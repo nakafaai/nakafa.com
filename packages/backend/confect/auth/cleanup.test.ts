@@ -64,12 +64,14 @@ describe("auth/cleanup", () => {
             plan: "free",
           });
           const commentId = await ctx.db.insert("comments", {
+            likeCount: 0,
             slug: "material/algebra",
             userId,
             text: "Deleted personal comment",
             replyCount: 1,
           });
           const replyId = await ctx.db.insert("comments", {
+            likeCount: 0,
             slug: "material/algebra",
             userId: otherUserId,
             text: "Reply by another user",
@@ -159,12 +161,14 @@ describe("auth/cleanup", () => {
               userId,
             });
             const deletedCommentId = await ctx.db.insert("comments", {
+              likeCount: 0,
               slug: "material/algebra",
               userId,
               text: "Deleted personal comment",
               replyCount: 1,
             });
             const referencedCommentId = await ctx.db.insert("comments", {
+              likeCount: 0,
               slug: "material/algebra",
               userId: otherUserId,
               text: "Reply without retained personal preview",

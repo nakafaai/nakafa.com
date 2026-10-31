@@ -13,7 +13,6 @@ import {
 import {
   CURRENT_CONTENT_GENERATION,
   type contentGenerationValidator,
-  RETIRED_CONTENT_GENERATION,
 } from "@repo/backend/confect/contentRelease/generation";
 import {
   encodeReleaseJson,
@@ -21,10 +20,9 @@ import {
 } from "@repo/backend/confect/contentRelease/wire";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
-  BOOTSTRAP,
-  BOOTSTRAP_RECOVERY,
-  seedActiveBootstrap,
-  seedRetiredCandidate,
+  REPLACEMENT,
+  REPLACEMENT_RECOVERY,
+  seedReplacementCandidate,
 } from "@repo/backend/test/activation/fixture";
 import {
   insertActivationPair,
@@ -39,7 +37,7 @@ import {
   insertTestState,
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
 /** A snapshot-only candidate that rebuilds the program snapshot and upserts no heads. */
 const REPLACED_PROGRAM_SNAPSHOTS = {
@@ -55,30 +53,27 @@ const REPLACED_PROGRAM_SNAPSHOTS = {
 /** Seeds a completed candidate as the active release with its retained inverse in the slot, under the given generation. */
 async function seedActiveWithRecovery(
   ctx: Parameters<typeof insertTestState>[0],
-  generation:
-    | typeof CURRENT_CONTENT_GENERATION
-    | typeof RETIRED_CONTENT_GENERATION
-    | null
+  generation: typeof CURRENT_CONTENT_GENERATION | null
 ) {
   await insertZeroRelease(ctx, {
-    ...BOOTSTRAP,
+    ...REPLACEMENT,
     ownership: { base: [], result: [] },
     role: "candidate",
     status: "completed",
   });
   await insertZeroRelease(ctx, {
-    ...BOOTSTRAP_RECOVERY,
-    base: BOOTSTRAP,
-    originReleaseId: BOOTSTRAP.releaseId,
+    ...REPLACEMENT_RECOVERY,
+    base: REPLACEMENT,
+    originReleaseId: REPLACEMENT.releaseId,
     ownership: { base: ContentFamilySchema.literals, result: [] },
     role: "recovery",
     status: "verified",
   });
   await insertTestState(ctx, {
-    active: BOOTSTRAP,
+    active: REPLACEMENT,
     generation,
     nextSequence: 4,
-    recovery: BOOTSTRAP_RECOVERY,
+    recovery: REPLACEMENT_RECOVERY,
   });
 }
 
@@ -164,29 +159,9 @@ describe("activation identity validation", () => {
   );
 });
 
-describe("activation bootstrap validation", () => {
-  it.effect("activates a stored bootstrap without a retained inverse", () =>
-    Effect.gen(function* () {
-      const t = yield* Confect.pipe(Effect.provide(confectLayer));
-      yield* t.run(
-        Effect.gen(function* () {
-          const tCtx = yield* MutationCtx;
-          yield* Effect.promise(() =>
-            seedRetiredCandidate(tCtx, { bootstrap: true })
-          );
-          const validated = yield* validateCandidate(
-            BOOTSTRAP.releaseId,
-            testRendererJson(),
-            BOOTSTRAP.manifestHash
-          );
-          expect(Option.isNone(validated.inverse)).toBe(true);
-        })
-      );
-    })
-  );
-
+describe("activation candidate validation", () => {
   it.effect(
-    "keeps the retained inverse for an undeclared candidate over a current generation",
+    "keeps the retained inverse of a candidate over a current generation",
     () =>
       Effect.gen(function* () {
         const t = yield* Confect.pipe(Effect.provide(confectLayer));
@@ -194,80 +169,22 @@ describe("activation bootstrap validation", () => {
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
             yield* Effect.promise(() =>
-              seedRetiredCandidate(tCtx, {
-                bootstrap: false,
+              seedReplacementCandidate(tCtx, {
                 generation: CURRENT_CONTENT_GENERATION,
                 recovery: true,
               })
             );
             const validated = yield* validateCandidate(
-              BOOTSTRAP.releaseId,
+              REPLACEMENT.releaseId,
               testRendererJson(),
-              BOOTSTRAP.manifestHash
+              REPLACEMENT.manifestHash
             );
-            expect(
-              Option.getOrUndefined(validated.inverse)?.recovery.releaseId
-            ).toBe(BOOTSTRAP_RECOVERY.releaseId);
+            expect(validated.recovery.releaseId).toBe(
+              REPLACEMENT_RECOVERY.releaseId
+            );
           })
         );
       })
-  );
-
-  it.effect.each([
-    {
-      message: "no longer meets the bootstrap contract",
-      name: "a stored bootstrap once a recovery is staged",
-      options: { bootstrap: true, recovery: true },
-    },
-    {
-      message: "no longer meets the bootstrap contract",
-      name: "a stored bootstrap over a current generation",
-      options: { bootstrap: true, generation: CURRENT_CONTENT_GENERATION },
-    },
-    {
-      message: "lacks a verified retained recovery",
-      name: "an undeclared candidate over the retired generation without a recovery",
-      options: { bootstrap: false },
-    },
-    {
-      message: "extends a retired content generation",
-      name: "an undeclared candidate over the retired generation with an inverse",
-      options: { bootstrap: false, recovery: true },
-    },
-    {
-      message: "is not recorded",
-      name: "an undeclared candidate over an unrecorded generation with an inverse",
-      options: { bootstrap: false, generation: null, recovery: true },
-    },
-    {
-      message: "extends a retired content generation",
-      name: "a snapshot-only candidate over the retired generation with an inverse",
-      options: {
-        bootstrap: false,
-        recovery: true,
-        snapshots: REPLACED_PROGRAM_SNAPSHOTS,
-      },
-    },
-  ])("refuses $name", ({ message, options }) =>
-    Effect.gen(function* () {
-      const t = yield* Confect.pipe(Effect.provide(confectLayer));
-      yield* t.run(
-        Effect.gen(function* () {
-          const tCtx = yield* MutationCtx;
-          yield* Effect.promise(() => seedRetiredCandidate(tCtx, options));
-          expect(
-            yield* validateCandidate(
-              BOOTSTRAP.releaseId,
-              testRendererJson(),
-              BOOTSTRAP.manifestHash
-            ).pipe(Effect.flip)
-          ).toMatchObject({
-            code: "CONTENT_RELEASE_STATE",
-            message: expect.stringContaining(message),
-          });
-        })
-      );
-    })
   );
 
   it.effect("refuses a candidate that is not verified in its slot", () =>
@@ -277,13 +194,13 @@ describe("activation bootstrap validation", () => {
         Effect.gen(function* () {
           const tCtx = yield* MutationCtx;
           yield* Effect.promise(() =>
-            seedRetiredCandidate(tCtx, { bootstrap: true })
+            seedReplacementCandidate(tCtx, { generation: null })
           );
           const candidate = yield* Effect.promise(() =>
             tCtx.db
               .query("contentReleases")
               .withIndex("by_releaseId", (query) =>
-                query.eq("releaseId", BOOTSTRAP.releaseId)
+                query.eq("releaseId", REPLACEMENT.releaseId)
               )
               .unique()
           );
@@ -297,37 +214,13 @@ describe("activation bootstrap validation", () => {
           );
           expect(
             yield* validateCandidate(
-              BOOTSTRAP.releaseId,
+              REPLACEMENT.releaseId,
               testRendererJson(),
-              BOOTSTRAP.manifestHash
+              REPLACEMENT.manifestHash
             ).pipe(Effect.flip)
           ).toMatchObject({
             code: "CONTENT_RELEASE_STATE",
             message: expect.stringContaining("is not the verified candidate"),
-          });
-        })
-      );
-    })
-  );
-
-  it.effect("refuses recovery over an active bootstrap", () =>
-    Effect.gen(function* () {
-      const t = yield* Confect.pipe(Effect.provide(confectLayer));
-      yield* t.run(
-        Effect.gen(function* () {
-          const tCtx = yield* MutationCtx;
-          yield* Effect.promise(() => seedActiveBootstrap(tCtx));
-          expect(
-            yield* validateRecovery(
-              BOOTSTRAP_RECOVERY.releaseId,
-              testRendererJson(),
-              BOOTSTRAP_RECOVERY.manifestHash
-            ).pipe(Effect.flip)
-          ).toMatchObject({
-            code: "CONTENT_RELEASE_UNSUPPORTED",
-            message: expect.stringContaining(
-              "Publish a new release instead of rolling back across the contract change"
-            ),
           });
         })
       );
@@ -349,9 +242,9 @@ describe("activation generation guard", () => {
           yield* Effect.promise(() => seedActiveWithRecovery(tCtx, generation));
           expect(
             yield* validateRecovery(
-              BOOTSTRAP_RECOVERY.releaseId,
+              REPLACEMENT_RECOVERY.releaseId,
               testRendererJson(),
-              BOOTSTRAP_RECOVERY.manifestHash
+              REPLACEMENT_RECOVERY.manifestHash
             ).pipe(Effect.flip)
           ).toMatchObject({
             code: "CONTENT_RELEASE_STATE",
@@ -360,13 +253,6 @@ describe("activation generation guard", () => {
         })
       );
     });
-
-  it.effect("refuses recovery activation over a retired generation", () =>
-    expectRecoveryRefused(
-      RETIRED_CONTENT_GENERATION,
-      "retired content generation"
-    )
-  );
 
   it.effect("refuses recovery activation over an unrecorded generation", () =>
     expectRecoveryRefused(null, "is not recorded")
@@ -382,12 +268,12 @@ describe("activation generation guard", () => {
             seedActiveWithRecovery(tCtx, CURRENT_CONTENT_GENERATION)
           );
           const validated = yield* validateRecovery(
-            BOOTSTRAP_RECOVERY.releaseId,
+            REPLACEMENT_RECOVERY.releaseId,
             testRendererJson(),
-            BOOTSTRAP_RECOVERY.manifestHash
+            REPLACEMENT_RECOVERY.manifestHash
           );
           expect(validated.release.releaseId).toBe(
-            BOOTSTRAP_RECOVERY.releaseId
+            REPLACEMENT_RECOVERY.releaseId
           );
         })
       );

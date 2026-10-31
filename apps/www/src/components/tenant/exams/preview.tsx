@@ -10,15 +10,13 @@ import {
   CHOICE_OPTIONS_MAX,
   fixedOptions,
 } from "@repo/backend/confect/exams/question";
-import { markBlockDirections } from "@repo/design-system/components/editor/direction";
 import {
   editorContent,
   editorDocument,
   editorPlaceholder,
 } from "@repo/design-system/components/editor/frame";
-import { drawArticleProse } from "@repo/design-system/components/editor/prose";
-import { paragraphVariants } from "@repo/design-system/lib/prose";
-import { DOMSerializer, Node } from "@tiptap/pm/model";
+import { drawDocument } from "@repo/design-system/components/editor/prose";
+import { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { type ReactNode, useCallback, useDeferredValue, useMemo } from "react";
@@ -135,15 +133,11 @@ const EMPTY_TEXT = Node.fromJSON(assessmentSchema, {
 });
 
 /**
- * A rich text drawn without an editor: the schema's own rendering of each node, which is what the
- * editor draws, in the wrapper and the document classes the editor gives its text, so the text takes
- * the same box and spacing as it does once the editor mounts, and each block takes the direction of
- * its own words, as the editor gives it. A text that changes while the teacher types is drawn when
- * the browser has time. Its headings, lists, quotations and code take the published article's classes,
- * as `articleProse` gives them in the editor, and `article` gives each paragraph the classes the
- * article's paragraphs take, which the prompt and the notes of a question take in their editors, and an
- * option does not. An empty
- * paragraph gets the line break an editor gives it, so an empty text keeps the height of its editor.
+ * A rich text drawn without an editor (`drawDocument`), in the wrapper and the document classes the editor
+ * gives its text, so the text takes the same box and spacing as it does once the editor mounts. A text
+ * that changes while the teacher types is drawn when the browser has time. `article` gives each paragraph
+ * the classes the article's paragraphs take, which the prompt and the notes of a question take in their
+ * editors, and an option does not.
  */
 export function PreviewProse({
   article,
@@ -158,25 +152,9 @@ export function PreviewProse({
   // The text is drawn again only when it changes, not on every redraw of the page.
   const draw = useCallback(
     (element: HTMLDivElement | null) => {
-      if (element === null) {
-        return;
+      if (element !== null) {
+        drawDocument(element, shown, article);
       }
-      element.replaceChildren(
-        DOMSerializer.fromSchema(shown.type.schema).serializeFragment(
-          shown.content
-        )
-      );
-      markBlockDirections(element);
-      drawArticleProse(element);
-      Arr.forEach(Arr.fromIterable(element.querySelectorAll("p")), (p) => {
-        // A cell's paragraph reads as the cell's words, as the lesson and the editor draw it.
-        if (article && p.closest("td, th") === null) {
-          p.className = paragraphVariants();
-        }
-        if (p.childNodes.length === 0) {
-          p.append(document.createElement("br"));
-        }
-      });
     },
     [article, shown]
   );

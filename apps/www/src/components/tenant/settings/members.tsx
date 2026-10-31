@@ -194,7 +194,7 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
     }),
     memberColumns.accessor((member) => member.roles, {
       cell: (info) => (
-        <div className="inline-flex items-center gap-1 whitespace-nowrap">
+        <div className="inline-flex flex-wrap justify-center gap-1">
           {Arr.map(info.getValue(), (role) => (
             <RoleBadge key={role} role={role} />
           ))}

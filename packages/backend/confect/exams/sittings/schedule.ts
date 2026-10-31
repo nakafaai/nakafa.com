@@ -8,10 +8,11 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import { keyMissing, questionView } from "@repo/backend/confect/exams/question";
+import { questionGap } from "@repo/backend/confect/exams/parts";
+import { questionView } from "@repo/backend/confect/exams/question";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import {
-  KeysMissing,
+  QuestionsUnready,
   ScheduleInvalid,
 } from "@repo/backend/confect/exams/sittings/errors";
 import type {
@@ -81,11 +82,11 @@ const placeOf = Effect.fn("exams.sittings.schedule.place")(function* (
 });
 
 /**
- * Refuses a schedule while a question that needs a key has no answer key that
- * fits it. An essay needs none, since the teacher scores it. The reply names the order
- * number of each such question, counted from one (round 2, decision 10).
+ * Refuses a schedule while a question is not ready to be sat (`questionGap`): a part of it shows nothing, or
+ * it needs a key and has none that fits. An essay needs no key, since the teacher scores it. The reply names
+ * each such question by its order number, counted from one, with its gap (round 2, decision 10).
  */
-const keysFit = Effect.fn("exams.sittings.schedule.keys")(function* (
+const questionsReady = Effect.fn("exams.sittings.schedule.ready")(function* (
   questions: readonly ExamQuestionsDoc["_id"][]
 ) {
   const reader = yield* DatabaseReader;
@@ -95,11 +96,13 @@ const keysFit = Effect.fn("exams.sittings.schedule.keys")(function* (
       .get(id)
       .pipe(Effect.orDie, Effect.flatMap(questionView))
   );
-  const unkeyed = Arr.flatMap(views, (view, index) =>
-    keyMissing(view) ? [index + 1] : []
+  const unready = Arr.getSomes(
+    Arr.map(views, (view, index) =>
+      Option.map(questionGap(view), (gap) => ({ gap, number: index + 1 }))
+    )
   );
-  if (unkeyed.length > 0) {
-    return yield* new KeysMissing({ questions: unkeyed });
+  if (unready.length > 0) {
+    return yield* new QuestionsUnready({ questions: unready });
   }
 });
 
@@ -150,7 +153,7 @@ export const createSitting = Effect.fn("exams.sittings.create")(
     readonly room: typeof RoomName.Type;
     readonly tenantId: ExamsDoc["tenantId"];
   }) {
-    yield* keysFit(args.exam.questions);
+    yield* questionsReady(args.exam.questions);
     const now = yield* Clock.currentTimeMillis;
     // The placeholders are replaced below, in the same transaction, once the row has the
     // ID that the token is bound to.

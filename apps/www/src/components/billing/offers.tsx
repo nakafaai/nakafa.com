@@ -15,8 +15,9 @@ import { formatMinorAmount } from "@/lib/billing/plan";
 /**
  * The payment method dialog: the Pro offers the learner's currency sells, the
  * monthly plan that renews by itself and the passes paid once, each with how it
- * is paid and its price. Continue starts the chosen offer's checkout. The first
- * offer is chosen until the learner picks another.
+ * is paid and its price. A pass holder extending Pro sees only passes, so the
+ * description names only those. Continue starts the chosen offer's checkout. The
+ * first offer is chosen until the learner picks another.
  */
 export function ProOfferDialog({
   choose,
@@ -32,6 +33,10 @@ export function ProOfferDialog({
   const t = useTranslations("Pricing");
   const common = useTranslations("Common");
   const [picked, setPicked] = useState<ProOffer["offer"] | null>(null);
+  const sellsPlan = Arr.some(
+    offers ?? [],
+    ({ interval }) => interval !== "pass"
+  );
   const chosen = Option.getOrNull(
     Option.orElse(
       Arr.findFirst(offers ?? [], ({ offer }) => offer === picked),
@@ -41,7 +46,9 @@ export function ProOfferDialog({
 
   return (
     <ResponsiveDialog
-      description={t("offer-description")}
+      description={t(
+        sellsPlan ? "offer-description" : "offer-pass-description"
+      )}
       footer={
         <>
           <Button onClick={dismiss} type="button" variant="outline">
@@ -103,7 +110,7 @@ function ProOfferOption({ offer }: { offer: ProOffer }) {
               ? t("offer-pass", { months: offer.months })
               : t("offer-monthly")}
           </span>
-          <span className="tabular-nums">
+          <span className="whitespace-nowrap tabular-nums">
             {formatMinorAmount(offer.amount, offer.currency)}
           </span>
         </span>

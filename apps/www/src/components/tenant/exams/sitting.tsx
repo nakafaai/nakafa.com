@@ -2,11 +2,12 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Building03Icon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
-  keyMissing,
-  type QuestionTemplate,
-} from "@repo/backend/confect/exams/question";
+  type QuestionGap,
+  questionGap,
+} from "@repo/backend/confect/exams/parts";
+import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import type {
-  KeysMissing,
+  QuestionsUnready,
   ScheduleInvalid,
 } from "@repo/backend/confect/exams/sittings/errors";
 import {
@@ -70,6 +71,25 @@ const keyNotice = (template: QuestionTemplate) =>
   );
 
 /**
+ * The sentence that names a question with a part that shows nothing, in the words of its template: the
+ * options of a choice, which the teacher writes or removes, the fixed options of true or false and cause
+ * and effect, which the teacher writes, the statements and answers of a matching, and the statements and
+ * columns of a true or false table.
+ */
+const emptyNotice = (template: QuestionTemplate) =>
+  Match.value(template).pipe(
+    Match.when("truefalse", () => "schedule-empty-fixed" as const),
+    Match.when("cause", () => "schedule-empty-fixed" as const),
+    Match.when("match", () => "schedule-empty-match" as const),
+    Match.when("table", () => "schedule-empty-table" as const),
+    Match.orElse(() => "schedule-empty-choice" as const)
+  );
+
+/** The sentence that names what keeps a question from being scheduled. */
+const gapNotice = (gap: QuestionGap, template: QuestionTemplate) =>
+  gap === "empty" ? emptyNotice(template) : keyNotice(template);
+
+/**
  * The dialog that schedules one sitting of the exam: its unit, its room, its start, and its
  * length. The start is read on the clock of the chosen unit, and it stays as the dialog opened
  * with it when the teacher picks another unit. A refused schedule keeps the dialog open with
@@ -95,8 +115,8 @@ export function ScheduleSitting({
   const [room, setRoom] = useState("");
   const [minutes, setMinutes] = useState(DEFAULT_MINUTES);
   const [audience, setAudience] = useState(UNIT_AUDIENCE);
-  // The questions the server named as missing their key, when the dialog's view of them was behind.
-  const [refusedKeys, setRefusedKeys] = useState<readonly number[]>([]);
+  // The questions the server named as not ready, with their gaps, when the dialog's view of them was behind.
+  const [refused, setRefused] = useState<QuestionsUnready["questions"]>([]);
   const [pastStart, setPastStart] = useState(false);
   const [pending, startTransition] = useTransition();
   const unitItems = Arr.map(units, (unit) => ({
@@ -133,26 +153,29 @@ export function ScheduleSitting({
     sittingTimes(starts, minutes, named)
   );
   const roomName = Str.trim(room);
-  // Each question by its number, and whether it keeps the exam from being scheduled (`keyMissing`), the
-  // rule the server applies: an essay needs no key, and every other template a key that fits it.
-  const numbered = Arr.map(exam.questions, (question, index) => ({
-    missing: keyMissing(question),
-    number: index + 1,
-    template: question.template,
-  }));
-  const unkeyed = Arr.findFirst(numbered, (entry) => entry.missing);
-  const keysMissing = Option.isSome(unkeyed);
+  // Each question that keeps the exam from being scheduled, by its number, with its gap (`questionGap`), the
+  // rule the server applies: no part that shows nothing, and a key that fits for every template but an essay.
+  const unready = Arr.getSomes(
+    Arr.map(exam.questions, (question, index) =>
+      Option.map(questionGap(question), (gap) => ({
+        gap,
+        number: index + 1,
+        template: question.template,
+      }))
+    )
+  );
+  const firstUnready = Arr.head(unready);
   const ready =
     Option.isSome(choice) &&
     Option.isSome(times) &&
     Schema.is(RoomName)(roomName) &&
-    !keysMissing &&
+    Option.isNone(firstUnready) &&
     !pending;
 
-  /** The server refused the schedule because a question has no key that fits it: the footer names the first one. */
-  const refuseKeys = (error: KeysMissing) =>
+  /** The server refused the schedule because a question is not ready: the footer names the first one. */
+  const refuseUnready = (error: QuestionsUnready) =>
     Effect.sync(() => {
-      setRefusedKeys(error.questions);
+      setRefused(error.questions);
     });
 
   /**
@@ -185,7 +208,7 @@ export function ScheduleSitting({
         onSome: (cohort) => ({ cohortId: cohort.id, kind: "cohort" }),
       }
     );
-    setRefusedKeys([]);
+    setRefused([]);
     setPastStart(false);
     startTransition(async () => {
       await runExamAction(
@@ -209,7 +232,7 @@ export function ScheduleSitting({
             })
           ),
           Effect.catchTags({
-            KeysMissing: refuseKeys,
+            QuestionsUnready: refuseUnready,
             ScheduleInvalid: refuseStart,
           })
         ),
@@ -224,9 +247,12 @@ export function ScheduleSitting({
       footer={
         <>
           <ScheduleNotices
-            missing={Option.orElse(unkeyed, () =>
-              Option.flatMap(Arr.head(refusedKeys), (number) =>
-                Arr.get(numbered, number - 1)
+            missing={Option.orElse(firstUnready, () =>
+              Option.flatMap(Arr.head(refused), (entry) =>
+                Option.map(
+                  Arr.get(exam.questions, entry.number - 1),
+                  (question) => ({ ...entry, template: question.template })
+                )
               )
             )}
           />
@@ -355,14 +381,15 @@ export function ScheduleSitting({
 }
 
 /**
- * The sentence at the foot of the dialog that names the first question that still needs its key, in the words
- * of its template, one line in the destructive colour. It comes from the exam itself, so it stays put while the
+ * The sentence at the foot of the dialog that names the first question that is not ready, an empty part or a
+ * missing key, in the words of its template, one line in the destructive colour. It comes from the exam itself, so it stays put while the
  * dialog is open; a start that has passed shows under the start instead.
  */
 function ScheduleNotices({
   missing,
 }: {
   readonly missing: Option.Option<{
+    readonly gap: QuestionGap;
     readonly number: number;
     readonly template: QuestionTemplate;
   }>;
@@ -373,7 +400,7 @@ function ScheduleNotices({
     onNone: () => null,
     onSome: (entry) => (
       <p className="text-destructive me-auto text-sm">
-        {t(keyNotice(entry.template), { number: entry.number })}
+        {t(gapNotice(entry.gap, entry.template), { number: entry.number })}
       </p>
     ),
   });

@@ -4,6 +4,7 @@ import {
   Delete02Icon,
 } from "@hugeicons/core-free-icons";
 import { useHotkeys } from "@mantine/hooks";
+import { questionGap } from "@repo/backend/confect/exams/parts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -121,7 +122,10 @@ function GridTile({
       >
         <span className="sr-only">
           {t("open-question", { number })}
-          {question.key === null ? ` ${t("no-key")}` : null}
+          {Option.match(questionGap(question), {
+            onNone: () => null,
+            onSome: (gap) => ` ${t(gap === "empty" ? "empty-part" : "no-key")}`,
+          })}
         </span>
         <QuestionPreview open={current} question={question} saved={saved} />
       </button>

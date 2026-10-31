@@ -270,7 +270,7 @@ export const billingEventAppliedValidator = Schema.Union([
   }),
 ]).pipe(Schema.toTaggedUnion("kind"));
 
-/** One unprocessed Polar delivery the sweep reads, with the fields it logs. */
+/** One unprocessed delivery the sweep reads, with the fields it logs. */
 export const unprocessedBillingEventValidator = Schema.Struct({
   eventId: Id("billingEvents"),
   key: Schema.String,

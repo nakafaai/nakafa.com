@@ -20,7 +20,7 @@ import {
   stagedEvidence,
 } from "@repo/backend/confect/contentRelease/receipt";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Clock, Effect, Option, Schema } from "effect";
+import { Clock, Effect, Schema } from "effect";
 
 /** Starts the invisible read-model build after full candidate validation. */
 export const prepareCandidate = Effect.fn("contentRelease.prepareCandidate")(
@@ -39,18 +39,10 @@ export const prepareCandidate = Effect.fn("contentRelease.prepareCandidate")(
         kind: "completed",
       } satisfies PreparationResult;
     }
-    const { inverse, release, signed, state } = yield* validateCandidate(
-      releaseId,
-      rendererJson,
-      manifestHash
-    );
+    const { recovery, recoverySigned, release, signed, state } =
+      yield* validateCandidate(releaseId, rendererJson, manifestHash);
     yield* stagedEvidence(release, signed);
-    if (Option.isSome(inverse)) {
-      yield* stagedEvidence(
-        inverse.value.recovery,
-        inverse.value.recoverySigned
-      );
-    }
+    yield* stagedEvidence(recovery, recoverySigned);
     yield* ensureModelBuild(release, signed, state);
     return {
       kind: "prepared",
@@ -76,18 +68,10 @@ export const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
         receipt: yield* completedActivation(releaseId, stored),
       } satisfies ActivationResult;
     }
-    const { inverse, release, signed, state } = yield* validateCandidate(
-      releaseId,
-      rendererJson,
-      manifestHash
-    );
+    const { recovery, recoverySigned, release, signed, state } =
+      yield* validateCandidate(releaseId, rendererJson, manifestHash);
     yield* stagedEvidence(release, signed);
-    if (Option.isSome(inverse)) {
-      yield* stagedEvidence(
-        inverse.value.recovery,
-        inverse.value.recoverySigned
-      );
-    }
+    yield* stagedEvidence(recovery, recoverySigned);
     const build = yield* requireReadyModelBuild(release, signed);
     const receipt = yield* publicationReceipt(release, signed);
     const now = yield* Clock.currentTimeMillis;

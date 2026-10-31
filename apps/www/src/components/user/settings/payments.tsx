@@ -4,15 +4,14 @@ import { Invoice01Icon } from "@hugeicons/core-free-icons";
 import billingRefs from "@repo/backend/confect/_generated/refs/billing";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemTitle,
+} from "@repo/design-system/components/ui/item";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -33,7 +32,7 @@ const PAYMENT_LABELS = {
 
 /**
  * The plan card's Payments action: a dialog of the learner's receipts. The
- * receipts are read while the card shows, so the dialog opens on its table.
+ * receipts are read while the card shows, so the dialog opens on its list.
  */
 export function PlanPayments() {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
@@ -70,15 +69,19 @@ export function PlanPayments() {
         title={t("payments")}
       >
         {QueryResult.isSuccess(payments) ? (
-          <PaymentsTable payments={payments.value} />
+          <PaymentsList payments={payments.value} />
         ) : null}
       </ResponsiveDialog>
     </>
   );
 }
 
-/** The receipts, newest first, each with its day, what it bought, the provider that took it and its amount. */
-function PaymentsTable({
+/**
+ * The receipts, newest first: what each bought and its day on the left, its
+ * amount and the provider that took it on the right. Each fact stays on its own
+ * line at every width, so a phone never breaks a word or an amount.
+ */
+function PaymentsList({
   payments,
 }: {
   payments: Ref.Returns<typeof billingRefs.queries.payments>;
@@ -87,27 +90,31 @@ function PaymentsTable({
   const locale = useLocale();
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{t("payment-date")}</TableHead>
-          <TableHead>{t("payment-for")}</TableHead>
-          <TableHead>{t("paid-with")}</TableHead>
-          <TableHead className="text-end">{t("payment-amount")}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {Arr.map(payments, (payment) => (
-          <TableRow key={`${payment.rail}-${payment.paidAt}`}>
-            <TableCell>{formatBillingDate(payment.paidAt, locale)}</TableCell>
-            <TableCell>{t(PAYMENT_LABELS[payment.kind])}</TableCell>
-            <TableCell>{providerNameOf(payment.rail)}</TableCell>
-            <TableCell className="text-end tabular-nums">
+    <ItemGroup aria-label={t("payments")} className="gap-2">
+      {Arr.map(payments, (payment) => (
+        <Item
+          className="flex-nowrap"
+          key={`${payment.rail}-${payment.paidAt}`}
+          render={<li />}
+          size="sm"
+          variant="outline"
+        >
+          <ItemContent className="min-w-0">
+            <ItemTitle>{t(PAYMENT_LABELS[payment.kind])}</ItemTitle>
+            <ItemDescription className="line-clamp-1">
+              {formatBillingDate(payment.paidAt, locale)}
+            </ItemDescription>
+          </ItemContent>
+          <ItemContent className="items-end">
+            <ItemTitle className="tabular-nums">
               {formatMinorAmount(payment.amount, payment.currency)}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+            </ItemTitle>
+            <ItemDescription className="line-clamp-1 text-right">
+              {providerNameOf(payment.rail)}
+            </ItemDescription>
+          </ItemContent>
+        </Item>
+      ))}
+    </ItemGroup>
   );
 }

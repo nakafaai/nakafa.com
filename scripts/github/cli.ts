@@ -7,7 +7,7 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
-import { parseDocument } from "yaml";
+import { Yaml } from "effect/encoding";
 import { NODE_RUNTIME_VERSION } from "#scripts/dependencies/policy";
 import { problemWhen } from "#scripts/problem";
 
@@ -166,12 +166,13 @@ function hasRerunnableArtifacts(build: WorkflowJob) {
   );
 }
 
+const parseWorkflowText = Option.liftThrowable(Yaml.parse);
+
 function decodeWorkflow(source: string) {
-  const document = parseDocument(source);
-  if (document.errors.length > 0) {
-    return Option.none();
-  }
-  return Schema.decodeUnknownOption(CliWorkflowSchema)(document.toJS());
+  return Option.flatMap(
+    parseWorkflowText(source),
+    Schema.decodeUnknownOption(CliWorkflowSchema)
+  );
 }
 
 /** Reports each required source fragment a job no longer contains. */

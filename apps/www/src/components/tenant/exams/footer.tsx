@@ -4,6 +4,7 @@ import {
   Layout01Icon,
 } from "@hugeicons/core-free-icons";
 import { useReducedMotion } from "@mantine/hooks";
+import { questionGap } from "@repo/backend/confect/exams/parts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
@@ -300,7 +301,10 @@ function PageThumb({
     >
       <span className="sr-only">
         {t("question", { number })}
-        {question.key === null ? ` ${t("no-key")}` : null}
+        {Option.match(questionGap(question), {
+          onNone: () => null,
+          onSome: (gap) => ` ${t(gap === "empty" ? "empty-part" : "no-key")}`,
+        })}
       </span>
       <QuestionPreview open={selected} question={question} saved={saved} />
     </button>

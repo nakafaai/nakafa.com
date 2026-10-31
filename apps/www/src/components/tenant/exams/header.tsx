@@ -109,7 +109,7 @@ export function ExamHeaderFrame() {
 function ExamHeaderRow({ children }: { children: ReactNode }) {
   return (
     <header className="h-14 shrink-0 border-b" data-slot="page-header">
-      <div className="flex h-full w-full items-center gap-2 px-2">
+      <div className="flex h-full w-full items-center gap-2 px-4">
         {children}
       </div>
     </header>
@@ -140,7 +140,10 @@ function BackToExams() {
   );
 }
 
-/** The field of the exam's title, which takes the room the row leaves between the link and the buttons. */
+/**
+ * The field of the exam's title, which takes the room the row leaves between the link and the buttons. Its text
+ * starts 12px after the link, the player's distance from its back button to its title.
+ */
 function ExamTitleField(
   props: Omit<ComponentProps<typeof Input>, "aria-label" | "className" | "dir">
 ) {
@@ -150,7 +153,7 @@ function ExamTitleField(
     <Input
       {...props}
       aria-label={t("title-label")}
-      className="min-w-0 flex-1 truncate border-0 text-lg font-semibold shadow-none md:text-lg"
+      className="min-w-0 flex-1 truncate border-0 px-1 text-lg font-semibold shadow-none md:text-lg"
       dir="auto"
     />
   );

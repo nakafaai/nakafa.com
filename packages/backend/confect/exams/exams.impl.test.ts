@@ -22,7 +22,7 @@ describe("exams/exams", () => {
   });
 
   it.effect(
-    "creates an exam whose first question is a single-answer choice of four empty options",
+    "creates an exam whose first question is a single-answer choice of four empty options, and answers with the exam as the editor opens it",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -36,6 +36,8 @@ describe("exams/exams", () => {
           examId: made.id,
           slug: nf,
         });
+        // The create answers with the exam as the editor reads it, so the editor draws it on its first frame.
+        expect(made).toEqual(opened);
         expect(opened).toMatchObject({
           title: "PTS Matematika",
         });

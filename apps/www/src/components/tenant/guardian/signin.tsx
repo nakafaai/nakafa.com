@@ -134,7 +134,7 @@ function GuardianSignInForm() {
       data-slot="guardian-sign-in"
       onSubmit={handleSubmit}
     >
-      <FieldGroup className="gap-4">
+      <FieldGroup>
         {sentTo === undefined ? (
           <Field>
             <FieldLabel htmlFor={`${id}-email`}>{t("email-label")}</FieldLabel>

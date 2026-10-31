@@ -146,8 +146,9 @@ async function expectMixedQuestionAt(
     timeout: readinessTimeoutMilliseconds,
   });
   const studentPrompt = student
-    .getByRole("textbox", { name: "Question text" })
-    .nth(1);
+    .getByRole("article", { exact: true, name: "Question 2" })
+    .locator('[data-slot="sitting-document"]')
+    .first();
   await expectParagraphsInTheirDirection(studentPrompt);
   await expect
     .poll(() => naskhDrawsArabic(student), {

@@ -17,15 +17,16 @@ beforeEach(() => {
   vi.setSystemTime(SWEEP_NOW);
 });
 
-/** Stores one Polar delivery the way the webhook inbox does, without scheduling its processing, so only the sweep runs. */
+/** Stores one delivery the way the webhook inbox does, without scheduling its processing, so only the sweep runs. */
 function insertDelivery(
   ctx: MutationCtx,
   key: string,
   payload: string,
-  receivedAt: number
+  receivedAt: number,
+  rail: "polar" | "xendit" = "polar"
 ) {
   return ctx.db.insert("billingEvents", {
-    rail: "polar",
+    rail,
     key,
     type: "subscription.created",
     providerTime: receivedAt,
@@ -59,6 +60,24 @@ describe("billing/sweep", () => {
     }));
     expect(stored.older).toBe(SWEEP_NOW);
     expect(stored.younger).toBeNull();
+  });
+
+  it("reapplies a Xendit delivery too, because Xendit stops retrying once the inbox answers", async () => {
+    const t = createBillingTestConvex();
+    const id = await t.run((ctx) =>
+      insertDelivery(
+        ctx,
+        "sweep-xendit",
+        "{}",
+        SWEEP_NOW - 10 * MINUTE_MS,
+        "xendit"
+      )
+    );
+    expect(await t.action(internal.billing.events.sweep, {})).toBe(1);
+    const processedAt = await t.run(
+      async (ctx) => (await ctx.db.get(id))?.processedAt
+    );
+    expect(processedAt).toBe(SWEEP_NOW);
   });
 
   it("neither reapplies nor gives up a delivery that is only just past its window", async () => {

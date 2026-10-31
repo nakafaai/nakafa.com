@@ -20,7 +20,6 @@ import {
   Field,
   FieldContent,
   FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -202,7 +201,7 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
   );
 
   return (
-    <Field orientation="horizontal">
+    <Field orientation="responsive">
       <FieldContent>
         <FieldLabel htmlFor={id}>{t("policy-nina-credits")}</FieldLabel>
         <FieldDescription>
@@ -264,7 +263,6 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
   const [draft, setDraft] = useState(() =>
     Arr.join(policies.emailDomains, "\n")
   );
-  const errorId = useId();
   const domains = parseDomains(draft);
   const isChanged =
     Arr.join(domains, "\n") !== Arr.join(policies.emailDomains, "\n");
@@ -286,7 +284,6 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
       </CardHeader>
       <CardContent>
         <Textarea
-          aria-describedby={problem === null ? undefined : errorId}
           aria-invalid={problem !== null}
           aria-label={t("policy-domains")}
           className="max-w-md"
@@ -294,11 +291,11 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
           placeholder={t("policy-domains-placeholder")}
           value={draft}
         />
-        <FieldError className="max-w-md" id={errorId}>
-          {problem}
-        </FieldError>
       </CardContent>
-      <CardSectionFooter hint={t("policy-domains-footer")}>
+      <CardSectionFooter
+        hint={problem ?? t("policy-domains-footer")}
+        tone={problem === null ? "muted" : "destructive"}
+      >
         <CardSectionActions>
           <Button
             disabled={!(isSettled && isChanged) || problem !== null}

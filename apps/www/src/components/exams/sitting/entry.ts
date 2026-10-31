@@ -127,6 +127,11 @@ export function isFinalRefusal(error: unknown): boolean {
   );
 }
 
+/** Whether a refused answer is one that the server already holds, or that a newer answer took the place of. */
+export function isStaleAnswer(error: unknown): boolean {
+  return Option.contains(reasonOf(error), "StaleAnswer");
+}
+
 /**
  * Whether a failed call says the proctor retired this device, so another device holds the attempt now and this
  * one can neither answer nor finish it.

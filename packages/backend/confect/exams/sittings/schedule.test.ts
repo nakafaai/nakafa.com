@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  choiceAnswers,
+  encodeAnswers,
+  textLabel,
+} from "@repo/backend/confect/exams/question";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import {
@@ -209,19 +214,55 @@ describe("exams/sittings schedule", () => {
   );
 
   it.effect(
-    "refuses a schedule of an exam with a question that has no fitting key, and names its number",
+    "refuses a schedule of an exam whose question still has empty options, and names its number",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* keyedSchool(fixture);
-        const exam = yield* teacherExam(fixture, "Tanpa kunci");
+        // A new exam's question starts with four options that show nothing, and no key.
+        const exam = yield* teacherExam(fixture, "Belum ditulis");
         const failure = yield* scheduleSitting(fixture, {
           closesAt: CLOSES_AT,
           examId: exam.id,
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: OPENS_AT,
         }).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "KeysMissing", questions: [1] });
+        expect(failure).toMatchObject({
+          _tag: "QuestionsUnready",
+          questions: [{ gap: "empty", number: 1 }],
+        });
+      })
+  );
+
+  it.effect(
+    "refuses a schedule of an exam with a written question that has no fitting key, and names its number",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const exam = yield* teacherExam(fixture, "Tanpa kunci");
+        const [question] = exam.questions;
+        const answers = yield* encodeAnswers(
+          choiceAnswers([textLabel("144"), textLabel("124")])
+        );
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            yield* writer
+              .table("examQuestions")
+              .patch(question.id, { answers });
+          })
+        );
+        const failure = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId: exam.id,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        }).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "QuestionsUnready",
+          questions: [{ gap: "key", number: 1 }],
+        });
       })
   );
 

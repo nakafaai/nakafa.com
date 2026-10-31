@@ -1,7 +1,15 @@
 import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import {
+  choiceAnswers,
+  encodeAnswers,
+  textLabel,
+} from "@repo/backend/confect/exams/question";
 import { nf } from "@repo/backend/test/editor";
 import { fillExam } from "@repo/backend/test/exams";
 import {
@@ -14,6 +22,7 @@ import {
   openedSitting,
   type SittingFixture,
   scheduleSitting,
+  sittingRow,
 } from "@repo/backend/test/sittings";
 import {
   suspend,
@@ -62,6 +71,52 @@ describe("exams/sittings paper", () => {
         expect(question.number).toBe(1);
         expect(question.interactions).toHaveLength(1);
         expect(Record.keys(question)).toEqual(["id", "interactions", "number"]);
+      })
+  );
+
+  it.effect(
+    "leaves out an option that was emptied after the schedule, so the student never meets an empty answer",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const sitting = yield* sittingRow(fixture, made.id);
+        // The exam takes changes while it runs, and the teacher clears the second option's words.
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const exam = yield* (yield* DatabaseReader)
+              .table("exams")
+              .get(sitting.examId)
+              .pipe(Effect.orDie);
+            const answers = yield* encodeAnswers(
+              choiceAnswers([
+                textLabel("Pilihan 1"),
+                { content: [{ type: "paragraph" }], type: "doc" },
+                textLabel("Pilihan 3"),
+                textLabel("Pilihan 4"),
+              ])
+            );
+            yield* (yield* DatabaseWriter)
+              .table("examQuestions")
+              .patch(exam.questions[0], { answers });
+          })
+        );
+        yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        const { questions } = yield* paperOf(fixture, made.id, deviceOf(1));
+        expect(questions[0]?.interactions).toMatchObject([
+          {
+            kind: "choice",
+            options: [
+              { id: "option-1" },
+              { id: "option-3" },
+              { id: "option-4" },
+            ],
+          },
+        ]);
       })
   );
 

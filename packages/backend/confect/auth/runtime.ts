@@ -122,6 +122,12 @@ export const createAuthOptions = (
       encryptOAuthTokens: true,
     },
     databaseHooks: accountTokenHooks,
+    // A read never writes. Without this, every read of a session that is due for
+    // its refresh writes the one session row: the server's session and token
+    // reads, then the browser's, all in one page load, and Convex retries each
+    // write that loses the race. The browser's session client sends the write,
+    // once, when a read answers that it is due (`authFetch`).
+    session: { deferSessionRefresh: true },
     disabledPaths: [
       ...disabledCredentialPaths,
       ...disabledSignInPaths,

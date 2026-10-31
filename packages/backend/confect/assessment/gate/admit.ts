@@ -17,6 +17,7 @@ import {
 } from "@repo/backend/confect/assessment/gate/rules";
 import {
   type Answerable,
+  type Attempt,
   acceptsWrites,
   type Binding,
   type Candidate,
@@ -33,6 +34,11 @@ function refuse(reason: AttemptRefused["reason"]) {
 /** Whether a write's version is not newer than the question's latest admitted write, which a newer write already took the place of. */
 function isStale(incoming: Version, latest: Option.Option<Version>) {
   return Option.exists(latest, (current) => incoming <= current);
+}
+
+/** Whether a closing attempt still takes a write under its rule, because its deadline passed only a moment ago. */
+function inAllowance(rule: Rule, attempt: Attempt, now: number) {
+  return attempt.state === "closing" && now < attempt.deadline + rule.allowance;
 }
 
 /**
@@ -83,7 +89,8 @@ export function make<
    * deadline for a `live` rule, and last the rest of the rows the write needs, which the
    * store loads and checks only now. The first failing rule is the refusal, and nothing is
    * written after one. The live deadline is the earlier of the attempt's and the section's,
-   * so a section that added minutes never cuts a student off.
+   * so a section that added minutes never cuts a student off. A rule's allowance moves both
+   * deadlines, so an attempt that became closing a moment ago still takes the write.
    */
   const admit = Effect.fn("assessment.gate.admit")(function* <L, LE, LR>(
     rule: Rule,
@@ -100,7 +107,7 @@ export function make<
       return yield* refuse(new Missing());
     }
     const { attempt, section } = target.value;
-    if (!acceptsWrites(attempt.state)) {
+    if (!(acceptsWrites(attempt.state) || inAllowance(rule, attempt, now))) {
       return yield* refuse(new AttemptClosed());
     }
     // A locked attempt past its deadline takes no more writes as a closed one does (ADR 0013),
@@ -108,7 +115,7 @@ export function make<
     if (
       rule.lock === "refuse" &&
       attempt.state === "locked" &&
-      now < attempt.deadline
+      now < attempt.deadline + rule.allowance
     ) {
       return yield* refuse(new Locked());
     }
@@ -122,7 +129,7 @@ export function make<
     }
     yield* open.value.verify;
     const deadline = Num.min(attempt.deadline, open.value.deadline);
-    if (rule.deadline === "live" && now >= deadline) {
+    if (rule.deadline === "live" && now >= deadline + rule.allowance) {
       return yield* refuse(new Expired({ deadline }));
     }
     return {
@@ -164,7 +171,7 @@ export function make<
     readonly version: Version;
   }) {
     const { live, now } = yield* admit(
-      rules.answer,
+      { ...rules.answer, allowance: store.writeAllowance },
       input.owner,
       input.device,
       store.placement(input.placement)

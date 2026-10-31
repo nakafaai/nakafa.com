@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import {
   Array as Arr,
   Clock,
@@ -51,6 +51,7 @@ import {
   defaultChoice,
   type ScopeChoice,
 } from "@/components/tenant/exams/create";
+import { CreatedExamsContext } from "@/components/tenant/exams/created";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import { useImportFile } from "@/components/tenant/exams/import/calls";
 import { ImportFileField } from "@/components/tenant/exams/import/field";
@@ -105,9 +106,11 @@ export function CreateExam({
   waiting?: boolean;
 }) {
   const drafts = useExamDrafts();
+  const created = use(CreatedExamsContext);
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
   const navigate = useNavigate();
+  const router = useRouter();
   const create = useMutation(exams.exams.create);
   const importFile = useImportFile(slug);
   // A create sent before Convex holds the session's token is refused as signed out, so the
@@ -163,6 +166,8 @@ export function CreateExam({
           ),
           Effect.tap((saved) =>
             Effect.sync(() => {
+              // The editor draws the saved exam at once, and its own read takes over once it answers.
+              created?.getState().hold(saved);
               navigate({
                 params: { exam: saved.id, slug },
                 to: "/school/$slug/exams/$exam/edit",
@@ -182,7 +187,15 @@ export function CreateExam({
   return (
     <>
       {/* The label gives way to the icon when the header has too little room for it, as at 200 percent text on a phone. */}
-      <Button onClick={() => setOpen(true)}>
+      <Button
+        onClick={() => {
+          setOpen(true);
+          // The editor's code loads while the teacher names the exam, so the editor the create opens draws at once.
+          return router.loadRouteChunk(
+            router.routesById["/school/$slug/exams/$exam/edit"]
+          );
+        }}
+      >
         <HugeIcons aria-hidden="true" icon={Add01Icon} />
         <span className="@max-sm/header:sr-only">{t("create")}</span>
       </Button>

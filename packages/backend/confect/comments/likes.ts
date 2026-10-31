@@ -7,7 +7,6 @@ import type commentLikesTable from "@repo/backend/confect/_generated/tables/comm
 import {
   type CommentDoc,
   findCommentLike,
-  likeCountOf,
 } from "@repo/backend/confect/comments/rows";
 import { COMMENT_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/triggers/comments/cleanup";
 import { Effect, Struct } from "effect";
@@ -34,7 +33,7 @@ export const addCommentLike = Effect.fn("comments.likes.addCommentLike")(
       .table("comments")
       .replace(comment._id, {
         ...Struct.omit(comment, ["_id", "_creationTime"]),
-        likeCount: likeCountOf(comment) + 1,
+        likeCount: comment.likeCount + 1,
       })
       .pipe(Effect.orDie);
   }
@@ -55,7 +54,7 @@ export const removeCommentLike = Effect.fn("comments.likes.removeCommentLike")(
       .table("comments")
       .replace(comment._id, {
         ...Struct.omit(comment, ["_id", "_creationTime"]),
-        likeCount: likeCountOf(comment) - 1,
+        likeCount: comment.likeCount - 1,
       })
       .pipe(Effect.orDie);
   }

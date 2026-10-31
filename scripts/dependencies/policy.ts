@@ -90,12 +90,8 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
     "packages/design-system/package.json",
     [
       "@tiptap/core",
-      "@tiptap/extension-document",
       "@tiptap/extension-highlight",
       "@tiptap/extension-list",
-      "@tiptap/extension-paragraph",
-      "@tiptap/extension-table",
-      "@tiptap/extension-text",
       "@tiptap/extension-underline",
       "@tiptap/extensions",
       "@tiptap/markdown",

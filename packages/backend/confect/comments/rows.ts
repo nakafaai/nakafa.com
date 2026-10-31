@@ -6,15 +6,6 @@ import { Effect } from "effect";
 /** A comment as the database holds it. */
 export type CommentDoc = typeof commentsTable.Doc.Type;
 
-/**
- * The likes a comment holds, as its count says. A row written before the likes table
- * has no count until the migration sets one, so it reads as zero until then. The
- * contract stage removes this read, once every row holds its count.
- */
-export function likeCountOf(comment: CommentDoc): number {
-  return comment.likeCount ?? 0;
-}
-
 /** The comment with this id, or null once it is deleted. */
 export const findComment = Effect.fn("comments.rows.findComment")(function* (
   commentId: Id<"comments">

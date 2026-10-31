@@ -27,7 +27,10 @@ import { SittingLook } from "@/components/exams/sitting/look";
 import { useFlagQuestion } from "@/components/exams/sitting/mark";
 import { useSittingMode } from "@/components/exams/sitting/mode";
 import { mergePaper, type PaperValue } from "@/components/exams/sitting/paper";
-import { SittingQuestion } from "@/components/exams/sitting/question";
+import {
+  PaperReveal,
+  SittingQuestion,
+} from "@/components/exams/sitting/question";
 import {
   projectSittingCells,
   projectSittingQuestions,
@@ -300,18 +303,25 @@ function RunningPaper({
       >
         {locked ? <p>{t("student-locked")}</p> : null}
         <PaperLockProvider locked={locked}>
-          <PlayerQuestions>
-            {Arr.map(paper.questions, (question) => (
-              <SittingQuestion
-                attemptId={attemptId}
-                deviceId={deviceId}
-                key={question.id}
-                question={question}
-                sittingId={sittingId}
-                slug={slug}
-              />
-            ))}
-          </PlayerQuestions>
+          <PaperReveal
+            deviceId={deviceId}
+            paper={paper}
+            sittingId={sittingId}
+            slug={slug}
+          >
+            <PlayerQuestions>
+              {Arr.map(paper.questions, (question) => (
+                <SittingQuestion
+                  attemptId={attemptId}
+                  deviceId={deviceId}
+                  key={question.id}
+                  question={question}
+                  sittingId={sittingId}
+                  slug={slug}
+                />
+              ))}
+            </PlayerQuestions>
+          </PaperReveal>
         </PaperLockProvider>
       </PlayerMain>
       <PlayerFooter>

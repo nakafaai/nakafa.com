@@ -102,7 +102,7 @@ function TenantLoginForm() {
       <p className="text-muted-foreground text-center text-sm">
         {t("card-hint")}
       </p>
-      <FieldGroup className="gap-4">
+      <FieldGroup>
         <Field>
           <FieldLabel htmlFor={`${id}-username`}>
             {t("username-label")}

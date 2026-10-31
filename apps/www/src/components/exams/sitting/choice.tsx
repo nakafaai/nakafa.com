@@ -43,13 +43,7 @@ export function SittingChoice({
             disabled={disabled}
             id={`${id}-${option.id}`}
             key={option.id}
-            label={
-              <SittingDocument
-                document={option.label}
-                label={choice.label}
-                size="line"
-              />
-            }
+            label={<SittingDocument document={option.label} size="line" />}
             value={option.id}
           />
         ))}
@@ -68,13 +62,7 @@ export function SittingChoice({
           disabled={disabled}
           id={`${id}-${option.id}`}
           key={option.id}
-          label={
-            <SittingDocument
-              document={option.label}
-              label={choice.label}
-              size="line"
-            />
-          }
+          label={<SittingDocument document={option.label} size="line" />}
           onCheckedChange={(checked) =>
             onChoose(
               toggleOption(response, option.id, checked, choice.maxChoices)
