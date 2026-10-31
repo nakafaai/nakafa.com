@@ -252,3 +252,18 @@ export const ScreenView = Schema.Struct({
   prompt: Schema.String,
   response: Schema.NullOr(ExamResponse),
 });
+
+/** One student of a room whose connection went silent, and when it did (K25). */
+export const OfflineSeat = Schema.Struct({
+  attemptId: Id("examAttempts"),
+  since: Schema.Finite,
+});
+
+/** How many of a room's seats read each way, which the exam's rooms show at a glance (K26). */
+export const RoomSeats = Schema.Struct({
+  away: Schema.Finite,
+  finished: Schema.Finite,
+  locked: Schema.Finite,
+  offline: Schema.Finite,
+  working: Schema.Finite,
+});

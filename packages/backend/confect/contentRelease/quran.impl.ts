@@ -4,7 +4,6 @@ import spec from "@repo/backend/confect/contentRelease/quran.spec";
 import { readQuranAttribution } from "@repo/backend/content/quran/attribution";
 import { readQuranSurahs } from "@repo/backend/content/quran/catalog";
 import { quranLayer } from "@repo/backend/content/quran/confect";
-import { readQuranDocument } from "@repo/backend/content/quran/document";
 import { readQuranInterpretation } from "@repo/backend/content/quran/interpretation";
 import { readQuranMarkdown } from "@repo/backend/content/quran/markdown";
 import { readQuranPassage } from "@repo/backend/content/quran/reference";
@@ -25,19 +24,6 @@ const surahs = FunctionImpl.make(
   "surahs",
   Effect.fn("contentRelease.quran.surahs")(function* () {
     return yield* readQuranSurahs().pipe(Effect.provide(quranLayer));
-  })
-);
-const surah = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "surah",
-  Effect.fn("contentRelease.quran.surah")(function* ({
-    appLocale,
-    surahNumber,
-  }) {
-    return yield* readQuranDocument(appLocale, surahNumber).pipe(
-      Effect.provide(quranLayer)
-    );
   })
 );
 const prose = FunctionImpl.make(
@@ -96,7 +82,6 @@ const passage = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(attribution),
   Layer.provide(surahs),
-  Layer.provide(surah),
   Layer.provide(prose),
   Layer.provide(page),
   Layer.provide(tafsir),

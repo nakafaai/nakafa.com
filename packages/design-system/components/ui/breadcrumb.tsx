@@ -106,7 +106,6 @@ function BreadcrumbEllipsis({
       {...props}
     >
       <HugeIcons className="size-4" icon={FolderTreeIcon} />
-      <span className="sr-only">More</span>
     </span>
   );
 }

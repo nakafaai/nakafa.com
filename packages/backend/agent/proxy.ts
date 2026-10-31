@@ -91,13 +91,12 @@ export const forwardAgentEdge = Effect.fn("agent.edge.forward")(function* (
     Effect.mapError((cause) => new AgentEdgeUpstreamError({ cause }))
   );
 
-  const headers = new Headers(upstream.headers);
-  headers.set(NAKAFA_EDGE_RELEASE_SHA_HEADER, releaseSha);
+  // An answer without a body, as to a HEAD, stays one: reading `upstream.stream`
+  // directly fails with EmptyBody after the status has gone out.
   return HttpServerResponse.toWeb(
-    HttpServerResponse.stream(upstream.stream, {
-      headers,
-      status: upstream.status,
-    })
+    HttpServerResponse.fromClientResponse(upstream).pipe(
+      HttpServerResponse.setHeader(NAKAFA_EDGE_RELEASE_SHA_HEADER, releaseSha)
+    )
   );
 });
 
