@@ -11,4 +11,5 @@ export default {
 ["closeDue"]: RegisteredConvexFunction.register({ ...definitions["closeDue"], handler: forward(definitions["closeDue"].handler) }),
 ["closeAttempt"]: RegisteredConvexFunction.register({ ...definitions["closeAttempt"], handler: forward(definitions["closeAttempt"].handler) }),
 ["submit"]: RegisteredConvexFunction.register({ ...definitions["submit"], handler: forward(definitions["submit"].handler) }),
+["sweep"]: RegisteredConvexFunction.register({ ...definitions["sweep"], handler: forward(definitions["sweep"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../exams/sittings/timers.spec")["default"]>;

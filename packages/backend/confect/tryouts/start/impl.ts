@@ -4,14 +4,12 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { getIncludedAttemptAccess } from "@repo/backend/confect/tryouts/access/impl";
 import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/confect/tryouts/access/source";
 import { loadActiveAssessment } from "@repo/backend/confect/tryouts/active";
+import { tryoutGate } from "@repo/backend/confect/tryouts/gate";
 import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { expireAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
 import { readAttemptStart } from "@repo/backend/confect/tryouts/runtime/lookup";
-import {
-  requireEntrySection,
-  startSectionAttempt,
-} from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
+import { requireEntrySection } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
 import { createTryoutAttempt } from "@repo/backend/confect/tryouts/start/attempt";
 import { selectAttemptScale } from "@repo/backend/confect/tryouts/start/scale";
 import { loadTryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
@@ -160,9 +158,8 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
       if (!entrySection || entrySection.publicPath) {
         return attempt;
       }
-      yield* startSectionAttempt({
-        attempt,
-        now: input.now,
+      yield* tryoutGate.startSection(input.userId, {
+        attemptId: attempt._id,
         sectionKey: entrySection.sectionKey,
       });
     }

@@ -42,13 +42,19 @@ describe("billing/route", () => {
   );
 
   it.effect(
-    "sells the passes through Xendit and keeps the monthly plan on Polar while the switch names passes",
+    "sells what is paid once through Xendit and keeps the monthly plan on Polar while the switch names passes",
     () =>
       Effect.gen(function* () {
         const pass = yield* routeOffer("ID", "pro.pass.1");
+        const pack = yield* routeOffer("ID", "pro.topup");
         const monthly = yield* routeOffer("ID", "pro.monthly");
         expect(pass).toEqual({
           amount: 79_000,
+          currency: "IDR",
+          rail: "xendit",
+        });
+        expect(pack).toEqual({
+          amount: 59_000,
           currency: "IDR",
           rail: "xendit",
         });
@@ -161,7 +167,7 @@ describe("billing/route", () => {
     { env: { BILLING_INDONESIA_RAIL: "xendit", ...xenditKeys }, takes: true },
     { env: { BILLING_INDONESIA_RAIL: "xendit" }, takes: false },
     { env: { BILLING_INDONESIA_RAIL: "polar", ...xenditKeys }, takes: false },
-    { env: { BILLING_INDONESIA_RAIL: "passes", ...xenditKeys }, takes: false },
+    { env: { BILLING_INDONESIA_RAIL: "passes", ...xenditKeys }, takes: true },
     {
       env: { BILLING_INDONESIA_RAIL: "midtrans", ...xenditKeys },
       takes: false,
