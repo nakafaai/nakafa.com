@@ -220,7 +220,10 @@ export const ApiGrade = Schema.Struct({
  * enums and reason codes, never a name, an email or free text (ADR 0016).
  */
 export const ApiChange = Schema.Struct({
-  change: Schema.Json,
+  change: Schema.Record(
+    Schema.String,
+    Schema.Union([Schema.Boolean, Schema.Finite, Schema.Null, Schema.String])
+  ),
   id: Schema.String,
   occurredAt: Schema.String,
   subject: Schema.Struct({ id: Schema.String, kind: Schema.String }),
