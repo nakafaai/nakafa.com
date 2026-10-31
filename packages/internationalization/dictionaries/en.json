@@ -2334,27 +2334,27 @@
       "description": "Choose another name for this cohort."
     },
     "school-refusal-class-subject-taken": {
-      "title": "This cohort already has an active classroom for this subject.",
-      "description": "Use that classroom, or archive it first."
+      "title": "This subject has a classroom.",
+      "description": "Use the cohort's active classroom, or archive it first."
     },
     "school-refusal-class-limit": {
-      "title": "This cohort holds the most classrooms it can.",
+      "title": "This cohort has all its classrooms.",
       "description": "Restore an archived classroom instead of adding a new one."
     },
     "school-refusal-class-address-empty": {
-      "title": "This classroom name has no letter or digit.",
+      "title": "The name has no letter or digit.",
       "description": "Use a subject with letters or digits."
     },
     "school-refusal-class-ambiguous": {
-      "title": "This classroom's address is already taken.",
+      "title": "This address is already taken.",
       "description": "Rename the classroom, then try again."
     },
     "school-refusal-class-subject-required": {
-      "title": "A classroom of this unit names its subject.",
+      "title": "A classroom here needs a subject.",
       "description": "Write the subject, then add it again."
     },
     "school-refusal-class-subject-not-allowed": {
-      "title": "An SD cohort has one classroom without a subject.",
+      "title": "SD classrooms have no subject.",
       "description": "Add it without a subject."
     },
     "school-period-archived": {

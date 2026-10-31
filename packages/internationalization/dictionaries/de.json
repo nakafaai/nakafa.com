@@ -2330,31 +2330,31 @@
       "title": "Lerngruppe archiviert."
     },
     "school-refusal-class-name-taken": {
-      "title": "Diesen Namen hat schon eine Lerngruppe.",
+      "title": "Diesen Namen gibt es schon.",
       "description": "Wähle für diese Klasse einen anderen Namen."
     },
     "school-refusal-class-subject-taken": {
-      "title": "Diese Klasse hat schon eine aktive Lerngruppe für dieses Fach.",
+      "title": "Das Fach hat schon eine Lerngruppe.",
       "description": "Nutze diese Lerngruppe oder archiviere sie zuerst."
     },
     "school-refusal-class-limit": {
-      "title": "Diese Klasse hat schon so viele Lerngruppen wie möglich.",
-      "description": "Stelle eine archivierte Lerngruppe wieder her, statt eine neue anzulegen."
+      "title": "Mehr Lerngruppen passen nicht.",
+      "description": "Stelle eine archivierte Lerngruppe wieder her."
     },
     "school-refusal-class-address-empty": {
-      "title": "Dieser Name enthält keinen Buchstaben und keine Ziffer.",
+      "title": "Im Namen fehlen Buchstaben.",
       "description": "Nimm ein Fach mit Buchstaben oder Ziffern."
     },
     "school-refusal-class-ambiguous": {
-      "title": "Die Adresse dieser Lerngruppe ist schon vergeben.",
+      "title": "Diese Adresse ist schon vergeben.",
       "description": "Benenne die Lerngruppe um und versuche es noch einmal."
     },
     "school-refusal-class-subject-required": {
-      "title": "Eine Lerngruppe dieser Einheit nennt ihr Fach.",
+      "title": "Diese Lerngruppe braucht ein Fach.",
       "description": "Gib das Fach ein und lege sie noch einmal an."
     },
     "school-refusal-class-subject-not-allowed": {
-      "title": "Eine Grundschulklasse hat eine Lerngruppe ohne Fach.",
+      "title": "Grundschulgruppen haben kein Fach.",
       "description": "Lege sie ohne Fach an."
     },
     "school-period-archived": {
