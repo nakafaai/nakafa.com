@@ -138,7 +138,7 @@ test("a Xendit subscriber cancels the plan in the settings, and it ends with its
           .getByRole("button", { name: "Cancel", exact: true })
           .click();
         await expect(
-          page.getByText("Nothing is charged after this period.")
+          page.getByText("No more charges.")
         ).toBeVisible();
         await expect(page.getByText("Ends on")).toBeVisible();
         await picture(page, "ending");
