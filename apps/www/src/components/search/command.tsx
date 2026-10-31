@@ -259,7 +259,10 @@ function SearchList({ groups }: SearchListProps) {
   );
 }
 
-/** Renders one navigation or content result inside the command list. */
+/**
+ * Renders one navigation or content result inside the command list. A content result's excerpt under its name is
+ * the name's 14px text in the muted colour, as the fact under every list row's name is (`lib/row.ts`).
+ */
 function SearchListItem({
   isPending,
   item,
@@ -282,7 +285,7 @@ function SearchListItem({
           <span className="line-clamp-1">{item.label}</span>
         </div>
         <SearchExcerpt
-          className="line-clamp-3 text-muted-foreground text-xs group-data-highlighted:text-accent-foreground group-data-highlighted:[&_mark]:text-accent-foreground"
+          className="line-clamp-3 text-muted-foreground text-sm group-data-highlighted:text-accent-foreground group-data-highlighted:[&_mark]:text-accent-foreground"
           excerpt={item.excerpt}
           query={item.query}
         />
