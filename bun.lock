@@ -564,9 +564,6 @@
     "core-js",
     "workerd",
   ],
-  "patchedDependencies": {
-    "alchemy@2.0.0-beta.84": "patches/alchemy@2.0.0-beta.84.patch",
-  },
   "overrides": {
     "@effect/ai-openai-compat": "4.1.0",
     "@effect/ai-openrouter": "4.1.0",

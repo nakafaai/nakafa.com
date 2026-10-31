@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { AcceptanceModeError } from "@repo/backend/scripts/content/acceptance/mode";
 import { PRODUCTION_CONCURRENCY } from "@repo/backend/scripts/content/acceptance/process";
@@ -7,6 +6,7 @@ import { BLUEPRINT_PLAN } from "@repo/backend/scripts/load/plan";
 import { Recorder, recorderLayer } from "@repo/backend/scripts/load/recorder";
 import type { LoadInput } from "@repo/backend/scripts/load/run";
 import { sessionCookie, TokenFailed } from "@repo/backend/scripts/load/token";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
@@ -76,7 +76,7 @@ vi.mock("@repo/backend/scripts/load/token", async (importOriginal) => ({
 vi.mock("@repo/backend/scripts/load/wire", () => ({ openWire: mocks.open }));
 
 /** The services the command reads: the platform, and the HTTP client the backend start asks with. */
-const services = Layer.merge(nodeServicesLayer, FetchClient);
+const services = Layer.merge(nodePlatform, FetchClient);
 
 const runtime = {
   backend: "/backend",
