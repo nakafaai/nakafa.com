@@ -35,6 +35,15 @@ export const OFFER_DESCRIPTIONS = {
 } satisfies Record<XenditLocale, Record<ProOffer, string>>;
 
 /**
+ * The channels of a monthly plan's first payment: the ones a recurring plan can
+ * charge later. Xendit saves an e-wallet too, but its renewal fails with
+ * PAYMENT_METHOD_MISCONFIGURED until Xendit enables that wallet's recurring
+ * charges (measured in Test Mode on 31 Oct 2026 for DANA, OVO, ShopeePay and GoPay),
+ * so a buyer would pay once and lapse a month later without having chosen to.
+ */
+const RENEWABLE_CHANNELS = ["CARDS"];
+
+/**
  * The hosted session one Pro offer opens: one payment through any channel
  * Xendit offers for a pass, and for the monthly plan the first month through a
  * channel Xendit saves, which the recurring plan opened after the payment
@@ -64,7 +73,11 @@ export function proSessionRequest(input: {
   } as const;
   return billingOffer(input.offer).interval === "pass"
     ? session
-    : { ...session, allow_save_payment_method: "FORCED" };
+    : {
+        ...session,
+        allow_save_payment_method: "FORCED",
+        allowed_payment_channels: RENEWABLE_CHANNELS,
+      };
 }
 
 /** A Xendit call of the checkout failed. Its cause is logged, and the learner sees the checkout failure. */

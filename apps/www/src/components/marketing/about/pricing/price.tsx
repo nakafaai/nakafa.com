@@ -58,7 +58,10 @@ export function PricingYearly() {
   const t = useTranslations("Pricing");
 
   return (
-    <div className="text-muted-foreground text-sm" data-pricing-yearly="">
+    <div
+      className="text-muted-foreground text-sm text-pretty"
+      data-pricing-yearly=""
+    >
       {Arr.map(PricingCurrencySchema.literals, (currency) => (
         <CurrencyBranch currency={currency} key={currency}>
           {t("pro-yearly", {

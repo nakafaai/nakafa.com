@@ -47,6 +47,7 @@ describe("billing/xendit/renewal", () => {
       customer_id: "cust-1",
       description: "Nakafa Pro, diperpanjang setiap bulan",
       failed_cycle_action: "STOP",
+      notification_channels: ["EMAIL"],
       immediate_payment: false,
       locale: "id",
       payment_tokens: [{ payment_token_id: "pt-1", rank: 1 }],

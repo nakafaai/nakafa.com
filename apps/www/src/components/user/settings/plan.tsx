@@ -160,7 +160,7 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-6 gap-y-3 text-sm">
+        <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-3 text-sm whitespace-nowrap">
           <dt className="text-muted-foreground">{t("period-start")}</dt>
           <dd>{formatBillingDate(subscription.currentPeriodStart, locale)}</dd>
           <EndDate ending={ending} subscription={subscription} />

@@ -45,6 +45,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -146,7 +147,7 @@ function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-6 gap-y-3 text-sm">
+        <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-3 text-sm">
           <dt className="text-muted-foreground">{t("billing-students")}</dt>
           <dd>{formatCount(students, locale)}</dd>
           {plan.kind === "free" ? (
@@ -327,7 +328,7 @@ function SchoolTermOption({
       <span className="grid flex-1 gap-1">
         <span className="flex items-baseline justify-between gap-3 text-sm font-medium">
           <span>{t(OFFER_LABELS[rail][quote.offer])}</span>
-          <span className="tabular-nums">
+          <span className="whitespace-nowrap tabular-nums">
             {formatMinorAmount(quote.total, currency)}
           </span>
         </span>
@@ -360,43 +361,45 @@ function SchoolInvoicesCard({ billing: overview }: { billing: SchoolBilling }) {
       </CardHeader>
       {Arr.isReadonlyArrayNonEmpty(overview.invoices) ? (
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("invoice-number")}</TableHead>
-                <TableHead>{t("invoice-term")}</TableHead>
-                <TableHead>{t("invoice-students")}</TableHead>
-                <TableHead>{t("invoice-total")}</TableHead>
-                <TableHead>{t("invoice-status")}</TableHead>
-                <TableHead>
-                  <span className="sr-only">{t("invoice-pay")}</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Arr.map(overview.invoices, (invoice) => (
-                <TableRow key={`${invoice.number}-${invoice.periodStart}`}>
-                  <TableCell className="font-medium">
-                    {invoice.number}
-                  </TableCell>
-                  <TableCell>
-                    {t("billing-term-dates", {
-                      end: formatBillingDate(invoice.periodEnd - 1, locale),
-                      start: formatBillingDate(invoice.periodStart, locale),
-                    })}
-                  </TableCell>
-                  <TableCell>{formatCount(invoice.seats, locale)}</TableCell>
-                  <TableCell>
-                    {formatMinorAmount(invoice.total, invoice.currency)}
-                  </TableCell>
-                  <TableCell>{t(`invoice-${invoice.status}`)}</TableCell>
-                  <TableCell className="text-end">
-                    <SchoolInvoiceAction invoice={invoice} />
-                  </TableCell>
+          <TableFrame>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("invoice-number")}</TableHead>
+                  <TableHead>{t("invoice-term")}</TableHead>
+                  <TableHead>{t("invoice-students")}</TableHead>
+                  <TableHead>{t("invoice-total")}</TableHead>
+                  <TableHead>{t("invoice-status")}</TableHead>
+                  <TableHead>
+                    <span className="sr-only">{t("invoice-pay")}</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {Arr.map(overview.invoices, (invoice) => (
+                  <TableRow key={`${invoice.number}-${invoice.periodStart}`}>
+                    <TableCell className="font-medium">
+                      {invoice.number}
+                    </TableCell>
+                    <TableCell>
+                      {t("billing-term-dates", {
+                        end: formatBillingDate(invoice.periodEnd - 1, locale),
+                        start: formatBillingDate(invoice.periodStart, locale),
+                      })}
+                    </TableCell>
+                    <TableCell>{formatCount(invoice.seats, locale)}</TableCell>
+                    <TableCell>
+                      {formatMinorAmount(invoice.total, invoice.currency)}
+                    </TableCell>
+                    <TableCell>{t(`invoice-${invoice.status}`)}</TableCell>
+                    <TableCell className="text-end">
+                      <SchoolInvoiceAction invoice={invoice} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableFrame>
         </CardContent>
       ) : null}
       <CardSectionFooter

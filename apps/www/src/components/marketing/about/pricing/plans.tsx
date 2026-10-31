@@ -44,7 +44,7 @@ function PricingFeature({
         className="mt-1 size-4 shrink-0"
         icon={planFeatureIcons[feature]}
       />
-      <span>{text}</span>
+      <span className="text-pretty">{text}</span>
     </li>
   );
 }

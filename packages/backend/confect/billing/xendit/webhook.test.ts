@@ -37,6 +37,19 @@ describe("billing/xendit/webhook", () => {
   );
 
   it.effect(
+    "accepts a plan event, which Xendit sends with an empty payment session, and keys it by the plan",
+    () =>
+      Effect.gen(function* () {
+        const body =
+          '{"created":"2026-10-31T12:02:07.135Z","business_id":"biz_1","event":"recurring.plan.inactivated","data":{"id":"repl_1","status":"INACTIVE","updated":"2026-10-31T12:02:06.799Z","payment_session_id":null},"api_version":"2026-01-01"}';
+        const key = yield* xenditDeliveryKey(yield* envelopeOf(body), body);
+        expect(key).toBe(
+          "recurring.plan.inactivated:repl_1:INACTIVE:2026-10-31T12:02:06.799Z"
+        );
+      })
+  );
+
+  it.effect(
     "keys a delivery without an update time by the digest of its body, so distinct deliveries stay distinct",
     () =>
       Effect.gen(function* () {
