@@ -1,4 +1,4 @@
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/query";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Effect, Schema } from "effect";
 import { CatalogQuery } from "@/components/tryout/catalog/table/query";
@@ -22,7 +22,7 @@ export const TrackListRequestSchema = Schema.Struct({
   numItems: Schema.optionalKey(
     Schema.Int.check(
       Schema.isBetween({
-        maximum: TRYOUT_CATALOG_LIMIT,
+        maximum: TRACK_SET_PAGE_LIMIT,
         minimum: TRYOUT_SET_PAGE_SIZE,
       })
     )

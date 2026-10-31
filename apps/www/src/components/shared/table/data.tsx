@@ -2,6 +2,7 @@ import {
   ArrowDown02Icon,
   ArrowUp02Icon,
   ArrowUpDownIcon,
+  Calendar03Icon,
 } from "@hugeicons/core-free-icons";
 import {
   DropdownMenu,
@@ -32,13 +33,14 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { cva } from "class-variance-authority";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { PaneTableRow } from "@/components/shared/pane";
 import { useHasPanes } from "@/components/shared/panes";
+import { chosenDays } from "@/components/shared/table/days";
 import { dataTableFeatures } from "@/components/shared/table/features";
-import { TableHeadButton } from "@/components/shared/table/head";
+import { DaysHead, TableHeadButton } from "@/components/shared/table/head";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { EmptyNina } from "@/components/state/empty";
 
@@ -199,7 +201,8 @@ function DataTableRow({
 
 /**
  * A column's head, in its place in the line: the column's name, or, when the column sorts the rows, the head's button
- * whose menu sorts them each way, as the try-out tables' heads do. A column that filters draws its own button in its
+ * whose menu sorts them each way, as the try-out tables' heads do. A column of moments that also keeps chosen days
+ * sorts and chooses them from one panel (`DaysHead`). A column that filters by its values draws its own button in its
  * head (`ColumnFilter`).
  */
 function DataTableHead<TData extends RowData>({
@@ -212,9 +215,11 @@ function DataTableHead<TData extends RowData>({
   index: number;
 }) {
   const t = useTranslations("DataTable");
+  const chosen = useTableFilters((state) => state.chosen);
   const column = header.column;
   const place = placeOf(index, column.columnDef.meta?.align === "menu");
   const sorted = column.getIsSorted() || "none";
+  const days = chosenDays(chosen, column.id);
 
   if (header.isPlaceholder) {
     return <TableHead className={columnAlign({ align: place })} />;
@@ -223,6 +228,28 @@ function DataTableHead<TData extends RowData>({
     return (
       <TableHead className={columnAlign({ align: place })} scope="col">
         {children}
+      </TableHead>
+    );
+  }
+  if (column.columnDef.meta?.filter === "days") {
+    return (
+      <TableHead
+        aria-sort={sortNames[sorted]}
+        className={columnAlign({ align: place })}
+        scope="col"
+      >
+        <DaysHead
+          column={column}
+          trigger={
+            <TableHeadButton
+              active={sorted !== "none" || Option.isSome(days)}
+              align={place === "start" ? "start" : "center"}
+              icon={sorted === "none" ? Calendar03Icon : sortIcons[sorted]}
+            >
+              {children}
+            </TableHeadButton>
+          }
+        />
       </TableHead>
     );
   }

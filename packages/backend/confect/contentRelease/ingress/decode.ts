@@ -38,7 +38,6 @@ const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   stageRouteBatch: MAX_ROUTE_BATCH_BYTES,
   stageSnapshot: MAX_PUBLICATION_REQUEST_BYTES,
   stageSnapshotBatch: MAX_SNAPSHOT_BATCH_BYTES,
-  stageTryoutRuntimeBundle: MAX_PUBLICATION_REQUEST_BYTES,
   status: MAX_PUBLICATION_REQUEST_BYTES,
   verify: MAX_PUBLICATION_REQUEST_BYTES,
 };

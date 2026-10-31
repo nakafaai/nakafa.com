@@ -37,6 +37,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
+import { daysColumn } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
@@ -57,7 +58,10 @@ import { LoginRenameDialog } from "@/components/tenant/settings/login";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
-import { SchoolDateTime } from "@/components/tenant/settings/time";
+import {
+  SchoolDateTime,
+  useSchoolTimeZone,
+} from "@/components/tenant/settings/time";
 
 const SOURCE = "components/tenant/settings/students";
 
@@ -153,6 +157,7 @@ function SchoolLoginsBody() {
  */
 function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
   const t = useTranslations("SchoolSettings");
+  const timeZone = useSchoolTimeZone();
 
   if (Arr.isReadonlyArrayEmpty(logins)) {
     return (
@@ -189,6 +194,7 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
       header: t("login-issued"),
       id: "issued",
       sortFn: "basic",
+      ...daysColumn(timeZone),
     }),
     loginColumns.display({
       cell: (info) => <SchoolLoginMenu login={info.row.original} />,

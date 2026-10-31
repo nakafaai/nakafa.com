@@ -55,7 +55,7 @@ const agentKey = hasAgentKey
         agentEnvironment.CONVEX_CLOUD_URL ?? agentEnvironment.VITE_CONVEX_URL,
     }).key
   : undefined;
-export const trustedContentKeys =
+const trustedContentKeys =
   agentKey === undefined
     ? TRUSTED_CONTENT_KEYS
     : [...TRUSTED_CONTENT_KEYS, agentKey];

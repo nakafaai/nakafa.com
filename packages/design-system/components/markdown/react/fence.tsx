@@ -1,5 +1,11 @@
 import { TerminalIcon } from "@hugeicons/core-free-icons";
+import {
+  codeFrameVariants,
+  codeHeaderVariants,
+  codeLabelVariants,
+} from "@repo/design-system/components/code-block/variants";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { blockGapVariants } from "@repo/design-system/lib/prose";
 import type { ReactNode } from "react";
 
 interface CodeFenceProps {
@@ -11,8 +17,10 @@ interface CodeFenceProps {
 
 /**
  * A response code block's frame: the header with the language and its
- * actions, and the code below. The block and the placeholder shown while the
- * highlighter loads share it, so both have one size.
+ * actions, and the code below, in the anatomy a lesson's code block draws
+ * (`code-block/variants.ts`) and with an article's room around it. The block
+ * and the placeholder shown while the highlighter loads share it, so both have
+ * one size.
  */
 export function CodeFence({
   actions,
@@ -22,16 +30,16 @@ export function CodeFence({
 }: CodeFenceProps) {
   return (
     <div
-      className="my-4 w-full overflow-hidden rounded-xl border"
+      className={codeFrameVariants({ className: blockGapVariants() })}
       data-code-block-container
       data-language={language}
     >
       <div
-        className="bg-muted/80 text-muted-foreground flex items-center justify-between p-1 text-sm"
+        className={codeHeaderVariants()}
         data-code-block-header
         data-language={language}
       >
-        <div className="flex min-w-0 items-center gap-2 px-4 py-1.5">
+        <div className={codeLabelVariants()}>
           {icon ?? <HugeIcons className="size-4" icon={TerminalIcon} />}
           <span className="truncate font-mono lowercase" title={language}>
             {language || "txt"}

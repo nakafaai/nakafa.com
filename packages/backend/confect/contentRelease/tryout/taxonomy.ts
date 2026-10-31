@@ -1,30 +1,23 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { Array as Arr, Effect, MutableHashMap } from "effect";
 
-/** Reads localized options and route counts from one verified Tryout catalog. */
+/** Reads the countries and exams of the active try-out catalog in one locale, with its public route count. */
 export const readTryoutTaxonomy = Effect.fn(
   "contentRelease.readTryoutTaxonomy"
 )(function* (locale: AppLocaleCode) {
-  const catalog = yield* loadTryoutCatalog(locale).pipe(
-    Effect.provide(tryoutLayer)
-  );
-  const countries = Arr.flatMap(catalog.entries, ({ row }) =>
-    row.kind === "country" ? [{ id: row.countryKey, label: row.title }] : []
-  );
+  const { rows } = yield* loadTryoutCatalog(locale);
   const exams = MutableHashMap.empty<string, string>();
-  for (const { row } of catalog.entries) {
+  for (const row of rows) {
     if (row.kind === "exam") {
       MutableHashMap.set(exams, row.examKey, row.title);
     }
   }
   return {
-    countries,
-    exams: Array.from(exams, ([id, label]) => ({
-      id,
-      label,
-    })),
-    routeCount: catalog.routeCount,
+    countries: Arr.flatMap(rows, (row) =>
+      row.kind === "country" ? [{ id: row.countryKey, label: row.title }] : []
+    ),
+    exams: Arr.map(Arr.fromIterable(exams), ([id, label]) => ({ id, label })),
+    routeCount: Arr.countBy(rows, ({ publicPath }) => publicPath !== undefined),
   };
 });

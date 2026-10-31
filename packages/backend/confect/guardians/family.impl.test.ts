@@ -347,12 +347,14 @@ describe("guardians/family grades", () => {
             className: "Fisika X-1",
             id: released.id,
             kktp: "reached",
+            period: term.name,
             value: 82,
           },
           {
             className: "Kimia X-1",
             id: below.id,
             kktp: "notReached",
+            period: term.name,
             value: 50,
           },
         ]);

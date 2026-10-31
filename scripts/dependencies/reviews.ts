@@ -59,14 +59,14 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "2.0.0",
-    "2.0.0 replaces the question and try-out contracts with the assessment snapshot, and nakafa.com adopts it in the try-out engine train (#1434, #1436), so this repository stays on 1.0.0 until that train lands. 2.0.0 still peers effect 4.0.5 exactly, as 1.0.0 does.",
+    "3.0.0",
+    "nakafa.com declares 2.0.0, the first release with the assessment snapshot, which peers effect 4.0.5 exactly. 3.0.0 (30 October 2026) builds the contracts on effect/crypto and peers effect exactly 4.1.0, so it moves with the Effect cohort in #1524, after 2.0.0 lands.",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "ai@latest",
     "7.0.158",
-    "AI SDK packages move as one reviewed cohort. 7.0.157 is the newest release past the one-day release age: @convex-dev/agent 0.7.9 carries the TS2590 fixes for 7.0.141 and later (convex/agent#414 and #424). 7.0.158 was published on 2026-10-30 at 15:38 UTC and becomes eligible a day later; its notes repair partial JSON and extend the experimental sandbox session, which Nakafa does not use.",
+    "AI SDK packages move as one reviewed cohort. 7.0.157 is the adopted release: @convex-dev/agent 0.7.9 carries the TS2590 fixes for 7.0.141 and later (convex/agent#414 and #424). 7.0.158, published on 2026-10-30 at 15:38 UTC, repairs partial JSON and extends the experimental sandbox session, which Nakafa does not use, and moves with the next package upgrade.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",

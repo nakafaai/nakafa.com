@@ -27,7 +27,7 @@ import {
   renderHeadersFile,
 } from "#www/src/lib/security/headers";
 import { renderRobotsTxt } from "#www/src/lib/seo/robots";
-import { PRERENDER_HEADER } from "#www/src/lib/static/calls";
+import { PRERENDER_HEADERS } from "#www/src/lib/static/calls";
 import { STATIC_HEADER_RULES } from "#www/src/lib/static/headers";
 import { PrerenderedPagesJson } from "#www/src/lib/static/prerender";
 import { workerEnvironment, workerSettings } from "#www/worker";
@@ -224,9 +224,7 @@ const writeStaticArtifacts: Plugin = {
 const NODE_ONLY_CONTRACT_PATHS = [
   "artifact/verify",
   "preview/auth",
-  "runtime/protected/verify",
   "runtime/verify",
-  "tryout/runtime/verify",
 ];
 
 const contractsRequire = createRequire(import.meta.url);
@@ -466,12 +464,14 @@ export default defineConfig(async ({ command, isPreview }) => {
           failOnError: true,
           // The Worker records each page's server function calls, which
           // writeStaticAnswers turns into static files.
-          headers: { [PRERENDER_HEADER]: "1" },
+          headers: PRERENDER_HEADERS,
         },
       }),
       // No deployment pin route: a client that asks for a
       // chunk the deploy replaced reloads the document once.
-      rsc(),
+      // One chunk per client module, so a page preloads only the references it
+      // renders, not every reference that shares a server chunk with them.
+      rsc({ clientChunks: ({ normalizedId }) => normalizedId }),
       tailwindcss(),
       react(),
       babel({ presets: [reactCompilerPreset()] }),

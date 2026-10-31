@@ -26,7 +26,7 @@ export const PACKAGE_MANAGER = "bun@1.4.4";
  * release and the workflow checks compare it with this value.
  */
 export const NODE_RUNTIME_VERSION = "26.13.0";
-const CONTRACT_PACKAGE_VERSION = "1.0.0";
+const CONTRACT_PACKAGE_VERSION = "2.0.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.5";
 /**
@@ -129,7 +129,7 @@ const TIPTAP_PACKAGES = Arr.dedupe(
 );
 
 /**
- * Six transitive overrides in the root `package.json` hold a version for a reason
+ * Eight transitive overrides in the root `package.json` hold a version for a reason
  * that no manifest states. `seroval` 1.7.5 and `seroval-plugins` 1.7.6 are one copy each
  * for TanStack Start's serializer, its web plugins, and the prerender
  * (`apps/www/prerender.config.ts`): the TanStack packages declare `^1.6.7`, and Bun
@@ -137,9 +137,8 @@ const TIPTAP_PACKAGES = Arr.dedupe(
  * affect, when the web app moved. `prosemirror-transform` 1.12.4 is the one copy that the
  * ProseMirror packages of `@tiptap/pm` and the backend's step folding share: Bun
  * kept the packages' nested 1.12.2 copies when the backend moved to 1.12.4, and a
- * step made by one copy fails `instanceof` checks against the other. `convex-helpers` 0.1.131, the latest release that the
- * release-age gate admits on 30 October 2026, keeps one copy for every Convex
- * component: @convex-dev/aggregate 0.3.4 pins
+ * step made by one copy fails `instanceof` checks against the other. `convex-helpers`
+ * 0.1.131 keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
  * 0.1.128 exactly, the Agent and Workflow peers need ^0.1.127, and the Workpool peer
  * needs ^0.1.94, so one copy satisfies every range. `lodash` 4.18.1 replaces the
  * 4.17.21 that chevrotain 10.5.0 pins exactly, which GHSA-f23m-r3pf-42rh,
@@ -147,8 +146,12 @@ const TIPTAP_PACKAGES = Arr.dedupe(
  * through @mrleebo/prisma-ast ^0.13.1, and `auth` 1.7 moves to prisma-ast ^0.16 on
  * chevrotain 12. KaTeX 0.19.1, the design system's own, replaces the ^0.16.0 that
  * micromark-extension-math 3.1.0, its latest release, declares: every 0.16 release is
- * affected by GHSA-238p-pmpm-9mq7, which 0.18.2 fixes. The other transitive versions
- * come from their dependents' own ranges.
+ * affected by GHSA-238p-pmpm-9mq7, which 0.18.2 fixes. `glob` 14.0.2 and `minimatch`
+ * 11.0.1 replace the 13.0.6 and 10.2.6 that GHSA-3g3m-2fjr-6pw4 and GHSA-g3hv-75wg-m249
+ * affect: react-email declares glob ^13.0.6, and the root sigstore reaches glob through
+ * make-fetch-happen's cacache and minimatch through tuf-js's @tufjs/models, so one copy of
+ * each serves every dependent. The other transitive versions come from their
+ * dependents' own ranges.
  */
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
@@ -271,11 +274,9 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
 
 export const SCRIPT_DEPENDENCY_HOLDS = [
   {
-    // bunx installs React Doctor into a throwaway directory, so it takes the
-    // one-day release age from its own flag: a 4-minute-old electron-to-chromium
-    // tarball was still propagating through npm and returned 404, which failed
-    // Doctor. The flag keeps that install on settled releases.
-    approved: "bunx --minimum-release-age 86400 react-doctor@0.9.18",
+    // bunx installs React Doctor into a throwaway directory outside the lockfile,
+    // so the script pins its exact release.
+    approved: "bunx react-doctor@0.9.18",
     manifestPath: "apps/www/package.json",
     script: "doctor",
   },

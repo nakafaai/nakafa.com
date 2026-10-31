@@ -7,7 +7,7 @@ import {
   markedCells,
   NO_RESPONSE,
   typedText,
-} from "@repo/backend/confect/exams/sittings/response";
+} from "@repo/backend/confect/assessment/response";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Function as Fn, Option, Schema } from "effect";
 import { useId, useMemo } from "react";

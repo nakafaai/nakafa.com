@@ -36,7 +36,7 @@ const PARAGRAPHS = [
   { direction: "ltr", text: "Read the passage and answer the question below." },
 ] as const;
 
-/** A sample of Arabic that only the Amiri Quran face draws, which the check below asks the browser about. */
+/** A sample of Arabic that only the Noto Naskh Arabic face draws, which the check below asks the browser about. */
 const ARABIC_SAMPLE = "مرحبا";
 
 /**
@@ -59,14 +59,14 @@ async function expectParagraphsInTheirDirection(prompt: Locator) {
   }
 }
 
-/** Whether the browser holds a loaded Amiri Quran face that draws the Arabic sample. */
-function amiriDrawsArabic(page: Page) {
+/** Whether the browser holds a loaded Noto Naskh Arabic face that draws the Arabic sample. */
+function naskhDrawsArabic(page: Page) {
   return page.evaluate(
     (sample) =>
-      document.fonts.check(`16px "Amiri Quran"`, sample) &&
+      document.fonts.check(`16px "Noto Naskh Arabic"`, sample) &&
       Array.from(document.fonts).some(
         (face) =>
-          face.family.includes("Amiri Quran") && face.status === "loaded"
+          face.family.includes("Noto Naskh Arabic") && face.status === "loaded"
       ),
     ARABIC_SAMPLE
   );
@@ -119,7 +119,7 @@ async function expectMixedQuestionAt(
   });
   await expectParagraphsInTheirDirection(editorPrompt);
   await expect
-    .poll(() => amiriDrawsArabic(owner), {
+    .poll(() => naskhDrawsArabic(owner), {
       timeout: readinessTimeoutMilliseconds,
     })
     .toBe(true);
@@ -150,7 +150,7 @@ async function expectMixedQuestionAt(
     .nth(1);
   await expectParagraphsInTheirDirection(studentPrompt);
   await expect
-    .poll(() => amiriDrawsArabic(student), {
+    .poll(() => naskhDrawsArabic(student), {
       timeout: readinessTimeoutMilliseconds,
     })
     .toBe(true);
@@ -160,8 +160,8 @@ async function expectMixedQuestionAt(
     path: testInfo.outputPath(`multilingual-student-${viewport.name}.png`),
   });
 
-  // A page that shows no Arabic loads no Amiri Quran face: the school's root opens the owner's exam list, whose
-  // titles are Latin.
+  // A page that shows no Arabic loads no Arabic face: the school's root opens the owner's exam list, whose titles
+  // are Latin.
   const home = await ownerContext.newPage();
   await home.setViewportSize(viewport);
   await home.goto(address("/"));
@@ -169,14 +169,16 @@ async function expectMixedQuestionAt(
   await expect(home.getByRole("heading", { level: 1 })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  const amiriLoaded = await home.evaluate(
+  const arabicLoaded = await home.evaluate(
     () =>
       Array.from(document.fonts).filter(
         (face) =>
-          face.family.includes("Amiri Quran") && face.status === "loaded"
+          (face.family.includes("Noto Naskh Arabic") ||
+            face.family.includes("Amiri Quran")) &&
+          face.status === "loaded"
       ).length
   );
-  expect(amiriLoaded).toBe(0);
+  expect(arabicLoaded).toBe(0);
   await Promise.all([studentContext.close(), ownerContext.close()]);
 }
 

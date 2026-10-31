@@ -1,14 +1,12 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
+import { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { publicFailure } from "@repo/backend/confect/failure";
-import {
-  type ResponseRejected,
-  Selection,
-} from "@repo/backend/confect/response/model";
 import { Schema } from "effect";
 export const saveTryoutResponseArgsValidator = Schema.Struct({
   placementId: IdSchema("tryoutAttemptPlacements"),
-  selection: Schema.Union([Selection, Schema.Null]),
+  /** The learner's response to the question's one interaction, or `null` to clear the answer. */
+  response: Schema.Union([ExamResponse, Schema.Null]),
   /**
    * Numbers the writes of one question, so a write another one overtook is
    * refused.
@@ -49,30 +47,18 @@ export function toTryoutResponseError(error: unknown) {
     message: "Unable to save try-out response.",
   });
 }
-/** A learner selection does not belong to its immutable response definition. */
-export class TryoutResponseSelectionError extends Schema.TaggedError<TryoutResponseSelectionError>()(
-  "TryoutResponseSelectionError",
+/**
+ * A response does not fit its question's frozen interaction (`fitsQuestion`): it holds another kind of
+ * answer, or parts the interaction does not have, or more choices than it takes.
+ */
+export class TryoutResponseUnfitError extends Schema.TaggedError<TryoutResponseUnfitError>()(
+  "TryoutResponseUnfitError",
   {
-    code: Schema.Literals([
-      "TRYOUT_RESPONSE_KIND_MISMATCH",
-      "TRYOUT_RESPONSE_SELECTION_INVALID",
-    ]),
+    code: Schema.Literal("TRYOUT_RESPONSE_UNFIT"),
     message: Schema.String,
   }
 ) {}
 
-/** Maps one rejected selection onto the deployed try-out selection error. */
-export function toTryoutSelectionError(rejected: ResponseRejected) {
-  return rejected.reason === "kind"
-    ? new TryoutResponseSelectionError({
-        code: "TRYOUT_RESPONSE_KIND_MISMATCH",
-        message: "Try-out response kind does not match its frozen question.",
-      })
-    : new TryoutResponseSelectionError({
-        code: "TRYOUT_RESPONSE_SELECTION_INVALID",
-        message: "Try-out selection does not belong to this frozen question.",
-      });
-}
 /** Stable corruption detected across response, placement, and attempt rows. */
 export class TryoutResponseIntegrityError extends Schema.TaggedError<TryoutResponseIntegrityError>()(
   "TryoutResponseIntegrityError",
@@ -80,7 +66,7 @@ export class TryoutResponseIntegrityError extends Schema.TaggedError<TryoutRespo
     code: Schema.Literals([
       "TRYOUT_PLACEMENT_COUNT_MISMATCH",
       "TRYOUT_PLACEMENT_DUPLICATE",
-      "TRYOUT_RESPONSE_SELECTION_MISMATCH",
+      "TRYOUT_RESPONSE_GRADE_MISMATCH",
       "TRYOUT_RESPONSE_COUNT_EXCEEDED",
       "TRYOUT_RESPONSE_LINK_MISMATCH",
       "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",

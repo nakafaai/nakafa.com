@@ -1,4 +1,8 @@
 import { Image } from "@repo/design-system/components/image";
+import {
+  blockGapVariants,
+  pictureVariants,
+} from "@repo/design-system/lib/prose";
 import { cn } from "cn";
 import { type ComponentProps, memo } from "react";
 
@@ -37,7 +41,9 @@ export const MarkdownImage = memo(
       <Image
         alt={alt}
         className={cn(
-          "bg-muted my-4 block h-auto max-w-full rounded-xl border",
+          blockGapVariants(),
+          pictureVariants(),
+          "block h-auto max-w-full",
           className
         )}
         height={resolvedHeight}

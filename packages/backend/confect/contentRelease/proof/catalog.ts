@@ -164,15 +164,7 @@ export const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(
       ).pipe(Effect.provide(publicationLayer));
       if (head) {
         // 128 schema-bounded heads fit below 652 KiB, within the proof ceiling.
-        const { publicPath, ...fields } = head;
-        heads = Arr.append(heads, {
-          ...fields,
-          ...(publicPath === undefined
-            ? {}
-            : {
-                publicPath,
-              }),
-        });
+        heads = Arr.append(heads, head);
       }
       nextCursor = {
         artifactLocale: key.artifactLocale,

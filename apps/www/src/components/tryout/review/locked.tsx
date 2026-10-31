@@ -1,6 +1,3 @@
-import "@tanstack/react-start/server-only";
-
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Card,
   CardContent,
@@ -10,76 +7,45 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr } from "effect";
+import { useTranslations } from "use-intl";
 import {
   PricingPrice,
   StaticPrice,
 } from "@/components/marketing/about/pricing/price";
-import type { SignedContentAccess } from "@/components/tryout/content/model";
-import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
-import type { readReviewTranslators } from "@/components/tryout/review/copy.server";
-import { projectTryoutReview } from "@/components/tryout/review/model";
+import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutReviewCheckout } from "@/components/tryout/review/upgrade";
+import {
+  TryoutExplanationBody,
+  TryoutQuestionBody,
+} from "@/components/tryout/runtime/question/body";
 import {
   TryoutLockedQuestionShell,
   TryoutReviewQuestionExplanation,
 } from "@/components/tryout/runtime/question/shell";
-import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
-import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import { TryoutResponseFields } from "@/components/tryout/runtime/response/fields";
+import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
 import { Link } from "@/lib/routing/link";
 
 /**
- * Loads the leading questions the backend previews to a free learner, with
- * their explanations; the offer stays usable without them.
+ * Shows a free learner their own leading questions with explanations under the Pro offer: the questions
+ * whose keys the backend gives a free learner. The backend sends no key and no explanation for the rest,
+ * so removing the veil reveals nothing beyond the preview.
  */
-const loadPreview = Effect.fn("TryoutReview.loadPreview")(
-  function* (
-    attemptId: Id<"tryoutAttempts">,
-    access: SignedContentAccess,
-    runtime: TryoutSectionRuntime
-  ) {
-    const count = access.previewAnswers.length;
-    if (count === 0) {
-      return [];
-    }
-    const content = yield* loadSignedTryoutContent(attemptId, {
-      ...access,
-      answers: access.previewAnswers,
-      questions: Arr.take(access.questions, count),
-    });
-    return yield* projectTryoutReview({
-      content,
-      questions: Arr.take(runtime.questions, count),
-    });
-  },
-  Effect.catchTags({
-    ContentRuntimeMissingError: () => Effect.succeed([]),
-    ContentRuntimeVerificationError: () => Effect.succeed([]),
-    TryoutReviewProjectionError: () => Effect.succeed([]),
-  })
-);
-
-/**
- * Shows a free learner their own leading questions with explanations under
- * the Pro offer. The backend authorizes only those answers, so removing the
- * veil reveals nothing beyond the preview.
- */
-export async function TryoutReviewLocked({
-  access,
-  attemptId,
-  runtime,
-  translators,
+export function TryoutReviewLocked({
+  preview,
+  total,
 }: {
-  readonly access: SignedContentAccess;
-  readonly attemptId: Id<"tryoutAttempts">;
-  readonly runtime: TryoutSectionRuntime;
-  /** The try-out and pricing translators of the page's locale, read while the preview loads. */
-  readonly translators: ReturnType<typeof readReviewTranslators>;
+  /** The leading questions with their bodies, keys, and explanations. */
+  readonly preview: readonly {
+    readonly body: TryoutBody;
+    readonly question: TryoutRuntimeQuestion;
+  }[];
+  /** How many questions the section holds. */
+  readonly total: number;
 }) {
-  const [[t, tPricing], preview] = await Promise.all([
-    translators,
-    Effect.runPromise(loadPreview(attemptId, access, runtime)),
-  ]);
+  const t = useTranslations("Tryouts");
+  const tPricing = useTranslations("Pricing");
 
   return (
     <section
@@ -92,24 +58,30 @@ export async function TryoutReviewLocked({
         className="pointer-events-none absolute inset-x-0 top-0 space-y-12 px-6 pt-1 select-none"
         inert
       >
-        {Arr.map(preview, (question) => (
+        {Arr.map(preview, ({ body, question }) => (
           <TryoutLockedQuestionShell
-            key={question.questionOrder}
+            key={question.placementId}
             questionOrder={question.questionOrder}
           >
-            <section className="my-6">{question.content}</section>
+            <section className="my-6">
+              <TryoutQuestionBody body={body} />
+            </section>
             <section className="my-8">
-              {/* Correctness is not authorized here, so no choice is marked. */}
-              <TryoutReviewedResponse
-                questionOrder={question.questionOrder}
-                responseSpec={question.responseSpec}
-                selection={null}
+              {/* The learner's own answer is not marked here, so no choice shows a mark. */}
+              <TryoutResponseFields
+                value={{
+                  id: question.placementId,
+                  interaction: body.interaction,
+                  locked: true,
+                  onChange: () => undefined,
+                  response: null,
+                }}
               />
             </section>
             <TryoutReviewQuestionExplanation
               questionOrder={question.questionOrder}
             >
-              {question.answer}
+              <TryoutExplanationBody body={body} />
             </TryoutReviewQuestionExplanation>
           </TryoutLockedQuestionShell>
         ))}
@@ -137,7 +109,7 @@ export async function TryoutReviewLocked({
         <CardHeader>
           <CardTitle>
             <h2 id="tryout-review-offer">
-              {t("paywall-title", { count: runtime.questions.length })}
+              {t("paywall-title", { count: total })}
             </h2>
           </CardTitle>
           <CardDescription>{t("paywall-description")}</CardDescription>

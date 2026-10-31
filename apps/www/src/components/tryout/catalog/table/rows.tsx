@@ -81,7 +81,7 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
         <TryoutStatus status={row.attemptStatus} />
       </TableCell>
       <TableCell className="px-2 text-center tabular-nums sm:px-4">
-        {row.readyQuestionCount}
+        {row.questionCount}
       </TableCell>
       <TableCell className="px-2 text-center sm:px-4">
         <TryoutSetDuration seconds={row.durationSeconds} />

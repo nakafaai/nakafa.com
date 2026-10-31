@@ -1,6 +1,9 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -11,7 +14,7 @@ import spec from "@repo/backend/confect/records/schemes.spec";
 import { newestVersion } from "@repo/backend/confect/records/version";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
-import { Effect, Layer, Option } from "effect";
+import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
 /**
  * Stores one version of the school's grading scheme, which takes effect on its
@@ -51,7 +54,35 @@ const store = FunctionImpl.make(
   })
 );
 
+/** One page of the school's scheme versions, the newest first, so the first row is the version in force from now. */
+const list = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "list",
+  Effect.fn("records.schemes.list")(function* ({ paginationOpts }) {
+    const { tenant } = yield* Member;
+    const page = yield* (yield* DatabaseReader)
+      .table("gradingSchemes")
+      .index(
+        "by_tenantId_and_effectiveFrom",
+        (query) => query.eq("tenantId", tenant._id),
+        "desc"
+      )
+      .paginate(paginationOpts)
+      .pipe(Effect.orDie);
+    return Struct.assign(page, {
+      page: Arr.map(page.page, (row) => ({
+        bands: row.bands,
+        effectiveFrom: row.effectiveFrom,
+        id: row._id,
+        kktp: row.kktp,
+      })),
+    });
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(list),
   Layer.provide(store),
   Layer.provide(session),
   Layer.provide(member),

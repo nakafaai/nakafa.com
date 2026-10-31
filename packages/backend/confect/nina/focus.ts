@@ -1,19 +1,23 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { decodeArtifactJson } from "@repo/backend/confect/contentRelease/parse";
 import type {
   NinaFocus,
   NinaFocusInput,
   NinaFocusSource,
 } from "@repo/backend/confect/nina/contract/focus";
+import { formatFocusAnswer } from "@repo/backend/confect/nina/prompt/focus";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
-import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
-import { readAttemptAnswer } from "@repo/backend/confect/tryouts/runtime/answer";
+import { isCorrectGrade } from "@repo/backend/confect/tryouts/response/answer";
+import {
+  readExplanation,
+  readItemVersion,
+} from "@repo/backend/confect/tryouts/rows";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
+import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
 import type { Locale } from "@repo/contents/content";
+import { documentMarkdown } from "@repo/contents/llms/document";
 import { Effect, Option } from "effect";
 
 /** Verifies an explicitly requested question against a finished, entitled review. */
@@ -48,7 +52,25 @@ export const retainQuestionFocus = Effect.fn("nina.focus.retain")(function* (
   return Option.isSome(entitled) ? focus : undefined;
 });
 
-/** Reads the signed question, its localized explanation and the learner's answer. */
+/** The words the prompt uses for how the learner's answer graded. */
+function resultOf(
+  response: Docs["tryoutResponses"] | null
+): NinaFocusSource["result"] {
+  if (response === null) {
+    return "not answered";
+  }
+  if (response.grade.status === "pending") {
+    return "answered, awaiting grading";
+  }
+  return isCorrectGrade(response.grade)
+    ? "answered correctly"
+    : "answered incorrectly";
+}
+
+/**
+ * Reads the focused question, its explanation in the learner's locale, and the learner's answer, as
+ * the text the prompt quotes. A version without an explanation in that locale quotes none.
+ */
 export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
   focus: NinaFocus,
   userId: Docs["users"]["_id"],
@@ -58,17 +80,12 @@ export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
   if (Option.isNone(entitled)) {
     return null;
   }
-  const { attempt, placement } = entitled.value;
-  const database = yield* DatabaseReader;
-  const answer = yield* readAttemptAnswer(
-    attempt,
-    placement,
-    AppLocaleSchema.make(locale)
-  );
-  const [question, explanation, response] = yield* Effect.all([
-    readArtifact(placement.questionArtifactHash),
-    readArtifact(answer.artifactHash),
-    database
+  const { placement } = entitled.value;
+  const [version, question, explanation, response] = yield* Effect.all([
+    readItemVersion(placement.versionHash),
+    readPlacedQuestion(placement),
+    readExplanation(placement.versionHash, locale),
+    (yield* DatabaseReader)
       .table("tryoutResponses")
       .get("by_placementId", placement._id)
       .pipe(
@@ -77,13 +94,15 @@ export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
       ),
   ]);
   return {
+    answer: formatFocusAnswer(question, response?.response ?? null),
+    explanation: Option.match(explanation, {
+      onNone: () => "",
+      onSome: documentMarkdown,
+    }),
+    question: documentMarkdown(version.prompt),
+    questionLanguage: placement.deliveryLanguage,
     questionOrder: placement.questionOrder,
-    questionLocale: question.payload.artifactLocale,
-    questionMdx: question.payload.rawMdx,
-    explanationMdx: explanation.payload.rawMdx,
-    responseSpec: placement.responseSpec,
-    selection: response?.selection ?? null,
-    outcome: response === null ? null : readOutcome(response),
+    result: resultOf(response),
   } satisfies NinaFocusSource;
 });
 
@@ -119,21 +138,4 @@ const readEntitledPlacement = Effect.fn("nina.focus.placement")(function* (
   }
   const access = yield* readTryoutSectionContentAccess(attempt, section.status);
   return access.answers ? Option.some({ attempt, placement }) : Option.none();
-});
-
-/** Returns one stored signed body whose content address still matches. */
-const readArtifact = Effect.fn("nina.focus.artifact")(function* (
-  artifactHash: string
-) {
-  const stored = yield* (yield* DatabaseReader)
-    .table("contentArtifacts")
-    .get("by_artifactHash", artifactHash)
-    .pipe(Effect.mapError(toTryoutRuntimeError));
-  const artifact = yield* decodeArtifactJson(stored.artifactJson);
-  if (artifact.artifactHash !== artifactHash) {
-    return yield* toTryoutRuntimeError(
-      "A focused try-out body changed its content address."
-    );
-  }
-  return artifact;
 });

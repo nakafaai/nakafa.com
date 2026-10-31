@@ -112,6 +112,19 @@ export const ReportHash = Schema.String.check(
   Schema.isPattern(/^[0-9a-f]{64}$/u)
 );
 
+/**
+ * One locked report card of a student as their own page lists it: its class group, period and approval date, the
+ * address of its PDF, and the hash its QR code carries.
+ */
+export const OwnReport = Schema.Struct({
+  approvedAt: Schema.Finite,
+  cohort: Schema.String,
+  file: Schema.String,
+  hash: ReportHash,
+  id: Id("reportCards"),
+  period: Schema.String,
+});
+
 /** Everything one report PDF shows: the copy taken at approval, and the hash and link its QR carries. */
 export const PrintableReport = Schema.Struct({
   approvedAt: Schema.Finite,

@@ -16,11 +16,7 @@ import {
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
-import {
-  activateTryoutSnapshot,
-  makeTryoutCatalogRow,
-  makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout/snapshot";
+import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import { ConvexError } from "convex/values";
 import { Array as Arr, Effect } from "effect";
@@ -45,28 +41,12 @@ async function activateArticleSearch(
   });
   return t;
 }
-/** Activates a signed Tryout catalog whose one entry is named "Technical country". */
+/** Activates the shared try-out fixture, whose English country page is described as "Try-out Indonesia". */
 const activateTryoutSearch = Effect.fn("test.contents.tryoutSearch")(
   function* () {
     const t = createConvexTestWithBetterAuth();
-    const runtimeServices = yield* Effect.context<never>();
-    const [countryEn, countryId] = yield* Effect.all([
-      makeTryoutCatalogRow("en"),
-      makeTryoutCatalogRow("id"),
-    ]);
-    const [placementEn, placementId] = yield* Effect.all([
-      makeTryoutPlacementRow("en"),
-      makeTryoutPlacementRow("id"),
-    ]);
     yield* Effect.promise(() =>
-      t.mutation((ctx) =>
-        Effect.runPromiseWith(runtimeServices)(
-          activateTryoutSnapshot(ctx, {
-            catalog: [countryEn.record.row, countryId.record.row],
-            placements: [placementEn.record.row, placementId.record.row],
-          })
-        )
-      )
+      t.mutation((ctx) => activateAssessmentTestSnapshot(ctx))
     );
     return t;
   }
@@ -279,18 +259,18 @@ describe("contents/queries/search:search", () => {
             queries: [
               Arr.join(
                 Arr.makeBy(17, (index) =>
-                  index % 2 === 0 ? "Technical" : "country"
+                  index % 2 === 0 ? "Try-out" : "Indonesia"
                 ),
                 " "
               ),
             ],
             section: "tryout",
           });
-          expect(result.items).toEqual([
+          expect(result.items).toContainEqual(
             expect.objectContaining({
-              content_id: "asset:en:tryout:technical:country",
-            }),
-          ]);
+              content_id: "asset:en:tryout:country",
+            })
+          );
         });
       })
   );
@@ -304,16 +284,16 @@ describe("contents/queries/search:search", () => {
             limit: 10,
             locale: "en",
             offset: 0,
-            queries: ["Technical country"],
+            queries: ["try-out/indonesia-en"],
             section: "tryout",
           });
-          expect(result.items).toEqual([
+          expect(result.items[0]).toEqual(
             expect.objectContaining({
-              content_id: "asset:en:tryout:technical:country",
-              route: "try-out/indonesia",
+              content_id: "asset:en:tryout:country",
+              route: "try-out/indonesia-en",
               section: "tryout",
-            }),
-          ]);
+            })
+          );
           expect(result.items[0]).not.toHaveProperty("markdown_url");
         });
       })

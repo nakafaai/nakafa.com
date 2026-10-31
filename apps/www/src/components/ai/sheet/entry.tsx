@@ -56,16 +56,18 @@ export function SheetEntry({ contextTitle = "" }: { contextTitle?: string }) {
 
   const press = useEarlyPress<HTMLButtonElement>(handleOpen);
 
+  // The strip spans the page's width, so only its button takes a press: a
+  // control beside the button, such as a comment's Post, stays pressable.
   return (
     <aside
-      className="sticky right-0 bottom-0 left-0 z-50 px-6 pb-6 transition-[opacity,translate] duration-300 ease-out data-open:pointer-events-none data-open:translate-y-50 data-open:opacity-0 motion-reduce:transition-none"
+      className="group/entry pointer-events-none sticky right-0 bottom-0 left-0 z-50 px-6 pb-6 transition-[opacity,translate] duration-300 ease-out data-open:translate-y-50 data-open:opacity-0 motion-reduce:transition-none"
       data-open={open ? "" : undefined}
       inert={open}
     >
       <div className="mx-auto sm:max-w-xs">
         <Button
           {...press}
-          className="w-full justify-between transition-transform duration-200 hover:scale-105"
+          className="pointer-events-auto w-full justify-between transition-transform duration-200 group-data-open/entry:pointer-events-none hover:scale-105"
           onFocus={warm}
           onMouseEnter={warm}
           onPointerDown={warm}

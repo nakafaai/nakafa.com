@@ -68,12 +68,6 @@ export const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(
         );
       }
       const projection = yield* decodeProjectionJson(head.projectionJson);
-      if (projection.kind === "question-body") {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_ROUTE",
-          `Route ${path.appLocale}/${path.publicPath} targets a protected question body.`
-        );
-      }
       if (
         projection.contentKey !== binding.contentKey ||
         familyForProjection(projection) !== head.family ||

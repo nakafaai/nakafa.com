@@ -1,36 +1,10 @@
-import { codeBlockDarkModeVariants } from "@repo/design-system/components/code-block/variants";
+import { codeBodyVariants } from "@repo/design-system/components/code-block/variants";
 import {
   type CodeBlockData,
   useCodeBlock,
 } from "@repo/design-system/lib/code-block/context";
-import { cva } from "class-variance-authority";
-import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { HTMLAttributes, ReactNode } from "react";
-
-const codeBlockLineNumberVariants = cva(
-  "[&_.line]:before:text-muted-foreground [&_.line]:before:mr-4 [&_.line]:before:inline-block [&_.line]:before:w-4 [&_.line]:before:text-right [&_.line]:before:font-mono [&_.line]:before:text-xs [&_.line]:before:content-[counter(line)] [&_.line]:before:select-none [&_.line]:before:[counter-increment:line] [&_code]:[counter-increment:line_0] [&_code]:[counter-reset:line]"
-);
-
-const codeBlockLineHighlightVariants = cva(
-  "[&_.line.highlighted]:after:bg-primary [&_.line.highlighted]:after:absolute [&_.line.highlighted]:after:top-0 [&_.line.highlighted]:after:bottom-0 [&_.line.highlighted]:after:left-0 [&_.line.highlighted]:after:w-0.5"
-);
-
-const codeBlockLineDiffVariants = cva(
-  "[&_.line.diff.add]:after:bg-primary [&_.line.diff.remove]:after:bg-destructive [&_.line.diff]:after:absolute [&_.line.diff]:after:top-0 [&_.line.diff]:after:bottom-0 [&_.line.diff]:after:left-0 [&_.line.diff]:after:w-0.5"
-);
-
-const codeBlockLineFocusedVariants = cva(
-  "[&_code:has(.focused)_.line]:blur-[2px] [&_code:has(.focused)_.line.focused]:blur-none"
-);
-
-const codeBlockWordHighlightVariants = cva(
-  "[&_.highlighted-word]:underline [&_.highlighted-word]:decoration-current [&_.highlighted-word]:underline-offset-2"
-);
-
-const codeBlockVariants = cva(
-  "bg-muted/40 mt-0 text-sm [&_.line]:relative [&_.line]:w-full [&_.line]:px-4 [&_.shiki]:bg-transparent! [&_code]:grid [&_code]:w-full [&_code]:bg-transparent [&_pre]:overflow-x-auto [&_pre]:py-4"
-);
 
 /** Render-prop contract for projecting every code source into the body. */
 type CodeBlockBodyProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
@@ -44,16 +18,14 @@ export function CodeBlockBody({ children, ...props }: CodeBlockBodyProps) {
   return <div {...props}>{Arr.map(data, children)}</div>;
 }
 
-/** Active-source identity and optional line-number presentation. */
+/** Active-source identity of one item. */
 type CodeBlockItemProps = HTMLAttributes<HTMLDivElement> & {
   value: string;
-  lineNumbers?: boolean;
 };
 
 /** Renders one source only while its value is active. */
 export function CodeBlockItem({
   children,
-  lineNumbers = true,
   className,
   value,
   ...props
@@ -65,19 +37,7 @@ export function CodeBlockItem({
   }
 
   return (
-    <div
-      className={cn(
-        codeBlockVariants(),
-        codeBlockLineHighlightVariants(),
-        codeBlockLineDiffVariants(),
-        codeBlockLineFocusedVariants(),
-        codeBlockWordHighlightVariants(),
-        codeBlockDarkModeVariants(),
-        !!lineNumbers && codeBlockLineNumberVariants(),
-        className
-      )}
-      {...props}
-    >
+    <div className={codeBodyVariants({ className })} {...props}>
       {children}
     </div>
   );

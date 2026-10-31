@@ -25,7 +25,7 @@ import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 const LEARNER_NAME = "Acceptance Learner";
 
 /** The sign-in page, where the sidebar's sign-out goes. */
-const AUTH_PAGE = /\/auth(?:\?|$)/u;
+const HOME_PAGE = /\/en$/u;
 
 /** The session the browser last had in the cases that seed one. */
 const KNOWN_SESSION = "session-known";
@@ -187,7 +187,7 @@ test("a session that ends without a sign-out shows the anonymous prompt once the
   );
 });
 
-test("a soft sign-out after an account decision shows the anonymous prompt without a reload", async ({
+test("a sign-out after an account decision shows the anonymous prompt on the home page", async ({
   baseURL,
   browser,
 }) => {
@@ -214,8 +214,8 @@ test("a soft sign-out after an account decision shows the anonymous prompt witho
           expect.poll(() => isRootMarked(page)).toBe(false)
         );
 
-        // The sidebar's sign-out replaces this page with the sign-in page, and the
-        // Back button of that page goes to the home page with no reload.
+        // The sidebar's sign-out loads the home page, as every sign-out leaves by
+        // loading another document (`signOutAccountBrowserIdentity`).
         yield* Effect.promise(async () => {
           await page
             .locator('[data-sidebar="footer"]')
@@ -224,12 +224,9 @@ test("a soft sign-out after an account decision shows the anonymous prompt witho
           await page
             .getByRole("menuitem", { exact: true, name: app.Auth.logout })
             .click();
-          await expect(page).toHaveURL(AUTH_PAGE, {
+          await expect(page).toHaveURL(HOME_PAGE, {
             timeout: readinessTimeoutMilliseconds,
           });
-          await page
-            .getByRole("button", { exact: true, name: app.Common.back })
-            .click();
         });
         yield* Effect.promise(() =>
           expect(page.getByText(PROMPT_DESCRIPTION)).toBeVisible({

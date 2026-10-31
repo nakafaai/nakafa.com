@@ -1,30 +1,32 @@
 import { Table } from "@confect/core";
-import { AuthoredQuestionPointsSchema } from "@nakafa/aksara-contracts/question/points";
+import { ItemFamilyIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
+import { ScoringRuleSchema } from "@nakafa/aksara-contracts/assessment/scoring";
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { rendererDomainValidator } from "@repo/backend/confect/contentRelease/spec";
-import { ResponseSpec } from "@repo/backend/confect/response/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { Schema } from "effect";
+
+/**
+ * One place of an attempt's paper, frozen when the attempt starts: the item version the place names,
+ * by family and hash, its one interaction and the key's answer for it, and the rule that scores it
+ * (the item's override, else the profile's default for its kind). The interaction and the key are
+ * stored as JSON text (`runtime/question`), because a document in a label can nest deeper than a
+ * Convex object may. An answer is graded from this row alone, and the item's prompt is read by its
+ * hash when the place is shown. The key never leaves the server before the attempt's review.
+ */
 export default Table.make(() =>
   Schema.Struct({
-    answerArtifactHash: Schema.String,
-    answerContentKey: Schema.String,
-    placementIdentity: Schema.String,
-    placementRowHash: Schema.String,
-    questionArtifactHash: Schema.String,
-    questionContentKey: Schema.String,
-    rendererDomain: rendererDomainValidator,
-    sectionIdentity: Schema.String,
-    sectionKey: tryoutRouteKeyValidator,
     tryoutAttemptId: IdSchema("tryoutAttempts"),
+    sectionKey: tryoutRouteKeyValidator,
     questionOrder: Schema.Finite,
-    sourcePath: Schema.String,
-    responseSpec: ResponseSpec,
-    /** Authored worth above the default single point; read through `questionPoints`. */
-    points: Schema.optionalKey(AuthoredQuestionPointsSchema),
-    sourceRevision: Schema.String,
-    contentHash: Schema.String,
+    family: ItemFamilyIdSchema,
+    versionHash: Sha256HashSchema,
+    deliveryLanguage: ContentLanguageSchema,
+    interactionJson: Schema.String,
+    keyJson: Schema.String,
+    rule: ScoringRuleSchema,
     /**
      * The version of the write that cleared the question's answer. Deleting the
      * answer deletes the version it carried, so the placement keeps the number

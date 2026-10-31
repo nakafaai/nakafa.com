@@ -1,36 +1,33 @@
 "use client";
 
-import { Response } from "@repo/design-system/components/ai/response";
+import type { AssessmentDocument } from "@nakafa/aksara-contracts/assessment/document";
+import { documentMarkdown } from "@repo/contents/llms/document";
 import { spokenText } from "@repo/design-system/lib/markdown/spoken";
 import { useTranslations } from "use-intl";
+import { AssessmentLine } from "@/components/assessment/document";
 
 /**
- * Renders one rich response label with optional accessible correctness. The label names its control by
- * its own words: the drawn label is hidden from assistive technology, and its words, each formula spoken
- * as KaTeX reads it, stand beside it for screen readers, as the server's labels do.
+ * One response label, an option's, a statement's, or a column's, read as one line, which says whether it
+ * is correct once the answers are revealed. The label names its control by its own words: the drawn
+ * document is hidden from assistive technology, and its words, each formula spoken as KaTeX reads it,
+ * stand beside it for screen readers. A label drawn only as math would otherwise name nothing, since
+ * its formula is MathML, which an accessible name does not read.
  */
 export function TryoutResponseLabel({
-  children,
   correctness,
-  id,
+  document,
 }: {
-  readonly children: string;
   readonly correctness?: boolean | undefined;
-  readonly id: string;
+  readonly document: Pick<AssessmentDocument, "content">;
 }) {
   const t = useTranslations("Tryouts");
 
   return (
     <>
       <div aria-hidden="true">
-        <Response
-          className="h-auto wrap-anywhere whitespace-normal"
-          id={`${id}-label-content`}
-        >
-          {children}
-        </Response>
+        <AssessmentLine document={document} />
       </div>
-      <span className="sr-only">{spokenText(children)}</span>
+      <span className="sr-only">{spokenText(documentMarkdown(document))}</span>
       {correctness === undefined ? null : (
         <span className="sr-only">
           {t(correctness ? "correct" : "incorrect")}

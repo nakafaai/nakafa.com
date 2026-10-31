@@ -62,13 +62,11 @@ export const editorPlaceholder = cva(
  * its first line shares a line box with the letter that names it. An exam's
  * document (`article`) takes the published article's headings, lists, quotations,
  * inline code, tables and room between blocks from `articleProse`, so only a plain
- * text, such as a memory, draws them here. Everything inside a highlight reads in
- * the highlight's own text colour, a link too, which keeps its underline as its
- * cue, so it reads on the amber fill in light and dark; inline code keeps its own
- * muted pair, as the lesson's does.
+ * text, such as a memory, draws them here. A link and a highlight take the lesson's
+ * own classes on their elements (`linkVariants`, `emphasisVariants`), in every text.
  */
 export const editorDocument = cva(
-  "[&_a]:text-primary [&_pre]:bg-muted [&_span[data-link]]:text-primary relative min-h-full [font-feature-settings:'liga'_0] wrap-break-word [white-space:break-spaces] outline-none [font-variant-ligatures:none] [&_a]:underline [&_a]:underline-offset-4 [&_hr]:my-3 [&_mark]:rounded-sm [&_mark]:bg-amber-200 [&_mark]:px-0.5 [&_mark]:text-amber-950 [&_mark_a]:text-inherit [&_mark_span[data-link]]:text-inherit [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:whitespace-pre-wrap [&_span[data-link]]:underline [&_span[data-link]]:underline-offset-4",
+  "[&_pre]:bg-muted relative min-h-full [font-feature-settings:'liga'_0] wrap-break-word [white-space:break-spaces] outline-none [font-variant-ligatures:none] [&_hr]:my-3 [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:whitespace-pre-wrap",
   {
     compoundVariants: [{ class: "[&>*+*]:mt-2", size: "page", text: "plain" }],
     variants: {

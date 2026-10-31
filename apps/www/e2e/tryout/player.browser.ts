@@ -5,7 +5,6 @@ import { expectUncovered } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   chooseView,
-  countSentQuestions,
   currentNumberOf,
   expectView,
   numberCells,
@@ -65,22 +64,26 @@ const expectRemembered = Effect.fn("NakafaE2E.expectViewRemembered")(function* (
 });
 
 /**
- * Opens an address and counts the questions in the document the server sent,
- * which proves the view was resolved before the page was sent.
+ * Opens an address and counts the questions the player first shows once the
+ * learner's attempt arrives in the browser, which resolves the view from the
+ * address and the saved view before the player renders.
  */
-const sentQuestions = Effect.fn("NakafaE2E.sentQuestions")(function* (
+const shownAtOpen = Effect.fn("NakafaE2E.shownAtOpen")(function* (
   page: Page,
   address: string
 ) {
-  const response = yield* Effect.promise(() =>
-    page.goto(address, { waitUntil: "commit" })
+  yield* Effect.promise(() => page.goto(address, { waitUntil: "commit" }));
+  yield* Effect.promise(() =>
+    expect(
+      page.getByRole("button", { exact: true, name: "Finish" })
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );
-  return yield* countSentQuestions(response);
+  return yield* Effect.promise(() => shownQuestions(page).count());
 });
 
 /**
  * Resolves the view from the address, then the learner's saved view, then the
- * list, on the server, and keeps the page still while the view changes and the
+ * list, in the browser, and keeps the page still while the view changes and the
  * timer ticks.
  */
 const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
@@ -93,9 +96,9 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
   yield* expectView(page, "List");
 
   // With nothing saved, the list; the address alone names the other view.
-  const listed = yield* sentQuestions(page, withView(address));
+  const listed = yield* shownAtOpen(page, withView(address));
   yield* Effect.sync(() => expect(listed).toBeGreaterThan(1));
-  const named = yield* sentQuestions(page, withView(address, "single"));
+  const named = yield* shownAtOpen(page, withView(address, "single"));
   yield* Effect.sync(() => expect(named).toBe(1));
   yield* expectView(page, "One question");
   const unsaved = yield* Effect.promise(() => readRememberedView(page));
@@ -132,9 +135,9 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
   yield* Effect.sync(() => expectStillShell(observation, [true]));
 
   // The saved view is the first one after a reload, and the address still wins.
-  const saved = yield* sentQuestions(page, withView(address));
+  const saved = yield* shownAtOpen(page, withView(address));
   yield* Effect.sync(() => expect(saved).toBe(1));
-  const overridden = yield* sentQuestions(page, withView(address, "list"));
+  const overridden = yield* shownAtOpen(page, withView(address, "list"));
   yield* Effect.sync(() => expect(overridden).toBeGreaterThan(1));
 
   // Choosing a view again keeps the address in step, so a reload cannot undo it.

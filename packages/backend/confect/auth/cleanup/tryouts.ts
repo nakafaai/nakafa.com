@@ -4,8 +4,6 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
-import { reconcileTryoutRuntimeAfterAttempt } from "@repo/backend/confect/contentRelease/tryout/runtime";
-import { cleanupAttemptScale } from "@repo/backend/confect/tryouts/runtime/scale";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow, Option } from "effect";
 
@@ -65,17 +63,7 @@ const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
       yield* writer.table("tryoutScores").delete(score._id);
       return true;
     }
-    if (
-      yield* cleanupAttemptScale(attempt).pipe(
-        Effect.mapError(toUserCleanupError)
-      )
-    ) {
-      return true;
-    }
     yield* writer.table("tryoutAttempts").delete(attempt._id);
-    yield* reconcileTryoutRuntimeAfterAttempt(attempt.tryoutBundleId).pipe(
-      Effect.mapError(toUserCleanupError)
-    );
     return true;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))

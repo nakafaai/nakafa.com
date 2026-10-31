@@ -4,7 +4,7 @@ import {
   setDirectionValidator,
   setFilterValidator,
   setSortValidator,
-} from "@repo/backend/confect/tryouts/sets/spec";
+} from "@repo/backend/confect/tryouts/sets/query";
 import { Schema } from "effect";
 
 type SetListQuery = typeof tryouts.queries.sets.list;

@@ -94,7 +94,7 @@ interface PageRowProps {
 
 /**
  * The row above a page's paper: the grip that moves the page, its number, its type, a mark while it needs a
- * key, and its actions. The type and the mark follow the edit on screen, so a key the teacher just set clears the
+ * key, and its actions, which keep the row's end while the rest wraps on a narrow screen. The type and the mark follow the edit on screen, so a key the teacher just set clears the
  * mark at once, before the server answers. A page the server has not saved yet, or a page of a locked exam, shows its number and
  * its type alone, and the type takes a change only once Convex holds the session.
  */
@@ -106,7 +106,7 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
   const number = index + 1;
 
   return (
-    <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+    <div className="flex min-h-9 items-center justify-between gap-2">
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         {editable ? (
           <QuestionGrip number={number} questionId={question.id} />

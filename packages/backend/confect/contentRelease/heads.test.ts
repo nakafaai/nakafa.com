@@ -22,7 +22,6 @@ import {
   retireStoredAnchorPayload,
 } from "@repo/backend/test/content/anchor";
 import {
-  insertQuestionHead,
   insertTestHead,
   maximumTestHead,
 } from "@repo/backend/test/content/head";
@@ -432,15 +431,4 @@ describe("contentRelease/heads", () => {
       data: { code: "CONTENT_RELEASE_ROUTE" },
     });
   });
-});
-
-it("returns question inventory without inventing a public route", async () => {
-  const t = convexTest(schema, convexModules);
-  await t.mutation(async (ctx) => {
-    await activateRollbackFixture(ctx, 0, 0);
-    await insertQuestionHead(ctx);
-  });
-  const page = await readPage(t, null, undefined, 2, "question");
-  expect(page.heads).toHaveLength(1);
-  expect(page.heads[0]).not.toHaveProperty("publicPath");
 });

@@ -19,25 +19,6 @@ interface TryoutQuestionShellProps {
   readonly questionOrder: number;
 }
 
-/** Composes one active question without terminal-review behavior. */
-export function TryoutActiveQuestionShell({
-  children,
-  questionOrder,
-}: TryoutQuestionShellProps) {
-  const ids = getTryoutQuestionIds(questionOrder);
-
-  return (
-    <Collapsible disabled>
-      <article aria-labelledby={ids.title} id={ids.article}>
-        <TryoutQuestionHeader questionOrder={questionOrder}>
-          <TryoutExplanationTrigger />
-        </TryoutQuestionHeader>
-        {children}
-      </article>
-    </Collapsible>
-  );
-}
-
 /** Composes one immutable review question with optional question actions. */
 export function TryoutReviewQuestionShell({
   action,

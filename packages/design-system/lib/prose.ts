@@ -48,8 +48,8 @@ export const headingTextVariants = cva(
   }
 );
 
-/** A list, numbered or bulleted, with room between its items. */
-export const listVariants = cva("my-4 space-y-4 ps-8 last:mb-0", {
+/** A list, numbered or bulleted, with room between its items; each item keeps the room for its marker. */
+export const listVariants = cva("my-4 space-y-4 last:mb-0", {
   variants: {
     kind: {
       bullet: "list-disc",
@@ -58,15 +58,26 @@ export const listVariants = cva("my-4 space-y-4 ps-8 last:mb-0", {
   },
 });
 
-/** One item of a list, whose first paragraph sits on the marker's line. */
+/**
+ * One item of a list, whose first paragraph sits on the marker's line. The item owns the room for its marker,
+ * its margin on its start side, so an item in Arabic keeps that room on the right and its neighbour in Latin on
+ * the left. It sets `text-start` itself, because WebKit aligns the text of a list item with the direction of its
+ * list and not its own.
+ */
 export const listItemVariants = cva(
-  "max-w-xl pl-1 leading-relaxed text-pretty [&>*+*]:mt-4 [&>p:first-child]:inline"
+  "ms-8 max-w-xl ps-1 text-start leading-relaxed text-pretty [&>*+*]:mt-4 [&>p:first-child]:inline"
 );
+
+/** A superscript or a subscript, at the annotation size. */
+export const scriptVariants = cva("text-sm");
 
 /** A quotation, on the muted callout surface. */
 export const quoteVariants = cva(
   "border-foreground bg-muted my-4 rounded-r-xl border-l-2 p-4 italic"
 );
+
+/** A link in a text: in the link colour, underlined, at the weight of the words around it. */
+export const linkVariants = cva("text-primary underline underline-offset-4");
 
 /** Code inside a line of text. */
 export const codeVariants = cva(
@@ -76,14 +87,21 @@ export const codeVariants = cva(
 /**
  * A table's frame: rounded and bordered, scrolling sideways when the table is wider, its words in the small
  * size, its table as wide as the frame (`*:w-full`), and its body on the muted surface. The lesson draws the
- * frame as the table's container, the exam editor as its table's wrapper, so both select the body alike.
+ * frame as the table's container, the exam editor as its table's wrapper, so both select the body alike, and a
+ * table laid out as a grid, such as a true or false question, marks its body as the table's body slot. The
+ * frame is as tall as its table (`h-auto`): the scroll area under a lesson's table fills its parent by default,
+ * and in Nina's answer, whose blocks have a definite height, a frame that filled the answer ran past its last row
+ * and under the answer's actions.
  */
 export const tableFrameVariants = cva(
-  "[&_tbody]:bg-muted/40 relative my-4 grid w-full grid-cols-1 overflow-x-auto rounded-xl border text-sm *:w-full first:mt-0 last:mb-0"
+  "[&_:is(tbody,[data-slot=table-body])]:bg-muted/40 relative my-4 grid h-auto w-full grid-cols-1 overflow-x-auto rounded-xl border text-sm *:w-full first:mt-0 last:mb-0"
 );
 
 /** A row of a table, with a rule under every row but the last. */
 export const tableRowVariants = cva("border-b last:border-b-0");
+
+/** A table, whose header row ends on a rule when a body follows it. */
+export const tableVariants = cva("has-[tbody]:[&_thead]:border-b");
 
 /**
  * A heading cell of a table, on the header's stronger muted surface, its words aligned to the start of the
@@ -103,6 +121,9 @@ export const tableCellVariants = cva(
  * line: the room an article leaves around it.
  */
 export const blockGapVariants = cva("my-4 first:mt-0 last:mb-0");
+
+/** A picture's surface, in a lesson, a response and a question alike: its corners, its border and the ground under it. */
+export const pictureVariants = cva("bg-muted rounded-xl border");
 
 /** A formula on its own line: the card that holds it. */
 export const mathBlockVariants = cva(

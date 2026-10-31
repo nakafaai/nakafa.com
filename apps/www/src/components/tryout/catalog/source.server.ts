@@ -2,12 +2,10 @@ import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
 import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
-import { renderServerComponent } from "@tanstack/react-start/rsc";
 import { Effect, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
-import { loadTryoutQuestion } from "@/components/tryout/content/signed";
-import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { queryContentStore } from "@/lib/content/store/query";
 import {
   readPublishedTryoutExamPage,
@@ -31,10 +29,10 @@ class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>(
 ) {}
 
 /**
- * Reads and renders the signed question selected for the marketing page. The
- * selection is the same for every request of one release, so the content store
- * holds it once for each release and locale. The signed body is verified and
- * rendered again on each call, because nothing caches the rendered tree.
+ * Reads the question demonstrated on the marketing page, decoded from the JSON text its body crosses
+ * the wire as: its prompt, its interaction, and the key the demo answers with. The selection is the
+ * same for every request of one release, so the content store holds it once for each release and
+ * locale.
  */
 export const readFeaturedTryout = Effect.fn("www.tryout.catalog.readFeatured")(
   function* (locale: Locale) {
@@ -44,15 +42,7 @@ export const readFeaturedTryout = Effect.fn("www.tryout.catalog.readFeatured")(
         appLocale: AppLocaleSchema.make(locale),
       }
     );
-    const question = yield* loadTryoutQuestion(featured.question);
-    // The question is a server component tree, so it crosses to the page as Flight data.
-    const content = yield* Effect.promise(() =>
-      renderServerComponent(question.content)
-    );
-    return {
-      question: content,
-      response: featured.response,
-    };
+    return yield* Schema.decodeEffect(TryoutQuestionBodyText)(featured.body);
   }
 );
 
@@ -69,19 +59,15 @@ export const readTryoutMetadata = Effect.fn("www.tryout.catalog.readMetadata")(
 
 /**
  * Reads the public country-first try-out catalog. The content store answers for
- * the release.
+ * the release. Its revision is the catalog's authored revision, a date the
+ * contract keeps as written, not a commit.
  */
 export const readTryoutHubPage = Effect.fn("www.tryout.catalog.readHubPage")(
   function* (locale: Locale) {
     const appLocale = AppLocaleSchema.make(locale);
-    const page = yield* queryContentStore(tryouts.queries.catalog.getHubPage, {
+    return yield* queryContentStore(tryouts.queries.catalog.getHubPage, {
       appLocale,
     }).pipe(Effect.mapError((cause) => new TryoutCatalogReadError({ cause })));
-    const sourceRevision = yield* decodeSourceRevision(page.sourceRevision, {
-      appLocale,
-      publicPath: "try-out",
-    });
-    return { ...page, sourceRevision };
   }
 );
 
@@ -100,14 +86,7 @@ export const readTryoutCountryPage = Effect.fn(
       publicPath,
     }
   ).pipe(Effect.mapError((cause) => new TryoutCatalogReadError({ cause })));
-  if (!page) {
-    return Option.none();
-  }
-  const sourceRevision = yield* decodeSourceRevision(page.sourceRevision, {
-    appLocale,
-    publicPath,
-  });
-  return Option.some({ ...page, sourceRevision });
+  return Option.fromNullishOr(page);
 });
 
 /** Reads one public exam page. The content store answers for the release. */
@@ -169,32 +148,6 @@ export const readTryoutSetPage = Effect.fn("www.tryout.catalog.readSetPage")(
   }
 );
 
-/** Fetches one authenticated set bootstrap without subscribing. */
-export const readTryoutSetAttemptPage = Effect.fn(
-  "www.tryout.catalog.readSetAttemptPage"
-)(function* (
-  token: string,
-  request: Ref.Args<typeof tryouts.queries.attemptPage.getSet>["request"]
-) {
-  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(tryouts.queries.attemptPage.getSet, {
-      request,
-    })
-  ).pipe(
-    Effect.provide(
-      httpLayer({
-        auth: token,
-      })
-    ),
-    Effect.mapError(
-      (cause) =>
-        new TryoutCatalogReadError({
-          cause,
-        })
-    )
-  );
-});
-
 /** Reads one public section page. The content store answers for the release. */
 export const readTryoutSectionPage = Effect.fn(
   "www.tryout.catalog.readSectionPage"
@@ -203,37 +156,4 @@ export const readTryoutSectionPage = Effect.fn(
     appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });
-});
-
-/**
- * Reads one authenticated section page with the signed bodies of its running
- * content, in one Convex read. A running attempt on another page answers none, and
- * an attempt read that is not retained answers none too.
- */
-export const readTryoutSectionWithBodies = Effect.fn(
-  "www.tryout.catalog.readSectionWithBodies"
-)(function* (
-  token: string,
-  request: Ref.Args<
-    typeof tryouts.queries.attemptPage.getSectionWithBodies
-  >["request"]
-) {
-  const page = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(tryouts.queries.attemptPage.getSectionWithBodies, {
-      request,
-    })
-  ).pipe(
-    Effect.provide(
-      httpLayer({
-        auth: token,
-      })
-    ),
-    Effect.mapError(
-      (cause) =>
-        new TryoutCatalogReadError({
-          cause,
-        })
-    )
-  );
-  return page;
 });

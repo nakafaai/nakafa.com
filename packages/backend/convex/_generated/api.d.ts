@@ -540,6 +540,20 @@ export declare const api: {
           subject?: string;
         }
       >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
     };
     forum: {
       channels: {
@@ -1101,6 +1115,36 @@ export declare const api: {
       >;
     };
     tasks: {
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          deadline: number;
+          latePolicy: "accept" | "close";
+          points: number;
+          slug: string;
+          task: string;
+          text: string;
+          title: string;
+        },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            text: string;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
       get: FunctionReference<
         "query",
         "public",
@@ -1173,32 +1217,6 @@ export declare const api: {
           slug: string;
           text: string;
           title: string;
-        },
-        {
-          deadline: number;
-          handedIn: number;
-          id: Id<"classroomTasks">;
-          latePolicy: "accept" | "close";
-          mine: {
-            late: boolean;
-            score: number | null;
-            text: string;
-            updatedAt: number;
-          } | null;
-          points: number;
-          slug: string;
-          text: string;
-          title: string;
-        }
-      >;
-      reschedule: FunctionReference<
-        "mutation",
-        "public",
-        {
-          classId: Id<"classes">;
-          deadline: number;
-          slug: string;
-          task: string;
         },
         {
           deadline: number;
@@ -2137,7 +2155,7 @@ export declare const api: {
         "public",
         {
           appLocale: "en" | "id" | "de";
-          family: "article" | "material" | "page" | "question";
+          family: "article" | "material" | "page";
           publicPath: string;
         },
         | { activeReleaseId: string | null; kind: "unmanaged" }
@@ -3546,18 +3564,6 @@ export declare const api: {
       };
     };
     tryout: {
-      catalog: FunctionReference<
-        "query",
-        "public",
-        { appLocale: "en" | "id" | "de" },
-        {
-          activeManifestHash: string | null;
-          activeReleaseId: string | null;
-          rowJson: Array<string>;
-          snapshotId: string;
-          sourceRevision: string | null;
-        }
-      >;
       sitemapCount: FunctionReference<
         "query",
         "public",
@@ -5989,6 +5995,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
           state?: "scheduled" | "open" | "closed";
         },
@@ -5996,7 +6003,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-            canCancel: boolean;
+            canChange: boolean;
             closesAt: number;
             group:
               | { kind: "unit"; unitId: Id<"tenantUnits"> }
@@ -6677,6 +6684,18 @@ export declare const api: {
         },
         { prompt: string }
       >;
+      reschedule: FunctionReference<
+        "mutation",
+        "public",
+        {
+          closesAt: number;
+          opensAt: number;
+          room: string;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
       signal: FunctionReference<
         "mutation",
         "public",
@@ -6817,6 +6836,7 @@ export declare const api: {
           className: string;
           id: Id<"classGrades">;
           kktp: "reached" | "notReached";
+          period: string;
           value: number;
         }>
       >;
@@ -7092,6 +7112,7 @@ export declare const api: {
             | "grade.enter"
             | "grade.list"
             | "scheme.manage"
+            | "scheme.view"
             | "report.list"
             | "report.write"
             | "report.open"
@@ -7211,6 +7232,7 @@ export declare const api: {
               | "grade.enter"
               | "grade.list"
               | "scheme.manage"
+              | "scheme.view"
               | "report.list"
               | "report.write"
               | "report.open"
@@ -7307,6 +7329,7 @@ export declare const api: {
               | { type: "class.created" }
               | { type: "class.renamed" }
               | { type: "class.archived" }
+              | { type: "class.restored" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
               | { message: Id<"classroomMessages">; type: "message.hidden" }
@@ -7316,6 +7339,7 @@ export declare const api: {
                   task: Id<"classroomTasks">;
                   type: "assignment.deadlineChanged";
                 }
+              | { task: Id<"classroomTasks">; type: "assignment.edited" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { grade: number; type: "cohort.grade.set" }
@@ -7547,6 +7571,7 @@ export declare const api: {
               | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
               | { type: "sitting.cancel" }
+              | { type: "sitting.reschedule" }
               | { person: Id<"tenantPeople">; type: "sitting.join" }
               | {
                   contract: {
@@ -8779,6 +8804,19 @@ export declare const api: {
           value: number;
         }>
       >;
+      own: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          band?: string;
+          className: string;
+          id: Id<"classGrades">;
+          kktp: "reached" | "notReached";
+          period: string;
+          value: number;
+        }>
+      >;
       release: FunctionReference<
         "mutation",
         "public",
@@ -8885,6 +8923,19 @@ export declare const api: {
           }>;
         }
       >;
+      own: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          approvedAt: number;
+          cohort: string;
+          file: string;
+          hash: string;
+          id: Id<"reportCards">;
+          period: string;
+        }>
+      >;
       reopen: FunctionReference<
         "mutation",
         "public",
@@ -8949,6 +9000,33 @@ export declare const api: {
       >;
     };
     schemes: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            bands: Array<{ label: string; minimum: number }>;
+            effectiveFrom: number;
+            id: Id<"gradingSchemes">;
+            kktp: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
       store: FunctionReference<
         "mutation",
         "public",
@@ -10625,26 +10703,11 @@ export declare const api: {
           "public",
           {
             placementId: Id<"tryoutAttemptPlacements">;
-            selection:
-              | { kind: "single-choice"; optionKey: string }
-              | { kind: "multiple-choice"; optionKeys: Array<string> }
-              | {
-                  assignments: Array<{
-                    categoryKey: string;
-                    statementKey: string;
-                  }>;
-                  kind: "category";
-                }
-              | { kind: "short-answer"; number?: string; text: string }
-              | {
-                  finalAnswers: Array<{
-                    criterionKey: string;
-                    number?: string;
-                    text: string;
-                  }>;
-                  kind: "rubric";
-                  text: string;
-                }
+            response:
+              | Array<string>
+              | { text: string }
+              | { pairs: Array<{ source: string; target: string }> }
+              | { cells: Array<{ column: string; statement: string }> }
               | null;
             version: number;
           },
@@ -10723,53 +10786,11 @@ export declare const api: {
               activeSectionPublicPath: string | null;
               activeSetPublicPath: string | null;
               attemptId: Id<"tryoutAttempts">;
-              content:
-                | { kind: "none" }
-                | {
-                    answers: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "entitled";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                    kind: "signed";
-                    previewAnswers: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "entitled";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                    questions: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "authenticated";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                  };
+              content: Array<{
+                body: string;
+                placementId: Id<"tryoutAttemptPlacements">;
+                versionHash: string;
+              }>;
               initialState: {
                 attempt: {
                   activeSectionKey: string | null;
@@ -10783,7 +10804,7 @@ export declare const api: {
                     publishedScore: number;
                     rawScore: number;
                     scoreStatus: "provisional" | "official";
-                    scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                    scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                     theta?: number;
                     thetaSE?: number;
                     totalCorrect: number;
@@ -10798,7 +10819,8 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                      scoringStrategy:
+                        "irt" | "raw" | "penalized" | "composite";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -10816,131 +10838,27 @@ export declare const api: {
                   attemptId: Id<"tryoutAttempts">;
                   expiresAt: number;
                   questions: Array<{
-                    contentHash: string;
                     flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
                       answeredAt: number;
-                      isComplete: boolean;
-                      outcome?:
-                        | { status: "correct" }
-                        | { status: "incorrect" }
-                        | { points: number; status: "partial" }
-                        | { status: "pending" };
-                      selection:
-                        | { kind: "single-choice"; optionKey: string }
-                        | { kind: "multiple-choice"; optionKeys: Array<string> }
+                      grade?:
                         | {
-                            assignments: Array<{
-                              categoryKey: string;
-                              statementKey: string;
-                            }>;
-                            kind: "category";
+                            category: number;
+                            ceiling: number;
+                            status: "scored";
                           }
+                        | { ceiling: number; status: "pending" };
+                      response:
+                        | Array<string>
+                        | { text: string }
+                        | { pairs: Array<{ source: string; target: string }> }
                         | {
-                            kind: "short-answer";
-                            number?: string;
-                            text: string;
-                          }
-                        | {
-                            finalAnswers: Array<{
-                              criterionKey: string;
-                              number?: string;
-                              text: string;
-                            }>;
-                            kind: "rubric";
-                            text: string;
+                            cells: Array<{ column: string; statement: string }>;
                           };
                       updatedAt: number;
                     } | null;
-                    responseSpec:
-                      | {
-                          kind: "single-choice";
-                          options: Array<{
-                            isCorrect?: boolean;
-                            label: string;
-                            optionKey: string;
-                            order: number;
-                          }>;
-                        }
-                      | {
-                          kind: "multiple-choice";
-                          options: Array<{
-                            isCorrect?: boolean;
-                            label: string;
-                            optionKey: string;
-                            order: number;
-                          }>;
-                        }
-                      | {
-                          categories: Array<{
-                            categoryKey: string;
-                            label: string;
-                            order: number;
-                          }>;
-                          kind: "category";
-                          statements: Array<{
-                            correctCategoryKey?: string;
-                            label: string;
-                            order: number;
-                            statementKey: string;
-                          }>;
-                        }
-                      | {
-                          key?:
-                            | {
-                                acceptsFractions: boolean;
-                                kind: "number";
-                                tolerance?: {
-                                  kind: "absolute" | "relative";
-                                  value: string;
-                                };
-                                value: string;
-                              }
-                            | {
-                                acceptedAnswers: Array<string>;
-                                collapseWhitespace: boolean;
-                                ignoreCase: boolean;
-                                kind: "text";
-                              };
-                          kind: "short-answer";
-                          language: "en" | "id" | "de";
-                        }
-                      | {
-                          criteria: Array<{
-                            criterionKey: string;
-                            final: boolean;
-                            finalAnswer?:
-                              | {
-                                  acceptsFractions: boolean;
-                                  kind: "number";
-                                  tolerance?: {
-                                    kind: "absolute" | "relative";
-                                    value: string;
-                                  };
-                                  value: string;
-                                }
-                              | {
-                                  acceptedAnswers: Array<string>;
-                                  collapseWhitespace: boolean;
-                                  ignoreCase: boolean;
-                                  kind: "text";
-                                };
-                            label?: { de: string; en: string; id: string };
-                            levels?: Array<{
-                              label: { de: string; en: string; id: string };
-                              levelKey: string;
-                              order: number;
-                              points: number;
-                            }>;
-                            order: number;
-                          }>;
-                          kind: "rubric";
-                          language: "en" | "id" | "de";
-                        };
-                    sourcePath: string;
-                    sourceRevision: string;
                     version?: number;
                   }>;
                   section: {
@@ -10952,7 +10870,8 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                      scoringStrategy:
+                        "irt" | "raw" | "penalized" | "composite";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -10971,7 +10890,6 @@ export declare const api: {
                   description?: string;
                   examKey: string;
                   publicPath: string;
-                  scoringStrategy: "irt" | "penalized" | "raw";
                   title: string;
                 };
                 section: {
@@ -10988,350 +10906,23 @@ export declare const api: {
                   description?: string;
                   examKey: string;
                   publicPath: string;
-                  readyQuestionCount: number;
-                  readyVisibleSectionCount: number;
-                  scoringStrategy: "irt" | "penalized" | "raw";
+                  questionCount: number;
+                  scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                   sectionCount: number;
                   setKey: string;
                   title: string;
-                  totalQuestionCount: number;
                   trackKey: string;
                   visibleSectionCount: number;
                 };
                 track: {
                   description?: string;
                   publicPath: string;
-                  readyQuestionCount: number;
-                  readyVisibleSectionCount: number;
                   title: string;
                   trackKey: string;
                   trackKind: "institution" | "subject" | "year";
                 };
               };
             }
-        >;
-        getSectionWithBodies: FunctionReference<
-          "query",
-          "public",
-          {
-            request:
-              | {
-                  countryKey: string;
-                  examKey: string;
-                  kind: "current";
-                  locale: "en" | "id" | "de";
-                  sectionKey: string;
-                  setKey: string;
-                  trackKey: string;
-                }
-              | {
-                  attemptId: string;
-                  kind: "retained";
-                  locale: "en" | "id" | "de";
-                  publicPath: string;
-                };
-          },
-          null | {
-            attempt: {
-              activeSectionPublicPath: string | null;
-              activeSetPublicPath: string | null;
-              attemptId: Id<"tryoutAttempts">;
-              content:
-                | { kind: "none" }
-                | {
-                    answers: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "entitled";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                    kind: "signed";
-                    previewAnswers: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "entitled";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                    questions: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "authenticated";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                  };
-              initialState: {
-                attempt: {
-                  activeSectionKey: string | null;
-                  attemptId: Id<"tryoutAttempts">;
-                  attemptNumber: number;
-                  completedSectionKeys: Array<string>;
-                  expiresAt: number;
-                  resumeSectionKey: string | null;
-                  resumeSectionPublicPath: string | null;
-                  score: {
-                    publishedScore: number;
-                    rawScore: number;
-                    scoreStatus: "provisional" | "official";
-                    scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
-                    theta?: number;
-                    thetaSE?: number;
-                    totalCorrect: number;
-                    totalQuestions: number;
-                  } | null;
-                  section: {
-                    answeredCount: number;
-                    completedAt: number | null;
-                    endReason: "submitted" | "time-expired" | null;
-                    expiresAt: number;
-                    score: {
-                      publishedScore: number;
-                      rawScore: number;
-                      scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
-                      theta?: number;
-                      thetaSE?: number;
-                      totalCorrect: number;
-                      totalQuestions: number;
-                    } | null;
-                    sectionKey: string;
-                    startedAt: number;
-                    status: "in-progress" | "completed" | "expired";
-                    totalQuestions: number;
-                  } | null;
-                  startedAt: number;
-                  status: "in-progress" | "completed" | "expired";
-                };
-                runtime: null | {
-                  attemptId: Id<"tryoutAttempts">;
-                  expiresAt: number;
-                  questions: Array<{
-                    contentHash: string;
-                    flagged: boolean;
-                    placementId: Id<"tryoutAttemptPlacements">;
-                    questionOrder: number;
-                    response: {
-                      answeredAt: number;
-                      isComplete: boolean;
-                      outcome?:
-                        | { status: "correct" }
-                        | { status: "incorrect" }
-                        | { points: number; status: "partial" }
-                        | { status: "pending" };
-                      selection:
-                        | { kind: "single-choice"; optionKey: string }
-                        | { kind: "multiple-choice"; optionKeys: Array<string> }
-                        | {
-                            assignments: Array<{
-                              categoryKey: string;
-                              statementKey: string;
-                            }>;
-                            kind: "category";
-                          }
-                        | {
-                            kind: "short-answer";
-                            number?: string;
-                            text: string;
-                          }
-                        | {
-                            finalAnswers: Array<{
-                              criterionKey: string;
-                              number?: string;
-                              text: string;
-                            }>;
-                            kind: "rubric";
-                            text: string;
-                          };
-                      updatedAt: number;
-                    } | null;
-                    responseSpec:
-                      | {
-                          kind: "single-choice";
-                          options: Array<{
-                            isCorrect?: boolean;
-                            label: string;
-                            optionKey: string;
-                            order: number;
-                          }>;
-                        }
-                      | {
-                          kind: "multiple-choice";
-                          options: Array<{
-                            isCorrect?: boolean;
-                            label: string;
-                            optionKey: string;
-                            order: number;
-                          }>;
-                        }
-                      | {
-                          categories: Array<{
-                            categoryKey: string;
-                            label: string;
-                            order: number;
-                          }>;
-                          kind: "category";
-                          statements: Array<{
-                            correctCategoryKey?: string;
-                            label: string;
-                            order: number;
-                            statementKey: string;
-                          }>;
-                        }
-                      | {
-                          key?:
-                            | {
-                                acceptsFractions: boolean;
-                                kind: "number";
-                                tolerance?: {
-                                  kind: "absolute" | "relative";
-                                  value: string;
-                                };
-                                value: string;
-                              }
-                            | {
-                                acceptedAnswers: Array<string>;
-                                collapseWhitespace: boolean;
-                                ignoreCase: boolean;
-                                kind: "text";
-                              };
-                          kind: "short-answer";
-                          language: "en" | "id" | "de";
-                        }
-                      | {
-                          criteria: Array<{
-                            criterionKey: string;
-                            final: boolean;
-                            finalAnswer?:
-                              | {
-                                  acceptsFractions: boolean;
-                                  kind: "number";
-                                  tolerance?: {
-                                    kind: "absolute" | "relative";
-                                    value: string;
-                                  };
-                                  value: string;
-                                }
-                              | {
-                                  acceptedAnswers: Array<string>;
-                                  collapseWhitespace: boolean;
-                                  ignoreCase: boolean;
-                                  kind: "text";
-                                };
-                            label?: { de: string; en: string; id: string };
-                            levels?: Array<{
-                              label: { de: string; en: string; id: string };
-                              levelKey: string;
-                              order: number;
-                              points: number;
-                            }>;
-                            order: number;
-                          }>;
-                          kind: "rubric";
-                          language: "en" | "id" | "de";
-                        };
-                    sourcePath: string;
-                    sourceRevision: string;
-                    version?: number;
-                  }>;
-                  section: {
-                    answeredCount: number;
-                    completedAt: number | null;
-                    endReason: "submitted" | "time-expired" | null;
-                    expiresAt: number;
-                    score: {
-                      publishedScore: number;
-                      rawScore: number;
-                      scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
-                      theta?: number;
-                      thetaSE?: number;
-                      totalCorrect: number;
-                      totalQuestions: number;
-                    } | null;
-                    sectionKey: string;
-                    startedAt: number;
-                    status: "in-progress" | "completed" | "expired";
-                    totalQuestions: number;
-                  };
-                };
-              };
-              kind: "retained";
-              page: {
-                exam: {
-                  description?: string;
-                  examKey: string;
-                  publicPath: string;
-                  scoringStrategy: "irt" | "penalized" | "raw";
-                  title: string;
-                };
-                section: {
-                  description?: string;
-                  publicPath?: string;
-                  questionCount: number;
-                  sectionKey: string;
-                  timeLimitSeconds: number;
-                  title: string;
-                  visibility: "internal-entry" | "visible";
-                };
-                set: {
-                  countryKey: string;
-                  description?: string;
-                  examKey: string;
-                  publicPath: string;
-                  readyQuestionCount: number;
-                  readyVisibleSectionCount: number;
-                  scoringStrategy: "irt" | "penalized" | "raw";
-                  sectionCount: number;
-                  setKey: string;
-                  title: string;
-                  totalQuestionCount: number;
-                  trackKey: string;
-                  visibleSectionCount: number;
-                };
-                track: {
-                  description?: string;
-                  publicPath: string;
-                  readyQuestionCount: number;
-                  readyVisibleSectionCount: number;
-                  title: string;
-                  trackKey: string;
-                  trackKind: "institution" | "subject" | "year";
-                };
-              };
-            };
-            bodies: Array<{
-              bundleJson: string;
-              items: Array<{
-                artifactJson: string;
-                delivery: "authenticated" | "entitled";
-                sourcePath: string;
-              }>;
-              rendererJson: string;
-            } | null>;
-          }
         >;
         getSet: FunctionReference<
           "query",
@@ -11361,53 +10952,11 @@ export declare const api: {
             }
           | {
               attemptId: Id<"tryoutAttempts">;
-              content:
-                | { kind: "none" }
-                | {
-                    answers: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "entitled";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                    kind: "signed";
-                    previewAnswers: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "entitled";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                    questions: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "authenticated";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                  };
+              content: Array<{
+                body: string;
+                placementId: Id<"tryoutAttemptPlacements">;
+                versionHash: string;
+              }>;
               initialState: {
                 attempt: {
                   activeSectionKey: string | null;
@@ -11421,7 +10970,7 @@ export declare const api: {
                     publishedScore: number;
                     rawScore: number;
                     scoreStatus: "provisional" | "official";
-                    scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                    scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                     theta?: number;
                     thetaSE?: number;
                     totalCorrect: number;
@@ -11436,7 +10985,8 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                      scoringStrategy:
+                        "irt" | "raw" | "penalized" | "composite";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -11454,131 +11004,27 @@ export declare const api: {
                   attemptId: Id<"tryoutAttempts">;
                   expiresAt: number;
                   questions: Array<{
-                    contentHash: string;
                     flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
                       answeredAt: number;
-                      isComplete: boolean;
-                      outcome?:
-                        | { status: "correct" }
-                        | { status: "incorrect" }
-                        | { points: number; status: "partial" }
-                        | { status: "pending" };
-                      selection:
-                        | { kind: "single-choice"; optionKey: string }
-                        | { kind: "multiple-choice"; optionKeys: Array<string> }
+                      grade?:
                         | {
-                            assignments: Array<{
-                              categoryKey: string;
-                              statementKey: string;
-                            }>;
-                            kind: "category";
+                            category: number;
+                            ceiling: number;
+                            status: "scored";
                           }
+                        | { ceiling: number; status: "pending" };
+                      response:
+                        | Array<string>
+                        | { text: string }
+                        | { pairs: Array<{ source: string; target: string }> }
                         | {
-                            kind: "short-answer";
-                            number?: string;
-                            text: string;
-                          }
-                        | {
-                            finalAnswers: Array<{
-                              criterionKey: string;
-                              number?: string;
-                              text: string;
-                            }>;
-                            kind: "rubric";
-                            text: string;
+                            cells: Array<{ column: string; statement: string }>;
                           };
                       updatedAt: number;
                     } | null;
-                    responseSpec:
-                      | {
-                          kind: "single-choice";
-                          options: Array<{
-                            isCorrect?: boolean;
-                            label: string;
-                            optionKey: string;
-                            order: number;
-                          }>;
-                        }
-                      | {
-                          kind: "multiple-choice";
-                          options: Array<{
-                            isCorrect?: boolean;
-                            label: string;
-                            optionKey: string;
-                            order: number;
-                          }>;
-                        }
-                      | {
-                          categories: Array<{
-                            categoryKey: string;
-                            label: string;
-                            order: number;
-                          }>;
-                          kind: "category";
-                          statements: Array<{
-                            correctCategoryKey?: string;
-                            label: string;
-                            order: number;
-                            statementKey: string;
-                          }>;
-                        }
-                      | {
-                          key?:
-                            | {
-                                acceptsFractions: boolean;
-                                kind: "number";
-                                tolerance?: {
-                                  kind: "absolute" | "relative";
-                                  value: string;
-                                };
-                                value: string;
-                              }
-                            | {
-                                acceptedAnswers: Array<string>;
-                                collapseWhitespace: boolean;
-                                ignoreCase: boolean;
-                                kind: "text";
-                              };
-                          kind: "short-answer";
-                          language: "en" | "id" | "de";
-                        }
-                      | {
-                          criteria: Array<{
-                            criterionKey: string;
-                            final: boolean;
-                            finalAnswer?:
-                              | {
-                                  acceptsFractions: boolean;
-                                  kind: "number";
-                                  tolerance?: {
-                                    kind: "absolute" | "relative";
-                                    value: string;
-                                  };
-                                  value: string;
-                                }
-                              | {
-                                  acceptedAnswers: Array<string>;
-                                  collapseWhitespace: boolean;
-                                  ignoreCase: boolean;
-                                  kind: "text";
-                                };
-                            label?: { de: string; en: string; id: string };
-                            levels?: Array<{
-                              label: { de: string; en: string; id: string };
-                              levelKey: string;
-                              order: number;
-                              points: number;
-                            }>;
-                            order: number;
-                          }>;
-                          kind: "rubric";
-                          language: "en" | "id" | "de";
-                        };
-                    sourcePath: string;
-                    sourceRevision: string;
                     version?: number;
                   }>;
                   section: {
@@ -11590,7 +11036,8 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                      scoringStrategy:
+                        "irt" | "raw" | "penalized" | "composite";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -11613,12 +11060,11 @@ export declare const api: {
                   timeLimitSeconds: number;
                   title: string;
                   visibility: "internal-entry" | "visible";
-                } | null;
+                };
                 exam: {
                   description?: string;
                   examKey: string;
                   publicPath: string;
-                  scoringStrategy: "irt" | "penalized" | "raw";
                   title: string;
                 };
                 sections: Array<{
@@ -11635,21 +11081,17 @@ export declare const api: {
                   description?: string;
                   examKey: string;
                   publicPath: string;
-                  readyQuestionCount: number;
-                  readyVisibleSectionCount: number;
-                  scoringStrategy: "irt" | "penalized" | "raw";
+                  questionCount: number;
+                  scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                   sectionCount: number;
                   setKey: string;
                   title: string;
-                  totalQuestionCount: number;
                   trackKey: string;
                   visibleSectionCount: number;
                 };
                 track: {
                   description?: string;
                   publicPath: string;
-                  readyQuestionCount: number;
-                  readyVisibleSectionCount: number;
                   title: string;
                   trackKey: string;
                   trackKind: "institution" | "subject" | "year";
@@ -11670,53 +11112,11 @@ export declare const api: {
             }
           | {
               attemptId: Id<"tryoutAttempts">;
-              content:
-                | { kind: "none" }
-                | {
-                    answers: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "entitled";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                    kind: "signed";
-                    previewAnswers: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "entitled";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                    questions: Array<{
-                      appLocale: "en" | "id" | "de";
-                      artifactHash: string;
-                      bundleHash: string;
-                      contentHash: string;
-                      contentKey: string;
-                      delivery: "authenticated";
-                      questionOrder: number;
-                      sectionKey: string;
-                      snapshotId: string;
-                      snapshotReleaseId: string;
-                      sourcePath: string;
-                      sourceRevision: string;
-                    }>;
-                  };
+              content: Array<{
+                body: string;
+                placementId: Id<"tryoutAttemptPlacements">;
+                versionHash: string;
+              }>;
               initialState: {
                 attempt: {
                   activeSectionKey: string | null;
@@ -11730,7 +11130,7 @@ export declare const api: {
                     publishedScore: number;
                     rawScore: number;
                     scoreStatus: "provisional" | "official";
-                    scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                    scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                     theta?: number;
                     thetaSE?: number;
                     totalCorrect: number;
@@ -11745,7 +11145,8 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                      scoringStrategy:
+                        "irt" | "raw" | "penalized" | "composite";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -11763,131 +11164,27 @@ export declare const api: {
                   attemptId: Id<"tryoutAttempts">;
                   expiresAt: number;
                   questions: Array<{
-                    contentHash: string;
                     flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
                       answeredAt: number;
-                      isComplete: boolean;
-                      outcome?:
-                        | { status: "correct" }
-                        | { status: "incorrect" }
-                        | { points: number; status: "partial" }
-                        | { status: "pending" };
-                      selection:
-                        | { kind: "single-choice"; optionKey: string }
-                        | { kind: "multiple-choice"; optionKeys: Array<string> }
+                      grade?:
                         | {
-                            assignments: Array<{
-                              categoryKey: string;
-                              statementKey: string;
-                            }>;
-                            kind: "category";
+                            category: number;
+                            ceiling: number;
+                            status: "scored";
                           }
+                        | { ceiling: number; status: "pending" };
+                      response:
+                        | Array<string>
+                        | { text: string }
+                        | { pairs: Array<{ source: string; target: string }> }
                         | {
-                            kind: "short-answer";
-                            number?: string;
-                            text: string;
-                          }
-                        | {
-                            finalAnswers: Array<{
-                              criterionKey: string;
-                              number?: string;
-                              text: string;
-                            }>;
-                            kind: "rubric";
-                            text: string;
+                            cells: Array<{ column: string; statement: string }>;
                           };
                       updatedAt: number;
                     } | null;
-                    responseSpec:
-                      | {
-                          kind: "single-choice";
-                          options: Array<{
-                            isCorrect?: boolean;
-                            label: string;
-                            optionKey: string;
-                            order: number;
-                          }>;
-                        }
-                      | {
-                          kind: "multiple-choice";
-                          options: Array<{
-                            isCorrect?: boolean;
-                            label: string;
-                            optionKey: string;
-                            order: number;
-                          }>;
-                        }
-                      | {
-                          categories: Array<{
-                            categoryKey: string;
-                            label: string;
-                            order: number;
-                          }>;
-                          kind: "category";
-                          statements: Array<{
-                            correctCategoryKey?: string;
-                            label: string;
-                            order: number;
-                            statementKey: string;
-                          }>;
-                        }
-                      | {
-                          key?:
-                            | {
-                                acceptsFractions: boolean;
-                                kind: "number";
-                                tolerance?: {
-                                  kind: "absolute" | "relative";
-                                  value: string;
-                                };
-                                value: string;
-                              }
-                            | {
-                                acceptedAnswers: Array<string>;
-                                collapseWhitespace: boolean;
-                                ignoreCase: boolean;
-                                kind: "text";
-                              };
-                          kind: "short-answer";
-                          language: "en" | "id" | "de";
-                        }
-                      | {
-                          criteria: Array<{
-                            criterionKey: string;
-                            final: boolean;
-                            finalAnswer?:
-                              | {
-                                  acceptsFractions: boolean;
-                                  kind: "number";
-                                  tolerance?: {
-                                    kind: "absolute" | "relative";
-                                    value: string;
-                                  };
-                                  value: string;
-                                }
-                              | {
-                                  acceptedAnswers: Array<string>;
-                                  collapseWhitespace: boolean;
-                                  ignoreCase: boolean;
-                                  kind: "text";
-                                };
-                            label?: { de: string; en: string; id: string };
-                            levels?: Array<{
-                              label: { de: string; en: string; id: string };
-                              levelKey: string;
-                              order: number;
-                              points: number;
-                            }>;
-                            order: number;
-                          }>;
-                          kind: "rubric";
-                          language: "en" | "id" | "de";
-                        };
-                    sourcePath: string;
-                    sourceRevision: string;
                     version?: number;
                   }>;
                   section: {
@@ -11899,7 +11196,8 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                      scoringStrategy:
+                        "irt" | "raw" | "penalized" | "composite";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -11922,12 +11220,11 @@ export declare const api: {
                   timeLimitSeconds: number;
                   title: string;
                   visibility: "internal-entry" | "visible";
-                } | null;
+                };
                 exam: {
                   description?: string;
                   examKey: string;
                   publicPath: string;
-                  scoringStrategy: "irt" | "penalized" | "raw";
                   title: string;
                 };
                 sections: Array<{
@@ -11944,21 +11241,17 @@ export declare const api: {
                   description?: string;
                   examKey: string;
                   publicPath: string;
-                  readyQuestionCount: number;
-                  readyVisibleSectionCount: number;
-                  scoringStrategy: "irt" | "penalized" | "raw";
+                  questionCount: number;
+                  scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                   sectionCount: number;
                   setKey: string;
                   title: string;
-                  totalQuestionCount: number;
                   trackKey: string;
                   visibleSectionCount: number;
                 };
                 track: {
                   description?: string;
                   publicPath: string;
-                  readyQuestionCount: number;
-                  readyVisibleSectionCount: number;
                   title: string;
                   trackKey: string;
                   trackKind: "institution" | "subject" | "year";
@@ -11996,7 +11289,6 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              scoringStrategy: "irt" | "penalized" | "raw";
               title: string;
             }>;
             sourceRevision: string | null;
@@ -12018,14 +11310,11 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              scoringStrategy: "irt" | "penalized" | "raw";
               title: string;
             };
             tracks: Array<{
               description?: string;
               publicPath: string;
-              readyQuestionCount: number;
-              readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
               trackKind: "institution" | "subject" | "year";
@@ -12036,106 +11325,7 @@ export declare const api: {
           "query",
           "public",
           { appLocale: "en" | "id" | "de" },
-          {
-            question: {
-              appLocale: "en" | "id" | "de";
-              artifactHash: string;
-              bundleHash: string;
-              contentHash: string;
-              contentKey: string;
-              delivery: "authenticated";
-              questionOrder: number;
-              sectionKey: string;
-              snapshotId: string;
-              snapshotReleaseId: string;
-              sourcePath: string;
-              sourceRevision: string;
-            };
-            response:
-              | {
-                  kind: "single-choice";
-                  options: Array<{
-                    isCorrect: boolean;
-                    label: string;
-                    optionKey: string;
-                    order: number;
-                  }>;
-                }
-              | {
-                  kind: "multiple-choice";
-                  options: Array<{
-                    isCorrect: boolean;
-                    label: string;
-                    optionKey: string;
-                    order: number;
-                  }>;
-                }
-              | {
-                  categories: Array<{
-                    categoryKey: string;
-                    label: string;
-                    order: number;
-                  }>;
-                  kind: "category";
-                  statements: Array<{
-                    correctCategoryKey: string;
-                    label: string;
-                    order: number;
-                    statementKey: string;
-                  }>;
-                }
-              | {
-                  key:
-                    | {
-                        acceptsFractions: boolean;
-                        kind: "number";
-                        tolerance?: {
-                          kind: "absolute" | "relative";
-                          value: string;
-                        };
-                        value: string;
-                      }
-                    | {
-                        acceptedAnswers: Array<string>;
-                        collapseWhitespace: boolean;
-                        ignoreCase: boolean;
-                        kind: "text";
-                      };
-                  kind: "short-answer";
-                  language: "en" | "id" | "de";
-                }
-              | {
-                  criteria: Array<{
-                    criterionKey: string;
-                    finalAnswer?:
-                      | {
-                          acceptsFractions: boolean;
-                          kind: "number";
-                          tolerance?: {
-                            kind: "absolute" | "relative";
-                            value: string;
-                          };
-                          value: string;
-                        }
-                      | {
-                          acceptedAnswers: Array<string>;
-                          collapseWhitespace: boolean;
-                          ignoreCase: boolean;
-                          kind: "text";
-                        };
-                    label: { de: string; en: string; id: string };
-                    levels: Array<{
-                      label: { de: string; en: string; id: string };
-                      levelKey: string;
-                      order: number;
-                      points: number;
-                    }>;
-                    order: number;
-                  }>;
-                  kind: "rubric";
-                  language: "en" | "id" | "de";
-                };
-          }
+          { body: string; versionHash: string }
         >;
         getHubPage: FunctionReference<
           "query",
@@ -12196,7 +11386,6 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              scoringStrategy: "irt" | "penalized" | "raw";
               title: string;
             };
             section: {
@@ -12213,21 +11402,17 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              readyQuestionCount: number;
-              readyVisibleSectionCount: number;
-              scoringStrategy: "irt" | "penalized" | "raw";
+              questionCount: number;
+              scoringStrategy: "irt" | "raw" | "penalized" | "composite";
               sectionCount: number;
               setKey: string;
               title: string;
-              totalQuestionCount: number;
               trackKey: string;
               visibleSectionCount: number;
             };
             track: {
               description?: string;
               publicPath: string;
-              readyQuestionCount: number;
-              readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
               trackKind: "institution" | "subject" | "year";
@@ -12247,12 +11432,11 @@ export declare const api: {
               timeLimitSeconds: number;
               title: string;
               visibility: "internal-entry" | "visible";
-            } | null;
+            };
             exam: {
               description?: string;
               examKey: string;
               publicPath: string;
-              scoringStrategy: "irt" | "penalized" | "raw";
               title: string;
             };
             sections: Array<{
@@ -12269,21 +11453,17 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              readyQuestionCount: number;
-              readyVisibleSectionCount: number;
-              scoringStrategy: "irt" | "penalized" | "raw";
+              questionCount: number;
+              scoringStrategy: "irt" | "raw" | "penalized" | "composite";
               sectionCount: number;
               setKey: string;
               title: string;
-              totalQuestionCount: number;
               trackKey: string;
               visibleSectionCount: number;
             };
             track: {
               description?: string;
               publicPath: string;
-              readyQuestionCount: number;
-              readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
               trackKind: "institution" | "subject" | "year";
@@ -12306,66 +11486,15 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              scoringStrategy: "irt" | "penalized" | "raw";
               title: string;
             };
             track: {
               description?: string;
               publicPath: string;
-              readyQuestionCount: number;
-              readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
               trackKind: "institution" | "subject" | "year";
             };
-          }
-        >;
-      };
-      content: {
-        getBatch: FunctionReference<
-          "query",
-          "public",
-          {
-            attemptId: Id<"tryoutAttempts">;
-            selectors: Array<
-              | {
-                  appLocale: "en" | "id" | "de";
-                  artifactHash: string;
-                  bundleHash: string;
-                  contentHash: string;
-                  contentKey: string;
-                  delivery: "authenticated";
-                  questionOrder: number;
-                  sectionKey: string;
-                  snapshotId: string;
-                  snapshotReleaseId: string;
-                  sourcePath: string;
-                  sourceRevision: string;
-                }
-              | {
-                  appLocale: "en" | "id" | "de";
-                  artifactHash: string;
-                  bundleHash: string;
-                  contentHash: string;
-                  contentKey: string;
-                  delivery: "entitled";
-                  questionOrder: number;
-                  sectionKey: string;
-                  snapshotId: string;
-                  snapshotReleaseId: string;
-                  sourcePath: string;
-                  sourceRevision: string;
-                }
-            >;
-          },
-          null | {
-            bundleJson: string;
-            items: Array<{
-              artifactJson: string;
-              delivery: "authenticated" | "entitled";
-              sourcePath: string;
-            }>;
-            rendererJson: string;
           }
         >;
       };
@@ -12399,7 +11528,7 @@ export declare const api: {
                 publishedScore: number;
                 rawScore: number;
                 scoreStatus: "provisional" | "official";
-                scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                 theta?: number;
                 thetaSE?: number;
                 totalCorrect: number;
@@ -12435,7 +11564,7 @@ export declare const api: {
                 publishedScore: number;
                 rawScore: number;
                 scoreStatus: "provisional" | "official";
-                scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                 theta?: number;
                 thetaSE?: number;
                 totalCorrect: number;
@@ -12450,7 +11579,7 @@ export declare const api: {
                   publishedScore: number;
                   rawScore: number;
                   scoreStatus: "provisional" | "official";
-                  scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                   theta?: number;
                   thetaSE?: number;
                   totalCorrect: number;
@@ -12468,127 +11597,21 @@ export declare const api: {
               attemptId: Id<"tryoutAttempts">;
               expiresAt: number;
               questions: Array<{
-                contentHash: string;
                 flagged: boolean;
                 placementId: Id<"tryoutAttemptPlacements">;
                 questionOrder: number;
                 response: {
                   answeredAt: number;
-                  isComplete: boolean;
-                  outcome?:
-                    | { status: "correct" }
-                    | { status: "incorrect" }
-                    | { points: number; status: "partial" }
-                    | { status: "pending" };
-                  selection:
-                    | { kind: "single-choice"; optionKey: string }
-                    | { kind: "multiple-choice"; optionKeys: Array<string> }
-                    | {
-                        assignments: Array<{
-                          categoryKey: string;
-                          statementKey: string;
-                        }>;
-                        kind: "category";
-                      }
-                    | { kind: "short-answer"; number?: string; text: string }
-                    | {
-                        finalAnswers: Array<{
-                          criterionKey: string;
-                          number?: string;
-                          text: string;
-                        }>;
-                        kind: "rubric";
-                        text: string;
-                      };
+                  grade?:
+                    | { category: number; ceiling: number; status: "scored" }
+                    | { ceiling: number; status: "pending" };
+                  response:
+                    | Array<string>
+                    | { text: string }
+                    | { pairs: Array<{ source: string; target: string }> }
+                    | { cells: Array<{ column: string; statement: string }> };
                   updatedAt: number;
                 } | null;
-                responseSpec:
-                  | {
-                      kind: "single-choice";
-                      options: Array<{
-                        isCorrect?: boolean;
-                        label: string;
-                        optionKey: string;
-                        order: number;
-                      }>;
-                    }
-                  | {
-                      kind: "multiple-choice";
-                      options: Array<{
-                        isCorrect?: boolean;
-                        label: string;
-                        optionKey: string;
-                        order: number;
-                      }>;
-                    }
-                  | {
-                      categories: Array<{
-                        categoryKey: string;
-                        label: string;
-                        order: number;
-                      }>;
-                      kind: "category";
-                      statements: Array<{
-                        correctCategoryKey?: string;
-                        label: string;
-                        order: number;
-                        statementKey: string;
-                      }>;
-                    }
-                  | {
-                      key?:
-                        | {
-                            acceptsFractions: boolean;
-                            kind: "number";
-                            tolerance?: {
-                              kind: "absolute" | "relative";
-                              value: string;
-                            };
-                            value: string;
-                          }
-                        | {
-                            acceptedAnswers: Array<string>;
-                            collapseWhitespace: boolean;
-                            ignoreCase: boolean;
-                            kind: "text";
-                          };
-                      kind: "short-answer";
-                      language: "en" | "id" | "de";
-                    }
-                  | {
-                      criteria: Array<{
-                        criterionKey: string;
-                        final: boolean;
-                        finalAnswer?:
-                          | {
-                              acceptsFractions: boolean;
-                              kind: "number";
-                              tolerance?: {
-                                kind: "absolute" | "relative";
-                                value: string;
-                              };
-                              value: string;
-                            }
-                          | {
-                              acceptedAnswers: Array<string>;
-                              collapseWhitespace: boolean;
-                              ignoreCase: boolean;
-                              kind: "text";
-                            };
-                        label?: { de: string; en: string; id: string };
-                        levels?: Array<{
-                          label: { de: string; en: string; id: string };
-                          levelKey: string;
-                          order: number;
-                          points: number;
-                        }>;
-                        order: number;
-                      }>;
-                      kind: "rubric";
-                      language: "en" | "id" | "de";
-                    };
-                sourcePath: string;
-                sourceRevision: string;
                 version?: number;
               }>;
               section: {
@@ -12600,7 +11623,7 @@ export declare const api: {
                   publishedScore: number;
                   rawScore: number;
                   scoreStatus: "provisional" | "official";
-                  scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                   theta?: number;
                   thetaSE?: number;
                   totalCorrect: number;
@@ -12631,7 +11654,7 @@ export declare const api: {
                 publishedScore: number;
                 rawScore: number;
                 scoreStatus: "provisional" | "official";
-                scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                 theta?: number;
                 thetaSE?: number;
                 totalCorrect: number;
@@ -12646,7 +11669,7 @@ export declare const api: {
                   publishedScore: number;
                   rawScore: number;
                   scoreStatus: "provisional" | "official";
-                  scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                   theta?: number;
                   thetaSE?: number;
                   totalCorrect: number;
@@ -12664,127 +11687,21 @@ export declare const api: {
               attemptId: Id<"tryoutAttempts">;
               expiresAt: number;
               questions: Array<{
-                contentHash: string;
                 flagged: boolean;
                 placementId: Id<"tryoutAttemptPlacements">;
                 questionOrder: number;
                 response: {
                   answeredAt: number;
-                  isComplete: boolean;
-                  outcome?:
-                    | { status: "correct" }
-                    | { status: "incorrect" }
-                    | { points: number; status: "partial" }
-                    | { status: "pending" };
-                  selection:
-                    | { kind: "single-choice"; optionKey: string }
-                    | { kind: "multiple-choice"; optionKeys: Array<string> }
-                    | {
-                        assignments: Array<{
-                          categoryKey: string;
-                          statementKey: string;
-                        }>;
-                        kind: "category";
-                      }
-                    | { kind: "short-answer"; number?: string; text: string }
-                    | {
-                        finalAnswers: Array<{
-                          criterionKey: string;
-                          number?: string;
-                          text: string;
-                        }>;
-                        kind: "rubric";
-                        text: string;
-                      };
+                  grade?:
+                    | { category: number; ceiling: number; status: "scored" }
+                    | { ceiling: number; status: "pending" };
+                  response:
+                    | Array<string>
+                    | { text: string }
+                    | { pairs: Array<{ source: string; target: string }> }
+                    | { cells: Array<{ column: string; statement: string }> };
                   updatedAt: number;
                 } | null;
-                responseSpec:
-                  | {
-                      kind: "single-choice";
-                      options: Array<{
-                        isCorrect?: boolean;
-                        label: string;
-                        optionKey: string;
-                        order: number;
-                      }>;
-                    }
-                  | {
-                      kind: "multiple-choice";
-                      options: Array<{
-                        isCorrect?: boolean;
-                        label: string;
-                        optionKey: string;
-                        order: number;
-                      }>;
-                    }
-                  | {
-                      categories: Array<{
-                        categoryKey: string;
-                        label: string;
-                        order: number;
-                      }>;
-                      kind: "category";
-                      statements: Array<{
-                        correctCategoryKey?: string;
-                        label: string;
-                        order: number;
-                        statementKey: string;
-                      }>;
-                    }
-                  | {
-                      key?:
-                        | {
-                            acceptsFractions: boolean;
-                            kind: "number";
-                            tolerance?: {
-                              kind: "absolute" | "relative";
-                              value: string;
-                            };
-                            value: string;
-                          }
-                        | {
-                            acceptedAnswers: Array<string>;
-                            collapseWhitespace: boolean;
-                            ignoreCase: boolean;
-                            kind: "text";
-                          };
-                      kind: "short-answer";
-                      language: "en" | "id" | "de";
-                    }
-                  | {
-                      criteria: Array<{
-                        criterionKey: string;
-                        final: boolean;
-                        finalAnswer?:
-                          | {
-                              acceptsFractions: boolean;
-                              kind: "number";
-                              tolerance?: {
-                                kind: "absolute" | "relative";
-                                value: string;
-                              };
-                              value: string;
-                            }
-                          | {
-                              acceptedAnswers: Array<string>;
-                              collapseWhitespace: boolean;
-                              ignoreCase: boolean;
-                              kind: "text";
-                            };
-                        label?: { de: string; en: string; id: string };
-                        levels?: Array<{
-                          label: { de: string; en: string; id: string };
-                          levelKey: string;
-                          order: number;
-                          points: number;
-                        }>;
-                        order: number;
-                      }>;
-                      kind: "rubric";
-                      language: "en" | "id" | "de";
-                    };
-                sourcePath: string;
-                sourceRevision: string;
                 version?: number;
               }>;
               section: {
@@ -12796,7 +11713,7 @@ export declare const api: {
                   publishedScore: number;
                   rawScore: number;
                   scoreStatus: "provisional" | "official";
-                  scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "raw" | "penalized" | "composite";
                   theta?: number;
                   thetaSE?: number;
                   totalCorrect: number;
@@ -12834,7 +11751,7 @@ export declare const api: {
               field:
                 | "order"
                 | "publishedScore"
-                | "readyQuestionCount"
+                | "questionCount"
                 | "durationSeconds"
                 | "title";
             };
@@ -12851,17 +11768,15 @@ export declare const api: {
               examKey: string;
               publicPath: string;
               publishedScore: number | null;
-              readyQuestionCount: number;
-              readyVisibleSectionCount: number;
+              questionCount: number;
               runningAttempt: null | {
                 attemptId: Id<"tryoutAttempts">;
                 publicPath: string;
               };
-              scoringStrategy: "irt" | "penalized" | "raw";
+              scoringStrategy: "irt" | "raw" | "penalized" | "composite";
               sectionCount: number;
               setKey: string;
               title: string;
-              totalQuestionCount: number;
               trackKey: string;
               visibleSectionCount: number;
             }>;
@@ -14053,6 +12968,13 @@ export declare const internal: {
               resultDigest: string;
               routeDigest: string;
               snapshots: {
+                assessment: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
                 program: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
@@ -14061,13 +12983,6 @@ export declare const internal: {
                   rowDigest: string;
                 };
                 quran: {
-                  baseSnapshotId: string | null;
-                  mode: "inherit" | "replace" | "restore";
-                  resultSnapshotId: string | null;
-                  rowCount: number;
-                  rowDigest: string;
-                };
-                tryout: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
                   resultSnapshotId: string | null;
@@ -14095,6 +13010,13 @@ export declare const internal: {
               resultDigest: string;
               routeDigest: string;
               snapshots: {
+                assessment: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
                 program: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
@@ -14103,13 +13025,6 @@ export declare const internal: {
                   rowDigest: string;
                 };
                 quran: {
-                  baseSnapshotId: string | null;
-                  mode: "inherit" | "replace" | "restore";
-                  resultSnapshotId: string | null;
-                  rowCount: number;
-                  rowDigest: string;
-                };
-                tryout: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
                   resultSnapshotId: string | null;
@@ -14142,6 +13057,13 @@ export declare const internal: {
               resultDigest: string;
               routeDigest: string;
               snapshots: {
+                assessment: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
                 program: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
@@ -14150,13 +13072,6 @@ export declare const internal: {
                   rowDigest: string;
                 };
                 quran: {
-                  baseSnapshotId: string | null;
-                  mode: "inherit" | "replace" | "restore";
-                  resultSnapshotId: string | null;
-                  rowCount: number;
-                  rowDigest: string;
-                };
-                tryout: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
                   resultSnapshotId: string | null;
@@ -14184,6 +13099,13 @@ export declare const internal: {
               resultDigest: string;
               routeDigest: string;
               snapshots: {
+                assessment: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
                 program: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
@@ -14192,13 +13114,6 @@ export declare const internal: {
                   rowDigest: string;
                 };
                 quran: {
-                  baseSnapshotId: string | null;
-                  mode: "inherit" | "replace" | "restore";
-                  resultSnapshotId: string | null;
-                  rowCount: number;
-                  rowDigest: string;
-                };
-                tryout: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
                   resultSnapshotId: string | null;
@@ -14327,7 +13242,7 @@ export declare const internal: {
           activeManifestHash: string;
           activeReleaseId: string;
           cursor: string | null;
-          family: "article" | "material" | "page" | "question";
+          family: "article" | "material" | "page";
           limit: number;
         },
         {
@@ -14335,16 +13250,16 @@ export declare const internal: {
           activeReleaseId: string;
           cursor: string | null;
           done: boolean;
-          family: "article" | "material" | "page" | "question";
+          family: "article" | "material" | "page";
           heads: Array<{
             artifactHash: string;
             artifactLocale: "en" | "id" | "de";
             compilerConfigHash: string;
             contentKey: string;
             delivery: "public" | "authenticated" | "entitled";
-            family: "article" | "material" | "page" | "question";
+            family: "article" | "material" | "page";
             projectionHash: string;
-            publicPath?: string;
+            publicPath: string;
             rendererDomain:
               | "ai-ds"
               | "biology"
@@ -14444,6 +13359,13 @@ export declare const internal: {
               resultDigest: string;
               routeDigest: string;
               snapshots: {
+                assessment: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
                 program: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
@@ -14452,13 +13374,6 @@ export declare const internal: {
                   rowDigest: string;
                 };
                 quran: {
-                  baseSnapshotId: string | null;
-                  mode: "inherit" | "replace" | "restore";
-                  resultSnapshotId: string | null;
-                  rowCount: number;
-                  rowDigest: string;
-                };
-                tryout: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
                   resultSnapshotId: string | null;
@@ -14504,6 +13419,13 @@ export declare const internal: {
               resultDigest: string;
               routeDigest: string;
               snapshots: {
+                assessment: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
                 program: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
@@ -14512,13 +13434,6 @@ export declare const internal: {
                   rowDigest: string;
                 };
                 quran: {
-                  baseSnapshotId: string | null;
-                  mode: "inherit" | "replace" | "restore";
-                  resultSnapshotId: string | null;
-                  rowCount: number;
-                  rowDigest: string;
-                };
-                tryout: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
                   resultSnapshotId: string | null;
@@ -14592,9 +13507,9 @@ export declare const internal: {
               compilerConfigHash: string;
               contentKey: string;
               delivery: "public" | "authenticated" | "entitled";
-              family: "article" | "material" | "page" | "question";
+              family: "article" | "material" | "page";
               projectionHash: string;
-              publicPath?: string;
+              publicPath: string;
               rendererDomain:
                 | "ai-ds"
                 | "biology"
@@ -14648,6 +13563,13 @@ export declare const internal: {
                 resultDigest: string;
                 routeDigest: string;
                 snapshots: {
+                  assessment: {
+                    baseSnapshotId: string | null;
+                    mode: "inherit" | "replace" | "restore";
+                    resultSnapshotId: string | null;
+                    rowCount: number;
+                    rowDigest: string;
+                  };
                   program: {
                     baseSnapshotId: string | null;
                     mode: "inherit" | "replace" | "restore";
@@ -14656,13 +13578,6 @@ export declare const internal: {
                     rowDigest: string;
                   };
                   quran: {
-                    baseSnapshotId: string | null;
-                    mode: "inherit" | "replace" | "restore";
-                    resultSnapshotId: string | null;
-                    rowCount: number;
-                    rowDigest: string;
-                  };
-                  tryout: {
                     baseSnapshotId: string | null;
                     mode: "inherit" | "replace" | "restore";
                     resultSnapshotId: string | null;
@@ -14835,6 +13750,13 @@ export declare const internal: {
                 resultDigest: string;
                 routeDigest: string;
                 snapshots: {
+                  assessment: {
+                    baseSnapshotId: string | null;
+                    mode: "inherit" | "replace" | "restore";
+                    resultSnapshotId: string | null;
+                    rowCount: number;
+                    rowDigest: string;
+                  };
                   program: {
                     baseSnapshotId: string | null;
                     mode: "inherit" | "replace" | "restore";
@@ -14843,13 +13765,6 @@ export declare const internal: {
                     rowDigest: string;
                   };
                   quran: {
-                    baseSnapshotId: string | null;
-                    mode: "inherit" | "replace" | "restore";
-                    resultSnapshotId: string | null;
-                    rowCount: number;
-                    rowDigest: string;
-                  };
-                  tryout: {
                     baseSnapshotId: string | null;
                     mode: "inherit" | "replace" | "restore";
                     resultSnapshotId: string | null;
@@ -15274,40 +14189,6 @@ export declare const internal: {
           >;
         };
       };
-      tryout: {
-        dispatch: {
-          dispatch: FunctionReference<
-            "action",
-            "internal",
-            { byteLength: number; source: string },
-            { body: string; status: number }
-          >;
-        };
-        internal: {
-          read: FunctionReference<
-            "query",
-            "internal",
-            {
-              bundleHash: string;
-              selectors: Array<{
-                artifactHash: string;
-                contentKey: string;
-                delivery: "authenticated" | "entitled";
-              }>;
-              snapshotId: string;
-            },
-            null | {
-              bundleJson: string;
-              items: Array<{
-                artifactJson: string;
-                delivery: "authenticated" | "entitled";
-                sourcePath: string;
-              }>;
-              rendererJson: string;
-            }
-          >;
-        };
-      };
     };
     snapshot: {
       batch: {
@@ -15316,7 +14197,7 @@ export declare const internal: {
           "internal",
           {
             batchIndex: number;
-            family: "program" | "quran" | "tryout";
+            family: "assessment" | "program" | "quran";
             releaseId: string;
             rowJson: Array<string>;
             snapshotId: string;
@@ -15324,7 +14205,7 @@ export declare const internal: {
           {
             batchIndex: number;
             created: number;
-            family: "program" | "quran" | "tryout";
+            family: "assessment" | "program" | "quran";
             releaseId: string;
             snapshotId: string;
             unchanged: number;
@@ -15338,7 +14219,7 @@ export declare const internal: {
           { releaseId: string; snapshotJson: string },
           {
             created: 0 | 1;
-            family: "program" | "quran" | "tryout";
+            family: "assessment" | "program" | "quran";
             releaseId: string;
             snapshotId: string;
             unchanged: 0 | 1;
@@ -15349,7 +14230,7 @@ export declare const internal: {
         manifest: FunctionReference<
           "query",
           "internal",
-          { family: "program" | "quran" | "tryout"; releaseId: string },
+          { family: "assessment" | "program" | "quran"; releaseId: string },
           string
         >;
         rows: FunctionReference<
@@ -15357,7 +14238,7 @@ export declare const internal: {
           "internal",
           {
             afterBatchIndex: number;
-            family: "program" | "quran" | "tryout";
+            family: "assessment" | "program" | "quran";
             releaseId: string;
           },
           {
@@ -15389,6 +14270,13 @@ export declare const internal: {
               resultDigest: string;
               routeDigest: string;
               snapshots: {
+                assessment: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
                 program: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
@@ -15397,13 +14285,6 @@ export declare const internal: {
                   rowDigest: string;
                 };
                 quran: {
-                  baseSnapshotId: string | null;
-                  mode: "inherit" | "replace" | "restore";
-                  resultSnapshotId: string | null;
-                  rowCount: number;
-                  rowDigest: string;
-                };
-                tryout: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
                   resultSnapshotId: string | null;
@@ -15430,7 +14311,6 @@ export declare const internal: {
             releaseJson: string;
             rendererJson: string;
           };
-          tryoutRuntimeBundleJson: string | null;
         }
       >;
       getStatus: FunctionReference<
@@ -15462,6 +14342,13 @@ export declare const internal: {
               resultDigest: string;
               routeDigest: string;
               snapshots: {
+                assessment: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
                 program: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
@@ -15470,13 +14357,6 @@ export declare const internal: {
                   rowDigest: string;
                 };
                 quran: {
-                  baseSnapshotId: string | null;
-                  mode: "inherit" | "replace" | "restore";
-                  resultSnapshotId: string | null;
-                  rowCount: number;
-                  rowDigest: string;
-                };
-                tryout: {
                   baseSnapshotId: string | null;
                   mode: "inherit" | "replace" | "restore";
                   resultSnapshotId: string | null;
@@ -16492,121 +15372,16 @@ export declare const internal: {
         "internal",
         { turnId: Id<"ninaTurns"> },
         {
-          explanationMdx: string;
-          outcome:
-            | { status: "correct" }
-            | { status: "incorrect" }
-            | { points: number; status: "partial" }
-            | { status: "pending" }
-            | null;
-          questionLocale: "en" | "id" | "de";
-          questionMdx: string;
+          answer: string;
+          explanation: string;
+          question: string;
+          questionLanguage: string;
           questionOrder: number;
-          responseSpec:
-            | {
-                kind: "single-choice";
-                options: Array<{
-                  isCorrect: boolean;
-                  label: string;
-                  optionKey: string;
-                  order: number;
-                }>;
-              }
-            | {
-                kind: "multiple-choice";
-                options: Array<{
-                  isCorrect: boolean;
-                  label: string;
-                  optionKey: string;
-                  order: number;
-                }>;
-              }
-            | {
-                categories: Array<{
-                  categoryKey: string;
-                  label: string;
-                  order: number;
-                }>;
-                kind: "category";
-                statements: Array<{
-                  correctCategoryKey: string;
-                  label: string;
-                  order: number;
-                  statementKey: string;
-                }>;
-              }
-            | {
-                key:
-                  | {
-                      acceptsFractions: boolean;
-                      kind: "number";
-                      tolerance?: {
-                        kind: "absolute" | "relative";
-                        value: string;
-                      };
-                      value: string;
-                    }
-                  | {
-                      acceptedAnswers: Array<string>;
-                      collapseWhitespace: boolean;
-                      ignoreCase: boolean;
-                      kind: "text";
-                    };
-                kind: "short-answer";
-                language: "en" | "id" | "de";
-              }
-            | {
-                criteria: Array<{
-                  criterionKey: string;
-                  finalAnswer?:
-                    | {
-                        acceptsFractions: boolean;
-                        kind: "number";
-                        tolerance?: {
-                          kind: "absolute" | "relative";
-                          value: string;
-                        };
-                        value: string;
-                      }
-                    | {
-                        acceptedAnswers: Array<string>;
-                        collapseWhitespace: boolean;
-                        ignoreCase: boolean;
-                        kind: "text";
-                      };
-                  label: { de: string; en: string; id: string };
-                  levels: Array<{
-                    label: { de: string; en: string; id: string };
-                    levelKey: string;
-                    order: number;
-                    points: number;
-                  }>;
-                  order: number;
-                }>;
-                kind: "rubric";
-                language: "en" | "id" | "de";
-              };
-          selection:
-            | { kind: "single-choice"; optionKey: string }
-            | { kind: "multiple-choice"; optionKeys: Array<string> }
-            | {
-                assignments: Array<{
-                  categoryKey: string;
-                  statementKey: string;
-                }>;
-                kind: "category";
-              }
-            | { kind: "short-answer"; number?: string; text: string }
-            | {
-                finalAnswers: Array<{
-                  criterionKey: string;
-                  number?: string;
-                  text: string;
-                }>;
-                kind: "rubric";
-                text: string;
-              }
-            | null;
+          result:
+            | "not answered"
+            | "answered correctly"
+            | "answered incorrectly"
+            | "answered, awaiting grading";
         } | null
       >;
     };
@@ -17820,22 +16595,6 @@ export declare const internal: {
           null
         >;
         sweep: FunctionReference<"mutation", "internal", {}, null>;
-      };
-    };
-    runtime: {
-      signed: {
-        stageTryoutRuntimeBundle: FunctionReference<
-          "mutation",
-          "internal",
-          { bundleJson: string; rendererJson: string },
-          {
-            bundleHash: string;
-            created: 0 | 1;
-            releaseId: string;
-            snapshotId: string;
-            unchanged: 0 | 1;
-          }
-        >;
       };
     };
   };

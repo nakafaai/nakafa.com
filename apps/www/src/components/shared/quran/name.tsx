@@ -1,4 +1,4 @@
-/** A surah's transliterated name with its Arabic name beside it. */
+/** A surah's transliterated name with its Arabic name beside it, in the Quran's face. */
 export function QuranSurahName({
   arabic,
   title,
@@ -9,7 +9,11 @@ export function QuranSurahName({
   return (
     <>
       <span className="min-w-0 text-pretty">{title}</span>
-      <span className="shrink-0 text-xl font-normal" dir="rtl" lang="ar">
+      <span
+        className="font-quran shrink-0 text-xl font-normal"
+        dir="rtl"
+        lang="ar"
+      >
         {arabic}
       </span>
     </>

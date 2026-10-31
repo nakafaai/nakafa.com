@@ -16,6 +16,7 @@ import {
   CodeBlockSelectValue,
 } from "@repo/design-system/components/code-block/header";
 import type { CodeBlockData } from "@repo/design-system/lib/code-block/context";
+import { blockGapVariants } from "@repo/design-system/lib/prose";
 import { Array as Arr, Schema, String as Str } from "effect";
 
 /** The line count of a code block's first source, which its height stands in for while the browser skips it. */
@@ -30,7 +31,7 @@ export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
   };
   return (
     <CodeBlock
-      className="content-auto-code my-4"
+      className={blockGapVariants({ className: "content-auto-code" })}
       data={data}
       defaultValue={data[0].language}
       style={style}

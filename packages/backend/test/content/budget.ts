@@ -1,12 +1,8 @@
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
-import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
-import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
 import {
   CONTENT_DOCUMENT_LIMIT,
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/confect/contentRelease/document";
-import { tryoutPlacementFacts } from "@repo/backend/confect/contentRelease/tryout/facts";
-import { TRYOUT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
@@ -15,11 +11,8 @@ import {
   testRollbackJson,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
-import { makeTryoutPlacementRow } from "@repo/backend/test/tryout/snapshot";
 import { getDocumentSize, type Value } from "convex/values";
-import { Array as Arr, Effect, Schema } from "effect";
-
-type ArtifactHash = TryoutPlacement["questionArtifactHash"];
+import { Array as Arr, Schema } from "effect";
 
 /** One stored version or item naming an artifact at a release sequence. */
 const ArtifactRowSchema = Schema.Struct({
@@ -113,39 +106,10 @@ export function insertCeilingItem(
   );
 }
 
-/** Inserts one try-out placement naming an artifact as question and answer. */
-async function insertCeilingPlacement(
-  ctx: MutationCtx,
-  artifactHash: ArtifactHash,
-  index: number
-) {
-  const { record } = await Effect.runPromise(
-    makeTryoutPlacementRow("en", {
-      answerArtifactHash: artifactHash,
-      questionArtifactHash: artifactHash,
-    })
-  );
-  const rowJson = canonicalizeContentSnapshotRow({
-    family: "tryout",
-    record,
-    rowKind: "placement",
-  });
-  return ctx.db.insert(
-    "tryoutPlacements",
-    fill(TRYOUT_PLACEMENT_DOCUMENT_LIMIT, (padding) => ({
-      ...tryoutPlacementFacts(record),
-      index,
-      rowHash: record.rowHash,
-      rowJson: `${rowJson}${padding}`,
-      snapshotId: TEST_DIGEST,
-    }))
-  );
-}
-
 /** Keeps every artifact reachable through the largest rows that may name it. */
 export async function insertCeilingReferences(
   ctx: MutationCtx,
-  artifactHashes: readonly ArtifactHash[],
+  artifactHashes: readonly ArtifactRow["artifactHash"][],
   sequence: number
 ) {
   const references = Arr.map(artifactHashes, (artifactHash, index) => ({
@@ -157,7 +121,6 @@ export async function insertCeilingReferences(
   for (const reference of references) {
     await insertCeilingHead(ctx, reference);
     await insertCeilingItem(ctx, reference);
-    await insertCeilingPlacement(ctx, reference.artifactHash, reference.index);
   }
 }
 
