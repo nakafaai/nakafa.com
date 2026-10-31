@@ -292,6 +292,7 @@
     "question": "Frage {number}",
     "option": "Option {letter}",
     "option-of": "Frage {number}, Option {letter}",
+    "option-unsaved": "Noch nicht gespeichert.",
     "option-add": "Option hinzufügen",
     "no-key": "Diese Frage hat noch keinen Lösungsschlüssel.",
     "empty-part": "Diese Frage hat eine leere Option oder Aussage.",

@@ -64,6 +64,7 @@ import {
 import { tableOf } from "@/components/tenant/exams/table";
 import { QuestionType } from "@/components/tenant/exams/type";
 import { usePageWindow } from "@/components/tenant/exams/window";
+import type { Unstored } from "@/components/tenant/exams/writer";
 
 /**
  * The prompt loads when a page mounts its editors, never with the page. Until it loads, the page
@@ -420,7 +421,7 @@ function LivePaper({
                       }))
                   : null
               }
-              onSave={(label: OptionLabel, unstored: () => void) =>
+              onSave={(label: OptionLabel, unstored: Unstored) =>
                 saveAnswers(
                   (draft) => ({
                     ...draft,
