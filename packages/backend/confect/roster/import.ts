@@ -124,10 +124,7 @@ export const applyRow = Effect.fn("roster.import.row")(function* (
       unitId: period.unitId,
     }).pipe(Effect.orDie);
   }
-  yield* writeRosterEntry(keys, person, {
-    nisn: Option.some(row.nisn),
-    underAgeLimit: row.underAgeLimit,
-  });
+  yield* writeRosterEntry(keys, person, row.nisn);
   yield* personAuthority.record(actor, person, { type: "roster.set" });
   if (row.cohortName !== undefined) {
     yield* placeNamed(actor, person, period, row.cohortName);

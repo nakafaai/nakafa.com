@@ -12,7 +12,7 @@ export const LESSONS_PER_STEP = 6;
 /** Bytes of search rows one build step may scan while it lists its lessons. */
 export const LESSON_PAGE_BYTES = 1024 * 1024;
 
-/** Sections that the model test embeds in one batch, which it runs a few batches at a time. */
+/** Sections that one embedding batch holds. */
 export const EMBED_BATCH_SIZE = 64;
 
 /**
@@ -61,19 +61,6 @@ export const PRUNE_BATCH_SIZE = SECTIONS_PER_DOCUMENT;
 
 /** Documents one clean-up mutation checks for being published still. */
 export const PRUNE_SOURCES_PER_PAGE = 64;
-
-/** Stored sections one page of the model test reads back. */
-export const COMPARE_PAGE_ROWS = 64;
-
-/**
- * Bytes one page of the model test may read. A stored section takes at most
- * about 31 KB, a vector of 6,914 bytes and 12,000 characters of Arabic, so a
- * full page stays below 2 MB.
- */
-export const COMPARE_PAGE_BYTES = 4 * 1024 * 1024;
-
-/** Embedding requests the model test keeps open at once. */
-export const COMPARE_CONCURRENCY = 6;
 
 /** Characters of a section kept for word search. */
 export const SECTION_TEXT_CHARS = 12_000;

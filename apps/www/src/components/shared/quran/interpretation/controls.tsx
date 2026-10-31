@@ -58,6 +58,7 @@ export function QuranInterpretationControls({
   const t = useTranslations("Holy");
   const [isOpen, { close, open, set }] = useDisclosure(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
+  const [selectedVerseNumber, setSelectedVerseNumber] = useState(1);
   const [pendingVerseNumber, setPendingVerseNumber] = useOptimistic<
     number | null
   >(null);
@@ -170,6 +171,7 @@ export function QuranInterpretationControls({
             return;
           }
           setSelectedInterpretation(interpretation);
+          setSelectedVerseNumber(verseNumber);
           open();
         })
       ),
@@ -201,7 +203,7 @@ export function QuranInterpretationControls({
     <QuranInterpretationContext value={contextValue}>
       {children}
       <ResponsiveDialog
-        description={t("interpretation-description")}
+        description={t("verse-count", { count: selectedVerseNumber })}
         open={isOpen}
         setOpen={set}
         title={label}

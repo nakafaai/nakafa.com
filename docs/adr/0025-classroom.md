@@ -75,9 +75,7 @@ and the library of every class their grant covers, and they write nowhere in
 them (a roles-granted view action, ADR 0012). Counselors, Staff, Proctors,
 Auditors, and Integrations have no access to them. A guardian does not read the
 forum. The verified parent relation opens tasks, grades, report cards, and
-announcements. A student under the age limit of the country profile (ADR 0032)
-uses the forum, and Nina in it, only after a parent's consent is recorded (K2).
-Signing in does not count as consent (ADR 0009).
+announcements.
 
 ### Channels and numbered discussions
 
@@ -112,6 +110,57 @@ Signing in does not count as consent (ADR 0009).
 - A forward is a reference to the original message and not a copy. It is a stored
   object reference (ADR 0016), so opening it checks permission through the kind
   of the message every time.
+
+### The forum is laid out as a chat app
+
+The owner asked on 31 October 2026 for a forum that works as Discord, Slack and
+WhatsApp do. These decisions hold it.
+
+- The list of a class's chats stands beside the open chat, as Discord's channel
+  rail and WhatsApp's chat list do, and opening the forum shows the list, never one
+  chat. A phone shows one of the two. A chat is a channel in the code and in this
+  ADR, and the words on the page say chat, which is what a class calls it.
+- The list filters like WhatsApp's: All, Unread, and Threads, which gathers the
+  class's discussions as Slack's Threads view does. Its search stays above its rows
+  at every width.
+- A row carries the start of the chat's newest message. The list already reads that
+  row to mark the chat unread, so the preview costs one read of the author and no
+  more. It stays a dot with no count (ADR 0027).
+- A chat reads in a column of `max-w-3xl`, inside the page's `max-w-7xl`. Bubbles
+  stand at both edges of the column, and a wider column makes the eye travel too far
+  between them. The list, the header and the tabs keep the page's width.
+- Any message of a channel starts a thread with one press, as in Slack and Discord,
+  under the class's next number and titled by its first line, its poll's question,
+  or its first file's name. A titled discussion stays for a teacher who asks a
+  question on purpose. `studentThreads` rules both.
+
+### Files, polls and reactions
+
+- A message carries up to ten files: a photo, a PDF, or a Word, Excel or PowerPoint
+  file, up to 20 MB each. Its bytes name its kind, as in the library, and the name
+  is sealed. A file uploads when it is chosen and waits as a row of
+  `classroomUploads`; the send moves it onto the message, so a send stays one
+  transaction and stays instant. A daily sweep deletes what stayed unsent.
+- The browser shrinks a photo before it leaves the device: at most 1,600 pixels on
+  its long edge, with a 480 pixel copy for the stream. A phone's 4 MB photo costs each
+  reader about 40 KB in the stream and 300 KB when opened.
+- The files stay in Convex storage. On 31 October 2026 the team used 119 MB of the
+  100 GB included and about 2.4 GB of the 50 GB of egress, and Convex serves a file
+  as `private, max-age=2592000`, so a reader pays once. R2 has no egress fee and half
+  the price per gigabyte, but it adds a bill with no hard cap, a second store beside
+  the library's, and an S3 emulator to every acceptance run. At one estimate (a school
+  of 500, 1,200 files a month, 30 readers each) a school costs 3.2 GB of egress a
+  month, so the included 50 GB holds about 15 schools, and at 100 schools R2 saves
+  about $36 a month against Rp500 million of revenue. Move when the usage page nears
+  the included egress: `classroom/forum/attach.ts` and `files.impl.ts` are the seam.
+- `classroomFileUse` keeps each school within 10 GiB, the guard ADR 0028 asks for,
+  until the plan sets the number.
+- A poll stands on its message, its words sealed. Reactions and votes live apart, in
+  one `classroomTallies` row a message that holds any, and a reader reads them in a
+  query of its own by the time of its oldest loaded message. A burst of forty votes
+  would otherwise rerun forty readers' pages of thirty messages for each vote.
+- The emoji ship with the page. A picker's data on a third party's CDN would tell it
+  which school pages are open.
 
 ### The forum is built on the primitives of Nina
 

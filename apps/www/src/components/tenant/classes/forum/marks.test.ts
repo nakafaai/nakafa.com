@@ -21,6 +21,7 @@ const message = (
   mine = false,
   pending = false
 ): ForumMessage => ({
+  attachments: [],
   author: { id: personId, name: "Raka" },
   clientKey: key,
   createdAt,
@@ -29,6 +30,7 @@ const message = (
   mentions: [],
   id: messageOf(pending ? key : `saved-${key}`),
   mine,
+  poll: null,
   text: "Halo",
 });
 

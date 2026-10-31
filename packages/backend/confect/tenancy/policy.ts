@@ -98,9 +98,21 @@ export const applyPolicy = (
   });
 
 /**
+ * The ministry's Workspace for Indonesian schools. It gives each level and role a
+ * subdomain of its own, such as `guru.sma.belajar.id`, so its one entry stands for all
+ * of them, and a school cannot list domains it has no way to enumerate (ADR 0009).
+ */
+const BELAJAR_ID = "belajar.id";
+
+/** Whether a domain is on the list: as written, or as a subdomain of a listed belajar.id. */
+const isAllowedDomain = (allowed: readonly string[], domain: string) =>
+  Arr.contains(allowed, domain) ||
+  (Arr.contains(allowed, BELAJAR_ID) && Str.endsWith(`.${BELAJAR_ID}`)(domain));
+
+/**
  * Whether the tenant admits an address: every address while its list of email
- * domains is empty, and otherwise only an address whose domain is exactly one
- * of them, so a subdomain needs its own entry. An address is one local part,
+ * domains is empty, and otherwise only an address whose domain is on it, so any
+ * subdomain but belajar.id's needs its own entry. An address is one local part,
  * `@`, and a lowercase domain, as `Email` writes it.
  */
 export const admitsAddress = (
@@ -108,7 +120,7 @@ export const admitsAddress = (
   address: string
 ) =>
   Arr.isReadonlyArrayEmpty(policies.emailDomains) ||
-  Arr.contains(
+  isAllowedDomain(
     policies.emailDomains,
     Arr.lastNonEmpty(Str.split(address, "@"))
   );
@@ -131,5 +143,5 @@ export const admitsHostedDomains = (
       hostedDomains,
       (domain) =>
         Predicate.isNotNull(domain) &&
-        Arr.contains(policies.emailDomains, domain)
+        isAllowedDomain(policies.emailDomains, domain)
     ));

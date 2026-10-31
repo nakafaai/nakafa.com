@@ -3,11 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { PrintableReport } from "@repo/backend/confect/records/report";
 import { Schema } from "effect";
 
-/**
- * The drawing of an approved report's PDF (ADR 0033, S5): `draw` reads the report's
- * printable copy, draws the PDF, stores it, and `lock` locks the report with its file.
- * Only the approval schedules them.
- */
+/** The printable copy of an approved report, and the lock that `draw` writes once its PDF is stored (ADR 0033, S5). */
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalQuery({
@@ -20,13 +16,6 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "lock",
       args: () => ({ reportId: Id("reportCards"), storageId: Id("_storage") }),
-      returns: () => Schema.Null,
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalAction({
-      name: "draw",
-      args: () => ({ reportId: Id("reportCards") }),
       returns: () => Schema.Null,
     })
   );

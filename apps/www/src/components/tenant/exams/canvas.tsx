@@ -223,7 +223,7 @@ export function ExamCanvas({
       viewportRef={canvas}
     >
       <div
-        className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 md:px-6"
+        className="mx-auto flex w-full max-w-212 flex-col gap-8 px-4 py-6 md:px-6"
         style={{ zoom: drawnPercent / 100 }}
       >
         {Arr.map(exam.questions, (question, index) => (

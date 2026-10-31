@@ -25,14 +25,17 @@ import classGrades from "./tables/classGrades";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
+import classroomFileUse from "./tables/classroomFileUse";
 import classroomFolders from "./tables/classroomFolders";
 import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
 import classroomPosts from "./tables/classroomPosts";
 import classroomReads from "./tables/classroomReads";
 import classroomSubmissions from "./tables/classroomSubmissions";
+import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
 import classroomThreads from "./tables/classroomThreads";
+import classroomUploads from "./tables/classroomUploads";
 import commentLikes from "./tables/commentLikes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
@@ -173,14 +176,17 @@ export default $defineSchema({
   classTeachers: $Table.tableDefinition(classTeachers),
   classes: $Table.tableDefinition(classes),
   classroomChannels: $Table.tableDefinition(classroomChannels),
+  classroomFileUse: $Table.tableDefinition(classroomFileUse),
   classroomFolders: $Table.tableDefinition(classroomFolders),
   classroomLibrary: $Table.tableDefinition(classroomLibrary),
   classroomMessages: $Table.tableDefinition(classroomMessages),
   classroomPosts: $Table.tableDefinition(classroomPosts),
   classroomReads: $Table.tableDefinition(classroomReads),
   classroomSubmissions: $Table.tableDefinition(classroomSubmissions),
+  classroomTallies: $Table.tableDefinition(classroomTallies),
   classroomTasks: $Table.tableDefinition(classroomTasks),
   classroomThreads: $Table.tableDefinition(classroomThreads),
+  classroomUploads: $Table.tableDefinition(classroomUploads),
   commentLikes: $Table.tableDefinition(commentLikes),
   comments: $Table.tableDefinition(comments),
   connectorConnections: $Table.tableDefinition(connectorConnections),
