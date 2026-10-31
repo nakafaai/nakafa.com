@@ -1,128 +1,70 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { readSignedTryoutSearchDocuments } from "@repo/backend/confect/contents/search/tryout";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
-import {
-  activateTryoutSnapshot,
-  makeTryoutCatalogRow,
-  makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout/snapshot";
-import { Effect, Schema } from "effect";
+import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
+import { Array as Arr, Effect, Order } from "effect";
 
-/** Builds one internal section that must never become a public search result. */
-function makeInternalSection(appLocale: ActiveAppLocaleCode) {
-  return Schema.decodeSync(TryoutCatalogRowSchema)({
-    countryKey: "indonesia",
-    description: "Internal entry",
-    examKey: "snbt",
-    graph: {
-      alignmentId: "alignment:tryout:technical:internal-section",
-      assetId: `asset:${appLocale}:tryout:technical:internal-section`,
-      conceptId: "concept:tryout:technical:internal-section",
-      learningObjectId: "lo:tryout-technical-internal-section",
-      lensId: "lens:tryout:technical",
-    },
-    kind: "section",
-    appLocale,
-    order: 1,
-    questionCount: 1,
-    questionSourcePath:
-      "packages/corpus/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1",
-    sectionKey: "quantitative-knowledge",
-    setKey: "set-1",
-    sourceRevision: "technical-revision",
-    timeLimitSeconds: 60,
-    title: "Internal entry",
-    trackKey: "2027",
-    visibility: "internal-entry",
-  });
-}
+const input = {
+  limit: 10,
+  locale: "en",
+  offset: 0,
+  section: "tryout",
+} satisfies Parameters<typeof readSignedTryoutSearchDocuments>[0];
+
+/** Searches the try-out documents of the English catalog for `queries`, at most `limit`. */
+const search = (queries: readonly string[], limit = 10) =>
+  readSignedTryoutSearchDocuments(
+    { ...input, queries: [...queries] },
+    queries,
+    limit
+  );
+
 describe("contents/search/tryout", () => {
-  it.effect("returns no source fallback before signed Tryout activation", () =>
+  it.effect("finds nothing before any release activates a snapshot", () =>
     Effect.gen(function* () {
       const t = yield* Confect.pipe(Effect.provide(confectLayer));
       yield* t.run(
         Effect.gen(function* () {
-          expect(
-            yield* readSignedTryoutSearchDocuments(
-              {
-                limit: 10,
-                locale: "en",
-                offset: 0,
-                queries: ["technical"],
-                section: "tryout",
-              },
-              ["technical"],
-              10
-            )
-          ).toEqual([]);
+          expect(yield* search(["try-out"])).toEqual([]);
         })
       );
     })
   );
+
   it.effect(
-    "searches only public rows from one verified localized catalog",
+    "searches the public routes of the active catalog by route, title and description, never an internal section",
     () =>
       Effect.gen(function* () {
         const t = yield* Confect.pipe(Effect.provide(confectLayer));
         yield* t.run(
           Effect.gen(function* () {
-            const tCtx = yield* MutationCtx;
-            yield* activateTryoutSnapshot(tCtx, {
-              catalog: [
-                {
-                  ...(yield* makeTryoutCatalogRow("en")).record.row,
-                  description: "Signed description",
-                },
-                makeInternalSection("en"),
-                (yield* makeTryoutCatalogRow("id")).record.row,
-                makeInternalSection("id"),
-              ],
-              placements: [
-                (yield* makeTryoutPlacementRow("en")).record.row,
-                (yield* makeTryoutPlacementRow("id")).record.row,
-              ],
-            });
-            const input = {
-              limit: 10,
-              locale: "en",
-              offset: 0,
+            const ctx = yield* MutationCtx;
+            yield* Effect.promise(() =>
+              activateAssessmentTestSnapshot(ctx, { entry: true })
+            );
+            const [exact] = yield* search(["try-out/indonesia-en"]);
+            expect(exact).toMatchObject({
+              content_id: "asset:en:tryout:country",
+              route: "try-out/indonesia-en",
               section: "tryout",
-            } satisfies Parameters<typeof readSignedTryoutSearchDocuments>[0];
-            const exact = yield* readSignedTryoutSearchDocuments(
-              {
-                ...input,
-                queries: ["try-out/indonesia"],
-              },
-              ["try-out/indonesia"],
-              10
-            );
-            const internal = yield* readSignedTryoutSearchDocuments(
-              {
-                ...input,
-                queries: ["Internal entry"],
-              },
-              ["Internal entry"],
-              10
-            );
-            const browsed = yield* readSignedTryoutSearchDocuments(
-              input,
-              [],
-              10
-            );
-            const empty = yield* readSignedTryoutSearchDocuments(input, [], 0);
-            expect(exact).toMatchObject([
-              {
-                content_id: "asset:en:tryout:technical:country",
-                route: "try-out/indonesia",
-                section: "tryout",
-              },
+            });
+            expect(
+              Arr.map(yield* search(["Indonesia"]), ({ route }) => route)
+            ).toContain("try-out/indonesia-en");
+            const browsed = yield* search([]);
+            expect(
+              Arr.sort(
+                Arr.map(browsed, ({ route }) => route),
+                Order.String
+              )
+            ).toEqual([
+              "try-out/indonesia-en",
+              "try-out/indonesia/snbt-en",
+              "try-out/indonesia/snbt/2027-en",
+              "try-out/indonesia/snbt/2027/set-1-en",
             ]);
-            expect(internal).toEqual([]);
-            expect(browsed).toHaveLength(1);
-            expect(empty).toEqual([]);
+            expect(yield* search([], 0)).toEqual([]);
           })
         );
       })

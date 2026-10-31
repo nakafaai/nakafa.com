@@ -2,16 +2,16 @@ import type {
   ExamQuestionsDoc,
   ExamSittingsDoc,
 } from "@repo/backend/confect/_generated/docs";
+import { fitsQuestion } from "@repo/backend/confect/assessment/fit";
 import type { Version } from "@repo/backend/confect/assessment/gate/rules";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { questionAnswers } from "@repo/backend/confect/exams/question";
 import {
   ResponseDoesNotFit,
   StaleAnswer,
 } from "@repo/backend/confect/exams/sittings/errors";
-import { fitsQuestion } from "@repo/backend/confect/exams/sittings/fit";
 import { sittingGate } from "@repo/backend/confect/exams/sittings/gate";
 import { toSittingError } from "@repo/backend/confect/exams/sittings/refusal";
-import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Effect, Option } from "effect";
 

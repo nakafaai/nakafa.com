@@ -125,7 +125,6 @@ describe("contentRelease/manifest", () => {
     expect(stored.release).toMatchObject({
       baseFamilies: [],
       resultFamilies: ContentFamilySchema.literals,
-      tryoutRuntimeRequired: true,
     });
     await expect(
       t.mutation(stageRelease, {

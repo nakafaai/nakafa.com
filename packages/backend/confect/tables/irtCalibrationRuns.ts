@@ -8,7 +8,7 @@ import { Schema } from "effect";
 export default Table.make(() =>
   Schema.Struct({
     scaleVersionId: IdSchema("irtScaleVersions"),
-    sectionIdentity: Schema.String,
+    sectionKey: Schema.String,
     model: irtOperationalModelValidator,
     status: irtCalibrationRunStatusValidator,
     questionCount: Schema.Finite,
@@ -21,8 +21,8 @@ export default Table.make(() =>
     completedAt: Schema.optionalKey(Schema.Finite),
     error: Schema.optionalKey(Schema.String),
   })
-).index("by_scaleVersionId_and_sectionIdentity_and_startedAt", [
+).index("by_scaleVersionId_and_sectionKey_and_startedAt", [
   "scaleVersionId",
-  "sectionIdentity",
+  "sectionKey",
   "startedAt",
 ]);

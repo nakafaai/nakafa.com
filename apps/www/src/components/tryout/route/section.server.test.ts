@@ -1,26 +1,22 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Option } from "effect";
 import { readTryoutSectionRoute } from "@/components/tryout/route/section.server";
+import { makeTryoutBody } from "@/test/tryout";
 
 const mocks = vi.hoisted(() => ({
-  loadSignedTryoutContent: vi.fn(),
-  renderSignedTryoutRows: vi.fn(),
   readCurrentTryoutSection: vi.fn(),
   readCurrentTryoutSet: vi.fn(),
   readPlayerMode: vi.fn(),
   readRequestToken: vi.fn(),
   readServerTranslator: vi.fn(),
-  readTryoutQuestionPreview: vi.fn(),
   readTryoutRouteHead: vi.fn(),
   readRetainedTryoutSection: vi.fn(),
   readTryoutSectionPage: vi.fn(),
   readTryoutSetAttemptPage: vi.fn(),
   readTryoutSetPage: vi.fn(),
-  renderTryoutPreview: vi.fn(),
-  renderTryoutQuestionBody: vi.fn(),
-  renderTryoutReview: vi.fn(),
   setResponseHeader: vi.fn(),
 }));
 
@@ -35,13 +31,6 @@ vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutSetAttemptPage: mocks.readTryoutSetAttemptPage,
   readTryoutSetPage: mocks.readTryoutSetPage,
 }));
-vi.mock("@/components/tryout/content/signed", () => ({
-  loadSignedTryoutContent: mocks.loadSignedTryoutContent,
-  renderSignedTryoutRows: mocks.renderSignedTryoutRows,
-}));
-vi.mock("@/components/tryout/preview/read", () => ({
-  readTryoutQuestionPreview: mocks.readTryoutQuestionPreview,
-}));
 vi.mock("@/components/tryout/route/catalog.server", () => ({
   readTryoutRouteHead: mocks.readTryoutRouteHead,
 }));
@@ -49,13 +38,6 @@ vi.mock("@/components/tryout/route/current", () => ({
   readCurrentTryoutSection: mocks.readCurrentTryoutSection,
   readRetainedTryoutSection: mocks.readRetainedTryoutSection,
   readCurrentTryoutSet: mocks.readCurrentTryoutSet,
-}));
-vi.mock("@/components/tryout/route/body.server", () => ({
-  renderTryoutQuestionBody: mocks.renderTryoutQuestionBody,
-}));
-vi.mock("@/components/tryout/route/rendered.server", () => ({
-  renderTryoutPreview: mocks.renderTryoutPreview,
-  renderTryoutReview: mocks.renderTryoutReview,
 }));
 vi.mock("@/components/tryout/route/token.server", () => ({
   readRequestToken: mocks.readRequestToken,
@@ -97,30 +79,19 @@ const catalogSection = {
   set: { countryKey: "id", examKey: "snbt", setKey: "set-1", trackKey: "2027" },
 };
 
-const signedContent = { answers: [], kind: "signed" };
-const runtime = { questions: [] };
-const runningBodies = [null];
-const runningSigned = {
-  bodies: runningBodies,
-  content: signedContent,
+/** The body of one question as the attempt page carries it: its JSON text with its placement and version. */
+const { placementId, versionHash, ...question } = makeTryoutBody("question-1");
+const content = [{ body: encodeJsonText(question), placementId, versionHash }];
+const running = {
+  content,
   initialState: { attempt: { status: "in-progress" } },
 };
-const finishedSigned = {
-  content: signedContent,
-  initialState: { attempt: { status: "completed" }, runtime },
-};
-const preview = { target: { section: { title: "Question 1" } } };
-/** The signed questions of a running section, as the content loader returns them. */
-const signedQuestions = {
-  answers: [],
-  questions: [
-    {
-      content: "body-1",
-      contentHash: "hash-1",
-      sourcePath: "path-1",
-      sourceRevision: "revision-1",
-    },
-  ],
+const finished = {
+  content,
+  initialState: {
+    attempt: { status: "completed" },
+    runtime: { questions: [] },
+  },
 };
 
 /** One attempt as the attempt readers return it, retained or current. */
@@ -129,8 +100,7 @@ function attemptOf(kind: "current" | "retained", overrides: object = {}) {
     activeSectionPublicPath: undefined,
     activeSetPublicPath: undefined,
     attemptId: "attempt-1",
-    bodies: [],
-    content: { kind: "none" },
+    content: [],
     initialState: { answers: [] },
     kind,
     page: {
@@ -149,16 +119,6 @@ beforeEach(() => {
   mocks.readPlayerMode.mockReturnValue("list");
   mocks.readServerTranslator.mockImplementation(() =>
     Promise.resolve((key: string) => key)
-  );
-  mocks.readTryoutQuestionPreview.mockReturnValue(Effect.succeedNone);
-  mocks.renderTryoutPreview.mockResolvedValue("preview-tree");
-  mocks.renderTryoutReview.mockResolvedValue("review-tree");
-  mocks.loadSignedTryoutContent.mockReturnValue(
-    Effect.succeed(signedQuestions)
-  );
-  mocks.renderSignedTryoutRows.mockReturnValue(Effect.succeed(signedQuestions));
-  mocks.renderTryoutQuestionBody.mockImplementation((question) =>
-    Promise.resolve({ ...question, content: "rendered-body" })
   );
   mocks.readTryoutRouteHead.mockReturnValue(Effect.succeed(head));
   mocks.readTryoutSectionPage.mockReturnValue(Effect.succeed(catalogSection));
@@ -202,25 +162,16 @@ describe("readTryoutSectionRoute", () => {
   );
 
   it.effect(
-    "renders a running retained section with its signed questions",
+    "passes a running retained section's questions as decoded bodies",
     () =>
       Effect.gen(function* () {
         mocks.readRetainedTryoutSection.mockReturnValue(
-          Effect.succeedSome(attemptOf("retained", runningSigned))
+          Effect.succeedSome(attemptOf("retained", running))
         );
 
-        const route = yield* readSection(attemptSearch);
-
-        expect(mocks.renderSignedTryoutRows).toHaveBeenCalledExactlyOnceWith(
-          signedContent,
-          runningBodies
-        );
-        expect(route).toMatchObject({
-          content: {
-            questions: [{ content: "rendered-body", contentHash: "hash-1" }],
-          },
+        expect(yield* readSection(attemptSearch)).toMatchObject({
+          content: [makeTryoutBody("question-1")],
           kind: "attempt",
-          review: undefined,
         });
       })
   );
@@ -250,28 +201,15 @@ describe("readTryoutSectionRoute", () => {
       })
   );
 
-  it.effect("renders the review of a finished retained section", () =>
+  it.effect("passes a finished retained section's bodies for its review", () =>
     Effect.gen(function* () {
       mocks.readRetainedTryoutSection.mockReturnValue(
-        Effect.succeedSome(attemptOf("retained", finishedSigned))
+        Effect.succeedSome(attemptOf("retained", finished))
       );
 
-      const route = yield* readSection(attemptSearch);
-
-      expect(route).toMatchObject({ kind: "attempt", review: "review-tree" });
-      expect(mocks.loadSignedTryoutContent).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("answers a public section with its question preview", () =>
-    Effect.gen(function* () {
-      mocks.readTryoutQuestionPreview.mockReturnValue(
-        Effect.succeedSome(preview)
-      );
-
-      expect(yield* readSection()).toMatchObject({
-        kind: "preview",
-        preview: "preview-tree",
+      expect(yield* readSection(attemptSearch)).toMatchObject({
+        content: [makeTryoutBody("question-1")],
+        kind: "attempt",
       });
     })
   );
@@ -346,38 +284,17 @@ describe("readTryoutSectionRoute", () => {
       })
   );
 
-  it.effect("renders a running current section with its signed questions", () =>
-    Effect.gen(function* () {
-      mocks.readCurrentTryoutSection.mockReturnValue(
-        Effect.succeedSome(attemptOf("current", runningSigned))
-      );
-
-      const route = yield* readSection();
-
-      expect(route).toMatchObject({
-        content: {
-          questions: [{ content: "rendered-body", contentHash: "hash-1" }],
-        },
-        kind: "catalog",
-        review: undefined,
-      });
-    })
-  );
-
   it.effect(
-    "fails the running section with a typed render error when a question cannot render",
+    "passes a running current section's questions as decoded bodies",
     () =>
       Effect.gen(function* () {
         mocks.readCurrentTryoutSection.mockReturnValue(
-          Effect.succeedSome(attemptOf("current", runningSigned))
-        );
-        mocks.renderTryoutQuestionBody.mockRejectedValueOnce(
-          new Error("Body failed.")
+          Effect.succeedSome(attemptOf("current", running))
         );
 
-        expect(yield* readSection().pipe(Effect.flip)).toMatchObject({
-          _tag: "TryoutSurfaceRenderError",
-          stage: "question",
+        expect(yield* readSection()).toMatchObject({
+          content: [makeTryoutBody("question-1")],
+          kind: "catalog",
         });
       })
   );

@@ -8,7 +8,7 @@ import { Schema } from "effect";
 export default Table.make(() =>
   Schema.Struct({
     tryoutAttemptId: IdSchema("tryoutAttempts"),
-    tryoutSnapshotId: Schema.String,
+    assessmentSnapshotId: Schema.String,
     setIdentity: Schema.String,
     userId: IdSchema("users"),
     scoringStrategy: tryoutScoringStrategyValidator,
@@ -23,6 +23,7 @@ export default Table.make(() =>
     finalizedAt: Schema.Finite,
   })
 )
+  .index("by_assessmentSnapshotId", ["assessmentSnapshotId"])
   .index("by_scaleVersionId", ["scaleVersionId"])
   .index("by_tryoutAttemptId", ["tryoutAttemptId"])
   .index("by_userId_and_finalizedAt", ["userId", "finalizedAt"]);

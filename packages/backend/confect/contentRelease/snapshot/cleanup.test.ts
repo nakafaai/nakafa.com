@@ -1,5 +1,5 @@
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
-import { afterEach, assert, describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { compactSnapshots } from "@repo/backend/confect/contentRelease/snapshot/cleanup";
 // biome-ignore lint/performance/noNamespaceImport: Vitest spies on this module namespace to control the owning failure boundary.
@@ -34,10 +34,10 @@ describe("contentRelease/snapshot/cleanup", () => {
     },
     {
       family: "quran",
-      cleanupPart: "catalog",
+      cleanupPart: "assessment",
     },
     {
-      family: "tryout",
+      family: "assessment",
       cleanupPart: "program",
     },
   ] as const)(
@@ -80,45 +80,6 @@ describe("contentRelease/snapshot/cleanup", () => {
       ctx.db.query("contentSnapshots").unique()
     );
     expect(snapshot?.cleanupAt).toBeUndefined();
-  });
-  it("rolls back child deletion when an incomplete page has no valid position", async () => {
-    const snapshotId = `sha256:${"d".repeat(64)}`;
-    const t = convexTest(schema, convexModules);
-    const bundle = await t.mutation(async (ctx) => {
-      await insertExpiredProgram(ctx, snapshotId, 0);
-      const id = await ctx.db.insert("tryoutRuntimeBundles", {
-        bundleHash: snapshotId,
-        bundleJson: "{}",
-        createdAt: 0,
-        rendererJson: "{}",
-        rendererManifestHash: snapshotId,
-        snapshotId,
-        sourceGitSha: "a".repeat(40),
-        sourceManifestHash: snapshotId,
-        sourceReleaseId: "cleanup-position",
-      });
-      return ctx.db.get("tryoutRuntimeBundles", id);
-    });
-    assert(bundle);
-    vi.spyOn(snapshotRows, "loadSnapshotChildren").mockReturnValueOnce(
-      Effect.succeed({
-        children: [
-          {
-            row: bundle,
-            table: "tryoutRuntimeBundles",
-          },
-        ],
-        done: false,
-        part: "program",
-      })
-    );
-    await expect(runCompactPage(t)).rejects.toMatchObject({
-      code: "CONTENT_RELEASE_INTEGRITY",
-      message: `Snapshot program/${snapshotId} lost its cleanup position.`,
-    });
-    await expect(
-      t.query((ctx) => ctx.db.get("tryoutRuntimeBundles", bundle._id))
-    ).resolves.toEqual(bundle);
   });
   it("ignores unexpired snapshots without a cleanup retry", async () => {
     const snapshotId = `sha256:${"6".repeat(64)}`;
@@ -266,117 +227,41 @@ describe("contentRelease/snapshot/cleanup", () => {
       done: false,
     });
   });
-  it("cleans try-out tables in separate durable physical phases", async () => {
+  it("cleans assessment rows through resumable bounded pages", async () => {
     const snapshotId = `sha256:${"9".repeat(64)}`;
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await ctx.db.insert("contentSnapshots", {
         createdAt: 0,
-        family: "tryout",
+        family: "assessment",
         retainUntil: 0,
         snapshotId,
         snapshotJson: "{}",
       });
-      for (const index of [0]) {
-        await ctx.db.insert("tryoutCatalog", {
-          assetId: `asset:en:tryout:catalog-${index}`,
-          identity: `catalog-${index}`,
-          index,
-          kind: "exam",
-          appLocale: "en",
-          order: index,
-          rowHash: `sha256:${index.toString(16).padStart(64, "0")}`,
-          rowJson: "{}",
-          snapshotId,
-        });
-      }
-      for (const index of [1]) {
-        await ctx.db.insert("tryoutPlacements", {
-          answerArtifactHash: `sha256:${"a".repeat(64)}`,
-          answerArtifactLocale: "en",
-          appLocale: "en",
-          contentHash: "3".repeat(64),
-          countryKey: "indonesia",
-          deliveryLanguage: "en",
-          examKey: "snbt",
-          identity: `placement-${index}`,
-          index,
-          questionArtifactHash: `sha256:${"b".repeat(64)}`,
-          questionArtifactLocale: "en",
-          questionOrder: index,
-          rowHash: `sha256:${index.toString(16).padStart(64, "0")}`,
-          rowJson: "{}",
-          snapshotId,
-          sectionKey: "quantitative-knowledge",
-          setKey: "set-1",
-          trackKey: "2027",
-        });
-      }
       for (const index of [0, 1, 2]) {
-        await ctx.db.insert("tryoutRuntimeBundles", {
-          bundleHash: `sha256:${(index + 1).toString(16).repeat(64)}`,
-          bundleJson: "{}",
-          cleanupReleaseId: `release-cleanup-${index}`,
-          createdAt: 0,
-          rendererJson: "{}",
-          rendererManifestHash: `sha256:${(index + 4).toString(16).repeat(64)}`,
+        await ctx.db.insert("assessmentRows", {
+          identity: `family-${index}`,
+          index,
+          kind: "family",
+          rowHash: `sha256:${index.toString(16).padStart(64, "0")}`,
+          rowJson: "{}",
           snapshotId,
-          sourceGitSha: "a".repeat(40),
-          sourceManifestHash: `sha256:${"b".repeat(64)}`,
-          sourceReleaseId: `release-cleanup-${index}`,
         });
       }
     });
     await expect(runCompactPage(t)).resolves.toEqual({
       cursor: null,
-      deleted: 1,
-      done: false,
-    });
-    await expect(
-      t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-    ).resolves.toMatchObject({
-      cleanupPart: "placement",
-    });
-    await expect(runCompactPage(t)).resolves.toEqual({
-      cursor: null,
-      deleted: 1,
+      deleted: 2,
       done: false,
     });
     await expect(
       t.run(async (ctx) => ({
-        catalog: await ctx.db.query("tryoutCatalog").take(1),
-        placement: await ctx.db.query("tryoutPlacements").take(1),
-        runtime: await ctx.db.query("tryoutRuntimeBundles").take(3),
+        rows: await ctx.db.query("assessmentRows").collect(),
+        snapshot: await ctx.db.query("contentSnapshots").unique(),
       }))
-    ).resolves.toEqual({
-      catalog: [],
-      placement: [],
-      runtime: [
-        expect.objectContaining({
-          snapshotId,
-        }),
-        expect.objectContaining({
-          snapshotId,
-        }),
-        expect.objectContaining({
-          snapshotId,
-        }),
-      ],
-    });
-    await expect(
-      t.run((ctx) => ctx.db.query("contentSnapshots").unique())
     ).resolves.toMatchObject({
-      cleanupPart: "runtime",
-    });
-    await expect(runCompactPage(t)).resolves.toEqual({
-      cursor: null,
-      deleted: 2,
-      done: false,
-    });
-    await expect(
-      t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-    ).resolves.toMatchObject({
-      cleanupPart: "runtime",
+      rows: [{ index: 2 }],
+      snapshot: { cleanupIndex: 1, cleanupPart: "assessment" },
     });
     await expect(runCompactPage(t)).resolves.toEqual({
       cursor: null,
@@ -385,11 +270,11 @@ describe("contentRelease/snapshot/cleanup", () => {
     });
     await expect(
       t.run(async (ctx) => ({
-        runtime: await ctx.db.query("tryoutRuntimeBundles").take(1),
+        rows: await ctx.db.query("assessmentRows").take(1),
         snapshot: await ctx.db.query("contentSnapshots").take(1),
       }))
     ).resolves.toEqual({
-      runtime: [],
+      rows: [],
       snapshot: [],
     });
   });

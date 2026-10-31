@@ -1,6 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { QUESTION_POINTS_MAX } from "@repo/backend/confect/exams/question";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { Schema } from "effect";
 
 /**

@@ -1,13 +1,12 @@
-import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { describe, expect, it } from "@effect/vitest";
-import confectSchema from "@repo/backend/confect/_generated/schema";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { tryoutGate } from "@repo/backend/confect/tryouts/gate";
-import { api } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { client, inMutation } from "@repo/backend/test/client";
 import { describeGate } from "@repo/backend/test/gate";
 import { Failure } from "@repo/backend/test/gate/world";
 import {
+  choiceGrade,
   GATE_NOW,
   insertAnswer,
   seedTryoutGate,
@@ -15,12 +14,7 @@ import {
   tryoutRefusals,
   tryoutStale,
 } from "@repo/backend/test/tryout/gate";
-import {
-  readResponseState,
-  seedResponseFixture,
-  setResponseClock,
-} from "@repo/backend/test/tryout/response";
-import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import { TRYOUT_NOW } from "@repo/backend/test/tryout/world";
 import { Effect, Option, Struct } from "effect";
 
 const integrity = (code: string) =>
@@ -32,51 +26,52 @@ const change = (
   edit: (ctx: MutationCtx) => Promise<unknown>
 ) => Effect.promise(() => world.t.mutation(edit)).pipe(Effect.asVoid);
 
-/** Reads the running question's stored answer and its section row. */
+/** Reads the running question's stored answer and its section and attempt rows. */
 const stored = (world: TryoutGateWorld) =>
   Effect.promise(() =>
     world.t.query(async (ctx) => ({
-      attempt: await ctx.db.get(world.attemptId),
+      attempt: await ctx.db.get("tryoutAttempts", world.attemptId),
       responses: await ctx.db.query("tryoutResponses").collect(),
-      section: await ctx.db.get(world.sectionAttemptId),
+      section: await ctx.db.get(
+        "tryoutSectionAttempts",
+        world.sectionAttemptId
+      ),
     }))
   );
 
 const misnumberSection = (world: TryoutGateWorld) =>
   change(world, (ctx) =>
-    ctx.db.patch(world.sectionAttemptId, { sectionOrder: 999 })
+    ctx.db.patch("tryoutSectionAttempts", world.sectionAttemptId, {
+      sectionOrder: 999,
+    })
   );
+
+/** Moves the clock to `ms` after the world's start. */
+const setClock = (ms: number) =>
+  Effect.sync(() => vi.setSystemTime(TRYOUT_NOW + ms));
 
 describeGate("tryouts", {
   corruptions: [
     {
       arrange: misnumberSection,
       failure: integrity("TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH"),
-      name: "an answer to a section that contradicts its frozen snapshot",
+      name: "an answer to a section that contradicts its frozen section",
       write: "answer",
     },
     {
       arrange: misnumberSection,
       failure: integrity("TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH"),
-      name: "a finish of a section that contradicts its frozen snapshot",
+      name: "a finish of a section that contradicts its frozen section",
       write: "finish",
     },
     {
       arrange: (world) =>
-        change(world, (ctx) =>
-          ctx.db.patch(world.placementId, {
-            sectionIdentity: "another-section",
-          })
-        ),
-      failure: integrity("TRYOUT_RESPONSE_LINK_MISMATCH"),
-      name: "a question linked to another section",
-      write: "answer",
-    },
-    {
-      arrange: (world) =>
         change(world, async (ctx) => {
-          const attempt = await ctx.db.get(world.attemptId);
-          const section = await ctx.db.get(world.sectionAttemptId);
+          const attempt = await ctx.db.get("tryoutAttempts", world.attemptId);
+          const section = await ctx.db.get(
+            "tryoutSectionAttempts",
+            world.sectionAttemptId
+          );
           if (!(attempt && section)) {
             throw new Error("Expected the seeded attempt and section.");
           }
@@ -95,8 +90,8 @@ describeGate("tryouts", {
             ctx,
             world,
             foreignSectionId,
-            world.choices.correct,
-            true
+            ["option-2"],
+            choiceGrade(true)
           );
         }),
       failure: integrity("TRYOUT_RESPONSE_LINK_MISMATCH"),
@@ -110,15 +105,15 @@ describeGate("tryouts", {
             ctx,
             world,
             world.sectionAttemptId,
-            world.choices.correct,
-            true
+            ["option-2"],
+            choiceGrade(true)
           );
           await insertAnswer(
             ctx,
             world,
             world.sectionAttemptId,
-            world.choices.correct,
-            true
+            ["option-2"],
+            choiceGrade(true)
           );
         }),
       failure: integrity("TRYOUT_RESPONSE_PLACEMENT_DUPLICATE"),
@@ -132,12 +127,27 @@ describeGate("tryouts", {
             ctx,
             world,
             world.sectionAttemptId,
-            world.choices.correct,
-            false
+            ["option-2"],
+            choiceGrade(false)
           )
         ),
-      failure: integrity("TRYOUT_RESPONSE_SELECTION_MISMATCH"),
-      name: "a stored outcome its selection does not reproduce",
+      failure: integrity("TRYOUT_RESPONSE_GRADE_MISMATCH"),
+      name: "a stored grade its response does not reproduce",
+      write: "answer",
+    },
+    {
+      arrange: (world) =>
+        change(world, (ctx) =>
+          insertAnswer(
+            ctx,
+            world,
+            world.sectionAttemptId,
+            { text: "Jakarta" },
+            choiceGrade(true)
+          )
+        ),
+      failure: integrity("TRYOUT_RESPONSE_GRADE_MISMATCH"),
+      name: "a stored response that no longer fits its question",
       write: "answer",
     },
   ],
@@ -153,14 +163,10 @@ describeGate("tryouts", {
       }),
     })[write],
   refusal: (write, reason) => tryoutRefusals[write][reason],
-  rejection: (reason) =>
-    Failure.make({
-      _tag: "TryoutResponseSelectionError",
-      code:
-        reason === "kind"
-          ? "TRYOUT_RESPONSE_KIND_MISMATCH"
-          : "TRYOUT_RESPONSE_SELECTION_INVALID",
-    }),
+  rejection: Failure.make({
+    _tag: "TryoutResponseUnfitError",
+    code: "TRYOUT_RESPONSE_UNFIT",
+  }),
   seed: seedTryoutGate,
   stale: tryoutStale,
 });
@@ -193,11 +199,15 @@ describe("tryouts/gate", () => {
         expect(yield* world.flags).toEqual([]);
       })
   );
+
   it.effect(
-    "refuses a flag once the section's deadline passed, as an answer that came too late",
+    "refuses a flag once the section's deadline passed, and another learner's flag as a missing question",
     () =>
       Effect.gen(function* () {
         const world = yield* seedTryoutGate;
+        expect(yield* world.flag("other", "running", true)).toEqual(
+          Option.some(tryoutRefusals.answer.Missing)
+        );
         yield* world.arrange("expire-section");
         expect(yield* world.flag("learner", "running", true)).toEqual(
           Option.some(tryoutRefusals.answer.Expired)
@@ -205,58 +215,53 @@ describe("tryouts/gate", () => {
         expect(yield* world.flags).toEqual([]);
       })
   );
-  it.effect("refuses another learner's flag as a missing question", () =>
-    Effect.gen(function* () {
-      const world = yield* seedTryoutGate;
-      expect(yield* world.flag("other", "running", true)).toEqual(
-        Option.some(tryoutRefusals.answer.Missing)
-      );
-      expect(yield* world.flags).toEqual([]);
-    })
-  );
+
   it.effect(
     "keeps the first answer time and counts seconds spent in the section",
     () =>
       Effect.gen(function* () {
         const world = yield* seedTryoutGate;
         yield* world.answer("learner", "running", "correct", 1);
-        yield* setResponseClock(9000);
+        yield* setClock(9000);
         yield* world.answer("learner", "running", "correct", 2);
         const rows = yield* stored(world);
         expect(rows.responses).toMatchObject([
           {
             answeredAt: GATE_NOW,
-            outcome: { status: "correct" },
+            grade: choiceGrade(true),
+            response: ["option-2"],
             timeSpent: 9,
-            updatedAt: TRYOUT_TEST_NOW + 9000,
+            updatedAt: TRYOUT_NOW + 9000,
             version: 2,
           },
         ]);
-        expect(rows.section?.lastActivityAt).toBe(TRYOUT_TEST_NOW + 9000);
-        expect(rows.attempt?.lastActivityAt).toBe(TRYOUT_TEST_NOW + 9000);
+        expect(rows.section?.lastActivityAt).toBe(TRYOUT_NOW + 9000);
+        expect(rows.attempt?.lastActivityAt).toBe(TRYOUT_NOW + 9000);
       })
   );
+
   it.effect(
     "accepts the last instant before the deadline and refuses the deadline without overwriting",
     () =>
       Effect.gen(function* () {
         const world = yield* seedTryoutGate;
-        yield* setResponseClock(1_799_999);
+        yield* setClock(599_999);
         yield* world.answer("learner", "running", "correct", 1);
-        yield* setResponseClock(1_800_000);
+        yield* setClock(600_000);
         expect(
           yield* world.answer("learner", "running", "incorrect", 2)
         ).toEqual(Option.some(tryoutRefusals.answer.Expired));
         expect((yield* stored(world)).responses).toMatchObject([
           {
-            answeredAt: TRYOUT_TEST_NOW + 1_799_999,
-            timeSpent: 1799,
-            updatedAt: TRYOUT_TEST_NOW + 1_799_999,
+            answeredAt: TRYOUT_NOW + 599_999,
+            timeSpent: 599,
+            updatedAt: TRYOUT_NOW + 599_999,
             version: 1,
           },
         ]);
       })
   );
+
   it.effect(
     "refuses an answer past its deadline before it checks the question's stored answers",
     () =>
@@ -267,8 +272,8 @@ describe("tryouts/gate", () => {
             ctx,
             world,
             world.sectionAttemptId,
-            world.choices.correct,
-            false
+            ["option-2"],
+            choiceGrade(false)
           )
         );
         yield* world.arrange("expire-section");
@@ -279,17 +284,17 @@ describe("tryouts/gate", () => {
         expect(yield* world.rows).toEqual(before);
       })
   );
+
   it.effect(
     "records a clear on the question without changing anything else it froze",
     () =>
       Effect.gen(function* () {
         const world = yield* seedTryoutGate;
-        yield* change(world, (ctx) =>
-          ctx.db.patch(world.placementId, { points: 3 })
-        );
         const placement = () =>
           Effect.promise(() =>
-            world.t.query((ctx) => ctx.db.get(world.placementId))
+            world.t.query((ctx) =>
+              ctx.db.get("tryoutAttemptPlacements", world.placementId)
+            )
           );
         const before = yield* placement();
         yield* world.answer("learner", "running", "correct", 1);
@@ -298,43 +303,17 @@ describe("tryouts/gate", () => {
         expect(yield* placement()).toEqual({ ...before, clearedVersion: 2 });
       })
   );
-  it.effect(
-    "reads an answer stored before outcomes and versions from its correctness flag",
-    () =>
-      Effect.gen(function* () {
-        const world = yield* seedTryoutGate;
-        yield* change(world, async (ctx) => {
-          await insertAnswer(
-            ctx,
-            world,
-            world.sectionAttemptId,
-            world.choices.correct,
-            true
-          );
-          await ctx.db.patch(world.sectionAttemptId, {
-            answeredCount: 1,
-            correctAnswers: 1,
-          });
-        });
-        yield* world.answer("learner", "running", "incorrect", 1);
-        expect(yield* world.observe).toEqual({
-          answered: 1,
-          correct: 0,
-          outcome: Option.some("incorrect"),
-          section: "running",
-          version: Option.some(1),
-        });
-      })
-  );
+
   it.effect("masks an unexpected attempt lookup failure", () =>
     Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = createConvexTestWithBetterAuth();
-      const seeded = yield* seedResponseFixture(t, "gate-storage-failure");
+      const world = yield* seedTryoutGate;
       yield* Effect.promise(() =>
         expect(
-          t.mutation(async (ctx) => {
-            const placement = await ctx.db.get(seeded.placementId);
+          world.t.mutation(async (ctx) => {
+            const placement = await ctx.db.get(
+              "tryoutAttemptPlacements",
+              world.placementId
+            );
             if (!placement) {
               throw new Error("Expected one frozen placement.");
             }
@@ -343,18 +322,13 @@ describe("tryouts/gate", () => {
             get.mockRejectedValueOnce(
               new Error("internal tryoutAttempts storage details")
             );
-            return await Effect.runPromiseWith(runtimeServices)(
-              tryoutGate
-                .answer(seeded.identity.userId, {
-                  placementId: seeded.placementId,
-                  selection: {
-                    kind: "single-choice",
-                    optionKey: seeded.selectedChoice.optionKey,
-                  },
-                  version: 1,
-                })
-                .pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
-            );
+            return await inMutation(() =>
+              tryoutGate.answer(world.userId, {
+                placementId: world.placementId,
+                response: ["option-2"],
+                version: 1,
+              })
+            )(ctx);
           })
         ).rejects.toMatchObject({
           code: "TRYOUT_RESPONSE_FAILED",
@@ -363,39 +337,31 @@ describe("tryouts/gate", () => {
       );
     })
   );
+
   it.effect(
     "replaces the rows it loaded, so no row is read again by a partial update",
     () =>
       Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        const t = createConvexTestWithBetterAuth();
-        const seeded = yield* seedResponseFixture(t, "gate-metrics");
-        /** Saves the question's first choice, or clears it for `null`, at `version` and gives the reads and writes of its transaction. */
+        const world = yield* seedTryoutGate;
+        /** Saves the key, or clears it, at `version` and gives the reads and writes of its transaction. */
         const measure = (version: number, answered: boolean) =>
           Effect.promise(() =>
-            t.mutation(async (ctx) => {
-              await Effect.runPromiseWith(runtimeServices)(
-                tryoutGate
-                  .answer(seeded.identity.userId, {
-                    placementId: seeded.placementId,
-                    selection: answered
-                      ? {
-                          kind: "single-choice",
-                          optionKey: seeded.selectedChoice.optionKey,
-                        }
-                      : null,
-                    version,
-                  })
-                  .pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
-              );
+            world.t.mutation(async (ctx) => {
+              await inMutation(() =>
+                tryoutGate.answer(world.userId, {
+                  placementId: world.placementId,
+                  response: answered ? ["option-2"] : null,
+                  version,
+                })
+              )(ctx);
               return await ctx.meta.getTransactionMetrics();
             })
           );
-        yield* setResponseClock(5000);
+        yield* setClock(5000);
         const inserted = yield* measure(1, true);
-        yield* setResponseClock(9000);
+        yield* setClock(9000);
         const replaced = yield* measure(2, true);
-        expect((yield* readResponseState(t, seeded)).responses).toMatchObject([
+        expect((yield* stored(world)).responses).toMatchObject([
           { version: 2 },
         ]);
         const cleared = yield* measure(3, false);
@@ -412,28 +378,31 @@ describe("tryouts/gate", () => {
         expect(cleared.documentsWritten.used).toBe(4);
       })
   );
+
   it.effect("refuses callers without a session before the gate", () =>
     Effect.gen(function* () {
       const world = yield* seedTryoutGate;
       const before = yield* world.rows;
-      for (const call of [
-        () =>
-          world.t.mutation(api.tryouts.mutations.responses.save, {
+      const visitor = client(world.t);
+      const refused = [
+        yield* visitor
+          .mutation(tryouts.mutations.responses.save, {
             placementId: world.placementId,
-            selection: null,
+            response: null,
             version: 1,
-          }),
-        () =>
-          world.t.mutation(api.tryouts.mutations.sections.complete, {
+          })
+          .pipe(Effect.flip),
+        yield* visitor
+          .mutation(tryouts.mutations.sections.complete, {
             attemptId: world.attemptId,
-            sectionKey: "penalaran-matematika",
-          }),
-      ]) {
-        const failure = yield* Effect.tryPromise(call).pipe(Effect.flip);
-        expect(failure.cause).toMatchObject({
-          data: { code: "UNAUTHENTICATED" },
-        });
-      }
+            sectionKey: "section-a",
+          })
+          .pipe(Effect.flip),
+      ];
+      expect(refused).toMatchObject([
+        { code: "UNAUTHENTICATED" },
+        { code: "UNAUTHENTICATED" },
+      ]);
       expect(yield* world.rows).toEqual(before);
     })
   );

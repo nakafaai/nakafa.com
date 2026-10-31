@@ -19,4 +19,9 @@ export default Table.make(() => examSittingValidator)
   .index("by_cohortId_and_state_and_opensAt", ["cohortId", "state", "opensAt"])
   // The open rooms of one school, which a code typed without its room is checked against.
   .index("by_tenantId_and_state_and_opensAt", ["tenantId", "state", "opensAt"])
-  .index("by_examId_and_opensAt", ["examId", "opensAt"]);
+  .index("by_examId_and_opensAt", ["examId", "opensAt"])
+  // An exam's rooms whose names match a search, in one state or in any, best match first.
+  .searchIndex("search_room", {
+    searchField: "room",
+    filterFields: ["examId", "state"],
+  });

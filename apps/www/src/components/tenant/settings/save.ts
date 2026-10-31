@@ -66,6 +66,14 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-card-role.description",
     title: "school-refusal-card-role.title",
   },
+  RoomOpened: {
+    description: "school-refusal-room-opened.description",
+    title: "school-refusal-room-opened.title",
+  },
+  ScheduleInvalid: {
+    description: "school-refusal-schedule-invalid.description",
+    title: "school-refusal-schedule-invalid.title",
+  },
   ClassAddressEmpty: {
     description: "school-refusal-class-address-empty.description",
     title: "school-refusal-class-address-empty.title",
@@ -157,6 +165,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
   NpsnTaken: {
     description: "school-refusal-npsn-taken.description",
     title: "school-refusal-npsn-taken.title",
+  },
+  PersonClassLimit: {
+    description: "school-refusal-person-class-limit.description",
+    title: "school-refusal-person-class-limit.title",
   },
   PeriodActive: {
     description: "school-refusal-period-active.description",

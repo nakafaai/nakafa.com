@@ -5,7 +5,7 @@ import { Array as Arr, Effect, HashSet, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 
-/** Loads every started section within the attempt's signed snapshot bound. */
+/** Loads every started section, bounded by the attempt's frozen sections. */
 export const loadAttemptSections = Effect.fn(
   "tryouts.runtime.loadAttemptSections"
 )(function* (attempt: TryoutAttempt) {
@@ -15,12 +15,13 @@ export const loadAttemptSections = Effect.fn(
     .index("by_tryoutAttemptId_and_sectionOrder", (query) =>
       query.eq("tryoutAttemptId", attempt._id)
     )
-    .take(attempt.sectionSnapshots.length + 1)
+    .take(attempt.sections.length + 1)
     .pipe(Effect.orDie);
-  if (sections.length > attempt.sectionSnapshots.length) {
+  if (sections.length > attempt.sections.length) {
     return yield* new TryoutRuntimeError({
       code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
-      message: "Try-out section attempt count exceeds the attempt snapshot.",
+      message:
+        "Try-out section attempt count exceeds the attempt's frozen sections.",
     });
   }
   return sections;
@@ -37,15 +38,15 @@ export function readAttemptResume(
   const completedSections = HashSet.fromIterable(attempt.completedSectionKeys);
   const nextSection = Option.getOrUndefined(
     Arr.findFirst(
-      attempt.sectionSnapshots,
-      (snapshot) => !HashSet.has(completedSections, snapshot.sectionKey)
+      attempt.sections,
+      (frozen) => !HashSet.has(completedSections, frozen.sectionKey)
     )
   );
   const resumeSection = inProgressSection
     ? Option.getOrUndefined(
         Arr.findFirst(
-          attempt.sectionSnapshots,
-          (snapshot) => snapshot.sectionKey === inProgressSection.sectionKey
+          attempt.sections,
+          (frozen) => frozen.sectionKey === inProgressSection.sectionKey
         )
       )
     : nextSection;

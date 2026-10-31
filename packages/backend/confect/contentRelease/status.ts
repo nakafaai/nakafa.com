@@ -20,7 +20,6 @@ import type {
   currentValidator,
   statusValidator,
 } from "@repo/backend/confect/contentRelease/spec";
-import { findReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/binding";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { Effect } from "effect";
@@ -87,29 +86,20 @@ const stagedBundle = Effect.fn("contentRelease.stagedBundle")(function* (
   } satisfies StagedBundle;
 });
 
-/** Loads the completed active release and its optional permanent runtime pair. */
-const activePublication = Effect.fn("contentRelease.activePublication")(
-  function* () {
-    const active = yield* loadActiveIdentity().pipe(
-      Effect.provide(publicationLayer)
-    );
-    if (!active) {
-      return null;
-    }
-    const runtime = yield* findReleaseTryoutRuntime(
-      active.signed,
-      active.release.tryoutRuntimeBundleHash
-    );
-    return {
-      active: {
-        receipt: yield* completedReceipt(active.release, active.signed),
-        releaseJson: active.release.releaseJson,
-        rendererJson: active.release.rendererJson,
-      } satisfies ActiveBundle,
-      tryoutRuntimeBundleJson: runtime.result?.stored.bundleJson ?? null,
-    };
+/** Loads the completed active release with its receipt. */
+const activeBundle = Effect.fn("contentRelease.activeBundle")(function* () {
+  const active = yield* loadActiveIdentity().pipe(
+    Effect.provide(publicationLayer)
+  );
+  if (!active) {
+    return null;
   }
-);
+  return {
+    receipt: yield* completedReceipt(active.release, active.signed),
+    releaseJson: active.release.releaseJson,
+    rendererJson: active.release.rendererJson,
+  } satisfies ActiveBundle;
+});
 
 /** Reads authenticated recovery bytes for the singleton publication state. */
 export const currentProgram = Effect.fn("contentRelease.current")(function* () {
@@ -119,15 +109,12 @@ export const currentProgram = Effect.fn("contentRelease.current")(function* () {
       active: null,
       candidate: null,
       recovery: null,
-      tryoutRuntimeBundleJson: null,
     } satisfies CurrentStatus;
   }
-  const publication = yield* activePublication();
   return {
-    active: publication?.active ?? null,
+    active: yield* activeBundle(),
     candidate: yield* stagedBundle(state.candidateReleaseId),
     recovery: yield* stagedBundle(state.recoveryReleaseId),
-    tryoutRuntimeBundleJson: publication?.tryoutRuntimeBundleJson ?? null,
   } satisfies CurrentStatus;
 });
 
@@ -160,7 +147,6 @@ export const statusProgram = Effect.fn("contentRelease.status")(function* (
     );
   }
   if (release.status === "completed") {
-    yield* findReleaseTryoutRuntime(signed, release.tryoutRuntimeBundleHash);
     return {
       manifestHash,
       phase: "completed",

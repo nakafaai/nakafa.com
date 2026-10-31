@@ -16,7 +16,6 @@ import {
 const catalog = vi.hoisted(() => ({
   buildTryoutCountryOptions: vi.fn(),
   buildTryoutExamOptions: vi.fn(),
-  getAksaraTreeUrl: vi.fn(),
   getAppSocialArtwork: vi.fn(),
   getOgUrl: vi.fn(),
   readRequestToken: vi.fn(),
@@ -50,9 +49,6 @@ vi.mock("@/components/tryout/catalog/source.server", () => ({
 vi.mock("@/components/tryout/route/token.server", () => ({
   readRequestToken: catalog.readRequestToken,
 }));
-vi.mock("@/lib/content/repository", () => ({
-  getAksaraTreeUrl: catalog.getAksaraTreeUrl,
-}));
 vi.mock("@/lib/og/app", () => ({
   getAppSocialArtwork: catalog.getAppSocialArtwork,
 }));
@@ -67,7 +63,6 @@ vi.mock("@repo/internationalization/src/translator", () => ({
 const COUNTRY = "try-out/id";
 const EXAM = "try-out/id/snbt";
 const TRACK = "try-out/id/snbt/2027";
-const SOURCE = "a".repeat(40);
 
 const countryPage = {
   country: { countryKey: "id" },
@@ -80,7 +75,7 @@ const countryPage = {
       title: "UTBK",
     },
   ],
-  sourceRevision: SOURCE,
+  sourceRevision: "2026-10-02",
 };
 const examPage = { exam: { examKey: "snbt" }, publicPath: EXAM };
 const trackPage = {
@@ -112,10 +107,6 @@ beforeEach(() => {
   );
   catalog.getOgUrl.mockReturnValue("og-url");
   catalog.getAppSocialArtwork.mockReturnValue("og-app");
-  catalog.getAksaraTreeUrl.mockImplementation(
-    ({ path, revision }: { path: string; revision: string }) =>
-      `https://aksara.test/${path}/${revision}`
-  );
   catalog.buildTryoutCountryOptions.mockReturnValue([]);
   catalog.buildTryoutExamOptions.mockReturnValue([]);
   catalog.readTryoutHubPage.mockReturnValue(Effect.succeed(hub));
@@ -224,28 +215,18 @@ describe("readTryoutRouteHead", () => {
 });
 
 describe("readTryoutHubRoute", () => {
-  it.effect(
-    "links the hub to its Aksara source tree at the catalog revision",
-    () =>
-      Effect.gen(function* () {
-        const route = yield* readTryoutHubRoute("en");
+  it.effect("answers the hub with its catalog and its social artwork", () =>
+    Effect.gen(function* () {
+      const route = yield* readTryoutHubRoute("en");
 
-        expect(route.sourceUrl).toBeUndefined();
-        catalog.readTryoutHubPage.mockReturnValueOnce(
-          Effect.succeed({ ...hub, sourceRevision: SOURCE })
-        );
-        const linked = yield* readTryoutHubRoute("en");
-
-        expect(linked.sourceUrl).toBe(
-          `https://aksara.test/packages/corpus/tryout/${SOURCE}`
-        );
-        expect(linked.image).toBe("og-app");
-      })
+      expect(route.page).toEqual(hub);
+      expect(route.image).toBe("og-app");
+    })
   );
   it("answers the hub through its server handler", async () => {
     const route = await readTryoutHubHandler({ data: { locale: "en" } });
 
-    expect(route.sourceUrl).toBeUndefined();
+    expect(route.page).toEqual(hub);
   });
 });
 
@@ -291,25 +272,7 @@ describe("readTryoutCountryRoute", () => {
             { examKey: "snbt", imageSrc: "card-snbt.png" },
             { examKey: "utbk" },
           ],
-          sourceUrl: `https://aksara.test/packages/corpus/tryout/id/${SOURCE}`,
         });
-      })
-  );
-
-  it.effect(
-    "leaves the source link out when the catalog names no revision",
-    () =>
-      Effect.gen(function* () {
-        catalog.readTryoutCountryPage.mockReturnValue(
-          Effect.succeedSome({ ...countryPage, sourceRevision: undefined })
-        );
-
-        const route = yield* readTryoutCountryRoute({
-          country: "id",
-          locale: "en",
-        });
-
-        expect(route).toMatchObject({ kind: "found", sourceUrl: undefined });
       })
   );
 });
