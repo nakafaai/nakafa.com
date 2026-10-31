@@ -1,6 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import connectorsPublic from "@repo/backend/confect/_generated/refs/connectors";
 import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
+import rosterPublic from "@repo/backend/confect/_generated/refs/roster";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -246,7 +247,7 @@ const importRoster = FunctionImpl.make(
       yield* requireAuth();
       const { runQuery } = yield* QueryRunner;
       const { runMutation } = yield* MutationRunner;
-      const found = yield* runQuery(refs.internal.connectors.classroom.target, {
+      const found = yield* runQuery(connectorsInternal.classroom.target, {
         slug,
       }).pipe(Effect.orDie);
       const link =
@@ -257,7 +258,7 @@ const importRoster = FunctionImpl.make(
         return yield* missing();
       }
       const { cohortName, periodId } = yield* runQuery(
-        refs.internal.connectors.classroom.place,
+        connectorsInternal.classroom.place,
         { classId: link.value.classId }
       ).pipe(Effect.orDie);
       const client = yield* readGoogleClient("classroom");
@@ -268,7 +269,7 @@ const importRoster = FunctionImpl.make(
       const batches = yield* Effect.forEach(
         Arr.chunksOf(students, IMPORT_BATCH),
         (batch) =>
-          runMutation(refs.public.roster.imports.applySourced, {
+          runMutation(rosterPublic.imports.applySourced, {
             periodId,
             rows: Arr.map(batch, (student) => ({
               cohortName,
