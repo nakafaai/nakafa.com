@@ -31,7 +31,7 @@ D2. No `:has()` on `html`, `body` or `:root`. A state that the root must know is
 
 D3. A section under the first screen of a long page goes through `LaterSection`. Its HTML stays whole for readers and crawlers, its code loads when the page has settled and the section is near the screen, and a client navigation loads it before the page commits. The boundary sits under a box with no state, because an update into a boundary that still waits for its code would throw its HTML away.
 
-D4. Decoration waits for `untilPageRead`: the reader's first gesture, or six seconds on a page nobody touches. Six is past the five quiet seconds that mark a page interactive, so decoration never counts as the page's own loading. The analytics SDK waits there too.
+D4. Decoration waits for `untilPageRead`: the reader's first gesture, or ten seconds on a page nobody touches. A slow phone is still hydrating a few seconds after the load, so the wait has to reach past that and past the five quiet seconds that mark a page interactive. At six, on production `/id` with DevTools throttling, particles made about 185 ms of the 372 ms of blocking time. The analytics SDK waits there too.
 
 D5. A loop that runs by itself keeps to `createFramePace`: it rests seven times as long as it worked, an eighth of the thread at most. The pace is measured, never guessed from a device's name, so a phone that is busy with something else slows the loop too.
 
@@ -41,4 +41,4 @@ D6. What the build can draw, the build draws. Lesson code is highlighted in `Cod
 
 Positive: every page loses those recalculations, the home page's first JavaScript no longer holds the sections under its first screen, and decoration leaves the thread to the reader.
 
-Negative: a press on a section that is still loading its code is lost until the section hydrates, which the near-screen margin makes rare; a link still navigates. Toys and Nina wait for a gesture or six seconds. An end-to-end spec that waits for a far section to hydrate has to walk down the page.
+Negative: a press on a section that is still loading its code is lost until the section hydrates, which the near-screen margin makes rare; a link still navigates. Toys and Nina wait for a gesture or ten seconds. An end-to-end spec that waits for a far section to hydrate has to walk down the page.
