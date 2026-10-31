@@ -211,6 +211,7 @@ describe("immutable try-out application catalog", () => {
         );
         expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud", {
           auth: "technical-token",
+          fetch: expect.any(Function),
         });
         fetchQueryMock.mockReturnValue(
           Effect.fail(

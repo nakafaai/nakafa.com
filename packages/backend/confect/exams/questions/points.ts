@@ -1,7 +1,10 @@
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { ScoringDoesNotFit } from "@repo/backend/confect/exams/errors";
-import type { QuestionPoints } from "@repo/backend/confect/exams/question";
+import {
+  encodeScoring,
+  type QuestionPoints,
+} from "@repo/backend/confect/exams/question";
 import {
   type ScoringKind,
   scoringPoints,
@@ -38,12 +41,13 @@ export const setScoring = Effect.fn("exams.question.scoring")(function* (
   if (!takesScoring(question.template)) {
     return yield* new ScoringDoesNotFit();
   }
-  const scoring = scoringRule(kind);
+  const rule = scoringRule(kind);
+  const scoring = yield* encodeScoring(rule);
   const at = yield* Clock.currentTimeMillis;
   yield* (yield* DatabaseWriter)
     .table("examQuestions")
     .patch(question._id, {
-      points: scoringPoints(question.points, scoring),
+      points: scoringPoints(question.points, rule),
       scoring,
       updatedAt: at,
     })
