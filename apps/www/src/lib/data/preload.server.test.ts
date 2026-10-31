@@ -9,6 +9,7 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { ConvexError } from "convex/values";
 import { Effect, Schema } from "effect";
+import { ConvexGatewayFailure } from "@/lib/convex/http";
 import { PreloadFailed, preloadConfectQuery } from "@/lib/data/preload.server";
 
 /** The calls that the Convex HTTP client receives, as doubles. */
@@ -38,6 +39,10 @@ vi.mock("convex/browser", () => ({
 
 process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
 
+vi.mock("@/env.public", () => ({
+  clientEnv: { VITE_CONVEX_URL: "https://example.convex.cloud" },
+}));
+
 /** A real public query reference, whose value is a list of learning rows. */
 const ref = refs.public.contents.queries.recent.getRecentlyViewed;
 
@@ -57,6 +62,25 @@ const refusal = () =>
   );
 
 describe("server preload", () => {
+  it.live("reads again after a gateway answers in Convex's place", () =>
+    Effect.gen(function* () {
+      convex.query.mockReset();
+      convex.query
+        .mockRejectedValueOnce(new ConvexGatewayFailure({ status: 502 }))
+        .mockRejectedValueOnce(new ConvexGatewayFailure({ status: 503 }))
+        .mockResolvedValueOnce([]);
+
+      const value = yield* preloadConfectQuery(
+        ref,
+        { locale: "en" },
+        undefined
+      );
+
+      expect(value).toStrictEqual([]);
+      expect(convex.query).toHaveBeenCalledTimes(3);
+    })
+  );
+
   it.effect("reads the query for a visitor without a token", () =>
     Effect.gen(function* () {
       convex.query.mockResolvedValueOnce([]);
