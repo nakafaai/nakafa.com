@@ -144,6 +144,16 @@ export const SittingQuestion = memo(function SittingQuestion({
     [question.interactions]
   );
   const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
+  const readingText = QueryResult.isSuccess(prompt)
+    ? prompt.value.reading
+    : null;
+  const readingDocument = useMemo(
+    () =>
+      readingText === null
+        ? null
+        : Schema.decodeSync(JsonTextSchema)(readingText),
+    [readingText]
+  );
   const promptDocument = useMemo(
     () =>
       promptText === null
@@ -179,9 +189,12 @@ export const SittingQuestion = memo(function SittingQuestion({
       )
     );
     return pictureIdsOfDocuments(
-      promptDocument === null ? labels : [promptDocument, ...labels]
+      Arr.filter(
+        [promptDocument, readingDocument, ...labels],
+        (document) => document !== null
+      )
     );
-  }, [question.interactions, pairing, promptDocument, table]);
+  }, [question.interactions, pairing, promptDocument, readingDocument, table]);
   const pictures = useQuery(
     exams.sittings.images,
     pictureIds.length === 0
@@ -218,9 +231,14 @@ export const SittingQuestion = memo(function SittingQuestion({
       <PlayerQuestionHeader number={question.number} />
       <SittingPictures value={addresses}>
         <PlayerQuestionPrompt>
-          {promptDocument === null ? null : (
-            <SittingDocument document={promptDocument} />
-          )}
+          <div className="grid gap-6">
+            {readingDocument === null ? null : (
+              <SittingDocument document={readingDocument} />
+            )}
+            {promptDocument === null ? null : (
+              <SittingDocument document={promptDocument} />
+            )}
+          </div>
         </PlayerQuestionPrompt>
         <PlayerQuestionAnswer>
           {Option.isSome(choice) ? (

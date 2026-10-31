@@ -21,8 +21,8 @@ import { Array as Arr, Clock, Effect } from "effect";
  * Adds a topic channel to a class, after its last channel. The name is unique
  * among the class's channels, compared without case, and a class holds at most
  * CHANNEL_LIMIT channels. A class holds its general channel at 0 from its
- * creation and no channel is removed, so the positions run from 0 without a gap
- * and the new channel takes the count of the channels before it. The class's
+ * creation, and a removed channel leaves a gap, so the new channel takes the
+ * position after the last one. The class's
  * `forum.manage` decision admits an Admin or a subject teacher of the class, and
  * refuses an archived class as a write.
  */
@@ -45,7 +45,12 @@ export const add = FunctionImpl.make(
     if (Arr.some(channels, (channel) => channelNameKey(channel.name) === key)) {
       return yield* new ChannelNameTaken();
     }
-    const position = channels.length;
+    // The channels are read in position order, so the last one sets the next place.
+    const position = Arr.reduce(
+      channels,
+      0,
+      (_next, channel) => channel.position + 1
+    );
     const now = yield* Clock.currentTimeMillis;
     const channelId = yield* (yield* DatabaseWriter)
       .table("classroomChannels")

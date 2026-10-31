@@ -13,10 +13,16 @@ export class ChannelNameTaken extends Schema.TaggedError<ChannelNameTaken>()(
   refusal("CHANNEL_NAME_TAKEN", "Another channel of this class has this name.")
 ) {}
 
-/** A rename of a class's general channel, whose name the page translates for each reader. */
+/** A rename, an archive or a removal of a class's general channel, whose name the page translates for each reader. */
 export class ChannelFixed extends Schema.TaggedError<ChannelFixed>()(
   "ChannelFixed",
   refusal("CHANNEL_FIXED", "The general channel keeps its name.")
+) {}
+
+/** A write into an archived channel, which stays readable and takes nothing new. */
+export class ChannelArchived extends Schema.TaggedError<ChannelArchived>()(
+  "ChannelArchived",
+  refusal("CHANNEL_ARCHIVED", "This channel is archived.")
 ) {}
 
 /** An edit of a message that a teacher hid: the message has no text left to change. */

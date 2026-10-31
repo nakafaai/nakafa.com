@@ -35,10 +35,12 @@ export const channelNameKey = (name: string) => name.toLowerCase();
 
 /**
  * A channel of one class. `position` orders the list from 0, the general channel,
- * and a topic channel takes the position after the last one. `tenantId` is copied
- * from the class for indexing and for the tenant check of every read.
+ * and a topic channel takes the position after the last one. `archivedAt` marks a
+ * channel that stays readable and takes nothing new. `tenantId` is copied from the
+ * class for indexing and for the tenant check of every read.
  */
 export const channelValidator = Schema.Struct({
+  archivedAt: Schema.optionalKey(Schema.Finite),
   classId: Id("classes"),
   createdAt: Schema.Finite,
   kind: ChannelKind,
@@ -61,10 +63,11 @@ const ChannelLast = Schema.Struct({
 });
 
 /**
- * One channel as the wire shows it: its newest message, and whether that message
- * came after the viewer last read the channel.
+ * One channel as the wire shows it: whether it is archived, its newest message, and
+ * whether that message came after the viewer last read the channel.
  */
 export const ChannelView = Schema.Struct({
+  archived: Schema.Boolean,
   id: Id("classroomChannels"),
   kind: ChannelKind,
   last: Schema.NullOr(ChannelLast),
@@ -78,6 +81,7 @@ export const channelView = (
   latest: Pick<typeof ChannelView.Type, "last" | "unread">
 ) => ({
   ...latest,
+  archived: row.archivedAt !== undefined,
   id: row._id,
   kind: row.kind,
   name: row.name,
