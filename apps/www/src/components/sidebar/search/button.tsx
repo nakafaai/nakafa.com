@@ -5,6 +5,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { SearchShortcut } from "@/components/search/shortcut";
 
 /**
@@ -12,7 +13,9 @@ import { SearchShortcut } from "@/components/search/shortcut";
  * and its keys on a wide screen. A press opens the palette, and intent warms it.
  * The placeholder keeps one line and clips as the sidebar folds, like every
  * other row's label, so it never wraps while the row narrows. The rail keeps the
- * row's icon alone, so the keys never crowd it in the round button.
+ * row's icon alone, so the keys never crowd it in the round button. On a phone
+ * the sheet steps aside for the palette, as it does for a link, so a result opens
+ * on the page and closing the palette returns to the page.
  */
 export function SidebarSearchButton({
   label,
@@ -25,13 +28,18 @@ export function SidebarSearchButton({
   onOpen: () => void;
   open: boolean;
 }) {
+  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton
           className="text-muted-foreground justify-between"
           isActive={open}
-          onClick={onOpen}
+          onClick={() => {
+            setOpenMobile(false);
+            onOpen();
+          }}
           onFocus={onIntent}
           onMouseEnter={onIntent}
           onTouchStart={onIntent}

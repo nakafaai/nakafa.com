@@ -9,9 +9,9 @@ import {
 import { Array as Arr, Config, Effect, HashSet, Option, Schema } from "effect";
 
 /**
- * The value of the Indonesia rail switch. `passes` sells the passes through
- * Xendit and keeps the monthly plan on Polar, for as long as no live Xendit
- * channel can renew it. It is read only by this module.
+ * The value of the Indonesia rail switch. `passes` takes everything paid once
+ * through Xendit and keeps the monthly plan on Polar, for as long as no live
+ * Xendit channel can renew it. It is read only by this module.
  */
 const IndonesiaRail = Schema.Literals(["polar", "passes", "xendit"]);
 
@@ -59,10 +59,10 @@ const isXenditConfigured = Effect.fn("billing.route.isXenditConfigured")(
 );
 
 /**
- * Whether Xendit takes everything Indonesian buyers pay: the switch names Xendit
- * and this deployment holds the Xendit key. Under `passes` it takes the passes
- * alone, so a school keeps paying by bank transfer. A switch that names no rail is
- * logged and keeps Indonesia where it was, on Polar.
+ * Whether Xendit takes what Indonesian buyers pay once, such as a school's
+ * invoice: the switch names Xendit, whole or under `passes`, and this deployment
+ * holds the Xendit key. A switch that names no rail is logged and keeps Indonesia
+ * where it was, on Polar.
  */
 export const xenditTakesIndonesia = Effect.fn(
   "billing.route.xenditTakesIndonesia"
@@ -74,7 +74,7 @@ export const xenditTakesIndonesia = Effect.fn(
       }).pipe(Effect.as("polar" as const))
     )
   );
-  return rail === "xendit" && (yield* isXenditConfigured());
+  return rail !== "polar" && (yield* isXenditConfigured());
 });
 
 /** The rail of one offer in Indonesia while the switch names `passes`: what is paid once goes to Xendit. */
