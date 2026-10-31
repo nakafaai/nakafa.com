@@ -47,6 +47,30 @@ describe("createTryoutHead", () => {
     });
   });
 
+  it("links each locale's address that the catalog resolved, which can differ by slug", () => {
+    const head = createTryoutHead({
+      ...page,
+      alternates: [
+        {
+          href: "https://nakafa.com/en/try-out/set/general-reasoning",
+          hreflang: "en",
+        },
+        {
+          href: "https://nakafa.com/id/try-out/set/penalaran-umum",
+          hreflang: "id",
+        },
+      ],
+      indexable: true,
+      jsonLd: [],
+    });
+
+    expect(head.links).toContainEqual({
+      href: "https://nakafa.com/id/try-out/set/penalaran-umum",
+      hreflang: "id",
+      rel: "alternate",
+    });
+  });
+
   it("emits the canonical link first and then the JSON-LD nodes in order", () => {
     const first = { "@type": "BreadcrumbList" };
     const second = { "@type": "WebPage" };
