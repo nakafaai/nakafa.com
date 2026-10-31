@@ -16,6 +16,9 @@ import { ACCESS_TITLE } from "@/e2e/support/share";
 import { promptWith } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
+/** The class of a spinner that is turning. */
+const SPINNING = /animate-spin/u;
+
 /**
  * A window property that marks the learner's document. A full document load
  * replaces the window, so the marker is gone afterwards, while a client navigation
@@ -170,7 +173,7 @@ const signsOutOfAChat = Effect.fn("NakafaE2E.signsOutOfAChat")(function* (
     await signOut.click();
     // The server holds its answer, so the press shows its loader meanwhile.
     await expect(signOut.locator('[data-slot="spinner"]')).toHaveClass(
-      /animate-spin/u
+      SPINNING
     );
     await page.waitForURL((url) => url.pathname === "/en", {
       waitUntil: "load",

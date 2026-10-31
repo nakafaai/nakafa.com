@@ -429,7 +429,11 @@ describe("pointedQuestion", () => {
 
 describe("scoredQuestion", () => {
   it("gives one question its rule, raises points too few for its steps, and keeps the others", () => {
-    const scored = scoredQuestion(viewOf([first, second]), second.id, "wrongParts");
+    const scored = scoredQuestion(
+      viewOf([first, second]),
+      second.id,
+      "wrongParts"
+    );
 
     expect(scored.questions[0]).toEqual(first);
     expect(scored.questions[1]).toMatchObject({

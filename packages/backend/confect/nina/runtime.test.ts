@@ -38,9 +38,7 @@ describe("answerRunFor", () => {
   });
 
   it("runs a file part that holds an image in the default runtime", () => {
-    expect(answerRunFor(withFile("image/png"))).toBe(
-      ninaInternal.response.run
-    );
+    expect(answerRunFor(withFile("image/png"))).toBe(ninaInternal.response.run);
   });
 
   it("runs a PDF in the Node runtime", () => {

@@ -3,6 +3,9 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** Any address at all. */
+const SOME_ADDRESS = /./u;
+
 // A phone's width folds every ancestor of the path into the breadcrumb's More menu.
 // An article's path has Home, Articles and its category, so it folds; a lesson's
 // breadcrumb names only the lesson and never does.
@@ -15,7 +18,7 @@ test("every breadcrumb item is a link, the current page included", async ({
   const path = page.getByRole("navigation", { name: "breadcrumb" });
   const current = path.locator('[aria-current="page"]');
   await expect(current).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(current).toHaveAttribute("href", /./u);
+  await expect(current).toHaveAttribute("href", SOME_ADDRESS);
   await expect(path.getByRole("button", { name: "More" })).toBeVisible();
 });
 
