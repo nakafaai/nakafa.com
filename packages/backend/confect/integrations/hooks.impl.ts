@@ -3,7 +3,7 @@ import type {
   IntegrationDeliveriesDoc,
   JournalEntriesDoc,
 } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -113,11 +113,9 @@ const recoverLost = Effect.fn("integrations.hooks.recover")(function* () {
           .table("integrationDeliveries")
           .patch(delivery._id, { dueAt: now })
           .pipe(Effect.orDie),
-        scheduler.runAfter(
-          Duration.zero,
-          refs.internal.integrations.hooks.deliver,
-          { deliveryId: delivery._id }
-        )
+        scheduler.runAfter(Duration.zero, integrationsInternal.hooks.deliver, {
+          deliveryId: delivery._id,
+        })
       ),
     { discard: true }
   );
@@ -143,11 +141,9 @@ const sweep = FunctionImpl.make(
     yield* Effect.forEach(
       due,
       (webhook) =>
-        scheduler.runAfter(
-          Duration.zero,
-          refs.internal.integrations.hooks.run,
-          { webhookId: webhook._id }
-        ),
+        scheduler.runAfter(Duration.zero, integrationsInternal.hooks.run, {
+          webhookId: webhook._id,
+        }),
       { discard: true }
     );
     if (cursor === null) {
@@ -156,7 +152,7 @@ const sweep = FunctionImpl.make(
     if (!page.isDone) {
       yield* scheduler.runAfter(
         Duration.zero,
-        refs.internal.integrations.hooks.sweep,
+        integrationsInternal.hooks.sweep,
         { cursor: page.continueCursor }
       );
     }
@@ -194,12 +190,14 @@ const run = FunctionImpl.make(
       RUN_PAGE,
       HANDLED_LIMIT
     );
-    const carried = Arr.filterMap(plan.handle, (entry) => {
-      const change = entry.change.type;
-      return isPublished(change) && Arr.contains(webhook.changes, change)
-        ? Option.some({ change, entry })
-        : Option.none();
-    });
+    const carried = Arr.getSomes(
+      Arr.map(plan.handle, (entry) => {
+        const change = entry.change.type;
+        return isPublished(change) && Arr.contains(webhook.changes, change)
+          ? Option.some({ change, entry })
+          : Option.none();
+      })
+    );
     yield* Effect.forEach(carried, ({ change, entry }, index) =>
       Effect.flatMap(
         writer
@@ -217,7 +215,7 @@ const run = FunctionImpl.make(
         (deliveryId) =>
           scheduler.runAfter(
             Duration.times(STAGGER, index),
-            refs.internal.integrations.hooks.deliver,
+            integrationsInternal.hooks.deliver,
             { deliveryId }
           )
       )
@@ -230,7 +228,7 @@ const run = FunctionImpl.make(
     if (Option.isSome(plan.nextRunAt)) {
       yield* scheduler.runAt(
         DateTime.makeUnsafe(plan.nextRunAt.value),
-        refs.internal.integrations.hooks.run,
+        integrationsInternal.hooks.run,
         { webhookId }
       );
     }
@@ -291,7 +289,7 @@ const deliver = FunctionImpl.make(
   Effect.fn("integrations.hooks.deliver.run")(function* ({ deliveryId }) {
     const { runQuery } = yield* QueryRunner;
     const { runMutation } = yield* MutationRunner;
-    const prepared = yield* runQuery(refs.internal.integrations.hooks.prepare, {
+    const prepared = yield* runQuery(integrationsInternal.hooks.prepare, {
       deliveryId,
     }).pipe(Effect.orDie);
     if (prepared.outcome === "settled") {
@@ -301,7 +299,7 @@ const deliver = FunctionImpl.make(
       prepared.outcome === "drop"
         ? { reason: prepared.reason, status: "dropped" as const }
         : yield* attemptOf(prepared);
-    yield* runMutation(refs.internal.integrations.hooks.settle, {
+    yield* runMutation(integrationsInternal.hooks.settle, {
       deliveryId,
       outcome,
     }).pipe(Effect.orDie);
@@ -351,7 +349,7 @@ const settle = FunctionImpl.make(
       .pipe(Effect.orDie);
     yield* (yield* Scheduler).runAt(
       DateTime.makeUnsafe(dueAt),
-      refs.internal.integrations.hooks.deliver,
+      integrationsInternal.hooks.deliver,
       { deliveryId: next }
     );
     return null;
@@ -384,7 +382,7 @@ const prune = FunctionImpl.make(
     if (old.length === PRUNE_PAGE) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.integrations.hooks.prune,
+        integrationsInternal.hooks.prune,
         {}
       );
     }

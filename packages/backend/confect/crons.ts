@@ -49,7 +49,7 @@ export default CronJobs.make()
     CronJob.make(
       "sweep school webhooks",
       Duration.minutes(WEBHOOK_SWEEP_INTERVAL_MINUTES),
-      internal.integrations.hooks.sweep,
+      integrationsInternal.hooks.sweep,
       { cursor: null }
     )
   )
@@ -57,7 +57,7 @@ export default CronJobs.make()
     CronJob.make(
       "delete old webhook deliveries",
       Duration.hours(WEBHOOK_DELIVERY_PRUNE_INTERVAL_HOURS),
-      internal.integrations.hooks.prune,
+      integrationsInternal.hooks.prune,
       {}
     )
   )

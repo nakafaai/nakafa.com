@@ -39,7 +39,7 @@ describe("a receiver address", () => {
 
 describe("the retries of a change", () => {
   it("give eight attempts inside 24 hours, each delay longer than the last", () => {
-    const delays = Arr.filterMap(Arr.range(1, 8), retryDelay);
+    const delays = Arr.getSomes(Arr.map(Arr.range(1, 8), retryDelay));
     expect(delays).toHaveLength(7);
     expect(Option.isNone(retryDelay(8))).toBe(true);
     expect(

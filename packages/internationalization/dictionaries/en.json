@@ -913,6 +913,12 @@
         "ended": "Role ended"
       },
       "integration": {
+        "webhook": {
+          "created": "Webhook created",
+          "changed": "Webhook changed",
+          "rotated": "Webhook secret rotated",
+          "revoked": "Webhook revoked"
+        },
         "created": "Client created",
         "rotated": "Secret rotated",
         "revoked": "Client revoked",

@@ -913,6 +913,12 @@
         "ended": "Peran berakhir"
       },
       "integration": {
+        "webhook": {
+          "created": "Webhook dibuat",
+          "changed": "Webhook diubah",
+          "rotated": "Rahasia webhook diganti",
+          "revoked": "Webhook dicabut"
+        },
         "created": "Klien dibuat",
         "rotated": "Rahasia diganti",
         "revoked": "Klien dicabut",

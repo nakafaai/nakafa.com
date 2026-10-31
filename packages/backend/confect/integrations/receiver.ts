@@ -29,10 +29,11 @@ const addressesOf = Effect.fn("integrations.receiver.addresses")(function* (
   });
   const answer =
     yield* HttpClientResponse.schemaBodyJson(ResolverAnswer)(response);
-  return Arr.filterMap(answer.Answer ?? [], (record) =>
-    Arr.contains(ADDRESS_RECORDS, record.type)
-      ? Option.some(record.data)
-      : Option.none()
+  return Arr.map(
+    Arr.filter(answer.Answer ?? [], (record) =>
+      Arr.contains(ADDRESS_RECORDS, record.type)
+    ),
+    (record) => record.data
   );
 });
 

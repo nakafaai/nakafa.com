@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -225,7 +225,7 @@ const resend = FunctionImpl.make(
       .pipe(Effect.orDie);
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.integrations.hooks.deliver,
+      integrationsInternal.hooks.deliver,
       { deliveryId: resent }
     );
     return null;

@@ -94,28 +94,33 @@ export const DeliveryFailure = Schema.Literals([
 /** Why a change was not sent: its client may no longer read its subject, or the webhook has ended. */
 export const DeliveryDrop = Schema.Literals(["access", "revoked"]);
 
+/** The fields of an attempt that reached its receiver or failed trying. */
+const delivered = {
+  code: Schema.Finite,
+  ms: Schema.Finite,
+  status: Schema.Literal("delivered"),
+};
+const failed = {
+  code: Schema.NullOr(Schema.Finite),
+  ms: Schema.Finite,
+  reason: DeliveryFailure,
+  status: Schema.Literal("failed"),
+};
+const dropped = { reason: DeliveryDrop, status: Schema.Literal("dropped") };
+
 /** The outcome that one attempt settles with. */
 export const DeliveryOutcome = Schema.Union([
-  Schema.Struct({
-    code: Schema.Finite,
-    ms: Schema.Finite,
-    status: Schema.Literal("delivered"),
-  }),
-  Schema.Struct({
-    code: Schema.NullOr(Schema.Finite),
-    ms: Schema.Finite,
-    reason: DeliveryFailure,
-    status: Schema.Literal("failed"),
-  }),
-  Schema.Struct({ reason: DeliveryDrop, status: Schema.Literal("dropped") }),
+  Schema.Struct(delivered),
+  Schema.Struct(failed),
+  Schema.Struct(dropped),
 ]);
 
 /** Where one attempt stands: due, or settled at `at`. */
 export const DeliveryState = Schema.Union([
   Schema.Struct({ status: Schema.Literal("due") }),
-  ...Arr.map(DeliveryOutcome.members, (member) =>
-    member.mapFields((fields) => ({ ...fields, at: Schema.Finite }))
-  ),
+  Schema.Struct({ ...delivered, at: Schema.Finite }),
+  Schema.Struct({ ...failed, at: Schema.Finite }),
+  Schema.Struct({ ...dropped, at: Schema.Finite }),
 ]);
 
 /**
