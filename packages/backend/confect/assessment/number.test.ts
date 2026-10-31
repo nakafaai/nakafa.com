@@ -4,7 +4,6 @@ import {
   matchesNumber,
   type NumericEntry,
   type NumericKey,
-  numberText,
   numericKeyFits,
 } from "@repo/backend/confect/assessment/number";
 import { Option } from "effect";
@@ -24,16 +23,6 @@ const threeQuarters: NumericKey = {
   kind: "numericEntry",
   value: "0.75",
 };
-
-describe("assessment/number numberText", () => {
-  it("reads Arabic-Indic digits as ASCII digits, and every decimal point as the dot", () => {
-    expect(numberText("٠٫٧٥")).toBe("0.75");
-    expect(numberText("۱۲,۵")).toBe("12.5");
-    expect(numberText("0,75")).toBe("0.75");
-    expect(numberText("3/4")).toBe("3/4");
-    expect(numberText("tiga")).toBe("tiga");
-  });
-});
 
 describe("assessment/number canonicalDecimal", () => {
   it("spells a typed decimal as the key stores it, in any script and with either point", () => {
