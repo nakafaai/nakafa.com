@@ -104,7 +104,7 @@ A row holds IDs and codes only, never a name, an email address, or free text
 transaction, and it journals `guardian.withdrawn`, which tells the school the
 withdrawal is done (blueprint, Orang tua, requests).
 
-### Age and the under-18 gate
+### Age
 
 - The age limit comes from the country profile (ADR 0032). For Indonesia it is
   under 18, which the profile reads from UU 35/2014 Pasal 1 angka 1 (a secondary
@@ -113,16 +113,14 @@ withdrawal is done (blueprint, Orang tua, requests).
   an age marker and does not store it (ADR 0015). The import compares the date
   with the limit, keeps the answer, and drops the date. The answer is one flag on
   the student's roster row, `underAgeLimit`. The import reads no NIK (K13).
-- A roster row with no flag counts as under the limit, so the gate and quiet hours
-  apply until the school sets the flag. Staff can set it by hand when a student is
-  entered, and each roster import sets it again. A student who turns 18 keeps the
-  flag until the next import. That errs toward consent and quiet hours, never away
-  from them.
-- The gate refuses a student under the limit who has no active `granted` row, with
-  the typed refusal `ConsentRequired`. It applies to Nina, the class forum, and
-  active grading (GLOSSARY). S8 implements it. The slices that make active grading
-  check it when they land. A subject grade that a teacher enters is the teacher's
-  judgment, not active grading, so ADR 0033 does not check it.
+- A roster row with no flag counts as under the limit, so quiet hours apply until the
+  school sets the flag. Staff can set it by hand when a student is entered, and each
+  roster import sets it again. A student who turns 18 keeps the flag until the next
+  import.
+- Nothing refuses a student for lack of a guardian's consent. The owner decided on 31
+  October 2026 that Nakafa holds no guardian gate, so the planned `requireConsent` and
+  its `ConsentRequired` refusal are gone, from Nina, the class forum, and active grading
+  alike. A link and its consent stay what a guardian reads a child's school through.
 - Quiet hours follow the same flag. They are on for a student under the limit and
   for a student with no flag, and only the school's DPIA can relax them (ADR 0027).
 
@@ -146,7 +144,7 @@ withdrawal is done (blueprint, Orang tua, requests).
 - Every consent is a row with a time, a method, a policy version, and a checker,
   so a school can show which check admitted a guardian and under which rule.
 - The roster's `underAgeLimit` flag is the only new age value. It sits on the
-  roster row, has two readers (the gate and quiet hours), and leaves with the
+  roster row, has one reader (quiet hours), and leaves with the
   roster when the school leaves. No birth date is stored anywhere.
 - Withdrawal cannot be undone by a click. A guardian who withdraws links again
   through the same verification, and the old rows stay in the ledger.
@@ -160,8 +158,7 @@ withdrawal is done (blueprint, Orang tua, requests).
   relation name should say what the link is (ADR 0012).
 - An update of the consent state in place. The ledger must show every change.
 - Storing the birth date and computing the age at each check. The blueprint says
-  the date is not stored, and one flag answers every question that the gate and
-  quiet hours ask.
+  the date is not stored, and one flag answers every question quiet hours ask.
 - The flag on the tenant person row. That row is shared by every role of a school,
   and the flag is a roster fact (ADR 0011).
 - A guardian code accepted on nakafa.com. ADR 0009 accepts a parent's code only on
@@ -183,7 +180,6 @@ withdrawal is done (blueprint, Orang tua, requests).
 | `guardianCodes` and the email code at `/parents` | Built, S8: `guardians/codes:send` mails the code from the mutation that draws it, through `confect/emails`, and answers the same for every address. The HMAC uses `LOGIN_CARD_SECRET` under the purpose label `nakafa/identity/guardian-code/v1`, bound to the school and the address (`identity/secret.ts`). The school host's Better Auth endpoint `/school/guardian/sign-in` (`auth/guardian.ts`) redeems the code through `guardians/codes:redeem`, binds the guardian Person with the claim method `code`, and makes the session. A sweep deletes expired codes hourly. |
 | `guardianConsents` and the NISN second check | Built, S8: the guardian's check compares the blind of the typed NISN with the roster's (`guardians/family:confirm`). Three mismatches leave only the staff check. Withdrawal writes the `withdrawn` row with the method of its grant and ends the link in one transaction. |
 | The under-age flag on the school roster | Built: `rosterEntries` holds `underAgeLimit` and the NISN, sealed and blinded under the school key (`confect/roster`). Admin and Staff set it with `roster/entries:set`. The Dapodik import sets it again when it lands (ADR 0015). |
-| The under-18 gate (`ConsentRequired`) | Built, S8: `requireConsent` in `guardians/gate.ts`. Wiring it into the class forum belongs to the classroom lane, and Nina's school threads and active grading call it when they land. |
 | Guardian notices and the rename of the notification relation | Planned, S9 |
 | Parent home, shared narratives, and requests | Partly built, S10: the parent home at `/parents` lists each linked child, runs the NISN check, shows the released grades of a verified link, and withdraws consent. Shared narratives wait for Insight (ADR 0035), and report copy and correction requests are a later slice. |
 

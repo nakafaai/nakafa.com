@@ -52,15 +52,6 @@ export const rosterEntryOf = Effect.fn("roster.entry.of")(function* (
     );
 });
 
-/**
- * Whether a student counts as under the age limit. A student without a roster row
- * or without the flag counts as under it, so the consent gate errs toward consent
- * (ADR 0034).
- */
-export const countsUnderAge = (
-  entry: Option.Option<Pick<RosterEntriesDoc, "underAgeLimit">>
-) => Option.getOrUndefined(entry)?.underAgeLimit !== false;
-
 /** The blind of a NISN under the school key, which a stored row is compared by. */
 export const blindNisn = Effect.fn("roster.entry.blind")(function* (
   keys: TenantKeys,
