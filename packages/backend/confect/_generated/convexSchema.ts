@@ -87,8 +87,11 @@ import insightMastery from "./tables/insightMastery";
 import insightNarratives from "./tables/insightNarratives";
 import insightTags from "./tables/insightTags";
 import integrationClients from "./tables/integrationClients";
+import integrationDeliveries from "./tables/integrationDeliveries";
 import integrationDevices from "./tables/integrationDevices";
+import integrationRequests from "./tables/integrationRequests";
 import integrationTokens from "./tables/integrationTokens";
+import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
@@ -238,8 +241,11 @@ export default $defineSchema({
   insightNarratives: $Table.tableDefinition(insightNarratives),
   insightTags: $Table.tableDefinition(insightTags),
   integrationClients: $Table.tableDefinition(integrationClients),
+  integrationDeliveries: $Table.tableDefinition(integrationDeliveries),
   integrationDevices: $Table.tableDefinition(integrationDevices),
+  integrationRequests: $Table.tableDefinition(integrationRequests),
   integrationTokens: $Table.tableDefinition(integrationTokens),
+  integrationWebhooks: $Table.tableDefinition(integrationWebhooks),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),

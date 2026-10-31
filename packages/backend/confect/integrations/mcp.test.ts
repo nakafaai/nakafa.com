@@ -82,7 +82,7 @@ const ToolAnswer = Schema.Struct({
 
 describe("school MCP route", () => {
   it.effect(
-    "lists the school's four read-only tools to a client with an MCP token",
+    "lists the school's read-only tools to a client with an MCP token",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -100,6 +100,9 @@ describe("school MCP route", () => {
           "school_list_periods:true",
           "school_list_cohorts:true",
           "school_list_people:true",
+          "school_list_grades:true",
+          "school_import_roster:false",
+          "school_list_changes:true",
           "school_list_placements:true",
         ]);
         const discovered = yield* json(

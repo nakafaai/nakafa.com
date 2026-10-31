@@ -116,7 +116,7 @@ export const unit = Kind.make("unit", "tenantUnits", {
       access: "read",
       grantedBy: "roles",
       relations: ["member"],
-      roles: ["admin", "auditor"],
+      roles: ["admin", "auditor", "integration"],
     },
   },
   changes: [

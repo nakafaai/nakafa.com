@@ -17,6 +17,12 @@ import { Schema } from "effect";
  */
 export const gradeKind = Kind.make("grade", "classGrades", {
   actions: {
+    "grade.export": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["integration"],
+    },
     "grade.release": {
       access: "write",
       grantedBy: "relations",

@@ -1,5 +1,6 @@
 import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import type integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -17,6 +18,10 @@ import type {
 } from "@/components/tenant/settings/state";
 
 type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
+type Webhook = Ref.Returns<typeof integrations.webhooks.list>["page"][number];
+type Delivery = Ref.Returns<
+  typeof integrations.webhooks.deliveries
+>["page"][number];
 
 export const slug = Schema.decodeSync(TenantSlug)("nf");
 export const otherSlug = Schema.decodeSync(TenantSlug)("other");
@@ -97,6 +102,34 @@ export function client(id: string): Client {
     rotatedAt: 1,
     scope: { kind: "tenant" },
     status: "active",
+  };
+}
+
+/** One webhook as the school's list shows it. */
+export function webhook(id: string): Webhook {
+  return {
+    changes: ["unit.created"],
+    clientActions: ["unit.view"],
+    clientId: Schema.decodeUnknownSync(Id("integrationClients"))("client"),
+    clientName: "Sinkron",
+    createdAt: 1,
+    id: Schema.decodeUnknownSync(Id("integrationWebhooks"))(id),
+    rotatedAt: 1,
+    status: "active",
+    url: "https://93.184.216.34/hook",
+  };
+}
+
+/** One failed attempt of a webhook's log. */
+export function delivery(id: string): Delivery {
+  return {
+    attempt: 1,
+    change: "unit.created",
+    createdAt: 1,
+    dueAt: 1,
+    entryId: Schema.decodeUnknownSync(Id("journalEntries"))("entry"),
+    id: Schema.decodeUnknownSync(Id("integrationDeliveries"))(id),
+    state: { at: 1, code: 500, ms: 1, reason: "status", status: "failed" },
   };
 }
 

@@ -445,10 +445,11 @@ The 15 files that import `convex-helpers`:
 | `@nakafa/cli` 0.1.1 | Live, public and read only |
 | `effect/http-api` in Nakafa code | Used by the school API (`confect/integrations/api.ts`), 26 October 2026 |
 | `integrationClients` and the client registry (the amendment of 14 October 2026) | Built, with no route yet |
-| `confect/integrations` (the `HttpApi` definition), `integrationDeliveries` | Planned, program wave C |
+| `confect/integrations` (the `HttpApi` definition) | Planned, program wave C |
 | School REST | Built, 26 October 2026: the token endpoint, the bearer check, and the roster reads (see the amendment of that day) |
 | School MCP and the CLI login | Planned, program wave C |
-| Webhooks and exports | Planned, program wave C |
+| Webhooks | Built, 31 October 2026 (see the amendment of that day) |
+| Exports | Built, 31 October 2026 (see the amendment of that day) |
 | LTI, the OneRoster REST service, and the QTI codec | Planned, program wave C |
 | The OneRoster CSV import | Built, 31 October 2026: the browser reads the zip as it reads a Dapodik file (ADR 0015), and `roster/imports:applySourced` applies the rows. A student's roster row keeps the blind of their `sourcedId` under the school key, so a later file names the same student, and teachers stay out of the import. |
 | `hono@4.13.13` in `bun.lock` | Removed on 26 October 2026. `bun.lock` keeps only the peer declaration of `convex-helpers`, `bun install --frozen-lockfile` accepts it, and `RETIRED_LOCK_PACKAGES` in `scripts/dependencies/policy.ts` fails the dependency policy when the lock resolves `hono` again. |
@@ -534,7 +535,8 @@ first. The token endpoint, the bearer middleware, and the routes come later.
   tokens that the chat share link uses too, and the token endpoint checks a
   presented secret with its `matchesToken`, which compares digests in constant
   time.
-- Ending the webhooks of a revoked client. Webhooks do not exist yet.
+- Ending the webhooks of a revoked client, which the amendment of 31 October 2026
+  built.
 
 ## Amendment: The Token Endpoint And The First Routes, 26 October 2026
 
@@ -604,6 +606,70 @@ What is built:
 Errors are the typed errors of the definition, as JSON. RFC 9457 problem details
 for the school API wait for the change that moves the public API to an `HttpApi`
 definition, so both answer the same shape.
+
+## Amendment: Webhooks, 31 October 2026
+
+Webhooks are built. This section settles what the table above left open and states
+what the code does.
+
+1. **Position.** A webhook keeps one row in `journalCursors`, with its own ID as
+   the consumer and no change type, so there is no second cursor table. It reads
+   every entry of its school in creation order through `planRun`, the rule of ADR
+   0016, and keeps the changes its list names. One position per webhook keeps the
+   order of the journal across change types and costs one index read to learn that
+   nothing is new.
+2. **Start.** `record` inserts and reads nothing (ADR 0016), so no write marks a
+   webhook as owed. `integrations/hooks:sweep` runs each minute and starts a run for
+   each active webhook with an unread entry, so a change reaches its receiver within
+   a minute or so.
+3. **Attempts.** A run writes the first attempt of each change in the transaction
+   that moves the cursor, so a change gets exactly one first attempt. Each attempt is
+   one row of `integrationDeliveries`. Scheduled actions run at most once, so the
+   sweep sends again an attempt still due five minutes past its time. `settle` keeps
+   the first outcome. Retries wait 30 seconds, 2 minutes, 10 minutes, 30 minutes, 2
+   hours, 6 hours, and 15 hours, which is eight attempts in under 24 hours.
+4. **Access.** A webhook names changes from those its client's action list opens, and
+   each attempt decides the subject again through its kind's authority, so a client
+   that lost a read or a subject that left its scope drops the attempt as `access`.
+   `grade.export` is the client's read of a released grade. It is a separate action
+   because a role on `grade.view` would open drafts to the Owner.
+5. **Address.** A receiver is judged when it is written and before each attempt: an
+   address literal by `judgeAddress`, and a name by every address the Cloudflare
+   resolver answers for it. Convex gives an action no way to connect to a checked
+   address, so a name can resolve elsewhere between the check and the connection.
+   The attempt reads nothing of the answer but its status, and the log shows only
+   that status, so a name that moves learns almost nothing.
+6. **Secret.** It is sealed with the school's key and bound to the client, because a
+   webhook's own ID does not exist until the sealed value is written. Revoking a
+   webhook or its client deletes it.
+7. **Log.** `integrationDeliveries` keeps an attempt for 30 days. Owners and Admins
+   read it per webhook and can send a change again, which is one more attempt with
+   the same event ID.
+
+A request carries `nakafa-signature: t=<seconds>,v1=<hex>`, `nakafa-event`,
+`nakafa-event-type`, and `nakafa-attempt`. The body holds `id`, `type`, `occurredAt`,
+`subject`, and `change`.
+
+## Amendment: Reads, Exports, And The First Client Write, 31 October 2026
+
+1. **Reads.** `GET /grades?period=` lists released grades through `grade.export`, and a
+   draft never leaves. `GET /changes` lists the published changes a client may read,
+   oldest first, the same event a webhook posts. A page can hold few rows, because it
+   reads the journal and decides each entry, so a client follows `next`. MCP serves both
+   as `school_list_grades` and `school_list_changes`, and the CLI as `nakafa school
+   grades` and `changes`.
+2. **Exports.** `GET /exports/csv/:dataset` and `/exports/xlsx/:dataset` write `people`,
+   `placements`, or `grades` through those reads, so a file holds exactly what its token
+   may read, up to 5,000 rows. `write-excel-file` writes the XLSX file, the library the
+   browser export uses (ADR 0015).
+3. **The first client write.** `POST /roster/import` is the Dapodik bridge: a school's own
+   system sends at most 100 students of one period, and they join the roster as a file
+   import does. MCP serves it as `school_import_roster`. `TenantActor` takes a client, as
+   this ADR planned, so the journal and the audit log say an integration made the change.
+4. **Idempotency.** `integrationRequests` holds the digest and the first answer of each
+   `Idempotency-Key` for 24 hours, written by the mutation that makes the change. A repeat
+   gets the first answer, and the same key with another request gets 422. A missing key is
+   refused by the definition's own header schema.
 
 ## References
 

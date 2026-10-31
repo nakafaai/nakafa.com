@@ -27,7 +27,7 @@ import {
 import { cohortNameKey } from "@repo/backend/confect/tenancy/cohort";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
 import type { TenantKeys } from "@repo/backend/confect/vault/keys";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** What applying one row did: a new student, a changed one, or a row it skipped. */
 type RowOutcome = "added" | "changed" | "skipped";
@@ -113,6 +113,17 @@ const placeNamed = Effect.fn("roster.import.place")(function* (
     type: "person.placed",
   });
 });
+
+/** What one batch did, from the outcome of each of its rows. */
+export const importSummary = (outcomes: readonly RowOutcome[]) => {
+  const count = (outcome: RowOutcome) =>
+    Arr.length(Arr.filter(outcomes, (found) => found === outcome));
+  return {
+    added: count("added"),
+    changed: count("changed"),
+    skipped: count("skipped"),
+  };
+};
 
 /**
  * The student a row names and a grant in the period's unit: the Person the roster already

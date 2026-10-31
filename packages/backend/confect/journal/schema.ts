@@ -33,6 +33,11 @@ export const TenantActor = Schema.Union([
   Schema.Struct({ id: Id("tenantPeople"), kind: Schema.Literal("person") }),
   /** Nakafa staff acting outside a visit, such as to open or suspend a school. */
   Schema.Struct({ id: Id("operators"), kind: Schema.Literal("operator") }),
+  /** An integration client writing through the school API (ADR 0029). */
+  Schema.Struct({
+    id: Id("integrationClients"),
+    kind: Schema.Literal("client"),
+  }),
   /** Scheduled or cascading work. */
   Schema.Struct({ kind: Schema.Literal("system") }),
 ]).pipe(Schema.toTaggedUnion("kind"));
@@ -125,10 +130,13 @@ export const ChangeView = Schema.Union([
 /** A subject on the wire, tolerant of kinds added later. */
 export const SubjectView = Schema.Union([...ObjectRef.members, UnknownSubject]);
 
-/** The consumers that read the journal with a cursor of their own. */
-export const JournalConsumer = Schema.Literals(["inbox"]);
+/** The consumers that read the journal with a cursor of their own: the inbox, and each webhook. */
+export const JournalConsumer = Schema.Union([
+  Schema.Literal("inbox"),
+  Id("integrationWebhooks"),
+]);
 
-/** The change types a consumer reads. */
+/** The change types a cursor reads one type at a time. A webhook's cursor names none, because it reads every change of its school. */
 export const ConsumedChangeType = Schema.Literals(["person.invited"]);
 
 /**
@@ -152,7 +160,7 @@ const HandledEntry = Schema.Struct({
  * the cursors whose run never happened.
  */
 export const JournalCursor = Schema.Struct({
-  changeType: ConsumedChangeType,
+  changeType: Schema.NullOr(ConsumedChangeType),
   consumer: JournalConsumer,
   handled: Schema.Array(HandledEntry),
   pending: Schema.Boolean,

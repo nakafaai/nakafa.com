@@ -7563,6 +7563,7 @@ export declare const api: {
             | "post.publish"
             | "task.manage"
             | "task.submit"
+            | "grade.export"
             | "grade.release"
             | "grade.view"
             | "report.approve"
@@ -7693,6 +7694,7 @@ export declare const api: {
               | "post.publish"
               | "task.manage"
               | "task.submit"
+              | "grade.export"
               | "grade.release"
               | "grade.view"
               | "report.approve"
@@ -7827,6 +7829,7 @@ export declare const api: {
             | "post.publish"
             | "task.manage"
             | "task.submit"
+            | "grade.export"
             | "grade.release"
             | "grade.view"
             | "report.approve"
@@ -7937,6 +7940,7 @@ export declare const api: {
             | "post.publish"
             | "task.manage"
             | "task.submit"
+            | "grade.export"
             | "grade.release"
             | "grade.view"
             | "report.approve"
@@ -8034,6 +8038,265 @@ export declare const api: {
         {}
       >;
     };
+    webhooks: {
+      change: FunctionReference<
+        "mutation",
+        "public",
+        {
+          changes: Array<
+            | "grade.released"
+            | "grant.created"
+            | "grant.ended"
+            | "guardian.linked"
+            | "guardian.withdrawn"
+            | "unit.created"
+          >;
+          clientId: Id<"integrationClients">;
+          slug: string;
+          url: string;
+          webhookId: Id<"integrationWebhooks">;
+        },
+        null
+      >;
+      create: FunctionReference<
+        "mutation",
+        "public",
+        {
+          changes: Array<
+            | "grade.released"
+            | "grant.created"
+            | "grant.ended"
+            | "guardian.linked"
+            | "guardian.withdrawn"
+            | "unit.created"
+          >;
+          clientId: Id<"integrationClients">;
+          slug: string;
+          url: string;
+        },
+        { id: Id<"integrationWebhooks">; secret: string }
+      >;
+      deliveries: FunctionReference<
+        "query",
+        "public",
+        {
+          clientId: Id<"integrationClients">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+          webhookId: Id<"integrationWebhooks">;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            attempt: number;
+            change:
+              | "grade.released"
+              | "grant.created"
+              | "grant.ended"
+              | "guardian.linked"
+              | "guardian.withdrawn"
+              | "unit.created";
+            createdAt: number;
+            dueAt: number;
+            entryId: Id<"journalEntries">;
+            id: Id<"integrationDeliveries">;
+            state:
+              | { status: "due" }
+              | { at: number; code: number; ms: number; status: "delivered" }
+              | {
+                  at: number;
+                  code: number | null;
+                  ms: number;
+                  reason: "address" | "deadline" | "network" | "status";
+                  status: "failed";
+                }
+              | { at: number; reason: "access" | "revoked"; status: "dropped" };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            changes: Array<
+              | "grade.released"
+              | "grant.created"
+              | "grant.ended"
+              | "guardian.linked"
+              | "guardian.withdrawn"
+              | "unit.created"
+            >;
+            clientActions: Array<
+              | "audit.view"
+              | "tenant.manage"
+              | "tenant.view"
+              | "unit.manage"
+              | "unit.view"
+              | "card.issue"
+              | "person.invite"
+              | "person.manage"
+              | "person.view"
+              | "period.manage"
+              | "period.view"
+              | "cohort.manage"
+              | "cohort.view"
+              | "promotion.apply"
+              | "promotion.approve"
+              | "promotion.prepare"
+              | "promotion.view"
+              | "grant.revoke"
+              | "grant.view"
+              | "integration.manage"
+              | "integration.view"
+              | "connection.manage"
+              | "connection.view"
+              | "class.manage"
+              | "class.view"
+              | "forum.manage"
+              | "forum.post"
+              | "forum.read"
+              | "library.manage"
+              | "post.publish"
+              | "task.manage"
+              | "task.submit"
+              | "grade.export"
+              | "grade.release"
+              | "grade.view"
+              | "report.approve"
+              | "report.complete"
+              | "report.view"
+              | "visit.end"
+              | "document.edit"
+              | "document.view"
+              | "exam.edit"
+              | "exam.rooms"
+              | "exam.view"
+              | "sitting.proctor"
+              | "sitting.schedule"
+              | "sitting.view"
+              | "result.grade"
+              | "result.release"
+              | "result.view"
+              | "guardian.child"
+              | "guardian.confirm"
+              | "guardian.readdress"
+              | "guardian.revoke"
+              | "guardian.verify"
+              | "guardian.view"
+              | "guardian.withdraw"
+              | "invite.view"
+              | "person.manage"
+              | "person.view"
+              | "period.manage"
+              | "period.view"
+              | "cohort.manage"
+              | "grant.manage"
+              | "owner.manage"
+              | "grant.manage"
+              | "integration.manage"
+              | "integration.view"
+              | "integration.manage"
+              | "connection.create"
+              | "connection.view"
+              | "class.create"
+              | "class.list"
+              | "grade.enter"
+              | "grade.list"
+              | "scheme.manage"
+              | "scheme.view"
+              | "report.list"
+              | "report.write"
+              | "graduation.issue"
+              | "graduation.view"
+              | "report.export"
+              | "graduation.decide"
+              | "report.open"
+              | "graduation.open"
+              | "visit.approve"
+              | "document.edit"
+              | "document.edit"
+              | "exam.edit"
+              | "exam.rooms"
+              | "exam.view"
+              | "exam.edit"
+              | "exam.rooms"
+              | "exam.view"
+              | "billing.manage"
+              | "billing.view"
+              | "guardian.link"
+              | "guardian.list"
+              | "roster.manage"
+              | "roster.view"
+              | "roster.import"
+            >;
+            clientId: Id<"integrationClients">;
+            clientName: string;
+            createdAt: number;
+            id: Id<"integrationWebhooks">;
+            rotatedAt: number;
+            status: "active" | "revoked";
+            url: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      resend: FunctionReference<
+        "mutation",
+        "public",
+        {
+          clientId: Id<"integrationClients">;
+          deliveryId: Id<"integrationDeliveries">;
+          slug: string;
+          webhookId: Id<"integrationWebhooks">;
+        },
+        null
+      >;
+      revoke: FunctionReference<
+        "mutation",
+        "public",
+        {
+          clientId: Id<"integrationClients">;
+          slug: string;
+          webhookId: Id<"integrationWebhooks">;
+        },
+        null
+      >;
+      rotate: FunctionReference<
+        "mutation",
+        "public",
+        {
+          clientId: Id<"integrationClients">;
+          slug: string;
+          webhookId: Id<"integrationWebhooks">;
+        },
+        { id: Id<"integrationWebhooks">; secret: string }
+      >;
+    };
   };
   journal: {
     audit: {
@@ -8063,6 +8326,7 @@ export declare const api: {
           page: Array<{
             actor:
               | { id: Id<"tenantPeople">; kind: "person"; name: string }
+              | { kind: "client" }
               | { kind: "operator" }
               | { kind: "system" };
             at: number;
@@ -8182,6 +8446,26 @@ export declare const api: {
               | {
                   client: Id<"integrationClients">;
                   type: "integration.authorized";
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.webhook.created";
+                  webhook: Id<"integrationWebhooks">;
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.webhook.changed";
+                  webhook: Id<"integrationWebhooks">;
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.webhook.rotated";
+                  webhook: Id<"integrationWebhooks">;
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.webhook.revoked";
+                  webhook: Id<"integrationWebhooks">;
                 }
               | { type: "period.created" }
               | { type: "period.opened" }
@@ -16278,7 +16562,82 @@ export declare const internal: {
       >;
       sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
+    hooks: {
+      deliver: FunctionReference<
+        "action",
+        "internal",
+        { deliveryId: Id<"integrationDeliveries"> },
+        null
+      >;
+      prepare: FunctionReference<
+        "query",
+        "internal",
+        { deliveryId: Id<"integrationDeliveries"> },
+        | {
+            attempt: number;
+            body: string;
+            event: Id<"journalEntries">;
+            outcome: "send";
+            secret: string;
+            type: string;
+            url: string;
+          }
+        | { outcome: "drop"; reason: "access" | "revoked" }
+        | { outcome: "settled" }
+      >;
+      prune: FunctionReference<"mutation", "internal", {}, null>;
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { webhookId: Id<"integrationWebhooks"> },
+        null
+      >;
+      settle: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          deliveryId: Id<"integrationDeliveries">;
+          outcome:
+            | { code: number; ms: number; status: "delivered" }
+            | {
+                code: number | null;
+                ms: number;
+                reason: "address" | "deadline" | "network" | "status";
+                status: "failed";
+              }
+            | { reason: "access" | "revoked"; status: "dropped" };
+        },
+        null
+      >;
+      sweep: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null },
+        null
+      >;
+    };
     reads: {
+      changes: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+        },
+        | {
+            data: Array<{
+              change: Record<string, boolean | number | null | string>;
+              id: string;
+              occurredAt: string;
+              subject: { id: string; kind: string };
+              type: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
       cohorts: FunctionReference<
         "query",
         "internal",
@@ -16295,6 +16654,29 @@ export declare const internal: {
               name: string;
               periodId: string;
               status: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      grades: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          period: string;
+        },
+        | {
+            data: Array<{
+              classId: string;
+              id: string;
+              periodId: string;
+              personId: string;
+              releasedAt: number;
+              value: number;
             }>;
             next: string | null;
             outcome: "page";
@@ -16376,6 +16758,31 @@ export declare const internal: {
         { clientId: string; resource?: string; secret: string },
         | { expiresIn: number; outcome: "issued"; token: string }
         | { error: "invalid_client" | "invalid_target"; outcome: "refused" }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
+    writes: {
+      importRoster: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          digest: string;
+          key: string;
+          period: string;
+          rows: Array<{
+            cohortName?: string;
+            name: string;
+            nisn: string;
+            underAgeLimit: boolean;
+          }>;
+        },
+        | {
+            outcome: "applied";
+            summary: { added: number; changed: number; skipped: number };
+          }
+        | { outcome: "forbidden" }
+        | { outcome: "conflict" }
       >;
       sweep: FunctionReference<"mutation", "internal", {}, null>;
     };

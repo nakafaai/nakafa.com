@@ -208,6 +208,18 @@ const make = <
     return decision === "allow";
   });
 
+  /** Whether an integration client may perform an action on the subject an ID names; a missing subject is closed. */
+  const allowsClientOn = Effect.fn("access.allowsClientOn")(function* (
+    action: typeof Action.Type,
+    id: GenericId.GenericId<K["table"]>,
+    principal: typeof ClientPrincipal.Type
+  ) {
+    const row = yield* loadRow(id);
+    return (
+      Option.isSome(row) && (yield* allowsClient(action, row.value, principal))
+    );
+  });
+
   /** The actions of this kind the caller may perform on a loaded subject; none on another tenant's. */
   const allowed = Effect.fn("access.allowed")(function* (row: Row) {
     const member = yield* Member;
@@ -282,7 +294,15 @@ const make = <
       );
     });
 
-  return { allowed, allowsClient, authorize, check, middleware, record };
+  return {
+    allowed,
+    allowsClient,
+    allowsClientOn,
+    authorize,
+    check,
+    middleware,
+    record,
+  };
 };
 
 /** Constructors a lane uses to implement its kinds. */

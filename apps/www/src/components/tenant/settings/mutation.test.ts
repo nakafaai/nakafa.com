@@ -2,19 +2,23 @@ import { describe, expect, it } from "@effect/vitest";
 import access from "@repo/backend/confect/_generated/refs/access";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { ReceiverUrl } from "@repo/backend/confect/integrations/hook";
 import { Email, Npsn } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Option, Schema } from "effect";
 import {
   addUnitChange,
   archiveUnitChange,
   assignGrantChange,
+  changeWebhookChange,
   editUnitChange,
   finishSetupChange,
   inviteChange,
   removeLogoChange,
+  resendDeliveryChange,
   revokeClientChange,
   revokeGrantChange,
   revokeInviteChange,
+  revokeWebhookChange,
   setNameChange,
   setNpsnChange,
   setPolicyChange,
@@ -25,6 +29,7 @@ import { type Invite, isDraft } from "@/components/tenant/settings/state";
 import { createLocalStore } from "@/test/optimistic";
 import {
   client,
+  delivery,
   grant,
   grantedPersonId,
   invite,
@@ -38,6 +43,7 @@ import {
   smp,
   unit,
   viewer,
+  webhook,
 } from "@/test/settings";
 
 describe("components/tenant/settings/mutation", () => {
@@ -280,6 +286,95 @@ describe("components/tenant/settings/mutation", () => {
         Option.getOrThrow(local.store.getQuery(tenancy.viewer.get, { slug }))
           .tenant.setupDone
       ).toBe(true);
+    });
+  });
+
+  describe("the webhooks of the school", () => {
+    /** A store holding one school's list of two webhooks, and another school's list. */
+    const webhookLists = () => {
+      const local = createLocalStore();
+      const rows = [webhook("first"), webhook("second")];
+      for (const school of [slug, otherSlug]) {
+        local.seed(
+          integrations.webhooks.list,
+          { paginationOpts: paging, slug: school },
+          pageOf(rows)
+        );
+      }
+      return local;
+    };
+
+    const listOf = (
+      local: ReturnType<typeof webhookLists>,
+      school: typeof slug
+    ) =>
+      Option.getOrThrow(
+        local.store.getQuery(integrations.webhooks.list, {
+          paginationOpts: paging,
+          slug: school,
+        })
+      ).page;
+
+    const names = {
+      clientId: webhook("first").clientId,
+      slug,
+      webhookId: webhook("first").id,
+    };
+
+    it("shows a webhook's new receiver and changes in its school's list only", () => {
+      const local = webhookLists();
+      const url = Schema.decodeSync(ReceiverUrl)("https://93.184.216.35/hook");
+      changeWebhookChange(local.store, {
+        ...names,
+        changes: ["unit.created"],
+        url,
+      });
+      expect(Arr.map(listOf(local, slug), (row) => row.url)).toEqual([
+        url,
+        webhook("second").url,
+      ]);
+      expect(listOf(local, otherSlug)[0]?.url).toBe(webhook("first").url);
+    });
+
+    it("shows a webhook revoked at once", () => {
+      const local = webhookLists();
+      revokeWebhookChange(local.store, names);
+      expect(Arr.map(listOf(local, slug), (row) => row.status)).toEqual([
+        "revoked",
+        "active",
+      ]);
+    });
+
+    it("lists a sent-again change at the top of the first page, waiting, and leaves other logs", () => {
+      const local = createLocalStore();
+      const failed = delivery("attempt");
+      const log = { ...names, paginationOpts: paging };
+      const next = { ...names, paginationOpts: later };
+      const another = { ...log, webhookId: webhook("second").id };
+      const loading = { ...log, webhookId: webhook("third").id };
+      for (const args of [log, next, another]) {
+        local.seed(
+          integrations.webhooks.deliveries,
+          args,
+          pageOf([failed])
+        );
+      }
+      local.seed(integrations.webhooks.deliveries, loading, undefined);
+
+      resendDeliveryChange(local.store, { ...names, deliveryId: failed.id });
+      resendDeliveryChange(local.store, {
+        ...names,
+        deliveryId: delivery("absent").id,
+      });
+
+      const shown = (args: typeof log | typeof next) =>
+        Option.getOrThrow(
+          local.store.getQuery(integrations.webhooks.deliveries, args)
+        ).page;
+      expect(Arr.map(shown(log), (row) => row.attempt)).toEqual([2, 1]);
+      expect(shown(log)[0]?.state).toEqual({ status: "due" });
+      expect(shown(next)).toHaveLength(1);
+      expect(shown(another)).toHaveLength(1);
     });
   });
 

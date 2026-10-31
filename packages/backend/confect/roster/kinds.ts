@@ -37,7 +37,7 @@ const rosterPeriod = Kind.extend(period, {
       access: "write",
       grantedBy: "roles",
       relations: [],
-      roles: ["admin", "staff"],
+      roles: ["admin", "staff", "integration"],
     },
   },
   changes: [

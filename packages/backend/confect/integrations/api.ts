@@ -70,6 +70,20 @@ export class SchoolApiBearer extends HttpApiMiddleware.Service<
   security: { bearer: HttpApiSecurity.bearer },
 }) {}
 
+/** A request whose rows do not read as students. */
+export class SchoolApiInvalid extends Schema.TaggedError<SchoolApiInvalid>()(
+  "SchoolApiInvalid",
+  { message: Schema.String },
+  { httpApiStatus: 400 }
+) {}
+
+/** A repeat of an `Idempotency-Key` with another request. */
+export class SchoolApiConflict extends Schema.TaggedError<SchoolApiConflict>()(
+  "SchoolApiConflict",
+  { message: Schema.String },
+  { httpApiStatus: 422 }
+) {}
+
 /** The refusals every roster read may answer: a closed read, a refused token, and a client past its limit. */
 const ROSTER_ERRORS = [
   SchoolApiForbidden,
@@ -191,6 +205,63 @@ export const ApiPlacement = Schema.Struct({
   personId: Schema.String,
 });
 
+/** One released grade of a period. A draft never leaves the school. */
+export const ApiGrade = Schema.Struct({
+  classId: Schema.String,
+  id: Schema.String,
+  periodId: Schema.String,
+  personId: Schema.String,
+  releasedAt: Schema.Finite,
+  value: Schema.Finite,
+});
+
+/**
+ * One published change of the school's journal, the same event a webhook posts: its IDs,
+ * enums and reason codes, never a name, an email or free text (ADR 0016).
+ */
+export const ApiChange = Schema.Struct({
+  change: Schema.Record(
+    Schema.String,
+    Schema.Union([Schema.Boolean, Schema.Finite, Schema.Null, Schema.String])
+  ),
+  id: Schema.String,
+  occurredAt: Schema.String,
+  subject: Schema.Struct({ id: Schema.String, kind: Schema.String }),
+  type: Schema.String,
+});
+
+/** One student of a roster import, as a school's own system sends it. */
+export const ApiRosterRow = Schema.Struct({
+  cohortName: Schema.optionalKey(Schema.String),
+  name: Schema.String,
+  nisn: Schema.String,
+  underAgeLimit: Schema.Boolean,
+});
+
+/** One import request: the period it fills and at most one hundred students. */
+export const ApiRosterImport = Schema.Struct({
+  period: Schema.String,
+  rows: Schema.Array(ApiRosterRow).check(Schema.isMaxLength(PAGE_LIMIT)),
+});
+
+/** What one import did. */
+export const ApiImportSummary = Schema.Struct({
+  added: Schema.Finite,
+  changed: Schema.Finite,
+  skipped: Schema.Finite,
+});
+
+/** What an export holds. */
+export const ExportDataset = Schema.Literals([
+  "grades",
+  "people",
+  "placements",
+]);
+
+/** The media type of an XLSX file. */
+export const XLSX_TYPE =
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
 /** The token endpoint and the device authorization endpoint, which take the client's own credentials and no bearer token. */
 class OAuthGroup extends HttpApiGroup.make("oauth").add(
   HttpApiEndpoint.post("token", "/token", {
@@ -236,10 +307,72 @@ class RosterGroup extends HttpApiGroup.make("roster")
   )
   .middleware(SchoolApiBearer) {}
 
-/** The school API: the token endpoint and the roster reads, under the Convex path of the school API. */
+/** The reads of a school's record: its released grades, and its journal of published changes. */
+class RecordsGroup extends HttpApiGroup.make("records")
+  .add(
+    HttpApiEndpoint.get("grades", "/grades", {
+      error: ROSTER_ERRORS,
+      query: { ...PageQuery, period: Schema.String },
+      success: pageOf(ApiGrade),
+    }),
+    HttpApiEndpoint.get("changes", "/changes", {
+      error: ROSTER_ERRORS,
+      query: PageQuery,
+      success: pageOf(ApiChange),
+    })
+  )
+  .middleware(SchoolApiBearer) {}
+
+/**
+ * The Dapodik bridge: a school's own system sends the students of one period, and they join
+ * the roster as a file import does. Every POST carries an `Idempotency-Key` (ADR 0029).
+ */
+class ImportsGroup extends HttpApiGroup.make("imports")
+  .add(
+    HttpApiEndpoint.post("roster", "/roster/import", {
+      error: [...ROSTER_ERRORS, SchoolApiConflict, SchoolApiInvalid],
+      headers: { "idempotency-key": Schema.String },
+      payload: ApiRosterImport,
+      success: ApiImportSummary,
+    })
+  )
+  .middleware(SchoolApiBearer) {}
+
+/** The query of an export: the period of the two that belong to one. */
+const ExportQuery = { period: Schema.optional(Schema.String) };
+
+/**
+ * The exports a client's action list opens, as CSV or XLSX files made by the same reads, so an
+ * export holds exactly what its caller may read (ADR 0029).
+ */
+class ExportsGroup extends HttpApiGroup.make("exports")
+  .add(
+    HttpApiEndpoint.get("csv", "/exports/csv/:dataset", {
+      error: ROSTER_ERRORS,
+      params: { dataset: ExportDataset },
+      query: ExportQuery,
+      success: Schema.String.pipe(
+        HttpApiSchema.asText({ contentType: "text/csv" })
+      ),
+    }),
+    HttpApiEndpoint.get("xlsx", "/exports/xlsx/:dataset", {
+      error: ROSTER_ERRORS,
+      params: { dataset: ExportDataset },
+      query: ExportQuery,
+      success: Schema.Uint8Array.pipe(
+        HttpApiSchema.asUint8Array({ contentType: XLSX_TYPE })
+      ),
+    })
+  )
+  .middleware(SchoolApiBearer) {}
+
+/** The school API: the token endpoint, the reads and the exports, under the Convex path of the school API. */
 export class SchoolApi extends HttpApi.make("nakafa-school")
   .add(OAuthGroup)
   .add(RosterGroup)
+  .add(RecordsGroup)
+  .add(ImportsGroup)
+  .add(ExportsGroup)
   .prefix(SCHOOL_API_PATH)
   .annotateMerge(
     OpenApi.annotations({

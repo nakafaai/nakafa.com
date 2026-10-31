@@ -4,22 +4,34 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import {
+  type ApiRosterImport,
   CLI_CLIENT_ID,
   DEVICE_GRANT,
+  type ExportDataset,
   OAuthClientError,
   OAuthError,
   PAGE_LIMIT,
   SCHOOL_API_PATH,
   SchoolApi,
   SchoolApiBearer,
+  SchoolApiConflict,
   SchoolApiForbidden,
+  SchoolApiInvalid,
   SchoolApiRateLimited,
   SchoolApiToken,
   SchoolApiUnauthorized,
   type TokenResponse,
 } from "@repo/backend/confect/integrations/api";
+import {
+  encodeCsv,
+  encodeXlsx,
+  readExport,
+} from "@repo/backend/confect/integrations/exports";
 import { pageOr } from "@repo/backend/confect/integrations/reads";
+import { ImportRow } from "@repo/backend/confect/roster/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { sha256Hex } from "@repo/utilities/digest";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Layer, Option, Redacted, Schema, String as Str } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
 
@@ -272,6 +284,112 @@ const rosterHandlers = HttpApiBuilder.group(
   })
 );
 
+/** The reads of the school's record, each one internal query for the verified client. */
+const recordsHandlers = HttpApiBuilder.group(
+  SchoolApi,
+  "records",
+  Effect.fn(function* (handlers) {
+    return handlers
+      .handle("grades", ({ query }) =>
+        Effect.gen(function* () {
+          const { runQuery } = yield* QueryRunner;
+          const answer = yield* runQuery(integrationsInternal.reads.grades, {
+            clientId: yield* callerId,
+            ...pageArgs(query),
+            period: query.period,
+          }).pipe(Effect.orDie);
+          return yield* pageOr(answer, forbidden);
+        })
+      )
+      .handle("changes", ({ query }) =>
+        Effect.gen(function* () {
+          const { runQuery } = yield* QueryRunner;
+          const answer = yield* runQuery(integrationsInternal.reads.changes, {
+            clientId: yield* callerId,
+            ...pageArgs(query),
+          }).pipe(Effect.orDie);
+          return yield* pageOr(answer, forbidden);
+        })
+      );
+  })
+);
+
+/**
+ * One import for the verified client. The rows are read as students here, so a malformed row
+ * answers 400 with nothing written, and the request's digest tells a repeat from another
+ * request under the same `Idempotency-Key`.
+ */
+const importRoster = Effect.fn("integrations.routes.importRoster")(function* (
+  key: string,
+  payload: typeof ApiRosterImport.Type
+) {
+  const clientId = yield* callerId;
+  const { runMutation } = yield* MutationRunner;
+  const rows = yield* Schema.decodeEffect(Schema.Array(ImportRow))(
+    payload.rows
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new SchoolApiInvalid({ message: "A row does not read as a student." })
+    )
+  );
+  const digest = yield* sha256Hex(encodeJsonText(payload)).pipe(Effect.orDie);
+  const answer = yield* runMutation(integrationsInternal.writes.importRoster, {
+    clientId,
+    digest,
+    key,
+    period: payload.period,
+    rows,
+  }).pipe(Effect.orDie);
+  if (answer.outcome === "forbidden") {
+    return yield* forbidden();
+  }
+  if (answer.outcome === "conflict") {
+    return yield* new SchoolApiConflict({
+      message: "This key was used for another request.",
+    });
+  }
+  return answer.summary;
+});
+
+/** The sheet of one export for the request's client, or the refusal of a read it may not make. */
+const exportSheet = (request: {
+  readonly params: { readonly dataset: typeof ExportDataset.Type };
+  readonly query: { readonly period?: string | undefined };
+}) =>
+  Effect.gen(function* () {
+    const sheet = yield* readExport(
+      yield* callerId,
+      request.params.dataset,
+      request.query.period
+    );
+    return yield* Effect.fromOption(sheet).pipe(Effect.mapError(forbidden));
+  });
+
+/** The writes of the school API. */
+const importsHandlers = HttpApiBuilder.group(
+  SchoolApi,
+  "imports",
+  Effect.fn(function* (handlers) {
+    return handlers.handle("roster", ({ headers, payload }) =>
+      importRoster(headers["idempotency-key"], payload)
+    );
+  })
+);
+
+/** The exports, each one sheet in the file format its path names. */
+const exportsHandlers = HttpApiBuilder.group(
+  SchoolApi,
+  "exports",
+  Effect.fn(function* (handlers) {
+    return handlers
+      .handle("csv", (request) => Effect.map(exportSheet(request), encodeCsv))
+      .handle("xlsx", (request) =>
+        Effect.flatMap(exportSheet(request), encodeXlsx)
+      );
+  })
+);
+
 /** The bearer security: the token of the request, which each read checks with `callerId`. */
 const bearer = Layer.succeed(
   SchoolApiBearer,
@@ -289,4 +407,13 @@ const bearer = Layer.succeed(
  */
 export const schoolApiRoutes = HttpApiBuilder.layer(SchoolApi, {
   openapiPath: `${SCHOOL_API_PATH}/openapi.json`,
-}).pipe(Layer.provide([oauthHandlers, rosterHandlers]), Layer.provide(bearer));
+}).pipe(
+  Layer.provide([
+    exportsHandlers,
+    importsHandlers,
+    oauthHandlers,
+    recordsHandlers,
+    rosterHandlers,
+  ]),
+  Layer.provide(bearer)
+);

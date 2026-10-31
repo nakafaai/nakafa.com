@@ -1,7 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import {
+  ApiChange,
   ApiCohort,
+  ApiGrade,
   ApiPeriod,
   ApiPerson,
   ApiPlacement,
@@ -29,7 +31,7 @@ const answerOf = <S extends Schema.Top>(item: S) =>
 const page = { cursor: Schema.NullOr(Schema.String), numItems: Schema.Finite };
 
 /**
- * The roster reads of the school API (ADR 0029, amendment rule 6). Each takes the client
+ * The reads of the school API (ADR 0029, amendment rule 6). Each takes the client
  * that the bearer check verified, never a school the caller names, and decides every row
  * for that client. They are internal: only the HTTP routes call them.
  */
@@ -72,5 +74,23 @@ export default GroupSpec.make()
         period: Schema.String,
       }),
       returns: () => answerOf(ApiPlacement),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "grades",
+      args: () => ({
+        ...page,
+        clientId: Id("integrationClients"),
+        period: Schema.String,
+      }),
+      returns: () => answerOf(ApiGrade),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "changes",
+      args: () => ({ ...page, clientId: Id("integrationClients") }),
+      returns: () => answerOf(ApiChange),
     })
   );

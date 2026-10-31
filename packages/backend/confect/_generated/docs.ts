@@ -87,8 +87,11 @@ export type InsightMasteryDoc = Document.Document<typeof schemaDefinition, "insi
 export type InsightNarrativesDoc = Document.Document<typeof schemaDefinition, "insightNarratives">;
 export type InsightTagsDoc = Document.Document<typeof schemaDefinition, "insightTags">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
+export type IntegrationDeliveriesDoc = Document.Document<typeof schemaDefinition, "integrationDeliveries">;
 export type IntegrationDevicesDoc = Document.Document<typeof schemaDefinition, "integrationDevices">;
+export type IntegrationRequestsDoc = Document.Document<typeof schemaDefinition, "integrationRequests">;
 export type IntegrationTokensDoc = Document.Document<typeof schemaDefinition, "integrationTokens">;
+export type IntegrationWebhooksDoc = Document.Document<typeof schemaDefinition, "integrationWebhooks">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
 export type IrtScaleVersionsDoc = Document.Document<typeof schemaDefinition, "irtScaleVersions">;
@@ -238,8 +241,11 @@ export interface Docs {
   insightNarratives: InsightNarrativesDoc;
   insightTags: InsightTagsDoc;
   integrationClients: IntegrationClientsDoc;
+  integrationDeliveries: IntegrationDeliveriesDoc;
   integrationDevices: IntegrationDevicesDoc;
+  integrationRequests: IntegrationRequestsDoc;
   integrationTokens: IntegrationTokensDoc;
+  integrationWebhooks: IntegrationWebhooksDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
   irtScaleVersions: IrtScaleVersionsDoc;

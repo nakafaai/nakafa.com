@@ -6,8 +6,12 @@ import { Array as Arr, Schema } from "effect";
  */
 export const IntegrationAction = Schema.Literals([
   "cohort.view",
+  "grade.export",
+  "guardian.view",
   "period.view",
   "person.view",
+  "roster.import",
+  "unit.view",
 ]);
 
 export type IntegrationAction = typeof IntegrationAction.Type;

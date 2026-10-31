@@ -86,8 +86,11 @@ import insightMastery from "./tables/insightMastery";
 import insightNarratives from "./tables/insightNarratives";
 import insightTags from "./tables/insightTags";
 import integrationClients from "./tables/integrationClients";
+import integrationDeliveries from "./tables/integrationDeliveries";
 import integrationDevices from "./tables/integrationDevices";
+import integrationRequests from "./tables/integrationRequests";
 import integrationTokens from "./tables/integrationTokens";
+import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
@@ -237,8 +240,11 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly insightNarratives: typeof insightNarratives;
   readonly insightTags: typeof insightTags;
   readonly integrationClients: typeof integrationClients;
+  readonly integrationDeliveries: typeof integrationDeliveries;
   readonly integrationDevices: typeof integrationDevices;
+  readonly integrationRequests: typeof integrationRequests;
   readonly integrationTokens: typeof integrationTokens;
+  readonly integrationWebhooks: typeof integrationWebhooks;
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
@@ -387,8 +393,11 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   insightNarratives,
   insightTags,
   integrationClients,
+  integrationDeliveries,
   integrationDevices,
+  integrationRequests,
   integrationTokens,
+  integrationWebhooks,
   irtCalibrationRuns,
   irtScaleItems,
   irtScaleVersions,

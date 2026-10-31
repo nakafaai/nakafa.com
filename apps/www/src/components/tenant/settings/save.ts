@@ -262,6 +262,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-teacher-has-homeroom.description",
     title: "school-refusal-teacher-has-homeroom.title",
   },
+  WebhookLimit: {
+    description: "school-refusal-webhook-limit.description",
+    title: "school-refusal-webhook-limit.title",
+  },
   UnitLimit: {
     description: "school-refusal-unit-limit.description",
     title: "school-refusal-unit-limit.title",
