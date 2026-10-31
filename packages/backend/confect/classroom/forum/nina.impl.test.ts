@@ -4,6 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import {
   firstPage,
   forumClass,
@@ -331,7 +332,9 @@ describe("classroom/forum nina", () => {
       const fixture = yield* keyedFixture;
       yield* withPool(fixture, 3);
       const { messageId } = yield* asked(fixture);
-      findContent.mockReturnValue(Effect.fail(new Error("down")));
+      findContent.mockReturnValue(
+        Effect.fail(new GatewayFailure({ reason: "timeout" }))
+      );
       const model = ninaAnswers({ text: "Tetap dijawab.", unsure: false });
 
       yield* fixture.internal.action(reply, { messageId });

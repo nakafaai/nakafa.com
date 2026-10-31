@@ -331,6 +331,7 @@ const reply = FunctionImpl.make(
       offset: 0,
       queries: [ask.question],
     }).pipe(
+      Effect.provide(GatewayLive),
       Effect.map((found) => found.text),
       Effect.orElseSucceed(() => "")
     );
