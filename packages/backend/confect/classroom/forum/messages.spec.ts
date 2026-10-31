@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import {
+  ChannelArchived,
   MentionRefused,
   MessageEmpty,
   MessageHidden,
@@ -60,7 +61,13 @@ export default GroupSpec.make()
       }),
       returns: () => MessageView,
       error: () =>
-        Schema.Union([AccessDenied, MentionRefused, MessageEmpty, UploadGone]),
+        Schema.Union([
+          AccessDenied,
+          ChannelArchived,
+          MentionRefused,
+          MessageEmpty,
+          UploadGone,
+        ]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   )
   .addFunction(
@@ -73,7 +80,7 @@ export default GroupSpec.make()
         text: MessageText,
       }),
       returns: () => MessageView,
-      error: () => Schema.Union([AccessDenied, MessageHidden]),
+      error: () => Schema.Union([AccessDenied, ChannelArchived, MessageHidden]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   )
   .addFunction(

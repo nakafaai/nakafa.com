@@ -602,22 +602,30 @@ export declare const api: {
           "public",
           { classId: Id<"classes">; name: string; slug: string },
           {
+            archived: boolean;
             id: Id<"classroomChannels">;
             kind: "general" | "topic";
             last: {
               at: number;
               author: string;
+              media: "document" | "image" | "poll" | null;
               mine: boolean;
-              poll: {
-                multiple: boolean;
-                options: Array<string>;
-                question: string;
-              } | null;
               text: string | null;
             } | null;
             name: string;
             unread: boolean;
           }
+        >;
+        archive: FunctionReference<
+          "mutation",
+          "public",
+          {
+            archived: boolean;
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            slug: string;
+          },
+          null
         >;
         list: FunctionReference<
           "query",
@@ -638,17 +646,14 @@ export declare const api: {
             continueCursor: string;
             isDone: boolean;
             page: Array<{
+              archived: boolean;
               id: Id<"classroomChannels">;
               kind: "general" | "topic";
               last: {
                 at: number;
                 author: string;
+                media: "document" | "image" | "poll" | null;
                 mine: boolean;
-                poll: {
-                  multiple: boolean;
-                  options: Array<string>;
-                  question: string;
-                } | null;
                 text: string | null;
               } | null;
               name: string;
@@ -657,6 +662,16 @@ export declare const api: {
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
           }
+        >;
+        remove: FunctionReference<
+          "mutation",
+          "public",
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            slug: string;
+          },
+          null
         >;
         rename: FunctionReference<
           "mutation",
@@ -1396,15 +1411,6 @@ export declare const api: {
           text: string;
         },
         {
-          attachments: Array<{
-            address: string | null;
-            byteSize: number;
-            height: number | null;
-            kind: "document" | "image";
-            name: string;
-            thumbnail: string | null;
-            width: number | null;
-          }>;
           author: { id: Id<"tenantPeople">; name: string };
           clientKey: string;
           createdAt: number;
@@ -1434,15 +1440,6 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-            attachments: Array<{
-              address: string | null;
-              byteSize: number;
-              height: number | null;
-              kind: "document" | "image";
-              name: string;
-              thumbnail: string | null;
-              width: number | null;
-            }>;
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
@@ -1467,15 +1464,6 @@ export declare const api: {
           text: string;
         },
         {
-          attachments: Array<{
-            address: string | null;
-            byteSize: number;
-            height: number | null;
-            kind: "document" | "image";
-            name: string;
-            thumbnail: string | null;
-            width: number | null;
-          }>;
           author: { id: Id<"tenantPeople">; name: string };
           clientKey: string;
           createdAt: number;
@@ -3504,282 +3492,6 @@ export declare const api: {
           verses: Array<{
             arabic: string;
             number: { inSurah: number };
-            translation: {
-              notes: Array<{
-                number: number;
-                referenceOffset: number;
-                text: string;
-              }>;
-              segments: Array<
-                | { kind: "text"; offset: number; value: string }
-                | { kind: "note"; number: number; offset: number }
-              >;
-            };
-          }>;
-        }
-      >;
-      surah: FunctionReference<
-        "query",
-        "public",
-        { appLocale: "en" | "id" | "de"; surahNumber: number },
-        {
-          activeManifestHash: string | null;
-          activeReleaseId: string | null;
-          appLocale: "en" | "id" | "de";
-          managed: boolean;
-          preBismillah: {
-            arabic: string;
-            translation: {
-              notes: Array<{
-                number: number;
-                referenceOffset: number;
-                text: string;
-              }>;
-              segments: Array<
-                | { kind: "text"; offset: number; value: string }
-                | { kind: "note"; number: number; offset: number }
-              >;
-            };
-          } | null;
-          snapshotId: string | null;
-          sourceOrigin:
-            | { kind: "git"; sha: string }
-            | { kind: "rollback"; releaseId: string }
-            | null;
-          sourceRevision: string | null;
-          sources:
-            | {
-                arabic: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "tanzil-text";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-                translation: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "quranenc-english";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | {
-                arabic: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "tanzil-text";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-                translation: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "quranenc-indonesian";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | {
-                arabic: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "tanzil-text";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-                translation: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "quranenc-german";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | null;
-          surah: {
-            kind: "quran-surah";
-            name: {
-              arabic: string;
-              sourceMeaning:
-                | { de: string; en: string; id: string }
-                | { appLocale: "en"; text: string };
-              transliteration: string;
-            };
-            number: number;
-            numberOfVerses: number;
-            revelation: { order: number; place: "Meccan" | "Medinan" };
-          } | null;
-          tafsirAccess:
-            | {
-                appLocale: "id";
-                kind: "embedded";
-                notice: string;
-                source: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "quranenc-tafsir";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | {
-                appLocale: "en";
-                kind: "external";
-                notice: string;
-                source: {
-                  id: "mokhtasar-english";
-                  kind: "external";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: { access: "link-only"; url: string };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | {
-                appLocale: "de";
-                kind: "external";
-                notice: string;
-                source: {
-                  id: "mokhtasar-german";
-                  kind: "external";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: { access: "link-only"; url: string };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | null;
-          verses: Array<{
-            arabic: string;
-            number: { inQuran: number; inSurah: number };
             translation: {
               notes: Array<{
                 number: number;
@@ -9345,6 +9057,10 @@ export declare const api: {
                 }
               | {
                   client: Id<"integrationClients">;
+                  type: "integration.changed";
+                }
+              | {
+                  client: Id<"integrationClients">;
                   type: "integration.rotated";
                 }
               | {
@@ -9515,6 +9231,7 @@ export declare const api: {
                   type: "tenant.provisioned";
                 }
               | { size: "s" | "m" | "l" | "xl"; type: "tenant.founded" }
+              | { dpaVersion: string; type: "tenant.dpa.accepted" }
               | { country: string; currency: string; type: "tenant.locale.set" }
               | { type: "tenant.logo.removed" }
               | { type: "tenant.logo.set" }
@@ -12873,14 +12590,6 @@ export declare const api: {
           { kind: "free-attempt" } | { kind: "included" }
         >;
       };
-      attempt: {
-        isLockedByAttemptId: FunctionReference<
-          "query",
-          "public",
-          { attemptId: string },
-          boolean
-        >;
-      };
       attemptPage: {
         getSection: FunctionReference<
           "query",
@@ -13930,17 +13639,6 @@ export declare const api: {
         { picture: "animal" | "photo" },
         null
       >;
-      syncUserInfoForChat: FunctionReference<
-        "mutation",
-        "public",
-        {},
-        {
-          credits: number;
-          role:
-            "teacher" | "student" | "parent" | "administrator" | null | null;
-          userId: Id<"users">;
-        }
-      >;
       updateBio: FunctionReference<"mutation", "public", { bio: string }, null>;
       updateUsername: FunctionReference<
         "mutation",
@@ -14858,6 +14556,14 @@ export declare const internal: {
   };
   classroom: {
     forum: {
+      channels: {
+        sweep: FunctionReference<
+          "mutation",
+          "internal",
+          { channelId: Id<"classroomChannels"> },
+          null
+        >;
+      };
       files: {
         commit: FunctionReference<
           "mutation",
@@ -16675,61 +16381,6 @@ export declare const internal: {
           }
         >;
       };
-      compare: {
-        rank: FunctionReference<
-          "action",
-          "internal",
-          {
-            locale: "en" | "id" | "de";
-            model:
-              | "google/gemini-embedding-001"
-              | "google/gemini-embedding-2"
-              | "openai/text-embedding-3-large"
-              | "openai/text-embedding-3-small"
-              | "qwen/qwen3-embedding-4b"
-              | "qwen/qwen3-embedding-8b";
-            questions: Array<{
-              contentKey: string;
-              ordinal: number;
-              question: string;
-            }>;
-          },
-          | { kind: "empty" }
-          | {
-              kind: "ranked";
-              pool: number;
-              refused: number;
-              verdicts: Array<{
-                milliseconds: number;
-                section: { heading: string; rank: number } | null;
-              }>;
-            }
-          | {
-              failure:
-                | { _tag: "GatewayConfigurationError"; message: string }
-                | {
-                    _tag: "GatewayFailure";
-                    reason:
-                      | "rate-limit"
-                      | "quota"
-                      | "auth"
-                      | "configuration"
-                      | "invalid"
-                      | "too-large"
-                      | "timeout"
-                      | "unavailable"
-                      | "network"
-                      | "interrupted"
-                      | "unknown";
-                    retryAfter?: number;
-                    retryable?: boolean;
-                    status?: number;
-                    type?: string;
-                  };
-              kind: "failed";
-            }
-        >;
-      };
       hits: {
         resolve: FunctionReference<
           "query",
@@ -16797,20 +16448,6 @@ export declare const internal: {
               releaseId: string;
               unchanged: number;
             }
-        >;
-        page: FunctionReference<
-          "query",
-          "internal",
-          { appLocale: "en" | "id" | "de"; cursor: string | null },
-          {
-            next: string | null;
-            sections: Array<{
-              contentKey: string;
-              headingPath: Array<string>;
-              ordinal: number;
-              text: string;
-            }>;
-          }
         >;
         prune: FunctionReference<
           "mutation",
@@ -16898,45 +16535,6 @@ export declare const internal: {
               releaseId: string;
               surah: number;
               unchanged: number;
-            }
-        >;
-      };
-      search: {
-        search: FunctionReference<
-          "action",
-          "internal",
-          {
-            limit?: number;
-            locale: "en" | "id" | "de";
-            query: string;
-            section?: "articles" | "material" | "tryout" | "quran";
-          },
-          | { kind: "empty" }
-          | {
-              hits: Array<{
-                anchor: string;
-                appLocale: "en" | "id" | "de";
-                contentKey: string;
-                excerpt: string;
-                headingPath: Array<string>;
-                ordinal: number;
-                reference: {
-                  alignmentId: string;
-                  assetId: string;
-                  conceptId: string;
-                  content_id: string;
-                  description: string;
-                  learningObjectId: string;
-                  lensId: string;
-                  locale: "en" | "id" | "de";
-                  markdown_url?: string;
-                  route: string;
-                  section: "articles" | "material" | "tryout" | "quran";
-                  title: string;
-                  url: string;
-                };
-              }>;
-              kind: "hits";
             }
         >;
       };
@@ -18881,32 +18479,6 @@ export declare const internal: {
         "query",
         "internal",
         { authId: string },
-        {
-          _creationTime: number;
-          _id: Id<"users">;
-          authId: string;
-          authVerificationCleanupCursor?: string;
-          bio?: string;
-          credits: number;
-          creditsResetAt: number;
-          deletedAt?: number;
-          deletionCleanupStartedAt?: number;
-          deletionPreparedAt?: number;
-          email: string;
-          image?: string;
-          mascot: string;
-          name: string;
-          picture?: "animal" | "photo";
-          plan: "free" | "pro";
-          planCreditGrantId?: Id<"creditTransactions">;
-          role?: "teacher" | "student" | "parent" | "administrator";
-          username?: string;
-        } | null
-      >;
-      getUserById: FunctionReference<
-        "query",
-        "internal",
-        { userId: Id<"users"> },
         {
           _creationTime: number;
           _id: Id<"users">;
