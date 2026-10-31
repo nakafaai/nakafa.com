@@ -20,9 +20,11 @@ import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
@@ -47,6 +49,7 @@ import {
 } from "@/components/tenant/classes/library/uploads";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { PERSON_ICONS } from "@/components/tenant/settings/choices";
 
 /** How many items the library reads each time its end comes into view. */
 const LIBRARY_PAGE_SIZE = 20;
@@ -199,7 +202,17 @@ function LibraryRows({
         </span>
       ),
       enableSorting: false,
-      header: t("library-added-by"),
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="author"
+          options={namedOptions(
+            Arr.dedupe(Arr.map(rows, (row) => shownOf(row).author)),
+            PERSON_ICONS
+          )}
+          title={t("library-added-by")}
+        />
+      ),
       id: "author",
     }),
     libraryColumns.accessor((row) => shownOf(row).createdAt, {

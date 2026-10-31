@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import {
   matchAnswers,
@@ -9,9 +10,16 @@ import {
   optionIdsOf,
   pairIdsOf,
   type ScoredAnswer,
+  scriptsOf,
   tallyAnswers,
 } from "@repo/backend/confect/exams/results/stats";
 import { Array as Arr } from "effect";
+
+/** A label of one paragraph that holds `text`. */
+const label = (text: string): typeof ContentDocumentSchema.Type => ({
+  content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
+  type: "doc",
+});
 
 /** The option IDs of the choice that a new question holds, in order. */
 const options = ["option-1", "option-2", "option-3", "option-4"];
@@ -42,6 +50,32 @@ describe("exams/results/stats", () => {
     expect(pairIdsOf(tableAnswers(["Benar", "Salah"]))).toEqual({
       sourceIds: ["statement-1", "statement-2", "statement-3"],
       targetIds: ["column-1", "column-2"],
+    });
+  });
+
+  it("names the options and the answers or columns in the script of their labels", () => {
+    const arabicChoice = Arr.map(newChoiceAnswers(), (interaction) =>
+      interaction.kind === "choice"
+        ? {
+            ...interaction,
+            options: Arr.map(interaction.options, (option) => ({
+              ...option,
+              label: label("كِتَابٌ"),
+            })),
+          }
+        : interaction
+    );
+    expect(scriptsOf(arabicChoice)).toEqual({
+      optionScript: "arabic",
+      targetScript: "latin",
+    });
+    expect(scriptsOf(tableAnswers(["نعم", "لا"]))).toEqual({
+      optionScript: "latin",
+      targetScript: "arabic",
+    });
+    expect(scriptsOf(matchAnswers())).toEqual({
+      optionScript: "latin",
+      targetScript: "latin",
     });
   });
 

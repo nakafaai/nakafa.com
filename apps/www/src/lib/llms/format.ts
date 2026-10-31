@@ -8,7 +8,7 @@ import {
 } from "@/lib/llms/constants";
 
 /** Canonical discovery directive shown near the top of agent-facing markdown. */
-export const AGENT_MARKDOWN_DIRECTIVE = `> For AI agents: use [llms.txt](${BASE_URL}${LLMS_TEXT_PATH}) for the site index. Markdown versions are available by appending \`.md\` to content URLs or sending \`Accept: text/markdown\`.`;
+export const AGENT_MARKDOWN_DIRECTIVE = `> For AI agents: use [llms.txt](${BASE_URL}${LLMS_TEXT_PATH}) for the site index. Markdown versions are available by appending \`.md\` to content URLs.`;
 
 /**
  * Builds the same-origin Markdown route for one localized content path.

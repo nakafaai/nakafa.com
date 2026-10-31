@@ -10,7 +10,7 @@ import { Array as Arr, Effect } from "effect";
 const nf = slugOf("nf");
 const { assign } = refs.public.tenancy.assignments;
 const cohorts = refs.public.tenancy.cohorts;
-const { members, rename } = refs.public.tenancy.cohorts;
+const { edit, members } = refs.public.tenancy.cohorts;
 const periods = refs.public.tenancy.periods;
 const people = refs.public.tenancy.people;
 const { place } = refs.public.tenancy.placements;
@@ -145,9 +145,14 @@ describe("tenancy/authority cohortMember relation", () => {
           .as("student")
           .query(members, { ...firstPage, cohortId: seventhB.id, slug: nf })
           .pipe(Effect.flip);
-        const renamed = yield* fixture
+        const edited = yield* fixture
           .as("student")
-          .mutation(rename, { cohortId: seventhA.id, name: "Saya", slug: nf })
+          .mutation(edit, {
+            cohortId: seventhA.id,
+            grade: 7,
+            name: "Saya",
+            slug: nf,
+          })
           .pipe(Effect.flip);
         const placedSomeoneElse = yield* fixture
           .as("student")
@@ -157,7 +162,7 @@ describe("tenancy/authority cohortMember relation", () => {
             slug: nf,
           })
           .pipe(Effect.flip);
-        expect([otherCohort, renamed, placedSomeoneElse]).toMatchObject([
+        expect([otherCohort, edited, placedSomeoneElse]).toMatchObject([
           denied("role"),
           denied("role"),
           denied("role"),
