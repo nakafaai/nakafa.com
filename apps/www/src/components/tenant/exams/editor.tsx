@@ -1,12 +1,14 @@
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option } from "effect";
-import { useRef } from "react";
+import { use, useEffect, useRef } from "react";
+import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
+import { CreatedExamsContext } from "@/components/tenant/exams/created";
 import { ExamFooter } from "@/components/tenant/exams/footer";
 import { ExamGrid } from "@/components/tenant/exams/grid";
 import {
@@ -26,6 +28,7 @@ import {
 } from "@/components/tenant/exams/toolbar";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
 import { useLastValue } from "@/lib/data/kept";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**
  * The editor of one exam, as a design tool lays out its document: a header with the title and the
@@ -44,9 +47,12 @@ export function ExamEditor({
 }) {
   // The exam needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const result = useQuery(
+  // An exam this visit just created draws whole at once, from what the create answered, until the read answers.
+  const created = useCreatedExam(examId);
+  const result = usePreloadedQueryResult(
     exams.exams.open,
-    isSettled ? { examId, slug } : "skip"
+    isSettled ? { examId, slug } : "skip",
+    created
   );
   // An exam deleted, or closed to the teacher, after the editor read it keeps its workspace on screen, locked.
   const kept = useLastValue(result);
@@ -68,6 +74,23 @@ export function ExamEditor({
       <ExamWorkspace />
     </ExamProvider>
   );
+}
+
+/**
+ * The exam that a create of this visit answered with, when it is the exam this editor opens. It goes once
+ * the editor closes, so a later visit to the same exam reads it as it stands.
+ */
+function useCreatedExam(examId: Id<"exams">) {
+  const store = use(CreatedExamsContext);
+  if (store === null) {
+    throw new Error("useCreatedExam must be used within the exam pages");
+  }
+  const held = useStore(store, (state) =>
+    state.held?.id === examId ? state.held : undefined
+  );
+  const release = useStore(store, (state) => state.release);
+  useEffect(() => () => release(examId), [examId, release]);
+  return held;
 }
 
 /**
