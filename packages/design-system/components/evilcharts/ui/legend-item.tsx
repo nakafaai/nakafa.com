@@ -68,7 +68,7 @@ function LegendItem({ config, item, itemKey }: LegendItemProps) {
     "flex items-center gap-1.5 transition-colors [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
     !isSelected && "text-muted-foreground",
     isClickable &&
-      "cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      "rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
   );
 
   if (isClickable) {

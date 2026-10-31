@@ -174,3 +174,64 @@ test("a provider failure in the address shows on the static page without a hydra
     )
   ).toEqual([]);
 });
+
+/** Better Auth's start of a Google sign-in, which a test holds back. */
+const GOOGLE_START = "**/api/auth/sign-in/social*";
+
+/**
+ * The Google button keeps its place and its words: it shows once Convex says the
+ * visitor is signed out, a provider failure shows under it without moving it,
+ * and while Google opens the button keeps its label and width, with a spinner in
+ * place of the logo.
+ */
+test("the Google button never moves or changes its words for a failure or while Google opens", async ({
+  page,
+}) => {
+  // The button's top in the commit that first adds it. The logo's SVG carries a
+  // title, so the button is the one whose own text node is the label.
+  await page.addInitScript((label) => {
+    const observer = new MutationObserver(() => {
+      const button = Array.from(document.querySelectorAll("button")).find(
+        (candidate) =>
+          Array.from(candidate.childNodes).some(
+            (node) =>
+              node.nodeType === Node.TEXT_NODE && node.nodeValue === label
+          )
+      );
+      if (button === undefined) {
+        return;
+      }
+      observer.disconnect();
+      Reflect.set(
+        window,
+        "nakafaGoogleTop",
+        button.getBoundingClientRect().top
+      );
+    });
+    observer.observe(document, { childList: true, subtree: true });
+  }, app.Auth["continue-with-google"]);
+  await page.route(GOOGLE_START, () => undefined);
+  await page.goto(`${SIGN_IN}?${new URLSearchParams({ error: "oauth" })}`);
+
+  const google = page.getByRole("button", {
+    name: app.Auth["continue-with-google"],
+  });
+  const alert = page
+    .getByRole("alert")
+    .filter({ hasText: app.Toast["provider-error"].title });
+  await expect(alert).toBeVisible();
+  const [first, button, failure] = await Promise.all([
+    page.evaluate(() => Reflect.get(window, "nakafaGoogleTop")),
+    google.boundingBox(),
+    alert.boundingBox(),
+  ]);
+  expect(button?.y).toBe(first);
+  expect(failure?.y ?? 0).toBeGreaterThan(
+    (button?.y ?? 0) + (button?.height ?? 0)
+  );
+
+  await google.click();
+  await expect(google).toBeDisabled();
+  await expect(google).toHaveAccessibleName(app.Auth["continue-with-google"]);
+  expect((await google.boundingBox())?.width).toBe(button?.width);
+});

@@ -9,10 +9,12 @@ import type { Locale } from "use-intl";
 import {
   BASE_URL,
   type LlmsSection,
+  llmsRouteUrl,
   SECTION_LABELS,
 } from "@/lib/llms/constants";
 import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
 import { renderLlmsIndexText } from "@/lib/llms/index/render";
+import { CONTENT_USE_POLICY } from "@/lib/seo/license";
 
 type LlmsContentSection = Exclude<LlmsSection, "site">;
 
@@ -45,6 +47,10 @@ export function buildRootLlmsIndexText() {
       "",
       ...Arr.map(LOCALES, formatLocaleIndexLine),
       "",
+      "## Use",
+      "",
+      ...Arr.map(CONTENT_USE_POLICY, (line) => `- ${line}`),
+      "",
       "## References",
       "",
       `- [Nakafa MCP skill](${BASE_URL}/skill.md): public agent instructions for tools \`nakafa_search_content\`, \`nakafa_get_content\`, \`nakafa_get_taxonomy\`, and \`nakafa_get_quran_reference\`. MCP endpoint: \`${NAKAFA_MCP_ENDPOINT}\`.`,
@@ -62,7 +68,7 @@ export function getPublicLlmsSectionIndexLines(locale: Locale) {
   return Arr.map(
     getPublicLlmsSectionIndexes(locale),
     (index) =>
-      `- [${index.label}](${BASE_URL}/${locale}/${index.prefix}/llms.txt): ${localeLabel} ${index.label.toLowerCase()}.`
+      `- [${index.label}](${llmsRouteUrl(`/${locale}/${index.prefix}/llms.txt`)}): ${localeLabel} ${index.label.toLowerCase()}.`
   );
 }
 
@@ -158,5 +164,5 @@ function getProjectedPublicLlmsSectionIndex({
 /** Formats one locale aggregate link for the root index. */
 function formatLocaleIndexLine(locale: Locale) {
   const localeLabel = getLocaleLabel(locale);
-  return `- [${localeLabel} content index](${BASE_URL}/${locale}/llms.txt): ${localeLabel} starter pages and nested public-prefix indexes.`;
+  return `- [${localeLabel} content index](${llmsRouteUrl(`/${locale}/llms.txt`)}): ${localeLabel} starter pages and nested public-prefix indexes.`;
 }
