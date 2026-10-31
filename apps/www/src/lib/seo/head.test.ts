@@ -59,6 +59,14 @@ describe("page head", () => {
     );
   });
 
+  it("caps every snippet at a whole word, which a long authored description would overrun", () => {
+    const head = createSeoHead({ ...facts, description: "kata ".repeat(40) });
+
+    expect(head.description).toHaveLength(159);
+    expect(head.social["og:description"]).toBe(head.description);
+    expect(head.social["twitter:description"]).toBe(head.description);
+  });
+
   it("keeps an unindexable page out of the index", () => {
     expect(createSeoHead({ ...facts, indexable: false }).robots).toBe(
       "noindex,nofollow"

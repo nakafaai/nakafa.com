@@ -1956,6 +1956,9 @@
   "Tryouts": {
     "title": "Welchen Probetest möchtest du heute bearbeiten?",
     "metadata-description": "Wähle auf Nakafa ein Land, eine Prüfung und einen Probetest aus.",
+    "track-metadata-description": "Wähle auf Nakafa einen Probetest für {exam}: mit Zeitlimit und sofortiger Auswertung.",
+    "set-metadata-description": "Mach {exam} {set} auf Nakafa: ein Probetest mit Zeitlimit und sofortiger Auswertung.",
+    "section-metadata-description": "Übe {section} aus {exam} {set} auf Nakafa: ein Probetest mit Zeitlimit und sofortiger Auswertung.",
     "country-selector-label": "Land",
     "exam-selector-label": "Prüfung",
     "open-country-cta": "Prüfungen anzeigen",

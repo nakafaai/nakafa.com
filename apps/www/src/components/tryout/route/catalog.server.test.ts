@@ -83,9 +83,9 @@ const countryPage = {
 const examPage = { exam: { examKey: "snbt" }, publicPath: EXAM };
 const trackPage = {
   country: { countryKey: "id" },
-  exam: { examKey: "snbt" },
+  exam: { examKey: "snbt", title: "SNBT" },
   publicPath: TRACK,
-  track: { title: "2027", trackKey: "2027" },
+  track: { title: "Year 2027", trackKey: "2027" },
 };
 const hub = {
   countries: [{ publicPath: COUNTRY, title: "Indonesia" }],
@@ -400,6 +400,10 @@ describe("readTryoutTrackRoute", () => {
 
         expect(route).toMatchObject({
           examPath: EXAM,
+          head: {
+            description: "track-metadata-description",
+            title: "SNBT Year 2027",
+          },
           kind: "found",
           list: { result: { isDone: true, page: [] } },
           page: trackPage,
@@ -413,6 +417,27 @@ describe("readTryoutTrackRoute", () => {
           })
         );
       })
+  );
+});
+
+describe("the description of a track", () => {
+  it.effect("keeps the description a track was published with", () =>
+    Effect.gen(function* () {
+      catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
+      catalog.readTryoutSetList.mockReturnValue(
+        Effect.succeed({ isDone: true, page: [] })
+      );
+      catalog.readTryoutTrackPage.mockReturnValueOnce(
+        Effect.succeed({
+          ...trackPage,
+          track: { ...trackPage.track, description: "Written for this year." },
+        })
+      );
+
+      expect(yield* readTrack()).toMatchObject({
+        head: { description: "Written for this year." },
+      });
+    })
   );
 });
 

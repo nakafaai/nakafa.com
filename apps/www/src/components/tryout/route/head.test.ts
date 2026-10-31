@@ -38,6 +38,19 @@ describe("createTryoutHead", () => {
     expect(head.meta).toContainEqual({ title: "Set 1" });
   });
 
+  it("joins title parts within the title budget, the last dropping first", () => {
+    const head = createTryoutHead({
+      ...page,
+      indexable: true,
+      jsonLd: [],
+      title: ["General Knowledge and Understanding", "Set 1", "SNBT Year 2027"],
+    });
+
+    expect(head.meta).toContainEqual({
+      title: "General Knowledge and Understanding - Set 1 - Nakafa",
+    });
+  });
+
   it("keeps an attempt page out of search results", () => {
     const head = createTryoutHead({ ...page, indexable: false, jsonLd: [] });
 

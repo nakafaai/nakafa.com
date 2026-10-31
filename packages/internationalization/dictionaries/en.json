@@ -1956,6 +1956,9 @@
   "Tryouts": {
     "title": "What try out do you want today?",
     "metadata-description": "Choose a country, exam, and try out set from Nakafa.",
+    "track-metadata-description": "Choose a {exam} try out set on Nakafa: timed, and scored the moment you finish.",
+    "set-metadata-description": "Take {exam} {set} on Nakafa: a timed try out, scored the moment you finish.",
+    "section-metadata-description": "Practice {section} from {exam} {set} on Nakafa: a timed try out, scored the moment you finish.",
     "country-selector-label": "Country",
     "exam-selector-label": "Exam",
     "open-country-cta": "View exams",

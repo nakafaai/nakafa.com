@@ -1,4 +1,5 @@
 import type { Locale } from "@repo/internationalization/src/locale";
+import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Clock, Effect, Option } from "effect";
 import { readTryoutSectionPage } from "@/components/tryout/catalog/source.server";
 import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
@@ -28,7 +29,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       track: input.track,
     };
     const sectionPath = getTryoutPublicPath(route);
-    const [page, head] = yield* Effect.all(
+    const [page, head, tTryouts] = yield* Effect.all(
       [
         readTryoutSectionPage(input.locale, sectionPath),
         readTryoutRouteHead({
@@ -36,14 +37,29 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
           locale: input.locale,
           publicPath: sectionPath,
         }),
+        Effect.promise(() =>
+          readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
+        ),
       ],
       { concurrency: "unbounded" }
     );
     if (!page || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
+    const exam = `${page.exam.title} ${page.track.title}`;
     return {
-      head: head.value,
+      // Every set of an exam has the same sections, so the page names its set too.
+      head: {
+        ...head.value,
+        description:
+          page.section.description ??
+          tTryouts("section-metadata-description", {
+            exam,
+            section: page.section.title,
+            set: page.set.title,
+          }),
+        title: [page.section.title, page.set.title, exam],
+      },
       kind: "catalog" as const,
       now: yield* Clock.currentTimeMillis,
       page,

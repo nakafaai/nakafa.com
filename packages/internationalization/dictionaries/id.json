@@ -1956,6 +1956,9 @@
   "Tryouts": {
     "title": "Mau coba try out apa hari ini?",
     "metadata-description": "Pilih negara, ujian, dan set try out dari Nakafa.",
+    "track-metadata-description": "Pilih set try out {exam} di Nakafa: berwaktu, dengan skor langsung setelah selesai.",
+    "set-metadata-description": "Kerjakan {set} {exam} di Nakafa: try out berwaktu dengan skor langsung setelah selesai.",
+    "section-metadata-description": "Latihan {section} dari {set} {exam} di Nakafa: try out berwaktu dengan skor langsung setelah selesai.",
     "country-selector-label": "Negara",
     "exam-selector-label": "Ujian",
     "open-country-cta": "Lihat ujian",

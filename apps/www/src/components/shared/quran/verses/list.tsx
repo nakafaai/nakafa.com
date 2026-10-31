@@ -4,6 +4,7 @@ import {
   QuranInterpretationButton,
   QuranInterpretationLink,
 } from "@/components/shared/quran/interpretation/button";
+import { QuranInterpretationSprite } from "@/components/shared/quran/interpretation/icon";
 import { QuranText } from "@/components/shared/quran/text";
 import { useQuranVerses } from "@/components/shared/quran/verses/context";
 import {
@@ -38,6 +39,7 @@ export function QuranVerseList({ items }: QuranVerseListProps) {
 
   return (
     <div>
+      <QuranInterpretationSprite />
       {Arr.map(items, (item) => (
         <QuranSurahVerse
           isLast={Option.exists(last, (value) => value === item)}
