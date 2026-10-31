@@ -9,7 +9,10 @@ import {
   tableAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/question";
-import { reasonAnswers } from "@repo/backend/confect/exams/reason";
+import {
+  reasonAnswers,
+  reasonChoice,
+} from "@repo/backend/confect/exams/reason";
 import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Array as Arr } from "effect";
 
@@ -47,6 +50,12 @@ describe("exams/template asTemplate", () => {
     expect(key).toBeNull();
     expect(asTemplate("reason", essayAnswers(), null, []).answers).toEqual(
       reasonAnswers()
+    );
+  });
+
+  it("starts a new choice from a question that holds nothing but a reason", () => {
+    expect(asTemplate("choice", [reasonChoice()], null, []).answers).toEqual(
+      newChoiceAnswers()
     );
   });
 

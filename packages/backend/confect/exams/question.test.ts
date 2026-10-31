@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  essayAnswers,
   keyMissing,
   needsKey,
   newChoiceAnswers,

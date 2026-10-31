@@ -18,6 +18,7 @@ import {
   reasonAnswers,
   reasonChoice,
 } from "@repo/backend/confect/exams/reason";
+import { REASON_ID } from "@repo/backend/confect/exams/scoring";
 import { Array as Arr, Option } from "effect";
 
 /**
@@ -69,10 +70,14 @@ export const asTemplate = (
   }
   const fixed = Option.isSome(fixedOptions(template));
   // A short answer, a numeric answer, an essay, and a match hold no choice, so a choice template starts them from a new choice.
-  const choices = Option.match(answer, {
-    onNone: newChoiceAnswers,
-    onSome: (choice) => Arr.of<Interaction>(choice),
-  });
+  const choices = Arr.match(
+    Arr.filter(answers, (part) => part.id !== REASON_ID),
+    {
+      onEmpty: newChoiceAnswers,
+      onNonEmpty: (parts) =>
+        Option.isSome(answer) ? parts : newChoiceAnswers(),
+    }
+  );
   const converted = Arr.map(choices, (answer): Interaction => {
     if (answer.kind !== "choice") {
       return answer;
