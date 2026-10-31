@@ -15,7 +15,7 @@ export function ContentHeader({
 }) {
   const t = useTranslations("Common");
   return (
-    <BreadcrumbHeaderFrame>
+    <BreadcrumbHeaderFrame contentClassName="@container">
       <div className="min-w-0">{breadcrumb}</div>
       <div className="flex shrink-0 items-center gap-2">
         <ButtonGroup aria-label={t("content-actions")}>{children}</ButtonGroup>

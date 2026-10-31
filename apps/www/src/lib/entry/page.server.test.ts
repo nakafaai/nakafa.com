@@ -25,7 +25,7 @@ let status = {
 };
 let pages: Pick<
   PageNavigation,
-  "privacyPolicyPath" | "termsOfServicePath"
+  "dataProcessingPath" | "privacyPolicyPath" | "termsOfServicePath"
 > | null = null;
 
 vi.mock("@tanstack/react-start/server", () => ({
@@ -153,6 +153,7 @@ describe("school start page", () => {
   it("links the policy pages of the locale for a signed-in visitor", async () => {
     session = { convexToken: signedIn(), setCookies: [] };
     pages = {
+      dataProcessingPath: "data-processing-agreement",
       privacyPolicyPath: "privacy-policy",
       termsOfServicePath: "terms-of-service",
     };
@@ -161,6 +162,7 @@ describe("school start page", () => {
     ).resolves.toStrictEqual({
       _tag: "Start",
       legal: {
+        dataProcessing: "https://nakafa.com/id/data-processing-agreement",
         privacy: "https://nakafa.com/id/privacy-policy",
         terms: "https://nakafa.com/id/terms-of-service",
       },

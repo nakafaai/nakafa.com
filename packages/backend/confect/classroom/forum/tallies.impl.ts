@@ -16,6 +16,7 @@ import {
   VoteRefused,
 } from "@repo/backend/confect/classroom/forum/errors";
 import {
+  channelOpen,
   classMessage,
   classThread,
   missing,
@@ -154,6 +155,7 @@ const react = FunctionImpl.make(
   Effect.fn("classroom.forum.tallies.react")(function* ({ emoji, messageId }) {
     const { person } = yield* Member;
     const message = yield* classMessage(messageId, "forum.post");
+    yield* channelOpen(message.channelId);
     if (message.sealedText === null) {
       return yield* new MessageHidden();
     }
@@ -192,6 +194,7 @@ const vote = FunctionImpl.make(
   Effect.fn("classroom.forum.tallies.vote")(function* ({ messageId, options }) {
     const { person } = yield* Member;
     const message = yield* classMessage(messageId, "forum.post");
+    yield* channelOpen(message.channelId);
     if (message.sealedText === null) {
       return yield* new MessageHidden();
     }

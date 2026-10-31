@@ -6,6 +6,8 @@ import type { ContentPagination } from "@repo/contents/content";
 import { encodeMaterialContextHint } from "@repo/contents/route/material/context";
 import { Array as Arr, Option, Order, Schema } from "effect";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
+import { isRenderableCurriculumView } from "@/lib/curriculum/routes";
+import { publicPathTarget } from "@/lib/routing/target";
 
 /** The part of one signed material page that its navigation reads: the route, its siblings and whether it is a preview. */
 const MaterialNavigationSourceSchema = Schema.Struct({
@@ -43,6 +45,13 @@ export function toMaterialPlacement(published: PublishedMaterialContext) {
     label: published.label,
     parent: { publicPath: published.parent.publicPath },
     resolvedCanonicalPath: published.resolvedCanonicalPath,
+    trail: Arr.map(
+      Arr.filter(
+        Arr.append(published.ancestors, published.parent),
+        isRenderableCurriculumView
+      ),
+      ({ publicPath, title }) => ({ label: title, publicPath })
+    ),
   };
 }
 
@@ -150,6 +159,7 @@ export function readMaterialNavigation(
       currentContext: undefined,
       link: undefined,
       pagination: readRoutePagination(page.route, page.siblings),
+      trail: [],
     };
   }
 
@@ -170,5 +180,34 @@ export function readMaterialNavigation(
       publicPath: published.parent.publicPath,
     },
     pagination: readRoutePagination(page.route, page.siblings, toContext),
+    trail: published.trail,
   };
+}
+
+/**
+ * The breadcrumb of one lesson: its title, or the curriculum it was opened from
+ * down to the card that lists it. A path that names no page keeps the title.
+ */
+export function readMaterialPath(
+  { link, trail }: ReturnType<typeof readMaterialNavigation>,
+  title: string
+) {
+  if (!link) {
+    return [{ label: title }];
+  }
+  return Option.getOrElse(
+    Option.all([
+      ...Arr.map(trail, ({ label, publicPath }) =>
+        Option.map(publicPathTarget(publicPath), (target) => ({
+          label,
+          target,
+        }))
+      ),
+      Option.map(publicPathTarget(link.publicPath), (target) => ({
+        label: link.label,
+        target: { ...target, hash: link.hash },
+      })),
+    ]),
+    () => [{ label: title }]
+  );
 }

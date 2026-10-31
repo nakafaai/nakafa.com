@@ -5,10 +5,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import {
-  encodeAnswers,
-  essayAnswers,
-} from "@repo/backend/confect/exams/question";
+import { essayAnswers } from "@repo/backend/confect/exams/blank";
+import { encodeAnswers } from "@repo/backend/confect/exams/question";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import {

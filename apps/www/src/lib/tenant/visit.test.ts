@@ -37,6 +37,7 @@ const UNUSED_READS = Layer.succeed(
 
 /** The legal links of a visitor's entry page, as the static answer of the shell holds them. */
 const LINKS = {
+  dataProcessing: "https://nakafa.com/en/data-processing-agreement",
   privacy: "https://nakafa.com/en/privacy",
   terms: "https://nakafa.com/en/terms",
 };

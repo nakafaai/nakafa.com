@@ -55,7 +55,10 @@ import { CreatedExamsContext } from "@/components/tenant/exams/created";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import { useImportFile } from "@/components/tenant/exams/import/calls";
 import { ImportFileField } from "@/components/tenant/exams/import/field";
-import { titleOfFile } from "@/components/tenant/exams/import/file";
+import {
+  IMPORT_ACCEPT,
+  titleOfFile,
+} from "@/components/tenant/exams/import/file";
 import { insertDraftExam } from "@/components/tenant/exams/optimistic";
 import { placeholderExamId } from "@/components/tenant/exams/placeholder";
 
@@ -245,8 +248,11 @@ export function CreateExam({
             </FieldError>
           </Field>
           <ImportFileField
+            accept={IMPORT_ACCEPT}
             description={t("import-description")}
+            drop={t("import-drop")}
             file={file}
+            label={t("import-label")}
             onFile={(chosen) => {
               setFile(chosen);
               if (chosen !== null && name === "") {

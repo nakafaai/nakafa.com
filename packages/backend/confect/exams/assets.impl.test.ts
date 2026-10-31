@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { MAX_ASSET_READS } from "@repo/backend/confect/exams/asset";
+import { AUDIO_BYTE_LIMIT } from "@repo/backend/confect/exams/media";
 import { nf, otherSchoolTeacher } from "@repo/backend/test/editor";
 import { png } from "@repo/backend/test/exams";
 import { storageUrl, storeFile } from "@repo/backend/test/logo";
@@ -12,9 +13,25 @@ import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { Array as Arr, Effect, Exit } from "effect";
 
-const { create } = refs.public.exams.exams;
-const { canAdd, register, uploadUrl, urls } = refs.public.exams.assets;
+const { create, open } = refs.public.exams.exams;
+const questions = refs.public.exams.questions;
+const { canAdd, media, register, registerAudio, uploadUrl, urls } =
+  refs.public.exams.assets;
 const { discard, stored, sweep } = refs.internal.exams.assets;
+
+/** A clip whose leading bytes name an MP3 file. */
+const mp3 = (bytes = 8) =>
+  new Blob(
+    [Uint8Array.from([0x49, 0x44, 0x33, ...Arr.makeBy(bytes, () => 0)])],
+    {
+      type: "audio/mpeg",
+    }
+  );
+
+/** Every row of the clips, so a test reads what the server stored. */
+const audioRows = Effect.flatMap(DatabaseReader, (reader) =>
+  reader.table("examAudio").index("by_creation_time").take(100)
+);
 
 /** Every row of the images, so a test reads what the server stored. */
 const assetRows = Effect.flatMap(DatabaseReader, (reader) =>
@@ -322,5 +339,112 @@ describe("exams/assets", () => {
         expect(yield* fixture.run(assetRows)).toEqual([]);
         expect(yield* storageUrl(fixture.convex, storageIds[0])).toBeNull();
       })
+  );
+
+  it.effect(
+    "registers an MP3 clip, plays it on its question, and sweeps it with its exam",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const made = yield* teacher.mutation(create, {
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+          title: "Listening",
+        });
+        const storageId = yield* storeFile(fixture.convex, mp3());
+        const clip = yield* teacher.action(registerAudio, {
+          examId: made.id,
+          slug: nf,
+          storageId,
+        });
+        const exam = yield* teacher.query(open, { examId: made.id, slug: nf });
+        const questionId = exam.questions[0].id;
+        yield* teacher.mutation(questions.media, {
+          examId: made.id,
+          media: [{ alt: "Percakapan", asset: clip.id, kind: "audio" }],
+          questionId,
+          slug: nf,
+        });
+        const played = yield* teacher.query(media, {
+          examId: made.id,
+          questionId,
+          slug: nf,
+        });
+        expect(played).toMatchObject([{ alt: "Percakapan", kind: "audio" }]);
+
+        yield* fixture.internal.mutation(sweep, { examId: made.id });
+        expect(yield* fixture.run(audioRows)).toHaveLength(0);
+        const gone = yield* teacher.query(media, {
+          examId: made.id,
+          questionId,
+          slug: nf,
+        });
+        expect(gone).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "refuses a file that is no clip and a clip over its limit, keeps nothing, and refuses a student",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const made = yield* teacher.mutation(create, {
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+          title: "Listening",
+        });
+        const ids = { examId: made.id, slug: nf };
+        const notAudio = yield* storeFile(fixture.convex, png());
+        const wrong = yield* teacher
+          .action(registerAudio, { ...ids, storageId: notAudio })
+          .pipe(Effect.flip);
+        expect(wrong).toMatchObject({ _tag: "AudioTypeRefused" });
+        const large = yield* storeFile(fixture.convex, mp3(AUDIO_BYTE_LIMIT));
+        const tooLarge = yield* teacher
+          .action(registerAudio, { ...ids, storageId: large })
+          .pipe(Effect.flip);
+        expect(tooLarge).toMatchObject({ _tag: "AudioSizeRefused" });
+        expect(yield* fixture.run(audioRows)).toHaveLength(0);
+        const own = yield* storeFile(fixture.convex, mp3());
+        const refused = yield* fixture
+          .as("student")
+          .action(registerAudio, { ...ids, storageId: own })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "AccessDenied" });
+      })
+  );
+
+  it.effect("refuses a clip of another exam on a question", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const teacher = fixture.as("teacher");
+      const first = yield* teacher.mutation(create, {
+        scope: { kind: "unit", unitId: fixture.units.smp },
+        slug: nf,
+        title: "Satu",
+      });
+      const second = yield* teacher.mutation(create, {
+        scope: { kind: "unit", unitId: fixture.units.smp },
+        slug: nf,
+        title: "Dua",
+      });
+      const clip = yield* teacher.action(registerAudio, {
+        examId: first.id,
+        slug: nf,
+        storageId: yield* storeFile(fixture.convex, mp3()),
+      });
+      const exam = yield* teacher.query(open, { examId: second.id, slug: nf });
+      const refused = yield* teacher
+        .mutation(questions.media, {
+          examId: second.id,
+          media: [{ alt: "Percakapan", asset: clip.id, kind: "audio" }],
+          questionId: exam.questions[0].id,
+          slug: nf,
+        })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "AccessDenied" });
+    })
   );
 });

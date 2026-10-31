@@ -100,12 +100,13 @@ test("material sidebar preserves verified curriculum context", async ({
               // only in its final form.
               const title = page.getByRole("heading", { level: 1 });
               const opening = page.getByRole("heading", { level: 2 }).first();
-              const home = page
+              const path = page
                 .getByRole("navigation", { name: "Breadcrumb", exact: true })
-                .getByRole("link", { name: "Home", exact: true });
+                .getByRole("link")
+                .last();
               yield* Effect.promise(() => expect(title).toBeVisible());
               yield* Effect.promise(() => expect(opening).toBeVisible());
-              yield* Effect.promise(() => expect(home).toBeHidden());
+              yield* Effect.promise(() => expect(path).toBeHidden());
               yield* Effect.promise(() =>
                 page.evaluate(() => document.fonts.ready.then(() => undefined))
               );
@@ -119,7 +120,7 @@ test("material sidebar preserves verified curriculum context", async ({
                 expect.poll(() => reads.length).toBeGreaterThan(0)
               );
               yield* Deferred.succeed(released, undefined);
-              yield* Effect.promise(() => expect(home).toBeVisible());
+              yield* Effect.promise(() => expect(path).toBeVisible());
 
               const canonical = page.locator('link[rel="canonical"]');
               yield* Effect.promise(() => expect(canonical).toHaveCount(1));

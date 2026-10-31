@@ -7,8 +7,10 @@ import { Schema } from "effect";
 import { createElement } from "react";
 import {
   readMaterialNavigation,
+  readMaterialPath,
   toMaterialHref,
   toMaterialNavigationPage,
+  toMaterialPlacement,
 } from "@/lib/content/material/navigation";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 import {
@@ -16,8 +18,10 @@ import {
   previewProjection,
 } from "@/test/content-preview";
 import {
+  testProgramClass,
   testProgramContexts,
   testProgramGroups,
+  testProgramRoot,
   testProgramSubject,
 } from "@/test/content-program";
 
@@ -63,6 +67,7 @@ function publishedContext(
     Schema.Tuple([CurriculumRouteSchema])
   )(testProgramContexts);
   return {
+    ancestors: [testProgramRoot, testProgramClass],
     context,
     group,
     hash: "functions",
@@ -204,7 +209,7 @@ describe("material lesson navigation", () => {
     expect(
       readMaterialNavigation(
         previewPage,
-        publishedContext(previewProjection.parentPath)
+        toMaterialPlacement(publishedContext(previewProjection.parentPath))
       )
     ).toMatchObject({
       context: undefined,
@@ -219,7 +224,7 @@ describe("material lesson navigation", () => {
     expect(
       readMaterialNavigation(
         publishedPage,
-        publishedContext(previewProjection.parentPath)
+        toMaterialPlacement(publishedContext(previewProjection.parentPath))
       )
     ).toMatchObject({
       context,
@@ -234,11 +239,87 @@ describe("material lesson navigation", () => {
     });
   });
 
+  it("walks the curriculum down to the card, each step a link", () => {
+    const placement = toMaterialPlacement(
+      publishedContext(previewProjection.parentPath)
+    );
+    expect(placement.trail).toStrictEqual([
+      { label: "Kurikulum Merdeka", publicPath: "curriculum/merdeka" },
+      { label: "Class 11", publicPath: "curriculum/merdeka/class-11" },
+      {
+        label: "Mathematics",
+        publicPath: "curriculum/merdeka/class-11/mathematics",
+      },
+    ]);
+    expect(
+      readMaterialPath(
+        readMaterialNavigation(publishedPage, placement),
+        "Function concept"
+      )
+    ).toMatchObject([
+      { label: "Kurikulum Merdeka", target: { params: { _splat: "" } } },
+      { label: "Class 11", target: { params: { _splat: "class-11" } } },
+      {
+        label: "Mathematics",
+        target: { params: { _splat: "class-11/mathematics" } },
+      },
+      {
+        label: "Functions",
+        target: {
+          hash: "functions",
+          params: { _splat: "class-11/mathematics" },
+        },
+      },
+    ]);
+  });
+
+  it("leaves a curriculum route without a page out of the path", () => {
+    const context = publishedContext(previewProjection.parentPath);
+    expect(
+      toMaterialPlacement({
+        ...context,
+        ancestors: [testProgramRoot, { ...testProgramClass, sitemap: false }],
+      }).trail
+    ).toStrictEqual([
+      { label: "Kurikulum Merdeka", publicPath: "curriculum/merdeka" },
+      {
+        label: "Mathematics",
+        publicPath: "curriculum/merdeka/class-11/mathematics",
+      },
+    ]);
+  });
+
+  it("names only the lesson without a placement, or with a path that names no page", () => {
+    expect(
+      readMaterialPath(
+        readMaterialNavigation(publishedPage, null),
+        "Function concept"
+      )
+    ).toStrictEqual([{ label: "Function concept" }]);
+    const placement = toMaterialPlacement(
+      publishedContext(previewProjection.parentPath)
+    );
+    expect(
+      readMaterialPath(
+        readMaterialNavigation(publishedPage, {
+          ...placement,
+          trail: [
+            {
+              label: "Nowhere",
+              publicPath: PublicPathSchema.make("articles/too/deep/path"),
+            },
+          ],
+        }),
+        "Function concept"
+      )
+    ).toStrictEqual([{ label: "Function concept" }]);
+  });
+
   it("keeps unrelated siblings canonical and drops stale context", () => {
     expect(
       readMaterialNavigation(
         publishedPage,
-        publishedContext(previewProjection.publicPath)
+        toMaterialPlacement(publishedContext(previewProjection.publicPath))
       )
     ).toMatchObject({
       pagination: {
@@ -284,7 +365,7 @@ describe("material lesson navigation", () => {
       expect(
         readMaterialNavigation(
           { ...publishedPage, route, siblings: [route, next] },
-          verified
+          toMaterialPlacement(verified)
         )
       ).toMatchObject({
         context,

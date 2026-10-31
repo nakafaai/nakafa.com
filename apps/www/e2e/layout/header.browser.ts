@@ -2,7 +2,10 @@ import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
-import { readControlProblems } from "@/e2e/support/controls";
+import {
+  expectGroupsKeepShape,
+  readControlProblems,
+} from "@/e2e/support/controls";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -182,6 +185,10 @@ const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
         }),
       { discard: true }
     );
+    yield* Effect.promise(() =>
+      page.setViewportSize(viewportSize(desktopViewport))
+    );
+    yield* expectGroupsKeepShape(page, label);
   }
 );
 
@@ -228,6 +235,7 @@ test("a signed-in learner's pages keep their headers to one row at every width",
   baseURL,
   browser,
 }) => {
+  test.slow();
   await Effect.runPromise(
     Effect.forEach(
       learnerRoutes,
@@ -304,6 +312,7 @@ test("a school's own pages keep their headers to one row at every width", async 
   baseURL,
   browser,
 }) => {
+  test.slow();
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
@@ -322,6 +331,7 @@ test("an exam's pages keep their headers to one row at every width, for its Owne
   baseURL,
   browser,
 }) => {
+  test.slow();
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
@@ -387,6 +397,7 @@ test("a class and its forum keep their headers to one row at every width", async
   baseURL,
   browser,
 }) => {
+  test.slow();
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
