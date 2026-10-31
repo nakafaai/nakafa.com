@@ -1,7 +1,10 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { createStore } from "zustand";
 import { AuthSessionContext } from "@/components/auth/context";
-import { SignedOutSessionProvider } from "@/components/auth/session";
+import {
+  SignedOutSessionProvider,
+  useSignedInHint,
+} from "@/components/auth/session";
 import { clientEnv } from "@/env.public";
 import { readAuthClient } from "@/lib/auth/client";
 import { followAuthSession, readAuthSession } from "@/lib/auth/session";
@@ -30,6 +33,7 @@ function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
       }),
     [session, store]
   );
+  useSignedInHint(store);
 
   return <AuthSessionContext value={store}>{children}</AuthSessionContext>;
 }

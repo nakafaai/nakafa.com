@@ -16,7 +16,6 @@ import {
 import { answerFromAuth, answerWithoutAuth } from "@/lib/auth/answer";
 import { bufferResponse } from "@/lib/auth/body";
 import { withSessionHint } from "@/lib/auth/hint.server";
-import { SESSION_PATH } from "@/lib/auth/session";
 import { readRequestHost } from "@/lib/routing/school/host";
 import { runServerEffect } from "@/lib/server/fn";
 
@@ -215,24 +214,23 @@ function logRouteFailure(request: Request) {
  * Builds the route methods for the Better Auth handler. A network failure that
  * is not repeated rejects the route, and the server answers 500, after the
  * failure is logged (`logRouteFailure`). Reads go through `answerRead`, and
- * writes reach Better Auth with the browser's host. A session read also keeps
- * the signed-in hint (`withSessionHint`).
+ * writes reach Better Auth with the browser's host. Every answer keeps the
+ * signed-in hint (`withSessionHint`).
  */
 export function createAuthProxy(handler: AuthRouteHandler) {
   return {
     GET: (request: Request) =>
       runServerEffect(
-        (new URL(request.url).pathname === SESSION_PATH
-          ? Effect.flatMap(answerRead(handler, request), (response) =>
-              withSessionHint(request, response)
-            )
-          : answerRead(handler, request)
-        ).pipe(logRouteFailure(request))
+        answerRead(handler, request).pipe(
+          Effect.flatMap((response) => withSessionHint(request, response)),
+          logRouteFailure(request)
+        )
       ),
     POST: (request: Request) =>
       runServerEffect(
         writeAuthResponse(handler, withBrowserHost(request)).pipe(
           answerAuthDeadline,
+          Effect.flatMap((response) => withSessionHint(request, response)),
           logRouteFailure(request)
         )
       ),

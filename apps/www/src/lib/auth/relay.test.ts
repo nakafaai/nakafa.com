@@ -297,6 +297,48 @@ describe("answerAuthDeadline", () => {
 });
 
 describe("createAuthProxy", () => {
+  it.effect.each([
+    [
+      "the Google callback that signs in",
+      "GET",
+      "https://nakafa.com/api/auth/callback/google?code=one-time",
+      "__Secure-better-auth.session_token=token.signature; Path=/",
+      "nakafa-signed-in=1;",
+    ],
+    [
+      "the write that signs out",
+      "POST",
+      "https://nakafa.com/api/auth/sign-out",
+      "__Secure-better-auth.session_token=; Max-Age=0; Path=/",
+      "nakafa-signed-in=;",
+    ],
+  ] as const)("keeps the hint on %s", ([, method, url, cookie, hint]) =>
+    Effect.gen(function* () {
+      vi.stubEnv("SITE_URL", "https://nakafa.com");
+      const answer = new Response(null, {
+        headers: { "set-cookie": cookie },
+        status: 200,
+      });
+      handler.GET.mockResolvedValueOnce(answer.clone());
+      handler.POST.mockResolvedValueOnce(answer.clone());
+      const send = createAuthProxy(handler)[method];
+
+      const response = yield* Effect.promise(() =>
+        send(
+          new Request(url, {
+            headers: SECURE_SESSION_COOKIE,
+            method,
+          })
+        )
+      );
+
+      expect(response.headers.getSetCookie()).toStrictEqual([
+        cookie,
+        expect.stringContaining(hint),
+      ]);
+    })
+  );
+
   it.effect(
     "rejects a write whose network failure is not repeated, so the server answers 500, after logging it",
     () =>
