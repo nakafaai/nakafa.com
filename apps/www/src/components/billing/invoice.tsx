@@ -1,4 +1,5 @@
 import { Button } from "@repo/design-system/components/ui/button";
+import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   Tooltip,
@@ -35,7 +36,7 @@ export function RowAction({
   label,
   onClick,
 }: {
-  icon: ComponentProps<typeof Spinner>["icon"];
+  icon: ComponentProps<typeof HugeIcons>["icon"];
   isPending: boolean;
   label: string;
   onClick: () => void;

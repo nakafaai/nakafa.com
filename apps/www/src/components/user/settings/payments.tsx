@@ -1,10 +1,5 @@
 import { Invoice01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
@@ -42,11 +37,10 @@ export function UserSettingsPayments() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("payments")}</CardTitle>
-        <CardDescription>{t("payments-card-description")}</CardDescription>
-      </CardHeader>
+    <CardSection
+      description={t("payments-card-description")}
+      title={t("payments")}
+    >
       <CardSectionFooter hint={t("payments-footer")}>
         <CardSectionActions>
           <Button

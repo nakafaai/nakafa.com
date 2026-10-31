@@ -37,7 +37,11 @@ import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { PaneTableRow } from "@/components/shared/pane";
 import { useHasPanes } from "@/components/shared/panes";
-import { columnAlign, placeOf } from "@/components/shared/table/align";
+import {
+  columnAlign,
+  headPlace,
+  placeOf,
+} from "@/components/shared/table/align";
 import { chosenDays } from "@/components/shared/table/days";
 import { dataTableFeatures } from "@/components/shared/table/features";
 import { DaysHead, TableHeadButton } from "@/components/shared/table/head";
@@ -189,7 +193,7 @@ function DataTableHead<TData extends RowData>({
   const chosen = useTableFilters((state) => state.chosen);
   const column = header.column;
   const place = placeOf(index, column.columnDef.meta?.align);
-  const headAlign = place === "menu" ? "center" : place;
+  const headAlign = headPlace[place];
   const sorted = column.getIsSorted() || "none";
   const days = chosenDays(chosen, column.id);
 

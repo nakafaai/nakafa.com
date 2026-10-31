@@ -33,6 +33,15 @@ export const columnAlign = cva("", {
   },
 });
 
+/** Where a head's button stands at each place of its column: over a column's figures, and in the middle over a menu. */
+export const headPlace = {
+  center: "center",
+  end: "end",
+  figure: "end",
+  menu: "center",
+  start: "start",
+} as const satisfies Record<string, typeof HeadAlign.Type>;
+
 /** The place of a column in its table: the first names the row, a column's meta may set it, and the rest stand between. */
 export const placeOf = (
   index: number,

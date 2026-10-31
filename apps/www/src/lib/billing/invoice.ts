@@ -6,5 +6,5 @@ export const invoiceBlob = Effect.fn("billing.invoice.blob")(function* (
   base64: string
 ) {
   const bytes = yield* Effect.fromResult(Base64.decode(base64));
-  return new Blob([bytes], { type: "application/pdf" });
+  return new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
 });
