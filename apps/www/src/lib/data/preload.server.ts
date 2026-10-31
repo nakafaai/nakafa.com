@@ -55,7 +55,7 @@ export const preloadConfectQuery = Effect.fn("www.data.preloadQuery")(
           Effect.fail(new PreloadFailed({ cause }))
         ),
         Effect.mapError((error) =>
-          error instanceof PreloadFailed &&
+          Schema.is(PreloadFailed)(error) &&
           error.cause instanceof ConvexGatewayFailure
             ? new RetryableNetworkAttempt({ failure: error })
             : error
