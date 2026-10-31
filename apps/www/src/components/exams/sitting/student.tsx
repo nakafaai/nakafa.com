@@ -278,7 +278,7 @@ function StudentScheduled({
           <CardSectionFooter hint={t("student-scheduled-footer")} />
         </CardSection>
       </SittingBody>
-    </>
+    </PaperFrame>
   );
 }
 
