@@ -13951,8 +13951,26 @@ export declare const internal: {
       >;
     };
     sync: {
+      destroy: FunctionReference<
+        "mutation",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
       reconnect: FunctionReference<
         "mutation",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      revocable: FunctionReference<
+        "query",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        string | null
+      >;
+      revoke: FunctionReference<
+        "action",
         "internal",
         { connectionId: Id<"connectorConnections"> },
         null
