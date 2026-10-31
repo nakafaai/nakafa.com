@@ -280,17 +280,74 @@ describe("acceptance invite", () => {
         const { fs, root } = yield* fixture;
         answerCommands(APP_USERS);
 
-        yield* inviteMode.run(root, [
-          SLUG,
-          ADDRESS,
-          `${root}/mode.json`,
-          "ignored",
-        ]);
+        yield* inviteMode.run(root, [SLUG, ADDRESS, `${root}/mode.json`]);
 
         const cookie = yield* fs
           .readFileString(`${root}/mode.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "ends an expired invite before the account signs in, waits for no inbox row, and still writes the cookie",
+    () =>
+      Effect.gen(function* () {
+        const { fs, root } = yield* fixture;
+        // No inbox row ever holds the person, so a wait for one would run out its 30 seconds.
+        const specs = answerCommands(APP_USERS, "[]");
+
+        yield* inviteMode.run(root, [
+          SLUG,
+          ADDRESS,
+          `${root}/expired.json`,
+          "expired",
+        ]);
+
+        const calls = MutableList.toArray(specs);
+        const expiry = Arr.findFirstIndex(calls, (spec) =>
+          Arr.contains(spec.args, "tenancy/seed:expired")
+        );
+        const signIn = Arr.findFirstIndex(calls, (spec) =>
+          Arr.contains(spec.args, "adapter:create")
+        );
+        expect(Option.getOrThrow(expiry)).toBeLessThan(
+          Option.getOrThrow(signIn)
+        );
+        expect(
+          yield* Schema.decodeEffect(
+            Schema.fromJsonString(
+              Schema.Struct({ email: Schema.String, slug: Schema.String })
+            )
+          )(
+            lastArgument(
+              Option.getOrThrow(Arr.get(calls, Option.getOrThrow(expiry)))
+            )
+          )
+        ).toEqual({ email: ADDRESS, slug: SLUG });
+        expect(
+          Arr.some(calls, (spec) => Arr.contains(spec.args, "notifications"))
+        ).toBe(false);
+        const cookie = yield* fs
+          .readFileString(`${root}/expired.json`)
+          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+        expect(cookie.name).toBe("better-auth.session_token");
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "refuses an invite mode whose fourth argument is not expired, before any operation",
+    () =>
+      Effect.gen(function* () {
+        const { root } = yield* fixture;
+        const specs = answerCommands(APP_USERS);
+
+        expect(
+          yield* inviteMode
+            .run(root, [SLUG, ADDRESS, `${root}/mode.json`, "later"])
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
+        expect(MutableList.toArray(specs)).toEqual([]);
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
@@ -306,7 +363,7 @@ describe("acceptance invite", () => {
         ).toMatchObject({
           _tag: "AcceptanceRuntimeError",
           message:
-            "Usage: acceptance invite <school-slug> <learner-address> <cookie-file>",
+            "Usage: acceptance invite <school-slug> <learner-address> <cookie-file> [expired]",
         });
         expect(MutableList.toArray(specs)).toEqual([]);
         expect(mocks.read).not.toHaveBeenCalled();

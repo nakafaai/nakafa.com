@@ -13,6 +13,7 @@ import { Array as Arr, Effect, Exit, Schema } from "effect";
 
 const seedTeacher = refs.internal.tenancy.seed.teacher;
 const seedStudent = refs.internal.tenancy.seed.student;
+const seedExpired = refs.internal.tenancy.seed.expired;
 const teacherAddress = Schema.decodeSync(Email)("guru@acceptance.example.test");
 const memberAddress = Schema.decodeSync(Email)("member-0@example.com");
 const unknownAddress = Schema.decodeSync(Email)("tidak-ada@example.com");
@@ -200,6 +201,72 @@ describe("tenancy/seed student", () => {
         );
         expect(defectOf(exit)).toContain(
           "This address is not a member of the school."
+        );
+      })
+  );
+});
+
+describe("tenancy/seed expired", () => {
+  it.effect(
+    "ends the school's pending invite of the address as the sweep does, so the invites list shows it expired",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const seeded = yield* fixture.internal.mutation(seedTeacher, {
+          email: teacherAddress,
+          locale: "id",
+          name: "Guru Acceptance",
+          slug: slugOf("nf"),
+        });
+        yield* fixture.internal.mutation(seedExpired, {
+          email: teacherAddress,
+          slug: slugOf("nf"),
+        });
+        const invites = yield* fixture
+          .as("admin")
+          .query(refs.public.tenancy.invites.list, {
+            paginationOpts: { cursor: null, numItems: 100 },
+            slug: slugOf("nf"),
+          });
+        expect(invites.page).toContainEqual(
+          expect.objectContaining({ id: seeded.invite, status: "expired" })
+        );
+        expect(yield* fixture.run(journal)).toContainEqual(
+          expect.objectContaining({
+            actor: { kind: "system" },
+            change: { invite: seeded.invite, type: "invite.expired" },
+            subject: { id: seeded.person, kind: "person" },
+          })
+        );
+      })
+  );
+
+  it.effect("refuses a school that no tenant has", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const refusal = yield* fixture.internal
+        .mutation(seedExpired, {
+          email: teacherAddress,
+          slug: slugOf("tidak-ada"),
+        })
+        .pipe(Effect.flip);
+      expect(refusal).toMatchObject({ _tag: "TenantNotFound" });
+    })
+  );
+
+  it.effect(
+    "dies when the school holds no pending invite for the address",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const exit = yield* Effect.exit(
+          fixture.internal.mutation(seedExpired, {
+            email: unknownAddress,
+            slug: slugOf("nf"),
+          })
+        );
+        expect(defectOf(exit)).toContain(
+          "The school holds no pending invite for this address."
         );
       })
   );
