@@ -150,6 +150,18 @@ function enterVisit(slug: TenantSlug, visit: SchoolVisit) {
   });
 }
 
+/** Takes the live read that checks the visit's kept frame, once, so one layout checks it. */
+function takeLiveRead(visit: SchoolVisit) {
+  const live = visit.live;
+  visit.live = undefined;
+  return live;
+}
+
+/** Hands the gate's next run the live frame that replaces the kept one. */
+function confirmFrame(visit: SchoolVisit, next: VisitFrame) {
+  visit.confirmed = next;
+}
+
 /** The frame a navigation into the school commits: the live one that replaced a kept frame, the visit's, or a new visit's. */
 function frameOfNavigation(
   visit: SchoolVisit,
@@ -256,11 +268,10 @@ function useLiveVisit() {
   const router = useRouter();
 
   useEffect(() => {
-    const live = visit.live;
+    const live = takeLiveRead(visit);
     if (live === undefined) {
       return;
     }
-    visit.live = undefined;
     live.then(
       (next) => {
         if (
@@ -272,7 +283,7 @@ function useLiveVisit() {
         ) {
           return;
         }
-        visit.confirmed = next;
+        confirmFrame(visit, next);
         router.invalidate();
       },
       (cause) =>

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { TenantProfile } from "@repo/backend/confect/tenancy/schema";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { reportClientException } from "@/lib/analytics/client";
 import { KEPT_SCHOOL_KEY } from "@/lib/auth/keys";
 import {
@@ -53,7 +53,7 @@ vi.mock("@/lib/analytics/client", () => ({
 
 /** The text a host stores for a kept frame, written and read back as a visit does. */
 const textOf = (kept: KeptFrame) =>
-  Effect.runSync(saveKeptFrame(kept).pipe(Effect.andThen(loadKeptFrameText())));
+  saveKeptFrame(kept).pipe(Effect.andThen(loadKeptFrameText()));
 
 /** A storage the browser refuses to hand out or to use, as with storage turned off. */
 const refusing = {
@@ -74,52 +74,85 @@ afterEach(() => {
 });
 
 describe("keptFrameFor", () => {
-  it("draws the frame kept for the session the signed-in browser holds, in its locale", () => {
-    expect(
-      keptFrameFor(textOf(OUTSIDER), {
-        known: "session-ayu",
-        locale: "en",
-        signedIn: true,
+  it.effect(
+    "draws the frame kept for the session the signed-in browser holds, in its locale",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          keptFrameFor(yield* textOf(OUTSIDER), {
+            known: "session-ayu",
+            locale: "en",
+            signedIn: true,
+          })
+        ).toEqual(Option.some(OUTSIDER));
       })
-    ).toEqual(Option.some(OUTSIDER));
-  });
+  );
 
-  it("draws a visitor's kept frame for a browser that the hint says is signed out", () => {
-    expect(
-      keptFrameFor(textOf(VISITOR), {
-        known: null,
-        locale: "en",
-        signedIn: false,
+  it.effect(
+    "draws a visitor's kept frame for a browser that the hint says is signed out",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          keptFrameFor(yield* textOf(VISITOR), {
+            known: null,
+            locale: "en",
+            signedIn: false,
+          })
+        ).toEqual(Option.some(VISITOR));
       })
-    ).toEqual(Option.some(VISITOR));
-  });
+  );
 
-  it("draws nothing for another session, a visitor's frame once signed in, another locale, or a text it cannot read", () => {
-    const signedIn = {
-      known: "session-ayu",
-      locale: "en",
-      signedIn: true,
-    } as const;
-    expect(
-      keptFrameFor(textOf(OUTSIDER), { ...signedIn, known: "session-budi" })
-    ).toEqual(Option.none());
-    expect(keptFrameFor(textOf(VISITOR), signedIn)).toEqual(Option.none());
-    expect(
-      keptFrameFor(textOf(OUTSIDER), { ...signedIn, locale: "id" })
-    ).toEqual(Option.none());
-    expect(keptFrameFor("{", signedIn)).toEqual(Option.none());
-    expect(keptFrameFor(null, signedIn)).toEqual(Option.none());
-  });
-
-  it("draws no signed-in frame for a browser the hint says is signed out", () => {
-    expect(
-      keptFrameFor(textOf(OUTSIDER), {
-        known: "session-ayu",
-        locale: "en",
-        signedIn: false,
+  it.effect(
+    "draws nothing for another session, a visitor's frame once signed in, another locale, or a text it cannot read",
+    () =>
+      Effect.gen(function* () {
+        const outsider = yield* textOf(OUTSIDER);
+        expect(
+          keptFrameFor(outsider, {
+            known: "session-budi",
+            locale: "en",
+            signedIn: true,
+          })
+        ).toEqual(Option.none());
+        expect(
+          keptFrameFor(outsider, {
+            known: "session-ayu",
+            locale: "id",
+            signedIn: true,
+          })
+        ).toEqual(Option.none());
+        expect(
+          keptFrameFor(yield* textOf(VISITOR), {
+            known: "session-ayu",
+            locale: "en",
+            signedIn: true,
+          })
+        ).toEqual(Option.none());
+        for (const text of ["{", null]) {
+          expect(
+            keptFrameFor(text, {
+              known: "session-ayu",
+              locale: "en",
+              signedIn: true,
+            })
+          ).toEqual(Option.none());
+        }
       })
-    ).toEqual(Option.none());
-  });
+  );
+
+  it.effect(
+    "draws no signed-in frame for a browser the hint says is signed out",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          keptFrameFor(yield* textOf(OUTSIDER), {
+            known: "session-ayu",
+            locale: "en",
+            signedIn: false,
+          })
+        ).toEqual(Option.none());
+      })
+  );
 });
 
 describe("isSameFrame", () => {
@@ -156,7 +189,10 @@ describe("the kept frame in storage", () => {
         yield* saveKeptFrame(VISITOR, refusing);
         yield* dropKeptFrame(refusing);
         expect(
-          reportClientExceptionMock.mock.calls.map(([, context]) => context)
+          Arr.map(
+            reportClientExceptionMock.mock.calls,
+            ([, context]) => context
+          )
         ).toEqual([
           { operation: "load", source: "tenant.keptFrame" },
           { operation: "save", source: "tenant.keptFrame" },
