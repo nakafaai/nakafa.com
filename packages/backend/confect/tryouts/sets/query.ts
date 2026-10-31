@@ -2,10 +2,11 @@ import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
 import { Schema } from "effect";
 
 /**
- * The query a learner makes of a track's sets: the direction, the sort field and
- * the status filter. A track page validates them in its address, in route options
- * that every page's first JavaScript holds, so they stay apart from the list's
- * spec and the rows, paging and contracts it imports.
+ * The query a learner makes of a track's sets: the direction, the sort field, the
+ * status filter, and the most sets one page holds. A track page validates them in
+ * its address and its server functions' inputs, in modules that every page's
+ * first JavaScript holds, so they stay apart from the list's spec and page and the
+ * rows, contracts and digests those import.
  */
 export const setDirectionValidator = Schema.Literals(["asc", "desc"]);
 export const setSortValidator = Schema.Struct({
@@ -23,3 +24,6 @@ export const setFilterValidator = Schema.Literals([
   "not-started",
   ...tryoutStatusValidator.literals,
 ]);
+
+/** The most sets one page of a track's list holds, whatever the client asks for; the web's list grows to it. */
+export const TRACK_SET_PAGE_LIMIT = 1000;
