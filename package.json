@@ -16,7 +16,7 @@
       "@alchemy.run/cloudflare": "2.0.0-beta.84",
       "@alchemy.run/cloudflare-runtime": "2.0.0-beta.84",
       "@alchemy.run/github": "2.0.0-beta.84",
-      "@confect/core": "10.4.1",
+      "@confect/core": "10.5.0",
       "@convex-dev/agent": "0.7.9",
       "@convex-dev/ai-sdk-provider": "0.3.0",
       "@effect/platform-bun": "4.1.0",

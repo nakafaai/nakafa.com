@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@confect/core": "catalog:",
-    "@confect/server": "10.4.1",
+    "@confect/server": "10.5.0",
     "@convex-dev/agent": "catalog:",
     "@convex-dev/aggregate": "^0.3.4",
     "@convex-dev/ai-sdk-provider": "catalog:",
@@ -39,7 +39,7 @@
     "@convex-dev/workflow": "^0.4.10",
     "@convex-dev/workpool": "0.4.15",
     "@effect/platform-node": "catalog:",
-    "@nakafa/aksara-contracts": "2.0.0",
+    "@nakafa/aksara-contracts": "3.0.0",
     "@polar-sh/sdk": "^1.0.2",
     "@posthog/convex": "2.1.8",
     "@react-email/render": "catalog:",
@@ -82,8 +82,8 @@
     "uqr": "0.1.3"
   },
   "devDependencies": {
-    "@confect/cli": "10.4.1",
-    "@confect/test": "10.4.1",
+    "@confect/cli": "10.5.0",
+    "@confect/test": "10.5.0",
     "@edge-runtime/vm": "^5.0.0",
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",

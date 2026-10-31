@@ -55,7 +55,7 @@ export const REGISTRY_REVIEWS = [
   [
     "@nakafa/aksara-contracts@latest",
     "3.0.0",
-    "nakafa.com declares 2.0.0, the first release with the assessment snapshot, which peers effect 4.0.5 exactly. 3.0.0 (30 October 2026) builds the contracts on effect/crypto and peers effect exactly 4.1.0, so it moves with the Effect cohort in #1524, after 2.0.0 lands.",
+    "3.0.0 (30 October 2026) carries the assessment snapshot of 2.0.0, builds the contracts on effect/crypto and peers effect exactly 4.1.0, so it moves with the Effect cohort.",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [

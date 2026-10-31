@@ -83,8 +83,8 @@
       "version": "2.1.0",
       "dependencies": {
         "@confect/core": "catalog:",
-        "@confect/js": "10.4.1",
-        "@confect/react": "10.4.1",
+        "@confect/js": "10.5.0",
+        "@confect/react": "10.5.0",
         "@convex-dev/agent": "catalog:",
         "@convex-dev/better-auth": "0.12.6",
         "@fontsource-variable/inter": "5.3.0",
@@ -92,7 +92,7 @@
         "@hugeicons/core-free-icons": "catalog:",
         "@hugeicons/react": "catalog:",
         "@mantine/hooks": "catalog:",
-        "@nakafa/aksara-contracts": "2.0.0",
+        "@nakafa/aksara-contracts": "3.0.0",
         "@repo/analytics": "workspace:*",
         "@repo/backend": "workspace:*",
         "@repo/contents": "workspace:*",
@@ -187,7 +187,7 @@
       "version": "3.1.0",
       "dependencies": {
         "@confect/core": "catalog:",
-        "@confect/server": "10.4.1",
+        "@confect/server": "10.5.0",
         "@convex-dev/agent": "catalog:",
         "@convex-dev/aggregate": "^0.3.4",
         "@convex-dev/ai-sdk-provider": "catalog:",
@@ -198,7 +198,7 @@
         "@convex-dev/workflow": "^0.4.10",
         "@convex-dev/workpool": "0.4.15",
         "@effect/platform-node": "catalog:",
-        "@nakafa/aksara-contracts": "2.0.0",
+        "@nakafa/aksara-contracts": "3.0.0",
         "@polar-sh/sdk": "^1.0.2",
         "@posthog/convex": "2.1.8",
         "@react-email/render": "catalog:",
@@ -241,8 +241,8 @@
         "uqr": "0.1.3",
       },
       "devDependencies": {
-        "@confect/cli": "10.4.1",
-        "@confect/test": "10.4.1",
+        "@confect/cli": "10.5.0",
+        "@confect/test": "10.5.0",
         "@edge-runtime/vm": "^5.0.0",
         "@effect/vitest": "catalog:",
         "@repo/testing": "workspace:*",
@@ -281,7 +281,7 @@
       "version": "2.0.2",
       "dependencies": {
         "@hugeicons/core-free-icons": "catalog:",
-        "@nakafa/aksara-contracts": "2.0.0",
+        "@nakafa/aksara-contracts": "3.0.0",
         "@repo/math": "workspace:*",
         "@repo/seo": "workspace:*",
         "@repo/utilities": "workspace:*",
@@ -419,7 +419,7 @@
       "name": "@repo/email",
       "version": "0.0.3",
       "dependencies": {
-        "@nakafa/aksara-contracts": "2.0.0",
+        "@nakafa/aksara-contracts": "3.0.0",
         "@react-email/render": "catalog:",
         "@repo/design-system": "workspace:*",
         "@repo/seo": "workspace:*",
@@ -443,7 +443,7 @@
       "name": "@repo/internationalization",
       "version": "1.0.0",
       "dependencies": {
-        "@nakafa/aksara-contracts": "2.0.0",
+        "@nakafa/aksara-contracts": "3.0.0",
         "@repo/seo": "workspace:*",
         "@repo/site": "workspace:*",
         "@repo/utilities": "workspace:*",
@@ -495,7 +495,7 @@
       "name": "@repo/seo",
       "version": "1.0.1",
       "dependencies": {
-        "@nakafa/aksara-contracts": "2.0.0",
+        "@nakafa/aksara-contracts": "3.0.0",
         "@repo/site": "workspace:*",
         "@repo/utilities": "workspace:*",
         "effect": "catalog:",
@@ -581,7 +581,7 @@
     "@alchemy.run/cloudflare": "2.0.0-beta.84",
     "@alchemy.run/cloudflare-runtime": "2.0.0-beta.84",
     "@alchemy.run/github": "2.0.0-beta.84",
-    "@confect/core": "10.4.1",
+    "@confect/core": "10.5.0",
     "@convex-dev/agent": "0.7.9",
     "@convex-dev/ai-sdk-provider": "0.3.0",
     "@effect/platform-bun": "4.1.0",
@@ -795,17 +795,17 @@
 
     "@cloudflare/workers-types": ["@cloudflare/workers-types@5.20261024.1", "", {}, "sha512-sNhbgBsuVvmumSurgCcIrXShqACPfRt/XlYFstBeANu5BHEJhXW+e7PmHxDNYRXxKYZV57toUfkLwFp8/0SZKA=="],
 
-    "@confect/cli": ["@confect/cli@10.4.1", "", { "dependencies": { "@effect/platform-node": "^4.0.4", "bundle-require": "^5.1.0", "code-block-writer": "^13.0.3", "esbuild": "0.27.0 - 0.27.3 || ^0.27.5 || ^0.28.0", "exsolve": "^1.1.3", "jsonc-parser": "^3.3.1" }, "peerDependencies": { "@confect/core": "^10.4.1", "@confect/server": "^10.4.1", "effect": "^4.0.4" }, "bin": { "confect": "./bin/confect.mjs" } }, "sha512-/7NJl0SRvHyO6OeavytuxOtr2yHNZsX5la3DlKFvTol1u1OAuZhqAhEgEpzd1rcjvDs8pNjKrLwnNWIT19oY4A=="],
+    "@confect/cli": ["@confect/cli@10.5.0", "", { "dependencies": { "@effect/platform-node": "~4.1.0", "bundle-require": "^5.1.0", "code-block-writer": "^13.0.3", "esbuild": "0.27.0 - 0.27.3 || ^0.27.5 || ^0.28.0", "exsolve": "^1.1.3", "jsonc-parser": "^3.3.1" }, "peerDependencies": { "@confect/core": "^10.5.0", "@confect/server": "^10.5.0", "effect": "~4.1.0" }, "bin": { "confect": "./bin/confect.mjs" } }, "sha512-24dUY6CNyEzlEY9WWWcJsMZYtKLKcCioSBzowZ2WSxMViQa/6Y2Vr42Vuma0OdNrujejrp6KYiWXEIXIAjW9IA=="],
 
-    "@confect/core": ["@confect/core@10.4.1", "", { "peerDependencies": { "convex": "^1.32.0", "effect": "^4.0.0" } }, "sha512-Jp6vJX/5PHlL4uFeiQYrB+wNiKdnswlECQYSLmAZyjNXVj+k9RgDms7/7vcvewL8HbW2DcJ+yBSr4xNbIWhf8w=="],
+    "@confect/core": ["@confect/core@10.5.0", "", { "peerDependencies": { "convex": "^1.32.0", "effect": "^4.0.0" } }, "sha512-+QWEnQ8eoVOwB7IURXh5GyKy59I4dOiVS59f+J3tf++hrjqWR3cPRiUm/dsWKoiGEHcW6iwBm6eTiEu7Fzi49g=="],
 
-    "@confect/js": ["@confect/js@10.4.1", "", { "peerDependencies": { "@confect/core": "^10.4.1", "convex": "^1.32.0", "effect": "^4.0.0" } }, "sha512-VupEkkKXmfn7e+kQqu9fkj8HXC8NBwaI96Wfs7HspoEcXdnsrQhnvG8q0AKe+FOpe32/R9CDjHYk/+pVhp2v/A=="],
+    "@confect/js": ["@confect/js@10.5.0", "", { "peerDependencies": { "@confect/core": "^10.5.0", "convex": "^1.32.0", "effect": "^4.0.0" } }, "sha512-SjHgRPJXDkeAez6s7WkgehgI6mRMP4dwcphB7o70wIW5AyEljcrC4mdS6c8J7dm6vulfJlQ1zQ1MxRyP7bQcFQ=="],
 
-    "@confect/react": ["@confect/react@10.4.1", "", { "peerDependencies": { "@confect/core": "^10.4.1", "convex": "^1.36.0", "effect": "^4.0.0", "react": "^18.0.0 || ^19.0.0" } }, "sha512-li+2xZoAlt586MkSQmoRqYoaQD9TVkPlNiZKkzT673wS/POcCzFW1BCrsXk+Q1oeLoYHD8H1zTkGWx3IOZykaQ=="],
+    "@confect/react": ["@confect/react@10.5.0", "", { "peerDependencies": { "@confect/core": "^10.5.0", "convex": "^1.36.0", "effect": "^4.0.0", "react": "^18.0.0 || ^19.0.0" } }, "sha512-+sjitdOM+G9DWaOkaE/vOfDdPxW6BUPlRVqQrb1HPZNnQ3e6+mr0vONmAjqJCk+tjgCNFvYVAi6McoUIwuBtGA=="],
 
-    "@confect/server": ["@confect/server@10.4.1", "", { "dependencies": { "@effect/ai-openai-compat": "4.0.4", "@effect/ai-openrouter": "4.0.4" }, "peerDependencies": { "@confect/core": "^10.4.1", "@effect/platform-node": "^4.0.0", "convex": "^1.45.0", "effect": "^4.0.4" }, "optionalPeers": ["@effect/platform-node"] }, "sha512-TmgQqPZZ7phpM/yXHsGHWxlmoi1v5laFKxWgNQOvInQZ2HjhNKI7bgrFJ8wFFOzXDQ+hpTq1S4P7VejGUXFkLQ=="],
+    "@confect/server": ["@confect/server@10.5.0", "", { "dependencies": { "@effect/ai-openai-compat": "4.1.0", "@effect/ai-openrouter": "4.1.0" }, "peerDependencies": { "@confect/core": "^10.5.0", "@effect/platform-node": "~4.1.0", "convex": "^1.45.0", "effect": "~4.1.0" }, "optionalPeers": ["@effect/platform-node"] }, "sha512-WNDN6GXHaHHu63jMCwgDKK09TGwHnOgnjBCuTlwvifew61KHZxU4IQf3LYMH37kALm63bAf54T2V7G340ZS72g=="],
 
-    "@confect/test": ["@confect/test@10.4.1", "", { "peerDependencies": { "@confect/core": "^10.4.1", "@confect/server": "^10.4.1", "convex": "^1.32.0", "convex-test": ">=0.0.50 <0.1.0", "effect": "^4.0.0" } }, "sha512-Z+8EhywTL9HWS8NW6cnU4HJuzU6l+xUBiQMxrY8EQh/ka6DsIONQe57EwZ6jx1evrzh2OY7h+LZ5X1mXV+WhwA=="],
+    "@confect/test": ["@confect/test@10.5.0", "", { "peerDependencies": { "@confect/core": "^10.5.0", "@confect/server": "^10.5.0", "convex": "^1.32.0", "convex-test": ">=0.0.50 <0.1.0", "effect": "^4.0.0" } }, "sha512-YwQSjo/P38VYppZRKVOpdeOe1uUdHrP77CzJ/h9/aJJ/+kfnXOf/WK548ZQl3AL8iTFFFhTXuDjhdE8hspq3EA=="],
 
     "@convex-dev/agent": ["@convex-dev/agent@0.7.9", "", { "optionalDependencies": { "@ungap/structured-clone": "^1.4.0" }, "peerDependencies": { "@ai-sdk/provider": "^4.0.0", "@ai-sdk/provider-utils": "^5.0.0", "ai": "^7.0.129", "convex": "^1.46.0", "convex-helpers": "^0.1.127", "react": "^18.3.1 || ^19.0.0" }, "optionalPeers": ["react"] }, "sha512-/P7IU6CyzopR3olJmqQsLmy0sb9bTvubeuLTInsgqqQBgr7S7Z/N6L22AIer9dGcYTnW1sb7Lzacw61H2ptqbw=="],
 
@@ -1091,7 +1091,7 @@
 
     "@mrleebo/prisma-ast": ["@mrleebo/prisma-ast@0.13.1", "", { "dependencies": { "chevrotain": "10.5.0", "lilconfig": "2.1.0" } }, "sha512-XyroGQXcHrZdvmrGJvsA9KNeOOgGMg1Vg9OlheUsBOSKznLMDl+YChxbkboRHvtFYJEMRYmlV3uoo/njCw05iw=="],
 
-    "@nakafa/aksara-contracts": ["@nakafa/aksara-contracts@2.0.0", "", { "peerDependencies": { "effect": "4.0.5" } }, "sha512-4wwiaJljsyQgr1fDOonF03Cvq6X6Xoi0J/s/2ti64T+8j/f3Lo1LRa3hnIo/yxX1PFViF5A+Ukscn3wvnF6gaA=="],
+    "@nakafa/aksara-contracts": ["@nakafa/aksara-contracts@3.0.0", "", { "peerDependencies": { "effect": "4.1.0" } }, "sha512-4Z141KrPfaTSpEFYG7c3m5PYjypXpJ8cYLs1YY/+OCwjZfpHavioCcXd0cZZ3NBsmYZg1ET6RfMivqrSVuJtZA=="],
 
     "@nakafa/cli": ["@nakafa/cli@workspace:packages/cli"],
 
