@@ -1,6 +1,7 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Option } from "effect";
 import { createContext, type ReactNode, Suspense, use, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -41,6 +42,7 @@ import type {
 } from "@/components/tryout/section/model";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
+import { useLastValue } from "@/lib/data/kept";
 
 type SectionState = TryoutSectionInitialState | null;
 
@@ -139,6 +141,8 @@ function LiveTryoutSectionPage({
       : "skip"
   );
 
+  const live = useLastValue(liveState);
+
   if (
     terminalState === undefined &&
     QueryResult.isSuccess(liveState) &&
@@ -147,10 +151,9 @@ function LiveTryoutSectionPage({
     setTerminalState(liveState.value);
   }
 
-  let state: SectionState = binding.initialState;
-  if (QueryResult.isSuccess(liveState)) {
-    state = liveState.value;
-  }
+  // A paused subscription, as during an auth reload, keeps the last live answer; the page's own state shows
+  // only before the first one, so the timer and the answers never fall back to it.
+  let state: SectionState = Option.getOrElse(live, () => binding.initialState);
   if (terminalState !== undefined) {
     state = terminalState;
   }

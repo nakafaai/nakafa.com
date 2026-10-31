@@ -39,6 +39,7 @@ import {
   TryoutSetOverview,
   type TryoutSetOverviewProps,
 } from "@/components/tryout/set/overview";
+import { useLastValue } from "@/lib/data/kept";
 
 type SetState = TryoutSetInitialState | null;
 
@@ -126,6 +127,8 @@ function LiveTryoutSetPage({
       : "skip"
   );
 
+  const live = useLastValue(liveState);
+
   if (
     terminalState === undefined &&
     QueryResult.isSuccess(liveState) &&
@@ -134,10 +137,9 @@ function LiveTryoutSetPage({
     setTerminalState(liveState.value);
   }
 
-  let state: SetState = binding.initialState;
-  if (QueryResult.isSuccess(liveState)) {
-    state = liveState.value;
-  }
+  // A paused subscription, as during an auth reload, keeps the last live answer; the page's own state shows
+  // only before the first one, so the timer and the answers never fall back to it.
+  let state: SetState = Option.getOrElse(live, () => binding.initialState);
   if (terminalState !== undefined) {
     state = terminalState;
   }

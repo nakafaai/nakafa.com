@@ -214,7 +214,7 @@ export function useLearnerSet(input: {
   );
   const shown = useShownAttempt(
     projected,
-    QueryResult.isLoading(read) && !read.skipped
+    QueryResult.isLoading(read) && !gate.settledSignedOut
   );
 
   if (QueryResult.isFailure(read)) {
@@ -276,7 +276,7 @@ export function useLearnerSection(input: {
   );
   const shown = useShownAttempt(
     projected,
-    QueryResult.isLoading(read) && !read.skipped
+    QueryResult.isLoading(read) && !gate.settledSignedOut
   );
 
   if (QueryResult.isFailure(read)) {
@@ -290,9 +290,11 @@ export function useLearnerSection(input: {
 }
 
 /**
- * The attempt a page shows: its read's own, or, while the read of the next attempt the URL names loads,
- * the one it showed last. Moving between two attempts of a page, as the history does, keeps the page in
- * place until the next attempt arrives, as a navigation keeps the page it leaves.
+ * The attempt a page shows: its read's own, or the one it showed last while its read waits, either for the
+ * next attempt the URL names or for the session through an auth reload. Moving between two attempts of a
+ * page, as the history does, keeps the page in place until the next attempt arrives, as a navigation keeps
+ * the page it leaves, and a running attempt stays on screen while Convex confirms the session again. A
+ * learner who signed out sees nothing of it.
  */
 function useShownAttempt<Value>(
   projected: Value | undefined,
