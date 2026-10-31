@@ -6,8 +6,8 @@ import { Option, Schema } from "effect";
 import {
   type Cohort,
   draftText,
+  editCohort,
   insertCohort,
-  setCohortName,
   setCohortStatus,
 } from "@/components/tenant/settings/state";
 
@@ -54,14 +54,15 @@ export const createCohortChange: OptimisticUpdate<
   );
 };
 
-/** Shows a cohort under its new name at once, in every loaded list of cohorts. */
-export const renameCohortChange: OptimisticUpdate<
-  typeof tenancy.cohorts.rename
-> = (localStore, { cohortId, name }) => {
+/** Shows a cohort under its new name and school year at once, in its place in every loaded list of cohorts. */
+export const editCohortChange: OptimisticUpdate<typeof tenancy.cohorts.edit> = (
+  localStore,
+  { cohortId, grade, name }
+) => {
   changeCohortLists(
     localStore,
     () => true,
-    (cohorts) => setCohortName(cohorts, cohortId, name)
+    (cohorts) => editCohort(cohorts, cohortId, { grade, name })
   );
 };
 

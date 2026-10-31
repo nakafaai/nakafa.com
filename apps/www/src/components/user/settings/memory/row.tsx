@@ -69,10 +69,11 @@ export const MemoryRow = memo(
     );
 
     // The name's button stretches over the row, so every part the hover lights opens the memory; the row's own
-    // buttons sit above it and take their own press.
+    // buttons sit above it and take their own press. A memory still being stored has no press to take, so its
+    // row does not light up.
     return (
       <div
-        className="group/row focus-within:bg-muted/50 hover:bg-muted/50 data-selected:bg-muted/50 relative flex h-full items-center gap-1 pe-4 transition-colors ease-out"
+        className="group/row focus-within:bg-muted/50 has-enabled:hover:bg-muted/50 data-selected:bg-muted/50 relative flex h-full items-center gap-1 pe-4 transition-colors ease-out"
         data-selected={selected ? "" : undefined}
         ref={row}
       >

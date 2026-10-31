@@ -1,6 +1,10 @@
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
+  letterScript,
+  optionLetter,
+} from "@repo/backend/confect/exams/letters";
+import {
   needsKey,
   QUESTION_POINTS_MAX,
   takesRubric,
@@ -36,7 +40,6 @@ import {
   changedOption,
   choiceOf,
   markedOptions,
-  optionLetter,
 } from "@/components/tenant/exams/answer";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
@@ -251,11 +254,16 @@ export function TeacherLayer({
   const editable = live && !locked;
   const options = Option.match(choiceOf(shown.answers), {
     onNone: (): readonly KeyOption[] => [],
-    onSome: (choice) =>
-      Arr.map(choice.options, (option, index) => ({
+    onSome: (choice) => {
+      // The options are named in the script of their labels, as the paper names them.
+      const script = letterScript(
+        Arr.map(choice.options, (option) => option.label)
+      );
+      return Arr.map(choice.options, (option, index) => ({
         id: option.id,
-        letter: optionLetter(index),
-      })),
+        letter: optionLetter(index, script),
+      }));
+    },
   });
   // A table's key is marked in its rows on the canvas, so the panel holds no key part for it.
   const keyed = needsKey(shown.template) && shown.template !== "table";

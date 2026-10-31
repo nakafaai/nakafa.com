@@ -151,6 +151,25 @@
 }
 
 /*
+ * The account row the browser kept draws in the first frame
+ * (`components/sidebar/user/kept.tsx`): the pre-paint script
+ * (`src/lib/identity/prepaint.ts`) names its plan in `data-kept-plan` and its
+ * name in `--kept-account-name`, and the parts of the other plan stay hidden.
+ * Without a kept row the row stays hidden, and so does the sidebar's member
+ * footer while it holds nothing else, as it holds no room until its live row
+ * arrives. Other member-only parts, such as a plan card's link, are not footers.
+ */
+:root:not([data-kept-plan]) [data-kept-account],
+:root:not([data-kept-plan])
+  [data-slot="sidebar-footer"][data-account="member"]:not(
+    :has(li:not([data-kept-account] li))
+  ),
+:root:not([data-kept-plan="free"]) [data-kept-plan-part="free"],
+:root:not([data-kept-plan="pro"]) [data-kept-plan-part="pro"] {
+  display: none;
+}
+
+/*
  * A control pressed before React took the page over keeps the pressed look of
  * the `pressable` utility until React replays the press. The pre-paint script
  * marks it with `data-pressed` (`src/lib/press/prepaint.ts`).

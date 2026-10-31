@@ -10,7 +10,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { getRouteApi } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
@@ -22,12 +22,15 @@ import {
   useSittingStore,
 } from "@/components/exams/sitting/context";
 import {
+  awaySince,
+  awayTime,
   isDisconnected,
   lastActivityOf,
   matchesFilter,
   type SeatFrame,
   seatFrame,
 } from "@/components/exams/sitting/seat";
+import { useSittingClock } from "@/components/exams/sitting/timer";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
@@ -301,19 +304,36 @@ function SeatLink({
       <span className="grid min-w-0 gap-0.5">
         <span className="truncate">{attempt.name}</span>
         <span className="text-muted-foreground truncate text-xs">
-          {t("seat-last-activity", {
-            time:
-              schoolDateTimeText({
-                at: lastActivityOf(
-                  attempt,
-                  QueryResult.isSuccess(answered) ? answered.value : null
-                ),
-                locale,
-                timeZone: value.sitting.timeZone,
-              }) ?? "",
+          {Option.match(awaySince(attempt), {
+            onNone: () =>
+              t("seat-last-activity", {
+                time:
+                  schoolDateTimeText({
+                    at: lastActivityOf(
+                      attempt,
+                      QueryResult.isSuccess(answered) ? answered.value : null
+                    ),
+                    locale,
+                    timeZone: value.sitting.timeZone,
+                  }) ?? "",
+              }),
+            onSome: (since) => <SeatAway since={since} />,
           })}
         </span>
       </span>
     </Link>
   );
+}
+
+/**
+ * How long an away seat's student has been gone, counted each second from the exit or disconnect that no return
+ * followed, in the line where a present student's last activity stands.
+ */
+function SeatAway({ since }: { readonly since: number }) {
+  const t = useTranslations("Exams");
+  const { minutes, seconds } = awayTime(since, useSittingClock());
+
+  return minutes === 0
+    ? t("seat-away-seconds", { seconds })
+    : t("seat-away-minutes", { minutes, seconds });
 }

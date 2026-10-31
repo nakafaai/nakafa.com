@@ -73,7 +73,7 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
               locale: params.locale,
               publicPath: "",
             }),
-            indexable: true,
+            indexable: false,
             jsonLd: [],
             locale: params.locale,
             parts: [],

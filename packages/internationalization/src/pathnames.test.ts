@@ -3,6 +3,7 @@ import {
   publicSegment,
   readCanonicalName,
   readCanonicalSpelling,
+  readSpellingLocale,
 } from "@repo/internationalization/src/pathnames";
 import { Option } from "effect";
 
@@ -50,5 +51,21 @@ describe("canonical segment of a spelling", () => {
   it("refuses a spelling that another locale uses", () => {
     expect(Option.isNone(readCanonicalSpelling("id", "subjects"))).toBe(true);
     expect(Option.isNone(readCanonicalSpelling("en", "materi"))).toBe(true);
+  });
+});
+
+describe("locale of a spelling", () => {
+  it.each([
+    ["kurikulum", "id"],
+    ["materi", "id"],
+    ["subjects", "en"],
+    ["faecher", "de"],
+  ] as const)("reads %s as %s", (spelling, locale) => {
+    expect(readSpellingLocale(spelling)).toStrictEqual(Option.some(locale));
+  });
+
+  it("names no locale for a segment that no locale spells", () => {
+    expect(Option.isNone(readSpellingLocale("articles"))).toBe(true);
+    expect(Option.isNone(readSpellingLocale("materials"))).toBe(true);
   });
 });
