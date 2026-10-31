@@ -20,9 +20,12 @@ const PRELOAD_PRIORITY = /\bfetchPriority="(?<priority>[^"]*)"/u;
 const LOW_PRELOAD_PRIORITY = /\s+fetchPriority="low"/u;
 const BODY_END = "</body>";
 
-/** The address of one built script: the only address a static page preloads or starts. */
+/**
+ * The address of one built script: the only address a static page preloads or starts.
+ * Rolldown names a merged group `shared~entry-hash.js`.
+ */
 const ScriptPath = Schema.String.check(
-  Schema.isPattern(/^\/assets\/[\w.-]+\.js$/u)
+  Schema.isPattern(/^\/assets\/[\w.~-]+\.js$/u)
 );
 
 const ModulePreload = Schema.Struct({
