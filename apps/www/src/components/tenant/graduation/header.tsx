@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +19,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Stream, Tuple } from "effect";
-import { useState, useTransition } from "react";
+import { type ReactNode, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { TableSearch } from "@/components/shared/table/toolbar";
@@ -73,10 +74,13 @@ export function CohortGraduationHeader() {
       ]}
       title={title}
     >
-      <TableSearch placeholder={t("search-students")} />
       {QueryResult.isSuccess(overview) ? (
-        <GraduationActions overview={overview.value} />
-      ) : null}
+        <GraduationActions overview={overview.value}>
+          <TableSearch placeholder={t("search-students")} />
+        </GraduationActions>
+      ) : (
+        <TableSearch placeholder={t("search-students")} />
+      )}
     </SchoolHeader>
   );
 }
@@ -86,7 +90,14 @@ export function CohortGraduationHeader() {
  * and the e-Ijazah readiness export; and Issue letters, the principal's end goal, which issues the
  * SKL of every ready student a batch at a time and says how many it issued.
  */
-function GraduationActions({ overview }: { overview: GraduationOverview }) {
+function GraduationActions({
+  children,
+  overview,
+}: {
+  /** The search, which joins the menu in one group. */
+  children: ReactNode;
+  overview: GraduationOverview;
+}) {
   const t = useTranslations("SchoolGraduation");
   const common = useTranslations("Common");
   const { slug } = useTenant();
@@ -147,35 +158,38 @@ function GraduationActions({ overview }: { overview: GraduationOverview }) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon"
-              variant="outline"
-            >
-              {isExporting ? (
-                <Spinner isLoading />
-              ) : (
-                <HugeIcons icon={MoreHorizontalIcon} />
-              )}
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-56">
-          {canDecide ? (
-            <DropdownMenuItem onClick={() => setIsDeciding(true)}>
-              <HugeIcons icon={CheckmarkBadge01Icon} />
-              {t("decide")}
+      <ButtonGroup>
+        {children}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                aria-label={common("more-actions")}
+                size="icon"
+                variant="outline"
+              >
+                {isExporting ? (
+                  <Spinner isLoading />
+                ) : (
+                  <HugeIcons icon={MoreHorizontalIcon} />
+                )}
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" className="w-56">
+            {canDecide ? (
+              <DropdownMenuItem onClick={() => setIsDeciding(true)}>
+                <HugeIcons icon={CheckmarkBadge01Icon} />
+                {t("decide")}
+              </DropdownMenuItem>
+            ) : null}
+            <DropdownMenuItem disabled={isExporting} onClick={exportReadiness}>
+              <HugeIcons icon={FileExportIcon} />
+              {t("export-readiness")}
             </DropdownMenuItem>
-          ) : null}
-          <DropdownMenuItem disabled={isExporting} onClick={exportReadiness}>
-            <HugeIcons icon={FileExportIcon} />
-            {t("export-readiness")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </ButtonGroup>
       {canIssue ? (
         <Button
           disabled={overview.decision === null || isIssuing}
