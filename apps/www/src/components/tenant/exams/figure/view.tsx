@@ -1,6 +1,6 @@
 import { Cancel01Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
 import { FigureAttrsSchema } from "@nakafa/aksara-contracts/assessment/figure";
-import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
+import { useFigureNode } from "@repo/design-system/components/editor/figure";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Option, Schema } from "effect";
@@ -20,18 +20,9 @@ const LazyFigure = lazy(() =>
  * One figure in a text being written, drawn as the student reads it, with the teacher's controls over its corner
  * while the text takes changes. A figure a teacher cannot make here, as one a file brought in, can only be removed.
  */
-export function ExamFigure({
-  attrs,
-  editor,
-  onRemove,
-  position,
-}: {
-  readonly attrs: unknown;
-  readonly editor: DocumentEditorInstance;
-  readonly onRemove: () => void;
-  readonly position: number | null;
-}) {
+export function ExamFigure() {
   const t = useTranslations("Exams");
+  const { attrs, editor, onRemove, position } = useFigureNode();
   const openFigure = useExamEditing((state) => state.openFigure);
   const editing = Option.flatMap(
     Schema.decodeUnknownOption(FigureAttrsSchema)(attrs),

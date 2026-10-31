@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { documentSchema } from "@repo/editor/document";
 import { FIGURE_ATTRIBUTES } from "@repo/editor/figure";
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 
 /** The attributes of a figure, as the contract stores them. */
 const attrs = {
@@ -25,11 +25,10 @@ const readBack = (element: ReturnType<typeof elementOf>) =>
 
 describe("editor/figure", () => {
   it("writes a figure's attributes into its markup and reads them back", () => {
-    const written = Object.assign(
+    const written = Arr.reduce(
+      Rec.values(FIGURE_ATTRIBUTES),
       {},
-      ...Object.values(FIGURE_ATTRIBUTES).map((attribute) =>
-        attribute.renderHTML(attrs)
-      )
+      (all, attribute) => ({ ...all, ...attribute.renderHTML(attrs) })
     );
 
     expect(written).toMatchObject({ "data-alt": attrs.alt });

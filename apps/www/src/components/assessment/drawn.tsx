@@ -1,5 +1,5 @@
 import type { Node } from "@tiptap/pm/model";
-import { Array as Arr } from "effect";
+import { Array as Arr, MutableList } from "effect";
 import { lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 
@@ -23,13 +23,13 @@ export const figurePlaces = (root: HTMLElement): readonly HTMLElement[] => {
 
 /** The attributes of each figure of a document, in its order. */
 const figuresOf = (doc: Node) => {
-  const figures: Node["attrs"][] = [];
+  const figures = MutableList.make<Node["attrs"]>();
   doc.descendants((node) => {
     if (node.type.name === "figure") {
-      figures.push(node.attrs);
+      MutableList.append(figures, node.attrs);
     }
   });
-  return figures;
+  return MutableList.takeAll(figures);
 };
 
 /**
