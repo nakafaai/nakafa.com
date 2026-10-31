@@ -14,6 +14,7 @@ const SENTENCES = {
     "person.invited": "Du wurdest an eine Schule eingeladen.",
     "exam.starting": "Deine Prüfung beginnt bald.",
     "exam.reminder": "Eine Prüfung deines Kindes steht bevor.",
+    "grade.released": "Eine neue Note wurde freigegeben.",
   },
   en: {
     "announcement.posted": "There is a new announcement in your class.",
@@ -22,6 +23,7 @@ const SENTENCES = {
     "person.invited": "You have been invited to a school.",
     "exam.starting": "Your exam starts soon.",
     "exam.reminder": "Your child has an exam coming up.",
+    "grade.released": "A new grade has been released.",
   },
   id: {
     "announcement.posted": "Ada pengumuman baru di kelasmu.",
@@ -30,6 +32,7 @@ const SENTENCES = {
     "person.invited": "Kamu diundang ke sebuah sekolah.",
     "exam.starting": "Ujianmu segera dimulai.",
     "exam.reminder": "Anakmu akan mengikuti ujian.",
+    "grade.released": "Ada nilai baru yang dirilis.",
   },
 } satisfies Record<
   typeof AppLocaleCodeSchema.Type,

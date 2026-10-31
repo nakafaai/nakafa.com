@@ -8144,7 +8144,8 @@ export declare const api: {
               | "announcement.posted"
               | "assignment.published"
               | "exam.starting"
-              | "exam.reminder";
+              | "exam.reminder"
+              | "grade.released";
             createdAt: number;
             detail: {
               actor: string;
@@ -8162,6 +8163,7 @@ export declare const api: {
               sittingId: Id<"examSittings">;
               student: string | null;
             } | null;
+            grade: { className: string; student: string | null } | null;
             id: Id<"notifications">;
             readAt?: number;
             subject:
@@ -8208,7 +8210,8 @@ export declare const api: {
             | "announcement.posted"
             | "assignment.published"
             | "exam.starting"
-            | "exam.reminder";
+            | "exam.reminder"
+            | "grade.released";
           createdAt: number;
           detail: {
             actor: string;
@@ -8226,6 +8229,7 @@ export declare const api: {
             sittingId: Id<"examSittings">;
             student: string | null;
           } | null;
+          grade: { className: string; student: string | null } | null;
           id: Id<"notifications">;
           readAt?: number;
           subject:

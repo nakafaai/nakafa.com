@@ -9,13 +9,15 @@ function row(
   changeType: string,
   subject: unknown,
   detail: unknown = null,
-  exam: unknown = null
+  exam: unknown = null,
+  grade: unknown = null
 ): ListNotification {
   return Schema.decodeUnknownSync(NotificationView)({
     changeType,
     createdAt: 1,
     detail,
     exam,
+    grade,
     id: "notification-1",
     subject,
     tenant: {
@@ -104,6 +106,26 @@ describe("inbox row destinations", () => {
     expect(href(row("exam.reminder", sitting))).toEqual(
       Option.some("https://harapan.nakafa.com/orang-tua")
     );
+  });
+
+  it("opens the parent home for a child's released grade, and no page for a student's own", () => {
+    const grade = { id: "grade-1", kind: "grade" };
+    expect(
+      href(
+        row("grade.released", grade, null, null, {
+          className: "Fisika X-1",
+          student: "Raka",
+        })
+      )
+    ).toEqual(Option.some("https://harapan.nakafa.com/orang-tua"));
+    expect(
+      pageOf(
+        row("grade.released", grade, null, null, {
+          className: "Fisika X-1",
+          student: null,
+        })
+      )
+    ).toEqual(Option.none());
   });
 
   it("opens no page for a class row without its detail, or for a subject of any other kind", () => {

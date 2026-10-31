@@ -1586,7 +1586,10 @@
     "assignment-published-gone": "Eine Aufgabe, die es nicht mehr gibt.",
     "exam-starting": "{examTitle} öffnet um {opensAt, time, short} in {room}.",
     "exam-reminder": "{student} schreibt {examTitle} am {opensAt, date, long} um {opensAt, time, short} in {room}.",
-    "exam-gone": "Eine Prüfung, die nicht mehr auf ihren Beginn wartet."
+    "exam-gone": "Eine Prüfung, die nicht mehr auf ihren Beginn wartet.",
+    "grade-released": "Deine Note in {className} wurde freigegeben.",
+    "grade-released-child": "Die Note von {student} in {className} wurde freigegeben.",
+    "grade-gone": "Eine Note, die nicht mehr freigegeben ist."
   },
   "Posts": {
     "placeholder": "Was gibt es Neues?",

@@ -70,8 +70,19 @@ const ExamReminderRow = Schema.Struct({
 });
 
 /**
- * One inbox row: one recipient Person and one invitation, mention, announcement, new task, coming sitting, or child's
- * coming sitting, told apart by `changeType`. It holds IDs and codes only, and its text is read from its subject when
+ * The row of a released grade, for its student and for each guardian with a verified link to the student. Its subject
+ * is the grade, and it names the student, so a guardian's row says whose grade it is.
+ */
+const GradeReleasedRow = Schema.Struct({
+  ...rowFields,
+  changeType: Schema.Literal("grade.released"),
+  gradeId: Id("classGrades"),
+  studentPersonId: Id("tenantPeople"),
+});
+
+/**
+ * One inbox row: one recipient Person and one invitation, mention, announcement, new task, coming sitting, child's
+ * coming sitting, or released grade, told apart by `changeType`. It holds IDs and codes only, and its text is read from its subject when
  * it is opened (ADR 0027).
  */
 export const Notification = Schema.Union([
@@ -81,9 +92,10 @@ export const Notification = Schema.Union([
   AssignmentRow,
   ExamStartRow,
   ExamReminderRow,
+  GradeReleasedRow,
 ]);
 
-/** What a row tells: an invitation, a mention, an announcement, a new task, or a coming sitting. */
+/** What a row tells: an invitation, a mention, an announcement, a new task, a coming sitting, or a released grade. */
 const NotificationType = Schema.Literals([
   "person.invited",
   "forum.mentioned",
@@ -91,6 +103,7 @@ const NotificationType = Schema.Literals([
   "assignment.published",
   "exam.starting",
   "exam.reminder",
+  "grade.released",
 ]);
 
 /**
@@ -102,6 +115,15 @@ const ExamDetail = Schema.Struct({
   opensAt: Schema.Finite,
   room: Schema.String,
   sittingId: Id("examSittings"),
+  student: Schema.NullOr(Schema.String),
+});
+
+/**
+ * The grade a grade row tells of, read when the row is read while the grade stays released: its class's name, and,
+ * on a guardian's row, the student's name.
+ */
+const GradeDetail = Schema.Struct({
+  className: Schema.String,
   student: Schema.NullOr(Schema.String),
 });
 
@@ -132,6 +154,7 @@ export const NotificationView = Schema.Struct({
   createdAt: Schema.Finite,
   detail: Schema.NullOr(ClassDetail),
   exam: Schema.NullOr(ExamDetail),
+  grade: Schema.NullOr(GradeDetail),
   id: Id("notifications"),
   readAt: Schema.optionalKey(Schema.Finite),
   subject: SubjectView,
@@ -149,15 +172,18 @@ export const notificationView = (
   {
     detail,
     exam,
+    grade,
   }: {
     readonly detail: typeof ClassDetail.Type | null;
     readonly exam: typeof ExamDetail.Type | null;
+    readonly grade: typeof GradeDetail.Type | null;
   }
 ) => ({
   changeType: row.changeType,
   createdAt: row.createdAt,
   detail,
   exam,
+  grade,
   id: row._id,
   subject: row.subject,
   tenant,
