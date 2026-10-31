@@ -19,7 +19,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { columnAlign } from "@/components/shared/table/align";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
-import { InsightOff } from "@/components/tenant/insight/page";
+import { InsightOff } from "@/components/tenant/insight/off";
 import {
   type InsightStudent,
   percentOf,

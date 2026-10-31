@@ -25,6 +25,7 @@ import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import { InsightOff } from "@/components/tenant/insight/off";
 import { percentOf } from "@/components/tenant/insight/rows";
 import { ClassInsightTable } from "@/components/tenant/insight/table";
 import { QuestionTags } from "@/components/tenant/insight/tags";
@@ -147,17 +148,5 @@ function OwnInsight() {
         </TableBody>
       </Table>
     </TableFrame>
-  );
-}
-
-/** What Insight shows while the school has recorded no impact assessment. */
-export function InsightOff() {
-  const t = useTranslations("SchoolInsight");
-  return (
-    <TableEmpty
-      act="waving"
-      description={t("off-description")}
-      title={t("off")}
-    />
   );
 }
