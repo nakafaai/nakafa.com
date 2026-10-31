@@ -2,6 +2,7 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -15,6 +16,7 @@ import { useEffect, useEffectEvent } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
+import { useLiveSession } from "@/components/providers/live";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import {
   getTryoutPageHref,
@@ -35,6 +37,7 @@ import {
   startAttemptProgram,
   startEntrySectionProgram,
 } from "@/components/tryout/set/program";
+import { hasSignedInHint } from "@/lib/auth/hint";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 type StartAttempt = Pick<
@@ -78,6 +81,7 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
   }
   return (
     <ConvexIsland
+      keepsPress
       fallback={
         <TryoutStartSignInButton
           label={startLabelOf(props.attempt)}
@@ -102,7 +106,12 @@ function startLabelOf(attempt: StartTryoutButtonProps["attempt"]) {
   return attempt ? "restart-cta" : "start-cta";
 }
 
-/** A visitor's start button: it sends the visitor to sign in with the page as the return address. */
+/**
+ * The start button before the page holds its client. It is in the page's HTML, so a press before React
+ * takes the page over counts once React mounts it. A visitor's press goes to sign in with the page as the
+ * return address. A press on a page whose hint says a session may exist shows the loader, and the live
+ * action answers it once it mounts; a session that could not be read sends it to sign in.
+ */
 function TryoutStartSignInButton({
   label,
   request,
@@ -112,20 +121,41 @@ function TryoutStartSignInButton({
 }) {
   const navigate = useNavigate();
   const t = useTranslations("Tryouts");
+  const hasError = useLiveSession((state) => state.hasError);
+  const phase = useTryoutStartPhase();
+  const setPhase = useSetTryoutStartPhase();
   const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
   /** Sends a visitor to sign in before any attempt starts. */
-  function onStart() {
+  function signIn() {
     navigate({
       params: { locale: request.locale },
       search: { redirect: authRedirect },
       to: "/$locale/auth",
     });
   }
+  /** Answers a press: at once for a visitor, and once the session is known for a learner. */
+  function onStart() {
+    if (hasSignedInHint(document.cookie) && !hasError) {
+      setPhase("pressed");
+      return;
+    }
+    signIn();
+  }
+  const press = useEarlyPress<HTMLButtonElement>(onStart);
+  const answerPress = useEffectEvent(() => {
+    setPhase("idle");
+    signIn();
+  });
+  useEffect(() => {
+    if (phase === "pressed" && hasError) {
+      answerPress();
+    }
+  }, [hasError, phase]);
 
   return (
-    <Button onClick={onStart}>
-      <HugeIcons icon={Rocket01Icon} />
+    <Button {...press}>
+      <Spinner icon={Rocket01Icon} isLoading={phase === "pressed"} />
       {t(label)}
     </Button>
   );
@@ -161,7 +191,6 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const t = useTranslations("Tryouts");
   const now = useTryoutClock(false);
   const [dialogOpen, dialog] = useDisclosure(false);
-  const [pressed, press] = useDisclosure(false);
   const activeAttempt = attempt?.status === "in-progress";
   const finishedAttempt = Boolean(attempt && !activeAttempt);
   const directEntry = Boolean(request.entrySectionKey);
@@ -185,7 +214,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     isAuthenticated && !activeAttempt && !QueryResult.isSuccess(access);
   const attemptLoading = isAuthenticated && attempt === undefined;
   const resolvingAccess = isLoading || accessLoading || attemptLoading;
-  const started = phase !== "idle";
+  const pressed = phase === "pressed";
+  const started = phase === "starting" || phase === "opening";
   const dialogKind = QueryResult.isSuccess(access)
     ? access.value.kind
     : "free-attempt";
@@ -198,10 +228,12 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       return;
     }
     if (resolvingAccess) {
-      press.open();
+      setPhase("pressed");
       return;
     }
-    press.close();
+    if (pressed) {
+      setPhase("idle");
+    }
     if (!isAuthenticated) {
       navigate({
         params: { locale: request.locale },
