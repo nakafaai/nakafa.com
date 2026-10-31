@@ -6,12 +6,14 @@ import { tenant, unit } from "@repo/backend/confect/tenancy/kinds";
 const examEditors: (typeof RuleRole.Type)[] = ["admin", "teacher"];
 
 /**
- * The school roles that view the rooms of an exam: the editors, and the Principal and the
- * Deputy, who view every room the sitting view allows them (the roles of `sitting.view`).
+ * The school roles that view the rooms of an exam: the editors, the Proctor, who runs them, and the
+ * Principal and the Deputy, who view every room the sitting view allows them (the roles of
+ * `sitting.view`).
  */
 const roomViewers: (typeof RuleRole.Type)[] = [
   "admin",
   "teacher",
+  "proctor",
   "principal",
   "deputy",
 ];

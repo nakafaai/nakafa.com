@@ -164,8 +164,10 @@ describe("exams/sittings dashboard", () => {
         const made = yield* openedSitting(fixture, "PTS");
         const page = yield* dashboardOf(fixture, made.id);
         expect(page.token).toBe(made.token);
-        expect(page.can).toHaveLength(2);
+        // The teacher who schedules the exam also moves and cancels its rooms.
+        expect(page.can).toHaveLength(3);
         expect(page.can).toContain("sitting.proctor");
+        expect(page.can).toContain("sitting.schedule");
         expect(page.can).toContain("sitting.view");
       })
   );

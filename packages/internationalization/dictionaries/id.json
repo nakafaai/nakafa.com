@@ -967,7 +967,7 @@
       "staff": "Melihat rencana, orang, dan kenaikan kelas sekolah.",
       "student": "Belajar di sekolah dan mengerjakan ujiannya sendiri.",
       "guardian": "Mengikuti siswa yang terhubung dengannya dan mencatat persetujuan untuk siswa tersebut.",
-      "proctor": "Mengawasi sesi ujian sekolah.",
+      "proctor": "Menjalankan ruang ujian sekolah: token, kunci, tambahan waktu, dan penutupan.",
       "auditor": "Melihat catatan dan jejak audit sekolah tanpa mengubahnya.",
       "integration": "Membaca data sekolah melalui aksi yang dimiliki kliennya."
     },
@@ -1906,7 +1906,6 @@
     "incorrect": "Salah",
     "reset": "Ulangi",
     "explanation": "Pembahasan",
-    "number-count": "Nomor {count}",
     "prompt": "Soal",
     "reading": "Bacaan"
   },
@@ -1916,6 +1915,7 @@
     "controls": "Kontrol soal",
     "previous-question": "Soal sebelumnya",
     "next-question": "Soal berikutnya",
+    "question": "Soal {number}",
     "mode": "Tampilan",
     "mode-list": "Daftar",
     "mode-single": "Satu soal",
