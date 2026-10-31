@@ -146,6 +146,7 @@ describe("access/catalog", () => {
         [
           "tenant.provisioned",
           "tenant.founded",
+          "tenant.setup.finished",
           "tenant.locale.set",
           "tenant.logo.removed",
           "tenant.logo.set",

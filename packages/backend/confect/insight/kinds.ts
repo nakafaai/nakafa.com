@@ -24,6 +24,7 @@ const classInsight = Kind.extend(classKind, {
     Schema.Struct({ type: Schema.Literal("insight.narrative.shared") }),
     Schema.Struct({ type: Schema.Literal("insight.narrative.withdrawn") }),
   ],
+  published: [],
 });
 
 export const insight = {
