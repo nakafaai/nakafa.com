@@ -1,6 +1,7 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import {
   LatePolicy,
+  TaskCategory,
   TaskPoints,
   TaskTargets,
   TaskText,
@@ -18,6 +19,7 @@ import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
  * browser's date and time field holds it, the points as the number field holds them, and the late policy.
  */
 export const TaskDraft = Schema.Struct({
+  category: Schema.String,
   deadline: Schema.String,
   latePolicy: LatePolicy,
   points: Schema.NullOr(Schema.Finite),
@@ -28,6 +30,7 @@ export const TaskDraft = Schema.Struct({
 
 /** The form of a new task: nothing written yet, worth 100 points, and late work accepted. */
 export const EMPTY_DRAFT: typeof TaskDraft.Type = {
+  category: "",
   deadline: "",
   latePolicy: "accept",
   points: 100,
@@ -38,6 +41,7 @@ export const EMPTY_DRAFT: typeof TaskDraft.Type = {
 
 /** The form of a task as it stands, its deadline in the browser's own time. */
 export const draftOf = (task: ClassTask): typeof TaskDraft.Type => ({
+  category: task.category ?? "",
   deadline: localDeadline(task.deadline),
   latePolicy: task.latePolicy,
   points: task.points,
@@ -46,6 +50,14 @@ export const draftOf = (task: ClassTask): typeof TaskDraft.Type => ({
   title: task.title,
 });
 
+/** The category a field holds once trimmed: none for an empty field, and a value the server accepts. */
+const categoryOf = (category: string) => {
+  const trimmed = Str.trim(category);
+  return trimmed === ""
+    ? Option.some(null)
+    : Option.liftPredicate(trimmed, Schema.is(TaskCategory));
+};
+
 /**
  * The task a form names once every field holds what the server accepts: the trimmed title and text, the instant of
  * the deadline, the points, and the late policy. None while any field does not.
@@ -53,6 +65,7 @@ export const draftOf = (task: ClassTask): typeof TaskDraft.Type => ({
 export const checkedDraft = (draft: typeof TaskDraft.Type) =>
   Option.map(
     Option.all({
+      category: categoryOf(draft.category),
       deadline: deadlineOf(draft.deadline),
       points: Option.filter(
         Option.fromNullOr(draft.points),

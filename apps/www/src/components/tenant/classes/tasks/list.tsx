@@ -1,7 +1,13 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   Award02Icon,
+  Book02Icon,
+  Bookmark01Icon,
   Calendar03Icon,
+  Flag01Icon,
+  Folder01Icon,
+  Note01Icon,
+  Tag01Icon,
   Task01Icon,
   TaskDone01Icon,
   TimeQuarterPassIcon,
@@ -14,15 +20,15 @@ import {
 } from "@repo/backend/confect/classroom/tasks/task";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, DateTime, Option, Schema } from "effect";
+import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnChoice } from "@/components/shared/table/column";
+import { ColumnChoice, ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
-import { chosenOne } from "@/components/shared/table/filter";
+import { chosenOne, namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
@@ -43,6 +49,16 @@ const TASK_PAGE_SIZE = 20;
 
 /** The columns of the task table. */
 const taskColumns = createColumnHelper<typeof dataTableFeatures, ClassTask>();
+
+/** The icons of the categories in the category filter, each a kind of file or mark. */
+const CATEGORY_ICONS = [
+  Tag01Icon,
+  Bookmark01Icon,
+  Folder01Icon,
+  Flag01Icon,
+  Note01Icon,
+  Book02Icon,
+];
 
 /**
  * The look of each standing of a task in its column's filter: a task still open, work handed in, work that came
@@ -80,7 +96,6 @@ export function TaskList() {
 function TaskListBody() {
   const t = useTranslations("Classroom");
   const { can, classId, slug } = useClassScope();
-  const columns = useTaskColumns();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const chosen = useTableFilters((state) => state.chosen);
   const standing = Option.getOrElse(
@@ -97,6 +112,13 @@ function TaskListBody() {
   const kept = useKeptRows(
     PaginatedQueryResult.isLoadingFirstPage(pagination),
     pagination.results
+  );
+  const columns = useTaskColumns(
+    Arr.dedupe(
+      Arr.filterMap(pagination.results, (task) =>
+        task.category === null ? Result.failVoid : Result.succeed(task.category)
+      )
+    )
   );
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -145,10 +167,10 @@ function TaskListBody() {
 }
 
 /**
- * The columns of the task table: each task's title, which opens it, its deadline, and where it
+ * The columns of the task table: each task's title, which opens it, the category it is filed under, its deadline, and where it
  * stands, the viewer's own work for a student and the number of work handed in for a teacher.
  */
-function useTaskColumns() {
+function useTaskColumns(categories: readonly string[]) {
   const t = useTranslations("Classroom");
   const format = useFormatter();
   const { can } = useClassScope();
@@ -161,6 +183,23 @@ function useTaskColumns() {
       filterFn: "includesString",
       header: t("task-title"),
       id: "title",
+    }),
+    taskColumns.accessor((task) => task.category ?? "", {
+      cell: (info) => (
+        <span className="text-muted-foreground" dir="auto">
+          {info.getValue()}
+        </span>
+      ),
+      enableSorting: false,
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="category"
+          options={namedOptions(categories, CATEGORY_ICONS)}
+          title={t("task-category")}
+        />
+      ),
+      id: "category",
     }),
     taskColumns.accessor((task) => task.deadline, {
       cell: (info) => (

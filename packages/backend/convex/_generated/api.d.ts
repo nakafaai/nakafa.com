@@ -1516,6 +1516,7 @@ export declare const api: {
         "mutation",
         "public",
         {
+          category: string | null;
           classId: Id<"classes">;
           deadline: number;
           latePolicy: "accept" | "close";
@@ -1527,6 +1528,7 @@ export declare const api: {
           title: string;
         },
         {
+          category: string | null;
           deadline: number;
           handedIn: number;
           id: Id<"classroomTasks">;
@@ -1549,6 +1551,7 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string; task: string },
         {
+          category: string | null;
           deadline: number;
           handedIn: number;
           id: Id<"classroomTasks">;
@@ -1586,6 +1589,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
+            category: string | null;
             deadline: number;
             handedIn: number;
             id: Id<"classroomTasks">;
@@ -1610,6 +1614,7 @@ export declare const api: {
         "mutation",
         "public",
         {
+          category: string | null;
           classId: Id<"classes">;
           clientKey: string;
           deadline: number;
@@ -1621,6 +1626,7 @@ export declare const api: {
           title: string;
         },
         {
+          category: string | null;
           deadline: number;
           handedIn: number;
           id: Id<"classroomTasks">;
@@ -1693,6 +1699,7 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string; task: string; text: string },
         {
+          category: string | null;
           deadline: number;
           handedIn: number;
           id: Id<"classroomTasks">;

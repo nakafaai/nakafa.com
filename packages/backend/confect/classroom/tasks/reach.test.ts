@@ -38,6 +38,7 @@ const taught = Effect.gen(function* () {
   const draft = {
     ...scope,
     deadline: TENANCY_NOW + 86_400_000,
+    category: null,
     latePolicy: "accept" as const,
     points: 100,
     text: "Kerjakan soal remedial.",
@@ -84,6 +85,7 @@ describe("classroom/tasks reach", () => {
         yield* teacher.mutation(edit, {
           ...scope,
           deadline: draft.deadline,
+          category: null,
           latePolicy: "accept",
           points: 100,
           targets: [fixture.people.teacher.personId],
@@ -113,6 +115,7 @@ describe("classroom/tasks reach", () => {
         yield* teacher.mutation(edit, {
           ...scope,
           deadline: draft.deadline,
+          category: null,
           latePolicy: "accept",
           points: 100,
           targets: null,
@@ -166,6 +169,39 @@ describe("classroom/tasks reach", () => {
       });
       yield* settle;
       expect(yield* fixture.run(noticesOf(student))).toBe(before + 1);
+    })
+  );
+
+  it.effect("files a task under a category, and takes it out again", () =>
+    Effect.gen(function* () {
+      const { draft, scope, teacher } = yield* taught;
+      const filed = yield* teacher.mutation(publish, {
+        ...draft,
+        category: "Remedial",
+        clientKey: "filed-task",
+        targets: null,
+      });
+      expect(filed.category).toBe("Remedial");
+      const edited = {
+        ...scope,
+        deadline: draft.deadline,
+        latePolicy: "accept" as const,
+        points: 100,
+        targets: null,
+        task: filed.slug,
+        text: draft.text,
+        title: draft.title,
+      };
+      const moved = yield* teacher.mutation(edit, {
+        ...edited,
+        category: "Latihan",
+      });
+      expect(moved.category).toBe("Latihan");
+      const cleared = yield* teacher.mutation(edit, {
+        ...edited,
+        category: null,
+      });
+      expect(cleared.category).toBeNull();
     })
   );
 });
