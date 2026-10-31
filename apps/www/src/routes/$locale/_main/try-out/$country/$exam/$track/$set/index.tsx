@@ -1,9 +1,15 @@
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Schema } from "effect";
+import { ConvexIsland } from "@/components/providers/island";
+import { usePrepaintRelease } from "@/components/sidebar/lock";
+import { AppNotFound } from "@/components/state/app";
 import { TryoutAttemptReview } from "@/components/tryout/review/screen";
 import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
-import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
+import {
+  useAttemptSignIn,
+  useLearnerSet,
+} from "@/components/tryout/route/live";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
@@ -11,65 +17,120 @@ import { readStaticData } from "@/lib/static/data";
 
 /**
  * One set of a track. Its catalog view is the same for every visitor, so the build
- * prerenders it and keeps its answer. The learner's own attempt on it is personal:
- * a signed-in learner and a URL bound to an attempt read their own answer from the
- * server, which renders their page for their request (`isLearnerPage`), and a URL
- * bound to an attempt answers for that attempt alone.
+ * prerenders it and keeps its answer, and every URL of the set reads that answer:
+ * the Worker renders nothing personal. A signed-in learner's attempt, and the one a
+ * URL names with `?attemptId`, are read in the browser once the session is known
+ * (`useLearnerSet`), and a URL bound to an attempt answers for that attempt alone.
  */
+/** The read of a page without a Convex client: a visitor's. */
+const VISITOR = { kind: "visitor" } as const;
+
 export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$track/$set/"
 )({
   validateSearch: Schema.toStandardSchemaV1(TryoutAttemptSearch),
-  loaderDeps: ({ search }) => search,
-  loader: async ({ context, deps, params }) => {
-    const input = {
+  loader: async ({ params }) => {
+    const route = await readStaticData(readTryoutSetFn, {
       country: params.country,
       exam: params.exam,
       locale: params.locale,
-      search: deps,
       set: params.set,
       track: params.track,
-    };
-    const route = await (context.signedIn || deps.attemptId !== undefined
-      ? readTryoutSetFn({ data: input })
-      : readStaticData(readTryoutSetFn, input));
+    });
     if (route.kind === "notFound") {
       throw notFound();
     }
-    if (route.kind === "signIn") {
-      // The sign-in address carries the attempt's return path, so it stays an href.
-      throw redirect({ href: route.href, statusCode: 307 });
-    }
     return route;
   },
-  head: ({ loaderData, params }) =>
+  head: ({ loaderData, match, params }) =>
     loaderData === undefined
       ? {}
       : createTryoutHead({
           canonicalPath: loaderData.head.canonicalPath,
           description: loaderData.head.description,
           image: loaderData.head.image,
-          indexable: loaderData.head.indexable,
+          // A URL bound to one attempt is personal, and one that names a view repeats the page,
+          // so only the bare address is indexed.
+          indexable:
+            loaderData.head.indexable &&
+            match.search.attemptId === undefined &&
+            match.search.view === undefined,
           jsonLd: [],
           locale: params.locale,
           title: loaderData.head.title,
         }),
-  headers: readTryoutPersonalHeaders,
   component: TryoutSetPage,
 });
 
 function TryoutSetPage() {
-  const route = Route.useLoaderData();
   return (
-    <TryoutClockProvider initialNow={route.now}>
+    // A visitor's page holds no Convex client, so it draws the set as every visitor sees it, which the
+    // build prerenders; a learner's page reads their attempt once it holds the client.
+    <ConvexIsland fallback={<TryoutSetVisitor />}>
+      <TryoutSetLearner />
+    </ConvexIsland>
+  );
+}
+
+/** The set as every visitor sees it. An address bound to an attempt goes to sign-in. */
+function TryoutSetVisitor() {
+  const route = Route.useLoaderData();
+  const search = Route.useSearch();
+  useAttemptSignIn({ publicPath: route.page.set.publicPath, search });
+  return <TryoutSetView learner={VISITOR} />;
+}
+
+/** A learner's set: their attempt through it, read in the browser (`useLearnerSet`). */
+function TryoutSetLearner() {
+  const route = Route.useLoaderData();
+  const search = Route.useSearch();
+  const signedIn = Route.useRouteContext({
+    select: (context) => context.signedIn,
+  });
+  const learner = useLearnerSet({ page: route.page, search, signedIn });
+  return <TryoutSetView learner={learner} />;
+}
+
+/** Draws the set from the learner read: the attempt's page, or the catalog's while there is none. */
+function TryoutSetView({
+  learner,
+}: {
+  readonly learner: ReturnType<typeof useLearnerSet>;
+}) {
+  const route = Route.useLoaderData();
+  // A read that answered decides the shell's lock, so the first frame's lock can go.
+  usePrepaintRelease(
+    learner.kind === "attempt" ||
+      learner.kind === "none" ||
+      learner.kind === "notFound"
+  );
+  if (learner.kind === "notFound") {
+    return <AppNotFound locale={route.route.locale} />;
+  }
+  const view =
+    learner.kind === "attempt"
+      ? learner.value
+      : {
+          binding: null,
+          content: null,
+          page: route.page,
+          restartTarget: route.restartTarget,
+        };
+  return (
+    // The clock starts again with the attempt, so its first render reads the browser's time.
+    <TryoutClockProvider
+      initialNow={route.now}
+      key={view.binding?.attemptId ?? "catalog"}
+    >
       <TryoutSetPageClient
-        binding={route.binding}
-        content={route.content}
-        page={route.page}
-        restartTarget={route.restartTarget}
+        binding={view.binding}
+        content={view.content}
+        page={view.page}
+        pending={learner.kind === "pending"}
+        restartTarget={view.restartTarget}
         route={route.route}
       >
-        <TryoutAttemptReview binding={route.binding} />
+        <TryoutAttemptReview binding={view.binding} />
       </TryoutSetPageClient>
     </TryoutClockProvider>
   );

@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { GuardianLink } from "@repo/backend/confect/guardians/access";
 import {
   guardianLinkAccess,
@@ -15,15 +14,11 @@ import {
   isLive,
   linksOfGuardian,
 } from "@repo/backend/confect/guardians/link";
-import {
-  type ChildGrade,
-  NISN_TRIES,
-} from "@repo/backend/confect/guardians/schema";
+import { NISN_TRIES } from "@repo/backend/confect/guardians/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { gradeView } from "@repo/backend/confect/records/grade";
-import { schemeOf } from "@repo/backend/confect/records/version";
+import { releasedGradesOf } from "@repo/backend/confect/records/grades/released";
 import {
   blindNisn,
   rosterEntryOf,
@@ -40,9 +35,6 @@ import {
   Schema,
   String as Str,
 } from "effect";
-
-/** The most released grades of one child a read returns: a child's grades of a few years. */
-const GRADE_LIMIT = 200;
 
 /**
  * The children whose links name the caller, each as the guardian sees it. A link
@@ -146,32 +138,7 @@ const grades = FunctionImpl.make(
   "grades",
   Effect.fn("guardians.family.grades")(function* () {
     const link = yield* GuardianLink;
-    const reader = yield* DatabaseReader;
-    const rows = yield* reader
-      .table("classGrades")
-      .index("by_personId_and_periodId", (query) =>
-        query.eq("personId", link.studentPersonId)
-      )
-      .take(GRADE_LIMIT)
-      .pipe(Effect.orDie);
-    const released = Arr.filter(rows, (row) => row.state === "released");
-    return yield* Effect.forEach(released, (row) =>
-      Effect.gen(function* () {
-        const cls = yield* reader
-          .table("classes")
-          .get(row.classId)
-          .pipe(Effect.orDie);
-        const view = gradeView(row, yield* schemeOf(row.schemeId));
-        const grade: typeof ChildGrade.Type = {
-          ...(view.band === undefined ? {} : { band: view.band }),
-          className: cls.name,
-          id: view.id,
-          kktp: view.kktp,
-          value: view.value,
-        };
-        return grade;
-      })
-    );
+    return yield* releasedGradesOf(link.studentPersonId);
   })
 );
 

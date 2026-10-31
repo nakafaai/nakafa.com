@@ -1115,6 +1115,36 @@ export declare const api: {
       >;
     };
     tasks: {
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          deadline: number;
+          latePolicy: "accept" | "close";
+          points: number;
+          slug: string;
+          task: string;
+          text: string;
+          title: string;
+        },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            text: string;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
       get: FunctionReference<
         "query",
         "public",
@@ -1187,32 +1217,6 @@ export declare const api: {
           slug: string;
           text: string;
           title: string;
-        },
-        {
-          deadline: number;
-          handedIn: number;
-          id: Id<"classroomTasks">;
-          latePolicy: "accept" | "close";
-          mine: {
-            late: boolean;
-            score: number | null;
-            text: string;
-            updatedAt: number;
-          } | null;
-          points: number;
-          slug: string;
-          text: string;
-          title: string;
-        }
-      >;
-      reschedule: FunctionReference<
-        "mutation",
-        "public",
-        {
-          classId: Id<"classes">;
-          deadline: number;
-          slug: string;
-          task: string;
         },
         {
           deadline: number;
@@ -6831,6 +6835,7 @@ export declare const api: {
           className: string;
           id: Id<"classGrades">;
           kktp: "reached" | "notReached";
+          period: string;
           value: number;
         }>
       >;
@@ -7333,6 +7338,7 @@ export declare const api: {
                   task: Id<"classroomTasks">;
                   type: "assignment.deadlineChanged";
                 }
+              | { task: Id<"classroomTasks">; type: "assignment.edited" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { grade: number; type: "cohort.grade.set" }
@@ -8797,6 +8803,19 @@ export declare const api: {
           value: number;
         }>
       >;
+      own: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          band?: string;
+          className: string;
+          id: Id<"classGrades">;
+          kktp: "reached" | "notReached";
+          period: string;
+          value: number;
+        }>
+      >;
       release: FunctionReference<
         "mutation",
         "public",
@@ -8902,6 +8921,19 @@ export declare const api: {
             value: number;
           }>;
         }
+      >;
+      own: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          approvedAt: number;
+          cohort: string;
+          file: string;
+          hash: string;
+          id: Id<"reportCards">;
+          period: string;
+        }>
       >;
       reopen: FunctionReference<
         "mutation",

@@ -62,6 +62,28 @@ export function getActiveTryoutAttempt<Attempt extends TryoutAttemptClock>(
   return attempt;
 }
 
+/**
+ * The attempt a page's action reads. While the learner read is pending there is none yet, so the
+ * action shows its loader and takes no press; an attempt whose time ran out here reads as none, so
+ * the action starts again; any other attempt is the page's own.
+ */
+export function selectActionAttempt<Attempt extends TryoutAttemptClock>(input: {
+  readonly activeAttempt: Attempt | null;
+  readonly currentAttempt: Attempt | null;
+  readonly pending: boolean;
+}): Attempt | null | undefined {
+  if (input.pending) {
+    return undefined;
+  }
+  if (
+    input.currentAttempt?.status === "in-progress" &&
+    input.activeAttempt === null
+  ) {
+    return null;
+  }
+  return input.currentAttempt;
+}
+
 /** Keeps an expired runtime visible until Convex publishes its terminal state. */
 export function getTryoutRuntimeState<Runtime extends TryoutRuntimeClock>({
   activeAttempt,

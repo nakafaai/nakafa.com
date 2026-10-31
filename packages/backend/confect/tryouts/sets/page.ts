@@ -5,6 +5,7 @@ import {
 import tryoutSetProgress from "@repo/backend/confect/_generated/tables/tryoutSetProgress";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
+import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/query";
 import type { ListArgs } from "@repo/backend/confect/tryouts/sets/spec";
 import {
   PublishedSetPaginationError,
@@ -17,9 +18,6 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const SIGNED_CURSOR_PREFIX = "signed:";
-
-/** The most sets one page of a track's list holds, whatever the client asks for; the web's list grows to it. */
-export const TRACK_SET_PAGE_LIMIT = 1000;
 
 const publishedSetRowSchema = Schema.Struct({
   durationSeconds: Schema.Finite,

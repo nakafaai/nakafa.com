@@ -7,6 +7,7 @@ import {
   changeAnswersIn,
   decodeGiven,
   decodeSent,
+  encodeAuthError,
   encodeRefusal,
   failQueriesIn,
   isMutation,
@@ -441,5 +442,16 @@ describe("the frames of the realtime connection", () => {
       success: false,
       type: "ActionResponse",
     });
+  });
+
+  it("writes the refusal of a connection's credentials as Convex sends it once a token expires", () => {
+    const refusal = {
+      authUpdateAttempted: true,
+      baseVersion: 3,
+      error: "Token expired",
+      type: "AuthError",
+    } as const;
+
+    expect(encodeAuthError(refusal)).toBe(encodeJsonText(refusal));
   });
 });

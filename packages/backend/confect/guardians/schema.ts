@@ -141,15 +141,3 @@ export const RedeemAnswer = Schema.Union([
 
 /** The NISN checks a link allows before only staff may check it. */
 export const NISN_TRIES = 3;
-
-/**
- * One released grade of a child as the guardian reads it: the class's name and
- * the grade's value, band, and KKTP status. Drafts never reach a guardian.
- */
-export const ChildGrade = Schema.Struct({
-  band: Schema.optionalKey(Schema.String),
-  className: Schema.String,
-  id: Id("classGrades"),
-  kktp: Schema.Literals(["reached", "notReached"]),
-  value: Schema.Finite,
-});

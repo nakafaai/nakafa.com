@@ -13,7 +13,7 @@ import { Option, Schema } from "effect";
 export const GradeState = Schema.Literals(["draft", "released"]);
 
 /** Whether a grade reaches the KKTP of the scheme that judged it. */
-const KktpStatus = Schema.Literals(["reached", "notReached"]);
+export const KktpStatus = Schema.Literals(["reached", "notReached"]);
 
 /**
  * One student's final grade in one class and period. `classId`, `periodId`, and
@@ -48,6 +48,19 @@ export const GradeView = Schema.Struct({
   personId: Id("tenantPeople"),
   state: GradeState,
   value: GradeValue,
+});
+
+/**
+ * One released grade of a student as the student's own page and their guardian's page show it: the class and the
+ * period it belongs to, the value, and its band and KKTP status by the scheme its entry named.
+ */
+export const ReleasedGrade = Schema.Struct({
+  band: Schema.optionalKey(Schema.String),
+  className: Schema.String,
+  id: Id("classGrades"),
+  kktp: KktpStatus,
+  period: Schema.String,
+  value: Schema.Finite,
 });
 
 /** The wire view of one grade, judged by the scheme that its entry named. */
