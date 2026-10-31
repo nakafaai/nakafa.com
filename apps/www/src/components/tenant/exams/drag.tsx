@@ -6,6 +6,7 @@ import type {
 } from "@/components/tenant/exams/optimistic";
 import {
   dropIndex,
+  edgeScroll,
   type PageBox,
   placeOf,
   siblingShift,
@@ -81,7 +82,8 @@ const clearDrag = (pages: readonly HTMLElement[]) => {
 };
 
 /**
- * Starts a drag of the page whose grip the pointer pressed. The drag ends on release, which saves
+ * Starts a drag of the page whose grip the pointer pressed. Near an end of the canvas the drag scrolls
+ * it, frame by frame, so the page reaches any place of the exam. The drag ends on release, which saves
  * the move when the page changed its place, or on a cancelled pointer or Escape, which keeps the
  * order. Returns the function that cancels the drag, or none when the grip names no question.
  */
@@ -104,15 +106,34 @@ const beginDrag = (
   );
   const boxes = Arr.map(pages, boxOf);
   const step = (boxes[from]?.height ?? 0) + gapOf(root);
-  let offset = 0;
+  const scrolledFrom = root.scrollTop;
+  let pointer = press.clientY;
   let target = from;
 
-  const onMove = (move: PointerEvent) => {
-    offset = (move.clientY - press.clientY) / zoom;
+  /** Lays the pages out for where the pointer stands, with what the canvas has scrolled since the press. */
+  const layOut = () => {
+    const offset =
+      (pointer - press.clientY + root.scrollTop - scrolledFrom) / zoom;
     target = dropIndex(boxes, from, offset);
     showDrag(pages, { from, offset, step, target });
   };
+  const onMove = (move: PointerEvent) => {
+    pointer = move.clientY;
+    layOut();
+  };
+  /** Scrolls the canvas while the pointer stands near one of its ends, each frame until the drag ends. */
+  const followEdge = () => {
+    const { bottom, top } = root.getBoundingClientRect();
+    const scroll = edgeScroll(pointer, top, bottom);
+    if (scroll !== 0) {
+      root.scrollTop += scroll;
+      layOut();
+    }
+    frame = window.requestAnimationFrame(followEdge);
+  };
+  let frame = window.requestAnimationFrame(followEdge);
   const detach = () => {
+    window.cancelAnimationFrame(frame);
     window.removeEventListener("pointermove", onMove);
     window.removeEventListener("pointerup", onRelease);
     window.removeEventListener("pointercancel", cancel);

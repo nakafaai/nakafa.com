@@ -19,6 +19,8 @@ const SelectionState = Schema.Struct({
   /** Whether the chosen question is held, so the scroll that brings it into view does not choose another. */
   pinned: Schema.Boolean,
   selected: Schema.NullOr(Id("examQuestions")),
+  /** The question the teacher just added, whose prompt takes the caret once it opens, or none. */
+  writing: Schema.NullOr(Id("examQuestions")),
 });
 
 /** The actions of one editor's selection. */
@@ -47,6 +49,8 @@ interface SelectionActions {
   readonly startPending: (id: QuestionId) => void;
   /** Releases the held question, so the canvas chooses the page the teacher scrolls to again. */
   readonly unpin: () => void;
+  /** Hands the caret to the prompt of a question once it opens, or takes that request back with none. */
+  readonly write: (id: QuestionId | null) => void;
 }
 
 /** The state of one editor's selection, with its actions, as its store holds it. */
@@ -124,4 +128,6 @@ export const createExamSelection = () =>
     startPending: (id) =>
       set((state) => ({ pending: Arr.append(state.pending, id) })),
     unpin: () => set({ pinned: false }),
+    write: (id) => set({ writing: id }),
+    writing: null,
   }));

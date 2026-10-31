@@ -2165,7 +2165,7 @@
     "image-add": "Tambah gambar",
     "image-add-description": "Gambar tampil di soal setelah ditambahkan.",
     "image-alt": "Teks alternatif",
-    "image-alt-hint": "Yang perlu diketahui siswa yang tidak dapat melihat gambar",
+    "image-alt-hint": "Jelaskan gambar untuk siswa",
     "image-cancel": "Batal",
     "image-delete": "Hapus gambar",
     "image-edit": "Ubah teks alternatif",
@@ -2209,6 +2209,10 @@
     "image-refused-type": {
       "title": "Gambar tidak ditambahkan.",
       "description": "Pilih gambar PNG, JPEG, WebP, atau GIF."
+    },
+    "paste-refused": {
+      "title": "Teks tidak ditambahkan.",
+      "description": "Teks ini terlalu panjang untuk satu soal."
     },
     "school-logo-size": {
       "title": "Logo tidak disimpan.",

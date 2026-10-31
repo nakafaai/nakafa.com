@@ -20,6 +20,7 @@ import {
   optionEditOf,
 } from "@/components/tenant/exams/answer";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
+import { refusePaste } from "@/components/tenant/exams/picture";
 import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
 import { ControlRoom } from "@/components/tenant/exams/sheet";
 import { assessmentSchema } from "@/lib/editor/assessment";
@@ -37,7 +38,7 @@ const OPTION_EXTENSIONS = [
   ...RICH_EXTENSIONS,
   articleProse.configure({ paragraphs: false }),
   depthGuard(MAX_DOCUMENT_DEPTH),
-  documentSizeGuard(MAX_DOCUMENT_BYTES),
+  documentSizeGuard(MAX_DOCUMENT_BYTES, refusePaste),
 ];
 
 /** The grid of one option row: the text, then the room of its control unless the part is never removed. */
@@ -189,6 +190,7 @@ export function OptionRow({
       })}
     >
       <ExamDocumentWiringProvider
+        content={Node.fromJSON(assessmentSchema, label).toJSON()}
         extensions={OPTION_EXTENSIONS}
         onChange={(transaction) => {
           const current = editor.current;
@@ -206,10 +208,6 @@ export function OptionRow({
         }}
         onEditor={(next) => {
           editor.current = next;
-          next.commands.setContent(
-            Node.fromJSON(assessmentSchema, label).toJSON(),
-            { emitUpdate: false }
-          );
           next.setEditable(!locked, false);
         }}
       >

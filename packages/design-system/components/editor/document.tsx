@@ -5,12 +5,12 @@ import {
   editorDocument,
   editorPlaceholder,
 } from "@repo/design-system/components/editor/frame";
-import type { AnyExtension, Editor } from "@tiptap/core";
+import type { AnyExtension, Editor, JSONContent } from "@tiptap/core";
 import { Placeholder } from "@tiptap/extensions";
 import type { Transaction } from "@tiptap/pm/state";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import { cn } from "cn";
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 /** The focus callback of an editor that has none, so the editor always calls one. */
 const noFocus = () => undefined;
@@ -24,6 +24,11 @@ interface DocumentEditorProps {
    * `useCurrentEditor`, and they stay out of the document.
    */
   children?: ReactNode;
+  /**
+   * The document the editor opens with, drawn from its first frame, for a caller that holds it as the editor
+   * mounts and renders only in the browser. A caller without it fills the editor it receives.
+   */
+  content?: JSONContent;
   /** The extensions that make the document the caller holds, built once by the caller. */
   extensions: readonly AnyExtension[];
   /** The accessible name of the editing surface. */
@@ -52,6 +57,7 @@ interface DocumentEditorProps {
  */
 export function DocumentEditor({
   children,
+  content,
   extensions,
   label,
   onChange,
@@ -63,7 +69,10 @@ export function DocumentEditor({
   const change = useCallbackRef(onChange);
   const ready = useCallbackRef(onEditor);
   const focused = useCallbackRef(onFocus ?? noFocus);
+  // The editor opens with this document, and any later one reaches it through the caller.
+  const [opening] = useState(content);
   const editor = useEditor({
+    content: opening,
     editable: false,
     editorProps: {
       attributes: {
@@ -80,7 +89,7 @@ export function DocumentEditor({
       Placeholder.configure({ placeholder }),
       editableState,
     ],
-    immediatelyRender: false,
+    immediatelyRender: opening !== undefined,
     onCreate: ({ editor: current }) => ready(current),
     onFocus: ({ editor: current }) => focused(current),
     onUpdate: ({ transaction }) => change(transaction),

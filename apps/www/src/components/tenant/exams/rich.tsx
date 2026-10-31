@@ -35,6 +35,8 @@ type ExamExtensions = ComponentProps<typeof DocumentEditor>["extensions"];
  * document it composes.
  */
 interface ExamDocumentWiring {
+  /** The document the text opens with, when the owner holds it as the text mounts. */
+  readonly content?: ComponentProps<typeof DocumentEditor>["content"];
   /** The extensions of this text, built once by the owner, on top of the shared ones. */
   readonly extensions: ExamExtensions;
   /** Called after each transaction of the text, including one another editor brought in. */
@@ -51,12 +53,15 @@ const ExamDocumentWiringContext = createContext<ExamDocumentWiring | null>(
 /** Gives the rich text its owner composes the owner's wiring. */
 export function ExamDocumentWiringProvider({
   children,
+  content,
   extensions,
   onChange,
   onEditor,
 }: ExamDocumentWiring & { readonly children: ReactNode }) {
   return (
-    <ExamDocumentWiringContext value={{ extensions, onChange, onEditor }}>
+    <ExamDocumentWiringContext
+      value={{ content, extensions, onChange, onEditor }}
+    >
       {children}
     </ExamDocumentWiringContext>
   );
@@ -95,7 +100,7 @@ export function ExamDocument({
   placeholder,
   size = "page",
 }: ExamDocumentProps) {
-  const { extensions, onChange, onEditor } = useDocumentWiring();
+  const { content, extensions, onChange, onEditor } = useDocumentWiring();
   const { exam, slug } = useExam();
   const labels = useDocumentLabels();
   const activate = useExamEditing((state) => state.activate);
@@ -152,6 +157,7 @@ export function ExamDocument({
         urls={addresses}
       >
         <DocumentEditor
+          content={content}
           extensions={allExtensions}
           label={label}
           onChange={onChange}

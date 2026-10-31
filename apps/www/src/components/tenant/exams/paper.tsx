@@ -11,6 +11,7 @@ import {
   type QuestionTemplate,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
+import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { statusIconVariants } from "@repo/design-system/lib/status";
@@ -50,6 +51,7 @@ import {
   useExam,
   useExamLocked,
   useExamSelection,
+  useExamSelectionStore,
 } from "@/components/tenant/exams/provider";
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import { activeQuestion } from "@/components/tenant/exams/selection";
@@ -307,6 +309,7 @@ function LivePaper({
   // so the words the teacher typed stay on screen.
   const frozen = isLocked(exam);
   const locked = useExamLocked();
+  const selection = useExamSelectionStore();
   const { displayed, saveAnswers } = editing;
   const choice = Option.getOrNull(choiceOf(displayed.answers));
   // The options are named in the script of their labels: أ, ب, ج for a set written in Arabic.
@@ -347,6 +350,22 @@ function LivePaper({
       <ExamText
         documentId={question.prompt}
         key={`${question.prompt}-${frozen}`}
+        onOpen={(editor: DocumentEditorInstance) => {
+          const { write, writing } = selection.getState();
+          if (writing !== question.id) {
+            return;
+          }
+          write(null);
+          // A teacher who went on to write somewhere else meanwhile keeps the caret there.
+          if (
+            document.activeElement?.closest(
+              "[contenteditable='true'], input, textarea"
+            ) === null
+          ) {
+            editor.commands.focus("end");
+          }
+        }}
+        size="page"
       >
         <ExamDocument
           label={t("question-text", { number })}

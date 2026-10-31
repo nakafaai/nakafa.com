@@ -31,6 +31,34 @@ export const dropIndex = (
     },
   });
 
+/** The band at each end of the canvas, in pixels, where a dragged page scrolls the canvas. */
+const EDGE_BAND = 72;
+
+/** The most a dragged page scrolls the canvas in one frame, in pixels, with the pointer at the canvas's end or past it. */
+const EDGE_SPEED = 24;
+
+/** How deep the pointer stands in an end's band, scaled to the speed of one frame. */
+const edgeSpeed = (depth: number) =>
+  Math.ceil((Math.min(depth, EDGE_BAND) / EDGE_BAND) * EDGE_SPEED);
+
+/**
+ * How far a page dragged with the pointer at `pointer` scrolls a canvas that stands from `top` to `bottom`
+ * this frame: up or down as the pointer enters an end's band, faster the deeper it goes, and not at all
+ * between the bands. So a question moves past the pages the screen shows, however long the exam is.
+ */
+export const edgeScroll = (
+  pointer: number,
+  top: number,
+  bottom: number
+): number => {
+  const above = top + EDGE_BAND - pointer;
+  if (above > 0) {
+    return -edgeSpeed(above);
+  }
+  const below = pointer - (bottom - EDGE_BAND);
+  return below > 0 ? edgeSpeed(below) : 0;
+};
+
 /**
  * How far a page that is not dragged moves while the dragged page takes `target` in place of `from`.
  * The pages between the two places move by `step`, the dragged page's height and the gap after it,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Array as Arr, Data, Deferred, Effect, Fiber, Ref } from "effect";
+import { TestClock } from "effect/testing";
 import {
   emptyLabel,
   type OptionLabel,
@@ -74,13 +75,22 @@ class RevisionStale extends Data.TaggedError("RevisionStale")<{
   readonly current: number;
 }> {}
 
+/** A refusal that no second try changes. */
+class AnswersRefused extends Data.TaggedError("AnswersRefused") {}
+
 /**
  * A fake server of one question. Each save it receives is recorded. A save at a revision the server no
  * longer holds is refused with the server's current revision. With `held`, a save waits at the server
- * until `release` is succeeded, and `arrived` is succeeded when the first save reaches it.
+ * until `release` is succeeded, and `arrived` is succeeded when the first save reaches it. While
+ * `refusing` holds, every save is refused for its contents.
  */
-const serverHolding = (initial: QuestionDraft, held: boolean) =>
+const serverHolding = (
+  initial: QuestionDraft,
+  held: boolean,
+  refuses = false
+) =>
   Effect.gen(function* () {
+    const refusing = yield* Ref.make(refuses);
     const stored = yield* Ref.make(initial);
     const sent = yield* Ref.make<readonly QuestionDraft[]>([]);
     const bases = yield* Ref.make<readonly QuestionDraft[]>([]);
@@ -95,6 +105,9 @@ const serverHolding = (initial: QuestionDraft, held: boolean) =>
         yield* Ref.update(bases, (drafts) => [...drafts, base]);
         yield* Deferred.succeed(arrived, undefined);
         yield* Deferred.await(release);
+        if (yield* Ref.get(refusing)) {
+          return yield* new AnswersRefused();
+        }
         const current = yield* Ref.get(stored);
         if (draft.revision !== current.revision) {
           return yield* new RevisionStale({ current: current.revision });
@@ -108,7 +121,7 @@ const serverHolding = (initial: QuestionDraft, held: boolean) =>
         yield* Ref.set(stored, next);
         return next;
       });
-    return { arrived, bases, release, send, sent, stored };
+    return { arrived, bases, refusing, release, send, sent, stored };
   });
 
 describe("makeQuestionWriter", () => {
@@ -169,31 +182,54 @@ describe("makeQuestionWriter", () => {
   );
 
   it.effect(
-    "refuses a save that another editor overtook, writes nothing, and starts the next save from the render",
+    "lands a save that another editor overtook on the render, once the render holds that editor's save",
     () =>
       Effect.gen(function* () {
         // Another editor saved the question once more, so the server holds revision 4 with its own text.
-        const server = yield* serverHolding(
-          draftAt(4, ["", "Paris", "Rome", "Madrid"]),
-          false
-        );
+        const foreign = draftAt(4, ["", "Paris", "Rome", "Madrid"]);
+        const server = yield* serverHolding(foreign, false);
         const render = yield* Ref.make(draftAt(3));
         const writer = yield* makeQuestionWriter(server.send, Ref.get(render));
 
-        const refused = yield* Effect.flip(
+        const save = yield* Effect.forkChild(
           writer.save(typeOption("option-2", "Lyon"))
         );
-        expect(refused).toMatchObject({ _tag: "RevisionStale", current: 4 });
-        expect(yield* Ref.get(server.stored)).toMatchObject({ revision: 4 });
-        expect(textsOf(yield* Ref.get(server.stored))).toEqual([
-          "",
-          "Paris",
-          "Rome",
-          "Madrid",
-        ]);
+        // The refused save waits for the render, which catches up a moment later.
+        yield* Effect.yieldNow;
+        yield* Ref.set(render, foreign);
+        yield* TestClock.adjust("150 millis");
+        yield* Fiber.join(save);
 
-        // The render catches up with the other editor's save, and the next save starts from it.
-        yield* Ref.set(render, draftAt(4, ["", "Paris", "Rome", "Madrid"]));
+        const stored = yield* Ref.get(server.stored);
+        expect(stored.revision).toBe(5);
+        expect(textsOf(stored)).toEqual(["", "Lyon", "Rome", "Madrid"]);
+        expect(
+          Arr.map(yield* Ref.get(server.sent), (draft) => draft.revision)
+        ).toEqual([3, 4]);
+      })
+  );
+
+  it.effect(
+    "fails a save whose render never catches up, and starts the next save from the render",
+    () =>
+      Effect.gen(function* () {
+        const foreign = draftAt(4, ["", "Paris", "Rome", "Madrid"]);
+        const server = yield* serverHolding(foreign, false);
+        const render = yield* Ref.make(draftAt(3));
+        const writer = yield* makeQuestionWriter(server.send, Ref.get(render));
+
+        const refused = yield* Effect.forkChild(
+          Effect.flip(writer.save(typeOption("option-2", "Lyon")))
+        );
+        yield* Effect.yieldNow;
+        yield* TestClock.adjust("2 seconds");
+        expect(yield* Fiber.join(refused)).toMatchObject({
+          _tag: "RevisionStale",
+          current: 4,
+        });
+        expect(yield* Ref.get(server.stored)).toMatchObject({ revision: 4 });
+
+        yield* Ref.set(render, foreign);
         yield* writer.save(typeOption("option-2", "Lyon"));
         const stored = yield* Ref.get(server.stored);
         expect(stored.revision).toBe(5);
@@ -207,9 +243,10 @@ describe("makeQuestionWriter", () => {
       Effect.gen(function* () {
         const server = yield* serverHolding(
           draftAt(4, ["", "Paris", "Rome", "Madrid"]),
+          true,
           true
         );
-        const render = yield* Ref.make(draftAt(3));
+        const render = yield* Ref.make(draftAt(4));
         const writer = yield* makeQuestionWriter(server.send, Ref.get(render));
 
         const refused = yield* Effect.forkChild(
@@ -225,11 +262,12 @@ describe("makeQuestionWriter", () => {
         const refusal = yield* Fiber.join(refused);
         const drop = yield* Fiber.join(dropped);
 
-        expect(refusal).toMatchObject({ _tag: "RevisionStale", current: 4 });
+        expect(refusal).toBeInstanceOf(AnswersRefused);
         expect(drop).toBeInstanceOf(SaveDropped);
         expect(yield* Ref.get(server.sent)).toHaveLength(1);
         expect(yield* Ref.get(server.stored)).toMatchObject({ revision: 4 });
 
+        yield* Ref.set(server.refusing, false);
         yield* Ref.set(render, draftAt(4, ["", "Paris", "Rome", "Madrid"]));
         yield* writer.save(typeOption("option-4", "Bern"));
         const stored = yield* Ref.get(server.stored);

@@ -181,3 +181,16 @@ describe("focus request", () => {
     expect(selection.getState().focus).toBeNull();
   });
 });
+
+describe("writing request", () => {
+  it("holds the question whose prompt takes the caret until it is taken back", () => {
+    const selection = createExamSelection();
+    const first = questionId("question-1");
+
+    expect(selection.getState().writing).toBeNull();
+    selection.getState().write(first);
+    expect(selection.getState().writing).toBe(first);
+    selection.getState().write(null);
+    expect(selection.getState().writing).toBeNull();
+  });
+});
