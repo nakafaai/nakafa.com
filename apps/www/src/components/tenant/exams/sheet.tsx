@@ -148,7 +148,11 @@ export function PaperTable({
   );
 }
 
-/** The header row of a paper's table: an empty cell over the numbers, the statements' heading, then each column's header. */
+/**
+ * The header row of a paper's table: an empty cell over the numbers, the statements' heading, then each column's
+ * header. Its cells share their first baseline, so each column's words stand on the line of the statements' heading
+ * whatever padding and line height each cell has.
+ */
 export function PaperTableHead({
   children,
   heading,
@@ -157,7 +161,7 @@ export function PaperTableHead({
   heading: string;
 }) {
   return (
-    <div className="col-span-full grid grid-cols-subgrid items-center bg-muted/50 font-medium text-sm">
+    <div className="col-span-full grid grid-cols-subgrid items-baseline bg-muted/50 font-medium text-sm">
       <div aria-hidden="true" className="py-3 pl-4" />
       <div className="px-3 py-3">{heading}</div>
       {children}
