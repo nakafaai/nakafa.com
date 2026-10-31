@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { saved, trackChanges } from "@/e2e/support/changes";
 import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
@@ -240,7 +239,6 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
 
   const student = await studentContext.newPage();
-  const changes = await Effect.runPromise(trackChanges(student, []));
   await student.goto(address(`/sittings/${sitting.sittingId}`));
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
@@ -271,7 +269,6 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     exact: true,
     name: "Flag question 2",
   });
-  const flaggedBefore = changes.sent;
   await flag.click();
   await expect(flag).toHaveAttribute("aria-pressed", "true");
   await expect(
@@ -288,10 +285,8 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     navigator.getByRole("button", { exact: true, name: "Question 1, answered" })
   ).toBeVisible();
 
-  // A reload brings back the flag from the server's shared flags table, so the flag survives a closed tab, once the
-  // server answered it: a reload drops a change still on its way. The answer is not checked here: the server may
-  // hold it already, so the check would pass either way.
-  await saved(changes, flaggedBefore);
+  // A reload brings back the flag from the server's shared flags table, so the flag survives a closed tab. The
+  // answer is not checked here: the server may hold it already, so the check would pass either way.
   await student.reload();
   await expect(
     navigator.getByRole("button", {
