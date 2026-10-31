@@ -14,6 +14,7 @@ import {
   useTryoutFinish,
 } from "@/components/tryout/player/finish";
 import {
+  getTryoutAttemptLock,
   getTryoutPublicPath,
   type TryoutPageAddress,
 } from "@/components/tryout/route/path";
@@ -260,7 +261,12 @@ function SectionLock({
   binding,
 }: Pick<TryoutSectionPageClientProps, "binding">) {
   return binding?.initialState.attempt.status === "in-progress" ? (
-    <ShellLock />
+    <ShellLock
+      remember={getTryoutAttemptLock(
+        binding.attemptId,
+        binding.initialState.attempt.expiresAt
+      )}
+    />
   ) : null;
 }
 

@@ -3,6 +3,7 @@ import { Option } from "effect";
 import {
   getTryoutAttemptAuthHref,
   getTryoutAttemptHref,
+  getTryoutAttemptLock,
   getTryoutCrumbTarget,
   getTryoutHref,
   getTryoutPageHref,
@@ -28,6 +29,11 @@ describe("tryout route paths", () => {
     expect(getTryoutPublicPathHref("try-out/indonesia/tka")).toBe(
       "/try-out/indonesia/tka"
     );
+    expect(getTryoutAttemptLock("attempt/id", 42)).toEqual({
+      name: "attemptId",
+      until: 42,
+      value: "attempt/id",
+    });
     expect(getTryoutAttemptHref("try-out/id/set-1/section", "attempt/id")).toBe(
       "/try-out/id/set-1/section?attemptId=attempt%2Fid"
     );

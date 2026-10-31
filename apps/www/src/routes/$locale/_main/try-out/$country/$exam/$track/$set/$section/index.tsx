@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { ConvexIsland } from "@/components/providers/island";
+import { usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
 import { TryoutAttemptReview } from "@/components/tryout/review/screen";
 import { readTryoutSectionFn } from "@/components/tryout/route/attempt.functions";
@@ -104,6 +105,12 @@ function TryoutSectionView({
   readonly learner: ReturnType<typeof useLearnerSection>;
 }) {
   const route = Route.useLoaderData();
+  // A read that answered decides the shell's lock, so the first frame's lock can go.
+  usePrepaintRelease(
+    learner.kind === "attempt" ||
+      learner.kind === "none" ||
+      learner.kind === "notFound"
+  );
   if (learner.kind === "notFound") {
     return <AppNotFound locale={route.route.locale} />;
   }

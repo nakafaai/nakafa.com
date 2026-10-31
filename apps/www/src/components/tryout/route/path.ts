@@ -198,6 +198,14 @@ export function getTryoutPageHref({
     : getTryoutAttemptHref(publicPath, attemptId);
 }
 
+/**
+ * The lock a running attempt's pages hold, as the shell remembers it for a reload: the attempt
+ * capability that names those pages, until the attempt ends.
+ */
+export function getTryoutAttemptLock(attemptId: string, until: number) {
+  return { name: ATTEMPT_ID_PARAM, until, value: attemptId };
+}
+
 /** Preserves an exact attempt capability, and the view the address names, through localized authentication. */
 export function getTryoutAttemptAuthHref(
   locale: string,

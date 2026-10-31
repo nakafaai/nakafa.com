@@ -11,6 +11,7 @@ import {
   readBrowserPlayerMode,
 } from "@/components/player/mode";
 import { useLiveSession } from "@/components/providers/live";
+import { releasePrepaintLock } from "@/components/sidebar/prepaint";
 import { readAddressIntent } from "@/components/tryout/route/intent";
 import {
   decodeAttemptBodies,
@@ -80,11 +81,16 @@ export function useAttemptSignIn(input: {
   );
   const attemptId = attemptOf(input.search);
   const view = viewOfAddress(input.search);
-  const signIn = attemptId !== undefined && !isLoading && !isAuthenticated;
+  const signedOut = !(isLoading || isAuthenticated);
 
   useEffect(() => {
     const known = looked || !hasSignedInHint(document.cookie);
-    if (signIn && known && attemptId !== undefined) {
+    if (!(signedOut && known)) {
+      return;
+    }
+    // Signed out, the page locks nothing, so the first frame's lock goes.
+    releasePrepaintLock(document);
+    if (attemptId !== undefined) {
       navigate({
         href: getTryoutAttemptAuthHref(
           locale,
@@ -95,7 +101,7 @@ export function useAttemptSignIn(input: {
         replace: true,
       });
     }
-  }, [attemptId, input.publicPath, locale, looked, navigate, signIn, view]);
+  }, [attemptId, input.publicPath, locale, looked, navigate, signedOut, view]);
 }
 
 /**

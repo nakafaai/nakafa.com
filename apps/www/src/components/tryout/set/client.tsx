@@ -15,6 +15,7 @@ import {
 } from "@/components/tryout/player/finish";
 import { selectTryoutSetLinks } from "@/components/tryout/route/owner";
 import {
+  getTryoutAttemptLock,
   getTryoutPublicPath,
   type TryoutPageAddress,
 } from "@/components/tryout/route/path";
@@ -223,7 +224,12 @@ function ResolvedTryoutSetPage({
   return (
     <>
       {binding?.initialState.attempt.status === "in-progress" ? (
-        <ShellLock />
+        <ShellLock
+          remember={getTryoutAttemptLock(
+            binding.attemptId,
+            binding.initialState.attempt.expiresAt
+          )}
+        />
       ) : null}
       {isInternalEntry && entrySection ? (
         <TryoutInternalSet
