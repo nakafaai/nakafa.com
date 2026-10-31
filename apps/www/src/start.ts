@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-start";
 import { Effect, Option } from "effect";
 import { hintCookieFor, hintScopeFor, isHintCurrent } from "@/lib/auth/hint";
+import { recoverStaleFunction } from "@/lib/chunks/stale";
 import { pricingCurrencyCookieFor } from "@/lib/pricing/currency";
 
 /** The path of Better Auth's routes, which the proxy serves on this site. */
@@ -67,7 +68,20 @@ const pricingCurrency = createMiddleware({ type: "request" }).server(
   }
 );
 
+/** Reloads a tab whose server function a deploy removed, once, as a missing chunk does. */
+const staleFunction = createMiddleware({ type: "function" }).client(
+  ({ next }) =>
+    Effect.runPromise(
+      recoverStaleFunction(() => next(), {
+        address: window.location.pathname,
+        reload: () => window.location.reload(),
+        storage: window.sessionStorage,
+      })
+    )
+);
+
 export const startInstance = createStart(() => ({
+  functionMiddleware: [staleFunction],
   requestMiddleware: [
     requestSession,
     pricingCurrency,

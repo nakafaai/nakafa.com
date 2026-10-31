@@ -1,9 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, MutableHashMap, Option } from "effect";
+import { Deferred, Effect, Exit, Fiber, MutableHashMap, Option } from "effect";
 import {
   isStaleChunkError,
+  recoverStaleFunction,
   reloadForStaleChunk,
   STALE_CHUNK_SCRIPT,
+  STALE_FUNCTION_MESSAGE,
 } from "@/lib/chunks/stale";
 
 const CHROMIUM = new TypeError(
@@ -158,4 +160,80 @@ describe("STALE_CHUNK_SCRIPT", () => {
     expect(reportMissingScript(target)).toBe(false);
     expect(reload).not.toHaveBeenCalled();
   });
+});
+
+describe("recoverStaleFunction", () => {
+  const gone = new Error(STALE_FUNCTION_MESSAGE);
+  const failing = (cause: Error) => () => Promise.reject(cause);
+
+  it.effect("answers what the call answers", () =>
+    Effect.gen(function* () {
+      const { reload, storage } = tab();
+
+      expect(
+        yield* recoverStaleFunction(() => Promise.resolve("read"), {
+          address: "/en",
+          reload,
+          storage,
+        })
+      ).toBe("read");
+      expect(reload).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect(
+    "reloads for a function that a deploy removed, and holds the call",
+    () =>
+      Effect.gen(function* () {
+        const { storage } = tab();
+        const reloaded = yield* Deferred.make<void>();
+        const page = {
+          address: "/en",
+          reload: () => Deferred.doneUnsafe(reloaded, Exit.void),
+          storage,
+        };
+
+        const held = yield* Effect.forkChild(
+          recoverStaleFunction(failing(gone), page)
+        );
+        yield* Deferred.await(reloaded);
+        yield* Effect.yieldNow;
+
+        expect(held.pollUnsafe()).toBeUndefined();
+        yield* Fiber.interrupt(held);
+      })
+  );
+
+  it.effect("gives the caller the failure once the address has reloaded", () =>
+    Effect.gen(function* () {
+      const { reload, storage } = tab();
+      yield* reloadForStaleChunk("/en", storage, reload);
+      reload.mockClear();
+
+      const cause = yield* recoverStaleFunction(failing(gone), {
+        address: "/en",
+        reload,
+        storage,
+      }).pipe(Effect.flip);
+
+      expect(cause).toBe(gone);
+      expect(reload).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("leaves every other failure alone", () =>
+    Effect.gen(function* () {
+      const { reload, storage } = tab();
+      const other = new Error("The read failed.");
+
+      const cause = yield* recoverStaleFunction(failing(other), {
+        address: "/en",
+        reload,
+        storage,
+      }).pipe(Effect.flip);
+
+      expect(cause).toBe(other);
+      expect(reload).not.toHaveBeenCalled();
+    })
+  );
 });

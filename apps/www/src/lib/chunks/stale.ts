@@ -1,14 +1,22 @@
 import { Array as Arr, Effect, Schema } from "effect";
 
 /**
- * The messages that Chromium, Firefox and Safari give a dynamic import whose
- * file is gone, which is what a page loaded before a deploy meets when it asks
- * for a chunk that the deploy replaced.
+ * What a tab from before a deploy reads when it calls a server function that the
+ * deploy replaced (`answerStaleFunction`).
+ */
+export const STALE_FUNCTION_MESSAGE =
+  "This server function belongs to an earlier release.";
+
+/**
+ * What a page loaded before a deploy meets when it asks for something the deploy
+ * replaced: the messages that Chromium, Firefox and Safari give a dynamic import
+ * whose file is gone, and the answer to a server function that is gone.
  */
 const STALE_CHUNK_MESSAGES = [
   "Failed to fetch dynamically imported module",
   "error loading dynamically imported module",
   "Importing a module script failed",
+  STALE_FUNCTION_MESSAGE,
 ] as const;
 
 /** The tab's storage could not be read or written, so the page does not reload. */
@@ -17,7 +25,7 @@ class ReloadMarkUnavailable extends Schema.TaggedError<ReloadMarkUnavailable>()(
   { cause: Schema.Unknown }
 ) {}
 
-/** Whether an error is a dynamic import of a chunk that is gone. */
+/** Whether an error is a dynamic import of a chunk, or a server function, that is gone. */
 export function isStaleChunkError(error: unknown): error is Error {
   return (
     error instanceof Error &&
@@ -95,3 +103,28 @@ export const reloadForStaleChunk = Effect.fn("www.chunks.reloadForStale")(
   },
   Effect.catchTag("ReloadMarkUnavailable", () => Effect.succeed(false))
 );
+
+/**
+ * Runs a server function call and answers one that a deploy replaced as a missing
+ * chunk is answered: the page reloads once at its address and the call waits for
+ * it, so no caller draws an error meanwhile. Every other failure, and a function
+ * still missing after the reload, reaches the caller unchanged.
+ */
+export function recoverStaleFunction<A>(
+  call: () => Promise<A>,
+  page: {
+    readonly address: string;
+    readonly reload: () => void;
+    readonly storage: Pick<Storage, "getItem" | "setItem">;
+  }
+) {
+  return Effect.tryPromise({ catch: (cause) => cause, try: call }).pipe(
+    Effect.catchIf(isStaleChunkError, (cause) =>
+      reloadForStaleChunk(page.address, page.storage, page.reload).pipe(
+        Effect.flatMap((reloads) =>
+          reloads ? Effect.never : Effect.fail(cause)
+        )
+      )
+    )
+  );
+}
