@@ -2,73 +2,56 @@ import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { FileExportIcon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { Array as Arr, Effect, Option } from "effect";
-import { createContext, use, useTransition } from "react";
+import { Array as Arr, Option } from "effect";
+import { createContext, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useTenant } from "@/components/tenant/context";
-import { saveLedger } from "@/components/tenant/graduation/save";
 import { useRosterUnit } from "@/components/tenant/roster/unit";
 
 /** One class group of the period, as the export menu lists it. */
 type CohortChoice = Ref.Returns<typeof tenancy.cohorts.list>[number];
 
+/** One class group of the period, as the export menu lists it. */
+export type GradeCohort = CohortChoice;
+
 /** The save of one class group's report data, which the menu's items run when chosen. */
-const GradeDownloadContext = createContext<(cohort: CohortChoice) => void>(
-  () => undefined
-);
+export const GradeDownloadContext = createContext<
+  (cohort: CohortChoice) => void
+>(() => undefined);
 
 /**
- * The Dapodik export of report data (ADR 0033, S6): a menu of the unit's class groups in its active
- * period, each of which saves its locked report cards as a workbook to paste into the template
- * Dapodik downloads for that class group and subject. The button stands enabled from the first
- * paint; the menu reads the class groups once it opens, and the button shows its work only while a
- * file is saved. The writer loads only when a file is asked for.
+ * The report grades of the export menu (ADR 0033, S6): a submenu of the unit's class groups in its
+ * active period, each of which saves its locked report cards as a workbook to paste into the template
+ * Dapodik downloads for that class group and subject. It reads the class groups once it opens, and
+ * the writer loads only when a file is asked for.
  */
 export function RosterGradesExport() {
   const t = useTranslations("SchoolRoster");
-  const { slug } = useTenant();
-  const [isExporting, startExporting] = useTransition();
-
-  const download = (cohort: CohortChoice) =>
-    startExporting(() =>
-      Effect.runPromise(saveLedger(slug, { id: cohort.id, name: cohort.name }))
-    );
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button disabled={isExporting} type="button" variant="outline">
-            {isExporting ? (
-              <Spinner isLoading />
-            ) : (
-              <HugeIcons icon={FileExportIcon} />
-            )}
-            <span className="max-sm:sr-only">{t("export-grades")}</span>
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end" className="w-56">
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <HugeIcons icon={FileExportIcon} />
+        {t("export-grades")}
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="w-56">
         <DropdownMenuGroup>
           <DropdownMenuLabel>{t("export-grades-label")}</DropdownMenuLabel>
-          <GradeDownloadContext value={download}>
-            <RosterGradeCohorts />
-          </GradeDownloadContext>
+          <RosterGradeCohorts />
         </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
   );
 }
 

@@ -109,6 +109,7 @@ test("an admin previews a Dapodik file, imports its students into the active per
     .locator("header")
     .getByRole("button", { exact: true, name: "Export" })
     .click();
+  await page.getByRole("menuitem", { name: "Student list" }).click();
   const file = await (await download).path();
   const rows = await readSheet(file);
   expect(Arr.head(rows)).toEqual(

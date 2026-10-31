@@ -10,7 +10,6 @@ import {
   CheckmarkCircle02Icon,
   CircleIcon,
   Edit02Icon,
-  Loading03Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
   SentIcon,
@@ -46,6 +45,7 @@ import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -77,20 +77,20 @@ function useCohortArgs() {
   return { cohortId, slug };
 }
 
-/** The state of each line's report, with its icon, in the list, its filter, and the open report. */
-const STATE_ICONS = {
-  approved: Loading03Icon,
-  completed: SentIcon,
-  draft: Edit02Icon,
-  locked: SquareLock02Icon,
-  none: CircleIcon,
-};
-
 /** The columns of the report list. */
 const lineColumns = createColumnHelper<typeof dataTableFeatures, ReportLine>();
 
 /** The state of a line's report: not started, or the state the report is in. */
 const stateOf = (line: ReportLine) => line.report?.state ?? "none";
+
+/** The state of each line's report, with its look, in the list and its filter. */
+const STATE_LOOKS = {
+  approved: { icon: CheckmarkBadge01Icon, tone: "success" },
+  completed: { icon: SentIcon, tone: "info" },
+  draft: { icon: Edit02Icon, tone: "info" },
+  locked: { icon: SquareLock02Icon, tone: "success" },
+  none: { icon: CircleIcon, tone: "neutral" },
+} as const satisfies Record<ReturnType<typeof stateOf>, StatusLook>;
 
 /**
  * The report cards of one class group (ADR 0033, S4): each placed student with the state
@@ -118,7 +118,7 @@ function CohortReportsHeader() {
   const args = useCohortArgs();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const cohort = useQuery(tenancy.cohorts.get, isSettled ? args : "skip");
-  const title = QueryResult.isSuccess(cohort) ? cohort.value.name : "";
+  const title = QueryResult.isSuccess(cohort) ? cohort.value.name : undefined;
 
   return (
     <SchoolHeader
@@ -131,9 +131,9 @@ function CohortReportsHeader() {
             to: "/school/$slug/reports",
           },
         },
-        { label: title },
+        { label: title ?? "" },
       ]}
-      title={title}
+      {...(title === undefined ? {} : { title })}
     >
       <TableSearch placeholder={t("search-students")} />
     </SchoolHeader>
@@ -179,10 +179,10 @@ function CohortReportsBody() {
     }),
     lineColumns.accessor(stateOf, {
       cell: (info) => (
-        <span className="flex items-center gap-2">
-          <HugeIcons icon={STATE_ICONS[info.getValue()]} />
-          {t(`state-${info.getValue()}`)}
-        </span>
+        <TableStatus
+          {...STATE_LOOKS[info.getValue()]}
+          label={t(`state-${info.getValue()}`)}
+        />
       ),
       enableSorting: false,
       filterFn: "oneOf",
@@ -192,7 +192,7 @@ function CohortReportsBody() {
           options={Arr.map(
             ["none", "draft", "completed", "approved", "locked"] as const,
             (state) => ({
-              icon: STATE_ICONS[state],
+              icon: STATE_LOOKS[state].icon,
               label: t(`state-${state}`),
               value: state,
             })

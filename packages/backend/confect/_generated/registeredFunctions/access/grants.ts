@@ -9,5 +9,6 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["list"]: RegisteredConvexFunction.register({ ...definitions["list"], handler: forward(definitions["list"].handler) }),
 ["assign"]: RegisteredConvexFunction.register({ ...definitions["assign"], handler: forward(definitions["assign"].handler) }),
+["change"]: RegisteredConvexFunction.register({ ...definitions["change"], handler: forward(definitions["change"].handler) }),
 ["revoke"]: RegisteredConvexFunction.register({ ...definitions["revoke"], handler: forward(definitions["revoke"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../access/grants.spec")["default"]>;

@@ -293,6 +293,7 @@ export function TenantShell({
   home,
   personName,
   profile,
+  reach,
   role,
   viewer,
 }: {
@@ -305,6 +306,7 @@ export function TenantShell({
   home: HomeAccess;
   personName: string;
   profile: typeof TenantProfile.Type;
+  reach: TenantValue["reach"];
   role: TenantValue["role"];
   viewer: SchoolViewer;
 }) {
@@ -320,6 +322,7 @@ export function TenantShell({
           mascot: profile.mascot,
           home,
           name: profile.name,
+          reach,
           role,
           slug: profile.slug,
         }}

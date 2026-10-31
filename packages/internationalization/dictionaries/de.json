@@ -128,7 +128,7 @@
   "SchoolRoster": {
     "import": "Importieren",
     "export": "Exportieren",
-    "export-grades": "Noten exportieren",
+    "export-grades": "Zeugnisnoten",
     "export-grades-label": "Zeugnisnoten einer Klasse",
     "export-grades-loading": "Klassen werden geladen",
     "export-grades-no-period": "Noch kein aktiver Zeitraum.",
@@ -155,7 +155,8 @@
     "status-birth": "Geburtsdatum unlesbar",
     "status-cohort": "Klassenname zu lang",
     "cancel": "Abbrechen",
-    "apply": "Schüler importieren"
+    "apply": "Schüler importieren",
+    "export-students": "Schülerliste"
   },
   "Exams": {
     "minutes-placeholder": "10",
@@ -867,7 +868,8 @@
         "created": "Client angelegt",
         "rotated": "Geheimnis erneuert",
         "revoked": "Client gesperrt",
-        "authorized": "Gerät verbunden"
+        "authorized": "Gerät verbunden",
+        "changed": "Client bearbeitet"
       },
       "invite": {
         "expired": "Einladung abgelaufen",
@@ -1138,7 +1140,18 @@
     "grading-save": "Version speichern",
     "grading-status": "Status",
     "grading-current": "Gültig",
-    "grading-earlier": "Früher"
+    "grading-earlier": "Früher",
+    "grant-change": "Rolle ändern",
+    "grant-change-description": "Die neue Rolle ersetzt diese für {name}.",
+    "invite-readdress": "E-Mail ändern",
+    "invite-readdress-description": "Die alte Einladung endet, und eine neue geht an diese E-Mail.",
+    "client-edit": "Client bearbeiten",
+    "client-edit-description": "Sein Bereich und sein Geheimnis bleiben unverändert.",
+    "locale-title": "Land und Währung",
+    "locale-description": "Wo diese Schule liegt und in welcher Währung ihr Tarif läuft.",
+    "locale-country": "Land",
+    "locale-currency": "Währung",
+    "locale-footer": "Jede Änderung wird im Prüfprotokoll festgehalten."
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1252,8 +1265,8 @@
     "task-points": "Punkte",
     "task-points-for": "Punkte für {name}",
     "task-late": "Späte Abgabe",
-    "task-late-accept": "Angenommen und als verspätet markiert",
-    "task-late-close": "Nach der Frist nicht angenommen",
+    "task-late-accept": "Als verspätet markiert",
+    "task-late-close": "Nicht angenommen",
     "task-status": "Stand",
     "task-handed-in-count": "{count, plural, one {# abgegeben} other {# abgegeben}}",
     "task-not-handed-in": "Nicht abgegeben",
@@ -1275,7 +1288,13 @@
     "task-edit": "Aufgabe bearbeiten",
     "task-edit-description": "Ihre Adresse bleibt, also öffnet jeder Link sie weiter.",
     "task-edit-save": "Speichern",
-    "task-points-fixed": "Die Punkte stehen fest, sobald Arbeit abgegeben ist."
+    "task-points-fixed": "Die Punkte stehen fest, sobald Arbeit abgegeben ist.",
+    "channel-rename": "Kanal umbenennen",
+    "channel-rename-description": "Alle in der Klasse sehen den neuen Namen.",
+    "discussion-rename": "Diskussion umbenennen",
+    "discussion-rename-description": "Alle in der Klasse sehen den neuen Titel.",
+    "library-edit": "Bearbeiten",
+    "library-edit-description": "Die Klasse sieht die Änderung sofort."
   },
   "SchoolGrades": {
     "student": "Schüler",
@@ -2830,6 +2849,14 @@
     "school-roster-no-period": {
       "title": "Noch kein aktiver Zeitraum.",
       "description": "Öffne zuerst einen Zeitraum für diese Einheit."
+    },
+    "school-refusal-channel-name-taken": {
+      "title": "Dieser Kanalname ist schon vergeben.",
+      "description": "Wähle für diese Klasse einen anderen Namen."
+    },
+    "school-refusal-channel-fixed": {
+      "title": "Der allgemeine Kanal behält seinen Namen.",
+      "description": "Benenne stattdessen einen Themenkanal um."
     }
   },
   "Ai": {

@@ -19,6 +19,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
@@ -184,7 +185,9 @@ function CohortsActions({ slug }: { slug: TenantSlug }) {
     <>
       <CohortsUnitChoice />
       <TableSearch placeholder={t("cohorts-search")} />
-      <SchoolCohortAdd active={active} slug={slug} />
+      <WithAction action="cohort.manage">
+        <SchoolCohortAdd active={active} slug={slug} />
+      </WithAction>
     </>
   );
 }
@@ -416,12 +419,15 @@ function SchoolCohortTable({
       id: "status",
     }),
     cohortColumns.display({
-      cell: (info) =>
-        info.row.original.status === "archived" ? (
-          <SchoolCohortRestore cohort={info.row.original} slug={slug} />
-        ) : (
-          <SchoolCohortMenu cohort={info.row.original} slug={slug} />
-        ),
+      cell: (info) => (
+        <WithAction action="cohort.manage">
+          {info.row.original.status === "archived" ? (
+            <SchoolCohortRestore cohort={info.row.original} slug={slug} />
+          ) : (
+            <SchoolCohortMenu cohort={info.row.original} slug={slug} />
+          )}
+        </WithAction>
+      ),
       id: "actions",
       meta: { align: "menu" },
     }),

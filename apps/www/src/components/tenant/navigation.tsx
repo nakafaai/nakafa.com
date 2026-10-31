@@ -20,24 +20,30 @@ import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { showsStudentHome } from "@/components/tenant/home/access";
 import { SchoolSettingsNav } from "@/components/tenant/settings/nav";
-import { Link, useRouteMatched } from "@/lib/routing/link";
+import { Link, TargetLink, useRouteMatched } from "@/lib/routing/link";
+import { firstSettingsTarget } from "@/lib/settings/school";
 
 /** The address under which every school settings section lives. */
 const SETTINGS_PATH = "/school/$slug/settings";
 
 /**
  * Renders the navigation of the school sidebar. The settings sections replace it
- * on a settings route for a viewer who may manage the school, and otherwise the
- * school's own groups show. It stays mounted from the page the viewer leaves into
+ * on a settings route for a viewer who opens any of them, and otherwise the school's
+ * own groups show. It stays mounted from the page the viewer leaves into
  * settings, so it remembers that page for the settings' way back.
  */
 export function TenantNavigation() {
-  const { canManage } = useTenant();
+  const { reach, slug } = useTenant();
   const isSettings = useRouteMatched(SETTINGS_PATH, { exact: false });
+  const opensSettings = Option.isSome(firstSettingsTarget(slug, reach));
 
   return (
     <SettingsReturnProvider path={SETTINGS_PATH}>
-      {canManage && isSettings ? <SchoolSettingsNav /> : <TenantSchoolGroups />}
+      {opensSettings && isSettings ? (
+        <SchoolSettingsNav />
+      ) : (
+        <TenantSchoolGroups />
+      )}
     </SettingsReturnProvider>
   );
 }
@@ -46,20 +52,15 @@ export function TenantNavigation() {
  * The school's own groups, as the learner's sidebar has them: first the main pages with no label,
  * the notifications for everyone, a student's own exams, grades and report cards, the exams, the
  * school's report cards, and the graduation for a viewer who may open them, then the management
- * group, with the settings entry, only for a viewer who may manage the school. The school has no
+ * group, with the settings entry, only for a viewer who opens a section of the settings. The school has no
  * home of its own: its root opens the viewer's main page. The viewer's classes come last, when the
  * viewer has any, so they never move the groups above them.
  */
 function TenantSchoolGroups() {
   const tenant = useTenant();
-  const {
-    canManage,
-    canOpenExams,
-    canOpenGraduation,
-    canOpenReports,
-    role,
-    slug,
-  } = tenant;
+  const { canOpenExams, canOpenGraduation, canOpenReports, reach, role, slug } =
+    tenant;
+  const settings = firstSettingsTarget(slug, reach);
   const matchRoute = useMatchRoute();
   const tExams = useTranslations("Exams");
   const tGrades = useTranslations("SchoolGrades");
@@ -193,13 +194,11 @@ function TenantSchoolGroups() {
           </SidebarMenuItem>
         ) : null}
       </TenantSidebarGroup>
-      {canManage ? (
+      {Option.isSome(settings) ? (
         <TenantSidebarGroup label={tSettings("manage-group")}>
           <SidebarMenuItem>
             <SidebarMenuButton
-              render={
-                <Link params={{ slug }} to="/school/$slug/settings/profile" />
-              }
+              render={<TargetLink target={settings.value} />}
               tooltip={tSettings("manage-settings")}
             >
               <HugeIcons icon={Settings01Icon} />

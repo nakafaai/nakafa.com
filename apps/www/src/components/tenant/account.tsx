@@ -18,7 +18,7 @@ import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { languages } from "@repo/internationalization/data/lang";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useRouter } from "@tanstack/react-router";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
@@ -33,7 +33,8 @@ import { selectMenuSide } from "@/components/sidebar/menu/side";
 import { useTenant } from "@/components/tenant/context";
 import { changeSchoolLanguage } from "@/components/tenant/locale";
 import { profileHref } from "@/lib/profile/href";
-import { Link } from "@/lib/routing/link";
+import { TargetLink } from "@/lib/routing/link";
+import { firstSettingsTarget } from "@/lib/settings/school";
 
 /** Changes the language that the account menu chose, and renders the current page in it at once. */
 function changeLanguage(
@@ -62,7 +63,8 @@ export function TenantAccountItems({
 }: {
   username: string | undefined;
 }) {
-  const { canManage, slug } = useTenant();
+  const { reach, slug } = useTenant();
+  const settings = firstSettingsTarget(slug, reach);
   const t = useTranslations();
   const locale = useLocale();
 
@@ -93,16 +95,16 @@ export function TenantAccountItems({
           }
         />
       </DropdownMenuGroup>
-      {canManage ? (
+      {Option.isSome(settings) ? (
         <>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem
               render={
-                <Link params={{ slug }} to="/school/$slug/settings/profile">
+                <TargetLink target={settings.value}>
                   <HugeIcons icon={SchoolIcon} />
                   {t("SchoolSettings.manage-settings")}
-                </Link>
+                </TargetLink>
               }
             />
           </DropdownMenuGroup>

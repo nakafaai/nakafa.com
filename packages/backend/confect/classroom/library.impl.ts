@@ -21,6 +21,7 @@ import {
 } from "@repo/backend/confect/classroom/errors";
 import type { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { classItem, edit } from "@repo/backend/confect/classroom/library/edit";
 import {
   fileTypeOf,
   HEAD_BYTES,
@@ -342,19 +343,9 @@ const remove = FunctionImpl.make(
   spec,
   "remove",
   Effect.fn("classroom.library.remove")(function* ({ itemId }) {
-    const row = yield* Class;
-    const item = yield* (yield* DatabaseReader)
-      .table("classroomLibrary")
-      .get(itemId)
-      .pipe(Effect.option);
-    if (Option.isNone(item) || item.value.classId !== row._id) {
-      return yield* new AccessDenied({
-        action: "library.manage",
-        reason: "resource",
-      });
-    }
+    const item = yield* classItem(itemId);
     const storage = yield* StorageWriter;
-    yield* Match.value(item.value).pipe(
+    yield* Match.value(item).pipe(
       Match.discriminatorsExhaustive("kind")({
         file: (file) => storage.delete(file.storageId).pipe(Effect.orDie),
         link: () => Effect.void,
@@ -376,6 +367,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(register),
   Layer.provide(importDrive),
   Layer.provide(commit),
+  Layer.provide(edit),
   Layer.provide(remove),
   Layer.provide(session),
   Layer.provide(member),

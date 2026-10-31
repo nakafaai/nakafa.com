@@ -34,8 +34,9 @@ const InviteView = Schema.Struct({
 });
 
 /**
- * The invites of one school. Its Admin invites a Person, revokes or sends again
- * an invite, and lists the pending ones. Invites end by claim, revoke, or expiry.
+ * The invites of one school. Its Admin invites a Person, corrects the address of a
+ * pending invite, revokes or sends one again, and lists the pending ones. Invites
+ * end by claim, revoke, or expiry.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -66,6 +67,26 @@ export default GroupSpec.make()
           PersonClaimed,
         ]),
     }).middleware(PersonAccess, { action: "person.invite", arg: "personId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "readdress",
+      args: () => ({
+        email: Email,
+        inviteId: Id("tenantInvites"),
+        locale: ActiveAppLocaleCodeSchema,
+        slug: TenantSlug,
+      }),
+      returns: () => InviteView,
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          InviteDomainRefused,
+          InviteExpired,
+          InviteNotPending,
+          PersonClaimed,
+        ]),
+    })
   )
   .addFunction(
     FunctionSpec.publicMutation({

@@ -8,11 +8,13 @@ import {
   ClockAlertIcon,
   Delete02Icon,
   IdIcon,
+  MailEdit01Icon,
   MailSend01Icon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -42,6 +44,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
+import { LineDialog } from "@/components/tenant/line";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleLooks } from "@/components/tenant/roles";
@@ -49,6 +52,7 @@ import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
+import { readdressInviteChange } from "@/components/tenant/settings/edits";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation";
@@ -222,8 +226,8 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
 }
 
 /**
- * An invite's row menu. A pending invite is sent again in the viewer's language or revoked
- * behind a confirmation, and a login card is offered only to a Person who may take one (an
+ * An invite's row menu. A pending invite is sent again in the viewer's language, corrected to
+ * another address, or revoked behind a confirmation, and a login card is offered only to a Person who may take one (an
  * Owner or an Admin may not). An expired invite is sent again as a new invite to the same
  * Person and address, because the school never sends an expired invite itself. A draft invite,
  * still on its way to the server, has an inert menu, and a send waits until the viewer's
@@ -237,6 +241,9 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
     Schema.decodeOption(ActiveAppLocaleCodeSchema)(useLocale())
   );
   const resend = useMutation(tenancy.invites.resend);
+  const readdress = useMutation(tenancy.invites.readdress).withOptimisticUpdate(
+    readdressInviteChange
+  );
   const inviteAgain = useMutation(tenancy.invites.invite);
   const revoke = useMutation(tenancy.invites.revoke).withOptimisticUpdate(
     revokeInviteChange
@@ -245,6 +252,8 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
   const [isResending, startResending] = useTransition();
   const [isIssuing, setIsIssuing] = useState(false);
   const [issued, setIssued] = useState<CardView | undefined>(undefined);
+  const [readdressing, setReaddressing] = useState(0);
+  const [isReaddressing, setIsReaddressing] = useState(false);
   const isExpired = invite.status === "expired";
 
   /**
@@ -273,6 +282,26 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
         SOURCE
       )
     );
+
+  /** Corrects a pending invite's address, in the viewer's language. The row shows it at once. */
+  const readdressTo = (value: string) => {
+    const email = Schema.decodeOption(Email)(value);
+    if (sendLocale === undefined || Option.isNone(email)) {
+      return;
+    }
+    startTransition(() =>
+      saveSchool(
+        () =>
+          readdress({
+            email: email.value,
+            inviteId: invite.id,
+            locale: sendLocale,
+            slug,
+          }),
+        SOURCE
+      )
+    );
+  };
 
   return (
     <div className="flex justify-end">
@@ -303,6 +332,16 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
           </DropdownMenuItem>
           {isExpired ? null : (
             <>
+              <DropdownMenuItem
+                disabled={sendLocale === undefined}
+                onClick={() => {
+                  setReaddressing((count) => count + 1);
+                  setIsReaddressing(true);
+                }}
+              >
+                <HugeIcons icon={MailEdit01Icon} />
+                {t("invite-readdress")}
+              </DropdownMenuItem>
               {cardOffered(invite.roles) ? (
                 <DropdownMenuItem onClick={() => setIsIssuing(true)}>
                   <HugeIcons icon={IdIcon} />
@@ -362,6 +401,21 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
         slug={slug}
       />
       <SchoolCardDialog card={issued} onClose={() => setIssued(undefined)} />
+      {readdressing === 0 ? null : (
+        <LineDialog
+          description={t("invite-readdress-description")}
+          initial={invite.email}
+          isValid={Schema.is(Email)}
+          key={readdressing}
+          label={t("invite-email")}
+          onSave={readdressTo}
+          open={isReaddressing}
+          placeholder={t("invite-email-placeholder")}
+          setOpen={setIsReaddressing}
+          title={t("invite-readdress")}
+          type="email"
+        />
+      )}
     </div>
   );
 }
