@@ -34,9 +34,10 @@ interface TryoutSummaryActionProps {
       setKey: string;
       trackKey: string;
     };
-    startAttemptSectionKey?: string;
     startDestination: {
       address: TryoutPageAddress;
+      /** The section whose page the start lands on; none for a set's internal entry, whose page is the set. */
+      sectionKey?: string;
       successNavigation: StartTryoutRequest["successNavigation"];
     } | null;
   };
@@ -86,12 +87,11 @@ export function TryoutSummaryAction({ value }: TryoutSummaryActionProps) {
     authRedirect: startDestination.address,
     countryKey: value.set.countryKey,
     destination: startDestination.address,
-    destinationSectionKey: value.section.sectionKey,
-    ...(value.startAttemptSectionKey === undefined
+    ...(startDestination.sectionKey === undefined
       ? {}
-      : {
-          entrySectionKey: value.startAttemptSectionKey,
-        }),
+      : { destinationSectionKey: startDestination.sectionKey }),
+    // The action stands for one section, so its start opens that section: one press shows the player.
+    entrySectionKey: value.section.sectionKey,
     examKey: value.set.examKey,
     locale: value.locale,
     setKey: value.set.setKey,

@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { Effect } from "effect";
 import { activate } from "@/e2e/support/input";
-import { confirmFinish } from "@/e2e/support/player";
+import { confirmFinish, waitForRunningSection } from "@/e2e/support/player";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -32,11 +32,7 @@ export const startEntryAttempt = Effect.fn("NakafaE2E.startEntryAttempt")(
         .getByRole("button", { exact: true, name: primary }),
       false
     );
-    yield* Effect.promise(() =>
-      expect(
-        page.getByRole("button", { exact: true, name: "Finish" })
-      ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-    );
+    yield* waitForRunningSection(page);
   }
 );
 

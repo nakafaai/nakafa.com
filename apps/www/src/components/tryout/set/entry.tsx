@@ -1,8 +1,10 @@
 import { type ReactNode, Suspense } from "react";
 import type { PlayerMode } from "@/components/player/mode";
-import { PlayerDigits } from "@/components/player/timer";
+import { PlayerDigits, PlayerTimer } from "@/components/player/timer";
 import { TryoutPlayer } from "@/components/tryout/player/client";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
+import { TryoutPlayerOpening } from "@/components/tryout/player/opening";
+import { useTryoutStartPhase } from "@/components/tryout/runtime/start";
 import {
   isTryoutRuntimeRunning,
   type TryoutRuntimeState,
@@ -36,9 +38,11 @@ interface TryoutSetEntryProps {
 
 /**
  * Renders a no-nested-section set as the directly startable section surface.
- * A running section is the player, and every other state is the set page.
+ * A running section is the player, a section the learner's press is opening is
+ * the player's frame until it runs, and every other state is the set page.
  */
 export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
+  const opening = useTryoutStartPhase() === "opening";
   const state = value.runtimeState;
   if (value.player && isTryoutRuntimeRunning(state)) {
     return (
@@ -49,6 +53,18 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
           state={state}
           title={value.page.set.title}
         />
+      </TryoutPage>
+    );
+  }
+  if (opening) {
+    return (
+      <TryoutPage>
+        <TryoutPlayerOpening
+          questionCount={value.entrySection.questionCount}
+          title={value.page.set.title}
+        >
+          <PlayerTimer seconds={value.entrySection.timeLimitSeconds} />
+        </TryoutPlayerOpening>
       </TryoutPage>
     );
   }
@@ -153,16 +169,14 @@ function TryoutEntryAction({ value }: { value: TryoutSetEntryProps["value"] }) {
         section: startEntrySection,
         sectionFinished,
         set: value.start.set,
-        ...(startEntrySection.visibility === "internal-entry"
-          ? { startAttemptSectionKey: startEntrySection.sectionKey }
-          : {}),
-        startDestination: {
-          address: startDestination.address,
-          successNavigation:
-            startEntrySection.visibility === "internal-entry"
-              ? "stay"
-              : "destination",
-        },
+        startDestination:
+          startEntrySection.visibility === "internal-entry"
+            ? { address: startDestination.address, successNavigation: "stay" }
+            : {
+                address: startDestination.address,
+                sectionKey: startEntrySection.sectionKey,
+                successNavigation: "destination",
+              },
       }}
     />
   );

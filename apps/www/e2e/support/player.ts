@@ -48,6 +48,21 @@ export const shownQuestions = (page: Page) =>
 export const questionArticle = (page: Page, number: number) =>
   page.locator(`#exercise-question-${number}`);
 
+/**
+ * Waits until the section a press started runs in the player: its first question shows. The press draws
+ * the player's frame at once, Finish included, before the server starts the section, so a visible Finish
+ * alone does not say the section runs.
+ */
+export const waitForRunningSection = Effect.fn(
+  "NakafaE2E.waitForRunningSection"
+)(function* (page: Page) {
+  yield* Effect.promise(() =>
+    expect(questionArticle(page, 1)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+});
+
 /** The number row of one question, which a reader sees under the header when it is revealed. */
 export const questionHeading = (page: Page, number: number) =>
   page.locator(`#question-${number}`);
@@ -180,11 +195,7 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
     // late moves text, which is not what these suites measure.
     yield* loadMathFonts(page);
     yield* activate(start, hasTouch);
-    yield* Effect.promise(() =>
-      expect(
-        page.getByRole("button", { exact: true, name: "Finish" })
-      ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-    );
+    yield* waitForRunningSection(page);
     // Late streamed content would still move the page, so let it settle.
     yield* Effect.sleep("750 millis");
   }
