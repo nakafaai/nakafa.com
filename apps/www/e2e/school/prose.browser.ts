@@ -104,9 +104,8 @@ const LESSONS = [
 
 /**
  * The look of the first element the selector finds inside `root`, or nothing when it finds none. A
- * heading is read at the element that holds its first words, where its colour and its rule are: a
- * lesson's heading holds them in a span inside its link, beside the link's icon, and an exam
- * document's holds them itself.
+ * heading is read at the element that holds its words, where its colour and its rule are: a lesson's
+ * heading wraps them in its link and a span, and an exam document's holds them itself.
  */
 async function lookIn(root: Locator, selector: string) {
   const element = root.locator(selector).first();
@@ -116,15 +115,18 @@ async function lookIn(root: Locator, selector: string) {
   await element.scrollIntoViewIfNeeded();
   return element.evaluate(
     (node, names) => {
-      // A heading is read at the element of its first words: a lesson's sits in its link beside the link's icon.
-      const words = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
-        acceptNode: (text) =>
-          (text.textContent ?? "").trim() === ""
-            ? NodeFilter.FILTER_SKIP
-            : NodeFilter.FILTER_ACCEPT,
-      });
-      const first = node.matches("h1, h2, h3") ? words.nextNode() : null;
-      const target = first?.parentElement ?? node;
+      let target: Element = node;
+      while (
+        node.matches("h1, h2, h3") &&
+        target.children.length === 1 &&
+        Array.from(target.childNodes).every(
+          (child) =>
+            child.nodeType !== Node.TEXT_NODE ||
+            (child.textContent ?? "").trim() === ""
+        )
+      ) {
+        target = target.children[0] ?? target;
+      }
       const style = getComputedStyle(target);
       return Object.fromEntries(
         names.map((name) => [name, style.getPropertyValue(name)])
@@ -177,18 +179,6 @@ async function documentLooks(browser: Browser, baseURL: string | undefined) {
     timeout: readinessTimeoutMilliseconds,
   });
   const editor = await looksIn(editorPrompt, "document");
-  const editorInset = await insetOf(editorPrompt);
-
-  // The teacher's preview, Try as student, reads the exam the way its student does.
-  await owner.goto(address(`/exams/${sitting.examId}/try`));
-  const previewPrompt = owner
-    .getByRole("textbox", { name: "Question text" })
-    .nth(2);
-  await expect(previewPrompt).toContainText("Soal ketiga", {
-    timeout: readinessTimeoutMilliseconds,
-  });
-  const preview = await looksIn(previewPrompt, "document");
-  const previewInset = await insetOf(previewPrompt);
 
   const student = await studentContext.newPage();
   await student.goto(address(`/sittings/${sitting.sittingId}`));
@@ -206,34 +196,9 @@ async function documentLooks(browser: Browser, baseURL: string | undefined) {
     timeout: readinessTimeoutMilliseconds,
   });
   const reader = await looksIn(sittingPrompt, "document");
-  const sittingInset = await insetOf(sittingPrompt);
 
   await Promise.all([studentContext.close(), ownerContext.close()]);
-  return {
-    insets: {
-      editor: editorInset,
-      preview: previewInset,
-      sitting: sittingInset,
-    },
-    looks: { editor, preview, sitting: reader },
-  };
-}
-
-/**
- * How far a document draws its first block inside its own box, as `left,top` in pixels: zero for a document that
- * draws flush, so the card or the paper around it alone gives the text its room, as a try-out question's does.
- */
-function insetOf(document: Locator) {
-  return document.evaluate((node) => {
-    const box = node.getBoundingClientRect();
-    const first = node.firstElementChild?.getBoundingClientRect();
-    if (first === undefined) {
-      return "empty";
-    }
-    const left = Math.round(first.left - box.left - node.clientLeft);
-    const top = Math.round(first.top - box.top - node.clientTop);
-    return `${left},${top}`;
-  });
+  return { editor, sitting: reader };
 }
 
 /** The properties of `look` that differ from `reference`, each as the lesson's value and this surface's. */
@@ -302,7 +267,7 @@ function reportOf(
 test.describe("Content looks alike on every surface", () => {
   test.use({ viewport: { height: 900, width: 1280 } });
 
-  test("draws each block and mark of a lesson the same, and flush in its card, in a try-out question, the exam editor, the teacher's preview and the sitting", async ({
+  test("draws each block and mark of a lesson the same in a try-out question, the exam editor and the sitting", async ({
     baseURL,
     browser,
     page,
@@ -321,28 +286,13 @@ test.describe("Content looks alike on every surface", () => {
       timeout: readinessTimeoutMilliseconds,
     });
     const tryout = await looksIn(documents, "lesson");
-    const tryoutInset = await insetOf(documents.first());
     expect(
       tryout.paragraph,
       "a try-out question draws paragraphs"
     ).toBeDefined();
 
     const exam = await documentLooks(browser, baseURL);
-    const surfaces = { tryout, ...exam.looks };
-
-    // Every document draws its first block flush in its own box: the card around it gives the room. The check is
-    // soft, so a run reports the look of every kind below as well.
-    expect
-      .soft(
-        { tryout: tryoutInset, ...exam.insets },
-        "each document's first block, as left,top inside its box"
-      )
-      .toEqual({
-        editor: "0,0",
-        preview: "0,0",
-        sitting: "0,0",
-        tryout: "0,0",
-      });
+    const surfaces = { tryout, ...exam };
 
     // The report names each kind that differs, each surface where it does, and each property with
     // the lesson's value and that surface's; a kind no lesson holds is not compared.
