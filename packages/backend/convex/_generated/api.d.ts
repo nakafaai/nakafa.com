@@ -335,7 +335,11 @@ export declare const api: {
       generateTopupCheckoutLink: FunctionReference<
         "action",
         "public",
-        { locale: "en" | "id" | "de"; successUrl: string },
+        {
+          currency: "EUR" | "IDR" | "USD";
+          locale: "en" | "id" | "de";
+          successUrl: string;
+        },
         { url: string }
       >;
     };
@@ -13442,7 +13446,12 @@ export declare const internal: {
                   };
                 };
             locale: "en" | "id" | "de";
-            offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+            offer:
+              | "pro.monthly"
+              | "pro.pass.1"
+              | "pro.pass.3"
+              | "pro.pass.12"
+              | "pro.topup";
             session: { expiresAt: number; sessionId: string; url: string };
             userId: Id<"users">;
           },
@@ -13452,7 +13461,12 @@ export declare const internal: {
           "mutation",
           "internal",
           {
-            offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+            offer:
+              | "pro.monthly"
+              | "pro.pass.1"
+              | "pro.pass.3"
+              | "pro.pass.12"
+              | "pro.topup";
             userId: Id<"users">;
           },
           {

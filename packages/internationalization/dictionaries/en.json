@@ -2201,6 +2201,7 @@
     "payments-description": "The payments that went through, newest first.",
     "payment-date": "Date",
     "payment-for": "For",
+    "payment-via": "Via",
     "payment-amount": "Amount",
     "payment-credits": "Nina credits",
     "payment-cycle": "Pro subscription",
