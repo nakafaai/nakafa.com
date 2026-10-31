@@ -58,6 +58,20 @@
     "outsider-check-again": "Periksa lagi undanganku"
   },
   "SchoolGuardians": {
+    "request-ask": "Tanya sekolah",
+    "request-description": "Tata usaha menjawab setiap permintaan. Tulis kebutuhan Anda secara singkat.",
+    "request-kind": "Permintaan",
+    "request-text": "Catatan Anda",
+    "request-state": "Status",
+    "request-student": "Siswa",
+    "request-send": "Kirim",
+    "request-approve": "Setujui",
+    "request-decline": "Tolak",
+    "request-kind-reportCopy": "Salinan rapor",
+    "request-kind-dataCorrection": "Perbaikan data",
+    "request-state-waiting": "Menunggu",
+    "request-state-approved": "Disetujui",
+    "request-state-declined": "Ditolak",
     "family-title": "Orang tuaku",
     "family-invite": "Undang orang tua",
     "family-empty-description": "Tambahkan email orang tuamu agar mereka bisa masuk dan melihat nilaimu.",
@@ -1071,7 +1085,10 @@
         "linked": "Tautan orang tua terverifikasi",
         "withdrawn": "Persetujuan orang tua ditarik",
         "revoked": "Tautan orang tua diakhiri",
-        "readdressed": "Alamat tautan orang tua diperbaiki"
+        "readdressed": "Alamat tautan orang tua diperbaiki",
+        "request": {
+          "answered": "Permintaan orang tua dijawab"
+        }
       },
       "roster": {
         "set": "Data siswa diperbarui",

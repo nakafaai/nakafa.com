@@ -58,6 +58,20 @@
     "outsider-check-again": "Check again for my invite"
   },
   "SchoolGuardians": {
+    "request-ask": "Ask the school",
+    "request-description": "The school office answers each request. Write what you need in a few words.",
+    "request-kind": "Request",
+    "request-text": "Your note",
+    "request-state": "Status",
+    "request-student": "Student",
+    "request-send": "Send",
+    "request-approve": "Approve",
+    "request-decline": "Decline",
+    "request-kind-reportCopy": "A copy of a report",
+    "request-kind-dataCorrection": "A correction of data",
+    "request-state-waiting": "Waiting",
+    "request-state-approved": "Approved",
+    "request-state-declined": "Declined",
     "family-title": "My parents",
     "family-invite": "Invite a parent",
     "family-empty-description": "Add your parent's email so they can sign in and see your grades.",
@@ -1071,7 +1085,10 @@
         "linked": "Parent link verified",
         "withdrawn": "Parent consent withdrawn",
         "revoked": "Parent link ended",
-        "readdressed": "Parent link address corrected"
+        "readdressed": "Parent link address corrected",
+        "request": {
+          "answered": "Parent request answered"
+        }
       },
       "roster": {
         "set": "Student record updated",

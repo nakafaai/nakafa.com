@@ -58,6 +58,20 @@
     "outsider-check-again": "Erneut nach meiner Einladung sehen"
   },
   "SchoolGuardians": {
+    "request-ask": "Die Schule fragen",
+    "request-description": "Das Sekretariat beantwortet jede Anfrage. Schreibe kurz, was du brauchst.",
+    "request-kind": "Anfrage",
+    "request-text": "Deine Notiz",
+    "request-state": "Status",
+    "request-student": "Schüler",
+    "request-send": "Senden",
+    "request-approve": "Annehmen",
+    "request-decline": "Ablehnen",
+    "request-kind-reportCopy": "Eine Zeugniskopie",
+    "request-kind-dataCorrection": "Eine Datenkorrektur",
+    "request-state-waiting": "Wartet",
+    "request-state-approved": "Angenommen",
+    "request-state-declined": "Abgelehnt",
     "family-title": "Meine Eltern",
     "family-invite": "Elternteil einladen",
     "family-empty-description": "Füge die E-Mail deiner Eltern hinzu, damit sie sich anmelden und deine Noten sehen können.",
@@ -1071,7 +1085,10 @@
         "linked": "Elternverknüpfung bestätigt",
         "withdrawn": "Einwilligung der Eltern widerrufen",
         "revoked": "Elternverknüpfung beendet",
-        "readdressed": "Adresse der Elternverknüpfung korrigiert"
+        "readdressed": "Adresse der Elternverknüpfung korrigiert",
+        "request": {
+          "answered": "Elternanfrage beantwortet"
+        }
       },
       "roster": {
         "set": "Schülerdaten aktualisiert",

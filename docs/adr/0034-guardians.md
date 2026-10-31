@@ -135,8 +135,11 @@ withdrawal is done (blueprint, Orang tua, requests).
 ### Requests
 
 - A report copy request and a data correction request reach Staff (Staf TU), who
-  approves each one (blueprint, Orang tua, requests). Those requests are a later
-  slice, so this ADR names only their owner.
+  approves or declines each one (blueprint, Orang tua, requests). A parent with a
+  verified link asks from the parent home, Staff answers from the guardian links
+  page, and the answer shows on the parent home. What a parent writes is sealed
+  with the school key. Staff hands the copy over or makes the correction itself,
+  and the answer records that it was decided.
 
 ## Consequences
 
@@ -178,7 +181,7 @@ withdrawal is done (blueprint, Orang tua, requests).
 | `guardianConsents` and the NISN second check | Built, S8: the guardian's check compares the blind of the typed NISN with the roster's (`guardians/family:confirm`). Three mismatches leave only the staff check. Withdrawal writes the `withdrawn` row with the method of its grant and ends the link in one transaction. |
 | The NISN on the school roster | Built: `rosterEntries` holds the NISN, sealed and blinded under the school key (`confect/roster`). Admin and Staff set it with `roster/entries:set`, and the Dapodik import sets it (ADR 0015). |
 | Guardian notices and the rename of the notification relation | Planned, S9 |
-| Parent home, shared narratives, and requests | Partly built, S10: the parent home at `/parents` lists each linked child, runs the NISN check, shows the released grades of a verified link, and withdraws consent. Shared narratives wait for Insight (ADR 0035), and report copy and correction requests are a later slice. |
+| Parent home, shared narratives, and requests | Partly built, S10: the parent home at `/parents` lists each linked child, runs the NISN check, shows the released grades of a verified link, and withdraws consent. Shared narratives wait for Insight (ADR 0035), and report copy and correction requests are built (`guardians/requests`). |
 
 Counsel reviews the consent wording and the policy version (K20), so
 `CONSENT_POLICY_VERSION` stays `id-profile-pending-1` until then, and nothing waits

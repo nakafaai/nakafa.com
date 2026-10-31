@@ -53,6 +53,7 @@ import {
   type ChildItem,
   withdrawChange,
 } from "@/components/tenant/guardian/change";
+import { ParentRequests } from "@/components/tenant/guardian/requests";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { SchoolHeader } from "@/components/tenant/header";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -182,7 +183,14 @@ function GuardianChild({ items }: { items: readonly ChildItem[] }) {
             </p>
           </PaneBody>
         ) : null}
-        {found.status === "verified" ? <GuardianGrades child={found} /> : null}
+        {found.status === "verified" ? (
+          <>
+            <GuardianGrades child={found} />
+            <PaneBody>
+              <ParentRequests linkId={found.linkId} />
+            </PaneBody>
+          </>
+        ) : null}
         {found.status !== "pending" && found.status !== "verified" ? (
           <PaneBody>
             <p className="text-muted-foreground text-sm">

@@ -69,7 +69,7 @@ written against it.
 | Public CLI | `@nakafa/cli` 0.1.1 | None | Live, read only |
 | School REST | `harapan.nakafa.com/api/v1` | A bearer token | Built |
 | School MCP | `harapan.nakafa.com/mcp` | A bearer token | Built |
-| School CLI | `nakafa login harapan.nakafa.com` | Device authorization | Planned |
+| School CLI | `nakafa login harapan.nakafa.com` | Device authorization | Built |
 | Webhooks | The receiver's address | An HMAC signature | Built |
 | Exports | CSV and XLSX files | The caller's token or session | Built |
 

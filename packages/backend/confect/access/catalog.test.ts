@@ -259,6 +259,7 @@ describe("access/catalog", () => {
           "guardian.withdrawn",
           "guardian.revoked",
           "guardian.readdressed",
+      "guardian.request.answered",
           "roster.set",
           "roster.imported",
         ],

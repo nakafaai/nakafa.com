@@ -85,6 +85,7 @@ import graduations from "./tables/graduations";
 import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
+import guardianRequests from "./tables/guardianRequests";
 import insightCalibrations from "./tables/insightCalibrations";
 import insightDrafts from "./tables/insightDrafts";
 import insightMastery from "./tables/insightMastery";
@@ -249,6 +250,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly guardianCodes: typeof guardianCodes;
   readonly guardianConsents: typeof guardianConsents;
   readonly guardianLinks: typeof guardianLinks;
+  readonly guardianRequests: typeof guardianRequests;
   readonly insightCalibrations: typeof insightCalibrations;
   readonly insightDrafts: typeof insightDrafts;
   readonly insightMastery: typeof insightMastery;
@@ -412,6 +414,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   guardianCodes,
   guardianConsents,
   guardianLinks,
+  guardianRequests,
   insightCalibrations,
   insightDrafts,
   insightMastery,

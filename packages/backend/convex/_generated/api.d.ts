@@ -7704,6 +7704,56 @@ export declare const api: {
         }
       >;
     };
+    requests: {
+      answer: FunctionReference<
+        "mutation",
+        "public",
+        {
+          decision: "approved" | "declined";
+          linkId: Id<"guardianLinks">;
+          requestId: Id<"guardianRequests">;
+          slug: string;
+        },
+        null
+      >;
+      ask: FunctionReference<
+        "mutation",
+        "public",
+        {
+          kind: "reportCopy" | "dataCorrection";
+          linkId: Id<"guardianLinks">;
+          slug: string;
+          text: string;
+        },
+        null
+      >;
+      ofLink: FunctionReference<
+        "query",
+        "public",
+        { linkId: Id<"guardianLinks">; slug: string },
+        Array<{
+          createdAt: number;
+          id: Id<"guardianRequests">;
+          kind: "reportCopy" | "dataCorrection";
+          state: "waiting" | "approved" | "declined";
+          text: string;
+        }>
+      >;
+      waiting: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          createdAt: number;
+          id: Id<"guardianRequests">;
+          kind: "reportCopy" | "dataCorrection";
+          linkId: Id<"guardianLinks">;
+          state: "waiting" | "approved" | "declined";
+          student: string;
+          text: string;
+        }>
+      >;
+    };
   };
   identity: {
     cards: {
@@ -7990,8 +8040,10 @@ export declare const api: {
             | "result.grade"
             | "result.release"
             | "result.view"
+            | "guardian.answer"
             | "guardian.child"
             | "guardian.confirm"
+            | "guardian.request"
             | "guardian.readdress"
             | "guardian.revoke"
             | "guardian.verify"
@@ -8120,8 +8172,10 @@ export declare const api: {
               | "result.grade"
               | "result.release"
               | "result.view"
+              | "guardian.answer"
               | "guardian.child"
               | "guardian.confirm"
+              | "guardian.request"
               | "guardian.readdress"
               | "guardian.revoke"
               | "guardian.verify"
@@ -8254,8 +8308,10 @@ export declare const api: {
             | "result.grade"
             | "result.release"
             | "result.view"
+            | "guardian.answer"
             | "guardian.child"
             | "guardian.confirm"
+            | "guardian.request"
             | "guardian.readdress"
             | "guardian.revoke"
             | "guardian.verify"
@@ -8364,8 +8420,10 @@ export declare const api: {
             | "result.grade"
             | "result.release"
             | "result.view"
+            | "guardian.answer"
             | "guardian.child"
             | "guardian.confirm"
+            | "guardian.request"
             | "guardian.readdress"
             | "guardian.revoke"
             | "guardian.verify"
@@ -8606,8 +8664,10 @@ export declare const api: {
               | "result.grade"
               | "result.release"
               | "result.view"
+              | "guardian.answer"
               | "guardian.child"
               | "guardian.confirm"
+              | "guardian.request"
               | "guardian.readdress"
               | "guardian.revoke"
               | "guardian.verify"
@@ -8830,6 +8890,11 @@ export declare const api: {
                   guardian: Id<"tenantPeople">;
                   student: Id<"tenantPeople">;
                   type: "guardian.readdressed";
+                }
+              | {
+                  decision: "approved" | "declined";
+                  student: Id<"tenantPeople">;
+                  type: "guardian.request.answered";
                 }
               | {
                   client: Id<"integrationClients">;
