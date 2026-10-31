@@ -1,4 +1,3 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -12,13 +11,18 @@ import tryoutAttempts from "@repo/backend/confect/_generated/tables/tryoutAttemp
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { createAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
+import type { TryoutSection } from "@repo/backend/confect/tryouts/runtime/schema";
 import { startSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
-import { tryoutStartSourceSchema } from "@repo/backend/confect/tryouts/start/source";
+import {
+  type FrozenPlacement,
+  freezeAttempt,
+} from "@repo/backend/confect/tryouts/start/freeze";
+import { TryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
 import {
   startAttemptArgsValidator,
   toTryoutStartError,
 } from "@repo/backend/confect/tryouts/start/spec";
-import { Array as Arr, Duration, Effect, flow, Schema, Struct } from "effect";
+import { Duration, Effect, flow, Schema, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutAttemptInsert = Omit<TryoutAttempt, "_creationTime" | "_id">;
@@ -35,17 +39,30 @@ const createTryoutAttemptInputSchema = Schema.Struct({
   attemptNumber: Schema.Finite,
   now: Schema.Finite,
   scaleVersion: Schema.NullOr(irtScaleVersions.Doc),
-  source: tryoutStartSourceSchema,
+  source: TryoutStartSource,
   userId: IdSchema("users"),
 });
 type CreateTryoutAttemptInput = typeof createTryoutAttemptInputSchema.Type;
 
-/** Creates the attempt snapshot and all start-related rows atomically. */
+/**
+ * Freezes the set into an attempt and creates the attempt with all its start rows atomically: its
+ * sections and places, its progress, the entry section a direct-entry set starts in, and its expiry.
+ */
 export const createTryoutAttempt = Effect.fn(
   "tryouts.start.createTryoutAttempt"
 )(function* (input: CreateTryoutAttemptInput) {
   const writer = yield* DatabaseWriter;
-  const values = buildAttemptValues(input);
+  const frozen = yield* freezeAttempt({
+    items: input.source.items,
+    paper: input.source.paper.paper,
+    profile: input.source.profile.profile,
+    sections: input.source.sections,
+  });
+  const values = buildAttemptValues(
+    input,
+    frozen.sections,
+    frozen.placements.length
+  );
   const attemptId = yield* writer
     .table("tryoutAttempts")
     .insert(values)
@@ -57,70 +74,46 @@ export const createTryoutAttempt = Effect.fn(
   yield* persistAttemptStart({
     attempt,
     input,
+    placements: frozen.placements,
   });
   return attempt;
 });
 
-/** Builds the complete immutable attempt row before any related writes. */
+/** Builds the complete immutable attempt row, from the source and its frozen sections, before any related writes. */
 function buildAttemptValues(
-  input: CreateTryoutAttemptInput
+  input: CreateTryoutAttemptInput,
+  sections: readonly TryoutSection[],
+  totalQuestions: number
 ): TryoutAttemptInsert {
-  const values = {
+  const { source } = input;
+  return {
     ...input.access,
+    appLocale: input.args.locale,
+    assessmentSnapshotId: source.active.snapshotId,
     attemptNumber: input.attemptNumber,
     completedAt: null,
     completedSectionKeys: [],
+    countryKey: source.set.countryKey,
     endReason: null,
+    examKey: source.set.examKey,
     expiresAt: input.now + 3 * 24 * 60 * 60 * 1000,
     lastActivityAt: input.now,
+    paper: { hash: source.paper.hash, id: source.paper.paper.id },
+    profile: { hash: source.profile.hash, id: source.profile.profile.id },
+    releaseId: source.active.releaseId,
     scoreStatus: input.scaleVersion?.status ?? "official",
+    scoring: source.profile.profile.scoring,
+    sections: [...sections],
+    setIdentity: source.setIdentity,
+    setKey: source.set.setKey,
+    setPublicPath: source.set.publicPath,
     startedAt: input.now,
     status: "in-progress",
     totalCorrect: 0,
+    totalQuestions,
+    trackKey: source.set.trackKey,
     userId: input.userId,
-    ...(input.scaleVersion
-      ? {
-          scaleVersionId: input.scaleVersion._id,
-        }
-      : {}),
-  } satisfies Partial<TryoutAttemptInsert>;
-  const signedSet = input.source.snapshot.set.row;
-  return {
-    ...values,
-    countryKey: signedSet.countryKey,
-    examKey: signedSet.examKey,
-    appLocale: input.args.locale,
-    scoringStrategy: signedSet.scoringStrategy,
-    sectionSnapshots: Arr.map(
-      input.source.snapshot.sections,
-      ({ section }) => ({
-        ...(section.row.marks === undefined
-          ? {}
-          : { marks: section.row.marks }),
-        ...(section.row.publicPath === undefined
-          ? {}
-          : {
-              publicPath: section.row.publicPath,
-            }),
-        questionCount: section.row.questionCount,
-        questionSourcePath: section.row.questionSourcePath,
-        sectionIdentity: tryoutCatalogIdentity(section.row),
-        sectionKey: section.row.sectionKey,
-        sectionOrder: section.row.order,
-        sectionRowHash: section.rowHash,
-        sourceRevision: section.row.sourceRevision,
-        timeLimitSeconds: section.row.timeLimitSeconds,
-      })
-    ),
-    setIdentity: input.source.snapshot.setIdentity,
-    setKey: signedSet.setKey,
-    setPublicPath: signedSet.publicPath,
-    snapshotReleaseId: input.source.releaseId,
-    totalQuestions: signedSet.questionCount,
-    trackKey: signedSet.trackKey,
-    tryoutBundleHash: input.source.bundle.bundleHash,
-    tryoutBundleId: input.source.bundle._id,
-    tryoutSnapshotId: input.source.snapshot.snapshotId,
+    ...(input.scaleVersion ? { scaleVersionId: input.scaleVersion._id } : {}),
   };
 }
 
@@ -129,19 +122,17 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
   function* (args: {
     attempt: TryoutAttempt;
     input: CreateTryoutAttemptInput;
+    placements: readonly FrozenPlacement[];
   }) {
     const scheduler = yield* Scheduler;
-    const { attempt, input } = args;
+    const { attempt, input, placements } = args;
     yield* writeTryoutSetProgress({
       attempt,
       publishedScore: null,
       status: "in-progress",
       updatedAt: input.now,
     });
-    yield* createAttemptPlacements({
-      attempt,
-      source: input.source,
-    });
+    yield* createAttemptPlacements(attempt, placements);
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
       yield* startSectionAttempt({

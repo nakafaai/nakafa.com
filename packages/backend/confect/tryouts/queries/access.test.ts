@@ -4,7 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import { TRYOUT_NOW } from "@repo/backend/test/tryout/world";
 import type { FunctionArgs } from "convex/server";
 
 const startAccessArgs: FunctionArgs<
@@ -13,7 +13,7 @@ const startAccessArgs: FunctionArgs<
   countryKey: "indonesia",
   examKey: "snbt",
   locale: "id",
-  now: TRYOUT_TEST_NOW,
+  now: TRYOUT_NOW,
   setKey: "set-1",
   trackKey: "2027",
 };
@@ -28,7 +28,7 @@ describe("tryouts/queries/access", () => {
 
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
-        now: TRYOUT_TEST_NOW,
+        now: TRYOUT_NOW,
         suffix: "start-access-free",
       })
     );
@@ -49,7 +49,7 @@ describe("tryouts/queries/access", () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
-        now: TRYOUT_TEST_NOW,
+        now: TRYOUT_NOW,
         plan: "pro",
         suffix: "start-access-included",
       })

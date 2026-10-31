@@ -59,8 +59,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "2.0.0",
-    "2.0.0 replaces the question and try-out contracts with the assessment snapshot, and nakafa.com adopts it in the try-out engine train (#1434, #1436), so this repository stays on 1.0.0 until that train lands. 2.0.0 still peers effect 4.0.5 exactly, as 1.0.0 does.",
+    "3.0.0",
+    "nakafa.com declares 2.0.0, the first release with the assessment snapshot, which peers effect 4.0.5 exactly. 3.0.0 (30 October 2026) builds the contracts on effect/crypto and peers effect exactly 4.1.0, so it moves with the Effect cohort in #1524, after 2.0.0 lands.",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [

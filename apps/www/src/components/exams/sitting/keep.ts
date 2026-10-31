@@ -1,4 +1,4 @@
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
+import { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { Array as Arr, Option } from "effect";
 import { keptAnswers } from "@/components/player/keep";
 

@@ -43,9 +43,6 @@ export const decodePublicRuntimeRow = Effect.fn(
     "the current public content projection",
     projectionJson
   ).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
-  if (projection.kind === "question-body") {
-    return yield* new PublicRuntimeReadError();
-  }
   if (
     row.projectionHash !== projectionHash ||
     row.activeManifestHash !== release.manifestHash ||

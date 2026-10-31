@@ -64,48 +64,6 @@ function materialProjection() {
   );
 }
 
-/** Creates one valid non-routed question projection for exclusion coverage. */
-function questionProjection() {
-  const setKey = "question-bank/tryout/indonesia/snbt/general/set-1";
-  const questionKey = `${setKey}/question-1`;
-  return Schema.decodeSync(ContentProjectionSchema)({
-    bodyKind: "question",
-    contentKey: `${questionKey}/question`,
-    kind: "question-body",
-    artifactLocale: "en",
-    metadata: {
-      authors: [
-        {
-          name: "Nakafa",
-        },
-      ],
-      datePublished: "2026-07-24",
-      title: "Technical question",
-    },
-    peerContentKey: `${questionKey}/answer`,
-    questionKey,
-    questionNumber: 1,
-    response: {
-      kind: "single-choice",
-      options: [
-        {
-          isCorrect: true,
-          label: "Correct",
-          optionKey: "option-1",
-          order: 1,
-        },
-        {
-          isCorrect: false,
-          label: "Incorrect",
-          optionKey: "option-2",
-          order: 2,
-        },
-      ],
-    },
-    setKey,
-  });
-}
-
 /** Runs the write program at the native Convex mutation boundary. */
 function write(
   ctx: MutationCtx,
@@ -154,25 +112,6 @@ describe("contentRelease/search/write", () => {
             testHead({
               delivery: "authenticated",
             })
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      code: "CONTENT_RELEASE_INTEGRITY",
-    });
-    const question = questionProjection();
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          write(
-            ctx,
-            {
-              ...testHead({
-                contentKey: question.contentKey,
-              }),
-              family: "question",
-            },
-            question
           )
         )
       )

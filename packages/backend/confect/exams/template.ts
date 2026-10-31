@@ -1,6 +1,6 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
-import { keyFits } from "@repo/backend/confect/exams/key";
+import { keyFits } from "@repo/backend/confect/assessment/key";
 import {
   choiceLimit,
   essayAnswers,

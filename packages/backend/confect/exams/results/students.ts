@@ -4,6 +4,7 @@ import type {
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { isAnswered } from "@repo/backend/confect/assessment/response";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
 import { attemptAnswers } from "@repo/backend/confect/exams/results/mine";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
@@ -11,7 +12,6 @@ import {
   attemptIn,
   attemptOf,
 } from "@repo/backend/confect/exams/sittings/attempt";
-import { isAnswered } from "@repo/backend/confect/exams/sittings/response";
 import type { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { namedPeople } from "@repo/backend/confect/tenancy/named";
 import type { PaginationOptions } from "convex/server";

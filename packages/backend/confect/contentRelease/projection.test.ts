@@ -3,13 +3,11 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
-import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
-  TEST_QUESTION_CONTENT_KEY,
-  TEST_QUESTION_PROJECTION,
-  TEST_QUESTION_PROJECTION_JSON,
-  TEST_QUESTION_SOURCE,
-} from "@repo/backend/test/content/question";
+  FUNCTION_MATERIAL,
+  FUNCTION_MATERIAL_KEY,
+  testProjectionJson,
+} from "@repo/backend/test/content/material";
 import {
   TEST_DIGEST,
   TEST_RELEASE_ID,
@@ -31,22 +29,6 @@ function stageUpsert(t: TestConvex<typeof schema>, contentKey = "test:head-0") {
   return t.mutation(stageItems, {
     batchIndex: 0,
     itemJson: [testUpsertJson({ contentKey })],
-    releaseId: TEST_RELEASE_ID,
-  });
-}
-
-/** Stages the exact Question upsert required by transition tests. */
-function stageQuestionUpsert(t: TestConvex<typeof schema>) {
-  return t.mutation(stageItems, {
-    batchIndex: 0,
-    itemJson: [
-      testUpsertJson({
-        contentKey: TEST_QUESTION_CONTENT_KEY,
-        family: "question",
-        rendererDomain: "snbt-general",
-        sourcePath: TEST_QUESTION_SOURCE,
-      }),
-    ],
     releaseId: TEST_RELEASE_ID,
   });
 }
@@ -249,14 +231,12 @@ describe("contentRelease/projection", () => {
   });
 
   it.each(["candidate", "recovery"] as const)(
-    "stages strict Question projections for a signed %s release",
+    "stages strict projections for a signed %s release",
     async (role) => {
       const t = convexTest(schema, convexModules);
       await t.mutation((ctx) => insertTestRelease(ctx, { role }));
-      await stageQuestionUpsert(t);
-      await expect(
-        stage(t, [TEST_QUESTION_PROJECTION_JSON])
-      ).resolves.toMatchObject({
+      await stageUpsert(t);
+      await expect(stage(t, [testProjectionJson()])).resolves.toMatchObject({
         created: 1,
         unchanged: 0,
       });
@@ -264,15 +244,15 @@ describe("contentRelease/projection", () => {
   );
 
   it.each(["candidate", "recovery"] as const)(
-    "rejects extra Question fields for a signed %s release",
+    "rejects extra projection fields for a signed %s release",
     async (role) => {
       const t = convexTest(schema, convexModules);
       await t.mutation((ctx) => insertTestRelease(ctx, { role }));
-      await stageQuestionUpsert(t);
+      await stageUpsert(t, FUNCTION_MATERIAL_KEY);
       await expect(
         stage(t, [
           encodeJsonText({
-            ...TEST_QUESTION_PROJECTION,
+            ...FUNCTION_MATERIAL,
             choices: [],
           }),
         ])

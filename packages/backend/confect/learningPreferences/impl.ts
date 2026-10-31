@@ -1,6 +1,4 @@
-import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type { TryoutCountry } from "@nakafa/aksara-contracts/tryout/catalog";
-import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { CatalogCountrySchema } from "@nakafa/aksara-contracts/assessment/catalog";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -11,11 +9,10 @@ import {
   learningPreferencePersistenceFailedMessage,
 } from "@repo/backend/confect/learningPreferences/schema";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
-import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
-import { readTryoutCatalogRowByIdentity } from "@repo/backend/content/tryout/row";
+import { loadActiveAssessment } from "@repo/backend/confect/tryouts/active";
+import { readCatalogNode } from "@repo/backend/confect/tryouts/catalog/rows";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /** Maps unknown database failures into the preference persistence contract. */
 function toLearningPreferencePersistenceError() {
@@ -26,7 +23,9 @@ function toLearningPreferencePersistenceError() {
 }
 
 /** Converts a try-out country row into the compact option used by navigation. */
-export function toTryoutCountryOption(country: TryoutCountry) {
+export function toTryoutCountryOption(
+  country: typeof CatalogCountrySchema.Type
+) {
   return {
     countryCode: country.countryCode,
     key: country.countryKey,
@@ -52,21 +51,17 @@ export const readLearningPreferenceByUserId = Effect.fn(
     );
 });
 
-/** Loads one active try-out country from the signed catalog. */
+/** Loads one try-out country of the active catalog in one locale, none when the catalog has no such country. */
 export const readActiveTryoutCountry = Effect.fn(
   "learningPreferences.readActiveTryoutCountry"
 )(function* (args: { readonly countryKey: string; readonly locale: Locale }) {
-  const owner = yield* loadTryoutOwner().pipe(Effect.provide(tryoutLayer));
-  const identity = tryoutCatalogNodeIdentity({
-    appLocale: ActiveAppLocaleSchema.make(args.locale),
+  const { snapshotId } = yield* loadActiveAssessment();
+  const country = yield* readCatalogNode(snapshotId, {
+    appLocale: args.locale,
     countryKey: args.countryKey,
     kind: "country",
   });
-  const country = yield* readTryoutCatalogRowByIdentity(
-    owner.snapshotId,
-    identity
-  ).pipe(Effect.provide(tryoutLayer));
-  return country?.kind === "country" ? country : null;
+  return Option.getOrNull(country);
 });
 
 /** Reads the current explicit try-out country preference. */

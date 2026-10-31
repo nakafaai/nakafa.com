@@ -1,6 +1,5 @@
 import { ListPlusIcon } from "@hugeicons/core-free-icons";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import {
   letterScript,
   optionLetter,
@@ -10,16 +9,9 @@ import {
   CHOICE_OPTIONS_MIN,
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
-import { FieldDescription } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Radio,
-  RadioGroup,
-} from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Option } from "effect";
-import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { markedWith } from "@/components/exams/sitting/response";
 import type { OptionLabel } from "@/components/tenant/exams/answer";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import type { Question } from "@/components/tenant/exams/optimistic";
@@ -44,9 +36,6 @@ import {
 /** A true or false table, as the page shows it. */
 type Table = Extract<Interaction, { kind: "matrix" }>;
 
-/** One cell of the key: a statement and the column it takes. */
-type Cell = Extract<InteractionKey, { kind: "matrix" }>["answers"][number];
-
 /** One statement or column of the table: its ID and its rich text. */
 type Part = Table["statements"][number];
 
@@ -66,9 +55,9 @@ interface TableSheetProps {
 
 /**
  * A true or false question's paper as the student sees it: one table, a row for each numbered statement and a
- * column for each choice, true and false. The teacher writes each statement in its row, may retype a column's
- * header, and marks the key in the table itself, one choice per row. The key saves once every statement is marked;
- * until then the marks wait on screen. A statement that leaves takes its mark out of the key.
+ * column for each choice, true and false, each row's circles unmarked. The teacher writes each statement in its
+ * row and may retype a column's header; the key is marked in the teacher's layer (`TableKey`), so the paper
+ * carries no mark. A statement that leaves takes its mark out of the key.
  */
 export function TableSheet({
   chosen,
@@ -80,30 +69,10 @@ export function TableSheet({
 }: TableSheetProps) {
   const t = useTranslations("Exams");
   const tTryouts = useTranslations("Tryouts");
-  const id = useId();
-  // The marks that do not mark every statement yet, which stand for the key until they do.
-  const [draft, setDraft] = useState<readonly Cell[] | null>(null);
-  const cells = Arr.filter(
-    draft ?? keyCells(editing.displayed.key),
-    (cell) =>
-      Arr.some(table.statements, (part) => part.id === cell.statement) &&
-      Arr.some(table.columns, (part) => part.id === cell.column)
-  );
   const saved = (side: "columns" | "statements") =>
     Arr.flatMap(question.answers, (answer) =>
       answer.kind === "matrix" ? answer[side] : []
     );
-
-  /** Marks one statement with one column, and saves the marks once they mark every statement. */
-  const mark = (statement: string, column: string) => {
-    const next = markedWith(table.statements, cells, { column, statement });
-    if (next.length === table.statements.length) {
-      setDraft(null);
-      editing.setCells(next);
-      return;
-    }
-    setDraft(next);
-  };
 
   /** Saves the label a statement's or a column's editor holds. */
   const saveLabel = (
@@ -149,7 +118,7 @@ export function TableSheet({
       <PaperTable columns={table.columns.length}>
         <PaperTableHead heading={tTryouts("statement")}>
           {Arr.map(table.columns, (column, index) => (
-            <PaperTableHeader id={`${id}-${column.id}`} key={column.id}>
+            <PaperTableHeader key={column.id}>
               <OptionRow
                 label={labelOf(column, saved("columns"))}
                 locked={frozen}
@@ -177,19 +146,9 @@ export function TableSheet({
           ))}
         </PaperTableHead>
         {Arr.map(table.statements, (statement, index) => (
-          <RadioGroup
-            aria-label={t("cell-of", { name: index + 1, number })}
-            className="col-span-full grid grid-cols-subgrid gap-0"
-            disabled={frozen}
+          <div
+            className="col-span-full grid grid-cols-subgrid"
             key={statement.id}
-            onValueChange={(column: string) => mark(statement.id, column)}
-            value={Option.getOrElse(
-              Option.map(
-                Arr.findFirst(cells, (cell) => cell.statement === statement.id),
-                (cell) => cell.column
-              ),
-              () => ""
-            )}
           >
             <PaperTableNumber number={index + 1} />
             <PaperTableStatement>
@@ -217,14 +176,9 @@ export function TableSheet({
               </OptionRow>
             </PaperTableStatement>
             {Arr.map(table.columns, (column) => (
-              <PaperTableMark key={column.id}>
-                <Radio
-                  aria-labelledby={`${id}-${column.id}`}
-                  value={column.id}
-                />
-              </PaperTableMark>
+              <PaperTableMark key={column.id} />
             ))}
-          </RadioGroup>
+          </div>
         ))}
       </PaperTable>
       {frozen || table.statements.length >= CHOICE_OPTIONS_MAX ? null : (
@@ -240,7 +194,6 @@ export function TableSheet({
           </Button>
         </div>
       )}
-      <FieldDescription>{t("cell-hint")}</FieldDescription>
     </div>
   );
 }

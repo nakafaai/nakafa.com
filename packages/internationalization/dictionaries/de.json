@@ -258,6 +258,7 @@
     "title": "Prüfungen",
     "empty": "Es gibt noch keine Prüfungen.",
     "exams-search": "Prüfung suchen",
+    "rooms-search": "Raum suchen",
     "mine-exam": "Prüfung",
     "mine-opens": "Öffnet",
     "mine-status": "Status",
@@ -1750,7 +1751,9 @@
     "incorrect": "Falsch",
     "reset": "Zurücksetzen",
     "explanation": "Lösungserklärung",
-    "number-count": "Nummer {count}"
+    "number-count": "Nummer {count}",
+    "prompt": "Aufgabe",
+    "reading": "Lesetext"
   },
   "Player": {
     "navigator": "Aufgaben",

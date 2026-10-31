@@ -1,109 +1,86 @@
-import { Array as Arr, HashMap, HashSet, Option } from "effect";
+import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import {
+  chosenOptions,
+  type ExamResponse,
+  markedCells,
+} from "@repo/backend/confect/assessment/response";
+import { Array as Arr, Option } from "effect";
 import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface";
 import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
+import { optionLabelId } from "@/components/tryout/runtime/response/id";
 import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label";
-import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
-import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
 
-/** Renders one immutable response with answer-key review styling. */
-export function TryoutReviewedResponse({
-  questionOrder,
-  responseSpec,
-  selection,
+/**
+ * Renders the one interaction of a reviewed question with its key: each option marked correct or not,
+ * and each statement of a matrix with the key's column and a mark that misses it.
+ */
+export function TryoutReviewedFields({
+  answer,
+  id,
+  interaction,
+  response,
 }: {
-  readonly questionOrder: number;
-  readonly responseSpec: TryoutRenderableResponseSpec;
-  readonly selection: TryoutResponseSelection | null;
+  /** The key's answer for the interaction. */
+  readonly answer: InteractionKey;
+  readonly id: string;
+  readonly interaction: Interaction;
+  readonly response: ExamResponse | null;
 }) {
-  if (responseSpec.kind === "category") {
+  if (interaction.kind === "matrix" && answer.kind === "matrix") {
+    const cells = markedCells(response ?? []);
     return (
-      <ReviewedCategoryResponse
-        questionOrder={questionOrder}
-        responseSpec={responseSpec}
-        selection={selection}
+      <TryoutChoiceTable
+        columns={Arr.map(interaction.columns, (column) => ({
+          id: column.id,
+          label: <TryoutResponseLabel document={column.label} />,
+        }))}
+        disabled
+        statements={Arr.map(interaction.statements, (statement) => ({
+          correct: Option.getOrUndefined(
+            Option.map(
+              Arr.findFirst(
+                answer.answers,
+                (cell) => cell.statement === statement.id
+              ),
+              (cell) => cell.column
+            )
+          ),
+          id: statement.id,
+          label: <TryoutResponseLabel document={statement.label} />,
+          marked: Option.getOrUndefined(
+            Option.map(
+              Arr.findFirst(cells, (cell) => cell.statement === statement.id),
+              (cell) => cell.column
+            )
+          ),
+        }))}
       />
     );
   }
-  if (responseSpec.kind === "short-answer" || responseSpec.kind === "rubric") {
+  if (interaction.kind !== "choice" || answer.kind !== "choice") {
     return null;
   }
-  const selected = HashSet.fromIterable(readSelectedOptionKeys(selection));
+  const chosen = chosenOptions(response ?? []);
   return (
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-      {Arr.map(responseSpec.options, (option) => (
-        <TryoutReviewedChoice
-          checked={HashSet.has(selected, option.optionKey)}
-          id={`review-question-${questionOrder}-${option.optionKey}`}
-          isCorrect={option.isCorrect}
-          key={option.optionKey}
-          label={
-            <TryoutResponseLabel
-              correctness={option.isCorrect}
-              id={`review-question-${questionOrder}-${option.optionKey}`}
-            >
-              {option.label}
-            </TryoutResponseLabel>
-          }
-        />
-      ))}
+      {Arr.map(interaction.options, (option) => {
+        const isCorrect = Arr.contains(answer.correct, option.id);
+        return (
+          <TryoutReviewedChoice
+            checked={Arr.contains(chosen, option.id)}
+            id={optionLabelId(id, option.id)}
+            isCorrect={isCorrect}
+            key={option.id}
+            label={
+              <TryoutResponseLabel
+                correctness={isCorrect}
+                document={option.label}
+              />
+            }
+          />
+        );
+      })}
     </div>
-  );
-}
-
-function readSelectedOptionKeys(selection: TryoutResponseSelection | null) {
-  if (selection?.kind === "single-choice") {
-    return [selection.optionKey];
-  }
-  if (selection?.kind === "multiple-choice") {
-    return selection.optionKeys;
-  }
-  return [];
-}
-
-function ReviewedCategoryResponse({
-  questionOrder,
-  responseSpec,
-  selection,
-}: {
-  readonly questionOrder: number;
-  readonly responseSpec: Extract<
-    TryoutRenderableResponseSpec,
-    { kind: "category" }
-  >;
-  readonly selection: TryoutResponseSelection | null;
-}) {
-  const assigned = HashMap.fromIterable(
-    selection?.kind === "category"
-      ? Arr.map(selection.assignments, (assignment) => [
-          assignment.statementKey,
-          assignment.categoryKey,
-        ])
-      : []
-  );
-  const id = `review-question-${questionOrder}`;
-  return (
-    <TryoutChoiceTable
-      columns={Arr.map(responseSpec.categories, (category) => ({
-        id: category.categoryKey,
-        label: (
-          <TryoutResponseLabel id={`${id}-category-${category.categoryKey}`}>
-            {category.label}
-          </TryoutResponseLabel>
-        ),
-      }))}
-      disabled
-      statements={Arr.map(responseSpec.statements, (statement) => ({
-        correct: statement.correctCategoryKey,
-        id: statement.statementKey,
-        label: (
-          <TryoutResponseLabel id={`${id}-${statement.statementKey}`}>
-            {statement.label}
-          </TryoutResponseLabel>
-        ),
-        marked: Option.getOrUndefined(
-          HashMap.get(assigned, statement.statementKey)
-        ),
-      }))}
-    />
   );
 }

@@ -64,7 +64,6 @@ describe("contentRelease/status", () => {
       active: null,
       candidate: null,
       recovery: null,
-      tryoutRuntimeBundleJson: null,
     });
     await expect(getStatus(empty)).resolves.toEqual({
       manifestHash: TEST_MANIFEST_HASH,
@@ -82,7 +81,6 @@ describe("contentRelease/status", () => {
         rendererJson: testRendererJson(),
       },
       recovery: null,
-      tryoutRuntimeBundleJson: null,
     });
     await expect(getStatus(candidate)).resolves.toMatchObject({
       phase: "staging",
@@ -96,7 +94,6 @@ describe("contentRelease/status", () => {
       active: null,
       candidate: null,
       recovery: { phase: "staging" },
-      tryoutRuntimeBundleJson: null,
     });
   });
 
@@ -192,7 +189,6 @@ describe("contentRelease/status", () => {
       },
       candidate: null,
       recovery: null,
-      tryoutRuntimeBundleJson: null,
     });
     await expect(
       getStatus(t, `sha256:${"f".repeat(64)}`, ACTIVE.releaseId)

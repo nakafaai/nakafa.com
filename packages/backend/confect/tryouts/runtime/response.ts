@@ -2,7 +2,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   indexTryoutResponses,
-  requireTryoutResponseSectionSnapshot,
+  requireTryoutResponseSection,
   validateTryoutResponsePlacementInventory,
 } from "@repo/backend/confect/tryouts/response/integrity";
 import { responseIntegrity } from "@repo/backend/confect/tryouts/response/spec";
@@ -31,10 +31,7 @@ export const loadSectionResponseIndex = Effect.fn(
   placements: readonly TryoutPlacement[]
 ) {
   const database = yield* DatabaseReader;
-  const snapshot = yield* requireTryoutResponseSectionSnapshot(
-    attempt,
-    section
-  );
+  const frozen = yield* requireTryoutResponseSection(attempt, section);
   const responses = yield* database
     .table("tryoutResponses")
     .index("by_tryoutSectionAttemptId_and_answeredAt", (index) =>
@@ -50,9 +47,9 @@ export const loadSectionResponseIndex = Effect.fn(
   }
   const validatedPlacements = yield* validateTryoutResponsePlacementInventory({
     attemptId: attempt._id,
-    expectedQuestionCount: snapshot.questionCount,
+    expectedQuestionCount: frozen.questionCount,
     placements,
-    snapshots: [snapshot],
+    sections: [frozen],
   });
   const links = Arr.map(validatedPlacements, (placement) => ({
     placement,
@@ -82,7 +79,7 @@ export const loadAttemptResponses = Effect.fn(
     attemptId: attempt._id,
     expectedQuestionCount: attempt.totalQuestions,
     placements,
-    snapshots: attempt.sectionSnapshots,
+    sections: attempt.sections,
   });
   const { responses, sections } = yield* Effect.all(
     {
@@ -98,7 +95,7 @@ export const loadAttemptResponses = Effect.fn(
         .index("by_tryoutAttemptId_and_sectionOrder", (index) =>
           index.eq("tryoutAttemptId", attempt._id)
         )
-        .take(attempt.sectionSnapshots.length + 1)
+        .take(attempt.sections.length + 1)
         .pipe(Effect.mapError(toTryoutRuntimeError)),
     },
     {
@@ -111,7 +108,7 @@ export const loadAttemptResponses = Effect.fn(
       "Try-out response count exceeds the attempt question count."
     );
   }
-  const sectionsByIdentity = yield* indexAttemptSections(
+  const sectionsByKey = yield* indexAttemptSections(
     attempt,
     sections,
     sectionCoverage
@@ -119,7 +116,7 @@ export const loadAttemptResponses = Effect.fn(
   const links = Arr.getSomes(
     Arr.map(validatedPlacements, (placement) =>
       Option.map(
-        MutableHashMap.get(sectionsByIdentity, placement.sectionIdentity),
+        MutableHashMap.get(sectionsByKey, placement.sectionKey),
         (section) => ({
           placement,
           sectionAttemptId: section._id,
@@ -146,46 +143,42 @@ const indexAttemptSections = Effect.fn("tryouts.response.indexAttemptSections")(
     sections: readonly TryoutSectionAttempt[],
     sectionCoverage: SectionCoverage
   ) {
-    if (sections.length > attempt.sectionSnapshots.length) {
+    if (sections.length > attempt.sections.length) {
       return yield* responseIntegrity(
         "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
-        "Try-out section attempt count exceeds its frozen snapshot."
+        "Try-out section attempt count exceeds its frozen sections."
       );
     }
     if (
       sectionCoverage === "complete" &&
-      sections.length !== attempt.sectionSnapshots.length
+      sections.length !== attempt.sections.length
     ) {
       return yield* responseIntegrity(
         "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
         "Try-out section attempts do not match the frozen section count."
       );
     }
-    const sectionsByIdentity = MutableHashMap.empty<
-      string,
-      TryoutSectionAttempt
-    >();
+    const sectionsByKey = MutableHashMap.empty<string, TryoutSectionAttempt>();
     for (const section of sections) {
-      const snapshot = Option.getOrUndefined(
+      const frozen = Option.getOrUndefined(
         Arr.findFirst(
-          attempt.sectionSnapshots,
-          (candidate) => candidate.sectionIdentity === section.sectionIdentity
+          attempt.sections,
+          (candidate) => candidate.sectionKey === section.sectionKey
         )
       );
       if (
-        !snapshot ||
-        MutableHashMap.has(sectionsByIdentity, section.sectionIdentity) ||
-        section.sectionKey !== snapshot.sectionKey ||
-        section.sectionOrder !== snapshot.sectionOrder ||
-        section.totalQuestions !== snapshot.questionCount
+        !frozen ||
+        MutableHashMap.has(sectionsByKey, section.sectionKey) ||
+        section.sectionOrder !== frozen.sectionOrder ||
+        section.totalQuestions !== frozen.questionCount
       ) {
         return yield* responseIntegrity(
           "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
-          "Try-out section attempt differs from its frozen snapshot."
+          "Try-out section attempt differs from its frozen sections."
         );
       }
-      MutableHashMap.set(sectionsByIdentity, section.sectionIdentity, section);
+      MutableHashMap.set(sectionsByKey, section.sectionKey, section);
     }
-    return sectionsByIdentity;
+    return sectionsByKey;
   }
 );

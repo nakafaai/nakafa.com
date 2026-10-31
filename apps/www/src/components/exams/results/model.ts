@@ -1,13 +1,13 @@
-import { optionLetter } from "@repo/backend/confect/exams/letters";
-import type { QuestionSummary } from "@repo/backend/confect/exams/results/contract";
-import type { Verdict } from "@repo/backend/confect/exams/results/schema";
 import {
   type ExamPair,
   type ExamResponse,
   isCellsResponse,
   isPairsResponse,
   isTextResponse,
-} from "@repo/backend/confect/exams/sittings/response";
+} from "@repo/backend/confect/assessment/response";
+import { optionLetter } from "@repo/backend/confect/exams/letters";
+import type { QuestionSummary } from "@repo/backend/confect/exams/results/contract";
+import type { Verdict } from "@repo/backend/confect/exams/results/schema";
 import { Array as Arr, Option, Result, String as Str } from "effect";
 
 /** The copy key that names each verdict of an answer. */

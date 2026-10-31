@@ -23,46 +23,46 @@ function hasSnapshotFamily<Family extends ContentSnapshotKind>(
 }
 
 /** Loads and authenticates one retained immutable family snapshot. */
-export const loadVerifiedSnapshot = Effect.fn(
-  "contentRelease.loadVerifiedSnapshot"
-)(function* <const Family extends ContentSnapshotKind>(
-  family: Family,
-  snapshotId: string
-) {
-  const stored = Option.getOrNull(
-    yield* (yield* PublicationSource).snapshot(family, snapshotId)
-  );
-  if (!stored || stored.verifiedAt === undefined) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_MISSING",
-      `Verified ${family} snapshot ${snapshotId} is unavailable.`
-    );
-  }
-  const decoded = yield* decodeSnapshotJson(stored.snapshotJson);
-  const snapshot = decoded;
-  if (
-    !hasSnapshotFamily(snapshot, family) ||
-    contentSnapshotId(snapshot) !== snapshotId
+const loadVerifiedSnapshot = Effect.fn("contentRelease.loadVerifiedSnapshot")(
+  function* <const Family extends ContentSnapshotKind>(
+    family: Family,
+    snapshotId: string
   ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Verified ${family} snapshot lost its signed identity.`
+    const stored = Option.getOrNull(
+      yield* (yield* PublicationSource).snapshot(family, snapshotId)
     );
+    if (!stored || stored.verifiedAt === undefined) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_MISSING",
+        `Verified ${family} snapshot ${snapshotId} is unavailable.`
+      );
+    }
+    const decoded = yield* decodeSnapshotJson(stored.snapshotJson);
+    const snapshot = decoded;
+    if (
+      !hasSnapshotFamily(snapshot, family) ||
+      contentSnapshotId(snapshot) !== snapshotId
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Verified ${family} snapshot lost its signed identity.`
+      );
+    }
+    if (
+      decoded.family === "quran" &&
+      decoded.manifest.provenanceStatus !== "approved"
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_UNSUPPORTED",
+        "Verified Quran snapshot has blocked provenance."
+      );
+    }
+    return {
+      snapshot,
+      stored,
+    };
   }
-  if (
-    decoded.family === "quran" &&
-    decoded.manifest.provenanceStatus !== "approved"
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_UNSUPPORTED",
-      "Verified Quran snapshot has blocked provenance."
-    );
-  }
-  return {
-    snapshot,
-    stored,
-  };
-});
+);
 
 /** Resolves active release ownership and its optional verified family snapshot. */
 export const loadSnapshotOwner = Effect.fn("contentRelease.loadSnapshotOwner")(

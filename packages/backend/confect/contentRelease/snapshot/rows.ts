@@ -4,15 +4,13 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import assessmentRows from "@repo/backend/confect/_generated/tables/assessmentRows";
 import contentSnapshots from "@repo/backend/confect/_generated/tables/contentSnapshots";
 import curriculumRoutes from "@repo/backend/confect/_generated/tables/curriculumRoutes";
 import programBuckets from "@repo/backend/confect/_generated/tables/programBuckets";
 import programCatalog from "@repo/backend/confect/_generated/tables/programCatalog";
 import quranRows from "@repo/backend/confect/_generated/tables/quranRows";
 import quranSearch from "@repo/backend/confect/_generated/tables/quranSearch";
-import tryoutCatalog from "@repo/backend/confect/_generated/tables/tryoutCatalog";
-import tryoutPlacements from "@repo/backend/confect/_generated/tables/tryoutPlacements";
-import tryoutRuntimeBundles from "@repo/backend/confect/_generated/tables/tryoutRuntimeBundles";
 import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { Array as Arr, Effect, Schema } from "effect";
@@ -42,16 +40,8 @@ const SnapshotChildSchema = Schema.Union([
     table: Schema.Literal("quranSearch"),
   }),
   Schema.Struct({
-    row: tryoutRuntimeBundles.Doc,
-    table: Schema.Literal("tryoutRuntimeBundles"),
-  }),
-  Schema.Struct({
-    row: tryoutCatalog.Doc,
-    table: Schema.Literal("tryoutCatalog"),
-  }),
-  Schema.Struct({
-    row: tryoutPlacements.Doc,
-    table: Schema.Literal("tryoutPlacements"),
+    row: assessmentRows.Doc,
+    table: Schema.Literal("assessmentRows"),
   }),
 ]);
 type SnapshotChild = typeof SnapshotChildSchema.Type;
@@ -200,57 +190,17 @@ export const loadSnapshotChildren = Effect.fn(
       part: selected,
     } satisfies ChildPage;
   }
-  const selected = part ?? "catalog";
-  if (selected === "catalog") {
-    const page = yield* database
-      .table("tryoutCatalog")
-      .index("by_snapshotId_and_index", (query) =>
-        query.eq("snapshotId", snapshotId).gt("index", afterIndex)
-      )
-      .paginate(cleanupPage())
-      .pipe(Effect.orDie);
-    return {
-      children: Arr.map(
-        page.page,
-        (row): SnapshotChild => ({
-          row,
-          table: "tryoutCatalog",
-        })
-      ),
-      done: page.isDone,
-      part: selected,
-    } satisfies ChildPage;
-  }
-  if (selected === "placement") {
-    const page = yield* database
-      .table("tryoutPlacements")
-      .index("by_snapshotId_and_index", (query) =>
-        query.eq("snapshotId", snapshotId).gt("index", afterIndex)
-      )
-      .paginate(cleanupPage())
-      .pipe(Effect.orDie);
-    return {
-      children: Arr.map(
-        page.page,
-        (row): SnapshotChild => ({
-          row,
-          table: "tryoutPlacements",
-        })
-      ),
-      done: page.isDone,
-      part: selected,
-    } satisfies ChildPage;
-  }
-  if (selected !== "runtime") {
+  const selected = part ?? "assessment";
+  if (selected !== "assessment") {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Try-out snapshot ${snapshotId} has an invalid cleanup part.`
+      `Assessment snapshot ${snapshotId} has an invalid cleanup part.`
     );
   }
   const page = yield* database
-    .table("tryoutRuntimeBundles")
-    .index("by_snapshotId_and_rendererManifestHash", (query) =>
-      query.eq("snapshotId", snapshotId)
+    .table("assessmentRows")
+    .index("by_snapshotId_and_index", (query) =>
+      query.eq("snapshotId", snapshotId).gt("index", afterIndex)
     )
     .paginate(cleanupPage())
     .pipe(Effect.orDie);
@@ -259,7 +209,7 @@ export const loadSnapshotChildren = Effect.fn(
       page.page,
       (row): SnapshotChild => ({
         row,
-        table: "tryoutRuntimeBundles",
+        table: "assessmentRows",
       })
     ),
     done: page.isDone,
@@ -292,13 +242,5 @@ export const deleteSnapshotChild = Effect.fn(
     yield* writer.table("quranSearch").delete(child.row._id);
     return;
   }
-  if (child.table === "tryoutCatalog") {
-    yield* writer.table("tryoutCatalog").delete(child.row._id);
-    return;
-  }
-  if (child.table === "tryoutRuntimeBundles") {
-    yield* writer.table("tryoutRuntimeBundles").delete(child.row._id);
-    return;
-  }
-  yield* writer.table("tryoutPlacements").delete(child.row._id);
+  yield* writer.table("assessmentRows").delete(child.row._id);
 });

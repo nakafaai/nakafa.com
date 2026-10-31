@@ -1,473 +1,126 @@
-import { describe, expect, it } from "@effect/vitest";
-import {
-  ACTIVE_APP_LOCALE_CODES,
-  type ActiveAppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
-import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
-import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
-import { convexModules } from "@repo/backend/confect/test.setup";
+import { assert, describe, expect, it } from "@effect/vitest";
+import type { AssessmentRowSchema } from "@nakafa/aksara-contracts/assessment/snapshot";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
 import { LANDING_FEATURED_TRYOUT } from "@repo/backend/content/tryout/featured";
-import { api } from "@repo/backend/convex/_generated/api";
-import schema from "@repo/backend/convex/schema";
-import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
-import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
-import {
-  activateLandingSource,
-  activateSnbtSource,
-  makeLandingHierarchy,
-  makeLandingPlacement,
-} from "@repo/backend/test/tryout/landing";
-import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
-import { TRYOUT_START_CONTENT_HASH } from "@repo/backend/test/tryout/source";
-import { convexTest } from "convex-test";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
-const LANDING_SET_PATH = "try-out/indonesia/snbt/2027/set-1";
-const DISTRACTOR_CONTENT_ROOT =
-  "question-bank/tryout/indonesia/snbt/general-reasoning/set-1";
-const DISTRACTOR_SOURCE_ROOT =
-  "packages/corpus/question-bank/tryout/indonesia/snbt/general-reasoning/set-1";
-const DISTRACTOR_QUESTION_ROOT = `${DISTRACTOR_CONTENT_ROOT}/question-1`;
-const DISTRACTOR_QUESTION_SOURCE_ROOT = `${DISTRACTOR_SOURCE_ROOT}/question-1`;
+type AssessmentRow = typeof AssessmentRowSchema.Type;
 
-/** Adds an earlier signed section without changing the landing target. */
-function makeLeadingSectionHierarchy(locale: ActiveAppLocaleCode) {
-  const hierarchy = makeLandingHierarchy(locale, "visible");
-  const target = Arr.findFirst(
-    hierarchy,
-    (row) =>
-      row.kind === "section" &&
-      row.sectionKey === LANDING_FEATURED_TRYOUT.sectionKey
+const { getFeaturedQuestion } = tryouts.queries.catalog;
+
+/** The fixture paper of the landing's set. */
+const isFeaturedPaper = (row: AssessmentRow) =>
+  row.kind === "paper" && row.paper.id === "test-paper-set-1";
+
+/** The hash of the version the landing's set places first in the featured section. */
+const featuredHash = (rows: readonly AssessmentRow[]) => {
+  const place = Option.flatMap(Arr.findFirst(rows, isFeaturedPaper), (row) =>
+    row.kind === "paper"
+      ? Option.map(
+          Arr.findFirst(
+            row.paper.sections,
+            ({ section }) => section === LANDING_FEATURED_TRYOUT.sectionKey
+          ),
+          ({ placements }) => Arr.headNonEmpty(placements).hash
+        )
+      : Option.none()
   );
-  if (!(Option.isSome(target) && target.value.kind === "section")) {
-    throw new Error("Expected the stable landing section fixture.");
-  }
+  assert.ok(Option.isSome(place), "Expected the featured place.");
+  return place.value;
+};
 
-  return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))([
-    ...Arr.map(hierarchy, (row) => {
-      if (row.kind === "track" || row.kind === "set") {
-        return {
-          ...row,
-          questionCount: 2,
-          sectionCount: 2,
-          visibleSectionCount: 2,
-        };
-      }
-      if (row.kind === "section") {
-        return { ...row, order: 2 };
-      }
-      return row;
-    }),
-    {
-      ...target.value,
-      order: 1,
-      publicPath: `${LANDING_SET_PATH}/general-reasoning`,
-      questionSourcePath: DISTRACTOR_SOURCE_ROOT,
-      sectionKey: "general-reasoning",
-      title: "General Reasoning",
-    },
-  ]);
-}
+/** A world whose first section is the landing's featured section. */
+const featuredWorld = tryoutWorld({
+  firstSectionKey: LANDING_FEATURED_TRYOUT.sectionKey,
+});
 
-/** Creates the earlier signed placement used to prove order independence. */
-function makeLeadingPlacement(locale: ActiveAppLocaleCode) {
-  return Schema.decodeSync(TryoutPlacementSchema)({
-    ...makeLandingPlacement(locale),
-    answerContentKey: `${DISTRACTOR_QUESTION_ROOT}/answer`,
-    questionContentKey: `${DISTRACTOR_QUESTION_ROOT}/question`,
-    questionSourcePath: DISTRACTOR_QUESTION_SOURCE_ROOT,
-    rendererDomain: "snbt-plain",
-    sectionKey: "general-reasoning",
-  });
-}
-
-/** Makes the first authored placement exercise the full response contract. */
-function makeMultipleChoicePlacement(locale: ActiveAppLocaleCode) {
-  const placement = makeLandingPlacement(locale);
-  return Schema.decodeSync(TryoutPlacementSchema)({
-    ...placement,
-    response: {
-      kind: "multiple-choice",
-      options: [
-        { isCorrect: true, label: "A", optionKey: "option-1", order: 1 },
-        { isCorrect: true, label: "B", optionKey: "option-2", order: 2 },
-        { isCorrect: false, label: "C", optionKey: "option-3", order: 3 },
-      ],
-    },
-  });
-}
-
-/** Makes the first authored placement exercise category assignments. */
-function makeCategoryPlacement(locale: ActiveAppLocaleCode) {
-  const placement = makeLandingPlacement(locale);
-  return Schema.decodeSync(TryoutPlacementSchema)({
-    ...placement,
-    response: {
-      categories: [
-        { categoryKey: "category-1", label: "Benar", order: 1 },
-        { categoryKey: "category-2", label: "Salah", order: 2 },
-      ],
-      kind: "category",
-      statements: [
-        {
-          correctCategoryKey: "category-1",
-          label: "Pernyataan",
-          order: 1,
-          statementKey: "statement-1",
-        },
-      ],
-    },
-  });
-}
-
-describe("tryouts/catalog/featured", () => {
-  it.effect.each(["country", "exam", "track", "set", "section"] as const)(
-    "rejects a publication missing its featured %s",
-    (kind) =>
-      Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const snapshotId = await Effect.runPromiseWith(runtimeServices)(
-              activateTryoutSnapshot(ctx, {
-                catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-                  Arr.filter(
-                    makeLandingHierarchy(locale, "visible"),
-                    (row) => row.kind !== kind
-                  )
-                ),
-                placements: Arr.map(
-                  ACTIVE_APP_LOCALE_CODES,
-                  makeLandingPlacement
-                ),
-              })
-            );
-            await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-          })
-        );
-        const failure = yield* Effect.tryPromise(() =>
-          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-            appLocale: "id",
-          })
-        ).pipe(Effect.flip);
-        expect(failure.cause).toMatchObject({
-          data: {
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `The active try-out publication has no featured ${kind}.`,
-          },
-        });
-      })
-  );
-
-  it.effect.each(["set", "bundle"] as const)(
-    "rejects a replaced featured %s without selecting another example",
-    (missing) =>
-      Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const snapshotId = await Effect.runPromiseWith(runtimeServices)(
-              activateTryoutSnapshot(ctx, {
-                catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-                  Arr.map(makeLandingHierarchy(locale, "visible"), (row) =>
-                    missing === "set" && "setKey" in row
-                      ? { ...row, setKey: "set-2" }
-                      : row
-                  )
-                ),
-                placements: Arr.map(
-                  ACTIVE_APP_LOCALE_CODES,
-                  makeLandingPlacement
-                ),
-              })
-            );
-            if (missing !== "bundle") {
-              await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-            }
-          })
-        );
-        const failure = yield* Effect.tryPromise(() =>
-          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-            appLocale: "id",
-          })
-        ).pipe(Effect.flip);
-        expect(failure.cause).toMatchObject({
-          data: {
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `The active try-out publication has no featured ${missing === "set" ? "set" : "question"}.`,
-          },
-        });
-      })
-  );
-
+describe("content/tryout/featured", () => {
   it.effect(
-    "returns the stable signed question for the public landing demo",
+    "demonstrates the reading the featured version was written against",
     () =>
       Effect.gen(function* () {
-        const t = convexTest(schema, convexModules);
-        const source = makeLandingPlacement("id");
-        yield* Effect.promise(() =>
-          t.mutation((ctx) => activateLandingSource(ctx, "visible"))
+        const world = yield* featuredWorld;
+        yield* world.rewrite(
+          (row, rows) =>
+            row.kind === "item" && row.version.hash === featuredHash(rows),
+          (row, rows) => {
+            const read = Arr.findFirst(
+              rows,
+              (candidate) =>
+                candidate.kind === "item" &&
+                candidate.version.stimulus !== undefined
+            );
+            assert.ok(
+              row.kind === "item" &&
+                Option.isSome(read) &&
+                read.value.kind === "item",
+              "Expected the featured item and an item with a reading."
+            );
+            const { stimulus } = read.value.version;
+            assert.ok(stimulus, "Expected the reading.");
+            return { ...row, version: { ...row.version, stimulus } };
+          }
         );
-
-        const featured = yield* Effect.promise(() =>
-          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-            appLocale: "id",
-          })
-        );
-
-        expect(featured).toEqual({
-          question: {
-            artifactHash: source.questionArtifactHash,
-            bundleHash: expect.any(String),
-            contentHash: TRYOUT_START_CONTENT_HASH,
-            contentKey: source.questionContentKey,
-            delivery: "authenticated",
-            appLocale: "id",
-            questionOrder: 1,
-            sectionKey: source.sectionKey,
-            snapshotReleaseId: TEST_RELEASE_ID,
-            snapshotId: expect.any(String),
-            sourcePath: source.questionSourcePath,
-            sourceRevision: source.sourceRevision,
-          },
-          response: {
-            kind: "single-choice",
-            options: [
-              {
-                isCorrect: true,
-                label: "A",
-                optionKey: "option-1",
-                order: 1,
-              },
-              {
-                isCorrect: false,
-                label: "B",
-                optionKey: "option-2",
-                order: 2,
-              },
-            ],
-          },
-        });
-        expect(featured.question).not.toHaveProperty("answerArtifactHash");
-        expect(featured.question).not.toHaveProperty("artifactLocale");
-      })
-  );
-
-  it.effect(
-    "proves every placement of the landing section before returning its question",
-    () =>
-      Effect.gen(function* () {
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          t.mutation((ctx) => activateSnbtSource(ctx))
-        );
-
-        const read = yield* Effect.promise(() =>
-          t.query(async (ctx) => ({
-            featured: await ctx.runQuery(
-              api.tryouts.queries.catalog.getFeaturedQuestion,
-              { appLocale: "id" }
-            ),
-            metrics: await ctx.meta.getTransactionMetrics(),
-          }))
-        );
-
-        expect(read.featured.question).toMatchObject({
-          contentKey: LANDING_FEATURED_TRYOUT.questionContentKey,
-          questionOrder: 1,
-        });
-        // The state, release and snapshot rows (3), the country, exam, track and
-        // set rows (4), the seven section rows that prove the set inventory, and
-        // all 20 placements of the landing section, which prove it complete and
-        // in order. One question is returned; the other 19 are the proof. A
-        // single-row read took 15 documents and also dropped that proof.
-        expect(read.metrics.documentsRead.used).toBe(34);
-      })
-  );
-
-  it.effect.each([
-    {
-      label: "a placement of the landing section is missing",
-      message: "lost its signed placements",
-      questionOrders: Arr.filter(Arr.range(1, 20), (order) => order !== 7),
-    },
-    {
-      label: "the placement orders of the landing section have a gap",
-      message: "changed its placement order",
-      questionOrders: [...Arr.range(1, 19), 21],
-    },
-  ] as const)("fails closed when $label", ({ message, questionOrders }) =>
-    Effect.gen(function* () {
-      const t = convexTest(schema, convexModules);
-      yield* Effect.promise(() =>
-        t.mutation((ctx) => activateSnbtSource(ctx, questionOrders))
-      );
-
-      const failure = yield* Effect.tryPromise(() =>
-        t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+        const question = yield* world.visitor.query(getFeaturedQuestion, {
           appLocale: "id",
-        })
-      ).pipe(Effect.flip);
+        });
+        expect(
+          yield* Schema.decodeEffect(TryoutQuestionBodyText)(question.body)
+        ).toMatchObject({ stimulus: { type: "doc" } });
+      })
+  );
 
-      // The first question is present and valid in both cases, yet the demo
-      // refuses to serve a section whose siblings cannot be proven.
-      expect(failure.cause).toMatchObject({
-        data: {
+  it.effect(
+    "refuses a release whose featured key has no answer for its version, or whose paper lost the section",
+    () =>
+      Effect.gen(function* () {
+        const keyless = yield* featuredWorld;
+        yield* keyless.rewrite(
+          (row, rows) =>
+            row.kind === "key" && row.key.version === featuredHash(rows),
+          (row, rows) => {
+            const other = Arr.findFirst(
+              rows,
+              (candidate) =>
+                candidate.kind === "key" &&
+                Arr.some(candidate.key.answers, ({ kind }) => kind === "matrix")
+            );
+            assert.ok(Option.isSome(other), "Expected the table's key.");
+            assert.ok(row.kind === "key", "Expected the featured key.");
+            return other.value;
+          }
+        );
+        expect(
+          yield* keyless.visitor
+            .query(getFeaturedQuestion, { appLocale: "id" })
+            .pipe(Effect.flip)
+        ).toMatchObject({
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: expect.stringContaining(message),
-        },
-      });
-    })
-  );
-
-  it.effect(
-    "does not expose an internal-entry section on the public landing",
-    () =>
-      Effect.gen(function* () {
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          t.mutation((ctx) => activateLandingSource(ctx, "internal-entry"))
-        );
-
-        const failure = yield* Effect.tryPromise(() =>
-          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-            appLocale: "id",
-          })
-        ).pipe(Effect.flip);
-        expect(failure.cause).toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          message: expect.stringContaining("featured answer"),
+        });
+        const unplaced = yield* featuredWorld;
+        yield* unplaced.rewrite(isFeaturedPaper, (row) => {
+          assert.ok(row.kind === "paper", "Expected the featured paper.");
+          const [first, second, ...rest] = row.paper.sections;
+          assert.ok(second, "Expected a second paper section.");
+          // The featured section's places now sit under the second section's key.
+          return {
+            ...row,
+            paper: {
+              ...row.paper,
+              sections: [{ ...first, section: second.section }, ...rest],
+            },
+          };
+        });
+        expect(
+          yield* unplaced.visitor
+            .query(getFeaturedQuestion, { appLocale: "id" })
+            .pipe(Effect.flip)
+        ).toMatchObject({
+          message: expect.stringContaining("featured question"),
         });
       })
-  );
-
-  it.effect(
-    "ignores an earlier section when selecting the landing question",
-    () =>
-      Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const snapshotId = await Effect.runPromiseWith(runtimeServices)(
-              activateTryoutSnapshot(ctx, {
-                catalog: Arr.flatMap(
-                  ACTIVE_APP_LOCALE_CODES,
-                  makeLeadingSectionHierarchy
-                ),
-                placements: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) => [
-                  makeLeadingPlacement(locale),
-                  makeLandingPlacement(locale),
-                ]),
-              })
-            );
-            await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-          })
-        );
-
-        const featured = yield* Effect.promise(() =>
-          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-            appLocale: "id",
-          })
-        );
-
-        expect(featured.question.contentKey).toBe(
-          LANDING_FEATURED_TRYOUT.questionContentKey
-        );
-      })
-  );
-
-  it.effect(
-    "returns the stable authored question for every response format",
-    () =>
-      Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const snapshotId = await Effect.runPromiseWith(runtimeServices)(
-              activateTryoutSnapshot(ctx, {
-                catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-                  makeLandingHierarchy(locale, "visible")
-                ),
-                placements: Arr.map(
-                  ACTIVE_APP_LOCALE_CODES,
-                  makeMultipleChoicePlacement
-                ),
-              })
-            );
-            await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-          })
-        );
-
-        const featured = yield* Effect.promise(() =>
-          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-            appLocale: "id",
-          })
-        );
-
-        expect(featured.response.kind).toBe("multiple-choice");
-        expect(featured.question.questionOrder).toBe(1);
-      })
-  );
-
-  it.effect("returns a category response without narrowing its structure", () =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = convexTest(schema, convexModules);
-      yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const snapshotId = await Effect.runPromiseWith(runtimeServices)(
-            activateTryoutSnapshot(ctx, {
-              catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-                makeLandingHierarchy(locale, "visible")
-              ),
-              placements: Arr.map(
-                ACTIVE_APP_LOCALE_CODES,
-                makeCategoryPlacement
-              ),
-            })
-          );
-          await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-        })
-      );
-
-      const featured = yield* Effect.promise(() =>
-        t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-          appLocale: "id",
-        })
-      );
-
-      expect(featured.response).toMatchObject({
-        categories: [
-          { categoryKey: "category-1" },
-          { categoryKey: "category-2" },
-        ],
-        kind: "category",
-        statements: [
-          {
-            correctCategoryKey: "category-1",
-            statementKey: "statement-1",
-          },
-        ],
-      });
-    })
-  );
-
-  it.effect("requires one active signed hierarchy", () =>
-    Effect.gen(function* () {
-      const t = convexTest(schema, convexModules);
-
-      const failure = yield* Effect.tryPromise(() =>
-        t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-          appLocale: "id",
-        })
-      ).pipe(Effect.flip);
-      expect(failure.cause).toMatchObject({
-        data: { code: "CONTENT_RELEASE_MISSING" },
-      });
-    })
   );
 });
