@@ -13,6 +13,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -85,6 +86,7 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
     stored !== undefined && stored === current
       ? undefined
       : (reply.message ?? lastAnswer);
+  const available = answer === "username-available";
 
   const save = (username: string) =>
     Effect.runPromise(
@@ -153,15 +155,12 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
               />
             </InputGroup>
             {/* One line always answers the typed name, so the card never grows while the name is checked:
-                a free name reads muted, a refused one in the error colour. */}
-            <FieldError
-              className={
-                answer === "username-available"
-                  ? "text-muted-foreground"
-                  : undefined
-              }
-            >
-              {answer === undefined ? null : t(answer)}
+                the rule until there is an answer, a free name in its place, and a refusal in the error colour. */}
+            <FieldDescription>
+              {t(available ? "username-available" : "username-characters")}
+            </FieldDescription>
+            <FieldError>
+              {answer === undefined || available ? null : t(answer)}
             </FieldError>
           </Field>
         </CardContent>

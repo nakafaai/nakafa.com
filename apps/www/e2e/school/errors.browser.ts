@@ -127,7 +127,7 @@ function overflowing({
   width: number;
 }) {
   const line = document.createElement("div");
-  line.className = "min-h-5 font-normal text-destructive text-sm";
+  line.className = "font-normal leading-normal text-destructive text-sm";
   line.style.width = `${width}px`;
   document.body.append(line);
   const long = texts.filter((entry) => {

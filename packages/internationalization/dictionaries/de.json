@@ -218,6 +218,7 @@
     "reason-rule-break": "Regelverstoß",
     "reason-other": "Sonstiges",
     "minutes": "Minuten",
+    "minutes-hint": "Von 1 bis 120 Minuten.",
     "minutes-invalid": "Gib eine ganze Zahl von 1 bis 120 ein.",
     "add-minutes": "Minuten hinzufügen",
     "lock": "Sperren",

@@ -218,6 +218,7 @@
     "reason-rule-break": "Rule broken",
     "reason-other": "Other",
     "minutes": "Minutes",
+    "minutes-hint": "From 1 to 120 minutes.",
     "minutes-invalid": "Enter a whole number from 1 to 120.",
     "add-minutes": "Add minutes",
     "lock": "Lock",

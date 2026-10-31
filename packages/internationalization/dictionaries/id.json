@@ -218,6 +218,7 @@
     "reason-rule-break": "Pelanggaran aturan",
     "reason-other": "Lainnya",
     "minutes": "Menit",
+    "minutes-hint": "Dari 1 sampai 120 menit.",
     "minutes-invalid": "Masukkan bilangan bulat dari 1 sampai 120.",
     "add-minutes": "Tambah menit",
     "lock": "Kunci",

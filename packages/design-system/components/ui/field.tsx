@@ -41,7 +41,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "group/field-group @container/field-group flex w-full flex-col gap-6 data-[slot=checkbox-group]:gap-3 *:data-[slot=field]:has-[>[data-slot=field-error]:last-child]:-mb-3 *:data-[slot=field-group]:gap-4",
+        "group/field-group @container/field-group flex w-full flex-col gap-6 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4",
         className
       )}
       data-slot="field-group"
@@ -135,12 +135,16 @@ function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * The line under a field that says what to write. It shows from the first paint and steps aside only while the
+ * `FieldError` right after it holds a message, so the error takes its place and the field keeps its height.
+ */
 function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       className={cn(
         "text-muted-foreground text-sm leading-normal font-normal group-has-data-[orientation=horizontal]/field:text-balance",
-        "last:mt-0 nth-last-2:-mt-1 [[data-variant=legend]+&]:-mt-1.5",
+        "has-[+[data-slot=field-error]:not(:empty)]:hidden not-last:[[data-slot=field-label]+&]:-mt-1 [[data-variant=legend]+&]:-mt-1.5",
         "[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4",
         className
       )}
@@ -151,18 +155,16 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
 }
 
 /**
- * The line under a field that holds its error. It is always there and one line tall, so a field keeps its
- * description and never grows or jumps when an error shows or goes: pass the message as children while there is
- * one, and nothing otherwise. It stays a live region the whole time, so a message that appears is announced.
- * Under a description it is that note's next line, with no gap of its own, and in a `FieldGroup` a field that ends
- * with it gives the next field half the group's gap: the line itself is the rest of that room while it is empty,
- * and a message in it still keeps 12px from the next field. So every form keeps one rhythm, reserved line or not.
+ * The line that holds a field's error, with the same metrics as a description. Pass the message as children while
+ * there is one, and nothing otherwise: without a message it takes no space, so no field keeps a blank line under
+ * it, and it replaces the `FieldDescription` right before it. A field whose error shows while typing therefore
+ * needs a description, so its height holds. It stays mounted, so a message that appears is announced.
  */
 function FieldError({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "text-destructive min-h-5 text-sm font-normal [[data-slot=field-description]+&]:-mt-3",
+        "text-destructive text-sm leading-normal font-normal empty:hidden",
         className
       )}
       data-slot="field-error"

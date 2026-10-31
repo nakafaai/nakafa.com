@@ -194,7 +194,7 @@ function RoomJoinForm() {
   }
 
   return (
-    <form className="flex w-full max-w-sm flex-col gap-4" onSubmit={onSubmit}>
+    <form className="flex w-full max-w-sm flex-col gap-6" onSubmit={onSubmit}>
       <Field>
         <FieldLabel htmlFor={tokenId}>{t("token")}</FieldLabel>
         <Input

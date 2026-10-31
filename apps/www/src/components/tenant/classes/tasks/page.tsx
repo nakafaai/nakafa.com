@@ -2,6 +2,7 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskText } from "@repo/backend/confect/classroom/tasks/task";
 import { Button } from "@repo/design-system/components/ui/button";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import {
   Array as Arr,
@@ -142,18 +143,18 @@ function HandIn({ task }: { task: ClassTask }) {
   };
 
   return (
-    <form action={handIn} className="flex flex-col gap-2">
-      <label className="text-sm font-medium" htmlFor={`${id}-work`}>
-        {t("task-work")}
-      </label>
-      <Textarea
-        className="min-h-40"
-        dir="auto"
-        id={`${id}-work`}
-        onChange={(event) => setText(event.target.value)}
-        placeholder={t("handin-placeholder")}
-        value={text}
-      />
+    <form action={handIn} className="flex flex-col gap-6">
+      <Field>
+        <FieldLabel htmlFor={`${id}-work`}>{t("task-work")}</FieldLabel>
+        <Textarea
+          className="min-h-40"
+          dir="auto"
+          id={`${id}-work`}
+          onChange={(event) => setText(event.target.value)}
+          placeholder={t("handin-placeholder")}
+          value={text}
+        />
+      </Field>
       <div className="flex justify-end">
         <Button disabled={!ready} type="submit">
           {t("task-hand-in")}

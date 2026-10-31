@@ -84,7 +84,7 @@ export function StartNameQuestion() {
       required
     >
       <QuestionnaireTitle>{t("name-title")}</QuestionnaireTitle>
-      <FieldGroup className="gap-4">
+      <FieldGroup>
         <Field>
           <FieldLabel htmlFor={nameId}>{t("name-label")}</FieldLabel>
           <QuestionnaireInput
