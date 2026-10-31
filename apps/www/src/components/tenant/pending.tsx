@@ -1,34 +1,29 @@
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useHydrated } from "@tanstack/react-router";
-import { cva } from "class-variance-authority";
 import type { ReactElement } from "react";
 
 /**
- * The spinner of a school's first load. In the first HTML it fades in late, so a fast load never
- * sees it. Once the code runs the load is already under way, so it stands at once, and the frame
- * never blinks between the two.
+ * What a school draws until its first page can, once its code runs: the frame that the empty stage
+ * draws before any script (`DrawerStage`), at the same place and size, so the mark never moves and the
+ * loader never blinks between the two. A school's first HTML is the root shell alone (ADR 0038 D2),
+ * which holds no route, so the first client render draws nothing here, or hydration fails against it.
  */
-const pendingSpinner = cva("text-muted-foreground", {
-  variants: {
-    hydrated: {
-      false:
-        "motion-safe:animate-in motion-safe:fade-in fill-mode-backwards delay-500",
-      true: "",
-    },
-  },
-});
-
-/**
- * What a school draws until its first page can. A school renders only in the browser, so this frame
- * is the one thing the first HTML paints: the page's background and the spinner, so a slow phone
- * never sits on an empty screen.
- */
-export function SchoolPending(): ReactElement {
+export function SchoolPending(): ReactElement | null {
   const hydrated = useHydrated();
 
+  if (!hydrated) {
+    return null;
+  }
+
   return (
-    <div className="bg-background flex min-h-dvh items-center justify-center">
-      <Spinner className={pendingSpinner({ hydrated })} />
+    <div className="bg-background fixed inset-0 grid place-items-center">
+      <img
+        alt=""
+        className="col-start-1 row-start-1 size-12 -translate-y-5 rounded-xl"
+        height={48}
+        src="/logo.svg"
+        width={48}
+      />
+      <span className="border-muted-foreground col-start-1 row-start-1 size-6 translate-y-8 animate-spin rounded-full border-2 border-t-transparent" />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { trackChanges } from "@/e2e/support/changes";
 import { closeSitting } from "@/e2e/support/proctor";
 import { giveRole } from "@/e2e/support/roles";
 import {
@@ -21,8 +22,19 @@ const NOT_FOUND = "We can't find this page";
 /** The name of the seeded exam's open room, which its rooms list links. */
 const ROOM = "Lab 2";
 
+/** Longer than a silent session stays open: 2.5 heartbeats of 30 seconds, and a beat in flight. */
+const SILENCE_MILLISECONDS = 120_000;
+
+/** Longer than the exam's rooms wait before they read a room again. */
+const ROOM_READ_MILLISECONDS = 30_000;
+
 /** The row of the seeded exam's room for tomorrow, which is still scheduled. */
 const UPCOMING_ROW = /Lab 3/u;
+
+/** How a room reads its seats at a glance, and a seat its silence. */
+const ONE_WORKING = /^1 working/u;
+const ONE_OFFLINE = /1 offline/u;
+const AWAY_FOR = /^.*Away for \d+/u;
 
 test("a person whose only role is Proctor runs a room end to end, and is refused moving or cancelling a room, the exam's editor, its list and its results", async ({
   baseURL,
@@ -178,4 +190,134 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
     { timeout: readinessTimeoutMilliseconds }
   );
   await proctorContext.close();
+});
+
+test("a server failure of the room's read keeps the proctor on the room, and the seats come back by themselves", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `student-${school.slug}@acceptance.example.test`;
+  const studentContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: studentContext,
+      slug: school.slug,
+    })
+  );
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+
+  const proctor = await ownerContext.newPage();
+  const changes = await Effect.runPromise(trackChanges(proctor, []));
+  await proctor.goto(
+    address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
+  );
+  const token = proctor.locator("header").getByRole("button", {
+    name: `Show the room's QR code, token ${sitting.token}`,
+  });
+  await expect(token).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  const student = await studentContext.newPage();
+  await student.goto(address(`/sittings/${sitting.sittingId}`));
+  await waitUntilTakenOver(
+    student.getByRole("button", { name: "Enter sitting" })
+  );
+  await student
+    .getByPlaceholder("Enter the token from your proctor")
+    .fill(sitting.token);
+
+  // The entry changes the room, and the next read of it fails with a failure that names no refusal, as a function
+  // that ran out of time does, so the seats leave and the proctor stays on the room's page.
+  changes.failQuery("exams/sittings:dashboard", "ServerBroke");
+  await student.getByRole("button", { name: "Enter sitting" }).click();
+  await expect(token).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
+  await expect(
+    proctor.getByRole("heading", { name: "Something broke" })
+  ).toHaveCount(0);
+
+  // The server answers again, and the student's seat is there with no press.
+  changes.recoverQuery();
+  await expect(
+    proctor
+      .getByRole("list", { name: "Student seats" })
+      .getByRole("link", { name: LEARNER_NAME })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await Promise.all([studentContext.close(), ownerContext.close()]);
+});
+
+test("a student whose connection drops shows on the seat with a clock that runs, and the exam's rooms add the room up", async ({
+  baseURL,
+  browser,
+}) => {
+  test.setTimeout(300_000);
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `student-${school.slug}@acceptance.example.test`;
+  const studentContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: studentContext,
+      slug: school.slug,
+    })
+  );
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+
+  const student = await studentContext.newPage();
+  await student.goto(address(`/sittings/${sitting.sittingId}`));
+  await waitUntilTakenOver(
+    student.getByRole("button", { name: "Enter sitting" })
+  );
+  await student
+    .getByPlaceholder("Enter the token from your proctor")
+    .fill(sitting.token);
+  await student.getByRole("button", { name: "Enter sitting" }).click();
+  await expect(
+    student.getByRole("heading", { name: "Question 1" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  const proctor = await ownerContext.newPage();
+  await proctor.goto(
+    address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
+  );
+  const seat = proctor
+    .getByRole("list", { name: "Student seats" })
+    .getByRole("link", { name: LEARNER_NAME });
+  await expect(seat).toHaveAttribute("data-frame", "plain", {
+    timeout: readinessTimeoutMilliseconds,
+  });
+
+  // The exam's rooms show the open room at a glance, and read it again on their own.
+  const rooms = await ownerContext.newPage();
+  await rooms.goto(address(`/exams/${sitting.examId}`));
+  await expect(rooms.getByRole("img", { name: ONE_WORKING })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+
+  // The beats stop, and the proctor reads the silence while it lasts, with no word from the student's device.
+  await studentContext.setOffline(true);
+  await expect(seat).toHaveAttribute("data-frame", "away", {
+    timeout: SILENCE_MILLISECONDS,
+  });
+  await expect(seat).toContainText(AWAY_FOR);
+  await expect(rooms.getByRole("img", { name: ONE_OFFLINE })).toBeVisible({
+    timeout: ROOM_READ_MILLISECONDS,
+  });
+
+  // The student comes back, and the seat reads as it did.
+  await studentContext.setOffline(false);
+  await expect(seat).toHaveAttribute("data-frame", "plain", {
+    timeout: SILENCE_MILLISECONDS,
+  });
+  await Promise.all([studentContext.close(), ownerContext.close()]);
 });

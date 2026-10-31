@@ -21,10 +21,12 @@ import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 const LOADING_HOLD_MS = 8000;
 
 /**
- * A marker that only the unit circle's scene draws on the home page: the slot
- * of its coordinate system. The chunk that holds it is the one held back.
+ * A marker that only the unit circle's scene module holds: the message of its
+ * context. The chunk that holds it is the one held back. A chunk's name will not
+ * do: every chunk that loads the scene lists its neighbours' names, so holding
+ * one back would hold the lab itself, which draws no spinner.
  */
-const CIRCLE_SCENE_MARKER = "coordinate-system";
+const CIRCLE_SCENE_MARKER = "The unit circle scene requires";
 
 /** The tab of the circle lesson, the second of the window's tabs. */
 const CIRCLE_TAB_INDEX = 1;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option, Result, Schema } from "effect";
-import { deferStaticScripts } from "@/lib/static/scripts";
+import { deferStaticScripts, prepareShell } from "@/lib/static/scripts";
 
 /** A prerendered page as TanStack writes it: module preloads in the head, the hydration scripts and the entry in the body. */
 const PRERENDERED = Arr.join(
@@ -8,7 +8,7 @@ const PRERENDERED = Arr.join(
     "<!doctype html><html><head>",
     '<link rel="stylesheet" href="/assets/globals.css"/>',
     '<link rel="modulepreload" href="/assets/react-a1.js" crossorigin=""/>',
-    '<link rel="modulepreload" href="/assets/route-b2.js" crossorigin="" fetchPriority="low"/>',
+    '<link rel="modulepreload" href="/assets/shared~route-b2.js" crossorigin="" fetchPriority="low"/>',
     '<link rel="modulepreload" href="/assets/react-a1.js" crossorigin="" fetchPriority="low"/>',
     "<script>document.documentElement.classList.add('light');</script>",
     "</head><body><main><h1>Pecahan</h1></main>",
@@ -67,7 +67,7 @@ describe("lib/static/scripts", () => {
       entry: "/assets/index-c3.js",
       preloads: [
         { href: "/assets/react-a1.js" },
-        { fetchPriority: "low", href: "/assets/route-b2.js" },
+        { fetchPriority: "low", href: "/assets/shared~route-b2.js" },
       ],
     });
   });
@@ -90,10 +90,31 @@ describe("lib/static/scripts", () => {
 
   it("refuses a script outside the built assets", () => {
     const foreign = PRERENDERED.replace(
-      "/assets/route-b2.js",
+      "/assets/shared~route-b2.js",
       "https://example.com/route.js"
     );
 
     expect(Result.isFailure(deferStaticScripts(foreign))).toBe(true);
+  });
+});
+
+describe("prepareShell", () => {
+  const scripts = {
+    member: ["/assets/shell-m1.js"],
+    school: ["/assets/layout-s1.js"],
+  };
+
+  it("lets every preload of the shell load at once", () => {
+    expect(prepareShell(PRERENDERED, scripts)).not.toContain("fetchPriority");
+  });
+
+  it("names a school's scripts in the head, for a school host only", () => {
+    const shell = prepareShell(PRERENDERED, scripts);
+    const [head] = shell.split("</head>");
+
+    expect(head).toContain("/assets/layout-s1.js");
+    expect(head).toContain("/assets/shell-m1.js");
+    expect(head).toContain("nakafa-signed-in");
+    expect(head).toContain("nakafa\\\\.com|localhost");
   });
 });

@@ -41,7 +41,6 @@ import {
   Suspense,
   use,
   useState,
-  useTransition,
 } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { Authenticated } from "@/components/auth/gate";
@@ -115,35 +114,32 @@ function useViewerAccount() {
  * The account button at the foot of the school's sidebar: the viewer's round
  * avatar, the viewer's name in the school, and the role, with the account menu.
  * The school layout's gate reads the account before the page commits, so the footer
- * has no pending state of its own. A sign-out makes the account inert until it settles, so a
+ * has no pending state of its own. The account menu holds its loader through a sign-out, so a
  * second press signs out once. The role line is left out for a viewer with no grant.
  */
 function TenantAccount() {
   const { account, name } = useViewerAccount();
   const { role } = useTenant();
   const t = useTranslations("School");
-  const [isSigningOut, startSigningOut] = useTransition();
 
   return (
     <SidebarFooter className="border-t">
-      <div inert={isSigningOut}>
-        <SidebarMenu>
-          <AccountMenu
-            account={{
-              mascot: account.mascot,
-              photo: account.image,
-            }}
-            description={Option.match(role, {
-              onNone: () => undefined,
-              onSome: (value) => t(`role.${value}`),
-            })}
-            name={name}
-            onSignOut={() => startSigningOut(() => signOutOfSchool())}
-          >
-            <TenantAccountItems username={account.username} />
-          </AccountMenu>
-        </SidebarMenu>
-      </div>
+      <SidebarMenu>
+        <AccountMenu
+          account={{
+            mascot: account.mascot,
+            photo: account.image,
+          }}
+          description={Option.match(role, {
+            onNone: () => undefined,
+            onSome: (value) => t(`role.${value}`),
+          })}
+          name={name}
+          onSignOut={signOutOfSchool}
+        >
+          <TenantAccountItems username={account.username} />
+        </AccountMenu>
+      </SidebarMenu>
     </SidebarFooter>
   );
 }

@@ -1,4 +1,6 @@
-import { Array as Arr, Result, Schema } from "effect";
+import { MAIN_DOMAIN } from "@repo/site/domains";
+import { Array as Arr, Result, Schema, String as Str } from "effect";
+import { SIGNED_IN_HINT_COOKIE } from "#www/src/lib/auth/hint";
 
 /** Every link that preloads a JavaScript module. */
 export const MODULE_PRELOAD = /<link\b[^>]*\brel="modulepreload"[^>]*>/gu;
@@ -15,11 +17,15 @@ const MANIFEST_PRELOADS = /preloads:(?<slot>\$R\[\d+\])=\[[^\]]*\]/gu;
 
 const PRELOAD_HREF = /\bhref="(?<href>[^"]*)"/u;
 const PRELOAD_PRIORITY = /\bfetchPriority="(?<priority>[^"]*)"/u;
+const LOW_PRELOAD_PRIORITY = /\s+fetchPriority="low"/u;
 const BODY_END = "</body>";
 
-/** The address of one built script: the only address a static page preloads or starts. */
+/**
+ * The address of one built script: the only address a static page preloads or starts.
+ * Rolldown names a merged group `shared~entry-hash.js`.
+ */
 const ScriptPath = Schema.String.check(
-  Schema.isPattern(/^\/assets\/[\w.-]+\.js$/u)
+  Schema.isPattern(/^\/assets\/[\w.~-]+\.js$/u)
 );
 
 const ModulePreload = Schema.Struct({
@@ -167,4 +173,62 @@ export function deferStaticScripts(
         .replace(BODY_END, () => `${loader}${BODY_END}`);
     })
   );
+}
+
+/** The address of a school host, or of a local one. */
+const SCHOOL_HOST = `^[^.]+\\.(${Str.replaceAll(".", "\\.")(MAIN_DOMAIN)}|localhost)$`;
+
+/** The scripts that the browser shell preloads on a school host, for a visitor and for a member. */
+const ShellScripts = Schema.Struct({
+  cookie: Schema.String,
+  host: Schema.String,
+  member: Schema.Array(ScriptPath),
+  school: Schema.Array(ScriptPath),
+});
+
+const ShellScriptsJson = Schema.fromJsonString(ShellScripts);
+
+/**
+ * Preloads a school's scripts from the shell's first bytes. The shell serves every address, so it
+ * cannot name a route's scripts in its head, and the router asks for them only once its own have
+ * run. The script removes itself, as `STATIC_SCRIPTS_LOADER` does.
+ */
+const SHELL_SCRIPTS_LOADER = `(function (shell) {
+  document.currentScript.remove();
+  if (!new RegExp(shell.host).test(location.hostname)) {
+    return;
+  }
+  var signedIn = document.cookie.split(";").some(function (pair) {
+    return pair.trim() === shell.cookie + "=1";
+  });
+  var links = document.createDocumentFragment();
+  shell.school.concat(signedIn ? shell.member : []).forEach(function (href) {
+    var link = document.createElement("link");
+    link.rel = "modulepreload";
+    link.href = href;
+    links.appendChild(link);
+  });
+  document.head.appendChild(links);
+})`;
+
+/**
+ * Readies the browser shell for a slow phone, which sees nothing of a page that renders only in the
+ * browser until its scripts have run. A low priority held 172 scripts behind the stylesheet for
+ * 1.5 s on slow 4G, and a school's own scripts started only when those had run, so the shell starts
+ * them all at once.
+ */
+export function prepareShell(
+  html: string,
+  scripts: Pick<typeof ShellScripts.Type, "member" | "school">
+) {
+  const loader = `<script>${SHELL_SCRIPTS_LOADER}(${Schema.encodeSync(
+    ShellScriptsJson
+  )({
+    ...scripts,
+    cookie: SIGNED_IN_HINT_COOKIE,
+    host: SCHOOL_HOST,
+  })});</script>`;
+  return html
+    .replace(MODULE_PRELOAD, (tag) => tag.replace(LOW_PRELOAD_PRIORITY, ""))
+    .replace("</head>", () => `${loader}</head>`);
 }

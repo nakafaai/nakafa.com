@@ -18,7 +18,7 @@ import {
 } from "@repo/design-system/components/ui/questionnaire";
 import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Option, Schema } from "effect";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTypedName } from "@/components/tenant/start/context";
 import { START_NAME_LIMIT } from "@/components/tenant/start/state";
@@ -59,21 +59,28 @@ export function StartNameQuestion() {
     asked === slug && QueryResult.isSuccess(check)
       ? Option.some(check.value)
       : Option.none();
+  // The last answer stays while the next is checked, so a reason never blinks away between keystrokes.
+  const [lastAnswer, setLastAnswer] = useState(state);
+  if (Option.isSome(state) && !Option.contains(lastAnswer, state.value)) {
+    setLastAnswer(state);
+  }
+  const answer =
+    slug === "" ? Option.none() : Option.orElse(state, () => lastAnswer);
   // Once either field holds something, the name is required, so typing an address
   // alone never answers the question.
   const started = name !== "" || slug !== "";
   const nameProblem = started && !isSchoolName(name.trim());
   const addressProblem =
     (started && slug === "") ||
-    Option.exists(state, (answer) => answer !== "free");
+    Option.exists(answer, (reply) => reply !== "free");
   const addressMessage =
     checkFailed && asked === slug
       ? t("address-check-failed")
-      : Option.match(state, {
+      : Option.match(answer, {
           onNone: () =>
             started && slug === "" ? t("address-invalid") : t("required-error"),
-          onSome: (answer) =>
-            answer === "free" ? t("required-error") : t(`address-${answer}`),
+          onSome: (reply) =>
+            reply === "free" ? t("required-error") : t(`address-${reply}`),
         });
   const message = nameProblem ? t("name-error") : addressMessage;
 

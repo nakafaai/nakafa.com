@@ -4,6 +4,7 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { createDocument } from "@repo/backend/confect/editor/create";
 import { storedDocument } from "@repo/backend/confect/editor/document";
+import { newChoiceAnswers } from "@repo/backend/confect/exams/blank";
 import { ExamFull } from "@repo/backend/confect/exams/errors";
 import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
 import { insertIndex, placeAt } from "@repo/backend/confect/exams/order";
@@ -12,7 +13,6 @@ import {
   encodeAnswers,
   NEW_QUESTION_POINTS,
   NEW_QUESTION_TEMPLATE,
-  newChoiceAnswers,
   type questionValidator,
 } from "@repo/backend/confect/exams/question";
 import { Clock, Effect, Option } from "effect";
@@ -29,6 +29,7 @@ type QuestionFields = Pick<
   | "points"
   | "prompt"
   | "rubric"
+  | "scoring"
   | "template"
 >;
 
@@ -63,6 +64,7 @@ export const placeQuestion = Effect.fn("exams.question.place")(function* (
       prompt: fields.prompt,
       revision: 0,
       rubric: fields.rubric,
+      ...(fields.scoring === undefined ? {} : { scoring: fields.scoring }),
       template: fields.template,
       tenantId: exam.tenantId,
       updatedAt: at,

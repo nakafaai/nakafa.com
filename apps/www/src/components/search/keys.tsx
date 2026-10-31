@@ -8,12 +8,15 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Kbd, KbdGroup } from "@repo/design-system/components/ui/kbd";
 import { useTranslations } from "use-intl";
 
-/** The foot of a command palette: the keys that move through it, open a row and close it. */
+/**
+ * The foot of a command palette: the keys that move through it, open a row and
+ * close it. A touch screen has none of these keys, so it draws no foot.
+ */
 export function CommandKeys() {
   const t = useTranslations("Common");
 
   return (
-    <CommandFooter>
+    <CommandFooter className="pointer-coarse:hidden">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <KbdGroup>

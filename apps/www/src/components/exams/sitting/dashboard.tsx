@@ -3,14 +3,15 @@ import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Option } from "effect";
-import { type ReactNode, useState } from "react";
+import { Array as Arr, HashMap, Option } from "effect";
+import { type ReactNode, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { dashboardArgs } from "@/components/exams/sitting/change";
 import {
   type SittingData,
   SittingDataContext,
+  SittingOfflineContext,
   SittingStoreContext,
 } from "@/components/exams/sitting/context";
 import { SittingHeader } from "@/components/exams/sitting/header";
@@ -23,6 +24,7 @@ import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import { ReadRecovery } from "@/components/tenant/read/recovery";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
@@ -52,6 +54,20 @@ export function SittingDashboard({
     isSettled ? dashboardArgs({ sittingId, slug }, null) : "skip"
   );
   const kept = useLastValue(state);
+  // Presence answers apart from the page: it changes only when a student's connection comes or goes.
+  const silent = useLastValue(
+    useQuery(exams.screens.offline, isSettled ? { sittingId, slug } : "skip")
+  );
+  const offline = useMemo(
+    () =>
+      HashMap.fromIterable(
+        Arr.map(
+          Option.getOrElse(silent, () => []),
+          (seat) => [seat.attemptId, seat.since] as const
+        )
+      ),
+    [silent]
+  );
 
   if (QueryResult.isFailure(state)) {
     if (isLostAccess(state.error)) {
@@ -90,14 +106,16 @@ export function SittingDashboard({
         <PanesProvider>
           <SittingHeader examId={examId} />
           <SittingFilterRow />
-          <Panes>
-            <PanesList>
-              <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">
-                <SittingSeats />
-              </div>
-            </PanesList>
-            <SittingPanel />
-          </Panes>
+          <SittingOfflineContext value={offline}>
+            <Panes>
+              <PanesList>
+                <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">
+                  <SittingSeats />
+                </div>
+              </PanesList>
+              <SittingPanel />
+            </Panes>
+          </SittingOfflineContext>
         </PanesProvider>
       </SittingDataContext>
     </SittingStoreContext>
@@ -155,11 +173,27 @@ function SittingDashboardShell() {
   return <SchoolHeader items={examsItems} />;
 }
 
+/**
+ * Keeps a proctor on the room through a server failure of one of its reads: the page's header stays, and the seats
+ * come back by themselves, so a room in full flow is not left on an error page that waits for a press.
+ */
+export function DashboardRecovery({
+  children,
+}: {
+  readonly children: ReactNode;
+}) {
+  return (
+    <ReadRecovery frame={SittingDashboardRetry} retry={SittingRetry}>
+      {children}
+    </ReadRecovery>
+  );
+}
+
 /** The page when the dashboard could not be read for a reason a reload may fix: the header, then why and the retry. */
 function SittingDashboardRetry({ children }: { readonly children: ReactNode }) {
   return (
     <>
-      <SchoolHeader items={[]} />
+      <SittingDashboardShell />
       <div className="grid justify-items-start gap-4 p-4 text-sm md:p-6">
         {children}
       </div>

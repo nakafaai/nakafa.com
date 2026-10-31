@@ -47,9 +47,9 @@ const ledger = FunctionImpl.make(
             rosterEntryOf(placement.personId),
             reportOf(row._id, placement.personId),
           ]);
-          const nisn = Option.isSome(entry)
-            ? yield* openNisn(keys, entry.value)
-            : Option.none();
+          const nisn = yield* Effect.transposeOption(
+            Option.map(entry, (found) => openNisn(keys, found))
+          );
           const ledgerRow: typeof LedgerRow.Type = {
             name: person.name,
             nisn: Option.getOrNull(nisn),

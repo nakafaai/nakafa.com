@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/question";
+import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
 import { Array as Arr, Schema } from "effect";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { projectTryQuestions } from "@/components/tenant/exams/try/questions";
@@ -27,6 +27,7 @@ const question = (id: string, answers: Question["answers"]): Question => ({
   id: questionId(id),
   key: null,
   points: 1,
+  scoring: { kind: "allOrNothing" },
   prompt: documentId(`prompt-${id}`),
   revision: 0,
   rubric: documentId(`rubric-${id}`),

@@ -127,7 +127,7 @@ export const childViewOf = Effect.fn("guardians.link.child")(function* (
   const entry = yield* rosterEntryOf(link.studentPersonId);
   const view: typeof ChildView.Type = {
     linkId: link._id,
-    staffCheck: Option.getOrUndefined(entry)?.nisn === undefined,
+    staffCheck: Option.isNone(entry),
     status: linkStatusOf(link, now),
     student: { id: student._id, name: student.name },
   };

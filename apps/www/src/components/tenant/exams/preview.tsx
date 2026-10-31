@@ -22,7 +22,13 @@ import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { useCallback, useDeferredValue, useMemo } from "react";
 import { useTranslations } from "use-intl";
-import { choiceOf, type OptionLabel } from "@/components/tenant/exams/answer";
+import { ChoiceGroup } from "@/components/exams/sitting/reason";
+import {
+  type Choice,
+  isChoice,
+  type OptionLabel,
+} from "@/components/tenant/exams/answer";
+import { choiceTitle } from "@/components/tenant/exams/choice";
 import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -141,7 +147,7 @@ export function PreviewProse({
 }: {
   article: boolean;
   doc: Option.Option<Node>;
-  size: "line" | "page";
+  size: "line" | "page" | "paper";
 }) {
   const shown = useDeferredValue(Option.getOrElse(doc, () => EMPTY_TEXT));
   // The text is drawn again only when it changes, not on every redraw of the page.
@@ -263,31 +269,20 @@ export function PaperSketch({
   withControls?: boolean;
 }) {
   const locked = useExamLocked();
-  const choice = choiceOf(question.answers);
   // A template that fixes its options takes no added option, so its page keeps no room for the action.
   const addsOption =
-    withControls &&
-    !locked &&
-    Option.isNone(fixedOptions(question.template)) &&
-    Option.exists(
-      choice,
-      (current) => current.options.length < CHOICE_OPTIONS_MAX
-    );
+    withControls && !locked && Option.isNone(fixedOptions(question.template));
 
   return (
     <>
-      {Option.isSome(choice) ? (
-        <PaperOptions>
-          {Arr.map(choice.value.options, (option) => (
-            <PaperOption
-              key={option.id}
-              multiple={choice.value.maxChoices !== 1}
-            >
-              <OptionSketch label={option.label} />
-            </PaperOption>
-          ))}
-        </PaperOptions>
-      ) : null}
+      {Arr.map(Arr.filter(question.answers, isChoice), (choice) => (
+        <ChoiceSketch
+          adds={addsOption && choice.options.length < CHOICE_OPTIONS_MAX}
+          choice={choice}
+          key={choice.id}
+          template={question.template}
+        />
+      ))}
       {Option.match(matchOf(question.answers), {
         onNone: () => null,
         onSome: (match) => (
@@ -319,7 +314,34 @@ export function PaperSketch({
         onSome: (table) => <TableSketch table={table} />,
       })}
       <PaperField answers={question.answers} />
-      {addsOption ? <OptionAddRoom /> : null}
+    </>
+  );
+}
+
+/** One choice of a page drawn without its editors, a reason under its name, as the page draws it with them. */
+function ChoiceSketch({
+  adds,
+  choice,
+  template,
+}: {
+  /** Whether the page keeps the room of the action that adds an option. */
+  readonly adds: boolean;
+  readonly choice: Choice;
+  /** The question's template, which names its choices when it holds two. */
+  readonly template: Question["template"];
+}) {
+  return (
+    <>
+      <ChoiceGroup title={choiceTitle(template, choice.id)}>
+        <PaperOptions>
+          {Arr.map(choice.options, (option) => (
+            <PaperOption key={option.id} multiple={choice.maxChoices !== 1}>
+              <OptionSketch label={option.label} />
+            </PaperOption>
+          ))}
+        </PaperOptions>
+      </ChoiceGroup>
+      {adds ? <OptionAddRoom /> : null}
     </>
   );
 }
@@ -356,7 +378,7 @@ export function QuestionPreview({
         inert
       >
         <QuestionPaper>
-          <PreviewProse article doc={doc} size="page" />
+          <PreviewProse article doc={doc} size="paper" />
           <PaperSketch question={question} />
         </QuestionPaper>
       </div>

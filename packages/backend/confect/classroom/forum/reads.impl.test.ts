@@ -53,6 +53,8 @@ describe("classroom/forum reads", () => {
         ).toEqual({ at: null });
         vi.setSystemTime(actedAt());
         const sent = yield* fixture.as("teacher").mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "teacher-message",
           mentions: [],
@@ -111,6 +113,7 @@ describe("classroom/forum reads", () => {
         });
         vi.setSystemTime(actedAt(4));
         yield* fixture.as("student").mutation(reply, {
+          attachments: [],
           classId: forum.classId,
           clientKey: "read-reply",
           mentions: [],

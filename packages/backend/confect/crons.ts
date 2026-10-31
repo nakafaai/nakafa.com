@@ -1,12 +1,14 @@
 import { CronJob, CronJobs } from "@confect/server";
 import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
+import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
 import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import creditsInternal from "@repo/backend/confect/_generated/refs/credits.server";
 import editorInternal from "@repo/backend/confect/_generated/refs/editor.server";
 import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
+import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import guardiansInternal from "@repo/backend/confect/_generated/refs/guardians.server";
 import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
@@ -21,6 +23,7 @@ import {
 } from "@repo/backend/confect/auth/deletion/constants";
 import { BILLING_EVENT_SWEEP_INTERVAL_MINUTES } from "@repo/backend/confect/billing/sweep";
 import { PRUNE_INTERVAL } from "@repo/backend/confect/editor/prune";
+import { SITTING_SWEEP_INTERVAL } from "@repo/backend/confect/exams/sittings/sweep";
 import { SWEEP_INTERVAL } from "@repo/backend/confect/nina/deadline";
 import { Cron, Duration } from "effect";
 
@@ -72,6 +75,14 @@ export default CronJobs.make()
       "delete expired billing webhooks",
       Duration.hours(BILLING_EVENT_CLEANUP_INTERVAL_HOURS),
       billingInternal.events.cleanup,
+      {}
+    )
+  )
+  .add(
+    CronJob.make(
+      "delete unsent chat files",
+      Duration.hours(24),
+      classroomInternal.forum.files.sweep,
       {}
     )
   )
@@ -262,6 +273,18 @@ export default CronJobs.make()
       "sweep invite expiry",
       Duration.hours(INVITE_EXPIRY_SWEEP_INTERVAL_HOURS),
       tenancyInternal.expiry.sweep,
+      {}
+    )
+  )
+  .add(
+    /**
+     * Sends again the opening, closing, or submission of a sitting that did not
+     * happen, since Convex does not retry a scheduled mutation that failed (ADR 0013).
+     */
+    CronJob.make(
+      "sweep late sitting steps",
+      SITTING_SWEEP_INTERVAL,
+      examsInternal.sittings.timers.sweep,
       {}
     )
   )

@@ -11,7 +11,7 @@ import {
   matchAnswers,
   newChoiceAnswers,
   tableAnswers,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
 import { Array as Arr } from "effect";
 
 const ALL_OR_NOTHING: ScoringRule = { kind: "allOrNothing" };
@@ -197,6 +197,34 @@ describe("assessment/grade", () => {
     expect(gradeOf(choice, choiceKey, ["option-2", "option-4"], bands)).toEqual(
       { category: 0, ceiling: 2, status: "scored" }
     );
+  });
+
+  it("counts a statement or a pair with another answer as one wrong part, and an option missed and an option added as two", () => {
+    const bands: ScoringRule = {
+      bands: [
+        { points: 2, wrong: 0 },
+        { points: 1, wrong: 1 },
+      ],
+      kind: "wrongParts",
+    };
+    const swapped = gradeOf(choice, choiceKey, ["option-1", "option-2"], bands);
+    expect(swapped).toEqual({ category: 0, ceiling: 2, status: "scored" });
+    const anotherColumn = Arr.map(tableCells, (cell, index) =>
+      index === 0 ? { ...cell, column: "column-2" } : cell
+    );
+    expect(gradeOf(table, tableKey, { cells: anotherColumn }, bands)).toEqual({
+      category: 1,
+      ceiling: 2,
+      status: "scored",
+    });
+    const anotherAnswer = Arr.map(matchPairs, (pair, index) =>
+      index === 0 ? { ...pair, target: "target-9" } : pair
+    );
+    expect(gradeOf(match, matchKey, { pairs: anotherAnswer }, bands)).toEqual({
+      category: 1,
+      ceiling: 2,
+      status: "scored",
+    });
   });
 
   it("leaves a rubric to a person", () => {

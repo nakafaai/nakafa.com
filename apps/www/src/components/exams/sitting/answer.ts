@@ -9,7 +9,8 @@ import { Clock, Effect, Option, Schema } from "effect";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import { finishInStore } from "@/components/exams/sitting/attempt";
 import { isFinalRefusal } from "@/components/exams/sitting/entry";
-import { keptAttempt } from "@/components/exams/sitting/keep";
+import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
+import { keptAttempt, keptFinish } from "@/components/exams/sitting/keep";
 import {
   changeSaved,
   nextVersionOf,
@@ -90,10 +91,66 @@ function confirmKept(input: SentAnswer, answeredAt: number) {
 }
 
 /** Finishes the student's attempt at once: the answers close, and a refused finish rolls back. */
-export function useFinish() {
+function useFinish() {
   return useMutation(exams.sittings.finish).withOptimisticUpdate(
     (localStore, args) => finishInStore(localStore, args)
   );
+}
+
+/** Runs one step of the kept Finish, and reports a browser that refuses it, since the Finish goes either way. */
+function onKeptFinish(step: ReturnType<ReturnType<typeof keptFinish>["keep"]>) {
+  return step.pipe(
+    Effect.provide(keptStorage),
+    Effect.catchTag("KeyValueStoreError", (error) =>
+      reportClientException(error, {
+        source: "components/exams/sitting/answer",
+      })
+    )
+  );
+}
+
+/**
+ * Sends the student's Finish, kept in the browser while it is on its way (`keptFinish`). The screen shows the finish
+ * at once, so a page closed on a slow network must not lose it. A call that failed names no refusal, so it goes
+ * again, and a second Finish changes nothing on the server. Any answer the page hears ends the keeping: a confirmed
+ * Finish forgets all the browser holds for the attempt, and a failed one tells the student, who presses again.
+ */
+export function useSendFinish() {
+  const finish = useFinish();
+
+  return (input: {
+    readonly attemptId: typeof SentAnswer.Type.attemptId;
+    readonly deviceId: string;
+    readonly sittingId: typeof SentAnswer.Type.sittingId;
+    readonly slug: TenantSlug;
+  }) => {
+    const kept = keptFinish(input.sittingId, input.attemptId);
+
+    return onKeptFinish(kept.keep()).pipe(
+      Effect.andThen(
+        Effect.tryPromise(() =>
+          finish({
+            deviceId: input.deviceId,
+            sittingId: input.sittingId,
+            slug: input.slug,
+          })
+        ).pipe(
+          Effect.retry(NETWORK_RETRY_SCHEDULE),
+          Effect.flatMap(Effect.fromResult)
+        )
+      ),
+      Effect.matchEffect({
+        onFailure: (error) =>
+          onKeptFinish(kept.drop()).pipe(
+            Effect.andThen(sittingCallFailures([error]))
+          ),
+        onSuccess: () =>
+          Effect.sync(() => {
+            forgetKeptAttempt(input.sittingId, input.attemptId);
+          }),
+      })
+    );
+  };
 }
 
 /**

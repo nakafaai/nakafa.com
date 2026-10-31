@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
-import { keyFits } from "@repo/backend/confect/assessment/key";
+import { keyFits, keyPartsFit } from "@repo/backend/confect/assessment/key";
 import type {
   ExamCell,
   ExamPair,
@@ -11,7 +11,8 @@ import {
   matchAnswers,
   newChoiceAnswers,
   tableAnswers,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
+import { reasonAnswers } from "@repo/backend/confect/exams/reason";
 import { type Array as Arr, Schema } from "effect";
 
 /** A key that marks the given options of the choice `choice` correct. */
@@ -207,6 +208,37 @@ describe("exams/key keyFits", () => {
       keyFits(essayAnswers(), [
         { correct: ["option-1"], interaction: "essay", kind: "choice" },
       ])
+    ).toBe(false);
+  });
+});
+
+describe("exams/key keyPartsFit", () => {
+  const answerKey: InteractionKey = {
+    correct: ["option-2"],
+    interaction: "choice",
+    kind: "choice",
+  };
+  const reasonKey: InteractionKey = {
+    correct: ["reason-1"],
+    interaction: "reason",
+    kind: "choice",
+  };
+
+  it("takes the marks of a two-choice question one at a time, while `keyFits` waits for both", () => {
+    const answers = reasonAnswers();
+
+    expect(keyPartsFit(answers, [answerKey])).toBe(true);
+    expect(keyFits(answers, [answerKey])).toBe(false);
+    expect(keyPartsFit(answers, [answerKey, reasonKey])).toBe(true);
+    expect(keyFits(answers, [answerKey, reasonKey])).toBe(true);
+  });
+
+  it("refuses a choice marked twice, and a mark that fits no interaction", () => {
+    const answers = reasonAnswers();
+
+    expect(keyPartsFit(answers, [answerKey, answerKey])).toBe(false);
+    expect(
+      keyPartsFit(answers, [{ ...reasonKey, correct: ["option-1"] }])
     ).toBe(false);
   });
 });

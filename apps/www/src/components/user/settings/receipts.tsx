@@ -23,7 +23,7 @@ import { namedOptions } from "@/components/shared/table/filter";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import {
   BILLING_TIME_ZONE,
-  formatBillingDate,
+  formatBillingDay,
   formatMinorAmount,
   providerNameOf,
 } from "@/lib/billing/plan";
@@ -110,7 +110,7 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
     }),
     receiptColumns.accessor((payment) => payment.paidAt, {
       ...daysColumn(Option.some(BILLING_TIME_ZONE)),
-      cell: (info) => formatBillingDate(info.getValue(), locale),
+      cell: (info) => formatBillingDay(info.getValue(), locale),
       header: t("payment-date"),
       id: "date",
       sortFn: "basic",
@@ -122,7 +122,7 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
         <ColumnFilter
           column="provider"
           options={providers}
-          title={t("paid-with")}
+          title={t("payment-via")}
         />
       ),
       id: "provider",
