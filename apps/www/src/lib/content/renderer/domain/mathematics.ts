@@ -1,7 +1,7 @@
-import { FunctionChart } from "@repo/design-system/components/contents/mathematics/function-chart";
 import { mathematicsComponentNames } from "@repo/design-system/lib/markdown/names";
 import {
   BarChart,
+  FunctionChart,
   HistogramChart,
   ScatterDiagram,
   VectorChart,

@@ -1,4 +1,3 @@
-import { NumberLine } from "@repo/design-system/components/contents/mathematics/number-line";
 import { Illustration } from "@repo/design-system/components/contents/snbt/quantitative/set-3/question-13";
 import { QuestionGraph as Set5Question9Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-5/question-9";
 import { QuestionGraph as Set5Question12Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-5/question-12";
@@ -15,6 +14,7 @@ import { Graph as Set10Question1Graph } from "@repo/design-system/components/con
 import { Graph as Set10Question2Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-10/question-2";
 import { Graph as Set10Question8Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-10/question-8";
 import { snbtQuantComponentNames } from "@repo/design-system/lib/markdown/names";
+import { NumberLine } from "@/lib/content/renderer/client/snbt/math/number";
 import { UnitCircle } from "@/lib/content/renderer/client/snbt/quant/basics";
 import { LineEquationServer } from "@/lib/content/renderer/line.server";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
