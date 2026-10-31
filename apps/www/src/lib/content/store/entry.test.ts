@@ -64,7 +64,7 @@ function lastKey() {
 beforeEach(() => {
   resetTestRuntimeCache();
   readBuildEntry.mockReset();
-  readBuildEntry.mockReturnValue(Effect.succeed(Option.none()));
+  readBuildEntry.mockReturnValue(Effect.succeedNone);
   writeBuildEntry.mockReset();
   writeBuildEntry.mockReturnValue(Effect.void);
 });
@@ -109,7 +109,7 @@ describe("content store entries", () => {
   it.effect("asks the deploy's read store for a lasting entry it lacks", () =>
     Effect.gen(function* () {
       readBuildEntry.mockReturnValueOnce(
-        Effect.succeed(Option.some({ value: "kept by a deploy" }))
+        Effect.succeedSome({ value: "kept by a deploy" })
       );
 
       expect(
