@@ -203,7 +203,7 @@ describe("guardians/links", () => {
                 email: AYAH,
                 guardianName: "Ayah",
                 slug: nf,
-                studentId: fixture.people.student.personId,
+                studentId: fixture.people.admin.personId,
               })
             )
           ).toMatchObject(denied("role"));
