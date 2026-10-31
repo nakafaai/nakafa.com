@@ -98,10 +98,8 @@ import contents_queries_recent from "../contents/queries/recent.spec";
 import contents_queries_search from "../contents/queries/search.spec";
 import contents_queries_trending from "../contents/queries/trending.spec";
 import contents_sections_build from "../contents/sections/build.spec";
-import contents_sections_compare from "../contents/sections/compare.spec";
 import contents_sections_hits from "../contents/sections/hits.spec";
 import contents_sections_rows from "../contents/sections/rows.spec";
-import contents_sections_search from "../contents/sections/search.spec";
 import contents_sections_state from "../contents/sections/state.spec";
 import credits_lots from "../credits/lots.spec";
 import credits_mutations from "../credits/mutations.spec";
@@ -231,7 +229,6 @@ import tryouts_mutations_expiry from "../tryouts/mutations/expiry.spec";
 import tryouts_mutations_responses from "../tryouts/mutations/responses.spec";
 import tryouts_mutations_sections from "../tryouts/mutations/sections.spec";
 import tryouts_queries_access from "../tryouts/queries/access.spec";
-import tryouts_queries_attempt from "../tryouts/queries/attempt.spec";
 import tryouts_queries_attemptPage from "../tryouts/queries/attemptPage.spec";
 import tryouts_queries_catalog from "../tryouts/queries/catalog.spec";
 import tryouts_queries_history from "../tryouts/queries/history.spec";
@@ -426,10 +423,8 @@ const spec: Spec.Spec<{
     }),
     ["sections"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
       ["build"]: contents_sections_build,
-      ["compare"]: contents_sections_compare,
       ["hits"]: contents_sections_hits,
       ["rows"]: contents_sections_rows,
-      ["search"]: contents_sections_search,
       ["state"]: contents_sections_state,
     }),
   }),
@@ -623,7 +618,6 @@ const spec: Spec.Spec<{
     }),
     ["queries"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
       ["access"]: tryouts_queries_access,
-      ["attempt"]: tryouts_queries_attempt,
       ["attemptPage"]: tryouts_queries_attemptPage,
       ["catalog"]: tryouts_queries_catalog,
       ["history"]: tryouts_queries_history,
