@@ -185,6 +185,11 @@ function GuardianLinkTable() {
       id: "student",
       sortFn: "text",
     }),
+    linkColumns.accessor((link) => link.guardian.name, {
+      header: t("guardian-name"),
+      id: "guardian",
+      sortFn: "text",
+    }),
     linkColumns.accessor((link) => link.email, {
       header: t("email-label"),
       id: "email",
