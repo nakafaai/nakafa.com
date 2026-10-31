@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
   readTryoutSetPage: vi.fn(),
 }));
 
+vi.mock("@repo/internationalization/src/translator", () => ({
+  readServerTranslator: () => Promise.resolve((key: string) => key),
+}));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutSetPage: mocks.readTryoutSetPage,
 }));
@@ -33,8 +36,10 @@ const address = {
 } as const;
 const catalogSet = {
   entrySection: { sectionKey: "section-1" },
+  exam: { title: "SNBT" },
   set: { publicPath: SET, title: "Set 1" },
   sections: [{ publicPath: `${SET}/section-1` }],
+  track: { title: "Year 2027" },
 };
 
 beforeEach(() => {
@@ -47,7 +52,11 @@ describe("readTryoutSetRoute", () => {
   it.effect("answers the set's catalog view with the set to start", () =>
     Effect.gen(function* () {
       expect(yield* readTryoutSetRoute(address)).toMatchObject({
-        head,
+        head: {
+          ...head,
+          description: "set-metadata-description",
+          title: ["Set 1", "SNBT Year 2027"],
+        },
         kind: "catalog",
         page: catalogSet,
         restartTarget: {
@@ -60,6 +69,21 @@ describe("readTryoutSetRoute", () => {
         "en",
         SET
       );
+    })
+  );
+
+  it.effect("keeps the description a set was published with", () =>
+    Effect.gen(function* () {
+      mocks.readTryoutSetPage.mockReturnValueOnce(
+        Effect.succeed({
+          ...catalogSet,
+          set: { ...catalogSet.set, description: "Written for this set." },
+        })
+      );
+
+      expect(yield* readTryoutSetRoute(address)).toMatchObject({
+        head: { description: "Written for this set." },
+      });
     })
   );
 

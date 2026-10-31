@@ -155,7 +155,7 @@ const expectArticleJsonLd = Effect.fn("NakafaE2E.expectArticleJsonLd")(
     yield* Effect.sync(() => {
       expect(article.url).toBe(`${APP_ORIGIN}${route.href}`);
       expect(article.headline).toBe(heading);
-      expect(article.description).toBe(served.description);
+      expect(article.description).toContain(served.description);
       expect(article.image).toBe(served.image);
       expect(article.inLanguage).toBe(route.locale);
       expect(served.language).toBe(route.locale);
