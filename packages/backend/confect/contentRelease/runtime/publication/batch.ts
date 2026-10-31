@@ -1,4 +1,3 @@
-import { protectedRuntimeResponseBytes } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import {
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
   type PublicContentRuntimeRequest,
@@ -15,6 +14,7 @@ import {
   MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES,
   PublicContentRuntimeBatchRequestSchema,
   PublicContentRuntimeBatchResponseSchema,
+  publicRuntimeResponseBytes,
 } from "@repo/backend/content/batch";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
 import { Array as Arr, Effect, flow, Result, Schema } from "effect";
@@ -105,8 +105,7 @@ export const dispatchBatchProgram = Effect.fn(
     Arr.some(
       responses.success,
       (response) =>
-        protectedRuntimeResponseBytes(response) >
-        MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
+        publicRuntimeResponseBytes(response) > MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
     )
   ) {
     return failureResult("CONTENT_RUNTIME_RESPONSE_TOO_LARGE", 500);

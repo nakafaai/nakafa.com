@@ -18,7 +18,6 @@ import {
   validateReleaseRenderer,
 } from "@repo/backend/confect/contentRelease/ingress/envelope";
 import { requireActiveContentKey } from "@repo/backend/confect/contentRelease/ingress/key";
-import { stageTryoutRuntimeBundle } from "@repo/backend/confect/contentRelease/ingress/runtime/bundle";
 import {
   stageSnapshot,
   stageSnapshotBatch,
@@ -132,14 +131,6 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
     }
     if (request.operation === "stageSnapshotBatch") {
       const value = yield* stageSnapshotBatch(request);
-      return {
-        ok: true,
-        operation: request.operation,
-        value,
-      };
-    }
-    if (request.operation === "stageTryoutRuntimeBundle") {
-      const value = yield* stageTryoutRuntimeBundle(request, activeKeyId);
       return {
         ok: true,
         operation: request.operation,

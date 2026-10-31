@@ -1,173 +1,101 @@
-import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
-import confectSchema from "@repo/backend/confect/_generated/schema";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
+import type { ContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/spec";
 import { readTryoutReference } from "@repo/backend/content/tryout/reference";
-import schema from "@repo/backend/convex/schema";
-import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
-import {
-  makeTryoutStartHierarchy,
-  makeTryoutStartPlacement,
-} from "@repo/backend/test/tryout/source";
-import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
+import { type TryoutWorld, tryoutWorld } from "@repo/backend/test/tryout/world";
+import { Effect, Struct } from "effect";
 
-describe("try-out reference visibility", () => {
+/** Resolves one reference the way the reference reader does, then reads its try-out entry. */
+const read = (world: TryoutWorld, input: ContentReferenceInput) =>
+  Effect.gen(function* () {
+    const resolved = yield* resolveReferenceInput(input);
+    assert.ok(resolved, "Expected a try-out reference.");
+    return yield* world.run(readTryoutReference(resolved));
+  });
+
+describe("content/tryout/reference", () => {
   it.effect(
-    "does not invent a route for absent ownership, an absent asset, or an internal entry",
+    "resolves a public route or a graph asset to its search document, with the row's description",
     () =>
       Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        const t = convexTest(schema, convexModules);
-        const catalog = makeTryoutStartHierarchy("id", "internal-entry");
-        const section = Arr.findFirst(catalog, (row) => row.kind === "section");
-        if (Option.isNone(section)) {
-          return yield* Effect.die("Expected a technical section.");
-        }
-        const input = yield* resolveReferenceInput({
-          kind: "content",
-          contentId: section.value.graph.assetId,
+        const world = yield* tryoutWorld();
+        expect(
+          yield* read(world, {
+            appLocale: "en",
+            kind: "route",
+            publicPath: "try-out/indonesia-en",
+          })
+        ).toMatchObject({
+          description: "Try-out Indonesia",
+          locale: "en",
+          route: "try-out/indonesia-en",
+          title: "Try-out",
         });
-        if (input === null) {
-          return yield* Effect.die("Expected a classified try-out asset.");
-        }
         expect(
-          yield* Effect.promise(() =>
-            t.query((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                readTryoutReference(input).pipe(
-                  Effect.provide(
-                    Layer.provideMerge(
-                      tryoutLayer,
-                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
-                    )
-                  )
-                )
-              )
-            )
-          )
-        ).toBeNull();
-        yield* Effect.promise(() =>
-          t.mutation((ctx) =>
-            Effect.runPromiseWith(runtimeServices)(
-              activateTryoutSnapshot(ctx, {
-                catalog,
-                placements: [makeTryoutStartPlacement("id")],
-              })
-            )
-          )
-        );
-        expect(
-          yield* Effect.promise(() =>
-            t.query((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                readTryoutReference(input).pipe(
-                  Effect.provide(
-                    Layer.provideMerge(
-                      tryoutLayer,
-                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
-                    )
-                  )
-                )
-              )
-            )
-          )
-        ).toBeNull();
-        const absent = yield* resolveReferenceInput({
-          kind: "content",
-          contentId: `${section.value.graph.assetId}:absent`,
+          yield* read(world, {
+            contentId: "asset:id:tryout:set-1",
+            kind: "content",
+          })
+        ).toMatchObject({
+          description: "",
+          route: "try-out/indonesia/snbt/2027/set-1-id",
         });
-        if (absent === null) {
-          return yield* Effect.die(
-            "Expected a classified absent try-out asset."
-          );
-        }
         expect(
-          yield* Effect.promise(() =>
-            t.query((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                readTryoutReference(absent).pipe(
-                  Effect.provide(
-                    Layer.provideMerge(
-                      tryoutLayer,
-                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
-                    )
-                  )
-                )
-              )
-            )
-          )
+          yield* read(world, {
+            appLocale: "id",
+            kind: "route",
+            publicPath: "try-out/nowhere",
+          })
         ).toBeNull();
       })
   );
-});
-it.effect(
-  "preserves public descriptions and rejects duplicate graph identities",
-  () =>
+
+  it.effect("finds no route for an internal entry or an absent asset", () =>
     Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = convexTest(schema, convexModules);
-      const catalog = Arr.map(
-        makeTryoutStartHierarchy("id", "visible"),
-        (row) => ({
-          ...row,
-          description: "Signed description",
+      const world = yield* tryoutWorld({ entry: true });
+      for (const contentId of [
+        "asset:id:tryout:set-1-section-a",
+        "asset:id:tryout:absent",
+      ]) {
+        expect(yield* read(world, { contentId, kind: "content" })).toBeNull();
+      }
+    })
+  );
+
+  it.effect("fails closed when two rows hold one graph asset", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld();
+      yield* Effect.promise(() =>
+        world.t.mutation(async (ctx) => {
+          const row = await ctx.db
+            .query("assessmentRows")
+            .withIndex("by_snapshotId_and_appLocale_and_assetId", (query) =>
+              query
+                .eq("snapshotId", world.snapshotId)
+                .eq("appLocale", "id")
+                .eq("assetId", "asset:id:tryout:country")
+            )
+            .unique();
+          assert.ok(row);
+          await ctx.db.insert("assessmentRows", {
+            ...Struct.omit(row, ["_creationTime", "_id"]),
+            identity: `${row.identity}-copy`,
+          });
         })
       );
-      const country = Arr.findFirst(catalog, (row) => row.kind === "country");
-      assert(Option.isSome(country));
-      yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            activateTryoutSnapshot(ctx, {
-              catalog,
-              placements: [makeTryoutStartPlacement("id")],
-            })
+      const resolved = yield* resolveReferenceInput({
+        contentId: "asset:id:tryout:country",
+        kind: "content",
+      });
+      assert.ok(resolved);
+      expect(
+        yield* world.run(
+          readTryoutReference(resolved).pipe(
+            Effect.flip,
+            Effect.map(({ code }) => code)
           )
         )
-      );
-      const input = yield* resolveReferenceInput({
-        kind: "content",
-        contentId: country.value.graph.assetId,
-      });
-      assert(input);
-      const read = () =>
-        t.query((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            readTryoutReference(input).pipe(
-              Effect.provide(
-                Layer.provideMerge(
-                  tryoutLayer,
-                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
-                )
-              )
-            )
-          )
-        );
-      expect(yield* Effect.promise(read)).toMatchObject({
-        description: "Signed description",
-      });
-      yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const row = await ctx.db
-            .query("tryoutCatalog")
-            .filter((q) =>
-              q.eq(q.field("assetId"), country.value.graph.assetId)
-            )
-            .first();
-          assert(row);
-          await ctx.db.insert(
-            "tryoutCatalog",
-            Struct.omit(row, ["_id", "_creationTime"])
-          );
-        })
-      );
-      yield* Effect.promise(() =>
-        expect(read()).rejects.toMatchObject({
-          code: "CONTENT_RELEASE_INTEGRITY",
-        })
-      );
+      ).toBe("CONTENT_RELEASE_INTEGRITY");
     })
-);
+  );
+});

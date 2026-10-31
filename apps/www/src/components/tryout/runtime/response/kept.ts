@@ -40,7 +40,7 @@ export function useResendKeptPicks({
                 send(
                   {
                     placementId: questionId,
-                    selection: answer.response,
+                    response: answer.response,
                     version: answer.version,
                   },
                   answer.answeredAt

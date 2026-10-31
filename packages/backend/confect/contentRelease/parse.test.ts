@@ -20,7 +20,7 @@ import {
   decodeRollbackJson,
   decodeRouteJson,
   decodeSnapshotJson,
-  decodeTryoutRuntimeBundleJson,
+  decodeSnapshotRowJson,
   parseStoredJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import {
@@ -35,7 +35,6 @@ import {
   FUNCTION_MATERIAL,
   testProjectionJson,
 } from "@repo/backend/test/content/material";
-import { TEST_QUESTION_PROJECTION } from "@repo/backend/test/content/question";
 import {
   TEST_ARTIFACT_HASH,
   TEST_DIGEST,
@@ -176,30 +175,6 @@ describe("contentRelease/parse", () => {
   );
 
   it.live(
-    "rejects retired Question fields at the stored projection boundary",
-    () =>
-      Effect.gen(function* () {
-        const projection = TEST_QUESTION_PROJECTION;
-        for (const value of [
-          { ...projection, choices: [] },
-          {
-            ...projection,
-            metadata: {
-              authors: projection.metadata.authors,
-              date: projection.metadata.datePublished,
-              title: projection.metadata.title,
-            },
-          },
-        ]) {
-          const rejected = yield* decodeProjectionJson(
-            yield* Schema.encodeEffect(JsonTextSchema)(value)
-          ).pipe(Effect.flip);
-          expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-        }
-      })
-  );
-
-  it.live(
     "keeps rejecting a manifest the content contract does not recognize",
     () =>
       Effect.gen(function* () {
@@ -237,7 +212,7 @@ describe("contentRelease/parse", () => {
             decodeRollbackJson("{}").pipe(Effect.flip),
             decodeRouteJson("{}").pipe(Effect.flip),
             decodeSnapshotJson("{}").pipe(Effect.flip),
-            decodeTryoutRuntimeBundleJson("{}").pipe(Effect.flip),
+            decodeSnapshotRowJson("{}").pipe(Effect.flip),
           ],
           { concurrency: "unbounded" }
         );

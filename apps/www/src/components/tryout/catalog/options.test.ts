@@ -36,7 +36,6 @@ describe("try-out catalog options", () => {
           description: "Ujian baru",
           examKey: "ujian-baru",
           publicPath: PublicPathSchema.make("try-out/indonesia/ujian-baru"),
-          scoringStrategy: "irt",
           title: "Ujian Baru",
         },
       ])

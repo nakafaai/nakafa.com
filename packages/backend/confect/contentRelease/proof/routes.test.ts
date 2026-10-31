@@ -3,7 +3,6 @@ import { ROUTE_CATALOG_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/s
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { TEST_QUESTION_PROJECTION_JSON } from "@repo/backend/test/content/question";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   beginFixture,
@@ -34,11 +33,6 @@ it.each([
     name: "missing projection",
     head: { projectionJson: undefined },
     code: "CONTENT_RELEASE_INTEGRITY",
-  },
-  {
-    name: "protected question",
-    head: { projectionJson: TEST_QUESTION_PROJECTION_JSON },
-    code: "CONTENT_RELEASE_ROUTE",
   },
   {
     name: "wrong family",

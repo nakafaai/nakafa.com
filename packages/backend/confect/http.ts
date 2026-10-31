@@ -9,7 +9,6 @@ import { schoolUsernameSignIn } from "@repo/backend/confect/auth/login";
 import { authDiscoveryRoutes } from "@repo/backend/confect/auth/route";
 import { createAuth } from "@repo/backend/confect/auth/runtime";
 import { batchRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/batch";
-import { protectedRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/protected";
 import { publicRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/public";
 import { publicationRoutes } from "@repo/backend/confect/contentRelease/ingress/route";
 import { schoolMcpRoutes } from "@repo/backend/confect/integrations/mcp";
@@ -34,8 +33,7 @@ const http = ConfectHttpRouter.make(
     xenditRoutes,
     publicationRoutes,
     batchRuntimeRoutes,
-    publicRuntimeRoutes,
-    protectedRuntimeRoutes
+    publicRuntimeRoutes
   ).pipe(
     Layer.provide(requestIdentity.layer),
     Layer.provide(requestLogger.layer)

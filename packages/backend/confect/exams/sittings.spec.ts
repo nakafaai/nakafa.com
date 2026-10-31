@@ -3,6 +3,7 @@ import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/Pagi
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
+import { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { FoldPending } from "@repo/backend/confect/editor/errors";
 import {
   AssetAddress,
@@ -30,7 +31,6 @@ import {
   StaleAnswer,
 } from "@repo/backend/confect/exams/sittings/errors";
 import { SITTING_REFUSALS } from "@repo/backend/confect/exams/sittings/refusal";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import {
   DeviceId,
   Minutes,

@@ -7,9 +7,6 @@ import { readTryoutSectionHandler } from "@/components/tryout/route/section.serv
 
 const mocks = vi.hoisted(() => ({
   readRequestToken: vi.fn(),
-  renderTryoutPreview: vi.fn(),
-  renderTryoutReview: vi.fn(),
-  readTryoutQuestionPreview: vi.fn(),
   readTryoutMetadata: vi.fn(),
   readTryoutSectionPage: vi.fn(),
   readTryoutSetPage: vi.fn(),
@@ -24,16 +21,6 @@ vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutMetadata: mocks.readTryoutMetadata,
   readTryoutSectionPage: mocks.readTryoutSectionPage,
   readTryoutSetPage: mocks.readTryoutSetPage,
-}));
-vi.mock("@/components/tryout/content/signed", () => ({
-  loadSignedTryoutContent: vi.fn(),
-}));
-vi.mock("@/components/tryout/preview/read", () => ({
-  readTryoutQuestionPreview: mocks.readTryoutQuestionPreview,
-}));
-vi.mock("@/components/tryout/route/rendered.server", () => ({
-  renderTryoutPreview: mocks.renderTryoutPreview,
-  renderTryoutReview: mocks.renderTryoutReview,
 }));
 vi.mock("@/components/tryout/route/token.server", () => ({
   readRequestToken: mocks.readRequestToken,
@@ -52,7 +39,6 @@ const NOT_FOUND = { kind: "notFound" };
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
-  mocks.readTryoutQuestionPreview.mockReturnValue(Effect.succeedNone);
   // The set's page and its head are read together, so a missing page still reads the head.
   mocks.readTryoutMetadata.mockReturnValue(Effect.succeed({ route: null }));
 });

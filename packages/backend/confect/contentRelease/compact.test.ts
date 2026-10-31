@@ -1,15 +1,12 @@
-import { Ref } from "@confect/core";
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { actionLayer } from "@confect/server/RegisteredFunction";
 
-import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
-import refs from "@repo/backend/confect/_generated/refs";
+import { assert, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   compactProgram,
   runProgram,
 } from "@repo/backend/confect/contentRelease/compact";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -22,15 +19,28 @@ import {
   seedExpiredSnapshotBacklog,
 } from "@repo/backend/test/content/compact";
 import {
+  TEST_MANIFEST_HASH,
+  TEST_RELEASE_ID,
+} from "@repo/backend/test/content/release";
+import {
   insertTestState,
   insertZeroRelease,
+  type TestIdentity,
 } from "@repo/backend/test/content/state";
-import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
-import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { convexTest } from "convex-test";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
+import { convexTest, type TestConvex } from "convex-test";
 import { Array as Arr, DateTime, Effect, Option, Order } from "effect";
 
 const IDLE_RELEASE_COUNT = 40;
+
+/** Runs one scheduled compaction tick in an action of the test deployment. */
+function runCompaction(t: TestConvex<typeof schema>) {
+  return t.action((ctx) =>
+    Effect.runPromise(
+      runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+    )
+  );
+}
 
 describe("contentRelease/compact", () => {
   it("yields a large expired snapshot backlog across bounded scheduled runs", async () => {
@@ -99,11 +109,7 @@ describe("contentRelease/compact", () => {
     expect(paused?.compactCursor).toBeUndefined();
     expect(paused?.compactPhase).toBe("heads");
     expect(paused?.compactedFloor).toBe(0);
-    const completed = await t.action((ctx) =>
-      Effect.runPromise(
-        runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
-      )
-    );
+    const completed = await runCompaction(t);
     const stored = await t.run(async (ctx) => ({
       artifacts: await ctx.db.query("contentArtifacts").collect(),
       bindings: await ctx.db.query("contentBindings").collect(),
@@ -178,13 +184,7 @@ describe("contentRelease/compact", () => {
     // Every page of the cycle wrote the compaction row; the state row that
     // every content query loads was never written.
     expect(stored.state).toEqual(stateBefore);
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
-          runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
-        )
-      )
-    ).resolves.toEqual({
+    await expect(runCompaction(t)).resolves.toEqual({
       complete: true,
       deleted: 0,
       floor: 3,
@@ -223,11 +223,7 @@ describe("contentRelease/compact", () => {
         nextSequence: 6,
       });
     });
-    const receipt = await t.action((ctx) =>
-      Effect.runPromise(
-        runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
-      )
-    );
+    const receipt = await runCompaction(t);
     const sequences = await t.run(async (ctx) =>
       Arr.map(
         await ctx.db.query("contentReleases").collect(),
@@ -281,11 +277,7 @@ describe("contentRelease/compact", () => {
         recovery,
       });
     });
-    const receipt = await t.action((ctx) =>
-      Effect.runPromise(
-        runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
-      )
-    );
+    const receipt = await runCompaction(t);
     const sequences = await t.run(async (ctx) =>
       Arr.map(
         await ctx.db.query("contentReleases").collect(),
@@ -341,98 +333,74 @@ describe("contentRelease/compact", () => {
   });
 });
 describe("contentRelease/compact permanent history", () => {
-  beforeEach(() => vi.setSystemTime(TRYOUT_TEST_NOW));
-  it("preserves frozen attempt history after its source release expires", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seed = await t.mutation(async (ctx) => {
-      const seed = await insertHistoryAttempt(ctx);
-      const source = await ctx.db.query("contentReleases").unique();
-      assert.ok(source);
-      await ctx.db.patch(source._id, {
-        createdAt: 0,
-      });
-      let active = {
-        manifestHash: seed.runtime.sourceManifestHash,
-        releaseId: seed.runtime.sourceReleaseId,
-        sequence: source.sequence,
-      };
-      for (let sequence = 2; sequence <= 5; sequence += 1) {
-        const identity = compactionIdentity(sequence);
-        await insertCompletedRelease(ctx, identity, active, 0);
-        active = identity;
-      }
-      const state = await ctx.db.query("contentState").unique();
-      assert.ok(state);
-      await ctx.db.patch(state._id, {
-        activeManifestHash: active.manifestHash,
-        activeReleaseId: active.releaseId,
-        activeSequence: active.sequence,
-        nextSequence: 6,
-      });
-      await insertCompaction(ctx, { compactedFloor: 1 });
-      const snapshot = await ctx.db.query("contentSnapshots").unique();
-      assert.ok(snapshot);
-      await ctx.db.patch(snapshot._id, {
-        retainUntil: 0,
-      });
-      for (const facts of await ctx.db
-        .query("contentArtifactFacts")
-        .collect()) {
-        await ctx.db.patch(facts._id, {
-          retainUntil: 0,
-        });
-      }
-      return seed;
-    });
-    const owned = t.withIdentity({
-      subject: seed.identity.authUserId,
-      sessionId: seed.identity.sessionId,
-    });
-    const read = () =>
-      owned
-        .query(
-          Ref.getFunctionReference(
-            refs.public.tryouts.queries.content.getBatch
-          ),
-          seed.request
-        )
-        .then((value) =>
-          Ref.decodeReturnsSync(
-            refs.public.tryouts.queries.content.getBatch,
-            value
-          )
+  it.effect(
+    "keeps the assessment snapshot an attempt names after its source release expires",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        yield* world.start();
+        const { snapshotId, t } = world;
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const source = await ctx.db.query("contentReleases").unique();
+            assert.ok(source);
+            await ctx.db.patch("contentReleases", source._id, { createdAt: 0 });
+            let active: TestIdentity = {
+              manifestHash: TEST_MANIFEST_HASH,
+              releaseId: TEST_RELEASE_ID,
+              sequence: source.sequence,
+            };
+            for (let sequence = 2; sequence <= 5; sequence += 1) {
+              const identity = compactionIdentity(sequence);
+              await insertCompletedRelease(ctx, identity, active, 0);
+              active = identity;
+            }
+            const state = await ctx.db.query("contentState").unique();
+            assert.ok(state);
+            await ctx.db.patch("contentState", state._id, {
+              activeManifestHash: active.manifestHash,
+              activeReleaseId: active.releaseId,
+              activeSequence: active.sequence,
+              nextSequence: 6,
+            });
+            await insertCompaction(ctx, { compactedFloor: 1 });
+            const snapshot = await ctx.db.query("contentSnapshots").unique();
+            assert.ok(snapshot);
+            await ctx.db.patch("contentSnapshots", snapshot._id, {
+              retainUntil: 0,
+            });
+          })
         );
-    const before = await read();
-    assert.ok(before);
-    const attempt = await t.query((ctx) => ctx.db.get(seed.request.attemptId));
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
-          runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
-        )
-      )
-    ).resolves.toMatchObject({
-      complete: true,
-      floor: 3,
-    });
-    expect(await read()).toEqual(before);
-    expect(await t.query((ctx) => ctx.db.get(seed.request.attemptId))).toEqual(
-      attempt
-    );
-    expect(await t.query((ctx) => ctx.db.get(seed.runtime._id))).toEqual(
-      seed.runtime
-    );
-    expect(
-      await t.query(async (ctx) =>
-        Arr.map(
-          await ctx.db.query("contentReleases").collect(),
-          ({ sequence }) => sequence
-        )
-      )
-    ).toEqual([3, 4, 5]);
-    expect(Arr.map(before.items, ({ delivery }) => delivery)).toEqual([
-      "authenticated",
-      "entitled",
-    ]);
-  });
+        const rows = () =>
+          t.query((ctx) =>
+            ctx.db
+              .query("assessmentRows")
+              .withIndex("by_snapshotId_and_index", (index) =>
+                index.eq("snapshotId", snapshotId)
+              )
+              .collect()
+          );
+        const before = yield* Effect.promise(rows);
+        expect(yield* Effect.promise(() => runCompaction(t))).toMatchObject({
+          complete: true,
+          floor: 3,
+        });
+        expect(yield* Effect.promise(rows)).toEqual(before);
+        expect(
+          yield* Effect.promise(() =>
+            t.query((ctx) => ctx.db.query("contentSnapshots").unique())
+          )
+        ).toMatchObject({ snapshotId, retainUntil: expect.any(Number) });
+        expect(
+          yield* Effect.promise(() =>
+            t.query(async (ctx) =>
+              Arr.map(
+                await ctx.db.query("contentReleases").collect(),
+                ({ sequence }) => sequence
+              )
+            )
+          )
+        ).toEqual([3, 4, 5]);
+      })
+  );
 });

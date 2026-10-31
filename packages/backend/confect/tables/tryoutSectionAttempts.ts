@@ -8,7 +8,6 @@ import { Schema } from "effect";
 export default Table.make(() =>
   Schema.Struct({
     tryoutAttemptId: IdSchema("tryoutAttempts"),
-    sectionIdentity: Schema.String,
     sectionKey: tryoutRouteKeyValidator,
     sectionOrder: Schema.Finite,
     status: tryoutStatusValidator,

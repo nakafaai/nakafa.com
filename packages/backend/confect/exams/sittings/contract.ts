@@ -3,8 +3,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
+import { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import {
   AttemptState,
   RoomName,

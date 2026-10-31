@@ -18,20 +18,24 @@ export const RoomStateFilter = Schema.Literals([
 ]);
 
 /**
- * The arguments of one page of an exam's rooms, with the state the table filters by. Every state
- * leaves the state out of the arguments, so the server reads every room of the exam.
+ * The arguments of one page of an exam's rooms, with the state the table filters by and the search
+ * of its header. Every state leaves the state out of the arguments, and an empty search leaves the
+ * search out, so the server reads every room of the exam.
  */
 export function roomsArgs(
   input: {
     readonly examId: GenericId.GenericId<"exams">;
     readonly slug: TenantSlug;
   },
-  filter: typeof RoomStateFilter.Type
+  filter: typeof RoomStateFilter.Type,
+  search: string
 ) {
-  if (filter === "all") {
-    return { examId: input.examId, slug: input.slug };
-  }
-  return { examId: input.examId, slug: input.slug, state: filter };
+  return {
+    examId: input.examId,
+    slug: input.slug,
+    ...(filter === "all" ? {} : { state: filter }),
+    ...(search === "" ? {} : { search }),
+  };
 }
 
 /**

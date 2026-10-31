@@ -15,9 +15,7 @@ import {
   ContentSnapshotRowSchema,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
-import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { decodeStoredSnapshotRow } from "@repo/backend/confect/contentRelease/tryout/row";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema, Struct } from "effect";
 
@@ -261,32 +259,16 @@ export const decodeSnapshotJson = Effect.fn(
     )
   )
 );
-/** Strictly decodes one current row at publication ingress. */
-export const decodeCurrentSnapshotRowJson = Effect.fn(
-  "contentRelease.decodeCurrentSnapshotRowJson"
+/** Strictly decodes one structured-family row, at ingress or from storage. */
+export const decodeSnapshotRowJson = Effect.fn(
+  "contentRelease.decodeSnapshotRowJson"
 )((source: string) =>
-  parseStoredJson(source, "Current content snapshot row").pipe(
+  parseStoredJson(source, "Content snapshot row").pipe(
     Effect.flatMap(
       Schema.decodeUnknownEffect(ContentSnapshotRowSchema, {
         onExcessProperty: "error",
       })
     ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message:
-            "New content snapshot row does not satisfy the current contract.",
-        })
-    )
-  )
-);
-/** Strictly decodes one immutable structured-family row from storage. */
-export const decodeSnapshotRowJson = Effect.fn(
-  "contentRelease.decodeSnapshotRowJson"
-)((source: string) =>
-  parseStoredJson(source, "Content snapshot row").pipe(
-    Effect.flatMap(decodeStoredSnapshotRow),
     Effect.mapError(
       () =>
         new ReleaseError({
@@ -311,26 +293,6 @@ export const decodeRendererJson = Effect.fn(
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
           message: "Renderer manifest does not satisfy its exact contract.",
-        })
-    )
-  )
-);
-/** Strictly decodes one permanent signed try-out runtime bundle. */
-export const decodeTryoutRuntimeBundleJson = Effect.fn(
-  "contentRelease.decodeTryoutRuntimeBundleJson"
-)((source: string) =>
-  parseStoredJson(source, "Try-out runtime bundle").pipe(
-    Effect.flatMap(
-      Schema.decodeUnknownEffect(SignedTryoutRuntimeBundleSchema, {
-        onExcessProperty: "error",
-      })
-    ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message:
-            "Try-out runtime bundle does not satisfy its exact contract.",
         })
     )
   )

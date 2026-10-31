@@ -3,7 +3,6 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadState } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { completedReceipt } from "@repo/backend/confect/contentRelease/receipt";
-import { findReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/binding";
 import { Effect } from "effect";
 
 /** Returns terminal evidence for one idempotently repeated activation. */
@@ -38,6 +37,5 @@ export const completedActivation = Effect.fn(
       `Completed release ${releaseId} lost its active model manifest.`
     );
   }
-  yield* findReleaseTryoutRuntime(signed, release.tryoutRuntimeBundleHash);
   return yield* completedReceipt(release, signed);
 });

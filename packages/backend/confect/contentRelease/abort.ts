@@ -7,10 +7,6 @@ import {
   deleteAbortRows,
   hasAbortResidue,
 } from "@repo/backend/confect/contentRelease/abort/rows";
-import {
-  deleteAbortRuntime,
-  hasAbortRuntime,
-} from "@repo/backend/confect/contentRelease/abort/runtime";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   loadRelease,
@@ -59,7 +55,7 @@ export const validateAbortedRelease = Effect.fn(
   const database = yield* DatabaseReader;
   const release = yield* loadRelease(releaseId);
   const state = yield* loadState();
-  const [build, rows, residue, runtime] = yield* Effect.all([
+  const [build, rows, residue] = yield* Effect.all([
     loadModelBuild(),
     Effect.all([
       database
@@ -92,7 +88,6 @@ export const validateAbortedRelease = Effect.fn(
         .pipe(Effect.map(Option.getOrNull), Effect.orDie),
     ]),
     hasAbortResidue(release.sequence),
-    hasAbortRuntime(releaseId),
   ]);
   if (
     release.status !== "aborted" ||
@@ -106,7 +101,6 @@ export const validateAbortedRelease = Effect.fn(
     state?.recoveryReleaseId === releaseId ||
     build?.releaseId === releaseId ||
     residue ||
-    runtime ||
     Arr.some(rows, (row) => row !== null)
   ) {
     return yield* releaseFail(
@@ -158,7 +152,6 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
     yield* stopProofWorkflow(release.proofWorkflowId);
   }
   const total = abortRowCount(release);
-  yield* deleteAbortRuntime(releaseId);
   const deleted = yield* deleteAbortRows(releaseId, release.sequence);
   if (deleted === 0 && before < total) {
     return yield* releaseFail(

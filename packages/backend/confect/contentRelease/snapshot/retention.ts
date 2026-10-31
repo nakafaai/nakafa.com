@@ -7,30 +7,23 @@ import {
 } from "@repo/backend/confect/contentRelease/model";
 import { Array as Arr, Effect, MutableHashSet, Option } from "effect";
 
-/** Checks permanent try-out state that still requires one snapshot. */
-const hasTryoutRuntimeReference = Effect.fn(
-  "contentRelease.hasTryoutRuntimeReference"
-)(function* (snapshotId: string) {
-  const database = yield* DatabaseReader;
-  const [attempt, scale] = yield* Effect.all([
-    database
+/**
+ * Checks whether a try-out attempt still names one assessment snapshot. An
+ * attempt freezes its paper and item versions from the snapshot and reads them
+ * back for its review, so the snapshot stays while any attempt names it.
+ */
+const hasAttemptReference = Effect.fn("contentRelease.hasAttemptReference")(
+  function* (snapshotId: string) {
+    const attempt = yield* (yield* DatabaseReader)
       .table("tryoutAttempts")
-      .index("by_tryoutSnapshotId", (query) =>
-        query.eq("tryoutSnapshotId", snapshotId)
+      .index("by_assessmentSnapshotId", (query) =>
+        query.eq("assessmentSnapshotId", snapshotId)
       )
       .first()
-      .pipe(Effect.map(Option.getOrNull), Effect.orDie),
-    database
-      .table("irtScaleVersions")
-      .index(
-        "by_tryoutSnapshotId_and_setIdentity_and_history_and_publishedAt",
-        (query) => query.eq("tryoutSnapshotId", snapshotId)
-      )
-      .first()
-      .pipe(Effect.map(Option.getOrNull), Effect.orDie),
-  ]);
-  return attempt !== null || scale !== null;
-});
+      .pipe(Effect.orDie);
+    return Option.isSome(attempt);
+  }
+);
 
 /** Collects every release ID whose stored history must stay reachable. */
 const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
@@ -78,7 +71,7 @@ const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
 export const isSnapshotReferenced = Effect.fn(
   "contentRelease.isSnapshotReferenced"
 )(function* (family: ContentSnapshotKind, snapshotId: string) {
-  if (family === "tryout" && (yield* hasTryoutRuntimeReference(snapshotId))) {
+  if (family === "assessment" && (yield* hasAttemptReference(snapshotId))) {
     return true;
   }
   const ids = yield* protectedReleases();
@@ -93,28 +86,4 @@ export const isSnapshotReferenced = Effect.fn(
     }
   }
   return false;
-});
-
-/** Checks whether any immutable try-out placement owns an artifact. */
-export const hasSnapshotArtifactReference = Effect.fn(
-  "contentRelease.hasSnapshotArtifactReference"
-)(function* (artifactHash: string) {
-  const database = yield* DatabaseReader;
-  const [question, answer] = yield* Effect.all([
-    database
-      .table("tryoutPlacements")
-      .index("by_questionArtifactHash", (query) =>
-        query.eq("questionArtifactHash", artifactHash)
-      )
-      .first()
-      .pipe(Effect.map(Option.getOrNull), Effect.orDie),
-    database
-      .table("tryoutPlacements")
-      .index("by_answerArtifactHash", (query) =>
-        query.eq("answerArtifactHash", artifactHash)
-      )
-      .first()
-      .pipe(Effect.map(Option.getOrNull), Effect.orDie),
-  ]);
-  return question !== null || answer !== null;
 });

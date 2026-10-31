@@ -11,7 +11,6 @@ import {
   createTestPublication,
   makePageRuntimeSource,
 } from "@repo/backend/test/content/publication";
-import { TEST_QUESTION_PROJECTION_JSON } from "@repo/backend/test/content/question";
 import { Effect, Schema } from "effect";
 
 // Strict decoding rejects undeclared keys instead of stripping them.
@@ -139,9 +138,6 @@ describe("stored public exchange", () => {
           },
           {
             activeReleaseId: "different-release",
-          },
-          {
-            projectionJson: TEST_QUESTION_PROJECTION_JSON,
           },
         ]) {
           expect(

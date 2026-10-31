@@ -1,415 +1,200 @@
-import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import confectSchema from "@repo/backend/confect/_generated/schema";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { client } from "@repo/backend/test/client";
 import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
-import { selectAttemptScale } from "@repo/backend/confect/tryouts/start/scale";
-import { loadTryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
-import type { StartAttemptArgs } from "@repo/backend/confect/tryouts/start/spec";
-import { api } from "@repo/backend/convex/_generated/api";
-import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
-import {
-  makeSignedTryoutSection,
-  makeSignedTryoutSource,
-} from "@repo/backend/test/tryout/section";
-import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
-import {
-  activateTryoutStartSource,
-  TRYOUT_START_COUNTRY as COUNTRY,
-  TRYOUT_START_EXAM as EXAM,
-  makeTryoutStartCatalog,
-  makeTryoutStartPlacement,
-  TRYOUT_START_NOW as NOW,
-  TRYOUT_START_SET as SET,
-  TRYOUT_START_TRACK as TRACK,
-} from "@repo/backend/test/tryout/source";
-import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
-import { Array as Arr, Effect, Option } from "effect";
+  startArgs,
+  TRYOUT_NOW,
+  type TryoutWorld,
+  tryoutWorld,
+} from "@repo/backend/test/tryout/world";
+import { Array as Arr, Effect, Struct } from "effect";
 
-const startArgs: StartAttemptArgs = {
-  countryKey: COUNTRY,
-  examKey: EXAM,
-  locale: "id",
-  setKey: SET,
-  trackKey: TRACK,
-};
+/** Reads every scale with its items and calibration runs. */
+const readScales = (world: TryoutWorld) =>
+  Effect.promise(() =>
+    world.t.query(async (ctx) => ({
+      items: await ctx.db.query("irtScaleItems").collect(),
+      runs: await ctx.db.query("irtCalibrationRuns").collect(),
+      scales: await ctx.db.query("irtScaleVersions").collect(),
+    }))
+  );
+
+/** Starts the fixture set as another learner. */
+const startAsAnother = (world: TryoutWorld, suffix: string) =>
+  Effect.gen(function* () {
+    const other = yield* Effect.promise(() =>
+      world.t.mutation((ctx) =>
+        seedAuthenticatedUser(ctx, { now: TRYOUT_NOW, suffix })
+      )
+    );
+    return yield* client(
+      world.t.withIdentity({
+        sessionId: other.sessionId,
+        subject: other.authUserId,
+      })
+    ).mutation(tryouts.mutations.attempts.startAttempt, startArgs());
+  });
+
+/** Runs one direct change against the world's scale rows. */
+const change = (
+  world: TryoutWorld,
+  edit: (ctx: MutationCtx) => Promise<unknown>
+) => Effect.promise(() => world.t.mutation(edit));
+
 describe("tryouts/start/scale", () => {
-  it.each([
-    {
-      official: true,
-      changed: false,
-    },
-    {
-      official: false,
-      changed: false,
-    },
-    {
-      official: true,
-      changed: true,
-    },
-  ])(
-    "publishes one complete scale with previous official status: %s",
-    async ({ official, changed }) => {
-      vi.setSystemTime(NOW);
-      const t = createConvexTestWithBetterAuth();
-      const seeded = await t.mutation(async (ctx) => {
-        const firstIdentity = await seedAuthenticatedUser(ctx, {
-          now: NOW,
-          suffix: "tryout-first-scale",
-        });
-        const fixture = await activateTryoutStartSource(ctx, "visible", "irt");
-        return {
-          firstIdentity,
-          fixture,
-        };
-      });
-      const firstAuthed = t.withIdentity({
-        sessionId: seeded.firstIdentity.sessionId,
-        subject: seeded.firstIdentity.authUserId,
-      });
-      const firstResult = await firstAuthed.mutation(
-        api.tryouts.mutations.attempts.startAttempt,
-        startArgs
-      );
-      const second = await t.mutation(async (ctx) => {
-        const oldScale = await ctx.db.query("irtScaleVersions").unique();
-        assert(oldScale, "Expected the first scale.");
-        if (official) {
-          await ctx.db.patch(oldScale._id, {
+  it.effect(
+    "publishes a provisional scale of the paper's families on the first IRT start, and reuses it",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld({ scoring: { kind: "irt" } });
+        const first = yield* world.start();
+        const created = yield* readScales(world);
+        expect(created.scales).toMatchObject([
+          {
+            assessmentSnapshotId: world.snapshotId,
+            model: "2pl",
+            questionCount: 3,
+            setIdentity: "indonesia/snbt/2027/set-1",
+            status: "provisional",
+          },
+        ]);
+        expect(
+          Arr.map(created.runs, ({ questionCount, sectionKey }) => [
+            sectionKey,
+            questionCount,
+          ])
+        ).toEqual([
+          ["section-a", 2],
+          ["section-b", 1],
+        ]);
+        expect(
+          Arr.map(
+            created.items,
+            ({ calibrationStatus, difficulty, discrimination, family }) => [
+              family,
+              calibrationStatus,
+              difficulty,
+              discrimination,
+            ]
+          )
+        ).toEqual([
+          ["section-a-item-1", "provisional", 0, 1],
+          ["section-a-item-2", "provisional", 0, 1],
+          ["section-b-item-1", "provisional", 0, 1],
+        ]);
+        const second = yield* startAsAnother(world, "second");
+        expect(yield* readScales(world)).toEqual(created);
+        const attempts = yield* Effect.promise(() =>
+          world.t.query(async (ctx) => [
+            await ctx.db.get("tryoutAttempts", first.attemptId),
+            await ctx.db.get("tryoutAttempts", second.attemptId),
+          ])
+        );
+        expect(Arr.map(attempts, (attempt) => attempt?.scaleVersionId)).toEqual(
+          [created.scales[0]?._id, created.scales[0]?._id]
+        );
+      })
+  );
+
+  it.effect(
+    "carries each family's calibration into the scale of a later snapshot, official only when every family carries over",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld({ scoring: { kind: "irt" } });
+        yield* world.start();
+        yield* change(world, async (ctx) => {
+          const [scale] = await ctx.db.query("irtScaleVersions").collect();
+          assert.ok(scale);
+          await ctx.db.patch("irtScaleVersions", scale._id, {
             status: "official",
           });
-        }
-        const [release, state] = await Promise.all([
-          ctx.db.query("contentReleases").unique(),
-          ctx.db.query("contentState").unique(),
-        ]);
-        assert(
-          release && state,
-          "Expected the first active technical release."
-        );
-        await ctx.db.delete("contentReleases", release._id);
-        await ctx.db.delete("contentState", state._id);
-        const locales = ACTIVE_APP_LOCALE_CODES;
-        const catalog = Arr.flatMap(locales, (locale) =>
-          Arr.map(makeTryoutStartCatalog(locale, "visible", "irt"), (row) =>
-            locale === "en" && row.kind === "set"
-              ? {
-                  ...row,
-                  title: "Set one",
-                }
-              : row
-          )
-        );
-        const placements = Arr.map(locales, (locale) => {
-          const placement = makeTryoutStartPlacement(locale);
-          return changed
-            ? {
-                ...placement,
-                sourceRevision: "2027",
-              }
-            : placement;
+          for (const item of await ctx.db.query("irtScaleItems").collect()) {
+            await ctx.db.patch("irtScaleItems", item._id, {
+              calibrationStatus: "calibrated",
+              difficulty: 0.5,
+            });
+          }
         });
-        const snapshotId = await Effect.runPromise(
-          activateTryoutSnapshot(ctx, {
-            catalog,
-            placements,
-            releaseId: "release-test-second-scale",
-          })
-        );
-        await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-        const identity = await seedAuthenticatedUser(ctx, {
-          now: NOW,
-          suffix: "tryout-second-scale",
-        });
-        return {
-          identity,
-          snapshotId,
-        };
-      });
-      const secondAuthed = t.withIdentity({
-        sessionId: second.identity.sessionId,
-        subject: second.identity.authUserId,
-      });
-      const secondResult = await secondAuthed.mutation(
-        api.tryouts.mutations.attempts.startAttempt,
-        startArgs
-      );
-      const proof = await t.query(async (ctx) => {
-        const firstAttempt = await ctx.db.get(firstResult.attemptId);
-        const secondAttempt = await ctx.db.get(secondResult.attemptId);
-        assert(
-          firstAttempt?.scaleVersionId && secondAttempt?.scaleVersionId,
-          "Expected both signed attempts to freeze a scale."
-        );
-        const firstScaleVersionId = firstAttempt.scaleVersionId;
-        const secondScaleVersionId = secondAttempt.scaleVersionId;
-        const firstScale = await ctx.db.get(firstScaleVersionId);
-        const secondScale = await ctx.db.get(secondScaleVersionId);
-        const firstItems = await ctx.db
-          .query("irtScaleItems")
-          .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
-            query.eq("scaleVersionId", firstScaleVersionId)
-          )
-          .collect();
-        const secondItems = await ctx.db
-          .query("irtScaleItems")
-          .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
-            query.eq("scaleVersionId", secondScaleVersionId)
-          )
-          .collect();
-        return {
-          firstItems,
-          firstScale,
-          secondItems,
-          secondScale,
-        };
-      });
-      expect(proof.firstScale?.tryoutSnapshotId).toBe(
-        seeded.fixture.snapshotId
-      );
-      expect(proof.secondScale?.tryoutSnapshotId).toBe(second.snapshotId);
-      expect(proof.secondScale?._id).not.toBe(proof.firstScale?._id);
-      expect(proof.secondScale?.status).toBe(
-        official && !changed ? "official" : "provisional"
-      );
-      expect(proof.firstItems).toHaveLength(1);
-      expect(proof.secondItems).toHaveLength(1);
-      expect(
-        proof.secondItems[0]?.placementRowHash ===
-          proof.firstItems[0]?.placementRowHash
-      ).toBe(!changed);
-    }
-  );
-  it("rejects an incomplete scale bound to the exact snapshot", async () => {
-    vi.setSystemTime(NOW);
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-incomplete-scale",
-      });
-      const fixture = await activateTryoutStartSource(ctx, "visible", "irt");
-      await ctx.db.insert("irtScaleVersions", {
-        model: "2pl",
-        publishedAt: NOW,
-        questionCount: 1,
-        setIdentity: fixture.setIdentity,
-        status: "official",
-        tryoutSnapshotId: fixture.snapshotId,
-      });
-      return {
-        identity,
-      };
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-    await expect(
-      authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
-    ).rejects.toThrow("TRYOUT_IRT_SCALE_REQUIRED");
-  });
-  it("excludes many migrated historical scales before selecting a live scale", async () => {
-    vi.setSystemTime(NOW);
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-history-scale",
-      });
-      const fixture = await activateTryoutStartSource(ctx, "visible", "irt");
-      for (let index = 0; index < 32; index += 1) {
-        await ctx.db.insert("irtScaleVersions", {
-          history: true,
-          model: "2pl",
-          publishedAt: NOW - index,
-          questionCount: 1,
-          setIdentity: fixture.setIdentity,
-          status: "official",
-          tryoutSnapshotId: fixture.snapshotId,
-        });
-      }
-      return {
-        identity,
-      };
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-    const result = await authed.mutation(
-      api.tryouts.mutations.attempts.startAttempt,
-      startArgs
-    );
-    const proof = await t.query(async (ctx) => ({
-      attempt: await ctx.db.get(result.attemptId),
-      scales: await ctx.db.query("irtScaleVersions").collect(),
-    }));
-    expect(proof.scales).toHaveLength(33);
-    expect(
-      Option.getOrUndefined(
-        Arr.findFirst(
-          proof.scales,
-          ({ _id }) => _id === proof.attempt?.scaleVersionId
-        )
-      )
-    ).not.toHaveProperty("history");
-  });
-  it.effect.each([
-    "duplicate scales",
-    "wrong question count",
-    "stale item",
-    "duplicate item",
-    "incomplete source",
-    "missing cached placements",
-  ])("rejects $0 before choosing a scale", (kind) =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const signedSection = yield* makeSignedTryoutSection(
-        makeTryoutSection({
-          questionCount: 2,
-        })
-      );
-      const signedSource = yield* makeSignedTryoutSource(
-        {
-          ...makeTryoutSet({
-            questionCount: 2,
-          }),
-          scoringStrategy: "irt",
-        },
-        [signedSection]
-      );
-      const t = createConvexTestWithBetterAuth();
-      yield* Effect.promise(() =>
+        yield* world.release({ renamed: true, scoring: { kind: "irt" } });
+        yield* startAsAnother(world, "later");
+        const { items, scales } = yield* readScales(world);
+        const [, later] = scales;
+        expect(later).toMatchObject({ questionCount: 3, status: "official" });
         expect(
-          t.mutation(async (ctx) => {
-            await activateTryoutStartSource(ctx, "visible", "irt");
-            const active = await Effect.runPromiseWith(runtimeServices)(
-              loadTryoutStartSource(startArgs).pipe(
-                Effect.provide(
-                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                )
-              )
-            );
-            const source = {
-              ...active,
-              ...signedSource,
-            };
-            if (kind === "incomplete source") {
-              return Effect.runPromiseWith(runtimeServices)(
-                selectAttemptScale(
-                  {
-                    ...source,
-                    snapshot: {
-                      ...source.snapshot,
-                      sections: [],
-                    },
-                  },
-                  NOW
-                ).pipe(
-                  Effect.provide(
-                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                  )
-                )
-              );
-            }
-            const scale = await Effect.runPromiseWith(runtimeServices)(
-              selectAttemptScale(source, NOW).pipe(
-                Effect.provide(
-                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                )
-              )
-            );
-            assert(scale, "Expected an IRT scale.");
-            if (kind === "missing cached placements") {
-              return Effect.runPromiseWith(runtimeServices)(
-                selectAttemptScale(
-                  {
-                    ...source,
-                    snapshot: {
-                      ...source.snapshot,
-                      sections: [],
-                    },
-                  },
-                  NOW
-                ).pipe(
-                  Effect.provide(
-                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                  )
-                )
-              );
-            }
-            if (kind === "duplicate scales") {
-              const { _id, _creationTime, ...values } = scale;
-              await ctx.db.insert("irtScaleVersions", values);
-            }
-            if (kind === "wrong question count") {
-              await ctx.db.patch(scale._id, {
-                questionCount: 3,
-              });
-            }
-            const items = await ctx.db.query("irtScaleItems").collect();
-            const first = items[0];
-            const second = items[1];
-            assert(first && second, "Expected two IRT scale items.");
-            if (kind === "stale item") {
-              await ctx.db.patch(first._id, {
-                placementRowHash: "stale-hash",
-              });
-            }
-            if (kind === "duplicate item") {
-              await ctx.db.patch(second._id, {
-                placementIdentity: first.placementIdentity,
-              });
-            }
-            return Effect.runPromiseWith(runtimeServices)(
-              selectAttemptScale(source, NOW + 1).pipe(
-                Effect.provide(
-                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                )
-              )
-            );
-          })
-        ).rejects.toMatchObject({
-          code: "TRYOUT_IRT_SCALE_REQUIRED",
-        })
-      );
-      const remaining = yield* Effect.promise(() =>
-        t.query((ctx) => ctx.db.query("irtScaleVersions").collect())
-      );
-      expect(remaining).toEqual([]);
-    })
+          Arr.map(
+            Arr.filter(items, (item) => item.scaleVersionId === later?._id),
+            ({ calibrationStatus, difficulty }) => [
+              calibrationStatus,
+              difficulty,
+            ]
+          )
+        ).toEqual([
+          ["calibrated", 0.5],
+          ["calibrated", 0.5],
+          ["calibrated", 0.5],
+        ]);
+      })
   );
-  it("reuses the exact authenticated scale without creating another publication", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await t.mutation(async (ctx) => {
-      await activateTryoutStartSource(ctx, "visible", "irt");
-      const source = await Effect.runPromise(
-        loadTryoutStartSource(startArgs).pipe(
-          Effect.provide(
-            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-          )
-        )
-      );
-      const first = await Effect.runPromise(
-        selectAttemptScale(source, NOW).pipe(
-          Effect.provide(
-            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-          )
-        )
-      );
-      const second = await Effect.runPromise(
-        selectAttemptScale(source, NOW + 1).pipe(
-          Effect.provide(
-            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-          )
-        )
-      );
-      expect(second).toEqual(first);
-      expect(await ctx.db.query("irtScaleVersions").collect()).toHaveLength(1);
-    });
-  });
+
+  it.effect(
+    "refuses a start against duplicate, mismatched, incomplete, or repeating scales",
+    () =>
+      Effect.gen(function* () {
+        const cases: readonly ((ctx: MutationCtx) => Promise<unknown>)[] = [
+          async (ctx) => {
+            const [scale] = await ctx.db.query("irtScaleVersions").collect();
+            assert.ok(scale);
+            await ctx.db.insert(
+              "irtScaleVersions",
+              Struct.omit(scale, ["_creationTime", "_id"])
+            );
+          },
+          async (ctx) => {
+            const [scale] = await ctx.db.query("irtScaleVersions").collect();
+            assert.ok(scale);
+            await ctx.db.patch("irtScaleVersions", scale._id, {
+              questionCount: 2,
+            });
+          },
+          async (ctx) => {
+            const [item] = await ctx.db.query("irtScaleItems").collect();
+            assert.ok(item);
+            await ctx.db.delete("irtScaleItems", item._id);
+          },
+          async (ctx) => {
+            const [first, second] = await ctx.db
+              .query("irtScaleItems")
+              .collect();
+            assert.ok(first && second);
+            await ctx.db.patch("irtScaleItems", second._id, {
+              family: first.family,
+            });
+          },
+          async (ctx) => {
+            const [first] = await ctx.db.query("irtScaleItems").collect();
+            assert.ok(first);
+            await ctx.db.patch("irtScaleItems", first._id, {
+              family: "other-family",
+            });
+          },
+        ];
+        yield* Effect.forEach(
+          cases,
+          (arrange, index) =>
+            Effect.gen(function* () {
+              const world = yield* tryoutWorld({ scoring: { kind: "irt" } });
+              yield* world.start();
+              yield* change(world, arrange);
+              expect(
+                yield* startAsAnother(world, `refused-${index}`).pipe(
+                  Effect.flip
+                )
+              ).toMatchObject({ code: "TRYOUT_IRT_SCALE_REQUIRED" });
+            }),
+          { discard: true }
+        );
+      })
+  );
 });

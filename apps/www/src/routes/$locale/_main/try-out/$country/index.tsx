@@ -66,7 +66,7 @@ function TryoutCountryPage() {
           <TryoutCountryPageClient page={{ exams: route.exams }} />
         </LayoutContent>
         <FooterContent>
-          <RefContent githubUrl={route.sourceUrl} />
+          <RefContent />
         </FooterContent>
       </LayoutMaterialContent>
     </LayoutMaterial>

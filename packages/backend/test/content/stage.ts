@@ -130,7 +130,6 @@ export async function insertSignedCandidate(
     stagedSnapshotRows: 0,
     stagedUpserts: 0,
     status: "staging",
-    tryoutRuntimeRequired: true,
     updatedAt: now,
   });
   await ctx.db.insert("contentState", {

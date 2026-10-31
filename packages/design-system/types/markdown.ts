@@ -13,6 +13,7 @@ export type StrongProps = ComponentPropsWithoutRef<"strong">;
 export type HighlightProps = ComponentPropsWithoutRef<"strong"> &
   VariantProps<typeof emphasisVariants>;
 export type ListProps = ComponentPropsWithoutRef<"ul">;
+export type OrderedListProps = ComponentPropsWithoutRef<"ol">;
 export type ListItemProps = ComponentPropsWithoutRef<"li">;
 export type PreProps = ComponentPropsWithoutRef<"pre">;
 export type CodeProps = ComponentPropsWithoutRef<"code">;
