@@ -20,6 +20,6 @@ export const Route = createFileRoute("/school/$slug/notifications")({
 });
 
 function SchoolNotificationsPage(): ReactElement {
-  const { schools, topic } = Route.useSearch();
-  return <SchoolNotifications all={schools === "all"} topic={topic ?? "all"} />;
+  const { schools } = Route.useSearch();
+  return <SchoolNotifications all={schools === "all"} />;
 }

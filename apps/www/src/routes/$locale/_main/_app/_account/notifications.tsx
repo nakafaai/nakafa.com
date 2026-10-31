@@ -3,6 +3,7 @@ import { Option, Schema } from "effect";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsHeader } from "@/components/notifications/header";
 import { NotificationsList } from "@/components/notifications/list";
+import { MarkAllRead } from "@/components/notifications/read";
 import { InboxTabs } from "@/components/notifications/tabs";
 import { InboxTopic } from "@/components/notifications/topic";
 import { LayoutContent } from "@/components/shared/content/frame";
@@ -35,17 +36,18 @@ export const Route = createFileRoute(
  */
 function NotificationsPage() {
   const { first, now } = Route.useLoaderData();
-  const { topic = "all" } = Route.useSearch();
   const page = Option.fromUndefinedOr(first);
   const clock = useAgeClock(now);
   return (
     <LayoutMaterial>
       <LayoutMaterialContent>
-        <NotificationsHeader first={page} />
-        <InboxTabs topic={topic} width="column" />
+        <NotificationsHeader>
+          <MarkAllRead first={page} slug={undefined} />
+        </NotificationsHeader>
+        <InboxTabs width="column" />
         <LayoutContent className="flex flex-col gap-6 py-6">
           <NotificationsClockContext value={clock}>
-            <NotificationsList first={page} slug={undefined} topic={topic} />
+            <NotificationsList first={page} slug={undefined} />
           </NotificationsClockContext>
         </LayoutContent>
       </LayoutMaterialContent>
