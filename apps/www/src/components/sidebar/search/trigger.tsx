@@ -53,6 +53,8 @@ export function SearchMenu() {
 /**
  * The search row at the head of a sidebar, in both apps: the palette's placeholder,
  * and its keys on a wide screen. A press opens the palette, and intent warms it.
+ * The placeholder keeps one line and clips as the sidebar folds, like every
+ * other row's label, so it never wraps while the row narrows.
  */
 export function SidebarSearchButton({
   label,
@@ -78,11 +80,11 @@ export function SidebarSearchButton({
           tooltip={label}
           variant="outline"
         >
-          <div className="flex items-center gap-2">
-            <HugeIcons className="size-4" icon={Search02Icon} />
-            <span>{label}</span>
+          <div className="flex min-w-0 items-center gap-2">
+            <HugeIcons className="size-4 shrink-0" icon={Search02Icon} />
+            <span className="truncate">{label}</span>
           </div>
-          <div className="hidden items-center lg:flex">
+          <div className="hidden shrink-0 items-center lg:flex">
             <kbd className="rounded">
               <HugeIcons className="size-3.5 shrink-0" icon={CommandIcon} />
               <span className="sr-only">Command/Ctrl</span>

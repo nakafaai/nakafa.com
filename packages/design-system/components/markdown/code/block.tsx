@@ -17,6 +17,7 @@ import {
 } from "@repo/design-system/components/code-block/header";
 import type { CodeBlockData } from "@repo/design-system/lib/code-block/context";
 import { blockGapVariants } from "@repo/design-system/lib/prose";
+import { Array as Arr, String as Str } from "effect";
 
 /** Composes authored MDX code sources into Nakafa's tabbed code block. */
 export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
@@ -25,6 +26,7 @@ export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
       className={blockGapVariants({ className: "content-auto-code" })}
       data={data}
       defaultValue={data[0].language}
+      style={{ "--code-lines": Arr.length(Str.split(data[0].code, "\n")) }}
     >
       <CodeBlockHeader>
         <CodeBlockFiles>

@@ -74,6 +74,9 @@ describe("Nina conversation turns", () => {
       ctx.db.patch("ninaTurns", f.turnId, { promptedAt: NOW, ...ownerFacts })
     );
     // The turn ends, so the conversation and the turns tell the same of it.
+    // The admission commits first, so the end has its own moment.
+    const endedAt = NOW + 1000;
+    vi.setSystemTime(endedAt);
     await f.t.mutation(recover, { turnId: f.turnId });
     await f.owner.mutation(share, {
       chatId: f.chatId,
@@ -92,7 +95,7 @@ describe("Nina conversation turns", () => {
       order: queued.order,
       promptMessageId: f.promptMessageId,
       promptedAt: NOW,
-      state: { status: "failed", finishedAt: NOW, reason: "interrupted" },
+      state: { status: "failed", finishedAt: endedAt, reason: "interrupted" },
       usage: [],
     };
     const read = async (

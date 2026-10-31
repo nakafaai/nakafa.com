@@ -1,8 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
 import {
   correctShare,
-  optionLetter,
   responseText,
   verdictKeys,
 } from "@/components/exams/results/model";
@@ -17,17 +15,22 @@ describe("components/exams/results model", () => {
     });
   });
 
-  it("names the options of a choice by letter, from A", () => {
-    expect(Arr.map([0, 1, 3], optionLetter)).toEqual(["A", "B", "D"]);
-  });
-
   it("shows the letters of the chosen options in the order of the choice, or the typed text without its spaces", () => {
     const question = {
       optionIds: ["option-1", "option-2", "option-3"],
+      optionScript: "latin" as const,
       sourceIds: [],
       targetIds: [],
+      targetScript: "latin" as const,
     };
     expect(responseText(question, ["option-3", "option-1"])).toBe("A, C");
+    // A set written in Arabic names its options as the student's paper did, in abjad order.
+    expect(
+      responseText({ ...question, optionScript: "arabic" }, [
+        "option-3",
+        "option-1",
+      ])
+    ).toBe("أ, ج");
     expect(responseText(question, [])).toBe("");
     expect(responseText(question, { text: "  Jakarta " })).toBe("Jakarta");
   });
@@ -35,8 +38,10 @@ describe("components/exams/results model", () => {
   it("shows the pairs of a match by statement number and answer letter, in the order of the statements", () => {
     const question = {
       optionIds: [],
+      optionScript: "latin" as const,
       sourceIds: ["source-1", "source-2", "source-3"],
       targetIds: ["target-1", "target-2"],
+      targetScript: "latin" as const,
     };
     expect(
       responseText(question, {

@@ -18,6 +18,16 @@ export const pinnedRoutes = {
     en: "/en/articles/politics/merah-putih-cabinet-analysis",
     id: "/id/articles/politics/merah-putih-cabinet-analysis",
   },
+  /**
+   * A page of code blocks of several lengths, whose stand-in heights a check
+   * measures. The acceptance release serves no AI and data science lesson, so
+   * the developers page, which draws its code through the same renderer, stands in.
+   */
+  code: {
+    de: "/de/developers",
+    en: "/en/developers",
+    id: "/id/developers",
+  },
   exponent: {
     de: "/de/faecher/mathematik/potenzen-und-logarithmen/grundlagen",
     en: "/en/subjects/mathematics/exponential-logarithm/basic-concept",
