@@ -331,6 +331,30 @@ describe("forwardAgentEdge", () => {
     })
   );
 
+  it.effect(
+    "answers a HEAD that the origin refuses without reading a body",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValue(new Response(null, { status: 405 }));
+
+        const response = yield* forwardAgentEdge(
+          NAKAFA_API_EDGE_CONTRACT,
+          NAKAFA_API_EDGE_PATHS,
+          new Request("https://api.nakafa.com/openapi.json", {
+            method: "HEAD",
+          }),
+          bindings
+        ).pipe(
+          Effect.provide(FetchClient),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
+
+        expect(response.status).toBe(405);
+        expect(response.headers.get("x-nakafa-release-sha")).toBe("abc123");
+        expect(yield* Effect.promise(() => response.text())).toBe("");
+      })
+  );
+
   it.effect("passes the origin's cache policy through to the caller", () =>
     Effect.gen(function* () {
       fetcher.mockResolvedValue(
