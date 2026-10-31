@@ -107,7 +107,7 @@ export function ExamTryPaper({
               </PlayerSidebar>
             }
           >
-            <TryReveal documentId={exam.questions[0]?.prompt}>
+            <TryReveal questions={exam.questions}>
               <PlayerQuestions>
                 {Arr.map(exam.questions, (question, index) => (
                   <ExamTryQuestion
