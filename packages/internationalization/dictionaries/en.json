@@ -358,6 +358,7 @@
     "starts-time-placeholder": "Time",
     "length": "Length",
     "length-minutes": "{count, plural, one {# minute} other {# minutes}}",
+    "schedule-prompt": "Write the text of question {number}.",
     "schedule-key-choice": "Mark the correct answer of question {number}.",
     "schedule-key-short": "Add an accepted answer to question {number}.",
     "schedule-key-numeric": "Write the correct number of question {number}.",

@@ -358,6 +358,7 @@
     "starts-time-placeholder": "Uhrzeit",
     "length": "Dauer",
     "length-minutes": "{count, plural, one {# Minute} other {# Minuten}}",
+    "schedule-prompt": "Schreibe den Text von Frage {number}.",
     "schedule-key-choice": "Markiere die richtige Antwort von Frage {number}.",
     "schedule-key-short": "Füge Frage {number} eine akzeptierte Antwort hinzu.",
     "schedule-key-numeric": "Schreibe die richtige Zahl von Frage {number}.",
