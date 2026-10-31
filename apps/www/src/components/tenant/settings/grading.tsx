@@ -142,7 +142,6 @@ function GradingTable({
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
       header: t("grading-kktp"),
       id: "kktp",
-      meta: { align: "end" },
       sortFn: "basic",
     }),
     versionColumns.accessor(
@@ -201,7 +200,6 @@ function GradingTable({
           />
         ),
         id: "status",
-        meta: { align: "center" },
       }
     ),
   ]);
