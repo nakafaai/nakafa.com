@@ -17,10 +17,12 @@ import { SittingField } from "@/components/exams/sitting/field";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import {
   choiceOf,
+  reasonOf,
   pairingOf,
   tableOf,
   writtenOf,
 } from "@/components/exams/sitting/response";
+import { SittingReason } from "@/components/exams/sitting/reason";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
 import { readQuestionIds } from "@/components/player/ids";
@@ -93,6 +95,7 @@ export function ExamTryQuestion({
   // The try shows the paper a student would meet, which leaves out every part that shows nothing.
   const answers = paperAnswers(question.answers);
   const choice = choiceOf(answers);
+  const reasons = reasonOf(answers);
   const entry = writtenOf(answers);
   const pairing = pairingOf(answers);
   const table = tableOf(answers);
@@ -119,6 +122,15 @@ export function ExamTryQuestion({
             choice={choice.value}
             labelledBy={ids.title}
             onChoose={(next) => choose(question.id, next)}
+            response={chosenOptions(response ?? NO_RESPONSE)}
+          />
+        ) : null}
+        {Option.isSome(reasons) ? (
+          <SittingReason
+            answer={reasons.value[0]}
+            labelledBy={ids.title}
+            onChoose={(next) => choose(question.id, next)}
+            reason={reasons.value[1]}
             response={chosenOptions(response ?? NO_RESPONSE)}
           />
         ) : null}

@@ -20,14 +20,8 @@ import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PanePortal } from "@/components/shared/panes";
-import {
-  choiceOf,
-  keyWithoutOption,
-  type OptionLabel,
-  withOptionAdded,
-  withOptionLabel,
-  withOptionRemoved,
-} from "@/components/tenant/exams/answer";
+import { isChoice } from "@/components/tenant/exams/answer";
+import { ChoiceSheet } from "@/components/tenant/exams/choice";
 import { MatchColumn } from "@/components/tenant/exams/columns";
 import { PageActions, QuestionGrip } from "@/components/tenant/exams/controls";
 import {
@@ -39,7 +33,6 @@ import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
 import { TableSheet } from "@/components/tenant/exams/matrix";
 import type { Question } from "@/components/tenant/exams/optimistic";
-import { OptionRow } from "@/components/tenant/exams/option";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   PaperSketch,
@@ -310,40 +303,9 @@ function LivePaper({
   const frozen = isLocked(exam);
   const locked = useExamLocked();
   const selection = useExamSelectionStore();
-  const { displayed, saveAnswers } = editing;
-  const choice = Option.getOrNull(choiceOf(displayed.answers));
-  // The options are named in the script of their labels: أ, ب, ج for a set written in Arabic.
-  const script = letterScript(
-    choice === null ? [] : Arr.map(choice.options, (option) => option.label)
-  );
+  const { displayed } = editing;
   const match = Option.getOrNull(matchOf(displayed.answers));
   const table = Option.getOrNull(tableOf(displayed.answers));
-  // The label the server holds for an option. Its editor starts from that label, and a label the server does not
-  // store goes back to it, so the editor never keeps text that is not saved. An option the server does not hold
-  // yet has the label the paper shows.
-  const savedLabel = (option: {
-    readonly id: string;
-    readonly label: OptionLabel;
-  }): OptionLabel =>
-    Option.match(choiceOf(question.answers), {
-      onNone: () => option.label,
-      onSome: (saved) =>
-        Option.match(
-          Arr.findFirst(saved.options, (item) => item.id === option.id),
-          {
-            onNone: () => option.label,
-            onSome: (item) => item.label,
-          }
-        ),
-    });
-
-  // A template that fixes its options keeps their number, so the teacher neither adds nor removes one.
-  const fixed = Option.isSome(fixedOptions(displayed.template));
-  const canAddOption =
-    choice !== null &&
-    choice.options.length < CHOICE_OPTIONS_MAX &&
-    !fixed &&
-    !locked;
 
   return (
     <QuestionPaper selected={chosen}>
@@ -403,70 +365,17 @@ function LivePaper({
           table={table}
         />
       )}
-      {choice === null ? null : (
-        <PaperOptions>
-          {Arr.map(choice.options, (option, index) => (
-            <OptionRow
-              key={option.id}
-              label={savedLabel(option)}
-              locked={locked}
-              onRemove={
-                choice.options.length > CHOICE_OPTIONS_MIN && !fixed
-                  ? () =>
-                      saveAnswers((draft) => ({
-                        ...draft,
-                        answers: withOptionRemoved(draft.answers, option.id),
-                        key: keyWithoutOption(draft.key, option.id),
-                      }))
-                  : null
-              }
-              onSave={(label: OptionLabel, unstored: () => void) =>
-                saveAnswers(
-                  (draft) => ({
-                    ...draft,
-                    answers: withOptionLabel(draft.answers, option.id, label),
-                  }),
-                  unstored
-                )
-              }
-              removeName={t("option-remove-of", {
-                letter: optionLetter(index, script),
-                number,
-              })}
-            >
-              <PaperOption multiple={choice.maxChoices !== 1}>
-                <ExamDocument
-                  label={t("option-of", {
-                    letter: optionLetter(index, script),
-                    number,
-                  })}
-                  placeholder={t("option-placeholder")}
-                  size="line"
-                />
-              </PaperOption>
-            </OptionRow>
-          ))}
-        </PaperOptions>
-      )}
+      {Arr.map(Arr.filter(displayed.answers, isChoice), (choice) => (
+        <ChoiceSheet
+          choice={choice}
+          chosen={chosen}
+          editing={editing}
+          key={choice.id}
+          number={number}
+          question={question}
+        />
+      ))}
       <PaperField answers={displayed.answers} />
-      {canAddOption ? (
-        <div className={chosen ? undefined : "invisible"}>
-          <Button
-            onClick={() =>
-              saveAnswers((draft) => ({
-                ...draft,
-                answers: withOptionAdded(draft.answers),
-              }))
-            }
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <HugeIcons aria-hidden="true" icon={ListPlusIcon} />
-            {t("option-add")}
-          </Button>
-        </div>
-      ) : null}
     </QuestionPaper>
   );
 }

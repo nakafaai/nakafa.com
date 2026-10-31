@@ -8,6 +8,7 @@ import {
   type QuestionView,
   tableAnswers,
 } from "@repo/backend/confect/exams/question";
+import { reasonAnswers } from "@repo/backend/confect/exams/reason";
 import { scoreResponse } from "@repo/backend/confect/exams/results/score";
 import {
   ALL_OR_NOTHING,
@@ -60,6 +61,12 @@ const verdictOf = (
     { answers, key, points: 1, scoring: ALL_OR_NOTHING },
     response
   ).verdict;
+
+/** The key of an answer and its reason. */
+const reasonKey: Arr.NonEmptyReadonlyArray<InteractionKey> = [
+  { correct: ["option-2"], interaction: "choice", kind: "choice" },
+  { correct: ["reason-1"], interaction: "reason", kind: "choice" },
+];
 
 /** A key that judges three statements of a table: true, false, and true. */
 const tableKey: Arr.NonEmptyReadonlyArray<InteractionKey> = [
@@ -256,10 +263,47 @@ describe("exams/results/score", () => {
     );
   });
 
-  it("leaves a question of two interactions pending, since a student answers one choice", () => {
+  it("scores an answer and its reason as one: both right earn everything, the answer alone half, and a reason alone nothing", () => {
+    const question = {
+      answers: reasonAnswers(),
+      key: reasonKey,
+      points: 4,
+      scoring: ALL_OR_NOTHING,
+    };
+    const scored = Arr.map(
+      [
+        ["option-2", "reason-1"],
+        ["option-2", "reason-3"],
+        ["option-2"],
+        ["option-1", "reason-1"],
+        [],
+      ],
+      (response) => scoreResponse(question, response)
+    );
+    expect(scored).toEqual([
+      { points: 4, verdict: "correct" },
+      { points: 2, verdict: "partial" },
+      { points: 2, verdict: "partial" },
+      { points: 0, verdict: "incorrect" },
+      { points: 0, verdict: "incorrect" },
+    ]);
     expect(
-      verdictOf([...single, text], keyOf(["option-2"]), ["option-2"])
-    ).toBe("pending");
+      scoreResponse({ ...question, key: null }, ["option-2", "reason-1"])
+    ).toEqual({ points: 0, verdict: "pending" });
+  });
+
+  it("reads a response that holds no option as nothing chosen in either choice", () => {
+    expect(
+      scoreResponse(
+        {
+          answers: [...reasonAnswers(), text],
+          key: reasonKey,
+          points: 2,
+          scoring: ALL_OR_NOTHING,
+        },
+        { text: "Karena" }
+      )
+    ).toEqual({ points: 0, verdict: "incorrect" });
   });
 
   it("scores a single-answer choice that names two options incorrect, as it names no one option", () => {

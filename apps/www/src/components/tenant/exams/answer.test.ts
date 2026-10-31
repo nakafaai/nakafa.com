@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { reasonAnswers } from "@repo/backend/confect/exams/reason";
 import { Array as Arr, Option } from "effect";
 import {
   acceptedKey,
@@ -197,7 +198,7 @@ describe("withOptionLabel", () => {
 
 describe("markedKey", () => {
   it("marks the named option correct for each interaction", () => {
-    const key = markedKey([choice], "option-3");
+    const key = markedKey([choice], null, "option-3");
 
     expect(key).toEqual([
       { correct: ["option-3"], interaction: "choice", kind: "choice" },
@@ -207,7 +208,7 @@ describe("markedKey", () => {
 
 describe("markedOptions", () => {
   it("reads the options that the key marks", () => {
-    expect(markedOptions(markedKey([choice], "option-2"))).toEqual([
+    expect(markedOptions(markedKey([choice], null, "option-2"))).toEqual([
       "option-2",
     ]);
   });
@@ -267,7 +268,7 @@ describe("toggledKey", () => {
   it("marks a new option beside the others, in the order of the choice", () => {
     const key = toggledKey(
       [choices],
-      markedKey([choices], "option-3"),
+      markedKey([choices], null, "option-3"),
       "option-1"
     );
 
@@ -282,23 +283,23 @@ describe("toggledKey", () => {
 
   it("marks the first option of a question without a key", () => {
     expect(toggledKey([choices], null, "option-2")).toEqual(
-      markedKey([choices], "option-2")
+      markedKey([choices], null, "option-2")
     );
   });
 
   it("unmarks a marked option and keeps the rest", () => {
     const key = toggledKey(
       [choices],
-      toggledKey([choices], markedKey([choices], "option-1"), "option-4"),
+      toggledKey([choices], markedKey([choices], null, "option-1"), "option-4"),
       "option-1"
     );
 
-    expect(key).toEqual(markedKey([choices], "option-4"));
+    expect(key).toEqual(markedKey([choices], null, "option-4"));
   });
 
   it("clears the key once its last option is unmarked", () => {
     expect(
-      toggledKey([choices], markedKey([choices], "option-2"), "option-2")
+      toggledKey([choices], markedKey([choices], null, "option-2"), "option-2")
     ).toBeNull();
   });
 
@@ -309,13 +310,52 @@ describe("toggledKey", () => {
   });
 });
 
+describe("a question of two choices", () => {
+  const answers = reasonAnswers();
+
+  it("marks each choice on its own, so a mark in one leaves the other's", () => {
+    const answered = markedKey(answers, null, "option-2");
+    const both = markedKey(answers, answered, "reason-1");
+
+    expect(answered).toEqual([
+      { correct: ["option-2"], interaction: "choice", kind: "choice" },
+    ]);
+    expect(markedOptions(both)).toEqual(["option-2", "reason-1"]);
+    expect(markedOptions(markedKey(answers, both, "reason-3"))).toEqual([
+      "option-2",
+      "reason-3",
+    ]);
+  });
+
+  it("adds an option to the named choice under its own prefix", () => {
+    const [, reason] = withOptionAdded(answers, "reason");
+
+    expect(reason?.kind === "choice" ? reason.options.at(-1)?.id : "").toBe(
+      "reason-4"
+    );
+  });
+
+  it("removes an option from its own choice, and only its mark from the key", () => {
+    const both = markedKey(
+      answers,
+      markedKey(answers, null, "option-2"),
+      "reason-1"
+    );
+    const [answer, reason] = withOptionRemoved(answers, "reason-3");
+
+    expect(answer).toEqual(answers[0]);
+    expect(reason?.kind === "choice" ? reason.options.length : 0).toBe(2);
+    expect(keyWithoutOption(both, "reason-1")).toEqual([both[0]]);
+  });
+});
+
 describe("withOptionAdded", () => {
   it("adds an empty option after the last one, numbered after the largest option ID the choice holds", () => {
     const sparse = {
       ...choice,
       options: [choice.options[0], choice.options[2]],
     };
-    expect(withOptionAdded([sparse])).toEqual([
+    expect(withOptionAdded([sparse], sparse.id)).toEqual([
       {
         ...sparse,
         options: [...sparse.options, { id: "option-4", label: emptyLabel() }],
@@ -331,7 +371,7 @@ describe("withOptionAdded", () => {
         { id: "second", label: emptyLabel() },
       ],
     };
-    expect(withOptionAdded([named])).toEqual([
+    expect(withOptionAdded([named], named.id)).toEqual([
       {
         ...named,
         options: [...named.options, { id: "option-1", label: emptyLabel() }],
@@ -341,7 +381,7 @@ describe("withOptionAdded", () => {
 
   it("lets a complex choice take the new option too", () => {
     const choices = { ...choice, maxChoices: 4 };
-    expect(withOptionAdded([choices])).toEqual([
+    expect(withOptionAdded([choices], choices.id)).toEqual([
       {
         ...choices,
         maxChoices: 5,
@@ -355,7 +395,7 @@ describe("withOptionAdded", () => {
       ...choice,
       options: [...choice.options, { id: "option-5", label: emptyLabel() }],
     };
-    expect(withOptionAdded([full, entry])).toEqual([full, entry]);
+    expect(withOptionAdded([full, entry], full.id)).toEqual([full, entry]);
   });
 });
 
@@ -371,10 +411,10 @@ describe("withOptionRemoved", () => {
   });
 
   it("keeps the key that marks another option, and clears the key that marks the removed one", () => {
-    const key = markedKey([choice], "option-3");
+    const key = markedKey([choice], null, "option-3");
     expect(keyWithoutOption(key, "option-2")).toEqual(key);
     expect(
-      keyWithoutOption(markedKey([choice], "option-2"), "option-2")
+      keyWithoutOption(markedKey([choice], null, "option-2"), "option-2")
     ).toBeNull();
     expect(keyWithoutOption(null, "option-2")).toBeNull();
   });
@@ -389,11 +429,11 @@ describe("withOptionRemoved", () => {
   it("keeps the other correct options of a complex choice when one is removed", () => {
     const key = toggledKey(
       [choice],
-      markedKey([choice], "option-1"),
+      markedKey([choice], null, "option-1"),
       "option-3"
     );
     expect(keyWithoutOption(key, "option-1")).toEqual(
-      markedKey([choice], "option-3")
+      markedKey([choice], null, "option-3")
     );
   });
 
@@ -405,12 +445,12 @@ describe("withOptionRemoved", () => {
     };
     const key = toggledKey(
       [choice],
-      markedKey([choice], "option-1"),
+      markedKey([choice], null, "option-1"),
       "option-3"
     );
     expect(
       keyWithoutOption(key === null ? null : [math, ...key], "option-1")
-    ).toEqual([math, ...markedKey([choice], "option-3")]);
+    ).toEqual([math, ...markedKey([choice], null, "option-3")]);
   });
 
   it("leaves a choice of two options as it is", () => {
@@ -443,6 +483,6 @@ describe("acceptedKey and acceptedOf", () => {
   it("clears the key when no text is left, and reads no accepted answer from a choice key or none", () => {
     expect(acceptedKey([entry], ["  ", ""])).toBeNull();
     expect(acceptedOf(null)).toEqual([]);
-    expect(acceptedOf(markedKey([choice], "option-1"))).toEqual([]);
+    expect(acceptedOf(markedKey([choice], null, "option-1"))).toEqual([]);
   });
 });

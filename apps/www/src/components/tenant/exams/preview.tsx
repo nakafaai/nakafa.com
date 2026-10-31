@@ -11,6 +11,7 @@ import {
   CHOICE_OPTIONS_MAX,
   fixedOptions,
 } from "@repo/backend/confect/exams/question";
+import { REASON_ID } from "@repo/backend/confect/exams/scoring";
 import {
   editorContent,
   editorDocument,
@@ -22,7 +23,12 @@ import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { useCallback, useDeferredValue, useMemo } from "react";
 import { useTranslations } from "use-intl";
-import { choiceOf, type OptionLabel } from "@/components/tenant/exams/answer";
+import { ChoiceGroup } from "@/components/exams/sitting/reason";
+import {
+  type Choice,
+  isChoice,
+  type OptionLabel,
+} from "@/components/tenant/exams/answer";
 import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -263,31 +269,19 @@ export function PaperSketch({
   withControls?: boolean;
 }) {
   const locked = useExamLocked();
-  const choice = choiceOf(question.answers);
   // A template that fixes its options takes no added option, so its page keeps no room for the action.
   const addsOption =
-    withControls &&
-    !locked &&
-    Option.isNone(fixedOptions(question.template)) &&
-    Option.exists(
-      choice,
-      (current) => current.options.length < CHOICE_OPTIONS_MAX
-    );
+    withControls && !locked && Option.isNone(fixedOptions(question.template));
 
   return (
     <>
-      {Option.isSome(choice) ? (
-        <PaperOptions>
-          {Arr.map(choice.value.options, (option) => (
-            <PaperOption
-              key={option.id}
-              multiple={choice.value.maxChoices !== 1}
-            >
-              <OptionSketch label={option.label} />
-            </PaperOption>
-          ))}
-        </PaperOptions>
-      ) : null}
+      {Arr.map(Arr.filter(question.answers, isChoice), (choice) => (
+        <ChoiceSketch
+          adds={addsOption && choice.options.length < CHOICE_OPTIONS_MAX}
+          choice={choice}
+          key={choice.id}
+        />
+      ))}
       {Option.match(matchOf(question.answers), {
         onNone: () => null,
         onSome: (match) => (
@@ -319,7 +313,31 @@ export function PaperSketch({
         onSome: (table) => <TableSketch table={table} />,
       })}
       <PaperField answers={question.answers} />
-      {addsOption ? <OptionAddRoom /> : null}
+    </>
+  );
+}
+
+/** One choice of a page drawn without its editors, a reason under its name, as the page draws it with them. */
+function ChoiceSketch({
+  adds,
+  choice,
+}: {
+  /** Whether the page keeps the room of the action that adds an option. */
+  readonly adds: boolean;
+  readonly choice: Choice;
+}) {
+  return (
+    <>
+      <ChoiceGroup reason={choice.id === REASON_ID}>
+        <PaperOptions>
+          {Arr.map(choice.options, (option) => (
+            <PaperOption key={option.id} multiple={choice.maxChoices !== 1}>
+              <OptionSketch label={option.label} />
+            </PaperOption>
+          ))}
+        </PaperOptions>
+      </ChoiceGroup>
+      {adds ? <OptionAddRoom /> : null}
     </>
   );
 }

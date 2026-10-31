@@ -149,7 +149,7 @@ export function useQuestionEditing(question: Question) {
     if (!Arr.contains(markedOptions(draft.key), optionId)) {
       saveAnswers((base) => ({
         ...base,
-        key: markedKey(base.answers, optionId),
+        key: markedKey(base.answers, base.key, optionId),
       }));
     }
   };

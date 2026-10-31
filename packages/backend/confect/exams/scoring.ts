@@ -2,6 +2,10 @@ import {
   type DefaultRuleSchema,
   scoreCeiling,
 } from "@nakafa/aksara-contracts/assessment/scoring";
+import {
+  type JointRule,
+  jointCeiling,
+} from "@nakafa/aksara-contracts/assessment/joint";
 import type {
   QuestionPoints,
   QuestionTemplate,
@@ -39,6 +43,23 @@ const AKM_BANDS: QuestionRule = {
   kind: "wrongParts",
 };
 
+/** The ID of a two-tier question's first choice, as every choice template names its choice. */
+const ANSWER_ID = "choice";
+
+/** The ID of a two-tier question's second choice, the reason for the answer. */
+export const REASON_ID = "reason";
+
+/**
+ * The rule of an answer and its reason, scored as one: both right earn everything, the answer right alone earns
+ * half, and a reason without its answer earns nothing.
+ */
+export const ANSWER_AND_REASON: JointRule = {
+  levels: [
+    { correct: [ANSWER_ID, REASON_ID], points: 2 },
+    { correct: [ANSWER_ID], points: 1 },
+  ],
+};
+
 /** The rule of a kind. A question stores the rule itself, so a later change of a rule leaves it as it was. */
 export const scoringRule = (kind: ScoringKind): QuestionRule =>
   Match.value(kind).pipe(
@@ -64,6 +85,7 @@ export const takesScoring = (template: QuestionTemplate) =>
     Match.when("essay", () => false),
     Match.when("match", () => true),
     Match.when("table", () => true),
+    Match.when("reason", () => false),
     Match.exhaustive
   );
 
@@ -72,3 +94,9 @@ export const scoringPoints = (
   points: typeof QuestionPoints.Type,
   rule: QuestionRule
 ) => Math.max(points, scoreCeiling(rule, 1));
+
+/** The fewest points a question of this template holds: an answer and its reason share at least two. */
+export const templatePoints = (
+  points: typeof QuestionPoints.Type,
+  template: QuestionTemplate
+) => (template === "reason" ? Math.max(points, jointCeiling(ANSWER_AND_REASON)) : points);

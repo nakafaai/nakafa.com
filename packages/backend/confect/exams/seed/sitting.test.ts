@@ -4,8 +4,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { answersFit } from "@repo/backend/confect/exams/fits";
 import {
-  answersFit,
   keyMissing,
   questionView,
 } from "@repo/backend/confect/exams/question";

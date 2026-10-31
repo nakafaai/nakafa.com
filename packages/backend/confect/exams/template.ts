@@ -14,6 +14,10 @@ import {
   tableAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/question";
+import {
+  reasonAnswers,
+  reasonChoice,
+} from "@repo/backend/confect/exams/reason";
 import { Array as Arr, Option } from "effect";
 
 /**
@@ -25,7 +29,8 @@ import { Array as Arr, Option } from "effect";
  * other template keeps each choice's options and gives it the template's bounds (`choiceLimit`),
  * and the key stays when it fits the new interactions and is cleared otherwise, so a complex
  * choice that marks several options correct becomes a single-answer choice with no key, which the
- * teacher marks again.
+ * teacher marks again. A two-tier question keeps a choice as its answer and adds an empty reason, and
+ * any choice template keeps its answer alone.
  */
 export const asTemplate = (
   template: QuestionTemplate,
@@ -48,11 +53,26 @@ export const asTemplate = (
   if (template === "table") {
     return { answers: tableAnswers(labels), key: null };
   }
+  // The first choice stays the answer, so its words stay, and its mark is the teacher's to give again.
+  const answer = Arr.findFirst(answers, (part) => part.kind === "choice");
+  if (template === "reason") {
+    return {
+      answers: Option.match(answer, {
+        onNone: reasonAnswers,
+        onSome: (choice) => [
+          { ...choice, maxChoices: 1, minChoices: 1 },
+          reasonChoice(),
+        ],
+      }),
+      key: null,
+    };
+  }
   const fixed = Option.isSome(fixedOptions(template));
   // A short answer, a numeric answer, an essay, and a match hold no choice, so a choice template starts them from a new choice.
-  const choices = Arr.some(answers, (answer) => answer.kind === "choice")
-    ? answers
-    : newChoiceAnswers();
+  const choices = Option.match(answer, {
+    onNone: newChoiceAnswers,
+    onSome: (choice) => Arr.of<Interaction>(choice),
+  });
   const converted = Arr.map(choices, (answer): Interaction => {
     if (answer.kind !== "choice") {
       return answer;
@@ -70,8 +90,15 @@ export const asTemplate = (
       options,
     };
   });
+  // A two-tier question leaves its reason, and the reason's mark with it.
+  const kept =
+    key === null
+      ? null
+      : Arr.filter(key, ({ interaction }) =>
+          Arr.some(converted, (answer) => answer.id === interaction)
+        );
   return {
     answers: converted,
-    key: !fixed && key !== null && keyFits(converted, key) ? key : null,
+    key: !fixed && kept !== null && keyFits(converted, kept) ? kept : null,
   };
 };

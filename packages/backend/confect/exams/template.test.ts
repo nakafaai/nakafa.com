@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import {
+  essayAnswers,
   matchAnswers,
   newChoiceAnswers,
   numericAnswers,
@@ -8,7 +9,9 @@ import {
   tableAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/question";
+import { reasonAnswers } from "@repo/backend/confect/exams/reason";
 import { asTemplate } from "@repo/backend/confect/exams/template";
+import { Array as Arr } from "effect";
 
 /** An empty document, as an option or a statement holds one. */
 const empty = { content: [{ type: "paragraph" }], type: "doc" } as const;
@@ -27,6 +30,42 @@ const matrix: Interaction = {
 };
 
 describe("exams/template asTemplate", () => {
+  it("keeps a choice as the answer of a two-tier question, adds an empty reason, and clears the key", () => {
+    const [choice] = newChoiceAnswers();
+    const { answers, key } = asTemplate(
+      "reason",
+      [choice],
+      [{ correct: ["option-1"], interaction: "choice", kind: "choice" }],
+      []
+    );
+
+    expect(Arr.map(answers, (answer) => answer.id)).toEqual([
+      "choice",
+      "reason",
+    ]);
+    expect(answers[0]).toEqual(choice);
+    expect(key).toBeNull();
+    expect(asTemplate("reason", essayAnswers(), null, []).answers).toEqual(
+      reasonAnswers()
+    );
+  });
+
+  it("keeps a two-tier question's answer and its mark in a choice, and leaves its reason out", () => {
+    const key = [
+      { correct: ["option-1"], interaction: "choice", kind: "choice" },
+      { correct: ["reason-1"], interaction: "reason", kind: "choice" },
+    ] as const;
+    const { answers, key: kept } = asTemplate(
+      "choice",
+      reasonAnswers(),
+      key,
+      []
+    );
+
+    expect(Arr.map(answers, (answer) => answer.id)).toEqual(["choice"]);
+    expect(kept).toEqual([key[0]]);
+  });
+
   it("gives each choice the template's bounds, and leaves an interaction that is no choice as it is", () => {
     const [choice] = newChoiceAnswers();
     const converted = asTemplate("choices", [choice, matrix], null, []);

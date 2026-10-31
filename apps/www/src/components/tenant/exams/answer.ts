@@ -5,19 +5,20 @@ import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
 } from "@repo/backend/confect/exams/question";
+import { REASON_ID } from "@repo/backend/confect/exams/scoring";
 import { Array as Arr, Option, pipe, Schema, String as Str } from "effect";
 
 /** The choice interaction, which a single-answer and a complex multiple choice both hold. */
-type Choice = Extract<Interaction, { kind: "choice" }>;
+export type Choice = Extract<Interaction, { kind: "choice" }>;
 
 /** The label of one option: a rich document of its own, which the option's editor writes. */
 export type OptionLabel = Choice["options"][number]["label"];
 
-/** The number that an option ID holds after `option-`, when it holds one. */
-const OPTION_NUMBER = /^option-(?<digits>\d+)$/u;
+/** The number that an option ID holds at its end, when it holds one. */
+const OPTION_NUMBER = /-(?<digits>\d+)$/u;
 
 /** Whether an interaction is a choice. */
-const isChoice = (answer: Interaction): answer is Choice =>
+export const isChoice = (answer: Interaction): answer is Choice =>
   answer.kind === "choice";
 
 /** Whether a key answer is the answer of a choice. */
@@ -132,33 +133,39 @@ const keyMarking = (
     : null;
 
 /**
- * The key that marks one option correct in each interaction. A question holds one
- * choice, so the key holds one answer, and a single-answer choice takes one option.
+ * The key once one option is marked alone in its choice: the choice's answer takes the option, and the answer of
+ * any other choice stays, so a question of two choices takes its marks one at a time.
  */
 export const markedKey = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
+  key: readonly InteractionKey[] | null,
   optionId: string
-): Arr.NonEmptyArray<InteractionKey> =>
-  Arr.map(
-    answers,
-    (answer): InteractionKey => ({
-      correct: [optionId],
-      interaction: answer.id,
-      kind: "choice",
-    })
+): Arr.NonEmptyArray<InteractionKey> => {
+  const { id } = Option.getOrElse(
+    Arr.findFirst(
+      answers,
+      (answer) =>
+        isChoice(answer) &&
+        Arr.some(answer.options, (option) => option.id === optionId)
+    ),
+    () => Arr.headNonEmpty(answers)
   );
+  return Arr.append(
+    Arr.filter(key ?? [], (keyed) => keyed.interaction !== id),
+    { correct: [optionId], interaction: id, kind: "choice" }
+  );
+};
 
-/** The options that a key marks correct, or none while the key is absent or marks no choice. */
+/** The options that a key marks correct in every choice, or none while the key is absent or marks no choice. */
 export const markedOptions = (
   key: readonly InteractionKey[] | null
 ): readonly string[] => {
   if (key === null) {
     return [];
   }
-  return Option.match(Arr.findFirst(key, isChoiceKey), {
-    onNone: () => [],
-    onSome: (answer) => answer.correct,
-  });
+  return Arr.flatMap(key, (answer) =>
+    isChoiceKey(answer) ? answer.correct : []
+  );
 };
 
 /**
@@ -200,17 +207,17 @@ export const toggledKey = (
 };
 
 /**
- * The ID of a new option: `option-` and the number after the largest one that the choice
- * holds, so a new option never shares an ID with an option the choice still holds. An ID
- * that a removed option held can come back, which is safe, because options change only
- * while the exam is unfrozen, and no attempt holds an answer then.
+ * The ID of a new option: the choice's prefix, `reason-` for a two-tier question's reason and `option-` for any
+ * other, and the number after the largest one that the choice holds, so a new option never shares an ID with an
+ * option the question still holds. An ID that a removed option held can come back, which is safe, because options
+ * change only while the exam is unfrozen, and no attempt holds an answer then.
  */
-const nextOptionId = (options: readonly Choice["options"][number][]) => {
-  const largest = Arr.reduce(options, 0, (most, option) => {
+const nextOptionId = (choice: Choice) => {
+  const largest = Arr.reduce(choice.options, 0, (most, option) => {
     const digits = OPTION_NUMBER.exec(option.id)?.[1];
     return digits === undefined ? most : Math.max(most, Number(digits));
   });
-  return `option-${largest + 1}`;
+  return `${choice.id === REASON_ID ? REASON_ID : "option"}-${largest + 1}`;
 };
 
 /**
@@ -221,20 +228,23 @@ const limitAfter = (choice: Choice, count: number) =>
   choice.maxChoices === 1 ? 1 : count;
 
 /**
- * The answers with one empty option added at the end of each choice. A choice that holds
- * the most options it may take is left as it is, so the teacher cannot add past A to E.
+ * The answers with one empty option added at the end of the choice named `choiceId`. A choice that
+ * holds the most options it may take is left as it is, so the teacher cannot add past A to E.
  */
 export const withOptionAdded = (
-  answers: Arr.NonEmptyReadonlyArray<Interaction>
+  answers: Arr.NonEmptyReadonlyArray<Interaction>,
+  choiceId: string
 ): Arr.NonEmptyArray<Interaction> =>
   Arr.map(answers, (answer) =>
-    isChoice(answer) && answer.options.length < CHOICE_OPTIONS_MAX
+    isChoice(answer) &&
+    answer.id === choiceId &&
+    answer.options.length < CHOICE_OPTIONS_MAX
       ? {
           ...answer,
           maxChoices: limitAfter(answer, answer.options.length + 1),
           options: [
             ...answer.options,
-            { id: nextOptionId(answer.options), label: emptyLabel() },
+            { id: nextOptionId(answer), label: emptyLabel() },
           ],
         }
       : answer
@@ -263,7 +273,9 @@ export const withOptionRemoved = (
   optionId: string
 ): Arr.NonEmptyArray<Interaction> =>
   Arr.map(answers, (answer) =>
-    isChoice(answer) && answer.options.length > CHOICE_OPTIONS_MIN
+    isChoice(answer) &&
+    answer.options.length > CHOICE_OPTIONS_MIN &&
+    Arr.some(answer.options, (option) => option.id === optionId)
       ? {
           ...answer,
           maxChoices: limitAfter(answer, answer.options.length - 1),
@@ -283,13 +295,19 @@ export const keyWithoutOption = (
   key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
   optionId: string
 ): Arr.NonEmptyReadonlyArray<InteractionKey> | null => {
-  const remaining = Arr.filter(markedOptions(key), (id) => id !== optionId);
-  if (key === null || !Arr.isReadonlyArrayNonEmpty(remaining)) {
+  if (key === null) {
     return null;
   }
-  return Arr.map(key, (answer) =>
-    isChoiceKey(answer) ? { ...answer, correct: remaining } : answer
-  );
+  const remaining = Arr.filterMap(key, (answer) => {
+    if (!isChoiceKey(answer)) {
+      return Option.some(answer);
+    }
+    const correct = Arr.filter(answer.correct, (id) => id !== optionId);
+    return Arr.isReadonlyArrayNonEmpty(correct)
+      ? Option.some({ ...answer, correct })
+      : Option.none();
+  });
+  return Arr.isReadonlyArrayNonEmpty(remaining) ? remaining : null;
 };
 
 /** The answers a key accepts for a short answer, in the order the teacher wrote them, or none without a key. */

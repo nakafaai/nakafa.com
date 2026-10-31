@@ -9,6 +9,7 @@ import {
   shortAnswers,
   tableAnswers,
 } from "@repo/backend/confect/exams/question";
+import { reasonAnswers } from "@repo/backend/confect/exams/reason";
 
 describe("exams/sittings fitsQuestion", () => {
   it("takes the options of a choice within its count, and refuses an unknown, a repeated or a typed one", () => {
@@ -98,7 +99,19 @@ describe("exams/sittings fitsQuestion", () => {
     expect(fitsQuestion(table, ["option-1"])).toBe(false);
   });
 
-  it("takes no response to an interaction of another kind, or to a question of two interactions", () => {
+  it("takes one option from each choice of a question of two, one at a time, and no more", () => {
+    const both = reasonAnswers();
+
+    expect(fitsQuestion(both, ["option-2", "reason-1"])).toBe(true);
+    expect(fitsQuestion(both, ["reason-1"])).toBe(true);
+    expect(fitsQuestion(both, [])).toBe(true);
+    expect(fitsQuestion(both, ["option-1", "option-2"])).toBe(false);
+    expect(fitsQuestion(both, ["option-2", "option-2"])).toBe(false);
+    expect(fitsQuestion(both, ["option-9"])).toBe(false);
+    expect(fitsQuestion(both, { text: "B" })).toBe(false);
+  });
+
+  it("takes no response to an interaction of another kind, or to two interactions that are not all choices", () => {
     expect(
       fitsQuestion([{ id: "math", kind: "mathEntry", label: "Answer" }], {
         text: "2",
