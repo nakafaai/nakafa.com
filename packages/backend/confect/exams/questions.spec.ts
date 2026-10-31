@@ -121,8 +121,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => QuestionView,
-      error: () =>
-        Schema.Union([AccessDenied, ExamFrozen, ScoringDoesNotFit]),
+      error: () => Schema.Union([AccessDenied, ExamFrozen, ScoringDoesNotFit]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(

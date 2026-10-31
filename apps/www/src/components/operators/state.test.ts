@@ -41,7 +41,9 @@ describe("openRequest", () => {
   });
 
   it("takes the defaults of the chosen country", () => {
-    const request = openRequest(Struct.assign(FILLED, { country: "DE" as const }));
+    const request = openRequest(
+      Struct.assign(FILLED, { country: "DE" as const })
+    );
 
     expect(Option.getOrThrow(request)).toMatchObject({
       country: "DE",

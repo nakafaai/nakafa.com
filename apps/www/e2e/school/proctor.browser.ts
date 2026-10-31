@@ -31,6 +31,11 @@ const ROOM_READ_MILLISECONDS = 30_000;
 /** The row of the seeded exam's room for tomorrow, which is still scheduled. */
 const UPCOMING_ROW = /Lab 3/u;
 
+/** How a room reads its seats at a glance, and a seat its silence. */
+const ONE_WORKING = /^1 working/u;
+const ONE_OFFLINE = /1 offline/u;
+const AWAY_FOR = /^.*Away for \d+/u;
+
 test("a person whose only role is Proctor runs a room end to end, and is refused moving or cancelling a room, the exam's editor, its list and its results", async ({
   baseURL,
   browser,
@@ -295,7 +300,7 @@ test("a student whose connection drops shows on the seat with a clock that runs,
   // The exam's rooms show the open room at a glance, and read it again on their own.
   const rooms = await ownerContext.newPage();
   await rooms.goto(address(`/exams/${sitting.examId}`));
-  await expect(rooms.getByRole("img", { name: /^1 working/u })).toBeVisible({
+  await expect(rooms.getByRole("img", { name: ONE_WORKING })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
 
@@ -304,8 +309,8 @@ test("a student whose connection drops shows on the seat with a clock that runs,
   await expect(seat).toHaveAttribute("data-frame", "away", {
     timeout: SILENCE_MILLISECONDS,
   });
-  await expect(seat).toContainText(/^.*Away for \d+/u);
-  await expect(rooms.getByRole("img", { name: /1 offline/u })).toBeVisible({
+  await expect(seat).toContainText(AWAY_FOR);
+  await expect(rooms.getByRole("img", { name: ONE_OFFLINE })).toBeVisible({
     timeout: ROOM_READ_MILLISECONDS,
   });
 

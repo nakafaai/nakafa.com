@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { drawLetterPdf } from "@repo/backend/confect/pdf/letter/draw";
-import { indonesianDate, indonesianValue } from "@repo/backend/confect/pdf/letter/words";
+import {
+  indonesianDate,
+  indonesianValue,
+} from "@repo/backend/confect/pdf/letter/words";
 import { Effect, Struct } from "effect";
 
 /** One SKL as its print reads it. */

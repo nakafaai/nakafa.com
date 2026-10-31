@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth, Session } from "@repo/backend/confect/auth/session";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { inspectUsername } from "@repo/backend/confect/users/availability";
