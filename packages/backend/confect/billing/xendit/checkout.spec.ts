@@ -4,7 +4,7 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/events";
 import {
   CheckoutUnavailable,
-  ProCheckoutOffer,
+  XenditCheckoutOffer,
 } from "@repo/backend/confect/billing/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import { Schema } from "effect";
@@ -38,7 +38,7 @@ export default GroupSpec.make()
       name: "prepare",
       args: () => ({
         userId: IdSchema("users"),
-        offer: ProCheckoutOffer,
+        offer: XenditCheckoutOffer,
       }),
       returns: () => preparedCheckoutValidator,
       error: () => CheckoutUnavailable,
@@ -50,7 +50,7 @@ export default GroupSpec.make()
       args: () => ({
         accountId: IdSchema("billingAccounts"),
         userId: IdSchema("users"),
-        offer: ProCheckoutOffer,
+        offer: XenditCheckoutOffer,
         locale: ActiveAppLocaleCodeSchema,
         session: openedSessionValidator,
         event: productAnalyticsEventValidator,

@@ -8,6 +8,7 @@ import {
   creditFooterKey,
   creditPeriodKey,
   formatBillingDate,
+  formatBillingDay,
   formatCount,
   formatMinorAmount,
   planStateOf,
@@ -145,6 +146,15 @@ describe("billing/plan", () => {
     );
     expect(formatBillingDate(Date.UTC(2026, 9, 31, 16, 59), "de")).toBe(
       "31. Oktober 2026"
+    );
+  });
+
+  it("writes the Jakarta day in short words for a narrow column", () => {
+    expect(formatBillingDay(Date.UTC(2026, 10, 1, 23, 30), "en")).toBe(
+      "Nov 2, 2026"
+    );
+    expect(formatBillingDay(Date.UTC(2026, 9, 31, 16, 59), "id")).toBe(
+      "31 Okt 2026"
     );
   });
 

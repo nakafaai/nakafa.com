@@ -57,6 +57,7 @@ describe("onboarding server adapter", () => {
       expect(fetchQuery).toHaveBeenCalledWith(onboarding.queries.getStatus, {});
       expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud", {
         auth: "test-token",
+        fetch: expect.any(Function),
       });
     })
   );
@@ -88,6 +89,7 @@ describe("onboarding server adapter", () => {
       );
       expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud", {
         auth: "test-token",
+        fetch: expect.any(Function),
       });
     })
   );
