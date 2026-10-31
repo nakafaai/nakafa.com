@@ -53,8 +53,7 @@ export function LibraryEditDialog({
   const nextAddress = address.trim();
   const canSave =
     Schema.is(LibraryTitle)(nextTitle) &&
-    (nextTitle !== item.title ||
-      (isLink && nextAddress !== item.address)) &&
+    (nextTitle !== item.title || (isLink && nextAddress !== item.address)) &&
     (!isLink || Schema.is(LinkAddress)(nextAddress));
 
   const save = () => {

@@ -403,29 +403,31 @@ describe("classroom/forum threads", () => {
       })
   );
 
-  it.effect("meets a member who neither opened it nor teaches as a missing object", () =>
-    Effect.gen(function* () {
-      const fixture = yield* keyedFixture;
-      const term = yield* period(fixture, fixture.units.smp);
-      const forum = yield* forumClass(fixture, term.id, "X-8");
-      yield* fixture.as("teacher").mutation(open, {
-        ...forum,
-        clientKey: "teacher-discussion",
-        mentions: [],
-        slug: nf,
-        text: "Diskusikan.",
-        title: "Diskusi guru",
-      });
-      const refused = yield* fixture
-        .as("student")
-        .mutation(rename, {
-          classId: forum.classId,
-          number: 1,
+  it.effect(
+    "meets a member who neither opened it nor teaches as a missing object",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-8");
+        yield* fixture.as("teacher").mutation(open, {
+          ...forum,
+          clientKey: "teacher-discussion",
+          mentions: [],
           slug: nf,
-          title: "Diambil alih",
-        })
-        .pipe(Effect.flip);
-      expect(refused).toMatchObject(denied("resource"));
-    })
+          text: "Diskusikan.",
+          title: "Diskusi guru",
+        });
+        const refused = yield* fixture
+          .as("student")
+          .mutation(rename, {
+            classId: forum.classId,
+            number: 1,
+            slug: nf,
+            title: "Diambil alih",
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("resource"));
+      })
   );
 });

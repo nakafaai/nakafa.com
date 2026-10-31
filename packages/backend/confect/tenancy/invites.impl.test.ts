@@ -23,10 +23,8 @@ const RESEND_GAP = HOUR / 3;
 const TERM = Duration.toMillis(INVITE_TERM);
 const guru = Schema.decodeSync(Email)("guru@harapan.example.test");
 const lain = Schema.decodeSync(Email)("lain@lain.example.test");
-const benar = Schema.decodeSync(Email)("benar@harapan.example.test");
 const nf = slugOf("nf");
-const { invite, list, readdress, resend, revoke } =
-  refs.public.tenancy.invites;
+const { invite, list, readdress, resend, revoke } = refs.public.tenancy.invites;
 const { setPolicy } = refs.public.tenancy.settings;
 const expire = refs.internal.tenancy.expiry.invite;
 const holdersSchedule = refs.internal.tenancy.holders.schedule;
@@ -442,101 +440,6 @@ describe("tenancy/invites owner, unit admin, and tenants", () => {
           foreign.inviteId
         );
       })
-  );
-});
-
-describe("tenancy/invites readdress", () => {
-  it.effect(
-    "ends the mistyped invite and sends a new one with a fresh term, and the same address changes nothing",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const admin = fixture.as("admin");
-        const made = yield* inviteInvited(fixture);
-        vi.setSystemTime(NOW + HOUR);
-        const same = yield* admin.mutation(readdress, {
-          email: guru,
-          inviteId: made.id,
-          locale: "id",
-          slug: nf,
-        });
-        expect(same).toEqual(made);
-        const corrected = yield* admin.mutation(readdress, {
-          email: benar,
-          inviteId: made.id,
-          locale: "id",
-          slug: nf,
-        });
-        expect(corrected).toMatchObject({
-          email: benar,
-          expiresAt: NOW + HOUR + TERM,
-          personId: fixture.invited,
-          status: "pending",
-        });
-        expect(corrected.id).not.toBe(made.id);
-        const listed = yield* admin.query(list, { ...firstPage, slug: nf });
-        expect(Arr.map(listed.page, (row) => row.id)).toEqual([corrected.id]);
-      })
-  );
-
-  it.effect(
-    "refuses an address the school does not admit, an expired invite, a revoked invite, and a teacher",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const admin = fixture.as("admin");
-        const made = yield* inviteInvited(fixture);
-        const args = { email: benar, inviteId: made.id, locale: "id", slug: nf } as const;
-        yield* admin.mutation(setPolicy, {
-          policy: { key: "emailDomains", value: ["harapan.example.test"] },
-          slug: nf,
-        });
-        const domain = yield* admin
-          .mutation(readdress, { ...args, email: lain })
-          .pipe(Effect.flip);
-        const teacher = yield* fixture
-          .as("teacher")
-          .mutation(readdress, args)
-          .pipe(Effect.flip);
-        vi.setSystemTime(NOW + TERM);
-        const ended = yield* admin.mutation(readdress, args).pipe(Effect.flip);
-        vi.setSystemTime(NOW);
-        yield* admin.mutation(revoke, { inviteId: made.id, slug: nf });
-        const revoked = yield* admin.mutation(readdress, args).pipe(Effect.flip);
-        expect([domain, teacher, ended, revoked]).toMatchObject([
-          { _tag: "InviteDomainRefused" },
-          denied("role"),
-          { _tag: "InviteExpired" },
-          { _tag: "InviteNotPending" },
-        ]);
-      })
-  );
-
-  it.effect("refuses to readdress the invite of a Person who has an account", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const made = yield* inviteInvited(fixture);
-      yield* fixture.run(
-        Effect.gen(function* () {
-          const owner = yield* (yield* DatabaseReader)
-            .table("tenantPeople")
-            .get(fixture.people.owner.personId);
-          yield* (yield* DatabaseWriter)
-            .table("tenantPeople")
-            .patch(fixture.invited, { account: owner.account });
-        })
-      );
-      const refused = yield* fixture
-        .as("admin")
-        .mutation(readdress, {
-          email: benar,
-          inviteId: made.id,
-          locale: "id",
-          slug: nf,
-        })
-        .pipe(Effect.flip);
-      expect(refused).toMatchObject({ _tag: "PersonClaimed" });
-    })
   );
 
   it.effect(

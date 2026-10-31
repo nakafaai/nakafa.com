@@ -253,10 +253,7 @@ export function schoolSettingsGroups(slug: TenantSlug) {
 }
 
 /** The groups of the sections a viewer who holds the actions in `reach` opens, in sidebar order, none of them empty. */
-export function openSettingsGroups(
-  slug: TenantSlug,
-  reach: readonly string[]
-) {
+export function openSettingsGroups(slug: TenantSlug, reach: readonly string[]) {
   return Arr.filter(
     Arr.map(schoolSettingsGroups(slug), (group) => ({
       ...group,
@@ -292,15 +289,13 @@ export function opensSettingsRoute(
 ) {
   return Arr.some(openSettingsGroups(slug, reach), (group) =>
     Arr.some(group.sections, (section) =>
-      Str.startsWith(section.target.to)(routeId)
+      Str.startsWith(`/school/$slug/settings/${section.labelKey}`)(routeId)
     )
   );
 }
 
-/** One group of the school settings, as `schoolSettingsGroups` returns it. */
-export type SchoolSettingsGroup = ReturnType<
-  typeof schoolSettingsGroups
->[number];
+/** One group of the school settings, as `openSettingsGroups` returns it. */
+export type SchoolSettingsGroup = ReturnType<typeof openSettingsGroups>[number];
 
 /**
  * Every section in sidebar order, each with the group that holds it. A group

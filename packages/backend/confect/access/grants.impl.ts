@@ -6,47 +6,21 @@ import {
   grantAccess,
   tenantAccess,
 } from "@repo/backend/confect/access/authority";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
 import {
   assignRole,
-  authorizeOwnerRole,
+  authorizeAssign,
   leavesOwner,
   revokeGrant,
   signedInOwners,
 } from "@repo/backend/confect/access/grant";
+import { change } from "@repo/backend/confect/access/grants.change";
 import spec from "@repo/backend/confect/access/grants.spec";
-import {
-  type BuiltinRole,
-  GrantScope,
-} from "@repo/backend/confect/access/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Person } from "@repo/backend/confect/tenancy/access";
-import {
-  personAccess,
-  tenantAuthority,
-  unitAuthority,
-} from "@repo/backend/confect/tenancy/authority";
+import { personAccess } from "@repo/backend/confect/tenancy/authority";
 import { Effect, Layer, Number as Num, Struct } from "effect";
-
-/**
- * Giving a role needs `grant.manage` on the scope the new grant covers, so a
- * unit admin gives roles in their own unit only, and a unit named in the
- * arguments must belong to the member's tenant.
- */
-const authorizeAssign = Effect.fn("access.grants.authorizeAssign")(function* (
-  scope: GrantScope,
-  role: BuiltinRole
-) {
-  const { tenant } = yield* Member;
-  yield* GrantScope.match(scope, {
-    tenant: () => tenantAuthority.check("grant.manage", tenant),
-    unit: ({ unitId }) =>
-      Effect.asVoid(unitAuthority.authorize("grant.manage", unitId)),
-  });
-  yield* authorizeOwnerRole(role);
-});
 
 /** The largest page one request reads. */
 const PAGE_LIMIT = 100;
@@ -110,35 +84,6 @@ const assign = FunctionImpl.make(
       role,
       scope
     );
-  })
-);
-
-/**
- * Changes the role of an active grant in one step, over the same scope: the old role ends and the
- * new one starts in one transaction, so a refusal leaves the person's grant as it was, and no moment
- * leaves the person without a role. Each half passes the rules of its own path. A grant that has
- * ended is refused as a missing object.
- */
-const change = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "change",
-  Effect.fn("access.grants.change")(function* ({ role }) {
-    const grant = yield* Grant;
-    if (grant.status !== "active") {
-      return yield* new AccessDenied({
-        action: "grant.manage",
-        reason: "resource",
-      });
-    }
-    yield* authorizeAssign(grant.scope, role);
-    const actor = { id: (yield* Member).person._id, kind: "person" } as const;
-    const holder = yield* (yield* DatabaseReader)
-      .table("tenantPeople")
-      .get(grant.personId)
-      .pipe(Effect.orDie);
-    yield* revokeGrant(actor, grant, holder);
-    return yield* assignRole(actor, holder, role, grant.scope);
   })
 );
 

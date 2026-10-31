@@ -838,7 +838,8 @@
         "created": "Klien dibuat",
         "rotated": "Rahasia diganti",
         "revoked": "Klien dicabut",
-        "authorized": "Perangkat terhubung"
+        "authorized": "Perangkat terhubung",
+        "changed": "Klien diubah"
       },
       "invite": {
         "expired": "Undangan kedaluwarsa",

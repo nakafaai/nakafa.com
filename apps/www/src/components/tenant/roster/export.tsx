@@ -1,5 +1,5 @@
 import { useAction } from "@confect/react";
-import { Download01Icon, UserList01Icon } from "@hugeicons/core-free-icons";
+import { Download01Icon, UserListIcon } from "@hugeicons/core-free-icons";
 import roster from "@repo/backend/confect/_generated/refs/roster";
 import type { RosterLine } from "@repo/backend/confect/roster/schema";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -20,8 +20,8 @@ import { useTenant } from "@/components/tenant/context";
 import { saveLedger } from "@/components/tenant/graduation/save";
 import { EXPORT_HEADER } from "@/components/tenant/roster/dapodik";
 import {
-  GradeDownloadContext,
   type GradeCohort,
+  GradeDownloadContext,
   RosterGradesExport,
 } from "@/components/tenant/roster/grades";
 import { activePeriodOf } from "@/components/tenant/roster/period";
@@ -119,7 +119,7 @@ export function RosterExport() {
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={saveStudentsOfUnit}>
-            <HugeIcons icon={UserList01Icon} />
+            <HugeIcons icon={UserListIcon} />
             {t("export-students")}
           </DropdownMenuItem>
           <GradeDownloadContext value={saveGrades}>

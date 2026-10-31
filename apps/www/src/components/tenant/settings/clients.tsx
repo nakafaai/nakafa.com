@@ -45,7 +45,10 @@ import {
 } from "@/components/shared/table/toolbar";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
+import {
+  SchoolClientCreateDialog,
+  SchoolClientEditDialog,
+} from "@/components/tenant/settings/client";
 import { SchoolDeviceDialog } from "@/components/tenant/settings/device";
 import { revokeClientChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";

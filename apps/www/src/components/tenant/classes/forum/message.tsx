@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { MessageText } from "@repo/backend/confect/classroom/forum/message";
+import { DiscussionTitle as DiscussionTitleText } from "@repo/backend/confect/classroom/forum/thread";
 import {
   Bubble,
   BubbleContent,
@@ -34,7 +35,7 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import {
   forumCall,
@@ -51,8 +52,12 @@ import {
   type ForumMessage,
   hideUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
-import { DiscussionRenameDialog } from "@/components/tenant/classes/forum/rename";
+import { renameDiscussionUpdate } from "@/components/tenant/classes/forum/rename";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
+import { LineDialog } from "@/components/tenant/line";
+import { saveSchool } from "@/components/tenant/settings/save";
+
+const SOURCE = "components/tenant/classes/forum/message";
 
 /**
  * One message of a channel or of a discussion, as a chat shows it. The viewer's own messages stand
@@ -191,6 +196,9 @@ function MessageActions({
   const scope = useChannelScope();
   const common = useTranslations("Common");
   const [hiding, setHiding] = useState(false);
+  const rename = useMutation(
+    classroom.forum.threads.rename
+  ).withOptimisticUpdate(renameDiscussionUpdate);
   const [renaming, setRenaming] = useState(0);
   const [isRenaming, setIsRenaming] = useState(false);
   const { discussion } = message;
@@ -242,12 +250,30 @@ function MessageActions({
       </DropdownMenu>
       <HideMessage message={message} open={hiding} setOpen={setHiding} />
       {discussion === null || renaming === 0 ? null : (
-        <DiscussionRenameDialog
+        <LineDialog
+          description={t("discussion-rename-description")}
+          initial={discussion.title}
+          isValid={Schema.is(DiscussionTitleText)}
           key={renaming}
-          number={discussion.number}
+          label={t("discussion-title")}
+          onSave={(title) =>
+            startTransition(() =>
+              saveSchool(
+                () =>
+                  rename({
+                    classId: scope.classId,
+                    number: discussion.number,
+                    slug: scope.slug,
+                    title,
+                  }),
+                SOURCE
+              )
+            )
+          }
           open={isRenaming}
+          placeholder={t("discussion-title-placeholder")}
           setOpen={setIsRenaming}
-          title={discussion.title}
+          title={t("discussion-rename")}
         />
       )}
     </>

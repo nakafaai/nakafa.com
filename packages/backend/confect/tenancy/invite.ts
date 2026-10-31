@@ -18,7 +18,11 @@ import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { claimAfterInvite } from "@repo/backend/confect/tenancy/claims";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
-import { ProvisionRejected } from "@repo/backend/confect/tenancy/errors";
+import {
+  InviteExpired,
+  InviteNotPending,
+  ProvisionRejected,
+} from "@repo/backend/confect/tenancy/errors";
 import type { InviteRequest } from "@repo/backend/confect/tenancy/provision.spec";
 import {
   type Email,
@@ -131,6 +135,26 @@ export const retireExpiredInvites = Effect.fn("tenancy.invite.retire")(
     );
   }
 );
+
+/**
+ * Answers the present moment for an invite that still waits. An invite whose term has ended is
+ * expired, even before its scheduled expiry runs, and any other ended invite is no longer pending.
+ */
+export const pendingOrRefused = Effect.fn("tenancy.invite.pending")(function* (
+  stored: TenantInvitesDoc
+) {
+  const now = yield* Clock.currentTimeMillis;
+  if (
+    stored.state.status === "expired" ||
+    (stored.state.status === "pending" && stored.expiresAt <= now)
+  ) {
+    return yield* new InviteExpired();
+  }
+  if (stored.state.status !== "pending") {
+    return yield* new InviteNotPending();
+  }
+  return now;
+});
 
 /** Ends a pending invite as revoked: its inbox notice goes with it, and the journal records it. */
 export const endInvite = Effect.fn("tenancy.invite.end")(function* (

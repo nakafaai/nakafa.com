@@ -402,14 +402,14 @@ describe("integrations/clients update", () => {
         });
         const before = yield* fixture.run(stored(made.id));
         const changed = yield* fixture.as("admin").mutation(update, {
-          actions: ["person.view", "tenant.view"],
+          actions: ["person.view", "period.view"],
           clientId: made.id,
           name: "Sinkron Dapodik",
           slug: nf,
         });
         const after = yield* fixture.run(stored(made.id));
         expect(changed).toMatchObject({
-          actions: ["person.view", "tenant.view"],
+          actions: ["person.view", "period.view"],
           id: made.id,
           name: "Sinkron Dapodik",
           scope: { kind: "tenant" },

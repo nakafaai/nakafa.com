@@ -54,10 +54,8 @@ import {
 } from "@/components/tenant/settings/card";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
-import {
-  readdressInviteChange,
-  revokeInviteChange,
-} from "@/components/tenant/settings/mutation";
+import { readdressInviteChange } from "@/components/tenant/settings/edits";
+import { revokeInviteChange } from "@/components/tenant/settings/mutation";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";

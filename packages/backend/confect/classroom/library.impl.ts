@@ -26,6 +26,10 @@ import {
   HEAD_BYTES,
   LIBRARY_BYTE_LIMIT,
 } from "@repo/backend/confect/classroom/library/file";
+import {
+  classItem,
+  edit,
+} from "@repo/backend/confect/classroom/library/edit";
 import { libraryField } from "@repo/backend/confect/classroom/library/item";
 import { libraryViews } from "@repo/backend/confect/classroom/library/views";
 import spec from "@repo/backend/confect/classroom/library.spec";
@@ -329,58 +333,6 @@ const commit = FunctionImpl.make(
       })
       .pipe(Effect.orDie);
     return { id };
-  })
-);
-
-/** The item a call names, when it belongs to the allowed class; any other is refused as a missing object. */
-const classItem = Effect.fn("classroom.library.item")(function* (
-  itemId: GenericId.GenericId<"classroomLibrary">
-) {
-  const row = yield* Class;
-  const item = yield* (yield* DatabaseReader)
-    .table("classroomLibrary")
-    .get(itemId)
-    .pipe(Effect.option);
-  if (Option.isNone(item) || item.value.classId !== row._id) {
-    return yield* new AccessDenied({
-      action: "library.manage",
-      reason: "resource",
-    });
-  }
-  return item.value;
-});
-
-/**
- * Changes an item's title, and a link's address with it, sealed anew under the row that names
- * them. A file keeps its bytes and takes no address, so `address` holds a value for a link only.
- */
-const edit = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "edit",
-  Effect.fn("classroom.library.edit")(function* ({ address, itemId, title }) {
-    const row = yield* Class;
-    const item = yield* classItem(itemId);
-    const keys = yield* schoolKeys(row.tenantId);
-    const sealedTitle = yield* sealText(
-      keys,
-      libraryField(item, "sealedTitle"),
-      title
-    ).pipe(Effect.orDie);
-    const writer = (yield* DatabaseWriter).table("classroomLibrary");
-    if (item.kind === "file" || address === null) {
-      yield* writer.patch(itemId, { sealedTitle }).pipe(Effect.orDie);
-      return null;
-    }
-    const sealedAddress = yield* sealText(
-      keys,
-      libraryField(item, "sealedAddress"),
-      address
-    ).pipe(Effect.orDie);
-    yield* writer
-      .patch(itemId, { sealedAddress, sealedTitle })
-      .pipe(Effect.orDie);
-    return null;
   })
 );
 

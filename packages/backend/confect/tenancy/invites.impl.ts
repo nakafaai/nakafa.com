@@ -1,7 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { components } from "@repo/backend/confect/_generated/components";
-import type { TenantInvitesDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -21,18 +20,17 @@ import {
 } from "@repo/backend/confect/tenancy/authority";
 import {
   InviteDomainRefused,
-  InviteExpired,
-  InviteNotPending,
   InvitePending,
   InviteRateLimited,
   PersonClaimed,
 } from "@repo/backend/confect/tenancy/errors";
 import {
-  endInvite,
   expireInvite,
+  pendingOrRefused,
   retireExpiredInvites,
   writeInvite,
 } from "@repo/backend/confect/tenancy/invite";
+import { readdress } from "@repo/backend/confect/tenancy/invites.readdress";
 import spec from "@repo/backend/confect/tenancy/invites.spec";
 import {
   list,
@@ -59,26 +57,6 @@ const inviteResends = new RateLimiter(components.agentRateLimiter, {
     period: HOUR,
     rate: INVITE_RESENDS_PER_HOUR,
   },
-});
-
-/**
- * Answers the present moment for an invite that still waits. An invite whose term has ended is
- * expired, even before its scheduled expiry runs, and any other ended invite is no longer pending.
- */
-const pendingOrRefused = Effect.fn("tenancy.invites.pending")(function* (
-  stored: TenantInvitesDoc
-) {
-  const now = yield* Clock.currentTimeMillis;
-  if (
-    stored.state.status === "expired" ||
-    (stored.state.status === "pending" && stored.expiresAt <= now)
-  ) {
-    return yield* new InviteExpired();
-  }
-  if (stored.state.status !== "pending") {
-    return yield* new InviteNotPending();
-  }
-  return now;
 });
 
 /**
@@ -122,45 +100,6 @@ const invite = FunctionImpl.make(
       locale
     );
     return yield* viewOf(written, person);
-  })
-);
-
-/**
- * Corrects the address of a pending invite: the mistyped invite ends and a new one goes to the
- * right address in one transaction, under the school's domain rule, with a fresh term, because the
- * old address may hold the code and the new one has not had its term yet. The same address changes
- * nothing.
- */
-const readdress = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "readdress",
-  Effect.fn("tenancy.invites.readdress")(function* ({
-    email,
-    inviteId,
-    locale,
-  }) {
-    const { person: actor, tenant } = yield* Member;
-    const stored = yield* loadInvite(inviteId);
-    const person = yield* personAuthority.authorize(
-      "person.invite",
-      stored.personId
-    );
-    if (person.account.state === "claimed") {
-      return yield* new PersonClaimed();
-    }
-    if (!admitsAddress(tenant.policies, email)) {
-      return yield* new InviteDomainRefused();
-    }
-    yield* pendingOrRefused(stored);
-    if (stored.channel.email === email) {
-      return yield* viewOf(stored, person);
-    }
-    yield* endInvite(personActor(actor), stored, person);
-    return yield* viewOf(
-      yield* writeInvite(personActor(actor), person, email, locale),
-      person
-    );
   })
 );
 

@@ -1,6 +1,6 @@
 import { useMutation } from "@confect/react";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { CountryCodeSchema } from "@nakafa/aksara-contracts/country";
+import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { NewCurrency } from "@repo/backend/confect/tenancy/locale";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
@@ -35,7 +35,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { setLocaleChange } from "@/components/tenant/settings/mutation";
+import { setLocaleChange } from "@/components/tenant/settings/edits";
 import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/settings/locale";
@@ -70,9 +70,9 @@ export function SchoolLocaleCard({
   const t = useTranslations("SchoolSettings");
   const locale = useLocale();
   const id = useId();
-  const setLocale = useMutation(tenancy.settings.setLocale).withOptimisticUpdate(
-    setLocaleChange
-  );
+  const setLocale = useMutation(
+    tenancy.settings.setLocale
+  ).withOptimisticUpdate(setLocaleChange);
   const [nextCountry, setNextCountry] = useState(country);
   const [nextCurrency, setNextCurrency] = useState(currency);
   const countryNames = new Intl.DisplayNames([locale], { type: "region" });

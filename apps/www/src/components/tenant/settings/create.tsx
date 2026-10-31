@@ -120,7 +120,9 @@ function SchoolUnitCreateForm({
     Option.getOrNull(Option.map(unit, (it) => it.contentLanguage));
   const trimmed = name.trim();
   const ready =
-    Schema.is(UnitName)(trimmed) && timeZone !== null && contentLanguage !== null;
+    Schema.is(UnitName)(trimmed) &&
+    timeZone !== null &&
+    contentLanguage !== null;
 
   /** Adds the school and closes the dialog; the school shows at once, and a refusal takes it off. */
   const submit = () => {

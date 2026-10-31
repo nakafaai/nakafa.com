@@ -120,9 +120,9 @@ for (const viewport of [
     await waitUntilTakenOver(country);
     await country.click();
     await page.getByRole("option", { name: "Singapore" }).click();
-    await expect(page.getByRole("combobox", { name: "Currency" })).toContainText(
-      "SGD"
-    );
+    await expect(
+      page.getByRole("combobox", { name: "Currency" })
+    ).toContainText("SGD");
     await page
       .locator('[data-slot="card"]')
       .filter({ hasText: "Country and currency" })
@@ -203,10 +203,9 @@ for (const viewport of [
       .fill("https://example.com/baru");
     await edit.getByRole("textbox", { name: "Title" }).fill("Video baru");
     await edit.getByRole("button", { name: "Save" }).click();
-    await expect(page.getByRole("link", { name: "Video baru" })).toHaveAttribute(
-      "href",
-      "https://example.com/baru"
-    );
+    await expect(
+      page.getByRole("link", { name: "Video baru" })
+    ).toHaveAttribute("href", "https://example.com/baru");
     await context.close();
   });
 }

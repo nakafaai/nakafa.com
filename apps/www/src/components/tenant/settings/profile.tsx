@@ -82,6 +82,8 @@ function SchoolProfileCard({
   tenant,
 }: {
   tenant: {
+    readonly country: string;
+    readonly currency: string;
     readonly logo?: string | undefined;
     readonly mascot: Parameters<typeof SchoolMark>[0]["mascot"];
     readonly name: string;

@@ -16,7 +16,7 @@ import {
   givenRoles,
   SchoolRoleSelect,
 } from "@/components/tenant/settings/grant";
-import { changeGrantRoleChange } from "@/components/tenant/settings/mutation";
+import { changeGrantRoleChange } from "@/components/tenant/settings/edits";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Grant } from "@/components/tenant/settings/state";
 

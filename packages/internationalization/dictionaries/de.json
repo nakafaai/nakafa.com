@@ -838,7 +838,8 @@
         "created": "Client angelegt",
         "rotated": "Geheimnis erneuert",
         "revoked": "Client gesperrt",
-        "authorized": "Gerät verbunden"
+        "authorized": "Gerät verbunden",
+        "changed": "Client bearbeitet"
       },
       "invite": {
         "expired": "Einladung abgelaufen",

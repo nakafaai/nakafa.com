@@ -280,19 +280,17 @@ function usePaletteGroups(): readonly PaletteGroup[] {
       },
     })
   );
-  const settingsItems = Arr.flatMap(
-    openSettingsGroups(slug, reach),
-    (group) =>
-      Arr.map(
-        group.sections,
-        (section): PaletteItem => ({
-          icon: { hugeicon: settingsSectionIcons[section.labelKey] },
-          key: `settings:${section.labelKey}`,
-          label: tSettings(section.labelKey),
-          place: tSettings(group.key),
-          target: section.target,
-        })
-      )
+  const settingsItems = Arr.flatMap(openSettingsGroups(slug, reach), (group) =>
+    Arr.map(
+      group.sections,
+      (section): PaletteItem => ({
+        icon: { hugeicon: settingsSectionIcons[section.labelKey] },
+        key: `settings:${section.labelKey}`,
+        label: tSettings(section.labelKey),
+        place: tSettings(group.key),
+        target: section.target,
+      })
+    )
   );
 
   return Arr.filter(

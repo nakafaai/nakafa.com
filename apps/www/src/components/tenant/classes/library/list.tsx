@@ -309,43 +309,43 @@ function LibraryRemove({ item }: { item: LibraryItem }) {
 
   return (
     <>
-    <ConfirmRowMenu
-      action={t("library-remove")}
-      confirm={t("library-remove")}
-      description={t("library-remove-description")}
-      icon={Delete02Icon}
-      onConfirm={() =>
-        runForumCall(
-          forumCall(() =>
-            remove.withOptimisticUpdate(removeItemUpdate)({
-              classId,
-              itemId: item.id,
-              slug,
-            })
-          ),
-          toastForumFailure
-        )
-      }
-      title={t("library-remove-title")}
-    >
-      <DropdownMenuItem
-        onClick={() => {
-          setEditing((count) => count + 1);
-          setIsEditing(true);
-        }}
+      <ConfirmRowMenu
+        action={t("library-remove")}
+        confirm={t("library-remove")}
+        description={t("library-remove-description")}
+        icon={Delete02Icon}
+        onConfirm={() =>
+          runForumCall(
+            forumCall(() =>
+              remove.withOptimisticUpdate(removeItemUpdate)({
+                classId,
+                itemId: item.id,
+                slug,
+              })
+            ),
+            toastForumFailure
+          )
+        }
+        title={t("library-remove-title")}
       >
-        <HugeIcons icon={PencilEdit02Icon} />
-        {t("library-edit")}
-      </DropdownMenuItem>
-    </ConfirmRowMenu>
-    {editing === 0 ? null : (
-      <LibraryEditDialog
-        item={item}
-        key={editing}
-        open={isEditing}
-        setOpen={setIsEditing}
-      />
-    )}
+        <DropdownMenuItem
+          onClick={() => {
+            setEditing((count) => count + 1);
+            setIsEditing(true);
+          }}
+        >
+          <HugeIcons icon={PencilEdit02Icon} />
+          {t("library-edit")}
+        </DropdownMenuItem>
+      </ConfirmRowMenu>
+      {editing === 0 ? null : (
+        <LibraryEditDialog
+          item={item}
+          key={editing}
+          open={isEditing}
+          setOpen={setIsEditing}
+        />
+      )}
     </>
   );
 }

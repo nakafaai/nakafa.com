@@ -28,6 +28,7 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   personAuthority,
   tenantAuthority,
+  unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Effect, Match, Option, Schema, Struct } from "effect";
 
@@ -265,6 +266,24 @@ export const authorizeOwnerRole = Effect.fn("access.grant.ownerRole")(
     }
   }
 );
+
+/**
+ * Giving a role needs `grant.manage` on the scope the new grant covers, so a
+ * unit admin gives roles in their own unit only, and a unit named in the
+ * arguments must belong to the member's tenant.
+ */
+export const authorizeAssign = Effect.fn("access.grants.authorizeAssign")(function* (
+  scope: GrantScope,
+  role: BuiltinRole
+) {
+  const { tenant } = yield* Member;
+  yield* GrantScope.match(scope, {
+    tenant: () => tenantAuthority.check("grant.manage", tenant),
+    unit: ({ unitId }) =>
+      Effect.asVoid(unitAuthority.authorize("grant.manage", unitId)),
+  });
+  yield* authorizeOwnerRole(role);
+});
 
 /**
  * Ends one active grant the way the access lane's revoke path does: the grant's

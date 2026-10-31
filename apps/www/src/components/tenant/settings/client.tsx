@@ -30,7 +30,7 @@ import {
   IntegrationAction,
   toggleAction,
 } from "@/components/tenant/settings/actions";
-import { updateClientChange } from "@/components/tenant/settings/mutation";
+import { updateClientChange } from "@/components/tenant/settings/edits";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Client } from "@/components/tenant/settings/state";
 
@@ -184,7 +184,9 @@ function ClientActionsField({
 }: {
   actions: readonly IntegrationAction[];
   setActions: (
-    change: (current: readonly IntegrationAction[]) => readonly IntegrationAction[]
+    change: (
+      current: readonly IntegrationAction[]
+    ) => readonly IntegrationAction[]
   ) => void;
 }) {
   const t = useTranslations("SchoolSettings");

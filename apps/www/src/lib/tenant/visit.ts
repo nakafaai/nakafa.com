@@ -96,7 +96,9 @@ const READ_RETRIES = 2;
  * then, and one lost request must not stand for a broken school: the page shows its failure only
  * once the network has failed the read each time.
  */
-export const retryVisitRead = <A, R>(read: Effect.Effect<A, SchoolReadFailed, R>) =>
+export const retryVisitRead = <A, R>(
+  read: Effect.Effect<A, SchoolReadFailed, R>
+) =>
   read.pipe(
     Effect.retry({
       schedule: Schedule.exponential(READ_RETRY_WAIT),

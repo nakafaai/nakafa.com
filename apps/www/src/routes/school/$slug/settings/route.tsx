@@ -9,7 +9,7 @@ import { firstSettingsTarget, opensSettingsRoute } from "@/lib/settings/school";
  * not found. The settings root belongs to the viewer's first section.
  */
 export const Route = createFileRoute("/school/$slug/settings")({
-  beforeLoad: ({ context, matches }) => {
+  beforeLoad: ({ context, matches }): void => {
     const { school, slug } = context;
     if (school._tag !== "Member") {
       return;

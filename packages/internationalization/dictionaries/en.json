@@ -838,7 +838,8 @@
         "created": "Client created",
         "rotated": "Secret rotated",
         "revoked": "Client revoked",
-        "authorized": "Device connected"
+        "authorized": "Device connected",
+        "changed": "Client edited"
       },
       "invite": {
         "expired": "Invite expired",

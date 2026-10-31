@@ -11,7 +11,10 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
+import {
+  ChannelName,
+  type ChannelView,
+} from "@repo/backend/confect/classroom/forum/channel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -35,8 +38,8 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
-import { Array as Arr, Clock, Effect, Function as Fn } from "effect";
-import { useState } from "react";
+import { Array as Arr, Clock, Effect, Function as Fn, Schema } from "effect";
+import { startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { DataFailure } from "@/components/shared/failure";
@@ -56,13 +59,17 @@ import {
   runForumCall,
 } from "@/components/tenant/classes/forum/call";
 import { markUpdate } from "@/components/tenant/classes/forum/optimistic";
-import { ChannelRenameDialog } from "@/components/tenant/classes/forum/rename";
+import { renameChannelUpdate } from "@/components/tenant/classes/forum/rename";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useClassScope } from "@/components/tenant/classes/scope";
+import { LineDialog } from "@/components/tenant/line";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { saveSchool } from "@/components/tenant/settings/save";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolClassChannelTarget } from "@/lib/routing/school/target";
+
+const SOURCE = "components/tenant/classes/channels";
 
 /** How many channels the list asks for each time its end comes into view. */
 export const CHANNEL_PAGE_SIZE = 20;
@@ -276,78 +283,94 @@ function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
   const common = useTranslations("Common");
   const { can, classId, classSlug, slug } = useClassScope();
   const mark = useMutation(classroom.forum.reads.mark);
+  const rename = useMutation(
+    classroom.forum.channels.rename
+  ).withOptimisticUpdate(renameChannelUpdate);
   const [renaming, setRenaming] = useState(0);
   const [isRenaming, setIsRenaming] = useState(false);
 
   return (
     <>
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            aria-label={common("more-actions")}
-            size="icon-sm"
-            variant="ghost"
-          >
-            <HugeIcons icon={MoreHorizontalIcon} />
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            render={
-              <TargetLink
-                target={schoolClassChannelTarget(slug, classSlug, channel.id)}
-              >
-                <HugeIcons icon={ViewIcon} />
-                {common("open")}
-              </TargetLink>
-            }
-          />
-          <DropdownMenuItem
-            disabled={!channel.unread}
-            onClick={() =>
-              runForumCall(
-                Effect.flatMap(Clock.currentTimeMillis, (at) =>
-                  forumCall(() =>
-                    mark.withOptimisticUpdate(markUpdate)({
-                      at,
-                      classId,
-                      place: { _tag: "channel", channelId: channel.id },
-                      slug,
-                    })
-                  )
-                ),
-                Fn.constVoid
-              )
-            }
-          >
-            <HugeIcons icon={CheckmarkCircle02Icon} />
-            {t("channel-mark-read")}
-          </DropdownMenuItem>
-          {channel.kind === "topic" && Arr.contains(can, "forum.manage") ? (
-            <DropdownMenuItem
-              onClick={() => {
-                setRenaming((count) => count + 1);
-                setIsRenaming(true);
-              }}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
             >
-              <HugeIcons icon={PencilEdit02Icon} />
-              {t("channel-rename")}
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              render={
+                <TargetLink
+                  target={schoolClassChannelTarget(slug, classSlug, channel.id)}
+                >
+                  <HugeIcons icon={ViewIcon} />
+                  {common("open")}
+                </TargetLink>
+              }
+            />
+            <DropdownMenuItem
+              disabled={!channel.unread}
+              onClick={() =>
+                runForumCall(
+                  Effect.flatMap(Clock.currentTimeMillis, (at) =>
+                    forumCall(() =>
+                      mark.withOptimisticUpdate(markUpdate)({
+                        at,
+                        classId,
+                        place: { _tag: "channel", channelId: channel.id },
+                        slug,
+                      })
+                    )
+                  ),
+                  Fn.constVoid
+                )
+              }
+            >
+              <HugeIcons icon={CheckmarkCircle02Icon} />
+              {t("channel-mark-read")}
             </DropdownMenuItem>
-          ) : null}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-    {renaming === 0 ? null : (
-      <ChannelRenameDialog
-        channel={channel}
-        key={renaming}
-        open={isRenaming}
-        setOpen={setIsRenaming}
-      />
-    )}
+            {channel.kind === "topic" && Arr.contains(can, "forum.manage") ? (
+              <DropdownMenuItem
+                onClick={() => {
+                  setRenaming((count) => count + 1);
+                  setIsRenaming(true);
+                }}
+              >
+                <HugeIcons icon={PencilEdit02Icon} />
+                {t("channel-rename")}
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {renaming === 0 ? null : (
+        <LineDialog
+          description={t("channel-rename-description")}
+          initial={channel.name}
+          isValid={Schema.is(ChannelName)}
+          key={renaming}
+          label={t("channel-name")}
+          onSave={(name) =>
+            startTransition(() =>
+              saveSchool(
+                () => rename({ channelId: channel.id, classId, name, slug }),
+                SOURCE
+              )
+            )
+          }
+          open={isRenaming}
+          placeholder={t("channel-name-placeholder")}
+          setOpen={setIsRenaming}
+          title={t("channel-rename")}
+        />
+      )}
     </>
   );
 }
