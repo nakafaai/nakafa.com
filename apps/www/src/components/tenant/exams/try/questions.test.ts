@@ -27,6 +27,7 @@ const question = (id: string, answers: Question["answers"]): Question => ({
   id: questionId(id),
   key: null,
   points: 1,
+  reading: null,
   scoring: { kind: "allOrNothing" },
   prompt: documentId(`prompt-${id}`),
   revision: 0,

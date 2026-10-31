@@ -232,11 +232,12 @@ export const SavedView = Schema.Struct({
 });
 
 /**
- * One question's prompt as the document stands now, which is the editor's stored text with every
- * edit after its snapshot applied (ADR 0028).
+ * One question's prompt and its shared reading, if it has one, as the documents stand now, which is
+ * the editor's stored text with every edit after its snapshot applied (ADR 0028).
  */
 export const PromptView = Schema.Struct({
   prompt: Schema.String,
+  reading: Schema.NullOr(Schema.String),
 });
 
 /**

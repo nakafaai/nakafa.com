@@ -16,7 +16,7 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Effect, Option } from "effect";
 
 /**
- * The prompt of one question of the caller's paper, as the document stands now: the editor's
+ * The prompt of one question of the caller's paper, with its shared reading, as each document stands now: the editor's
  * snapshot with every step after it applied. The steps come as the editor's open reads them,
  * with `take` up to the head, which a fold keeps within one read and one batch; a page would
  * replay its first end in the student's subscription and fail once a fold moves the snapshot.
@@ -47,7 +47,11 @@ export const prompt = Effect.fn("exams.sittings.prompt")(function* (args: {
         Effect.fail(toSittingError(refusal))
       )
     );
-  return { prompt: yield* currentPrompt(live.question.prompt) };
+  const { reading } = live.question;
+  return {
+    prompt: yield* currentPrompt(live.question.prompt),
+    reading: reading === undefined ? null : yield* currentPrompt(reading),
+  };
 });
 
 /**

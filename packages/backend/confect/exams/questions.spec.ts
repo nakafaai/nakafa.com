@@ -19,6 +19,7 @@ import {
   QuestionPoints,
   QuestionTemplate,
   QuestionView,
+  ReadingSource,
   TemplateLabels,
 } from "@repo/backend/confect/exams/question";
 import { ScoringKind } from "@repo/backend/confect/exams/scoring";
@@ -113,6 +114,19 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicMutation({
+      name: "reading",
+      args: () => ({
+        examId: Id("exams"),
+        questionId: Id("examQuestions"),
+        slug: TenantSlug,
+        source: ReadingSource,
+      }),
+      returns: () => QuestionView,
+      error: () => Schema.Union([AccessDenied, ExamFrozen]),
+    }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
       name: "scoring",
       args: () => ({
         examId: Id("exams"),
@@ -121,8 +135,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => QuestionView,
-      error: () =>
-        Schema.Union([AccessDenied, ExamFrozen, ScoringDoesNotFit]),
+      error: () => Schema.Union([AccessDenied, ExamFrozen, ScoringDoesNotFit]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(
