@@ -1,16 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import {
-  appLocaleValidator,
-  releasePageArgs,
-  releasePageValidator,
-} from "@repo/backend/confect/contentRelease/spec";
+import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 
-const programPageValidator = Schema.Struct({
-  ...releasePageValidator(Schema.String).fields,
-  snapshotId: Schema.Union([Schema.String, Schema.Null]),
-});
 const programCatalogValidator = Schema.Struct({
   activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
@@ -106,14 +98,6 @@ export default GroupSpec.make()
         publicPath: Schema.String,
       }),
       returns: () => programContextValidator,
-      error: () => ReleaseError,
-    })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "page",
-      args: () => releasePageArgs,
-      returns: () => programPageValidator,
       error: () => ReleaseError,
     })
   )
