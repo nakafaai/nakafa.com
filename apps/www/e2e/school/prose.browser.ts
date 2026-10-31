@@ -1,7 +1,13 @@
-import { type Browser, expect, type Locator, test } from "@playwright/test";
+import {
+  type Browser,
+  expect,
+  type Locator,
+  type Page,
+  test,
+} from "@playwright/test";
 import { Array as Arr, Effect, Record as Rec } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
-import { answerMessage, learnerMessage } from "@/e2e/support/prose";
+import { runFirstSection } from "@/e2e/support/player";
 import {
   createSchool,
   hostAddress,
@@ -9,7 +15,6 @@ import {
   seedSitting,
   signInOwner,
 } from "@/e2e/support/school";
-import { drawnRow, openServedChat } from "@/e2e/support/serve";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -37,62 +42,52 @@ const LOOK = [
 
 /**
  * Every kind the fixture holds once, by its name in the report, and where each surface draws it: a
- * lesson's article (the published MDX path), a Markdown answer (the path a try-out's text and Nina's
- * answers share), and an exam document (which the exam editor and the student's sitting share). A
- * link is read straight inside a paragraph, since a link inside a marked phrase takes its colour.
+ * lesson's article and a try-out question, which draw their documents with the same parts, and an exam
+ * document, which the exam editor and the student's sitting share. A link is read straight inside a
+ * paragraph, since a link inside a marked phrase takes its colour.
  */
 const KINDS: Readonly<
-  Record<string, Readonly<Record<"document" | "lesson" | "markdown", string>>>
+  Record<string, Readonly<Record<"document" | "lesson", string>>>
 > = {
   bold: {
     document: "p strong",
     lesson: "p strong",
-    markdown: '[data-nakafa="paragraph"] [data-nakafa="bold"]',
   },
   cell: {
     document: "td",
     lesson: "td",
-    markdown: '[data-nakafa="table-cell"]',
   },
   code: {
     document: "p code",
     lesson: "p code",
-    markdown: '[data-nakafa="paragraph"] code',
   },
   heading: {
     document: "h2",
     lesson: "h2",
-    markdown: '[data-nakafa="heading-2"]',
   },
   link: {
     document: "p > a",
     lesson: "p > a[href]",
-    markdown: '[data-nakafa="paragraph"] > a[data-nakafa="anchor"]',
   },
   listItem: {
     document: "ul > li",
     lesson: "ul > li",
-    markdown: 'ul > [data-nakafa="list-item"]',
   },
   paragraph: {
     document: "p:not(li p, td p, th p, blockquote p)",
     lesson: "p:not(li p, td p, th p, blockquote p)",
-    markdown: '[data-nakafa="paragraph"]:not(li *, td *, th *, blockquote *)',
   },
   quote: {
     document: "blockquote",
     lesson: "blockquote",
-    markdown: '[data-nakafa="quote"]',
   },
   tableFrame: {
     document: ".tableWrapper",
     lesson: '[data-slot="table-container"]',
-    markdown: '[data-slot="table-container"]',
   },
   tableHead: {
     document: "th",
     lesson: "th",
-    markdown: '[data-nakafa="table-head"]',
   },
 };
 
@@ -107,32 +102,10 @@ const LESSONS = [
   pinnedRoutes.cabinet.en,
 ];
 
-/** The prose question's prompt as Markdown: the same blocks and marks as the seed's exam document. */
-const MARKDOWN = Arr.join(
-  [
-    "## Soal ketiga",
-    "",
-    "Bacalah **kata penting**, buka [tautan](https://nakafa.com), tulis `x + 1`, lalu baca.",
-    "",
-    "- Butir pertama",
-    "- Butir kedua",
-    "",
-    "1. Langkah pertama",
-    "2. Langkah kedua",
-    "",
-    "> Kutipan yang dibaca.",
-    "",
-    "| Zat | Titik didih |",
-    "| --- | --- |",
-    "| Air | 100 °C |",
-  ],
-  "\n"
-);
-
 /**
  * The look of the first element the selector finds inside `root`, or nothing when it finds none. A
- * heading whose words sit in one span of their own, as a lesson's do, is read at that span, where
- * its colour and its rule are.
+ * heading is read at the element that holds its words, where its colour and its rule are: a lesson's
+ * heading wraps them in its link and a span, and an exam document's holds them itself.
  */
 async function lookIn(root: Locator, selector: string) {
   const element = root.locator(selector).first();
@@ -142,9 +115,18 @@ async function lookIn(root: Locator, selector: string) {
   await element.scrollIntoViewIfNeeded();
   return element.evaluate(
     (node, names) => {
-      const only = node.children.length === 1 ? node.children[0] : null;
-      const target =
-        node.matches("h1, h2, h3") && only?.tagName === "SPAN" ? only : node;
+      let target: Element = node;
+      while (
+        node.matches("h1, h2, h3") &&
+        target.children.length === 1 &&
+        Array.from(target.childNodes).every(
+          (child) =>
+            child.nodeType !== Node.TEXT_NODE ||
+            (child.textContent ?? "").trim() === ""
+        )
+      ) {
+        target = target.children[0] ?? target;
+      }
       const style = getComputedStyle(target);
       return Object.fromEntries(
         names.map((name) => [name, style.getPropertyValue(name)])
@@ -155,10 +137,7 @@ async function lookIn(root: Locator, selector: string) {
 }
 
 /** The look of every kind inside `root`, by the selector that surface uses. */
-async function looksIn(
-  root: Locator,
-  side: "document" | "lesson" | "markdown"
-) {
+async function looksIn(root: Locator, side: "document" | "lesson") {
   const looks: Record<string, Record<string, string>> = {};
   for (const [name, kind] of Rec.toEntries(KINDS)) {
     const look = await lookIn(root, kind[side]);
@@ -234,63 +213,91 @@ function differences(
   );
 }
 
+/** The look of each kind in the lessons: the first article that holds a kind gives its look. */
+async function lessonLooks(page: Page) {
+  const lesson: Record<string, Record<string, string>> = {};
+  for (const path of LESSONS) {
+    await page.goto(path);
+    const article = page.locator("main article").first();
+    await expect(article).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    for (const [name, look] of Rec.toEntries(
+      await looksIn(article, "lesson")
+    )) {
+      lesson[name] ??= look;
+    }
+  }
+  return lesson;
+}
+
+/** How one surface draws one kind unlike the lesson: the properties that differ, or that it is missing. */
+function diffOf(
+  surface: string,
+  reference: Record<string, string>,
+  look: Record<string, string> | undefined
+) {
+  if (look !== undefined) {
+    return differences(reference, look);
+  }
+  return surface === "tryout" ? [] : ["missing"];
+}
+
+/**
+ * Each kind a surface draws unlike the lesson, by surface, with the properties that differ. The exam
+ * fixture holds every kind, so a kind it lacks is reported missing; a try-out question holds only the
+ * kinds its content does, so a kind it lacks is not compared.
+ */
+function reportOf(
+  lesson: Record<string, Record<string, string>>,
+  surfaces: Record<string, Record<string, Record<string, string>>>
+) {
+  const report: Record<string, Record<string, readonly string[]>> = {};
+  for (const [name, reference] of Rec.toEntries(lesson)) {
+    for (const [surface, looks] of Rec.toEntries(surfaces)) {
+      const diff = diffOf(surface, reference, looks[name]);
+      if (diff.length > 0) {
+        report[name] = { ...report[name], [surface]: diff };
+      }
+    }
+  }
+  return report;
+}
+
 test.describe("Content looks alike on every surface", () => {
   test.use({ viewport: { height: 900, width: 1280 } });
 
-  test("draws each block and mark of a lesson the same in a Markdown answer, the exam editor and the sitting", async ({
+  test("draws each block and mark of a lesson the same in a try-out question, the exam editor and the sitting", async ({
     baseURL,
     browser,
     page,
   }) => {
     test.setTimeout(6 * 60_000);
 
-    // The lesson: the first article that holds each kind gives its look.
-    const lesson: Record<string, Record<string, string>> = {};
-    for (const path of LESSONS) {
-      await page.goto(path);
-      const article = page.locator("main article").first();
-      await expect(article).toBeVisible({
-        timeout: readinessTimeoutMilliseconds,
-      });
-      for (const [name, look] of Rec.toEntries(
-        await looksIn(article, "lesson")
-      )) {
-        lesson[name] ??= look;
-      }
-    }
+    const lesson = await lessonLooks(page);
 
-    // A Markdown answer of the same blocks and marks.
-    const question = learnerMessage({ order: 1, text: "Pertanyaan 1" });
-    const answer = answerMessage({ markdown: MARKDOWN, order: 1 });
-    await Effect.runPromise(
-      openServedChat(page, baseURL ?? "", [question, answer])
+    // A try-out question: the documents of the first section, its readings and its prompts, which hold
+    // the kinds the acceptance content gives them.
+    await Effect.runPromise(runFirstSection(page, false, baseURL ?? ""));
+    const documents = page.locator(
+      'section[aria-label="Question"], section[aria-label="Reading"]'
     );
-    // An answer is drawn in its row, not in a bubble as a question is, and only once the row is in sight.
-    const row = await drawnRow(page, answer);
-    await expect(row).toContainText("Soal ketiga", {
+    await expect(documents.first()).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
-    const markdown = await looksIn(row, "markdown");
+    const tryout = await looksIn(documents, "lesson");
+    expect(
+      tryout.paragraph,
+      "a try-out question draws paragraphs"
+    ).toBeDefined();
 
     const exam = await documentLooks(browser, baseURL);
-    const surfaces = { markdown, ...exam };
+    const surfaces = { tryout, ...exam };
 
-    // Every surface draws each kind it holds with the lesson's look.
-    const report: Record<string, Record<string, readonly string[]>> = {};
-    for (const [name, reference] of Rec.toEntries(lesson)) {
-      for (const [surface, looks] of Rec.toEntries(surfaces)) {
-        const look = looks[name];
-        const missing = look === undefined;
-        const diff = missing ? ["missing"] : differences(reference, look);
-        if (diff.length > 0) {
-          report[name] = { ...report[name], [surface]: diff };
-        }
-      }
-    }
     // The report names each kind that differs, each surface where it does, and each property with
     // the lesson's value and that surface's; a kind no lesson holds is not compared.
     expect(
-      report,
+      reportOf(lesson, surfaces),
       `the lessons hold ${Arr.join(Rec.keys(lesson), ", ")}`
     ).toEqual({});
   });
