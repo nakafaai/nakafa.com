@@ -254,3 +254,11 @@ export const finishInputValidator = Schema.Struct({
 export const finishResultValidator = Schema.Struct({
   recorded: Schema.Boolean,
 });
+
+/** A question, the language of the learner, how many sections to return, and the kind of document to search. */
+export const searchInputValidator = Schema.Struct({
+  limit: Schema.optionalKey(Schema.Finite),
+  locale: localeValidator,
+  query: Schema.String,
+  section: Schema.optionalKey(nakafaSectionValidator),
+});
