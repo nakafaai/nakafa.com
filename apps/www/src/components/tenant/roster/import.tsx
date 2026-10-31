@@ -168,7 +168,13 @@ function RosterImportContent() {
   );
 }
 
-/** The import into one unit's active period, or the state of a unit that has none. */
+/**
+ * The import into one unit's active period. The header holds the same actions from the first paint: until a file is
+ * read the unit choice, Export and Import, which wait disabled while the period is read and stay disabled for a unit
+ * with no active period, and the body says what to do; once a file is read the header shows the search and status
+ * filter of the preview with Cancel and Import students, and the preview is the body. The rows go to the server in
+ * batches of `IMPORT_BATCH`, each one transaction, so a retry after a failed batch adds no duplicate.
+ */
 function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
   const t = useTranslations("SchoolRoster");
   const { slug } = useTenant();
@@ -180,43 +186,10 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
   if (QueryResult.isFailure(active)) {
     throw active.error;
   }
-  const periodId = QueryResult.isSuccess(active) ? active.value : undefined;
-
-  if (periodId === undefined) {
-    return (
-      <SettingsTablePage actions={<RosterUnitChoice />}>
-        {null}
-      </SettingsTablePage>
-    );
-  }
-  if (periodId === null) {
-    return (
-      <SettingsTablePage actions={<RosterUnitChoice />}>
-        <TableEmpty
-          act="pointing"
-          description={t("no-period-description")}
-          title={t("no-period")}
-        />
-      </SettingsTablePage>
-    );
-  }
-  return <RosterImportOfPeriod periodId={periodId} />;
-}
-
-/**
- * The import into one active period. Until a file is read the header shows the unit choice,
- * Export and Import, and the body says what to do; once a file is read the header shows the
- * search and status filter of the preview with Cancel and Import students, and the preview is
- * the body. The rows go to the server in batches of `IMPORT_BATCH`, each one transaction, so a
- * retry after a failed batch adds no duplicate.
- */
-function RosterImportOfPeriod({
-  periodId,
-}: {
-  periodId: GenericId.GenericId<"tenantPeriods">;
-}) {
-  const t = useTranslations("SchoolRoster");
-  const { slug } = useTenant();
+  // The period the import fills: none while it is read or when the unit has no active period.
+  const period = QueryResult.isSuccess(active)
+    ? Option.fromNullOr(active.value)
+    : Option.none();
   const apply = useMutation(roster.imports.apply);
   const exportLines = useAction(roster.exports.lines);
   const input = useRef<HTMLInputElement>(null);
@@ -246,7 +219,10 @@ function RosterImportOfPeriod({
     });
 
   // The batches go one after another and stop at the first refusal, which the save reports.
-  const applyBatches = (rows: readonly (typeof ReadRow.Type)[]) =>
+  const applyBatches = (
+    periodId: GenericId.GenericId<"tenantPeriods">,
+    rows: readonly (typeof ReadRow.Type)[]
+  ) =>
     Effect.runPromise(
       Effect.result(
         Effect.forEach(
@@ -260,10 +236,13 @@ function RosterImportOfPeriod({
       )
     );
 
-  const submit = (rows: readonly (typeof ReadRow.Type)[]) =>
+  const submit = (
+    periodId: GenericId.GenericId<"tenantPeriods">,
+    rows: readonly (typeof ReadRow.Type)[]
+  ) =>
     startApplying(() =>
       saveSchool(
-        () => applyBatches(rows),
+        () => applyBatches(periodId, rows),
         SOURCE,
         () => {
           toast.success({ title: "school-roster-imported.title" });
@@ -272,7 +251,7 @@ function RosterImportOfPeriod({
       )
     );
 
-  const download = () =>
+  const download = (periodId: GenericId.GenericId<"tenantPeriods">) =>
     startExporting(() =>
       saveSchool(
         () => exportLines({ periodId, slug }),
@@ -316,7 +295,11 @@ function RosterImportOfPeriod({
               disabled={
                 isApplying || Arr.isReadonlyArrayEmpty(studentsOf(preview))
               }
-              onClick={() => submit(preview)}
+              onClick={() => {
+                if (Option.isSome(period)) {
+                  submit(period.value, preview);
+                }
+              }}
               type="button"
             >
               <Spinner isLoading={isApplying} />
@@ -349,8 +332,12 @@ function RosterImportOfPeriod({
             type="file"
           />
           <Button
-            disabled={isExporting}
-            onClick={download}
+            disabled={isExporting || Option.isNone(period)}
+            onClick={() => {
+              if (Option.isSome(period)) {
+                download(period.value);
+              }
+            }}
             type="button"
             variant="outline"
           >
@@ -363,7 +350,7 @@ function RosterImportOfPeriod({
           </Button>
           <RosterGradesExport periodId={periodId} />
           <Button
-            disabled={isReading}
+            disabled={isReading || Option.isNone(period)}
             onClick={() => input.current?.click()}
             type="button"
           >
@@ -377,14 +364,43 @@ function RosterImportOfPeriod({
         </>
       }
     >
-      <TableEmpty
-        act={problem === undefined ? "reading" : "pointing"}
-        description={t(
-          problem === undefined ? "empty-description" : `file-${problem}`
-        )}
-        title={t(problem === undefined ? "empty" : "file-refused")}
-      />
+      {QueryResult.isSuccess(active) ? (
+        <RosterImportEmpty period={period} problem={problem} />
+      ) : null}
     </SettingsTablePage>
+  );
+}
+
+/**
+ * The body of the import before a file is read: what to do, the reason a file was refused, or, for a unit with no
+ * active period, that the period comes first.
+ */
+function RosterImportEmpty({
+  period,
+  problem,
+}: {
+  period: Option.Option<GenericId.GenericId<"tenantPeriods">>;
+  problem: FileProblem | undefined;
+}) {
+  const t = useTranslations("SchoolRoster");
+
+  if (Option.isNone(period)) {
+    return (
+      <TableEmpty
+        act="pointing"
+        description={t("no-period-description")}
+        title={t("no-period")}
+      />
+    );
+  }
+  return (
+    <TableEmpty
+      act={problem === undefined ? "reading" : "pointing"}
+      description={t(
+        problem === undefined ? "empty-description" : `file-${problem}`
+      )}
+      title={t(problem === undefined ? "empty" : "file-refused")}
+    />
   );
 }
 

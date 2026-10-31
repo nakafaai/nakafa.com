@@ -82,6 +82,46 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-card-role.description",
     title: "school-refusal-card-role.title",
   },
+  RoomOpened: {
+    description: "school-refusal-room-opened.description",
+    title: "school-refusal-room-opened.title",
+  },
+  ScheduleInvalid: {
+    description: "school-refusal-schedule-invalid.description",
+    title: "school-refusal-schedule-invalid.title",
+  },
+  ClassAddressEmpty: {
+    description: "school-refusal-class-address-empty.description",
+    title: "school-refusal-class-address-empty.title",
+  },
+  ClassAmbiguous: {
+    description: "school-refusal-class-ambiguous.description",
+    title: "school-refusal-class-ambiguous.title",
+  },
+  ClassLimit: {
+    description: "school-refusal-class-limit.description",
+    title: "school-refusal-class-limit.title",
+  },
+  ClassNameTaken: {
+    description: "school-refusal-class-name-taken.description",
+    title: "school-refusal-class-name-taken.title",
+  },
+  ClassSubjectNotAllowed: {
+    description: "school-refusal-class-subject-not-allowed.description",
+    title: "school-refusal-class-subject-not-allowed.title",
+  },
+  ClassSubjectRequired: {
+    description: "school-refusal-class-subject-required.description",
+    title: "school-refusal-class-subject-required.title",
+  },
+  ClassSubjectTaken: {
+    description: "school-refusal-class-subject-taken.description",
+    title: "school-refusal-class-subject-taken.title",
+  },
+  SchemeNotLater: {
+    description: "school-refusal-scheme-not-later.description",
+    title: "school-refusal-scheme-not-later.title",
+  },
   CohortHasHomeroom: {
     description: "school-refusal-cohort-has-homeroom.description",
     title: "school-refusal-cohort-has-homeroom.title",
@@ -141,6 +181,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
   NpsnTaken: {
     description: "school-refusal-npsn-taken.description",
     title: "school-refusal-npsn-taken.title",
+  },
+  PersonClassLimit: {
+    description: "school-refusal-person-class-limit.description",
+    title: "school-refusal-person-class-limit.title",
   },
   PeriodActive: {
     description: "school-refusal-period-active.description",

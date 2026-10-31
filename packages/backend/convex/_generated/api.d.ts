@@ -540,6 +540,20 @@ export declare const api: {
           subject?: string;
         }
       >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
     };
     forum: {
       channels: {
@@ -5984,7 +5998,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-            canCancel: boolean;
+            canChange: boolean;
             closesAt: number;
             group:
               | { kind: "unit"; unitId: Id<"tenantUnits"> }
@@ -6665,6 +6679,18 @@ export declare const api: {
         },
         { prompt: string }
       >;
+      reschedule: FunctionReference<
+        "mutation",
+        "public",
+        {
+          closesAt: number;
+          opensAt: number;
+          room: string;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
       signal: FunctionReference<
         "mutation",
         "public",
@@ -7080,6 +7106,7 @@ export declare const api: {
             | "grade.enter"
             | "grade.list"
             | "scheme.manage"
+            | "scheme.view"
             | "report.list"
             | "report.write"
             | "report.open"
@@ -7199,6 +7226,7 @@ export declare const api: {
               | "grade.enter"
               | "grade.list"
               | "scheme.manage"
+              | "scheme.view"
               | "report.list"
               | "report.write"
               | "report.open"
@@ -7295,6 +7323,7 @@ export declare const api: {
               | { type: "class.created" }
               | { type: "class.renamed" }
               | { type: "class.archived" }
+              | { type: "class.restored" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
               | { message: Id<"classroomMessages">; type: "message.hidden" }
@@ -7535,6 +7564,7 @@ export declare const api: {
               | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
               | { type: "sitting.cancel" }
+              | { type: "sitting.reschedule" }
               | { person: Id<"tenantPeople">; type: "sitting.join" }
               | {
                   contract: {
@@ -8937,6 +8967,33 @@ export declare const api: {
       >;
     };
     schemes: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            bands: Array<{ label: string; minimum: number }>;
+            effectiveFrom: number;
+            id: Id<"gradingSchemes">;
+            kktp: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
       store: FunctionReference<
         "mutation",
         "public",
