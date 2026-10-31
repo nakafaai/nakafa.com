@@ -278,20 +278,28 @@ export function firstSettingsTarget(
   );
 }
 
+/** The address of the settings' root, with or without its closing slash. */
+const SETTINGS_ROOT = /\/settings\/?$/u;
+
 /**
- * Whether a viewer who holds the actions in `reach` opens the settings page of the route, by the
- * section that owns it: a section's own page and the pages below it, such as one cohort.
+ * Whether a viewer who holds the actions in `reach` opens the settings address, by the section
+ * that owns it: a section's own page and the pages below it, such as one cohort. The root belongs to
+ * the viewer's first section, so it needs any section at all.
  */
-export function opensSettingsRoute(
+export function opensSettingsPath(
   slug: TenantSlug,
   reach: readonly string[],
-  routeId: string
+  pathname: string
 ) {
-  return Arr.some(openSettingsGroups(slug, reach), (group) =>
-    Arr.some(group.sections, (section) =>
-      Str.startsWith(`/school/$slug/settings/${section.labelKey}`)(routeId)
-    )
+  const sections = Arr.flatMap(
+    openSettingsGroups(slug, reach),
+    (group) => group.sections
   );
+  return SETTINGS_ROOT.test(pathname)
+    ? Arr.isReadonlyArrayNonEmpty(sections)
+    : Arr.some(sections, (section) =>
+        Str.includes(`/settings/${section.labelKey}`)(pathname)
+      );
 }
 
 /** One group of the school settings, as `openSettingsGroups` returns it. */

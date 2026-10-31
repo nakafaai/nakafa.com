@@ -5,7 +5,7 @@ import {
   firstSettingsTarget,
   getSchoolSettingsSection,
   openSettingsGroups,
-  opensSettingsRoute,
+  opensSettingsPath,
   schoolSettingsGroups,
   schoolSettingsSections,
 } from "@/lib/settings/school";
@@ -159,12 +159,14 @@ describe("school settings routes", () => {
   });
 
   it("opens a section's own page and the pages below it, and no section the viewer does not reach", () => {
-    expect(
-      opensSettingsRoute(slug, DEPUTY, "/school/$slug/settings/cohorts/$cohort")
-    ).toBe(true);
-    expect(
-      opensSettingsRoute(slug, DEPUTY, "/school/$slug/settings/roles")
-    ).toBe(false);
+    expect(opensSettingsPath(slug, DEPUTY, "/settings/cohorts/abc")).toBe(true);
+    expect(opensSettingsPath(slug, DEPUTY, "/settings/roles")).toBe(false);
+  });
+
+  it("opens the settings root for a viewer with any section, on either spelling of it", () => {
+    expect(opensSettingsPath(slug, DEPUTY, "/settings")).toBe(true);
+    expect(opensSettingsPath(slug, DEPUTY, "/settings/")).toBe(true);
+    expect(opensSettingsPath(slug, [], "/settings")).toBe(false);
   });
 
   it("links a group to the first section the viewer opens in it", () => {
