@@ -45,7 +45,7 @@ test("an admin links a parent, who signs in with the email code, opens the child
 
   const parent = await browser.newContext();
   const home = await parent.newPage();
-  await home.goto(address("/orang-tua"));
+  await home.goto(address("/parents"));
   const send = home.getByRole("button", { name: "Send code" });
   await waitUntilTakenOver(send);
   await home.getByLabel("Parent email").fill(email);

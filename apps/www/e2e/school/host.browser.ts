@@ -3,7 +3,6 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { createSchool, hostAddress } from "@/e2e/support/school";
-import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** A school address that no school holds, so the school host answers not found. */
 const UNKNOWN_SCHOOL = "zz-unknown";
@@ -65,9 +64,9 @@ test("the not-found page of an unknown school links to Nakafa, because the schoo
   page,
   baseURL,
 }) => {
-  // The Worker answers the unknown school with the app's not-found page at the
-  // school's own address, and the browser takes over the page that the server
-  // sent: a page drawn for another address would fail hydration (React #418).
+  // The Worker answers the unknown school with the release's static not-found
+  // page made for a school host: no Worker renders it and no app script starts,
+  // so the page that the first HTML holds is the page the visitor keeps.
   await Effect.runPromise(
     withObservedPageErrors(
       page,
@@ -76,10 +75,9 @@ test("the not-found page of an unknown school links to Nakafa, because the schoo
           hostAddress(baseURL, `${UNKNOWN_SCHOOL}.localhost`, "/")
         );
         expect(response?.status()).toBe(404);
-        // The first HTML holds the page, so nothing paints blank before React.
+        // The first HTML holds the page, so nothing paints blank.
         expect(await response?.text()).toContain("find this page");
         const home = page.getByRole("link", { exact: true, name: "Go home" });
-        await waitUntilTakenOver(home);
         await expect(home).toHaveAttribute(
           "href",
           new URL("/en", SITE_ORIGIN).href

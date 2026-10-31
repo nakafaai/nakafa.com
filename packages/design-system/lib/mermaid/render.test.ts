@@ -12,6 +12,23 @@ const render = vi.fn<MermaidRenderer["render"]>();
 let defaultConfig: MermaidConfig = {};
 const SVG = { svg: '<svg id="diagram"/>', diagramType: "flowchart" };
 
+/** Runs an effect on a runtime without `Object.groupBy`, as Safari before 17.4 is. */
+const withoutGroupBy = <A, E>(effect: Effect.Effect<A, E>) =>
+  Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const native = Reflect.getOwnPropertyDescriptor(Object, "groupBy");
+      Reflect.deleteProperty(Object, "groupBy");
+      return native;
+    }),
+    () => effect,
+    (native) =>
+      Effect.sync(() => {
+        if (native !== undefined) {
+          Reflect.defineProperty(Object, "groupBy", native);
+        }
+      })
+  );
+
 beforeEach(() => {
   vi.resetModules();
   initialize.mockReset();
@@ -47,6 +64,10 @@ describe("strict Mermaid rendering", () => {
         expect(initialize).toHaveBeenCalledExactlyOnceWith({
           theme: "dark",
           fontFamily: "Nakafa",
+          layout: "dagre",
+          look: "classic",
+          flowchart: { wrappingWidth: 200, minNodeWidth: 0 },
+          state: { minNodeWidth: 0 },
           securityLevel: "strict",
           startOnLoad: false,
           suppressErrorRendering: true,
@@ -105,6 +126,38 @@ describe("strict Mermaid rendering", () => {
           yield* Effect.flip(renderMermaid("diagram", "invalid", {}))
         ).toEqual(new MermaidRenderError({ cause, operation: "render" }));
       })
+  );
+
+  it.effect(
+    "gives Mermaid an Object.groupBy before it loads where the browser lacks one",
+    () =>
+      Effect.gen(function* () {
+        let grouped: unknown;
+        initialize.mockImplementation(() => {
+          const groupBy = Reflect.get(Object, "groupBy");
+          grouped =
+            typeof groupBy === "function"
+              ? groupBy(["a", "bb", "cc", 7], (item: unknown, index: number) =>
+                  index < 2 ? "first" : typeof item
+                )
+              : undefined;
+        });
+        yield* withoutGroupBy(renderMermaid("diagram", "graph TD; A-->B", {}));
+        expect(grouped).toEqual({
+          first: ["a", "bb"],
+          number: [7],
+          string: ["cc"],
+        });
+        expect(Object.getPrototypeOf(grouped)).toBeNull();
+      })
+  );
+
+  it.effect("keeps a native Object.groupBy", () =>
+    Effect.gen(function* () {
+      const native = Reflect.get(Object, "groupBy");
+      yield* renderMermaid("diagram", "graph TD; A-->B", {});
+      expect(Reflect.get(Object, "groupBy")).toBe(native);
+    })
   );
 
   it.effect("reports a failed lazy import as initialization failure", () =>

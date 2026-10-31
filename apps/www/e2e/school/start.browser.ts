@@ -94,6 +94,8 @@ test("a new account opens its own school in five questions and lands in it as it
     }))
   );
   await page.reload();
+  // The new Owner lands on the exams, the Owner's main page, with its one action.
+  await page.waitForURL(/\/exams$/u);
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
   // The tab names the school.
   await expect(page).toHaveTitle(new RegExp(name));

@@ -364,14 +364,14 @@ describe("decisions before the router", () => {
   );
 
   it.effect(
-    "answers a refused school page with the static shell before its migration, and a school file with the static page before any read",
+    "answers a refused school page with the static not-found page for a school host before its migration, and a school file with the static page before any read",
     () =>
       Effect.gen(function* () {
         refusal.read.mockReturnValue(Effect.succeedSome("id"));
         migration.read.mockReturnValue(
           Effect.succeed({ destination: "/en/@nabil/chat", status: 308 })
         );
-        assets.fetch.mockResolvedValue(new Response("<html>shell</html>"));
+        assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
         const handle = router();
 
         const response = yield* answerRequest(
@@ -382,8 +382,11 @@ describe("decisions before the router", () => {
         );
 
         expect(response.status).toBe(404);
+        expect(assets.fetch.mock.lastCall?.[0].url).toBe(
+          "https://harapan.nakafa.com/_notfound/school/id"
+        );
         expect(yield* Effect.promise(() => response.text())).toBe(
-          "<html>shell</html>"
+          "<h1>Not found</h1>"
         );
         expect(handle).not.toHaveBeenCalled();
         expect(migration.read).not.toHaveBeenCalled();

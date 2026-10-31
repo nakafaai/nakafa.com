@@ -11,6 +11,7 @@ import {
   startLink,
 } from "@repo/backend/test/guardians";
 import {
+  actedAt,
   journal,
   slugOf,
   TENANCY_NOW,
@@ -38,10 +39,11 @@ describe("guardians/links", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* asStaffSchool(fixture);
+        vi.setSystemTime(actedAt());
         const link = yield* startLink(fixture);
         expect(link).toMatchObject({
           email: IBU,
-          expiresAt: TENANCY_NOW + Duration.toMillis(LINK_TERM),
+          expiresAt: actedAt() + Duration.toMillis(LINK_TERM),
           guardian: { name: "Ibu Siti" },
           mismatches: 0,
           status: "pending",

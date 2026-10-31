@@ -25,7 +25,7 @@ export const PACKAGE_MANAGER = "bun@1.4.4";
  * not check out the repository cannot read the manifest, so it names the same
  * release and the workflow checks compare it with this value.
  */
-export const NODE_RUNTIME_VERSION = "24.22.2";
+export const NODE_RUNTIME_VERSION = "26.13.0";
 const CONTRACT_PACKAGE_VERSION = "1.0.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.5";
@@ -51,7 +51,7 @@ export const VITEST_COHORT_VERSION = "5.0.5";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
-  ai: "7.0.140",
+  ai: "7.0.157",
 } as const;
 /**
  * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
@@ -129,7 +129,7 @@ const TIPTAP_PACKAGES = Arr.dedupe(
 );
 
 /**
- * Seven transitive overrides in the root `package.json` hold a version for a reason
+ * Six transitive overrides in the root `package.json` hold a version for a reason
  * that no manifest states. `seroval` and `seroval-plugins` 1.7.3 are one copy each
  * for TanStack Start's serializer, its web plugins, and the prerender
  * (`apps/www/prerender.config.ts`): the TanStack packages declare `^1.6.7`, and Bun
@@ -145,13 +145,12 @@ const TIPTAP_PACKAGES = Arr.dedupe(
  * 4.17.21 that chevrotain 10.5.0 pins exactly, which GHSA-f23m-r3pf-42rh,
  * GHSA-r5fr-rjxr-66jc and GHSA-xxjr-mmjv-4gpg affect: Better Auth 1.6's `auth` reaches it
  * through @mrleebo/prisma-ast ^0.13.1, and `auth` 1.7 moves to prisma-ast ^0.16 on
- * chevrotain 12. KaTeX 0.19.1 is the one copy for mermaid 11.17.2 (^0.16.47) and
- * micromark-extension-math 3.1.0 (^0.16.0, its latest release) beside the design
- * system's own: every 0.16 release is affected by GHSA-238p-pmpm-9mq7, which 0.18.2
- * fixes. The other transitive versions come from their dependents' own ranges.
+ * chevrotain 12. KaTeX 0.19.1, the design system's own, replaces the ^0.16.0 that
+ * micromark-extension-math 3.1.0, its latest release, declares: every 0.16 release is
+ * affected by GHSA-238p-pmpm-9mq7, which 0.18.2 fixes. The other transitive versions
+ * come from their dependents' own ranges.
  */
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
-  { approved: "11.17.2", dependency: "mermaid", minimumDeclarations: 1 },
   {
     approved: "catalog:",
     dependency: "effect",
@@ -192,16 +191,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
   {
     approved: "catalog:",
-    dependency: "@convex-dev/agent",
-    minimumDeclarations: 1,
-  },
-  {
-    approved: "0.4.14",
-    declarationPaths: ["packages/backend/package.json"],
-    dependency: "@convex-dev/workpool",
-  },
-  {
-    approved: "catalog:",
     dependency: "@convex-dev/ai-sdk-provider",
     minimumDeclarations: 1,
   },
@@ -211,11 +200,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   { approved: "1.6.33", dependency: "auth", minimumDeclarations: 1 },
-  {
-    allowed: ["^0.0.62"],
-    dependency: "convex-test",
-    minimumDeclarations: 1,
-  },
   {
     approved: "0.12.6",
     dependency: "@convex-dev/better-auth",

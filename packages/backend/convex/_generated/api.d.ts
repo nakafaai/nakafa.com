@@ -8142,7 +8142,10 @@ export declare const api: {
               | "person.invited"
               | "forum.mentioned"
               | "announcement.posted"
-              | "assignment.published";
+              | "assignment.published"
+              | "exam.starting"
+              | "exam.reminder"
+              | "grade.released";
             createdAt: number;
             detail: {
               actor: string;
@@ -8153,6 +8156,14 @@ export declare const api: {
               messageId: Id<"classroomMessages"> | null;
               task: string | null;
             } | null;
+            exam: {
+              examTitle: string;
+              opensAt: number;
+              room: string;
+              sittingId: Id<"examSittings">;
+              student: string | null;
+            } | null;
+            grade: { className: string; student: string | null } | null;
             id: Id<"notifications">;
             readAt?: number;
             subject:
@@ -8197,7 +8208,10 @@ export declare const api: {
             | "person.invited"
             | "forum.mentioned"
             | "announcement.posted"
-            | "assignment.published";
+            | "assignment.published"
+            | "exam.starting"
+            | "exam.reminder"
+            | "grade.released";
           createdAt: number;
           detail: {
             actor: string;
@@ -8208,6 +8222,14 @@ export declare const api: {
             messageId: Id<"classroomMessages"> | null;
             task: string | null;
           } | null;
+          exam: {
+            examTitle: string;
+            opensAt: number;
+            room: string;
+            sittingId: Id<"examSittings">;
+            student: string | null;
+          } | null;
+          grade: { className: string; student: string | null } | null;
           id: Id<"notifications">;
           readAt?: number;
           subject:
@@ -17512,6 +17534,18 @@ export declare const internal: {
         "mutation",
         "internal",
         { cursor: string | null; personId: Id<"tenantPeople">; readAt: number },
+        null
+      >;
+    };
+    sittings: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: string | null;
+          notice: "examStart" | "examGuardianReminder";
+          sittingId: Id<"examSittings">;
+        },
         null
       >;
     };

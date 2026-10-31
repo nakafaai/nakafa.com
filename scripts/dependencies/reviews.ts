@@ -7,11 +7,6 @@ import { AI_SDK_COHORT } from "#scripts/dependencies/policy";
  */
 export const REGISTRY_REVIEWS = [
   [
-    "mermaid@latest",
-    "12.2.0",
-    "Mermaid 12 requires Safari 17.4 (recorded when this hold was made; not re-measured on 25 October 2026), while Nakafa keeps the Safari 16.4 floor that Vite 8.3.5 builds for by default (its baseline-widely-available target lists safari16.4). The hold holds while both are true.",
-  ],
-  [
     "effect@latest",
     "4.1.0",
     "Effect 4.1.0 is the latest release and is reviewed here, but the cohort stays on 4.0.5 (EFFECT_COHORT_VERSION). 4.1.0 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. Every published @nakafa/aksara-contracts (1.0.0, 1.0.1 and 2.0.0) peers effect 4.0.5 exactly, and its dist/hash/digest.js calls Crypto.make from effect when the module loads, so on 4.1 every contracts import fails. nakafa.com therefore moves to 4.1.0 in the change that adopts contracts 3.0.0, the release built on 4.1 (nakafaai/aksara#497), which follows the contracts 2.0 adoption (#1434, #1436); that change is #1524. Checked 30 October 2026.",
@@ -67,26 +62,11 @@ export const REGISTRY_REVIEWS = [
     "2.0.0",
     "2.0.0 replaces the question and try-out contracts with the assessment snapshot, and nakafa.com adopts it in the try-out engine train (#1434, #1436), so this repository stays on 1.0.0 until that train lands. 2.0.0 still peers effect 4.0.5 exactly, as 1.0.0 does.",
   ],
-  [
-    "convex-test@latest",
-    "0.0.66",
-    "convex-test 0.0.65 fails 115 backend tests in 52 files that pass on 0.0.62 (measured 25 October 2026 with the backend test suite on the merged tree). 0.0.63 to 0.0.66 pin a transaction's clock at or after its snapshot, enforce search candidate limits in paginated queries, fail fast on an unregistered component, allow one paginate() per component query, and support ctx.auth.signJwt in mutations; which of them the failures follow is not traced yet. The backend stays on the 0.0.62 range until it is, and the Agent and Workpool releases that paginate inside their components wait for it (re-checked 30 October 2026).",
-  ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "ai@latest",
-    "7.0.153",
-    "AI SDK packages move as one reviewed cohort. 7.0.140 stays: 7.0.141, 7.0.142, 7.0.147 and 7.0.152 each fail the backend typecheck with TS2590 in confect/nina (21 errors each, measured on 25 October 2026 with @convex-dev/agent 0.7.8), and 7.0.140 passes. 7.0.153 is the latest release and becomes eligible at 2026-10-25 17:57 UTC; re-test it then. Its release notes change the streamed input of OpenAI custom tools and the workflow telemetry context, and Nakafa uses neither.",
-  ],
-  [
-    "@convex-dev/agent@latest",
-    "0.7.9",
-    'The Agent component stays on 0.7.8 while convex-test stays on 0.0.62. 0.7.9 lists the component\'s files, threads, streams and users with one native ctx.db paginate() per query instead of the convex-helpers paginator. Convex runs one paginate() per component query, and convex-test supports it from 0.0.64 (get-convex/convex-test#163), but 0.0.62 refuses it ("paginate() is only supported in the app"): measured on 30 October 2026, 42 backend tests in 14 files fail on 0.7.9 with 0.0.62, among them the Agent file sweep, chat deletion, Nina sealing and privacy erasure. It lifts in the change that moves the backend to convex-test 0.0.64 or later, which first traces the 0.0.65 failures that the convex-test entry records.',
-  ],
-  [
-    "@convex-dev/workpool@latest",
-    "0.4.15",
-    "The Workpool component stays on 0.4.14 for the reason of the Agent entry: 0.4.15 reads its stats report (component/stats.js, run by the main loop) with a native paginate() inside the component, which convex-test 0.0.62 refuses, so 11 backend tests in 3 files that drive the Workflow component fail (privacy recovery, account deletion cleanup, content release proof). It lifts in the same change as the Agent hold.",
+    "7.0.158",
+    "AI SDK packages move as one reviewed cohort. 7.0.157 is the newest release past the one-day release age: @convex-dev/agent 0.7.9 carries the TS2590 fixes for 7.0.141 and later (convex/agent#414 and #424). 7.0.158 was published on 2026-10-30 at 15:38 UTC and becomes eligible a day later; its notes repair partial JSON and extend the experimental sandbox session, which Nakafa does not use.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
@@ -113,8 +93,16 @@ export const REGISTRY_REVIEWS = [
     "8.1.0",
     "Ultracite 8.1 moves with Biome 2.6, as the Biome entry describes: it renames the class sort rule, sorts the class lists of cva variants, turns on the newly stable Biome rules that match its Oxlint presets, and formats YAML and SCSS. Its ESLint, Oxlint, Oxfmt and Zed changes do not apply to this Biome setup.",
   ],
-  ["@types/node@24", "24.19.2", "Declarations remain on the Node 24 line."],
-  ["node@24", "24.22.2", "The repository supports the Node 24 runtime line."],
+  [
+    "@types/node@24",
+    "24.19.2",
+    "Declarations stay on the Node 24 line while Convex runs the backend's Node actions on node.nodeVersion 24 (packages/backend/convex.json), so the types never offer an API that runtime lacks. They move to 26 with that runtime, once a dev deployment runs it.",
+  ],
+  [
+    "node@26",
+    "26.13.0",
+    "Node 26 is the Active LTS line since 28 October 2026, and the tooling, CI and devEngines run it. Convex Node actions stay on 24 until a dev deployment proves 26.",
+  ],
   [
     "react-doctor@latest",
     "0.9.18",
