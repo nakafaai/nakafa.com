@@ -33,9 +33,10 @@ export interface TryoutSetOverviewProps {
 }
 
 /**
- * Renders a set page that offers visible nested sections. The section list
- * comes first and the attempt's countdown or score follows it, so the list a
- * pending page paints from the catalog never moves when the attempt arrives.
+ * Renders a set page that offers visible nested sections. A finished attempt's
+ * card comes first, so the page opens on the result and its history, and the
+ * running attempt's countdown and the section list follow. The server renders
+ * the learner's attempt with the page, so nothing moves after the first paint.
  */
 export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
   return (
@@ -60,13 +61,13 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
         />
       </TryoutSetPageHeader>
       <TryoutPageBody>
+        <TryoutSetResult value={value} />
         <TryoutSectionRows
           {...(value.actionAttempt === undefined
             ? {}
             : { attempt: value.actionAttempt })}
           sections={value.sectionRoutes}
         />
-        <TryoutSetResult value={value} />
       </TryoutPageBody>
     </TryoutPage>
   );
