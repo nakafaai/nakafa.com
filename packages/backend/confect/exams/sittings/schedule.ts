@@ -8,13 +8,21 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import { questionGap } from "@repo/backend/confect/exams/parts";
-import { questionView } from "@repo/backend/confect/exams/question";
+import {
+  promptEmpty,
+  questionGap,
+  type ScheduleGap,
+} from "@repo/backend/confect/exams/parts";
+import {
+  type QuestionView,
+  questionView,
+} from "@repo/backend/confect/exams/question";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import {
   QuestionsUnready,
   ScheduleInvalid,
 } from "@repo/backend/confect/exams/sittings/errors";
+import { currentPrompt } from "@repo/backend/confect/exams/sittings/prompt";
 import type {
   RoomName,
   SittingGroup,
@@ -82,25 +90,44 @@ const placeOf = Effect.fn("exams.sittings.schedule.place")(function* (
 });
 
 /**
- * Refuses a schedule while a question is not ready to be sat (`questionGap`): a part of it shows nothing, or
- * it needs a key and has none that fits. An essay needs no key, since the teacher scores it. The reply names
- * each such question by its order number, counted from one, with its gap (round 2, decision 10).
+ * The gap of one question, or none when it is ready: what `questionGap` reads in the question, and then its prompt,
+ * read last so a question with another gap reads no document. A prompt the server is still folding has been written.
+ */
+const gapOf = Effect.fn("exams.sittings.schedule.gap")(function* (
+  view: QuestionView
+) {
+  const gap = questionGap(view);
+  if (Option.isSome(gap)) {
+    return Option.some<ScheduleGap>(gap.value);
+  }
+  const empty = yield* currentPrompt(view.prompt).pipe(
+    Effect.map(promptEmpty),
+    Effect.catchTag("FoldPending", () => Effect.succeed(false))
+  );
+  return empty ? Option.some<ScheduleGap>("prompt") : Option.none();
+});
+
+/**
+ * Refuses a schedule while a question is not ready to be sat (`gapOf`): a part of it shows nothing, it needs a key
+ * and has none that fits, or its prompt has no words. An essay needs no key, since the teacher scores it. The reply
+ * names each such question by its order number, counted from one, with its gap (round 2, decision 10).
  */
 const questionsReady = Effect.fn("exams.sittings.schedule.ready")(function* (
   questions: readonly ExamQuestionsDoc["_id"][]
 ) {
   const reader = yield* DatabaseReader;
-  const views = yield* Effect.forEach(questions, (id) =>
+  const gaps = yield* Effect.forEach(questions, (id, index) =>
     reader
       .table("examQuestions")
       .get(id)
-      .pipe(Effect.orDie, Effect.flatMap(questionView))
+      .pipe(
+        Effect.orDie,
+        Effect.flatMap(questionView),
+        Effect.flatMap(gapOf),
+        Effect.map(Option.map((gap) => ({ gap, number: index + 1 })))
+      )
   );
-  const unready = Arr.getSomes(
-    Arr.map(views, (view, index) =>
-      Option.map(questionGap(view), (gap) => ({ gap, number: index + 1 }))
-    )
-  );
+  const unready = Arr.getSomes(gaps);
   if (unready.length > 0) {
     return yield* new QuestionsUnready({ questions: unready });
   }

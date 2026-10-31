@@ -5,10 +5,12 @@ import {
   labelEmpty,
   paperAnswers,
   partsEmpty,
+  promptEmpty,
   questionGap,
 } from "@repo/backend/confect/exams/parts";
 import {
   choiceAnswers,
+  EMPTY_PROMPT_TEXT,
   essayAnswers,
   matchAnswers,
   shortAnswers,
@@ -211,5 +213,24 @@ describe("exams/parts questionGap", () => {
     expect(
       questionGap({ answers: essayAnswers(), key: null, template: "essay" })
     ).toEqual(Option.none());
+  });
+});
+
+describe("exams/parts promptEmpty", () => {
+  it("reads a prompt of blank paragraphs as empty, and any words or a block as written", () => {
+    expect(promptEmpty(EMPTY_PROMPT_TEXT)).toBe(true);
+    expect(
+      promptEmpty(
+        '{"content":[{"content":[{"text":"  ","type":"text"}],"type":"paragraph"}],"type":"doc"}'
+      )
+    ).toBe(true);
+    expect(
+      promptEmpty(
+        '{"content":[{"content":[{"text":"Soal","type":"text"}],"type":"paragraph"}],"type":"doc"}'
+      )
+    ).toBe(false);
+    expect(promptEmpty('{"content":[{"type":"rule"}],"type":"doc"}')).toBe(
+      false
+    );
   });
 });

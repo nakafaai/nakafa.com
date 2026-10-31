@@ -356,6 +356,7 @@
     "starts-time-placeholder": "Jam",
     "length": "Durasi",
     "length-minutes": "{count} menit",
+    "schedule-prompt": "Tulis teks soal {number}.",
     "schedule-key-choice": "Tandai jawaban benar soal {number}.",
     "schedule-key-short": "Tambahkan jawaban yang diterima untuk soal {number}.",
     "schedule-key-numeric": "Tulis angka yang benar untuk soal {number}.",
