@@ -6,7 +6,7 @@ import { Array as Arr, Effect, Option } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
-const { store } = refs.public.records.schemes;
+const { list, store } = refs.public.records.schemes;
 
 /** A version of the school's scheme with two bands, from its effective time on. */
 const scheme = (effectiveFrom: number, kktp = 70) => ({
@@ -94,5 +94,33 @@ describe("records/schemes store", () => {
         denied("role"),
       ]);
     })
+  );
+});
+
+describe("records/schemes list", () => {
+  it.effect(
+    "lists the school's versions to its Admin, the newest first, and refuses a teacher",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const first = yield* storeAs(fixture, 1000, 70);
+        const second = yield* storeAs(fixture, 2000, 75);
+        const page = yield* fixture.as("admin").query(list, {
+          paginationOpts: { cursor: null, numItems: 10 },
+          slug: nf,
+        });
+        expect(Arr.map(page.page, (row) => [row.id, row.kktp])).toEqual([
+          [second.id, 75],
+          [first.id, 70],
+        ]);
+        const refused = yield* fixture
+          .as("teacher")
+          .query(list, {
+            paginationOpts: { cursor: null, numItems: 10 },
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("role"));
+      })
   );
 });

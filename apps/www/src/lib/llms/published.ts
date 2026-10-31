@@ -1,9 +1,6 @@
 import "@tanstack/react-start/server-only";
 
-import {
-  type ContentFamily,
-  ContentFamilySchema,
-} from "@nakafa/aksara-contracts/content";
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import {
   type GitCommitSha,
   GitCommitShaSchema,
@@ -28,23 +25,11 @@ import { readContentStore } from "@/lib/content/store/read";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader, getMdxDescription } from "@/lib/llms/format";
 
-type PublishedMarkdownFamily = Extract<
-  ContentFamily,
-  "article" | "material" | "page"
->;
-
-const PublishedMarkdownFamilySchema = Schema.Literals(
-  Arr.filter(
-    ContentFamilySchema.literals,
-    (family): family is PublishedMarkdownFamily => family !== "question"
-  )
-);
-
 /** Exact public content identity required for agent-facing markdown. */
 const PublishedMarkdownInputSchema = Schema.Struct({
   activeReleaseId: ReleaseIdSchema,
   appLocale: AppLocaleSchema,
-  family: PublishedMarkdownFamilySchema,
+  family: ContentFamilySchema,
   publicPath: Schema.String,
 });
 export type PublishedMarkdownInput = typeof PublishedMarkdownInputSchema.Type;

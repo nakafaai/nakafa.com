@@ -1,7 +1,7 @@
 "use client";
 
+import { linkVariants } from "@repo/design-system/lib/prose";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
-import { cn } from "cn";
 import { Data } from "effect";
 import { type ComponentType, createContext, use } from "react";
 
@@ -44,10 +44,7 @@ export function Anchor({
     return null;
   }
 
-  const anchorClassName = cn(
-    "h-auto p-0 font-normal text-primary underline underline-offset-4",
-    className
-  );
+  const anchorClassName = linkVariants({ className });
 
   if (isPagePath(href)) {
     if (PageLink === undefined) {

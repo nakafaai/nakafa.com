@@ -1,7 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { createTestPublication } from "@repo/backend/test/content/publication";
-import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Layer } from "effect";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { activateTestRelease } from "@/test/active";
@@ -92,16 +91,13 @@ describe("projected public html route rejection", () => {
         );
       })
   );
-  it.effect(
-    "accepts signed snapshot routes and rejects missing snapshot routes",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestPublication(fixture.source);
-        mockReadRuntimeContentReference.mockImplementation(context.query);
-        expect(yield* readRejection("/en/try-out/indonesia")).toBeNull();
-        expect(yield* readRejection("/en/try-out/missing-country")).toBe("en");
-      })
+  it.effect("accepts snapshot routes and rejects missing snapshot routes", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld();
+      mockReadRuntimeContentReference.mockImplementation(world.visitor.query);
+      expect(yield* readRejection("/en/try-out/indonesia-en")).toBeNull();
+      expect(yield* readRejection("/en/try-out/missing-country")).toBe("en");
+    })
   );
   it.effect("accepts concrete renderable routes", () =>
     Effect.gen(function* () {

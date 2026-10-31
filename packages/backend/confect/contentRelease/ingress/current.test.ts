@@ -3,14 +3,12 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { Ed25519SignatureSchema } from "@nakafa/aksara-contracts/ids";
 import {
   type SignedContentRelease,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import {
   readCurrentPublication,
   readRecovery,
@@ -27,16 +25,12 @@ import {
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,
 } from "@repo/backend/test/content/proof";
-import { makeRuntimeIngressFixture } from "@repo/backend/test/runtime/ingress";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Record as Rec, Schema } from "effect";
 
 const ReleaseJsonSchema = Schema.fromJsonString(SignedContentReleaseSchema);
 const RendererJsonSchema = Schema.fromJsonString(
   RendererManifestEnvelopeSchema
-);
-const RuntimeBundleJsonSchema = Schema.fromJsonString(
-  SignedTryoutRuntimeBundleSchema
 );
 
 /** Builds exact receipt counters for a signed query response under test. */
@@ -98,7 +92,6 @@ describe("authenticated current publication evidence", () => {
             phase: "verified",
           },
           recovery: null,
-          tryoutRuntimeBundleJson: null,
         })
       ).rejects.toMatchObject({
         code: "CONTENT_RELEASE_INTEGRITY",
@@ -106,73 +99,24 @@ describe("authenticated current publication evidence", () => {
       });
     }
   );
-  it.effect(
-    "authenticates the permanent runtime bundle with its active renderer",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* makeRuntimeIngressFixture();
-        const tryoutRuntimeBundleJson = yield* Schema.encodeEffect(
-          RuntimeBundleJsonSchema
-        )(fixture.bundle);
-        yield* Effect.promise(() =>
-          expect(
-            current({
-              active: completed(fixture.release),
-              candidate: null,
-              recovery: null,
-              tryoutRuntimeBundleJson,
-            })
-          ).resolves.toMatchObject({
-            tryoutRuntimeBundle: fixture.bundle,
-          })
-        );
-      })
-  );
-  it.effect("rejects a permanent bundle without an active publication", () =>
-    Effect.gen(function* () {
-      const fixture = yield* makeRuntimeIngressFixture();
-      const tryoutRuntimeBundleJson = yield* Schema.encodeEffect(
-        RuntimeBundleJsonSchema
-      )(fixture.bundle);
-      yield* Effect.promise(() =>
-        expect(
-          current({
-            active: null,
-            candidate: null,
-            recovery: null,
-            tryoutRuntimeBundleJson,
-          })
-        ).rejects.toMatchObject({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: expect.stringContaining("without an active release"),
+  itWithIngressFixture(
+    "authenticates the active release with its renderer and receipt",
+    async ({ ingressRelease }) => {
+      await expect(
+        current({
+          active: completed(ingressRelease),
+          candidate: null,
+          recovery: null,
         })
-      );
-    })
-  );
-  it.effect("rejects a permanent bundle whose signed payload was changed", () =>
-    Effect.gen(function* () {
-      const fixture = yield* makeRuntimeIngressFixture();
-      const tryoutRuntimeBundleJson = yield* Schema.encodeEffect(
-        RuntimeBundleJsonSchema
-      )({
-        ...fixture.bundle,
-        signature: Ed25519SignatureSchema.make(
-          `${fixture.bundle.signature.startsWith("A") ? "B" : "A"}${fixture.bundle.signature.slice(1)}`
-        ),
+      ).resolves.toMatchObject({
+        active: {
+          receipt: completed(ingressRelease).receipt,
+          release: ingressRelease,
+        },
+        candidate: null,
+        recovery: null,
       });
-      yield* Effect.promise(() =>
-        expect(
-          current({
-            active: completed(fixture.release),
-            candidate: null,
-            recovery: null,
-            tryoutRuntimeBundleJson,
-          })
-        ).rejects.toMatchObject({
-          code: "CONTENT_RELEASE_INTEGRITY",
-        })
-      );
-    })
+    }
   );
   itWithIngressFixture(
     "rejects an authenticated candidate with an invalid durable phase",
@@ -185,7 +129,6 @@ describe("authenticated current publication evidence", () => {
             phase: "completed",
           },
           recovery: null,
-          tryoutRuntimeBundleJson: null,
         })
       ).rejects.toMatchObject({
         _tag: "SchemaError",

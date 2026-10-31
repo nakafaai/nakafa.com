@@ -7,7 +7,7 @@ import {
   madePairs,
   markedCells,
   NO_RESPONSE,
-} from "@repo/backend/confect/exams/sittings/response";
+} from "@repo/backend/confect/assessment/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";

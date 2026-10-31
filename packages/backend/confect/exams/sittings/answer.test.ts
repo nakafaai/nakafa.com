@@ -6,12 +6,12 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
   encodeAnswers,
   newChoiceAnswers,
   shortAnswers,
 } from "@repo/backend/confect/exams/question";
-import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import {

@@ -1,376 +1,482 @@
-import { describe, expect, it } from "@effect/vitest";
-import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { api } from "@repo/backend/convex/_generated/api";
-import schema from "@repo/backend/convex/schema";
-import {
-  activateLandingSource,
-  makeLandingHierarchy,
-  makeLandingPlacement,
-} from "@repo/backend/test/tryout/landing";
-import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
-import {
-  activateTryoutStartSource,
-  makeTryoutStartHierarchy,
-  makeTryoutStartPlacement,
-  TRYOUT_START_COUNTRY,
-  TRYOUT_START_EXAM,
-  TRYOUT_START_SECTION,
-  TRYOUT_START_SET,
-  TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout/source";
-import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Schema } from "effect";
+import { assert, describe, expect, it } from "@effect/vitest";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { catalogNodeIdentity } from "@repo/backend/confect/tryouts/catalog/rows";
+import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
+import { FIXTURE_REVISION } from "@repo/backend/test/assessment/snapshot";
+import { client } from "@repo/backend/test/client";
+import { type TryoutWorld, tryoutWorld } from "@repo/backend/test/tryout/world";
+import { Effect, Schema, Struct } from "effect";
 
-const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
-const landingExamPath = "try-out/indonesia/snbt";
-const landingTrackPath = `${landingExamPath}/2027`;
-const landingSetPath = `${landingTrackPath}/set-1`;
+const catalog = tryouts.queries.catalog;
+const SET_PATH = "try-out/indonesia/snbt/2027/set-1-id";
+const KEYS = { countryKey: "indonesia", examKey: "snbt", trackKey: "2027" };
 
-describe("public try-out catalog queries", () => {
+/** Changes the stored catalog row of one node of the active snapshot: deletes it, or stores it twice. */
+const tamperCatalog = (
+  world: TryoutWorld,
+  keys: Parameters<typeof catalogNodeIdentity>[0],
+  change: "delete" | "duplicate"
+) =>
+  Effect.promise(() =>
+    world.t.mutation(async (ctx) => {
+      const row = await ctx.db
+        .query("assessmentRows")
+        .withIndex("by_snapshotId_and_kind_and_identity", (query) =>
+          query
+            .eq("snapshotId", world.snapshotId)
+            .eq("kind", "catalog")
+            .eq("identity", catalogNodeIdentity(keys))
+        )
+        .unique();
+      assert.ok(row, "Expected the catalog row.");
+      if (change === "delete") {
+        await ctx.db.delete("assessmentRows", row._id);
+        return;
+      }
+      await ctx.db.insert("assessmentRows", {
+        ...Struct.omit(row, ["_creationTime", "_id"]),
+        identity: `${row.identity}-copy`,
+      });
+    })
+  );
+
+describe("tryouts/queries/catalog", () => {
+  it.effect("reads nothing before any release activates a snapshot", () =>
+    Effect.gen(function* () {
+      const visitor = client(createConvexTestWithBetterAuth());
+      expect(
+        yield* visitor
+          .query(catalog.getHubPage, { appLocale: "id" })
+          .pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "ReleaseError",
+        code: "CONTENT_RELEASE_MISSING",
+      });
+    })
+  );
+
   it.effect(
-    "serves each localized hub, country, exam, and track from the same signed hierarchy",
+    "navigates the hub, a country, an exam, and a track with the revision of their catalog",
     () =>
       Effect.gen(function* () {
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"))
-        );
-        const countryPath = `try-out/${TRYOUT_START_COUNTRY}`;
-        const examPath = `${countryPath}/${TRYOUT_START_EXAM}`;
-        const trackPath = `${examPath}/${TRYOUT_START_TRACK}`;
-        for (const [appLocale, title] of [
-          ["en", "Compulsory Mathematics"],
-          ["id", "Matematika Wajib"],
-          ["de", "Pflichtmathematik"],
-        ] as const) {
-          const [hub, country, exam, track] = yield* Effect.promise(() =>
-            Promise.all([
-              t.query(api.tryouts.queries.catalog.getHubPage, { appLocale }),
-              t.query(api.tryouts.queries.catalog.getCountryPage, {
-                appLocale,
-                publicPath: countryPath,
-              }),
-              t.query(api.tryouts.queries.catalog.getExamPage, {
-                appLocale,
-                publicPath: examPath,
-              }),
-              t.query(api.tryouts.queries.catalog.getTrackPage, {
-                appLocale,
-                publicPath: trackPath,
-              }),
-            ])
-          );
-          expect(hub).toMatchObject({
-            countries: [{ countryKey: TRYOUT_START_COUNTRY, examCount: 1 }],
-          });
-          expect(country).toMatchObject({
-            country: { countryKey: TRYOUT_START_COUNTRY },
-            exams: [{ examKey: TRYOUT_START_EXAM }],
-            sourceRevision: hub.sourceRevision,
-          });
-          expect(exam).toMatchObject({
-            country: { countryKey: TRYOUT_START_COUNTRY },
-            exam: { examKey: TRYOUT_START_EXAM },
-            tracks: [{ trackKey: TRYOUT_START_TRACK, title }],
-          });
-          expect(track).toMatchObject({
-            country: { countryKey: TRYOUT_START_COUNTRY },
-            exam: { examKey: TRYOUT_START_EXAM },
-            track: { trackKey: TRYOUT_START_TRACK, title },
-          });
-        }
-        for (const endpoint of [
-          api.tryouts.queries.catalog.getCountryPage,
-          api.tryouts.queries.catalog.getExamPage,
-          api.tryouts.queries.catalog.getTrackPage,
-          api.tryouts.queries.catalog.getSetPage,
-          api.tryouts.queries.catalog.getSectionPage,
+        const world = yield* tryoutWorld();
+        const page = (ref: typeof catalog.getCountryPage, publicPath: string) =>
+          world.visitor.query(ref, { appLocale: "id", publicPath });
+        expect(
+          yield* world.visitor.query(catalog.getHubPage, { appLocale: "id" })
+        ).toEqual({
+          countries: [
+            {
+              countryCode: "ID",
+              countryKey: "indonesia",
+              description: "Try-out Indonesia",
+              examCount: 1,
+              publicPath: "try-out/indonesia-id",
+              title: "Try-out",
+            },
+          ],
+          sourceRevision: FIXTURE_REVISION,
+        });
+        expect(
+          yield* page(catalog.getCountryPage, "try-out/indonesia-id")
+        ).toMatchObject({
+          country: { countryKey: "indonesia" },
+          exams: [{ examKey: "snbt", publicPath: "try-out/indonesia/snbt-id" }],
+          sourceRevision: FIXTURE_REVISION,
+        });
+        expect(
+          yield* world.visitor.query(catalog.getExamPage, {
+            appLocale: "id",
+            publicPath: "try-out/indonesia/snbt-id",
+          })
+        ).toMatchObject({
+          country: { countryKey: "indonesia" },
+          exam: { examKey: "snbt" },
+          tracks: [{ trackKey: "2027", trackKind: "year" }],
+        });
+        expect(
+          yield* world.visitor.query(catalog.getTrackPage, {
+            appLocale: "id",
+            publicPath: "try-out/indonesia/snbt/2027-id",
+          })
+        ).toMatchObject({
+          country: { countryKey: "indonesia" },
+          exam: { examKey: "snbt" },
+          track: { trackKey: "2027" },
+        });
+        for (const ref of [
+          catalog.getCountryPage,
+          catalog.getExamPage,
+          catalog.getTrackPage,
+          catalog.getSetPage,
+          catalog.getSectionPage,
         ]) {
           expect(
-            yield* Effect.promise(() =>
-              t.query(endpoint, {
-                appLocale: "id",
-                publicPath: "try-out/missing",
-              })
-            )
+            yield* world.visitor.query(ref, {
+              appLocale: "id",
+              publicPath: "try-out/nowhere",
+            })
           ).toBeNull();
         }
       })
   );
 
   it.effect(
-    "does not substitute another locale and keeps set selection within its read budget",
+    "shows a set and its visible sections with counts and times from its paper and profile",
     () =>
       Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          t.mutation((ctx) =>
-            Effect.runPromiseWith(runtimeServices)(
-              activateTryoutSnapshot(ctx, {
-                catalog: makeTryoutStartHierarchy("id", "visible"),
-                placements: [makeTryoutStartPlacement("id")],
-              })
-            )
-          )
-        );
+        const world = yield* tryoutWorld({
+          scoring: {
+            kind: "penalized",
+            marks: { blank: 0, correct: 4, wrong: -1 },
+          },
+        });
+        const section = {
+          questionCount: 2,
+          sectionKey: "section-a",
+          timeLimitSeconds: 600,
+          visibility: "visible",
+        };
         expect(
-          yield* Effect.promise(() =>
-            t.query(api.tryouts.queries.catalog.getLocalizedPath, {
-              currentAppLocale: "id",
-              targetAppLocale: "en",
-              publicPath: setPath,
-            })
-          )
-        ).toBeNull();
-        const oversized = convexTest(schema, convexModules);
-        const catalog = Arr.map(
-          makeTryoutStartHierarchy("id", "visible"),
-          (row) =>
-            Schema.decodeSync(TryoutCatalogRowSchema)(
-              row.kind === "set"
-                ? {
-                    ...row,
-                    sectionCount: TRYOUT_CATALOG_LIMIT + 1,
-                    visibleSectionCount: TRYOUT_CATALOG_LIMIT + 1,
-                    questionCount: TRYOUT_CATALOG_LIMIT + 1,
-                  }
-                : row
-            )
-        );
-        yield* Effect.promise(() =>
-          oversized.mutation((ctx) =>
-            Effect.runPromiseWith(runtimeServices)(
-              activateTryoutSnapshot(ctx, {
-                catalog,
-                placements: [makeTryoutStartPlacement("id")],
-              })
-            )
-          )
-        );
-        yield* Effect.promise(() =>
-          expect(
-            oversized.query(api.tryouts.queries.catalog.getSetPage, {
-              appLocale: "id",
-              publicPath: setPath,
-            })
-          ).rejects.toMatchObject({
-            data: {
-              code: "CONTENT_RELEASE_INTEGRITY",
-              message: expect.stringContaining("exceeds"),
-            },
+          yield* world.visitor.query(catalog.getSetPage, {
+            appLocale: "id",
+            publicPath: SET_PATH,
           })
-        );
+        ).toMatchObject({
+          entrySection: section,
+          exam: { examKey: "snbt" },
+          sections: [
+            section,
+            {
+              questionCount: 1,
+              sectionKey: "section-b",
+              timeLimitSeconds: 300,
+            },
+          ],
+          set: {
+            publicPath: SET_PATH,
+            questionCount: 3,
+            scoringStrategy: "penalized",
+            sectionCount: 2,
+            visibleSectionCount: 2,
+          },
+          track: { trackKey: "2027" },
+        });
+        expect(
+          yield* world.visitor.query(catalog.getSectionPage, {
+            appLocale: "id",
+            publicPath: `${SET_PATH}/section-b`,
+          })
+        ).toMatchObject({
+          section: { questionCount: 1, sectionKey: "section-b" },
+          set: { publicPath: SET_PATH },
+        });
+        expect(
+          yield* world.visitor.query(catalog.getSectionPage, {
+            appLocale: "id",
+            publicPath: SET_PATH,
+          })
+        ).toBeNull();
       })
   );
 
   it.effect(
-    "returns the signed featured selector and localized set metadata",
+    "enters a direct-entry set through its internal section, which shows no page of its own",
     () =>
       Effect.gen(function* () {
-        const t = convexTest(schema, convexModules);
-        const snapshotId = yield* Effect.promise(() =>
-          t.mutation((ctx) => activateLandingSource(ctx, "visible"))
-        );
-        const featured = yield* Effect.promise(() =>
-          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+        const world = yield* tryoutWorld({ entry: true });
+        expect(
+          yield* world.visitor.query(catalog.getSetPage, {
             appLocale: "id",
+            publicPath: SET_PATH,
           })
-        );
-        expect(featured.question).toMatchObject({
-          snapshotId,
-          delivery: "authenticated",
-          contentKey: makeLandingPlacement("id").questionContentKey,
+        ).toMatchObject({
+          entrySection: {
+            sectionKey: "section-a",
+            visibility: "internal-entry",
+          },
+          sections: [],
+          set: { sectionCount: 1, visibleSectionCount: 0 },
         });
-        const metadata = yield* Effect.promise(() =>
-          t.query(api.tryouts.queries.catalog.getMetadata, {
+        expect(
+          yield* world.visitor.query(catalog.getHubPage, { appLocale: "id" })
+        ).not.toBeNull();
+      })
+  );
+
+  it.effect(
+    "describes a route with its counterparts in every locale, and resolves one into another locale",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        expect(
+          yield* world.visitor.query(catalog.getMetadata, {
             appLocale: "id",
             kind: "set",
-            publicPath: landingSetPath,
+            publicPath: SET_PATH,
           })
-        );
-        expect(metadata.route).toMatchObject({
-          publicPath: landingSetPath,
-          title: "Set 1",
+        ).toEqual({
+          route: {
+            alternates: [
+              {
+                appLocale: "en",
+                publicPath: "try-out/indonesia/snbt/2027/set-1-en",
+              },
+              { appLocale: "id", publicPath: SET_PATH },
+              {
+                appLocale: "de",
+                publicPath: "try-out/indonesia/snbt/2027/set-1-de",
+              },
+            ],
+            publicPath: SET_PATH,
+            socialImageIdentity: null,
+            title: "Try-out",
+          },
         });
         expect(
-          Arr.map(
-            metadata.route?.alternates ?? [],
-            ({ appLocale }) => appLocale
-          )
-        ).toEqual(["en", "id", "de"]);
+          yield* world.visitor.query(catalog.getMetadata, {
+            appLocale: "en",
+            kind: "exam",
+            publicPath: "try-out/indonesia/snbt-en",
+          })
+        ).toMatchObject({
+          route: {
+            socialImageIdentity: { countryKey: "indonesia", examKey: "snbt" },
+          },
+        });
         expect(
-          yield* Effect.promise(() =>
-            t.query(api.tryouts.queries.catalog.getCountryPage, {
-              appLocale: "id",
-              publicPath: "try-out/missing",
-            })
-          )
+          yield* world.visitor.query(catalog.getMetadata, {
+            appLocale: "id",
+            kind: "country",
+            publicPath: "try-out/indonesia-id",
+          })
+        ).toMatchObject({
+          route: {
+            alternates: [
+              { appLocale: "en", publicPath: "try-out/indonesia-en" },
+              { appLocale: "id", publicPath: "try-out/indonesia-id" },
+              { appLocale: "de", publicPath: "try-out/indonesia-de" },
+            ],
+            description: "Try-out Indonesia",
+          },
+        });
+        expect(
+          yield* world.visitor.query(catalog.getMetadata, {
+            appLocale: "id",
+            kind: "exam",
+            publicPath: SET_PATH,
+          })
+        ).toEqual({ route: null });
+        expect(
+          yield* world.visitor.query(catalog.getSetPage, {
+            appLocale: "id",
+            publicPath: `${SET_PATH}/section-a`,
+          })
+        ).toBeNull();
+        expect(
+          yield* world.visitor.query(catalog.getLocalizedPath, {
+            currentAppLocale: "id",
+            publicPath: `${SET_PATH}/section-a`,
+            targetAppLocale: "de",
+          })
+        ).toBe("try-out/indonesia/snbt/2027/set-1-de/section-a");
+        expect(
+          yield* world.visitor.query(catalog.getLocalizedPath, {
+            currentAppLocale: "id",
+            publicPath: "try-out/nowhere",
+            targetAppLocale: "de",
+          })
+        ).toBeNull();
+        yield* tamperCatalog(
+          world,
+          { ...KEYS, appLocale: "de", kind: "set", setKey: "set-1" },
+          "delete"
+        );
+        expect(
+          yield* world.visitor.query(catalog.getLocalizedPath, {
+            currentAppLocale: "id",
+            publicPath: SET_PATH,
+            targetAppLocale: "de",
+          })
         ).toBeNull();
       })
   );
 
   it.effect(
-    "fails closed at each missing level of the featured hierarchy",
+    "demonstrates the landing's question with its key and reading, and refuses a release without it",
     () =>
       Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        for (const kind of ["country", "exam", "track", "set"] as const) {
-          const t = convexTest(schema, convexModules);
-          yield* Effect.promise(() =>
-            t.mutation((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                activateTryoutSnapshot(ctx, {
-                  catalog: Arr.filter(
-                    makeLandingHierarchy("id", "visible"),
-                    (row) => row.kind !== kind
-                  ),
-                  placements: [makeLandingPlacement("id")],
-                })
-              )
-            )
-          );
-          yield* Effect.promise(() =>
-            expect(
-              t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-                appLocale: "id",
-              })
-            ).rejects.toMatchObject({
-              data: {
-                code: "CONTENT_RELEASE_INTEGRITY",
-                message: expect.stringContaining(`no featured ${kind}`),
-              },
-            })
-          );
-          if (kind === "country" || kind === "exam") {
-            const endpoint =
-              kind === "country"
-                ? api.tryouts.queries.catalog.getExamPage
-                : api.tryouts.queries.catalog.getTrackPage;
-            const publicPath =
-              kind === "country" ? landingExamPath : landingTrackPath;
-            yield* Effect.promise(() =>
-              expect(
-                t.query(endpoint, { appLocale: "id", publicPath })
-              ).rejects.toMatchObject({
-                data: { code: "CONTENT_RELEASE_INTEGRITY" },
-              })
-            );
-          }
-        }
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          t.mutation((ctx) =>
-            Effect.runPromiseWith(runtimeServices)(
-              activateTryoutSnapshot(ctx, {
-                catalog: makeLandingHierarchy("id", "visible"),
-                placements: [makeLandingPlacement("id")],
-              })
-            )
-          )
+        const featured = yield* tryoutWorld({
+          firstSectionKey: "quantitative-knowledge",
+        });
+        const question = yield* featured.visitor.query(
+          catalog.getFeaturedQuestion,
+          { appLocale: "en" }
         );
-        yield* Effect.promise(() =>
-          expect(
-            t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-              appLocale: "id",
-            })
-          ).rejects.toMatchObject({
-            data: {
-              code: "CONTENT_RELEASE_INTEGRITY",
-              message: expect.stringContaining("no featured question"),
-            },
-          })
+        expect(
+          yield* Schema.decodeEffect(TryoutQuestionBodyText)(question.body)
+        ).toMatchObject({
+          interaction: { kind: "choice", maxChoices: 1 },
+          key: { correct: ["option-2"], kind: "choice" },
+          prompt: { type: "doc" },
+        });
+        const missing = yield* tryoutWorld();
+        expect(
+          yield* missing.visitor
+            .query(catalog.getFeaturedQuestion, { appLocale: "id" })
+            .pipe(Effect.flip)
+        ).toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("featured section"),
+        });
+        yield* tamperCatalog(
+          missing,
+          { ...KEYS, appLocale: "id", kind: "set", setKey: "set-1" },
+          "delete"
         );
+        expect(
+          yield* missing.visitor
+            .query(catalog.getFeaturedQuestion, { appLocale: "id" })
+            .pipe(Effect.flip)
+        ).toMatchObject({ message: expect.stringContaining("featured set") });
       })
   );
 
   it.effect(
-    "rejects set pages whose signed parent or section relationships are incomplete",
+    "fails closed on a route held twice, a node without its parents, a paper without a profile section, and a set without its entry",
     () =>
       Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        for (const kind of [
-          "country",
-          "exam",
-          "track",
-          "section",
-          "set",
+        const twice = yield* tryoutWorld();
+        yield* tamperCatalog(
+          twice,
+          { appLocale: "id", countryKey: "indonesia", kind: "country" },
+          "duplicate"
+        );
+        expect(
+          yield* twice.visitor
+            .query(catalog.getHubPage, { appLocale: "id" })
+            .pipe(Effect.flip)
+        ).toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("held twice"),
+        });
+        const orphan = yield* tryoutWorld();
+        yield* tamperCatalog(
+          orphan,
+          { appLocale: "id", countryKey: "indonesia", kind: "country" },
+          "delete"
+        );
+        for (const [ref, publicPath] of [
+          [catalog.getExamPage, "try-out/indonesia/snbt-id"],
+          [catalog.getTrackPage, "try-out/indonesia/snbt/2027-id"],
+          [catalog.getSetPage, SET_PATH],
         ] as const) {
-          const t = convexTest(schema, convexModules);
-          yield* Effect.promise(() =>
-            t.mutation((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                activateTryoutSnapshot(ctx, {
-                  catalog: Arr.filter(
-                    makeTryoutStartHierarchy("id", "visible"),
-                    (row) => row.kind !== kind
-                  ),
-                  placements: [makeTryoutStartPlacement("id")],
-                })
-              )
-            )
-          );
-          const publicPath =
-            kind === "set" ? `${setPath}/${TRYOUT_START_SECTION}` : setPath;
-          const endpoint =
-            kind === "set"
-              ? api.tryouts.queries.catalog.getSectionPage
-              : api.tryouts.queries.catalog.getSetPage;
-          yield* Effect.promise(() =>
-            expect(
-              t.query(endpoint, { appLocale: "id", publicPath })
-            ).rejects.toMatchObject({
-              data: { code: "CONTENT_RELEASE_INTEGRITY" },
-            })
-          );
+          expect(
+            yield* orphan.visitor
+              .query(ref, { appLocale: "id", publicPath })
+              .pipe(Effect.flip)
+          ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
         }
+        for (const [keys, publicPath, lost] of [
+          [
+            {
+              appLocale: "id",
+              countryKey: "indonesia",
+              examKey: "snbt",
+              kind: "exam",
+            },
+            SET_PATH,
+            "exam",
+          ],
+          [{ ...KEYS, appLocale: "id", kind: "track" }, SET_PATH, "track"],
+          [
+            { ...KEYS, appLocale: "id", kind: "set", setKey: "set-1" },
+            `${SET_PATH}/section-a`,
+            "set",
+          ],
+        ] as const) {
+          const broken = yield* tryoutWorld();
+          yield* tamperCatalog(broken, keys, "delete");
+          expect(
+            yield* broken.visitor
+              .query(
+                keys.kind === "set"
+                  ? catalog.getSectionPage
+                  : catalog.getSetPage,
+                { appLocale: "id", publicPath }
+              )
+              .pipe(Effect.flip)
+          ).toMatchObject({
+            message: expect.stringContaining(`lost its ${lost}`),
+          });
+        }
+        const foreign = yield* tryoutWorld();
+        yield* foreign.rewrite(
+          (row) =>
+            row.kind === "catalog" &&
+            row.row.kind === "section" &&
+            row.row.appLocale === "id" &&
+            row.row.sectionKey === "section-b",
+          (row) => {
+            assert.ok(
+              row.kind === "catalog" && row.row.kind === "section",
+              "Expected the section row."
+            );
+            return { ...row, row: { ...row.row, sectionKey: "section-z" } };
+          }
+        );
+        expect(
+          yield* foreign.visitor
+            .query(catalog.getSetPage, {
+              appLocale: "id",
+              publicPath: SET_PATH,
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({
+          message: expect.stringContaining("names no section of its profile"),
+        });
+        const unplaced = yield* tryoutWorld();
+        yield* unplaced.rewrite(
+          (row) => row.kind === "paper" && row.paper.id === "test-paper-set-1",
+          (row) => {
+            assert.ok(row.kind === "paper", "Expected the set's paper.");
+            const [first] = row.paper.sections;
+            return { ...row, paper: { ...row.paper, sections: [first] } };
+          }
+        );
+        expect(
+          yield* unplaced.visitor
+            .query(catalog.getSetPage, {
+              appLocale: "id",
+              publicPath: SET_PATH,
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({
+          message: expect.stringContaining("places no section"),
+        });
+        const entryless = yield* tryoutWorld({ entry: true });
+        yield* tamperCatalog(
+          entryless,
+          {
+            ...KEYS,
+            appLocale: "id",
+            kind: "section",
+            sectionKey: "section-a",
+            setKey: "set-1",
+          },
+          "delete"
+        );
+        expect(
+          yield* entryless.visitor
+            .query(catalog.getSetPage, {
+              appLocale: "id",
+              publicPath: SET_PATH,
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({
+          message: expect.stringContaining("no section to enter"),
+        });
       })
   );
-});
-
-it("preserves optional signed descriptions across every public catalog level", async () => {
-  const t = convexTest(schema, convexModules);
-  const description = "Signed catalog description";
-  const catalog = Arr.map(makeTryoutStartHierarchy("en", "visible"), (row) => ({
-    ...row,
-    description,
-  }));
-  await t.mutation((ctx) =>
-    Effect.runPromise(
-      activateTryoutSnapshot(ctx, {
-        catalog,
-        placements: [makeTryoutStartPlacement("en")],
-      })
-    )
-  );
-  const countryPath = `try-out/${TRYOUT_START_COUNTRY}`;
-  const country = await t.query(api.tryouts.queries.catalog.getCountryPage, {
-    appLocale: "en",
-    publicPath: countryPath,
-  });
-  const exam = await t.query(api.tryouts.queries.catalog.getExamPage, {
-    appLocale: "en",
-    publicPath: `${countryPath}/${TRYOUT_START_EXAM}`,
-  });
-  const set = await t.query(api.tryouts.queries.catalog.getSetPage, {
-    appLocale: "en",
-    publicPath: setPath,
-  });
-  const metadata = await t.query(api.tryouts.queries.catalog.getMetadata, {
-    kind: "country",
-    appLocale: "en",
-    publicPath: countryPath,
-  });
-  expect(country).toMatchObject({
-    country: { description },
-    exams: [{ description }],
-  });
-  expect(exam).toMatchObject({ tracks: [{ description }] });
-  expect(set).toMatchObject({
-    set: { description },
-    sections: [{ description }],
-  });
-  expect(metadata).toMatchObject({ route: { description } });
 });

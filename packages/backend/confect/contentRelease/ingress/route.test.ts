@@ -61,7 +61,6 @@ describe("content publication HTTP route", () => {
         active: null,
         candidate: null,
         recovery: null,
-        tryoutRuntimeBundle: null,
       },
     });
   });

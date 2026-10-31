@@ -100,7 +100,13 @@ export const Route = createRootRoute({
       },
       { href: "/logo.svg", rel: "icon", type: "image/svg+xml" },
       { href: "/favicon.ico", rel: "shortcut icon" },
-      { href: "/logo.svg", rel: "apple-touch-icon" },
+      // iOS draws a home-screen icon from a PNG only, at 180 by 180, and fills
+      // transparency with black, so the icon is the opaque logo at that size.
+      {
+        href: "/apple-touch-icon.png",
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+      },
     ],
   }),
   shellComponent: RootDocument,

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
-import { canonicalizeQuestionProjection } from "@nakafa/aksara-contracts/projection/question";
 import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import {
   type RollbackPage,
@@ -22,11 +21,6 @@ import {
   FUNCTION_MATERIAL_KEY,
   FUNCTION_MATERIAL_SOURCE,
 } from "@repo/backend/test/content/material";
-import {
-  TEST_QUESTION_PROJECTION,
-  TEST_QUESTION_PROJECTION_JSON,
-  TEST_QUESTION_SOURCE,
-} from "@repo/backend/test/content/question";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
@@ -253,45 +247,6 @@ describe("contentRelease/rollback", () => {
       "projection.topicTitle",
       "Function Composition and Inverse Function"
     );
-  });
-
-  it("preserves an authenticated prior Question rollback state", async () => {
-    const t = convexTest(schema, convexModules);
-    const priorProjection = {
-      ...TEST_QUESTION_PROJECTION,
-      metadata: {
-        ...TEST_QUESTION_PROJECTION.metadata,
-        title: "Prior question",
-      },
-    };
-    await t.mutation(async (ctx) => {
-      await activateRollbackFixture(ctx, 1);
-      await insertRollbackItem(ctx, 0, true, "return {};", {
-        contentKey: TEST_QUESTION_PROJECTION.contentKey,
-        currentProjectionJson: TEST_QUESTION_PROJECTION_JSON,
-        currentSourcePath: TEST_QUESTION_SOURCE,
-        delivery: "authenticated",
-        family: "question",
-        priorProjectionJson: canonicalizeQuestionProjection(priorProjection),
-        priorSourcePath: TEST_QUESTION_SOURCE,
-        rendererDomain: "snbt-general",
-      });
-    });
-
-    const page = await readPage(t, -1, 1);
-    expect(page.records[0]?.prior).toMatchObject({
-      change: {
-        contentKey: TEST_QUESTION_PROJECTION.contentKey,
-        delivery: "authenticated",
-        family: "question",
-        operation: "upsert",
-      },
-      projection: priorProjection,
-    });
-    const prior = page.records[0]?.prior;
-    expect(
-      prior && "projection" in prior ? prior.projection : null
-    ).not.toHaveProperty("publicPath");
   });
 
   it("rejects invalid identity, unreadable state, and cursor drift", async () => {

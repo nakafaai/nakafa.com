@@ -1,342 +1,182 @@
 import { assert, describe, expect, it } from "@effect/vitest";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
-import { api } from "@repo/backend/convex/_generated/api";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
-import {
-  activateReusedTryoutStartPath,
-  activateTryoutStartSource,
-  TRYOUT_START_COUNTRY,
-  TRYOUT_START_EXAM,
-  TRYOUT_START_NOW,
-  TRYOUT_START_SECTION,
-  TRYOUT_START_SET,
-  TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout/source";
-import { TRYOUT_SECTION_KEY } from "@repo/backend/test/tryouts";
-import { Array as Arr, Effect, Option } from "effect";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
+import { client } from "@repo/backend/test/client";
+import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
+import { Array as Arr, Effect, Struct } from "effect";
 
-const setRoute = {
-  countryKey: TRYOUT_START_COUNTRY,
-  examKey: TRYOUT_START_EXAM,
-  locale: "id" as const,
-  setKey: TRYOUT_START_SET,
-  trackKey: TRYOUT_START_TRACK,
-};
+const { getSectionAttemptState, getSetAttemptState } = tryouts.queries.runtime;
+
 describe("tryouts/queries/runtime", () => {
-  it("reports each question's flag from the shared flags table, and only the attempt's own", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        suffix: "runtime-flags",
-      });
-      const placement = await ctx.db
-        .query("tryoutAttemptPlacements")
-        .withIndex("by_tryoutAttemptId_and_questionOrder", (query) =>
-          query.eq("tryoutAttemptId", fixture.attemptId)
-        )
-        .first();
-      assert(placement);
-      await ctx.db.insert("assessmentFlags", {
-        attempt: fixture.attemptId,
-        kind: "tryout",
-        question: placement._id,
-      });
-      await ctx.db.insert("assessmentFlags", {
-        attempt: "another-attempt",
-        kind: "tryout",
-        question: "another-question",
-      });
-      return { ...fixture, placementId: placement._id };
-    });
-    const owner = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-    const state = await owner.query(
-      api.tryouts.queries.runtime.getSectionAttemptState,
-      {
-        attemptId: seeded.attemptId,
-        locale: "id",
-        sectionKey: TRYOUT_SECTION_KEY,
-      }
-    );
-    const questions = state?.runtime?.questions ?? [];
-    expect(
-      Arr.map(questions, (question) => [question.placementId, question.flagged])
-    ).toEqual(
-      Arr.map(questions, (question) => [
-        question.placementId,
-        question.placementId === seeded.placementId,
-      ])
-    );
-    expect(questions.length).toBeGreaterThan(0);
-  });
-  it("rejects persisted section attempts beyond the frozen inventory", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        suffix: "excess-section-attempts",
-      });
-      const section = await ctx.db.get(fixture.sectionAttemptId);
-      assert(section);
-      const { _id, _creationTime, ...fields } = section;
-      await ctx.db.insert("tryoutSectionAttempts", {
-        ...fields,
-        sectionIdentity: "unexpected-section",
-        sectionKey: "unexpected-section",
-        sectionOrder: 2,
-      });
-      return fixture;
-    });
-    const owner = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-    await expect(
-      owner.query(api.tryouts.queries.runtime.getSetAttemptState, {
-        locale: "id",
-        attemptId: seeded.attemptId,
-      })
-    ).rejects.toMatchObject({
-      data: { code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED" },
-    });
-  });
-
-  it.each(["missing", "hash", "snapshot", "decode"] as const)(
-    "does not expose question selectors when the permanent bundle is %s",
-    async (corruption) => {
-      const t = createConvexTestWithBetterAuth();
-      const seeded = await t.mutation(async (ctx) => {
-        const fixture = await seedTryoutContentAccessState(ctx, {
-          attemptStatus: "in-progress",
-          sectionStatus: "in-progress",
-          suffix: `bundle-${corruption}`,
-        });
-        const attempt = await ctx.db.get(fixture.attemptId);
-        assert(attempt);
-        if (corruption === "missing") {
-          await ctx.db.delete(attempt.tryoutBundleId);
-        } else if (corruption === "decode") {
-          await ctx.db.patch(attempt.tryoutBundleId, { createdAt: Number.NaN });
-        } else {
-          await ctx.db.patch(
-            attempt.tryoutBundleId,
-            corruption === "hash"
-              ? { bundleHash: "sha256:changed" }
-              : { snapshotId: "sha256:changed" }
-          );
-        }
-        return fixture;
-      });
-      const owner = t.withIdentity({
-        sessionId: seeded.identity.sessionId,
-        subject: seeded.identity.authUserId,
-      });
-      await expect(
-        owner.query(api.tryouts.queries.runtime.getSectionAttemptState, {
+  it.effect(
+    "reports each question's flag from the shared flags table, and only the attempt's own",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const { attemptId } = yield* world.start();
+        yield* world.startSection(attemptId, "section-a");
+        const flagged = yield* Effect.promise(() =>
+          world.t.mutation(async (ctx) => {
+            const placement = await ctx.db
+              .query("tryoutAttemptPlacements")
+              .withIndex(
+                "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
+                (query) =>
+                  query
+                    .eq("tryoutAttemptId", attemptId)
+                    .eq("sectionKey", "section-a")
+              )
+              .first();
+            assert.ok(placement);
+            await ctx.db.insert("assessmentFlags", {
+              attempt: attemptId,
+              kind: "tryout",
+              question: placement._id,
+            });
+            await ctx.db.insert("assessmentFlags", {
+              attempt: "another-attempt",
+              kind: "tryout",
+              question: "another-question",
+            });
+            return placement._id;
+          })
+        );
+        const state = yield* world.learner.query(getSectionAttemptState, {
+          attemptId,
           locale: "id",
-          attemptId: seeded.attemptId,
-          sectionKey: TRYOUT_SECTION_KEY,
-        })
-      ).rejects.toMatchObject({ data: { code: "TRYOUT_SELECTOR_INTEGRITY" } });
-    }
+          sectionKey: "section-a",
+        });
+        expect(
+          Arr.map(
+            state?.runtime?.questions ?? [],
+            ({ flagged: isFlagged, placementId }) => [
+              placementId === flagged,
+              isFlagged,
+            ]
+          )
+        ).toEqual([
+          [true, true],
+          [false, false],
+        ]);
+      })
   );
 
   it.effect(
-    "keeps exact live state compact and skips score reads while active",
+    "keeps the live state of a direct-entry attempt compact, without a score while it runs",
     () =>
       Effect.gen(function* () {
-        yield* Effect.sync(() => vi.setSystemTime(TRYOUT_START_NOW));
-
-        const t = createConvexTestWithBetterAuth();
-        const identity = yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const user = await seedAuthenticatedUser(ctx, {
-              now: TRYOUT_START_NOW,
-              suffix: "exact-active-state",
-            });
-            await activateTryoutStartSource(ctx, "internal-entry", "raw");
-            return user;
-          })
-        );
-        const authed = t.withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
+        const world = yield* tryoutWorld({ entry: true });
+        const { attemptId } = yield* world.start({ entry: true });
+        const state = yield* world.learner.query(getSetAttemptState, {
+          attemptId,
+          locale: "id",
         });
-        const started = yield* Effect.promise(() =>
-          authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-            ...setRoute,
-            entrySectionKey: TRYOUT_START_SECTION,
-          })
-        );
-
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const attempt = await ctx.db.get(started.attemptId);
-            if (!attempt) {
-              throw new Error("Expected one active attempt.");
-            }
-            for (const offset of [0, 1]) {
-              await ctx.db.insert("tryoutScores", {
-                finalizedAt: TRYOUT_START_NOW + offset,
-                publishedScore: 0,
-                rawScore: 0,
-                scoreStatus: "official",
-                scoringStrategy: "raw",
-                setIdentity: attempt.setIdentity,
-                totalCorrect: 0,
-                totalQuestions: attempt.totalQuestions,
-                tryoutAttemptId: attempt._id,
-                tryoutSnapshotId: attempt.tryoutSnapshotId,
-                userId: attempt.userId,
-              });
-            }
-          })
-        );
-
-        const exact = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.runtime.getSetAttemptState, {
-            locale: "id",
-            attemptId: started.attemptId,
-          })
-        );
-        expect(exact).toMatchObject({
+        expect(state).toMatchObject({
           attempt: {
-            activeSectionKey: TRYOUT_START_SECTION,
-            attemptId: started.attemptId,
+            activeSectionKey: "section-a",
+            attemptId,
+            resumeSectionKey: "section-a",
             score: null,
           },
           runtime: {
-            questions: expect.any(Array),
-            section: { status: "in-progress" },
+            questions: [{ questionOrder: 1 }, { questionOrder: 2 }],
+            section: { sectionKey: "section-a", status: "in-progress" },
           },
         });
-        expect(exact?.attempt).not.toHaveProperty("lastActivityAt");
-        expect(exact?.attempt).not.toHaveProperty("sectionRoutes");
-        expect(exact?.attempt).not.toHaveProperty("totalQuestions");
-        expect(
-          Option.getOrUndefined(Arr.head(exact?.runtime?.questions ?? []))
-        ).not.toHaveProperty("title");
+        expect(state?.attempt).not.toHaveProperty("totalQuestions");
       })
   );
 
   it.effect(
-    "binds exact section state to ownership instead of the active catalog",
+    "binds section state to the attempt's owner and its frozen sections, whatever the active release holds",
     () =>
       Effect.gen(function* () {
-        yield* Effect.sync(() => vi.setSystemTime(TRYOUT_START_NOW));
-
-        const t = createConvexTestWithBetterAuth();
-        const identity = yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const user = await seedAuthenticatedUser(ctx, {
-              now: TRYOUT_START_NOW,
-              suffix: "exact-section-state",
-            });
-            await activateTryoutStartSource(ctx, "visible", "raw");
-            return user;
+        const world = yield* tryoutWorld();
+        const { attemptId } = yield* world.start();
+        const args = {
+          attemptId,
+          locale: "id" as const,
+          sectionKey: "section-a",
+        };
+        expect(
+          yield* world.learner.query(getSectionAttemptState, args)
+        ).toMatchObject({ attempt: { section: null }, runtime: null });
+        expect(
+          yield* world.learner.query(getSectionAttemptState, {
+            ...args,
+            sectionKey: "section-z",
           })
+        ).toBeNull();
+        const other = yield* Effect.promise(() =>
+          world.t.mutation((ctx) =>
+            seedAuthenticatedUser(ctx, { now: TRYOUT_NOW, suffix: "outsider" })
+          )
         );
-        const authed = t.withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        });
-        const started = yield* Effect.promise(() =>
-          authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-            ...setRoute,
-            destinationSectionKey: TRYOUT_START_SECTION,
-          })
-        );
-        yield* Effect.promise(async () => {
-          const args = {
-            locale: "id" as const,
-            attemptId: started.attemptId,
-            sectionKey: TRYOUT_START_SECTION,
-          };
-          expect(
-            await authed.query(
-              api.tryouts.queries.runtime.getSectionAttemptState,
-              args
-            )
-          ).toMatchObject({ attempt: { section: null }, runtime: null });
-          expect(
-            await authed.query(
-              api.tryouts.queries.runtime.getSectionAttemptState,
-              { ...args, sectionKey: "missing-section" }
-            )
-          ).toBeNull();
-          expect(
-            await t.query(api.tryouts.queries.runtime.getSetAttemptState, {
-              locale: "id",
-              attemptId: started.attemptId,
-            })
-          ).toBeNull();
-          const other = await t.mutation((ctx) =>
-            seedAuthenticatedUser(ctx, {
-              now: TRYOUT_START_NOW,
-              suffix: "unrelated-attempt-reader",
-            })
-          );
-          const outsider = t.withIdentity({
+        const outsider = client(
+          world.t.withIdentity({
             sessionId: other.sessionId,
             subject: other.authUserId,
-          });
-          expect(
-            await outsider.query(
-              api.tryouts.queries.runtime.getSetAttemptState,
-              { locale: "id", attemptId: started.attemptId }
-            )
-          ).toBeNull();
-          expect(
-            await outsider.query(
-              api.tryouts.queries.runtime.getSectionAttemptState,
-              args
-            )
-          ).toBeNull();
-        });
-        yield* Effect.promise(() =>
-          authed.mutation(api.tryouts.mutations.sections.start, {
-            attemptId: started.attemptId,
-            sectionKey: TRYOUT_START_SECTION,
           })
         );
-        const args = {
-          locale: "id" as const,
-          attemptId: started.attemptId,
-          sectionKey: TRYOUT_START_SECTION,
-        };
-
-        const initial = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.runtime.getSectionAttemptState, args)
+        for (const caller of [world.visitor, outsider]) {
+          expect(
+            yield* caller.query(getSetAttemptState, { attemptId, locale: "id" })
+          ).toBeNull();
+          expect(yield* caller.query(getSectionAttemptState, args)).toBeNull();
+        }
+        yield* world.startSection(attemptId, "section-a");
+        const initial = yield* world.learner.query(
+          getSectionAttemptState,
+          args
         );
         expect(initial).toMatchObject({
-          attempt: {
-            attemptId: started.attemptId,
-            section: { sectionKey: TRYOUT_START_SECTION },
-          },
-          runtime: { questions: expect.any(Array) },
+          attempt: { attemptId, section: { sectionKey: "section-a" } },
+          runtime: { questions: [{ response: null }, { response: null }] },
         });
-        yield* Effect.promise(() => t.mutation(activateReusedTryoutStartPath));
+        yield* world.release({ renamed: true, sets: 2 });
         expect(
-          yield* Effect.promise(() =>
-            authed.query(
-              api.tryouts.queries.runtime.getSectionAttemptState,
-              args
-            )
-          )
+          yield* world.learner.query(getSectionAttemptState, args)
         ).toEqual(initial);
+        yield* world.completeSection(attemptId, "section-a");
+        // A finished section of a running attempt shows no questions until the attempt ends.
         expect(
-          yield* Effect.promise(() =>
-            t.query(api.tryouts.queries.runtime.getSectionAttemptState, args)
-          )
-        ).toBeNull();
+          yield* world.learner.query(getSectionAttemptState, args)
+        ).toMatchObject({
+          attempt: { section: { status: "completed" } },
+          runtime: null,
+        });
       })
+  );
+
+  it.effect("refuses section attempts beyond the frozen sections", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld();
+      const { attemptId } = yield* world.start();
+      yield* world.startSection(attemptId, "section-a");
+      yield* Effect.promise(() =>
+        world.t.mutation(async (ctx) => {
+          const section = await ctx.db
+            .query("tryoutSectionAttempts")
+            .withIndex("by_tryoutAttemptId_and_sectionKey", (query) =>
+              query
+                .eq("tryoutAttemptId", attemptId)
+                .eq("sectionKey", "section-a")
+            )
+            .unique();
+          assert.ok(section);
+          for (const sectionKey of ["section-y", "section-z"]) {
+            await ctx.db.insert("tryoutSectionAttempts", {
+              ...Struct.omit(section, ["_creationTime", "_id"]),
+              sectionKey,
+            });
+          }
+        })
+      );
+      expect(
+        yield* world.learner
+          .query(getSetAttemptState, { attemptId, locale: "id" })
+          .pipe(Effect.flip)
+      ).toMatchObject({ code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED" });
+    })
   );
 });

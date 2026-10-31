@@ -16,6 +16,8 @@ import { EditorPane } from "@repo/design-system/components/editor/pane";
 import { itemTokens } from "@repo/design-system/components/editor/plain";
 import { decodeReferences } from "@repo/design-system/components/editor/references";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
+import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
+import { linkVariants } from "@repo/design-system/lib/prose";
 import { Array as Arr, Match, String as Str } from "effect";
 import type { Token, Tokens } from "marked-tiptap";
 import { type ReactNode, useId } from "react";
@@ -281,12 +283,12 @@ function Inline({ token }: { token: Token }) {
       </u>
     )),
     Match.when({ type: "highlight" }, ({ tokens }) => (
-      <mark>
+      <mark className={emphasisVariants()}>
         <Inlines tokens={tokens} />
       </mark>
     )),
     Match.when({ type: "link" }, ({ tokens }) => (
-      <span data-link="">
+      <span className={linkVariants()} data-link="">
         <Inlines tokens={tokens} />
       </span>
     )),

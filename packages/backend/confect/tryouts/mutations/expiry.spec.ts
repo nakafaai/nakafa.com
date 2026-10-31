@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/confect/tryouts/progress/spec";
 import {
   TryoutResponseIntegrityError,
-  TryoutResponseSelectionError,
+  TryoutResponseUnfitError,
 } from "@repo/backend/confect/tryouts/response/spec";
 import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
 import { Schema } from "effect";
@@ -26,7 +26,7 @@ export default GroupSpec.make()
           TryoutAttemptStateError,
           TryoutRuntimeErrorWire,
           TryoutResponseIntegrityError,
-          TryoutResponseSelectionError,
+          TryoutResponseUnfitError,
           TryoutProgressError,
           TryoutProgressSizeError,
         ]),
@@ -45,7 +45,7 @@ export default GroupSpec.make()
           TryoutAttemptStateError,
           TryoutRuntimeErrorWire,
           TryoutResponseIntegrityError,
-          TryoutResponseSelectionError,
+          TryoutResponseUnfitError,
           TryoutProgressError,
           TryoutProgressSizeError,
         ]),
