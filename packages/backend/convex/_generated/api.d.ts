@@ -540,6 +540,20 @@ export declare const api: {
           subject?: string;
         }
       >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
     };
     forum: {
       channels: {
@@ -7307,6 +7321,7 @@ export declare const api: {
               | { type: "class.created" }
               | { type: "class.renamed" }
               | { type: "class.archived" }
+              | { type: "class.restored" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
               | { message: Id<"classroomMessages">; type: "message.hidden" }

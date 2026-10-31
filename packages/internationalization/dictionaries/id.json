@@ -684,13 +684,6 @@
     "class-rename-save": "Simpan",
     "class-archive": "Arsipkan",
     "class-restore": "Pulihkan",
-    "class-teachers": "Guru",
-    "class-teachers-description": "Guru yang mengajar mata pelajaran ruang kelas ini. Setiap guru punya peran Guru di unit ini.",
-    "class-teacher": "Guru",
-    "class-teacher-add": "Tambah guru",
-    "class-teacher-remove": "Lepas",
-    "class-teacher-remove-label": "Lepas {name}",
-    "class-teachers-empty": "Belum ada guru.",
     "cohort-unavailable": "Rombel ini belum bisa dibuka di sini.",
     "cohort-unavailable-description": "Pilih rombel dari daftar, karena rombel ini sudah tidak ada atau milik sekolah lain.",
     "placement-add": "Tambah siswa",
@@ -700,14 +693,6 @@
     "placement-move-footer": "Siswa keluar dari rombel ini dan masuk ke rombel yang dipilih.",
     "placement-move-to": "Pindah ke",
     "placement-move-save": "Pindahkan",
-    "roster-entry": "NISN dan usia",
-    "roster-entry-description": "NISN dan tanda usia menentukan apakah siswa perlu izin orang tua.",
-    "roster-entry-save": "Simpan",
-    "roster-nisn": "NISN",
-    "roster-nisn-stored": "Sudah tersimpan; ketik yang baru untuk menggantinya",
-    "roster-nisn-none": "10 angka",
-    "roster-under-age": "Di bawah batas usia",
-    "roster-under-age-description": "Siswa di bawah batas usia perlu orang tua yang terverifikasi.",
     "cohort-members-search": "Cari siswa",
     "cohort-members-description": "Siswa yang masuk rombel ini tampil di sini.",
     "cohort-members-empty": "Belum ada siswa.",
@@ -763,8 +748,7 @@
         "created": "Wali kelas ditetapkan",
         "removed": "Wali kelas dilepas",
         "published": "Tugas diterbitkan",
-        "deadlineChanged": "Tenggat tugas diubah",
-        "edited": "Tugas diubah"
+        "deadlineChanged": "Tenggat tugas diubah"
       },
       "billing": {
         "invoice": {
@@ -1069,28 +1053,7 @@
     "device-description": "Ketik kode dari Nakafa CLI agar perangkat itu membaca sekolah sebagai {name}.",
     "device-code": "Kode perangkat",
     "device-authorize": "Hubungkan",
-    "device-deny": "Tolak perangkat",
-    "grading": "Penilaian",
-    "grading-description": "Versi skema penilaian sekolah. Setiap nilai tetap memakai versi saat ia dimasukkan.",
-    "grading-empty": "Belum ada versi tersimpan.",
-    "grading-empty-description": "Nilai memakai skema bawaan: KKTP {kktp}, tanpa predikat.",
-    "grading-search": "Cari predikat",
-    "grading-new": "Versi baru",
-    "grading-new-description": "Versi ini menilai setiap nilai yang dimasukkan mulai sekarang. Nilai sebelumnya tetap memakai versinya.",
-    "grading-effective": "Berlaku sejak",
-    "grading-kktp": "KKTP",
-    "grading-bands": "Predikat",
-    "grading-bands-none": "Tanpa predikat",
-    "grading-band": "{label} mulai {minimum}",
-    "grading-band-label": "Predikat",
-    "grading-band-label-placeholder": "B",
-    "grading-band-minimum": "Mulai",
-    "grading-band-add": "Tambah predikat",
-    "grading-band-remove": "Hapus predikat",
-    "grading-save": "Simpan versi",
-    "grading-status": "Status",
-    "grading-current": "Berlaku",
-    "grading-earlier": "Sebelumnya"
+    "device-deny": "Tolak perangkat"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -1223,11 +1186,7 @@
     "task-work-no-match-description": "Belum ada siswa dengan nama yang cocok yang mengumpulkan tugas.",
     "task-new": "Tugas baru",
     "task-new-description": "Semua anggota kelas menerimanya di notifikasi.",
-    "task-publish": "Terbitkan",
-    "task-edit": "Ubah tugas",
-    "task-edit-description": "Alamatnya tetap, jadi setiap tautannya tetap membuka tugas ini.",
-    "task-edit-save": "Simpan",
-    "task-points-fixed": "Poin tetap setelah ada tugas yang dikumpulkan."
+    "task-publish": "Terbitkan"
   },
   "SchoolGrades": {
     "student": "Siswa",
@@ -1247,15 +1206,7 @@
     "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya.",
     "detail": "Nilai siswa",
     "detail-empty": "Pilih siswa untuk melihat nilainya.",
-    "kktp": "KKTP",
-    "own-title": "Nilai saya",
-    "own-search": "Cari kelas",
-    "own-class": "Kelas",
-    "own-period": "Periode",
-    "own-band": "Predikat",
-    "own-band-none": "Tanpa predikat",
-    "own-empty": "Belum ada nilai yang dirilis.",
-    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya."
+    "kktp": "KKTP"
   },
   "SchoolReports": {
     "title": "Rapor",
@@ -1294,11 +1245,7 @@
     "grade": "Nilai",
     "result": "Hasil",
     "kktp-reached": "Mencapai KKTP",
-    "kktp-notReached": "Belum mencapai KKTP",
-    "own-title": "Rapor saya",
-    "own-search": "Cari rombel",
-    "own-empty": "Belum ada rapor yang dikunci.",
-    "own-empty-description": "Rapor muncul di sini setelah kepala sekolah menyetujuinya."
+    "kktp-notReached": "Belum mencapai KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",
@@ -1422,7 +1369,6 @@
     "short-description": "Materi belajar gratis untuk SD sampai universitas.",
     "very-short-description": "Materi belajar gratis.",
     "keywords": "materi belajar gratis, belajar matematika, belajar fisika, belajar kimia, belajar biologi, belajar komputer, belajar AI, belajar data science, latihan soal, pembahasan soal, persiapan ujian, try out online, materi SD, materi SMP, materi SMA, materi universitas, pendidikan terbuka, Nakafa",
-    "knows-about": "Matematika, Fisika, Kimia, Biologi, Ilmu Komputer, Kecerdasan Artifisial, Sains Data, Persiapan Ujian, Pendidikan Dasar dan Menengah, Pendidikan Tinggi",
     "classification": "Pendidikan"
   },
   "Common": {
@@ -2187,7 +2133,7 @@
     },
     "school-refusal-not-teacher": {
       "title": "Bukan guru aktif sekolah ini.",
-      "description": "Pilih guru aktif sekolah ini."
+      "description": "Hanya guru aktif sekolah ini yang bisa menjadi wali kelas."
     },
     "school-refusal-teacher-has-homeroom": {
       "title": "Sudah menjadi wali kelas lain.",
@@ -2417,10 +2363,6 @@
     "school-refusal-class-subject-not-allowed": {
       "title": "Ruang kelas SD tanpa mata pelajaran.",
       "description": "Tambahkan tanpa mata pelajaran."
-    },
-    "school-refusal-person-class-limit": {
-      "title": "Ruang kelas guru ini sudah penuh.",
-      "description": "Lepas dari ruang kelas lain dulu."
     },
     "school-period-archived": {
       "title": "Periode diarsipkan."
@@ -2699,10 +2641,6 @@
     "school-refusal-schedule-invalid": {
       "title": "Waktu ini tidak bisa dipakai.",
       "description": "Pilih waktu mulai yang belum lewat, dan waktu selesai sesudahnya."
-    },
-    "school-refusal-scheme-not-later": {
-      "title": "Ada versi yang lebih baru.",
-      "description": "Muat ulang halaman untuk melihatnya, lalu simpan versimu."
     }
   },
   "Ai": {

@@ -78,6 +78,7 @@ export const classKind = Kind.make("class", "classes", {
     Schema.Struct({ type: Schema.Literal("class.created") }),
     Schema.Struct({ type: Schema.Literal("class.renamed") }),
     Schema.Struct({ type: Schema.Literal("class.archived") }),
+    Schema.Struct({ type: Schema.Literal("class.restored") }),
     Schema.Struct({
       teacher: Id("tenantPeople"),
       type: Schema.Literal("class.teacherAssigned"),

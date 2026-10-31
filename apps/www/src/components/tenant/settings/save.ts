@@ -102,10 +102,6 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-class-subject-taken.description",
     title: "school-refusal-class-subject-taken.title",
   },
-  SchemeNotLater: {
-    description: "school-refusal-scheme-not-later.description",
-    title: "school-refusal-scheme-not-later.title",
-  },
   CohortHasHomeroom: {
     description: "school-refusal-cohort-has-homeroom.description",
     title: "school-refusal-cohort-has-homeroom.title",
@@ -165,10 +161,6 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
   NpsnTaken: {
     description: "school-refusal-npsn-taken.description",
     title: "school-refusal-npsn-taken.title",
-  },
-  PersonClassLimit: {
-    description: "school-refusal-person-class-limit.description",
-    title: "school-refusal-person-class-limit.title",
   },
   PeriodActive: {
     description: "school-refusal-period-active.description",
