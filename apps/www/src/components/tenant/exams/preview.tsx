@@ -19,7 +19,7 @@ import { drawDocument } from "@repo/design-system/components/editor/prose";
 import { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
-import { type ReactNode, useCallback, useDeferredValue, useMemo } from "react";
+import { useCallback, useDeferredValue, useMemo } from "react";
 import { useTranslations } from "use-intl";
 import {
   choiceOf,
@@ -36,7 +36,6 @@ import {
   useExamLocked,
 } from "@/components/tenant/exams/provider";
 import {
-  ControlRoom,
   OptionAddRoom,
   PaperLine,
   PaperNumber,
@@ -185,32 +184,6 @@ export function OptionSketch({ label }: { label: OptionLabel }) {
 }
 
 /**
- * One option of a paper drawn without editors: the letter and the text the caller composes. A page with
- * controls keeps the room of the one control an option has beside its text, the remove control, as the
- * editor's page does.
- */
-function PaperChoice({
-  children,
-  withControls,
-}: {
-  children: ReactNode;
-  withControls: boolean;
-}) {
-  if (!withControls) {
-    return children;
-  }
-
-  return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-      {children}
-      <div aria-hidden className="flex items-center gap-1">
-        <ControlRoom />
-      </div>
-    </div>
-  );
-}
-
-/**
  * One column of a matching or a table question drawn without editors, as its live column draws it: its
  * heading, its parts numbered or lettered, and the room of the action that adds a part when it takes one.
  */
@@ -233,11 +206,9 @@ function PartSketch({
     <div className="grid content-start gap-2">
       <p className="text-muted-foreground text-sm font-medium">{heading}</p>
       {Arr.map(parts, (part, index) => (
-        <PaperChoice key={part.id} withControls={withControls}>
-          <PaperOption letter={letterOf(index)}>
-            <OptionSketch label={part.label} />
-          </PaperOption>
-        </PaperChoice>
+        <PaperOption key={part.id} letter={letterOf(index)}>
+          <OptionSketch label={part.label} />
+        </PaperOption>
       ))}
       {withControls && adds && !locked && parts.length < CHOICE_OPTIONS_MAX ? (
         <OptionAddRoom />
@@ -293,8 +264,8 @@ const statementNumber = (index: number) => String(index + 1);
  * The answers of one question drawn without editors, as the student reads them, below the prompt that
  * the caller draws on the same paper (`PreviewProse`). The page draws them when its editors are not
  * mounted, and the thumbnails draw them small, so a page and its thumbnail look alike. A page passes
- * `withControls`, which keeps the room of its option controls and of the action that adds an option, so
- * the paper is as wide and as tall as it is when the editor mounts.
+ * `withControls`, which keeps the room of the action that adds an option, so the paper is as tall as it
+ * is when the editor mounts.
  */
 export function PaperSketch({
   question,
@@ -328,11 +299,9 @@ export function PaperSketch({
       {Option.isSome(choice) ? (
         <PaperOptions>
           {Arr.map(choice.value.options, (option, index) => (
-            <PaperChoice key={option.id} withControls={withControls}>
-              <PaperOption letter={optionLetter(index, script)}>
-                <OptionSketch label={option.label} />
-              </PaperOption>
-            </PaperChoice>
+            <PaperOption key={option.id} letter={optionLetter(index, script)}>
+              <OptionSketch label={option.label} />
+            </PaperOption>
           ))}
         </PaperOptions>
       ) : null}

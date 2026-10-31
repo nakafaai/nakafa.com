@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import type { ReactElement } from "react";
 import { SittingModeProvider } from "@/components/exams/sitting/mode";
+import { SittingRecovery } from "@/components/exams/sitting/recovery";
 import { StudentSitting } from "@/components/exams/sitting/student";
 import {
   readBrowserPlayerMode,
@@ -40,7 +41,9 @@ function StudentSittingPage(): ReactElement | null {
   const mode = Route.useLoaderData();
   return (
     <SittingModeProvider mode={mode}>
-      <StudentSitting sittingId={sittingId} slug={slug} />
+      <SittingRecovery>
+        <StudentSitting sittingId={sittingId} slug={slug} />
+      </SittingRecovery>
     </SittingModeProvider>
   );
 }

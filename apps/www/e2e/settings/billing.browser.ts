@@ -90,7 +90,7 @@ test("a pass holder sees when the pass ends, finds the receipt in Payments, and 
         await expect(receipts.getByText("Pro pass")).toBeVisible();
         await expect(receipts.getByText("Rp 79.000")).toBeVisible();
         await pictureDialog(page, "payments");
-        await receipts.getByRole("button", { name: "Close" }).click();
+        await receipts.getByRole("button", { name: "Close" }).last().click();
         await expect(receipts).toBeHidden();
         const extend = page.getByRole("button", { name: "Extend Pro" });
         await waitUntilTakenOver(extend);
@@ -123,7 +123,7 @@ test("a Xendit subscriber cancels the plan in the settings, and it ends with its
         await payments.click();
         const receipts = page.getByRole("dialog", { name: "Payments" });
         await expect(receipts.getByText("Pro subscription")).toBeVisible();
-        await receipts.getByRole("button", { name: "Close" }).click();
+        await receipts.getByRole("button", { name: "Close" }).last().click();
         await expect(receipts).toBeHidden();
         const cancel = page.getByRole("button", { name: "Cancel plan" });
         await waitUntilTakenOver(cancel);

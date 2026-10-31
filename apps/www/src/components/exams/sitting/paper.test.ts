@@ -39,6 +39,28 @@ const saved: SavedValue = {
 };
 
 describe("mergePaper", () => {
+  it("keeps a question's object until its version or its flag moves, so an answer redraws one question", () => {
+    const steady: typeof PaperView.Type = {
+      questions: [question("steady-a", 1), question("steady-b", 2)],
+    };
+    const [firstA, firstB] = mergePaper(steady, saved).questions;
+    const answered = setSavedResponse(
+      saved,
+      questionId("steady-b"),
+      ["b-2"],
+      1
+    );
+    const [secondA, secondB] = mergePaper(steady, answered).questions;
+    const [thirdA] = mergePaper(
+      steady,
+      setSavedFlag(answered, questionId("steady-a"), true)
+    ).questions;
+
+    expect(secondA).toBe(firstA);
+    expect(secondB).not.toBe(firstB);
+    expect(thirdA).not.toBe(secondA);
+  });
+
   it("gives each question of the paper the response, version, and flag that the student saved, and none to the others", () => {
     const merged = mergePaper(paper, {
       answers: saved.answers,

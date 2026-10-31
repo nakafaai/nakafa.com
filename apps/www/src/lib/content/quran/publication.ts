@@ -38,21 +38,19 @@ export const readPublishedQuranMarkdown = Effect.fn(
   "NakafaQuran.readPublishedMarkdown"
 )(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(
-      contentRelease.quran.prose,
-      verseLimit === undefined
-        ? {
-            appLocale,
-            surahNumber,
-          }
-        : {
-            appLocale,
-            surahNumber,
-            verseLimit,
-          }
-    )
-  ).pipe(Effect.provide(httpLayer()));
+  const result = yield* queryContentStore(
+    contentRelease.quran.prose,
+    verseLimit === undefined
+      ? {
+          appLocale,
+          surahNumber,
+        }
+      : {
+          appLocale,
+          surahNumber,
+          verseLimit,
+        }
+  );
   return yield* decodePublishedQuranMarkdown(result, {
     appLocale,
     surahNumber,

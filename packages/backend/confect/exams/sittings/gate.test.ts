@@ -10,6 +10,7 @@ import { nf } from "@repo/backend/test/editor";
 import {
   deviceOf,
   enterOk,
+  OPENS_AT,
   openedSitting,
   type SittingFixture,
 } from "@repo/backend/test/sittings";
@@ -82,12 +83,12 @@ describe("exams/sittings gate", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const send = yield* passedAttempt(fixture, {
-          deadline: TENANCY_NOW,
+          deadline: OPENS_AT,
           state: "closing",
         });
-        vi.setSystemTime(TENANCY_NOW + WRITE_ALLOWANCE_MS - 1);
+        vi.setSystemTime(OPENS_AT + WRITE_ALLOWANCE_MS - 1);
         yield* send(1);
-        vi.setSystemTime(TENANCY_NOW + WRITE_ALLOWANCE_MS);
+        vi.setSystemTime(OPENS_AT + WRITE_ALLOWANCE_MS);
         expect(yield* send(2).pipe(Effect.flip)).toMatchObject({
           _tag: "AttemptClosed",
         });
@@ -98,7 +99,7 @@ describe("exams/sittings gate", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const send = yield* passedAttempt(fixture, {
-        deadline: TENANCY_NOW - 1,
+        deadline: OPENS_AT - 1,
         state: "locked",
       });
       expect(yield* send(1).pipe(Effect.flip)).toMatchObject({

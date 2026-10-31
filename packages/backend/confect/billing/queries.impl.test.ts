@@ -315,15 +315,15 @@ describe("billing/queries proOffers", () => {
           offer: "pro.pass.12",
         },
       ]);
-      // While no live channel renews, the switch sells every offer in one list: the plan on Polar, the passes on Xendit.
+      // While no live channel renews, the passes lead the list, so a buyer without a card starts on one they can pay.
       vi.stubEnv("BILLING_INDONESIA_RAIL", "passes");
       expect(
         await t.query(api.billing.queries.proOffers, { currency: "IDR" })
       ).toMatchObject([
-        { offer: "pro.monthly" },
         { offer: "pro.pass.1" },
         { offer: "pro.pass.3" },
         { offer: "pro.pass.12" },
+        { offer: "pro.monthly" },
       ]);
       vi.stubEnv("BILLING_INDONESIA_RAIL", "xendit");
       // Without the Xendit key the monthly plan falls back to Polar, and the passes only Xendit sells are left out.

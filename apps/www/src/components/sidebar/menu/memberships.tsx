@@ -70,14 +70,10 @@ export function SidebarMembershipItems() {
   );
 }
 
-/** The whole group of schools, for a menu that loads it in one piece, as a school's switcher does. */
-export function SidebarMembershipGroup({
-  canOpenSchool,
-}: {
-  canOpenSchool: boolean;
-}) {
+/** The whole group of schools, for a menu that loads it in one piece, as a school's switcher does: no new school opens there. */
+export function SidebarMembershipGroup() {
   return (
-    <SidebarSchools canOpenSchool={canOpenSchool}>
+    <SidebarSchools canOpenSchool={false}>
       <SidebarMembershipItems />
     </SidebarSchools>
   );

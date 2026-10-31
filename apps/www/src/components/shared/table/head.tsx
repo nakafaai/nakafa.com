@@ -26,9 +26,9 @@ import type { dataTableFeatures } from "@/components/shared/table/features";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 
 /**
- * Where a head's button stands in its line: pulled to the cell's start edge in the first column, so the column's name
- * lines up with the rows below it, and pulled to both edges in a centred column. An active head, one that sorts or
- * filters the rows, takes the muted fill.
+ * Where a head's button stands in its line: pulled out by its own padding in the first column, so the column's name
+ * lines up with the rows below it, in the last column of figures, so its icon ends where they end, and to both edges in
+ * a centred column. An active head, one that sorts or filters the rows, takes the muted fill.
  */
 const headButton = cva(
   "max-w-[calc(100%+1rem)] min-w-0 overflow-hidden sm:max-w-[calc(100%+1.75rem)]",
@@ -36,7 +36,11 @@ const headButton = cva(
     defaultVariants: { active: false, align: "center" },
     variants: {
       active: { false: "", true: "bg-muted text-foreground" },
-      align: { center: "-mx-2 sm:-mx-3", start: "-ml-2 sm:-ml-3" },
+      align: {
+        center: "-mx-2 sm:-mx-3",
+        end: "-mr-2.5",
+        start: "-ml-2.5",
+      },
     },
   }
 );
@@ -55,7 +59,7 @@ export function TableHeadButton({
   ...props
 }: Omit<ComponentProps<typeof Button>, "className" | "size" | "variant"> & {
   readonly active?: boolean;
-  readonly align?: "center" | "start";
+  readonly align?: "center" | "end" | "start";
   readonly icon: IconSvgElement;
 }) {
   return (
