@@ -22,6 +22,9 @@ const ARTICLE = "article[data-player-key]";
 /** The accessible name of the footer button that opens the navigator sheet. */
 const OPENER_NAME = /^Open the question navigator/u;
 
+/** The accessible name of the view button, which says the view it shows. */
+const VIEW_NAME = /^View, /u;
+
 /** The cookie in which the server remembers the view a learner chose. */
 const VIEW_COOKIE = "player_view";
 
@@ -240,7 +243,7 @@ export const chooseView = Effect.fn("NakafaE2E.chooseView")(function* (
   hasTouch: boolean,
   view: PlayerView
 ) {
-  const menu = viewOf(page).getByRole("button", { exact: true, name: "View" });
+  const menu = viewOf(page).getByRole("button", { name: VIEW_NAME });
   // A page that was just loaded may not be React's yet, and a press before then is lost.
   yield* Effect.promise(() => waitUntilTakenOver(menu));
   yield* activate(menu, hasTouch);

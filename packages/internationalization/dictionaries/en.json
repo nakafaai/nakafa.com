@@ -2147,6 +2147,7 @@
     "next-question": "Next question",
     "question": "Question {number}",
     "mode": "View",
+    "mode-current": "View, {view}",
     "mode-list": "List",
     "mode-single": "One question",
     "cell": "{state, select, answered {Question {number}, answered} other {Question {number}, unanswered}}",

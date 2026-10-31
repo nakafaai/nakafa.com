@@ -2147,6 +2147,7 @@
     "next-question": "Nächste Aufgabe",
     "question": "Frage {number}",
     "mode": "Ansicht",
+    "mode-current": "Ansicht, {view}",
     "mode-list": "Liste",
     "mode-single": "Eine Aufgabe",
     "cell": "{state, select, answered {Aufgabe {number}, beantwortet} other {Aufgabe {number}, offen}}",
