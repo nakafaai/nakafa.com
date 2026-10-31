@@ -9,8 +9,7 @@ import {
   seedSitting,
   signInOwner,
 } from "@/e2e/support/school";
-import { BUBBLE_CONTENT } from "@/e2e/support/selector";
-import { openServedChat, rowOf } from "@/e2e/support/serve";
+import { drawnRow, openServedChat } from "@/e2e/support/serve";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -266,11 +265,12 @@ test.describe("Content looks alike on every surface", () => {
     await Effect.runPromise(
       openServedChat(page, baseURL ?? "", [question, answer])
     );
-    const bubble = rowOf(page, answer).locator(BUBBLE_CONTENT);
-    await expect(bubble).toContainText("Soal ketiga", {
+    // An answer is drawn in its row, not in a bubble as a question is, and only once the row is in sight.
+    const row = await drawnRow(page, answer);
+    await expect(row).toContainText("Soal ketiga", {
       timeout: readinessTimeoutMilliseconds,
     });
-    const markdown = await looksIn(bubble, "markdown");
+    const markdown = await looksIn(row, "markdown");
 
     const exam = await documentLooks(browser, baseURL);
     const surfaces = { markdown, ...exam };
