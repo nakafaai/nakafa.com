@@ -126,15 +126,11 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
               finalFocus={menuFinalFocus}
             >
               <DropdownMenuGroup>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={handleEdit}
-                >
+                <DropdownMenuItem onClick={handleEdit}>
                   <HugeIcons icon={Edit01Icon} />
                   {t("rename-chat")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="cursor-pointer"
                   onClick={() => setConfirmShare(true)}
                   onFocus={warmShare}
                   onPointerDown={warmShare}
@@ -147,7 +143,6 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem
-                  className="cursor-pointer"
                   onClick={() => setConfirmDelete(true)}
                   variant="destructive"
                 >

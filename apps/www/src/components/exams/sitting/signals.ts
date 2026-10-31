@@ -18,8 +18,11 @@ import { reportClientException } from "@/lib/analytics/client";
 
 /**
  * Sends the integrity signals of one admitted attempt while the student's page is open: a
- * change of visibility, leaving the window, leaving full screen, copy, and paste. The gate
- * keeps each kind to one send a second, and a failed send only reaches the analytics.
+ * change of visibility, leaving the window, leaving full screen, copy, paste, and losing and
+ * finding the network. The gate keeps each kind to one send a second, and a failed send only
+ * reaches the analytics. A disconnect carries the moment the device went offline: the client
+ * holds the send until the server can be reached again, so the proctor reads how long the
+ * student was offline.
  */
 export function useSittingSignals({
   attemptId,
@@ -43,18 +46,21 @@ export function useSittingSignals({
     /** Sends one kind of signal, unless the gate holds it back. */
     function send(kind: typeof SignalKind.Type) {
       const current: SignalGate = gate.current ?? HashMap.empty();
-      const [allowed, next] = takeSignal(
-        current,
-        kind,
-        Effect.runSync(Clock.currentTimeMillis)
-      );
+      const now = Effect.runSync(Clock.currentTimeMillis);
+      const [allowed, next] = takeSignal(current, kind, now);
       gate.current = next;
       if (!allowed) {
         return;
       }
       Effect.runPromise(
         Effect.tryPromise(() =>
-          signal({ attemptId, deviceId, kind, slug })
+          signal({
+            attemptId,
+            deviceId,
+            kind,
+            slug,
+            ...(kind === "disconnect" ? { since: now } : {}),
+          })
         ).pipe(
           Effect.flatMap(Effect.fromResult),
           Effect.matchEffect({
@@ -100,12 +106,22 @@ export function useSittingSignals({
       send("paste");
     }
 
+    function onOffline() {
+      send("disconnect");
+    }
+
+    function onOnline() {
+      send("return");
+    }
+
     document.addEventListener("visibilitychange", onVisibility);
     document.addEventListener("fullscreenchange", onFullscreen);
     document.addEventListener("copy", onCopy);
     document.addEventListener("paste", onPaste);
     window.addEventListener("pagehide", onPageHide);
     window.addEventListener("blur", onBlur);
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("online", onOnline);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       document.removeEventListener("fullscreenchange", onFullscreen);
@@ -113,6 +129,8 @@ export function useSittingSignals({
       document.removeEventListener("paste", onPaste);
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("blur", onBlur);
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("online", onOnline);
     };
   }, [attemptId, deviceId, enabled, signal, slug]);
 }

@@ -3,6 +3,10 @@ import { useInViewport } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
 import {
+  letterScript,
+  optionLetter,
+} from "@repo/backend/confect/exams/letters";
+import {
   CHOICE_OPTIONS_MAX,
   fixedOptions,
 } from "@repo/backend/confect/exams/question";
@@ -23,7 +27,6 @@ import {
   choiceOf,
   entryOf,
   type OptionLabel,
-  optionLetter,
 } from "@/components/tenant/exams/answer";
 import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
@@ -166,7 +169,8 @@ export function PreviewProse({
       markBlockDirections(element);
       drawArticleProse(element);
       Arr.forEach(Arr.fromIterable(element.querySelectorAll("p")), (p) => {
-        if (article) {
+        // A cell's paragraph reads as the cell's words, as the lesson and the editor draw it.
+        if (article && p.closest("td, th") === null) {
           p.className = paragraphVariants();
         }
         if (p.childNodes.length === 0) {
@@ -327,6 +331,13 @@ export function PaperSketch({
   const t = useTranslations("Exams");
   const locked = useExamLocked();
   const choice = choiceOf(question.answers);
+  // The options are named in the script of their labels: أ, ب, ج for a set written in Arabic.
+  const script = letterScript(
+    Option.match(choice, {
+      onNone: () => [],
+      onSome: (current) => Arr.map(current.options, (option) => option.label),
+    })
+  );
   // A template that fixes its options takes no added option, so its page keeps no room for the action.
   const addsOption =
     withControls &&
@@ -343,7 +354,7 @@ export function PaperSketch({
         <PaperOptions>
           {Arr.map(choice.value.options, (option, index) => (
             <PaperChoice key={option.id} withControls={withControls}>
-              <PaperOption letter={optionLetter(index)}>
+              <PaperOption letter={optionLetter(index, script)}>
                 <OptionSketch label={option.label} />
               </PaperOption>
             </PaperChoice>
@@ -364,7 +375,12 @@ export function PaperSketch({
             <PartSketch
               adds
               heading={t("match-answers")}
-              letterOf={optionLetter}
+              letterOf={(index) =>
+                optionLetter(
+                  index,
+                  letterScript(Arr.map(match.targets, (part) => part.label))
+                )
+              }
               parts={match.targets}
               withControls={withControls}
             />

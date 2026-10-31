@@ -63,7 +63,7 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
     .getByRole("dialog")
     .getByRole("button", { name: "Finish", exact: true })
     .click();
-  await expect(student.getByText("Your answers are in.")).toBeVisible();
+  await expect(student.getByText("You finished this exam.")).toBeVisible();
   await expect(
     student.getByText(
       "Your teacher releases the results after the sitting closes."
@@ -131,6 +131,11 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(student.getByText(SCORE)).toBeVisible();
+  // The student's own exams keep the finished exam with its released score.
+  await student.goto(address("/sittings"));
+  await expect(student.getByRole("table").getByText(SCORE)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
 
   await studentContext.close();
   await proctorContext.close();

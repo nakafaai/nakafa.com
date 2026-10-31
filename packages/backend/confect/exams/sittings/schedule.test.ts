@@ -13,6 +13,7 @@ import {
   sittingRow,
 } from "@repo/backend/test/sittings";
 import {
+  actedAt,
   journal,
   scheduledJobs,
   TENANCY_NOW,
@@ -55,7 +56,8 @@ describe("exams/sittings schedule", () => {
         });
         expect(row.tokenHash).not.toBe(made.token);
         expect(row.tokenHash).not.toContain(made.token);
-        expect(row.jobs).toHaveLength(2);
+        // The opening, the closing, and the two notices of its students and their guardians.
+        expect(row.jobs).toHaveLength(4);
         const entries = yield* fixture.run(journal);
         expect(Arr.map(entries, (entry) => entry.change)).toContainEqual({
           type: "sitting.schedule",
@@ -93,11 +95,12 @@ describe("exams/sittings schedule", () => {
         const fixture = yield* tenancyFixture;
         yield* keyedSchool(fixture);
         const examId = yield* keyedExam(fixture, "PTS");
+        vi.setSystemTime(actedAt());
         const late = yield* scheduleSitting(fixture, {
           closesAt: CLOSES_AT,
           examId,
           group: { kind: "unit", unitId: fixture.units.smp },
-          opensAt: TENANCY_NOW - 60_001,
+          opensAt: actedAt() - 60_001,
         }).pipe(Effect.flip);
         expect(late).toMatchObject({
           _tag: "ScheduleInvalid",
@@ -107,7 +110,7 @@ describe("exams/sittings schedule", () => {
           closesAt: CLOSES_AT,
           examId,
           group: { kind: "unit", unitId: fixture.units.smp },
-          opensAt: TENANCY_NOW - 60_000,
+          opensAt: actedAt() - 60_000,
         });
         expect(edge.token).toMatch(TOKEN);
       })

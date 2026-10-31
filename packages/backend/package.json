@@ -37,7 +37,7 @@
     "@convex-dev/rate-limiter": "0.4.2",
     "@convex-dev/resend": "^0.2.10",
     "@convex-dev/workflow": "^0.4.10",
-    "@convex-dev/workpool": "0.4.14",
+    "@convex-dev/workpool": "0.4.15",
     "@effect/platform-browser": "catalog:",
     "@effect/platform-node": "catalog:",
     "@nakafa/aksara-contracts": "1.0.0",
@@ -91,7 +91,7 @@
     "@scalar/openapi-parser": "0.29.18",
     "@vitest/coverage-istanbul": "catalog:",
     "auth": "1.6.33",
-    "convex-test": "^0.0.62",
+    "convex-test": "0.0.66",
     "typescript": "npm:typescript@7.0.2",
     "vite": "catalog:",
     "vitest": "catalog:"

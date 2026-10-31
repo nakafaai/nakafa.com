@@ -1,10 +1,8 @@
-import { env } from "cloudflare:workers";
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { Effect, Option } from "effect";
-import { clientEnv } from "@/env.public";
 import { hasStaticRelease } from "@/lib/routing/release";
 import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
-import { SCHOOL_SHELL_PATH } from "@/lib/routing/school/shell";
+import { answerShell } from "@/lib/routing/shell.server";
 import { namesFile } from "@/lib/routing/template";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
 
@@ -29,7 +27,7 @@ function readSchoolHostPath(request: Request): Option.Option<string> {
 }
 
 /** Whether the release's static shell answers a request: a school host's page, an address that names no file. */
-function readsSchoolShell(request: Request) {
+export function readsSchoolShell(request: Request) {
   return Option.exists(
     readSchoolHostPath(request),
     (pathname) => !namesFile(pathname)
@@ -53,30 +51,6 @@ export const readSchoolFile = Effect.fn("www.routing.school.file")(function* (
 });
 
 /**
- * The release's static shell at the visitor's address, with the given status. Its
- * `Link` header opens the connection to Convex while the shell's scripts load, so
- * the school's first read, which the page makes as soon as it runs, finds it open.
- */
-const answerSchoolShell = Effect.fn("www.routing.school.shell")(function* (
-  request: Request,
-  status: 200 | 404
-) {
-  const shell = yield* Effect.promise(() =>
-    env.ASSETS.fetch(new Request(new URL(SCHOOL_SHELL_PATH, request.url)))
-  );
-  const headers = new Headers(shell.headers);
-  headers.set("Content-Type", "text/html; charset=utf-8");
-  headers.append(
-    "Link",
-    `<${new URL(clientEnv.VITE_CONVEX_URL).origin}>; rel=preconnect; crossorigin`
-  );
-  return new Response(request.method === "HEAD" ? null : shell.body, {
-    headers,
-    status,
-  });
-});
-
-/**
  * Answers a page of a school host with the release's static shell and the given
  * status, and any other request with `otherwise`. A school renders only in the
  * browser (ADR 0038 D2), so the Worker renders nothing for it: the shell's script
@@ -88,7 +62,7 @@ export const answerSchoolPage = Effect.fn("www.routing.school.page")(function* <
   R,
 >(request: Request, status: 200 | 404, otherwise: Effect.Effect<A, E, R>) {
   if (readsSchoolShell(request)) {
-    return yield* answerSchoolShell(request, status);
+    return yield* answerShell(request, status);
   }
   return yield* otherwise;
 });

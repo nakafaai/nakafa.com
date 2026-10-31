@@ -272,7 +272,7 @@ function SearchListItem({
   if (item.type === "content") {
     return (
       <CommandItem
-        className="group cursor-pointer flex-col items-start"
+        className="group flex-col items-start"
         disabled={isPending}
         onClick={onClick}
         value={item}
@@ -291,12 +291,7 @@ function SearchListItem({
   }
 
   return (
-    <CommandItem
-      className="cursor-pointer"
-      disabled={isPending}
-      onClick={onClick}
-      value={item}
-    >
+    <CommandItem disabled={isPending} onClick={onClick} value={item}>
       <HugeIcons icon={item.icon} />
       <span className="line-clamp-1">{item.label}</span>
     </CommandItem>

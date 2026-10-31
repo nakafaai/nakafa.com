@@ -19,7 +19,7 @@ test("every School text field shows what to write: the card sign-in, the invite 
 
   const visitor = await browser.newContext();
   const entry = await visitor.newPage();
-  await entry.goto(address("/?masuk=username"));
+  await entry.goto(address("/?sign-in=username"));
   await waitUntilTakenOver(entry.getByRole("button", { name: "Sign in" }));
   await expect(entry.locator('form [data-slot="input"]')).not.toHaveCount(0);
   await expect(unhinted(entry.locator("form"))).toHaveCount(0);

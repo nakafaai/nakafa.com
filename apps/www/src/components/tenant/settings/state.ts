@@ -82,14 +82,20 @@ export function setPeriodStatus(
   );
 }
 
-/** Sets the name of one period on a page, and keeps every other period as it is. */
-export function setPeriodName(
+/**
+ * Sets the name and the dates of one period on a page, keeps every other period as it is, and puts the page back in the
+ * order the list shows it, since a new start can move the period.
+ */
+export function editPeriod(
   page: readonly Period[],
   periodId: Period["id"],
-  name: Period["name"]
+  edited: Pick<Period, "end" | "name" | "start">
 ) {
-  return Arr.map(page, (period) =>
-    period.id === periodId ? { ...period, name } : period
+  return Arr.sort(
+    Arr.map(page, (period) =>
+      period.id === periodId ? { ...period, ...edited } : period
+    ),
+    byNewestStart
   );
 }
 
@@ -109,14 +115,20 @@ export function insertCohort(cohorts: readonly Cohort[], cohort: Cohort) {
   return Arr.sort(Arr.prepend(cohorts, cohort), byGradeAndName);
 }
 
-/** Sets the name of one cohort in a list, and keeps every other cohort as it is. */
-export function setCohortName(
+/**
+ * Gives one cohort of a list its new name and school year, keeps every other cohort as it is, and puts the list in
+ * the order it shows its cohorts.
+ */
+export function editCohort(
   cohorts: readonly Cohort[],
   cohortId: Cohort["id"],
-  name: Cohort["name"]
+  change: Pick<Cohort, "grade" | "name">
 ) {
-  return Arr.map(cohorts, (cohort) =>
-    cohort.id === cohortId ? { ...cohort, name } : cohort
+  return Arr.sort(
+    Arr.map(cohorts, (cohort) =>
+      cohort.id === cohortId ? { ...cohort, ...change } : cohort
+    ),
+    byGradeAndName
   );
 }
 

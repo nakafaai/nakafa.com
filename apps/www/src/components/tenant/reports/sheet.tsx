@@ -205,7 +205,7 @@ function CohortReportsBody() {
     lineColumns.display({
       cell: (info) => <ReportLineMenu line={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

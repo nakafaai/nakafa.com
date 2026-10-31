@@ -3,9 +3,15 @@ import {
   ESSAY_RESPONSE_MAX,
   TEXT_RESPONSE_MAX,
 } from "@repo/backend/confect/exams/sittings/response";
-import { Input } from "@repo/design-system/components/ui/input";
-import { Textarea } from "@repo/design-system/components/ui/textarea";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupTextarea,
+} from "@repo/design-system/components/ui/input-group";
+import { useRef } from "react";
 import { useTranslations } from "use-intl";
+import { SittingKeypad } from "@/components/exams/sitting/keypad";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
 import type { Written } from "@/components/exams/sitting/response";
 
@@ -23,7 +29,8 @@ const ESSAY_ROWS = 8;
  * area the student writes an essay in, as a paper exam leaves room to write. The field shows each key at
  * once and keeps the text in the browser on every key, then sends it once the student pauses, leaves the
  * field, leaves the question, or the page hides or closes, so a typed answer is not one save per key and a
- * reload or a closed tab loses no key.
+ * reload or a closed tab loses no key. The Arabic keypad beside the field types an Arabic answer with its
+ * harakat, and the field follows the direction of the words the student writes.
  */
 export function SittingField({
   entry,
@@ -47,6 +54,8 @@ export function SittingField({
 }) {
   const disabled = usePaperLocked();
   const t = useTranslations("Exams");
+  const area = useRef<HTMLTextAreaElement>(null);
+  const line = useRef<HTMLInputElement>(null);
   const save = useDebouncedCallback(onType, {
     delay: TYPING_PAUSE_MILLISECONDS,
     flushOnUnmount: true,
@@ -68,32 +77,46 @@ export function SittingField({
 
   if (entry.kind === "extendedText") {
     return (
-      <Textarea
-        aria-labelledby={labelledBy}
-        defaultValue={text}
-        disabled={disabled}
-        maxLength={ESSAY_RESPONSE_MAX}
-        name={entry.id}
-        onBlur={() => save.flush()}
-        onChange={(event) => write(event.currentTarget.value)}
-        placeholder={t("essay-placeholder")}
-        rows={ESSAY_ROWS}
-      />
+      <InputGroup data-disabled={disabled}>
+        <InputGroupTextarea
+          aria-labelledby={labelledBy}
+          defaultValue={text}
+          dir="auto"
+          disabled={disabled}
+          maxLength={ESSAY_RESPONSE_MAX}
+          name={entry.id}
+          onBlur={() => save.flush()}
+          onChange={(event) => write(event.currentTarget.value)}
+          placeholder={t("essay-placeholder")}
+          ref={area}
+          rows={ESSAY_ROWS}
+        />
+        <InputGroupAddon align="block-end" className="justify-end">
+          <SittingKeypad field={area} />
+        </InputGroupAddon>
+      </InputGroup>
     );
   }
 
   return (
-    <Input
-      aria-labelledby={labelledBy}
-      autoComplete="off"
-      defaultValue={text}
-      disabled={disabled}
-      maxLength={TEXT_RESPONSE_MAX}
-      name={entry.id}
-      onBlur={() => save.flush()}
-      onChange={(event) => write(event.currentTarget.value)}
-      placeholder={t("short-placeholder")}
-      spellCheck={false}
-    />
+    <InputGroup data-disabled={disabled}>
+      <InputGroupInput
+        aria-labelledby={labelledBy}
+        autoComplete="off"
+        defaultValue={text}
+        dir="auto"
+        disabled={disabled}
+        maxLength={TEXT_RESPONSE_MAX}
+        name={entry.id}
+        onBlur={() => save.flush()}
+        onChange={(event) => write(event.currentTarget.value)}
+        placeholder={t("short-placeholder")}
+        ref={line}
+        spellCheck={false}
+      />
+      <InputGroupAddon align="inline-end">
+        <SittingKeypad field={line} />
+      </InputGroupAddon>
+    </InputGroup>
   );
 }
