@@ -9,16 +9,21 @@ import { Effect, Option } from "effect";
 import { answerRequest } from "@/lib/routing/answer.server";
 import { logRouteFailures } from "@/lib/routing/failures.server";
 import "@/lib/server/runtime";
+import { isPrerender, PRERENDER_HEADER } from "@/lib/static/calls";
 import { attachStaticCalls } from "@/lib/static/record.server";
+import { renderStaticPage } from "@/lib/static/render.server";
 import { withPageHeaders } from "@/lib/tenant/gate";
 
 /**
  * Renders the route tree after the router loads it. The router answers a failed
  * route with its own error page, so the log of each failed route is written here.
+ * The build's prerender gets each page whole; a visitor gets it as it streams.
  */
 const startHandler = createStartHandler((context) => {
   Effect.runSync(logRouteFailures(context.router.stores.matches.get()));
-  return defaultStreamHandler(context);
+  return isPrerender(context.request.headers.get(PRERENDER_HEADER))
+    ? renderStaticPage(context)
+    : defaultStreamHandler(context);
 });
 
 /**

@@ -40,20 +40,27 @@ import { THEME_PREPAINT_SCRIPT } from "#www/src/lib/theme/prepaint";
  * The marker that React writes where a Suspense boundary failed on the server, so
  * the browser renders that part. A page that carries it is a server failure.
  */
-const SERVER_FAILURE_MARKER = "<!--$!-->";
+const SERVER_FAILURE_PATTERN = /<!--\$!-->/u;
+
+/**
+ * The marker that React writes where a Suspense boundary had not finished when
+ * the page was written: its content follows at the page's end, for the browser's
+ * script to move into place. A page that carries it was not rendered whole.
+ */
+const PENDING_BOUNDARY_PATTERN = /<!--\$\?--><template id="B:/u;
 
 /**
  * The robots meta of the standalone not-found page. A prerendered page never
  * renders that page, because TanStack would write the body of a missing route.
  */
-const NOT_FOUND_MARKER = '<meta name="robots" content="noindex,nofollow"';
+const NOT_FOUND_PATTERN = /<meta name="robots" content="noindex,nofollow"/u;
 
 /**
  * TanStack runs each prerender task in a queue whose failures nobody awaits: a
  * page that fails only logs an unhandled rejection, and the build still exits 0.
  * This check throws unless the client output directory, the directory that
- * TanStack prerenders into, holds exactly the listed pages and none of them
- * carries a server failure marker.
+ * TanStack prerenders into, holds exactly the listed pages, each rendered whole,
+ * and none of them carries a server failure marker.
  */
 function assertPrerenderedPages(
   clientOutputDirectory: string,
@@ -68,27 +75,26 @@ function assertPrerenderedPages(
   })
     .filter((entry) => basename(entry) === "index.html")
     .map((entry) => join(clientOutputDirectory, entry));
+  const listed = new Set(expected);
   const problems = [
-    ...expected
-      .filter((file) => !existsSync(file))
-      .map((file) => `no page at ${file}`),
+    ...expected.flatMap((file) => {
+      if (!existsSync(file)) {
+        return [`no page at ${file}`];
+      }
+      const html = readFileSync(file, "utf8");
+      return [
+        ...(SERVER_FAILURE_PATTERN.test(html)
+          ? [`server failure in ${file}`]
+          : []),
+        ...(PENDING_BOUNDARY_PATTERN.test(html)
+          ? [`unfinished boundary in ${file}`]
+          : []),
+        ...(NOT_FOUND_PATTERN.test(html) ? [`not-found page in ${file}`] : []),
+      ];
+    }),
     ...written
-      .filter((file) => !expected.includes(file))
+      .filter((file) => !listed.has(file))
       .map((file) => `unlisted page at ${file}`),
-    ...expected
-      .filter(
-        (file) =>
-          existsSync(file) &&
-          readFileSync(file, "utf8").includes(SERVER_FAILURE_MARKER)
-      )
-      .map((file) => `server failure in ${file}`),
-    ...expected
-      .filter(
-        (file) =>
-          existsSync(file) &&
-          readFileSync(file, "utf8").includes(NOT_FOUND_MARKER)
-      )
-      .map((file) => `not-found page in ${file}`),
   ];
   if (problems.length > 0) {
     throw new Error(

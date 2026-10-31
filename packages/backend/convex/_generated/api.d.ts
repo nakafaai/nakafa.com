@@ -6338,7 +6338,7 @@ export declare const api: {
               state: "inProgress" | "locked" | "closing" | "submitted";
             }>;
           };
-          can: Array<"sitting.proctor" | "sitting.view">;
+          can: Array<"sitting.proctor" | "sitting.schedule" | "sitting.view">;
           canViewResults: boolean;
           sitting: {
             closesAt: number;
@@ -7106,6 +7106,7 @@ export declare const api: {
             | "exam.rooms"
             | "exam.view"
             | "sitting.proctor"
+            | "sitting.schedule"
             | "sitting.view"
             | "result.grade"
             | "result.release"
@@ -7232,6 +7233,7 @@ export declare const api: {
               | "exam.rooms"
               | "exam.view"
               | "sitting.proctor"
+              | "sitting.schedule"
               | "sitting.view"
               | "result.grade"
               | "result.release"

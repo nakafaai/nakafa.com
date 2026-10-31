@@ -19,7 +19,7 @@ import { rememberPlayerMode } from "@/components/player/remember";
 /**
  * The view of the player in its header, beside the one primary action: the list
  * or one question at a time, chosen from a menu behind one button that shows the
- * current view's icon, at every width. So the header holds at most two buttons,
+ * current view's icon. So the header holds at most two buttons,
  * the view and Finish. A player with no questions, such as a sitting whose paper
  * failed to load, shows no view.
  */
@@ -68,7 +68,10 @@ function useChooseView() {
   };
 }
 
-/** The view's menu: its button shows the current view's icon, and each choice carries its own. */
+/**
+ * The view's menu: its button shows the current view's icon beside its name, as Finish beside it does, and
+ * the icon alone on a phone, where the name stays for a screen reader; each choice carries its own icon.
+ */
 function PlayerViewMenu() {
   const t = useTranslations("Player");
   const mode = usePlayer((state) => state.mode);
@@ -76,17 +79,9 @@ function PlayerViewMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            aria-label={t("mode")}
-            size="icon"
-            type="button"
-            variant="outline"
-          />
-        }
-      >
+      <DropdownMenuTrigger render={<Button type="button" variant="outline" />}>
         <HugeIcons icon={mode === "single" ? File01Icon : ListViewIcon} />
+        <span className="max-sm:sr-only">{t("mode")}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuRadioGroup onValueChange={onValueChange} value={mode}>

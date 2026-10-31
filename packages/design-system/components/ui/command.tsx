@@ -280,7 +280,7 @@ function CommandSeparator({
 }: React.ComponentProps<typeof AutocompleteSeparator>) {
   return (
     <AutocompleteSeparator
-      className={cn("my-2", className)}
+      className={cn("-mx-2 my-2", className)}
       data-slot="command-separator"
       {...props}
     />
