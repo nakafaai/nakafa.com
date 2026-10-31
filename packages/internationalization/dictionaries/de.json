@@ -1812,7 +1812,9 @@
     "incorrect": "Falsch",
     "reset": "Zurücksetzen",
     "explanation": "Lösungserklärung",
-    "number-count": "Nummer {count}"
+    "number-count": "Nummer {count}",
+    "prompt": "Aufgabe",
+    "reading": "Lesetext"
   },
   "Player": {
     "navigator": "Aufgaben",

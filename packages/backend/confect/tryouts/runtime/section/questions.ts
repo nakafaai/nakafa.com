@@ -1,21 +1,15 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import {
-  project,
-  projectSelection,
-} from "@repo/backend/confect/response/projection";
-import { requireTryoutResponseSectionSnapshot } from "@repo/backend/confect/tryouts/response/integrity";
-import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
+import { requireTryoutResponseSection } from "@repo/backend/confect/tryouts/response/integrity";
 import { readVersion } from "@repo/backend/confect/tryouts/response/version";
+import { readSectionBodies } from "@repo/backend/confect/tryouts/runtime/bodies";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import { loadSectionPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import {
   loadSectionResponseIndex,
   type TryoutResponseIndex,
 } from "@repo/backend/confect/tryouts/runtime/response";
-import { projectTryoutSignedContent } from "@repo/backend/confect/tryouts/runtime/selectors";
-import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
 import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/result";
 import { Array as Arr, Effect, HashSet, MutableHashMap, Option } from "effect";
 
@@ -48,11 +42,8 @@ const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
   if (!access.questions) {
     return null;
   }
-  const snapshot = yield* requireTryoutResponseSectionSnapshot(
-    attempt,
-    section
-  );
-  const placements = yield* loadSectionPlacements(attempt, snapshot);
+  const frozen = yield* requireTryoutResponseSection(attempt, section);
+  const placements = yield* loadSectionPlacements(attempt, frozen);
   const loaded = yield* loadSectionResponseIndex(attempt, section, placements);
   const currentSection = yield* readCurrentSection(section);
   return {
@@ -80,27 +71,24 @@ const loadFlaggedPlacements = Effect.fn(
   return HashSet.fromIterable(Arr.map(flags, (flag) => flag.question));
 });
 
-/** Loads the compact runtime plus immutable content selectors once. */
+/**
+ * Loads a section's compact runtime, which a live query repeats on every write, and the bodies of its
+ * questions, which a page reads once.
+ */
 export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
   function* (
     attempt: Docs["tryoutAttempts"],
     section: Docs["tryoutSectionAttempts"],
-    appLocale: AppLocaleCode = attempt.appLocale
+    appLocale: AppLocaleCode
   ) {
     const loaded = yield* loadSectionRows(attempt, section);
     if (!loaded) {
-      return {
-        content: noTryoutSectionContentAccess,
-        runtime: null,
-      };
+      return { content: [], runtime: null };
     }
-    const content = yield* projectTryoutSignedContent({
-      answers: loaded.access.answers,
-      attempt,
+    const content = yield* readSectionBodies({
+      access: loaded.access,
       appLocale,
       placements: loaded.placements,
-      preview: loaded.access.preview,
-      totalQuestions: section.totalQuestions,
     });
     return {
       content,
@@ -142,7 +130,7 @@ function projectRuntimeQuestions(
   );
 }
 
-/** Projects one validated frozen placement and optional learner response. */
+/** Projects one validated frozen placement and the learner's answer to it, graded only once answers may be reviewed. */
 function projectRuntimeQuestion(
   placement: TryoutPlacement,
   response: TryoutResponse | null,
@@ -155,22 +143,17 @@ function projectRuntimeQuestion(
   const runtimeResponse = response
     ? {
         answeredAt: response.answeredAt,
-        isComplete: response.isComplete,
-        ...(access.answers ? { outcome: readOutcome(response) } : {}),
-        selection: projectSelection(response.selection, access.answers),
+        ...(access.answers ? { grade: response.grade } : {}),
+        response: response.response,
         updatedAt: response.updatedAt,
       }
     : null;
   const version = readVersion(placement, Option.fromNullOr(response));
   return {
-    contentHash: placement.contentHash,
     flagged,
     placementId: placement._id,
     questionOrder: placement.questionOrder,
     response: runtimeResponse,
-    responseSpec: project(placement.responseSpec, access.answers),
-    sourcePath: placement.sourcePath,
-    sourceRevision: placement.sourceRevision,
     ...(Option.isSome(version) ? { version: version.value } : {}),
   };
 }

@@ -54,7 +54,6 @@ import type { TestConvex } from "convex-test";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 23, 12);
-type RollbackFixtureFamily = "material" | "question";
 
 /** Inserts one signed route owner into a rollback fixture. */
 export function insertRoute(
@@ -163,7 +162,7 @@ async function insertVersion(
     readonly artifactHash: string;
     readonly contentKey: string;
     readonly delivery: ContentDeliveryClass;
-    readonly family: RollbackFixtureFamily;
+    readonly family: "material";
     readonly index: number;
     readonly projectionJson: string;
     readonly releaseId: string;
@@ -216,14 +215,13 @@ export async function insertRollbackItem(
     readonly currentProjectionJson?: string;
     readonly currentSourcePath?: typeof CorpusSourcePathSchema.Type;
     readonly delivery?: ContentDeliveryClass;
-    readonly family?: RollbackFixtureFamily;
     readonly priorProjectionJson?: string;
     readonly priorSourcePath?: typeof CorpusSourcePathSchema.Type;
     readonly rendererDomain?: RendererDomain;
   }
 ) {
   const delivery = options?.delivery ?? "public";
-  const family = options?.family ?? "material";
+  const family = "material";
   const contentKey =
     options?.contentKey ?? ContentKeySchema.make(`test:head-${index}`);
   const rendererDomain = options?.rendererDomain ?? "mathematics";
@@ -249,7 +247,7 @@ export async function insertRollbackItem(
     CorpusSourcePathSchema.make(`packages/corpus/test/prior-${index}/en.mdx`);
   const rollbackJson = previousExists
     ? canonicalizeRollbackSnapshotEntry(
-        Schema.decodeUnknownSync(RollbackSnapshotEntrySchema)({
+        Schema.decodeSync(RollbackSnapshotEntrySchema)({
           index,
           releaseId: TEST_RELEASE_ID,
           snapshot: {
@@ -263,7 +261,7 @@ export async function insertRollbackItem(
               projectionHash: Sha256HashSchema.make(
                 testTextHash(priorProjection)
               ),
-              ...(family === "question" ? {} : { publicPath: priorPath }),
+              publicPath: priorPath,
               rendererDomain,
               sourceHash: Sha256HashSchema.make(TEST_DIGEST),
               sourcePath: priorSourcePath,

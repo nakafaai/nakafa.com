@@ -10,6 +10,7 @@ import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import assessmentFlags from "./tables/assessmentFlags";
+import assessmentRows from "./tables/assessmentRows";
 import billingAccounts from "./tables/billingAccounts";
 import billingCheckouts from "./tables/billingCheckouts";
 import billingCounters from "./tables/billingCounters";
@@ -137,10 +138,7 @@ import tenantVisits from "./tables/tenantVisits";
 import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
 import tryoutAttempts from "./tables/tryoutAttempts";
-import tryoutCatalog from "./tables/tryoutCatalog";
-import tryoutPlacements from "./tables/tryoutPlacements";
 import tryoutResponses from "./tables/tryoutResponses";
-import tryoutRuntimeBundles from "./tables/tryoutRuntimeBundles";
 import tryoutScores from "./tables/tryoutScores";
 import tryoutSectionAttempts from "./tables/tryoutSectionAttempts";
 import tryoutSetProgress from "./tables/tryoutSetProgress";
@@ -159,6 +157,7 @@ export default $defineSchema({
   articleCatalog: $Table.tableDefinition(articleCatalog),
   articleCategories: $Table.tableDefinition(articleCategories),
   assessmentFlags: $Table.tableDefinition(assessmentFlags),
+  assessmentRows: $Table.tableDefinition(assessmentRows),
   billingAccounts: $Table.tableDefinition(billingAccounts),
   billingCheckouts: $Table.tableDefinition(billingCheckouts),
   billingCounters: $Table.tableDefinition(billingCounters),
@@ -286,10 +285,7 @@ export default $defineSchema({
   tenants: $Table.tableDefinition(tenants),
   tryoutAttemptPlacements: $Table.tableDefinition(tryoutAttemptPlacements),
   tryoutAttempts: $Table.tableDefinition(tryoutAttempts),
-  tryoutCatalog: $Table.tableDefinition(tryoutCatalog),
-  tryoutPlacements: $Table.tableDefinition(tryoutPlacements),
   tryoutResponses: $Table.tableDefinition(tryoutResponses),
-  tryoutRuntimeBundles: $Table.tableDefinition(tryoutRuntimeBundles),
   tryoutScores: $Table.tableDefinition(tryoutScores),
   tryoutSectionAttempts: $Table.tableDefinition(tryoutSectionAttempts),
   tryoutSetProgress: $Table.tableDefinition(tryoutSetProgress),

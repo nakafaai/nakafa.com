@@ -12,6 +12,5 @@ describe("contentRelease/search/spec", () => {
       SEARCH_FAMILIES
     );
     expect(isSearchFamily("page")).toBe(false);
-    expect(isSearchFamily("question")).toBe(false);
   });
 });
