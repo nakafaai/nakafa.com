@@ -98,7 +98,7 @@ test("the editor that Create opens draws the new exam on its first frame, and th
     const lengths: number[] = [];
     Reflect.set(window, key, lengths);
     const sample = () => {
-      lengths.push(document.querySelector("main")?.innerText.length ?? 0);
+      lengths.push(document.querySelector("main")?.textContent?.length ?? 0);
       requestAnimationFrame(sample);
     };
     requestAnimationFrame(sample);
