@@ -33,6 +33,7 @@ describe("isSchoolTreePath", () => {
     "/exams",
     "/school/new",
     "/id/school/new",
+    "/id/school",
     "/school%E0%A4%A",
   ])("does not name a school tree page at %s", (path) => {
     expect(isSchoolTreePath(path)).toBe(false);
