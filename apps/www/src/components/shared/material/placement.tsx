@@ -7,14 +7,16 @@ import {
   useLayoutEffect,
   useState,
 } from "react";
+import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
-import { BreadcrumbHeaderSegment } from "@/components/shared/breadcrumb/header";
+import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { SidebarRightHeader } from "@/components/shared/outline/panel";
 import {
   type MaterialNavigationPage,
   type MaterialPlacement,
   readMaterialNavigation,
+  readMaterialPath,
 } from "@/lib/content/material/navigation";
 import {
   createPlacementStore,
@@ -26,7 +28,7 @@ import {
   holdPlacementPaint,
   settlePlacementPaint,
 } from "@/lib/content/material/prepaint";
-import { publicPathTarget } from "@/lib/routing/target";
+import { HOME_TARGET } from "@/lib/routing/target";
 
 /** One lesson page's navigation model and the store of its verified placement. */
 const PlacementContext = createContext<{
@@ -113,21 +115,18 @@ function useMaterialNavigation() {
   };
 }
 
-/** Names the lesson, or links back to the curriculum card it was opened from. */
+/** Names the lesson, or walks back up the curriculum it was opened from. */
 export function MaterialBreadcrumb({ title }: { title: string }) {
+  const t = useTranslations("Common");
   const { navigation } = useMaterialNavigation();
-  const item = Option.match(Option.fromNullishOr(navigation.link), {
-    onNone: () => ({ label: title }),
-    onSome: (link) =>
-      Option.match(publicPathTarget(link.publicPath), {
-        onNone: () => ({ label: title }),
-        onSome: (target) => ({
-          label: link.label,
-          target: { ...target, hash: link.hash },
-        }),
-      }),
-  });
-  return <BreadcrumbHeaderSegment item={item} />;
+  return (
+    <BreadcrumbHeaderPath
+      home={HOME_TARGET}
+      homeLabel={t("home")}
+      items={readMaterialPath(navigation, title)}
+      unfolds
+    />
+  );
 }
 
 /** The outline's link to the lesson, carrying its verified placement. */

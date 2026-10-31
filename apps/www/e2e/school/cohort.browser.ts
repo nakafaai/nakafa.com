@@ -337,7 +337,7 @@ test("an admin places a student in a cohort, moves the student to another, and s
   const kept = page.getByRole("dialog");
   await expect(kept.getByRole("textbox", { name: "NISN" })).toHaveAttribute(
     "placeholder",
-    "Stored; type a new one to replace it"
+    "Stored, type a new one to replace it"
   );
   await expect(kept.getByRole("textbox", { name: "NISN" })).toHaveValue("");
   await context.close();

@@ -70,14 +70,6 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicQuery({
-      name: "mine",
-      args: () => ({ classId: Id("classes"), slug: TenantSlug }),
-      returns: () => Schema.Array(GradeView),
-      error: () => AccessDenied,
-    }).middleware(ClassAccess, { action: "class.view", arg: "classId" })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
       name: "own",
       args: () => ({ slug: TenantSlug }),
       returns: () => Schema.Array(ReleasedGrade),

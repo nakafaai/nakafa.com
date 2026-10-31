@@ -1,7 +1,9 @@
 import type { GenericId } from "@confect/core";
+import type { ClassroomChannelsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
+import { ChannelArchived } from "@repo/backend/confect/classroom/forum/errors";
 import { Effect, Option } from "effect";
 
 /** The forum actions a lookup refuses under. */
@@ -28,6 +30,31 @@ export const classChannel = Effect.fn("classroom.forum.lookup.channel")(
     return channel.value;
   }
 );
+
+/** Refuses a write into an archived channel, which stays readable and takes nothing new. */
+export const refuseArchived = (
+  channel: Pick<ClassroomChannelsDoc, "archivedAt">
+) =>
+  channel.archivedAt === undefined
+    ? Effect.void
+    : Effect.fail(new ChannelArchived());
+
+/**
+ * Refuses a write to a message or a discussion unless its channel takes one. A channel that was removed and whose
+ * messages the sweep has not reached yet is a missing object.
+ */
+export const channelOpen = Effect.fn("classroom.forum.lookup.open")(function* (
+  channelId: GenericId.GenericId<"classroomChannels">
+) {
+  const channel = yield* (yield* DatabaseReader)
+    .table("classroomChannels")
+    .get(channelId)
+    .pipe(Effect.option);
+  if (Option.isNone(channel)) {
+    return yield* missing("forum.post");
+  }
+  yield* refuseArchived(channel.value);
+});
 
 /** The message a call names, when it belongs to the class the check allowed. */
 export const classMessage = Effect.fn("classroom.forum.lookup.message")(

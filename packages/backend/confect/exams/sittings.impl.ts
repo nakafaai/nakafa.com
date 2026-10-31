@@ -2,7 +2,6 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { answer } from "@repo/backend/confect/exams/sittings/answer";
-import { heldAttempt } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAccess } from "@repo/backend/confect/exams/sittings/authority";
 import { cancelRoom } from "@repo/backend/confect/exams/sittings/cancel";
 import {
@@ -161,15 +160,6 @@ const closeFunction = FunctionImpl.make(
   })
 );
 
-const attemptFunction = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "attempt",
-  Effect.fn("exams.sittings.attempt.function")(function* (args) {
-    return yield* heldAttempt(args.sittingId);
-  })
-);
-
 const studentFunction = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -275,7 +265,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
       closeFunction
     )
   ),
-  Layer.provide(attemptFunction),
   Layer.provide(studentFunction),
   Layer.provide(signalsFunction),
   // The paper and what the student saved on it in one step, so the group stays within one pipe.

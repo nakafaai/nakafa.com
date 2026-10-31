@@ -3,7 +3,7 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/question";
+import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
@@ -53,7 +53,9 @@ const question = (id: string, revision = 0): Question => ({
   explanation: promptId(`explanation-${id}`),
   id: questionId(id),
   key: null,
+  media: [],
   points: 1,
+  reading: null,
   scoring: { kind: "allOrNothing" },
   prompt: promptId(`prompt-${id}`),
   revision,
@@ -255,8 +257,10 @@ describe("placeholderQuestion", () => {
       explanation: promptId("draft-explanation"),
       id: questionId("draft"),
       key: null,
+      media: [],
       points: 3,
       prompt: promptId("draft-prompt"),
+      reading: null,
       rubric: promptId("draft-rubric"),
       scoring: { kind: "allOrNothing" },
       template: "choice",

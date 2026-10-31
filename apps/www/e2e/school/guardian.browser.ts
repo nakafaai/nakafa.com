@@ -70,6 +70,16 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   await expect(row).toContainText("Pending");
   await saved(changes, readdressedBefore);
 
+  // The parent's name is corrected the same way, and the row shows it at once.
+  await row.getByRole("button", { name: "More actions" }).click();
+  await settings.getByRole("menuitem", { name: "Rename parent" }).click();
+  const naming = settings.getByRole("dialog");
+  await naming.getByRole("textbox", { name: "Name" }).fill("Ibu Uji Baru");
+  const renamedBefore = changes.sent;
+  await naming.getByRole("button", { name: "Save" }).click();
+  await expect(row).toContainText("Ibu Uji Baru");
+  await saved(changes, renamedBefore);
+
   const parent = await browser.newContext();
   const home = await parent.newPage();
   await home.goto(address("/parents"));
@@ -110,9 +120,7 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   );
   // The hint stays, and the refusal takes the line under it that the field kept from the start.
   await expect(
-    field.getByText(
-      "Enter your child's NISN to confirm this link, and check it or contact the school if it does not match."
-    )
+    field.getByText("Enter your child's NISN to confirm this link.")
   ).toBeVisible();
   expect((await field.boundingBox())?.height).toBe(typed?.height);
   // The refusal is one line, the one the field kept for it, so it never pushes the field taller.

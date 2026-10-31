@@ -8,12 +8,7 @@ import {
   StartCountry,
 } from "@repo/backend/confect/tenancy/start";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import {
   Field,
   FieldGroup,
@@ -107,11 +102,10 @@ export function SchoolLocaleCard({
   };
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("locale-title")}</CardTitle>
-        <CardDescription>{t("locale-description")}</CardDescription>
-      </CardHeader>
+    <CardSection
+      description={t("locale-description")}
+      title={t("locale-title")}
+    >
       <CardContent>
         <FieldGroup className="max-w-sm">
           <Field>

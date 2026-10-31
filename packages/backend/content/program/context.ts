@@ -1,6 +1,7 @@
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { PROGRAM_RELATED_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
 import { requireExpectedActiveRelease } from "@repo/backend/confect/contentRelease/runtime/pin";
+import { readAncestors } from "@repo/backend/content/program/model";
 import { loadProgramOwner } from "@repo/backend/content/program/owner";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
@@ -140,9 +141,35 @@ export const readProgramContext = Effect.fn(
         materialContextPublicPath: group.publicPath,
       },
       mappingJson: match.row.rowJson,
+      parent,
       parentJson: storedParent.rowJson,
       resolvedCanonicalPath: match.context.canonicalPath,
+      snapshotId,
     },
     managed: true,
+  };
+});
+/**
+ * Resolves one context with the curriculum path above its card-list parent,
+ * which only the reader's breadcrumb asks for.
+ */
+export const readProgramPlacement = Effect.fn(
+  "contentRelease.readProgramPlacement"
+)(function* (
+  appLocale: PublicationRow<"curriculumRoutes">["appLocale"],
+  input: ProgramContextInput,
+  expectedActiveReleaseId?: string | null
+) {
+  const { context, managed } = yield* readProgramContext(
+    appLocale,
+    input,
+    expectedActiveReleaseId
+  );
+  return {
+    ancestors: context
+      ? yield* readAncestors(context.snapshotId, context.parent)
+      : [],
+    context,
+    managed,
   };
 });

@@ -1,25 +1,31 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { strToU8, zipSync } from "fflate";
 import { chooseFile, openPeriodWithCohort } from "@/e2e/support/roster";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-const USERS = [
-  "sourcedId,status,givenName,familyName,email",
-  "u1,active,Raka,Pratama,raka@school.example",
-  "u2,active,Nadia,Putri,nadia@school.example",
-  "t1,active,Ayu,Lestari,ayu@school.example",
-].join("\n");
+const USERS = Arr.join(
+  [
+    "sourcedId,status,givenName,familyName,email",
+    "u1,active,Raka,Pratama,raka@school.example",
+    "u2,active,Nadia,Putri,nadia@school.example",
+    "t1,active,Ayu,Lestari,ayu@school.example",
+  ],
+  "\n"
+);
 
-const CLASSES = ["sourcedId,title,classType", "c1,7A,homeroom"].join("\n");
+const CLASSES = Arr.join(["sourcedId,title,classType", "c1,7A,homeroom"], "\n");
 
-const ENROLLMENTS = [
-  "sourcedId,classSourcedId,userSourcedId,role",
-  "e1,c1,u1,student",
-  "e2,c1,u2,student",
-  "e3,c1,t1,teacher",
-].join("\n");
+const ENROLLMENTS = Arr.join(
+  [
+    "sourcedId,classSourcedId,userSourcedId,role",
+    "e1,c1,u1,student",
+    "e2,c1,u2,student",
+    "e3,c1,t1,teacher",
+  ],
+  "\n"
+);
 
 /** A OneRoster CSV bundle as a student information system exports it. */
 const bundle = () => ({

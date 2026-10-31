@@ -9,7 +9,10 @@ import type { TypedName } from "@/components/tenant/start/typed";
  * answer, and the store of the name and address the founder types.
  */
 type StartValue = Record<"draft", StartDraft> &
-  Record<"legal", Record<"privacy" | "terms", string> | null> &
+  Record<
+    "legal",
+    Record<"dataProcessing" | "privacy" | "terms", string> | null
+  > &
   Record<"save", (answer: StartAnswer) => void> &
   Record<"typed", StoreApi<TypedName>>;
 
