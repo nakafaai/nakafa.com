@@ -20,7 +20,7 @@ export function PlayerHeader({ children }: { children: ReactNode }) {
 
 /** The start of the header: the way back and the title. */
 export function PlayerHeaderStart({ children }: { children: ReactNode }) {
-  return <div className="flex min-w-0 items-center gap-2">{children}</div>;
+  return <div className="flex min-w-0 items-center gap-3">{children}</div>;
 }
 
 /**

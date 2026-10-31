@@ -192,7 +192,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
         setOpen={handleOpenChange}
         title={t("delete-account-dialog-title")}
       >
-        <FieldError>{error ? errorMessage : null}</FieldError>
+        {error ? <FieldError>{errorMessage}</FieldError> : undefined}
       </ResponsiveDialog>
     </>
   );

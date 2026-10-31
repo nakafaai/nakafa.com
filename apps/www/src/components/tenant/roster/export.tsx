@@ -95,7 +95,7 @@ export function RosterStudentsExport() {
       ) : (
         <HugeIcons icon={Download01Icon} />
       )}
-      {t("export")}
+      <span className="max-sm:sr-only">{t("export")}</span>
     </Button>
   );
 }

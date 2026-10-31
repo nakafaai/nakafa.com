@@ -2,6 +2,7 @@ import { ReasonCode } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -347,6 +348,7 @@ export function AddMinutesDialog({
             placeholder={t("minutes-placeholder")}
             value={minutesText}
           />
+          <FieldDescription>{t("minutes-hint")}</FieldDescription>
           <FieldError id={errorId}>
             {invalid ? t("minutes-invalid") : null}
           </FieldError>

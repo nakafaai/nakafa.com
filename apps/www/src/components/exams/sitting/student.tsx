@@ -10,11 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Effect, Option } from "effect";
@@ -189,10 +185,13 @@ export function StudentSitting({
                   placeholder={t("student-token-placeholder")}
                   value={tokenText}
                 />
-                <FieldError>{message === null ? null : t(message)}</FieldError>
               </Field>
             </CardContent>
-            <CardSectionFooter hint={t("student-enter-footer")}>
+            {/* A refused token takes the sentence's place, so the card holds its height. */}
+            <CardSectionFooter
+              hint={message === null ? t("student-enter-footer") : t(message)}
+              tone={message === null ? "muted" : "destructive"}
+            >
               <CardSectionActions>
                 <Button disabled={!isSettled || entering} type="submit">
                   {t("student-enter")}

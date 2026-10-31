@@ -83,7 +83,7 @@ export function RosterFileChoice({
         type="button"
       >
         {isReading ? <Spinner isLoading /> : <HugeIcons icon={Upload01Icon} />}
-        {t("import")}
+        <span className="max-sm:sr-only">{t("import")}</span>
       </Button>
     </>
   );

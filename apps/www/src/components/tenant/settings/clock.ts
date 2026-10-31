@@ -45,6 +45,11 @@ function writeSchoolTime(
   );
 }
 
+/** Writes one moment as a time on the school's clock, in the reader's language: all a row of one day needs. */
+export function schoolTimeText(request: ClockRequest) {
+  return writeSchoolTime("time", request);
+}
+
 /** Writes one moment as a date and a time on the school's clock, in the reader's language. */
 export function schoolDateTimeText(request: ClockRequest) {
   return writeSchoolTime("dateTime", request);
