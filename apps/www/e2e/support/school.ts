@@ -154,15 +154,16 @@ export const grantStudent = Effect.fn("NakafaE2E.grantStudent")(function* (
  * school's first active unit. A `crowd` seats that many extra students with attempts in
  * progress first, so the learner's own attempt lands on a later dashboard page. `upcoming` also
  * schedules a room of the same exam for the next day, which the owner's home lists as upcoming,
- * `essay` adds an essay that the student writes and the teacher grades, and `prose` ends the exam with a
- * third question whose prompt holds every block and mark once. Each call seeds a new exam and sitting.
+ * `essay` adds an essay that the student writes and the teacher grades, `prose` ends the exam with a
+ * third question whose prompt holds every block and mark once, and `templates` adds a question of
+ * every other template, each written and keyed, and the essay. Each call seeds a new exam and sitting.
  */
 export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
   function* (
     slug: string,
     learnerAddress: string,
     crowd = 0,
-    extra?: "essay" | "prose" | "upcoming"
+    extra?: "essay" | "prose" | "templates" | "upcoming"
   ) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({

@@ -63,6 +63,11 @@ export default GroupSpec.make()
         /** Whether the seeded exam ends with the prose question, whose prompt holds every block and mark once. */
         prose: Schema.optionalKey(Schema.Boolean),
         slug: TenantSlug,
+        /**
+         * Whether the seeded exam also holds a question of every other template, with its key, and the essay, so a
+         * browser test sits, scores and grades every template.
+         */
+        templates: Schema.optionalKey(Schema.Boolean),
         /** Whether the seed also schedules a room for the next day, which a browser test reads as an upcoming room. */
         upcoming: Schema.optionalKey(Schema.Boolean),
       }),

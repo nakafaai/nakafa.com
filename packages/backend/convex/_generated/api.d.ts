@@ -15646,6 +15646,7 @@ export declare const internal: {
           essay?: boolean;
           prose?: boolean;
           slug: string;
+          templates?: boolean;
           upcoming?: boolean;
         },
         {
