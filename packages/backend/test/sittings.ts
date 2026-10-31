@@ -5,12 +5,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import {
-  choiceAnswers,
-  encodeAnswers,
-  encodeKey,
-  textLabel,
-} from "@repo/backend/confect/exams/question";
+import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
+import { encodeAnswers, encodeKey } from "@repo/backend/confect/exams/question";
 import type { EnterOutcome } from "@repo/backend/confect/exams/sittings/contract";
 import {
   RoomName,

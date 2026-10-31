@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { answersFit } from "@repo/backend/confect/exams/fits";
 import {
   essayAnswers,
   newChoiceAnswers,
   numericAnswers,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
+import { answersFit } from "@repo/backend/confect/exams/fits";
 import {
   reasonAnswers,
   reasonChoice,

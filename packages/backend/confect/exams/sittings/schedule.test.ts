@@ -1,11 +1,8 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import {
-  choiceAnswers,
-  encodeAnswers,
-  textLabel,
-} from "@repo/backend/confect/exams/question";
+import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
+import { encodeAnswers } from "@repo/backend/confect/exams/question";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import {

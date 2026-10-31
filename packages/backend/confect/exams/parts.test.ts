@@ -2,19 +2,19 @@ import { describe, expect, it } from "@effect/vitest";
 import type { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import {
-  labelEmpty,
-  paperAnswers,
-  partsEmpty,
-  questionGap,
-} from "@repo/backend/confect/exams/parts";
-import {
   choiceAnswers,
   essayAnswers,
   matchAnswers,
   shortAnswers,
   tableAnswers,
   textLabel,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
+import {
+  labelEmpty,
+  paperAnswers,
+  partsEmpty,
+  questionGap,
+} from "@repo/backend/confect/exams/parts";
 import { Array as Arr, Option } from "effect";
 
 /** The label of a new part, which holds one empty paragraph until the teacher writes it. */

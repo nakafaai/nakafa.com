@@ -8,7 +8,7 @@ import {
   shortAnswers,
   tableAnswers,
   textLabel,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
 import {
   reasonAnswers,
   reasonChoice,
