@@ -2,7 +2,7 @@ import { SchemaToValidator } from "@confect/core";
 import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { vWorkflowId } from "@convex-dev/workflow";
 import { vResultValidator } from "@convex-dev/workpool";
-import refs from "@repo/backend/confect/_generated/refs";
+import privacyInternal from "@repo/backend/confect/_generated/refs/privacy.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { Scheduler } from "@repo/backend/confect/_generated/services";
 import { internalMutation } from "@repo/backend/confect/functions";
@@ -30,7 +30,7 @@ export const handleCleanupComplete = internalMutation({
       if (args.result.kind === "success") {
         yield* scheduler.runAfter(
           Duration.zero,
-          refs.internal.privacy.recovery.cleanupWorkflowStorage,
+          privacyInternal.recovery.cleanupWorkflowStorage,
           {
             source: args.context.source,
             workflowId: args.workflowId,
@@ -48,7 +48,7 @@ export const handleCleanupComplete = internalMutation({
       yield* scheduler
         .runAfter(
           Duration.millis(WORKFLOW_RECOVERY_DELAY_MS),
-          refs.internal.privacy.recovery.retryCleanupWorkflow,
+          privacyInternal.recovery.retryCleanupWorkflow,
           {
             source: args.context.source,
             workflowId: args.workflowId,

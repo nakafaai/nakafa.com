@@ -10,7 +10,7 @@ import {
 } from "@repo/backend/client/nina/uploads";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
   ActionCtx,
@@ -73,7 +73,7 @@ const save = FunctionImpl.make(
       const { runMutation: mutate } = yield* MutationRunner;
       // The reservation seals the name first, so the component never stores the plain name.
       const { storedFilename, uploadId } = yield* mutate(
-        refs.internal.nina.uploads.reserve,
+        ninaInternal.uploads.reserve,
         { filename: args.filename }
       );
       const ctx = yield* ActionCtx;
@@ -89,14 +89,14 @@ const save = FunctionImpl.make(
             ),
           catch: uploadFailure,
         });
-        yield* mutate(refs.internal.nina.uploads.complete, {
+        yield* mutate(ninaInternal.uploads.complete, {
           uploadId,
           fileId: file.fileId,
         });
       }).pipe(
         Effect.onExit((exit) =>
           Exit.isFailure(exit)
-            ? mutate(refs.internal.nina.uploads.discard, { uploadId }).pipe(
+            ? mutate(ninaInternal.uploads.discard, { uploadId }).pipe(
                 Effect.orDie
               )
             : Effect.void
@@ -156,7 +156,7 @@ const reserve = FunctionImpl.make(
       .pipe(Effect.orDie);
     yield* (yield* Scheduler).runAfter(
       NINA_UPLOAD_LIFETIME,
-      refs.internal.nina.uploads.discard,
+      ninaInternal.uploads.discard,
       { uploadId }
     );
     return { storedFilename, uploadId };

@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import editorInternal from "@repo/backend/confect/_generated/refs/editor.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseWriter,
@@ -197,7 +197,7 @@ const submit = FunctionImpl.make(
     if (foldDue({ after, before })) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.editor.fold.fold,
+        editorInternal.fold.fold,
         { documentId: document._id }
       );
     }

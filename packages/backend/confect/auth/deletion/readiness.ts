@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { ensurePostHogErasureConfigured } from "@repo/backend/confect/analytics/erasure/action";
 import type { UserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
@@ -70,7 +70,7 @@ export const ensureAccountDeletionReady = Effect.fn(
   );
   const { runMutation } = yield* MutationRunner;
   yield* verifyAccountDeletionPreparation(
-    runMutation(refs.internal.auth.deletion.claimAccountDeletion, {
+    runMutation(authInternal.deletion.claimAccountDeletion, {
       attemptId,
       authId,
     })

@@ -3,7 +3,7 @@ import type {
   TenantsDoc,
   TenantUnitsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -55,7 +55,7 @@ const seatOne = Effect.fn("exams.seed.seats.one")(function* (seat: {
       input: { data, model: "user" },
     })
   );
-  yield* runMutation(refs.internal.auth.lifecycle.onCreate, {
+  yield* runMutation(authInternal.lifecycle.onCreate, {
     doc: authUser,
     model: "user",
   }).pipe(Effect.orDie);

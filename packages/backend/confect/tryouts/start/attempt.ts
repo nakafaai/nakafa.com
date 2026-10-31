@@ -1,6 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -144,7 +144,7 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
     yield* scheduler
       .runAfter(
         Duration.millis(Math.max(0, attempt.expiresAt - input.now)),
-        refs.internal.tryouts.mutations.expiry.attempt,
+        tryoutsInternal.mutations.expiry.attempt,
         {
           attemptId: attempt._id,
           expiresAt: attempt.expiresAt,

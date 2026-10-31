@@ -1,6 +1,6 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -193,7 +193,7 @@ export const ensureModelBuild = Effect.fn("contentRelease.ensureModelBuild")(
         ? undefined
         : yield* scheduler.runAfter(
             Duration.millis(0),
-            refs.internal.contentRelease.models.resume,
+            contentReleaseInternal.models.resume,
             {
               generation,
               releaseId: release.releaseId,

@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import {
   sameCallbackToken,
@@ -55,7 +55,7 @@ export const xenditRoutes = HttpRouter.add(
     );
     const key = yield* xenditDeliveryKey(envelope, body).pipe(Effect.orDie);
     const { runMutation } = yield* MutationRunner;
-    yield* runMutation(refs.internal.billing.events.record, {
+    yield* runMutation(billingInternal.events.record, {
       rail: "xendit",
       key,
       type: envelope.event,

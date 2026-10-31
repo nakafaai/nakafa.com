@@ -1,6 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
-import { asLeafGroup, isPublicLeaf } from "@repo/backend/scripts/refs/leaf";
+import { asLeafGroup, holdsVisibility } from "@repo/backend/scripts/refs/leaf";
 import { Effect, Schema } from "effect";
 
 const publicQuery = (name: string) =>
@@ -40,32 +40,27 @@ describe("asLeafGroup", () => {
   );
 });
 
-describe("isPublicLeaf", () => {
-  it("counts a leaf with a public function", () => {
-    expect(isPublicLeaf(publicOnly)).toBe(true);
+describe("holdsVisibility", () => {
+  it("counts a leaf with a function of the visibility", () => {
+    expect(holdsVisibility(publicOnly, "public")).toBe(true);
+    expect(holdsVisibility(internalOnly, "internal")).toBe(true);
   });
 
-  it("does not count a leaf whose functions are all internal", () => {
-    expect(isPublicLeaf(internalOnly)).toBe(false);
+  it("does not count a leaf whose functions all have the other visibility", () => {
+    expect(holdsVisibility(internalOnly, "public")).toBe(false);
+    expect(holdsVisibility(publicOnly, "internal")).toBe(false);
   });
 
-  it("counts a mixed leaf, which the generator writes whole", () => {
-    expect(isPublicLeaf(mixed)).toBe(true);
+  it("counts a mixed leaf for both visibilities, which the generator writes whole", () => {
+    expect(holdsVisibility(mixed, "public")).toBe(true);
+    expect(holdsVisibility(mixed, "internal")).toBe(true);
   });
 
-  it("counts a leaf whose public function sits in a nested group", () => {
-    expect(
-      isPublicLeaf(
-        GroupSpec.addGroupsAt(GroupSpec.make(), { inner: publicOnly })
-      )
-    ).toBe(true);
-  });
-
-  it("does not count a leaf whose nested group has only internal functions", () => {
-    expect(
-      isPublicLeaf(
-        GroupSpec.addGroupsAt(GroupSpec.make(), { inner: internalOnly })
-      )
-    ).toBe(false);
+  it("counts a leaf whose function of the visibility sits in a nested group", () => {
+    const nested = GroupSpec.addGroupsAt(GroupSpec.make(), {
+      inner: publicOnly,
+    });
+    expect(holdsVisibility(nested, "public")).toBe(true);
+    expect(holdsVisibility(nested, "internal")).toBe(false);
   });
 });

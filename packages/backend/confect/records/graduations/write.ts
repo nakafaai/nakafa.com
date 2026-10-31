@@ -1,5 +1,5 @@
 import { FunctionImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import recordsInternal from "@repo/backend/confect/_generated/refs/records.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -206,7 +206,7 @@ export const issue = FunctionImpl.make(
             })
             .pipe(Effect.orDie);
           yield* scheduler
-            .runAfter(Duration.zero, refs.internal.records.letters.draw, {
+            .runAfter(Duration.zero, recordsInternal.letters.draw, {
               letterId,
             })
             .pipe(Effect.orDie);

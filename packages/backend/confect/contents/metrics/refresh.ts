@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import {
   DatabaseReader,
   Scheduler,
@@ -43,8 +43,7 @@ export const scheduleLearningPopularityRefreshes = Effect.fn(
   yield* scheduler
     .runAfter(
       Duration.millis(0),
-      refs.internal.contents.mutations.popularity
-        .refreshLearningPopularityWindowPage,
+      contentsInternal.mutations.popularity.refreshLearningPopularityWindowPage,
       {
         ...(cycle.cursor === undefined
           ? {}
@@ -121,7 +120,7 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
       yield* scheduler
         .runAfter(
           Duration.millis(0),
-          refs.internal.contents.mutations.popularity
+          contentsInternal.mutations.popularity
             .refreshLearningPopularityWindowPage,
           {
             cursor: page.continueCursor,

@@ -1,7 +1,7 @@
 import { Agent, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import {
   ActionCtx,
   MutationRunner,
@@ -135,7 +135,7 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
     }
     const topics = topicsOf(turn.page);
     const learner = yield* (yield* QueryRunner)
-      .runQuery(refs.internal.nina.memory.known, {
+      .runQuery(ninaInternal.memory.known, {
         message,
         now: yield* Clock.currentTimeMillis,
         topics,
@@ -183,7 +183,7 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
       return;
     }
     yield* (yield* MutationRunner)
-      .runMutation(refs.internal.nina.memory.capture, {
+      .runMutation(ninaInternal.memory.capture, {
         candidates,
         seen: Arr.map(learner.known, Struct.pick(["confirmedAt", "id"])),
         topics,

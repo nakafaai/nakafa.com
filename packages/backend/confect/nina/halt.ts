@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { Duration, Effect, Exit, Schedule, Scope } from "effect";
 
@@ -26,7 +26,7 @@ export const turnHalted = Effect.fn("nina.halt.halted")(function* (
   turnId: Docs["ninaTurns"]["_id"]
 ) {
   const { runQuery } = yield* QueryRunner;
-  return yield* runQuery(refs.internal.nina.phase.halted, { turnId }).pipe(
+  return yield* runQuery(ninaInternal.phase.halted, { turnId }).pipe(
     Effect.orDie,
     Effect.catchDefect(() =>
       Effect.as(Effect.logWarning("Nina halt check failed", { turnId }), false)

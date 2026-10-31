@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import {
   DatabaseReader,
   Scheduler,
@@ -100,7 +100,7 @@ const startExpiryReconciliation = Effect.fn(
   yield* scheduler
     .runAfter(
       Duration.millis(0),
-      refs.internal.tryouts.mutations.expiry.reconcileAttempts,
+      tryoutsInternal.mutations.expiry.reconcileAttempts,
       {
         before,
       }
@@ -138,7 +138,7 @@ export const reconcileMissedAttemptExpiries = Effect.fn(
       (attemptRow) =>
         scheduler.runAfter(
           Duration.millis(0),
-          refs.internal.tryouts.mutations.expiry.attempt,
+          tryoutsInternal.mutations.expiry.attempt,
           {
             attemptId: attemptRow._id,
             expiresAt: attemptRow.expiresAt,
@@ -155,7 +155,7 @@ export const reconcileMissedAttemptExpiries = Effect.fn(
     );
     yield* scheduler.runAfter(
       Duration.millis(0),
-      refs.internal.tryouts.mutations.expiry.reconcileSections,
+      tryoutsInternal.mutations.expiry.reconcileSections,
       {
         before,
         scheduledAttemptIds,
@@ -198,7 +198,7 @@ export const reconcileMissedSectionExpiries = Effect.fn(
       (sectionRow) =>
         scheduler.runAfter(
           Duration.millis(0),
-          refs.internal.tryouts.mutations.expiry.section,
+          tryoutsInternal.mutations.expiry.section,
           {
             expiresAt: sectionRow.expiresAt,
             sectionAttemptId: sectionRow._id,

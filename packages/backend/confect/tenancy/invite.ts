@@ -4,7 +4,7 @@ import type {
   TenantInvitesDoc,
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -205,7 +205,7 @@ export const writeInvite = Effect.fn("tenancy.invite.write")(function* (
     .pipe(Effect.orDie);
   yield* (yield* Scheduler).runAt(
     DateTime.makeUnsafe(expiresAt),
-    refs.internal.tenancy.expiry.invite,
+    tenancyInternal.expiry.invite,
     { inviteId }
   );
   const entryId = yield* personAuthority.record(

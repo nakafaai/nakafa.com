@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Id } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import postsInternal from "@repo/backend/confect/_generated/refs/posts.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseWriter,
@@ -79,7 +79,7 @@ const remove = FunctionImpl.make(
     // The likes go in bounded batches, so a post with many likes takes several passes.
     yield* scheduler.runAfter(
       Duration.zero,
-      refs.internal.posts.cleanup.cleanupDeletedPost,
+      postsInternal.cleanup.cleanupDeletedPost,
       { postId: post._id }
     );
     return null;

@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import recordsInternal from "@repo/backend/confect/_generated/refs/records.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -189,7 +189,7 @@ const graduation = FunctionImpl.make(
       })
       .pipe(Effect.orDie);
     yield* (yield* Scheduler)
-      .runAfter(Duration.zero, refs.internal.records.prints.draw, { reportId })
+      .runAfter(Duration.zero, recordsInternal.prints.draw, { reportId })
       .pipe(Effect.orDie);
     return { cohort: name, cohortId };
   })

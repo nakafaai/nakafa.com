@@ -1,5 +1,5 @@
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { judge } from "@repo/backend/confect/nina/judgment/ask";
 import { noteText } from "@repo/backend/confect/nina/judgment/note";
@@ -28,7 +28,7 @@ export const isLasting = Effect.fn("nina.memory.lasting")(function* (
     return false;
   }
   const paused = yield* (yield* QueryRunner)
-    .runQuery(refs.internal.nina.memory.paused, { userId })
+    .runQuery(ninaInternal.memory.paused, { userId })
     .pipe(Effect.orDie);
   if (paused) {
     return false;

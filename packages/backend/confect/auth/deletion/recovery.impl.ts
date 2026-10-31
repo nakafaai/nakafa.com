@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   ActionCtx as ActionCtxService,
@@ -31,7 +31,7 @@ const sweepAccountDeletionRecovery = FunctionImpl.make(
           yield* scheduler
             .runAfter(
               Duration.millis(0),
-              refs.internal.auth.deletion.recovery.sweepAccountDeletionRecovery,
+              authInternal.deletion.recovery.sweepAccountDeletionRecovery,
               {}
             )
             .pipe(Effect.catchDefect(flow(toUserCleanupError, Effect.fail)));
@@ -51,7 +51,7 @@ const recoverAccountDeletion = FunctionImpl.make(
       authUserExists: tryUserCleanup(() =>
         authReader.getAnyUserById(ctx, args.authId)
       ).pipe(Effect.map((user) => user !== null)),
-      cancel: runMutation(refs.internal.auth.deletion.cancelAccountDeletion, {
+      cancel: runMutation(authInternal.deletion.cancelAccountDeletion, {
         authId: args.authId,
         expectedPreparation: args.expectedPreparation,
       }).pipe(
@@ -59,7 +59,7 @@ const recoverAccountDeletion = FunctionImpl.make(
         Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
       ),
       continueCommit: runMutation(
-        refs.internal.auth.deletion.continueAccountDeletionCommit,
+        authInternal.deletion.continueAccountDeletionCommit,
         {
           authId: args.authId,
           expectedPreparation: args.expectedPreparation,
@@ -69,7 +69,7 @@ const recoverAccountDeletion = FunctionImpl.make(
         Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
       ),
       finalize: runMutation(
-        refs.internal.auth.deletion.workflow.finalizeDeletedUserCleanup,
+        authInternal.deletion.workflow.finalizeDeletedUserCleanup,
         {
           authId: args.authId,
           expectedPreparation: args.expectedPreparation,

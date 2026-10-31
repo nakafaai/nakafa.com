@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -133,9 +133,8 @@ export const scheduleLearningPopularityExpiries = Effect.fn(
   }
   const reference =
     cycle.mode === "expiry"
-      ? refs.internal.contents.mutations.popularity
-          .expireLearningPopularityWindowPage
-      : refs.internal.contents.mutations.popularity
+      ? contentsInternal.mutations.popularity.expireLearningPopularityWindowPage
+      : contentsInternal.mutations.popularity
           .refreshLearningPopularityWindowPage;
   const scheduler = yield* Scheduler;
   yield* scheduler
@@ -218,7 +217,7 @@ export const expireLearningPopularityWindowPage = Effect.fn(
       yield* scheduler
         .runAfter(
           Duration.millis(0),
-          refs.internal.contents.mutations.popularity
+          contentsInternal.mutations.popularity
             .expireLearningPopularityWindowPage,
           {
             cursor: page.continueCursor,

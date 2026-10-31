@@ -45,6 +45,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   addStudentChange,
@@ -103,9 +104,10 @@ export function SchoolStudentsSettings() {
         actions={
           <>
             <TableSearch placeholder={t("logins-search")} />
-            <Button onClick={() => setIsAdding(true)} type="button">
-              {t("student-add")}
-            </Button>
+            <SchoolHeaderAdd
+              label={t("student-add")}
+              onClick={() => setIsAdding(true)}
+            />
           </>
         }
       >

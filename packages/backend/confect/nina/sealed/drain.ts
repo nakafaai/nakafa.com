@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -113,7 +113,7 @@ const attempt = Effect.fn("nina.sealed.drain.attempt")(function* (
   turnId: Docs["ninaTurns"]["_id"]
 ) {
   const { runMutation } = yield* MutationRunner;
-  const exit = yield* runMutation(refs.internal.nina.sealed.seal, {
+  const exit = yield* runMutation(ninaInternal.sealed.seal, {
     turnId,
   }).pipe(Effect.exit);
   if (Exit.isSuccess(exit)) {
@@ -126,7 +126,7 @@ const attempt = Effect.fn("nina.sealed.drain.attempt")(function* (
     );
     return { bytes: SEAL_RESERVE_BYTES, stop: true };
   }
-  const failure = yield* runMutation(refs.internal.nina.sealed.recordFailure, {
+  const failure = yield* runMutation(ninaInternal.sealed.recordFailure, {
     turnId,
   }).pipe(Effect.orDie);
   yield* Effect.logError("Nina could not seal a settled turn", {
@@ -174,7 +174,7 @@ const drainPages = Effect.fn("nina.sealed.drain.pages")(function* (
   run: Run
 ): Effect.fn.Return<null, never, MutationRunner | QueryRunner> {
   const { runQuery } = yield* QueryRunner;
-  const page = yield* runQuery(refs.internal.nina.sealed.candidates, {
+  const page = yield* runQuery(ninaInternal.sealed.candidates, {
     cursor,
     numItems: CANDIDATE_PAGE,
   }).pipe(Effect.orDie);

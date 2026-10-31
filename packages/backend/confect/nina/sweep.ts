@@ -1,5 +1,5 @@
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import {
   DatabaseReader,
   Scheduler,
@@ -52,11 +52,9 @@ export const startsLate = Effect.fn("nina.sweep.late")(function* (
  * on purpose is held too, so the drain never takes it again.
  */
 const scheduleSeals = Effect.fn("nina.sweep.seals")(function* () {
-  yield* (yield* Scheduler).runAfter(
-    Duration.zero,
-    refs.internal.nina.sealed.drain,
-    { budget: SEAL_BYTES_PER_SWEEP }
-  );
+  yield* (yield* Scheduler).runAfter(Duration.zero, ninaInternal.sealed.drain, {
+    budget: SEAL_BYTES_PER_SWEEP,
+  });
 });
 
 /**
@@ -98,24 +96,18 @@ export const sweepTurns = Effect.fn("nina.sweep")(function* (
     page.page,
     Effect.fn(function* (turn) {
       const turnId = turn._id;
-      yield* scheduler.runAfter(
-        Duration.zero,
-        refs.internal.nina.lifecycle.recover,
-        { turnId }
-      );
-      yield* scheduler.runAfter(
-        SETTLE_GRACE,
-        refs.internal.nina.lifecycle.abandon,
-        { turnId }
-      );
+      yield* scheduler.runAfter(Duration.zero, ninaInternal.lifecycle.recover, {
+        turnId,
+      });
+      yield* scheduler.runAfter(SETTLE_GRACE, ninaInternal.lifecycle.abandon, {
+        turnId,
+      });
     }),
     { discard: true }
   );
   if (!page.isDone) {
-    yield* scheduler.runAfter(
-      Duration.zero,
-      refs.internal.nina.lifecycle.sweep,
-      { resume: { before, cursor: page.continueCursor } }
-    );
+    yield* scheduler.runAfter(Duration.zero, ninaInternal.lifecycle.sweep, {
+      resume: { before, cursor: page.continueCursor },
+    });
   }
 });

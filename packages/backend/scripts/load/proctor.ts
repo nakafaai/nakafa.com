@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import examsPublic from "@repo/backend/confect/_generated/refs/exams";
 import { type Recorder, timed } from "@repo/backend/scripts/load/recorder";
 import type { Seating } from "@repo/backend/scripts/load/student";
 import { type Wire, watch } from "@repo/backend/scripts/load/wire";
@@ -12,7 +12,7 @@ import {
   type Scope,
 } from "effect";
 
-const sittings = refs.public.exams.sittings;
+const sittings = examsPublic.sittings;
 
 /** The seats that one page of a room's dashboard holds, the most the dashboard serves. */
 const PAGE_SIZE = 100;

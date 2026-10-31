@@ -1,7 +1,7 @@
 import { Agent } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import {
   ActionCtx,
   MutationRunner,
@@ -80,7 +80,7 @@ const countSpent = Effect.fn("nina.portrait.count")(function* (
   spent: typeof NinaUpkeepCall.Type
 ) {
   yield* (yield* MutationRunner)
-    .runMutation(refs.internal.nina.portrait.save, {
+    .runMutation(ninaInternal.portrait.save, {
       expected: through,
       memories: [],
       more: false,
@@ -106,7 +106,7 @@ const countSpent = Effect.fn("nina.portrait.count")(function* (
 export const buildPortrait = Effect.fn("nina.portrait.build")(
   function* (userId: Docs["users"]["_id"]) {
     const claim = yield* (yield* MutationRunner)
-      .runMutation(refs.internal.nina.portrait.claim, { userId })
+      .runMutation(ninaInternal.portrait.claim, { userId })
       .pipe(Effect.orDie);
     if (claim === null) {
       return;
@@ -132,7 +132,7 @@ export const buildPortrait = Effect.fn("nina.portrait.build")(
         )
       : undefined;
     yield* (yield* MutationRunner)
-      .runMutation(refs.internal.nina.portrait.save, {
+      .runMutation(ninaInternal.portrait.save, {
         expected: through,
         memories: Arr.map(memories, Struct.pick(["confirmedAt", "id"])),
         more,

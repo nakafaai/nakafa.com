@@ -1,6 +1,7 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import examsPublic from "@repo/backend/confect/_generated/refs/exams";
+import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -49,7 +50,7 @@ const canRead = FunctionImpl.make(
 const storedImage = (storageId: GenericId.GenericId<"_storage">) =>
   Effect.gen(function* () {
     const { runQuery } = yield* QueryRunner;
-    const { size } = yield* runQuery(refs.internal.exams.assets.stored, {
+    const { size } = yield* runQuery(examsInternal.assets.stored, {
       storageId,
     }).pipe(Effect.orDie);
     if (size > IMAGE_BYTE_LIMIT) {
@@ -79,7 +80,7 @@ const sourceContent = (
   Effect.gen(function* () {
     if (source.kind === "text") {
       const { runQuery } = yield* QueryRunner;
-      const pictures = yield* runQuery(refs.internal.exams.reads.pictures, {
+      const pictures = yield* runQuery(examsInternal.reads.pictures, {
         assets: Arr.fromIterable(source.images),
         examId,
       });
@@ -102,7 +103,7 @@ const sourceContent = (
     ).pipe(
       Effect.ensuring(
         Effect.flatMap(MutationRunner, ({ runMutation }) =>
-          runMutation(refs.internal.exams.reads.discard, {
+          runMutation(examsInternal.reads.discard, {
             images: Arr.map(source.pages, (page) => page.image),
           })
         ).pipe(Effect.orDie)
@@ -152,7 +153,7 @@ const read = FunctionImpl.make(
     function* ({ examId, slug, source }) {
       yield* requireAuth();
       const { runQuery } = yield* QueryRunner;
-      yield* runQuery(refs.public.exams.reads.canRead, {
+      yield* runQuery(examsPublic.reads.canRead, {
         examId,
         slug,
       }).pipe(
