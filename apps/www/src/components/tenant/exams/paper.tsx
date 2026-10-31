@@ -124,7 +124,6 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
         />
         {editing.displayed.key === null &&
         needsKey(editing.displayed.template) ? (
-          // A question without its key blocks the schedule, so its line takes the warning tone.
           <span className="flex items-center gap-1 text-muted-foreground text-xs">
             <HugeIcons
               aria-hidden="true"
