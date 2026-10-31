@@ -40,6 +40,7 @@ describe("billing/queries overview", () => {
     try {
       const { authed } = await signIn("free");
       expect(await authed.query(api.billing.queries.overview, {})).toEqual({
+        hasPayments: false,
         credits: {
           allowance: 10,
           balance: 10,
@@ -72,6 +73,7 @@ describe("billing/queries overview", () => {
         });
       });
       expect(await authed.query(api.billing.queries.overview, {})).toEqual({
+        hasPayments: false,
         credits: {
           allowance: 1000,
           balance: 1000,
@@ -464,10 +466,16 @@ describe("billing/queries payments", () => {
           paidAt: NOW - 500,
         });
       });
+      const { hasPayments } = await authed.query(
+        api.billing.queries.overview,
+        {}
+      );
+      expect(hasPayments).toBe(true);
       expect(await authed.query(api.billing.queries.payments, {})).toEqual([
         {
           amount: 229_000,
           currency: "IDR",
+          id: expect.any(String),
           kind: "pass",
           paidAt: NOW - 1000,
           rail: "xendit",
@@ -475,6 +483,7 @@ describe("billing/queries payments", () => {
         {
           amount: 499,
           currency: "USD",
+          id: expect.any(String),
           kind: "credits",
           paidAt: NOW - 2000,
           rail: "polar",

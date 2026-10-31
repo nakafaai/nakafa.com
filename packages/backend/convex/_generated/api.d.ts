@@ -221,6 +221,7 @@ export declare const api: {
             } | null;
             resetAt: number;
           };
+          hasPayments: boolean;
           pass: { endsAt: number } | null;
           plan: "free" | "pro";
           subscription: {
@@ -249,6 +250,7 @@ export declare const api: {
         Array<{
           amount: number;
           currency: "EUR" | "IDR" | "USD";
+          id: Id<"billingPayments">;
           kind: "cycle" | "pass" | "invoice" | "credits";
           paidAt: number;
           rail: "polar" | "xendit";
@@ -267,7 +269,37 @@ export declare const api: {
         }>
       >;
     };
+    receipts: {
+      download: FunctionReference<
+        "action",
+        "public",
+        { locale: "en" | "id" | "de"; paymentId: Id<"billingPayments"> },
+        { base64: string; name: string }
+      >;
+      school: FunctionReference<
+        "action",
+        "public",
+        { locale: "en" | "id" | "de"; number: string; slug: string },
+        { base64: string; name: string }
+      >;
+    };
     school: {
+      invoice: FunctionReference<
+        "query",
+        "public",
+        { locale: "en" | "id" | "de"; number: string; slug: string },
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        } | null
+      >;
       overview: FunctionReference<
         "query",
         "public",
@@ -14137,6 +14169,24 @@ export declare const internal: {
         }>
       >;
     };
+    draw: {
+      invoice: FunctionReference<
+        "action",
+        "internal",
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        },
+        string
+      >;
+    };
     events: {
       apply: FunctionReference<
         "mutation",
@@ -14237,6 +14287,28 @@ export declare const internal: {
           } | null
         >;
       };
+    };
+    receipts: {
+      read: FunctionReference<
+        "query",
+        "internal",
+        {
+          locale: "en" | "id" | "de";
+          paymentId: Id<"billingPayments">;
+          userId: Id<"users">;
+        },
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        } | null
+      >;
     };
     topup: {
       refundWithoutPro: FunctionReference<
