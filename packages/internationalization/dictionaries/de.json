@@ -111,6 +111,7 @@
     "status-withdrawn": "Widerrufen",
     "status-mismatch": "Angaben stimmen nicht",
     "link-verify": "Von Hand bestätigen",
+    "link-rename": "Elternteil umbenennen",
     "link-readdress": "E-Mail ändern",
     "link-readdress-description": "Die Eltern fordern mit der neuen E-Mail einen Code an.",
     "link-readdress-save": "E-Mail speichern",
