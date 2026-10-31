@@ -847,8 +847,11 @@
     "audit-empty": "Nothing has changed yet.",
     "audit-search": "Find a change",
     "audit-export": "Export",
-    "audit-operator": "Nakafa staff",
-    "audit-system": "System",
+    "audit-actor": {
+      "client": "An integration",
+      "operator": "Nakafa staff",
+      "system": "System"
+    },
     "audit-label": {
       "assignment": {
         "created": "Homeroom teacher assigned",
@@ -1111,6 +1114,9 @@
     "client-actions": "Actions",
     "client-actions-footer": "A client keeps at least one action.",
     "client-action": {
+      "roster": {
+        "import": "Import students"
+      },
       "grade": {
         "export": "Read released grades"
       },

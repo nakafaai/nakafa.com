@@ -108,6 +108,7 @@ describe("access/catalog", () => {
       "guardian.view",
       "period.view",
       "person.view",
+      "roster.import",
       "unit.view",
     ]);
   });

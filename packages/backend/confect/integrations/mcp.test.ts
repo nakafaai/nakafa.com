@@ -101,6 +101,7 @@ describe("school MCP route", () => {
           "school_list_cohorts:true",
           "school_list_people:true",
           "school_list_grades:true",
+          "school_import_roster:false",
           "school_list_changes:true",
           "school_list_placements:true",
         ]);

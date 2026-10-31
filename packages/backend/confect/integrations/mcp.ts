@@ -56,7 +56,7 @@ const unauthorized = () => {
  * reads only what the client's action list and scope open.
  */
 const handleSchoolMcp = Effect.gen(function* () {
-  const services = yield* Effect.context<QueryRunner>();
+  const services = yield* Effect.context<MutationRunner | QueryRunner>();
   const request = yield* HttpServerRequest.toWeb(
     yield* HttpServerRequest.HttpServerRequest
   );

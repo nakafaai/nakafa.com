@@ -1,5 +1,5 @@
 import type { GenericId } from "@confect/core";
-import refs from "@repo/backend/confect/_generated/refs";
+import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   type ExportDataset,
@@ -95,7 +95,7 @@ export const readExport = Effect.fn("integrations.exports.read")(function* (
   period: string | undefined
 ) {
   const { runQuery } = yield* QueryRunner;
-  const reads = refs.internal.integrations.reads;
+  const reads = integrationsInternal.reads;
   const page = { numItems: PAGE_LIMIT };
   if (dataset === "people") {
     const rows = yield* allRows((cursor) =>

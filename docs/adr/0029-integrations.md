@@ -449,7 +449,7 @@ The 15 files that import `convex-helpers`:
 | School REST | Built, 26 October 2026: the token endpoint, the bearer check, and the roster reads (see the amendment of that day) |
 | School MCP and the CLI login | Planned, program wave C |
 | Webhooks | Built, 31 October 2026 (see the amendment of that day) |
-| Exports | Planned, program wave C |
+| Exports | Built, 31 October 2026 (see the amendment of that day) |
 | LTI, the OneRoster REST service, and the QTI codec | Planned, program wave C |
 | The OneRoster CSV import, which uses the file import checks of ADR 0015 | Planned, program wave C |
 | `hono@4.13.13` in `bun.lock` | Removed on 26 October 2026. `bun.lock` keeps only the peer declaration of `convex-helpers`, `bun install --frozen-lockfile` accepts it, and `RETIRED_LOCK_PACKAGES` in `scripts/dependencies/policy.ts` fails the dependency policy when the lock resolves `hono` again. |
@@ -649,6 +649,27 @@ what the code does.
 A request carries `nakafa-signature: t=<seconds>,v1=<hex>`, `nakafa-event`,
 `nakafa-event-type`, and `nakafa-attempt`. The body holds `id`, `type`, `occurredAt`,
 `subject`, and `change`.
+
+## Amendment: Reads, Exports, And The First Client Write, 31 October 2026
+
+1. **Reads.** `GET /grades?period=` lists released grades through `grade.export`, and a
+   draft never leaves. `GET /changes` lists the published changes a client may read,
+   oldest first, the same event a webhook posts. A page can hold few rows, because it
+   reads the journal and decides each entry, so a client follows `next`. MCP serves both
+   as `school_list_grades` and `school_list_changes`, and the CLI as `nakafa school
+   grades` and `changes`.
+2. **Exports.** `GET /exports/csv/:dataset` and `/exports/xlsx/:dataset` write `people`,
+   `placements`, or `grades` through those reads, so a file holds exactly what its token
+   may read, up to 5,000 rows. `write-excel-file` writes the XLSX file, the library the
+   browser export uses (ADR 0015).
+3. **The first client write.** `POST /roster/import` is the Dapodik bridge: a school's own
+   system sends at most 100 students of one period, and they join the roster as a file
+   import does. MCP serves it as `school_import_roster`. `TenantActor` takes a client, as
+   this ADR planned, so the journal and the audit log say an integration made the change.
+4. **Idempotency.** `integrationRequests` holds the digest and the first answer of each
+   `Idempotency-Key` for 24 hours, written by the mutation that makes the change. A repeat
+   gets the first answer, and the same key with another request gets 422. A missing key is
+   refused by the definition's own header schema.
 
 ## References
 

@@ -847,8 +847,11 @@
     "audit-empty": "Noch hat sich nichts geändert.",
     "audit-search": "Änderung suchen",
     "audit-export": "Exportieren",
-    "audit-operator": "Nakafa-Team",
-    "audit-system": "System",
+    "audit-actor": {
+      "client": "Eine Integration",
+      "operator": "Nakafa-Team",
+      "system": "System"
+    },
     "audit-label": {
       "assignment": {
         "created": "Klassenlehrer zugewiesen",
@@ -1111,6 +1114,9 @@
     "client-actions": "Aktionen",
     "client-actions-footer": "Ein Client behält mindestens eine Aktion.",
     "client-action": {
+      "roster": {
+        "import": "Schüler importieren"
+      },
       "grade": {
         "export": "Freigegebene Noten lesen"
       },

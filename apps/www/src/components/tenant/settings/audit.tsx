@@ -216,9 +216,7 @@ function useEntryWords() {
       if (entry.actor.kind === "person") {
         return entry.actor.name;
       }
-      return entry.actor.kind === "operator"
-        ? t("audit-operator")
-        : t("audit-system");
+      return t(`audit-actor.${entry.actor.kind}`);
     },
     change: (entry: EntryItem) => t(`audit-label.${entry.change.type}`),
   };
