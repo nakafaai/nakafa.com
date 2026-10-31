@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page, type Route } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, MutableList, Schema } from "effect";
 import { type Changes, live, saved } from "@/e2e/support/changes";
 import {
@@ -10,10 +10,7 @@ import {
 } from "@/e2e/support/memory";
 import { CARD } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { firstRow, isHydrated } from "@/e2e/support/window";
-
-/** The scripts of the page itself. */
-const SCRIPTS = /\/assets\/.*\.js/;
+import { firstRow } from "@/e2e/support/window";
 
 /** The title of a memory in its editor. */
 export const titleOf = (page: Page) =>
@@ -166,49 +163,54 @@ export const pressTimes = Effect.fn("NakafaE2E.pressTimes")(function* (
 });
 
 /**
- * Loads the Memory page with its scripts held back, so that it shows only what
- * the server rendered, reads the names of its rows, lets the scripts run,
- * reads the names again once React has taken the page over, and says what the
- * console had to say on the way.
+ * Loads the Memory page and reads the names of its rows in the first frame that
+ * draws them and again once the page has settled, and says what the console had
+ * to say on the way. The account screens render in the browser only (ADR 0038
+ * D2), so the first frame with rows is the first render of the list.
  */
-export const namesAcrossHydration = Effect.fn("NakafaE2E.namesAcrossHydration")(
-  function* (page: Page, path: string) {
-    return yield* Effect.promise(async () => {
-      const held = MutableList.make<Route>();
-      const said = MutableList.make<string>();
-      const listen = (message: { text: () => string; type: () => string }) => {
-        if (message.type() === "error" || message.type() === "warning") {
-          MutableList.append(said, `${message.type()}: ${message.text()}`);
-        }
-      };
-
-      page.on("console", listen);
-      await page.route(SCRIPTS, (route) => {
-        MutableList.append(held, route);
-      });
-      await page.goto(path, { waitUntil: "domcontentloaded" });
-      await expect(firstRow(page)).toBeVisible({
-        timeout: readinessTimeoutMilliseconds,
-      });
-      const served = await namesOf(page);
-
-      expect(await isHydrated(firstRow(page))).toBe(false);
-      for (const route of MutableList.toArray(held)) {
-        await route.continue();
+export const namesAsDrawn = Effect.fn("NakafaE2E.namesAsDrawn")(function* (
+  page: Page,
+  path: string
+) {
+  return yield* Effect.promise(async () => {
+    const said = MutableList.make<string>();
+    const listen = (message: { text: () => string; type: () => string }) => {
+      if (message.type() === "error" || message.type() === "warning") {
+        MutableList.append(said, `${message.type()}: ${message.text()}`);
       }
-      await page.unroute(SCRIPTS);
-      await expect
-        .poll(() => isHydrated(firstRow(page)), {
-          timeout: readinessTimeoutMilliseconds,
-        })
-        .toBe(true);
-      page.off("console", listen);
+    };
 
-      return {
-        hydrated: await namesOf(page),
-        said: MutableList.toArray(said),
-        served,
+    page.on("console", listen);
+    const watch = await page.addInitScript(() => {
+      const look = () => {
+        const rows = [...document.querySelectorAll("main ul > li")];
+        if (rows.length > 0) {
+          Reflect.set(
+            window,
+            "nakafaFirstNames",
+            rows.map((item) => item.querySelector("span")?.textContent ?? "")
+          );
+          return;
+        }
+        requestAnimationFrame(look);
       };
+      requestAnimationFrame(look);
     });
-  }
-);
+    await page.goto(path);
+    await expect(firstRow(page)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await page.waitForLoadState("networkidle");
+    const first = await page.evaluate(() =>
+      Reflect.get(window, "nakafaFirstNames")
+    );
+    page.off("console", listen);
+    await watch.dispose();
+
+    return {
+      first,
+      said: MutableList.toArray(said),
+      settled: await namesOf(page),
+    };
+  });
+});

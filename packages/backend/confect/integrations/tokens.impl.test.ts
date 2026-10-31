@@ -7,7 +7,11 @@ import {
 import { TOKEN_SECONDS } from "@repo/backend/confect/integrations/api";
 import { createClient, issue } from "@repo/backend/test/api";
 import { nf } from "@repo/backend/test/classroom";
-import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  actedAt,
+  TENANCY_NOW,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect } from "effect";
 
 const { check, sweep } = refs.internal.integrations.tokens;
@@ -29,6 +33,7 @@ describe("integrations/tokens issue", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const client = yield* createClient(fixture);
+        vi.setSystemTime(actedAt());
         const issued = yield* issue(fixture, client);
         expect(issued).toMatchObject({
           expiresIn: TOKEN_SECONDS,
@@ -38,7 +43,7 @@ describe("integrations/tokens issue", () => {
         expect(row).toMatchObject({
           clientId: client.id,
           expiresAt:
-            TENANCY_NOW + Duration.toMillis(Duration.seconds(TOKEN_SECONDS)),
+            actedAt() + Duration.toMillis(Duration.seconds(TOKEN_SECONDS)),
           resource: "api",
         });
         expect(row?.tokenHash).not.toBe(
@@ -121,6 +126,7 @@ describe("integrations/tokens check", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const client = yield* createClient(fixture);
+        vi.setSystemTime(actedAt());
         const issued = yield* issue(fixture, client);
         const token = issued.outcome === "issued" ? issued.token : "";
         expect(
@@ -137,7 +143,7 @@ describe("integrations/tokens check", () => {
           })
         ).toEqual(unauthorized);
         vi.setSystemTime(
-          TENANCY_NOW + Duration.toMillis(Duration.seconds(TOKEN_SECONDS))
+          actedAt() + Duration.toMillis(Duration.seconds(TOKEN_SECONDS))
         );
         expect(
           yield* fixture.internal.mutation(check, { resource: "api", token })
@@ -217,9 +223,10 @@ describe("integrations/tokens check", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const client = yield* createClient(fixture);
+      vi.setSystemTime(actedAt());
       yield* issue(fixture, client);
       vi.setSystemTime(
-        TENANCY_NOW + Duration.toMillis(Duration.seconds(TOKEN_SECONDS))
+        actedAt() + Duration.toMillis(Duration.seconds(TOKEN_SECONDS))
       );
       yield* issue(fixture, client);
       expect(yield* fixture.internal.mutation(sweep, {})).toBeNull();

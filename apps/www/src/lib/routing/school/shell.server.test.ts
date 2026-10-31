@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
+import { clientEnv } from "@/env.public";
 import {
   answerSchoolPage,
   readSchoolFile,
@@ -54,11 +55,14 @@ describe("answerSchoolPage", () => {
         );
 
         const [shell] = assets.fetch.mock.calls[0] ?? [];
-        expect(shell?.url).toBe("https://harapan.nakafa.com/_school");
+        expect(shell?.url).toBe("https://harapan.nakafa.com/_shell");
         expect(response.status).toBe(404);
         expect(response.headers.get("etag")).toBe('"shell"');
         expect(response.headers.get("content-type")).toBe(
           "text/html; charset=utf-8"
+        );
+        expect(response.headers.get("link")).toBe(
+          `<${new URL(clientEnv.VITE_CONVEX_URL).origin}>; rel=preconnect; crossorigin`
         );
         expect(yield* Effect.promise(() => response.text())).toBe(
           "<html>shell</html>"

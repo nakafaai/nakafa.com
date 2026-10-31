@@ -7,6 +7,7 @@ import {
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import { Email, INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import {
+  actedAt,
   invitePerson,
   journal,
   scheduledJobs,
@@ -176,13 +177,14 @@ describe("tenancy/invites resend and expiry", () => {
             .as("admin")
             .mutation(resend, { inviteId: made.id, locale: "en", slug: nf });
         };
-        const first = yield* sendAt(NOW);
-        const burst = yield* sendAt(NOW).pipe(Effect.flip);
-        const early = yield* sendAt(NOW + RESEND_GAP - 1).pipe(Effect.flip);
-        const second = yield* sendAt(NOW + RESEND_GAP);
-        const third = yield* sendAt(NOW + 2 * RESEND_GAP);
-        const fullHour = yield* sendAt(NOW + HOUR - 1).pipe(Effect.flip);
-        const nextHour = yield* sendAt(NOW + HOUR);
+        const start = actedAt(0, NOW);
+        const first = yield* sendAt(start);
+        const burst = yield* sendAt(start).pipe(Effect.flip);
+        const early = yield* sendAt(start + RESEND_GAP - 1).pipe(Effect.flip);
+        const second = yield* sendAt(start + RESEND_GAP);
+        const third = yield* sendAt(start + 2 * RESEND_GAP);
+        const fullHour = yield* sendAt(start + HOUR - 1).pipe(Effect.flip);
+        const nextHour = yield* sendAt(start + HOUR);
         expect(
           Arr.map([first, second, third, nextHour], (row) => row.id)
         ).toEqual([made.id, made.id, made.id, made.id]);

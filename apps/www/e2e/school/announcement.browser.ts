@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   hostAddress,
@@ -27,6 +28,7 @@ for (const viewport of [
       signInClassTeacher(context, school.slug, address("/"))
     );
     const page = await context.newPage();
+    const changes = await Effect.runPromise(trackChanges(page, []));
     await page.goto(address("/classes/fisika-x-1"));
     await expect(page.getByText("No announcement yet")).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
@@ -41,13 +43,15 @@ for (const viewport of [
       .getByRole("textbox", { name: "Announcement" })
       .fill("Ulangan bab 2 hari Senin pukul 07.30.");
     await dialog.getByRole("checkbox", { name: "Also send by email" }).click();
+    const postedBefore = changes.sent;
     await dialog.getByRole("button", { name: "Post" }).click();
     await expect(dialog).toBeHidden();
     const posted = page.getByText("Ulangan bab 2 hari Senin pukul 07.30.");
     await expect(posted).toBeVisible();
     await expect(page.getByText("Also sent by email.")).toBeVisible();
 
-    // The server keeps it.
+    // The server keeps it, once it answered the post: a reload drops a change still on its way.
+    await saved(changes, postedBefore);
     await page.reload();
     await expect(posted).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
@@ -66,11 +70,13 @@ for (const viewport of [
     await expect(page.getByText(EDITED)).toBeVisible();
     await page.getByRole("button", { name: "More actions" }).click();
     await page.getByRole("menuitem", { name: "Remove" }).click();
+    const removedBefore = changes.sent;
     await page
       .getByRole("dialog")
       .getByRole("button", { name: "Remove", exact: true })
       .click();
     await expect(page.getByText("No announcement yet")).toBeVisible();
+    await saved(changes, removedBefore);
     await page.reload();
     await expect(page.getByText("No announcement yet")).toBeVisible({
       timeout: readinessTimeoutMilliseconds,

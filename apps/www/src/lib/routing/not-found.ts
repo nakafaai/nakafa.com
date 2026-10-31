@@ -1,7 +1,11 @@
 import type { Locale } from "@repo/internationalization/src/locale";
-import { LocaleSchema } from "@repo/internationalization/src/locale";
-import { isNotFound } from "@tanstack/react-router";
+import {
+  decodeLocale,
+  LocaleSchema,
+} from "@repo/internationalization/src/locale";
+import { isNotFound, notFound } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
+import { readStandaloneMessages } from "@/lib/i18n/standalone";
 import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 
 /**
@@ -52,4 +56,29 @@ export function withContentLanguage(response: Response, locale: Locale) {
     status: response.status,
     statusText: response.statusText,
   });
+}
+
+/**
+ * The locale of a prerendered not-found page's route. A locale that the app does
+ * not have is missing too.
+ */
+export function readNotFoundRouteLocale(param: string): Locale {
+  return Option.match(decodeLocale(param), {
+    onNone: () => {
+      throw notFound();
+    },
+    onSome: (locale) => locale,
+  });
+}
+
+/** The head of a prerendered not-found page: never indexed, titled in its locale. */
+export function notFoundRouteHead(locale: Locale | undefined) {
+  return {
+    meta: [
+      { content: "noindex,nofollow", name: "robots" },
+      ...(locale === undefined
+        ? []
+        : [{ title: readStandaloneMessages(locale).NotFound.title }]),
+    ],
+  };
 }

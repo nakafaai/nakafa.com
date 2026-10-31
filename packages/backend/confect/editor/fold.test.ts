@@ -13,7 +13,7 @@ import { Array as Arr, Effect, Logger, MutableList } from "effect";
 
 /** A document of one paragraph that holds `text`. */
 const paragraphDocument = (text: string) =>
-  assessmentModel.nodeFromJSON({
+  assessmentModel().nodeFromJSON({
     content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
     type: "doc",
   });
@@ -95,7 +95,7 @@ describe("editor/fold steps", () => {
     () =>
       Effect.gen(function* () {
         const folded = yield* foldSteps(
-          assessmentModel,
+          assessmentModel(),
           "document",
           paragraphDocument("Soal"),
           0,
@@ -119,7 +119,7 @@ describe("editor/fold steps", () => {
     () =>
       Effect.gen(function* () {
         const folded = yield* foldSteps(
-          assessmentModel,
+          assessmentModel(),
           "document",
           paragraphDocument("Soal"),
           40,
@@ -139,7 +139,7 @@ describe("editor/fold steps", () => {
           message: string;
         }>();
         yield* foldSteps(
-          assessmentModel,
+          assessmentModel(),
           "document-1",
           paragraphDocument("Soal"),
           40,
@@ -171,7 +171,7 @@ describe("editor/fold steps", () => {
   it.effect("returns the snapshot unchanged for no steps", () =>
     Effect.gen(function* () {
       const folded = yield* foldSteps(
-        assessmentModel,
+        assessmentModel(),
         "document",
         paragraphDocument("Soal"),
         3,
@@ -189,7 +189,7 @@ describe("editor/fold snapshot", () => {
     () =>
       Effect.gen(function* () {
         const text = encodeJsonText(paragraphDocument("Soal").toJSON());
-        const read = yield* snapshotNode(assessmentModel, text);
+        const read = yield* snapshotNode(assessmentModel(), text);
         expect(read.toJSON()).toEqual(paragraphDocument("Soal").toJSON());
       })
   );

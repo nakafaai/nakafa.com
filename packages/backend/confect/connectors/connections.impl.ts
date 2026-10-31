@@ -95,7 +95,7 @@ const disconnectSchool = FunctionImpl.make(
   Effect.fn("connectors.connections.disconnectSchool")(function* () {
     const connection = yield* SchoolConnection;
     const { person } = yield* Member;
-    yield* disconnect(personActor(person), connection);
+    yield* disconnect(personActor(person), connection, "revoke");
     return null;
   })
 );
@@ -113,7 +113,7 @@ const disconnectOwn = FunctionImpl.make(
   }) {
     const { appUser } = yield* requireAuth();
     const connection = yield* loadOwnConnection(appUser._id, connectionId);
-    yield* disconnect({ id: appUser._id, kind: "user" }, connection);
+    yield* disconnect({ id: appUser._id, kind: "user" }, connection, "revoke");
     return null;
   })
 );

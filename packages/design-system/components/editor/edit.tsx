@@ -142,12 +142,14 @@ function MathField({
  * JavaScript holds it. Closing the popover saves the
  * formula, unless the writer pressed Escape, which keeps the formula as it was. A blank formula
  * is never saved, and a formula that KaTeX does not parse is saved and drawn as its error, with
- * KaTeX's reason in one sentence.
+ * KaTeX's reason in one sentence. The formula the writer just inserted holds nothing yet to keep,
+ * so Escape or a blank close takes it back out (`onDiscard`) instead of leaving its placeholder.
  */
 export function FormulaEdit({
   block,
   labels,
   latex,
+  onDiscard,
   onSave,
   opening,
 }: {
@@ -167,6 +169,8 @@ export function FormulaEdit({
     open: string;
   };
   latex: string;
+  /** Takes the formula the writer just inserted back out of the text, when it closes without one. */
+  onDiscard: () => void;
   onSave: (latex: string) => void;
   /** Whether the editor opens as the formula first draws, as it does for the formula the writer just inserted. */
   opening: boolean;
@@ -203,6 +207,10 @@ export function FormulaEdit({
       setOpen(false);
       if (!discarded.current && draft.trim() !== "") {
         onSave(draft.trim());
+        return;
+      }
+      if (opening) {
+        onDiscard();
       }
       return;
     }
