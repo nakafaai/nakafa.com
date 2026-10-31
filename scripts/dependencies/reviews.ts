@@ -7,26 +7,6 @@ import { AI_SDK_COHORT } from "#scripts/dependencies/policy";
  */
 export const REGISTRY_REVIEWS = [
   [
-    "react@latest",
-    "19.3.1",
-    'The declared React is 19.3.1, the latest 19.3 release (checked 16 October 2026). Its release lists one entry, "Improve transport protocol" (facebook/react#37845), which adds a development-mode warning for an empty Flight or Fizz chunk where ArrayBuffer.prototype.detached is missing. Fiber 9.8.2 accepts React 19.3 (its peer range is >=19 <19.4), and scene labels no longer use drei\'s Html, so no second React root is created per label.',
-  ],
-  [
-    "react-dom@latest",
-    "19.3.1",
-    "React DOM is 19.3.1, the same release as React. react-dom 19.3.1 requires react ^19.3.1, and the overrides pin both to 19.3.1.",
-  ],
-  [
-    "@types/react@latest",
-    "19.3.0",
-    "19.3.0 is the newest published React declarations (checked 16 October 2026), so they stay on it while the runtime is 19.3.1.",
-  ],
-  [
-    "@types/react-dom@latest",
-    "19.3.0",
-    "19.3.0 is the newest published React DOM declarations (checked 16 October 2026), so they stay on it while the runtime is 19.3.1.",
-  ],
-  [
     "mermaid@latest",
     "12.2.0",
     "Mermaid 12 requires Safari 17.4 (recorded when this hold was made; not re-measured on 25 October 2026), while Nakafa keeps the Safari 16.4 floor that Vite 8.3.5 builds for by default (its baseline-widely-available target lists safari16.4). The hold holds while both are true.",
@@ -94,11 +74,6 @@ export const REGISTRY_REVIEWS = [
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
-    "convex@latest",
-    "1.48.0",
-    "Convex 1.48 adds `ctx.auth.signJwt`, redacts environment values in deploy logs, lists environment variable names only for agents, and makes storage available in mutations. Its `convex deploy` asks before it creates or changes a non-staged index on a table of 100,000 documents or more, and a non-interactive deploy fails there unless `--skip-large-indexes-check` is passed, so a production build that adds such an index fails without that flag. Acceptance uses an isolated deployment.",
-  ],
-  [
     "ai@latest",
     "7.0.153",
     "AI SDK packages move as one reviewed cohort. 7.0.140 stays: 7.0.141, 7.0.142, 7.0.147 and 7.0.152 each fail the backend typecheck with TS2590 in confect/nina (21 errors each, measured on 25 October 2026 with @convex-dev/agent 0.7.8), and 7.0.140 passes. 7.0.153 is the latest release and becomes eligible at 2026-10-25 17:57 UTC; re-test it then. Its release notes change the streamed input of OpenAI custom tools and the workflow telemetry context, and Nakafa uses neither.",
@@ -129,11 +104,6 @@ export const REGISTRY_REVIEWS = [
     "The adapter defines the accepted Better Auth peer range. 0.12.6 keeps >=1.6.11 <1.7.0 and convex-helpers ^0.1.128.",
   ],
   [
-    "posthog-node@latest",
-    "5.60.1",
-    "posthog-node 5.57.2 and later read the OpenTelemetry API from its global symbol instead of importing @opentelemetry/api, and 5.59 moves the OpenTelemetry integration to the separate posthog-node/otel entrypoint, so the Convex bundle of @posthog/convex resolves without the optional peer. The override that held the component on 5.55.1 is gone, and the component and the analytics package share one release. 5.60.1 is the latest release and becomes one day old at 2026-10-30 17:51 UTC; the release-age gate resolves 5.57.2 until then.",
-  ],
-  [
     "@biomejs/biome@latest",
     "2.6.4",
     "Formatting is reviewed as one cohort with Ultracite. Biome stays on 2.5.15. Ultracite 8.1.0 peers Biome ^2.6.2 and renames useSortedClasses to useTailwindSortedClasses, so the 2.6 line loads now, but the cohort also sorts classes in Tailwind CSS v4 order and turns on the rules that Biome 2.6 made stable. Measured on 30 October 2026 with Biome 2.6.4 and Ultracite 8.1.0: 1,620 findings in about 550 files, among them 733 class lists to re-sort in 290 files, 410 regular expressions without the unicode flag, 177 unnamed capture groups, 101 hook factory components (noComponentHookFactories) and 83 imports after code. That change touches most of the files that the open pull requests touch, so the hold lifts in its own change: one that applies Ultracite's fixes, clears the remaining findings by hand, and lands right after a merge train, when the fewest pull requests are open.",
@@ -149,20 +119,5 @@ export const REGISTRY_REVIEWS = [
     "react-doctor@latest",
     "0.9.18",
     "The local scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled. 0.9.18 narrows existing rules to reduce false positives and adds the opt-in --scope contextual mode, which this repository does not use.",
-  ],
-  [
-    "turbo@latest",
-    "2.11.10",
-    "Turbo and its generator move together. 2.11.10, published 2026-10-20, is the newest release one day old, and the repository gates pass on it.",
-  ],
-  [
-    "@react-three/fiber@latest",
-    "9.8.2",
-    "Fiber 9.8.2 accepts React 19.3 (its peer range is >=19 <19.4) and mounts a scene inside the React DOM commit that renders its canvas. Its 9.8.2 release notes keep pointer capture when an object's args change during a drag, request a frame when an object is removed with frameloop demand, fix the createPortal memory leaks with Activity, and make roots follow devicePixelRatio changes. Scene labels draw in one DOM overlay per canvas (components/three/overlay.tsx) and no longer use drei's Html, which created a second React root per label. That root's replacement during Fiber's mount cleared the first label of every scene and made a label's removal throw on lesson navigation (pmndrs/drei#2867). drei 10.7.9 peers Fiber ^9.0.0, which 9.8.2 satisfies. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene/lines.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
-  ],
-  [
-    "afdocs@latest",
-    "0.22.2",
-    "AFDocs 0.21 adds the page-size-transfer check. A cached surah page serves 0.73 to 0.88 MB; its first render after a deploy or a publication also carries the prefetch stream of the retired framework and serves up to 1.24 MB, so agent-docs.config.yml sets the pass line at 1.5 MB. AFDocs 0.22 adds the markdown-link-portability check, which the agent Markdown passes because site paths are written as absolute URLs. That check sends its first requests right after three checks that only compute, and for 50 large pages they hold the event loop longer than the 5 seconds a Node server keeps an idle connection, so the checker reused connections that the local server had closed (fetch failed, ECONNRESET). The start script of apps/www therefore keeps idle connections for 70 seconds, as a production proxy does.",
   ],
 ];
