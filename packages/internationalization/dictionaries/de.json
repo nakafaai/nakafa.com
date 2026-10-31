@@ -58,6 +58,9 @@
     "outsider-check-again": "Erneut nach meiner Einladung sehen"
   },
   "SchoolGuardians": {
+    "family-title": "Meine Eltern",
+    "family-invite": "Elternteil einladen",
+    "family-empty-description": "Füge die E-Mail deiner Eltern hinzu, damit sie sich anmelden und deine Noten sehen können.",
     "sign-in-action": "Als Elternteil anmelden",
     "email-label": "E-Mail der Eltern",
     "email-placeholder": "eltern@beispiel.de",
@@ -730,6 +733,8 @@
     "class-cohort-none": "Lege zuerst eine Klasse an",
     "class-subject": "Fach",
     "class-subject-placeholder": "Physik",
+    "class-subject-change": "Fach ändern",
+    "class-subject-change-description": "Die Klasse behält ihre Lernenden, Lehrkräfte und Aufgaben, und ihre Adresse bleibt.",
     "class-name": "Name",
     "class-name-placeholder": "Physik 7A",
     "class-status": "Status",
@@ -2224,6 +2229,7 @@
     "payments-description": "Die erfolgreichen Zahlungen, die neueste zuerst.",
     "payment-date": "Datum",
     "payment-for": "Für",
+    "payment-via": "Über",
     "payment-amount": "Betrag",
     "payment-credits": "Nina-Credits",
     "payment-cycle": "Pro-Abo",

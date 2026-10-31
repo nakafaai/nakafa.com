@@ -58,6 +58,9 @@
     "outsider-check-again": "Periksa lagi undanganku"
   },
   "SchoolGuardians": {
+    "family-title": "Orang tuaku",
+    "family-invite": "Undang orang tua",
+    "family-empty-description": "Tambahkan email orang tuamu agar mereka bisa masuk dan melihat nilaimu.",
     "sign-in-action": "Masuk sebagai orang tua",
     "email-label": "Email orang tua",
     "email-placeholder": "orangtua@contoh.com",
@@ -730,6 +733,8 @@
     "class-cohort-none": "Tambah rombel dulu",
     "class-subject": "Mata pelajaran",
     "class-subject-placeholder": "Fisika",
+    "class-subject-change": "Ubah mata pelajaran",
+    "class-subject-change-description": "Kelas tetap menyimpan siswa, guru, dan tugasnya, dan alamatnya tidak berubah.",
     "class-name": "Nama",
     "class-name-placeholder": "Fisika 7A",
     "class-status": "Status",
@@ -2224,6 +2229,7 @@
     "payments-description": "Pembayaran yang berhasil, dari yang terbaru.",
     "payment-date": "Tanggal",
     "payment-for": "Untuk",
+    "payment-via": "Via",
     "payment-amount": "Jumlah",
     "payment-credits": "Kredit Nina",
     "payment-cycle": "Langganan Pro",

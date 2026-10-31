@@ -58,6 +58,9 @@
     "outsider-check-again": "Check again for my invite"
   },
   "SchoolGuardians": {
+    "family-title": "My parents",
+    "family-invite": "Invite a parent",
+    "family-empty-description": "Add your parent's email so they can sign in and see your grades.",
     "sign-in-action": "Sign in as a parent",
     "email-label": "Parent email",
     "email-placeholder": "parent@example.com",
@@ -730,6 +733,8 @@
     "class-cohort-none": "Add a cohort first",
     "class-subject": "Subject",
     "class-subject-placeholder": "Physics",
+    "class-subject-change": "Change subject",
+    "class-subject-change-description": "The classroom keeps its students, teachers and tasks, and its address stays.",
     "class-name": "Name",
     "class-name-placeholder": "Physics 7A",
     "class-status": "Status",
@@ -2224,6 +2229,7 @@
     "payments-description": "The payments that went through, newest first.",
     "payment-date": "Date",
     "payment-for": "For",
+    "payment-via": "Via",
     "payment-amount": "Amount",
     "payment-credits": "Nina credits",
     "payment-cycle": "Pro subscription",

@@ -126,10 +126,11 @@ test("a teacher adds questions and writes on at once, drags the first past the s
   const grip = page.locator("[data-grip]").first();
   const from = await grip.boundingBox();
   expect(from).not.toBeNull();
-  await page.mouse.move(from?.x ?? 0, from?.y ?? 0);
+  const x = (from?.x ?? 0) + (from?.width ?? 0) / 2;
+  await page.mouse.move(x, (from?.y ?? 0) + (from?.height ?? 0) / 2);
   await page.mouse.down();
-  await page.mouse.move(from?.x ?? 0, 500, { steps: 4 });
-  await page.mouse.move(from?.x ?? 0, 840, { steps: 8 });
+  await page.mouse.move(x, 500, { steps: 4 });
+  await page.mouse.move(x, 840, { steps: 8 });
   await expect
     .poll(() =>
       page

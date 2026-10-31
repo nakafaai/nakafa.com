@@ -7,6 +7,7 @@ import {
   Notification01Icon,
   Settings01Icon,
   TaskEdit01Icon,
+  UserLove01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -95,6 +96,7 @@ function TenantSchoolGroups() {
   const matchRoute = useMatchRoute();
   const tExams = useTranslations("Exams");
   const tGrades = useTranslations("SchoolGrades");
+  const tGuardians = useTranslations("SchoolGuardians");
   const tNotifications = useTranslations("Notifications");
   const tGraduation = useTranslations("SchoolGraduation");
   const tReports = useTranslations("SchoolReports");
@@ -138,6 +140,21 @@ function TenantSchoolGroups() {
         ) : null}
         {Option.contains(role, "student") ? (
           <>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={
+                  matchRoute({
+                    params: { slug },
+                    to: "/school/$slug/family",
+                  }) !== false
+                }
+                render={<Link params={{ slug }} to="/school/$slug/family" />}
+                tooltip={tGuardians("family-title")}
+              >
+                <HugeIcons icon={UserLove01Icon} />
+                <span className="truncate">{tGuardians("family-title")}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={

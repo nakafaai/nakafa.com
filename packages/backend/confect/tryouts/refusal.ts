@@ -27,11 +27,27 @@ const unavailable = {
   SectionClosed: sectionNotActive,
 };
 
+/** A refused write to a section, in the attempt state codes these writes have always returned. */
+const toSectionFailure = (refused: AttemptRefused) =>
+  Match.valueTags(refused.reason, {
+    ...unavailable,
+    Expired: () =>
+      new TryoutAttemptStateError({
+        code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+        message: "Try-out attempt time has expired.",
+      }),
+    Missing: () =>
+      new TryoutAttemptStateError({
+        code: "TRYOUT_ATTEMPT_NOT_FOUND",
+        message: "Try-out attempt not found.",
+      }),
+  });
+
 /**
  * Maps one refused try-out write onto an error its function already declares,
  * so no deployed error union changes. Answers keep the response vocabulary for
- * a missing question and a passed deadline; a finish keeps the attempt state
- * codes it has always returned.
+ * a missing question and a passed deadline; a section's finish and start keep
+ * their attempt state codes.
  */
 export const toTryoutFailure = {
   answer: (refused: AttemptRefused) =>
@@ -48,22 +64,10 @@ export const toTryoutFailure = {
           message: "Try-out question placement not found.",
         }),
     }),
-  finish: (refused: AttemptRefused) =>
-    Match.valueTags(refused.reason, {
-      ...unavailable,
-      Expired: () =>
-        new TryoutAttemptStateError({
-          code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-          message: "Try-out attempt time has expired.",
-        }),
-      Missing: () =>
-        new TryoutAttemptStateError({
-          code: "TRYOUT_ATTEMPT_NOT_FOUND",
-          message: "Try-out attempt not found.",
-        }),
-    }),
+  finish: toSectionFailure,
+  start: toSectionFailure,
 } satisfies Record<
-  keyof Pick<typeof rules, "answer" | "finish">,
+  keyof Pick<typeof rules, "answer" | "finish" | "start">,
   (refused: AttemptRefused) => TryoutAttemptStateError | TryoutResponseError
 >;
 
