@@ -110,7 +110,10 @@ function SheetPopup({
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-1.5 border-b p-4", className)}
+      className={cn(
+        "flex flex-col gap-1.5 border-b p-4 last:border-b-0 has-[+[data-slot=sheet-footer]]:border-b-0",
+        className
+      )}
       data-slot="sheet-header"
       {...props}
     />
@@ -121,7 +124,10 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("mt-auto flex flex-col gap-2 border-t p-4", className)}
+      className={cn(
+        "bg-muted/70 mt-auto flex flex-col gap-2 border-t p-4",
+        className
+      )}
       data-slot="sheet-footer"
       {...props}
     />

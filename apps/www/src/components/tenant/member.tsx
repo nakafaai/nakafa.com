@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 import { AppProviders } from "@/components/providers/app";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { canOpenGraduation } from "@/components/tenant/graduation/access";
+import { PageRecovery } from "@/components/tenant/read/recovery";
 import { canOpenReports } from "@/components/tenant/reports/access";
 import { TenantShell } from "@/components/tenant/shell";
 import { canManageSchool, roleOf, type SchoolFrame } from "@/lib/tenant/frame";
@@ -35,7 +36,9 @@ export function SchoolMember({
         viewer={viewer}
       >
         <div className={cn(monospace, "contents")}>
-          <Outlet />
+          <PageRecovery>
+            <Outlet />
+          </PageRecovery>
         </div>
       </TenantShell>
     </AppProviders>
