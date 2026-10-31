@@ -95,7 +95,7 @@ const readFace = Effect.fn("pdf.font")(function* (
 export const renderPdf = Effect.fn("pdf.render")(
   function* (document: ReactElement, details: typeof PdfDetails.Type) {
     const fonts = yield* Effect.forEach(FACES, readFace);
-    return yield* Effect.tryPromise({
+    const bytes = yield* Effect.tryPromise({
       catch: (cause) =>
         new PdfRenderError({
           code: "PDF_RENDER_FAILED",
@@ -109,6 +109,7 @@ export const renderPdf = Effect.fn("pdf.render")(
           size: "a4",
         }),
     });
+    return new Uint8Array(bytes);
   },
   (effect) =>
     effect.pipe(
