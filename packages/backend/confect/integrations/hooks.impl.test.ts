@@ -1,11 +1,15 @@
 import type { GenericId } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { DELIVERY_RETENTION } from "@repo/backend/confect/integrations/hook";
+import {
+  DELIVERY_RETENTION,
+  type WebhookChanges,
+} from "@repo/backend/confect/integrations/hook";
 import { readsSubject } from "@repo/backend/confect/integrations/subject";
 import { cursorOf } from "@repo/backend/confect/journal/store";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
@@ -17,7 +21,7 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect, Option } from "effect";
+import { Array as Arr, Duration, Effect, Option, Schema } from "effect";
 
 /** The fetch that delivery calls, stubbed once for the file. */
 const fetcher = vi.fn<typeof fetch>();
@@ -29,6 +33,8 @@ const webhooks = refs.public.integrations.webhooks;
 const { deliver, prepare, prune, run, settle, sweep } =
   refs.internal.integrations.hooks;
 const RECEIVER = "https://93.184.216.34/hook";
+const goneGrade = Schema.decodeUnknownSync(Id("classGrades"))("1gone");
+const goneLink = Schema.decodeUnknownSync(Id("guardianLinks"))("1gone");
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 type DeliveryId = GenericId.GenericId<"integrationDeliveries">;
@@ -46,7 +52,7 @@ afterEach(() => {
 /** A client that reads units and people, and its webhook of `changes`. */
 const seeded = Effect.fn("test.hooks.seeded")(function* (
   fixture: Fixture,
-  changes: readonly ("grant.created" | "unit.created")[] = ["unit.created"]
+  changes: typeof WebhookChanges.Type = ["unit.created"]
 ) {
   yield* fixture.run(createTenantKey(fixture.tenants.nf));
   const client = yield* fixture.as("admin").mutation(clients.create, {
@@ -56,7 +62,7 @@ const seeded = Effect.fn("test.hooks.seeded")(function* (
     slug: nf,
   });
   const webhook = yield* fixture.as("admin").mutation(webhooks.create, {
-    changes: changes as ["unit.created"],
+    changes,
     clientId: client.id,
     slug: nf,
     url: RECEIVER,
@@ -581,9 +587,8 @@ describe("readsSubject", () => {
         expect(yield* reads({ id: fixture.units.sma, kind: "unit" })).toBe(
           true
         );
-        expect(yield* reads({ id: fixture.people.admin, kind: "person" })).toBe(
-          true
-        );
+        expect(yield* reads({ id: fixture.people.admin.personId, kind: "person" })
+        ).toBe(true);
       })
   );
 
@@ -598,8 +603,10 @@ describe("readsSubject", () => {
           subject: Parameters<typeof readsSubject>[0]["subject"]
         ) => fixture.run(readsSubject({ subject }, read));
 
-        expect(yield* reads({ id: "gone", kind: "grade" })).toBe(false);
-        expect(yield* reads({ id: "gone", kind: "guardianLink" })).toBe(false);
+        expect(yield* reads({ id: goneGrade, kind: "grade" })).toBe(false);
+        expect(yield* reads({ id: goneLink, kind: "guardianLink" })).toBe(
+          false
+        );
         expect(yield* reads({ id: clientId, kind: "integration" })).toBe(false);
       })
   );
