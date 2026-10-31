@@ -104,8 +104,9 @@ const LESSONS = [
 
 /**
  * The look of the first element the selector finds inside `root`, or nothing when it finds none. A
- * heading is read at the element that holds its words, where its colour and its rule are: a lesson's
- * heading wraps them in its link and a span, and an exam document's holds them itself.
+ * heading is read at the element that holds its first words, where its colour and its rule are: a
+ * lesson's heading holds them in a span inside its link, beside the link's icon, and an exam
+ * document's holds them itself.
  */
 async function lookIn(root: Locator, selector: string) {
   const element = root.locator(selector).first();
@@ -115,18 +116,15 @@ async function lookIn(root: Locator, selector: string) {
   await element.scrollIntoViewIfNeeded();
   return element.evaluate(
     (node, names) => {
-      let target: Element = node;
-      while (
-        node.matches("h1, h2, h3") &&
-        target.children.length === 1 &&
-        Array.from(target.childNodes).every(
-          (child) =>
-            child.nodeType !== Node.TEXT_NODE ||
-            (child.textContent ?? "").trim() === ""
-        )
-      ) {
-        target = target.children[0] ?? target;
-      }
+      // A heading is read at the element of its first words: a lesson's sits in its link beside the link's icon.
+      const words = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+        acceptNode: (text) =>
+          (text.textContent ?? "").trim() === ""
+            ? NodeFilter.FILTER_SKIP
+            : NodeFilter.FILTER_ACCEPT,
+      });
+      const first = node.matches("h1, h2, h3") ? words.nextNode() : null;
+      const target = first?.parentElement ?? node;
       const style = getComputedStyle(target);
       return Object.fromEntries(
         names.map((name) => [name, style.getPropertyValue(name)])
