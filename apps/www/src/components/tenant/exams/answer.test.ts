@@ -330,9 +330,11 @@ describe("a question of two choices", () => {
   it("adds an option to the named choice under its own prefix", () => {
     const [, reason] = withOptionAdded(answers, "reason");
 
-    expect(reason?.kind === "choice" ? reason.options.at(-1)?.id : "").toBe(
-      "reason-4"
-    );
+    expect(
+      reason?.kind === "choice"
+        ? Option.map(Arr.last(reason.options), (option) => option.id)
+        : Option.none()
+    ).toEqual(Option.some("reason-4"));
   });
 
   it("removes an option from its own choice, and only its mark from the key", () => {

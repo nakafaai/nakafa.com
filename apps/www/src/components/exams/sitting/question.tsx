@@ -234,7 +234,6 @@ export const SittingQuestion = memo(function SittingQuestion({
           {Option.isSome(reasons) ? (
             <SittingReason
               answer={reasons.value[0]}
-              labelledBy={ids.title}
               onChoose={onChoose}
               reason={reasons.value[1]}
               response={chosenOptions(question.response ?? NO_RESPONSE)}

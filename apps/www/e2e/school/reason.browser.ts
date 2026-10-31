@@ -76,10 +76,7 @@ test("a teacher writes an answer and its reason, marks both keys one at a time, 
   // The student picks one answer and one reason, and picking again moves only its own.
   await page.getByRole("link", { name: "Try as student" }).click();
   await page.waitForURL(TRY_PATH);
-  const answers = page.getByRole("radiogroup", {
-    exact: true,
-    name: "Question 1",
-  });
+  const answers = page.getByRole("radiogroup", { name: "Answer" });
   const reasons = page.getByRole("radiogroup", { name: "Reason" });
   await expect(answers).toBeVisible({
     timeout: readinessTimeoutMilliseconds,

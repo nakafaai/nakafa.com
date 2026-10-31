@@ -7,73 +7,72 @@ import {
   withHeld,
 } from "@/components/exams/sitting/response";
 
-/** The name above a question's reasons, wherever they are read or written. */
-export function ReasonTitle({ id }: { readonly id?: string }) {
-  const t = useTranslations("Exams");
-
-  return (
-    <p className="font-medium" id={id}>
-      {t("reason-title")}
-    </p>
-  );
-}
-
-/** The options of one choice on a paper: a reason stands under its name, and any other choice stands alone. */
+/**
+ * The options of one choice on a paper, under its name when the question holds two: the answer and the reason.
+ * A question of one choice names it in its prompt, so its options stand alone.
+ */
 export function ChoiceGroup({
   children,
-  reason,
+  id,
+  title,
 }: {
   readonly children: ReactNode;
-  /** Whether the options are a question's reasons. */
-  readonly reason: boolean;
+  /** The id of the name, for the options that a screen reader reads by it. */
+  readonly id?: string;
+  /** The key of the choice's name, or none for a question of one choice. */
+  readonly title: "reason-answer" | "reason-title" | null;
 }) {
-  return reason ? (
+  const t = useTranslations("Exams");
+
+  return title === null ? (
+    children
+  ) : (
     <div className="grid gap-3">
-      <ReasonTitle />
+      <p className="font-medium" id={id}>
+        {t(title)}
+      </p>
       {children}
     </div>
-  ) : (
-    children
   );
 }
 
 /**
- * An answer and its reason: the question's two choices, one under the other, which the one response of the
- * question answers together. Each change calls `onChoose` with the whole response, so the caller saves it at once.
+ * An answer and its reason: the question's two choices, one under the other, each under its name, which the one
+ * response of the question answers together. Each change calls `onChoose` with the whole response, so the caller
+ * saves it at once.
  */
 export function SittingReason({
   answer,
-  labelledBy,
   onChoose,
   reason,
   response,
 }: {
   readonly answer: Choice;
-  /** The id of the heading that names the question. */
-  readonly labelledBy: string;
   readonly onChoose: (response: readonly string[]) => void;
   readonly reason: Choice;
   readonly response: readonly string[];
 }) {
-  const id = useId();
+  const answerId = useId();
+  const reasonId = useId();
 
   return (
     <div className="grid gap-8">
-      <SittingChoice
-        choice={answer}
-        labelledBy={labelledBy}
-        onChoose={(next) => onChoose(withHeld(answer, next, response))}
-        response={heldBy(answer, response)}
-      />
-      <div className="grid gap-3">
-        <ReasonTitle id={id} />
+      <ChoiceGroup id={answerId} title="reason-answer">
+        <SittingChoice
+          choice={answer}
+          labelledBy={answerId}
+          onChoose={(next) => onChoose(withHeld(answer, next, response))}
+          response={heldBy(answer, response)}
+        />
+      </ChoiceGroup>
+      <ChoiceGroup id={reasonId} title="reason-title">
         <SittingChoice
           choice={reason}
-          labelledBy={id}
+          labelledBy={reasonId}
           onChoose={(next) => onChoose(withHeld(reason, next, response))}
           response={heldBy(reason, response)}
         />
-      </div>
+      </ChoiceGroup>
     </div>
   );
 }

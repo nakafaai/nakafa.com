@@ -476,6 +476,7 @@
     "template-cause": "Ursache und Wirkung",
     "template-reason": "Antwort und Begründung",
     "reason-title": "Begründung",
+    "reason-answer": "Antwort",
     "reason-option": "Begründung {letter}",
     "reason-of": "Frage {number}, Begründung {letter}",
     "reason-add": "Begründung hinzufügen",

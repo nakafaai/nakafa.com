@@ -1,18 +1,10 @@
-import { Alert02Icon, ListPlusIcon } from "@hugeicons/core-free-icons";
-import {
-  letterScript,
-  optionLetter,
-} from "@repo/backend/confect/exams/letters";
+import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { questionGap } from "@repo/backend/confect/exams/parts";
 import {
-  CHOICE_OPTIONS_MAX,
-  CHOICE_OPTIONS_MIN,
-  fixedOptions,
   type QuestionTemplate,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { statusIconVariants } from "@repo/design-system/lib/status";
 import { Array as Arr, Match, Option } from "effect";
@@ -49,8 +41,6 @@ import { ExamDocument } from "@/components/tenant/exams/rich";
 import { activeQuestion } from "@/components/tenant/exams/selection";
 import {
   PaperField,
-  PaperOption,
-  PaperOptions,
   PaperPairs,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
@@ -251,12 +241,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
             </QuestionPaper>
           }
         >
-          <LivePaper
-            chosen={chosen}
-            editing={editing}
-            number={number}
-            question={question}
-          />
+          <LivePaper editing={editing} number={number} question={question} />
         </Suspense>
       ) : (
         <QuestionPaper selected={chosen}>
@@ -286,18 +271,22 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
  * page moves nothing.
  */
 function LivePaper({
-  chosen,
   editing,
   number,
   question,
 }: {
-  chosen: boolean;
   editing: QuestionEditing;
   number: number;
   question: Question;
 }) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
+  const chosen = useExamSelection((state) =>
+    Option.exists(
+      activeQuestion(exam.questions, state.selected),
+      (active) => active.question.id === question.id
+    )
+  );
   // The prompt's editor opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone,
   // so the words the teacher typed stay on screen.
   const frozen = isLocked(exam);

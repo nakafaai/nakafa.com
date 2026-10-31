@@ -15,14 +15,14 @@ import { SittingChoice } from "@/components/exams/sitting/choice";
 import { useReaderLoaded } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
+import { SittingReason } from "@/components/exams/sitting/reason";
 import {
   choiceOf,
-  reasonOf,
   pairingOf,
+  reasonOf,
   tableOf,
   writtenOf,
 } from "@/components/exams/sitting/response";
-import { SittingReason } from "@/components/exams/sitting/reason";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
 import { readQuestionIds } from "@/components/player/ids";
@@ -128,7 +128,6 @@ export function ExamTryQuestion({
         {Option.isSome(reasons) ? (
           <SittingReason
             answer={reasons.value[0]}
-            labelledBy={ids.title}
             onChoose={(next) => choose(question.id, next)}
             reason={reasons.value[1]}
             response={chosenOptions(response ?? NO_RESPONSE)}

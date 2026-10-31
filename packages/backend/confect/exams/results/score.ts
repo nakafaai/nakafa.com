@@ -1,37 +1,37 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { jointCeiling } from "@nakafa/aksara-contracts/assessment/joint";
+import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import type { ScoringRule } from "@nakafa/aksara-contracts/assessment/scoring";
 import { grade } from "@repo/backend/confect/assessment/grade";
 import {
   chosenOptions,
   type ExamResponse,
 } from "@repo/backend/confect/assessment/response";
-import type { QuestionView } from "@repo/backend/confect/exams/question";
+import { QuestionView } from "@repo/backend/confect/exams/question";
 import {
+  examResultValidator,
   gradeVerdict,
-  type Verdict,
 } from "@repo/backend/confect/exams/results/schema";
 import {
   ALL_OR_NOTHING,
   ANSWER_AND_REASON,
 } from "@repo/backend/confect/exams/scoring";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Struct } from "effect";
 
 /** What one answer scored: the whole points it earned, and the verdict they give. */
-interface Scored {
-  readonly points: number;
-  readonly verdict: Verdict;
-}
+const Scored = examResultValidator.mapFields(
+  Struct.pick(["points", "verdict"])
+);
+type Scored = typeof Scored.Type;
 
 /** An answer that waits for a person, which has earned nothing yet. */
 const WAITING: Scored = { points: 0, verdict: "pending" };
 
 /** A question as the scoring reads it. */
-type ScoredQuestion = Pick<
-  QuestionView,
-  "answers" | "key" | "points" | "scoring"
->;
+const ScoredQuestion = QuestionView.mapFields(
+  Struct.pick(["answers", "key", "points", "scoring"])
+);
+type ScoredQuestion = typeof ScoredQuestion.Type;
 
 /**
  * What a category earns: its share of the question's points, in whole points and rounded down, so only a whole

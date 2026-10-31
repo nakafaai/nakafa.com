@@ -476,6 +476,7 @@
     "template-cause": "Sebab-akibat",
     "template-reason": "Jawaban dan alasan",
     "reason-title": "Alasan",
+    "reason-answer": "Jawaban",
     "reason-option": "Alasan {letter}",
     "reason-of": "Soal {number}, alasan {letter}",
     "reason-add": "Tambah alasan",
