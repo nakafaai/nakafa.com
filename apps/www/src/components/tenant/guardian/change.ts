@@ -11,6 +11,9 @@ import { draftText } from "@/components/tenant/settings/state";
 /** One guardian link as the Staff list shows it. */
 export type LinkItem = Ref.Returns<typeof guardians.links.list>["page"][number];
 
+/** One parent as the student's page shows the link. */
+export type FamilyItem = Ref.Returns<typeof guardians.links.mine>[number];
+
 /** One child as the parent home shows it. */
 export type ChildItem = Ref.Returns<typeof guardians.family.children>[number];
 
@@ -109,6 +112,27 @@ export const startLinkChange: OptimisticUpdate<typeof guardians.links.start> = (
     slug,
     (args) => args.paginationOpts.cursor === null,
     (page) => Arr.prepend(page, draft)
+  );
+};
+
+/** Lists a parent the student invites at once, waiting for the parent's check. */
+export const inviteParentChange: OptimisticUpdate<
+  typeof guardians.links.start
+> = (localStore, { email, guardianName, slug }) => {
+  const links = localStore.getQuery(guardians.links.mine, { slug });
+  if (Option.isNone(links)) {
+    return;
+  }
+  const draft: FamilyItem = {
+    email,
+    guardianName,
+    id: Schema.decodeUnknownSync(Id("guardianLinks"))(draftText()),
+    status: "pending",
+  };
+  localStore.setQuery(
+    guardians.links.mine,
+    { slug },
+    Option.some(Arr.prepend(links.value, draft))
   );
 };
 

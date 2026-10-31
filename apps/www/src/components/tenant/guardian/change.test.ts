@@ -6,6 +6,7 @@ import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Option, Schema } from "effect";
 import {
   type ChildItem,
+  inviteParentChange,
   type LinkItem,
   readdressLinkChange,
   revokeLinkChange,
@@ -56,6 +57,40 @@ const firstPageOf = (local: ReturnType<typeof createLocalStore>) =>
   Option.getOrThrow(
     local.store.getQuery(guardians.links.list, { paginationOpts: paging, slug })
   ).page;
+
+describe("inviteParentChange", () => {
+  const invite = {
+    email: IBU,
+    guardianName: "Ibu Siti",
+    slug,
+    studentId,
+  };
+
+  it("writes nothing while the student's links have not loaded", () => {
+    const local = createLocalStore();
+    inviteParentChange(local.store, invite);
+    expect(local.written()).toEqual([]);
+  });
+
+  it("lists the invited parent first, waiting for the parent's check", () => {
+    const local = createLocalStore();
+    local.seed(guardians.links.mine, { slug }, [
+      { email: AYAH, guardianName: "Ayah", id: linkId, status: "verified" },
+    ]);
+
+    inviteParentChange(local.store, invite);
+
+    const shown = Option.getOrThrow(
+      local.store.getQuery(guardians.links.mine, { slug })
+    );
+    expect(shown[0]).toMatchObject({
+      email: IBU,
+      guardianName: "Ibu Siti",
+      status: "pending",
+    });
+    expect(shown).toHaveLength(2);
+  });
+});
 
 describe("components/tenant/guardian/change", () => {
   it("lists a new link at once on the first page, once the picker has its student", () => {

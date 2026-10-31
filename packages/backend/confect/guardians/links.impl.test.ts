@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { LINK_TERM } from "@repo/backend/confect/guardians/schema";
+import {
+  LINK_TERM,
+  STUDENT_LINK_LIMIT,
+} from "@repo/backend/confect/guardians/schema";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { denied, firstPage, nf } from "@repo/backend/test/classroom";
 import {
@@ -19,7 +22,7 @@ import {
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Schema } from "effect";
 
-const { list, revoke, verify } = refs.public.guardians.links;
+const { list, mine, revoke, start, verify } = refs.public.guardians.links;
 const AYAH = Schema.decodeSync(Email)("ayah@example.com");
 
 /** The ledger rows of the school, oldest first. */
@@ -79,6 +82,83 @@ describe("guardians/links", () => {
         expect(second.guardian.id).toBe(first.guardian.id);
         expect(second.id).not.toBe(first.id);
       })
+  );
+
+  it.effect(
+    "lets a student invite their own parent, journals it under the student, and lists it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* asStaffSchool(fixture);
+
+        const link = yield* fixture.as("student").mutation(start, {
+          email: IBU,
+          guardianName: "Ibu Siti",
+          slug: nf,
+          studentId: fixture.people.student.personId,
+        });
+
+        expect(link).toMatchObject({ email: IBU, status: "pending" });
+        const entries = yield* fixture.run(journal);
+        expect(Arr.last(entries)).toMatchObject({
+          _tag: "Some",
+          value: {
+            actor: { id: fixture.people.student.personId, kind: "person" },
+            change: { type: "guardian.started" },
+          },
+        });
+        expect(yield* fixture.as("student").query(mine, { slug: nf })).toEqual([
+          {
+            email: IBU,
+            guardianName: "Ibu Siti",
+            id: link.id,
+            status: "pending",
+          },
+        ]);
+      })
+  );
+
+  it.effect("refuses a student who starts a link for someone else", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* asStaffSchool(fixture);
+
+      const refused = yield* fixture
+        .as("student")
+        .mutation(start, {
+          email: IBU,
+          guardianName: "Ibu Siti",
+          slug: nf,
+          studentId: fixture.people.teacher.personId,
+        })
+        .pipe(Effect.flip);
+
+      expect(refused).toMatchObject(denied("role"));
+    })
+  );
+
+  it.effect("refuses more live links than one student may hold", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* asStaffSchool(fixture);
+      const invite = (email: string) =>
+        fixture.as("student").mutation(start, {
+          email: Schema.decodeSync(Email)(email),
+          guardianName: "Ibu Siti",
+          slug: nf,
+          studentId: fixture.people.student.personId,
+        });
+      yield* Effect.forEach(
+        Arr.range(1, STUDENT_LINK_LIMIT),
+        (index) => invite(`ibu${index}@example.com`),
+        { discard: true }
+      );
+
+      expect(yield* Effect.flip(invite("ibu9@example.com"))).toMatchObject({
+        _tag: "LinkRefused",
+        code: "LINK_LIMIT",
+      });
+    })
   );
 
   it.effect("refuses a Person who is not an active student", () =>

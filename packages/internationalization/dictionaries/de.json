@@ -58,6 +58,9 @@
     "outsider-check-again": "Erneut nach meiner Einladung sehen"
   },
   "SchoolGuardians": {
+    "family-title": "Meine Eltern",
+    "family-invite": "Elternteil einladen",
+    "family-empty-description": "Füge die E-Mail deiner Eltern hinzu, damit sie sich anmelden und deine Noten sehen können.",
     "sign-in-action": "Als Elternteil anmelden",
     "email-label": "E-Mail der Eltern",
     "email-placeholder": "eltern@beispiel.de",

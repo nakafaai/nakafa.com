@@ -58,6 +58,9 @@
     "outsider-check-again": "Periksa lagi undanganku"
   },
   "SchoolGuardians": {
+    "family-title": "Orang tuaku",
+    "family-invite": "Undang orang tua",
+    "family-empty-description": "Tambahkan email orang tuamu agar mereka bisa masuk dan melihat nilaimu.",
     "sign-in-action": "Masuk sebagai orang tua",
     "email-label": "Email orang tua",
     "email-placeholder": "orangtua@contoh.com",

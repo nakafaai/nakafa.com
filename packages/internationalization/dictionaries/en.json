@@ -58,6 +58,9 @@
     "outsider-check-again": "Check again for my invite"
   },
   "SchoolGuardians": {
+    "family-title": "My parents",
+    "family-invite": "Invite a parent",
+    "family-empty-description": "Add your parent's email so they can sign in and see your grades.",
     "sign-in-action": "Sign in as a parent",
     "email-label": "Parent email",
     "email-placeholder": "parent@example.com",
