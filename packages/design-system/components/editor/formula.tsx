@@ -44,11 +44,16 @@ function useFormulaLabels(): FormulaLabels {
  * One formula of the editor, drawn in place by KaTeX. While the editor takes changes, a press
  * opens the formula's editor, and the formula the editor saves is the attribute the node keeps.
  * The formula the writer just inserted (`toggleFormula` with no text selected) opens its editor
- * at once.
+ * at once, and leaves the text again if that editor closes without a formula.
  * A read-only editor draws the formula alone. Inline and block math share this view, because
  * they differ only in the element that holds the formula.
  */
-function FormulaNode({ editor, node, updateAttributes }: ReactNodeViewProps) {
+function FormulaNode({
+  deleteNode,
+  editor,
+  node,
+  updateAttributes,
+}: ReactNodeViewProps) {
   const labels = useFormulaLabels();
   const editable = useEditorState({
     editor,
@@ -72,6 +77,7 @@ function FormulaNode({ editor, node, updateAttributes }: ReactNodeViewProps) {
           block={block}
           labels={labels}
           latex={latex}
+          onDiscard={deleteNode}
           onSave={(next) => updateAttributes({ latex: next })}
           opening={opening}
         />
