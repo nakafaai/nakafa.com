@@ -86,33 +86,16 @@ const loadRows = Effect.fn("contentRelease.loadSnapshotRows")(function* (
       .pipe(Effect.orDie);
     return yield* exactRowJson(rows, family, snapshotId, firstIndex, rowCount);
   }
-  const [catalog, placements] = yield* Effect.all([
-    database
-      .table("tryoutCatalog")
-      .index("by_snapshotId_and_index", (range) =>
-        range
-          .eq("snapshotId", snapshotId)
-          .gte("index", firstIndex)
-          .lte("index", firstIndex + rowCount - 1)
-      )
-      .take(rowCount + 1)
-      .pipe(Effect.orDie),
-    database
-      .table("tryoutPlacements")
-      .index("by_snapshotId_and_index", (range) =>
-        range
-          .eq("snapshotId", snapshotId)
-          .gte("index", firstIndex)
-          .lte("index", firstIndex + rowCount - 1)
-      )
-      .take(rowCount + 1)
-      .pipe(Effect.orDie),
-  ]);
-  const rows = Arr.sortWith(
-    [...catalog, ...placements],
-    (left) => left.index,
-    Order.Number
-  );
+  const rows = yield* database
+    .table("assessmentRows")
+    .index("by_snapshotId_and_index", (range) =>
+      range
+        .eq("snapshotId", snapshotId)
+        .gte("index", firstIndex)
+        .lte("index", firstIndex + rowCount - 1)
+    )
+    .take(rowCount + 1)
+    .pipe(Effect.orDie);
   return yield* exactRowJson(rows, family, snapshotId, firstIndex, rowCount);
 });
 

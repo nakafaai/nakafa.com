@@ -1,5 +1,4 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
-import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
@@ -8,22 +7,16 @@ import {
   invertContentSnapshots,
   snapshotRowCount,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import {
   CURRENT_CONTENT_GENERATION,
   RETIRED_CONTENT_GENERATION,
 } from "@repo/backend/confect/contentRelease/generation";
-import {
-  TEST_DIGEST,
-  testRendererJson,
-} from "@repo/backend/test/content/release";
+import { TEST_DIGEST } from "@repo/backend/test/content/release";
 import {
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content/state";
-import { makeRuntimeIngressFixture } from "@repo/backend/test/runtime/ingress";
-import { Effect, Schema } from "effect";
 
 export const CANDIDATE = {
   manifestHash: `sha256:${"6".repeat(64)}`,
@@ -152,10 +145,6 @@ export async function seedActiveBootstrap(
   });
 }
 
-const ACTIVATION_RENDERER = Schema.decodeSync(
-  Schema.fromJsonString(RendererManifestEnvelopeSchema)
-)(testRendererJson());
-
 /** Seeds one verified genesis candidate and its exact verified inverse. */
 export async function seedVerifiedPair(
   ctx: Parameters<typeof insertTestState>[0],
@@ -219,17 +208,3 @@ export function expectedReceipt(
     stagedSnapshotRows: snapshotRowCount(snapshots),
   };
 }
-
-/** Creates a permanent runtime fixture using the activation renderer identity. */
-export const makeActivationRuntime = Effect.fn("test.activation.makeRuntime")(
-  function* (options?: {
-    readonly bundleSnapshot?: "base" | "result";
-    readonly hasBaseSnapshot?: boolean;
-  }) {
-    return yield* makeRuntimeIngressFixture(
-      ReleaseIdSchema.make("release-runtime-activation"),
-      ACTIVATION_RENDERER,
-      options
-    );
-  }
-);

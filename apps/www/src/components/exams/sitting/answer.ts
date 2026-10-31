@@ -2,7 +2,7 @@ import { useMutation } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
+import { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Clock, Effect, Option, Schema } from "effect";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";

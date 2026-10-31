@@ -1750,7 +1750,9 @@
     "incorrect": "Salah",
     "reset": "Ulangi",
     "explanation": "Pembahasan",
-    "number-count": "Nomor {count}"
+    "number-count": "Nomor {count}",
+    "prompt": "Soal",
+    "reading": "Bacaan"
   },
   "Player": {
     "navigator": "Soal",

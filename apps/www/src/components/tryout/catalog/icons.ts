@@ -31,7 +31,7 @@ import {
   UniversityIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import type { TryoutTrackKindSchema } from "@nakafa/aksara-contracts/tryout/spec";
+import type { TrackKindSchema } from "@nakafa/aksara-contracts/assessment/catalog";
 import { getMaterialIcons } from "@repo/contents/curriculum/material";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
 import { Array as Arr, Match, Option, Record as Rec } from "effect";
@@ -138,7 +138,7 @@ export function getTryoutSubjectIcons(
  * a subject track. Tracks of one kind take them apart.
  */
 export function getTryoutTrackIcons(
-  trackKind: typeof TryoutTrackKindSchema.Type,
+  trackKind: typeof TrackKindSchema.Type,
   trackKey: string
 ): Arr.NonEmptyReadonlyArray<IconSvgElement> {
   return Match.value(trackKind).pipe(

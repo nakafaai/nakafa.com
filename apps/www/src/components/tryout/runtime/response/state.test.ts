@@ -3,417 +3,204 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
 import {
   applyOptimisticTryoutResponse,
-  assignCategorySelection,
+  isAnsweredQuestion,
+  matchesKey,
   nextTryoutResponseVersion,
-  toggleMultipleChoiceSelection,
   tryoutSubmitFailureOf,
 } from "@/components/tryout/runtime/response/state";
-import type {
-  TryoutRuntimeQuestion,
-  TryoutSectionRuntime,
-} from "@/components/tryout/runtime/types";
+import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import { makeTryoutQuestion } from "@/test/tryout";
 
 const NOW = 1_783_425_600_000;
-const decodePlacementId = Schema.decodeUnknownSync(
-  Id("tryoutAttemptPlacements")
-);
 const decodeAttemptId = Schema.decodeUnknownSync(Id("tryoutAttempts"));
 
-describe("try-out response state", () => {
-  it("adds and removes multiple choices in authored order", () => {
-    const question = makeMultipleQuestion();
-    expect(
-      toggleMultipleChoiceSelection(responseState(question), "option-2")
-    ).toEqual({
-      kind: "multiple-choice",
-      optionKeys: ["option-2"],
-    });
-    const selected = {
-      ...question,
-      response: makeResponse({
-        kind: "multiple-choice",
-        optionKeys: ["option-2"],
+/** A response the server stored for a question at `NOW - 1000`. */
+const stored = (response: readonly string[]) => ({
+  answeredAt: NOW - 1000,
+  response,
+  updatedAt: NOW - 1000,
+});
+
+/** A running section of two questions, the first answered. */
+function makeRuntime(): TryoutSectionRuntime {
+  return {
+    attemptId: decodeAttemptId("attempt"),
+    expiresAt: NOW + 60_000,
+    questions: [
+      makeTryoutQuestion("first", {
+        response: stored(["option-1"]),
+        version: 2,
       }),
+      makeTryoutQuestion("second", { questionOrder: 2 }),
+    ],
+    section: {
+      answeredCount: 1,
+      completedAt: null,
+      endReason: null,
+      expiresAt: NOW + 60_000,
+      score: null,
+      sectionKey: "verbal",
+      startedAt: NOW - 60_000,
+      status: "in-progress",
+      totalQuestions: 2,
+    },
+  };
+}
+
+describe("nextTryoutResponseVersion", () => {
+  it("numbers the first write one and every later one above the version shown", () => {
+    expect(nextTryoutResponseVersion(makeTryoutQuestion("first"))).toBe(1);
+    expect(
+      nextTryoutResponseVersion(makeTryoutQuestion("first", { version: 4 }))
+    ).toBe(5);
+  });
+});
+
+describe("tryoutSubmitFailureOf", () => {
+  it("tells a stale write, an ended attempt, and any other failure apart", () => {
+    expect(tryoutSubmitFailureOf("TRYOUT_RESPONSE_STALE")).toBe("stale");
+    expect(tryoutSubmitFailureOf("TRYOUT_EXPIRED")).toBe("ended");
+    expect(tryoutSubmitFailureOf("TRYOUT_ATTEMPT_NOT_ACTIVE")).toBe("ended");
+    expect(tryoutSubmitFailureOf("TRYOUT_SECTION_NOT_ACTIVE")).toBe("ended");
+    expect(tryoutSubmitFailureOf("TRYOUT_RESPONSE_FAILED")).toBe("error");
+    expect(tryoutSubmitFailureOf(undefined)).toBe("error");
+  });
+});
+
+describe("isAnsweredQuestion", () => {
+  it("counts a question as answered as the server counts its response", () => {
+    expect(isAnsweredQuestion(makeTryoutQuestion("first"))).toBe(false);
+    expect(
+      isAnsweredQuestion(
+        makeTryoutQuestion("first", { response: stored(["option-1"]) })
+      )
+    ).toBe(true);
+    expect(
+      isAnsweredQuestion(makeTryoutQuestion("first", { response: stored([]) }))
+    ).toBe(false);
+  });
+});
+
+describe("matchesKey", () => {
+  it("matches a choice that holds the key's options and no other", () => {
+    const key = {
+      correct: ["option-1", "option-2"] as const,
+      interaction: "choice",
+      kind: "choice" as const,
+    };
+    expect(matchesKey(key, ["option-2", "option-1"])).toBe(true);
+    expect(matchesKey(key, ["option-1"])).toBe(false);
+    expect(matchesKey(key, ["option-1", "option-3"])).toBe(false);
+  });
+
+  it("matches a matrix that marks every statement in the key's column", () => {
+    const key = {
+      answers: [
+        { column: "true", statement: "statement-1" },
+        { column: "false", statement: "statement-2" },
+      ] as const,
+      interaction: "matrix",
+      kind: "matrix" as const,
     };
     expect(
-      toggleMultipleChoiceSelection(responseState(selected), "option-1")
-    ).toEqual({
-      kind: "multiple-choice",
-      optionKeys: ["option-1", "option-2"],
-    });
+      matchesKey(key, {
+        cells: [
+          { column: "true", statement: "statement-1" },
+          { column: "false", statement: "statement-2" },
+        ],
+      })
+    ).toBe(true);
     expect(
-      toggleMultipleChoiceSelection(responseState(selected), "option-2")
-    ).toBeNull();
+      matchesKey(key, {
+        cells: [
+          { column: "true", statement: "statement-1" },
+          { column: "true", statement: "statement-2" },
+        ],
+      })
+    ).toBe(false);
     expect(
-      toggleMultipleChoiceSelection(
-        responseState(makeCategoryQuestion()),
-        "option-1"
-      )
-    ).toBeNull();
+      matchesKey(key, {
+        cells: [{ column: "true", statement: "statement-1" }],
+      })
+    ).toBe(false);
   });
 
-  it("replaces and canonically orders category assignments", () => {
-    const question = makeCategoryQuestion();
-    const first = assignCategorySelection(
-      responseState(question),
-      "statement-2",
-      "category-1"
-    );
-    expect(first).toEqual({
-      assignments: [{ categoryKey: "category-1", statementKey: "statement-2" }],
-      kind: "category",
-    });
-    if (!first) {
-      throw new Error("Expected one category assignment.");
-    }
+  it("matches nothing for a key of a kind the corpus does not compile", () => {
     expect(
-      assignCategorySelection(
-        responseState({ ...question, response: makeResponse(first) }),
-        "statement-1",
-        "category-2"
+      matchesKey(
+        { correct: "option-1", interaction: "gap", kind: "inlineChoice" },
+        ["option-1"]
       )
-    ).toEqual({
-      assignments: [
-        { categoryKey: "category-2", statementKey: "statement-1" },
-        { categoryKey: "category-1", statementKey: "statement-2" },
-      ],
-      kind: "category",
-    });
-    expect(
-      assignCategorySelection(
-        responseState(makeMultipleQuestion()),
-        "statement-1",
-        "x"
-      )
-    ).toBeNull();
+    ).toBe(false);
   });
+});
 
-  it("counts only complete optimistic responses and supports clearing", () => {
-    const multipleRuntime = makeRuntime(makeMultipleQuestion());
-    expect(
-      applyOptimisticTryoutResponse(
-        multipleRuntime,
-        {
-          placementId: multipleRuntime.questions[0].placementId,
-          selection: {
-            kind: "multiple-choice",
-            optionKeys: ["option-1"],
-          },
-          version: 1,
-        },
-        NOW
-      )?.section.answeredCount
-    ).toBe(1);
-
-    const runtime = makeRuntime(makeCategoryQuestion());
-    const partial = applyOptimisticTryoutResponse(
-      runtime,
+describe("applyOptimisticTryoutResponse", () => {
+  it("answers a question with its version and counts it once", () => {
+    const changed = applyOptimisticTryoutResponse(
+      makeRuntime(),
       {
-        placementId: runtime.questions[0].placementId,
-        selection: {
-          assignments: [
-            { categoryKey: "category-1", statementKey: "statement-1" },
-          ],
-          kind: "category",
-        },
+        placementId: makeTryoutQuestion("second").placementId,
+        response: ["option-2"],
         version: 1,
       },
       NOW
     );
-    expect(partial?.section.answeredCount).toBe(0);
-    expect(partial?.questions[0].response).toMatchObject({
-      answeredAt: NOW,
-      isComplete: false,
-    });
-
-    if (!partial) {
-      throw new Error("Expected an optimistic category response.");
-    }
-    const complete = applyOptimisticTryoutResponse(
-      partial,
-      {
-        placementId: runtime.questions[0].placementId,
-        selection: {
-          assignments: [
-            { categoryKey: "category-1", statementKey: "statement-1" },
-            { categoryKey: "category-2", statementKey: "statement-2" },
-          ],
-          kind: "category",
-        },
-        version: 2,
-      },
-      NOW + 1000
-    );
-    expect(complete?.section.answeredCount).toBe(1);
-    expect(complete?.questions[0].response).toMatchObject({
-      answeredAt: NOW,
-      isComplete: true,
-      updatedAt: NOW + 1000,
-    });
-
-    if (!complete) {
-      throw new Error("Expected a complete optimistic category response.");
-    }
-    const cleared = applyOptimisticTryoutResponse(
-      complete,
-      {
-        placementId: runtime.questions[0].placementId,
-        selection: null,
-        version: 3,
-      },
-      NOW + 2000
-    );
-    expect(cleared?.questions[0].response).toBeNull();
-    expect(cleared?.section.answeredCount).toBe(0);
-  });
-
-  it("numbers each write after the version its question shows", () => {
-    const question = makeMultipleQuestion();
-    expect(nextTryoutResponseVersion(question)).toBe(1);
-    expect(
-      nextTryoutResponseVersion({
-        ...question,
-        response: makeResponse({
-          kind: "multiple-choice",
-          optionKeys: ["option-1"],
-        }),
+    expect(changed?.section.answeredCount).toBe(2);
+    expect(changed?.questions[1]).toEqual(
+      makeTryoutQuestion("second", {
+        questionOrder: 2,
+        response: { answeredAt: NOW, response: ["option-2"], updatedAt: NOW },
+        version: 1,
       })
-    ).toBe(1);
-    expect(nextTryoutResponseVersion({ ...question, version: 4 })).toBe(5);
+    );
   });
 
-  it("shows the version of the latest write, so the next one follows it", () => {
-    const first = writeNext(makeRuntime(makeMultipleQuestion()), ["option-1"]);
-    expect(first.questions[0].version).toBe(1);
-    const second = writeNext(first, ["option-1", "option-2"]);
-    expect(second.questions[0].version).toBe(2);
-    expect(nextTryoutResponseVersion(second.questions[0])).toBe(3);
-  });
-
-  it("keeps the version when an answer is cleared, so the next write follows the clear", () => {
-    const answered = writeNext(makeRuntime(makeMultipleQuestion()), [
-      "option-1",
-    ]);
-    const cleared = applyOptimisticTryoutResponse(
-      answered,
+  it("changes an answer, keeping when it was first answered", () => {
+    const changed = applyOptimisticTryoutResponse(
+      makeRuntime(),
       {
-        placementId: answered.questions[0].placementId,
-        selection: null,
-        version: nextTryoutResponseVersion(answered.questions[0]),
+        placementId: makeTryoutQuestion("first").placementId,
+        response: ["option-2"],
+        version: 3,
       },
       NOW
     );
-    if (!cleared) {
-      throw new Error("Expected an optimistic clear.");
-    }
-    expect(cleared.questions[0]).toMatchObject({ response: null, version: 2 });
-    expect(nextTryoutResponseVersion(cleared.questions[0])).toBe(3);
+    expect(changed?.section.answeredCount).toBe(1);
+    expect(changed?.questions[0]?.response).toEqual({
+      answeredAt: NOW - 1000,
+      response: ["option-2"],
+      updatedAt: NOW,
+    });
   });
 
-  it("leaves a stale refusal silent, tells an ended attempt, and reports any other failure", () => {
-    const endedCodes: readonly Parameters<typeof tryoutSubmitFailureOf>[0][] = [
-      "TRYOUT_EXPIRED",
-      "TRYOUT_ATTEMPT_NOT_ACTIVE",
-      "TRYOUT_SECTION_NOT_ACTIVE",
-    ];
-    expect(tryoutSubmitFailureOf("TRYOUT_RESPONSE_STALE")).toBe("stale");
-    for (const code of endedCodes) {
-      expect(tryoutSubmitFailureOf(code)).toBe("ended");
-    }
-    expect(tryoutSubmitFailureOf("TRYOUT_RESPONSE_FAILED")).toBe("error");
-    expect(tryoutSubmitFailureOf(undefined)).toBe("error");
+  it("clears an answer, keeping its version, and stops counting it", () => {
+    const changed = applyOptimisticTryoutResponse(
+      makeRuntime(),
+      {
+        placementId: makeTryoutQuestion("first").placementId,
+        response: null,
+        version: 3,
+      },
+      NOW
+    );
+    expect(changed?.section.answeredCount).toBe(0);
+    expect(changed?.questions[0]).toEqual(
+      makeTryoutQuestion("first", { response: null, version: 3 })
+    );
   });
 
-  it("rejects missing placements and invalid optimistic selections", () => {
-    const runtime = makeRuntime(makeMultipleQuestion());
+  it("changes nothing for a question the section does not hold", () => {
     expect(
       applyOptimisticTryoutResponse(
-        runtime,
+        makeRuntime(),
         {
-          placementId: decodePlacementId("missing"),
-          selection: null,
+          placementId: makeTryoutQuestion("other").placementId,
+          response: ["option-1"],
           version: 1,
         },
         NOW
       )
     ).toBeNull();
-    expect(
-      applyOptimisticTryoutResponse(
-        runtime,
-        {
-          placementId: runtime.questions[0].placementId,
-          selection: { kind: "single-choice", optionKey: "option-1" },
-          version: 1,
-        },
-        NOW
-      )
-    ).toBeNull();
-    expect(
-      applyOptimisticTryoutResponse(
-        makeRuntime(makeSingleQuestion()),
-        {
-          placementId: runtime.questions[0].placementId,
-          selection: { kind: "single-choice", optionKey: "missing" },
-          version: 1,
-        },
-        NOW
-      )
-    ).toBeNull();
-    for (const optionKeys of [[], ["option-1", "option-1"], ["missing"]]) {
-      expect(
-        applyOptimisticTryoutResponse(
-          runtime,
-          {
-            placementId: runtime.questions[0].placementId,
-            selection: { kind: "multiple-choice", optionKeys },
-            version: 1,
-          },
-          NOW
-        )
-      ).toBeNull();
-    }
-    const categoryRuntime = makeRuntime(makeCategoryQuestion());
-    for (const assignments of [
-      [{ categoryKey: "missing", statementKey: "statement-1" }],
-      [{ categoryKey: "category-1", statementKey: "missing" }],
-      [
-        { categoryKey: "category-1", statementKey: "statement-1" },
-        { categoryKey: "category-2", statementKey: "statement-1" },
-      ],
-    ]) {
-      expect(
-        applyOptimisticTryoutResponse(
-          categoryRuntime,
-          {
-            placementId: categoryRuntime.questions[0].placementId,
-            selection: { assignments, kind: "category" },
-            version: 1,
-          },
-          NOW
-        )
-      ).toBeNull();
-    }
   });
 });
-
-function makeMultipleQuestion(): TryoutRuntimeQuestion {
-  return {
-    contentHash: "content-hash",
-    flagged: false,
-    placementId: decodePlacementId("placement"),
-    questionOrder: 1,
-    response: null,
-    responseSpec: {
-      kind: "multiple-choice",
-      options: [responseOption("option-1", 1), responseOption("option-2", 2)],
-    },
-    sourcePath: "question.mdx",
-    sourceRevision: "revision",
-  };
-}
-
-function makeSingleQuestion(): TryoutRuntimeQuestion {
-  return {
-    ...makeMultipleQuestion(),
-    responseSpec: {
-      kind: "single-choice",
-      options: [responseOption("option-1", 1), responseOption("option-2", 2)],
-    },
-  };
-}
-
-function makeCategoryQuestion(): TryoutRuntimeQuestion {
-  return {
-    ...makeMultipleQuestion(),
-    responseSpec: {
-      categories: [
-        responseCategory("category-1", 1),
-        responseCategory("category-2", 2),
-      ],
-      kind: "category",
-      statements: [
-        responseStatement("statement-1", 1),
-        responseStatement("statement-2", 2),
-      ],
-    },
-  };
-}
-
-function responseOption(optionKey: string, order: number) {
-  return {
-    label: optionKey,
-    optionKey,
-    order,
-  };
-}
-
-function responseCategory(categoryKey: string, order: number) {
-  return {
-    categoryKey,
-    label: categoryKey,
-    order,
-  };
-}
-
-function responseStatement(statementKey: string, order: number) {
-  return {
-    label: statementKey,
-    order,
-    statementKey,
-  };
-}
-
-function responseState(question: TryoutRuntimeQuestion) {
-  return {
-    responseSpec: question.responseSpec,
-    selection: question.response?.selection ?? null,
-  };
-}
-
-function makeResponse(
-  selection: NonNullable<TryoutRuntimeQuestion["response"]>["selection"]
-) {
-  return {
-    answeredAt: NOW,
-    isComplete: false,
-    selection,
-    updatedAt: NOW,
-  };
-}
-
-/** Writes a multiple-choice answer to the only question of a runtime, numbered as the client numbers it. */
-function writeNext(runtime: TryoutSectionRuntime, optionKeys: string[]) {
-  const [question] = runtime.questions;
-  const applied = applyOptimisticTryoutResponse(
-    runtime,
-    {
-      placementId: question.placementId,
-      selection: { kind: "multiple-choice", optionKeys },
-      version: nextTryoutResponseVersion(question),
-    },
-    NOW
-  );
-  if (!applied) {
-    throw new Error("Expected an optimistic multiple-choice response.");
-  }
-  return applied;
-}
-
-function makeRuntime(question: TryoutRuntimeQuestion): TryoutSectionRuntime {
-  return {
-    attemptId: decodeAttemptId("attempt"),
-    expiresAt: NOW + 1000,
-    questions: [question],
-    section: {
-      answeredCount: 0,
-      completedAt: null,
-      endReason: null,
-      expiresAt: NOW + 1000,
-      score: null,
-      sectionKey: "section",
-      startedAt: NOW,
-      status: "in-progress",
-      totalQuestions: 1,
-    },
-  };
-}

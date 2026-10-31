@@ -1,31 +1,53 @@
 import type { Ref } from "@confect/core";
+import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { select } from "@repo/backend/confect/response/selection";
 import {
-  Array as Arr,
-  MutableHashMap,
-  MutableHashSet,
-  Option,
-  Result,
-  Struct,
-} from "effect";
-
-import type { TryoutResponseFieldsProps } from "@/components/tryout/runtime/response/fields";
+  chosenOptions,
+  type ExamResponse,
+  isAnswered,
+  markedCells,
+} from "@repo/backend/confect/assessment/response";
+import { Array as Arr, Number as Num, Option, Struct } from "effect";
 import type {
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
 
 type SaveResponseArgs = Ref.Args<typeof tryouts.mutations.responses.save>;
-export type TryoutResponseSelection = NonNullable<
-  TryoutRuntimeQuestion["response"]
->["selection"];
 
-/** The response spec and selection that the response helpers read from one field set. */
-type TryoutResponseState = Pick<
-  TryoutResponseFieldsProps["value"],
-  "responseSpec" | "selection"
->;
+/** Whether a question holds an answer the server counts: a response that answers something. */
+export function isAnsweredQuestion(question: TryoutRuntimeQuestion) {
+  return question.response !== null && isAnswered(question.response.response);
+}
+
+/**
+ * Whether a response gives exactly the key's answer: a choice holds the key's options and no other, and
+ * a matrix marks every statement in the key's column. A key of a kind the corpus does not compile
+ * matches nothing.
+ */
+export function matchesKey(answer: InteractionKey, response: ExamResponse) {
+  if (answer.kind === "choice") {
+    const chosen = chosenOptions(response);
+    return (
+      chosen.length === answer.correct.length &&
+      Arr.every(answer.correct, (id) => Arr.contains(chosen, id))
+    );
+  }
+  if (answer.kind === "matrix") {
+    const cells = markedCells(response);
+    return (
+      cells.length === answer.answers.length &&
+      Arr.every(answer.answers, (key) =>
+        Arr.some(
+          cells,
+          (cell) =>
+            cell.statement === key.statement && cell.column === key.column
+        )
+      )
+    );
+  }
+  return false;
+}
 
 /**
  * Returns the version of the next write of one question: the first for a
@@ -61,116 +83,74 @@ export function tryoutSubmitFailureOf(
   return "error";
 }
 
-/** Applies one local response while Convex remains authoritative for time. */
+/**
+ * Applies one local response while Convex remains authoritative for time. The
+ * answered count moves as the server counts it (`isAnswered`), so a response
+ * that answers nothing, such as a cleared multiple choice, counts as none. A
+ * response for a question the section does not hold changes nothing, as the
+ * flag's change does (`updateRuntimeQueries`).
+ */
 export function applyOptimisticTryoutResponse(
   runtime: TryoutSectionRuntime,
   args: SaveResponseArgs,
   selectedAt: number
-) {
-  let answeredDelta = 0;
-  let foundQuestion = false;
-  let validSelection = true;
-  const questions = Arr.map(runtime.questions, (question) => {
-    if (question.placementId !== args.placementId) {
-      return question;
+): TryoutSectionRuntime | null {
+  const changed = Option.map(
+    Arr.findFirst(
+      runtime.questions,
+      (question) => question.placementId === args.placementId
+    ),
+    (current) => {
+      const answered = Number(
+        args.response !== null && isAnswered(args.response)
+      );
+      return {
+        ...runtime,
+        questions: Arr.map(runtime.questions, (question) =>
+          question.placementId === args.placementId
+            ? withResponse(question, args, selectedAt)
+            : question
+        ),
+        section: {
+          ...runtime.section,
+          answeredCount: Num.clamp(
+            runtime.section.answeredCount +
+              answered -
+              Number(isAnsweredQuestion(current)),
+            { maximum: runtime.section.totalQuestions, minimum: 0 }
+          ),
+        },
+      };
     }
-    foundQuestion = true;
-    const wasComplete = question.response?.isComplete ?? false;
-    if (args.selection === null) {
-      answeredDelta = -Number(wasComplete);
-      return { ...question, ...Struct.pick(args, ["version"]), response: null };
-    }
-    const selected = select(question.responseSpec, args.selection);
-    if (Result.isFailure(selected)) {
-      validSelection = false;
-      return question;
-    }
-    const { isComplete, selection } = selected.success;
-    answeredDelta = Number(isComplete) - Number(wasComplete);
-    return {
-      ...question,
-      ...Struct.pick(args, ["version"]),
-      response: {
-        answeredAt: question.response?.answeredAt ?? selectedAt,
-        isComplete,
-        selection,
-        updatedAt: selectedAt,
-      },
-    };
-  });
+  );
+  return Option.getOrNull(changed);
+}
 
-  if (!(foundQuestion && validSelection)) {
-    return null;
-  }
+/** One question after a local write: its new version, and the response, keeping when it was first answered. */
+function withResponse(
+  question: TryoutRuntimeQuestion,
+  args: SaveResponseArgs,
+  selectedAt: number
+): TryoutRuntimeQuestion {
   return {
-    ...runtime,
-    questions,
-    section: {
-      ...runtime.section,
-      answeredCount: Math.min(
-        runtime.section.totalQuestions,
-        Math.max(0, runtime.section.answeredCount + answeredDelta)
-      ),
-    },
+    ...question,
+    ...Struct.pick(args, ["version"]),
+    response:
+      args.response === null
+        ? null
+        : responseAt(question, args.response, selectedAt),
   };
 }
 
-/** Returns the next exact-set multiple-choice selection in authored order. */
-export function toggleMultipleChoiceSelection(
-  state: TryoutResponseState,
-  optionKey: string
-): TryoutResponseSelection | null {
-  if (state.responseSpec.kind !== "multiple-choice") {
-    return null;
-  }
-  const selected = MutableHashSet.fromIterable(
-    state.selection?.kind === "multiple-choice"
-      ? state.selection.optionKeys
-      : []
-  );
-  if (MutableHashSet.has(selected, optionKey)) {
-    MutableHashSet.remove(selected, optionKey);
-  } else {
-    MutableHashSet.add(selected, optionKey);
-  }
-  const optionKeys = Arr.flatMap(state.responseSpec.options, ({ optionKey }) =>
-    MutableHashSet.has(selected, optionKey) ? [optionKey] : []
-  );
-  return optionKeys.length > 0 ? { kind: "multiple-choice", optionKeys } : null;
-}
-
-/** Returns the next category assignment set in authored statement order. */
-export function assignCategorySelection(
-  state: TryoutResponseState,
-  statementKey: string,
-  categoryKey: string
-): TryoutResponseSelection | null {
-  if (state.responseSpec.kind !== "category") {
-    return null;
-  }
-  const assignments = MutableHashMap.fromIterable(
-    state.selection?.kind === "category"
-      ? Arr.map(state.selection.assignments, (assignment) => [
-          assignment.statementKey,
-          assignment.categoryKey,
-        ])
-      : []
-  );
-  MutableHashMap.set(assignments, statementKey, categoryKey);
+/** The stored shape of a local response chosen at `selectedAt`. */
+function responseAt(
+  question: TryoutRuntimeQuestion,
+  response: ExamResponse,
+  selectedAt: number
+) {
   return {
-    assignments: Arr.flatMap(state.responseSpec.statements, (statement) => {
-      const assignedCategory = Option.getOrUndefined(
-        MutableHashMap.get(assignments, statement.statementKey)
-      );
-      return assignedCategory
-        ? [
-            {
-              categoryKey: assignedCategory,
-              statementKey: statement.statementKey,
-            },
-          ]
-        : [];
-    }),
-    kind: "category",
+    answeredAt: question.response?.answeredAt ?? selectedAt,
+    response,
+    updatedAt: selectedAt,
   };
 }

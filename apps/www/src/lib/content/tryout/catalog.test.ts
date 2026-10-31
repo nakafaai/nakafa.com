@@ -1,14 +1,9 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { createTestPublication } from "@repo/backend/test/content/publication";
-import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
-import {
-  makeTryoutStartHierarchy,
-  makeTryoutStartPlacement,
-} from "@repo/backend/test/tryout/source";
-import { Array as Arr, Effect, Layer } from "effect";
+import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
+import { Effect, Layer } from "effect";
 import {
   readPublishedTryoutExamPage,
   readPublishedTryoutSectionPage,
@@ -40,8 +35,7 @@ vi.mock("@confect/js", async (importOriginal) => {
   };
 });
 
-const SUBJECT_SECTION_PATH =
-  "try-out/indonesia/tka/matematika-wajib/set-1/matematika-wajib";
+const SECTION_PATH = `${fixtureSetPath("set-1", "en")}/section-a`;
 
 describe("published try-out pages for routing", () => {
   beforeEach(() => {
@@ -49,34 +43,32 @@ describe("published try-out pages for routing", () => {
     runtimeQueryMock.mockReset();
   });
 
-  it.effect("reads a live exam with its signed tracks", () =>
+  it.effect("reads a live exam with its tracks", () =>
     Effect.gen(function* () {
-      const fixture = yield* makeTryoutRuntimeSource();
-      const context = yield* createTestPublication(fixture.source);
-      runtimeQueryMock.mockImplementation(context.query);
+      const world = yield* tryoutWorld();
+      runtimeQueryMock.mockImplementation(world.visitor.query);
 
       expect(
         yield* readPublishedTryoutExamPage({
           appLocale: "en",
-          publicPath: "try-out/indonesia/tka",
+          publicPath: "try-out/indonesia/snbt-en",
         })
       ).toMatchObject({
-        exam: { examKey: "tka" },
-        tracks: [{ trackKey: "matematika-wajib" }],
+        exam: { examKey: "snbt" },
+        tracks: [{ trackKey: "2027" }],
       });
     })
   );
 
   it.effect("returns no exam page for an absent exam", () =>
     Effect.gen(function* () {
-      const fixture = yield* makeTryoutRuntimeSource();
-      const context = yield* createTestPublication(fixture.source);
-      runtimeQueryMock.mockImplementation(context.query);
+      const world = yield* tryoutWorld();
+      runtimeQueryMock.mockImplementation(world.visitor.query);
 
       expect(
         yield* readPublishedTryoutExamPage({
           appLocale: "en",
-          publicPath: "try-out/indonesia/snbt",
+          publicPath: "try-out/indonesia/tka-en",
         })
       ).toBeNull();
     })
@@ -84,41 +76,30 @@ describe("published try-out pages for routing", () => {
 
   it.effect("reads a visible section as a live page", () =>
     Effect.gen(function* () {
-      const fixture = yield* makeTryoutRuntimeSource();
-      const context = yield* createTestPublication(fixture.source);
-      runtimeQueryMock.mockImplementation(context.query);
+      const world = yield* tryoutWorld();
+      runtimeQueryMock.mockImplementation(world.visitor.query);
 
       expect(
         yield* readPublishedTryoutSectionPage({
           appLocale: "en",
-          publicPath: SUBJECT_SECTION_PATH,
+          publicPath: SECTION_PATH,
         })
       ).toMatchObject({
-        section: { sectionKey: "matematika-wajib" },
+        section: { sectionKey: "section-a" },
       });
     })
   );
 
   it.effect("returns no section page for an internal entry", () =>
     Effect.gen(function* () {
-      const catalog = Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (appLocale) =>
-        makeTryoutStartHierarchy(appLocale, "internal-entry")
-      );
-      const placements = Arr.map(
-        ACTIVE_APP_LOCALE_CODES,
-        makeTryoutStartPlacement
-      );
-      const fixture = yield* makeTryoutRuntimeSource(undefined, {
-        catalog,
-        placements,
-      });
-      const context = yield* createTestPublication(fixture.source);
-      runtimeQueryMock.mockImplementation(context.query);
+      // An internal entry has no route of its own, so the section's would-be route reads nothing.
+      const world = yield* tryoutWorld({ entry: true });
+      runtimeQueryMock.mockImplementation(world.visitor.query);
 
       expect(
         yield* readPublishedTryoutSectionPage({
           appLocale: "en",
-          publicPath: SUBJECT_SECTION_PATH,
+          publicPath: SECTION_PATH,
         })
       ).toBeNull();
     })

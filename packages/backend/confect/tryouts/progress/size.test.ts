@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { TRYOUT_PROGRESS_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import {
   ensureTryoutProgressWithinReadBudget,
   isTryoutProgressWithinReadBudget,
@@ -32,12 +31,12 @@ describe("tryouts/progress/size", () => {
       expect(
         yield* ensureTryoutProgressWithinReadBudget({
           ...compactProgress,
-          setIdentity: "x".repeat(TRYOUT_PROGRESS_DOCUMENT_LIMIT),
+          setIdentity: "x".repeat(2 * 1024),
         }).pipe(Effect.flip)
       ).toMatchObject({
         _tag: "TryoutProgressSizeError",
         code: "TRYOUT_PROGRESS_SIZE",
-        message: "Try-out progress exceeds the signed catalog read budget.",
+        message: "Try-out progress exceeds its read budget.",
       });
     })
   );

@@ -35,11 +35,6 @@ import {
   testSignedEmptyRelease,
 } from "@repo/backend/test/content/proof";
 import {
-  TEST_QUESTION_CONTENT_KEY,
-  TEST_QUESTION_PROJECTION_JSON,
-  TEST_QUESTION_SOURCE,
-} from "@repo/backend/test/content/question";
-import {
   TEST_RELEASE_ID,
   testDeleteJson,
   testRouteJson,
@@ -80,9 +75,8 @@ const completedProofCoordinator = {
   start: () => Effect.die(new Error("Unexpected proof coordinator start.")),
   status: () => Effect.succeed(COMPLETED_PROOF_WORKFLOW_STATUS),
 } satisfies ProofPollCoordinatorService;
-type RoutedContentFamily = Exclude<ContentFamily, "question">;
 /** Selects one complete family-owned upsert fixture without parallel helpers. */
-function upsertFixture(family: RoutedContentFamily) {
+function upsertFixture(family: ContentFamily) {
   if (family === "article") {
     return {
       artifactJson: testArtifactJson({
@@ -130,15 +124,6 @@ function upsertFixture(family: RoutedContentFamily) {
 }
 /** Selects one complete prior state for a deletion fixture. */
 function deleteFixture(family: ContentFamily) {
-  if (family === "question") {
-    return {
-      contentKey: TEST_QUESTION_CONTENT_KEY,
-      projectionJson: TEST_QUESTION_PROJECTION_JSON,
-      publicPath: undefined,
-      rendererDomain: "snbt-general" as const,
-      sourcePath: TEST_QUESTION_SOURCE,
-    };
-  }
   if (family === "article") {
     return {
       contentKey: TEST_ARTICLE_KEY,
@@ -173,7 +158,7 @@ function deleteFixture(family: ContentFamily) {
 /** Stages one complete technical upsert through every real mutation. */
 export async function stageUpsertFixture(
   t: TestConvex<typeof schema>,
-  family: RoutedContentFamily = "material",
+  family: ContentFamily = "material",
   role: Doc<"contentReleases">["role"] = "candidate"
 ) {
   const fixture = upsertFixture(family);
@@ -213,30 +198,23 @@ export async function stageDeleteFixture(
     await insertTestRelease(ctx, {
       deleteCount: 1,
       projectionCount: 0,
-      routeCount: family === "question" ? 0 : 1,
+      routeCount: 1,
       sequence: 2,
       upsertCount: 0,
     });
-    await insertRuntimeVersion(
-      ctx,
-      family === "question" ? "authenticated" : "public",
-      fixture.contentKey,
-      {
-        headReleaseId: "release-base",
-        headSequence: 1,
-        projectionJson: fixture.projectionJson,
-        publicPath: fixture.publicPath,
-        rendererDomain: fixture.rendererDomain,
-        sourcePath: fixture.sourcePath,
-      }
-    );
-    if (fixture.publicPath !== undefined) {
-      await insertRuntimeBinding(ctx, fixture.contentKey, {
-        bindingReleaseId: "release-base",
-        bindingSequence: 1,
-        publicPath: fixture.publicPath,
-      });
-    }
+    await insertRuntimeVersion(ctx, "public", fixture.contentKey, {
+      headReleaseId: "release-base",
+      headSequence: 1,
+      projectionJson: fixture.projectionJson,
+      publicPath: fixture.publicPath,
+      rendererDomain: fixture.rendererDomain,
+      sourcePath: fixture.sourcePath,
+    });
+    await insertRuntimeBinding(ctx, fixture.contentKey, {
+      bindingReleaseId: "release-base",
+      bindingSequence: 1,
+      publicPath: fixture.publicPath,
+    });
     const state = await ctx.db.query("contentState").unique();
     assert.ok(state, "Expected publication state.");
     await ctx.db.patch("contentState", state._id, {
@@ -255,9 +233,6 @@ export async function stageDeleteFixture(
     ],
     releaseId: TEST_RELEASE_ID,
   });
-  if (fixture.publicPath === undefined) {
-    return;
-  }
   await t.mutation(stageRoutes, {
     batchIndex: 0,
     releaseId: TEST_RELEASE_ID,

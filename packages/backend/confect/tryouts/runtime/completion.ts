@@ -1,6 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
-import { requireTryoutResponseSectionSnapshot } from "@repo/backend/confect/tryouts/response/integrity";
+import { requireTryoutResponseSection } from "@repo/backend/confect/tryouts/response/integrity";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { Array as Arr, Effect, HashSet, MutableHashSet } from "effect";
 
@@ -11,27 +11,24 @@ type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 export const readSectionCompletion = Effect.fn(
   "tryouts.runtime.readSectionCompletion"
 )(function* (attempt: TryoutAttempt, section: TryoutSectionAttempt) {
-  const snapshot = yield* requireTryoutResponseSectionSnapshot(
-    attempt,
-    section
-  );
+  const frozen = yield* requireTryoutResponseSection(attempt, section);
   if (section.status !== "in-progress") {
     return yield* new TryoutAttemptStateError({
       code: "TRYOUT_SECTION_NOT_ACTIVE",
       message: "Try-out section is not active.",
     });
   }
-  const snapshotKeys = HashSet.fromIterable(
-    Arr.map(attempt.sectionSnapshots, (snapshot) => snapshot.sectionKey)
+  const frozenKeys = HashSet.fromIterable(
+    Arr.map(attempt.sections, (section) => section.sectionKey)
   );
   const completedKeys = MutableHashSet.empty<string>();
   for (const sectionKey of attempt.completedSectionKeys) {
     if (
-      !HashSet.has(snapshotKeys, sectionKey) ||
+      !HashSet.has(frozenKeys, sectionKey) ||
       MutableHashSet.has(completedKeys, sectionKey)
     ) {
       return yield* completionIntegrity(
-        "Try-out completed sections differ from the frozen section snapshot."
+        "Try-out completed sections differ from the frozen sections."
       );
     }
     MutableHashSet.add(completedKeys, sectionKey);
@@ -46,10 +43,9 @@ export const readSectionCompletion = Effect.fn(
     section.sectionKey,
   ];
   return {
-    snapshot,
     completedSectionKeys,
-    completesAttempt:
-      completedSectionKeys.length === attempt.sectionSnapshots.length,
+    frozen,
+    completesAttempt: completedSectionKeys.length === attempt.sections.length,
   };
 });
 

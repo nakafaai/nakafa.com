@@ -1,4 +1,3 @@
-import { protectedRuntimeResponseBytes } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import {
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
@@ -6,6 +5,8 @@ import {
   type PublicContentRuntimeResponse,
   PublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
+import { encodeJsonText } from "@repo/utilities/json";
+import { utf8Bytes } from "@repo/utilities/text";
 import { Schema } from "effect";
 /** Maximum exact Aksara public exchanges resolved by one batch transaction. */
 export const PUBLIC_CONTENT_RUNTIME_BATCH_SIZE = 8;
@@ -18,6 +19,12 @@ export const MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES =
 export const MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES =
   PUBLIC_CONTENT_RUNTIME_BATCH_SIZE * MAX_PUBLIC_RUNTIME_RESPONSE_BYTES +
   BATCH_JSON_OVERHEAD_BYTES;
+/** Measures the exact JSON bytes that one public runtime response writes. */
+export function publicRuntimeResponseBytes(
+  response: PublicContentRuntimeResponse
+) {
+  return utf8Bytes(encodeJsonText(response));
+}
 /** Route identity of one public read: its path stays a plain string until a request validates it. */
 export const PublicContentRuntimeInputSchema = Schema.Struct({
   appLocale: PublicContentRuntimeRequestSchema.fields.appLocale,
@@ -50,7 +57,7 @@ const PublicContentRuntimeBatchItemSchema =
     Schema.check(
       Schema.makeFilter(
         (response) =>
-          protectedRuntimeResponseBytes(response) <=
+          publicRuntimeResponseBytes(response) <=
           MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
         {
           message: "Batch item exceeded the Aksara response ceiling.",

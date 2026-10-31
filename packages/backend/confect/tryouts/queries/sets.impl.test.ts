@@ -1,428 +1,450 @@
-import { describe, expect, it } from "@effect/vitest";
-import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
+import { assert, describe, expect, it } from "@effect/vitest";
 import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
-import { getTryoutStatusRank } from "@repo/backend/confect/tryouts/status";
-import { api } from "@repo/backend/convex/_generated/api";
+  ContentSnapshotRowSchema,
+  canonicalizeContentSnapshotRow,
+} from "@nakafa/aksara-contracts/release/snapshot/data";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { assessmentRowFacts } from "@repo/backend/confect/contentRelease/assessment/facts";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type {
+  ListArgs,
+  trackSetPageValidator,
+} from "@repo/backend/confect/tryouts/sets/spec";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
-  activateTryoutSetCatalog,
-  catalogListArgs,
-} from "@repo/backend/test/tryout/catalog";
-import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
+  FIXTURE_TRACK,
+  makeAssessmentSnapshot,
+} from "@repo/backend/test/assessment/snapshot";
+import { client } from "@repo/backend/test/client";
 import {
-  activateTryoutStartSource,
-  makeTryoutStartHierarchy,
-  makeTryoutStartPlacement,
-  TRYOUT_START_NOW,
-} from "@repo/backend/test/tryout/source";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+  TRYOUT_NOW,
+  type TryoutWorld,
+  tryoutWorld,
+} from "@repo/backend/test/tryout/world";
+import { Array as Arr, Effect, Option, Schema, Struct } from "effect";
 
-describe("tryouts/queries/sets", () => {
-  it.effect("requires an active signed try-out publication", () =>
-    Effect.gen(function* () {
-      const t = createConvexTestWithBetterAuth();
-      yield* Effect.promise(() =>
-        expect(
-          t.query(api.tryouts.queries.sets.list, {
-            ...catalogListArgs,
-            sort: { direction: "asc", field: "order" },
-          })
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } })
+const list = tryouts.queries.sets.list;
+
+/** The list arguments of the fixture track: every set in authored order, up to `numItems`. */
+const listArgs = (
+  overrides: Partial<
+    Pick<ListArgs, "filter" | "locale" | "sort"> & ListArgs["paginationOpts"]
+  > = {}
+) => ({
+  ...FIXTURE_TRACK,
+  filter: overrides.filter ?? "all",
+  locale: overrides.locale ?? "id",
+  paginationOpts: {
+    cursor: overrides.cursor ?? null,
+    numItems: overrides.numItems ?? 25,
+  },
+  sort: overrides.sort ?? {
+    direction: "asc" as const,
+    field: "order" as const,
+  },
+});
+
+/**
+ * A track of three sets where the learner runs set 1, finished set 2 with its first question right,
+ * and never started set 3.
+ */
+const seedTrack = Effect.gen(function* () {
+  const world = yield* tryoutWorld({ sets: 3 });
+  const running = yield* world.start();
+  const finished = yield* world.start({ setKey: "set-2" });
+  yield* world.startSection(finished.attemptId, "section-a");
+  yield* world.answer(finished.attemptId, {
+    order: 1,
+    pick: "correct",
+    section: "section-a",
+  });
+  yield* world.completeSection(finished.attemptId, "section-a");
+  yield* world.startSection(finished.attemptId, "section-b");
+  yield* world.completeSection(finished.attemptId, "section-b");
+  return { running: running.attemptId, world };
+});
+
+/** The set keys of one page, in order. */
+const keysOf = (page: typeof trackSetPageValidator.Type) =>
+  Arr.map(page.page, ({ setKey }) => setKey);
+
+/**
+ * Encodes the fixture's Indonesian catalog row of one set as a stored row, with the order and the
+ * route `change` gives from its route.
+ */
+const encodeSetRow = (
+  setKey: string,
+  change: (publicPath: string) => {
+    readonly order: number;
+    readonly publicPath: string;
+  }
+) =>
+  Effect.gen(function* () {
+    const { catalog } = yield* makeAssessmentSnapshot({ sets: 3 });
+    const set = Arr.findFirst(
+      catalog,
+      (row) =>
+        row.kind === "set" && row.setKey === setKey && row.appLocale === "id"
+    );
+    assert.ok(
+      Option.isSome(set) && set.value.kind === "set",
+      "Expected the fixture set row."
+    );
+    const row = yield* Schema.decodeEffect(ContentSnapshotRowSchema)({
+      family: "assessment",
+      record: {
+        row: {
+          kind: "catalog",
+          row: { ...set.value, ...change(set.value.publicPath) },
+        },
+        rowHash: `sha256:${"c".repeat(64)}`,
+      },
+    });
+    assert.ok(row.family === "assessment");
+    return {
+      ...assessmentRowFacts(row.record.row),
+      publicPath: set.value.publicPath,
+      rowHash: row.record.rowHash,
+      rowJson: canonicalizeContentSnapshotRow(row),
+    };
+  });
+
+/** Stores another copy of a set's catalog row in the active snapshot, at another route. */
+const insertSetCopy = (world: TryoutWorld, setKey: string) =>
+  Effect.gen(function* () {
+    const { publicPath, ...stored } = yield* encodeSetRow(setKey, (path) => ({
+      order: 99,
+      publicPath: `${path}-copy`,
+    }));
+    yield* Effect.promise(() =>
+      world.t.mutation((ctx) =>
+        ctx.db.insert("assessmentRows", {
+          ...stored,
+          identity: `copy-${setKey}`,
+          index: 9999,
+          snapshotId: world.snapshotId,
+        })
+      )
+    );
+  });
+
+/** Moves one set of the active snapshot to another authored order, keeping its route. */
+const reorderSet = (world: TryoutWorld, setKey: string, order: number) =>
+  Effect.gen(function* () {
+    const stored = yield* encodeSetRow(setKey, (publicPath) => ({
+      order,
+      publicPath,
+    }));
+    yield* Effect.promise(() =>
+      world.t.mutation(async (ctx) => {
+        const row = await ctx.db
+          .query("assessmentRows")
+          .withIndex("by_snapshotId_and_appLocale_and_publicPath", (query) =>
+            query
+              .eq("snapshotId", world.snapshotId)
+              .eq("appLocale", "id")
+              .eq("publicPath", stored.publicPath)
+          )
+          .unique();
+        assert.ok(row, "Expected the stored set row.");
+        await ctx.db.patch("assessmentRows", row._id, stored);
+      })
+    );
+  });
+
+/** Changes the learner's progress row of one set. */
+const patchProgress = (
+  world: TryoutWorld,
+  setKey: string,
+  change: (ctx: MutationCtx, id: Id<"tryoutSetProgress">) => Promise<unknown>
+) =>
+  Effect.promise(() =>
+    world.t.mutation(async (ctx) => {
+      const rows = await ctx.db.query("tryoutSetProgress").collect();
+      const row = Arr.findFirst(
+        rows,
+        (candidate) => candidate.setKey === setKey
       );
+      assert.ok(Option.isSome(row), "Expected the set's progress.");
+      await change(ctx, row.value._id);
     })
   );
 
-  it.effect.each([0, -1, 1.5])(
-    "rejects the invalid signed page size %s",
-    (numItems) =>
-      Effect.gen(function* () {
-        const t = createConvexTestWithBetterAuth();
-        yield* Effect.promise(() =>
-          t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"))
-        );
-        yield* Effect.promise(() =>
-          expect(
-            t.query(api.tryouts.queries.sets.list, {
-              ...catalogListArgs,
-              paginationOpts: { cursor: null, numItems },
-              sort: { direction: "asc", field: "order" },
-            })
-          ).rejects.toMatchObject({
-            data: { code: "INVALID_TRYOUT_SET_PAGE_SIZE" },
-          })
-        );
-      })
+describe("tryouts/queries/sets", () => {
+  it.effect("requires an active release", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* client(createConvexTestWithBetterAuth())
+          .query(list, listArgs())
+          .pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "ReleaseError",
+        code: "CONTENT_RELEASE_MISSING",
+      });
+    })
   );
 
   it.effect(
-    "breaks equal authored ranks by identity and keeps missing scores last",
+    "lists a track's sets in authored order with their facts, for a visitor without progress",
     () =>
       Effect.gen(function* () {
-        const { authed, t } = yield* activateTryoutSetCatalog([
-          {
-            setKey: "set-2",
-            title: "Same",
-            order: 1,
-            questionCount: 1,
-            durationSeconds: 60,
-          },
-          {
-            setKey: "set-1",
-            title: "Same",
-            order: 1,
-            questionCount: 1,
-            durationSeconds: 60,
-          },
-        ]);
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            for (const row of await ctx.db
-              .query("tryoutSetProgress")
-              .collect()) {
-              await ctx.db.patch(row._id, { publishedScore: 0 });
-            }
-          })
-        );
-        for (const direction of ["asc", "desc"] as const) {
-          const tied = yield* Effect.promise(() =>
-            authed.query(api.tryouts.queries.sets.list, {
-              ...catalogListArgs,
-              sort: { field: "publishedScore", direction },
-            })
-          );
-          expect(Arr.map(tied.page, ({ setKey }) => setKey)).toEqual([
-            "set-1",
-            "set-2",
-          ]);
-        }
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const rows = await ctx.db.query("tryoutSetProgress").collect();
-            for (const row of rows) {
-              if (row.setKey === "set-1") {
-                await ctx.db.patch(row._id, { publishedScore: null });
-              }
-            }
-          })
-        );
-        for (const direction of ["asc", "desc"] as const) {
-          const ranked = yield* Effect.promise(() =>
-            authed.query(api.tryouts.queries.sets.list, {
-              ...catalogListArgs,
-              sort: { field: "publishedScore", direction },
-            })
-          );
-          expect(Arr.map(ranked.page, ({ setKey }) => setKey)).toEqual([
-            "set-2",
-            "set-1",
-          ]);
-        }
-      })
-  );
-
-  it.effect(
-    "applies status filtering before sorting and limiting the same result",
-    () =>
-      Effect.gen(function* () {
-        const { authed } = yield* activateTryoutSetCatalog();
-        const selections = [
-          ["completed", "title", "asc", ["set-2", "set-1"]],
-          ["not-started", "readyQuestionCount", "desc", ["set-4", "set-3"]],
-          [
-            "all",
-            "durationSeconds",
-            "desc",
-            ["set-2", "set-1", "set-4", "set-3"],
+        const world = yield* tryoutWorld({ sets: 2 });
+        const page = yield* world.visitor.query(list, listArgs());
+        expect(page).toMatchObject({
+          isDone: true,
+          page: [
+            {
+              attemptStatus: null,
+              durationSeconds: 900,
+              publishedScore: null,
+              questionCount: 3,
+              runningAttempt: null,
+              sectionCount: 2,
+              setKey: "set-1",
+              visibleSectionCount: 2,
+            },
+            { setKey: "set-2" },
           ],
-          ["in-progress", "title", "asc", []],
-          ["expired", "publishedScore", "desc", []],
-        ] as const;
-        for (const [filter, field, direction, expected] of selections) {
-          const result = yield* Effect.promise(() =>
-            authed.query(api.tryouts.queries.sets.list, {
-              ...catalogListArgs,
-              filter,
-              sort: { field, direction },
-            })
-          );
-          expect(Arr.map(result.page, ({ setKey }) => setKey)).toEqual(
-            expected
-          );
-        }
-        const first = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.sets.list, {
-            ...catalogListArgs,
-            filter: "not-started",
-            sort: { field: "readyQuestionCount", direction: "desc" },
-            paginationOpts: { cursor: null, numItems: 1 },
-          })
-        );
-        expect(Arr.map(first.page, ({ setKey }) => setKey)).toEqual(["set-4"]);
-        expect(first.isDone).toBe(false);
+          snapshotId: world.snapshotId,
+          viewerId: null,
+        });
+        expect(
+          yield* world.visitor.query(list, { ...listArgs(), trackKey: "2099" })
+        ).toMatchObject({ isDone: true, page: [] });
       })
   );
 
   it.effect(
-    "preserves completed zero scores and scored expiry without crossing accounts",
+    "joins the learner's progress, links a running attempt, and filters and sorts before paging",
     () =>
       Effect.gen(function* () {
-        const { authed, identity, snapshotId, t } =
-          yield* activateTryoutSetCatalog();
-        const other = yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            for (const row of await ctx.db
-              .query("tryoutSetProgress")
-              .collect()) {
-              const status = row.setKey === "set-1" ? "completed" : "expired";
-              await ctx.db.patch(row._id, {
-                publishedScore: row.setKey === "set-1" ? 0 : 80,
-                status,
-                statusRank: getTryoutStatusRank(status),
-              });
-            }
-            return await seedAuthenticatedUser(ctx, {
-              now: TRYOUT_START_NOW,
-              suffix: "other-catalog-viewer",
-            });
-          })
-        );
-        const args = {
-          ...catalogListArgs,
-          sort: { field: "publishedScore", direction: "desc" },
-        } as const;
-        const result = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.sets.list, args)
-        );
-        expect(result).toMatchObject({
-          snapshotId,
-          viewerId: identity.authUserId,
-        });
-        expect(
-          Arr.map(result.page, ({ setKey, attemptStatus, publishedScore }) => ({
-            setKey,
-            attemptStatus,
-            publishedScore,
-          }))
-        ).toEqual([
-          { setKey: "set-2", attemptStatus: "expired", publishedScore: 80 },
-          { setKey: "set-1", attemptStatus: "completed", publishedScore: 0 },
-          { setKey: "set-3", attemptStatus: null, publishedScore: null },
-          { setKey: "set-4", attemptStatus: null, publishedScore: null },
+        const { running, world } = yield* seedTrack;
+        const all = yield* world.learner.query(list, listArgs());
+        expect(all.page).toMatchObject([
+          {
+            attemptStatus: "in-progress",
+            publishedScore: null,
+            runningAttempt: {
+              attemptId: running,
+              publicPath: "try-out/indonesia/snbt/2027/set-1-id",
+            },
+            setKey: "set-1",
+          },
+          {
+            attemptStatus: "completed",
+            publishedScore: 33,
+            runningAttempt: null,
+            setKey: "set-2",
+          },
+          { attemptStatus: null, setKey: "set-3" },
         ]);
-        const completed = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.sets.list, {
-            ...args,
-            filter: "completed",
-          })
-        );
-        expect(completed.page).toMatchObject([
-          { setKey: "set-1", publishedScore: 0 },
-        ]);
-        const expired = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.sets.list, {
-            ...args,
-            filter: "expired",
-          })
-        );
-        expect(expired.page).toMatchObject([
-          { setKey: "set-2", publishedScore: 80 },
-        ]);
-        const secondViewer = t.withIdentity({
-          subject: other.authUserId,
-          sessionId: other.sessionId,
-        });
-        const separate = yield* Effect.promise(() =>
-          secondViewer.query(api.tryouts.queries.sets.list, args)
-        );
-        const anonymous = yield* Effect.promise(() =>
-          t.query(api.tryouts.queries.sets.list, args)
-        );
-        expect(separate).toMatchObject({
-          snapshotId,
-          viewerId: other.authUserId,
-        });
-        expect(anonymous).toMatchObject({ snapshotId, viewerId: null });
-        for (const page of [separate, anonymous]) {
+        for (const [filter, keys] of [
+          ["in-progress", ["set-1"]],
+          ["completed", ["set-2"]],
+          ["not-started", ["set-3"]],
+        ] as const) {
           expect(
-            Arr.map(page.page, ({ attemptStatus, publishedScore }) => [
-              attemptStatus,
-              publishedScore,
-            ])
-          ).toEqual([
-            [null, null],
-            [null, null],
-            [null, null],
-            [null, null],
-          ]);
+            keysOf(yield* world.learner.query(list, listArgs({ filter })))
+          ).toEqual(keys);
         }
-        yield* Effect.promise(() =>
-          t.mutation((ctx) =>
-            ctx.db.patch(identity.userId, { deletedAt: TRYOUT_START_NOW })
-          )
-        );
-        const deleted = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.sets.list, args)
-        );
-        expect(deleted.viewerId).toBeNull();
-        expect(deleted.page).toEqual(anonymous.page);
+        for (const [sort, keys] of [
+          [
+            { direction: "desc", field: "publishedScore" },
+            ["set-2", "set-1", "set-3"],
+          ],
+          [
+            { direction: "asc", field: "publishedScore" },
+            ["set-2", "set-1", "set-3"],
+          ],
+          [{ direction: "desc", field: "order" }, ["set-3", "set-2", "set-1"]],
+          [
+            { direction: "asc", field: "questionCount" },
+            ["set-1", "set-2", "set-3"],
+          ],
+          [
+            { direction: "desc", field: "durationSeconds" },
+            ["set-1", "set-2", "set-3"],
+          ],
+          [{ direction: "asc", field: "title" }, ["set-1", "set-2", "set-3"]],
+        ] as const) {
+          expect(
+            keysOf(yield* world.learner.query(list, listArgs({ sort })))
+          ).toEqual(keys);
+        }
       })
   );
 
   it.effect(
-    "grows beyond one hundred rows and atomically refreshes the complete prefix",
+    "sorts scored sets by score ahead of unscored ones, and breaks an order tie by set identity",
     () =>
       Effect.gen(function* () {
-        const definitions = Array.from({ length: 125 }, (_, index) => ({
-          durationSeconds: 60 * (index + 1),
-          order: index + 1,
-          questionCount: 1,
-          setKey: `set-${index + 1}`,
-          title: `Set ${index + 1}`,
-        }));
-        const { authed, t } = yield* activateTryoutSetCatalog(definitions);
-        const args = {
-          ...catalogListArgs,
-          sort: { field: "order", direction: "asc" },
-        } as const;
-        const first = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.sets.list, {
-            ...args,
-            paginationOpts: { cursor: null, numItems: 25 },
-          })
+        const { world } = yield* seedTrack;
+        yield* patchProgress(world, "set-1", (ctx, id) =>
+          ctx.db.patch("tryoutSetProgress", id, { publishedScore: 50 })
         );
-        const grown = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.sets.list, {
-            ...args,
-            paginationOpts: { cursor: null, numItems: 125 },
-          })
-        );
-        expect(first.isDone).toBe(false);
-        expect(grown.isDone).toBe(true);
-        expect(grown.page).toHaveLength(125);
-        expect(Arr.take(grown.page, 25)).toEqual(first.page);
-        expect(
-          Arr.dedupe(Arr.map(grown.page, ({ setKey }) => setKey)).length
-        ).toBe(125);
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            for (const row of await ctx.db
-              .query("tryoutSetProgress")
-              .collect()) {
-              await ctx.db.patch(row._id, { publishedScore: 0 });
-            }
-          })
-        );
-        const refreshed = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.sets.list, {
-            ...args,
-            paginationOpts: { cursor: null, numItems: 125 },
-          })
-        );
-        expect(refreshed.page).toHaveLength(125);
-        expect(refreshed.snapshotId).toBe(grown.snapshotId);
-        expect(
-          Arr.map(
-            Arr.take(refreshed.page, 2),
-            ({ publishedScore }) => publishedScore
-          )
-        ).toEqual([0, 0]);
-      })
-  );
-
-  it.effect(
-    "counts every visible section once and includes the hidden internal entry",
-    () =>
-      Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        for (const visibility of ["visible", "internal-entry"] as const) {
-          const t = createConvexTestWithBetterAuth();
-          const source = makeTryoutStartHierarchy("id", visibility);
-          const durationSeconds = visibility === "visible" ? 11_700 : 4500;
-          const section = Option.getOrUndefined(
-            Arr.findFirst(source, (row) => row.kind === "section")
-          );
-          if (section?.kind !== "section") {
-            return yield* Effect.die("Expected the technical section fixture.");
-          }
-          let catalog = Arr.map(source, (row) => {
-            if (row.kind === "section") {
-              return {
-                ...row,
-                timeLimitSeconds:
-                  visibility === "visible" ? 3600 : durationSeconds,
-              };
-            }
-            if (
-              visibility === "visible" &&
-              (row.kind === "set" || row.kind === "track")
-            ) {
-              return {
-                ...row,
-                questionCount: 2,
-                sectionCount: 2,
-                visibleSectionCount: 2,
-              };
-            }
-            return row;
-          });
-          if (visibility === "visible") {
-            catalog = Arr.append(
-              catalog,
-              yield* Schema.decodeEffect(TryoutCatalogRowSchema)({
-                ...section,
-                graph: {
-                  ...section.graph,
-                  assetId: `${section.graph.assetId}-second`,
-                },
-                order: 2,
-                publicPath: `${section.publicPath}-second`,
-                sectionKey: "second-section",
-                timeLimitSeconds: 8100,
-              }).pipe(Effect.orDie)
-            );
-          }
-          const signedCatalog = yield* Schema.decodeEffect(
-            Schema.Array(TryoutCatalogRowSchema)
-          )(catalog).pipe(Effect.orDie);
-          yield* Effect.promise(() =>
-            t.mutation((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                activateTryoutSnapshot(ctx, {
-                  catalog: signedCatalog,
-                  placements: [makeTryoutStartPlacement("id")],
-                })
+        for (const [direction, keys] of [
+          ["desc", ["set-1", "set-2", "set-3"]],
+          ["asc", ["set-2", "set-1", "set-3"]],
+        ] as const) {
+          expect(
+            keysOf(
+              yield* world.learner.query(
+                list,
+                listArgs({ sort: { direction, field: "publishedScore" } })
               )
             )
-          );
-          const result = yield* Effect.promise(() =>
-            t.query(api.tryouts.queries.sets.list, {
-              ...catalogListArgs,
-              sort: { field: "durationSeconds", direction: "asc" },
-            })
-          );
-          expect(result.page).toMatchObject([
-            {
-              durationSeconds,
-              readyQuestionCount: visibility === "visible" ? 2 : 1,
-              readyVisibleSectionCount: visibility === "visible" ? 2 : 0,
-            },
-          ]);
-          const publicPath = section.publicPath;
-          if (publicPath !== undefined) {
-            const entry = yield* Effect.promise(() =>
-              t.query(api.tryouts.queries.catalog.getSectionPage, {
-                appLocale: "id",
-                publicPath,
-              })
-            );
-            expect(entry).toMatchObject({
-              section: { timeLimitSeconds: 3600 },
-              set: { readyQuestionCount: 2 },
-            });
-          }
+          ).toEqual(keys);
         }
+        yield* reorderSet(world, "set-3", 1);
+        expect(keysOf(yield* world.learner.query(list, listArgs()))).toEqual([
+          "set-1",
+          "set-3",
+          "set-2",
+        ]);
+      })
+  );
+
+  it.effect(
+    "pages by an exact-state cursor and asks the client to restart once the rows change",
+    () =>
+      Effect.gen(function* () {
+        const { world } = yield* seedTrack;
+        const first = yield* world.learner.query(
+          list,
+          listArgs({ numItems: 2 })
+        );
+        expect(keysOf(first)).toEqual(["set-1", "set-2"]);
+        expect(first.isDone).toBe(false);
+        const second = yield* world.learner.query(
+          list,
+          listArgs({ cursor: first.continueCursor, numItems: 2 })
+        );
+        expect(second).toMatchObject({ continueCursor: "", isDone: true });
+        expect(keysOf(second)).toEqual(["set-3"]);
+        for (const cursor of [
+          "elsewhere",
+          `${first.continueCursor.slice(0, -1)}x`,
+        ]) {
+          expect(
+            yield* world.learner
+              .query(list, listArgs({ cursor, numItems: 2 }))
+              .pipe(Effect.flip)
+          ).toMatchObject({ code: "INVALID_TRYOUT_SET_CURSOR" });
+        }
+        yield* world.start({ setKey: "set-3" });
+        expect(
+          yield* world.learner
+            .query(
+              list,
+              listArgs({ cursor: first.continueCursor, numItems: 2 })
+            )
+            .pipe(Effect.flip)
+        ).toMatchObject({ code: "INVALID_TRYOUT_SET_CURSOR" });
+        for (const numItems of [0, 1.5]) {
+          expect(
+            yield* world.learner
+              .query(list, listArgs({ numItems }))
+              .pipe(Effect.flip)
+          ).toMatchObject({ code: "INVALID_TRYOUT_SET_PAGE_SIZE" });
+        }
+      })
+  );
+
+  it.effect(
+    "fails closed on progress stored twice, oversized, or naming another set, and on a set listed twice",
+    () =>
+      Effect.gen(function* () {
+        const cases = [
+          (world: TryoutWorld) =>
+            patchProgress(world, "set-1", async (ctx, id) => {
+              const row = await ctx.db.get("tryoutSetProgress", id);
+              assert.ok(row);
+              await ctx.db.insert(
+                "tryoutSetProgress",
+                Struct.omit(row, ["_creationTime", "_id"])
+              );
+            }),
+          (world: TryoutWorld) =>
+            patchProgress(world, "set-1", (ctx, id) =>
+              ctx.db.patch("tryoutSetProgress", id, {
+                setIdentity: "x".repeat(4096),
+              })
+            ),
+          (world: TryoutWorld) =>
+            patchProgress(world, "set-1", (ctx, id) =>
+              ctx.db.patch("tryoutSetProgress", id, {
+                setIdentity: "indonesia/snbt/2027/set-9",
+              })
+            ),
+          (world: TryoutWorld) => insertSetCopy(world, "set-1"),
+        ];
+        for (const arrange of cases) {
+          const { world } = yield* seedTrack;
+          yield* arrange(world);
+          expect(
+            yield* world.learner.query(list, listArgs()).pipe(Effect.flip)
+          ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+        }
+      })
+  );
+
+  it.effect(
+    "leaves a running link off progress whose attempt already ended",
+    () =>
+      Effect.gen(function* () {
+        const { running, world } = yield* seedTrack;
+        yield* Effect.promise(() =>
+          world.t.mutation((ctx) =>
+            ctx.db.patch("tryoutAttempts", running, {
+              completedAt: TRYOUT_NOW,
+              endReason: "time-expired",
+              status: "expired",
+            })
+          )
+        );
+        const page = yield* world.learner.query(list, listArgs());
+        expect(page.page[0]).toMatchObject({
+          attemptStatus: "in-progress",
+          runningAttempt: null,
+        });
+      })
+  );
+
+  it.effect(
+    "leaves a running link off a set whose attempt's snapshot lost it in the listed locale",
+    () =>
+      Effect.gen(function* () {
+        const { running, world } = yield* seedTrack;
+        yield* world.release({ renamed: true, sets: 3 });
+        yield* Effect.promise(() =>
+          world.t.mutation(async (ctx) => {
+            const attempt = await ctx.db.get("tryoutAttempts", running);
+            assert.ok(attempt, "Expected the running attempt.");
+            for (const row of await ctx.db
+              .query("assessmentRows")
+              .withIndex(
+                "by_snapshotId_and_setIdentity_and_appLocale_and_order",
+                (query) =>
+                  query
+                    .eq("snapshotId", world.snapshotId)
+                    .eq("setIdentity", attempt.setIdentity)
+                    .eq("appLocale", "en")
+              )
+              .collect()) {
+              await ctx.db.delete("assessmentRows", row._id);
+            }
+          })
+        );
+        const page = yield* world.learner.query(
+          list,
+          listArgs({ locale: "en" })
+        );
+        expect(page.page[0]).toMatchObject({
+          attemptStatus: "in-progress",
+          runningAttempt: null,
+          setKey: "set-1",
+        });
       })
   );
 });

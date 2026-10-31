@@ -27,7 +27,7 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
-import { activateTryoutStartSource } from "@repo/backend/test/tryout/source";
+import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect, Exit } from "effect";
 
@@ -292,12 +292,12 @@ describe("Nina signed learning context", () => {
   it("keeps a signed try-out route out of current-page fetch", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {
-      const { set } = await activateTryoutStartSource(ctx, "visible");
+      await activateAssessmentTestSnapshot(ctx);
       const context = await Effect.runPromise(
         Effect.gen(function* () {
           const user = yield* seedUser();
           return yield* resolveNinaContext(
-            { locale: "id", slug: set.publicPath },
+            { locale: "id", slug: "try-out/indonesia/snbt/2027/set-1-id" },
             user
           );
         }).pipe(

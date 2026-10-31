@@ -1,4 +1,3 @@
-import type { ProtectedContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import type {
   ContentRuntimeFailureSchema,
   ContentRuntimeMissingSchema,
@@ -11,7 +10,7 @@ import type { HttpClientResponse } from "effect/http";
 
 type ContentRuntimeStatus =
   | Pick<typeof ContentRuntimeFailureSchema.Type, "code" | "kind">
-  | Pick<PublicContentRuntimeFound | ProtectedContentRuntimeFound, "kind">
+  | Pick<PublicContentRuntimeFound, "kind">
   | Pick<typeof ContentRuntimeMissingSchema.Type, "kind">;
 
 /** Classifies an out-of-contract JSON body without exposing its contents. */
