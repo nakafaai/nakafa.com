@@ -68,7 +68,8 @@ export const QuestionPoints = Schema.Int.check(
  * it among the parts of an answer, absent until the teacher chooses one. `prompt`, `rubric`, and
  * `explanation` are documents of their own: the question's text, the teacher's scoring
  * guide, and the explanation a learner reads after the result. Each of them is written by
- * the collaborative editor, and each one is frozen with its exam.
+ * the collaborative editor, and each one is frozen with its exam. `reading` is the shared reading
+ * the question is asked of, a document several questions may hold, absent until a teacher gives one.
  */
 export const questionValidator = Schema.Struct({
   answers: Schema.String,
@@ -77,6 +78,7 @@ export const questionValidator = Schema.Struct({
   key: Schema.NullOr(Schema.String),
   points: QuestionPoints,
   prompt: Id("editorDocuments"),
+  reading: Schema.optionalKey(Id("editorDocuments")),
   revision: Schema.Natural,
   rubric: Id("editorDocuments"),
   scoring: Schema.optionalKey(Schema.String),
@@ -84,6 +86,15 @@ export const questionValidator = Schema.Struct({
   tenantId: Id("tenants"),
   updatedAt: Schema.Finite,
 });
+
+/**
+ * The reading a question takes: a new one the teacher writes, none, or the reading of another question of its
+ * exam, so several questions are asked of one text.
+ */
+export const ReadingSource = Schema.Union([
+  Schema.Literals(["new", "none"]),
+  Id("examQuestions"),
+]);
 
 /** The fewest options a choice holds: a choice of one option asks nothing. */
 export const CHOICE_OPTIONS_MIN = 2;
@@ -208,7 +219,7 @@ const KeyText = Schema.fromJsonString(
 
 /**
  * One question as the wire shows it: its ID, its template, its points and the rule that
- * scores them, its prompt, rubric and explanation documents, its interactions, its key (null
+ * scores them, its prompt, reading, rubric and explanation documents, its interactions, its key (null
  * until one option is marked), and its revision. Only the teacher's editor reads this view; a learner's paper reads the
  * interactions alone, so the key, the rubric, and the explanation never reach it.
  */
@@ -219,6 +230,7 @@ export const QuestionView = Schema.Struct({
   key: Schema.NullOr(Schema.NonEmptyArray(InteractionKeySchema)),
   points: QuestionPoints,
   prompt: Id("editorDocuments"),
+  reading: Schema.NullOr(Id("editorDocuments")),
   revision: Schema.Natural,
   rubric: Id("editorDocuments"),
   scoring: DefaultRuleSchema,
@@ -291,6 +303,7 @@ export const questionView = Effect.fn("exams.question.view")(function* (
     key: yield* decodeKey(row.key),
     points: row.points,
     prompt: row.prompt,
+    reading: row.reading ?? null,
     revision: row.revision,
     rubric: row.rubric,
     scoring: yield* decodeScoring(row),

@@ -5,6 +5,7 @@ export const answer = registeredFunctions.answer;
 export const copy = registeredFunctions.copy;
 export const move = registeredFunctions.move;
 export const points = registeredFunctions.points;
+export const reading = registeredFunctions.reading;
 export const remove = registeredFunctions.remove;
 export const scoring = registeredFunctions.scoring;
 export const template = registeredFunctions.template;

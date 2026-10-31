@@ -74,6 +74,7 @@ export const NodeTypeSchema = Schema.Literals([
   "blockquote",
   "bulletList",
   "codeBlock",
+  "figure",
   "hardBreak",
   "heading",
   "image",
