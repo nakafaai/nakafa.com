@@ -3,7 +3,6 @@ import {
   AccountConsentControls,
   AccountConsentEffects,
 } from "@/components/analytics/consent/account";
-import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
 import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { ConvexProvider } from "@/components/providers/convex";
@@ -37,7 +36,6 @@ export function AppProviders({
             isPreviewChild={clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true"}
           >
             {children}
-            <AnalyticsConsentBootstrap />
             <AccountConsentControls />
             <AccountConsentEffects />
           </AnalyticsConsentProvider>

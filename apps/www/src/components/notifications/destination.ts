@@ -5,13 +5,23 @@ import { schoolOrigin } from "@/lib/routing/school/host";
 /**
  * The page that a row opens, on the school's own host, when its subject has one. An invitation
  * opens the home of the school. A mention opens its message, in its discussion when it is a reply
- * and in its channel otherwise, an announcement opens the class home, and a new task opens its page,
- * each while the server gives the row its detail. Any other row has no page, so it only marks itself read.
+ * and in its channel otherwise, an announcement opens the class home, a new task opens its page, and
+ * a coming sitting opens its entry, each while the server gives the row its detail. A guardian's
+ * reminder of a child's sitting opens the parent home. Any other row has no page, so it only marks
+ * itself read.
  */
 export function pageOf(notification: ListNotification): Option.Option<URL> {
   const origin = schoolOrigin(notification.tenant.slug);
   if (notification.subject.kind === "person") {
     return Option.some(origin);
+  }
+  if (notification.changeType === "exam.reminder") {
+    return Option.some(new URL("/orang-tua", origin));
+  }
+  if (notification.exam !== null) {
+    return Option.some(
+      new URL(`/sittings/${notification.exam.sittingId}`, origin)
+    );
   }
   return Option.map(Option.fromNullOr(notification.detail), (detail) => {
     const page = new URL(`/classes/${detail.classSlug}`, origin);

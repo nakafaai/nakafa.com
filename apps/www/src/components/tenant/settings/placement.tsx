@@ -51,9 +51,12 @@ type CohortId = Cohort["id"];
  */
 export function SchoolPlacementAdd({
   cohortId,
+  disabled,
   slug,
 }: {
   cohortId: CohortId;
+  /** Whether the action waits, while the cohort is not read yet or once it is archived. */
+  disabled: boolean;
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
@@ -83,7 +86,7 @@ export function SchoolPlacementAdd({
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} type="button">
+      <Button disabled={disabled} onClick={() => setIsOpen(true)} type="button">
         {t("placement-add")}
       </Button>
       <ResponsiveDialog

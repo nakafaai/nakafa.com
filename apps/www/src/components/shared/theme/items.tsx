@@ -22,7 +22,6 @@ function ThemeGroup({ options }: { options: typeof themeOptions }) {
     <DropdownMenuGroup>
       {Arr.map(options, (theme) => (
         <DropdownMenuItem
-          className="cursor-pointer"
           key={theme.value}
           onClick={() => setTheme(theme.value)}
         >

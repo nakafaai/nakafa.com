@@ -11,16 +11,6 @@
     "back-to-learning": "Back to Nakafa",
     "classes": "Classes",
     "home": "Home",
-    "home-rooms": "Rooms",
-    "home-exams": "Exams",
-    "home-updates": "Updates",
-    "home-updates-all": "All updates",
-    "home-updates-empty": "Nothing new yet.",
-    "home-classes-empty": "You are not in a class yet.",
-    "home-minutes-left": "{count, plural, one {# minute left} other {# minutes left}}",
-    "greeting-morning": "Good morning, {name}",
-    "greeting-afternoon": "Good afternoon, {name}",
-    "greeting-evening": "Good evening, {name}",
     "role": {
       "admin": "Admin",
       "auditor": "Auditor",
@@ -36,7 +26,6 @@
       "teacher": "Teacher"
     },
     "sign-in-title": "Sign in to {school}",
-    "answers-saved": "Answers saved",
     "search": "Search",
     "search-placeholder": "Search the school...",
     "search-description": "Open a page, a class or a setting of the school.",
@@ -94,7 +83,7 @@
     "child-ended-hint": "Contact the school to link again.",
     "nisn-label": "Child's NISN",
     "nisn-hint": "Enter your child's NISN to confirm this link.",
-    "nisn-refused": "The details do not match, check them or contact the school.",
+    "nisn-refused": "This NISN does not match the school's record.",
     "nisn-submit": "Check",
     "withdraw": "Withdraw consent",
     "withdraw-hint": "You can withdraw consent at any time.",
@@ -192,6 +181,7 @@
     "state-submitted": "Submitted",
     "signals": "Signals",
     "signals-empty": "No signal has been recorded.",
+    "signals-offline-note": "A lost connection shows here, with how long it lasted, once the student is back online.",
     "signal-exit": "Left the exam",
     "signal-return": "Came back to the exam",
     "screen-title": "Student screen",
@@ -209,6 +199,8 @@
     "signal-copy": "Copied text",
     "signal-paste": "Pasted text",
     "signal-disconnect": "Lost the connection",
+    "signal-offline-seconds": "Lost the connection for {seconds} s",
+    "signal-offline-minutes": "Lost the connection for {minutes} min {seconds} s",
     "signal-secondTab": "Opened a second tab",
     "reason": "Reason",
     "reason-power-outage": "Power outage",
@@ -263,10 +255,19 @@
     "student-unavailable": "This sitting is not open to you, so ask your teacher if you think this is wrong.",
     "finish-title": "Finish the exam?",
     "finish-description": "You cannot change your answers after you finish.",
-    "answers-in": "Your answers are in.",
     "title": "Exams",
     "empty": "There are no exams yet.",
     "exams-search": "Find an exam",
+    "mine-exam": "Exam",
+    "mine-opens": "Opens",
+    "mine-status": "Status",
+    "mine-score": "Score",
+    "mine-open": "Open now",
+    "mine-upcoming": "Upcoming",
+    "mine-finished": "Finished",
+    "mine-score-waiting": "Not released yet",
+    "mine-empty": "No exams yet",
+    "mine-empty-description": "Your exams show here once your school schedules them.",
     "untitled": "Untitled exam",
     "title-label": "Exam title",
     "unavailable": "This exam is not available.",
@@ -326,7 +327,7 @@
     "release-description": "Each student sees their own score and answers once you release them.",
     "release-action": "Release results",
     "released": "Released",
-    "student-results-title": "Your result",
+    "student-finished": "You finished this exam.",
     "student-score": "{points} of {total} points",
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
     "student-answer": "Your answer: {answer}",
@@ -416,6 +417,8 @@
     "student-scheduled-footer": "The token field opens with the sitting.",
     "student-back-home": "Back to home",
     "seat-last-activity": "Last activity {time}.",
+    "seat-away-seconds": "Away for {seconds} s.",
+    "seat-away-minutes": "Away for {minutes} min {seconds} s.",
     "title-needed": "The exam needs a title before you can create it.",
     "title-too-long": "The title can have at most {count} characters.",
     "no-unit-description": "Every exam belongs to a unit, so add or restore one in the settings first.",
@@ -627,9 +630,9 @@
     "period-start-placeholder": "Choose the first day",
     "period-end-placeholder": "Choose the last day",
     "period-add-footer": "A new period starts as planned.",
-    "period-rename": "Rename",
-    "period-rename-description": "The period keeps its classes and dates.",
-    "period-rename-save": "Save",
+    "period-edit": "Edit",
+    "period-edit-description": "The period keeps its classes.",
+    "period-edit-save": "Save",
     "periods-empty": "No period yet.",
     "periods-search": "Find a period",
     "cohorts": "Cohorts",
@@ -642,9 +645,8 @@
     "cohort-status": "Status",
     "cohort-active": "Active",
     "cohort-archived": "Archived",
-    "cohort-rename": "Rename",
-    "cohort-rename-description": "The class keeps its students, teachers and grades.",
-    "cohort-rename-save": "Save",
+    "cohort-edit-description": "The class keeps its students, teachers and grades.",
+    "cohort-edit-save": "Save",
     "cohort-archive": "Archive",
     "cohort-add-footer": "A new cohort starts active.",
     "cohorts-empty": "No cohort yet.",
@@ -669,7 +671,6 @@
     "homeroom-teacher": "Teacher",
     "homeroom-none": "None yet.",
     "homeroom-footer": "Choose the teacher who leads this cohort.",
-    "homeroom-remove-footer": "Removing the teacher leaves the cohort without one.",
     "homeroom-archived": "An archived cohort keeps its homeroom teacher as it was.",
     "homeroom-save": "Save",
     "homeroom-remove": "Remove",
@@ -755,7 +756,10 @@
         "created": "Cohort added",
         "renamed": "Cohort renamed",
         "archived": "Cohort archived",
-        "restored": "Cohort restored"
+        "restored": "Cohort restored",
+        "grade": {
+          "set": "Cohort grade changed"
+        }
       },
       "connection": {
         "connected": "Connection added",
@@ -782,7 +786,8 @@
         "opened": "Period opened",
         "archived": "Period archived",
         "rename": "Period renamed",
-        "restored": "Period restored"
+        "restored": "Period restored",
+        "rescheduled": "Period dates changed"
       },
       "person": {
         "claimed": "Account joined",
@@ -855,6 +860,12 @@
         },
         "npsn": {
           "set": "NPSN changed"
+        },
+        "name": {
+          "set": "Unit renamed"
+        },
+        "level": {
+          "set": "Unit level changed"
         }
       },
       "visit": {
@@ -876,6 +887,9 @@
       "roster": {
         "set": "Student record updated",
         "imported": "Students imported from Dapodik"
+      },
+      "login": {
+        "renamed": "Login name changed"
       }
     },
     "role-description": {
@@ -920,6 +934,12 @@
     "member-remove-title": "Remove this member?",
     "member-remove-description": "The person leaves the school, and its roles end.",
     "member-remove-confirm": "Remove",
+    "person-rename": "Rename",
+    "person-rename-description": "The new name shows wherever the school lists this person.",
+    "person-rename-save": "Save",
+    "login-rename": "Change login name",
+    "login-rename-description": "The student signs in with the new name and the same password.",
+    "login-rename-save": "Save",
     "invite-action": "Invite",
     "invites-footer": "Invite a person who has no account yet.",
     "invite-dialog-title": "Invite a person",
@@ -1128,7 +1148,6 @@
     "task-work": "Your work",
     "task-student": "Student",
     "task-hand-in": "Hand in",
-    "task-hand-in-again": "Hand in again",
     "task-work-empty": "No work yet",
     "task-work-empty-description": "The work students hand in shows here.",
     "task-work-search": "Search students",
@@ -1564,7 +1583,10 @@
     "push-on": "Turn on",
     "push-home-screen": "On iPhone and iPad, notifications come only from the Home Screen: tap Share, then Add to Home Screen, and open Nakafa from its icon.",
     "assignment-published": "{actor} posted a new task in {className}.",
-    "assignment-published-gone": "A task that is no longer there."
+    "assignment-published-gone": "A task that is no longer there.",
+    "exam-starting": "{examTitle} opens at {opensAt, time, short} in {room}.",
+    "exam-reminder": "{student} sits {examTitle} on {opensAt, date, long} at {opensAt, time, short} in {room}.",
+    "exam-gone": "An exam that no longer waits to open."
   },
   "Posts": {
     "placeholder": "What's new?",
@@ -1698,6 +1720,9 @@
     "status-in-progress": "In progress",
     "status-completed": "Completed",
     "status-expired": "Time expired",
+    "finished-title": "Try-out finished",
+    "finished-description": "You finished this attempt, and its score is saved.",
+    "finished-expired-description": "Time ran out, so this attempt ended with the answers you gave.",
     "remaining-time-label": "Time left to finish this set",
     "time-days-short": "days",
     "time-hours-short": "hr",
@@ -1800,7 +1825,6 @@
   "Auth": {
     "back-to-nakafa": "Back to Nakafa",
     "continue-with-google": "Continue with Google",
-    "opening-google": "Opening Google...",
     "sign-in-title": "Sign in to Nakafa",
     "sign-in-description": "So your progress stays saved.",
     "logout": "Logout",
@@ -1872,7 +1896,6 @@
     "picture-animal": "Animal",
     "picture-photo": "Google photo",
     "picture-footer-animal": "Each shuffle shows another animal.",
-    "picture-footer-photo": "Your Google photo shows wherever your name does.",
     "animal-shuffle": "Shuffle animal",
     "username": "Username",
     "username-placeholder": "alex_rivera",

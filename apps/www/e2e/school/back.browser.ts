@@ -7,7 +7,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
  * School settings has its own sidebar, so its first row leads back to the school:
  * to the school page the viewer left for settings, past every section opened in
  * between, and Escape leaves the same way. Settings opened first leads to the
- * school's home.
+ * school's root, which opens the viewer's main page.
  */
 test("the school settings sidebar leads back to the school page the viewer came from, and Escape does too", async ({
   baseURL,
@@ -49,10 +49,11 @@ test("the school settings sidebar leads back to the school page the viewer came 
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(address("/exams"));
 
-  // Settings opened first has no school page before it, so its way back leads home.
+  // Settings opened first has no school page before it, so its way back leads to the
+  // school's root, which opens the Owner's exams.
   await page.goto(address("/settings/profile"));
   await waitUntilTakenOver(back);
   await back.click();
-  await expect(page).toHaveURL(address("/"));
+  await expect(page).toHaveURL(address("/exams"));
   await context.close();
 });

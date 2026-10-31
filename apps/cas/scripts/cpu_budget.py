@@ -1,4 +1,4 @@
-"""Measure the CPU that each CAS test-corpus request costs, against the Free budget.
+"""Measure the CPU that each CAS test-corpus request costs, against the engine CPU cap.
 
 The corpus is every request that the test suite sends to `cas.engine.run`. A
 pytest plugin records each call, so the corpus is exactly what the suite runs.
@@ -6,8 +6,9 @@ Each request runs through `cas.engine.run`, the calculation that the Durable
 Object runs through `cas.compute`, and the script records the process CPU time
 of each call: the first call of a request is cold, and the later rounds are warm.
 
-Cloudflare Workers on the Free plan allow 10 ms of CPU per request for the
-Worker itself. This script runs on CPython, not Pyodide, so its numbers estimate
+The engine Worker stops an invocation past its CPU cap, 20,000 ms
+(`CAS_ENGINE_LIMITS` in apps/www/deploy/stage.ts), which is the front's call
+deadline. This script runs on CPython, not Pyodide, so its numbers estimate
 the cost of the same code. Measure the deployed Durable Object with Workers Logs
 (`cpuTime`) before deciding.
 
@@ -28,7 +29,7 @@ import pytest
 from cas import engine
 from cas.schema import MathRequest, MathResult
 
-CPU_BUDGET_MS = 10.0
+CPU_BUDGET_MS = 20_000.0
 ROOT = Path(__file__).resolve().parent.parent
 ORIGINAL_RUN = engine.run
 
@@ -100,7 +101,7 @@ def percentile(sorted_values: list[float], fraction: float) -> float:
 
 
 def summarize(request_count: int, cold: list[float], warm: list[float]) -> Summary:
-    """Reduce the timings to the numbers that the Free budget decision needs."""
+    """Reduce the timings to the numbers that the CPU cap decision needs."""
     ordered = sorted(warm)
     return Summary(
         requests=request_count,

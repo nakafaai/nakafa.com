@@ -1,6 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { detailOf } from "@repo/backend/confect/notifications/detail";
+import { partsOf } from "@repo/backend/confect/notifications/detail";
 import { NotificationCursorInvalid } from "@repo/backend/confect/notifications/errors";
 import {
   HELD_SCHOOL_LIMIT,
@@ -150,8 +150,8 @@ export const feedPage = Effect.fn("notifications.feed.page")(function* (
     isDone: ahead.length <= numItems,
     page: yield* Effect.forEach(rows, (candidate) =>
       Effect.map(
-        detailOf(candidate.row, candidate.held.person, candidate.held.tenant),
-        (detail) => notificationView(candidate.row, candidate.school, detail)
+        partsOf(candidate.row, candidate.held.person, candidate.held.tenant),
+        (parts) => notificationView(candidate.row, candidate.school, parts)
       )
     ),
   };

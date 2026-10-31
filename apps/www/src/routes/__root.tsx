@@ -1,5 +1,6 @@
 import "@fontsource-variable/inter";
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import { PageScrollbar } from "@repo/design-system/components/ui/scrollbar";
 import { DrawerStage } from "@repo/design-system/components/ui/stage";
 import { ThemeProvider } from "@repo/design-system/providers/theme";
 import { textDirection } from "@repo/internationalization/src/direction";
@@ -29,8 +30,11 @@ import {
   LocalizedNotFound,
   useRouteFailure,
 } from "@/components/state/localized";
+import { ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/analytics/consent/bootstrap";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
+import { readStandaloneMessages } from "@/lib/i18n/standalone";
+import { KEPT_ACCOUNT_SCRIPT } from "@/lib/identity/prepaint";
 import { EARLY_PRESS_SCRIPT } from "@/lib/press/prepaint";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import {
@@ -63,6 +67,13 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { title: SOCIAL_SITE_NAME },
+      // The description of a document whose route names none, such as the
+      // School shell. A route's own description wins: the head keeps the deepest
+      // route's tag of each name.
+      {
+        name: "description",
+        content: readStandaloneMessages(DEFAULT_LOCALE).Document.description,
+      },
       { charSet: "utf-8" },
       {
         name: "viewport",
@@ -102,9 +113,10 @@ export const Route = createRootRoute({
  * router renders inside it. Its language and direction follow the not-found page
  * that the server answered, then the locale param of the route on screen, then
  * the language a school page renders in, and the default locale answers a path
- * without one. The pre-paint scripts set the theme, the pricing currency and the
- * signed-in hint before the first frame, so nothing changes after paint, and keep
- * a press that lands before React takes the page over. The theme is mounted here
+ * without one. The pre-paint scripts set the theme, the pricing currency, the
+ * signed-in hint and the usage-data mark before the body parses, so nothing on
+ * the document's root changes once the page is drawn, which would restyle every
+ * element, and keep a press that lands before React takes the page over. The theme is mounted here
  * once, for every route below.
  */
 function RootDocument({ children }: { children: ReactNode }) {
@@ -141,6 +153,16 @@ function RootDocument({ children }: { children: ReactNode }) {
         />
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{ __html: KEPT_ACCOUNT_SCRIPT }}
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{
+            __html: ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT,
+          }}
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: EARLY_PRESS_SCRIPT }}
         />
         <HeadContent />
@@ -159,6 +181,7 @@ function RootDocument({ children }: { children: ReactNode }) {
               <ContentPageAnchorProvider>{children}</ContentPageAnchorProvider>
             </DrawerStage>
           </MotionConfig>
+          <PageScrollbar />
         </ThemeProvider>
         <Scripts />
       </body>
