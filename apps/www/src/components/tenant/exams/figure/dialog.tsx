@@ -125,6 +125,7 @@ function GraphFields({
             id={`${id}-a`}
             inputMode="decimal"
             onChange={(event) => onChange({ a: event.target.value })}
+            placeholder="1"
             value={draft.a}
           />
         </FigureField>
@@ -133,6 +134,7 @@ function GraphFields({
             id={`${id}-b`}
             inputMode="decimal"
             onChange={(event) => onChange({ b: event.target.value })}
+            placeholder="0"
             value={draft.b}
           />
         </FigureField>
@@ -142,6 +144,7 @@ function GraphFields({
               id={`${id}-c`}
               inputMode="decimal"
               onChange={(event) => onChange({ c: event.target.value })}
+              placeholder="0"
               value={draft.c}
             />
           </FigureField>
@@ -153,6 +156,7 @@ function GraphFields({
             id={`${id}-from`}
             inputMode="decimal"
             onChange={(event) => onChange({ from: event.target.value })}
+            placeholder="-5"
             value={draft.from}
           />
         </FigureField>
@@ -161,6 +165,7 @@ function GraphFields({
             id={`${id}-to`}
             inputMode="decimal"
             onChange={(event) => onChange({ to: event.target.value })}
+            placeholder="5"
             value={draft.to}
           />
         </FigureField>
@@ -191,6 +196,7 @@ function ChartFields({
           dir="auto"
           id={`${id}-labels`}
           onChange={(event) => onChange({ categories: event.target.value })}
+          placeholder={t("figure-labels-placeholder")}
           value={draft.categories}
         />
       </FigureField>
@@ -203,6 +209,7 @@ function ChartFields({
           id={`${id}-values`}
           inputMode="decimal"
           onChange={(event) => onChange({ values: event.target.value })}
+          placeholder="70 80 90"
           value={draft.values}
         />
       </FigureField>
@@ -281,7 +288,7 @@ function FigureForm({
             {common("cancel")}
           </Button>
           <Button disabled={Option.isNone(made)} onClick={save}>
-            {common("save")}
+            {t("figure-save")}
           </Button>
         </>
       }
@@ -300,6 +307,7 @@ function FigureForm({
             dir="auto"
             id={`${id}-title`}
             onChange={(event) => change({ title: event.target.value })}
+            placeholder={t("figure-name-placeholder")}
             value={draft.title}
           />
         </FigureField>
@@ -320,6 +328,7 @@ function FigureForm({
               dir="ltr"
               id={`${id}-source`}
               onChange={(event) => change({ chart: event.target.value })}
+              placeholder="graph TD; A-->B"
               value={draft.chart}
             />
           </FigureField>
@@ -333,6 +342,7 @@ function FigureForm({
             dir="auto"
             id={`${id}-alt`}
             onChange={(event) => change({ alt: event.target.value })}
+            placeholder={t("figure-alt-placeholder")}
             value={draft.alt}
           />
         </FigureField>
