@@ -2,9 +2,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import {
-  SECTIONS_PER_DOCUMENT,
-} from "@repo/backend/confect/contents/sections/limits";
+import { SECTIONS_PER_DOCUMENT } from "@repo/backend/confect/contents/sections/limits";
 import {
   type knownInputValidator,
   type SourceRecord,

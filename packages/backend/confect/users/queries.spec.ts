@@ -1,5 +1,4 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import usersTable from "@repo/backend/confect/_generated/tables/users";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";

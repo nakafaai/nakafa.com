@@ -1,8 +1,6 @@
 import {
-  CalendarRemove01Icon,
   IdentityCardIcon,
   UserCheck01Icon,
-  UserLock01Icon,
   UserMultiple02Icon,
   UserQuestion01Icon,
 } from "@hugeicons/core-free-icons";
@@ -19,20 +17,15 @@ import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 
 /**
  * The look of each status, in the preview's status cell and in its column's filter, one icon per
- * status: the two ages of a student who imports, and the problem that keeps each other row out,
+ * status: a row that imports, and the problem that keeps each other row out,
  * which reads as a danger.
  */
 const ROSTER_STATUS_LOOKS = {
-  adult: { icon: UserCheck01Icon, tone: "success" },
-  birth: { icon: CalendarRemove01Icon, tone: "destructive" },
   cohort: { icon: UserMultiple02Icon, tone: "destructive" },
   name: { icon: UserQuestion01Icon, tone: "destructive" },
   nisn: { icon: IdentityCardIcon, tone: "destructive" },
-  under: { icon: UserLock01Icon, tone: "info" },
-} as const satisfies Record<
-  typeof RowProblem.Type | "adult" | "under",
-  StatusLook
->;
+  ready: { icon: UserCheck01Icon, tone: "success" },
+} as const satisfies Record<typeof RowProblem.Type | "ready", StatusLook>;
 
 /** The columns of the preview table. */
 const rowColumns = createColumnHelper<
@@ -40,12 +33,12 @@ const rowColumns = createColumnHelper<
   typeof ReadRow.Type
 >();
 
-/** The status of one read row: under or over the age limit, or the problem that keeps it out. */
+/** The status of one read row: ready, or the problem that keeps it out. */
 const statusOf = (row: typeof ReadRow.Type) => {
   if (row.outcome === "problem") {
     return row.problem;
   }
-  return row.outcome === "sourced" || row.row.underAgeLimit ? "under" : "adult";
+  return "ready";
 };
 
 /** The class group a read row names, or none for a row that a problem keeps out. */
@@ -130,7 +123,7 @@ export function RosterPreviewTable({
         <ColumnFilter
           column="status"
           options={Arr.map(
-            ["under", "adult", ...RowProblem.literals] as const,
+            ["ready", ...RowProblem.literals] as const,
             (status) => ({
               icon: ROSTER_STATUS_LOOKS[status].icon,
               label: t(`status-${status}`),

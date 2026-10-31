@@ -29,6 +29,7 @@ type QuestionFields = Pick<
   | "points"
   | "prompt"
   | "rubric"
+  | "scoring"
   | "template"
 >;
 
@@ -63,6 +64,7 @@ export const placeQuestion = Effect.fn("exams.question.place")(function* (
       prompt: fields.prompt,
       revision: 0,
       rubric: fields.rubric,
+      ...(fields.scoring === undefined ? {} : { scoring: fields.scoring }),
       template: fields.template,
       tenantId: exam.tenantId,
       updatedAt: at,

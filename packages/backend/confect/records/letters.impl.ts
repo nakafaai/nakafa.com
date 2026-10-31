@@ -1,16 +1,11 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import recordsInternal from "@repo/backend/confect/_generated/refs/records.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationRunner,
-  QueryRunner,
-  StorageActionWriter,
 } from "@repo/backend/confect/_generated/services";
 import type { PrintableLetter } from "@repo/backend/confect/records/letter";
-import { drawLetterPdf } from "@repo/backend/confect/records/letters/pdf";
 import spec from "@repo/backend/confect/records/letters.spec";
 import {
   openNisn,
@@ -21,9 +16,6 @@ import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { cohortAuthority } from "@repo/backend/confect/tenancy/authority";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Clock, Effect, Layer, Struct } from "effect";
-
-/** The PDF's media type. */
-const PDF_TYPE = "application/pdf";
 
 /** The issued letter a print names. Only an issue schedules a print, so another state is a defect. */
 const issuedLetter = Effect.fn("records.letters.issued")(function* (
@@ -90,26 +82,6 @@ const printable = FunctionImpl.make(
   })
 );
 
-/** Draws an issued SKL's PDF, stores it, and locks the letter with it. */
-const draw = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "draw",
-  Effect.fn("records.letters.draw")(function* ({ letterId }) {
-    const copy = yield* (yield* QueryRunner)
-      .runQuery(recordsInternal.letters.printable, { letterId })
-      .pipe(Effect.orDie);
-    const bytes = yield* drawLetterPdf(copy);
-    const storageId = yield* (yield* StorageActionWriter).store(
-      new Blob([bytes], { type: PDF_TYPE })
-    );
-    yield* (yield* MutationRunner)
-      .runMutation(recordsInternal.letters.lock, { letterId, storageId })
-      .pipe(Effect.orDie);
-    return null;
-  })
-);
-
 /**
  * Locks an issued SKL with its stored PDF, and journals the lock on its class group with the
  * letter's ID and hash, as the principal who issued it (ADR 0033, S6).
@@ -144,10 +116,9 @@ const lock = FunctionImpl.make(
   })
 );
 
-/** The drawing of issued SKL's PDFs and their lock. */
+/** The printable copy of issued SKLs and their lock. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(printable),
-  Layer.provide(draw),
   Layer.provide(lock),
   GroupImpl.finalize
 );

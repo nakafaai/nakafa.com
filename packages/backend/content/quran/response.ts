@@ -5,7 +5,6 @@ import {
 import {
   quranAppLocaleValidator,
   quranReadingSourcesValidator,
-  quranRevelationPlaceValidator,
   quranSourceFields,
   quranSurahMeaningValidator,
   quranTafsirAccessValidator,
@@ -17,7 +16,6 @@ import {
   quranBismillahValidator,
 } from "@repo/backend/content/quran/contract";
 import { Schema } from "effect";
-
 
 /** Exact signed tafsir response returned only after one verse is requested. */
 export const quranInterpretationValidator = Schema.Struct({

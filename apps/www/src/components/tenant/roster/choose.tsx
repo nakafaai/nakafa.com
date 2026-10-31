@@ -2,7 +2,7 @@ import { Upload01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { DateTime, Effect, Record as Rec, Result } from "effect";
+import { Effect, Record as Rec, Result } from "effect";
 import { useRef, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -39,7 +39,7 @@ export type FileProblem = typeof SheetProblem.Type | "unreadable";
  * first JavaScript, and the file never leaves the device: only the rows the Admin applies
  * reach the server (ADR 0015, ADR 0029).
  */
-const readFile = (file: File, today: DateTime.Utc) =>
+const readFile = (file: File) =>
   Effect.tryPromise(async () => {
     if (file.size > FILE_LIMIT) {
       return readFailure;
@@ -54,7 +54,7 @@ const readFile = (file: File, today: DateTime.Utc) =>
       return readOneRoster(bundle);
     }
     const { readSheet } = await import("read-excel-file/browser");
-    return readDapodikSheet(await readSheet(file), today);
+    return readDapodikSheet(await readSheet(file));
   });
 
 /**
@@ -75,9 +75,7 @@ export function RosterFileChoice({
 
   const choose = (file: File) =>
     startReading(async () => {
-      const read = await Effect.runPromise(
-        Effect.result(readFile(file, DateTime.nowUnsafe()))
-      );
+      const read = await Effect.runPromise(Effect.result(readFile(file)));
       if (Result.isFailure(read)) {
         onProblem("unreadable");
         return;

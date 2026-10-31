@@ -9,6 +9,7 @@ import {
   QUESTION_POINTS_MAX,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
+import { takesScoring } from "@repo/backend/confect/exams/scoring";
 import {
   Field,
   FieldGroup,
@@ -54,6 +55,7 @@ import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
 import { ExamDocument } from "@/components/tenant/exams/rich";
+import { ScoringField } from "@/components/tenant/exams/scoring";
 import { tableOf } from "@/components/tenant/exams/table";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
@@ -277,6 +279,13 @@ export function TeacherLayer({
         points={question.points}
         questionId={question.id}
       />
+      {takesScoring(shown.template) ? (
+        <ScoringField
+          editable={editable}
+          kind={question.scoring.kind}
+          questionId={question.id}
+        />
+      ) : null}
       {shown.template === "short" ? (
         <AcceptedAnswers
           accepted={acceptedOf(shown.key)}
