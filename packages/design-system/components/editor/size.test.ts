@@ -44,6 +44,20 @@ describe("stepSizeGuard", () => {
     expect(next.doc.textContent).toBe("a");
   });
 
+  it("tells the writer of a paste it refuses, and of no other edit", () => {
+    const refused = vi.fn<() => void>();
+    const { schema, stateOf } = openEditor(stepSizeGuard(MAX_BYTES, refused));
+    const state = stateOf(
+      schema.node("doc", null, [
+        schema.node("paragraph", null, [schema.text("a")]),
+      ])
+    );
+    state.apply(state.tr.insertText("x".repeat(300), 1));
+    expect(refused).not.toHaveBeenCalled();
+    state.apply(state.tr.insertText("x".repeat(300), 1).setMeta("paste", true));
+    expect(refused).toHaveBeenCalledOnce();
+  });
+
   it("applies an edit whose step is within the bound", () => {
     const { schema, stateOf } = openEditor(stepSizeGuard(MAX_BYTES));
     const state = stateOf(
@@ -81,6 +95,20 @@ describe("documentSizeGuard", () => {
     const next = state.apply(state.tr.insertText("x".repeat(300), 1));
     expect(next).toBe(state);
     expect(next.doc.textContent).toBe("a");
+  });
+
+  it("tells the writer of a paste that would grow the document past the bound", () => {
+    const refused = vi.fn<() => void>();
+    const { schema, stateOf } = openEditor(
+      documentSizeGuard(MAX_BYTES, refused)
+    );
+    const state = stateOf(
+      schema.node("doc", null, [
+        schema.node("paragraph", null, [schema.text("a")]),
+      ])
+    );
+    state.apply(state.tr.insertText("x".repeat(300), 1).setMeta("paste", true));
+    expect(refused).toHaveBeenCalledOnce();
   });
 
   it("applies an edit that keeps the document within the bound", () => {

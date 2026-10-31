@@ -1,5 +1,8 @@
 import { KeyboardIcon } from "@hugeicons/core-free-icons";
-import { ArabicKeypad } from "@repo/design-system/components/ui/arabic";
+import {
+  ArabicKeypad,
+  ArabicNumberPad,
+} from "@repo/design-system/components/ui/arabic";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { InputGroupButton } from "@repo/design-system/components/ui/input-group";
 import {
@@ -14,19 +17,30 @@ import { usePaperLocked } from "@/components/exams/sitting/lock";
 
 /**
  * The control beside a short answer's or an essay's field that opens the Arabic keypad, so a student
- * without an Arabic keyboard writes an Arabic answer with its harakat, as a teacher does in the editor. A
+ * without an Arabic keyboard writes an Arabic answer with its harakat, as a teacher does in the editor, and
+ * beside a numeric answer's field that opens the Arabic-Indic digits, which the server reads as one number. A
  * key types at the field's caret through `typeIntoField`, which the field reads as the student's typing,
  * and the field keeps its focus. The keypad stays open while the student moves the caret in the field, and
  * closes from its control, Escape, or a press elsewhere.
  */
 export function SittingKeypad({
   field,
+  keys,
 }: {
   readonly field: RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
+  /** The keys it opens: the Arabic letters with their harakat, or the Arabic-Indic digits of a number. */
+  readonly keys: "digits" | "letters";
 }) {
   const t = useTranslations("Editor");
   const disabled = usePaperLocked();
   const [open, setOpen] = useState(false);
+
+  /** Types one key at the field's caret, as the student's own typing. */
+  const typeKey = (text: string) => {
+    if (field.current !== null) {
+      typeIntoField(field.current, text);
+    }
+  };
 
   return (
     <Popover
@@ -44,7 +58,7 @@ export function SittingKeypad({
       <PopoverTrigger
         render={
           <InputGroupButton
-            aria-label={t("arabic")}
+            aria-label={t(keys === "digits" ? "arabic-digits" : "arabic")}
             aria-pressed={open}
             className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
             disabled={disabled}
@@ -61,13 +75,11 @@ export function SittingKeypad({
         finalFocus={false}
         initialFocus={false}
       >
-        <ArabicKeypad
-          onKey={(text) => {
-            if (field.current !== null) {
-              typeIntoField(field.current, text);
-            }
-          }}
-        />
+        {keys === "digits" ? (
+          <ArabicNumberPad onKey={typeKey} />
+        ) : (
+          <ArabicKeypad onKey={typeKey} />
+        )}
       </PopoverContent>
     </Popover>
   );

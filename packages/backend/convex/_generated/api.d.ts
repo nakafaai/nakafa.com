@@ -4410,6 +4410,7 @@ export declare const api: {
               | "truefalse"
               | "cause"
               | "short"
+              | "numeric"
               | "essay"
               | "match"
               | "table";
@@ -4767,6 +4768,7 @@ export declare const api: {
             | "truefalse"
             | "cause"
             | "short"
+            | "numeric"
             | "essay"
             | "match"
             | "table";
@@ -5254,6 +5256,7 @@ export declare const api: {
             | "truefalse"
             | "cause"
             | "short"
+            | "numeric"
             | "essay"
             | "match"
             | "table";
@@ -5506,6 +5509,7 @@ export declare const api: {
             | "truefalse"
             | "cause"
             | "short"
+            | "numeric"
             | "essay"
             | "match"
             | "table";
@@ -5774,6 +5778,7 @@ export declare const api: {
             | "truefalse"
             | "cause"
             | "short"
+            | "numeric"
             | "essay"
             | "match"
             | "table";
@@ -5800,6 +5805,7 @@ export declare const api: {
             | "truefalse"
             | "cause"
             | "short"
+            | "numeric"
             | "essay"
             | "match"
             | "table";
@@ -6047,6 +6053,7 @@ export declare const api: {
             | "truefalse"
             | "cause"
             | "short"
+            | "numeric"
             | "essay"
             | "match"
             | "table";
@@ -15958,6 +15965,7 @@ export declare const internal: {
           essay?: boolean;
           prose?: boolean;
           slug: string;
+          templates?: boolean;
           upcoming?: boolean;
         },
         {
@@ -17432,6 +17440,12 @@ export declare const internal: {
       >;
     };
     seed: {
+      expired: FunctionReference<
+        "mutation",
+        "internal",
+        { email: string; slug: string },
+        null
+      >;
       student: FunctionReference<
         "mutation",
         "internal",

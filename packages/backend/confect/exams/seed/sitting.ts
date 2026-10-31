@@ -16,8 +16,6 @@ import {
 import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
 import { activeOwners, assignRole } from "@repo/backend/confect/access/grant";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
-import { createDocument } from "@repo/backend/confect/editor/create";
-import { storedDocument } from "@repo/backend/confect/editor/document";
 import {
   choiceAnswers,
   encodeAnswers,
@@ -28,17 +26,17 @@ import {
   textLabel,
 } from "@repo/backend/confect/exams/question";
 import {
-  createEmptyDocument,
-  placeQuestion,
-} from "@repo/backend/confect/exams/questions/place";
+  placeSeeded,
+  type SeededExam,
+} from "@repo/backend/confect/exams/seed/place";
 import {
   PROSE_PROMPT,
   paragraphsDocument,
 } from "@repo/backend/confect/exams/seed/prompt";
+import { seedTemplates } from "@repo/backend/confect/exams/seed/templates";
 import { openSitting } from "@repo/backend/confect/exams/sittings/closing";
 import { createSitting } from "@repo/backend/confect/exams/sittings/schedule";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
-import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Clock, Effect } from "effect";
 
 /** The title of the seeded exam. */
@@ -140,74 +138,53 @@ export const ownerUserId = Effect.fn("exams.seed.owner")(function* (
 });
 
 /**
- * Places one seeded question after `after`: the prompt document it is given, empty rubric and
- * explanation documents, and one choice of four written options whose first is the correct
- * answer. It returns the question's ID.
+ * Places one seeded question after `after`: the prompt document it is given, and one choice of four
+ * written options whose first is the correct answer. It returns the question's ID.
  */
 export const seedQuestion = Effect.fn("exams.seed.question")(function* (
-  exam: Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">,
+  exam: SeededExam,
   after: ExamQuestionsDoc["_id"] | null,
-  document: Parameters<typeof encodeJsonText>[0]
+  document: Parameters<typeof placeSeeded>[2]
 ) {
-  const prompt = yield* createDocument({
-    scope: exam.scope,
-    tenantId: exam.tenantId,
-    text: yield* storedDocument(encodeJsonText(document)).pipe(Effect.orDie),
-  }).pipe(Effect.orDie);
-  const rubric = yield* createEmptyDocument(exam).pipe(Effect.orDie);
-  const explanation = yield* createEmptyDocument(exam).pipe(Effect.orDie);
-  const answers = yield* encodeAnswers(
-    choiceAnswers(Arr.map(OPTION_TEXTS, textLabel))
-  );
-  const key = yield* encodeKey(FIRST_OPTION_KEY);
-  return yield* placeQuestion(exam, after, {
-    answers,
-    explanation,
-    key,
+  return yield* placeSeeded(exam, after, document, {
+    answers: yield* encodeAnswers(
+      choiceAnswers(Arr.map(OPTION_TEXTS, textLabel))
+    ),
+    key: yield* encodeKey(FIRST_OPTION_KEY),
     points: NEW_QUESTION_POINTS,
-    prompt,
-    rubric,
     template: NEW_QUESTION_TEMPLATE,
-  }).pipe(Effect.orDie);
+  });
 });
 
 /** The points of the seeded essay, more than one so that a grade between none and all is partial. */
 const ESSAY_POINTS = 4;
 
 /**
- * Places the seeded essay after `after`: a prompt of one paragraph, empty rubric and explanation
- * documents, and one long text with no key, which the teacher grades by the rubric.
+ * Places the seeded essay after `after`: a prompt of one paragraph, and one long text with no key, which the
+ * teacher grades by the rubric.
  */
 const seedEssay = Effect.fn("exams.seed.essay")(function* (
-  exam: Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">,
+  exam: SeededExam,
   after: ExamQuestionsDoc["_id"]
 ) {
-  const prompt = yield* createDocument({
-    scope: exam.scope,
-    tenantId: exam.tenantId,
-    text: yield* storedDocument(
-      encodeJsonText(
-        paragraphsDocument(["Jelaskan proses fotosintesis dengan singkat."])
-      )
-    ).pipe(Effect.orDie),
-  }).pipe(Effect.orDie);
-  const rubric = yield* createEmptyDocument(exam).pipe(Effect.orDie);
-  const explanation = yield* createEmptyDocument(exam).pipe(Effect.orDie);
-  return yield* placeQuestion(exam, after, {
-    answers: yield* encodeAnswers(essayAnswers()),
-    explanation,
-    key: null,
-    points: ESSAY_POINTS,
-    prompt,
-    rubric,
-    template: "essay",
-  }).pipe(Effect.orDie);
+  return yield* placeSeeded(
+    exam,
+    after,
+    paragraphsDocument(["Jelaskan proses fotosintesis dengan singkat."]),
+    {
+      answers: yield* encodeAnswers(essayAnswers()),
+      key: null,
+      points: ESSAY_POINTS,
+      template: "essay",
+    }
+  );
 });
 
 /**
  * Gives the learner who holds the address a student grant in the school's first active unit,
- * then creates a keyed exam with two choice questions, an essay when `essay` asks for one, and the
- * prose question when `prose` asks for it, last (`PROSE_PROMPT`), and a
+ * then creates a keyed exam with two choice questions, a question of every other template when
+ * `templates` asks for them, an essay when `essay` or `templates` asks for one, the prose question
+ * when `prose` asks for it, last (`PROSE_PROMPT`), and a
  * sitting of it that opens now and closes an hour later. The learner must already be a member of the school, because a claim
  * happens when the account signs in. The journal records the schedule as the system (ADR 0013).
  */
@@ -217,6 +194,7 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
   readonly essay?: boolean;
   readonly prose?: boolean;
   readonly slug: string;
+  readonly templates?: boolean;
   readonly upcoming?: boolean;
 }) {
   yield* requireAcceptanceSeed();
@@ -268,9 +246,9 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
     first,
     paragraphsDocument(MIXED_PARAGRAPHS)
   );
-  const essay =
-    args.essay === true
-      ? yield* seedEssay(
+  const written =
+    args.templates === true
+      ? yield* seedTemplates(
           {
             _id: examId,
             questions: [first, second],
@@ -279,13 +257,18 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
           },
           second
         )
-      : null;
-  const placed: Arr.NonEmptyReadonlyArray<ExamQuestionsDoc["_id"]> =
-    essay === null ? [first, second] : [first, second, essay];
+      : second;
+  const lastWritten =
+    args.essay === true || args.templates === true
+      ? yield* seedEssay(
+          yield* reader.table("exams").get(examId).pipe(Effect.orDie),
+          written
+        )
+      : written;
   if (args.prose === true) {
     yield* seedQuestion(
-      { _id: examId, questions: placed, scope, tenantId: tenant._id },
-      Arr.lastNonEmpty(placed),
+      yield* reader.table("exams").get(examId).pipe(Effect.orDie),
+      lastWritten,
       PROSE_PROMPT
     );
   }

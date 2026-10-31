@@ -3,7 +3,10 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { MutableList } from "effect";
 import type { PendingPicture } from "@/components/tenant/exams/editing";
-import { queuePictureFile } from "@/components/tenant/exams/picture";
+import {
+  queuePictureFile,
+  refusePaste,
+} from "@/components/tenant/exams/picture";
 
 vi.mock("@repo/design-system/lib/toast/notify", () => ({
   toast: { error: vi.fn() },
@@ -61,6 +64,17 @@ describe("queuePictureFile", () => {
     expect(toast.error).toHaveBeenLastCalledWith({
       description: "image-refused-size.description",
       title: "image-refused-size.title",
+    });
+  });
+});
+
+describe("refusePaste", () => {
+  it("tells the teacher why the pasted text did not land", () => {
+    refusePaste();
+
+    expect(toast.error).toHaveBeenLastCalledWith({
+      description: "paste-refused.description",
+      title: "paste-refused.title",
     });
   });
 });

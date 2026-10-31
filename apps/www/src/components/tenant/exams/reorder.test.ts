@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
   dropIndex,
+  edgeScroll,
   type PageBox,
   placeOf,
   siblingShift,
@@ -34,6 +35,26 @@ describe("dropIndex", () => {
 
   it("keeps the page where it is when the page is not on the canvas", () => {
     expect(dropIndex(pages, 5, 300)).toBe(5);
+  });
+});
+
+describe("edgeScroll", () => {
+  it("leaves the canvas where it is while the pointer stands between its ends", () => {
+    expect(edgeScroll(400, 100, 700)).toBe(0);
+    expect(edgeScroll(172, 100, 700)).toBe(0);
+    expect(edgeScroll(628, 100, 700)).toBe(0);
+  });
+
+  it("scrolls up near the top and down near the bottom, faster the deeper the pointer goes", () => {
+    expect(edgeScroll(136, 100, 700)).toBe(-12);
+    expect(edgeScroll(100, 100, 700)).toBe(-24);
+    expect(edgeScroll(664, 100, 700)).toBe(12);
+    expect(edgeScroll(700, 100, 700)).toBe(24);
+  });
+
+  it("holds its top speed with the pointer past the canvas", () => {
+    expect(edgeScroll(20, 100, 700)).toBe(-24);
+    expect(edgeScroll(880, 100, 700)).toBe(24);
   });
 });
 

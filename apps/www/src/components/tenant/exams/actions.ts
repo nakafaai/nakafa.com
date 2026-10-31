@@ -97,7 +97,10 @@ export function useQuestionActions() {
     );
   };
 
-  /** Adds an empty question right after `after`, or at the end when `after` is none. */
+  /**
+   * Adds an empty question right after `after`, or at the end when `after` is none, and hands its prompt the
+   * caret once it opens, so the teacher writes on at once.
+   */
   const addQuestion = (after: QuestionId | null) =>
     act(
       placeholderDraft({
@@ -116,6 +119,9 @@ export function useQuestionActions() {
               })
             )
           )
+        ),
+        Effect.tap((saved) =>
+          Effect.sync(() => selection.getState().write(saved.id))
         )
       )
     );

@@ -33,7 +33,7 @@ const openState = () =>
     doc: assessmentSchema.node("doc", null, [
       assessmentSchema.node("paragraph"),
     ]),
-    plugins: [stepSizePlugin(MAX_STEP_BYTES)],
+    plugins: [stepSizePlugin(MAX_STEP_BYTES, () => undefined)],
   });
 
 /** The UTF-8 bytes of one step as its JSON text, which the editor's bound counts. */

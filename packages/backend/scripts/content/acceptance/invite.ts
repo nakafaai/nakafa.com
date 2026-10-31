@@ -88,10 +88,18 @@ export const waitForInboxRow = Effect.fn("contentAcceptance.inboxRow")(
  * the school for its Owner. The command waits until the inbox holds the row, and
  * then writes the learner's session cookie to `output`, mode 600, for a browser
  * test to send. An address that already holds an account signs that account in
- * again, so a learner invited to a second school keeps one inbox.
+ * again, so a learner invited to a second school keeps one inbox. An `expired`
+ * invite ends before the account signs in, as its term ending does, so the claim
+ * joins no school, and no inbox row is waited for.
  */
 export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
-  function* (root: string, slug: string, address: string, output: string) {
+  function* (
+    root: string,
+    slug: string,
+    address: string,
+    output: string,
+    expired = false
+  ) {
     const runtime = yield* readLocalRuntime(root);
     if (runtime === undefined) {
       return yield* acceptanceRuntimeError(
@@ -114,6 +122,13 @@ export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
       ),
       Effect.flatMap(Schema.decodeEffect(InvitedPerson))
     );
+    if (expired) {
+      yield* encodeArguments({ email: address, slug }).pipe(
+        Effect.flatMap((args) =>
+          run("invite expiry", ["run", "tenancy/seed:expired", args])
+        )
+      );
+    }
     const account = yield* openLearnerAccount(run, SESSION_LIFETIME, address);
     const users = yield* run("app users", [
       "data",
@@ -137,23 +152,30 @@ export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
         run("learner claim", ["run", "tenancy/claims:run", args])
       )
     );
-    yield* waitForInboxRow(run, invited.person, ROW_WAIT);
+    if (!expired) {
+      yield* waitForInboxRow(run, invited.person, ROW_WAIT);
+    }
     yield* writeSessionCookie(output, account.token);
   }
 );
 
-/** The usage of the invite mode: the school, the learner's address, then the file for the session cookie. */
-const USAGE = "invite <school-slug> <learner-address> <cookie-file>";
+/**
+ * The usage of the invite mode: the school, the learner's address, the file for the session cookie, then
+ * `expired` for an invite whose term has ended.
+ */
+const USAGE = "invite <school-slug> <learner-address> <cookie-file> [expired]";
 const InviteArguments = Schema.Tuple([
   Schema.String,
   Schema.String,
   Schema.String,
+  Schema.optionalKey(Schema.Literal("expired")),
 ]);
 
 /**
  * The invite mode of the acceptance command line: invites the learner at the
  * address into the school that the command names, signs the learner in, and writes
- * the learner's session cookie to the file that the command names.
+ * the learner's session cookie to the file that the command names. `expired` ends
+ * the invite first, so the learner signs in as no member of the school.
  */
 export const inviteMode = {
   mode: "invite",
@@ -162,11 +184,17 @@ export const inviteMode = {
     root: string,
     args: readonly string[]
   ) {
-    const [slug, address, output] = yield* decodeModeArguments(
+    const [slug, address, output, state] = yield* decodeModeArguments(
       USAGE,
       InviteArguments,
       args
     );
-    return yield* createAcceptanceInvite(root, slug, address, output);
+    return yield* createAcceptanceInvite(
+      root,
+      slug,
+      address,
+      output,
+      state === "expired"
+    );
   }),
 } satisfies AcceptanceMode;

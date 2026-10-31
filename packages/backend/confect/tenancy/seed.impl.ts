@@ -9,9 +9,13 @@ import { assignRole } from "@repo/backend/confect/access/grant";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { TenantNotFound } from "@repo/backend/confect/tenancy/errors";
-import { writeInvite } from "@repo/backend/confect/tenancy/invite";
+import {
+  ADDRESS_INVITE_LIMIT,
+  expireInvite,
+  writeInvite,
+} from "@repo/backend/confect/tenancy/invite";
 import spec from "@repo/backend/confect/tenancy/seed.spec";
-import { Effect, Layer, Option } from "effect";
+import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /**
  * Seeds one Teacher of an open school for an acceptance run, as `open` seeds its
@@ -118,8 +122,55 @@ const student = FunctionImpl.make(
   })
 );
 
+/**
+ * Ends the pending invite of the address to the school as its term ending does, the way the
+ * sweep expires it (`expireInvite`), so an acceptance run meets an expired invite without
+ * waiting the term out. A school that holds no pending invite for the address ends the seed
+ * with a defect that names it.
+ */
+const expired = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "expired",
+  Effect.fn("tenancy.seed.expired")(function* ({ email, slug }) {
+    yield* requireAcceptanceSeed();
+    const reader = yield* DatabaseReader;
+    const tenant = yield* reader
+      .table("tenants")
+      .index("by_slug", (query) => query.eq("slug", slug))
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isNone(tenant)) {
+      return yield* new TenantNotFound();
+    }
+    const invites = yield* reader
+      .table("tenantInvites")
+      .index("by_tenantId_and_channel_email", (query) =>
+        query.eq("tenantId", tenant.value._id).eq("channel.email", email)
+      )
+      .take(ADDRESS_INVITE_LIMIT)
+      .pipe(Effect.orDie);
+    const pending = Arr.findFirst(
+      invites,
+      (invite) => invite.state.status === "pending"
+    );
+    if (Option.isNone(pending)) {
+      return yield* Effect.die(
+        "The school holds no pending invite for this address."
+      );
+    }
+    const person = yield* reader
+      .table("tenantPeople")
+      .get(pending.value.personId)
+      .pipe(Effect.orDie);
+    yield* expireInvite(pending.value, person);
+    return null;
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(teacher),
   Layer.provide(student),
+  Layer.provide(expired),
   GroupImpl.finalize
 );

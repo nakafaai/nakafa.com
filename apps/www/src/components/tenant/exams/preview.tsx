@@ -27,6 +27,7 @@ import {
   type OptionLabel,
 } from "@/components/tenant/exams/answer";
 import { matchOf } from "@/components/tenant/exams/match";
+import { numberEntryOf } from "@/components/tenant/exams/number";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
@@ -38,6 +39,7 @@ import {
   ControlRoom,
   OptionAddRoom,
   PaperLine,
+  PaperNumber,
   PaperOption,
   PaperOptions,
   PaperTable,
@@ -367,6 +369,10 @@ export function PaperSketch({
         ),
       })}
       {Option.isSome(entryOf(question.answers)) ? <PaperLine /> : null}
+      {Option.match(numberEntryOf(question.answers), {
+        onNone: () => null,
+        onSome: (entry) => <PaperNumber unit={entry.unit} />,
+      })}
       {question.template === "essay" ? <PaperLine essay /> : null}
       {addsOption ? <OptionAddRoom /> : null}
     </>

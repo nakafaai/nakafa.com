@@ -248,6 +248,24 @@ describe("billing/pro", () => {
       })
   );
 
+  it.effect(
+    "sends a rupiah monthly plan to Polar while the switch names passes",
+    () =>
+      Effect.gen(function* () {
+        const { authed } = yield* setup();
+        vi.stubEnv("BILLING_INDONESIA_RAIL", "passes");
+        vi.stubEnv("XENDIT_API_KEY", "test-secret");
+        yield* Effect.promise(() =>
+          authed.action(route.generateCheckoutLink, {
+            ...request,
+            currency: "IDR",
+            offer: "pro.monthly",
+          })
+        );
+        expect(polarGateway.createCheckoutSession).toHaveBeenCalledOnce();
+      }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
+  );
+
   it.effect("preserves the public checkout failure contract", () =>
     Effect.gen(function* () {
       const { authed } = yield* setup();

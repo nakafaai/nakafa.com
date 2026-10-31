@@ -1,4 +1,10 @@
 import { Input } from "@repo/design-system/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@repo/design-system/components/ui/input-group";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
@@ -13,9 +19,11 @@ const ESSAY_ROWS = 6;
 /**
  * The frame of a paper: a page in the shape of the thumbnails, which a longer question makes taller,
  * with its content from the top. The chosen page is outlined, as a design tool outlines the page in hand.
+ * A flex column, since Safari keeps a grid's rows at the height the aspect ratio gave them, so a growing
+ * prompt would run over the options below it.
  */
 const questionPaper = cva(
-  "bg-background grid aspect-4/3 w-full min-w-0 content-start gap-6 rounded-xl p-6 shadow-sm md:p-10",
+  "bg-background flex aspect-4/3 w-full min-w-0 flex-col gap-6 rounded-xl p-6 shadow-sm md:p-10",
   {
     defaultVariants: { selected: false },
     variants: {
@@ -123,6 +131,29 @@ export function PaperLine({ essay = false }: { essay?: boolean }) {
 }
 
 /**
+ * The line a numeric answer leaves on a paper: one field the student types a number in, with the unit beside it
+ * when the teacher gave one, as the student's paper draws it. It takes no typing in the editor.
+ */
+export function PaperNumber({ unit }: { unit: string | undefined }) {
+  const t = useTranslations("Exams");
+  return (
+    <InputGroup data-disabled>
+      <InputGroupInput
+        aria-label={t("number-line")}
+        disabled
+        inputMode="decimal"
+        placeholder={t("number-placeholder")}
+      />
+      {unit === undefined ? null : (
+        <InputGroupAddon align="inline-end">
+          <InputGroupText>{unit}</InputGroupText>
+        </InputGroupAddon>
+      )}
+    </InputGroup>
+  );
+}
+
+/**
  * A true or false table on a paper, as the student's player draws it: one bordered grid, a numbers column, the
  * statements, then a column for each choice. The live editor and the drawing without editors both build on it, so a
  * page keeps its size when its editors mount. A choice column is at least 6rem wide, and on a narrow paper the choice
@@ -187,7 +218,7 @@ export function PaperTableHeader({
 /** The number at the start of a statement's row. */
 export function PaperTableNumber({ number }: { number: number }) {
   return (
-    <span className="flex items-start border-t py-3 pl-4 font-medium tabular-nums">
+    <span className="flex items-start border-t py-3.5 pl-4 font-medium tabular-nums">
       {number}.
     </span>
   );
