@@ -18,6 +18,7 @@ import { useRouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
+import { loadEntryForm } from "@/components/tenant/forms";
 import { TenantMissing } from "@/components/tenant/missing";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -126,6 +127,7 @@ export const Route = createFileRoute("/school/$slug")({
     matches,
     params,
     routeId,
+    search,
   }): Promise<SchoolContext> => {
     const { visit } = context;
     const invalid = Arr.some(
@@ -139,6 +141,19 @@ export const Route = createFileRoute("/school/$slug")({
     visit.frame = frame;
     if (frame.school._tag === "Refused") {
       throw notFound();
+    }
+    // A visitor's entry paints with its form, and so does the username form that an outsider's card
+    // way opens while its account signs out; an outsider never sees the parent's form.
+    if (frame.school._tag === "Visitor" || frame.school._tag === "Outsider") {
+      await loadEntryForm({
+        guardian:
+          frame.school._tag === "Visitor" &&
+          Arr.some(
+            matches,
+            (match) => match.routeId === "/school/$slug/parents"
+          ),
+        signIn: search["sign-in"],
+      });
     }
     return { legal: frame.legal, school: frame.school, slug: params.slug };
   },
