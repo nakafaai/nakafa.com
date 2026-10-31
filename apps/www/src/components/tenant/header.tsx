@@ -1,8 +1,8 @@
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
 } from "@repo/design-system/components/ui/breadcrumb";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
@@ -11,6 +11,7 @@ import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
+import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
@@ -104,7 +105,15 @@ function SchoolPath({
       <Breadcrumb aria-label={tCommon("breadcrumb")} className="min-w-0">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbPage>{tCommon("home")}</BreadcrumbPage>
+            <BreadcrumbLink
+              aria-current="page"
+              className="text-foreground"
+              render={
+                <BreadcrumbAnchor target={schoolHomeTarget(slug)}>
+                  {tCommon("home")}
+                </BreadcrumbAnchor>
+              }
+            />
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
