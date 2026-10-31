@@ -10,7 +10,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import { DateTime, Result, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import {
   deferStaticPageScripts,
@@ -26,10 +26,6 @@ import {
   readWwwHeaderOrigins,
   renderHeadersFile,
 } from "#www/src/lib/security/headers";
-import {
-  renderSecurityTxt,
-  SECURITY_TXT_PATH,
-} from "#www/src/lib/security/txt";
 import { renderRobotsTxt } from "#www/src/lib/seo/robots";
 import { PRERENDER_HEADER } from "#www/src/lib/static/calls";
 import { STATIC_HEADER_RULES } from "#www/src/lib/static/headers";
@@ -160,25 +156,6 @@ const writeRobotsFile: Plugin = {
       ),
   },
   name: "www:write-robots-file",
-};
-
-/** Writes security.txt into the client output, renewed by every build. */
-const writeSecurityFile: Plugin = {
-  apply: "build",
-  buildApp: {
-    order: "post",
-    handler: (builder) =>
-      Promise.resolve(
-        writeFileSync(
-          join(
-            builder.environments.client.config.build.outDir,
-            SECURITY_TXT_PATH
-          ),
-          renderSecurityTxt(DateTime.nowUnsafe())
-        )
-      ),
-  },
-  name: "www:write-security-file",
 };
 
 /**
@@ -536,7 +513,6 @@ export default defineConfig(async ({ command, isPreview }) => {
       writeHeadersFile,
       readPreviewHeaders,
       writeRobotsFile,
-      writeSecurityFile,
       serveRobotsFile,
       writeStaticArtifacts,
       writeStaticAnswers(prerenderedPages),

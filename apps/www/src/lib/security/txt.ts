@@ -2,8 +2,8 @@ import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, DateTime } from "effect";
 
-/** Where security.txt lives, which RFC 9116 fixes. */
-export const SECURITY_TXT_PATH = "/.well-known/security.txt";
+/** Where security.txt lives in the build's output, which RFC 9116 fixes. */
+export const SECURITY_TXT_PATH = ".well-known/security.txt";
 
 /** How long a security.txt stays valid. RFC 9116 asks for less than a year, and every build renews it. */
 const VALID_DAYS = 360;

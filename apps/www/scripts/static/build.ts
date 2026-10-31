@@ -5,6 +5,7 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
   Array as Arr,
   Clock,
+  DateTime,
   Effect,
   FileSystem,
   Option,
@@ -15,6 +16,7 @@ import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 import { readTwinTitle } from "@/lib/llms/format";
 import { buildRootLlmsIndexText } from "@/lib/llms/index/public";
 import { readOgCopy } from "@/lib/og/copy.server";
+import { renderSecurityTxt, SECURITY_TXT_PATH } from "@/lib/security/txt";
 import { staticPagePath } from "@/lib/routing/prerendered";
 import {
   readSubjectMap,
@@ -158,10 +160,12 @@ const readTextArtifacts = Effect.fn("www.static.textArtifacts")(function* (
   );
   const rss = yield* readRssText();
   const manifest = yield* readManifestText();
+  const now = yield* DateTime.now;
   const rest: readonly TextArtifact[] = [
     { path: "rss.xml", text: rss },
     { path: "llms.txt", text: buildLlmsText(twins) },
     { path: "manifest.webmanifest", text: manifest },
+    { path: SECURITY_TXT_PATH, text: renderSecurityTxt(now) },
   ];
   return [...sitemap, ...subjects, ...rest];
 });
