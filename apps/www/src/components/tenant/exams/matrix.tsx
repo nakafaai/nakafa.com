@@ -1,6 +1,10 @@
 import { ListPlusIcon } from "@hugeicons/core-free-icons";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import {
+  letterScript,
+  optionLetter,
+} from "@repo/backend/confect/exams/letters";
+import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
 } from "@repo/backend/confect/exams/question";
@@ -8,10 +12,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
-import {
-  type OptionLabel,
-  optionLetter,
-} from "@/components/tenant/exams/answer";
+import type { OptionLabel } from "@/components/tenant/exams/answer";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
@@ -127,7 +128,15 @@ export function TableSheet({
                 removeName=""
               >
                 <ExamDocument
-                  label={t("column-of", { name: optionLetter(index), number })}
+                  label={t("column-of", {
+                    name: optionLetter(
+                      index,
+                      letterScript(
+                        Arr.map(table.columns, (column) => column.label)
+                      )
+                    ),
+                    number,
+                  })}
                   placeholder={t("column-placeholder")}
                   size="line"
                 />

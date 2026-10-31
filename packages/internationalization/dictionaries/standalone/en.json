@@ -12,5 +12,8 @@
   },
   "State": {
     "home-button": "Go home"
+  },
+  "Document": {
+    "description": "Free lessons, practice questions and exam preparation on Nakafa, from primary school to university."
   }
 }

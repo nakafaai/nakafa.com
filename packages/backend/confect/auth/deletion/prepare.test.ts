@@ -54,11 +54,13 @@ describe("auth/deletion/prepare", () => {
     expect(state.user).not.toHaveProperty("deletionPreparedAt");
   });
   it("prepares an account in one call and quiesces its writes", async () => {
+    // The clock stands at NOW before the seed: convex-test runs each mutation
+    // after the commits before it, so a clock moved back after a seed is not read.
+    vi.setSystemTime(NOW);
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation((ctx) =>
       seedDeletionUser(ctx, "prepared-owner")
     );
-    vi.setSystemTime(NOW);
     const outcome = await t.mutation((ctx) =>
       Effect.runPromise(prepareInTest(ctx, "prepared-owner"))
     );
@@ -79,6 +81,7 @@ describe("auth/deletion/prepare", () => {
     });
   });
   it("refreshes one preparation without duplicating it", async () => {
+    vi.setSystemTime(NOW - 60_000);
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => seedDeletionUser(ctx, "retry-owner"));
     for (const now of [NOW, NOW + 1000]) {

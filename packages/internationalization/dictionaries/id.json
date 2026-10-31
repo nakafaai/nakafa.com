@@ -192,6 +192,7 @@
     "state-submitted": "Terkumpul",
     "signals": "Kejadian",
     "signals-empty": "Belum ada kejadian yang tercatat.",
+    "signals-offline-note": "Koneksi yang terputus tampil di sini, beserta lamanya, setelah siswa kembali daring.",
     "signal-exit": "Keluar dari ujian",
     "signal-return": "Kembali ke ujian",
     "screen-title": "Layar siswa",
@@ -209,6 +210,8 @@
     "signal-copy": "Menyalin teks",
     "signal-paste": "Menempel teks",
     "signal-disconnect": "Koneksi terputus",
+    "signal-offline-seconds": "Kehilangan koneksi selama {seconds} detik",
+    "signal-offline-minutes": "Kehilangan koneksi selama {minutes} menit {seconds} detik",
     "signal-secondTab": "Membuka tab kedua",
     "reason": "Alasan",
     "reason-power-outage": "Listrik padam",
@@ -416,6 +419,8 @@
     "student-scheduled-footer": "Kolom token terbuka bersama sesi.",
     "student-back-home": "Kembali ke beranda",
     "seat-last-activity": "Aktivitas terakhir {time}.",
+    "seat-away-seconds": "Keluar selama {seconds} detik.",
+    "seat-away-minutes": "Keluar selama {minutes} menit {seconds} detik.",
     "title-needed": "Ujian perlu judul sebelum dapat dibuat.",
     "title-too-long": "Judul paling banyak {count} karakter.",
     "no-unit-description": "Setiap ujian berada di dalam unit, jadi tambahkan atau pulihkan unit di pengaturan dulu.",
@@ -642,9 +647,8 @@
     "cohort-status": "Status",
     "cohort-active": "Aktif",
     "cohort-archived": "Diarsipkan",
-    "cohort-rename": "Ganti nama",
-    "cohort-rename-description": "Siswa, guru, dan nilai di kelas ini tetap sama.",
-    "cohort-rename-save": "Simpan",
+    "cohort-edit-description": "Siswa, guru, dan nilai di kelas ini tetap sama.",
+    "cohort-edit-save": "Simpan",
     "cohort-archive": "Arsipkan",
     "cohort-add-footer": "Rombel baru langsung aktif.",
     "cohorts-empty": "Belum ada rombel.",
@@ -754,7 +758,10 @@
         "created": "Rombel ditambahkan",
         "renamed": "Rombel diganti nama",
         "archived": "Rombel diarsipkan",
-        "restored": "Rombel dipulihkan"
+        "restored": "Rombel dipulihkan",
+        "grade": {
+          "set": "Tingkat rombel diubah"
+        }
       },
       "connection": {
         "connected": "Koneksi ditambahkan",
@@ -855,6 +862,12 @@
         },
         "npsn": {
           "set": "NPSN diubah"
+        },
+        "name": {
+          "set": "Unit diganti nama"
+        },
+        "level": {
+          "set": "Jenjang unit diubah"
         }
       },
       "visit": {
@@ -876,6 +889,9 @@
       "roster": {
         "set": "Data siswa diperbarui",
         "imported": "Siswa diimpor dari Dapodik"
+      },
+      "login": {
+        "renamed": "Nama login diubah"
       }
     },
     "role-description": {
@@ -920,6 +936,12 @@
     "member-remove-title": "Keluarkan anggota ini?",
     "member-remove-description": "Orang ini keluar dari sekolah, dan perannya berakhir.",
     "member-remove-confirm": "Keluarkan",
+    "person-rename": "Ganti nama",
+    "person-rename-description": "Nama baru tampil di setiap daftar sekolah yang memuat orang ini.",
+    "person-rename-save": "Simpan",
+    "login-rename": "Ganti nama login",
+    "login-rename-description": "Siswa masuk dengan nama baru dan kata sandi yang sama.",
+    "login-rename-save": "Simpan",
     "invite-action": "Undang",
     "invites-footer": "Undang orang yang belum punya akun.",
     "invite-dialog-title": "Undang orang",
@@ -1696,6 +1718,9 @@
     "status-in-progress": "Sedang dikerjakan",
     "status-completed": "Selesai",
     "status-expired": "Waktu habis",
+    "finished-title": "Try out selesai",
+    "finished-description": "Kamu sudah menyelesaikan percobaan ini, dan skornya tersimpan.",
+    "finished-expired-description": "Waktu habis, jadi percobaan ini berakhir dengan jawaban yang sudah kamu isi.",
     "remaining-time-label": "Sisa waktu untuk menyelesaikan set ini",
     "time-days-short": "hari",
     "time-hours-short": "jam",
@@ -1869,7 +1894,6 @@
     "picture-animal": "Hewan",
     "picture-photo": "Foto Google",
     "picture-footer-animal": "Setiap acak memberi hewan lain.",
-    "picture-footer-photo": "Foto Google-mu tampil di mana pun namamu tampil.",
     "animal-shuffle": "Acak hewan",
     "username": "Username",
     "username-placeholder": "budi_santoso",

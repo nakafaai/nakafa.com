@@ -192,6 +192,7 @@
     "state-submitted": "Abgegeben",
     "signals": "Ereignisse",
     "signals-empty": "Bisher ist kein Ereignis erfasst.",
+    "signals-offline-note": "Eine verlorene Verbindung erscheint hier mit ihrer Dauer, sobald der Schüler wieder online ist.",
     "signal-exit": "Hat die Prüfung verlassen",
     "signal-return": "Ist zur Prüfung zurückgekehrt",
     "screen-title": "Bildschirm der Person",
@@ -209,6 +210,8 @@
     "signal-copy": "Text kopiert",
     "signal-paste": "Text eingefügt",
     "signal-disconnect": "Verbindung verloren",
+    "signal-offline-seconds": "War {seconds} s ohne Verbindung",
+    "signal-offline-minutes": "War {minutes} min {seconds} s ohne Verbindung",
     "signal-secondTab": "Zweiten Tab geöffnet",
     "reason": "Grund",
     "reason-power-outage": "Stromausfall",
@@ -416,6 +419,8 @@
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
     "student-back-home": "Zur Startseite",
     "seat-last-activity": "Letzte Aktivität {time}.",
+    "seat-away-seconds": "Seit {seconds} s weg.",
+    "seat-away-minutes": "Seit {minutes} min {seconds} s weg.",
     "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
     "title-too-long": "Der Titel darf höchstens {count} Zeichen lang sein.",
     "no-unit-description": "Jede Prüfung gehört zu einer Einheit, also lege zuerst in den Einstellungen eine an oder stelle eine wieder her.",
@@ -642,9 +647,8 @@
     "cohort-status": "Status",
     "cohort-active": "Aktiv",
     "cohort-archived": "Archiviert",
-    "cohort-rename": "Umbenennen",
-    "cohort-rename-description": "Die Klasse behält ihre Schüler, Lehrkräfte und Noten.",
-    "cohort-rename-save": "Speichern",
+    "cohort-edit-description": "Die Klasse behält ihre Schüler, Lehrkräfte und Noten.",
+    "cohort-edit-save": "Speichern",
     "cohort-archive": "Archivieren",
     "cohort-add-footer": "Eine neue Klasse ist sofort aktiv.",
     "cohorts-empty": "Noch keine Klasse.",
@@ -754,7 +758,10 @@
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
         "archived": "Klasse archiviert",
-        "restored": "Klasse wiederhergestellt"
+        "restored": "Klasse wiederhergestellt",
+        "grade": {
+          "set": "Klassenstufe geändert"
+        }
       },
       "connection": {
         "connected": "Verbindung hinzugefügt",
@@ -855,6 +862,12 @@
         },
         "npsn": {
           "set": "NPSN geändert"
+        },
+        "name": {
+          "set": "Einheit umbenannt"
+        },
+        "level": {
+          "set": "Stufe der Einheit geändert"
         }
       },
       "visit": {
@@ -876,6 +889,9 @@
       "roster": {
         "set": "Schülerdaten aktualisiert",
         "imported": "Schüler aus Dapodik importiert"
+      },
+      "login": {
+        "renamed": "Anmeldename geändert"
       }
     },
     "role-description": {
@@ -920,6 +936,12 @@
     "member-remove-title": "Dieses Mitglied entfernen?",
     "member-remove-description": "Die Person verlässt die Schule, und ihre Rollen enden.",
     "member-remove-confirm": "Entfernen",
+    "person-rename": "Umbenennen",
+    "person-rename-description": "Der neue Name erscheint überall, wo die Schule diese Person führt.",
+    "person-rename-save": "Speichern",
+    "login-rename": "Anmeldenamen ändern",
+    "login-rename-description": "Die Person meldet sich mit dem neuen Namen und demselben Passwort an.",
+    "login-rename-save": "Speichern",
     "invite-action": "Einladen",
     "invites-footer": "Eine Person ohne Konto einladen.",
     "invite-dialog-title": "Person einladen",
@@ -1696,6 +1718,9 @@
     "status-in-progress": "In Bearbeitung",
     "status-completed": "Abgeschlossen",
     "status-expired": "Zeit abgelaufen",
+    "finished-title": "Tryout beendet",
+    "finished-description": "Du hast diesen Versuch beendet, und sein Ergebnis ist gespeichert.",
+    "finished-expired-description": "Die Zeit ist abgelaufen, daher endete dieser Versuch mit deinen bisherigen Antworten.",
     "remaining-time-label": "Verbleibende Zeit für dieses Set",
     "time-days-short": "Tage",
     "time-hours-short": "Std.",
@@ -1869,7 +1894,6 @@
     "picture-animal": "Tier",
     "picture-photo": "Google-Foto",
     "picture-footer-animal": "Jedes Würfeln zeigt ein anderes Tier.",
-    "picture-footer-photo": "Dein Google-Foto erscheint überall, wo dein Name steht.",
     "animal-shuffle": "Tier würfeln",
     "username": "Benutzername",
     "username-placeholder": "lena_schmidt",

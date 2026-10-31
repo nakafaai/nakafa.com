@@ -70,6 +70,8 @@ export default GroupSpec.make()
         attemptId: Id("examAttempts"),
         deviceId: DeviceId,
         kind: SignalKind,
+        /** When the device lost its connection, for a disconnect it sends once it can reach the server again. */
+        since: Schema.optionalKey(Schema.Finite),
         slug: TenantSlug,
       }),
       returns: () => Schema.Null,
