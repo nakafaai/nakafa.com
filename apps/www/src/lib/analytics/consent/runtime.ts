@@ -9,9 +9,9 @@ import {
   revokeToBaselineAnalytics,
   suspendBrowserAnalyticsIdentity,
 } from "@repo/analytics/posthog/browser";
+import { untilPageRead } from "@repo/design-system/lib/settle";
 import { Effect, Fiber, type Option, Schedule } from "effect";
 import { useEffect } from "react";
-import { untilBrowserIdle } from "@/lib/analytics/consent/idle";
 import {
   type AccountConsentDecision,
   type BrowserAnalyticsUser,
@@ -21,9 +21,9 @@ import {
 /**
  * Owns the baseline-to-granted runtime alignment for one consent state.
  *
- * The baseline loads once the browser is idle, so the SDK does not compete with
- * the page's first render; the landing view waits for a settled state so
- * returning grants are attributed. Transient failures retry with backoff before
+ * The baseline loads once the page has its reader, so the SDK does not compete
+ * with the page's first render or the reader's first press; the landing view
+ * waits for a settled state so returning grants are attributed. Transient failures retry with backoff before
  * surfacing. Preview children skip the SDK; cleanup only suspends
  * authorization, never SDK consent.
  */
@@ -71,7 +71,7 @@ export function useAnalyticsRuntimeAlignment({
       transition = revokeToBaselineAnalytics();
     }
     const runtimeFiber = Effect.runFork(
-      untilBrowserIdle.pipe(
+      untilPageRead.pipe(
         Effect.andThen(
           enableBaselineAnalytics().pipe(
             Effect.andThen(transition),

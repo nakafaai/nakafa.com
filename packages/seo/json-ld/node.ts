@@ -144,7 +144,6 @@ export function makeEducationalOrganizationNode(
   return {
     ...ORGANIZATION,
     "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
     alternateName: input.alternateName,
     areaServed: COMPANY_IDENTITY.registeredAddress.country,
     description: input.description,

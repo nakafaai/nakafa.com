@@ -1,9 +1,6 @@
 import { captureException } from "@repo/analytics/posthog/capture";
 import { CodeBlockText } from "@repo/design-system/components/code-block/text";
-import {
-  type CodeHighlightOptions,
-  highlightCode,
-} from "@repo/design-system/lib/code-block/highlight";
+import type { CodeHighlightOptions } from "@repo/design-system/lib/code-block/highlight";
 import type { CodeOptionsMultipleThemes } from "@shikijs/core";
 import { Effect, Fiber, Schema } from "effect";
 import type { HTMLAttributes } from "react";
@@ -13,6 +10,8 @@ import { useEffect, useMemo, useState } from "react";
 type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
   children: string;
   language?: string;
+  /** The highlighted HTML that a server drew, which needs no highlighter here. */
+  serverHtml?: string;
   syntaxHighlighting?: boolean;
   themes?: CodeOptionsMultipleThemes["themes"];
   transparentBackground?: boolean;
@@ -27,11 +26,24 @@ const CodeHighlightRequestSchema = Schema.Struct({
 type CodeHighlightRequest = typeof CodeHighlightRequestSchema.Type &
   Pick<CodeHighlightOptions, "themes">;
 
+/** The highlighter's code could not load, so the block stays plain text. */
+class CodeHighlighterLoadError extends Schema.TaggedError<CodeHighlighterLoadError>()(
+  "CodeHighlighterLoadError",
+  { cause: Schema.Unknown }
+) {}
+
+/** The highlighter, which only code that a server did not draw loads. */
+const loadHighlighter = Effect.tryPromise({
+  try: () => import("@repo/design-system/lib/code-block/highlight"),
+  catch: (cause) => new CodeHighlighterLoadError({ cause }),
+});
+
 /** Highlights client-rendered code while retaining a safe text fallback. */
 export function CodeBlockContent({
   children,
   themes,
   language,
+  serverHtml,
   syntaxHighlighting = true,
   transparentBackground = false,
   ...props
@@ -55,25 +67,31 @@ export function CodeBlockContent({
   });
 
   useEffect(() => {
-    if (!request.syntaxHighlighting) {
+    if (!request.syntaxHighlighting || serverHtml !== undefined) {
       return;
     }
 
     const fiber = Effect.runFork(
-      highlightCode({
-        code: request.children,
-        ...(request.language === undefined
-          ? {}
-          : { language: request.language }),
-        ...(request.themes === undefined ? {} : { themes: request.themes }),
-        transparentBackground: request.transparentBackground,
-      }).pipe(
+      loadHighlighter.pipe(
+        Effect.andThen(({ highlightCode }) =>
+          highlightCode({
+            code: request.children,
+            ...(request.language === undefined
+              ? {}
+              : { language: request.language }),
+            ...(request.themes === undefined ? {} : { themes: request.themes }),
+            transparentBackground: request.transparentBackground,
+          })
+        ),
         Effect.matchEffect({
           onFailure: (error) =>
             Effect.sync(() => {
               setHighlightedCode({ html: "", request });
               captureException(
-                error._tag === "CodeHighlightError" ? error.cause : error,
+                error._tag === "CodeHighlightError" ||
+                  error._tag === "CodeHighlighterLoadError"
+                  ? error.cause
+                  : error,
                 {
                   component: "CodeBlockContent",
                   language: request.language ?? "plain-text",
@@ -92,9 +110,11 @@ export function CodeBlockContent({
     return () => {
       Effect.runFork(Fiber.interrupt(fiber));
     };
-  }, [request]);
+  }, [request, serverHtml]);
 
-  const html = highlightedCode.request === request ? highlightedCode.html : "";
+  const html =
+    serverHtml ??
+    (highlightedCode.request === request ? highlightedCode.html : "");
 
   if (!(request.syntaxHighlighting && html)) {
     return <CodeBlockText {...props}>{children}</CodeBlockText>;

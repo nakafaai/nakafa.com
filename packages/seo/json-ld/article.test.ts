@@ -57,7 +57,7 @@ describe("article JSON-LD", () => {
           },
         ],
         publisher: {
-          "@type": "Organization",
+          "@type": "EducationalOrganization",
           "@id": "https://nakafa.com/#organization",
           name: "Nakafa",
           url: "https://nakafa.com",

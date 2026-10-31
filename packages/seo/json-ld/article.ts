@@ -30,7 +30,7 @@ const PersonSchema = Schema.Struct({
 
 /** Links the article to the one organization node the root layout renders. */
 const PublisherSchema = Schema.Struct({
-  "@type": Schema.Literal("Organization"),
+  "@type": Schema.Literal("EducationalOrganization"),
   "@id": SiteUrlSchema,
   name: TextSchema,
   url: SiteUrlSchema,
@@ -158,7 +158,7 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
         ? {}
         : { author: [firstAuthor, ...otherAuthors] }),
       publisher: {
-        "@type": "Organization",
+        "@type": "EducationalOrganization",
         "@id": ORGANIZATION_ID,
         name: COMPANY_IDENTITY.brandName,
         url: COMPANY_IDENTITY.url,
