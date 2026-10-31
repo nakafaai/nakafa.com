@@ -2,10 +2,10 @@ import { parseCalendarDayKey } from "@repo/design-system/lib/calendar/day-key";
 import { Array as Arr, Option, Order, Schema, String as Str } from "effect";
 
 /** A time of day on the 24-hour clock to the minute: two digits of the hour, a colon, two of the minute. */
-const TIME_OF_DAY = /^([01]\d|2[0-3]):[0-5]\d$/u;
+const TIME_OF_DAY = /^(?:[01]\d|2[0-3]):[0-5]\d$/u;
 
 /** A `datetime-local` value: a day key, the letter T, and a time of day. */
-const LOCAL_TIME = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/u;
+const LOCAL_TIME = /^(?<date>\d{4}-\d{2}-\d{2})T(?<time>\d{2}:\d{2})$/u;
 
 /** The minutes of one day. */
 const DAY_MINUTES = 24 * 60;

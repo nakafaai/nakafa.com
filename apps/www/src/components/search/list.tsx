@@ -56,17 +56,17 @@ export function SearchResults({
 
   if (isError) {
     return (
-      <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm">
+      <div className="text-muted-foreground flex items-center justify-center gap-1 text-sm">
         <HugeIcons className="size-4" icon={InformationCircleIcon} />
         <div className="mt-1">{t("search-error")}</div>
-        <div className="wrap-break-word mt-2 max-w-xs text-xs">{error}</div>
+        <div className="mt-2 max-w-xs text-xs wrap-break-word">{error}</div>
       </div>
     );
   }
 
   if (!query) {
     return (
-      <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm">
+      <div className="text-muted-foreground flex items-center justify-center gap-1 text-sm">
         <HugeIcons className="size-4" icon={Rocket01Icon} />
         <p>{t("search-help")}</p>
       </div>
@@ -112,7 +112,7 @@ function ResultGroup({ group }: { group: SearchResultGroup }) {
   const query = useResultsQuery();
   return (
     <div className="space-y-2">
-      <h2 className="px-4 font-medium text-muted-foreground text-sm">
+      <h2 className="text-muted-foreground px-4 text-sm font-medium">
         {group.title}
       </h2>
       <div className="flex flex-col gap-1">
@@ -120,20 +120,20 @@ function ResultGroup({ group }: { group: SearchResultGroup }) {
           <PublicPathLink
             activeOptions={EXACT_ACTIVE_OPTIONS}
             className={cn(
-              "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+              "group hover:bg-accent hover:text-accent-foreground flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out"
             )}
             key={result.content_id}
             publicPath={result.route}
           >
             <div className="flex items-center gap-2">
               <HugeIcons
-                className="size-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground"
+                className="text-muted-foreground group-hover:text-accent-foreground size-4 shrink-0"
                 icon={FileIcon}
               />
               <span className="line-clamp-1">{result.title}</span>
             </div>
             <SearchExcerpt
-              className="line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground group-hover:[&_mark]:text-accent-foreground"
+              className="text-muted-foreground group-hover:text-accent-foreground group-hover:[&_mark]:text-accent-foreground line-clamp-3 text-sm"
               excerpt={result.excerpt}
               query={query}
             />

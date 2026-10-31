@@ -1,20 +1,20 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, MutableHashSet } from "effect";
+import { Array as Arr, MutableHashSet, MutableRef } from "effect";
 import { notifyTickListeners } from "@/components/tryout/runtime/tick";
 
 describe("tryout runtime tick", () => {
   it("calls every listener once per tick, in subscription order", () => {
     const listeners = MutableHashSet.empty<() => void>();
-    let calls: string[] = [];
+    const calls = MutableRef.make<readonly string[]>([]);
     for (const name of ["first", "second", "third"]) {
       MutableHashSet.add(listeners, () => {
-        calls = Arr.append(calls, name);
+        MutableRef.update(calls, Arr.append(name));
       });
     }
 
     notifyTickListeners(listeners);
 
-    expect(calls).toEqual(["first", "second", "third"]);
+    expect(MutableRef.get(calls)).toEqual(["first", "second", "third"]);
   });
 
   it("skips a listener that an earlier listener removed during the same tick", () => {

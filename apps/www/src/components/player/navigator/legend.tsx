@@ -11,18 +11,18 @@ export function PlayerLegend() {
   const t = useTranslations("Player");
 
   return (
-    <ul className="grid gap-2 text-muted-foreground text-xs">
+    <ul className="text-muted-foreground grid gap-2 text-xs">
       <li className="flex items-center gap-2">
         <span
           aria-hidden="true"
-          className="size-4 shrink-0 rounded-sm bg-primary"
+          className="bg-primary size-4 shrink-0 rounded-sm"
         />
         {t("legend-answered")}
       </li>
       <li className="flex items-center gap-2">
         <span
           aria-hidden="true"
-          className="size-4 shrink-0 rounded-sm border border-destructive bg-destructive/5"
+          className="border-destructive bg-destructive/5 size-4 shrink-0 rounded-sm border"
         />
         {t("unanswered")}
       </li>

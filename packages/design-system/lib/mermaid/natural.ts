@@ -8,7 +8,7 @@ const ViewBox = Schema.Tuple([
   Schema.FiniteFromString,
 ]);
 const decodeViewBox = Schema.decodeUnknownOption(ViewBox);
-const VIEW_BOX_SEPARATOR = /[\s,]+/;
+const VIEW_BOX_SEPARATOR = /[\s,]+/u;
 
 /** Reads the width and height that a viewBox names, or nothing when it is not four numbers. */
 function viewBoxSize(viewBox: string | null | undefined) {

@@ -44,7 +44,7 @@ export function BreadcrumbMenu({
           render={
             <button
               aria-label={menuLabel}
-              className="flex size-6 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring flex size-6 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
               type="button"
             >
               <BreadcrumbEllipsis />

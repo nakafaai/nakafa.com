@@ -156,12 +156,12 @@ export function Mermaid({
           <p className="flex items-start gap-2 text-sm">
             <HugeIcons
               aria-hidden="true"
-              className="mt-0.5 size-4 text-destructive"
+              className="text-destructive mt-0.5 size-4"
               icon={Alert02Icon}
             />
             {t("diagram-error")}
           </p>
-          <CollapsibleTrigger className="group/failure flex min-h-6 w-fit items-center gap-1 rounded-sm text-muted-foreground text-xs outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+          <CollapsibleTrigger className="group/failure text-muted-foreground hover:text-foreground focus-visible:ring-ring flex min-h-6 w-fit items-center gap-1 rounded-sm text-xs transition-colors outline-none focus-visible:ring-2">
             {t("show-code")}
             <HugeIcons
               aria-hidden="true"

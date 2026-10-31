@@ -52,11 +52,11 @@ function EvilBrushControls({
   return (
     <>
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 rounded-l-md bg-background/70 backdrop-blur-[2px]"
+        className="bg-background/70 pointer-events-none absolute inset-y-0 left-0 rounded-l-md backdrop-blur-[2px]"
         style={{ width: leftPosition }}
       />
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 rounded-r-md bg-background/70 backdrop-blur-[2px]"
+        className="bg-background/70 pointer-events-none absolute inset-y-0 right-0 rounded-r-md backdrop-blur-[2px]"
         style={{ width: rightOverlayWidth }}
       />
       <div

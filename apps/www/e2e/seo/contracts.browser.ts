@@ -32,10 +32,10 @@ import {
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const APP_ORIGIN = "https://nakafa.com";
-const CLASS_SEPARATOR_PATTERN = /\s+/;
-const DOCUMENT_TITLE_PATTERN = /<h1[\s>]/;
-const DOCUMENT_SECTION_PATTERN = /<h2[\s>]/;
-const STORED_DEVICE_PATTERN = /^".+"$/;
+const CLASS_SEPARATOR_PATTERN = /\s+/u;
+const DOCUMENT_TITLE_PATTERN = /<h1[\s>]/u;
+const DOCUMENT_SECTION_PATTERN = /<h2[\s>]/u;
+const STORED_DEVICE_PATTERN = /^".+"$/u;
 const CONTENT_VIEW_DEVICE_KEY = "nakafa-device-id";
 const CONTENT_VIEWS_KEY = "nakafa-content-views";
 /** Longer than the three-second engagement delay before a view counts. */

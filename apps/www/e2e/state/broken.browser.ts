@@ -19,7 +19,7 @@ import {
   desktopViewport,
   touchViewport,
 } from "@/e2e/support/viewport";
-import { isTakenOverNow, waitUntilTakenOver } from "@/e2e/support/window";
+import { isTakenOver, waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The window mark of the first document, which the reload of the first press replaces. */
 const FIRST_DOCUMENT = "nakafaFirstDocument";
@@ -114,13 +114,12 @@ const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
   });
   // The press after the reload, once React has the reloaded page, meets the chunk
   // still missing, and the page shows what broke. A chunk the reloaded page needs
-  // may be missing too, and then it shows the state before any press, in place of
-  // the trigger: the check of the trigger does not wait for it.
+  // may be missing too, and then it shows the state before any press.
   yield* Effect.promise(async () => {
     await expect
       .poll(
         async () =>
-          (await heading.isVisible()) || (await isTakenOverNow(selector)),
+          (await heading.isVisible()) || (await isTakenOver(selector)),
         {
           timeout: readinessTimeoutMilliseconds,
         }

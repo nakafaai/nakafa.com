@@ -59,7 +59,7 @@ const token = Ref.getFunctionReference(refs.public.chats.queries.getShareToken);
 type Fixture = Awaited<ReturnType<typeof createThreadTest>>;
 
 /** The keys under which a part holds what the provider reported for a call, and the report's own key. */
-const REPORTED = /[pP]roviderMetadata|convexGateway/;
+const REPORTED = /[pP]roviderMetadata|convexGateway/u;
 
 /** Shares the chat of an owner, and returns the token of its link. */
 async function shareChat(

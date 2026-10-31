@@ -28,10 +28,10 @@ const QUESTION = "Tolong bantu?";
 const SHEET_PAGE = "quran/1";
 
 /** The button that opens Nina's sheet, named in each language of the site. */
-const ASK_NINA = /^(Ask Nina|Tanya Nina|Nina fragen)$/u;
+const ASK_NINA = /^(?:Ask Nina|Tanya Nina|Nina fragen)$/u;
 
 /** The button that declines usage data, named in each language of the site. */
-const DECLINE = /^(Decline|Tolak|Ablehnen)$/u;
+const DECLINE = /^(?:Decline|Tolak|Ablehnen)$/u;
 
 /** The sections of a reply: the work Nina did, and the answer with the sources after it. */
 const REPLY = '[data-slot="message-activity"], [data-slot="message-response"]';

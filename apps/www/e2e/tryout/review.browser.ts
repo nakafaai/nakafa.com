@@ -19,7 +19,7 @@ const QUESTIONS = 25;
 const ARTICLES = 'main article[id^="exercise-question-"]';
 
 /** The name of an option the key marks correct; an incorrect one ends with "Incorrect". */
-const CORRECT = /Correct\s*$/;
+const CORRECT = /Correct\s*$/u;
 
 /** The global that holds the fewest question articles the page showed while it watched. */
 const FEWEST = "__nakafaFewestReviewArticles";
@@ -173,7 +173,9 @@ const chooseAttempt = Effect.fn("NakafaE2E.chooseTryoutAttempt")(function* (
     false
   );
   yield* activate(
-    page.getByRole("option", { name: new RegExp(`^Attempt ${chosen}\\b`) }),
+    page.getByRole("option", {
+      name: new RegExp(`^Attempt ${chosen}\\b`, "u"),
+    }),
     false
   );
   yield* Effect.promise(async () => {

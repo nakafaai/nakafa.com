@@ -17,14 +17,14 @@ function Radio({ className, ...props }: RadioPrimitive.Root.Props) {
   return (
     <RadioPrimitive.Root
       className={cn(
-        "pressable relative inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-input bg-background bg-clip-padding shadow-xs outline-none transition-[scale,box-shadow] before:pointer-events-none before:absolute before:inset-0 before:rounded-full not-disabled:not-data-checked:not-aria-invalid:before:shadow-[0_1px_--theme(--color-black/4%)] after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-64 aria-invalid:border-destructive focus-visible:aria-invalid:border-destructive focus-visible:aria-invalid:ring-destructive/48 dark:not-data-checked:bg-input/32 dark:bg-clip-border dark:not-disabled:not-data-checked:not-aria-invalid:before:shadow-[0_-1px_--theme(--color-white/8%)] [:disabled,[data-checked],[aria-invalid]]:shadow-none",
+        "pressable border-input bg-background focus-visible:ring-ring focus-visible:ring-offset-background aria-invalid:border-destructive focus-visible:aria-invalid:border-destructive focus-visible:aria-invalid:ring-destructive/48 dark:not-data-checked:bg-input/32 relative inline-flex size-4 shrink-0 items-center justify-center rounded-full border bg-clip-padding shadow-xs transition-[scale,box-shadow] outline-none before:pointer-events-none before:absolute before:inset-0 before:rounded-full not-disabled:not-data-checked:not-aria-invalid:before:shadow-[0_1px_--theme(--color-black/4%)] after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:ring-2 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-64 dark:bg-clip-border dark:not-disabled:not-data-checked:not-aria-invalid:before:shadow-[0_-1px_--theme(--color-white/8%)] [:disabled,[data-checked],[aria-invalid]]:shadow-none",
         className
       )}
       data-slot="radio"
       {...props}
     >
       <RadioPrimitive.Indicator
-        className="absolute -inset-px flex size-4 items-center justify-center rounded-full before:size-1.5 before:rounded-full before:bg-primary-foreground data-unchecked:hidden data-checked:bg-primary"
+        className="before:bg-primary-foreground data-checked:bg-primary absolute -inset-px flex size-4 items-center justify-center rounded-full before:size-1.5 before:rounded-full data-unchecked:hidden"
         data-slot="radio-indicator"
       />
     </RadioPrimitive.Root>

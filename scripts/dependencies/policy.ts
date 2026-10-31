@@ -130,7 +130,7 @@ const TIPTAP_PACKAGES = Arr.dedupe(
 
 /**
  * Eight transitive overrides in the root `package.json` hold a version for a reason
- * that no manifest states. `seroval` and `seroval-plugins` 1.7.3 are one copy each
+ * that no manifest states. `seroval` 1.7.5 and `seroval-plugins` 1.7.6 are one copy each
  * for TanStack Start's serializer, its web plugins, and the prerender
  * (`apps/www/prerender.config.ts`): the TanStack packages declare `^1.6.7`, and Bun
  * kept their nested 1.6.8 copies, which GHSA-9wx9-5pv9-3349 and GHSA-f86p-h4j2-7qgj
@@ -221,16 +221,10 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@nakafa/aksara-contracts",
   },
   {
-    approved: "2.5.15",
-    dependency: "@biomejs/biome",
-    minimumDeclarations: 1,
-  },
-  {
     approved: "24.19.2",
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  { approved: "8.0.2", dependency: "ultracite", minimumDeclarations: 1 },
   // The marked that @tiptap/markdown lexes with. The Memory page reads stored
   // Markdown with the same lexer, so a row says what the editor shows; it moves
   // with the editor's lexer, which plain.test.ts checks, never with the latest.

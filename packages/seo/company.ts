@@ -10,16 +10,16 @@ const UrlStringSchema = Schema.String.check(
   )
 );
 const EmailAddressSchema = Schema.String.check(
-  Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+  Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/u)
 );
 const PhoneNumberSchema = Schema.String.check(
-  Schema.isPattern(/^\+\d[\d -]+$/)
+  Schema.isPattern(/^\+\d[\d -]+$/u)
 );
 const IncorporationCertificateNumberSchema = Schema.String.check(
-  Schema.isPattern(/^AHU-\d{6}\.AH\.01\.30\.Tahun \d{4}$/)
+  Schema.isPattern(/^AHU-\d{6}\.AH\.01\.30\.Tahun \d{4}$/u)
 );
 const BusinessIdentificationNumberSchema = Schema.String.check(
-  Schema.isPattern(/^\d{13}$/)
+  Schema.isPattern(/^\d{13}$/u)
 );
 
 export const CompanyIdentitySchema = Schema.Struct({
@@ -37,7 +37,7 @@ export const CompanyIdentitySchema = Schema.Struct({
     district: NonEmptyTrimmedStringSchema,
     regency: NonEmptyTrimmedStringSchema,
     region: NonEmptyTrimmedStringSchema,
-    postalCode: Schema.String.check(Schema.isPattern(/^\d{5}$/)),
+    postalCode: Schema.String.check(Schema.isPattern(/^\d{5}$/u)),
     country: NonEmptyTrimmedStringSchema,
     countryCode: Schema.Literal("ID"),
   }),

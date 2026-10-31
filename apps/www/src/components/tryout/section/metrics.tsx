@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 /** Renders the production try-out metric number style. */
 export function TryoutMetricNumber({ value }: { value: number }) {
   return (
-    <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none">
+    <div className="text-foreground font-mono text-5xl leading-none font-light tabular-nums">
       <NumberFormat value={value} />
     </div>
   );
@@ -25,7 +25,7 @@ export function TryoutMetricFraction({ children }: { children: ReactNode }) {
 /** The slash between the two numbers of a correct-answer fraction. */
 export function TryoutMetricSlash() {
   return (
-    <span className="font-light font-mono text-3xl text-muted-foreground leading-none">
+    <span className="text-muted-foreground font-mono text-3xl leading-none font-light">
       /
     </span>
   );

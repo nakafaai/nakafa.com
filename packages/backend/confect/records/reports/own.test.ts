@@ -16,10 +16,10 @@ import {
 import { Effect } from "effect";
 
 /** A report hash: 64 lowercase hex digits. */
-const HASH = /^[0-9a-f]{64}$/;
+const HASH = /^[0-9a-f]{64}$/u;
 
 /** A web address, as a stored file's has. */
-const WEB_ADDRESS = /^https?:\/\//;
+const WEB_ADDRESS = /^https?:\/\//u;
 
 const reports = refs.public.records.reports;
 const grades = refs.public.records.grades;

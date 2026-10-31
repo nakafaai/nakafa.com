@@ -251,7 +251,7 @@ function PartSketch({
 
   return (
     <div className="grid content-start gap-2">
-      <p className="font-medium text-muted-foreground text-sm">{heading}</p>
+      <p className="text-muted-foreground text-sm font-medium">{heading}</p>
       {Arr.map(parts, (part, index) => (
         <PaperChoice key={part.id} withControls={withControls}>
           <PaperOption letter={letterOf(index)}>

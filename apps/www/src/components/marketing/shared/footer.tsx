@@ -71,7 +71,7 @@ export function Footer({
         <div className="grid scroll-mt-28 pt-24">
           <section className="flex flex-col justify-between gap-8 md:flex-row">
             <div className="flex flex-col gap-3">
-              <span className="font-medium text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-sm font-medium">
                 {tCommon("subject")}
               </span>
               <ul className="flex flex-col gap-2">
@@ -87,7 +87,7 @@ export function Footer({
             </div>
 
             <div className="flex flex-col gap-3">
-              <span className="font-medium text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-sm font-medium">
                 {tHoly("holy")}
               </span>
               <ul className="flex flex-col gap-2">
@@ -103,7 +103,7 @@ export function Footer({
             </div>
 
             <div className="flex flex-col gap-3">
-              <span className="font-medium text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-sm font-medium">
                 {tCommon("articles")}
               </span>
               <ul className="flex flex-col gap-2">
@@ -119,7 +119,7 @@ export function Footer({
             </div>
 
             <div className="flex flex-col gap-3">
-              <span className="font-medium text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-sm font-medium">
                 {t("company")}
               </span>
               <ul className="flex flex-col gap-2">
@@ -153,7 +153,7 @@ export function Footer({
             </div>
 
             <div className="flex flex-col gap-3">
-              <span className="font-medium text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-sm font-medium">
                 {tLegal("terms-and-policies")}
               </span>
               <ul className="flex flex-col gap-2">
@@ -176,10 +176,10 @@ export function Footer({
 
       <Link
         activeOptions={EXACT_ACTIVE_OPTIONS}
-        className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
+        className="hover:text-primary mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out"
         to="/$locale"
       >
-        <span className="mx-auto font-bold text-7xl transition-colors duration-300 ease-out hover:text-primary sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
+        <span className="hover:text-primary mx-auto text-7xl font-bold transition-colors duration-300 ease-out sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
           Nakafa
         </span>
       </Link>
@@ -228,7 +228,7 @@ export function Footer({
 
 /** The text treatment that every footer destination shares. */
 const linkItemVariants = cva(
-  "text-sm transition-colors ease-out hover:text-primary"
+  "hover:text-primary text-sm transition-colors ease-out"
 );
 
 /** One footer link of the app, at a route target that the app chose. */

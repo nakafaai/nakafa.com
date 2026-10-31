@@ -125,7 +125,7 @@ function Block({ hint, token }: { hint?: string | undefined; token: Token }) {
     // The editor holds a table it cannot read as its Markdown, one paragraph of
     // text in which every line break is a space.
     Match.when({ type: "table" }, ({ raw }) => (
-      <p dir="auto">{Str.replaceAll(/\s+/g, " ")(Str.trim(raw))}</p>
+      <p dir="auto">{Str.replaceAll(/\s+/gu, " ")(Str.trim(raw))}</p>
     )),
     Match.orElse(() => null)
   );

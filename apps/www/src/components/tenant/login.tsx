@@ -99,7 +99,7 @@ function TenantLoginForm() {
       className="flex w-full max-w-sm flex-col gap-6"
       onSubmit={handleSubmit}
     >
-      <p className="text-center text-muted-foreground text-sm">
+      <p className="text-muted-foreground text-center text-sm">
         {t("card-hint")}
       </p>
       <FieldGroup className="gap-4">

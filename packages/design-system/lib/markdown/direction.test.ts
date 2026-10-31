@@ -6,10 +6,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 /** An item of a loose list: its paragraph has no direction of its own, so the item reads the text. */
-const LOOSE_ITEM = /<li dir="auto">\s*<p>أ<\/p>/;
+const LOOSE_ITEM = /<li dir="auto">\s*<p>أ<\/p>/u;
 /** A paragraph inside a quote inside an item: the item cannot read it, so the paragraph does. */
 const QUOTED_PARAGRAPH =
-  /<li dir="auto">\s*<blockquote>\s*<p dir="auto">أ<\/p>/;
+  /<li dir="auto">\s*<blockquote>\s*<p dir="auto">أ<\/p>/u;
 
 /** A response as the page renders it, without the components that style it. */
 const render = (markdown: string) =>

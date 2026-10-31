@@ -7,8 +7,8 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Option, Schema } from "effect";
 import type { Locale } from "use-intl/core";
 
-const ABSOLUTE_URL_REGEX = /^https?:\/\//;
-const NOT_INTERNAL_REGEX = /^(#|mailto:|tel:|\/\/)/;
+const ABSOLUTE_URL_REGEX = /^https?:\/\//u;
+const NOT_INTERNAL_REGEX = /^(?:#|mailto:|tel:|\/\/)/u;
 
 /**
  * Whether an href leads inside the app. A hash, mail or telephone link, a

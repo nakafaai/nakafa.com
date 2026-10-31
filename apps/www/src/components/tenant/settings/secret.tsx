@@ -45,7 +45,7 @@ export function SchoolSecretDialog({
       }}
       title={title}
     >
-      <code className="break-all rounded-md bg-muted p-3 text-sm">
+      <code className="bg-muted rounded-md p-3 text-sm break-all">
         {secret}
       </code>
     </ResponsiveDialog>
