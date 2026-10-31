@@ -9,6 +9,7 @@ import {
   lessonVisual,
   lessonWindow,
   PROJECTILE_VIEW,
+  showLessonWindow,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
@@ -83,9 +84,7 @@ test("home lesson window keeps its height once its visual is mounted", async ({
             Effect.gen(function* () {
               yield* openHome(page);
               const panel = lessonPanel(page);
-              yield* Effect.promise(() =>
-                lessonWindow(page).scrollIntoViewIfNeeded()
-              );
+              yield* showLessonWindow(page);
               yield* Effect.promise(() =>
                 expect(
                   lessonVisual(page, PROJECTILE_VIEW).locator("canvas")
@@ -140,7 +139,7 @@ for (const viewport of WINDOW_VIEWPORTS) {
                 const before = yield* Effect.promise(() => root.boundingBox());
                 expect(before).not.toBeNull();
 
-                yield* Effect.promise(() => root.scrollIntoViewIfNeeded());
+                yield* showLessonWindow(page);
                 yield* Effect.promise(() =>
                   expect(
                     lessonVisual(page, PROJECTILE_VIEW).locator("canvas")
@@ -188,7 +187,7 @@ for (const viewport of WINDOW_VIEWPORTS) {
                 const tabs = lessonSection(page)
                   .locator('[data-slot="button-group"]')
                   .getByRole("button");
-                yield* Effect.promise(() => root.scrollIntoViewIfNeeded());
+                yield* showLessonWindow(page);
 
                 const heights = MutableList.make<number>();
                 for (
@@ -260,9 +259,7 @@ for (const viewport of WINDOW_VIEWPORTS) {
                     )
                   )
                 );
-                yield* Effect.promise(() =>
-                  lessonWindow(page).scrollIntoViewIfNeeded()
-                );
+                yield* showLessonWindow(page);
 
                 for (
                   let index = 0;

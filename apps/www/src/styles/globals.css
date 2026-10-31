@@ -136,6 +136,18 @@
 }
 
 /*
+ * A part of a marketing page below its first screen is drawn only once the
+ * reader nears it: its style, layout and paint wait, so the first load styles
+ * the screen the reader sees and not the dozen parts under it. Until it is
+ * drawn a part stands at its least height, one screen under the header, and it
+ * keeps the height it had once it was.
+ */
+@utility content-auto-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto calc(100svh - 4rem);
+}
+
+/*
  * A verse anchor scrolls the sticky headers above it into view, so the verse's
  * number row lands right under them: the app header and the surah header below
  * lg, and the surah header alone from lg, where the app header is hidden.
