@@ -1,6 +1,7 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { Effect, Option } from "effect";
+import { readTokenClaims } from "@/lib/auth/claims";
 import type { AuthLegalLinks } from "@/lib/auth/legal";
 import { readBrowserSessionToken } from "@/lib/auth/token";
 import { readSchoolFrame, SchoolReadFailed } from "@/lib/tenant/read";
@@ -26,30 +27,60 @@ export function reusesVisitFrame(navigation: {
  * then the same decision as `readSchoolFrame`. A failed token read fails the
  * decision, so an outage never looks like a signed-out visitor. A visitor's entry
  * page names the privacy and terms pages, so a read with no session takes `legal`
- * beside the school's own reads, and only a visitor keeps its answer.
+ * beside the school's own reads, and only a visitor keeps its answer. When the
+ * sign-in hint says the browser is signed out, a visitor's reads start beside the
+ * token's, and a token that answers anyway decides as a signed-in read. The answer
+ * names the session the token belongs to, which a kept frame is kept for.
  */
 export const readBrowserVisit = Effect.fn("www.tenant.readBrowserVisit")(
-  function* (
-    slug: TenantSlug,
-    locale: Locale,
-    legal: Effect.Effect<AuthLegalLinks | null, SchoolReadFailed>
-  ) {
+  function* (input: {
+    readonly legal: Effect.Effect<AuthLegalLinks | null, SchoolReadFailed>;
+    readonly locale: Locale;
+    readonly signedIn: boolean;
+    readonly slug: TenantSlug;
+  }) {
+    const { legal, locale, signedIn, slug } = input;
+    const visitor = Effect.suspend(() =>
+      Effect.all(
+        [readSchoolFrame({ locale, slug, token: Option.none() }), legal],
+        { concurrency: "unbounded" }
+      )
+    ).pipe(
+      Effect.map(([school, links]) => ({
+        legal: school._tag === "Visitor" ? links : null,
+        school,
+        sessionId: null,
+      }))
+    );
     const origin = yield* Effect.sync(() => window.location.origin);
-    const token = yield* readBrowserSessionToken(origin).pipe(
+    const token = readBrowserSessionToken(origin).pipe(
       Effect.mapError((cause) => new SchoolReadFailed({ cause }))
     );
-    if (token !== undefined) {
-      const school = yield* readSchoolFrame({
-        locale,
-        slug,
-        token: Option.some(token),
-      });
-      return { legal: null, school };
-    }
-    const [school, links] = yield* Effect.all(
-      [readSchoolFrame({ locale, slug, token: Option.none() }), legal],
+    // The early visitor's answer is kept as a value, so it fails the decision only when the decision uses it.
+    const [held, early] = yield* Effect.all(
+      [
+        token,
+        signedIn ? Effect.succeedNone : Effect.asSome(Effect.result(visitor)),
+      ],
       { concurrency: "unbounded" }
     );
-    return { legal: school._tag === "Visitor" ? links : null, school };
+    if (held === undefined) {
+      return yield* Option.match(early, {
+        onNone: () => visitor,
+        onSome: Effect.fromResult,
+      });
+    }
+    const school = yield* readSchoolFrame({
+      locale,
+      slug,
+      token: Option.some(held),
+    });
+    return {
+      legal: null,
+      school,
+      sessionId: Option.getOrNull(
+        Option.map(readTokenClaims(held), (claims) => claims.sessionId)
+      ),
+    };
   }
 );
