@@ -19,16 +19,20 @@ import {
 import type { Column, RowData } from "@tanstack/react-table";
 import { cva } from "class-variance-authority";
 import { Option } from "effect";
-import type { ComponentProps, ReactElement } from "react";
+import { type ComponentProps, type ReactElement, use } from "react";
 import { useTranslations } from "use-intl";
+import {
+  type HeadAlign,
+  HeadAlignContext,
+} from "@/components/shared/table/align";
 import { chosenDays, dayRangeOf } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 
 /**
- * Where a head's button stands in its line: pulled to the cell's start edge in the first column, so the column's name
- * lines up with the rows below it, and pulled to both edges in a centred column. An active head, one that sorts or
- * filters the rows, takes the muted fill.
+ * Where a head's button stands in its line: pulled out by its own padding in the first column, so the column's name
+ * lines up with the rows below it, in the last column of figures, so its icon ends where they end, and to both edges in
+ * a centred column. An active head, one that sorts or filters the rows, takes the muted fill.
  */
 const headButton = cva(
   "max-w-[calc(100%+1rem)] min-w-0 overflow-hidden sm:max-w-[calc(100%+1.75rem)]",
@@ -36,7 +40,11 @@ const headButton = cva(
     defaultVariants: { active: false, align: "center" },
     variants: {
       active: { false: "", true: "bg-muted text-foreground" },
-      align: { center: "-mx-2 sm:-mx-3", start: "-ml-2 sm:-ml-3" },
+      align: {
+        center: "-mx-2 sm:-mx-3",
+        end: "-mr-2.5",
+        start: "-ml-2.5",
+      },
     },
   }
 );
@@ -49,19 +57,21 @@ const headButton = cva(
  */
 export function TableHeadButton({
   active = false,
-  align = "center",
+  align,
   children,
   icon,
   ...props
 }: Omit<ComponentProps<typeof Button>, "className" | "size" | "variant"> & {
   readonly active?: boolean;
-  readonly align?: "center" | "start";
+  readonly align?: typeof HeadAlign.Type;
   readonly icon: IconSvgElement;
 }) {
+  const placed = use(HeadAlignContext);
+
   return (
     <Button
       {...props}
-      className={headButton({ active, align })}
+      className={headButton({ active, align: align ?? placed })}
       size="sm"
       type="button"
       variant="ghost"

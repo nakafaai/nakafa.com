@@ -3,10 +3,10 @@
 import { ArrowUpRight01Icon, StarsIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
-import { useEarlyPress } from "@/lib/press/replay";
 
 const FIRST_INTERACTION = ["keydown", "pointerdown", "scroll"] as const;
 

@@ -83,14 +83,16 @@ test("a dialog opens as a drawer on a phone, scales the page back, keeps the foc
   await expect.poll(() => scrollLocked(page)).toBe(false);
   await expect.poll(() => stageScale(stage)).toBe("none");
 
-  // A swipe down on the drawer's bar closes it.
+  // A swipe down on the drawer's handle closes it.
   await create.click();
   await expect(drawer).toBeVisible();
-  const bar = await drawer.locator('[data-slot="drawer-bar"]').boundingBox();
-  expect(bar).not.toBeNull();
-  if (bar !== null) {
-    const x = bar.x + bar.width / 2;
-    const y = bar.y + bar.height / 2;
+  const handle = await drawer
+    .locator('[data-slot="drawer-swipe-handle"]')
+    .boundingBox();
+  expect(handle).not.toBeNull();
+  if (handle !== null) {
+    const x = handle.x + handle.width / 2;
+    const y = handle.y + handle.height / 2;
     await page.mouse.move(x, y);
     await page.mouse.down();
     await page.mouse.move(x, y + SWIPE, { steps: 20 });

@@ -33,15 +33,14 @@ export function HeaderMenu() {
           }
           size="lg"
         >
-          <div className="relative aspect-square size-8">
-            <Image
-              alt=""
-              className="rounded-sm border object-contain"
-              fill
-              sizes="32px"
-              src="/logo.svg"
-            />
-          </div>
+          <Image
+            alt=""
+            className="size-8 rounded-sm border object-contain"
+            height={32}
+            preload
+            src="/logo.svg"
+            width={32}
+          />
           <div className="grid flex-1 text-left text-sm leading-tight">
             <p className="truncate font-medium">Nakafa</p>
             <SidebarMenuDescription>

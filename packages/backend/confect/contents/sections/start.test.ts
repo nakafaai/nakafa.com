@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import { startSectionBuild } from "@repo/backend/confect/contents/sections/start";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { Effect } from "effect";
+import { ConfigProvider, Effect } from "effect";
 
 beforeEach(() => vi.useFakeTimers());
 
@@ -27,5 +27,24 @@ describe("section build start", () => {
         state: { kind: "pending" },
       },
     ]);
+  });
+
+  it("schedules nothing on a deployment that keeps no section index", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.action((ctx) =>
+      Effect.runPromise(
+        startSectionBuild("release-1").pipe(
+          Effect.provide(RegisteredFunction.actionLayer(schema, ctx)),
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({ SECTION_INDEX: "off" })
+          )
+        )
+      )
+    );
+    const jobs = await t.run((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    expect(jobs).toEqual([]);
   });
 });

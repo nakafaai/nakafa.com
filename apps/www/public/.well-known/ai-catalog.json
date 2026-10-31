@@ -1,0 +1,28 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Nakafa",
+    "identifier": "nakafa.com",
+    "documentationUrl": "https://nakafa.com/llms.txt"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:nakafa.com:mcp:content",
+      "displayName": "Nakafa MCP Server",
+      "mediaType": "application/mcp-server-card+json",
+      "type": "application/mcp-server-card+json",
+      "url": "https://raw.githubusercontent.com/nakafaai/nakafa.com/main/server.json",
+      "description": "Read-only access to Nakafa's signed educational content and reviewed Quran references.",
+      "tags": ["education", "lessons", "quran", "mcp-server"]
+    },
+    {
+      "identifier": "urn:air:nakafa.com:content:llms",
+      "displayName": "Nakafa content index",
+      "mediaType": "text/plain",
+      "type": "text/plain",
+      "url": "https://nakafa.com/llms.txt",
+      "description": "The index of every lesson, article and Quran page as Markdown, in Indonesian, English and German.",
+      "tags": ["education", "llms-txt"]
+    }
+  ]
+}

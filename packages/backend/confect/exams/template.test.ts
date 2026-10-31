@@ -3,6 +3,7 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import {
   matchAnswers,
   newChoiceAnswers,
+  numericAnswers,
   shortAnswers,
   tableAnswers,
   textLabel,
@@ -80,6 +81,18 @@ describe("exams/template asTemplate", () => {
     const short = asTemplate("short", newChoiceAnswers(), key, []);
     expect(short).toEqual({ answers: shortAnswers(), key: null });
     expect(asTemplate("choice", short.answers, null, [])).toEqual({
+      answers: newChoiceAnswers(),
+      key: null,
+    });
+  });
+
+  it("turns any question into one numeric entry with no key, and a numeric answer back into a new choice", () => {
+    const key = [
+      { correct: ["option-1"], interaction: "choice", kind: "choice" },
+    ] as const;
+    const numeric = asTemplate("numeric", newChoiceAnswers(), key, []);
+    expect(numeric).toEqual({ answers: numericAnswers(), key: null });
+    expect(asTemplate("choice", numeric.answers, null, [])).toEqual({
       answers: newChoiceAnswers(),
       key: null,
     });

@@ -10,7 +10,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Node } from "@tiptap/pm/model";
-import { cva } from "class-variance-authority";
 import { Effect, Option } from "effect";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import {
@@ -20,8 +19,8 @@ import {
   optionEditOf,
 } from "@/components/tenant/exams/answer";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
+import { refusePaste } from "@/components/tenant/exams/picture";
 import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
-import { ControlRoom } from "@/components/tenant/exams/sheet";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { makeQuietSaver } from "@/lib/save/quiet";
 
@@ -37,18 +36,8 @@ const OPTION_EXTENSIONS = [
   ...RICH_EXTENSIONS,
   articleProse.configure({ paragraphs: false }),
   depthGuard(MAX_DOCUMENT_DEPTH),
-  documentSizeGuard(MAX_DOCUMENT_BYTES),
+  documentSizeGuard(MAX_DOCUMENT_BYTES, refusePaste),
 ];
-
-/** The grid of one option row: the text, then the room of its control unless the part is never removed. */
-const optionRowVariants = cva("group/option grid items-center gap-2", {
-  variants: {
-    control: {
-      none: "grid-cols-1",
-      room: "grid-cols-[minmax(0,1fr)_auto]",
-    },
-  },
-});
 
 /** The props of one option row: the option it shows, and the teacher's controls beside it. */
 interface OptionRowProps {
@@ -62,11 +51,10 @@ interface OptionRowProps {
   /** Whether the option is locked, so its text and its controls take no change. */
   readonly locked: boolean;
   /**
-   * Removes the option, or none while the question holds the fewest options it may take, which keeps the room of
-   * the control so the option keeps its width. `"never"` is a part no teacher removes, a column of a true or false
-   * table, which takes no room, so its text centres over its column.
+   * Removes the option, or none for a part that stays: an option while the question holds the fewest it may take,
+   * or a column of a true or false table.
    */
-  readonly onRemove: (() => void) | null | "never";
+  readonly onRemove: (() => void) | null;
   /**
    * Saves the label the option's editor holds, after its quiet period. Calls `unstored` when the server does not store it.
    */
@@ -77,7 +65,7 @@ interface OptionRowProps {
 
 /**
  * One option of a question: the letter and the rich text the caller composes, framed as the player
- * frames it, then the teacher's remove control to its right. The row wires the text it holds. The key of the question is marked in the teacher's layer,
+ * frames it, as wide as the student reads it, with the teacher's remove control over its end. The row wires the text it holds. The key of the question is marked in the teacher's layer,
  * not here. Removing is shown when the option may go, on hover or focus, and always on a touch
  * screen. The text saves after its quiet period once the teacher types in it. A change that edits no
  * text, such as the editor taking its lock, saves nothing. Removing the option drops the pending save
@@ -134,11 +122,8 @@ export function OptionRow({
   // Removing the option drops the quiet save of its label first. The removal makes that save stale,
   // since it would send the answers of a revision the server has already moved past.
   const remove = () => {
-    if (typeof onRemove !== "function") {
-      return;
-    }
     Effect.runFork(saver.cancel);
-    onRemove();
+    onRemove?.();
   };
 
   // The editor takes a label the server holds once it changes, as a save of this option lands after the editor
@@ -175,20 +160,29 @@ export function OptionRow({
     const flush = () => {
       Effect.runFork(saver.flush);
     };
+    // A page that closes with words the server does not hold yet asks first, since a save may not leave in time.
+    const askFirst = (event: BeforeUnloadEvent) => {
+      if (
+        editor.current !== null &&
+        !holdsLabel(editor.current.getJSON(), previous.current)
+      ) {
+        flush();
+        event.preventDefault();
+      }
+    };
     window.addEventListener("pagehide", flush);
+    window.addEventListener("beforeunload", askFirst);
     return () => {
       window.removeEventListener("pagehide", flush);
+      window.removeEventListener("beforeunload", askFirst);
       flush();
     };
   }, [saver]);
 
   return (
-    <div
-      className={optionRowVariants({
-        control: onRemove === "never" ? "none" : "room",
-      })}
-    >
+    <div className="group/option relative">
       <ExamDocumentWiringProvider
+        content={Node.fromJSON(assessmentSchema, label).toJSON()}
         extensions={OPTION_EXTENSIONS}
         onChange={(transaction) => {
           const current = editor.current;
@@ -206,33 +200,24 @@ export function OptionRow({
         }}
         onEditor={(next) => {
           editor.current = next;
-          next.commands.setContent(
-            Node.fromJSON(assessmentSchema, label).toJSON(),
-            { emitUpdate: false }
-          );
           next.setEditable(!locked, false);
         }}
       >
         <Fragment key={editorRound}>{children}</Fragment>
       </ExamDocumentWiringProvider>
-      {onRemove === "never" ? null : (
-        <div className="flex items-center gap-1">
-          {onRemove === null ? (
-            <ControlRoom />
-          ) : (
-            <Button
-              aria-label={removeName}
-              className="opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
-              disabled={locked}
-              onClick={remove}
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
-            </Button>
-          )}
-        </div>
+      {onRemove === null ? null : (
+        <Button
+          aria-label={removeName}
+          className="absolute end-1.5 top-1.5 opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
+          data-remove=""
+          disabled={locked}
+          onClick={remove}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        >
+          <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
+        </Button>
       )}
     </div>
   );

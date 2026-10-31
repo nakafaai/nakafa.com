@@ -270,8 +270,8 @@ function AnswerList({
           {Arr.map(results, (answer) => (
             <TableRow key={answer.attemptId}>
               <TableCell>{answer.name}</TableCell>
-              <TableCell>
-                <span className="line-clamp-2 block max-w-96 whitespace-normal">
+              <TableCell className="min-w-56 wrap-break-word">
+                <span className="block whitespace-pre-wrap">
                   {responseText(question, answer.response)}
                 </span>
               </TableCell>
@@ -331,7 +331,7 @@ export function QuestionsAction({
           </Button>
         }
       />
-      <SheetContent className="sm:max-w-xl">
+      <SheetContent className="sm:max-w-3xl">
         <SheetHeader>
           <SheetTitle>{t("questions")}</SheetTitle>
         </SheetHeader>

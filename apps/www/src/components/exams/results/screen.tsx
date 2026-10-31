@@ -2,6 +2,7 @@ import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { Array as Arr, Number as Num } from "effect";
 import { createContext, type ReactNode, use, useMemo } from "react";
 import { useTranslations } from "use-intl";
@@ -135,8 +136,10 @@ function SittingResultsContent({
               room={sitting.room}
               sittingId={scope.sittingId}
             >
-              <TableSearch placeholder={t("results-search")} />
-              <QuestionsAction questions={questions} />
+              <ButtonGroup>
+                <TableSearch placeholder={t("results-search")} />
+                <QuestionsAction questions={questions} />
+              </ButtonGroup>
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>
             <Panes>

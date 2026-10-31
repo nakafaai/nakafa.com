@@ -4,6 +4,7 @@ import roster from "@repo/backend/confect/_generated/refs/roster";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { IMPORT_BATCH } from "@repo/backend/confect/roster/schema";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -138,16 +139,18 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
       <SettingsTablePage
         actions={
           <>
-            <TableSearch placeholder={t("search")} />
-            <Button
-              disabled={isApplying}
-              onClick={() => setPreview(undefined)}
-              type="button"
-              variant="outline"
-            >
-              <HugeIcons icon={Cancel01Icon} />
-              {t("cancel")}
-            </Button>
+            <ButtonGroup>
+              <TableSearch placeholder={t("search")} />
+              <Button
+                disabled={isApplying}
+                onClick={() => setPreview(undefined)}
+                type="button"
+                variant="outline"
+              >
+                <HugeIcons icon={Cancel01Icon} />
+                <span className="max-sm:sr-only">{t("cancel")}</span>
+              </Button>
+            </ButtonGroup>
             <Button
               disabled={
                 isApplying || Arr.isReadonlyArrayEmpty(studentsOf(preview))
@@ -169,9 +172,11 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
     <SettingsTablePage
       actions={
         <>
-          <RosterUnitChoice />
-          <RosterStudentsExport />
-          <RosterGradesExport />
+          <ButtonGroup>
+            <RosterUnitChoice />
+            <RosterStudentsExport />
+            <RosterGradesExport />
+          </ButtonGroup>
           <RosterFileChoice
             onProblem={setProblem}
             onRows={(rows) => {

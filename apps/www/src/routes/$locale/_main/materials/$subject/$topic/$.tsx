@@ -3,7 +3,10 @@ import { getHeadings } from "@repo/contents/toc";
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
-import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
+import {
+  makeArticleJsonLd,
+  makeLearningResourceNode,
+} from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
@@ -11,7 +14,7 @@ import { createTranslator } from "use-intl/core";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { DeferredComments } from "@/components/comments/deferred";
-import { ContentDates } from "@/components/content/dates";
+import { ContentByline } from "@/components/content/byline";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
@@ -145,6 +148,7 @@ const readMaterial = createServerFn({ method: "GET" })
               contentKey: route.contentKey,
               href: toMaterialHref(route),
               publicPath: route.publicPath,
+              topicTitle: route.topicTitle,
             },
             sourceUrl: published.sourceRevision
               ? getAksaraUrl({
@@ -212,6 +216,16 @@ export const Route = createFileRoute(
     const { alternates, canonicalPath, headMetadata, locale, route } =
       loaderData;
     const metadata = loaderData.metadata;
+    const article = {
+      authors: metadata.authors,
+      dates: metadata,
+      description: headMetadata.description,
+      headline: headMetadata.title,
+      image: getOgUrl(route.appLocale, route.publicPath),
+      locale,
+      path: route.href,
+      trail: [{ name: loaderData.labels.home, path: `/${locale}` }],
+    };
     return toRouterHead(
       createSeoHead({
         alternates,
@@ -219,20 +233,10 @@ export const Route = createFileRoute(
         description: headMetadata.description,
         image: getOgUrl(route.appLocale, route.publicPath),
         indexable: true,
-        jsonLd: [
-          makeArticleJsonLd({
-            authors: metadata.authors,
-            dates: metadata,
-            description: headMetadata.description,
-            headline: headMetadata.title,
-            image: getOgUrl(route.appLocale, route.publicPath),
-            locale,
-            path: route.href,
-            trail: [{ name: loaderData.labels.home, path: `/${locale}` }],
-          }),
-        ],
+        jsonLd: [makeArticleJsonLd(article), makeLearningResourceNode(article)],
         locale,
-        parts: [headMetadata.title],
+        // Many lessons share a short name, such as Numbers: the topic tells them apart.
+        parts: [headMetadata.title, route.topicTitle],
         type: "article",
       })
     );
@@ -289,13 +293,15 @@ function MaterialPage() {
                 <AiMenuItem contextTitle={metadata.title} />
               </OpenContent>
             </ContentHeader>
-            <ContentTitle title={metadata.title} />
-            <ContentDates
-              {...(metadata.dateModified === undefined
-                ? {}
-                : { dateModified: metadata.dateModified })}
-              datePublished={metadata.datePublished}
-            />
+            <ContentTitle title={metadata.title}>
+              <ContentByline
+                authors={metadata.authors}
+                {...(metadata.dateModified === undefined
+                  ? {}
+                  : { dateModified: metadata.dateModified })}
+                datePublished={metadata.datePublished}
+              />
+            </ContentTitle>
             <LayoutContent>
               {headings.length === 0 ? <ComingSoon /> : page.body}
             </LayoutContent>

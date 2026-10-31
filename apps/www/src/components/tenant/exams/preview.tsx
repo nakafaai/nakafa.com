@@ -10,18 +10,16 @@ import {
   CHOICE_OPTIONS_MAX,
   fixedOptions,
 } from "@repo/backend/confect/exams/question";
-import { markBlockDirections } from "@repo/design-system/components/editor/direction";
 import {
   editorContent,
   editorDocument,
   editorPlaceholder,
 } from "@repo/design-system/components/editor/frame";
-import { drawArticleProse } from "@repo/design-system/components/editor/prose";
-import { paragraphVariants } from "@repo/design-system/lib/prose";
-import { DOMSerializer, Node } from "@tiptap/pm/model";
+import { drawDocument } from "@repo/design-system/components/editor/prose";
+import { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
-import { type ReactNode, useCallback, useDeferredValue, useMemo } from "react";
+import { useCallback, useDeferredValue, useMemo } from "react";
 import { useTranslations } from "use-intl";
 import {
   choiceOf,
@@ -29,6 +27,7 @@ import {
   type OptionLabel,
 } from "@/components/tenant/exams/answer";
 import { matchOf } from "@/components/tenant/exams/match";
+import { numberEntryOf } from "@/components/tenant/exams/number";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
@@ -37,9 +36,9 @@ import {
   useExamLocked,
 } from "@/components/tenant/exams/provider";
 import {
-  ControlRoom,
   OptionAddRoom,
   PaperLine,
+  PaperNumber,
   PaperOption,
   PaperOptions,
   PaperTable,
@@ -135,15 +134,11 @@ const EMPTY_TEXT = Node.fromJSON(assessmentSchema, {
 });
 
 /**
- * A rich text drawn without an editor: the schema's own rendering of each node, which is what the
- * editor draws, in the wrapper and the document classes the editor gives its text, so the text takes
- * the same box and spacing as it does once the editor mounts, and each block takes the direction of
- * its own words, as the editor gives it. A text that changes while the teacher types is drawn when
- * the browser has time. Its headings, lists, quotations and code take the published article's classes,
- * as `articleProse` gives them in the editor, and `article` gives each paragraph the classes the
- * article's paragraphs take, which the prompt and the notes of a question take in their editors, and an
- * option does not. An empty
- * paragraph gets the line break an editor gives it, so an empty text keeps the height of its editor.
+ * A rich text drawn without an editor (`drawDocument`), in the wrapper and the document classes the editor
+ * gives its text, so the text takes the same box and spacing as it does once the editor mounts. A text
+ * that changes while the teacher types is drawn when the browser has time. `article` gives each paragraph
+ * the classes the article's paragraphs take, which the prompt and the notes of a question take in their
+ * editors, and an option does not.
  */
 export function PreviewProse({
   article,
@@ -158,25 +153,9 @@ export function PreviewProse({
   // The text is drawn again only when it changes, not on every redraw of the page.
   const draw = useCallback(
     (element: HTMLDivElement | null) => {
-      if (element === null) {
-        return;
+      if (element !== null) {
+        drawDocument(element, shown, article);
       }
-      element.replaceChildren(
-        DOMSerializer.fromSchema(shown.type.schema).serializeFragment(
-          shown.content
-        )
-      );
-      markBlockDirections(element);
-      drawArticleProse(element);
-      Arr.forEach(Arr.fromIterable(element.querySelectorAll("p")), (p) => {
-        // A cell's paragraph reads as the cell's words, as the lesson and the editor draw it.
-        if (article && p.closest("td, th") === null) {
-          p.className = paragraphVariants();
-        }
-        if (p.childNodes.length === 0) {
-          p.append(document.createElement("br"));
-        }
-      });
     },
     [article, shown]
   );
@@ -205,32 +184,6 @@ export function OptionSketch({ label }: { label: OptionLabel }) {
 }
 
 /**
- * One option of a paper drawn without editors: the letter and the text the caller composes. A page with
- * controls keeps the room of the one control an option has beside its text, the remove control, as the
- * editor's page does.
- */
-function PaperChoice({
-  children,
-  withControls,
-}: {
-  children: ReactNode;
-  withControls: boolean;
-}) {
-  if (!withControls) {
-    return children;
-  }
-
-  return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-      {children}
-      <div aria-hidden className="flex items-center gap-1">
-        <ControlRoom />
-      </div>
-    </div>
-  );
-}
-
-/**
  * One column of a matching or a table question drawn without editors, as its live column draws it: its
  * heading, its parts numbered or lettered, and the room of the action that adds a part when it takes one.
  */
@@ -253,11 +206,9 @@ function PartSketch({
     <div className="grid content-start gap-2">
       <p className="text-muted-foreground text-sm font-medium">{heading}</p>
       {Arr.map(parts, (part, index) => (
-        <PaperChoice key={part.id} withControls={withControls}>
-          <PaperOption letter={letterOf(index)}>
-            <OptionSketch label={part.label} />
-          </PaperOption>
-        </PaperChoice>
+        <PaperOption key={part.id} letter={letterOf(index)}>
+          <OptionSketch label={part.label} />
+        </PaperOption>
       ))}
       {withControls && adds && !locked && parts.length < CHOICE_OPTIONS_MAX ? (
         <OptionAddRoom />
@@ -313,8 +264,8 @@ const statementNumber = (index: number) => String(index + 1);
  * The answers of one question drawn without editors, as the student reads them, below the prompt that
  * the caller draws on the same paper (`PreviewProse`). The page draws them when its editors are not
  * mounted, and the thumbnails draw them small, so a page and its thumbnail look alike. A page passes
- * `withControls`, which keeps the room of its option controls and of the action that adds an option, so
- * the paper is as wide and as tall as it is when the editor mounts.
+ * `withControls`, which keeps the room of the action that adds an option, so the paper is as tall as it
+ * is when the editor mounts.
  */
 export function PaperSketch({
   question,
@@ -348,11 +299,9 @@ export function PaperSketch({
       {Option.isSome(choice) ? (
         <PaperOptions>
           {Arr.map(choice.value.options, (option, index) => (
-            <PaperChoice key={option.id} withControls={withControls}>
-              <PaperOption letter={optionLetter(index, script)}>
-                <OptionSketch label={option.label} />
-              </PaperOption>
-            </PaperChoice>
+            <PaperOption key={option.id} letter={optionLetter(index, script)}>
+              <OptionSketch label={option.label} />
+            </PaperOption>
           ))}
         </PaperOptions>
       ) : null}
@@ -389,6 +338,10 @@ export function PaperSketch({
         ),
       })}
       {Option.isSome(entryOf(question.answers)) ? <PaperLine /> : null}
+      {Option.match(numberEntryOf(question.answers), {
+        onNone: () => null,
+        onSome: (entry) => <PaperNumber unit={entry.unit} />,
+      })}
       {question.template === "essay" ? <PaperLine essay /> : null}
       {addsOption ? <OptionAddRoom /> : null}
     </>

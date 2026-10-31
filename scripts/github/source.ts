@@ -1,5 +1,5 @@
 import { Array as Arr, Effect, FileSystem, Order, Path, Schema } from "effect";
-import { parse as yamlParse } from "yaml";
+import { Yaml } from "effect/encoding";
 import {
   collectActionUses,
   validateGithubActionPolicy,
@@ -48,7 +48,7 @@ const readYamlActionUses = Effect.fnUntraced(function* (
           )
         );
       const document = yield* Effect.try({
-        try: () => yamlParse(source),
+        try: () => Yaml.parse(source),
         catch: (cause) =>
           policyError(`Unable to decode ${relativePath}.`, cause),
       });

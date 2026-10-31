@@ -293,62 +293,6 @@ describe("contentRelease/snapshot/retention", () => {
         ).toBe(false);
       })
   );
-  it("does not protect a bootstrap's base snapshot, even when its base release is gone", async () => {
-    const t = convexTest(schema, convexModules);
-    const replacedSnapshotId = `sha256:${"7".repeat(64)}`;
-    const resultSnapshotId = `sha256:${"8".repeat(64)}`;
-    await t.mutation(async (ctx) => {
-      const bootstrap = compactionIdentity(2);
-      await insertCompletedRelease(ctx, bootstrap, compactionIdentity(1));
-      const row = await storedRelease(ctx, bootstrap.releaseId);
-      await ctx.db.patch("contentReleases", row._id, {
-        bootstrap: true,
-        snapshotTransitions: {
-          ...row.snapshotTransitions,
-          assessment: {
-            ...row.snapshotTransitions.assessment,
-            baseSnapshotId: replacedSnapshotId,
-            resultSnapshotId,
-          },
-        },
-      });
-      await insertTestState(ctx, { active: bootstrap, nextSequence: 3 });
-    });
-    await expect(referenced(t, "assessment", replacedSnapshotId)).resolves.toBe(
-      false
-    );
-    await expect(referenced(t, "assessment", resultSnapshotId)).resolves.toBe(
-      true
-    );
-  });
-  it("does not protect a snapshot selected only by a completed release below the bootstrap floor", async () => {
-    const t = convexTest(schema, convexModules);
-    const retiredSnapshotId = `sha256:${"5".repeat(64)}`;
-    await t.mutation(async (ctx) => {
-      const retired = compactionIdentity(1);
-      const bootstrap = compactionIdentity(2);
-      await insertCompletedRelease(ctx, retired);
-      const retiredRow = await storedRelease(ctx, retired.releaseId);
-      await ctx.db.patch("contentReleases", retiredRow._id, {
-        snapshotTransitions: {
-          ...retiredRow.snapshotTransitions,
-          program: {
-            ...retiredRow.snapshotTransitions.program,
-            resultSnapshotId: retiredSnapshotId,
-          },
-        },
-      });
-      await insertCompletedRelease(ctx, bootstrap);
-      const bootstrapRow = await storedRelease(ctx, bootstrap.releaseId);
-      await ctx.db.patch("contentReleases", bootstrapRow._id, {
-        bootstrap: true,
-      });
-      await insertTestState(ctx, { active: bootstrap, nextSequence: 3 });
-    });
-    await expect(referenced(t, "program", retiredSnapshotId)).resolves.toBe(
-      false
-    );
-  });
   it("still protects the base snapshot of an ordinary active release", async () => {
     const t = convexTest(schema, convexModules);
     const baseSnapshotId = `sha256:${"6".repeat(64)}`;

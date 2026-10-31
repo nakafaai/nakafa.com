@@ -54,6 +54,7 @@ const loadUnderRelease = Effect.fn("www.content.store.load")(function* <
   if (active?.releaseId === input.releaseId) {
     const value = yield* Effect.fromResult(loaded);
     yield* writeStoreEntry({
+      lasting: true,
       parts: input.parts,
       schema: input.schema,
       tags: [makeReleaseTag(input.releaseId)],
@@ -89,7 +90,11 @@ const readUnderRelease = Effect.fn("www.content.store.readUnder")(function* <
   releaseId: ActiveContentReleaseId
 ) {
   const parts = [releaseId, input.kind, ...input.parts];
-  const stored = yield* readStoreEntry({ parts, schema: input.schema });
+  const stored = yield* readStoreEntry({
+    lasting: true,
+    parts,
+    schema: input.schema,
+  });
   if (Option.isSome(stored)) {
     return Result.succeed(stored.value);
   }

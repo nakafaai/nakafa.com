@@ -83,6 +83,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
     });
     for (let index = 0; index < 3; index += 1) {
       await ctx.db.insert("comments", {
+        likeCount: 0,
         slug: "material/algebra",
         userId: id,
         text: `Comment ${index}`,

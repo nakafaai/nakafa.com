@@ -16,7 +16,6 @@ import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/confect/contentRelease/error";
-import { requireCurrentArtifact } from "@repo/backend/confect/contentRelease/generation";
 import { loadExactVersion } from "@repo/backend/confect/contentRelease/model";
 import {
   decodeItemJson,
@@ -70,7 +69,6 @@ const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
       stored.artifactJson,
       "Signed artifact"
     );
-    yield* requireCurrentArtifact(artifact, identity, artifactHash);
     return { artifact, artifactJson: stored.artifactJson };
   }
 );

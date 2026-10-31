@@ -17,7 +17,6 @@ export default Table.make(() =>
     baseManifestHash: Schema.Union([Schema.String, Schema.Null]),
     baseReleaseId: Schema.Union([Schema.String, Schema.Null]),
     baseFamilies: Schema.mutable(Schema.Array(contentFamilyValidator)),
-    bootstrap: Schema.optionalKey(Schema.Literal(true)),
     cleanupAt: Schema.optionalKey(Schema.Finite),
     cleanupDeletedArtifacts: Schema.optionalKey(Schema.Finite),
     cleanupFutureAt: Schema.optionalKey(Schema.Finite),
@@ -53,9 +52,4 @@ export default Table.make(() =>
 )
   .index("by_releaseId", ["releaseId"])
   .index("by_sequence", ["sequence"])
-  .index("by_status_and_sequence", ["status", "sequence"])
-  .index("by_bootstrap_and_status_and_sequence", [
-    "bootstrap",
-    "status",
-    "sequence",
-  ]);
+  .index("by_status_and_sequence", ["status", "sequence"]);

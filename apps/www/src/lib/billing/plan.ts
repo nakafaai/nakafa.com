@@ -91,6 +91,9 @@ export function providerNameOf(rail: BillingRail) {
   return PROVIDER_NAMES[rail];
 }
 
+/** The zone of Nakafa's Indonesian billing, in which a payment's day is read. */
+export const BILLING_TIME_ZONE = "Asia/Jakarta";
+
 /**
  * A calendar day in the words of one locale, read in Asia/Jakarta, the zone of
  * Nakafa's Indonesian billing. The server and the browser then write the same
@@ -100,7 +103,7 @@ export function providerNameOf(rail: BillingRail) {
 export function formatBillingDate(moment: number, locale: string) {
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "long",
-    timeZone: "Asia/Jakarta",
+    timeZone: BILLING_TIME_ZONE,
   }).format(moment);
 }
 
@@ -115,7 +118,7 @@ export function formatCount(count: number, locale: string) {
  */
 export function formatMinorAmount(amount: number, currency: BillingCurrency) {
   const pricing = getProMonthlyPricingFor(currency);
-  return pricing.formatter.format(amount / 10 ** pricing.price.fractionDigits);
+  return pricing.format(amount / 10 ** pricing.price.fractionDigits);
 }
 
 /**

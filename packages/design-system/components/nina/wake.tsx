@@ -1,7 +1,8 @@
 import { Frame } from "@repo/design-system/components/nina/frame";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { untilPageRead } from "@repo/design-system/lib/settle";
 import { modeOf, type Options } from "@repo/mascot/nina/options";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Fiber } from "effect";
 import { type ReactNode, startTransition, useState } from "react";
 
 /** Her life as a module: her motion and the numbers she is drawn from. */
@@ -43,23 +44,34 @@ interface WakeProps {
   size: number;
 }
 
-/** Tells `then` when the element comes within 300 pixels of the screen. Answers what ends the watch. */
+/**
+ * Tells `then` when the element comes within 300 pixels of the screen and the page
+ * has its reader, so a phone spends its first seconds on the page and not on her.
+ * Answers what ends the watch.
+ */
 function whenNear(element: Element, then: () => void) {
-  const near = new IntersectionObserver(
-    (entries) => {
-      if (Arr.some(entries, ({ isIntersecting }) => isIntersecting)) {
-        then();
-      }
-    },
-    { rootMargin: "300px" }
+  const watching = Effect.runFork(
+    Effect.callback<void>((resume) => {
+      const near = new IntersectionObserver(
+        (entries) => {
+          if (Arr.some(entries, ({ isIntersecting }) => isIntersecting)) {
+            resume(Effect.void);
+          }
+        },
+        { rootMargin: "300px" }
+      );
+      near.observe(element);
+      return Effect.sync(() => near.disconnect());
+    }).pipe(Effect.andThen(untilPageRead), Effect.andThen(Effect.sync(then)))
   );
-  near.observe(element);
-  return () => near.disconnect();
+  return () => {
+    Effect.runFork(Fiber.interrupt(watching));
+  };
 }
 
 /**
- * Keeps her picture still until she nears the screen, or a pointer comes to
- * her, and then loads her life. The observer's own callback wakes her, and so
+ * Keeps her picture still until she nears the screen of a page that has its
+ * reader, or a pointer comes to her, and then loads her life. The observer's own callback wakes her, and so
  * does the pointer; her frame is a `span` that cannot take the focus, so
  * nothing else does. The picture stays in place while the code loads, and her
  * life takes over from it in one step, so nothing flashes and nothing moves.

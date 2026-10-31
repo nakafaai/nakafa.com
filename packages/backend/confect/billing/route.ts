@@ -8,8 +8,12 @@ import {
 } from "@repo/backend/confect/billing/catalog";
 import { Array as Arr, Config, Effect, HashSet, Option, Schema } from "effect";
 
-/** The value of the Indonesia rail switch. It is read only by this module. */
-const IndonesiaRail = Schema.Literals(["polar", "xendit"]);
+/**
+ * The value of the Indonesia rail switch. `passes` sells the passes through
+ * Xendit and keeps the monthly plan on Polar, for as long as no live Xendit
+ * channel can renew it. It is read only by this module.
+ */
+const IndonesiaRail = Schema.Literals(["polar", "passes", "xendit"]);
 
 /** An offer the chosen rail or currency does not sell, so no checkout can start. */
 export class OfferUnavailable extends Schema.TaggedError<OfferUnavailable>()(
@@ -38,7 +42,7 @@ const BillingRoute = Schema.Struct({
 });
 type BillingRoute = typeof BillingRoute.Type;
 
-/** The Indonesia switch from `BILLING_INDONESIA_RAIL`, which stays `polar` until Xendit is live. */
+/** The Indonesia switch from `BILLING_INDONESIA_RAIL`, which stays `polar` until Xendit sells there. */
 export const readIndonesiaRail = Config.schema(
   IndonesiaRail,
   "BILLING_INDONESIA_RAIL"
@@ -55,9 +59,10 @@ const isXenditConfigured = Effect.fn("billing.route.isXenditConfigured")(
 );
 
 /**
- * Whether Indonesian buyers pay through Xendit now: the switch names Xendit and
- * this deployment holds the Xendit key. A switch that names no rail is logged and
- * keeps Indonesia where it was, on Polar.
+ * Whether Xendit takes everything Indonesian buyers pay: the switch names Xendit
+ * and this deployment holds the Xendit key. Under `passes` it takes the passes
+ * alone, so a school keeps paying by bank transfer. A switch that names no rail is
+ * logged and keeps Indonesia where it was, on Polar.
  */
 export const xenditTakesIndonesia = Effect.fn(
   "billing.route.xenditTakesIndonesia"
@@ -70,6 +75,27 @@ export const xenditTakesIndonesia = Effect.fn(
     )
   );
   return rail === "xendit" && (yield* isXenditConfigured());
+});
+
+/** The rail of one offer in Indonesia while the switch names `passes`: what is paid once goes to Xendit. */
+function railUnderPasses(offer: BillingOfferKey) {
+  return billingOffer(offer).interval === "pass"
+    ? ("xendit" as const)
+    : ("polar" as const);
+}
+
+/**
+ * Whether the offers of `currency` lead with the passes: rupiah under `passes`,
+ * where the monthly plan needs a card, so a buyer without one starts on an offer
+ * they can pay. A switch that names no rail keeps the catalog's order.
+ */
+export const passesLead = Effect.fn("billing.route.passesLead")(function* (
+  currency: BillingCurrency
+) {
+  const rail = yield* readIndonesiaRail.pipe(
+    Effect.catchTag("ConfigError", () => Effect.succeed("polar" as const))
+  );
+  return currency === "IDR" && rail === "passes";
 });
 
 /** The country Nakafa holds when it does not know the buyer's, because Polar decides it at checkout. */
@@ -103,8 +129,9 @@ export const routeOffer = Effect.fn("billing.route.routeOffer")(function* (
   offer: BillingOfferKey
 ) {
   const currency = billingCurrencyFor(country);
-  const preferred =
+  const switched =
     country === "ID" ? yield* readIndonesiaRail : ("polar" as const);
+  const preferred = switched === "passes" ? railUnderPasses(offer) : switched;
   const keysConfigured = yield* isXenditConfigured();
   const sellsOnPolar = Arr.contains(billingOffer(offer).rails, "polar");
   const rail =

@@ -4,6 +4,7 @@ import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import { BillingRail } from "@repo/backend/confect/billing/schema";
 import { Array as Arr, Effect, Exit } from "effect";
 
 /** How often the sweep runs, in minutes. The cron reads this, and so do the sweep's windows. */
@@ -17,26 +18,28 @@ const BILLING_EVENT_SWEEP_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 /** Deliveries one sweep run reads, so a run never reads an unbounded set. */
 const BILLING_EVENT_SWEEP_BATCH = 50;
 
-/** The Polar deliveries still unprocessed that were received in [receivedFrom, receivedBefore), oldest first. */
-export const listUnprocessedPolar = Effect.fn("billing.events.listUnprocessed")(
+/** The deliveries of every rail still unprocessed that were received in [receivedFrom, receivedBefore), each rail's oldest first. */
+export const listUnprocessed = Effect.fn("billing.events.listUnprocessed")(
   function* (input: {
     readonly receivedFrom: number;
     readonly receivedBefore: number;
     readonly limit: number;
   }) {
     const reader = yield* DatabaseReader;
-    const rows = yield* reader
-      .table("billingEvents")
-      .index("by_rail_and_processedAt_and_receivedAt", (query) =>
-        query
-          .eq("rail", "polar")
-          .eq("processedAt", null)
-          .gte("receivedAt", input.receivedFrom)
-          .lt("receivedAt", input.receivedBefore)
-      )
-      .take(input.limit)
-      .pipe(Effect.orDie);
-    return Arr.map(rows, (row) => ({
+    const rows = yield* Effect.forEach(BillingRail.literals, (rail) =>
+      reader
+        .table("billingEvents")
+        .index("by_rail_and_processedAt_and_receivedAt", (query) =>
+          query
+            .eq("rail", rail)
+            .eq("processedAt", null)
+            .gte("receivedAt", input.receivedFrom)
+            .lt("receivedAt", input.receivedBefore)
+        )
+        .take(input.limit)
+        .pipe(Effect.orDie)
+    );
+    return Arr.map(Arr.flatten(rows), (row) => ({
       eventId: row._id,
       key: row.key,
       receivedAt: row.receivedAt,
@@ -46,7 +49,7 @@ export const listUnprocessedPolar = Effect.fn("billing.events.listUnprocessed")(
 );
 
 /**
- * Reapplies the Polar deliveries that stayed unprocessed past the minimum age and
+ * Reapplies the deliveries that stayed unprocessed past the minimum age and
  * within the maximum age, oldest first, one delivery at a time, so a failing one never
  * blocks the rest. A delivery that crosses the maximum age in this interval is logged
  * at error level, once, and is not reapplied. The sweep calls no provider: a customer

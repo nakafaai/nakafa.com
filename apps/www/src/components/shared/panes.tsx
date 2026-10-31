@@ -1,5 +1,9 @@
 import { useMediaQuery } from "@mantine/hooks";
 import {
+  Drawer,
+  DrawerContent,
+} from "@repo/design-system/components/ui/drawer";
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -9,7 +13,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
-import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { cva } from "class-variance-authority";
 import { Option, Schema } from "effect";
@@ -259,22 +262,23 @@ export function PanesDetail({
           )}
         </aside>
       </ResizablePanel>
-      <Sheet
+      <Drawer
         onOpenChange={(next) => {
           if (!next) {
             close();
           }
         }}
         open={!wide && sheet}
+        showSwipeHandle
       >
-        <SheetContent className="max-h-[85svh]" side="bottom">
+        <DrawerContent>
           {!wide && sheet ? (
             <PaneModeContext value={{ close, place: "sheet" }}>
               {children}
             </PaneModeContext>
           ) : null}
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }

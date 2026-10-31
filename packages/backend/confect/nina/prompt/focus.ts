@@ -150,9 +150,35 @@ function formatTextEntry(
 }
 
 /**
+ * Writes a numeric entry's number beside the learner's typed answer: the value, and how far an answer may
+ * stray from it, an absolute distance or a share of the value.
+ */
+function formatNumericEntry(
+  key: Of<InteractionKey, "numericEntry">,
+  response: ExamResponse
+) {
+  const tolerance = Option.match(Option.fromNullishOr(key.tolerance), {
+    onNone: () => "",
+    onSome: (within) =>
+      within.kind === "absolute"
+        ? ` (within ±${within.value})`
+        : ` (within ±${within.value} × ${key.value})`,
+  });
+  return Arr.join(
+    [
+      "## Answer Key",
+      "",
+      `- correct number: ${key.value}${tolerance}`,
+      `- learner's answer: ${Str.trim(typedText(response)) || "no answer"}`,
+    ],
+    "\n"
+  );
+}
+
+/**
  * Formats the focused question's answer section from its frozen interaction and key: a choice's
- * options, a table's statements, a match's pairs, or a text entry's accepted answers, each beside the
- * learner's answer. Any other interaction shows the learner's written answer alone.
+ * options, a table's statements, a match's pairs, a text entry's accepted answers, or a numeric entry's
+ * number, each beside the learner's answer. Any other interaction shows the learner's written answer alone.
  */
 export function formatFocusAnswer(
   question: PlacedQuestion,
@@ -171,6 +197,9 @@ export function formatFocusAnswer(
   }
   if (interaction.kind === "textEntry" && key.kind === "textEntry") {
     return formatTextEntry(key, answered);
+  }
+  if (interaction.kind === "numericEntry" && key.kind === "numericEntry") {
+    return formatNumericEntry(key, answered);
   }
   return Arr.join(
     [

@@ -1,6 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 
-export type TryoutFinishedSectionStatus = Exclude<
+type TryoutFinishedSectionStatus = Exclude<
   Docs["tryoutSectionAttempts"]["status"],
   "in-progress"
 >;

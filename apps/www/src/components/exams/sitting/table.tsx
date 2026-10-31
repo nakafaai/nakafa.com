@@ -36,13 +36,7 @@ export function SittingTable({
     <TryoutChoiceTable
       columns={Arr.map(table.columns, (column) => ({
         id: column.id,
-        label: (
-          <SittingDocument
-            document={column.label}
-            label={table.label}
-            size="line"
-          />
-        ),
+        label: <SittingDocument document={column.label} size="line" />,
       }))}
       disabled={disabled}
       label={table.label}
@@ -52,13 +46,7 @@ export function SittingTable({
       statementLabel={t("statement-placeholder")}
       statements={Arr.map(table.statements, (statement) => ({
         id: statement.id,
-        label: (
-          <SittingDocument
-            document={statement.label}
-            label={table.label}
-            size="line"
-          />
-        ),
+        label: <SittingDocument document={statement.label} size="line" />,
         marked: Option.getOrUndefined(
           Option.map(
             Arr.findFirst(cells, (cell) => cell.statement === statement.id),

@@ -6,14 +6,15 @@ import {
   QuestionnairePrevious,
   QuestionnaireSubmit,
 } from "@repo/design-system/components/ui/questionnaire";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
 /**
  * The row every Nakafa questionnaire ends with: back, continue, and the finish
  * action, whose icon and label (`children`) name what finishing does. While the
- * answers are sent the row holds still without a pending look (`inert`), so the
- * page moves on as soon as the server answers.
+ * answers are sent the row holds still (`inert`) and the finish action's icon turns
+ * into the loader, and the page moves on as soon as the server answers.
  */
 export function QuestionnaireSteps({
   children,
@@ -37,7 +38,7 @@ export function QuestionnaireSteps({
         <HugeIcons data-icon="inline-end" icon={ArrowRight02Icon} />
       </QuestionnaireNext>
       <QuestionnaireSubmit inert={inert}>
-        <HugeIcons data-icon="inline-start" icon={finishIcon} />
+        <Spinner data-icon="inline-start" icon={finishIcon} isLoading={inert} />
         {children}
       </QuestionnaireSubmit>
     </QuestionnaireActions>

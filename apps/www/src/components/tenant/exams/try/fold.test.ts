@@ -27,28 +27,18 @@ const opened = (
 ) => ({ client: null, snapshot, steps });
 
 describe("exam try prompt", () => {
-  it.effect(
-    "applies the stored steps in order, and keys the prompt by its last step",
-    () =>
-      Effect.gen(function* () {
-        const prompt = yield* tryPrompt(
-          opened([insert(2, "b"), insert(3, "c")])
-        );
-        expect(prompt).toEqual(
-          Option.some({ document: paragraphOf("acb"), key: 3 })
-        );
-      })
+  it.effect("applies the stored steps in order", () =>
+    Effect.gen(function* () {
+      const prompt = yield* tryPrompt(opened([insert(2, "b"), insert(3, "c")]));
+      expect(prompt).toEqual(Option.some(paragraphOf("acb")));
+    })
   );
 
-  it.effect(
-    "shows the snapshot itself, keyed by its version, when no step follows it",
-    () =>
-      Effect.gen(function* () {
-        const prompt = yield* tryPrompt(opened([]));
-        expect(prompt).toEqual(
-          Option.some({ document: paragraphOf("a"), key: 1 })
-        );
-      })
+  it.effect("shows the snapshot itself when no step follows it", () =>
+    Effect.gen(function* () {
+      const prompt = yield* tryPrompt(opened([]));
+      expect(prompt).toEqual(Option.some(paragraphOf("a")));
+    })
   );
 
   it.effect("waits while a full page of steps may stop short of the head", () =>
@@ -68,10 +58,7 @@ describe("exam try prompt", () => {
           insert(index + 2, "b")
         );
         expect(yield* tryPrompt(opened(page))).toEqual(
-          Option.some({
-            document: paragraphOf(`a${"b".repeat(STEP_PAGE_STEPS - 1)}`),
-            key: STEP_PAGE_STEPS,
-          })
+          Option.some(paragraphOf(`a${"b".repeat(STEP_PAGE_STEPS - 1)}`))
         );
       })
   );

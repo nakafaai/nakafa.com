@@ -41,6 +41,9 @@ type SessionReadFailure =
  */
 const ADDRESS_BASE = "https://auth.invalid";
 
+/** The Web Lock that keeps a session refresh to one tab at a time. */
+const SESSION_REFRESH_LOCK = "nakafa.session.refresh";
+
 /**
  * Fails at once when the caller's signal aborts. The browser owns that signal,
  * so this watches it instead of creating one.
@@ -155,10 +158,54 @@ function isSessionRead(
   );
 }
 
-/** The fetch that Better Auth's browser client calls for every request. */
-export const authFetch = (input: RequestInfo | URL, init?: RequestInit) =>
-  Effect.runPromise(
-    isSessionRead(input, init)
-      ? readSession(fetch, input, init)
-      : requestWithDeadline(fetch, input, init)
+/**
+ * Whether a request writes the session's new expiry: Better Auth's client sends
+ * it after a read answers that the session is due for its refresh.
+ */
+function isSessionRefresh(
+  input: RequestInfo | URL,
+  init: RequestInit | undefined
+) {
+  return (
+    init?.method === "POST" &&
+    new URL(String(input), ADDRESS_BASE).pathname === SESSION_PATH
   );
+}
+
+/**
+ * Sends a session refresh under a lock that every tab of the browser shares.
+ * Tabs read the same session, so each one is told to refresh it, and one row
+ * takes one write: the tab that comes second asks after the first has written,
+ * finds the session fresh, and writes nothing. A browser without Web Locks sends
+ * it at once.
+ */
+function refreshInOneTab(send: () => Promise<Response>) {
+  return "locks" in navigator
+    ? navigator.locks.request(SESSION_REFRESH_LOCK, send)
+    : send();
+}
+
+/**
+ * A session refresh as the server takes it. Better Auth's client sends it with no
+ * body, and its router refuses a POST that names no JSON with a 415, which reads
+ * as a failed session and leaves the page without one, so the refresh carries an
+ * empty JSON object.
+ */
+const refreshRequest = (init: RequestInit | undefined): RequestInit => {
+  const headers = new Headers(init?.headers);
+  headers.set("Content-Type", "application/json");
+  return { ...init, body: "{}", headers };
+};
+
+/** The fetch that Better Auth's browser client calls for every request. */
+export const authFetch = (input: RequestInfo | URL, init?: RequestInit) => {
+  if (isSessionRead(input, init)) {
+    return Effect.runPromise(readSession(fetch, input, init));
+  }
+  if (isSessionRefresh(input, init)) {
+    return refreshInOneTab(() =>
+      Effect.runPromise(requestWithDeadline(fetch, input, refreshRequest(init)))
+    );
+  }
+  return Effect.runPromise(requestWithDeadline(fetch, input, init));
+};

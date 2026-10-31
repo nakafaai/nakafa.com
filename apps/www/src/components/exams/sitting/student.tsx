@@ -10,14 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Effect, Option } from "effect";
+import { Option } from "effect";
 import {
   type FormEvent,
   useCallback,
@@ -34,12 +30,18 @@ import {
   useEnterSitting,
 } from "@/components/exams/sitting/admit";
 import { isActive, takesAnswers } from "@/components/exams/sitting/attempt";
-import { SittingBar } from "@/components/exams/sitting/bar";
+import {
+  PaperBack,
+  PaperBar,
+  SittingBar,
+} from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
+import { useReaderLoaded } from "@/components/exams/sitting/document";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
-import { entersBySelf, roomEntryOf } from "@/components/exams/sitting/join";
+import { entersBySelf, pageRoomEntry } from "@/components/exams/sitting/join";
 import { StudentOutcome } from "@/components/exams/sitting/outcome";
 import { StudentPlayer } from "@/components/exams/sitting/player";
+import { PaperFrame } from "@/components/exams/sitting/recovery";
 import { SittingRetry } from "@/components/exams/sitting/retry";
 import {
   CardSection,
@@ -60,7 +62,9 @@ type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
  * sitting that has not opened shows its opening time and no token field. Before the student is admitted,
  * the screen shows the token field. Once the sitting opens, a device that the browser keeps enters without a
  * token, because it already owns the attempt, and a student who scanned the room's QR code enters with its
- * code, which the field then shows in case the proctor has changed the token since. An admitted student sees
+ * code, which the field then shows in case the proctor has changed the token since. The browser holds both
+ * before the first paint, so a page that enters by itself shows the paper's frame from its first frame and
+ * never the token field, which comes back only when the entry is refused. An admitted student sees
  * the paper while the attempt is open, and one sentence for a lock. Any attempt that no longer takes answers shows its sentence and its results, so a reload after
  * a close or a finish still shows how it ended. Every screen keeps the school's header, so a phone can return
  * to the school home.
@@ -79,51 +83,14 @@ export function StudentSitting({
     exams.sittings.student,
     isSettled ? { sittingId, slug } : "skip"
   );
-  const enter = useEnterSitting();
-  const [admitted, setAdmitted] = useState<Admitted | null>(null);
-  const [message, setMessage] = useState<typeof EntryMessage.Type | null>(null);
-  const [tokenText, setTokenText] = useState("");
-  const resumed = useRef(false);
-  const tokenId = useId();
-  // The entry waits for the server's answer: a second press would send a second device with the same token.
-  const [entering, startEntering] = useTransition();
   // The page enters by itself once, when the sitting has opened.
   const enterable = QueryResult.isSuccess(view) && entersBySelf(view.value);
+  const entry = useSittingEntry({ enterable, sittingId, slug });
+  const { admitted, joining } = entry;
+  // The paper's reader loads while the student enters, so the paper draws at once.
+  useReaderLoaded(enterable);
   // A sitting cancelled, or closed to the student, while its page is open keeps its exam's title above the refusal.
   const kept = useLastValue(view);
-
-  /** Shows the admission, or the sentence that explains why the entry was refused. */
-  const receive = useCallback((next: Admission) => {
-    if (next._tag === "admitted") {
-      setAdmitted(next);
-      setMessage(null);
-      return;
-    }
-    setMessage(next._tag === "refused" ? next.message : null);
-  }, []);
-
-  useEffect(() => {
-    if (resumed.current || !enterable) {
-      return;
-    }
-    resumed.current = true;
-    Effect.runPromise(
-      roomEntryOf(sittingId, window.location.hash).pipe(
-        Effect.flatMap((entry) =>
-          Option.match(entry, {
-            onNone: () => Effect.void,
-            onSome: (token) =>
-              Effect.sync(() => {
-                setTokenText(token);
-                startEntering(async () => {
-                  await enter({ sittingId, slug, token }, receive);
-                });
-              }),
-          })
-        )
-      )
-    );
-  }, [enter, enterable, receive, sittingId, slug]);
 
   if (QueryResult.isFailure(view)) {
     return (
@@ -138,10 +105,17 @@ export function StudentSitting({
       </>
     );
   }
-  if (!QueryResult.isSuccess(view)) {
-    return <SittingBar examTitle={t("sitting")} />;
+  // A paused read, as while Convex confirms the session again, keeps its last answer, so a running paper stays.
+  if (Option.isNone(kept)) {
+    return joining ? (
+      <PaperFrame>
+        <PaperBar back={<PaperBack />} title={t("sitting")} />
+      </PaperFrame>
+    ) : (
+      <SittingBar examTitle={t("sitting")} />
+    );
   }
-  const { attempt, sitting } = view.value;
+  const { attempt, sitting } = kept.value;
   if (attempt !== null && admitted !== null && isActive(attempt.state)) {
     return (
       <StudentPlayer
@@ -152,6 +126,13 @@ export function StudentSitting({
       />
     );
   }
+  if (joining && enterable) {
+    return (
+      <PaperFrame>
+        <PaperBar back={<PaperBack />} title={sitting.examTitle} />
+      </PaperFrame>
+    );
+  }
   if (attempt !== null && !takesAnswers(attempt.state)) {
     return <StudentOutcome attempt={attempt} sitting={sitting} />;
   }
@@ -159,19 +140,11 @@ export function StudentSitting({
     return <StudentScheduled sitting={sitting} />;
   }
 
-  /** Enters with the token that the student typed. */
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    startEntering(async () => {
-      await enter({ sittingId, slug, token: tokenText.trim() }, receive);
-    });
-  }
-
   return (
     <>
       <SittingBar examTitle={sitting.examTitle} />
       <SittingBody>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={entry.submit}>
           <CardSection>
             <CardHeader>
               <CardTitle>{t("student-enter")}</CardTitle>
@@ -181,20 +154,29 @@ export function StudentSitting({
             </CardHeader>
             <CardContent>
               <Field>
-                <FieldLabel htmlFor={tokenId}>{t("token")}</FieldLabel>
+                <FieldLabel htmlFor={entry.tokenId}>{t("token")}</FieldLabel>
                 <Input
                   autoComplete="off"
-                  id={tokenId}
-                  onChange={(event) => setTokenText(event.currentTarget.value)}
+                  id={entry.tokenId}
+                  onChange={(event) =>
+                    entry.setTokenText(event.currentTarget.value)
+                  }
                   placeholder={t("student-token-placeholder")}
-                  value={tokenText}
+                  value={entry.tokenText}
                 />
-                <FieldError>{message === null ? null : t(message)}</FieldError>
               </Field>
             </CardContent>
-            <CardSectionFooter hint={t("student-enter-footer")}>
+            {/* A refused token takes the sentence's place, so the card holds its height. */}
+            <CardSectionFooter
+              hint={
+                entry.message === null
+                  ? t("student-enter-footer")
+                  : t(entry.message)
+              }
+              tone={entry.message === null ? "muted" : "destructive"}
+            >
               <CardSectionActions>
-                <Button disabled={!isSettled || entering} type="submit">
+                <Button disabled={!isSettled || entry.entering} type="submit">
                   {t("student-enter")}
                 </Button>
               </CardSectionActions>
@@ -204,6 +186,79 @@ export function StudentSitting({
       </SittingBody>
     </>
   );
+}
+
+/**
+ * The student's entry to one sitting: what the page enters with by itself, the token the student types, and the
+ * admission that lets the paper show. The browser holds the page's own entry before the first paint, so `joining`
+ * says from the first frame that the page will enter by itself, until the server answers.
+ */
+function useSittingEntry({
+  enterable,
+  sittingId,
+  slug,
+}: {
+  /** Whether the sitting's state lets the page enter by itself now. */
+  readonly enterable: boolean;
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+  readonly slug: TenantSlug;
+}) {
+  const enter = useEnterSitting();
+  const [admitted, setAdmitted] = useState<Admitted | null>(null);
+  const [message, setMessage] = useState<typeof EntryMessage.Type | null>(null);
+  // What the page enters with by itself, taken once: a room's code is spent as it is read.
+  const [selfEntry] = useState(() => pageRoomEntry(sittingId));
+  const [tokenText, setTokenText] = useState(() =>
+    Option.getOrElse(selfEntry, () => "")
+  );
+  // The page's own entry has not been answered yet, so it shows the paper's frame.
+  const [joining, setJoining] = useState(() => Option.isSome(selfEntry));
+  const resumed = useRef(false);
+  const tokenId = useId();
+  // The entry waits for the server's answer: a second press would send a second device with the same token.
+  const [entering, startEntering] = useTransition();
+
+  /** Shows the admission, or the sentence that explains why the entry was refused. */
+  const receive = useCallback((next: Admission) => {
+    setJoining(false);
+    if (next._tag === "admitted") {
+      setAdmitted(next);
+      setMessage(null);
+      return;
+    }
+    setMessage(next._tag === "refused" ? next.message : null);
+  }, []);
+
+  useEffect(() => {
+    if (resumed.current || !enterable) {
+      return;
+    }
+    resumed.current = true;
+    if (Option.isSome(selfEntry)) {
+      startEntering(async () => {
+        await enter({ sittingId, slug, token: selfEntry.value }, receive);
+      });
+    }
+  }, [enter, enterable, receive, selfEntry, sittingId, slug]);
+
+  /** Enters with the token that the student typed. */
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    startEntering(async () => {
+      await enter({ sittingId, slug, token: tokenText.trim() }, receive);
+    });
+  }
+
+  return {
+    admitted,
+    entering,
+    joining,
+    message,
+    setTokenText,
+    submit,
+    tokenId,
+    tokenText,
+  };
 }
 
 /** A sitting that has not opened: its opening time, and no token field until it opens. */

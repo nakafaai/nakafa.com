@@ -75,6 +75,7 @@
     "lint": "bun run effect:source:check && bun run check && ultracite check && turbo run lint --filter=cas",
     "prepare": "effect-tsgo patch --typescript --no-oxlint",
     "security:audit": "bash scripts/osv apps/cas/uv.lock",
+    "seo:audit": "bunx squirrelscan@latest audit https://nakafa.com --level surface --format llm",
     "start": "turbo run start",
     "test": "bun run check && bun run test:scripts && turbo run test",
     "test:scripts": "bun run typecheck:scripts && vitest run --config scripts/vitest.config.mts",
@@ -107,7 +108,6 @@
     "@repo/testing": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@sigstore/bundle": "5.0.0",
-    "@turbo/gen": "2.11.10",
     "@types/node": "24.19.2",
     "effect": "catalog:",
     "esbuild": "0.28.2",
@@ -116,8 +116,7 @@
     "turbo": "2.11.10",
     "typescript": "catalog:",
     "ultracite": "8.1.0",
-    "vitest": "catalog:",
-    "yaml": "2.9.1"
+    "vitest": "catalog:"
   },
   "packageManager": "bun@1.4.4",
   "engines": {

@@ -1,85 +1,92 @@
-import { ASSESSMENT_RULES } from "@repo/backend/confect/editor/model";
-import { blockDirections } from "@repo/design-system/components/editor/direction";
-import { DocumentEditor } from "@repo/design-system/components/editor/document";
+import { editorDocument } from "@repo/design-system/components/editor/frame";
+import { drawDocument } from "@repo/design-system/components/editor/prose";
 import {
-  FORMULA_VIEWS,
-  FormulaLabelsProvider,
-} from "@repo/design-system/components/editor/formula";
-import {
-  PICTURE_VIEW,
-  PicturesProvider,
-} from "@repo/design-system/components/editor/picture";
-import {
-  ARTICLE_MARKS,
-  articleProse,
-} from "@repo/design-system/components/editor/prose";
-import { documentExtensions } from "@repo/editor/document";
+  blockGapVariants,
+  pictureVariants,
+} from "@repo/design-system/lib/prose";
 import { Node } from "@tiptap/pm/model";
-import { use } from "react";
+import { cn } from "cn";
+import { Array as Arr, Option, Record as Rec } from "effect";
+import { use, useCallback, useMemo } from "react";
 import { SittingPictures } from "@/components/exams/sitting/pictures";
 import { assessmentSchema } from "@/lib/editor/assessment";
-import { useDocumentLabels } from "@/lib/editor/labels";
 
 /**
- * The extensions of a read-only document: the ones the exam canvas edits the same document with, and
- * the direction of each block from its own words, as the canvas gives it.
+ * Draws each image of a drawn document as the editor's picture draws it: a box at the image's stored aspect
+ * ratio, kept before the image loads, and the placeholder of that box until its address is resolved.
  */
-const READER_EXTENSIONS = [
-  ...documentExtensions(ASSESSMENT_RULES, {
-    ...FORMULA_VIEWS,
-    image: PICTURE_VIEW,
-    marks: ARTICLE_MARKS,
-  }),
-  blockDirections,
-];
-
-/** A prompt reads as the published article reads, its paragraphs included. */
-const PAGE_EXTENSIONS = [...READER_EXTENSIONS, articleProse];
-
-/** An option reads as the article's text too, with its paragraphs as one line of text. */
-const LINE_EXTENSIONS = [
-  ...READER_EXTENSIONS,
-  articleProse.configure({ paragraphs: false }),
-];
-
-/** Nothing begins on a reader: a read-only document takes no file. */
-const noBegin = () => undefined;
+function drawPictures(
+  root: HTMLElement,
+  urls: Readonly<Record<string, string>>
+) {
+  Arr.forEach(
+    Arr.fromIterable(root.querySelectorAll<HTMLElement>('[data-type="image"]')),
+    (element) => {
+      const {
+        alt = "",
+        asset = "",
+        height = "1",
+        width = "1",
+      } = element.dataset;
+      element.className = cn(blockGapVariants(), "relative block max-w-full");
+      element.style.aspectRatio = `${width} / ${height}`;
+      element.style.maxWidth = `${width}px`;
+      Option.match(Rec.get(urls, asset), {
+        onNone: () => {
+          const box = document.createElement("div");
+          box.className = cn(pictureVariants(), "size-full");
+          box.setAttribute("aria-label", alt);
+          box.setAttribute("role", "img");
+          element.replaceChildren(box);
+        },
+        onSome: (src) => {
+          const picture = document.createElement("img");
+          picture.alt = alt;
+          picture.className = cn(pictureVariants(), "size-full object-contain");
+          picture.height = Number(height);
+          picture.src = src;
+          picture.width = Number(width);
+          element.replaceChildren(picture);
+        },
+      });
+    }
+  );
+}
 
 /**
- * One assessment document, read-only. The editor starts read-only and nothing turns editing on, so
- * the document reads as the exam canvas renders it. The document is the JSON object of a prompt or
- * of an option label, and the schema reads it the way the editor's own document does. A prompt
- * reads as a page, and an option as one line, the same way the exam editor sizes each.
+ * One assessment document, read-only, as the exam canvas and the published article read it. It is drawn once
+ * without an editor (`drawDocument`), so a paper of forty questions with their options costs a slow phone a
+ * walk over each document, not an editor for each. The document is the JSON object of a prompt or of an option
+ * label: a prompt reads as a page, with the article's paragraphs, and an option as one line.
  */
 export function SittingReader({
   document,
-  label,
   size = "page",
 }: {
   readonly document: unknown;
-  /** The accessible name of the document. */
-  readonly label: string;
-  /** The room the text takes at least: a prompt takes a page, and an option takes one line. */
+  /** How the text reads: a prompt as a page, and an option as one line. */
   readonly size?: "line" | "page";
 }) {
-  const labels = useDocumentLabels();
   const urls = use(SittingPictures);
-  const content = Node.fromJSON(assessmentSchema, document).toJSON();
+  const content = useMemo(
+    () => Node.fromJSON(assessmentSchema, document),
+    [document]
+  );
+  const draw = useCallback(
+    (element: HTMLDivElement | null) => {
+      if (element !== null) {
+        drawDocument(element, content, size === "page");
+        drawPictures(element, urls);
+      }
+    },
+    [content, size, urls]
+  );
 
   return (
-    <FormulaLabelsProvider labels={labels.formulaEdit}>
-      <PicturesProvider begin={noBegin} labels={labels.pictures} urls={urls}>
-        <DocumentEditor
-          extensions={size === "page" ? PAGE_EXTENSIONS : LINE_EXTENSIONS}
-          label={label}
-          onChange={() => undefined}
-          onEditor={(editor) => {
-            editor.commands.setContent(content, { emitUpdate: false });
-          }}
-          placeholder=""
-          size={size}
-        />
-      </PicturesProvider>
-    </FormulaLabelsProvider>
+    <div
+      className={editorDocument({ size, text: "article" })}
+      data-slot="sitting-document"
+      ref={draw}
+    />
   );
 }

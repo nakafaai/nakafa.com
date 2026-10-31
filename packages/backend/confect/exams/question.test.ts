@@ -5,6 +5,7 @@ import {
   keyMissing,
   needsKey,
   newChoiceAnswers,
+  numericAnswers,
   QuestionTemplate,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
@@ -25,6 +26,12 @@ describe("exams/question answersFit", () => {
   it("fits an essay's long text to the essay template, and no choice to it", () => {
     expect(answersFit("essay", essayAnswers())).toBe(true);
     expect(answersFit("essay", newChoiceAnswers())).toBe(false);
+  });
+
+  it("fits a numeric entry to the numeric template, and neither a choice nor an essay to it", () => {
+    expect(answersFit("numeric", numericAnswers())).toBe(true);
+    expect(answersFit("numeric", newChoiceAnswers())).toBe(false);
+    expect(answersFit("numeric", essayAnswers())).toBe(false);
   });
 });
 

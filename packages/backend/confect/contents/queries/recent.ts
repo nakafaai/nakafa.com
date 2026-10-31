@@ -10,11 +10,9 @@ import {
 import { buildContentSearchRef } from "@repo/backend/confect/contents/search/documents";
 import { resolveLearningContext } from "@repo/backend/confect/contents/views/context";
 import { hydrateMaterialTarget } from "@repo/backend/confect/contents/views/target";
-import type { recentlyViewedSubjectValidator } from "@repo/backend/confect/lib/validators/trending";
 import { cleanSlug } from "@repo/utilities/slug";
-import { Array as Arr, Effect, flow, Schema, Struct } from "effect";
+import { Effect, flow, Predicate, Schema, Stream, Struct } from "effect";
 
-type RecentlyViewedSubject = typeof recentlyViewedSubjectValidator.Type;
 const defaultRecentLearningLimit = 5;
 const maxRecentLearningLimit = 20;
 const recentLearningCandidateLimit = 100;
@@ -46,8 +44,9 @@ export const listRecentLearning = Effect.fn(
     if (!(user && limit > 0)) {
       return [];
     }
-    let subjects: RecentlyViewedSubject[] = [];
-    const recentRows = yield* database
+    // The stream reads a row only when the page still needs one, so a learner
+    // whose latest rows resolve costs `limit` rows, not the whole candidate cap.
+    return yield* database
       .table("userLearningRecents")
       .index(
         "by_userId_and_locale_and_section_and_lastViewedAt",
@@ -58,18 +57,15 @@ export const listRecentLearning = Effect.fn(
             .eq("section", "material"),
         "desc"
       )
-      .take(recentLearningCandidateLimit)
-      .pipe(Effect.orDie);
-    for (const row of recentRows) {
-      const subject = yield* toRecentlyViewedSubject(row);
-      if (subject) {
-        subjects = Arr.append(subjects, subject);
-      }
-      if (subjects.length >= limit) {
-        break;
-      }
-    }
-    return subjects;
+      .stream()
+      .pipe(
+        Stream.take(recentLearningCandidateLimit),
+        Stream.mapEffect(toRecentlyViewedSubject),
+        Stream.filter(Predicate.isNotUndefined),
+        Stream.take(limit),
+        Stream.runCollect,
+        Effect.orDie
+      );
   },
   Effect.catchDefect(flow(toRecentLearningIoError, Effect.fail))
 );

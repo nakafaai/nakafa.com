@@ -42,6 +42,7 @@ import {
   NotFoundPageData,
   readNotFoundPageLocale,
 } from "@/lib/routing/not-found";
+import { SCROLL_AREA_PROPERTIES_SCRIPT } from "@/lib/scroll/prepaint";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";
 import { THEME_PREPAINT_SCRIPT } from "@/lib/theme/prepaint";
 import appCss from "@/styles/globals.css?url";
@@ -175,6 +176,10 @@ function RootDocument({ children }: { children: ReactNode }) {
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: EARLY_PRESS_SCRIPT }}
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{ __html: SCROLL_AREA_PROPERTIES_SCRIPT }}
         />
         <HeadContent />
       </head>

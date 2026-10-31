@@ -56,3 +56,23 @@ export const ARABIC_MARKS = [
 
 /** The Arabic comma, question mark and semicolon. */
 export const ARABIC_PUNCTUATION = ["،", "؟", "؛"] as const;
+
+/** The Arabic-Indic digits from one to nine, three to a row, as a number pad lays them out above zero. */
+export const ARABIC_DIGIT_ROWS = [
+  ["١", "٢", "٣"],
+  ["٤", "٥", "٦"],
+  ["٧", "٨", "٩"],
+] as const;
+
+/** The Arabic-Indic zero, which a number pad lays out under the other digits. */
+export const ARABIC_ZERO = "٠";
+
+/**
+ * The signs a number takes beside its digits, one at the end of each row of digits, each with the name of its key
+ * in the Common messages: the Arabic decimal separator, the slash of a fraction, and the minus sign.
+ */
+export const ARABIC_NUMBER_SIGNS = [
+  { name: "arabic-decimal", sign: "٫" },
+  { name: "arabic-fraction", sign: "/" },
+  { name: "arabic-minus", sign: "\u2212" },
+] as const;

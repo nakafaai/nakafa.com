@@ -1,6 +1,7 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useLocation } from "@tanstack/react-router";
 import { Array as Arr, Record as Rec } from "effect";
 import type { ReactNode } from "react";
@@ -30,8 +31,8 @@ import { PlayerProvider } from "@/components/player/provider";
  * running player's own frame (the header with back, the title, the timer and Finish; the navigator; the
  * footer) built from what the page already knows: the title, the time limit the caller's timer shows, and
  * how many questions the section holds, none answered yet. Nothing in it acts while the server starts the
- * attempt, and no question shows: the first one arrives with the running player, which takes this frame's
- * place once the page reads the attempt, so the wait shows as the player opening.
+ * attempt, and the loader stands where the first question arrives with the running player, which takes this
+ * frame's place once the page reads the attempt, so the wait shows as the player opening.
  */
 export function TryoutPlayerOpening({
   children,
@@ -91,7 +92,9 @@ export function TryoutPlayerOpening({
             </PlayerSidebar>
           }
         >
-          {null}
+          <div className="flex justify-center py-24">
+            <Spinner label={tCommon("loading")} />
+          </div>
         </PlayerMain>
         <PlayerFooter>
           <PlayerFlag locked questions={[]} />

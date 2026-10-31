@@ -1,5 +1,5 @@
 import { useMutation } from "@confect/react";
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, CloudOffIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
@@ -9,7 +9,9 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { statusIconVariants } from "@repo/design-system/lib/status";
 import { isComposingKey } from "@repo/utilities/composition";
+import { useConvexConnectionState } from "convex/react";
 import { Function as Fn, Option } from "effect";
 import { type ComponentProps, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -25,6 +27,7 @@ import {
 } from "@/components/tenant/exams/schedule";
 import { titleToSave } from "@/components/tenant/exams/title";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
+import { isConvexOffline } from "@/lib/convex/online";
 import { Link } from "@/lib/routing/link";
 
 /**
@@ -78,6 +81,7 @@ export function ExamHeader() {
         readOnly={exam.archived || gone}
         value={draft ?? exam.title}
       />
+      <ExamOffline />
       <ExamPresence />
       <ExamMenu />
       {exam.archived || gone ? null : <ScheduleExam />}
@@ -103,13 +107,47 @@ export function ExamHeaderFrame() {
 }
 
 /**
+ * What the header says while the connection is gone: the teacher keeps writing, and every change waits on the
+ * page and saves once the connection is back. A phone shows the icon, which names it in its tooltip.
+ */
+function ExamOffline() {
+  const t = useTranslations("Exams");
+  const connection = useConvexConnectionState();
+
+  if (!isConvexOffline(connection)) {
+    return null;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <span className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs" />
+        }
+      >
+        <HugeIcons
+          aria-hidden="true"
+          className={statusIconVariants({
+            className: "size-3.5",
+            tone: "warning",
+          })}
+          icon={CloudOffIcon}
+        />
+        <span className="max-md:sr-only">{t("offline-note")}</span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{t("offline-note")}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/**
  * The bar of the editor's header and its row. Both run the screen's full width, as the editor's panes do, so on a
  * wide screen the row lines up with the canvas under it.
  */
 function ExamHeaderRow({ children }: { children: ReactNode }) {
   return (
     <header className="h-14 shrink-0 border-b" data-slot="page-header">
-      <div className="flex h-full w-full items-center gap-2 px-2">
+      <div className="flex h-full w-full items-center gap-2 px-4">
         {children}
       </div>
     </header>
@@ -140,7 +178,10 @@ function BackToExams() {
   );
 }
 
-/** The field of the exam's title, which takes the room the row leaves between the link and the buttons. */
+/**
+ * The field of the exam's title, which takes the room the row leaves between the link and the buttons. Its text
+ * starts 12px after the link, the player's distance from its back button to its title.
+ */
 function ExamTitleField(
   props: Omit<ComponentProps<typeof Input>, "aria-label" | "className" | "dir">
 ) {
@@ -150,7 +191,7 @@ function ExamTitleField(
     <Input
       {...props}
       aria-label={t("title-label")}
-      className="min-w-0 flex-1 truncate border-0 text-lg font-semibold shadow-none md:text-lg"
+      className="min-w-0 flex-1 truncate border-0 px-1 text-lg font-semibold shadow-none md:text-lg"
       dir="auto"
     />
   );

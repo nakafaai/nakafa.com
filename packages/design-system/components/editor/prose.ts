@@ -1,3 +1,4 @@
+import { markBlockDirections } from "@repo/design-system/components/editor/direction";
 import { drawFormula } from "@repo/design-system/components/editor/render";
 import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import {
@@ -21,7 +22,7 @@ import {
 } from "@repo/design-system/lib/prose";
 import type { HeadingTag } from "@repo/design-system/types/markdown";
 import { Extension } from "@tiptap/core";
-import type { Node } from "@tiptap/pm/model";
+import { DOMSerializer, type Node } from "@tiptap/pm/model";
 import { Plugin } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { cn } from "cn";
@@ -225,4 +226,31 @@ export function drawArticleProse(root: HTMLElement) {
   );
   frameTables(root);
   drawFormulas(root);
+}
+
+/**
+ * Draws a document into `root` without an editor: the schema's own rendering of each node, which is what the
+ * editor draws, with each block in the direction of its own words and the published article's classes. A
+ * prompt or a note (`paragraphs`) gives each paragraph the article's classes, and an option leaves them as one
+ * line of text. An empty paragraph gets the line break an editor gives it, so it keeps its height.
+ */
+export function drawDocument(
+  root: HTMLElement,
+  doc: Node,
+  paragraphs: boolean
+) {
+  root.replaceChildren(
+    DOMSerializer.fromSchema(doc.type.schema).serializeFragment(doc.content)
+  );
+  markBlockDirections(root);
+  drawArticleProse(root);
+  Arr.forEach(Arr.fromIterable(root.querySelectorAll("p")), (paragraph) => {
+    // A cell's paragraph reads as the cell's words, as the lesson and the editor draw it.
+    if (paragraphs && paragraph.closest("td, th") === null) {
+      paragraph.className = paragraphVariants();
+    }
+    if (paragraph.childNodes.length === 0) {
+      paragraph.append(document.createElement("br"));
+    }
+  });
 }

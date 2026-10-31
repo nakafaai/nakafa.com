@@ -7,6 +7,7 @@ import {
   fixedOptions,
   matchAnswers,
   newChoiceAnswers,
+  numericAnswers,
   type QuestionTemplate,
   type QuestionView,
   shortAnswers,
@@ -17,7 +18,7 @@ import { Array as Arr, Option } from "effect";
 
 /**
  * A question's interactions and key as another template takes them. A short answer takes one text
- * entry and an essay one long text, both with no key, and a choice template turns either into a new
+ * entry, a numeric answer one numeric entry and an essay one long text, each with no key, and a choice template turns either into a new
  * choice first. A template that fixes its
  * options (`fixedOptions`) gives each choice those options, labelled with `labels` in order and
  * numbered from one, and clears the key, because no option the teacher marked is one of them. Any
@@ -35,6 +36,9 @@ export const asTemplate = (
   if (template === "short") {
     return { answers: shortAnswers(), key: null };
   }
+  if (template === "numeric") {
+    return { answers: numericAnswers(), key: null };
+  }
   if (template === "essay") {
     return { answers: essayAnswers(), key: null };
   }
@@ -45,7 +49,7 @@ export const asTemplate = (
     return { answers: tableAnswers(labels), key: null };
   }
   const fixed = Option.isSome(fixedOptions(template));
-  // A short answer, an essay, and a match hold no choice, so a choice template starts them from a new choice.
+  // A short answer, a numeric answer, an essay, and a match hold no choice, so a choice template starts them from a new choice.
   const choices = Arr.some(answers, (answer) => answer.kind === "choice")
     ? answers
     : newChoiceAnswers();

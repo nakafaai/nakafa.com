@@ -182,8 +182,9 @@ async function documentLooks(browser: Browser, baseURL: string | undefined) {
   // The teacher's preview, Try as student, reads the exam the way its student does.
   await owner.goto(address(`/exams/${sitting.examId}/try`));
   const previewPrompt = owner
-    .getByRole("textbox", { name: "Question text" })
-    .nth(2);
+    .getByRole("article", { exact: true, name: "Question 3" })
+    .locator('[data-slot="sitting-document"]')
+    .first();
   await expect(previewPrompt).toContainText("Soal ketiga", {
     timeout: readinessTimeoutMilliseconds,
   });
@@ -200,8 +201,9 @@ async function documentLooks(browser: Browser, baseURL: string | undefined) {
     .fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   const sittingPrompt = student
-    .getByRole("textbox", { name: "Question text" })
-    .nth(2);
+    .getByRole("article", { exact: true, name: "Question 3" })
+    .locator('[data-slot="sitting-document"]')
+    .first();
   await expect(sittingPrompt).toContainText("Soal ketiga", {
     timeout: readinessTimeoutMilliseconds,
   });

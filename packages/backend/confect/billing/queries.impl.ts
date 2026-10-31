@@ -7,11 +7,12 @@ import { readRecentPayments } from "@repo/backend/confect/billing/payments";
 import spec from "@repo/backend/confect/billing/queries.spec";
 import {
   checkoutCountryFor,
+  passesLead,
   routeOffer,
 } from "@repo/backend/confect/billing/route";
 import { ProCheckoutOffer } from "@repo/backend/confect/billing/spec";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { Array as Arr, Clock, Effect, Layer, Option } from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option, Order } from "effect";
 
 /** The viewer's plan, subscription, and Nina credits, read at the moment of the query. */
 const overview = FunctionImpl.make(
@@ -38,8 +39,9 @@ const payments = FunctionImpl.make(
 
 /**
  * The Pro offers sold in `currency`, each at its price on the rail that sells it
- * there, in catalog order. An offer no rail sells there is left out, so Polar's
- * Indonesia sells only the monthly plan, and Xendit's adds the passes.
+ * there, in catalog order, or with the passes first under `passes`. An offer no
+ * rail sells there is left out, so Polar's Indonesia sells only the monthly plan,
+ * and Xendit's adds the passes.
  */
 const proOffers = FunctionImpl.make(
   databaseSchema,
@@ -64,7 +66,16 @@ const proOffers = FunctionImpl.make(
         })
       )
     );
-    return Arr.getSomes(offers);
+    const sold = Arr.getSomes(offers);
+    if (!(yield* passesLead(currency))) {
+      return sold;
+    }
+    return Arr.sort(
+      sold,
+      Order.mapInput(Order.Number, ({ interval }: (typeof sold)[number]) =>
+        interval === "pass" ? 0 : 1
+      )
+    );
   })
 );
 

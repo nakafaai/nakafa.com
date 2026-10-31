@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -9,6 +9,16 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** Where the page keeps whether a drawer's popup was ever drawn since it started watching. */
 const DRAWER_SEEN = "__drawerSeen";
+
+/** Where the page keeps the length of its main landmark's text, one entry per frame, since it started watching. */
+const MAIN_TEXT = "__mainText";
+
+/**
+ * The fewest characters the main landmark holds on any frame between Create and the editor. The list and
+ * the editor's workspace each hold far more, and the editor's bare frame, its header and toolbar alone,
+ * held 23 before the editor drew the exam that the create answered with.
+ */
+const MAIN_TEXT_FLOOR = 60;
 
 test("a dialog that opens as it mounts is a dialog from its first frame on a wide screen", async ({
   baseURL,
@@ -60,5 +70,49 @@ test("a dialog that opens as it mounts is a dialog from its first frame on a wid
   expect(
     await page.evaluate((flag) => Reflect.get(window, flag), DRAWER_SEEN)
   ).toBe(false);
+  await context.close();
+});
+
+test("the editor that Create opens draws the new exam on its first frame, and the page never drops to a bare frame", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+  const create = page.getByRole("button", { name: "Create exam" });
+  await waitUntilTakenOver(create);
+  await create.click();
+  const creating = page.getByRole("dialog");
+  await creating.getByRole("textbox", { name: "Exam title" }).fill("Sekejap");
+
+  // Every frame from the press on records how much text the main landmark holds.
+  await page.evaluate((key) => {
+    const lengths: number[] = [];
+    Reflect.set(window, key, lengths);
+    const sample = () => {
+      lengths.push(document.querySelector("main")?.textContent?.length ?? 0);
+      requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  }, MAIN_TEXT);
+  await creating.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+  await expect(
+    page.getByRole("textbox", { name: "Question 1, option A" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  const lengths = Schema.decodeUnknownSync(Schema.Array(Schema.Int))(
+    await page.evaluate((key) => Reflect.get(window, key), MAIN_TEXT)
+  );
+  expect(lengths.length).toBeGreaterThan(0);
+  expect(Arr.filter(lengths, (length) => length < MAIN_TEXT_FLOOR)).toEqual([]);
   await context.close();
 });

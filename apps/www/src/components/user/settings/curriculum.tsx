@@ -5,7 +5,6 @@ import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import {
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
@@ -193,7 +192,6 @@ function UserSettingsCurriculumForm({
       <CardSection>
         <CardHeader>
           <CardTitle>{t("curriculum")}</CardTitle>
-          <CardDescription>{t("curriculum-description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form.Field name="preferredCurriculumProgramKey">

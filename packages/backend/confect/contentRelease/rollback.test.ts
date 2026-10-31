@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import {
   type RollbackPage,
@@ -34,7 +33,6 @@ import {
   rollbackArtifactHash,
 } from "@repo/backend/test/content/rollback";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
-import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest, type TestConvex } from "convex-test";
 import { Schema } from "effect";
 
@@ -44,9 +42,6 @@ const RollbackPageJsonSchema = Schema.fromJsonString(RollbackPageSchema);
 const RoutePageJsonSchema = Schema.fromJsonString(RoutePageSchema);
 const ContentProjectionJsonSchema = Schema.fromJsonString(
   ContentProjectionSchema
-);
-const SignedArtifactJsonSchema = Schema.fromJsonString(
-  SignedContentArtifactSchema
 );
 
 /** Decodes the canonical body response through the shared contract. */
@@ -326,44 +321,6 @@ describe("contentRelease/rollback", () => {
     });
     await expect(readPage(gap, -1, 1)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
-
-  it("reports a prior version signed under a retired contract as unsupported", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await activateRollbackFixture(ctx, 1);
-      await insertRollbackItem(ctx, 0, true);
-      const prior = await ctx.db
-        .query("contentArtifacts")
-        .withIndex("by_artifactHash", (query) =>
-          query.eq("artifactHash", rollbackArtifactHash(0, "prior"))
-        )
-        .unique();
-      if (!prior) {
-        throw new Error("Expected prior artifact.");
-      }
-      const stored = Schema.decodeSync(SignedArtifactJsonSchema)(
-        prior.artifactJson
-      );
-      await ctx.db.patch("contentArtifacts", prior._id, {
-        // The patched payload carries the retired requiredComponents shape,
-        // which the current contract rejects, so only the plain codec writes it.
-        artifactJson: encodeJsonText({
-          ...stored,
-          payload: {
-            ...stored.payload,
-            requiredComponents: [{ name: "InlineMath", version: 1 }],
-          },
-        }),
-      });
-    });
-
-    await expect(readPage(t, -1, 1)).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_UNSUPPORTED",
-        message: `Rollback state ${TEST_RELEASE_ID}/0/prior cannot read artifact ${rollbackArtifactHash(0, "prior")}, which was signed under a retired content contract. Publish a new release instead of rolling back across the contract change.`,
-      },
     });
   });
 

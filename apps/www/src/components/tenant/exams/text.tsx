@@ -17,11 +17,14 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import type { Transaction } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { useConvex } from "convex/react";
-import { Effect, Fiber, Ref } from "effect";
+import { Effect, Fiber, Option, Ref } from "effect";
+import { sendableSteps } from "prosemirror-collab";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { refusePaste } from "@/components/tenant/exams/picture";
+import { usePageDocument } from "@/components/tenant/exams/preview";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
 import {
@@ -54,8 +57,8 @@ const TEXT_EXTENSIONS = [
   Collab.configure({ clientId: "", version: 0 }),
   articleProse,
   depthGuard(MAX_DOCUMENT_DEPTH),
-  stepSizeGuard(MAX_STEP_BYTES),
-  documentSizeGuard(MAX_DOCUMENT_BYTES),
+  stepSizeGuard(MAX_STEP_BYTES, refusePaste),
+  documentSizeGuard(MAX_DOCUMENT_BYTES, refusePaste),
 ];
 
 /**
@@ -123,6 +126,8 @@ interface ExamTextProps {
   readonly children: ReactNode;
   /** The document the text edits, which the question owns. */
   readonly documentId: Id<"editorDocuments">;
+  /** Called once with the editor, when the server has opened the document and the text takes changes. */
+  readonly onOpen?: (editor: DocumentEditorInstance) => void;
 }
 
 /**
@@ -132,8 +137,10 @@ interface ExamTextProps {
  * local change schedules a round after `SEND_QUIET_PERIOD`, and the server's steps arrive through a
  * subscription, so the editor takes them without polling. When the text closes, the round it waits
  * for stops, and the steps the editor holds are sent. The text wires the document the caller composes.
+ * Until the server opens the document the editor holds nothing, so the text the server holds is drawn
+ * in its place, and a text with words never shows empty or as its hint on the way to its editor.
  */
-export function ExamText({ children, documentId }: ExamTextProps) {
+export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
   const { exam, gone, slug } = useExam();
   const frozen = isLocked(exam);
   const labels = useDocumentLabels();
@@ -149,6 +156,25 @@ export function ExamText({ children, documentId }: ExamTextProps) {
   const show = useExamLive((state) => state.show);
   const clientId = useStore(sync, (state) => state.clientId);
   const version = useStore(sync, (state) => state.version);
+  const opened = clientId !== null;
+  const stored = usePageDocument({
+    documentId,
+    editing: false,
+    open: false,
+    read: !opened,
+    saved: true,
+  });
+  // An empty text has nothing to draw, and its editor shows the hint at once.
+  const drawn = !(
+    opened ||
+    Option.exists(
+      stored,
+      (doc) =>
+        doc.childCount === 1 &&
+        doc.firstChild?.isTextblock === true &&
+        doc.firstChild.childCount === 0
+    )
+  );
   const reply = useQuery(
     editors.steps.since,
     clientId === null ? "skip" : { clientId, documentId, slug, version }
@@ -187,6 +213,27 @@ export function ExamText({ children, documentId }: ExamTextProps) {
       replaceWaiting(waiting, runRound(session.current, view.current, sync));
     }
   }, [reply, sync]);
+
+  // A page that closes sends what the editor holds at once, and asks first while the server does not hold it yet,
+  // since the send may not leave in time.
+  useEffect(() => {
+    const flush = () => {
+      replaceWaiting(waiting, runRound(session.current, view.current, sync));
+    };
+    const askFirst = (event: BeforeUnloadEvent) => {
+      const editor = view.current;
+      if (editor !== null && sendableSteps(editor.state) !== null) {
+        flush();
+        event.preventDefault();
+      }
+    };
+    window.addEventListener("pagehide", flush);
+    window.addEventListener("beforeunload", askFirst);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      window.removeEventListener("beforeunload", askFirst);
+    };
+  }, [sync]);
 
   // The text closes: stop the open and the waiting round, then send what the editor holds, unless the exam is
   // gone and the server takes nothing more.
@@ -242,6 +289,7 @@ export function ExamText({ children, documentId }: ExamTextProps) {
           Effect.sync(() => {
             show(documentId, editor.view.state.doc);
             editor.setEditable(!(frozen || closed.current));
+            onOpen?.(editor);
           })
         ),
         Effect.catchTag("EditorClosed", () => Effect.void),
@@ -290,6 +338,8 @@ export function ExamText({ children, documentId }: ExamTextProps) {
       extensions={extensions}
       onChange={change}
       onEditor={open}
+      opening={drawn}
+      stored={stored}
     >
       {children}
     </ExamDocumentWiringProvider>

@@ -4,6 +4,8 @@ import { createContext, use, useMemo } from "react";
 const CodeBlockDataSchema = Schema.Struct({
   code: Schema.String,
   filename: Schema.String,
+  /** The source's colours as a server drew them, which saves the browser the highlighter. */
+  html: Schema.optionalKey(Schema.String),
   language: Schema.String,
 });
 

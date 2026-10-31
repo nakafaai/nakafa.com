@@ -1,11 +1,14 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import {
+  ARABIC_DIGIT_ROWS,
   ARABIC_LETTERS,
   ARABIC_MARKS,
+  ARABIC_NUMBER_SIGNS,
   ARABIC_PUNCTUATION,
+  ARABIC_ZERO,
 } from "@repo/design-system/lib/arabic/keys";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
 /**
@@ -70,6 +73,47 @@ function ArabicKeypad({ onKey }: { onKey: (text: string) => void }) {
 }
 
 /**
+ * An on-screen pad of Arabic-Indic digits for a number: one to nine in three rows, each row ending in a sign, the
+ * decimal separator, the slash of a fraction or the minus sign, then zero along the bottom. Every key is named
+ * for assistive technology. A press types its key through `onKey` and keeps the focus in the field, as the
+ * letter keypad does. The digits read left to right, as a number does in Arabic, and the pad is 14rem wide, so
+ * it fits a 320px screen.
+ */
+function ArabicNumberPad({ onKey }: { onKey: (text: string) => void }) {
+  const t = useTranslations("Common");
+
+  return (
+    <div
+      className="grid w-56 max-w-full grid-cols-4 gap-1"
+      data-slot="arabic-number-pad"
+      dir="ltr"
+      lang="ar"
+    >
+      {Arr.map(
+        Arr.zip(ARABIC_DIGIT_ROWS, ARABIC_NUMBER_SIGNS),
+        ([row, { name, sign }]) => (
+          <Fragment key={name}>
+            {Arr.map(row, (digit) => (
+              <ArabicKey key={digit} label={digit} onKey={onKey} text={digit}>
+                {digit}
+              </ArabicKey>
+            ))}
+            <ArabicKey label={t(name)} onKey={onKey} text={sign}>
+              {sign}
+            </ArabicKey>
+          </Fragment>
+        )
+      )}
+      <div className="col-span-4">
+        <ArabicKey label={ARABIC_ZERO} onKey={onKey} text={ARABIC_ZERO}>
+          {ARABIC_ZERO}
+        </ArabicKey>
+      </div>
+    </div>
+  );
+}
+
+/**
  * A mark as its key shows it: shaped on the tatweel in Amiri Quran, with the tatweel's stroke left unpainted and a
  * dotted circle drawn where a letter would stand. Amiri Quran's tall ascent sets the baseline low in a `leading-none`
  * line, so the padding is 0.2em above and 0.8em below, which centres the marks in the 2em box. Measured in Amiri Quran,
@@ -117,4 +161,4 @@ function ArabicKey({
   );
 }
 
-export { ArabicKeypad };
+export { ArabicKeypad, ArabicNumberPad };

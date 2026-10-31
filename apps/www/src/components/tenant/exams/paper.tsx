@@ -3,17 +3,19 @@ import {
   letterScript,
   optionLetter,
 } from "@repo/backend/confect/exams/letters";
+import { questionGap } from "@repo/backend/confect/exams/parts";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
   fixedOptions,
-  needsKey,
+  type QuestionTemplate,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
+import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { statusIconVariants } from "@repo/design-system/lib/status";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Match, Option } from "effect";
 import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -37,6 +39,7 @@ import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
 import { TableSheet } from "@/components/tenant/exams/matrix";
+import { numberEntryOf } from "@/components/tenant/exams/number";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -49,11 +52,13 @@ import {
   useExam,
   useExamLocked,
   useExamSelection,
+  useExamSelectionStore,
 } from "@/components/tenant/exams/provider";
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import { activeQuestion } from "@/components/tenant/exams/selection";
 import {
   PaperLine,
+  PaperNumber,
   PaperOption,
   PaperOptions,
   QuestionPaper,
@@ -71,6 +76,14 @@ const ExamText = lazy(() =>
     default: module.ExamText,
   }))
 );
+
+/** The mark of a question with a part that shows nothing, in the words of its template. */
+const emptyMark = (template: QuestionTemplate) =>
+  Match.value(template).pipe(
+    Match.when("match", () => "page-empty-match" as const),
+    Match.when("table", () => "page-empty-table" as const),
+    Match.orElse(() => "page-empty-choice" as const)
+  );
 
 /** The props of one page of the canvas. */
 interface ExamPageProps {
@@ -122,20 +135,27 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
           onChange={editing.setTemplate}
           template={editing.displayed.template}
         />
-        {editing.displayed.key === null &&
-        needsKey(editing.displayed.template) ? (
-          <span className="text-muted-foreground flex items-center gap-1 text-xs">
-            <HugeIcons
-              aria-hidden="true"
-              className={statusIconVariants({
-                className: "size-3.5",
-                tone: "warning",
-              })}
-              icon={Alert02Icon}
-            />
-            {t("page-no-key")}
-          </span>
-        ) : null}
+        {/* What keeps the question from being scheduled, as the schedule names it: an empty part, or no key. */}
+        {Option.match(questionGap(editing.displayed), {
+          onNone: () => null,
+          onSome: (gap) => (
+            <span className="text-muted-foreground flex items-center gap-1 text-xs">
+              <HugeIcons
+                aria-hidden="true"
+                className={statusIconVariants({
+                  className: "size-3.5",
+                  tone: "warning",
+                })}
+                icon={Alert02Icon}
+              />
+              {t(
+                gap === "empty"
+                  ? emptyMark(editing.displayed.template)
+                  : "page-no-key"
+              )}
+            </span>
+          ),
+        })}
       </div>
       {editable ? <PageActions index={index} question={question} /> : null}
     </div>
@@ -291,6 +311,7 @@ function LivePaper({
   // so the words the teacher typed stay on screen.
   const frozen = isLocked(exam);
   const locked = useExamLocked();
+  const selection = useExamSelectionStore();
   const { displayed, saveAnswers } = editing;
   const choice = Option.getOrNull(choiceOf(displayed.answers));
   // The options are named in the script of their labels: أ, ب, ج for a set written in Arabic.
@@ -331,6 +352,21 @@ function LivePaper({
       <ExamText
         documentId={question.prompt}
         key={`${question.prompt}-${frozen}`}
+        onOpen={(editor: DocumentEditorInstance) => {
+          const { write, writing } = selection.getState();
+          if (writing !== question.id) {
+            return;
+          }
+          write(null);
+          // A teacher who went on to write somewhere else meanwhile keeps the caret there.
+          if (
+            document.activeElement?.closest(
+              "[contenteditable='true'], input, textarea"
+            ) === null
+          ) {
+            editor.commands.focus("end");
+          }
+        }}
       >
         <ExamDocument
           label={t("question-text", { number })}
@@ -415,6 +451,10 @@ function LivePaper({
         </PaperOptions>
       )}
       {Option.isSome(entryOf(displayed.answers)) ? <PaperLine /> : null}
+      {Option.match(numberEntryOf(displayed.answers), {
+        onNone: () => null,
+        onSome: (entry) => <PaperNumber unit={entry.unit} />,
+      })}
       {displayed.template === "essay" ? <PaperLine essay /> : null}
       {canAddOption ? (
         <div className={chosen ? undefined : "invisible"}>
@@ -427,7 +467,7 @@ function LivePaper({
             }
             size="sm"
             type="button"
-            variant="ghost"
+            variant="outline"
           >
             <HugeIcons aria-hidden="true" icon={ListPlusIcon} />
             {t("option-add")}

@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import {
   domAnimation,
   LazyMotion,
@@ -19,7 +20,8 @@ const BORDER_OPACITY_THRESHOLD_MAX = 50;
 /**
  * The app's bar on a phone, for a page that draws no header of its own. A page header
  * holds the sidebar's trigger itself, so the bar hides while one is on the page and the
- * phone shows one header row.
+ * phone shows one header row. A chat page streams its header after the shell, so the bar
+ * stands aside from the shell's first HTML, and the page never moves up when it arrives.
  */
 export function HeaderContainer({ children }: { children: ReactNode }) {
   const { scrollY } = useScroll();
@@ -40,7 +42,10 @@ export function HeaderContainer({ children }: { children: ReactNode }) {
   return (
     <LazyMotion features={domAnimation} strict>
       <m.header
-        className="bg-background sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 group-has-[[data-shell-title]]/sidebar-wrapper:hidden group-data-titled/sidebar-wrapper:hidden lg:hidden"
+        className={cn(
+          "bg-background sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 group-has-[[data-shell-title]]/sidebar-wrapper:hidden group-data-titled/sidebar-wrapper:hidden lg:hidden",
+          isChatPage && "hidden"
+        )}
         data-slot="app-header"
       >
         <m.div

@@ -15,53 +15,53 @@ export type School = typeof SchoolSchema.Type;
 /** The twenty schools and campuses of the wall, in the order of the design. */
 export const schools: readonly School[] = [
   {
-    logo: "/logos/tum.png",
+    logo: "/logos/tum.webp",
     name: "Technische Universität München",
   },
-  { logo: "/logos/oth.png", name: "OTH Regensburg" },
+  { logo: "/logos/oth.webp", name: "OTH Regensburg" },
   {
-    logo: "/logos/itb.png",
+    logo: "/logos/itb.webp",
     name: "Institut Teknologi Bandung",
   },
-  { logo: "/logos/ui.png", name: "Universitas Indonesia" },
+  { logo: "/logos/ui.webp", name: "Universitas Indonesia" },
   {
-    logo: "/logos/ugm.png",
+    logo: "/logos/ugm.webp",
     name: "Universitas Gadjah Mada",
   },
   {
-    logo: "/logos/unair.png",
+    logo: "/logos/unair.webp",
     name: "Universitas Airlangga",
   },
   {
-    logo: "/logos/unpad.png",
+    logo: "/logos/unpad.webp",
     name: "Universitas Padjadjaran",
   },
   {
-    logo: "/logos/undip.png",
+    logo: "/logos/undip.webp",
     name: "Universitas Diponegoro",
   },
   {
-    logo: "/logos/unhas.png",
+    logo: "/logos/unhas.webp",
     name: "Universitas Hasanuddin",
   },
-  { logo: "/logos/ub.png", name: "Universitas Brawijaya" },
+  { logo: "/logos/ub.webp", name: "Universitas Brawijaya" },
   {
-    logo: "/logos/uns.png",
+    logo: "/logos/uns.webp",
     name: "Universitas Sebelas Maret",
   },
   {
-    logo: "/logos/upi.png",
+    logo: "/logos/upi.webp",
     name: "Universitas Pendidikan Indonesia",
   },
   {
-    logo: "/logos/nfbs.png",
+    logo: "/logos/nfbs.webp",
     name: "Nurul Fikri Boarding School Bogor",
   },
-  { logo: "/logos/ipb.png", name: "IPB University" },
-  { logo: "/logos/usu.png", name: "Universitas Sumatera Utara" },
-  { logo: "/logos/unand.png", name: "Universitas Andalas" },
-  { logo: "/logos/unud.png", name: "Universitas Udayana" },
-  { logo: "/logos/uny.png", name: "Universitas Negeri Yogyakarta" },
-  { logo: "/logos/unsri.png", name: "Universitas Sriwijaya" },
-  { logo: "/logos/telkom.png", name: "Telkom University" },
+  { logo: "/logos/ipb.webp", name: "IPB University" },
+  { logo: "/logos/usu.webp", name: "Universitas Sumatera Utara" },
+  { logo: "/logos/unand.webp", name: "Universitas Andalas" },
+  { logo: "/logos/unud.webp", name: "Universitas Udayana" },
+  { logo: "/logos/uny.webp", name: "Universitas Negeri Yogyakarta" },
+  { logo: "/logos/unsri.webp", name: "Universitas Sriwijaya" },
+  { logo: "/logos/telkom.webp", name: "Telkom University" },
 ];

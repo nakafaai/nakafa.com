@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Effect, Option, Schema } from "effect";
 import {
+  forgetSittingDevice,
   readSittingDevice,
   rememberSittingDevice,
   reusedDeviceOf,
@@ -23,6 +24,7 @@ const flightTo = (sitting: string): SittingFlight => ({
 function storageWith(value: string | null) {
   return {
     getItem: vi.fn<(key: string) => string | null>(() => value),
+    removeItem: vi.fn<(key: string) => void>(),
     setItem: vi.fn<(key: string, value: string) => void>(),
   };
 }
@@ -33,11 +35,39 @@ function refusingStorage() {
     getItem: vi.fn<(key: string) => string | null>(() => {
       throw new Error("denied");
     }),
+    removeItem: vi.fn<(key: string) => void>(() => {
+      throw new Error("denied");
+    }),
     setItem: vi.fn<(key: string, value: string) => void>(() => {
       throw new Error("denied");
     }),
   };
 }
+
+describe("forgetSittingDevice", () => {
+  it.effect("forgets the device that the browser keeps for the sitting", () =>
+    Effect.gen(function* () {
+      const storage = storageWith(deviceId);
+
+      yield* forgetSittingDevice(sittingId, storage);
+
+      expect(storage.removeItem).toHaveBeenCalledWith(
+        `nakafa-sitting-device:${sittingId}`
+      );
+    })
+  );
+
+  it.effect("fails when the browser refuses", () =>
+    Effect.gen(function* () {
+      const failure = yield* forgetSittingDevice(
+        sittingId,
+        refusingStorage()
+      ).pipe(Effect.flip);
+
+      expect(failure).toBeInstanceOf(SittingDeviceStorageFailed);
+    })
+  );
+});
 
 describe("readSittingDevice", () => {
   it.effect("reads the device that the browser keeps for the sitting", () =>

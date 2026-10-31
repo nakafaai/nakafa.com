@@ -122,7 +122,7 @@ export function TableSheet({
               <OptionRow
                 label={labelOf(column, saved("columns"))}
                 locked={frozen}
-                onRemove="never"
+                onRemove={null}
                 onSave={(label: OptionLabel, unstored: () => void) =>
                   saveLabel(column.id, label, unstored)
                 }

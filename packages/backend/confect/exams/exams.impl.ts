@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { ExamsDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -34,9 +35,31 @@ import {
 } from "effect";
 
 /**
+ * The editor's view of one exam: its questions in order, its frozen time once a sitting of it has
+ * finished, and whether its place is archived. Each question is one small row, and the exam holds
+ * at most the limit of them.
+ */
+const viewOf = Effect.fn("exams.view")(function* (
+  exam: Pick<ExamsDoc, "_id" | "frozenAt" | "questions" | "scope" | "title">
+) {
+  const questions = yield* Effect.forEach(exam.questions, (questionId) =>
+    readQuestion(questionId)
+  );
+  const place = yield* scopePlace(exam.scope);
+  return {
+    archived: place.locked,
+    ...(exam.frozenAt === undefined ? {} : { frozenAt: exam.frozenAt }),
+    id: exam._id,
+    questions,
+    title: exam.title,
+  };
+});
+
+/**
  * Creates an exam in a scope the caller may edit, with its first question, so an
  * exam is never empty. The exam starts with no question, and the question is added
- * to it in the same transaction.
+ * to it in the same transaction. It returns the exam as the editor reads it, so the
+ * editor draws the new exam whole on its first frame.
  */
 const create = FunctionImpl.make(
   databaseSchema,
@@ -66,7 +89,11 @@ const create = FunctionImpl.make(
     ).pipe(
       Effect.catchTags({ AccessDenied: Effect.die, ExamFull: Effect.die })
     );
-    return { id: examId };
+    const exam = yield* (yield* DatabaseReader)
+      .table("exams")
+      .get(examId)
+      .pipe(Effect.orDie);
+    return yield* viewOf(exam);
   })
 );
 
@@ -107,26 +134,14 @@ const list = FunctionImpl.make(
 );
 
 /**
- * One exam with its questions in order, and its frozen time once a sitting of it has finished.
- * Each question is one small row, and the exam holds at most the limit of them.
+ * One exam as the editor reads it (`viewOf`).
  */
 const open = FunctionImpl.make(
   databaseSchema,
   spec,
   "open",
   Effect.fn("exams.open")(function* () {
-    const exam = yield* Exam;
-    const questions = yield* Effect.forEach(exam.questions, (questionId) =>
-      readQuestion(questionId)
-    );
-    const place = yield* scopePlace(exam.scope);
-    return {
-      archived: place.locked,
-      ...(exam.frozenAt === undefined ? {} : { frozenAt: exam.frozenAt }),
-      id: exam._id,
-      questions,
-      title: exam.title,
-    };
+    return yield* viewOf(yield* Exam);
   })
 );
 

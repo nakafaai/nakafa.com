@@ -12,6 +12,58 @@ import { Array as Arr, HashMap, Option, Schema, Tuple } from "effect";
 /** What a student saved on the paper of an open attempt, as the server reads it. */
 export type SavedValue = typeof SavedView.Type;
 
+/** One question of the server's paper, as the query answers it. */
+type ServerQuestion = (typeof PaperView.Type)["questions"][number];
+
+/** One saved answer, as the student's saved query answers it. */
+type SavedAnswer = SavedValue["answers"][number];
+
+/** A question of the server's paper with what the student saved on it. */
+const withSaved = (
+  question: ServerQuestion,
+  answer: Option.Option<SavedAnswer>,
+  flagged: boolean
+) => ({
+  ...question,
+  flagged,
+  response: Option.match(answer, {
+    onNone: () => null,
+    onSome: (found) => found.response,
+  }),
+  version: Option.match(answer, {
+    onNone: () => null,
+    onSome: (found) => found.version,
+  }),
+});
+
+/**
+ * The question each server question last merged to. An answer names one version, so a question keeps its object
+ * while its version and its flag stand, and an answer redraws its own question and not the other thirty-nine.
+ */
+const mergedQuestions = new WeakMap<
+  ServerQuestion,
+  ReturnType<typeof withSaved>
+>();
+
+/** One question merged with what the student saved on it, the same object as long as nothing on it moved. */
+function mergeQuestion(
+  question: ServerQuestion,
+  answer: Option.Option<SavedAnswer>,
+  flagged: boolean
+) {
+  const merged = withSaved(question, answer, flagged);
+  const kept = mergedQuestions.get(question);
+  if (
+    kept !== undefined &&
+    kept.version === merged.version &&
+    kept.flagged === merged.flagged
+  ) {
+    return kept;
+  }
+  mergedQuestions.set(question, merged);
+  return merged;
+}
+
 /**
  * The paper as the student sees it: each question of the server's paper, with the response and
  * version that the student saved for it, or `null` when none is saved, and whether it is flagged.
@@ -22,21 +74,13 @@ export function mergePaper(paper: typeof PaperView.Type, saved: SavedValue) {
     Arr.map(saved.answers, (answer) => Tuple.make(answer.question, answer))
   );
   return {
-    questions: Arr.map(paper.questions, (question) => {
-      const answer = HashMap.get(answers, question.id);
-      return {
-        ...question,
-        flagged: Arr.contains(saved.flagged, question.id),
-        response: Option.match(answer, {
-          onNone: () => null,
-          onSome: (found) => found.response,
-        }),
-        version: Option.match(answer, {
-          onNone: () => null,
-          onSome: (found) => found.version,
-        }),
-      };
-    }),
+    questions: Arr.map(paper.questions, (question) =>
+      mergeQuestion(
+        question,
+        HashMap.get(answers, question.id),
+        Arr.contains(saved.flagged, question.id)
+      )
+    ),
   };
 }
 

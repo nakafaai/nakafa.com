@@ -4,15 +4,12 @@ import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerDigits } from "@/components/player/timer";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
-import { TryoutScoreStatus } from "@/components/tryout/score/status";
 import {
   TryoutPartStat,
   TryoutPartStats,
   TryoutPartSummary,
 } from "@/components/tryout/section/card";
-import type { TryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import { TryoutMetricNumber } from "@/components/tryout/section/metrics";
-import { TryoutStatus } from "@/components/tryout/status";
 
 const TryoutSummarySectionSchema = Schema.Struct({
   questionCount: Schema.Finite,
@@ -30,64 +27,15 @@ export function TryoutSectionSummary({
   value: {
     score: TryoutScoreResult | null;
     section: TryoutSummarySection;
-    sectionStatus: TryoutFinishedSectionStatus | null;
   };
 }) {
-  const { score, section, sectionStatus } = value;
+  const { score, section } = value;
 
   return (
     <TryoutPartSummary>
-      <TryoutSectionStatuses score={score} status={sectionStatus} />
-
       <TryoutSectionMetrics score={score} section={section} />
     </TryoutPartSummary>
   );
-}
-
-/** Renders the section status row only when at least one status exists. */
-function TryoutSectionStatuses({
-  score,
-  status,
-}: {
-  score: TryoutScoreResult | null;
-  status: TryoutFinishedSectionStatus | null;
-}) {
-  if (score === null && status === null) {
-    return null;
-  }
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      <TryoutSectionScoreStatus score={score} />
-      <TryoutSectionWorkflowStatus status={status} />
-    </div>
-  );
-}
-
-/** Renders a section's score status only after terminal scoring. */
-function TryoutSectionScoreStatus({
-  score,
-}: {
-  score: TryoutScoreResult | null;
-}) {
-  if (!score) {
-    return null;
-  }
-
-  return <TryoutScoreStatus score={score} />;
-}
-
-/** Renders a section's terminal workflow status when it exists. */
-function TryoutSectionWorkflowStatus({
-  status,
-}: {
-  status: TryoutFinishedSectionStatus | null;
-}) {
-  if (!status) {
-    return null;
-  }
-
-  return <TryoutStatus status={status} />;
 }
 
 /** Chooses terminal score metrics or pre-start section facts explicitly. */

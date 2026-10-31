@@ -187,6 +187,29 @@ export function ShellLock({
   return hydrated ? null : <span data-shell-lock="" hidden />;
 }
 
+/** Whether the shell stands locked right now, as the page that is leaving holds it. */
+function readShellLocked() {
+  return (
+    document
+      .querySelector("[data-slot=sidebar-wrapper]")
+      ?.hasAttribute("data-locked") ?? false
+  );
+}
+
+/**
+ * Carries the shell's lock across a move between a running attempt's pages. The
+ * page that leaves lets its lock go as this page mounts, and this page knows its
+ * attempt only once its read answers, so without this the shell opens between
+ * them and closes again. It holds the lock while `pending`, for a shell that stood
+ * locked when this page mounted; a page opened from an open shell has nothing to
+ * carry. It mounts only in the browser, on a page that holds a Convex client.
+ */
+export function ShellLockCarry({ pending }: { pending: boolean }) {
+  const [carried] = useState(readShellLocked);
+
+  return carried && pending ? <ShellLock /> : null;
+}
+
 /**
  * Lets go of the lock the shell's script carried into the first frame once the
  * page has decided: its own lock holds the shell from then on, or nothing does.

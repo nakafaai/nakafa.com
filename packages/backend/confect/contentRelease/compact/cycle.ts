@@ -118,17 +118,12 @@ export const ensureCompactionRow = Effect.fn(
  * Proves from the compaction row and one release row that nothing is due: the
  * release at the completed floor is still inside the retention window, so the
  * oldest retained release does not move and compaction needs neither the
- * protected slots nor a scan of old releases. A history floor above the
- * completed floor leaves retired releases due, so the tick is not idle.
+ * protected slots nor a scan of old releases.
  */
 export const isCompactionIdle = Effect.fn("contentRelease.isCompactionIdle")(
-  function* (compaction: Docs["contentCompaction"], historyFloor: number) {
+  function* (compaction: Docs["contentCompaction"]) {
     const { compactedFloor } = compaction;
-    if (
-      hasCycleFields(compaction) ||
-      !isSequence(compactedFloor) ||
-      historyFloor > compactedFloor
-    ) {
+    if (hasCycleFields(compaction) || !isSequence(compactedFloor)) {
       return false;
     }
     const database = yield* DatabaseReader;

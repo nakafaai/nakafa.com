@@ -102,14 +102,16 @@ export const signInClassTeacher = Effect.fn("NakafaE2E.signInClassTeacher")(
  * Invites a learner into a school that `createSchool` opened, and signs the learner into
  * one browser context. The local acceptance runtime invites the address into the school,
  * creates the learner's account with that address, claims the invitation for the account,
- * and waits until the inbox holds the row. The command runs once, because a second run
- * would invite the same address again.
+ * and waits until the inbox holds the row. With `expired`, the invite ends before the
+ * account signs in, as its term ending does, so the learner signs in as no member of the
+ * school. The command runs once, because a second run would invite the same address again.
  */
 export const inviteLearner = Effect.fn("NakafaE2E.inviteLearner")(
   function* (learner: {
     readonly address: string;
     readonly baseURL: string;
     readonly context: BrowserContext;
+    readonly expired?: boolean;
     readonly slug: string;
   }) {
     const fs = yield* FileSystem.FileSystem;
@@ -121,7 +123,8 @@ export const inviteLearner = Effect.fn("NakafaE2E.inviteLearner")(
       "invite",
       learner.slug,
       learner.address,
-      output
+      output,
+      ...(learner.expired === true ? ["expired"] : [])
     );
     const cookie = yield* fs
       .readFileString(output)
@@ -151,15 +154,16 @@ export const grantStudent = Effect.fn("NakafaE2E.grantStudent")(function* (
  * school's first active unit. A `crowd` seats that many extra students with attempts in
  * progress first, so the learner's own attempt lands on a later dashboard page. `upcoming` also
  * schedules a room of the same exam for the next day, which the owner's home lists as upcoming,
- * `essay` adds an essay that the student writes and the teacher grades, and `prose` ends the exam with a
- * third question whose prompt holds every block and mark once. Each call seeds a new exam and sitting.
+ * `essay` adds an essay that the student writes and the teacher grades, `prose` ends the exam with a
+ * third question whose prompt holds every block and mark once, and `templates` adds a question of
+ * every other template, each written and keyed, and the essay. Each call seeds a new exam and sitting.
  */
 export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
   function* (
     slug: string,
     learnerAddress: string,
     crowd = 0,
-    extra?: "essay" | "prose" | "upcoming"
+    extra?: "essay" | "prose" | "templates" | "upcoming"
   ) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({

@@ -2,13 +2,22 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { utf8Bytes } from "@repo/utilities/text";
 import { Extension } from "@tiptap/core";
 import type { Node } from "@tiptap/pm/model";
-import { Plugin } from "@tiptap/pm/state";
+import { Plugin, type Transaction } from "@tiptap/pm/state";
 import {
   RemoveNodeMarkStep,
   ReplaceStep,
   type Step,
 } from "@tiptap/pm/transform";
-import { Array as Arr } from "effect";
+import { Array as Arr, Function as Fn } from "effect";
+
+/** Tells the writer why a paste left the document as it was, since nothing else says so. */
+const refuseOf = (transaction: Transaction, onRefuse: () => void) => {
+  // ProseMirror marks the transaction of a paste with this meta.
+  if (transaction.getMeta("paste") === true) {
+    onRefuse();
+  }
+  return false;
+};
 
 /**
  * The UTF-8 bytes of one step as its JSON text, the text a call sends it in. A size
@@ -45,24 +54,28 @@ function onlyRemoves(step: Step): boolean {
  * never holds an edit that no call can send (ADR 0028 Bounds). The caller passes
  * `MAX_STEP_BYTES` of `@repo/backend/confect/editor/batch`, the largest step text that
  * one call carries, and not the bound of a whole call, because a call also carries
- * its ids and version around the step. A refused paste leaves the document as it was.
- * A change that another editor's steps brought in carries the `rebased` meta of the
- * collab plugin, and passes, as it does for `depthGuard`.
+ * its ids and version around the step. A refused paste leaves the document as it was,
+ * and `onRefuse` runs. A change that another editor's steps brought in carries the
+ * `rebased` meta of the collab plugin, and passes, as it does for `depthGuard`.
  */
-export const stepSizePlugin = (maxBytes: number) =>
+export const stepSizePlugin = (maxBytes: number, onRefuse: () => void) =>
   new Plugin({
     filterTransaction: (transaction) =>
       !transaction.docChanged ||
       transaction.getMeta("rebased") !== undefined ||
-      Arr.every(transaction.steps, (step) => stepBytes(step) <= maxBytes),
+      Arr.every(transaction.steps, (step) => stepBytes(step) <= maxBytes) ||
+      refuseOf(transaction, onRefuse),
   });
 
 /** The extension that mounts `stepSizePlugin`, with the bound its caller passes. */
-export const stepSizeGuard = (maxBytes: number) =>
+export const stepSizeGuard = (
+  maxBytes: number,
+  onRefuse: () => void = Fn.constVoid
+) =>
   Extension.create({
     name: "stepSize",
     addProseMirrorPlugins() {
-      return [stepSizePlugin(maxBytes)];
+      return [stepSizePlugin(maxBytes, onRefuse)];
     },
   });
 
@@ -71,10 +84,11 @@ export const stepSizeGuard = (maxBytes: number) =>
  * measures it (ADR 0028 Bounds, `MAX_DOCUMENT_BYTES`). The document is measured only
  * when the transaction can grow it: a transaction that only removes content, or a mark
  * of one node, cannot, so it passes without a measure. A document already past the bound stays
- * editable, and an edit that grows it is refused. A change that another editor's steps
- * brought in carries the `rebased` meta of the collab plugin, and passes.
+ * editable, and an edit that grows it is refused, and when that edit is a paste `onRefuse` runs. A
+ * change that another editor's steps brought in carries the `rebased` meta of the collab plugin,
+ * and passes.
  */
-const documentSizePlugin = (maxBytes: number) =>
+const documentSizePlugin = (maxBytes: number, onRefuse: () => void) =>
   new Plugin({
     filterTransaction: (transaction, state) => {
       if (
@@ -85,15 +99,22 @@ const documentSizePlugin = (maxBytes: number) =>
         return true;
       }
       const after = documentBytes(transaction.doc);
-      return after <= maxBytes || after <= documentBytes(state.doc);
+      return (
+        after <= maxBytes ||
+        after <= documentBytes(state.doc) ||
+        refuseOf(transaction, onRefuse)
+      );
     },
   });
 
 /** The extension that mounts `documentSizePlugin`, with the bound its caller passes. */
-export const documentSizeGuard = (maxBytes: number) =>
+export const documentSizeGuard = (
+  maxBytes: number,
+  onRefuse: () => void = Fn.constVoid
+) =>
   Extension.create({
     name: "documentSize",
     addProseMirrorPlugins() {
-      return [documentSizePlugin(maxBytes)];
+      return [documentSizePlugin(maxBytes, onRefuse)];
     },
   });

@@ -2,10 +2,10 @@
 import { layerDigest } from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { languages } from "@repo/internationalization/data/lang";
+import { CONTENT_LICENSE_NAME, CONTENT_LICENSE_URL } from "@repo/seo/license";
 import { Effect } from "effect";
 import { Digest } from "effect/crypto";
 import { getNakafaAgentSkillIndex, getNakafaSkillText } from "@/lib/llms/skill";
-import { CONTENT_LICENSE_NAME, CONTENT_LICENSE_URL } from "@/lib/seo/license";
 
 describe("Nakafa public agent skill", () => {
   it("builds a skill.md document with required frontmatter and retrieval rules", () => {

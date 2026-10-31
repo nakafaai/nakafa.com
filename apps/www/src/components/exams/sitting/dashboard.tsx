@@ -3,6 +3,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -23,6 +24,7 @@ import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
+import { useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
 
@@ -49,6 +51,7 @@ export function SittingDashboard({
     exams.sittings.dashboard,
     isSettled ? dashboardArgs({ sittingId, slug }, null) : "skip"
   );
+  const kept = useLastValue(state);
 
   if (QueryResult.isFailure(state)) {
     if (isLostAccess(state.error)) {
@@ -64,11 +67,12 @@ export function SittingDashboard({
       </SittingDashboardRetry>
     );
   }
-  if (!QueryResult.isSuccess(state)) {
+  // A paused read, as while Convex confirms the session again, keeps its last answer, so the seats stay.
+  if (Option.isNone(kept)) {
     // The header is there from the first paint, with the path the address knows; the room fills in when it is read.
     return <SittingDashboardShell />;
   }
-  if (state.value.sitting.examId !== examId) {
+  if (kept.value.sitting.examId !== examId) {
     return (
       <SittingRefusal examId={examId} message={t("sitting-not-in-exam")} />
     );
@@ -77,7 +81,7 @@ export function SittingDashboard({
   const data: SittingData = {
     sittingId,
     slug,
-    value: state.value,
+    value: kept.value,
   };
 
   return (

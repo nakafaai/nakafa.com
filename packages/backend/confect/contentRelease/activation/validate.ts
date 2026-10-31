@@ -3,11 +3,7 @@ import {
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import {
-  isBootstrapCandidate,
-  requireCurrentBase,
-  requireRollbackable,
-} from "@repo/backend/confect/contentRelease/generation";
+import { requireCurrentBase } from "@repo/backend/confect/contentRelease/generation";
 import {
   loadRelease,
   loadState,
@@ -18,7 +14,7 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { validateRecoveryRelation } from "@repo/backend/confect/contentRelease/recovery";
 import { encodeRendererJson } from "@repo/backend/confect/contentRelease/wire";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
 /** Confirms one activation request uses its frozen live renderer envelope. */
 export const validateActivationRenderer = Effect.fn(
@@ -52,9 +48,7 @@ export const validateActivationRenderer = Effect.fn(
 
 /**
  * Loads and proves one verified candidate and the inverse that activation
- * needs. A stored bootstrap is re-proven against the live state and carries no
- * inverse; every other candidate keeps the retained recovery rules, and may not
- * extend the retired generation at all.
+ * needs, under the retained recovery rules.
  */
 export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
   function* (releaseId: string, rendererJson: string, manifestHash: string) {
@@ -89,20 +83,6 @@ export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
         `Content release ${releaseId} no longer extends the active release.`
       );
     }
-    if (release.bootstrap === true) {
-      if (!isBootstrapCandidate(signed.manifest, state)) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_STATE",
-          `Content release ${releaseId} no longer meets the bootstrap contract.`
-        );
-      }
-      return {
-        inverse: Option.none(),
-        release,
-        signed,
-        state,
-      };
-    }
     if (
       !(state.recoveryReleaseId && state.recoveryManifestHash) ||
       state.recoverySequence === undefined
@@ -136,7 +116,8 @@ export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
     }
     yield* requireCurrentBase(releaseId, state);
     return {
-      inverse: Option.some({ recovery, recoverySigned }),
+      recovery,
+      recoverySigned,
       release,
       signed,
       state,
@@ -160,9 +141,6 @@ export const validateRecovery = Effect.fn(
   const active = state?.activeReleaseId
     ? yield* loadRelease(state.activeReleaseId)
     : undefined;
-  if (active) {
-    yield* requireRollbackable(active);
-  }
   if (
     !(state && active) ||
     release.role !== "recovery" ||
