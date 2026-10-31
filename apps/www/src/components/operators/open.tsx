@@ -62,7 +62,7 @@ function OpenTextField({
         id={id}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        type={type}
+        {...(type === undefined ? {} : { type })}
         value={form[field]}
       />
     </Field>
