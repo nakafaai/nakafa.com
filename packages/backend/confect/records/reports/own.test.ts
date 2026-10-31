@@ -8,6 +8,7 @@ import {
   teach,
 } from "@repo/backend/test/classroom";
 import {
+  actedAt,
   grantRole,
   TENANCY_NOW,
   tenancyFixture,
@@ -84,6 +85,8 @@ describe("records/reports own", () => {
         yield* fixture
           .as("teacher")
           .mutation(reports.complete, { reportId: draft.id, slug: nf });
+        // The approval runs at an instant of its own, after the setup's commits.
+        vi.setSystemTime(actedAt());
         yield* fixture
           .as("principal")
           .mutation(reports.approve, { reportId: draft.id, slug: nf });
@@ -97,7 +100,7 @@ describe("records/reports own", () => {
           .query(reports.own, { slug: nf });
         expect(rest).toEqual([]);
         expect(card).toMatchObject({
-          approvedAt: TENANCY_NOW,
+          approvedAt: actedAt(),
           cohort: "X-1",
           id: draft.id,
           period: "Ganjil 2026/2027",

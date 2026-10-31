@@ -150,7 +150,7 @@ function OwnReportTable() {
         </div>
       ),
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 
