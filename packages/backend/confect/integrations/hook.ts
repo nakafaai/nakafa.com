@@ -1,9 +1,10 @@
+import type { JournalEntriesDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type { Action } from "@repo/backend/confect/access/catalog";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Sealed } from "@repo/backend/confect/vault/schema";
-import { Array as Arr, Duration, Schema } from "effect";
+import { Array as Arr, DateTime, Duration, Schema, Struct } from "effect";
 
 /** The changes a webhook can carry: every change type the catalog publishes (ADR 0016). */
 export const WebhookChange = Schema.Literals([
@@ -135,6 +136,21 @@ export const integrationDeliveryValidator = Schema.Struct({
   state: DeliveryState,
   tenantId: Id("tenants"),
   webhookId: Id("integrationWebhooks"),
+});
+
+/** Whether a journal entry's change is one the catalog publishes. */
+export const isPublished = Schema.is(WebhookChange);
+
+/**
+ * The event of a journal entry, the same for a webhook and for the REST and MCP reads: the
+ * published change and its subject, which hold IDs, enums and reason codes only (ADR 0016).
+ */
+export const eventOf = (entry: JournalEntriesDoc) => ({
+  change: Struct.omit(entry.change, ["type"]),
+  id: entry._id,
+  occurredAt: DateTime.formatIso(DateTime.makeUnsafe(entry._creationTime)),
+  subject: entry.subject,
+  type: entry.change.type,
 });
 
 /** The webhooks one client may hold. A school sends one system its changes, so ten leaves room to migrate. */

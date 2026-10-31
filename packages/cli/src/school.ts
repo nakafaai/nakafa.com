@@ -71,6 +71,16 @@ const rosterClient = (host: string, token: string) =>
     })
   ).pipe(Effect.provide(bearerLayer(token)));
 
+/** The record reads of one school host with the stored token. */
+const recordsClient = (host: string, token: string) =>
+  Effect.flatMap(hostHttpClient, (httpClient) =>
+    HttpApiClient.group(SchoolApi, {
+      baseUrl: `https://${host}`,
+      group: "records",
+      httpClient,
+    })
+  ).pipe(Effect.provide(bearerLayer(token)));
+
 /**
  * A failed school command as the CLI reports it: the OAuth error code and sentence of a
  * sign-in refusal (RFC 6749 section 5.2), or the name and message of any other failure.
@@ -150,6 +160,15 @@ export const SchoolRead = Schema.Union([
   }),
   Schema.Struct({
     cursor: Schema.optional(Schema.String),
+    period: Schema.String,
+    read: Schema.Literal("grades"),
+  }),
+  Schema.Struct({
+    cursor: Schema.optional(Schema.String),
+    read: Schema.Literal("changes"),
+  }),
+  Schema.Struct({
+    cursor: Schema.optional(Schema.String),
     read: Schema.Literal("people"),
     status: Schema.optional(
       Schema.Literals(["active", "suspended", "removed"])
@@ -161,16 +180,22 @@ export const SchoolRead = Schema.Union([
 const cursorOf = (cursor: string | undefined) =>
   cursor === undefined ? {} : { cursor };
 
-/** Reads one page of the signed-in school's roster as the client the Admin connected the CLI to. */
+/** Reads one page of the signed-in school as the client the Admin connected the CLI to. */
 export const readSchool = Effect.fn("NakafaCli.school.read")(function* (
   command: typeof SchoolRead.Type
 ) {
   const session = yield* readSession(yield* Clock.currentTimeMillis);
   const client = yield* rosterClient(session.host, session.token);
+  const records = yield* recordsClient(session.host, session.token);
   const read = Match.value(command).pipe(
     Match.discriminatorsExhaustive("read")({
+      changes: (found) => records.changes({ query: cursorOf(found.cursor) }),
       cohorts: (found) =>
         client.cohorts({
+          query: { ...cursorOf(found.cursor), period: found.period },
+        }),
+      grades: (found) =>
+        records.grades({
           query: { ...cursorOf(found.cursor), period: found.period },
         }),
       people: (found) =>

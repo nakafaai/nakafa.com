@@ -81,7 +81,8 @@
     "remark-parse": "catalog:",
     "strip-ansi": "^7.2.0",
     "unified": "catalog:",
-    "uqr": "0.1.3"
+    "uqr": "0.1.3",
+    "write-excel-file": "4.1.1"
   },
   "devDependencies": {
     "@confect/cli": "10.4.1",

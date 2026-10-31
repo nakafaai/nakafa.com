@@ -1,6 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { eventOf, isPublished } from "@repo/backend/confect/integrations/hook";
 import {
   clientRead,
   FORBIDDEN,
@@ -13,6 +14,8 @@ import {
   readsPeople,
 } from "@repo/backend/confect/integrations/reads";
 import spec from "@repo/backend/confect/integrations/reads.spec";
+import { readsSubject } from "@repo/backend/confect/integrations/subject";
+import { gradeAuthority } from "@repo/backend/confect/records/authority";
 import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /** The outcome of a read that answers a page. */
@@ -157,10 +160,92 @@ const placements = FunctionImpl.make(
   })
 );
 
+/**
+ * The released grades of one period that the client may read, a page at a time. A page reads
+ * only released grades, so a draft never reaches a client, and each row is decided for the
+ * client, whose scope may cover some units of the period's classes.
+ */
+const grades = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "grades",
+  Effect.fn("integrations.reads.grades.function")(function* ({
+    clientId,
+    cursor,
+    numItems,
+    period,
+  }) {
+    const read = yield* clientRead(clientId);
+    const found = yield* periodFor(read, period);
+    if (!lists(read, "grade.export") || Option.isNone(found)) {
+      return FORBIDDEN;
+    }
+    const result = yield* (yield* DatabaseReader)
+      .table("classGrades")
+      .index("by_periodId_and_state", (query) =>
+        query.eq("periodId", found.value._id).eq("state", "released")
+      )
+      .paginate(pageOptions(cursor, numItems))
+      .pipe(Effect.orDie);
+    const rows = yield* Effect.filter(result.page, (grade) =>
+      gradeAuthority.allowsClient("grade.export", grade, read)
+    );
+    return {
+      data: Arr.map(rows, (grade) => ({
+        classId: grade.classId,
+        id: grade._id,
+        periodId: grade.periodId,
+        personId: grade.personId,
+        releasedAt: grade.releasedAt ?? grade.updatedAt,
+        value: grade.value,
+      })),
+      next: nextOf(result),
+      outcome: PAGE,
+    };
+  })
+);
+
+/**
+ * The published changes of the client's school, oldest first, a page at a time, each one
+ * decided for the client as a webhook's attempt is. A page can hold fewer rows than its size,
+ * because the journal holds changes that are not published and subjects the client may not
+ * read, so a client follows `next` until it is null.
+ */
+const changes = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "changes",
+  Effect.fn("integrations.reads.changes.function")(function* ({
+    clientId,
+    cursor,
+    numItems,
+  }) {
+    const read = yield* clientRead(clientId);
+    const result = yield* (yield* DatabaseReader)
+      .table("journalEntries")
+      .index("by_owner_tenantId", (query) =>
+        query.eq("owner.tenantId", read.tenant._id)
+      )
+      .paginate(pageOptions(cursor, numItems))
+      .pipe(Effect.orDie);
+    const rows = yield* Effect.filter(
+      Arr.filter(result.page, (entry) => isPublished(entry.change.type)),
+      (entry) => readsSubject(entry, read)
+    );
+    return {
+      data: Arr.map(rows, eventOf),
+      next: nextOf(result),
+      outcome: PAGE,
+    };
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(periods),
   Layer.provide(cohorts),
   Layer.provide(people),
   Layer.provide(placements),
+  Layer.provide(grades),
+  Layer.provide(changes),
   GroupImpl.finalize
 );

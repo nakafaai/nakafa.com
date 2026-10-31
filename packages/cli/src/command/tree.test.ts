@@ -194,6 +194,8 @@ describe("Nakafa CLI command tree", () => {
           ["school", "cohorts", "--period", "p1", "--cursor", "next"],
           ["school", "people", "--status", "suspended"],
           ["school", "placements", "--period", "p1"],
+          ["school", "grades", "--period", "p1"],
+          ["school", "changes"],
         ],
         (argv) => readRequests(argv)
       );
@@ -208,6 +210,8 @@ describe("Nakafa CLI command tree", () => {
         },
         { kind: "school-read", read: { read: "people", status: "suspended" } },
         { kind: "school-read", read: { period: "p1", read: "placements" } },
+        { kind: "school-read", read: { period: "p1", read: "grades" } },
+        { kind: "school-read", read: { read: "changes" } },
       ]);
     })
   );

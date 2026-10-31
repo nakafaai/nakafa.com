@@ -218,6 +218,8 @@ describe("CLI school commands", () => {
             ),
           ],
           "/api/v1/people": [page(), page()],
+          "/api/v1/changes": [page()],
+          "/api/v1/grades": [page()],
           "/api/v1/placements": [page()],
         });
         yield* Effect.gen(function* () {
@@ -230,6 +232,8 @@ describe("CLI school commands", () => {
           yield* readSchool({ read: "people", status: "suspended" });
           yield* readSchool({ read: "people" });
           yield* readSchool({ period: "p1", read: "placements" });
+          yield* readSchool({ period: "p1", read: "grades" });
+          yield* readSchool({ read: "changes" });
           expect(
             yield* Effect.flip(readSchool({ period: "p1", read: "cohorts" }))
           ).toMatchObject({ message: "This client may not read it." });
@@ -244,6 +248,8 @@ describe("CLI school commands", () => {
           "/api/v1/people?status=suspended",
           "/api/v1/people",
           "/api/v1/placements?period=p1",
+          "/api/v1/grades?period=p1",
+          "/api/v1/changes",
           "/api/v1/cohorts?period=p1",
         ]);
       })
