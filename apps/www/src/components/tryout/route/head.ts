@@ -1,7 +1,11 @@
 import type { LocalizedPath } from "@repo/internationalization/src/alternates";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { Schema } from "effect";
-import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import {
+  createSeoHead,
+  type HeadAlternate,
+  toRouterHead,
+} from "@/lib/seo/head";
 
 /**
  * The title of a try-out page. A plain title takes the site name, and an absolute
@@ -23,9 +27,12 @@ function titleFacts(title: TryoutPageTitle) {
 
 /**
  * The head of one try-out page, with the title, description, canonical link,
- * alternates, social card and JSON-LD of the head seam.
+ * alternates, social card and JSON-LD of the head seam. A catalog page passes the
+ * language links the catalog resolved for it (`readTryoutRouteHead`), because its
+ * slug can differ by locale; the hub, whose address the route map spells, passes none.
  */
 export function createTryoutHead(input: {
+  readonly alternates?: readonly (typeof HeadAlternate.Type)[] | undefined;
   readonly canonicalPath: LocalizedPath;
   readonly description: string;
   readonly image: string;
@@ -37,6 +44,9 @@ export function createTryoutHead(input: {
 }) {
   return toRouterHead(
     createSeoHead({
+      ...(input.alternates === undefined
+        ? {}
+        : { alternates: [...input.alternates] }),
       canonicalPath: input.canonicalPath,
       description: input.description,
       image: input.image,

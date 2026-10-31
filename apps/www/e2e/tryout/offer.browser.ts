@@ -17,8 +17,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { arrive, arriveLocked, setHref } from "@/e2e/support/tryout";
 import { compactViewport } from "@/e2e/support/viewport";
 
-/** The English route prefix that the walked set's addresses start with. */
-const ENGLISH_PREFIX = /^\/en\//u;
+/** The link to the page's Indonesian address, which the catalog resolves, since a slug can differ by locale. */
+const INDONESIAN_ALTERNATE = 'link[rel="alternate"][hreflang="id"]';
 
 /** The review that a free learner sees once the whole attempt is finished. */
 const LOCKED_REVIEW = '[data-slot="tryout-review-locked"]';
@@ -145,10 +145,16 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
   function* (page: Page, baseURL: string) {
     yield* runFirstSection(page, false, baseURL);
     const section = new URL(page.url());
+    // The section's Indonesian address is its own, as `penalaran-umum` is `general-reasoning`, so it
+    // comes from the page's language link, with the attempt the English address names.
+    const alternate = yield* Effect.promise(() =>
+      page.locator(INDONESIAN_ALTERNATE).getAttribute("href")
+    ).pipe(Effect.flatMap(Effect.fromNullishOr));
+    const indonesian = new URL(alternate);
+    indonesian.search = section.search;
     yield* finishSection(page, false);
     yield* finishOtherSections(page, section.pathname);
 
-    section.pathname = section.pathname.replace(ENGLISH_PREFIX, "/id/");
     yield* Effect.promise(() =>
       page.setViewportSize({
         height: compactViewport.height,
@@ -157,7 +163,9 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
     );
     yield* Effect.promise(() => holdCheckoutAction(page));
     yield* Effect.promise(() =>
-      page.goto(section.toString(), { waitUntil: "commit" })
+      page.goto(indonesian.pathname + indonesian.search, {
+        waitUntil: "commit",
+      })
     );
     yield* Effect.promise(() =>
       expect(page.locator(LOCKED_REVIEW)).toBeVisible({

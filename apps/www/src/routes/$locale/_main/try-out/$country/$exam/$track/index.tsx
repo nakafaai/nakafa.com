@@ -53,6 +53,7 @@ export const Route = createFileRoute(
     loaderData === undefined
       ? {}
       : createTryoutHead({
+          alternates: loaderData.head.alternates,
           canonicalPath: loaderData.head.canonicalPath,
           description: loaderData.head.description,
           image: loaderData.head.image,
