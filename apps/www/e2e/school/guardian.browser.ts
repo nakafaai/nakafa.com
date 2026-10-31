@@ -59,11 +59,11 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   await row.getByRole("button", { name: "More actions" }).click();
   await settings.getByRole("menuitem", { name: "Change email" }).click();
   const correction = settings.getByRole("dialog");
-  const field = correction.getByLabel("Parent email");
-  await expect(field).toHaveValue(mistyped);
+  const corrected = correction.getByLabel("Parent email");
+  await expect(corrected).toHaveValue(mistyped);
   const saveEmail = correction.getByRole("button", { name: "Save email" });
   await expect(saveEmail).toBeDisabled();
-  await field.fill(email);
+  await corrected.fill(email);
   const readdressedBefore = changes.sent;
   await saveEmail.click();
   await expect(row).toContainText(email);
