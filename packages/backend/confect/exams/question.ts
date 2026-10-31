@@ -344,7 +344,9 @@ const decodeScoring = Effect.fn("exams.question.scoring")(function* (
   if (row.scoring === undefined || !takesScoring(row.template)) {
     return ALL_OR_NOTHING;
   }
-  return yield* Schema.decodeEffect(ScoringText)(row.scoring).pipe(Effect.orDie);
+  return yield* Schema.decodeEffect(ScoringText)(row.scoring).pipe(
+    Effect.orDie
+  );
 });
 
 /** A stored question as its wire view, with its answers and key decoded. */
