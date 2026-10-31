@@ -4,7 +4,6 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import type { QuranRowHashError } from "@nakafa/aksara-contracts/quran/snapshot/row/hash";
 import {
   decodePublishedQuranCatalog,
   decodePublishedQuranSurah,
@@ -162,7 +161,7 @@ describe("signed Quran catalog decoder", () => {
 
 /** Builds all 114 schema-valid signed metadata rows. */
 const catalogResult = Effect.fn("test.quran.catalogResult")(function* (
-  row: (index: number) => Effect.Effect<string, QuranRowHashError>
+  row: (index: number) => Effect.Effect<string>
 ) {
   return {
     ...source,

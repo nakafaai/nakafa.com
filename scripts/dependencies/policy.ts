@@ -26,9 +26,9 @@ export const PACKAGE_MANAGER = "bun@1.4.4";
  * release and the workflow checks compare it with this value.
  */
 export const NODE_RUNTIME_VERSION = "26.13.0";
-const CONTRACT_PACKAGE_VERSION = "2.0.0";
+const CONTRACT_PACKAGE_VERSION = "4.0.0";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.0.5";
+export const EFFECT_COHORT_VERSION = "4.1.0";
 /**
  * Effect packages that only dependencies declare: the Confect CLI's platform
  * packages and the Confect server's AI providers. An override keeps each one
@@ -124,7 +124,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
  * Confect package stays on 10.4.1 until the cohort reaches 4.1 (#1524). The catalog
  * holds `@confect/core`, and each manifest pins the rest exactly.
  */
-const CONFECT_COHORT_VERSION = "10.4.1";
+const CONFECT_COHORT_VERSION = "10.5.0";
 /** The Confect packages each manifest pins: the web app's client and the backend's server, CLI and tests. */
 const CONFECT_DECLARATIONS: readonly (readonly [string, readonly string[]])[] =
   [
@@ -184,11 +184,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     approved: "catalog:",
     dependency: "effect",
-    minimumDeclarations: 1,
-  },
-  {
-    approved: "catalog:",
-    dependency: "@effect/platform-browser",
     minimumDeclarations: 1,
   },
   {

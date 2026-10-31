@@ -13,7 +13,6 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@effect/platform-browser": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

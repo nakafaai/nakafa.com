@@ -38,10 +38,7 @@ export const storeContentArtifact = Effect.fn(
   }
   const body = { artifactHash, artifactJson };
   yield* ensureDocumentSize(`Artifact ${artifactHash}`, body);
-  const artifactJsonHash = yield* hashText(
-    `artifact ${artifactHash} bytes`,
-    artifactJson
-  );
+  const artifactJsonHash = yield* hashText(artifactJson);
   const facts = yield* loadArtifactFacts(artifactHash);
   if (facts) {
     if (facts.artifactJsonHash !== artifactJsonHash) {

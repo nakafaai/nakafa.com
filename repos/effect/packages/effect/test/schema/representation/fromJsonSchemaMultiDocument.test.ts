@@ -158,7 +158,7 @@ describe("SchemaRepresentation.fromJsonSchemaMultiDocument", () => {
         nonRecursives: [{
           $ref: "A",
           code: makeCode(
-            `Schema.String.check(Schema.isPattern(new RegExp("^a+$", "u")).annotate({ "expected": "a string matching the RegExp ^a+$", "identifier": "A" }))`,
+            `Schema.String.check(Schema.isPattern(new globalThis.RegExp("^a+$", "u")).annotate({ "expected": "a string matching the RegExp ^a+$", "identifier": "A" }))`,
             `string`
           )
         }]
@@ -333,6 +333,21 @@ describe("SchemaRepresentation.fromJsonSchemaMultiDocument", () => {
           }
         }),
       `Definition "A" is a circular alias.\n  at ["schemas"][0]["$ref"]`
+    )
+  })
+
+  it("also validates circular aliases annotated through allOf", () => {
+    throws(
+      () =>
+        SchemaRepresentation.fromJsonSchemaMultiDocument({
+          dialect: "draft-2020-12",
+          schemas: [{ allOf: [{ $ref: "#/$defs/A" }, { description: "resolve" }] }],
+          definitions: {
+            A: { $ref: "#/$defs/B" },
+            B: { $ref: "#/$defs/A" }
+          }
+        }),
+      `Definition "A" is a circular alias.\n  at ["schemas"][0]["allOf"][0]["$ref"]`
     )
   })
 })

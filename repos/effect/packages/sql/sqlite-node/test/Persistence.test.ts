@@ -5,6 +5,7 @@ import { Duration, Effect, FileSystem, Layer } from "effect"
 import * as PersistedQueueSqlTest from "effect-test/persistence/PersistedQueueSqlTest"
 import * as PersistedQueueTest from "effect-test/persistence/PersistedQueueTest"
 import * as SqlCleanupTest from "effect-test/persistence/SqlCleanupTest"
+import * as Arr from "effect/Array"
 import { PersistedQueue, Persistence } from "effect/persistence"
 import { Reactivity } from "effect/reactivity"
 import * as SqlClient from "effect/sql/SqlClient"
@@ -109,6 +110,30 @@ const suite = (
         expect(values).toEqual([{ name: "Alice" }, { name: "Bob" }, undefined])
       }))
 
+    it.effect("reused get expires", () =>
+      Effect.gen(function*() {
+        const persistence = yield* Persistence.BackingPersistence
+        const store = yield* persistence.make("test_store_reused_get")
+        yield* store.set("key", { name: "Alice" }, Duration.seconds(10))
+        const get = store.get("key")
+
+        assert.deepStrictEqual(yield* get, { name: "Alice" })
+        yield* TestClock.adjust(Duration.seconds(10))
+        assert.strictEqual(yield* get, undefined)
+      }))
+
+    it.effect("reused getMany expires", () =>
+      Effect.gen(function*() {
+        const persistence = yield* Persistence.BackingPersistence
+        const store = yield* persistence.make("test_store_reused_get_many")
+        yield* store.set("key", { name: "Alice" }, Duration.seconds(10))
+        const getMany = store.getMany(["key"])
+
+        assert.deepStrictEqual(yield* getMany, [{ name: "Alice" }])
+        yield* TestClock.adjust(Duration.seconds(10))
+        assert.deepStrictEqual(yield* getMany, [undefined])
+      }))
+
     it.effect("isolation between stores", () =>
       Effect.gen(function*() {
         const persistence = yield* Persistence.BackingPersistence
@@ -201,6 +226,7 @@ it.layer(ClientLayer)("Persistence SQL cleanup", (it) => {
         value: "{}",
         expires: SqlCleanupTest.expiredAtEpoch
       }))
+      assert(Arr.isArrayNonEmpty(entries))
       yield* sql`INSERT INTO ${table} ${sql.insert(entries)}`.unprepared
       yield* sql`
         INSERT INTO ${table} (store_id, id, value, expires)

@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ensurePostHogErasureConfigured } from "@repo/backend/confect/analytics/erasure/action";
 import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
@@ -21,6 +20,7 @@ import {
   ticking,
   versionServiceError,
 } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
@@ -39,7 +39,7 @@ vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
 }));
 // No test reads the shell's ACCEPTANCE_PORT: each one names the port it runs with.
 const services = Layer.merge(
-  nodeServicesLayer,
+  nodePlatform,
   ConfigProvider.layer(ConfigProvider.fromEnvRecord({}))
 );
 const encodeJson = Schema.encodeEffect(JsonTextSchema);

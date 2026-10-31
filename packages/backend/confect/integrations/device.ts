@@ -1,5 +1,4 @@
 import type { GenericId } from "@confect/core";
-import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -24,7 +23,6 @@ import { issueToken } from "@repo/utilities/token";
 import {
   Array as Arr,
   Clock,
-  Crypto,
   Duration,
   Effect,
   Option,
@@ -32,6 +30,7 @@ import {
   String as Str,
   Struct,
 } from "effect";
+import { SecureRandom } from "effect/crypto";
 
 /** The letters of a user code: consonants only, so no code spells a word (RFC 8628 section 6.1). */
 const ALPHABET = "BCDFGHJKLMNPQRSTVWXZ";
@@ -47,14 +46,16 @@ const SWEEP_LIMIT = 200;
 
 /** Draws one user code from a CSPRNG, one letter per random byte. */
 const drawUserCode = Effect.fn("integrations.device.userCode")(function* () {
-  const bytes = yield* (yield* Crypto.Crypto).randomBytes(CODE_LETTERS);
+  const bytes = yield* (yield* SecureRandom.SecureRandom).randomBytes(
+    CODE_LETTERS
+  );
   return Arr.join(
     Arr.map(Arr.fromIterable(bytes), (byte) =>
       ALPHABET.charAt(byte % ALPHABET.length)
     ),
     ""
   );
-}, Effect.provide(WebCryptoLayer));
+}, Effect.provide(SecureRandom.layerWebCrypto));
 
 /** Everything in a typed user code that is not a letter. */
 const NOT_LETTERS = /[^a-z]/giu;
@@ -82,7 +83,7 @@ export const startDevice = Effect.fn("integrations.device.start")(function* (
     const unknown: typeof DeviceStart.Type = { outcome: "unknown" };
     return unknown;
   }
-  const { hash, token: deviceCode } = yield* issueToken().pipe(Effect.orDie);
+  const { hash, token: deviceCode } = yield* issueToken();
   const userCode = yield* drawUserCode().pipe(
     Effect.flatMap(Schema.decodeEffect(UserCode)),
     Effect.orDie
@@ -124,7 +125,7 @@ export const pollDevice = Effect.fn("integrations.device.poll")(function* (
   deviceCode: string
 ) {
   const expired: typeof DevicePoll.Type = { outcome: "expired" };
-  const deviceCodeHash = yield* sha256Hex(deviceCode).pipe(Effect.orDie);
+  const deviceCodeHash = yield* sha256Hex(deviceCode);
   const found = yield* (yield* DatabaseReader)
     .table("integrationDevices")
     .index("by_deviceCodeHash", (query) =>

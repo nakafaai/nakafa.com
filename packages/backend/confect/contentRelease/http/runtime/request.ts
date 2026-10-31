@@ -42,14 +42,8 @@ export const readRuntimeRequest = Effect.fn(
   const trustedServer = yield* matchesHttpSecret(
     request.headers.get(CONTENT_TOKEN_HEADER) ?? "",
     secret
-  ).pipe(Effect.result);
-  if (Result.isFailure(trustedServer)) {
-    return {
-      kind: "rejected",
-      result: failureResult("CONTENT_RUNTIME_INTERNAL", 500),
-    } satisfies RuntimeRequestResult;
-  }
-  if (!trustedServer.success) {
+  );
+  if (!trustedServer) {
     return {
       kind: "rejected",
       result: failureResult("CONTENT_RUNTIME_UNAUTHORIZED", 401),

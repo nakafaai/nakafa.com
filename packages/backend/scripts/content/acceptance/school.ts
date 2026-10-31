@@ -7,7 +7,8 @@ import {
   decodeModeArguments,
 } from "@repo/backend/scripts/content/acceptance/mode";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Crypto, Effect, FileSystem, Schema } from "effect";
+import { Effect, FileSystem, Schema } from "effect";
+import { SecureRandom } from "effect/crypto";
 import { Hex } from "effect/encoding";
 
 /** One Convex function's arguments as the CLI takes them, JSON text. */
@@ -38,7 +39,7 @@ export const createAcceptanceSchool = Effect.fn(
       "Run bun run acceptance:prepare and start acceptance before creating a school."
     );
   }
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const id = Hex.encode(yield* crypto.randomBytes(4));
   const school = { name: `Sekolah ${id}`, slug: `acc-${id}` };
   const args = yield* encodeArguments({

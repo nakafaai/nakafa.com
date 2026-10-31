@@ -19,9 +19,6 @@ import { Array as Arr, Match, Schema } from "effect";
 
 const NonNegativeInt = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 
-/** The language a text key is read in. A text key reads no language, so any app locale serves. */
-const TEXT_KEY_LANGUAGE = "id";
-
 /**
  * How one response to one interaction scores. `scored` holds the score category, from 0 to the
  * ceiling, the most points its rule awards (`scoreCeiling`). `pending` waits for a person: a written
@@ -175,7 +172,7 @@ export function grade({
   }
   if (key.kind === "textEntry") {
     return isTextResponse(response) &&
-      matchesAnswerKey(key.accepted, response.text, TEXT_KEY_LANGUAGE)
+      matchesAnswerKey(key.accepted, response.text)
       ? { category: ceiling, ceiling, status: "scored" }
       : { ceiling, status: "pending" };
   }

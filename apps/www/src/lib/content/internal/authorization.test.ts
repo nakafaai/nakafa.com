@@ -30,16 +30,15 @@ describe("internal content authorization", () => {
 
   it.effect("is a defect when Web Crypto cannot derive a digest", () =>
     Effect.gen(function* () {
-      vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(
-        new Error("digest unavailable")
-      );
+      const failure = new Error("digest unavailable");
+      vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(failure);
 
       const defect = yield* isInternalContentAuthorized(
         "Bearer secret",
         "secret"
       ).pipe(Effect.catchDefect((cause) => Effect.succeed(cause)));
 
-      expect(defect).toMatchObject({ _tag: "PlatformError" });
+      expect(defect).toBe(failure);
     })
   );
 });

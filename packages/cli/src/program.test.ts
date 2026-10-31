@@ -65,6 +65,7 @@ const cliPlatformLayer = Layer.mergeAll(
       readInput: Effect.die("Unexpected terminal input"),
       readLine: Effect.die("Unexpected terminal input"),
       rows: Effect.succeed(24),
+      size: Effect.die("Unexpected terminal resize"),
     })
   ),
   Layer.succeed(

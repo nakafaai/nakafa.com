@@ -106,7 +106,7 @@ const verifyToken = Effect.fn("exams.sittings.gate.token")(function* (
   const hash = yield* tokenHash(keys, sitting._id, normalizeToken(token)).pipe(
     Effect.orDie
   );
-  if (!(yield* matchesSecret(hash, sitting.tokenHash).pipe(Effect.orDie))) {
+  if (!(yield* matchesSecret(hash, sitting.tokenHash))) {
     yield* countFailedTry(sitting._id, personId);
     return yield* new TokenRefused();
   }

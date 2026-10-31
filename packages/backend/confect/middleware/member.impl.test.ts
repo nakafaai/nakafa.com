@@ -7,7 +7,8 @@ import { Session } from "@repo/backend/confect/auth/session";
 import { member } from "@repo/backend/confect/middleware/member.impl";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { MASCOT } from "@repo/backend/test/mascot";
-import { Cause, Effect, Exit, Schema } from "effect";
+import { defectOf } from "@repo/backend/test/tenancy";
+import { Effect, Schema } from "effect";
 
 describe("middleware/member", () => {
   it.effect("dies when a function attaching it declares no tenant slug", () =>
@@ -41,11 +42,11 @@ describe("middleware/member", () => {
             }),
             Effect.exit
           );
-          return Exit.hasDies(exit) ? String(Cause.squash(exit.cause)) : "none";
+          return defectOf(exit);
         }).pipe(Effect.orDie),
         Schema.String
       );
-      expect(defect).not.toBe("none");
+      expect(defect).not.toBe("no defect");
       expect(defect).not.toContain("the handler ran");
     }).pipe(Effect.provide(confectLayer))
   );

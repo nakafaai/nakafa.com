@@ -72,21 +72,16 @@ describe("utilities/digest", () => {
     })
   );
 
-  it.effect("fails with a PlatformError when the digest is rejected", () =>
+  it.effect("dies when the runtime rejects the digest", () =>
     Effect.gen(function* () {
-      vi.spyOn(crypto.subtle, "digest").mockRejectedValue(
-        new Error("digest unavailable")
-      );
+      const failure = new Error("digest unavailable");
+      vi.spyOn(crypto.subtle, "digest").mockRejectedValue(failure);
+      const defectOf = <A>(program: Effect.Effect<A>) =>
+        program.pipe(Effect.catchDefect((cause) => Effect.succeed(cause)));
 
-      const shaFailure = yield* sha256(utf8("abc")).pipe(Effect.flip);
-      const hexFailure = yield* sha256Hex("abc").pipe(Effect.flip);
-      const secretFailure = yield* matchesSecret("abc", "abc").pipe(
-        Effect.flip
-      );
-
-      expect(shaFailure).toMatchObject({ _tag: "PlatformError" });
-      expect(hexFailure).toMatchObject({ _tag: "PlatformError" });
-      expect(secretFailure).toMatchObject({ _tag: "PlatformError" });
+      expect(yield* defectOf(sha256(utf8("abc")))).toBe(failure);
+      expect(yield* defectOf(sha256Hex("abc"))).toBe(failure);
+      expect(yield* defectOf(matchesSecret("abc", "abc"))).toBe(failure);
     })
   );
 });

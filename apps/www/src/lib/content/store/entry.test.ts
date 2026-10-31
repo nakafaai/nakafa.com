@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Data, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
   expireStoreTag,
   readStoreEntry,
@@ -27,26 +27,6 @@ vi.mock("@/lib/content/store/build", () => ({
   readBuildEntry,
   writeBuildEntry,
 }));
-
-/** The digest of a key failed, as the platform digest can. */
-class DigestUnavailableError extends Data.TaggedError(
-  "DigestUnavailableError"
-) {}
-
-/** Makes the digest of a key fail on demand, as the platform digest can. */
-const digest = vi.hoisted(() => ({ fails: false }));
-
-vi.mock("@repo/utilities/digest", async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import("@repo/utilities/digest")>();
-  return {
-    ...actual,
-    sha256Hex: (text: string) =>
-      digest.fails
-        ? Effect.fail(new DigestUnavailableError())
-        : actual.sha256Hex(text),
-  };
-});
 
 const TextSchema = Schema.String;
 const parts = ["page.catalog", "en"];
@@ -217,17 +197,6 @@ describe("content store entries", () => {
       });
 
       expect(testRuntimeCache.set).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("treats a key that cannot be digested as a miss and no write", () =>
-    Effect.gen(function* () {
-      digest.fails = true;
-      const read = yield* readStoreEntry({ parts, schema: TextSchema });
-      digest.fails = false;
-
-      expect(read).toStrictEqual(Option.none());
-      expect(testRuntimeCache.get).not.toHaveBeenCalled();
     })
   );
 

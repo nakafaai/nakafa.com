@@ -14,39 +14,13 @@ export type NumericEntry = Extract<Interaction, { kind: "numericEntry" }>;
 /** The key of a numeric entry: its value and, when the teacher allows one, how far an answer may stray from it. */
 export type NumericKey = Extract<InteractionKey, { kind: "numericEntry" }>;
 
-/** The Arabic-Indic digits ٠ to ٩ and the Eastern Arabic-Indic ones ۰ to ۹, which an Arabic keypad writes. */
-const EASTERN_DIGIT = /[٠-٩۰-۹]/gu;
-
-/** The comma and the Arabic decimal separator ٫, either of which a learner may write for the decimal point. */
-const DECIMAL_SEPARATOR = /[,٫]/gu;
-
-/** The code point of the Arabic-Indic zero ٠, from which each Arabic-Indic digit counts its value. */
-const ARABIC_INDIC_ZERO = 0x06_60;
-
-/** How far the Eastern Arabic-Indic digits ۰ to ۹ start after the Arabic-Indic ones, so both runs count alike. */
-const EASTERN_RUN = 0x90;
-
-/**
- * A typed number as the contract reads it, whatever script and separator the learner wrote it in: each
- * Arabic-Indic digit becomes its ASCII digit, and the comma or the Arabic decimal separator becomes the dot,
- * which the contract reads in English. A school's papers name no language, so the decimal point a learner
- * types is never wrong: `0,75`, `0.75` and `٠٫٧٥` read the same. Anything else stays as it was typed, so a
- * text that is no number stays no number.
- */
-export const numberText = (typed: string) =>
-  typed
-    .replace(EASTERN_DIGIT, (digit) =>
-      String((digit.charCodeAt(0) - ARABIC_INDIC_ZERO) % EASTERN_RUN)
-    )
-    .replace(DECIMAL_SEPARATOR, ".");
-
 /**
  * The canonical decimal a typed number stands for, as a key stores its value: the contract's one spelling,
  * with no trailing zero and `0` for zero. A fraction, a text that is no number, and a number too long to
  * spell without an exponent stand for none.
  */
 export const canonicalDecimal = (typed: string): Option.Option<string> =>
-  Option.flatMap(readNumberAnswer(numberText(typed), "en"), (number) =>
+  Option.flatMap(readNumberAnswer(typed), (number) =>
     number.fraction
       ? Option.none()
       : Option.some(BigDecimal.format(number.numerator))
@@ -74,11 +48,11 @@ export const numericKeyFits = (interaction: NumericEntry, key: NumericKey) =>
   isNumberKey(numberKeyOf(interaction, key));
 
 /**
- * Whether a typed answer is the key's number, read in any script and with either decimal point
- * (`numberText`), and within the key's tolerance. A fraction counts only when the entry accepts fractions.
+ * Whether a typed answer is the key's number, read in any script and with either decimal point, and
+ * within the key's tolerance. A fraction counts only when the entry accepts fractions.
  */
 export const matchesNumber = (
   interaction: NumericEntry,
   key: NumericKey,
   typed: string
-) => matchesAnswerKey(numberKeyOf(interaction, key), numberText(typed), "en");
+) => matchesAnswerKey(numberKeyOf(interaction, key), typed);

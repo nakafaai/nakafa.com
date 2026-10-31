@@ -39,10 +39,7 @@ export const decodePublicRuntimeRow = Effect.fn(
     Effect.mapError(() => new PublicRuntimeReadError())
   );
   const projectionJson = canonicalizeContentProjection(projection);
-  const projectionHash = yield* hashText(
-    "the current public content projection",
-    projectionJson
-  ).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
+  const projectionHash = yield* hashText(projectionJson);
   if (
     row.projectionHash !== projectionHash ||
     row.activeManifestHash !== release.manifestHash ||

@@ -1,8 +1,9 @@
+import { layerSecureRandom } from "@effect/platform-node/NodeCrypto";
 import { runMain } from "@effect/platform-node/NodeRuntime";
 import { layer } from "@effect/platform-node/NodeServices";
 import { renderReport, runGate } from "@repo/backend/scripts/nina/gate";
 import { DeploymentLive } from "@repo/backend/scripts/nina/live";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 /**
  * Runs one real Nina turn through the gateway on the deployment that the
@@ -17,4 +18,4 @@ const main = Effect.gen(function* () {
   });
 });
 
-runMain(main.pipe(Effect.provide(layer)));
+runMain(main.pipe(Effect.provide(Layer.merge(layer, layerSecureRandom))));
