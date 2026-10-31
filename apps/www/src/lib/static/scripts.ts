@@ -7,6 +7,12 @@ export const MODULE_PRELOAD = /<link\b[^>]*\brel="modulepreload"[^>]*>/gu;
 const ENTRY_SCRIPT =
   /<script type="module" async="" src="(?<src>[^"]+)"><\/script>/gu;
 
+/**
+ * The module preloads of one route in the router's dehydrated manifest. The head
+ * renders a link for each, and only the head reads them.
+ */
+const MANIFEST_PRELOADS = /preloads:(?<slot>\$R\[\d+\])=\[[^\]]*\]/gu;
+
 const PRELOAD_HREF = /\bhref="(?<href>[^"]*)"/u;
 const PRELOAD_PRIORITY = /\bfetchPriority="(?<priority>[^"]*)"/u;
 const BODY_END = "</body>";
@@ -51,6 +57,7 @@ const STATIC_SCRIPTS_LOADER = `(function (scripts) {
       return;
     }
     started = true;
+    var links = document.createDocumentFragment();
     for (var index = 0; index < scripts.preloads.length; index++) {
       var preload = scripts.preloads[index];
       var link = document.createElement("link");
@@ -60,8 +67,9 @@ const STATIC_SCRIPTS_LOADER = `(function (scripts) {
       if (preload.fetchPriority) {
         link.setAttribute("fetchpriority", preload.fetchPriority);
       }
-      document.head.appendChild(link);
+      links.appendChild(link);
     }
+    document.head.appendChild(links);
     var entry = document.createElement("script");
     entry.type = "module";
     entry.setAttribute("async", "");
@@ -105,7 +113,9 @@ const STATIC_SCRIPTS_LOADER = `(function (scripts) {
  * and its inline scripts; its module preloads and its entry script move into one
  * inline loader at the end of the body, which starts them with the same attributes
  * after the first paint. A module that the page preloads twice keeps the attributes
- * of its first link, as the browser does.
+ * of its first link, as the browser does. The router's dehydrated manifest stops
+ * naming the preloads, so the head that React hydrates adds no second link for a
+ * module that the loader has already started.
  */
 export function deferStaticScripts(
   html: string
@@ -152,6 +162,7 @@ export function deferStaticScripts(
       const loader = `<script>${STATIC_SCRIPTS_LOADER}(${Schema.encodeSync(StaticScriptsJson)(unique)});</script>`;
       return html
         .replace(MODULE_PRELOAD, "")
+        .replace(MANIFEST_PRELOADS, "preloads:$<slot>=[]")
         .replace(entry[0], "")
         .replace(BODY_END, () => `${loader}${BODY_END}`);
     })

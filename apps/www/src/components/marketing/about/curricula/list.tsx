@@ -26,7 +26,7 @@ type CurriculumLink = Pick<
   "countryCode" | "programKey" | "publicPath" | "title"
 >;
 
-interface CurriculumListProps {
+export interface CurriculumListProps {
   readonly curricula: readonly CurriculumLink[];
 }
 
