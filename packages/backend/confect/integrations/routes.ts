@@ -325,7 +325,7 @@ const importRoster = Effect.fn("integrations.routes.importRoster")(function* (
 ) {
   const clientId = yield* callerId;
   const { runMutation } = yield* MutationRunner;
-  const rows = yield* Schema.decodeUnknownEffect(Schema.Array(ImportRow))(
+  const rows = yield* Schema.decodeEffect(Schema.Array(ImportRow))(
     payload.rows
   ).pipe(
     Effect.mapError(

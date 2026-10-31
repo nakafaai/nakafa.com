@@ -292,7 +292,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
               input,
               "Send a key, the period's id, and at most one hundred students."
             );
-            const students = yield* Schema.decodeUnknownEffect(
+            const students = yield* Schema.decodeEffect(
               Schema.Array(ImportRow)
             )(rows).pipe(Effect.mapError(() => invalidRows));
             const digest = yield* sha256Hex(
