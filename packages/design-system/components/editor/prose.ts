@@ -1,9 +1,11 @@
 import { drawFormula } from "@repo/design-system/components/editor/render";
+import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import {
   blockGapVariants,
   codeVariants,
   headingTextVariants,
   headingVariants,
+  linkVariants,
   listItemVariants,
   listVariants,
   mathBlockVariants,
@@ -11,6 +13,7 @@ import {
   mathScrollVariants,
   paragraphVariants,
   quoteVariants,
+  scriptVariants,
   tableCellVariants,
   tableFrameVariants,
   tableHeadCellVariants,
@@ -61,28 +64,33 @@ const BLOCK_CLASSES: Record<string, (node: Node) => Option.Option<string>> = {
   tableRow: () => Option.some(tableRowVariants()),
 };
 
+/**
+ * The class of each mark's element, as the published article draws the phrase: a bold phrase is the
+ * lesson's marked phrase, a link the lesson's link, inline code its chip, and a sub- or superscript
+ * its annotation size. The editor and the reader give these to `documentExtensions`, so each mark's
+ * own element takes them, and a phrase that holds several marks takes its surface once.
+ */
+export const ARTICLE_MARKS = {
+  bold: emphasisVariants(),
+  code: codeVariants(),
+  link: linkVariants(),
+  subscript: scriptVariants(),
+  superscript: scriptVariants(),
+};
+
 /** The cells of a table, whose paragraphs read as the cell's words, as a lesson's cell holds them. */
 const CELL_NODES = ["tableCell", "tableHeader"];
 
 /**
- * A decoration on each block and each piece of inline code of a document, with the classes that the
- * published article draws them with, and on each paragraph too when `paragraphs` is set. A decoration
- * styles the view only: no node changes, so the stored document is the same as before.
+ * A decoration on each block of a document, with the classes that the published article draws it
+ * with, and on each paragraph too when `paragraphs` is set. A decoration styles the view only: no
+ * node changes, so the stored document is the same as before. The marks take their classes on their
+ * own elements (`ARTICLE_MARKS`).
  */
 const proseDecorations = (doc: Node, paragraphs: boolean) => {
   const decorations = MutableList.make<Decoration>();
   doc.descendants((node, position, parent) => {
     const end = position + node.nodeSize;
-    if (
-      node.isText &&
-      Arr.some(node.marks, (mark) => mark.type.name === "code")
-    ) {
-      MutableList.append(
-        decorations,
-        Decoration.inline(position, end, { class: codeVariants() })
-      );
-      return;
-    }
     if (
       paragraphs &&
       node.type.name === "paragraph" &&
@@ -112,7 +120,7 @@ const proseDecorations = (doc: Node, paragraphs: boolean) => {
 
 /**
  * Draws a document as the published article draws its text: its headings, lists, quotations and
- * inline code, and, for a prompt or a note (`paragraphs`), its paragraphs. An option's short text
+ * tables, and, for a prompt or a note (`paragraphs`), its paragraphs. An option's short text
  * leaves its paragraphs as one line of text.
  */
 export const articleProse = Extension.create<{ paragraphs: boolean }>({
@@ -134,12 +142,17 @@ export const articleProse = Extension.create<{ paragraphs: boolean }>({
 
 /**
  * The classes of each element of a document drawn without an editor, by the selector that finds it,
- * as the editor's decorations give them, so a text that stands in for its editor takes the same boxes.
+ * as the editor's decorations and marks give them, so a text that stands in for its editor takes the
+ * same boxes.
  * A paragraph is left to the caller, which knows whether its text reads as an article.
  */
 const ELEMENT_CLASSES = [
+  ["a", ARTICLE_MARKS.link],
   ["blockquote", quoteVariants()],
-  [":not(pre) > code", codeVariants()],
+  [":not(pre) > code", ARTICLE_MARKS.code],
+  ["strong", ARTICLE_MARKS.bold],
+  ["sub", ARTICLE_MARKS.subscript],
+  ["sup", ARTICLE_MARKS.superscript],
   ["h1", headingClasses("h1")],
   ["h2", headingClasses("h2")],
   ["h3", headingClasses("h3")],

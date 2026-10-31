@@ -194,6 +194,64 @@ test("the cohorts, exams, notifications, rooms, exam editor, periods, profile an
   await context.close();
 });
 
+/** How long a settings page gets to draw its live answers before its header is read again. */
+const SETTLE_MILLISECONDS = 4000;
+
+/** Every School settings page, by its address under the school's host. */
+const SETTINGS_PAGES = [
+  "/settings/profile",
+  "/settings/units",
+  "/settings/periods",
+  "/settings/cohorts",
+  "/settings/members",
+  "/settings/invites",
+  "/settings/students",
+  "/settings/roles",
+  "/settings/guardians",
+  "/settings/roster",
+  "/settings/clients",
+  "/settings/connections",
+  "/settings/policies",
+  "/settings/billing",
+  "/settings/audit",
+];
+
+test("every School settings page keeps its header's controls from the first paint, and nothing on it moves", async ({
+  baseURL,
+  browser,
+}) => {
+  test.setTimeout(600_000);
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+
+  for (const path of SETTINGS_PAGES) {
+    const page = await context.newPage();
+    await page.addInitScript(recordFirstControls, {
+      key: FIRST_CONTROLS,
+      selector: HEADER,
+    });
+    await page.goto(address(path));
+    await expect(page.locator(HEADER).first()).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    // The live reads answer over Convex's socket, which no load state waits for, so the page gets time to draw every
+    // answer before the header is read again. Waiting longer only makes the check stricter.
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(SETTLE_MILLISECONDS);
+    expect(await readFirstControls(page), path).toEqual(
+      await readControls(page, HEADER)
+    );
+    expect(await Effect.runPromise(readCumulativeLayoutShift(page)), path).toBe(
+      0
+    );
+    await page.close();
+  }
+  await context.close();
+});
+
 test("a class page keeps its tab row from the first paint, and nothing on it moves while the class loads", async ({
   baseURL,
   browser,

@@ -1,6 +1,6 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/page";
+import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/query";
 import { encodeJsonText } from "@repo/utilities/json";
 import { useConvexConnectionState } from "convex/react";
 import { useState } from "react";

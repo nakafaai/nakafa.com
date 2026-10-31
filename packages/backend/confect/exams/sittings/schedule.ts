@@ -104,6 +104,36 @@ const keysFit = Effect.fn("exams.sittings.schedule.keys")(function* (
 });
 
 /**
+ * Schedules the jobs of a sitting at its times: its opening, its closing, and the notices to its students and
+ * their guardians before it opens. The caller stores them on the row, so a cancel or a new time cancels them.
+ */
+export const sittingJobs = Effect.fn("exams.sittings.jobs")(function* (
+  sitting: Pick<ExamSittingsDoc, "_id" | "closesAt" | "opensAt" | "unitId">
+) {
+  const openJob = yield* scheduleOpen(sitting._id, sitting.opensAt);
+  const closeJob = yield* scheduleClose(sitting._id, sitting.closesAt);
+  const noticeJobs = yield* scheduleSittingNotices(sitting);
+  return [openJob, closeJob, ...noticeJobs];
+});
+
+/**
+ * Refuses the times of a sitting unless its closing comes after its opening, and its opening is at most
+ * OPEN_PAST_LIMIT_MS in the past, so neither a schedule nor a new time opens a sitting whose time has passed.
+ */
+export const checkTimes = Effect.fn("exams.sittings.times")(function* (
+  opensAt: number,
+  closesAt: number
+) {
+  if (!(opensAt < closesAt)) {
+    return yield* new ScheduleInvalid({ reason: "closesAt" });
+  }
+  const now = yield* Clock.currentTimeMillis;
+  if (opensAt < now - OPEN_PAST_LIMIT_MS) {
+    return yield* new ScheduleInvalid({ reason: "opensAt" });
+  }
+});
+
+/**
  * Writes one sitting of an exam in its place, with a new token, and schedules its opening
  * and its closing. The caller checks the times and the place. The token is hashed and
  * sealed under the school key, and the journal records the schedule under the actor that
@@ -146,17 +176,16 @@ export const createSitting = Effect.fn("exams.sittings.create")(
     const keys = yield* readTenantKeys(args.tenantId).pipe(Effect.orDie);
     const hash = yield* tokenHash(keys, id, token).pipe(Effect.orDie);
     const sealed = yield* sealToken(keys, id, token).pipe(Effect.orDie);
-    const openJob = yield* scheduleOpen(id, args.opensAt);
-    const closeJob = yield* scheduleClose(id, args.closesAt);
-    const noticeJobs = yield* scheduleSittingNotices({
+    const jobs = yield* sittingJobs({
       _id: id,
+      closesAt: args.closesAt,
       opensAt: args.opensAt,
       unitId: args.place.unitId,
     });
     yield* (yield* DatabaseWriter)
       .table("examSittings")
       .patch(id, {
-        jobs: [openJob, closeJob, ...noticeJobs],
+        jobs,
         tokenHash: hash,
         tokenSealed: sealed,
       })
@@ -188,13 +217,7 @@ export const scheduleSitting = Effect.fn("exams.sittings.schedule")(
     opensAt: number;
     room: typeof RoomName.Type;
   }) {
-    if (!(args.opensAt < args.closesAt)) {
-      return yield* new ScheduleInvalid({ reason: "closesAt" });
-    }
-    const now = yield* Clock.currentTimeMillis;
-    if (args.opensAt < now - OPEN_PAST_LIMIT_MS) {
-      return yield* new ScheduleInvalid({ reason: "opensAt" });
-    }
+    yield* checkTimes(args.opensAt, args.closesAt);
     const member = yield* Member;
     const tenantId = member.tenant._id;
     const place = yield* placeOf(args.group, tenantId);

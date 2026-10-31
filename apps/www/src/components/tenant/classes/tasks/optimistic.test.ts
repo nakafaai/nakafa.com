@@ -5,7 +5,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
   type ClassTask,
-  rescheduleUpdate,
+  editUpdate,
   scoreUpdate,
   submitUpdate,
   type TaskWork,
@@ -154,7 +154,7 @@ describe("task optimistic updates", () => {
     );
   });
 
-  it("moves a deadline and gives work its points at once", () => {
+  it("edits a task and gives work its points at once", () => {
     const moved = storeByRef([
       [
         classroom.tasks.get,
@@ -166,14 +166,25 @@ describe("task optimistic updates", () => {
         ],
       ],
     ]);
-    rescheduleUpdate(moved.localStore, {
+    editUpdate(moved.localStore, {
       classId,
       deadline: 900,
+      latePolicy: "close",
+      points: 40,
       slug,
       task: "ringkasan",
+      text: "Kerjakan lagi.",
+      title: "Ringkasan baru",
     });
     expect(moved.setQuery.mock.calls[0]?.[2]).toEqual(
-      Option.some({ ...task("ringkasan", null), deadline: 900 })
+      Option.some({
+        ...task("ringkasan", null),
+        deadline: 900,
+        latePolicy: "close",
+        points: 40,
+        text: "Kerjakan lagi.",
+        title: "Ringkasan baru",
+      })
     );
 
     const scored = storeByRef([

@@ -2,7 +2,11 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
-import { lessonPanel, lessonSection } from "@/e2e/support/lesson";
+import {
+  lessonPanel,
+  lessonSection,
+  showLessonWindow,
+} from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -48,7 +52,7 @@ const openReducedLesson = Effect.fn("NakafaE2E.openReducedLesson")(function* (
   page: Page
 ) {
   yield* openRoute(page, "/id", "denied");
-  yield* Effect.promise(() => lessonSection(page).scrollIntoViewIfNeeded());
+  yield* showLessonWindow(page);
 });
 
 /** Registers the reduced-motion check of one home lab, opened at its tab. */

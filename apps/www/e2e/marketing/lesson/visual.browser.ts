@@ -9,6 +9,7 @@ import {
   lessonVisual,
   lessonWindow,
   PROJECTILE_VIEW,
+  showLessonWindow,
   visibleShare,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -204,9 +205,7 @@ test("home lesson window keeps its visual mounted once the window has left the s
               const visual = lessonVisual(page, PROJECTILE_VIEW).locator(
                 "canvas"
               );
-              yield* Effect.promise(() =>
-                lessonWindow(page).scrollIntoViewIfNeeded()
-              );
+              yield* showLessonWindow(page);
               yield* Effect.promise(() =>
                 expect(visual).toBeAttached({
                   timeout: readinessTimeoutMilliseconds,
@@ -256,9 +255,7 @@ test("home lesson window draws no layout shift in its section while it is reveal
                 countSectionShifts(page)
               );
 
-              yield* Effect.promise(() =>
-                lessonWindow(page).scrollIntoViewIfNeeded()
-              );
+              yield* showLessonWindow(page);
               yield* Effect.promise(() =>
                 expect(
                   lessonVisual(page, PROJECTILE_VIEW).locator("canvas")
@@ -306,9 +303,7 @@ test("home lesson placeholder holds still with reduced motion while its scene lo
                 LOADING_HOLD_MS
               );
               yield* openRoute(page, "/id", "denied");
-              yield* Effect.promise(() =>
-                lessonWindow(page).scrollIntoViewIfNeeded()
-              );
+              yield* showLessonWindow(page);
               yield* Effect.promise(() =>
                 expect(
                   lessonVisual(page, PROJECTILE_VIEW).locator("canvas")

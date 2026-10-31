@@ -69,13 +69,18 @@ export const submitUpdate =
     }));
   };
 
-/** Shows a task's new deadline at once. */
-export const rescheduleUpdate: OptimisticUpdate<
-  typeof classroom.tasks.reschedule
-> = (localStore, args) => {
+/** Shows a task's new title, text, deadline, points and late policy at once, under its own address. */
+export const editUpdate: OptimisticUpdate<typeof classroom.tasks.edit> = (
+  localStore,
+  args
+) => {
   changeTask(localStore, args.task, (task) => ({
     ...task,
     deadline: args.deadline,
+    latePolicy: args.latePolicy,
+    points: args.points,
+    text: args.text,
+    title: args.title,
   }));
 };
 

@@ -1,6 +1,12 @@
 import { defineConfig, type Project } from "@playwright/test";
 import { acceptanceOrigin } from "@repo/backend/scripts/content/acceptance/origin";
-import { Array as Arr, Effect, Record as Rec } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Number as Num,
+  Option,
+  Record as Rec,
+} from "effect";
 
 // The browser tests open the acceptance runtime's origin, localhost on the port
 // that ACCEPTANCE_PORT names (3000 by default), so set the same ACCEPTANCE_PORT
@@ -37,6 +43,32 @@ const LEARNER_TESTS = [
 // take as long as the whole learner suite, so they run in their own leg too.
 const CHAT_TESTS = ["**/chat/**/*.browser.ts", "**/nina/**/*.browser.ts"];
 
+/**
+ * How many workers run a suite whose tests measure no timing across tests: one,
+ * unless PLAYWRIGHT_WORKERS names more. Every test of those suites seeds its own
+ * learner, school and chats, and marks what it writes with the moment of its
+ * run, so its files can run side by side. The navigation checks measure timing
+ * while they share the runner, so they keep their own counts.
+ */
+function parallelWorkers(value: string | undefined): number {
+  if (value === undefined) {
+    return 1;
+  }
+  const workers = Num.parse(value);
+  if (
+    Option.isSome(workers) &&
+    Number.isInteger(workers.value) &&
+    workers.value > 0
+  ) {
+    return workers.value;
+  }
+  throw new Error(
+    `PLAYWRIGHT_WORKERS must be a whole number above 0; received "${value}".`
+  );
+}
+
+const WORKERS = parallelWorkers(process.env.PLAYWRIGHT_WORKERS);
+
 // Each project as it runs. No project names its dependency here: the suite
 // order below derives it.
 const PROJECTS = {
@@ -47,19 +79,19 @@ const PROJECTS = {
       ...LEARNER_TESTS,
       ...VISUAL_TESTS,
     ],
-    workers: 1,
+    workers: WORKERS,
   },
   learner: {
     testMatch: LEARNER_TESTS,
-    workers: 1,
+    workers: WORKERS,
   },
   chat: {
     testMatch: CHAT_TESTS,
-    workers: 1,
+    workers: WORKERS,
   },
   visual: {
     testMatch: VISUAL_TESTS,
-    workers: 1,
+    workers: WORKERS,
   },
   "isolated-navigation": {
     testMatch: "**/navigation/instant.browser.ts",
@@ -71,7 +103,13 @@ const PROJECTS = {
   // WebKit. Its project runs after the navigation checks, so no other browser
   // shares the runner while those checks measure timing.
   webkit: {
-    testMatch: ["**/visual/cards.browser.ts", "**/reading/press.browser.ts"],
+    // The visual cards, the lesson breadcrumb that must paint once, and a press into a lesson
+    // that must draw it whole, in Safari too.
+    testMatch: [
+      "**/visual/cards.browser.ts",
+      "**/curriculum/placement.browser.ts",
+      "**/reading/press.browser.ts",
+    ],
     use: { browserName: "webkit" },
     workers: 1,
   },

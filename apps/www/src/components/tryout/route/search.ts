@@ -1,4 +1,4 @@
-import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/page";
+import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/query";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Effect, Schema } from "effect";
 import { CatalogQuery } from "@/components/tryout/catalog/table/query";

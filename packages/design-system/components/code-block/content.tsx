@@ -13,7 +13,6 @@ import { useEffect, useMemo, useState } from "react";
 type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
   children: string;
   language?: string;
-  preClassName?: string | undefined;
   syntaxHighlighting?: boolean;
   themes?: CodeOptionsMultipleThemes["themes"];
   transparentBackground?: boolean;
@@ -22,7 +21,6 @@ type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
 const CodeHighlightRequestSchema = Schema.Struct({
   children: Schema.String,
   language: Schema.UndefinedOr(Schema.String),
-  preClassName: Schema.UndefinedOr(Schema.String),
   syntaxHighlighting: Schema.Boolean,
   transparentBackground: Schema.Boolean,
 });
@@ -34,7 +32,6 @@ export function CodeBlockContent({
   children,
   themes,
   language,
-  preClassName,
   syntaxHighlighting = true,
   transparentBackground = false,
   ...props
@@ -43,19 +40,11 @@ export function CodeBlockContent({
     () => ({
       children,
       language,
-      preClassName,
       syntaxHighlighting,
       ...(themes === undefined ? {} : { themes }),
       transparentBackground,
     }),
-    [
-      children,
-      language,
-      preClassName,
-      syntaxHighlighting,
-      themes,
-      transparentBackground,
-    ]
+    [children, language, syntaxHighlighting, themes, transparentBackground]
   );
   const [highlightedCode, setHighlightedCode] = useState<{
     html: string;
@@ -76,7 +65,6 @@ export function CodeBlockContent({
         ...(request.language === undefined
           ? {}
           : { language: request.language }),
-        preClassName: request.preClassName,
         ...(request.themes === undefined ? {} : { themes: request.themes }),
         transparentBackground: request.transparentBackground,
       }).pipe(
@@ -109,11 +97,7 @@ export function CodeBlockContent({
   const html = highlightedCode.request === request ? highlightedCode.html : "";
 
   if (!(request.syntaxHighlighting && html)) {
-    return (
-      <CodeBlockText preClassName={request.preClassName} {...props}>
-        {children}
-      </CodeBlockText>
-    );
+    return <CodeBlockText {...props}>{children}</CodeBlockText>;
   }
 
   return (

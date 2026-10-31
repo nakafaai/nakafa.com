@@ -1,4 +1,4 @@
-import { DateTime, Option, String as Str } from "effect";
+import { Array as Arr, DateTime, Option, Order, String as Str } from "effect";
 
 /** One quarter of an hour, in milliseconds. */
 const QUARTER_HOUR_MS = 15 * 60 * 1000;
@@ -56,16 +56,28 @@ const localFields = (local: string) =>
  * is skipped rather than named, and the text names a time that the clock shows. Zone offsets are
  * whole quarter hours, so the quarter hours of the instant are the quarter hours of the clock.
  */
-export const nextQuarter = (now: DateTime.Utc, zone: DateTime.TimeZone) => {
-  const quarter =
+export const nextQuarter = (now: DateTime.Utc, zone: DateTime.TimeZone) =>
+  wallClockOf(
     Math.floor(DateTime.toEpochMillis(now) / QUARTER_HOUR_MS) *
       QUARTER_HOUR_MS +
-    QUARTER_HOUR_MS;
+      QUARTER_HOUR_MS,
+    zone
+  );
+
+/** An instant read on the wall clock of `zone` to the minute, as a `datetime-local` value. */
+export const wallClockOf = (at: number, zone: DateTime.TimeZone) => {
   const wall = DateTime.toParts(
-    DateTime.setZone(DateTime.makeUnsafe(quarter), zone)
+    DateTime.setZone(DateTime.makeUnsafe(at), zone)
   );
   return `${pad(wall.year, 4)}-${pad(wall.month, 2)}-${pad(wall.day, 2)}T${pad(wall.hour, 2)}:${pad(wall.minute, 2)}`;
 };
+
+/** The lengths of a sitting in minutes, which the schedule offers. */
+export const SITTING_LENGTHS: readonly number[] = [30, 45, 60, 90, 120];
+
+/** The lengths a room's change offers: the schedule's lengths, and the room's own length when it is another, in order. */
+export const lengthsWith = (minutes: number) =>
+  Arr.sort(Arr.dedupe(Arr.append(SITTING_LENGTHS, minutes)), Order.Number);
 
 /**
  * The instants that a sitting opens and closes at, for a start read on the wall clock of `zone`
@@ -86,3 +98,20 @@ export const sittingTimes = (
       return { closesAt: opensAt + minutes * MINUTE_MS, opensAt };
     })
   );
+
+/**
+ * The instants a moved room takes for the start and the length its dialog shows. While both show the room as it is,
+ * the room keeps its own instants: the start field holds whole minutes, and a stored start may hold seconds, which a
+ * start read back from the field would drop. Otherwise they are the sitting's times of that start and length, or none
+ * when the start is not a time the calendar holds.
+ */
+export const movedTimes = (
+  room: { readonly closesAt: number; readonly opensAt: number },
+  local: string,
+  minutes: number,
+  zone: DateTime.TimeZone
+) =>
+  local === wallClockOf(room.opensAt, zone) &&
+  minutes === Math.round((room.closesAt - room.opensAt) / MINUTE_MS)
+    ? Option.some({ closesAt: room.closesAt, opensAt: room.opensAt })
+    : sittingTimes(local, minutes, zone);

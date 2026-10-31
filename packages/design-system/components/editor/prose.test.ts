@@ -2,14 +2,17 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import {
+  ARTICLE_MARKS,
   articleProse,
   drawArticleProse,
 } from "@repo/design-system/components/editor/prose";
+import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import {
   blockGapVariants,
   codeVariants,
   headingTextVariants,
   headingVariants,
+  linkVariants,
   listItemVariants,
   listVariants,
   mathBlockVariants,
@@ -17,19 +20,24 @@ import {
   mathScrollVariants,
   paragraphVariants,
   quoteVariants,
+  scriptVariants,
   tableCellVariants,
   tableFrameVariants,
   tableHeadCellVariants,
   tableRowVariants,
 } from "@repo/design-system/lib/prose";
 import { documentExtensions } from "@repo/editor/document";
+import { NO_MATH_VIEWS } from "@repo/editor/math";
 import { Editor } from "@tiptap/core";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 
-/** A document with each block an article draws: a heading, a paragraph with code, lists, a quotation, a code block, a formula, a picture and a table with a header row. */
+/**
+ * A document with each block an article draws: a heading, a paragraph with code, a bold phrase, a link and
+ * a sub- and a superscript, lists, a quotation, a code block, a formula, a picture and a table with a header row.
+ */
 const DOCUMENT =
-  '<h2>Judul</h2><p>Hitung <code>x</code> saja</p><ul><li><p>satu</p></li></ul><ol><li><p>dua</p></li></ol><blockquote><p>kutipan</p></blockquote><pre><code>a = 1</code></pre><div data-type="math-block" data-latex="a+b"></div><div data-type="image"></div><table><tbody><tr><th><p>kepala</p></th></tr><tr><td><p>sel</p></td></tr></tbody></table>';
+  '<h2>Judul</h2><p>Hitung <code>x</code> saja, <strong>penting</strong> <a href="https://nakafa.com">tautan</a> H<sub>2</sub>O x<sup>2</sup></p><ul><li><p>satu</p></li></ul><ol><li><p>dua</p></li></ol><blockquote><p>kutipan</p></blockquote><pre><code>a = 1</code></pre><div data-type="math-block" data-latex="a+b"></div><div data-type="image"></div><table><tbody><tr><th><p>kepala</p></th></tr><tr><td><p>sel</p></td></tr></tbody></table>';
 
 /**
  * An editor of the assessment document, mounted on a detached element so the drawn DOM is readable,
@@ -40,11 +48,14 @@ function openEditor(paragraphs: boolean) {
     content: DOCUMENT,
     element: document.createElement("div"),
     extensions: [
-      ...documentExtensions({
-        headingLevels: [1, 2, 3],
-        isLinkAllowed: () => false,
-        marks: ["code"],
-      }),
+      ...documentExtensions(
+        {
+          headingLevels: [1, 2, 3],
+          isLinkAllowed: () => true,
+          marks: ["bold", "code", "link", "subscript", "superscript"],
+        },
+        { ...NO_MATH_VIEWS, image: null, marks: ARTICLE_MARKS }
+      ),
       articleProse.configure({ paragraphs }),
     ],
   });
@@ -60,7 +71,7 @@ function classesOf(root: Element, selector: string) {
 }
 
 describe("articleProse", () => {
-  it("draws each block and each piece of inline code with the published article's classes", () => {
+  it("draws each block with the published article's classes", () => {
     const editor = openEditor(true);
     const root = editor.view.dom;
 
@@ -77,7 +88,6 @@ describe("articleProse", () => {
       ["LI", listItemVariants()],
       ["BLOCKQUOTE", quoteVariants()],
     ]);
-    expect(classesOf(root, "code > span")).toEqual([["SPAN", codeVariants()]]);
     expect(classesOf(root, "pre")).toEqual([["PRE", blockGapVariants()]]);
     expect(
       classesOf(
@@ -100,6 +110,19 @@ describe("articleProse", () => {
       ...Arr.replicate(paragraphVariants(), 4),
       "",
       "",
+    ]);
+    editor.destroy();
+  });
+
+  it("draws each mark on its own element with the published article's classes", () => {
+    const editor = openEditor(true);
+
+    expect(classesOf(editor.view.dom, "p > :not(br)")).toEqual([
+      ["CODE", codeVariants()],
+      ["STRONG", emphasisVariants()],
+      ["A", linkVariants()],
+      ["SUB", scriptVariants()],
+      ["SUP", scriptVariants()],
     ]);
     editor.destroy();
   });
@@ -131,7 +154,7 @@ describe("drawArticleProse", () => {
   it("gives the elements of a document drawn without an editor the classes the editor gives them", () => {
     const root = document.createElement("div");
     root.innerHTML =
-      '<h1>a</h1><h3>b</h3><p>Hitung <code>x</code></p><ul><li>c</li></ul><ol><li>d</li></ol><blockquote>e</blockquote><pre><code>f</code></pre><table><tbody><tr><th>g</th></tr><tr><td>h</td></tr></tbody></table><div data-type="image"></div>';
+      '<h1>a</h1><h3>b</h3><p>Hitung <code>x</code> <strong>i</strong> <a href="https://nakafa.com">j</a> <sub>k</sub><sup>l</sup></p><ul><li>c</li></ul><ol><li>d</li></ol><blockquote>e</blockquote><pre><code>f</code></pre><table><tbody><tr><th>g</th></tr><tr><td>h</td></tr></tbody></table><div data-type="image"></div>';
     drawArticleProse(root);
     // A second drawing keeps the table in the one frame it has.
     drawArticleProse(root);
@@ -149,6 +172,12 @@ describe("drawArticleProse", () => {
     expect(classesOf(root, "code")).toEqual([
       ["CODE", codeVariants()],
       ["CODE", ""],
+    ]);
+    expect(classesOf(root, "strong, a, sub, sup")).toEqual([
+      ["STRONG", emphasisVariants()],
+      ["A", linkVariants()],
+      ["SUB", scriptVariants()],
+      ["SUP", scriptVariants()],
     ]);
     expect(classesOf(root, "ul, ol, li, blockquote, p")).toEqual([
       ["P", ""],
