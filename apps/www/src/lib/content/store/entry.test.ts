@@ -18,6 +18,16 @@ vi.mock("@/lib/content/store/memory", async () => {
   return testRuntimeCacheModule;
 });
 
+const { readBuildEntry, writeBuildEntry } = vi.hoisted(() => ({
+  readBuildEntry: vi.fn(),
+  writeBuildEntry: vi.fn(),
+}));
+
+vi.mock("@/lib/content/store/build", () => ({
+  readBuildEntry,
+  writeBuildEntry,
+}));
+
 /** The digest of a key failed, as the platform digest can. */
 class DigestUnavailableError extends Data.TaggedError(
   "DigestUnavailableError"
@@ -53,6 +63,10 @@ function lastKey() {
 
 beforeEach(() => {
   resetTestRuntimeCache();
+  readBuildEntry.mockReset();
+  readBuildEntry.mockReturnValue(Effect.succeed(Option.none()));
+  writeBuildEntry.mockReset();
+  writeBuildEntry.mockReturnValue(Effect.void);
 });
 
 describe("content store entries", () => {
@@ -89,6 +103,51 @@ describe("content store entries", () => {
           schema: TextSchema,
         })
       ).toStrictEqual(Option.none());
+    })
+  );
+
+  it.effect("asks the deploy's read store for a lasting entry it lacks", () =>
+    Effect.gen(function* () {
+      readBuildEntry.mockReturnValueOnce(
+        Effect.succeed(Option.some({ value: "kept by a deploy" }))
+      );
+
+      expect(
+        yield* readStoreEntry({ lasting: true, parts, schema: TextSchema })
+      ).toStrictEqual(Option.some("kept by a deploy"));
+    })
+  );
+
+  it.effect("keeps the active pointer out of the deploy's read store", () =>
+    Effect.gen(function* () {
+      yield* readStoreEntry({ parts, schema: TextSchema });
+      yield* writeStoreEntry({
+        parts,
+        schema: TextSchema,
+        tags: [],
+        ttl: "1 minute",
+        value: "text",
+      });
+
+      expect(readBuildEntry).not.toHaveBeenCalled();
+      expect(writeBuildEntry).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("hands the deploy's read store a lasting entry", () =>
+    Effect.gen(function* () {
+      yield* writeStoreEntry({
+        lasting: true,
+        parts,
+        schema: TextSchema,
+        tags: [],
+        ttl: "1 minute",
+        value: "text",
+      });
+
+      expect(writeBuildEntry).toHaveBeenCalledExactlyOnceWith(lastKey(), {
+        value: "text",
+      });
     })
   );
 

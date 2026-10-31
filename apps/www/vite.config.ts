@@ -361,6 +361,9 @@ function alchemyWorker(
         bindings: [
           ...Object.entries({
             ...workerEnvironment(),
+            // The deploy's read store, for the prerender's Worker. The deployed
+            // Worker's bindings come from `deployedWorkerBindings` and never hold it.
+            NAKAFA_BUILD_STORE: process.env.NAKAFA_BUILD_STORE,
             NODE_ENV: nodeEnvironment,
           }).flatMap(([name, value]) =>
             value === undefined ? [] : [textBinding(name, value)]

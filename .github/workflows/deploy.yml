@@ -73,6 +73,31 @@ jobs:
           # The default glob walks every folder, node_modules included, for 3.5 minutes.
           cache-dependency-glob: apps/cas/uv.lock
 
+      # A build reads every public page of the active release, about 0.45 GB of Convex
+      # Database I/O. A release never changes, so a deploy starts from the reads of the last
+      # deploy of the same release and the same code behind them, and asks Convex only for
+      # what is new (ADR 0038). The store is local to this job; the Worker never binds it.
+      - name: Read the active content release
+        id: release
+        working-directory: packages/backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: echo "id=$(bunx --no-install convex run contentRelease/runtime/active:read | jq -r .releaseId)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the reads of this release
+        id: reads
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/reads
+          key: reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-${{ hashFiles('bun.lock', 'packages/backend/client/content/**', 'packages/backend/client/quran/**', 'packages/backend/content/**', 'packages/backend/confect/contentRelease/**', 'packages/backend/confect/tryouts/queries/**') }}
+
+      - name: Serve the reads to the build
+        working-directory: apps/www
+        env:
+          NAKAFA_BUILD_STORE: http://127.0.0.1:4179
+          NAKAFA_BUILD_STORE_DIRECTORY: ${{ github.workspace }}/.cache/reads
+        run: bun scripts/static/store.ts &
+
       - name: Deploy Convex
         working-directory: packages/backend
         env:
@@ -92,6 +117,7 @@ jobs:
           MATH_CAS_API_KEY: ${{ secrets.MATH_CAS_API_KEY }}
           NAKAFA_API_EDGE_SECRET: ${{ secrets.NAKAFA_API_EDGE_SECRET }}
           CONVEX_SITE_URL: ${{ secrets.CONVEX_SITE_URL }}
+          NAKAFA_BUILD_STORE: http://127.0.0.1:4179
           NAKAFA_MCP_EDGE_SECRET: ${{ secrets.NAKAFA_MCP_EDGE_SECRET }}
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
           SITE_URL: ${{ secrets.SITE_URL }}
@@ -102,3 +128,10 @@ jobs:
           VITE_POSTHOG_PROXY_HOST: ${{ vars.VITE_POSTHOG_PROXY_HOST }}
           VITE_POSTHOG_UI_HOST: ${{ vars.VITE_POSTHOG_UI_HOST }}
         run: bunx --no-install alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes
+
+      - name: Keep the reads for the next deploy of this release
+        if: steps.reads.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/reads
+          key: ${{ steps.reads.outputs.cache-primary-key }}
