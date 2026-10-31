@@ -53,7 +53,7 @@ const taught = Effect.gen(function* () {
   return { draft, fixture, forum, scope, teacher, term, whole };
 });
 
-describe("classroom/tasks reach", () => {
+describe("classroom/tasks write", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
