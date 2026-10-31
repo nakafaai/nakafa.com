@@ -121,5 +121,4 @@ describe("section rows", () => {
       { key: "primary", model, releaseId: KNOWLEDGE_RELEASE.releaseId },
     ]);
   });
-
 });

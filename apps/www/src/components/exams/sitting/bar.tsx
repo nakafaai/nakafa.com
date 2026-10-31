@@ -12,31 +12,11 @@ import {
 } from "@/components/player/header";
 import { ShellLock } from "@/components/sidebar/lock";
 import { useTenant } from "@/components/tenant/context";
-import { SchoolHeader } from "@/components/tenant/header";
 import { TargetLink } from "@/lib/routing/link";
 import {
   schoolExamEditTarget,
   schoolHomeTarget,
 } from "@/lib/routing/school/target";
-
-/**
- * The header of a sitting's screen: the school's path to the sitting, with the exam's name as its last
- * crumb, and the screen's actions at its end. The path's home crumb and the sidebar's trigger keep a way
- * back to the school home on a phone, whatever the screen shows.
- */
-export function SittingBar({
-  children,
-  examTitle,
-}: {
-  readonly children?: ReactNode;
-  readonly examTitle: string;
-}) {
-  return (
-    <SchoolHeader items={[{ label: examTitle }]} title={examTitle}>
-      {children}
-    </SchoolHeader>
-  );
-}
 
 /**
  * The header of a paper being answered, the try-out player's own: the way back and the exam's name at the

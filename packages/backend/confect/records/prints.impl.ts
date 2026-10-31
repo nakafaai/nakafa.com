@@ -1,24 +1,16 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import recordsInternal from "@repo/backend/confect/_generated/refs/records.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationRunner,
-  QueryRunner,
-  StorageActionWriter,
 } from "@repo/backend/confect/_generated/services";
 import { reportAuthority } from "@repo/backend/confect/records/authority";
-import { drawReportPdf } from "@repo/backend/confect/records/pdf";
 import spec from "@repo/backend/confect/records/prints.spec";
 import type { PrintableReport } from "@repo/backend/confect/records/report";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Clock, Effect, Layer, Struct } from "effect";
-
-/** The PDF's media type. */
-const PDF_TYPE = "application/pdf";
 
 /** The approved report a print names. Only an approval schedules a print, so another state is a defect. */
 const approvedReport = Effect.fn("records.prints.approved")(function* (
@@ -85,26 +77,6 @@ const printable = FunctionImpl.make(
   })
 );
 
-/** Draws an approved report's PDF, stores it, and locks the report with it. */
-const draw = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "draw",
-  Effect.fn("records.prints.draw")(function* ({ reportId }) {
-    const copy = yield* (yield* QueryRunner)
-      .runQuery(recordsInternal.prints.printable, { reportId })
-      .pipe(Effect.orDie);
-    const bytes = yield* drawReportPdf(copy);
-    const storageId = yield* (yield* StorageActionWriter).store(
-      new Blob([bytes], { type: PDF_TYPE })
-    );
-    yield* (yield* MutationRunner)
-      .runMutation(recordsInternal.prints.lock, { reportId, storageId })
-      .pipe(Effect.orDie);
-    return null;
-  })
-);
-
 /**
  * Locks an approved report with its stored PDF, and journals the lock with the report's
  * hash, as the principal who approved it (ADR 0033, Journal changes).
@@ -142,10 +114,9 @@ const lock = FunctionImpl.make(
   })
 );
 
-/** The drawing of approved reports' PDFs and their lock. */
+/** The printable copy of approved reports and their lock. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(printable),
-  Layer.provide(draw),
   Layer.provide(lock),
   GroupImpl.finalize
 );

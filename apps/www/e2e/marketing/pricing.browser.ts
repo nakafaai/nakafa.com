@@ -10,6 +10,9 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport } from "@/e2e/support/viewport";
 
+/** A button in the first HTML that takes a press and is not disabled. */
+const LIVE_BUTTON = /<button(?![^>]*\sdisabled)[^>]*\sdata-press=/u;
+
 const PRICING_PATH_PATTERN = /\/id\/pricing$/u;
 
 // The page shows the price in the currency of the visitor's time zone, and these checks read the dollar
@@ -239,4 +242,13 @@ test.describe("dedicated pricing page with reduced motion", () => {
       withObservedPageErrors(page, verifyPricingReducedMotion(page))
     );
   });
+});
+
+test("the Pro action stands at rest in the page's first HTML, so a press before React counts", async ({
+  page,
+}) => {
+  const response = await page.request.get("/en/pricing");
+  const html = await response.text();
+
+  expect(html).toMatch(LIVE_BUTTON);
 });

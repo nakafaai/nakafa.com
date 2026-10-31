@@ -206,7 +206,7 @@ export const issue = FunctionImpl.make(
             })
             .pipe(Effect.orDie);
           yield* scheduler
-            .runAfter(Duration.zero, recordsInternal.letters.draw, {
+            .runAfter(Duration.zero, recordsInternal.draw.letter, {
               letterId,
             })
             .pipe(Effect.orDie);

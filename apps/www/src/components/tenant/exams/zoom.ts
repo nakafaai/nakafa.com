@@ -46,8 +46,11 @@ export const ZOOM_PRESETS = [200, 150, 100, 75, 50] as const;
  */
 const ZoomMode = Schema.Literals(["fit", "fill", "percent"]);
 
-/** The width of the column of pages at the default zoom, as `max-w-3xl` draws it, which Fill stretches. */
-export const PAGE_WIDTH = 768;
+/**
+ * The width of the column of pages at the default zoom, as `max-w-212` draws it, which Fill stretches: wide
+ * enough that a page's text stands as wide as the student's column of questions.
+ */
+export const PAGE_WIDTH = 848;
 
 /**
  * The zoom of one editor's pages, as the viewer chose it on this visit, and `canvasWidth`, the width the

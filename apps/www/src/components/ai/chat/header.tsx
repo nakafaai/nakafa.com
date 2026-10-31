@@ -39,7 +39,7 @@ import { useChat } from "@/components/ai/chat/context";
 import { ChatDeletion } from "@/components/ai/chat/deletion";
 import { handleTitleKeyDown } from "@/components/ai/chat/rename";
 import { ChatSharing } from "@/components/ai/chat/sharing";
-import { useChatRename } from "@/components/ai/chat/title";
+import { readChatTitle, useChatRename } from "@/components/ai/chat/title";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 
@@ -64,6 +64,7 @@ export function AiChatHeader() {
 
 /** A reader's header: the chat's title, and no control that writes. */
 function ReaderChatHeader({ chat }: { chat: ChatView }) {
+  const t = useTranslations("Ai");
   return (
     <ChatHeader>
       <h1 className="flex items-center gap-2 px-1.5">
@@ -71,7 +72,9 @@ function ReaderChatHeader({ chat }: { chat: ChatView }) {
           className="size-4 shrink-0"
           icon={chat.visibility === "private" ? SquareLock01Icon : Globe02Icon}
         />
-        <span className="line-clamp-1 text-sm">{chat.title}</span>
+        <span className="line-clamp-1 text-sm">
+          {readChatTitle(chat.title, t("new-chat"))}
+        </span>
       </h1>
     </ChatHeader>
   );
@@ -200,7 +203,9 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
               className="size-4 shrink-0"
               icon={isPrivate ? SquareLock01Icon : Globe02Icon}
             />
-            <span className="line-clamp-1 text-sm">{chat.title}</span>
+            <span className="line-clamp-1 text-sm">
+              {readChatTitle(chat.title, t("new-chat"))}
+            </span>
           </h1>
         </Activity>
       </ChatHeader>
