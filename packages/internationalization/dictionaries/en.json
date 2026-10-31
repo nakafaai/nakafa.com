@@ -927,6 +927,9 @@
       },
       "tenant": {
         "provisioned": "School opened",
+        "dpa": {
+          "accepted": "Data processing agreement accepted"
+        },
         "founded": "School founded",
         "locale": {
           "set": "Country and currency changed"

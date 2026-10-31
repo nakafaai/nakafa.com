@@ -8031,6 +8031,10 @@ export declare const api: {
                 }
               | {
                   client: Id<"integrationClients">;
+                  type: "integration.changed";
+                }
+              | {
+                  client: Id<"integrationClients">;
                   type: "integration.rotated";
                 }
               | {
@@ -8201,6 +8205,7 @@ export declare const api: {
                   type: "tenant.provisioned";
                 }
               | { size: "s" | "m" | "l" | "xl"; type: "tenant.founded" }
+              | { dpaVersion: string; type: "tenant.dpa.accepted" }
               | { country: string; currency: string; type: "tenant.locale.set" }
               | { type: "tenant.logo.removed" }
               | { type: "tenant.logo.set" }

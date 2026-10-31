@@ -927,6 +927,9 @@
       },
       "tenant": {
         "provisioned": "Schule eröffnet",
+        "dpa": {
+          "accepted": "Auftragsverarbeitungsvertrag angenommen"
+        },
         "founded": "Schule gegründet",
         "locale": {
           "set": "Land und Währung geändert"

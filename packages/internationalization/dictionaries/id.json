@@ -927,6 +927,9 @@
       },
       "tenant": {
         "provisioned": "Sekolah dibuka",
+        "dpa": {
+          "accepted": "Perjanjian pemrosesan data disetujui"
+        },
         "founded": "Sekolah didirikan",
         "locale": {
           "set": "Negara dan mata uang diubah"
