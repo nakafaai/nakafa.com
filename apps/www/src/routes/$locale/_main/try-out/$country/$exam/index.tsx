@@ -29,6 +29,7 @@ export const Route = createFileRoute("/$locale/_main/try-out/$country/$exam/")({
     loaderData === undefined
       ? {}
       : createTryoutHead({
+          alternates: loaderData.head.alternates,
           canonicalPath: loaderData.head.canonicalPath,
           description: loaderData.head.description,
           image: loaderData.head.image,
