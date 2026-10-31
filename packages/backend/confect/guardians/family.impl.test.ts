@@ -276,6 +276,12 @@ describe("guardians/family narratives", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const { guardian, link } = yield* linked(fixture);
+      yield* fixture
+        .as("counselor")
+        .mutation(refs.public.guardians.links.verify, {
+          linkId: link.id,
+          slug: nf,
+        });
       const term = yield* period(fixture, fixture.units.smp);
       const group = yield* cohort(fixture, term.id, "X-1");
       const made = yield* classOf(fixture, group.id, "Fisika");
