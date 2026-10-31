@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Array as Arr, Record as Rec } from "effect";
 import type { Plugin, Rollup } from "vite";
@@ -54,9 +54,11 @@ function scriptsOf(chunks: readonly Rollup.OutputChunk[], module: RegExp) {
 
 /**
  * Hands the browser shell the scripts of a school. The client build knows them, and the shell is
- * written last, so this reads the chunks once and prepares the shell after every environment.
+ * written last, so this reads the chunks once and prepares the shell after every environment. A
+ * build that prerenders no page writes no shell. TanStack writes the shell beside the pages, as
+ * `_shell.html`, and a shell that is missing from a build that has one stops the build.
  */
-export function prepareBrowserShell(): Plugin {
+export function prepareBrowserShell(pages: readonly string[]): Plugin {
   let school: readonly string[] = [];
   let member: readonly string[] = [];
   return {
@@ -65,12 +67,11 @@ export function prepareBrowserShell(): Plugin {
     buildApp: {
       order: "post",
       handler: (builder) => {
-        const file = join(
-          builder.environments.client.config.build.outDir,
-          SHELL_PATH,
-          "index.html"
-        );
-        if (existsSync(file)) {
+        if (pages.length > 0) {
+          const file = join(
+            builder.environments.client.config.build.outDir,
+            `${SHELL_PATH}.html`
+          );
           writeFileSync(
             file,
             prepareShell(readFileSync(file, "utf8"), { member, school })

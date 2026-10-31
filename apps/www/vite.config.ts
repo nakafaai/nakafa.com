@@ -479,7 +479,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       writeStaticArtifacts,
       writeStaticAnswers(prerenderedPages),
       deferStaticPageScripts(prerenderedPages),
-      prepareBrowserShell(),
+      prepareBrowserShell(prerenderedPages),
       writeNotFoundPages(prerenderedPages),
       verifyPrerenderedPages(prerenderedPages),
       // `vite dev` runs the Worker as Node runs a development server. `vite build`
