@@ -80,11 +80,10 @@ describe("wordPaste", () => {
       extensions: [StarterKit, wordPaste],
     });
 
-    expect(
-      Arr.some(
-        editor.extensionManager.plugins,
-        (plugin) => plugin.props.transformPastedHTML === wordLists
-      )
-    ).toBe(true);
+    const transforms = Arr.flatMap(editor.extensionManager.plugins, (plugin) =>
+      Arr.fromNullishOr(plugin.props.transformPastedHTML)
+    );
+
+    expect(transforms).toHaveLength(1);
   });
 });
