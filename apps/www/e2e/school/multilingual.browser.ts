@@ -69,7 +69,7 @@ async function expectParagraphAtItsStart(
   paragraph: Locator,
   direction: (typeof PARAGRAPHS)[number]["direction"]
 ) {
-  const side = direction === "rtl" ? "right" : "left";
+  const side = direction === "rtl" ? ("right" as const) : ("left" as const);
   const edgeOf = (block: Locator) =>
     block.evaluate((node, edge) => node.getBoundingClientRect()[edge], side);
   const [frame, box] = await Promise.all([edgeOf(prompt), edgeOf(paragraph)]);
