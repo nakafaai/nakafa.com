@@ -17,21 +17,23 @@ import {
 export const sharedReadings = (
   questions: readonly Question[],
   questionId: QuestionId
-) =>
-  Arr.dedupeWith(
-    Arr.flatMap(questions, (question, index) =>
-      question.reading === null || question.id === questionId
-        ? []
-        : [
-            {
-              number: index + 1,
-              reading: question.reading,
-              source: question.id,
-            },
-          ]
-    ),
+) => {
+  const held = Arr.flatMap(questions, (question, index) =>
+    question.reading === null || question.id === questionId
+      ? []
+      : [
+          {
+            number: index + 1,
+            reading: question.reading,
+            source: question.id,
+          },
+        ]
+  );
+  return Arr.dedupeWith(
+    held,
     (first, second) => first.reading === second.reading
   );
+};
 
 /**
  * The exam with one question's reading changed as the server changes it: none, or the reading of another
