@@ -1,4 +1,7 @@
-import { buildContentSearchExcerpt } from "@repo/backend/confect/contents/search/excerpt";
+import {
+  buildContentSearchExcerpt,
+  textAfterTitle,
+} from "@repo/backend/confect/contents/search/excerpt";
 import type { ContentSearchDocument } from "@repo/backend/confect/contents/search/groups";
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/search/schema";
 import { NAKAFA_AGENT_MAX_OFFSET } from "@repo/contents/agent/search";
@@ -23,7 +26,13 @@ export function buildContentSearchResult(
       conceptId: document.conceptId,
       content_id: document.content_id,
       description: document.description,
-      excerpt: buildContentSearchExcerpt(document, queryTexts),
+      excerpt: buildContentSearchExcerpt(
+        {
+          description: document.description,
+          text: textAfterTitle(document.text, document.title),
+        },
+        queryTexts
+      ),
       learningObjectId: document.learningObjectId,
       lensId: document.lensId,
       locale: document.locale,
