@@ -112,7 +112,11 @@ export function LaterSection<Props extends object>({
         return Effect.sync(() => watcher.disconnect());
       }).pipe(
         Effect.andThen(untilPageSettled),
-        Effect.andThen(Effect.sync(() => openLaterCode(code)))
+        Effect.andThen(
+          Effect.sync(() => {
+            Deferred.doneUnsafe(code.near, Exit.void);
+          })
+        )
       )
     );
     return () => {

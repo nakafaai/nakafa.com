@@ -75,7 +75,12 @@ export const untilPageRead = Effect.suspend(() =>
     ? Effect.void
     : untilPageSettled.pipe(
         Effect.andThen(
-          Effect.raceFirst(untilGesture, Effect.sleep(UNTOUCHED_WAIT))
+          untilGesture.pipe(
+            Effect.timeoutOrElse({
+              duration: UNTOUCHED_WAIT,
+              orElse: () => Effect.void,
+            })
+          )
         ),
         Effect.andThen(untilIdle),
         Effect.andThen(Effect.sync(() => MutableRef.set(readerSeen, true)))

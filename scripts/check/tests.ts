@@ -39,6 +39,7 @@ import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
 import { inspectSdkReach } from "#scripts/check/sdk";
 import { inspectSealedSource } from "#scripts/check/sealed";
+import { inspectStylesheet } from "#scripts/check/sheets";
 import { inspectCohortPins, inspectSharedFiles } from "#scripts/check/shared";
 import { inspectModuleSize } from "#scripts/check/size";
 import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
@@ -49,6 +50,7 @@ import { writeError, writeOutput } from "#scripts/output";
 
 const TEST_FILE_PATTERN = /\.test\.tsx?$/u;
 const TSX_TEST_FILE_PATTERN = /\.test\.tsx$/u;
+const STYLESHEET_PATTERN = /\.css$/u;
 const TEST_DIRECTORIES = HashSet.make("__test__", "__tests__");
 
 /** Renders one titled list of files, or nothing when the list is empty. */
@@ -192,6 +194,13 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         declarationDirectories(configs)
       )
     );
+    const sheetViolations = yield* Effect.forEach(
+      Arr.filter(workspaces, (file) => STYLESHEET_PATTERN.test(file)),
+      (file) =>
+        Effect.map(fileSystem.readFileString(file), (sourceText) =>
+          inspectStylesheet(path.relative(root, file), sourceText)
+        )
+    );
     const sdkViolations = yield* inspectSdkReach(root, workspaces);
     const dictionaryViolations = yield* inspectDictionaries(root, workspaces);
     const reports = Arr.filter(
@@ -210,6 +219,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         ),
         lineReport(runnerViolations),
         lineReport(sourceViolations),
+        lineReport(Arr.flatten(sheetViolations)),
         lineReport(sdkViolations),
         lineReport(dictionaryViolations),
         lineReport(
