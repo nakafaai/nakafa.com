@@ -31,7 +31,6 @@ import {
   TRANSACTION_READ_HEADROOM,
   TRANSACTION_READ_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { TRYOUT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 
 describe("contentRelease/spec", () => {
   it("preserves four MiB around worst-case lifecycle pages", () => {
@@ -45,13 +44,9 @@ describe("contentRelease/spec", () => {
   });
 
   it("bounds maintenance pages below the transaction read budget", () => {
-    // Proving one artifact referenced reads one head, one release item, and
-    // the try-out placements naming it as question and answer. An
+    // Proving one artifact referenced reads one head and one release item. An
     // unreferenced artifact reads only its small facts instead.
-    const referenceBytes =
-      READ_MODEL_DOCUMENT_LIMIT +
-      CONTENT_DOCUMENT_LIMIT +
-      2 * TRYOUT_PLACEMENT_DOCUMENT_LIMIT;
+    const referenceBytes = READ_MODEL_DOCUMENT_LIMIT + CONTENT_DOCUMENT_LIMIT;
     // Artifact facts hold fixed-size identities, far below a read model.
     const factsBytes = READ_MODEL_DOCUMENT_LIMIT;
     const maximumHeadWork =

@@ -1,10 +1,9 @@
 import type { GenericId } from "@confect/core";
-import { Ref } from "@confect/core";
-import { RegisteredConvexFunction } from "@confect/server";
+import type { RegisteredConvexFunction } from "@confect/server";
 import resendTest from "@convex-dev/resend/test";
 import workflowTest from "@convex-dev/workflow/test";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -27,12 +26,9 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type schema from "@repo/backend/convex/schema";
+import { client, inMutation, internalClient } from "@repo/backend/test/client";
 import { MASCOT } from "@repo/backend/test/mascot";
 import { seedSchools } from "@repo/backend/test/school";
-import type { FunctionReference } from "convex/server";
-import type { TestConvex } from "convex-test";
 import {
   Array as Arr,
   DateTime,
@@ -47,6 +43,19 @@ import {
 export const TENANCY_NOW = DateTime.toEpochMillis(
   DateTime.makeUnsafe("2026-10-01T08:00:00Z")
 );
+
+/**
+ * The instant of a mutation under test: a minute after the setup that ran at
+ * `setUpAt`, plus `seconds`. convex-test pins each mutation's clock at or after
+ * the commit before it, as the Convex backend does, so setup that commits at
+ * the frozen instant moves the next mutation past it. A test that reads a
+ * mutation's time runs it at an instant of its own, after the setup.
+ */
+export const actedAt = (seconds = 0, setUpAt = TENANCY_NOW) =>
+  setUpAt +
+  Duration.toMillis(
+    Duration.sum(Duration.minutes(1), Duration.seconds(seconds))
+  );
 
 export const slugOf = Schema.decodeSync(TenantSlug);
 
@@ -189,59 +198,6 @@ export const scheduledJobs = Effect.gen(function* () {
   );
 });
 
-/** Runs a Confect program in one convex-test mutation, the way a Confect mutation runs it. */
-const inMutation =
-  <A, E>(
-    program: (
-      ctx: MutationCtx
-    ) => Effect.Effect<
-      A,
-      E,
-      RegisteredConvexFunction.MutationServices<typeof databaseSchema>
-    >
-  ) =>
-  (ctx: MutationCtx) =>
-    Effect.runPromise(
-      program(ctx).pipe(
-        Effect.provide(
-          RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
-        )
-      )
-    );
-
-/**
- * Calls public functions as one identity and decodes their returns and typed
- * failures through each function's own contract, so tests match errors by tag.
- */
-const client = (
-  convex: ReturnType<TestConvex<typeof schema>["withIdentity"]>
-) => ({
-  action: <R extends Ref.AnyPublic & Ref.AnyAction>(
-    ref: R,
-    args: Ref.Args<R>
-  ) =>
-    Ref.runWithCodec(
-      ref,
-      args,
-      (reference: FunctionReference<"action", "public">, encoded) =>
-        convex.action(reference, encoded)
-    ),
-  mutation: <R extends Ref.AnyPublicMutation>(ref: R, args: Ref.Args<R>) =>
-    Ref.runWithCodec(
-      ref,
-      args,
-      (reference: FunctionReference<"mutation">, encoded) =>
-        convex.mutation(reference, encoded)
-    ),
-  query: <R extends Ref.AnyPublicQuery>(ref: R, args: Ref.Args<R>) =>
-    Ref.runWithCodec(
-      ref,
-      args,
-      (reference: FunctionReference<"query">, encoded) =>
-        convex.query(reference, encoded)
-    ),
-});
-
 /**
  * Seeds the tenancy fixture and returns a typed client per seeded account. The
  * workflow and mail components are registered, because opening a tenant starts
@@ -308,38 +264,7 @@ export const tenancyFixture = Effect.gen(function* () {
         })
       ),
     /** Calls internal functions the way the platform and `convex run` do, with no identity. */
-    internal: {
-      action: <R extends Ref.AnyInternal & Ref.AnyAction>(
-        ref: R,
-        args: Ref.Args<R>
-      ) =>
-        Ref.runWithCodec(
-          ref,
-          args,
-          (reference: FunctionReference<"action", "internal">, encoded) =>
-            t.action(reference, encoded)
-        ),
-      mutation: <R extends Ref.AnyInternal & Ref.AnyMutation>(
-        ref: R,
-        args: Ref.Args<R>
-      ) =>
-        Ref.runWithCodec(
-          ref,
-          args,
-          (reference: FunctionReference<"mutation", "internal">, encoded) =>
-            t.mutation(reference, encoded)
-        ),
-      query: <R extends Ref.AnyInternal & Ref.AnyQuery>(
-        ref: R,
-        args: Ref.Args<R>
-      ) =>
-        Ref.runWithCodec(
-          ref,
-          args,
-          (reference: FunctionReference<"query", "internal">, encoded) =>
-            t.query(reference, encoded)
-        ),
-    },
+    internal: internalClient(t),
     /** Runs a Confect program against the fixture's database, outside any function. */
     run: <A, E>(
       program: Effect.Effect<

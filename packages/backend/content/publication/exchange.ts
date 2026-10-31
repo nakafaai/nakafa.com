@@ -40,9 +40,6 @@ export const decodePublicRuntimeRow = Effect.fn(
   );
   const projectionJson = canonicalizeContentProjection(projection);
   const projectionHash = yield* hashText(projectionJson);
-  if (projection.kind === "question-body") {
-    return yield* new PublicRuntimeReadError();
-  }
   if (
     row.projectionHash !== projectionHash ||
     row.activeManifestHash !== release.manifestHash ||

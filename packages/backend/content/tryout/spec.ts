@@ -1,14 +1,15 @@
-import { ProtectedContentDeliverySchema } from "@nakafa/aksara-contracts/delivery";
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
-import { ResponseSpec } from "@repo/backend/confect/response/model";
-import { tryoutBodyBatchValidator } from "@repo/backend/confect/tryouts/runtime/body";
-import { tryoutQuestionSelectorValidator } from "@repo/backend/confect/tryouts/runtime/spec";
 import { Schema } from "effect";
 
-/** Public model for the signed landing demo, including its visible answer feedback. */
+/**
+ * The question the landing demonstrates, as the JSON text of a question body
+ * (`TryoutQuestionBodyText`): its prompt, its one interaction, the key's answer the demonstration
+ * reveals, and the reading it was written against.
+ */
 export const featuredTryoutValidator = Schema.Struct({
-  question: tryoutQuestionSelectorValidator,
-  response: ResponseSpec,
+  body: Schema.String,
+  versionHash: Sha256HashSchema,
 });
 export const tryoutMetadataArgsValidator = {
   appLocale: appLocaleValidator,
@@ -50,20 +51,3 @@ export const tryoutPageArgsValidator = Schema.Struct({
   ...tryoutHubArgsValidator.fields,
   publicPath: Schema.String,
 });
-const protectedSelectorValidator = Schema.Struct({
-  artifactHash: Schema.String,
-  contentKey: Schema.String,
-  delivery: ProtectedContentDeliverySchema,
-});
-export const protectedArgsValidator = {
-  bundleHash: Schema.String,
-  selectors: Schema.mutable(Schema.Array(protectedSelectorValidator)),
-  snapshotId: Schema.String,
-};
-export const protectedResultValidator = Schema.Union([
-  Schema.Null,
-  tryoutBodyBatchValidator,
-]);
-
-/** Stored protected batch returned only through one internal query. */
-export type ProtectedRuntimeBatchRow = typeof protectedResultValidator.Type;

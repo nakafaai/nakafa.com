@@ -165,7 +165,7 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
               >
                 {(c) => (
                   <AutocompleteItem
-                    className="flex min-h-8 cursor-pointer items-center justify-between gap-2 py-1.5 text-sm sm:min-h-8"
+                    className="flex min-h-8 items-center justify-between gap-2 py-1.5 text-sm sm:min-h-8"
                     key={c.value}
                     onClick={() => {
                       onChange(c.value);

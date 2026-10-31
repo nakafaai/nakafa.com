@@ -74,7 +74,9 @@ export function TenantOutsider({
   function leave(way: OutsiderWay) {
     startLeaving(async () => {
       setLeaving(true);
-      await navigate({ search: way === "card" ? { masuk: "username" } : {} });
+      await navigate({
+        search: way === "card" ? { "sign-in": "username" } : {},
+      });
       const destination = await Effect.runPromise(signOutSchoolAccount());
       if (destination === "home") {
         setLeft(true);

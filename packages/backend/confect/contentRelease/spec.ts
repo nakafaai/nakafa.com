@@ -35,7 +35,7 @@ export const COMPACTION_PAGE_BYTES = 2 * 1024 * 1024;
  * Maximum content versions inspected by one compaction transaction.
  *
  * Each version reads at most seven heads and may release two artifacts, each
- * proven against one head, one release item, and two try-out placements.
+ * proven against one head and one release item.
  */
 export const COMPACTION_HEAD_COUNT = 8;
 
@@ -121,9 +121,6 @@ export const appLocaleValidator = Schema.Literals([...APP_LOCALE_CODES]);
 
 /** Artifact locales owned by immutable compiled-content identities. */
 export const artifactLocaleValidator = Schema.Literals([...APP_LOCALE_CODES]);
-
-/** Assessed languages owned by signed question placements. */
-export const deliveryLanguageValidator = Schema.Literals([...APP_LOCALE_CODES]);
 
 /** Exact curriculum levels owned by the shared Aksara program contract. */
 export const curriculumLevelValidator = Schema.Literals([
@@ -211,14 +208,6 @@ export const snapshotReceiptValidator = Schema.Struct({
   unchanged: Schema.Literals([0, 1]),
 });
 
-/** Idempotent outcome for one permanent signed try-out runtime bundle. */
-export const tryoutRuntimeBundleReceiptValidator = Schema.Struct({
-  bundleHash: Schema.String,
-  created: Schema.Literals([0, 1]),
-  releaseId: Schema.String,
-  snapshotId: Schema.String,
-  unchanged: Schema.Literals([0, 1]),
-});
 const snapshotStateValidator = Schema.Struct({
   baseSnapshotId: Schema.Union([Schema.String, Schema.Null]),
   mode: ContentSnapshotStateSchema.fields.mode,
@@ -251,9 +240,9 @@ export const publicationReceiptValidator = Schema.Struct({
   resultDigest: Schema.String,
   routeDigest: Schema.String,
   snapshots: Schema.Struct({
+    assessment: snapshotStateValidator,
     program: snapshotStateValidator,
     quran: snapshotStateValidator,
-    tryout: snapshotStateValidator,
   }),
   stagedArtifacts: Schema.Finite,
   stagedItems: Schema.Finite,
@@ -323,7 +312,6 @@ export const currentValidator = Schema.Struct({
       },
     }),
   ]),
-  tryoutRuntimeBundleJson: Schema.Union([Schema.String, Schema.Null]),
 });
 
 /** Cumulative abort progress with a server-owned continuation cursor. */
@@ -359,7 +347,7 @@ export const contentHeadValidator = Schema.Struct({
   delivery: deliveryValidator,
   family: contentFamilyValidator,
   projectionHash: Schema.String,
-  publicPath: Schema.optionalKey(Schema.String),
+  publicPath: Schema.String,
   rendererDomain: rendererDomainValidator,
   sourceHash: Schema.String,
   sourcePath: Schema.String,

@@ -1,12 +1,13 @@
-import type { QuestionSummary } from "@repo/backend/confect/exams/results/contract";
-import type { Verdict } from "@repo/backend/confect/exams/results/schema";
 import {
   type ExamPair,
   type ExamResponse,
   isCellsResponse,
   isPairsResponse,
   isTextResponse,
-} from "@repo/backend/confect/exams/sittings/response";
+} from "@repo/backend/confect/assessment/response";
+import { optionLetter } from "@repo/backend/confect/exams/letters";
+import type { QuestionSummary } from "@repo/backend/confect/exams/results/contract";
+import type { Verdict } from "@repo/backend/confect/exams/results/schema";
 import { Array as Arr, Option, Result, String as Str } from "effect";
 
 /** The copy key that names each verdict of an answer. */
@@ -23,20 +24,18 @@ export const verdictKeys = {
   | "verdict-pending"
 >;
 
-/** The character code of the capital letter A, which names the first option of a choice. */
-const CODE_OF_A = 65;
-
-/** The letter that names an option by its place in its choice: A for the first, B for the second, and so on. */
-export const optionLetter = (index: number) =>
-  String.fromCharCode(CODE_OF_A + index);
-
-/** The letters of the chosen options, in the order of the choice rather than the order of the answer. */
+/**
+ * The letters of the chosen options, in the order of the choice rather than the order of the answer, in the
+ * script that names the question's options.
+ */
 const responseLetters = (
-  optionIds: readonly string[],
+  question: QuestionParts,
   response: readonly string[]
 ) =>
-  Arr.flatMap(optionIds, (optionId, index) =>
-    Arr.contains(response, optionId) ? [optionLetter(index)] : []
+  Arr.flatMap(question.optionIds, (optionId, index) =>
+    Arr.contains(response, optionId)
+      ? [optionLetter(index, question.optionScript)]
+      : []
   );
 
 /**
@@ -54,7 +53,9 @@ const pairLabels = (question: QuestionParts, pairs: readonly ExamPair[]) =>
       {
         onNone: () => Result.failVoid,
         onSome: (target) =>
-          Result.succeed(`${index + 1}-${optionLetter(target)}`),
+          Result.succeed(
+            `${index + 1}-${optionLetter(target, question.targetScript)}`
+          ),
       }
     )
   );
@@ -62,7 +63,7 @@ const pairLabels = (question: QuestionParts, pairs: readonly ExamPair[]) =>
 /** The parts of a question that a result names a response by: its options, statements, and answers in order. */
 type QuestionParts = Pick<
   typeof QuestionSummary.Type,
-  "optionIds" | "sourceIds" | "targetIds"
+  "optionIds" | "optionScript" | "sourceIds" | "targetIds" | "targetScript"
 >;
 
 /**
@@ -92,7 +93,7 @@ export const responseText = (
       ", "
     );
   }
-  return Arr.join(responseLetters(question.optionIds, response), ", ");
+  return Arr.join(responseLetters(question, response), ", ");
 };
 
 /**

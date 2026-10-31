@@ -7,6 +7,9 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { paginationNavigation } from "@/e2e/support/selector";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** A robots directive that keeps a page out of search indexes. */
+const NOINDEX = /noindex/;
+
 class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing>()(
   "LessonNavigationMissing",
   { href: Schema.String }
@@ -121,3 +124,15 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
     );
   });
 }
+
+test("search, chat and sign-in answer noindex, so no engine indexes a learner's screen", async ({
+  page,
+}) => {
+  for (const path of ["/en/search", "/en/chat", "/en/auth"]) {
+    await page.goto(path);
+    await expect(page.locator('meta[name="robots"]'), path).toHaveAttribute(
+      "content",
+      NOINDEX
+    );
+  }
+});

@@ -6,7 +6,6 @@ import { materialLayer } from "@repo/backend/content/material/confect";
 import { quranLayer } from "@repo/backend/content/quran/confect";
 import { readQuranMarkdown } from "@repo/backend/content/quran/markdown";
 import { readContentReference } from "@repo/backend/content/reference/read";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { Effect, Layer, Option, Schema } from "effect";
 
 /** One transactionally consistent source for an agent focused read. */
@@ -16,9 +15,7 @@ export const readAgentContentSource = Effect.fn(
   "contentRelease.readAgentContentSource"
 )(function* (input: ContentReferenceInput) {
   const reference = yield* readContentReference(input).pipe(
-    Effect.provide(
-      Layer.mergeAll(articleLayer, materialLayer, quranLayer, tryoutLayer)
-    )
+    Effect.provide(Layer.mergeAll(articleLayer, materialLayer, quranLayer))
   );
   if (reference === null) {
     return null;

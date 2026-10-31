@@ -4,7 +4,7 @@ import { Array as Arr, Option } from "effect";
 import {
   archiveCohortChange,
   createCohortChange,
-  renameCohortChange,
+  editCohortChange,
   restoreCohortChange,
 } from "@/components/tenant/settings/groups";
 import { isDraft, type Period } from "@/components/tenant/settings/state";
@@ -59,7 +59,7 @@ describe("components/tenant/settings/groups", () => {
     expect(cohortsOf(local, unloaded)).toEqual([]);
   });
 
-  it("shows a cohort under its new name at once, and keeps the others", () => {
+  it("shows a cohort under its new name and school year at once, in its new place, and keeps the others", () => {
     const local = createLocalStore();
     const term = period("ganjil", "2026-07-13", "active").id;
     const seventh = cohort("c-7a", "7A", 7);
@@ -67,14 +67,27 @@ describe("components/tenant/settings/groups", () => {
       seventh,
       cohort("c-8a", "8A", 8),
     ]);
-    renameCohortChange(local.store, {
+    editCohortChange(local.store, {
       cohortId: seventh.id,
+      grade: 7,
       name: "7 Biru",
       slug,
     });
     expect(Arr.map(cohortsOf(local, term), (item) => item.name)).toEqual([
       "7 Biru",
       "8A",
+    ]);
+    editCohortChange(local.store, {
+      cohortId: seventh.id,
+      grade: 9,
+      name: "9 Biru",
+      slug,
+    });
+    expect(
+      Arr.map(cohortsOf(local, term), (item) => [item.name, item.grade])
+    ).toEqual([
+      ["8A", 8],
+      ["9 Biru", 9],
     ]);
   });
 

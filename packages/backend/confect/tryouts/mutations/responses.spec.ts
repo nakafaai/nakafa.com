@@ -11,7 +11,7 @@ import {
   saveTryoutResponseResultValidator,
   TryoutResponseErrorWire,
   TryoutResponseIntegrityError,
-  TryoutResponseSelectionError,
+  TryoutResponseUnfitError,
   tryoutFlagArgsValidator,
 } from "@repo/backend/confect/tryouts/response/spec";
 import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
@@ -29,7 +29,7 @@ export default GroupSpec.make()
           TryoutResponseErrorWire,
           TryoutRuntimeErrorWire,
           TryoutResponseIntegrityError,
-          TryoutResponseSelectionError,
+          TryoutResponseUnfitError,
           TryoutProgressError,
           TryoutProgressSizeError,
         ]),

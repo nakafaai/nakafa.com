@@ -1,5 +1,4 @@
 import { generateKeyPairSync, sign as signBytes } from "node:crypto";
-import { assert } from "@effect/vitest";
 import { hashCompiledContentPayload } from "@nakafa/aksara-contracts/artifact/integrity";
 import {
   AKSARA_COMPILER_VERSION,
@@ -25,7 +24,6 @@ import {
   CONTENT_RELEASE_FORMAT,
   type ContentReleaseManifest,
   ContentReleaseManifestSchema,
-  type SignedContentRelease,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
 import { digestItems } from "@nakafa/aksara-contracts/release/digest";
@@ -38,7 +36,6 @@ import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapsh
 import {
   canonicalizeRendererManifestContract,
   RENDERER_MANIFEST_FORMAT,
-  type RendererManifestEnvelope,
   RendererManifestEnvelopeSchema,
 } from "@nakafa/aksara-contracts/renderer/contract";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
@@ -48,15 +45,6 @@ import {
   SigningKeyNotFoundError,
 } from "@nakafa/aksara-contracts/signature/spec";
 import type { ContentTreeElement } from "@nakafa/aksara-contracts/tree";
-import {
-  canonicalizeTryoutRuntimeBundlePayload,
-  canonicalizeTryoutRuntimeBundleSigningInput,
-} from "@nakafa/aksara-contracts/tryout/runtime/canonical";
-import {
-  SignedTryoutRuntimeBundleSchema,
-  TRYOUT_RUNTIME_BUNDLE_FORMAT,
-} from "@nakafa/aksara-contracts/tryout/runtime/spec";
-import type { TryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   insertTestArtifact,
@@ -286,34 +274,3 @@ export const testSignedEmptyRelease = Effect.fn(
   const manifest = yield* testEmptyManifest(releaseId);
   return yield* testSignedRelease(manifest);
 });
-
-/** Produces one authenticated permanent bundle from exact release provenance. */
-export function testSignedTryoutRuntimeBundle(input: {
-  readonly release: SignedContentRelease;
-  readonly rendererManifest: RendererManifestEnvelope;
-  readonly snapshot: TryoutSnapshot;
-}) {
-  assert.ok(
-    input.release.manifest.origin.kind === "git",
-    "Expected a Git release for a test runtime bundle."
-  );
-  const payload = {
-    format: TRYOUT_RUNTIME_BUNDLE_FORMAT,
-    rendererManifestHash: input.rendererManifest.hash,
-    snapshot: input.snapshot,
-    sourceGitSha: input.release.manifest.origin.sha,
-    sourceManifestHash: input.release.manifestHash,
-    sourceReleaseId: input.release.manifest.releaseId,
-  } as const;
-  const bundleHash = testTextHash(
-    canonicalizeTryoutRuntimeBundlePayload(payload)
-  );
-  return SignedTryoutRuntimeBundleSchema.make({
-    bundleHash,
-    keyId: TEST_KEY_ID,
-    payload,
-    signature: signTestMessage(
-      canonicalizeTryoutRuntimeBundleSigningInput(bundleHash, payload)
-    ),
-  });
-}

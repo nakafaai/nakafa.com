@@ -11,6 +11,14 @@ export const BarChart = withHydrationBoundary(
   )
 );
 
+export const FunctionChart = withHydrationBoundary(
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/mathematics/function-chart"
+    ).then((module) => ({ default: module.FunctionChart }))
+  )
+);
+
 export const HistogramChart = withHydrationBoundary(
   lazy(() =>
     import(

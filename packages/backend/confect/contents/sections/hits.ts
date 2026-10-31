@@ -20,7 +20,6 @@ import { articleLayer } from "@repo/backend/content/article/confect";
 import { materialLayer } from "@repo/backend/content/material/confect";
 import { quranLayer } from "@repo/backend/content/quran/confect";
 import { readContentReference } from "@repo/backend/content/reference/read";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { Array as Arr, Effect, HashMap, Layer, Option } from "effect";
 
 type Section = Docs["contentSections"];
@@ -65,9 +64,7 @@ const referenceOf = Effect.fn("contents.sections.referenceOf")(function* (
     kind: "route",
     publicPath: section.publicPath,
   }).pipe(
-    Effect.provide(
-      Layer.mergeAll(articleLayer, materialLayer, quranLayer, tryoutLayer)
-    )
+    Effect.provide(Layer.mergeAll(articleLayer, materialLayer, quranLayer))
   );
   return Option.fromNullishOr(reference);
 });

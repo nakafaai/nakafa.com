@@ -18,7 +18,6 @@ import {
   publicationReceipt,
   stagedEvidence,
 } from "@repo/backend/confect/contentRelease/receipt";
-import { loadReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/runtime";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Clock, Effect, Schema } from "effect";
 
@@ -77,10 +76,7 @@ export const activateRecovery = Effect.fn("contentRelease.activateRecovery")(
     );
     yield* stagedEvidence(release, signed);
     const build = yield* requireReadyModelBuild(release, signed);
-    const [runtime, receipt] = yield* Effect.all([
-      loadReleaseTryoutRuntime(signed),
-      publicationReceipt(release, signed),
-    ]);
+    const receipt = yield* publicationReceipt(release, signed);
     const now = yield* Clock.currentTimeMillis;
     yield* writer
       .table("contentReleases")
@@ -90,7 +86,6 @@ export const activateRecovery = Effect.fn("contentRelease.activateRecovery")(
           Effect.orDie
         ),
         status: "completed",
-        tryoutRuntimeBundleHash: runtime.result?.bundle.bundleHash,
         updatedAt: now,
       })
       .pipe(Effect.orDie);

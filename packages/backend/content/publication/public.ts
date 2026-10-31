@@ -184,7 +184,6 @@ const resolvePublicRouteForActive = Effect.fn(
   );
   if (
     familyForProjection(projection) !== head.family ||
-    projection.kind === "question-body" ||
     projectionHash !== head.projectionHash ||
     projection.contentKey !== head.contentKey ||
     projection.appLocale !== appLocale ||

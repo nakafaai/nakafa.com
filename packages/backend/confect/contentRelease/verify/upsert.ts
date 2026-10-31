@@ -60,23 +60,15 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
   const projectionHash = yield* hashText(
     canonicalizeContentProjection(projection)
   );
-  const binding =
-    projection.kind === "question-body"
-      ? null
-      : yield* loadRouteBinding(
-          projection.appLocale,
-          projection.publicPath,
-          row.sequence
-        );
+  const binding = yield* loadRouteBinding(
+    projection.appLocale,
+    projection.publicPath,
+    row.sequence
+  );
   const hasExpectedRoute =
-    projection.kind === "question-body"
-      ? binding === null
-      : binding?.operation === "bind" &&
-        binding.contentKey === row.contentKey &&
-        !(
-          binding.sequence === row.sequence &&
-          binding.releaseId !== row.releaseId
-        );
+    binding?.operation === "bind" &&
+    binding.contentKey === row.contentKey &&
+    !(binding.sequence === row.sequence && binding.releaseId !== row.releaseId);
   if (
     artifact.artifactHash !== change.artifactHash ||
     artifact.payload.contentKey !== row.contentKey ||

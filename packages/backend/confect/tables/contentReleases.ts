@@ -46,8 +46,6 @@ export default Table.make(() =>
     sequence: Schema.Finite,
     snapshotTransitions: releaseSnapshotTransitionsValidator,
     status: releaseStatusValidator,
-    tryoutRuntimeBundleHash: Schema.optionalKey(Schema.String),
-    tryoutRuntimeRequired: Schema.optionalKey(Schema.Literal(true)),
     updatedAt: Schema.Finite,
     verifiedAt: Schema.optionalKey(Schema.Finite),
     ...releaseProgress,

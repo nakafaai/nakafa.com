@@ -134,7 +134,6 @@ function SittingProctorActions({
         <SplitMenuTrigger />
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem
-            className="cursor-pointer"
             onClick={() => onOpen("close")}
             variant="destructive"
           >

@@ -74,7 +74,10 @@ export const submissionValidator = Schema.Struct({
   updatedAt: Schema.Finite,
 });
 
-/** One task as a class shows it, with what the viewer has handed in and how many have handed in. */
+/**
+ * One task as a class shows it, with how many have handed in and the viewer's own work: its text, so the viewer
+ * can read and change what they handed in, whether it came late, and its points.
+ */
 export const TaskView = Schema.Struct({
   deadline: Schema.Finite,
   handedIn: Schema.Int,
@@ -84,6 +87,7 @@ export const TaskView = Schema.Struct({
     Schema.Struct({
       late: Schema.Boolean,
       score: Schema.NullOr(Schema.Int),
+      text: Schema.String,
       updatedAt: Schema.Finite,
     })
   ),
@@ -92,6 +96,30 @@ export const TaskView = Schema.Struct({
   text: Schema.String,
   title: TaskTitle,
 });
+
+/**
+ * Where a task stands for the student who reads it: no work handed in yet, work handed in on time or late, or work
+ * that has its points.
+ */
+export const TaskStanding = Schema.Literals([
+  "open",
+  "handedIn",
+  "late",
+  "scored",
+]);
+
+/** Where a task stands for its reader, from the reader's own work. */
+export const standingOf = (
+  mine: (typeof TaskView.Type)["mine"]
+): typeof TaskStanding.Type => {
+  if (mine === null) {
+    return "open";
+  }
+  if (mine.score !== null) {
+    return "scored";
+  }
+  return mine.late ? "late" : "handedIn";
+};
 
 /** One student's work as the teacher reads it. */
 export const SubmissionView = Schema.Struct({

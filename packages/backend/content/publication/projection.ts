@@ -1,7 +1,7 @@
 import {
+  type ContentProjection,
   canonicalizeContentProjection,
   familyForProjection,
-  type RoutedContentProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
@@ -19,7 +19,7 @@ import { Effect, Option, Schema } from "effect";
 
 /** Converts one complete immutable upsert version into a compact head. */
 const decodeContentHead = Effect.fn("contentRelease.decodeContentHead")(
-  function* (head: PublicationRow<"contentHeads">, publicPath?: string) {
+  function* (head: PublicationRow<"contentHeads">, publicPath: string) {
     if (
       head.operation !== "upsert" ||
       !head.artifactHash ||
@@ -44,11 +44,7 @@ const decodeContentHead = Effect.fn("contentRelease.decodeContentHead")(
       delivery: head.delivery,
       family: head.family,
       projectionHash: head.projectionHash,
-      ...(publicPath === undefined
-        ? {}
-        : {
-            publicPath,
-          }),
+      publicPath,
       rendererDomain: head.rendererDomain,
       sourceHash: head.sourceHash,
       sourcePath: head.sourcePath,
@@ -92,7 +88,7 @@ const decodeHeadProjection = Effect.fn("contentRelease.decodeHeadProjection")(
 const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
   function* (
     head: PublicationRow<"contentHeads">,
-    projection: RoutedContentProjection,
+    projection: ContentProjection,
     activeSequence: number,
     selectedBinding: Option.Option<PublicationRow<"contentBindings">>
   ) {
@@ -158,9 +154,6 @@ const selectPublicProjection = Effect.fn(
     );
   }
   const projection = yield* decodeHeadProjection(head);
-  if (projection.kind === "question-body") {
-    return null;
-  }
   const publicPath = yield* resolvePublicPath(
     head,
     projection,
@@ -237,15 +230,12 @@ export const contentHead = Effect.fn("contentRelease.contentHead")(function* (
   activeSequence: number
 ) {
   const projection = yield* decodeHeadProjection(head);
-  const publicPath =
-    projection.kind === "question-body"
-      ? undefined
-      : yield* resolvePublicPath(
-          head,
-          projection,
-          activeSequence,
-          Option.none()
-        );
+  const publicPath = yield* resolvePublicPath(
+    head,
+    projection,
+    activeSequence,
+    Option.none()
+  );
   return yield* decodeContentHead(head, publicPath);
 });
 /** Resolves one effective immutable head from a frozen sequence snapshot. */

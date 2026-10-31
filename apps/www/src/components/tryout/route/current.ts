@@ -6,19 +6,19 @@ import type {
 } from "@repo/backend/confect/tryouts/attemptPage/spec";
 import { Effect, Option } from "effect";
 import {
-  readTryoutSectionWithBodies,
+  readTryoutSectionAttemptPage,
   readTryoutSetAttemptPage,
 } from "@/components/tryout/catalog/source.server";
 
 /** The set a public URL names, as its current-attempt request takes it. */
 type CurrentSetRequest = Omit<typeof currentSetRequestValidator.Type, "kind">;
 /** The section request of the attempt page query, which names a current or a retained section. */
-type SectionWithBodiesRequest = Ref.Args<
-  typeof tryouts.queries.attemptPage.getSectionWithBodies
+type SectionRequest = Ref.Args<
+  typeof tryouts.queries.attemptPage.getSection
 >["request"];
 /** The retained section a URL names, as its attempt request takes it. */
 type RetainedSectionRequest = Omit<
-  Extract<SectionWithBodiesRequest, { readonly kind: "retained" }>,
+  Extract<SectionRequest, { readonly kind: "retained" }>,
   "kind"
 >;
 /** The section a public URL names, as its current-attempt request takes it. */
@@ -54,31 +54,36 @@ export const readCurrentTryoutSet = Effect.fn(
   return running?.kind === "retained" ? Option.some(running) : Option.none();
 });
 
-/** The retained page of one section with the signed bodies of its running content. */
-const readRunningSection = Effect.fn("www.tryout.route.readRunningSection")(
-  function* (token: string, request: SectionWithBodiesRequest) {
-    const page = yield* readTryoutSectionWithBodies(token, request);
-    return Option.map(Option.fromNullishOr(page), ({ attempt, bodies }) => ({
-      ...attempt,
-      bodies,
-    }));
-  }
-);
-
 /**
- * Reads the attempt a public section URL shows in one Convex read: a running
- * attempt through this section as the exact page it continues on, rendered in
- * place like a set's, with the signed bodies of its content.
+ * Reads the attempt a public section URL shows: a running attempt through this section as the exact
+ * page it continues on, rendered in place like a set's, with the bodies of its content. A current
+ * request that names the running attempt's route answers with a redirect, which the retained read of
+ * that route follows.
  */
 export const readCurrentTryoutSection = Effect.fn(
   "www.tryout.route.readCurrentSection"
 )(function* (token: string, request: CurrentSectionRequest) {
-  return yield* readRunningSection(token, { ...request, kind: "current" });
+  const current = yield* readTryoutSectionAttemptPage(token, {
+    ...request,
+    kind: "current",
+  });
+  if (current?.kind !== "redirect") {
+    return Option.fromNullishOr(current);
+  }
+  return yield* readRetainedTryoutSection(token, {
+    attemptId: current.attemptId,
+    locale: request.locale,
+    publicPath: current.publicPath,
+  });
 });
 
-/** Reads the retained page of a section attempt that the URL names, with its signed bodies. */
+/** Reads the retained page of a section attempt that the URL names, with the bodies of its content. */
 export const readRetainedTryoutSection = Effect.fn(
   "www.tryout.route.readRetainedSection"
 )(function* (token: string, request: RetainedSectionRequest) {
-  return yield* readRunningSection(token, { ...request, kind: "retained" });
+  const page = yield* readTryoutSectionAttemptPage(token, {
+    ...request,
+    kind: "retained",
+  });
+  return page?.kind === "retained" ? Option.some(page) : Option.none();
 });

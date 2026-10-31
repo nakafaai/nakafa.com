@@ -1,360 +1,144 @@
 import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
-import refs from "@repo/backend/confect/_generated/refs";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
-  type ConvexTest,
-  expectConvexFailure,
-  type ResponseFixture,
-  readResponseState,
-  seedResponseFixture,
-  setResponseClock,
-} from "@repo/backend/test/tryout/response";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
-import {
-  TRYOUT_SECTION_KEY,
-  TRYOUT_TEST_NOW,
-} from "@repo/backend/test/tryouts";
+  seedTryoutGate,
+  type TryoutGateWorld,
+} from "@repo/backend/test/tryout/gate";
 import { Array as Arr, Effect, Option } from "effect";
 
-const saveAnswer = Effect.fn("test.tryout.response.saveAnswer")(
-  (
-    fixture: ResponseFixture,
-    selection: Doc<"tryoutResponses">["selection"] | null,
-    version: number
-  ) =>
-    Effect.promise(() =>
-      fixture.client.mutation(api.tryouts.mutations.responses.save, {
-        placementId: fixture.placementId,
-        selection,
-        version,
-      })
-    )
-);
-const freezeSpec = Effect.fn("test.tryout.response.freezeSpec")(
-  (
-    t: ConvexTest,
-    fixture: ResponseFixture,
-    responseSpec: Doc<"tryoutAttemptPlacements">["responseSpec"]
-  ) =>
-    Effect.promise(() =>
-      t.mutation((ctx) => ctx.db.patch(fixture.placementId, { responseSpec }))
-    )
-);
+/** Reads the running question as the learner's section state shows it. */
+const readQuestion = (world: TryoutGateWorld) =>
+  world.learner
+    .query(tryouts.queries.runtime.getSectionAttemptState, {
+      attemptId: world.attemptId,
+      locale: "id",
+      sectionKey: "section-a",
+    })
+    .pipe(
+      Effect.map((state) =>
+        Option.getOrUndefined(Arr.head(state?.runtime?.questions ?? []))
+      )
+    );
 
-it.each([
-  {
-    scenario: "selection",
-    tag: "TryoutResponseSelectionError",
-    code: "TRYOUT_RESPONSE_SELECTION_INVALID",
-  },
-  {
-    scenario: "integrity",
-    tag: "TryoutResponseIntegrityError",
-    code: "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
-  },
-  {
-    scenario: "ownership",
-    tag: "TryoutResponseError",
-    code: "TRYOUT_PLACEMENT_NOT_FOUND",
-  },
-  {
-    scenario: "terminal",
-    tag: "TryoutAttemptStateError",
-    code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-  },
-  {
-    scenario: "auth",
-    tag: "SessionRequired",
-    code: "UNAUTHENTICATED",
-  },
-])(
-  "restores the $scenario failure tag from the registered response payload",
-  async ({ scenario, tag, code }) => {
-    vi.setSystemTime(TRYOUT_TEST_NOW);
-    const t = createConvexTestWithBetterAuth();
-    const fixture = await t.mutation((ctx) =>
-      seedTryoutContentAccessState(ctx, {
-        suffix: scenario,
-        attemptStatus: scenario === "terminal" ? "completed" : "in-progress",
-        sectionStatus: "in-progress",
-      })
-    );
-    if (scenario === "ownership") {
-      await t.mutation((ctx) =>
-        ctx.db.delete("tryoutAttempts", fixture.attemptId)
-      );
-    }
-    if (scenario === "integrity") {
-      await t.mutation((ctx) =>
-        ctx.db.patch("tryoutSectionAttempts", fixture.sectionAttemptId, {
-          sectionIdentity: "another-section",
-        })
-      );
-    }
-    const client =
-      scenario === "auth"
-        ? t
-        : t.withIdentity({
-            sessionId: fixture.identity.sessionId,
-            subject: fixture.identity.authUserId,
-          });
-    const rejected = await client
-      .mutation(api.tryouts.mutations.responses.save, {
-        placementId: fixture.placementId,
-        selection: {
-          kind: "single-choice",
-          optionKey: "outside-the-frozen-options",
-        },
-        version: 1,
-      })
-      .catch((error: unknown) => error);
-    expect(rejected).toMatchObject({
-      data: {
-        code,
-      },
-    });
-    if (!Ref.isConvexError(rejected)) {
-      throw rejected;
-    }
-    const decoded = Ref.decodeErrorOption(
-      refs.public.tryouts.mutations.responses.save,
-      rejected.data
-    );
-    expect(
-      Option.map(decoded, (error) => ({
-        _tag: error._tag,
-        code: error.code,
-      }))
-    ).toEqual(
-      Option.some({
-        _tag: tag,
-        code,
-      })
-    );
-    expect(
-      await t.query((ctx) => ctx.db.query("tryoutResponses").collect())
-    ).toEqual([]);
-  }
-);
-
-describe("tryouts/mutations/responses outcomes", () => {
-  it.effect(
-    "reads a response stored before outcomes from its correctness flag",
-    () =>
-      Effect.gen(function* () {
-        const t = createConvexTestWithBetterAuth();
-        const seeded = yield* seedResponseFixture(t, "legacy-response");
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            await ctx.db.insert("tryoutResponses", {
-              answeredAt: TRYOUT_TEST_NOW,
-              isComplete: true,
-              isCorrect: true,
-              placementId: seeded.placementId,
-              selection: { kind: "single-choice", optionKey: "option-1" },
-              timeSpent: 0,
-              tryoutAttemptId: seeded.attemptId,
-              tryoutSectionAttemptId: seeded.sectionAttemptId,
-              updatedAt: TRYOUT_TEST_NOW,
-            });
-            await ctx.db.patch(seeded.sectionAttemptId, {
-              answeredCount: 1,
-              correctAnswers: 1,
-            });
-          })
-        );
-        yield* setResponseClock(5000);
-        yield* saveAnswer(
-          seeded,
-          {
-            kind: "single-choice",
-            optionKey: "option-2",
-          },
-          1
-        );
-        const stored = yield* readResponseState(t, seeded);
-        expect(stored.responses[0]).toMatchObject({
-          isCorrect: false,
-          outcome: { status: "incorrect" },
-          version: 1,
-        });
-        expect(stored.section).toMatchObject({
-          answeredCount: 1,
-          correctAnswers: 0,
-        });
-      })
+/** Reads the stored answers and the running section's counters. */
+const readStored = (world: TryoutGateWorld) =>
+  Effect.promise(() =>
+    world.t.query(async (ctx) => ({
+      responses: await ctx.db.query("tryoutResponses").collect(),
+      section: await ctx.db.get(
+        "tryoutSectionAttempts",
+        world.sectionAttemptId
+      ),
+    }))
   );
+
+describe("tryouts/mutations/responses", () => {
   it.effect(
-    "counts an unmatched text answer as answered while it awaits the grader",
+    "counts an unmatched typed answer as answered while it awaits the grader, and a matched one as correct",
     () =>
       Effect.gen(function* () {
-        const t = createConvexTestWithBetterAuth();
-        const seeded = yield* seedResponseFixture(t, "pending-response");
-        yield* freezeSpec(t, seeded, {
-          key: {
-            acceptedAnswers: ["Jakarta"],
-            collapseWhitespace: true,
-            ignoreCase: true,
-            kind: "text",
+        const world = yield* seedTryoutGate;
+        yield* world.answer("learner", "running", "pending", 1);
+        const pending = yield* readStored(world);
+        expect(pending.responses).toMatchObject([
+          {
+            grade: { ceiling: 1, status: "pending" },
+            response: { text: "Bandung" },
           },
-          kind: "short-answer",
-          language: "id",
-        });
-        yield* setResponseClock(5000);
-        yield* saveAnswer(seeded, { kind: "short-answer", text: "Bandung" }, 1);
-        const pending = yield* readResponseState(t, seeded);
-        expect(pending.responses[0]).toMatchObject({
-          isComplete: true,
-          isCorrect: false,
-          outcome: { status: "pending" },
-          selection: { kind: "short-answer", text: "Bandung" },
-        });
+        ]);
         expect(pending.section).toMatchObject({
           answeredCount: 1,
           correctAnswers: 0,
         });
-        yield* saveAnswer(
-          seeded,
-          { kind: "short-answer", text: " jakarta" },
-          2
-        );
-        const matched = yield* readResponseState(t, seeded);
-        expect(matched.responses[0]?.outcome).toEqual({ status: "correct" });
+        yield* world.learner.mutation(tryouts.mutations.responses.save, {
+          placementId: world.placementId,
+          response: { text: " jakarta" },
+          version: 2,
+        });
+        const matched = yield* readStored(world);
+        expect(matched.responses).toMatchObject([
+          {
+            grade: { category: 1, ceiling: 1, status: "scored" },
+            response: { text: " jakarta" },
+          },
+        ]);
         expect(matched.section).toMatchObject({
           answeredCount: 1,
           correctAnswers: 1,
         });
       })
   );
+
   it.effect(
-    "stores the exact number a typed answer was read as in its delivery language",
+    "keeps an empty choice as the latest write, which leaves the question unanswered",
     () =>
       Effect.gen(function* () {
-        const t = createConvexTestWithBetterAuth();
-        const seeded = yield* seedResponseFixture(t, "number-response");
-        yield* freezeSpec(t, seeded, {
-          key: { acceptsFractions: false, kind: "number", value: "0.5" },
-          kind: "short-answer",
-          language: "id",
+        const world = yield* seedTryoutGate;
+        yield* world.answer("learner", "running", "incorrect", 1);
+        yield* world.learner.mutation(tryouts.mutations.responses.save, {
+          placementId: world.placementId,
+          response: [],
+          version: 2,
         });
-        yield* setResponseClock(5000);
-        yield* saveAnswer(
-          seeded,
-          {
-            kind: "short-answer",
-            number: "9",
-            text: "0,50",
-          },
-          1
-        );
-        const stored = yield* readResponseState(t, seeded);
-        expect(stored.responses[0]).toMatchObject({
-          isCorrect: true,
-          outcome: { status: "correct" },
-          selection: { kind: "short-answer", number: "0.5", text: "0,50" },
+        const stored = yield* readStored(world);
+        expect(stored.responses).toMatchObject([{ response: [], version: 2 }]);
+        expect(stored.section).toMatchObject({
+          answeredCount: 0,
+          correctAnswers: 0,
         });
-        const running = yield* Effect.promise(() =>
-          seeded.client.query(
-            api.tryouts.queries.runtime.getSectionAttemptState,
-            {
-              attemptId: seeded.attemptId,
-              locale: "id",
-              sectionKey: TRYOUT_SECTION_KEY,
-            }
-          )
-        );
-        expect(
-          Option.getOrUndefined(Arr.head(running?.runtime?.questions ?? []))
-            ?.response?.selection
-        ).toEqual({
-          kind: "short-answer",
-          text: "0,50",
-        });
-        yield* expectConvexFailure(
-          () =>
-            seeded.client.mutation(api.tryouts.mutations.responses.save, {
-              placementId: seeded.placementId,
-              selection: { kind: "single-choice", optionKey: "option-1" },
-              version: 2,
-            }),
-          { code: "TRYOUT_RESPONSE_KIND_MISMATCH" }
-        );
       })
   );
+
+  it.effect(
+    "returns the version of the question's latest write without its grade, which a clear keeps and the next write must exceed",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* seedTryoutGate;
+        expect(yield* readQuestion(world)).toMatchObject({ response: null });
+        expect((yield* readQuestion(world))?.version).toBeUndefined();
+        yield* world.answer("learner", "running", "incorrect", 4);
+        const answered = yield* readQuestion(world);
+        expect(answered).toMatchObject({
+          response: { response: ["option-1"] },
+          version: 4,
+        });
+        // A running section never tells the learner how an answer grades.
+        expect(answered?.response).not.toHaveProperty("grade");
+        yield* world.answer("learner", "running", "clear", 5);
+        expect(yield* readQuestion(world)).toMatchObject({
+          response: null,
+          version: 5,
+        });
+      })
+  );
+
   it.effect.each([0, -1, 1.5])(
-    "refuses a version that is not a positive whole number (%s)",
+    "refuses a version that is not a positive whole number (%s) at the argument validator",
     (version) =>
       Effect.gen(function* () {
-        const t = createConvexTestWithBetterAuth();
-        const seeded = yield* seedResponseFixture(t, "version-invalid");
-        yield* setResponseClock(5000);
+        const world = yield* seedTryoutGate;
         const rejected = yield* Effect.tryPromise(() =>
-          seeded.client.mutation(api.tryouts.mutations.responses.save, {
-            placementId: seeded.placementId,
-            selection: { kind: "single-choice", optionKey: "option-1" },
-            version,
-          })
-        ).pipe(Effect.flip);
+          world.learnerConvex.mutation(
+            Ref.getFunctionReference(tryouts.mutations.responses.save),
+            { placementId: world.placementId, response: ["option-2"], version }
+          )
+        ).pipe(Effect.asVoid, Effect.flip);
         expect(String(rejected.cause)).toContain('at ["version"]');
-        expect((yield* readResponseState(t, seeded)).responses).toEqual([]);
+        expect((yield* readStored(world)).responses).toEqual([]);
       })
   );
-  it.effect(
-    "returns the version of the question's latest write, which a clear keeps and the next write must exceed",
-    () =>
-      Effect.gen(function* () {
-        const t = createConvexTestWithBetterAuth();
-        const seeded = yield* seedResponseFixture(t, "version-response");
-        const read = () =>
-          Effect.promise(() =>
-            seeded.client.query(
-              api.tryouts.queries.runtime.getSectionAttemptState,
-              {
-                attemptId: seeded.attemptId,
-                locale: "id",
-                sectionKey: TRYOUT_SECTION_KEY,
-              }
-            )
-          ).pipe(
-            Effect.map((state) =>
-              Option.getOrUndefined(Arr.head(state?.runtime?.questions ?? []))
-            )
-          );
-        expect(yield* read()).toMatchObject({ response: null });
-        expect((yield* read())?.version).toBeUndefined();
-        yield* setResponseClock(5000);
-        yield* saveAnswer(
-          seeded,
-          { kind: "single-choice", optionKey: "option-1" },
-          4
-        );
-        expect((yield* read())?.version).toBe(4);
-        yield* saveAnswer(seeded, null, 5);
-        const cleared = yield* read();
-        expect(cleared?.response).toBeNull();
-        expect(cleared?.version).toBe(5);
-      })
-  );
+
   it.effect(
     "refuses an answer without a version at the argument validator, before any write",
     () =>
       Effect.gen(function* () {
-        const t = createConvexTestWithBetterAuth();
-        const seeded = yield* seedResponseFixture(t, "version-absent");
-        yield* setResponseClock(5000);
-        // An untyped reference: the refusal under test is the validator of the
-        // deployed function, not the typed client.
-        const save = Ref.getFunctionReference(
-          refs.public.tryouts.mutations.responses.save
-        );
+        const world = yield* seedTryoutGate;
         const refusal = yield* Effect.tryPromise(() =>
-          seeded.client.mutation(save, {
-            placementId: seeded.placementId,
-            selection: { kind: "single-choice", optionKey: "option-1" },
-          })
+          world.learnerConvex.mutation(
+            Ref.getFunctionReference(tryouts.mutations.responses.save),
+            { placementId: world.placementId, response: ["option-2"] }
+          )
         ).pipe(
           Effect.match({
             onFailure: ({ cause }) => String(cause),
@@ -362,7 +146,7 @@ describe("tryouts/mutations/responses outcomes", () => {
           })
         );
         expect(refusal).toContain("Missing required field `version`");
-        expect((yield* readResponseState(t, seeded)).responses).toEqual([]);
+        expect((yield* readStored(world)).responses).toEqual([]);
       })
   );
 });
