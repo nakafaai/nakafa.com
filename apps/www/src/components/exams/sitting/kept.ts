@@ -21,6 +21,20 @@ import type {
 import { keptStorage } from "@/components/player/storage";
 import { reportClientException } from "@/lib/analytics/client";
 
+/** Sends a Finish that the page closed on once its answers are in, or drops it when they are not. */
+const resumeFinish = Effect.fn("sitting.finish.resume")(function* (
+  kept: ReturnType<typeof keptFinish>,
+  answersIn: boolean,
+  finish: Effect.Effect<void>
+) {
+  const held = yield* kept.held();
+  if (held && answersIn) {
+    yield* finish;
+  } else if (held) {
+    yield* kept.drop();
+  }
+}, Effect.provide(keptStorage));
+
 /**
  * Sends again the answers that the browser kept for an attempt, once its paper is on the screen. The
  * answers that were sent and never confirmed, because the page closed first, are the ones that the browser
@@ -89,15 +103,11 @@ export function useResendKeptAnswers({
           ),
           Effect.tap(sittingCallFailures),
           Effect.flatMap((failures) =>
-            Effect.gen(function* () {
-              const kept = keptFinish(sittingId, attemptId);
-              const held = yield* kept.held();
-              if (held && Arr.isReadonlyArrayEmpty(failures)) {
-                yield* finish({ attemptId, deviceId, sittingId, slug });
-              } else if (held) {
-                yield* kept.drop();
-              }
-            }).pipe(Effect.provide(keptStorage))
+            resumeFinish(
+              keptFinish(sittingId, attemptId),
+              Arr.isReadonlyArrayEmpty(failures),
+              finish({ attemptId, deviceId, sittingId, slug })
+            )
           ),
           Effect.catchTag("KeyValueStoreError", (error) =>
             reportClientException(error, {
