@@ -700,6 +700,14 @@
     "placement-move-footer": "The student leaves this cohort for the one you choose.",
     "placement-move-to": "Move to",
     "placement-move-save": "Move",
+    "roster-entry": "NISN and age",
+    "roster-entry-description": "The NISN and the age flag decide whether the student needs a guardian's consent.",
+    "roster-entry-save": "Save",
+    "roster-nisn": "NISN",
+    "roster-nisn-stored": "Stored; type a new one to replace it",
+    "roster-nisn-none": "10 digits",
+    "roster-under-age": "Under the age limit",
+    "roster-under-age-description": "A student under the limit needs a verified guardian.",
     "cohort-members-search": "Find a student",
     "cohort-members-description": "The students placed in this cohort appear here.",
     "cohort-members-empty": "No student yet.",
@@ -755,7 +763,8 @@
         "created": "Homeroom teacher assigned",
         "removed": "Homeroom teacher removed",
         "published": "Task published",
-        "deadlineChanged": "Task deadline changed"
+        "deadlineChanged": "Task deadline changed",
+        "edited": "Task edited"
       },
       "billing": {
         "invoice": {
@@ -1060,7 +1069,28 @@
     "device-description": "Type the code the Nakafa CLI shows to let it read the school as {name}.",
     "device-code": "Device code",
     "device-authorize": "Connect",
-    "device-deny": "Deny device"
+    "device-deny": "Deny device",
+    "grading": "Grading",
+    "grading-description": "The versions of the school's grading scheme. Each grade keeps the version it was entered under.",
+    "grading-empty": "No version stored yet.",
+    "grading-empty-description": "Grades use the built-in scheme: KKTP {kktp}, no bands.",
+    "grading-search": "Find a band",
+    "grading-new": "New version",
+    "grading-new-description": "It judges every grade entered from now on. Grades entered before keep their version.",
+    "grading-effective": "In force from",
+    "grading-kktp": "KKTP",
+    "grading-bands": "Bands",
+    "grading-bands-none": "No bands",
+    "grading-band": "{label} from {minimum}",
+    "grading-band-label": "Band",
+    "grading-band-label-placeholder": "B",
+    "grading-band-minimum": "From",
+    "grading-band-add": "Add band",
+    "grading-band-remove": "Remove band",
+    "grading-save": "Save version",
+    "grading-status": "Status",
+    "grading-current": "In force",
+    "grading-earlier": "Earlier"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1193,7 +1223,11 @@
     "task-work-no-match-description": "No student whose name matches has handed work in.",
     "task-new": "New task",
     "task-new-description": "Everyone in the class gets it in their notifications.",
-    "task-publish": "Publish"
+    "task-publish": "Publish",
+    "task-edit": "Edit task",
+    "task-edit-description": "Its address stays, so every link to it still opens it.",
+    "task-edit-save": "Save",
+    "task-points-fixed": "Points are fixed once work is handed in."
   },
   "SchoolGrades": {
     "student": "Student",
@@ -1213,7 +1247,15 @@
     "empty-description": "Students appear here once they are placed in the class group.",
     "detail": "Student's grade",
     "detail-empty": "Choose a student to see their grade.",
-    "kktp": "KKTP"
+    "kktp": "KKTP",
+    "own-title": "My grades",
+    "own-search": "Find a class",
+    "own-class": "Class",
+    "own-period": "Period",
+    "own-band": "Band",
+    "own-band-none": "No band",
+    "own-empty": "No grade is released yet.",
+    "own-empty-description": "Each grade shows here once its teacher releases it."
   },
   "SchoolReports": {
     "title": "Report cards",
@@ -1252,7 +1294,11 @@
     "grade": "Grade",
     "result": "Result",
     "kktp-reached": "Meets KKTP",
-    "kktp-notReached": "Below KKTP"
+    "kktp-notReached": "Below KKTP",
+    "own-title": "My report cards",
+    "own-search": "Find a class group",
+    "own-empty": "No report card is locked yet.",
+    "own-empty-description": "Your report card shows here once the principal approves it."
   },
   "SchoolStart": {
     "metadata-title": "Open your school",
@@ -1376,6 +1422,7 @@
     "short-description": "Free lessons for K-12 through university.",
     "very-short-description": "Free learning materials.",
     "keywords": "free lessons, math lessons, physics lessons, chemistry lessons, biology lessons, computer science lessons, AI lessons, data science lessons, practice questions, worked solutions, exam prep, online try out, K-12 materials, university materials, open education, Nakafa",
+    "knows-about": "Mathematics, Physics, Chemistry, Biology, Computer Science, Artificial Intelligence, Data Science, Exam Preparation, K-12 Education, Higher Education",
     "classification": "Education"
   },
   "Common": {
@@ -2652,6 +2699,10 @@
     "school-refusal-schedule-invalid": {
       "title": "This time cannot be used.",
       "description": "Choose a start that has not passed, and an end after it."
+    },
+    "school-refusal-scheme-not-later": {
+      "title": "A newer version is already stored.",
+      "description": "Reload the page to see it, then save yours."
     }
   },
   "Ai": {

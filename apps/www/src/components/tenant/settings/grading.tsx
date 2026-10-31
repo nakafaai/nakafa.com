@@ -1,0 +1,219 @@
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import { Archive02Icon, Target02Icon } from "@hugeicons/core-free-icons";
+import records from "@repo/backend/confect/_generated/refs/records";
+import { DEFAULT_GRADING_SCHEME } from "@repo/backend/confect/records/scheme";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Array as Arr, DateTime, Option, Schema } from "effect";
+import { useFormatter, useTranslations } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
+import { DataTable } from "@/components/shared/table/data";
+import type { dataTableFeatures } from "@/components/shared/table/features";
+import { TableEmpty } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import {
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
+import { useTenant } from "@/components/tenant/context";
+import { SchemeVersionAdd } from "@/components/tenant/settings/scheme";
+import { SettingsTablePage } from "@/components/tenant/settings/section";
+import {
+  type SchemeVersion,
+  SchemeVersionsContext,
+} from "@/components/tenant/settings/versions";
+
+/** How many versions one page of the list loads, and each page after it. */
+const PAGE_SIZE = 25;
+
+/** Whether a version is the one in force, the newest, or an earlier one that judged the grades of its time. */
+const VersionStatus = Schema.Literals(["current", "earlier"]);
+
+/** The look of each version status, in its cell and in its column's filter: the target in force, and an archive. */
+const VERSION_LOOKS = {
+  current: { icon: Target02Icon, tone: "success" },
+  earlier: { icon: Archive02Icon, tone: "neutral" },
+} as const satisfies Record<typeof VersionStatus.Type, StatusLook>;
+
+/** The columns of the versions table. */
+const versionColumns = createColumnHelper<
+  typeof dataTableFeatures,
+  SchemeVersion
+>();
+
+/**
+ * The versions of the school's grading scheme, the newest first, which is the version in force: when each took
+ * effect, its KKTP and its bands. The header holds the search and New version from the first paint, and New version
+ * waits disabled until the versions are read, so it opens with the version in force.
+ */
+export function SchoolGradingSettings() {
+  const t = useTranslations("SchoolSettings");
+  const { slug } = useTenant();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const pagination = usePaginatedQuery(
+    records.schemes.list,
+    isSettled ? { slug } : "skip",
+    { initialNumItems: PAGE_SIZE }
+  );
+  const isRead = pagination._tag !== "LoadingFirstPage";
+
+  return (
+    <TableFiltersProvider>
+      <SchemeVersionsContext
+        value={{
+          newest: isRead ? Arr.head(pagination.results) : Option.none(),
+          ready: isRead,
+        }}
+      >
+        <SettingsTablePage
+          actions={
+            <>
+              <TableSearch placeholder={t("grading-search")} />
+              <SchemeVersionAdd />
+            </>
+          }
+        >
+          {isRead ? (
+            <GradingTable
+              failed={PaginatedQueryResult.isFailure(pagination)}
+              loadMore={
+                PaginatedQueryResult.isCanLoadMore(pagination)
+                  ? () => pagination.loadMore(PAGE_SIZE)
+                  : null
+              }
+              versions={pagination.results}
+            />
+          ) : null}
+        </SettingsTablePage>
+      </SchemeVersionsContext>
+    </TableFiltersProvider>
+  );
+}
+
+/**
+ * The table of the school's versions, or the sentence of a school that judges its grades by the built-in scheme,
+ * with the next page read as its end comes into view.
+ */
+function GradingTable({
+  failed,
+  loadMore,
+  versions,
+}: {
+  failed: boolean;
+  loadMore: (() => void) | null;
+  versions: readonly SchemeVersion[];
+}) {
+  const t = useTranslations("SchoolSettings");
+  const format = useFormatter();
+
+  if (Arr.isReadonlyArrayEmpty(versions)) {
+    return failed ? (
+      <DataFailure onRetry={reloadPage} />
+    ) : (
+      <TableEmpty
+        act="thinking"
+        description={t("grading-empty-description", {
+          kktp: DEFAULT_GRADING_SCHEME.kktp,
+        })}
+        title={t("grading-empty")}
+      />
+    );
+  }
+
+  const newest = Option.map(Arr.head(versions), (version) => version.id);
+  const columns = versionColumns.columns([
+    versionColumns.accessor((row) => row.effectiveFrom, {
+      cell: (info) => (
+        <span className="font-medium tabular-nums">
+          {format.dateTime(
+            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
+            { dateStyle: "medium", timeStyle: "short" }
+          )}
+        </span>
+      ),
+      header: t("grading-effective"),
+      id: "effective",
+      sortFn: "basic",
+    }),
+    versionColumns.accessor((row) => row.kktp, {
+      cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
+      header: t("grading-kktp"),
+      id: "kktp",
+      sortFn: "basic",
+    }),
+    versionColumns.accessor(
+      (row) =>
+        Arr.join(
+          Arr.map(row.bands, (band) => band.label),
+          " "
+        ),
+      {
+        cell: (info) =>
+          Arr.isReadonlyArrayEmpty(info.row.original.bands) ? (
+            <span className="text-muted-foreground">
+              {t("grading-bands-none")}
+            </span>
+          ) : (
+            <span>
+              {Arr.join(
+                Arr.map(info.row.original.bands, (band) =>
+                  t("grading-band", {
+                    label: band.label,
+                    minimum: band.minimum,
+                  })
+                ),
+                ", "
+              )}
+            </span>
+          ),
+        enableSorting: false,
+        filterFn: "includesString",
+        header: t("grading-bands"),
+        id: "bands",
+      }
+    ),
+    versionColumns.accessor(
+      (row): typeof VersionStatus.Type =>
+        Option.contains(newest, row.id) ? "current" : "earlier",
+      {
+        cell: (info) => (
+          <TableStatus
+            icon={VERSION_LOOKS[info.getValue()].icon}
+            label={t(`grading-${info.getValue()}`)}
+            tone={VERSION_LOOKS[info.getValue()].tone}
+          />
+        ),
+        enableSorting: false,
+        filterFn: "oneOf",
+        header: () => (
+          <ColumnFilter
+            column="status"
+            options={Arr.map(VersionStatus.literals, (status) => ({
+              icon: VERSION_LOOKS[status].icon,
+              label: t(`grading-${status}`),
+              value: status,
+            }))}
+            title={t("grading-status")}
+          />
+        ),
+        id: "status",
+      }
+    ),
+  ]);
+
+  return (
+    <>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      <DataTable
+        columns={columns}
+        data={versions}
+        rowId={(row) => row.id}
+        search="bands"
+      />
+      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
+    </>
+  );
+}

@@ -700,6 +700,14 @@
     "placement-move-footer": "Die Schülerin oder der Schüler wechselt in die gewählte Klasse.",
     "placement-move-to": "Wechseln zu",
     "placement-move-save": "Verschieben",
+    "roster-entry": "NISN und Alter",
+    "roster-entry-description": "NISN und Altersangabe bestimmen, ob die Person die Zustimmung der Eltern braucht.",
+    "roster-entry-save": "Speichern",
+    "roster-nisn": "NISN",
+    "roster-nisn-stored": "Gespeichert; neue eingeben, um sie zu ersetzen",
+    "roster-nisn-none": "10 Ziffern",
+    "roster-under-age": "Unter der Altersgrenze",
+    "roster-under-age-description": "Wer unter der Grenze ist, braucht eine bestätigte Erziehungsperson.",
     "cohort-members-search": "Schüler suchen",
     "cohort-members-description": "Hier erscheinen die Schülerinnen und Schüler dieser Klasse.",
     "cohort-members-empty": "Noch keine Schülerin und kein Schüler.",
@@ -755,7 +763,8 @@
         "created": "Klassenlehrer zugewiesen",
         "removed": "Klassenlehrer entfernt",
         "published": "Aufgabe veröffentlicht",
-        "deadlineChanged": "Abgabefrist geändert"
+        "deadlineChanged": "Abgabefrist geändert",
+        "edited": "Aufgabe bearbeitet"
       },
       "billing": {
         "invoice": {
@@ -1060,7 +1069,28 @@
     "device-description": "Gib den Code der Nakafa CLI ein, damit sie die Schule als {name} liest.",
     "device-code": "Gerätecode",
     "device-authorize": "Verbinden",
-    "device-deny": "Gerät ablehnen"
+    "device-deny": "Gerät ablehnen",
+    "grading": "Bewertung",
+    "grading-description": "Die Versionen des Bewertungsschemas der Schule. Jede Note behält die Version, unter der sie eingetragen wurde.",
+    "grading-empty": "Noch keine Version gespeichert.",
+    "grading-empty-description": "Noten nutzen das eingebaute Schema: KKTP {kktp}, ohne Stufen.",
+    "grading-search": "Stufe suchen",
+    "grading-new": "Neue Version",
+    "grading-new-description": "Sie bewertet jede Note, die ab jetzt eingetragen wird. Frühere Noten behalten ihre Version.",
+    "grading-effective": "Gilt ab",
+    "grading-kktp": "KKTP",
+    "grading-bands": "Stufen",
+    "grading-bands-none": "Ohne Stufen",
+    "grading-band": "{label} ab {minimum}",
+    "grading-band-label": "Stufe",
+    "grading-band-label-placeholder": "B",
+    "grading-band-minimum": "Ab",
+    "grading-band-add": "Stufe hinzufügen",
+    "grading-band-remove": "Stufe entfernen",
+    "grading-save": "Version speichern",
+    "grading-status": "Status",
+    "grading-current": "Gültig",
+    "grading-earlier": "Früher"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1193,7 +1223,11 @@
     "task-work-no-match-description": "Kein Schüler mit passendem Namen hat etwas abgegeben.",
     "task-new": "Neue Aufgabe",
     "task-new-description": "Alle in der Klasse erhalten sie in ihren Benachrichtigungen.",
-    "task-publish": "Veröffentlichen"
+    "task-publish": "Veröffentlichen",
+    "task-edit": "Aufgabe bearbeiten",
+    "task-edit-description": "Ihre Adresse bleibt, also öffnet jeder Link sie weiter.",
+    "task-edit-save": "Speichern",
+    "task-points-fixed": "Die Punkte stehen fest, sobald Arbeit abgegeben ist."
   },
   "SchoolGrades": {
     "student": "Schüler",
@@ -1213,7 +1247,15 @@
     "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
     "detail": "Note der Schülerin oder des Schülers",
     "detail-empty": "Wähle eine Person aus der Liste, um ihre Note zu sehen.",
-    "kktp": "KKTP"
+    "kktp": "KKTP",
+    "own-title": "Meine Noten",
+    "own-search": "Klasse suchen",
+    "own-class": "Klasse",
+    "own-period": "Periode",
+    "own-band": "Stufe",
+    "own-band-none": "Ohne Stufe",
+    "own-empty": "Noch keine Note freigegeben.",
+    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
   },
   "SchoolReports": {
     "title": "Zeugnisse",
@@ -1252,7 +1294,11 @@
     "grade": "Note",
     "result": "Ergebnis",
     "kktp-reached": "KKTP erreicht",
-    "kktp-notReached": "KKTP nicht erreicht"
+    "kktp-notReached": "KKTP nicht erreicht",
+    "own-title": "Meine Zeugnisse",
+    "own-search": "Klasse suchen",
+    "own-empty": "Noch kein Zeugnis abgeschlossen.",
+    "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt."
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -1376,6 +1422,7 @@
     "short-description": "Kostenlose Lerninhalte von der Grundschule bis zur Universität.",
     "very-short-description": "Kostenlose Lernmaterialien.",
     "keywords": "kostenlose Lerninhalte, Mathematik lernen, Physik lernen, Chemie lernen, Biologie lernen, Informatik lernen, KI lernen, Data Science lernen, Übungsaufgaben, ausführliche Lösungen, Prüfungsvorbereitung, Online-Probetest, Schulmaterialien, Hochschulmaterialien, offene Bildung, Nakafa",
+    "knows-about": "Mathematik, Physik, Chemie, Biologie, Informatik, Künstliche Intelligenz, Data Science, Prüfungsvorbereitung, Schulbildung, Hochschulbildung",
     "classification": "Bildung"
   },
   "Common": {
@@ -2652,6 +2699,10 @@
     "school-refusal-schedule-invalid": {
       "title": "Diese Zeit geht nicht.",
       "description": "Wähle einen Beginn, der noch nicht vorbei ist, und ein Ende danach."
+    },
+    "school-refusal-scheme-not-later": {
+      "title": "Es gibt schon eine neuere Version.",
+      "description": "Lade die Seite neu, um sie zu sehen, und speichere dann deine."
     }
   },
   "Ai": {
