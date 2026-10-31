@@ -62,17 +62,23 @@ export const editorPlaceholder = cva(
  * its first line shares a line box with the letter that names it. An exam's
  * document (`article`) takes the published article's headings, lists, quotations,
  * inline code, tables and room between blocks from `articleProse`, so only a plain
- * text, such as a memory, draws them here. A link and a highlight take the lesson's
- * own classes on their elements (`linkVariants`, `emphasisVariants`), in every text.
+ * text, such as a memory, draws them here. An exam's page takes no padding either:
+ * the card or the paper around it gives the room, so its first line starts where a
+ * lesson's and a try-out question's start, in the editor's canvas, the sitting and
+ * the preview alike. Only a plain page, which draws its own field, keeps room inside
+ * it. A link and a highlight take the lesson's own classes on their elements
+ * (`linkVariants`, `emphasisVariants`), in every text.
  */
 export const editorDocument = cva(
   "wrap-break-word relative min-h-full outline-none [font-feature-settings:'liga'_0] [font-variant-ligatures:none] [white-space:break-spaces] [&_hr]:my-3 [&_pre]:whitespace-pre-wrap [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-3",
   {
-    compoundVariants: [{ class: "[&>*+*]:mt-2", size: "page", text: "plain" }],
+    compoundVariants: [
+      { class: "px-4 py-3 [&>*+*]:mt-2", size: "page", text: "plain" },
+    ],
     variants: {
       size: {
         line: "",
-        page: "px-4 py-3",
+        page: "",
       },
       text: {
         article: "",

@@ -12,6 +12,7 @@ import {
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { statusIconVariants } from "@repo/design-system/lib/status";
 import { Array as Arr, Option } from "effect";
 import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
@@ -123,10 +124,14 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
         />
         {editing.displayed.key === null &&
         needsKey(editing.displayed.template) ? (
+          // A question without its key blocks the schedule, so its line takes the warning tone.
           <span className="flex items-center gap-1 text-muted-foreground text-xs">
             <HugeIcons
               aria-hidden="true"
-              className="size-3.5 text-primary"
+              className={statusIconVariants({
+                className: "size-3.5",
+                tone: "warning",
+              })}
               icon={Alert02Icon}
             />
             {t("page-no-key")}

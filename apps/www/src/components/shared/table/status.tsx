@@ -1,20 +1,7 @@
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { STATUS_BADGES, type StatusTone } from "@repo/design-system/lib/status";
 import type { ComponentProps } from "react";
-import type { StatusTone } from "@/components/shared/table/tone";
-
-/** The badge that draws each tone. */
-const TONE_VARIANTS = {
-  danger: "destructive",
-  info: "info",
-  neutral: "muted",
-  primary: "default",
-  success: "success",
-  warning: "warning",
-} as const satisfies Record<
-  typeof StatusTone.Type,
-  ComponentProps<typeof Badge>["variant"]
->;
 
 /**
  * How one state of a table looks: its own icon and its tone, as `TableStatus` draws them. A table's
@@ -42,7 +29,7 @@ export function TableStatus({
   tone: typeof StatusTone.Type;
 }) {
   return (
-    <Badge variant={TONE_VARIANTS[tone]}>
+    <Badge variant={STATUS_BADGES[tone]}>
       <HugeIcons data-icon="inline-start" icon={icon} />
       {label}
     </Badge>

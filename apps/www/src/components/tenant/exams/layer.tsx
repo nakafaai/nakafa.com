@@ -13,7 +13,6 @@ import {
   Field,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
   FieldTitle,
 } from "@repo/design-system/components/ui/field";
 import {
@@ -276,7 +275,6 @@ export function TeacherLayer({
         points={question.points}
         questionId={question.id}
       />
-      <FieldSeparator />
       {shown.template === "short" ? (
         <AcceptedAnswers
           accepted={acceptedOf(shown.key)}
@@ -322,7 +320,6 @@ export function TeacherLayer({
           options={options}
         />
       ) : null}
-      {keyed ? <FieldSeparator /> : null}
       {takesRubric(shown.template) ? (
         <NoteField title={t("rubric")}>
           {live ? (

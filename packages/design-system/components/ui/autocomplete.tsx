@@ -260,7 +260,10 @@ function AutocompleteSeparator({
 }: AutocompletePrimitive.Separator.Props) {
   return (
     <AutocompletePrimitive.Separator
-      className={cn("mx-2 my-1 h-px bg-border last:hidden", className)}
+      className={cn(
+        "-mx-1 my-1 in-data-has-overflow-y:-me-3 h-px bg-border last:hidden",
+        className
+      )}
       data-slot="autocomplete-separator"
       {...props}
     />
