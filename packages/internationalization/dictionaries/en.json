@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "sort": "Sort",
     "filter-by": "Filter by {column}",
     "sort-ascending": "Ascending",
     "sort-descending": "Descending",
@@ -474,6 +475,7 @@
     "presence-more": "{names} are editing",
     "template-choice": "Multiple choice",
     "template-choices": "Complex multiple choice",
+    "template-title": "Question type",
     "template-label": "Question type: {type}",
     "template-truefalse": "True or false",
     "template-cause": "Cause and effect",

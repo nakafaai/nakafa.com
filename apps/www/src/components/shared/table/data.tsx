@@ -8,6 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -253,6 +254,7 @@ function DataTableHead<TData extends RowData>({
               }}
               value={sorted === "none" ? "" : sorted}
             >
+              <DropdownMenuLabel>{t("sort")}</DropdownMenuLabel>
               <DropdownMenuRadioItem value="asc">
                 <HugeIcons icon={ArrowUp02Icon} />
                 {t("sort-ascending")}
