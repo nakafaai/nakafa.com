@@ -6659,6 +6659,17 @@ export declare const api: {
       >;
     };
     screens: {
+      beat: FunctionReference<
+        "mutation",
+        "public",
+        {
+          attemptId: Id<"examAttempts">;
+          deviceId: string;
+          session: string;
+          slug: string;
+        },
+        { token: string }
+      >;
       look: FunctionReference<
         "mutation",
         "public",
@@ -6669,6 +6680,12 @@ export declare const api: {
           slug: string;
         },
         null
+      >;
+      offline: FunctionReference<
+        "query",
+        "public",
+        { sittingId: Id<"examSittings">; slug: string },
+        Array<{ attemptId: Id<"examAttempts">; since: number }>
       >;
       screen: FunctionReference<
         "query",
@@ -6858,6 +6875,18 @@ export declare const api: {
             | { cells: Array<{ column: string; statement: string }> }
             | null;
         } | null
+      >;
+      seats: FunctionReference<
+        "query",
+        "public",
+        { sittingId: Id<"examSittings">; slug: string },
+        {
+          away: number;
+          finished: number;
+          locked: number;
+          offline: number;
+          working: number;
+        }
       >;
     };
     sittings: {
