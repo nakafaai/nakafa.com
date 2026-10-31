@@ -2,17 +2,19 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { keyFits } from "@repo/backend/confect/assessment/key";
 import {
-  choiceLimit,
   essayAnswers,
-  fixedOptions,
   matchAnswers,
   newChoiceAnswers,
   numericAnswers,
-  type QuestionTemplate,
-  type QuestionView,
   shortAnswers,
   tableAnswers,
   textLabel,
+} from "@repo/backend/confect/exams/blank";
+import {
+  choiceLimit,
+  fixedOptions,
+  type QuestionTemplate,
+  type QuestionView,
 } from "@repo/backend/confect/exams/question";
 import {
   reasonAnswers,

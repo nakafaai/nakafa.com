@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   newChoiceAnswers,
   numericAnswers,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
 import {
   type NumberSetting,
   numberSettingOf,

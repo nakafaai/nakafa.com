@@ -8,7 +8,7 @@ import {
   numericAnswers,
   shortAnswers,
   tableAnswers,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
 import { reasonAnswers } from "@repo/backend/confect/exams/reason";
 
 describe("exams/sittings fitsQuestion", () => {

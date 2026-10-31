@@ -6,7 +6,6 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { storedDocument } from "@repo/backend/confect/editor/document";
-import { EMPTY_PROMPT_TEXT } from "@repo/backend/confect/exams/question";
 import {
   insertStep,
   nf,
@@ -86,7 +85,9 @@ describe("exams/sittings prompt", () => {
           sittingId: made.id,
         });
         expect(reply).toEqual({
-          prompt: yield* storedDocument(EMPTY_PROMPT_TEXT).pipe(Effect.orDie),
+          prompt: yield* storedDocument(paragraphText("Soal")).pipe(
+            Effect.orDie
+          ),
           reading: null,
         });
       })
@@ -142,7 +143,7 @@ describe("exams/sittings prompt", () => {
           sittingId: made.id,
         });
         expect(reply).toEqual({
-          prompt: yield* storedDocument(paragraphText("Edited")).pipe(
+          prompt: yield* storedDocument(paragraphText("EditedSoal")).pipe(
             Effect.orDie
           ),
           reading: null,

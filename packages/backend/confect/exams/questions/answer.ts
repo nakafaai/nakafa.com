@@ -10,10 +10,7 @@ import {
   RevisionStale,
 } from "@repo/backend/confect/exams/errors";
 import { answersFit } from "@repo/backend/confect/exams/fits";
-import {
-  encodeAnswers,
-  encodeKey,
-} from "@repo/backend/confect/exams/question";
+import { encodeAnswers, encodeKey } from "@repo/backend/confect/exams/question";
 import { type Array as Arr, Clock, Effect } from "effect";
 
 /**

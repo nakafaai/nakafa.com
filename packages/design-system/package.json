@@ -61,7 +61,7 @@
     "react-error-boundary": "^6.1.6",
     "react-markdown": "^10.1.0",
     "react-phone-number-input": "^3.4.18",
-    "react-resizable-panels": "4.15.3",
+    "react-resizable-panels": "4.16.0",
     "react-textarea-autosize": "^8.5.9",
     "recharts": "^3.10.1",
     "rehype-harden": "^1.1.8",

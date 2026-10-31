@@ -1,9 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   essayAnswers,
+  newChoiceAnswers,
+} from "@repo/backend/confect/exams/blank";
+import {
   keyMissing,
   needsKey,
-  newChoiceAnswers,
   QuestionTemplate,
   takesRubric,
 } from "@repo/backend/confect/exams/question";

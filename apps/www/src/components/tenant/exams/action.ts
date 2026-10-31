@@ -7,9 +7,9 @@ class ExamCallFailed extends Data.TaggedError("ExamCallFailed")<{
   readonly cause: unknown;
 }> {}
 
-/** What a call does with its answer: the value of a success, or nothing on a failure. */
-interface Settle<A> {
-  readonly onFailure: () => void;
+/** What a call does with its answer: the value of a success, or the failure. */
+interface Settle<A, E> {
+  readonly onFailure: (error: E) => void;
   readonly onSuccess: (value: A) => void;
 }
 
@@ -26,13 +26,13 @@ export const sentAction = <A, E>(send: () => Promise<Result.Result<A, E>>) =>
 
 /**
  * Runs one exam action from a browser event, and settles it. A success hands its value to
- * `onSuccess`. A failure is reported, `onFailure` runs, and the action-error toast shows.
+ * `onSuccess`. A failure is reported, `onFailure` takes it, and the action-error toast shows.
  * Convex removes the optimistic change of a failed call by itself, so `onFailure` only
  * restores what the page keeps outside the Convex store. No failure is left unhandled.
  */
 export const runExamAction = <A, E>(
   action: Effect.Effect<A, E>,
-  settle: Settle<A>
+  settle: Settle<A, E>
 ) =>
   Effect.runPromise(
     action.pipe(
@@ -43,7 +43,7 @@ export const runExamAction = <A, E>(
           }).pipe(
             Effect.andThen(
               Effect.sync(() => {
-                settle.onFailure();
+                settle.onFailure(error);
                 toast.error({
                   description: "action-error.description",
                   title: "action-error.title",

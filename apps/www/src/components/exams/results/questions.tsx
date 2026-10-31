@@ -164,12 +164,17 @@ function QuestionResults({ question }: { readonly question: Question }) {
             {Arr.map(stats.value.optionCounts, (option, index) => (
               <li className="flex justify-between gap-4" key={option.optionId}>
                 <span>
-                  {t(isReasonOption(option.optionId) ? "reason-option" : "option", {
-                    letter: optionLetter(
-                      optionPlace(question.optionIds, index),
-                      question.optionScript
-                    ),
-                  })}
+                  {t(
+                    isReasonOption(option.optionId)
+                      ? "reason-option"
+                      : "option",
+                    {
+                      letter: optionLetter(
+                        optionPlace(question.optionIds, index),
+                        question.optionScript
+                      ),
+                    }
+                  )}
                 </span>
                 <span className="tabular-nums">{option.count}</span>
               </li>

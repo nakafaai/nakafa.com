@@ -5,19 +5,17 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import {
-  choiceAnswers,
-  encodeAnswers,
-  encodeKey,
-  textLabel,
-} from "@repo/backend/confect/exams/question";
+import { storedDocument } from "@repo/backend/confect/editor/document";
+import { snapshotOf } from "@repo/backend/confect/editor/store";
+import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
+import { encodeAnswers, encodeKey } from "@repo/backend/confect/exams/question";
 import type { EnterOutcome } from "@repo/backend/confect/exams/sittings/contract";
 import {
   RoomName,
   SittingGroup,
 } from "@repo/backend/confect/exams/sittings/schema";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
-import { nf } from "@repo/backend/test/editor";
+import { nf, paragraphText } from "@repo/backend/test/editor";
 import { type ExamAuthor, examBy } from "@repo/backend/test/exams";
 import {
   scheduledJobs,
@@ -120,9 +118,19 @@ export const keyedSchool = Effect.fn("test.sittings.keyedSchool")(function* (
   yield* fixture.run(createTenantKey(fixture.tenants.nf));
 });
 
+/** Gives a question's prompt its words, which the schedule asks of every question. */
+export const writePrompt = Effect.fn("test.sittings.writePrompt")(function* (
+  documentId: GenericId.GenericId<"editorDocuments">
+) {
+  const snapshot = yield* snapshotOf(documentId);
+  yield* (yield* DatabaseWriter).table("editorSnapshots").patch(snapshot._id, {
+    content: yield* storedDocument(paragraphText("Soal")).pipe(Effect.orDie),
+  });
+});
+
 /**
- * An exam with one question whose options are written and whose correct answer is marked, so the exam can
- * be scheduled. The teacher writes it by default. Returns the exam's ID.
+ * An exam with one question whose prompt and options are written and whose correct answer is marked, so the
+ * exam can be scheduled. The teacher writes it by default. Returns the exam's ID.
  */
 export const keyedExam = Effect.fn("test.sittings.keyedExam")(function* (
   fixture: SittingFixture,
@@ -154,9 +162,11 @@ export const keyedExam = Effect.fn("test.sittings.keyedExam")(function* (
               kind: "choice",
             },
           ]);
-          yield* (yield* DatabaseWriter)
+          const writer = yield* DatabaseWriter;
+          yield* writer
             .table("examQuestions")
             .patch(question.id, { answers, key });
+          yield* writePrompt(question.prompt);
         })
       )
     )
