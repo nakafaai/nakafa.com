@@ -450,7 +450,7 @@ The 15 files that import `convex-helpers`:
 | School MCP and the CLI login | Planned, program wave C |
 | Webhooks and exports | Planned, program wave C |
 | LTI, the OneRoster REST service, and the QTI codec | Planned, program wave C |
-| The OneRoster CSV import, which uses the file import checks of ADR 0015 | Planned, program wave C |
+| The OneRoster CSV import | Built, 31 October 2026: the browser reads the zip as it reads a Dapodik file (ADR 0015), and `roster/imports:applySourced` applies the rows. A student's roster row keeps the blind of their `sourcedId` under the school key, so a later file names the same student, and teachers stay out of the import. |
 | `hono@4.13.13` in `bun.lock` | Removed on 26 October 2026. `bun.lock` keeps only the peer declaration of `convex-helpers`, `bun install --frozen-lockfile` accepts it, and `RETIRED_LOCK_PACKAGES` in `scripts/dependencies/policy.ts` fails the dependency policy when the lock resolves `hono` again. |
 
 ## Amendment: Decided on 14 October 2026

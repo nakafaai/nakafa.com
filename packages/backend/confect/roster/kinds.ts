@@ -27,7 +27,7 @@ const rosterPerson = Kind.extend(person, {
 });
 
 /**
- * The school's Admin and Staff import a Dapodik file into one period (ADR 0015): the
+ * The school's Admin and Staff import a Dapodik or a OneRoster file into one period: the
  * action is ruled on the period, so an archived period refuses it. Each batch is journaled
  * as `roster.imported` with its counts, never a name or a NISN (ADR 0016).
  */
@@ -45,7 +45,7 @@ const rosterPeriod = Kind.extend(period, {
       added: Schema.Finite,
       changed: Schema.Finite,
       skipped: Schema.Finite,
-      source: Schema.Literal("dapodik"),
+      source: Schema.Literals(["dapodik", "oneroster"]),
       type: Schema.Literal("roster.imported"),
     }),
   ],

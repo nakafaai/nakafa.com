@@ -45,12 +45,24 @@ const statusOf = (row: typeof ReadRow.Type) => {
   if (row.outcome === "problem") {
     return row.problem;
   }
-  return row.row.underAgeLimit ? "under" : "adult";
+  return row.outcome === "sourced" || row.row.underAgeLimit ? "under" : "adult";
 };
 
 /** The class group a read row names, or none for a row that a problem keeps out. */
 const cohortOf = (row: typeof ReadRow.Type) =>
-  row.outcome === "row" ? (row.row.cohortName ?? "") : "";
+  row.outcome === "problem" ? "" : (row.row.cohortName ?? "");
+
+/** The name a read row holds, or none for a row that a problem keeps out. */
+const nameOf = (row: typeof ReadRow.Type) =>
+  row.outcome === "problem" ? "" : row.row.name;
+
+/** The identity a read row holds: its NISN, or the source's identity. */
+const identityOf = (row: typeof ReadRow.Type) => {
+  if (row.outcome === "problem") {
+    return "";
+  }
+  return row.outcome === "row" ? row.row.nisn : row.row.sourcedId;
+};
 
 /**
  * The preview of a read file: each row, its class group and its status, which shows the rows a problem keeps out. The
@@ -73,23 +85,20 @@ export function RosterPreviewTable({
       id: "line",
       sortFn: "basic",
     }),
-    // The name with the NISN after it, so the header's search finds a row by either; the cell shows the name alone.
-    rowColumns.accessor(
-      (row) => (row.outcome === "row" ? `${row.row.name} ${row.row.nisn}` : ""),
-      {
-        cell: (info) =>
-          info.row.original.outcome === "row" ? (
-            <span className="font-medium" dir="auto">
-              {info.row.original.row.name}
-            </span>
-          ) : null,
-        filterFn: "includesString",
-        header: t("name"),
-        id: "name",
-        sortFn: "text",
-      }
-    ),
-    rowColumns.accessor((row) => (row.outcome === "row" ? row.row.nisn : ""), {
+    // The name with its identity after it, so the header's search finds a row by either; the cell shows the name alone.
+    rowColumns.accessor((row) => `${nameOf(row)} ${identityOf(row)}`, {
+      cell: (info) =>
+        info.row.original.outcome === "problem" ? null : (
+          <span className="font-medium" dir="auto">
+            {nameOf(info.row.original)}
+          </span>
+        ),
+      filterFn: "includesString",
+      header: t("name"),
+      id: "name",
+      sortFn: "text",
+    }),
+    rowColumns.accessor(identityOf, {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
       enableSorting: false,
       header: t("nisn"),

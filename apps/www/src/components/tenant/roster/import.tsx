@@ -24,7 +24,11 @@ import {
   type FileProblem,
   RosterFileChoice,
 } from "@/components/tenant/roster/choose";
-import { type ReadRow, studentsOf } from "@/components/tenant/roster/dapodik";
+import {
+  type ReadRow,
+  sourcedOf,
+  studentsOf,
+} from "@/components/tenant/roster/dapodik";
 import { RosterExport } from "@/components/tenant/roster/export";
 import { activePeriodOf } from "@/components/tenant/roster/period";
 import { RosterPreviewTable } from "@/components/tenant/roster/preview";
@@ -96,6 +100,7 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
   const t = useTranslations("SchoolRoster");
   const { slug } = useTenant();
   const apply = useMutation(roster.imports.apply);
+  const applySourced = useMutation(roster.imports.applySourced);
   const [preview, setPreview] = useState<
     readonly (typeof ReadRow.Type)[] | undefined
   >(undefined);
@@ -109,13 +114,23 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
       Effect.result(
         activePeriodOf(slug, unitId).pipe(
           Effect.flatMap((periodId) =>
-            Effect.forEach(
-              Arr.chunksOf(studentsOf(rows), IMPORT_BATCH),
-              (batch) =>
-                Effect.tryPromise(() =>
-                  apply({ periodId, rows: batch, slug })
-                ).pipe(Effect.flatMap(Effect.fromResult)),
-              { discard: true }
+            Effect.andThen(
+              Effect.forEach(
+                Arr.chunksOf(studentsOf(rows), IMPORT_BATCH),
+                (batch) =>
+                  Effect.tryPromise(() =>
+                    apply({ periodId, rows: batch, slug })
+                  ).pipe(Effect.flatMap(Effect.fromResult)),
+                { discard: true }
+              ),
+              Effect.forEach(
+                Arr.chunksOf(sourcedOf(rows), IMPORT_BATCH),
+                (batch) =>
+                  Effect.tryPromise(() =>
+                    applySourced({ periodId, rows: batch, slug })
+                  ).pipe(Effect.flatMap(Effect.fromResult)),
+                { discard: true }
+              )
             )
           )
         )
@@ -153,7 +168,8 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
             </ButtonGroup>
             <Button
               disabled={
-                isApplying || Arr.isReadonlyArrayEmpty(studentsOf(preview))
+                isApplying ||
+                Arr.every(preview, (row) => row.outcome === "problem")
               }
               onClick={() => submit(preview)}
               type="button"
