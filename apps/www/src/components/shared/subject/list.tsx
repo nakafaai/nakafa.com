@@ -10,7 +10,7 @@ export function SubjectList({
     <section
       {...props}
       className={cn(
-        "grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm",
+        "bg-card text-card-foreground grid divide-y overflow-hidden rounded-xl border shadow-sm",
         className
       )}
     />

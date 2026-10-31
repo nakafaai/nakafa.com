@@ -158,7 +158,7 @@ export function NinaInput({
       {children}
       <InputGroup
         className={cn(
-          "rounded-3xl bg-muted/50 text-chat shadow-none",
+          "bg-muted/50 text-chat rounded-3xl shadow-none",
           className
         )}
       >
@@ -170,7 +170,7 @@ export function NinaInput({
         <PromptInputTextarea
           aria-label={t("text-placeholder")}
           autoFocus={autoFocus}
-          className="text-(length:--text-chat) md:text-(length:--text-chat) max-h-[min(12rem,35dvh)] px-3 py-3"
+          className="max-h-[min(12rem,35dvh)] px-3 py-3 text-(length:--text-chat) md:text-(length:--text-chat)"
           dir="auto"
           onChange={(event) => {
             setText(event.target.value);
@@ -275,7 +275,7 @@ export function NinaSuggestions({
     <div className="flex flex-col gap-2 pb-4">
       {Arr.map(suggestions, (suggestion) => (
         <Button
-          className="group h-auto min-h-9 w-full justify-start whitespace-normal py-1.5 font-normal shadow-none"
+          className="group h-auto min-h-9 w-full justify-start py-1.5 font-normal whitespace-normal shadow-none"
           disabled={disabled}
           key={suggestion.label}
           onClick={(event) => {

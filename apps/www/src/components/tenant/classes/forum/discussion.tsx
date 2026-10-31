@@ -25,14 +25,14 @@ export function DiscussionTitle({
 
   if (isPending(message)) {
     return (
-      <p className="wrap-anywhere font-semibold" dir="auto">
+      <p className="font-semibold wrap-anywhere" dir="auto">
         {discussion.title}
       </p>
     );
   }
   return (
     <TargetLink
-      className="wrap-anywhere font-semibold underline-offset-4 hover:underline"
+      className="font-semibold wrap-anywhere underline-offset-4 hover:underline"
       dir="auto"
       target={schoolClassDiscussionTarget(slug, classSlug, discussion.number)}
     >
@@ -64,7 +64,7 @@ export function DiscussionReplies({
   }
   return (
     <TargetLink
-      className="flex w-fit items-center gap-2 px-3 font-medium text-primary text-sm underline-offset-4 hover:underline"
+      className="text-primary flex w-fit items-center gap-2 px-3 text-sm font-medium underline-offset-4 hover:underline"
       target={schoolClassDiscussionTarget(slug, classSlug, discussion.number)}
     >
       {discussion.replies === 0
@@ -74,7 +74,7 @@ export function DiscussionReplies({
         <>
           <span
             aria-hidden="true"
-            className="size-2 shrink-0 rounded-full bg-primary"
+            className="bg-primary size-2 shrink-0 rounded-full"
             data-slot="unread-dot"
           />
           <span className="sr-only">{t("unread")}</span>

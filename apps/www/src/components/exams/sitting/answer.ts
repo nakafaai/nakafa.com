@@ -10,10 +10,10 @@ import { finishInStore } from "@/components/exams/sitting/attempt";
 import { isFinalRefusal } from "@/components/exams/sitting/entry";
 import { keptAttempt } from "@/components/exams/sitting/keep";
 import {
-  changePaper,
+  changeSaved,
   nextVersionOf,
   type PaperQuestion,
-  setPaperResponse,
+  setSavedResponse,
 } from "@/components/exams/sitting/paper";
 import { settleSent } from "@/components/player/keep";
 import { keptStorage } from "@/components/player/storage";
@@ -23,8 +23,8 @@ import { reportClientException } from "@/lib/analytics/client";
 function useAnswer() {
   return useMutation(exams.sittings.answer).withOptimisticUpdate(
     (localStore, args) =>
-      changePaper(localStore, args, (paper) =>
-        setPaperResponse(paper, args.questionId, args.response, args.version)
+      changeSaved(localStore, args, (saved) =>
+        setSavedResponse(saved, args.questionId, args.response, args.version)
       )
   );
 }

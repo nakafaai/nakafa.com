@@ -101,7 +101,7 @@ test("a new account opens its own school in five questions and lands in it as it
   await page.waitForURL(EXAMS_ADDRESS);
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
   // The tab names the school.
-  await expect(page).toHaveTitle(new RegExp(name));
+  await expect(page).toHaveTitle(new RegExp(name, "u"));
   await context.close();
 });
 

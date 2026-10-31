@@ -22,8 +22,8 @@ import { convexTest } from "convex-test";
 import { Array as Arr, Effect } from "effect";
 
 const ARTICLE_PREFIX = "articles/politics";
-const ARTICLE_CURSOR_PATTERN = /^content:article:/;
-const MATERIAL_CURSOR_PATTERN = /^content:material:/;
+const ARTICLE_CURSOR_PATTERN = /^content:article:/u;
+const MATERIAL_CURSOR_PATTERN = /^content:material:/u;
 const MATERIAL_PREFIX = "material/lesson/mathematics";
 describe("contentRelease/partner/page", () => {
   it.each([

@@ -25,10 +25,10 @@ export function Community() {
     <MarketingSection id="community">
       <div className="mx-auto grid w-full max-w-7xl justify-items-center gap-12">
         <div className="grid justify-items-center gap-6 text-center">
-          <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+          <h2 className="text-3xl tracking-tight text-balance sm:text-4xl">
             {t("community-title")}
           </h2>
-          <p className="max-w-xl text-pretty text-base text-muted-foreground">
+          <p className="text-muted-foreground max-w-xl text-base text-pretty">
             {t("community-lead")}
           </p>
           <a
@@ -55,7 +55,7 @@ export function Community() {
               {index % CROWD_TYPING_EVERY === 0 ? (
                 <span
                   aria-hidden="true"
-                  className="absolute -end-2 -top-3 rounded-full bg-card px-2 py-1 ring-1 ring-foreground/10"
+                  className="bg-card ring-foreground/10 absolute -end-2 -top-3 rounded-full px-2 py-1 ring-1"
                 >
                   <TypingLoader />
                 </span>

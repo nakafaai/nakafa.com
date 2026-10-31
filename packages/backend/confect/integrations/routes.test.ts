@@ -29,7 +29,7 @@ const DeviceAnswer = Schema.Struct({
 });
 
 /** The user code of a device as it shows it, `XXXX-XXXX`. */
-const SHOWN_CODE = /^[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}$/;
+const SHOWN_CODE = /^[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}$/u;
 
 /** Asks the device authorization endpoint for a device code, as the Nakafa CLI does. */
 const postDevice = (fixture: Fixture, form: Record<string, string>) =>

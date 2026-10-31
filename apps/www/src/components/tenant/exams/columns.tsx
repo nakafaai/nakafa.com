@@ -114,7 +114,7 @@ function PartColumn({
 
   return (
     <div className="grid content-start gap-2">
-      <p className="font-medium text-muted-foreground text-sm">
+      <p className="text-muted-foreground text-sm font-medium">
         {t(words.heading)}
       </p>
       {Arr.map(parts, (part, index) => {

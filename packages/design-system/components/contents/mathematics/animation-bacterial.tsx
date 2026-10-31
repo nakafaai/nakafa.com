@@ -223,7 +223,7 @@ export function BacterialGrowth({
                           whileHover={{ scale: SCALE_INCREASE }}
                         >
                           <div
-                            className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-chart-1 sm:max-h-8 sm:max-w-8"
+                            className="bg-chart-1 aspect-square h-full max-h-5 w-full max-w-5 rounded-full sm:max-h-8 sm:max-w-8"
                             data-bacterium=""
                           />
                         </m.div>

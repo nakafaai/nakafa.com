@@ -45,9 +45,7 @@ export function getEffectiveCreditStateForResetTimestamp(
     };
   }
   return {
-    credits:
-      getPlanCreditConfig(user.plan).amount +
-      (user.credits < 0 ? user.credits : 0),
+    credits: getPlanCreditConfig(user.plan).amount + Math.min(user.credits, 0),
     creditsResetAt: resetTimestamp,
   };
 }

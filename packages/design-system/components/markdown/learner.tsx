@@ -56,7 +56,7 @@ const learnerComponents: ReactMarkdownComponents = {
   a: ({ node: _node, ...props }) => <LearnerLink {...props} />,
   blockquote: ({ node: _node, ...props }) => (
     <blockquote
-      className="rounded-r-xl border-foreground border-l-2 bg-muted p-4 italic *:mt-3 *:first:mt-0"
+      className="border-foreground bg-muted rounded-r-xl border-l-2 p-4 italic *:mt-3 *:first:mt-0"
       data-nakafa="quote"
       {...props}
     />
@@ -85,7 +85,7 @@ const learnerComponents: ReactMarkdownComponents = {
   img: ({ node: _node, ...props }) => <LearnerImage {...props} />,
   li: ({ node: _node, ...props }) => (
     <li
-      className="ms-8 mt-1 max-w-xl text-pretty ps-1 text-start leading-relaxed first:mt-0 [&>p:first-child]:inline"
+      className="ms-8 mt-1 max-w-xl ps-1 text-start leading-relaxed text-pretty first:mt-0 [&>p:first-child]:inline"
       data-nakafa="list-item"
       {...props}
     />
@@ -98,7 +98,7 @@ const learnerComponents: ReactMarkdownComponents = {
   ),
   p: ({ node: _node, ...props }) => (
     <p
-      className="max-w-xl text-pretty leading-relaxed"
+      className="max-w-xl leading-relaxed text-pretty"
       data-nakafa="paragraph"
       {...props}
     />

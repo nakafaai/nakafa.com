@@ -15,8 +15,8 @@ import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 const lessonHref = pinnedRoutes.material.en;
 const articleHref = pinnedRoutes.article.en;
 const articleCategoryHref = articleHref.slice(0, articleHref.lastIndexOf("/"));
-const FORWARD_LINK_PATTERN = /^Next/;
-const PREVIOUS_LINK_PATTERN = /^Previous/;
+const FORWARD_LINK_PATTERN = /^Next/u;
+const PREVIOUS_LINK_PATTERN = /^Previous/u;
 
 const viewports = [desktopViewport, touchViewport] as const;
 

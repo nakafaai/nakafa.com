@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { elementById } from "@repo/design-system/lib/element";
 import { Option } from "effect";
 import {
   ARTICLES_SELECTOR,
@@ -13,7 +14,7 @@ describe("player articles", () => {
         <article data-player-key="first"></article>
         <article data-player-key="a.b:c" id="odd"></article>
       </section>`;
-    const list = document.getElementById("list");
+    const list = elementById("list");
 
     expect(
       Option.map(findArticle(list, "a.b:c"), (article) => article.id)

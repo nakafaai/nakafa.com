@@ -135,7 +135,7 @@ export const childViewOf = Effect.fn("guardians.link.child")(function* (
 });
 
 /** Writes the next version of one link and answers it. */
-const replaceLink = Effect.fn("guardians.link.replace")(function* (
+export const replaceLink = Effect.fn("guardians.link.replace")(function* (
   next: GuardianLinksDoc
 ) {
   yield* (yield* DatabaseWriter)

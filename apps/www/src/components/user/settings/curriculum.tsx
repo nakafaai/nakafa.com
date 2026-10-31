@@ -226,7 +226,7 @@ function UserSettingsCurriculumForm({
                       {Arr.map(programs, (program) => (
                         <SelectItem key={program.key} value={program.key}>
                           <CountryFlagIcon countryCode={program.countryCode} />
-                          <span className="min-w-0 whitespace-normal leading-snug">
+                          <span className="min-w-0 leading-snug whitespace-normal">
                             {program.title}
                           </span>
                         </SelectItem>

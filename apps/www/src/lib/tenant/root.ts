@@ -27,6 +27,7 @@ const SCHOOL_NAMESPACES = [
   "School",
   "SchoolEntry",
   "SchoolGrades",
+  "SchoolGraduation",
   "SchoolGuardians",
   "SchoolReports",
   "SchoolRoster",

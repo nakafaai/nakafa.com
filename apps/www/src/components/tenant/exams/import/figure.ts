@@ -75,7 +75,7 @@ export const cropFigure = Effect.fn("exams.import.crop")(function* (
 });
 
 /** The mark of figure K in a question's text, as Nina writes it. */
-const FIGURE_MARK = /\{\{figure:(\d+)\}\}/gu;
+const FIGURE_MARK = /\{\{figure:(?<digits>\d+)\}\}/gu;
 
 /**
  * A question's text and figures once its figures are images of the exam. A figure that could not

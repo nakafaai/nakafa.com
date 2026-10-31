@@ -5,7 +5,7 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import type { ModelMessage } from "ai";
 import { Array as Arr, HashMap, HashSet, MutableHashSet, Option } from "effect";
 
-const whitespacePattern = /\s+/;
+const whitespacePattern = /\s+/u;
 const sourceSeparators = HashSet.make(",", ";");
 const boundaryPunctuation = HashSet.make(
   '"',

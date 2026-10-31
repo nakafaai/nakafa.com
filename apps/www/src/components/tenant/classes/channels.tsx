@@ -213,7 +213,7 @@ function ChannelItem({ channel }: { channel: typeof ChannelView.Type }) {
   const { classSlug, slug } = useClassScope();
 
   return (
-    <Item className="relative hover:bg-muted" render={<li />} size="sm">
+    <Item className="hover:bg-muted relative" render={<li />} size="sm">
       <ItemMedia className="text-muted-foreground" variant="icon">
         <HugeIcons icon={HashtagIcon} />
       </ItemMedia>
@@ -231,7 +231,7 @@ function ChannelItem({ channel }: { channel: typeof ChannelView.Type }) {
               <>
                 <span
                   aria-hidden="true"
-                  className="size-2 shrink-0 rounded-full bg-primary"
+                  className="bg-primary size-2 shrink-0 rounded-full"
                   data-slot="unread-dot"
                 />
                 <span className="sr-only">{t("unread")}</span>

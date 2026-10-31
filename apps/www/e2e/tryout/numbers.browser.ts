@@ -5,9 +5,9 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readSectionHref, setHref, settledSection } from "@/e2e/support/tryout";
 
 /** Every script the page would load, which the reader's page never runs. */
-const SCRIPT = /\.m?js(\?|$)/;
+const SCRIPT = /\.m?js(?:\?|$)/u;
 /** A digit, which every number of a section has. */
-const DIGIT = /\d/;
+const DIGIT = /\d/u;
 
 /**
  * A try-out section's numbers, its question count and its time, are in the

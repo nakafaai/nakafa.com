@@ -2,7 +2,7 @@ import {
   type AppLocaleCode,
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Order, Schema } from "effect";
 import {
   readPublishedTryoutExamPage,
   readPublishedTryoutSectionPage,
@@ -21,11 +21,11 @@ import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
  * sets `aufgabensatz-N`; English and Indonesian name them `set-N`.
  */
 const TRACKLESS_SET_PATTERNS: Record<AppLocaleCode, RegExp> = {
-  de: /^aufgabensatz-\d+$/,
-  en: /^set-\d+$/,
-  id: /^set-\d+$/,
+  de: /^aufgabensatz-\d+$/u,
+  en: /^set-\d+$/u,
+  id: /^set-\d+$/u,
 };
-const YEAR_TRACK_KEY_PATTERN = /^\d{4}$/;
+const YEAR_TRACK_KEY_PATTERN = /^\d{4}$/u;
 
 const TracklessSetRouteSchema = Schema.Struct({
   appLocale: AppLocaleCodeSchema,
@@ -100,7 +100,7 @@ const readNewestServingTrack = Effect.fn(
     return null;
   }
   const newestYear = Arr.reduce(servingTracks, "", (newest, track) =>
-    track.trackKey > newest ? track.trackKey : newest
+    Order.max(Order.String)(newest, track.trackKey)
   );
   const newestTracks = Arr.filter(
     servingTracks,

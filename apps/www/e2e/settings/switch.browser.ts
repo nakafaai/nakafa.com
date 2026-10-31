@@ -16,7 +16,7 @@ const PAUSE_MUTATION = "nina/memory:pause";
 /** The switch that lets Nina save and use memories. */
 const REMEMBER = "Let Nina save and use memories";
 /** The title of the Memory page. */
-const MEMORY_TITLE = /Memory/;
+const MEMORY_TITLE = /Memory/u;
 
 /**
  * The switch moves on the press, before the server answers, though the page has

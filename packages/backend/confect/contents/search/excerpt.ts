@@ -4,7 +4,7 @@ import { Array as Arr, Struct } from "effect";
 const EXCERPT_CONTEXT_RADIUS = 90;
 const EXCERPT_MAX_LENGTH = 220;
 const TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;
-const WHITESPACE_PATTERN = /\s+/g;
+const WHITESPACE_PATTERN = /\s+/gu;
 const ContentSearchExcerptSourceSchema =
   contentSearchDocumentValidator.mapFields(
     Struct.pick(["description", "text"])

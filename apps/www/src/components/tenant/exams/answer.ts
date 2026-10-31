@@ -14,7 +14,7 @@ type Choice = Extract<Interaction, { kind: "choice" }>;
 export type OptionLabel = Choice["options"][number]["label"];
 
 /** The number that an option ID holds after `option-`, when it holds one. */
-const OPTION_NUMBER = /^option-(\d+)$/u;
+const OPTION_NUMBER = /^option-(?<digits>\d+)$/u;
 
 /** Whether an interaction is a choice. */
 const isChoice = (answer: Interaction): answer is Choice =>

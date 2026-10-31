@@ -5,7 +5,7 @@ export const DecimalSeparatorSchema = Schema.Literals(["comma", "dot"]);
 
 export type DecimalSeparator = typeof DecimalSeparatorSchema.Type;
 
-const TRAILING_ZERO_PATTERN = /\.0$/;
+const TRAILING_ZERO_PATTERN = /\.0$/u;
 
 /**
  * Keeps the zero tenth: whole numbers print as written, and other values print

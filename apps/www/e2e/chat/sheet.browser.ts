@@ -7,7 +7,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { isTakenOver } from "@/e2e/support/window";
 
 /** The page's built scripts, which a test holds back so React cannot take the page over. */
-const SCRIPTS = /\/assets\/.*\.js/;
+const SCRIPTS = /\/assets\/.*\.js/u;
 
 test.describe("Nina sheet at 1440px", () => {
   test.use({ viewport: { height: 900, width: 1440 } });

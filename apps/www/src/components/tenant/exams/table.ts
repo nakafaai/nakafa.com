@@ -15,7 +15,7 @@ type Table = Extract<Interaction, { kind: "matrix" }>;
 type Cell = Extract<InteractionKey, { kind: "matrix" }>["answers"][number];
 
 /** The number that a statement ID holds after `statement-`, when it holds one. */
-const STATEMENT_NUMBER = /^statement-(\d+)$/u;
+const STATEMENT_NUMBER = /^statement-(?<digits>\d+)$/u;
 
 /** The first table of a question's answers, or none when the answers hold no table. */
 export const tableOf = (

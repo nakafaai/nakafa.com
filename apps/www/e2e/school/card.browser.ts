@@ -7,7 +7,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The entry address that holds the school username form alone. */
-const USERNAME_ADDRESS = /sign-in=username/;
+const USERNAME_ADDRESS = /sign-in=username/u;
 
 test("a wrong card code is refused with one message that does not say whether the username exists", async ({
   page,

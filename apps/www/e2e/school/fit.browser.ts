@@ -5,10 +5,10 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The grid's card of the first question, whose name opens it and may add that it has no key yet. */
-const FIRST_CARD = /^Open question 1\b/;
+const FIRST_CARD = /^Open question 1\b/u;
 
 /** Whether the value an element shows fits inside it, uncut by an ellipsis. */
 function fitsWhole(element: Element) {
@@ -28,11 +28,19 @@ function thumbnailAlign(card: Element) {
 /**
  * The tops of the first text line of a paper table's column heading and of the statements' heading in
  * its row, equal when the row stands its headings on one line, and the statements' heading itself.
+ * Each top is the top of the first words' own box: the column's editor wraps its words in a paragraph
+ * whose 20px line box starts half the leading above the words, and a range over the whole editor would
+ * take that box's top, a pixel above words that stand on the line.
  */
 function headingLines(column: Element) {
   const top = (node: Node) => {
+    const words = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    const first = words.nextNode();
+    if (first === null) {
+      return -1;
+    }
     const range = document.createRange();
-    range.selectNodeContents(node);
+    range.selectNodeContents(first);
     return Math.round(range.getBoundingClientRect().top);
   };
   const statements = column.closest(".grid-cols-subgrid")?.children.item(1);

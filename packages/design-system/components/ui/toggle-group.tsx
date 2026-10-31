@@ -58,7 +58,7 @@ const toggleGroupRootVariants = cva(
       layout: {
         default:
           "inline-grid auto-cols-[1fr] grid-flow-col items-stretch data-[orientation=vertical]:w-full data-[orientation=vertical]:grid-flow-row",
-        grid: "gap-px overflow-hidden rounded-md data-[variant=outline]:border data-[variant=outline]:bg-border",
+        grid: "data-[variant=outline]:bg-border gap-px overflow-hidden rounded-md data-[variant=outline]:border",
       },
     },
     defaultVariants: {
@@ -73,8 +73,8 @@ const toggleGroupItemLayoutVariants = cva("", {
       // Only the outline variant draws a border on each item, so only it drops the border between
       // joined items and keeps the first one's; a default item has no border (as shadcn scopes it).
       default:
-        "group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:border-t-0 group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:border-l-0 group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:first:border-t group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:first:border-l",
-      grid: "rounded-none border-0 bg-background hover:bg-accent hover:text-accent-foreground data-pressed:bg-accent",
+        "group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:border-l-0 group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:border-t-0 group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:first:border-l group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:first:border-t",
+      grid: "bg-background hover:bg-accent hover:text-accent-foreground data-pressed:bg-accent rounded-none border-0",
     },
   },
   defaultVariants: {

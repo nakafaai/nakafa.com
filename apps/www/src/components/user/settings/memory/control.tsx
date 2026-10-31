@@ -8,6 +8,7 @@ import {
 import { Label } from "@repo/design-system/components/ui/label";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Switch } from "@repo/design-system/components/ui/switch";
+import { elementById } from "@repo/design-system/lib/element";
 import { useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -97,7 +98,7 @@ export function MemoryControl() {
         onOpenChangeComplete={(open) => {
           if (!open && clearing.current) {
             clearing.current = false;
-            document.getElementById(MEMORY_ADD_ID)?.focus();
+            elementById(MEMORY_ADD_ID)?.focus();
           }
         }}
         open={confirming}

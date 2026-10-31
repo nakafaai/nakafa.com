@@ -27,7 +27,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 const particleDotVariants = cva(
-  "grid size-8 place-items-center rounded-full font-medium text-xs",
+  "grid size-8 place-items-center rounded-full text-xs font-medium",
   {
     variants: {
       type: {
