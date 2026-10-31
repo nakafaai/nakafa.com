@@ -1,7 +1,6 @@
 import {
   Certificate01Icon,
   ChartBarLineIcon,
-  Home01Icon,
   Notification01Icon,
   Settings01Icon,
   TaskEdit01Icon,
@@ -18,9 +17,9 @@ import { SettingsReturnProvider } from "@/components/shared/settings/return";
 import { TenantClassesGroup } from "@/components/tenant/classes/nav";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
+import { showsStudentHome } from "@/components/tenant/home/access";
 import { SchoolSettingsNav } from "@/components/tenant/settings/nav";
 import { Link, useRouteMatched } from "@/lib/routing/link";
-import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /** The address under which every school settings section lives. */
 const SETTINGS_PATH = "/school/$slug/settings";
@@ -44,15 +43,16 @@ export function TenantNavigation() {
 
 /**
  * The school's own groups, as the learner's sidebar has them: first the main pages with no label,
- * home and notifications for everyone, a student's own grades, the exams and the report cards for a
- * viewer who may open them, then the management group, with the settings entry, only for a viewer who may manage the
- * school. The viewer's classes come last, when the viewer has any, so they never move the groups
+ * the notifications for everyone, a student's own exams and grades, the exams and the report cards
+ * for a viewer who may open them, then the management group, with the settings entry, only for a
+ * viewer who may manage the school. The school has no home of its own: its root opens the viewer's
+ * main page. The viewer's classes come last, when the viewer has any, so they never move the groups
  * above them.
  */
 function TenantSchoolGroups() {
-  const { canManage, canOpenExams, canOpenReports, role, slug } = useTenant();
+  const tenant = useTenant();
+  const { canManage, canOpenExams, canOpenReports, role, slug } = tenant;
   const matchRoute = useMatchRoute();
-  const t = useTranslations("School");
   const tExams = useTranslations("Exams");
   const tGrades = useTranslations("SchoolGrades");
   const tNotifications = useTranslations("Notifications");
@@ -62,24 +62,6 @@ function TenantSchoolGroups() {
   return (
     <>
       <TenantSidebarGroup>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            isActive={
-              matchRoute({ params: { slug }, to: "/school/$slug" }) !== false
-            }
-            render={
-              <Link
-                activeOptions={EXACT_ACTIVE_OPTIONS}
-                params={{ slug }}
-                to="/school/$slug"
-              />
-            }
-            tooltip={t("home")}
-          >
-            <HugeIcons icon={Home01Icon} />
-            <span className="truncate">{t("home")}</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton
             isActive={
@@ -95,6 +77,24 @@ function TenantSchoolGroups() {
             <span className="truncate">{tNotifications("title")}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
+        {showsStudentHome(tenant, tenant.home) ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={
+                matchRoute({
+                  fuzzy: true,
+                  params: { slug },
+                  to: "/school/$slug/sittings",
+                }) !== false
+              }
+              render={<Link params={{ slug }} to="/school/$slug/sittings" />}
+              tooltip={tExams("title")}
+            >
+              <HugeIcons icon={TaskEdit01Icon} />
+              <span className="truncate">{tExams("title")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ) : null}
         {Option.contains(role, "student") ? (
           <SidebarMenuItem>
             <SidebarMenuButton

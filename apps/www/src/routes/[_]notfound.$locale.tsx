@@ -1,8 +1,9 @@
-import { decodeLocale } from "@repo/internationalization/src/locale";
-import { createFileRoute, notFound } from "@tanstack/react-router";
-import { Option } from "effect";
+import { createFileRoute } from "@tanstack/react-router";
 import { LocalizedNotFound } from "@/components/state/localized";
-import { readStandaloneMessages } from "@/lib/i18n/standalone";
+import {
+  notFoundRouteHead,
+  readNotFoundRouteLocale,
+} from "@/lib/routing/not-found";
 
 /**
  * The not-found page of one locale as a page of its own, which the build prerenders into that locale's `404.html`.
@@ -12,21 +13,8 @@ import { readStandaloneMessages } from "@/lib/i18n/standalone";
  * have is missing too.
  */
 export const Route = createFileRoute("/_notfound/$locale")({
-  loader: ({ params }) =>
-    Option.match(decodeLocale(params.locale), {
-      onNone: () => {
-        throw notFound();
-      },
-      onSome: (locale) => locale,
-    }),
-  head: ({ loaderData }) => ({
-    meta: [
-      { content: "noindex,nofollow", name: "robots" },
-      ...(loaderData === undefined
-        ? []
-        : [{ title: readStandaloneMessages(loaderData).NotFound.title }]),
-    ],
-  }),
+  loader: ({ params }) => readNotFoundRouteLocale(params.locale),
+  head: ({ loaderData }) => notFoundRouteHead(loaderData),
   component: LocaleNotFoundPage,
 });
 

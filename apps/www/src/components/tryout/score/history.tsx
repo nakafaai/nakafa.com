@@ -6,6 +6,7 @@ import {
   Tick01Icon,
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
   Autocomplete,
@@ -18,6 +19,15 @@ import {
   AutocompleteList,
 } from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
@@ -32,9 +42,8 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
-import { TryoutScoreHeader } from "@/components/tryout/score/card";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
-import { TryoutPartSummary } from "@/components/tryout/section/card";
+import { TryoutScoreNote } from "@/components/tryout/score/status";
 import { formatMoment } from "@/lib/i18n/date";
 
 type HistoryQuery = typeof tryouts.queries.history.bySet;
@@ -72,7 +81,7 @@ interface TryoutAttemptHistoryItemProps {
 function TryoutAttemptHistoryItem({ value }: TryoutAttemptHistoryItemProps) {
   return (
     <AutocompleteItem
-      className="min-h-8 cursor-pointer py-1.5 text-sm sm:min-h-8"
+      className="min-h-8 py-1.5 text-sm sm:min-h-8"
       onClick={value.onChoose}
       value={value.attempt}
     >
@@ -108,6 +117,8 @@ interface TryoutAttemptHistoryProps {
 
 /** Renders the prior production attempt-history picker styling. */
 function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
+  // Choosing an attempt opens its own page, so the picker closes with the choice.
+  const [open, { close, set }] = useDisclosure(false);
   const tTryouts = useTranslations("Tryouts");
   const tCommon = useTranslations("Common");
   const firstAttempt = Arr.head(value.attempts);
@@ -131,7 +142,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
   ];
 
   return (
-    <Popover>
+    <Popover onOpenChange={set} open={open}>
       <PopoverTrigger
         render={
           <Button
@@ -208,7 +219,10 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
                         attempt,
                         isSelected:
                           attempt.attemptId === value.selectedAttemptId,
-                        onChoose: () => value.onChoose(attempt.attemptId),
+                        onChoose: () => {
+                          close();
+                          value.onChoose(attempt.attemptId);
+                        },
                       }}
                     />
                   )}
@@ -223,10 +237,10 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
 }
 
 /**
- * Renders the score card of the page's attempt: its status with the picker of
- * the set's immutable attempt history, then its metrics and the metrics the
- * caller composed after them. Choosing an attempt opens that attempt's own
- * page, so the score and the review below it always belong to one attempt.
+ * Renders the card of the page's finished attempt, first on its page: a title that says the try-out is
+ * finished, one sentence on how it ended, and the picker of the set's attempt history; then its metrics and
+ * the metrics the caller composed after them; then how far its score is settled. Choosing an attempt opens
+ * that attempt's own page, so the score and the review always belong to one attempt.
  */
 export function TryoutAttemptResults({
   children,
@@ -234,6 +248,7 @@ export function TryoutAttemptResults({
 }: TryoutAttemptResultsProps & { children?: ReactNode }) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const navigate = useNavigate();
+  const t = useTranslations("Tryouts");
   const history = usePaginatedQuery(
     tryouts.queries.history.bySet,
     isAuthenticated ? value.identity : "skip",
@@ -242,34 +257,49 @@ export function TryoutAttemptResults({
   const attempts = Arr.filter(history.results, hasScore);
 
   return (
-    <TryoutPartSummary>
-      <TryoutScoreHeader
-        value={{ score: value.attempt.score, status: value.attempt.status }}
-      >
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <h2>{t("finished-title")}</h2>
+        </CardTitle>
+        <CardDescription>
+          {t(
+            value.attempt.status === "expired"
+              ? "finished-expired-description"
+              : "finished-description"
+          )}
+        </CardDescription>
+        <CardAction>
+          <TryoutAttemptHistory
+            value={{
+              attempts,
+              locale: value.identity.locale,
+              onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
+                ? () => history.loadMore(25)
+                : undefined,
+              onChoose: (attemptId) => {
+                if (attemptId === value.attempt.attemptId) {
+                  return;
+                }
+                navigate({
+                  href: `/${value.identity.locale}${getTryoutAttemptHref(value.publicPath, attemptId)}`,
+                });
+              },
+              selectedAttemptId: value.attempt.attemptId,
+            }}
+          />
+        </CardAction>
+      </CardHeader>
+      <CardContent className="[--number-flow-mask-height:0.125em]">
         {PaginatedQueryResult.isFailure(history) && <DataFailure />}
-        <TryoutAttemptHistory
-          value={{
-            attempts,
-            locale: value.identity.locale,
-            onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
-              ? () => history.loadMore(25)
-              : undefined,
-            onChoose: (attemptId) => {
-              if (attemptId === value.attempt.attemptId) {
-                return;
-              }
-              navigate({
-                href: `/${value.identity.locale}${getTryoutAttemptHref(value.publicPath, attemptId)}`,
-              });
-            },
-            selectedAttemptId: value.attempt.attemptId,
-          }}
-        />
-      </TryoutScoreHeader>
-      <TryoutScoreMetrics score={value.attempt.score}>
-        {children}
-      </TryoutScoreMetrics>
-    </TryoutPartSummary>
+        <TryoutScoreMetrics score={value.attempt.score}>
+          {children}
+        </TryoutScoreMetrics>
+      </CardContent>
+      <CardFooter>
+        <TryoutScoreNote score={value.attempt.score} />
+      </CardFooter>
+    </Card>
   );
 }
 

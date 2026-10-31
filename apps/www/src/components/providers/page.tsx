@@ -1,6 +1,5 @@
 import { Effect, Fiber, Option } from "effect";
 import { lazy, type ReactNode, Suspense, useEffect, useState } from "react";
-import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
 import {
   PageConsentControls,
   PageConsentEffects,
@@ -79,7 +78,6 @@ export function PageProviders({
                 isPreviewChild={clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true"}
               >
                 {children}
-                <AnalyticsConsentBootstrap />
                 <PageConsentControls />
                 <PageConsentEffects />
               </AnalyticsConsentProvider>

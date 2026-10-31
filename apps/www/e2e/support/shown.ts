@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { Schema } from "effect";
 
 /** The page global that holds the texts the document has shown since `watchTexts`. */
@@ -82,3 +82,40 @@ export const mostCopies = async (page: Page) =>
   Schema.decodeUnknownSync(Schema.Struct({ most: Schema.Finite }))(
     await page.evaluate((key) => Reflect.get(window, key), COPIES)
   ).most;
+
+/** The page global that holds each set of button words that one part of the page showed. */
+const LABELS = "nakafaShownLabels";
+
+/**
+ * Starts recording, inside the page, the words of the buttons in `part`, in order: the set it shows now, then each
+ * set that differs from the one before. The page reads the part at every change of it, in the microtask that the
+ * change queues, so a button that turns into another for a moment is in the record. A test that clicks one of them
+ * proves with it that the button a click lands on keeps its words while the change it makes shows.
+ */
+export const watchLabels = (part: Locator) =>
+  part.evaluate((node, key) => {
+    const sets: string[][] = [];
+    Reflect.set(window, key, sets);
+    const look = () => {
+      const labels = Array.from(
+        node.querySelectorAll("button"),
+        (button) => button.textContent?.trim() ?? ""
+      );
+      const last = sets.at(-1);
+      if (last === undefined || last.join("\n") !== labels.join("\n")) {
+        sets.push(labels);
+      }
+    };
+    new MutationObserver(look).observe(node, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+    look();
+  }, LABELS);
+
+/** Each set of button words that `watchLabels` saw its part show, in order. */
+export const shownLabels = async (page: Page) =>
+  Schema.decodeUnknownSync(Schema.Array(Schema.Array(Schema.String)))(
+    await page.evaluate((key) => Reflect.get(window, key), LABELS)
+  );

@@ -11,6 +11,8 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The width of a panel folded into its rail, in pixels: `w-12`. */
 const RAIL = 48;
+/** The most space below the toggle at the rail's foot: the footer's own padding, in pixels. */
+const FOOT = 16;
 
 /** The pages with a panel on their right side, and the name of its toggle. */
 const PANELS = [
@@ -55,6 +57,22 @@ const verifyPanelToggle = Effect.fn("NakafaE2E.verifyPanelToggle")(function* (
       .toBe(RAIL)
   );
   yield* Effect.promise(() => expect(toggle).toBeInViewport());
+  // The rail keeps the toggle at its foot, as the open panel does.
+  yield* Effect.promise(() =>
+    expect
+      .poll(async () => {
+        const [toggleBox, railBox] = await Promise.all([
+          toggle.boundingBox(),
+          rail.boundingBox(),
+        ]);
+        return Math.round(
+          (railBox?.y ?? 0) +
+            (railBox?.height ?? 0) -
+            ((toggleBox?.y ?? 0) + (toggleBox?.height ?? 0))
+        );
+      })
+      .toBeLessThanOrEqual(FOOT)
+  );
   yield* Effect.promise(() => toggle.click());
   yield* Effect.promise(() =>
     expect(toggle).toHaveAttribute("aria-expanded", "true")

@@ -57,6 +57,10 @@ it.each([true, false])(
         preparationId,
       };
     });
+    // Recovery runs a minute after the interruption: Convex runs each mutation
+    // after the commits before it, so the recovery's writes carry its own instant.
+    const recoveredAt = NOW + 60_000;
+    vi.setSystemTime(recoveredAt);
     await t.action(internal.auth.deletion.recovery.recoverAccountDeletion, {
       authId: seeded.owner.authUserId,
       expectedPreparation: {
@@ -84,7 +88,7 @@ it.each([true, false])(
     if (authPresent) {
       expect(state.preparation).toBeNull();
       expect(state.cancellations).toMatchObject([
-        { attemptId: ATTEMPT_ID, canceledAt: NOW },
+        { attemptId: ATTEMPT_ID, canceledAt: recoveredAt },
       ]);
       expect(state.receipts).toEqual([]);
       expect(state.auth).not.toBeNull();
@@ -98,25 +102,25 @@ it.each([true, false])(
     expect(state.auth).toBeNull();
     expect(state.cancellations).toEqual([]);
     expect(state.receipts).toMatchObject([
-      { attemptId: ATTEMPT_ID, committedAt: NOW },
+      { attemptId: ATTEMPT_ID, committedAt: recoveredAt },
     ]);
-    expect(state.preparation).toMatchObject({ finalizedAt: NOW });
+    expect(state.preparation).toMatchObject({ finalizedAt: recoveredAt });
     expect(state.preparation).not.toHaveProperty("recoveryAt");
     expect(state.user).toMatchObject({
       authId: `deleted:${seeded.owner.userId}`,
       name: "Deleted user",
-      deletedAt: NOW,
+      deletedAt: recoveredAt,
     });
     expect(state.scheduled).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           name: "auth/deletion/workflow:launchDeletedUserCleanup",
-          scheduledTime: NOW,
+          scheduledTime: recoveredAt,
           state: { kind: "pending" },
         }),
         expect.objectContaining({
           name: "auth/deletion/workflow:finalizeDeletedUserCleanup",
-          scheduledTime: NOW + ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
+          scheduledTime: recoveredAt + ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
           state: { kind: "pending" },
         }),
       ])

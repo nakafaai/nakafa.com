@@ -1,4 +1,5 @@
 import type { ContentKey } from "@nakafa/aksara-contracts/ids";
+import type { ArtifactLocale } from "@nakafa/aksara-contracts/locale";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import {
   type ContentTreeElement,
@@ -9,6 +10,7 @@ import {
 import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Array as Arr, Effect, Predicate, Record as Rec } from "effect";
 import { createElement, Fragment, type ReactElement } from "react";
+import { takesLocale } from "@/lib/content/renderer/locale";
 import { RendererImplementationMissing } from "@/lib/content/renderer/selection";
 
 /** The element that renders its children without an element of its own. */
@@ -36,16 +38,17 @@ function isRecord(value: ContentTreeValue): value is ContentTreeProps {
 /** Renders one prop value: nested elements become React elements, JSON data passes through. */
 function renderValue(
   value: ContentTreeValue,
-  components: MDXComponents
+  components: MDXComponents,
+  locale: ArtifactLocale
 ): unknown {
   if (isElement(value)) {
-    return renderElement(value, components);
+    return renderElement(value, components, locale);
   }
   if (isList(value)) {
-    return Arr.map(value, (item) => renderValue(item, components));
+    return Arr.map(value, (item) => renderValue(item, components, locale));
   }
   if (isRecord(value)) {
-    return Rec.map(value, (item) => renderValue(item, components));
+    return Rec.map(value, (item) => renderValue(item, components, locale));
   }
   return value;
 }
@@ -53,23 +56,29 @@ function renderValue(
 /**
  * Renders one element with the component map. An intrinsic tag resolves through
  * the same map and stays the literal tag when the map has no entry for it, so
- * `br` is never mapped.
+ * `br` is never mapped. A component marked with `TAKES_LOCALE` also gets the
+ * artifact's locale.
  */
 function renderElement(
   element: ContentTreeElement,
-  components: MDXComponents
+  components: MDXComponents,
+  locale: ArtifactLocale
 ): ReactElement {
   const type =
     element.name === FRAGMENT
       ? Fragment
       : (components[element.name] ?? element.name);
   const props = Rec.map(element.props, (value) =>
-    renderValue(value, components)
+    renderValue(value, components, locale)
   );
   const children = Arr.map(element.children, (child) =>
-    typeof child === "string" ? child : renderElement(child, components)
+    typeof child === "string" ? child : renderElement(child, components, locale)
   );
-  return createElement(type, props, ...children);
+  return createElement(
+    type,
+    takesLocale(type) ? { ...props, locale } : props,
+    ...children
+  );
 }
 
 /**
@@ -83,7 +92,8 @@ export const renderContentTree = Effect.fn("NakafaContent.renderContentTree")(
     components: MDXComponents,
     contentKey: ContentKey,
     rendererDomain: RendererDomain,
-    tree: ContentTreeElement
+    tree: ContentTreeElement,
+    locale: ArtifactLocale
   ) {
     for (const componentName of contentTreeComponentNames(tree)) {
       if (components[componentName] === undefined) {
@@ -94,6 +104,6 @@ export const renderContentTree = Effect.fn("NakafaContent.renderContentTree")(
         });
       }
     }
-    return renderElement(tree, components);
+    return renderElement(tree, components, locale);
   }
 );

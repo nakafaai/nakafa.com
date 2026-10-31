@@ -1,5 +1,6 @@
 import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { ClientOnly, useLocation } from "@tanstack/react-router";
 import { Effect } from "effect";
 import { type ComponentProps, useState, useTransition } from "react";
@@ -79,9 +80,20 @@ export function AuthGoogle({ returnPath, variant }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-2">
+      {/* The label stays one width while Google opens, and the button says it is
+          busy: a spinner takes the logo's place. A failure shows below it. */}
+      <Button
+        aria-busy={isPending || undefined}
+        disabled={isPending}
+        onClick={handleGoogleSignIn}
+        variant={variant}
+      >
+        {isPending ? <Spinner /> : <BrandLogo name="google" />}
+        {t("continue-with-google")}
+      </Button>
       {/* The sign-in page is static and prerendered without a query, so the
           provider's failure, which the query carries, shows once the page has
-          hydrated. */}
+          hydrated, under the button so the button never moves. */}
       <ClientOnly fallback={null}>
         {hasProviderError ? (
           <div
@@ -93,15 +105,6 @@ export function AuthGoogle({ returnPath, variant }: Props) {
           </div>
         ) : null}
       </ClientOnly>
-      <Button
-        aria-busy={isPending || undefined}
-        disabled={isPending}
-        onClick={handleGoogleSignIn}
-        variant={variant}
-      >
-        <BrandLogo name="google" />
-        {isPending ? t("opening-google") : t("continue-with-google")}
-      </Button>
     </div>
   );
 }

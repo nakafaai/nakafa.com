@@ -1,5 +1,4 @@
 import { physicsComponentNames } from "@repo/design-system/lib/markdown/names";
-import { LineEquation } from "@/lib/content/renderer/client/mathematics/equation";
 import {
   AccelerationGraphCard,
   AccelerationLab,
@@ -33,6 +32,7 @@ import {
   InstantaneousVelocitySpeedLab,
   VelocitySpeedLab,
 } from "@/lib/content/renderer/client/physics/velocity";
+import { LineEquationServer } from "@/lib/content/renderer/line.server";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 export const domainRenderers = [
@@ -62,7 +62,7 @@ export const domainRenderers = [
   },
   {
     name: physicsComponentNames.lineEquation,
-    component: LineEquation,
+    component: LineEquationServer,
   },
   {
     name: physicsComponentNames.measurementToolsLab,
