@@ -8,5 +8,6 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 
 export default {
 ["importRoster"]: RegisteredConvexFunction.register({ ...definitions["importRoster"], handler: forward(definitions["importRoster"].handler) }),
+["enterGrade"]: RegisteredConvexFunction.register({ ...definitions["enterGrade"], handler: forward(definitions["enterGrade"].handler) }),
 ["sweep"]: RegisteredConvexFunction.register({ ...definitions["sweep"], handler: forward(definitions["sweep"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../integrations/writes.spec")["default"]>;

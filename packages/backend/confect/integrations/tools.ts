@@ -18,6 +18,8 @@ import {
   ApiChange,
   ApiCohort,
   ApiGrade,
+  ApiGradeDraft,
+  ApiGradeEntry,
   ApiImportSummary,
   ApiPeriod,
   ApiPerson,
@@ -32,7 +34,7 @@ import { PersonStatus } from "@repo/backend/confect/tenancy/schema";
 import { NakafaAgentInputError } from "@repo/contents/agent/errors";
 import { sha256Hex } from "@repo/utilities/digest";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Context, Effect, Layer, Schema } from "effect";
+import { Context, Effect, Layer, Match, Schema } from "effect";
 import { McpProtocol, McpSchema, McpServer } from "effect/ai";
 
 const READ_ONLY = {
@@ -107,6 +109,15 @@ const RosterImport = ApiRosterImport.mapFields((fields) => ({
   }),
 }));
 
+/** The input of a grade entry. */
+const GradeEntry = ApiGradeEntry.mapFields((fields) => ({
+  classId: fields.classId.annotate({ description: "The id of the class." }),
+  personId: fields.personId.annotate({
+    description: "The id of the student, from school_list_people.",
+  }),
+  value: fields.value.annotate({ description: "The grade, from 0 to 100." }),
+}));
+
 /** The input of a read that takes nothing. */
 const NoInput = Schema.Struct({});
 
@@ -127,6 +138,18 @@ const invalidRows = new NakafaAgentInputError({
 const keyConflict = new NakafaAgentInputError({
   cause: "This key was used for another request.",
   message: "Send a new key for a new request.",
+});
+
+/** The tool error of a grade for a student who is not in the class. */
+const notPlaced = new NakafaAgentInputError({
+  cause: "This student is not in this class.",
+  message: "Send a student placed in the class's group.",
+});
+
+/** The tool error of a grade that a teacher already released. */
+const alreadyReleased = new NakafaAgentInputError({
+  cause: "This grade is already released.",
+  message: "A released grade stays as it is.",
 });
 
 /** One read-only tool definition from its text and its contracts. */
@@ -322,6 +345,43 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
           ApiImportSummary.pipe(mcpToolOutputSchema)
         ).pipe(Effect.orDie),
         title: "Import students",
+      }),
+    });
+    yield* server.addTool({
+      annotations: Context.empty(),
+      handle: (input: unknown) =>
+        run(
+          Effect.gen(function* () {
+            const entry = yield* decodeAgentInput(
+              GradeEntry,
+              input,
+              "Send the class's id, the student's id, and a grade from 0 to 100."
+            );
+            const { runMutation } = yield* MutationRunner;
+            const answer = yield* runMutation(
+              integrationsInternal.writes.enterGrade,
+              { ...entry, clientId }
+            ).pipe(Effect.orDie);
+            return yield* Match.value(answer).pipe(
+              Match.discriminatorsExhaustive("outcome")({
+                entered: ({ grade }) => Effect.succeed(grade),
+                forbidden: () => Effect.fail(forbidden),
+                notPlaced: () => Effect.fail(notPlaced),
+                released: () => Effect.fail(alreadyReleased),
+              })
+            );
+          })
+        ),
+      tool: new McpSchema.Tool({
+        annotations: IMPORT,
+        description:
+          "Enter a student's draft grade in a class, from 0 to 100. A teacher still releases it, and a released grade stays as it is.",
+        inputSchema: yield* toMcpInputSchema(GradeEntry).pipe(Effect.orDie),
+        name: "school_enter_grade",
+        outputSchema: yield* toMcpOutputSchema(
+          ApiGradeDraft.pipe(mcpToolOutputSchema)
+        ).pipe(Effect.orDie),
+        title: "Enter a grade",
       }),
     });
     yield* server.addTool({

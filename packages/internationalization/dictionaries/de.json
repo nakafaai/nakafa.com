@@ -1247,7 +1247,8 @@
         "import": "Schüler importieren"
       },
       "grade": {
-        "export": "Freigegebene Noten lesen"
+        "export": "Freigegebene Noten lesen",
+        "import": "Notenentwürfe eintragen"
       },
       "guardian": {
         "view": "Verknüpfungen mit Eltern ansehen"

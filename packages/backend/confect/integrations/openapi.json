@@ -928,6 +928,112 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "imports"
+        ],
+        "operationId": "imports.grade",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "SchoolApiUnauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiUnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SchoolApiForbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "SchoolApiConflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiConflictEncoded"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "SchoolApiRateLimited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiRateLimitedEncoded"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "classId": {
+                    "type": "string"
+                  },
+                  "personId": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "classId",
+                  "personId",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        }
       }
     },
     "/api/school/v1/changes": {
@@ -1478,13 +1584,13 @@
         ],
         "additionalProperties": false
       },
-      "SchoolApiInvalidEncoded": {
+      "SchoolApiConflictEncoded": {
         "type": "object",
         "properties": {
           "_tag": {
             "type": "string",
             "enum": [
-              "SchoolApiInvalid"
+              "SchoolApiConflict"
             ]
           },
           "message": {
@@ -1497,13 +1603,13 @@
         ],
         "additionalProperties": false
       },
-      "SchoolApiConflictEncoded": {
+      "SchoolApiInvalidEncoded": {
         "type": "object",
         "properties": {
           "_tag": {
             "type": "string",
             "enum": [
-              "SchoolApiConflict"
+              "SchoolApiInvalid"
             ]
           },
           "message": {

@@ -3,7 +3,9 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
+  DocumentIds,
 } from "@repo/backend/confect/_generated/services";
+import { classAuthority } from "@repo/backend/confect/classroom/authority";
 import {
   clientRead,
   FORBIDDEN,
@@ -11,6 +13,7 @@ import {
   periodFor,
 } from "@repo/backend/confect/integrations/reads";
 import spec from "@repo/backend/confect/integrations/writes.spec";
+import { draftGrade } from "@repo/backend/confect/records/grades/enter";
 import { schoolKeys } from "@repo/backend/confect/roster/entry";
 import { applyRow, importSummary } from "@repo/backend/confect/roster/import";
 import { clientActor } from "@repo/backend/confect/tenancy/actor";
@@ -113,7 +116,57 @@ const sweep = FunctionImpl.make(
   })
 );
 
+/**
+ * Writes a client's draft of one student's grade, as a teacher's entry does, so a teacher still
+ * reads and releases it. Writing the same value twice leaves one draft, so a retry needs no key.
+ * A class the client's list or scope does not open answers forbidden, whether or not it exists.
+ */
+const enterGrade = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "enterGrade",
+  Effect.fn("integrations.writes.enterGrade")(function* ({
+    classId,
+    clientId,
+    personId,
+    value,
+  }) {
+    const read = yield* clientRead(clientId);
+    const ids = yield* DocumentIds;
+    const klass = yield* ids.parse("classes", classId);
+    const person = yield* ids.parse("tenantPeople", personId);
+    if (
+      Option.isNone(klass) ||
+      Option.isNone(person) ||
+      !lists(read, "grade.import")
+    ) {
+      return FORBIDDEN;
+    }
+    const row = yield* (yield* DatabaseReader)
+      .table("classes")
+      .get(klass.value)
+      .pipe(Effect.option);
+    if (
+      Option.isNone(row) ||
+      !(yield* classAuthority.allowsClient("grade.import", row.value, read))
+    ) {
+      return FORBIDDEN;
+    }
+    return yield* draftGrade(row.value, person.value, value).pipe(
+      Effect.map((grade) => ({
+        grade: { id: grade.id, value: grade.value },
+        outcome: "entered" as const,
+      })),
+      Effect.catchTags({
+        GradeNotPlaced: () => Effect.succeed({ outcome: "notPlaced" as const }),
+        GradeReleased: () => Effect.succeed({ outcome: "released" as const }),
+      })
+    );
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(enterGrade),
   Layer.provide(importRoster),
   Layer.provide(sweep),
   GroupImpl.finalize

@@ -1247,7 +1247,8 @@
         "import": "Import students"
       },
       "grade": {
-        "export": "Read released grades"
+        "export": "Read released grades",
+        "import": "Enter draft grades"
       },
       "guardian": {
         "view": "View guardian links"

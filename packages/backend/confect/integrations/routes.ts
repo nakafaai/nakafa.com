@@ -4,6 +4,7 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import {
+  type ApiGradeEntry,
   type ApiRosterImport,
   CLI_CLIENT_ID,
   DEVICE_GRANT,
@@ -32,7 +33,15 @@ import { ImportRow } from "@repo/backend/confect/roster/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { sha256Hex } from "@repo/utilities/digest";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, Layer, Option, Redacted, Schema, String as Str } from "effect";
+import {
+  Effect,
+  Layer,
+  Match,
+  Option,
+  Redacted,
+  Schema,
+  String as Str,
+} from "effect";
 import { HttpApiBuilder } from "effect/http-api";
 
 /** The token type of every access token. */
@@ -352,6 +361,34 @@ const importRoster = Effect.fn("integrations.routes.importRoster")(function* (
   return answer.summary;
 });
 
+/** One draft grade for the verified client, or what the client or the grade's state refuses. */
+const enterGrade = Effect.fn("integrations.routes.enterGrade")(function* (
+  payload: typeof ApiGradeEntry.Type
+) {
+  const clientId = yield* callerId;
+  const { runMutation } = yield* MutationRunner;
+  const answer = yield* runMutation(integrationsInternal.writes.enterGrade, {
+    ...payload,
+    clientId,
+  }).pipe(Effect.orDie);
+  return yield* Match.value(answer).pipe(
+    Match.discriminatorsExhaustive("outcome")({
+      entered: ({ grade }) => Effect.succeed(grade),
+      forbidden: () => Effect.fail(forbidden()),
+      notPlaced: () =>
+        Effect.fail(
+          new SchoolApiConflict({
+            message: "This student is not in this class.",
+          })
+        ),
+      released: () =>
+        Effect.fail(
+          new SchoolApiConflict({ message: "This grade is already released." })
+        ),
+    })
+  );
+});
+
 /** The sheet of one export for the request's client, or the refusal of a read it may not make. */
 const exportSheet = (
   dataset: typeof ExportDataset.Type,
@@ -367,9 +404,11 @@ const importsHandlers = HttpApiBuilder.group(
   SchoolApi,
   "imports",
   Effect.fn(function* (handlers) {
-    return handlers.handle("roster", ({ headers, payload }) =>
-      importRoster(headers["idempotency-key"], payload)
-    );
+    return handlers
+      .handle("roster", ({ headers, payload }) =>
+        importRoster(headers["idempotency-key"], payload)
+      )
+      .handle("grade", ({ payload }) => enterGrade(payload));
   })
 );
 

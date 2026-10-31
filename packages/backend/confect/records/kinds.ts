@@ -59,6 +59,12 @@ const classGrades = Kind.extend(classKind, {
       grantedBy: "relations",
       relations: ["subjectTeacher"],
     },
+    "grade.import": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["integration"],
+    },
     "grade.list": {
       access: "read",
       grantedBy: "relations",
