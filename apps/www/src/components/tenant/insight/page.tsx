@@ -25,7 +25,6 @@ import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
-import { InsightOff } from "@/components/tenant/insight/off";
 import { percentOf } from "@/components/tenant/insight/rows";
 import { ClassInsightTable } from "@/components/tenant/insight/table";
 import { QuestionTags } from "@/components/tenant/insight/tags";
@@ -104,8 +103,11 @@ function OwnInsight() {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const mine = useQuery(insight.reads.mine, isSettled ? { slug } : "skip");
 
-  if (QueryResult.isFailure(mine) || !QueryResult.isSuccess(mine)) {
-    return QueryResult.isFailure(mine) ? <InsightOff /> : null;
+  if (QueryResult.isFailure(mine)) {
+    throw mine.error;
+  }
+  if (!QueryResult.isSuccess(mine)) {
+    return null;
   }
   if (Arr.isReadonlyArrayEmpty(mine.value)) {
     return (

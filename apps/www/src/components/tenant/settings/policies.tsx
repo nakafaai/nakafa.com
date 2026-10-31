@@ -45,7 +45,6 @@ import {
 } from "@/components/shared/card/section";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { SchoolDpia } from "@/components/tenant/settings/dpia";
 import { setPolicyChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsPage } from "@/components/tenant/settings/section";
@@ -88,7 +87,6 @@ function SchoolPoliciesBody() {
     <>
       <SchoolStudentsPolicy policies={viewer.value.tenant.policies} />
       <SchoolDomainsPolicy policies={viewer.value.tenant.policies} />
-      <SchoolDpia />
     </>
   );
 }

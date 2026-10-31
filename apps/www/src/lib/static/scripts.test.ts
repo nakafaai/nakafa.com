@@ -8,7 +8,7 @@ const PRERENDERED = Arr.join(
     "<!doctype html><html><head>",
     '<link rel="stylesheet" href="/assets/globals.css"/>',
     '<link rel="modulepreload" href="/assets/react-a1.js" crossorigin=""/>',
-    '<link rel="modulepreload" href="/assets/route-b2.js" crossorigin="" fetchPriority="low"/>',
+    '<link rel="modulepreload" href="/assets/shared~route-b2.js" crossorigin="" fetchPriority="low"/>',
     '<link rel="modulepreload" href="/assets/react-a1.js" crossorigin="" fetchPriority="low"/>',
     "<script>document.documentElement.classList.add('light');</script>",
     "</head><body><main><h1>Pecahan</h1></main>",
@@ -67,7 +67,7 @@ describe("lib/static/scripts", () => {
       entry: "/assets/index-c3.js",
       preloads: [
         { href: "/assets/react-a1.js" },
-        { fetchPriority: "low", href: "/assets/route-b2.js" },
+        { fetchPriority: "low", href: "/assets/shared~route-b2.js" },
       ],
     });
   });
@@ -90,7 +90,7 @@ describe("lib/static/scripts", () => {
 
   it("refuses a script outside the built assets", () => {
     const foreign = PRERENDERED.replace(
-      "/assets/route-b2.js",
+      "/assets/shared~route-b2.js",
       "https://example.com/route.js"
     );
 

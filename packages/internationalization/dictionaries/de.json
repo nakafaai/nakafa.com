@@ -1076,9 +1076,6 @@
         "renamed": "Anmeldename geändert"
       },
       "insight": {
-        "dpia": {
-          "recorded": "Folgenabschätzung festgehalten"
-        },
         "narrative": {
           "shared": "Bericht geteilt",
           "withdrawn": "Bericht zurückgenommen"
@@ -1260,13 +1257,7 @@
     "locale-description": "Wo diese Schule liegt und in welcher Währung ihr Tarif läuft.",
     "locale-country": "Land",
     "locale-currency": "Währung",
-    "locale-footer": "Jede Änderung wird im Prüfprotokoll festgehalten.",
-    "dpia-title": "Folgenabschätzung",
-    "dpia-off": "Keine festgehalten, darum ist Insight aus.",
-    "dpia-on": "Version {version}, geprüft von {reviewer}, am {date}.",
-    "dpia-version": "Version",
-    "dpia-reviewer": "Prüfer",
-    "dpia-record": "Festhalten"
+    "locale-footer": "Jede Änderung wird im Prüfprotokoll festgehalten."
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -3573,16 +3564,14 @@
     "chance": "Chance auf KKTP {kktp}",
     "chance-note": "Diese Chance ändert keine Note und ist nur für Lehrkräfte sichtbar. Sie stammt aus den Punkten oben und ist eine erste Schätzung.",
     "empty": "Noch nichts zu zeigen",
-    "empty-description": "Eine Frage zählt, sobald sie eine Kompetenz nennt und ihre Ergebnisse freigegeben sind.",
-    "off": "Insight ist aus",
-    "off-description": "Es geht an, sobald die Schule ihre Folgenabschätzung in den Einstellungen festhält.",
+    "empty-description": "Jede freigegebene Prüfung erscheint hier.",
     "narrative-title": "Bericht zu {student}",
     "narrative-description": "Deine Worte zu diesem Lernenden. Erziehungsberechtigte lesen sie erst, wenn du sie teilst.",
     "narrative-save": "Speichern",
     "narrative-share": "Mit Erziehungsberechtigten teilen",
     "narrative-withdraw": "Zurücknehmen",
     "tags": "Kompetenzen",
-    "tags-description": "Nenne die Kompetenz jeder Frage. Eine Frage ohne Kompetenz zählt nicht für Insight.",
+    "tags-description": "Nenne die Kompetenz jeder Frage. Eine Frage ohne Kompetenz zählt für ihre Prüfung.",
     "exam": "Prüfung",
     "question": "Frage {number}"
   }

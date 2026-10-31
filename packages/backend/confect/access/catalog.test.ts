@@ -147,6 +147,7 @@ describe("access/catalog", () => {
         [
           "tenant.provisioned",
           "tenant.founded",
+          "tenant.setup.finished",
           "tenant.locale.set",
           "tenant.logo.removed",
           "tenant.logo.set",
@@ -201,7 +202,6 @@ describe("access/catalog", () => {
           "promotion.submitted",
           "promotion.returned",
           "promotion.undone",
-          "insight.dpia.recorded",
           "insight.narrative.shared",
           "insight.narrative.withdrawn",
           "integration.created",
@@ -333,7 +333,6 @@ describe("access/catalog", () => {
       "audit.view",
       "tenant.manage",
       "tenant.view",
-      "insight.dpia",
       "invite.view",
       "person.manage",
       "person.view",

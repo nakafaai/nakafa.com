@@ -11,14 +11,6 @@ export const Competency = Schema.String.check(
   Schema.isMaxLength(80)
 );
 
-/** The version a school gives its impact assessment, and who reviewed it: one line, 1 to 120 characters. */
-const DpiaText = Schema.String.check(
-  Schema.isTrimmed(),
-  isSingleLine,
-  Schema.isMinLength(1),
-  Schema.isMaxLength(120)
-);
-
 /** What a teacher writes about a student: trimmed, 1 to 4,000 characters. */
 export const NarrativeText = Schema.String.check(
   Schema.isTrimmed(),
@@ -47,15 +39,6 @@ export const insightMasteryValidator = Schema.Struct({
   rating: Schema.Finite,
   tenantId: Id("tenants"),
   updatedAt: Schema.Finite,
-});
-
-/** A school's impact assessment on record, which switches Insight on (ADR 0035). */
-export const insightDpiaValidator = Schema.Struct({
-  recordedAt: Schema.Finite,
-  recordedBy: Id("tenantPeople"),
-  reviewer: DpiaText,
-  tenantId: Id("tenants"),
-  version: DpiaText,
 });
 
 /** What a teacher says about a student, sealed with the school key, and when it was shared with the student's guardians. */
@@ -115,16 +98,3 @@ export const QuestionTag = Schema.Struct({
   id: Id("examQuestions"),
   number: Schema.Int,
 });
-
-/** A school's impact assessment as Settings shows it. */
-export const DpiaView = Schema.Struct({
-  recordedAt: Schema.Finite,
-  reviewer: DpiaText,
-  version: DpiaText,
-});
-
-/** The fields a school records its impact assessment with. */
-export const DpiaFields = {
-  reviewer: DpiaText,
-  version: DpiaText,
-};

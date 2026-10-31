@@ -5,7 +5,6 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { classAccess } from "@repo/backend/confect/classroom/authority";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
-import { requireDpia } from "@repo/backend/confect/insight/gate";
 import { chanceOf } from "@repo/backend/confect/insight/mastery";
 import spec from "@repo/backend/confect/insight/reads.spec";
 import { narrativeField } from "@repo/backend/confect/insight/schema";
@@ -46,7 +45,6 @@ const ofClass = FunctionImpl.make(
   "ofClass",
   Effect.fn("insight.reads.ofClass")(function* () {
     const row = yield* Class;
-    yield* requireDpia(row.tenantId);
     const reader = yield* DatabaseReader;
     const scheme = yield* schemeForEntry(row.tenantId);
     const keys = yield* schoolKeys(row.tenantId);
@@ -101,8 +99,7 @@ const mine = FunctionImpl.make(
   spec,
   "mine",
   Effect.fn("insight.reads.mine")(function* () {
-    const { person, tenant } = yield* Member;
-    yield* requireDpia(tenant._id);
+    const { person } = yield* Member;
     return yield* skillsOf(person._id);
   })
 );

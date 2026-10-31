@@ -14,7 +14,10 @@ import { Clock, Duration, Effect, Layer, Option } from "effect";
 /** Scored answers one run reads: an exam of 50 questions and two students, and a page stays one transaction. */
 const OBSERVE_BATCH = 200;
 
-/** Adds one scored answer to its student's standing in the competency of its question. An untagged question adds nothing. */
+/**
+ * Adds one scored answer to its student's standing. The competency is the one its teacher named for the question, and
+ * a question with none counts for its exam, so every released answer tells something from the first sitting on.
+ */
 const observe = Effect.fn("insight.observe.one")(function* (
   result: ExamResultsDoc,
   now: number
@@ -26,14 +29,21 @@ const observe = Effect.fn("insight.observe.one")(function* (
     .index("by_questionId", (query) => query.eq("questionId", result.question))
     .first()
     .pipe(Effect.orDie);
-  if (Option.isNone(tag)) {
-    return;
-  }
   const question = yield* reader
     .table("examQuestions")
     .get(result.question)
     .pipe(Effect.orDie);
-  const competency = tag.value.competency;
+  const competency = yield* Option.match(tag, {
+    onNone: () =>
+      reader
+        .table("exams")
+        .get(question.examId)
+        .pipe(
+          Effect.map((exam) => exam.title),
+          Effect.orDie
+        ),
+    onSome: (found) => Effect.succeed(found.competency),
+  });
   const standing = yield* reader
     .table("insightMastery")
     .index("by_personId_and_competency", (query) =>

@@ -10,7 +10,7 @@ import { Schema } from "effect";
 
 /**
  * The competency of each question of an exam (ADR 0035). The teacher names it, because Insight never guesses one from a
- * question's text, and a question with none adds no observation.
+ * question's text, and a question with none counts for its exam.
  */
 export default GroupSpec.make()
   .middleware(Session)

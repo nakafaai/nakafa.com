@@ -82,7 +82,6 @@ import graduations from "./tables/graduations";
 import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
-import insightDpias from "./tables/insightDpias";
 import insightMastery from "./tables/insightMastery";
 import insightNarratives from "./tables/insightNarratives";
 import insightTags from "./tables/insightTags";
@@ -238,7 +237,6 @@ export default $defineSchema({
   guardianCodes: $Table.tableDefinition(guardianCodes),
   guardianConsents: $Table.tableDefinition(guardianConsents),
   guardianLinks: $Table.tableDefinition(guardianLinks),
-  insightDpias: $Table.tableDefinition(insightDpias),
   insightMastery: $Table.tableDefinition(insightMastery),
   insightNarratives: $Table.tableDefinition(insightNarratives),
   insightTags: $Table.tableDefinition(insightTags),

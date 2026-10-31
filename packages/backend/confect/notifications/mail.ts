@@ -11,6 +11,7 @@ import type {
   Relation,
 } from "@repo/backend/confect/notifications/rules";
 import { DigestChange } from "@repo/email/templates/digest/content";
+import { namedTimeZone } from "@repo/utilities/timezone";
 import {
   Array as Arr,
   Clock,
@@ -65,7 +66,8 @@ const MAIL_OF = {
 
 /**
  * Queues the mail of one notice for one recipient, when the rules give their relation an email (ADR 0027). A digest is
- * due at the next 17:00 on the clock of the unit, and any other mail at once. A mail with an anchor expires there,
+ * due at the next 17:00 on the clock of the unit, or at once in a unit whose zone is no named zone, and any other mail
+ * at once. A mail with an anchor expires there,
  * because it says what is about to happen. A recipient without an account has no address, so nothing is queued.
  */
 export const queueMail = Effect.fn("notifications.mail.queue")(function* (
@@ -87,18 +89,15 @@ export const queueMail = Effect.fn("notifications.mail.queue")(function* (
     .table("tenantUnits")
     .get(unitId)
     .pipe(Effect.orDie);
-  // A unit's time zone is checked as an IANA zone where it is written, so one that does not read is a defect.
-  const zone = yield* DateTime.zoneMakeNamedEffect(unit.timeZone).pipe(
-    Effect.orDie
-  );
+  const zone = namedTimeZone(unit.timeZone);
   yield* (yield* DatabaseWriter)
     .table("noticeMails")
     .insert({
       ...MAIL_OF[kind],
       dueAt:
-        email.value.timing._tag === "Digest"
+        email.value.timing._tag === "Digest" && Option.isSome(zone)
           ? DateTime.toEpochMillis(
-              digestInstant(DateTime.makeUnsafe(now), zone)
+              digestInstant(DateTime.makeUnsafe(now), zone.value)
             )
           : now,
       expiresAt: Option.getOrElse(
