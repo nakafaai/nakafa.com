@@ -1,5 +1,8 @@
 import { expect, it } from "@effect/vitest";
-import { buildContentSearchExcerpt } from "@repo/backend/confect/contents/search/excerpt";
+import {
+  buildContentSearchExcerpt,
+  textAfterTitle,
+} from "@repo/backend/confect/contents/search/excerpt";
 
 it("selects complete terms and the last prefix instead of unrelated substrings", () => {
   const text = `Nonlinear models. ${"Background context. ".repeat(25)} Linear functions provide the relevant example. ${"Further reading. ".repeat(25)}`;
@@ -91,4 +94,13 @@ it("bounds excerpts even when a long word has no nearby space", () => {
     ["線形"]
   );
   expect(unbroken).toBe(`線形${"式".repeat(218)}...`);
+});
+
+it("starts the text after the title it opens with, and keeps any other text whole", () => {
+  expect(
+    textAfterTitle(" Konsep  Fungsi Fungsi memasangkan.", "Konsep Fungsi")
+  ).toBe("Fungsi memasangkan.");
+  expect(textAfterTitle("Fungsi memasangkan.", "Konsep Fungsi")).toBe(
+    "Fungsi memasangkan."
+  );
 });

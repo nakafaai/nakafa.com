@@ -9,4 +9,7 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["look"]: RegisteredConvexFunction.register({ ...definitions["look"], handler: forward(definitions["look"].handler) }),
 ["screen"]: RegisteredConvexFunction.register({ ...definitions["screen"], handler: forward(definitions["screen"].handler) }),
+["beat"]: RegisteredConvexFunction.register({ ...definitions["beat"], handler: forward(definitions["beat"].handler) }),
+["offline"]: RegisteredConvexFunction.register({ ...definitions["offline"], handler: forward(definitions["offline"].handler) }),
+["seats"]: RegisteredConvexFunction.register({ ...definitions["seats"], handler: forward(definitions["seats"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../exams/screens.spec")["default"]>;

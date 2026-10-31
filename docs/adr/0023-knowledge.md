@@ -100,10 +100,10 @@ that the read tool opens the document at that section.
 **The model** is `google/gemini-embedding-2`, decided on 12 October 2026.
 Google's benchmark puts it first of its models (MTEB Multilingual 69.9, against
 68.4 for `gemini-embedding-001`), it takes 8,192 input tokens against 2,048,
-and the older model shuts down on 14 May 2028. `scripts/knowledge` runs a fixed
-set of questions against each embedding model of the gateway and reports how
-often the right section is among the first five in each language. On the dev
-deployment that test found 142 of 150 right sections for this model and 146 for
+and the older model shuts down on 14 May 2028. A model test, deleted on 31 October
+2026 because each run cost dollars of embeddings, ran a fixed set of questions
+against each embedding model of the gateway and reported how often the right
+section was among the first five in each language. On the dev deployment it found 142 of 150 right sections for this model and 146 for
 the older one, at 433 ms and 257 ms a question; with 50 questions a language
 that difference does not tell the two apart, so the benchmark, the input limit
 and the lifetime decided. The test embeds the stored sections as the build

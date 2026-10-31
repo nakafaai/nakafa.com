@@ -3,13 +3,10 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import {
-  COMPARE_PAGE_BYTES,
-  COMPARE_PAGE_ROWS,
   SECTIONS_PER_DOCUMENT,
 } from "@repo/backend/confect/contents/sections/limits";
 import {
   type knownInputValidator,
-  type pageInputValidator,
   type SourceRecord,
   sectionHeadValidator,
   sectionScope,
@@ -162,38 +159,5 @@ export const storeDocument = Effect.fn("contents.sections.store")(function* (
     removed: Arr.length(extras),
     stale: false,
     written: count("written"),
-  };
-});
-
-/**
- * Reads one page of the stored sections of a language, in the order of the
- * index: for the model test, the headings that tell which section is which
- * and the text that each candidate model embeds.
- */
-export const pageTexts = Effect.fn("contents.sections.pageTexts")(function* (
-  input: typeof pageInputValidator.Type
-) {
-  const page = yield* (yield* DatabaseReader)
-    .table("contentSections")
-    .index("by_appLocale_and_contentKey_and_ordinal", (index) =>
-      index.eq("appLocale", input.appLocale)
-    )
-    .paginate({
-      cursor: input.cursor,
-      maximumBytesRead: COMPARE_PAGE_BYTES,
-      numItems: COMPARE_PAGE_ROWS,
-    })
-    .pipe(Effect.orDie);
-  return {
-    next: page.isDone ? null : page.continueCursor,
-    sections: Arr.map(
-      page.page,
-      ({ contentKey, headingPath, ordinal, text }) => ({
-        contentKey,
-        headingPath,
-        ordinal,
-        text,
-      })
-    ),
   };
 });

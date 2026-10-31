@@ -8,7 +8,6 @@ import {
 } from "@repo/backend/confect/contentRelease/quran/spec";
 import { quranMarkdownValidator } from "@repo/backend/content/quran/contract";
 import {
-  quranDocumentValidator,
   quranInterpretationValidator,
   quranPassageValidator,
   quranViewValidator,
@@ -39,17 +38,6 @@ export default GroupSpec.make()
       name: "surahs",
       args: () => ({}),
       returns: () => surahCatalogValidator,
-      error: () => ReleaseError,
-    })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "surah",
-      args: () => ({
-        appLocale: quranAppLocaleValidator,
-        surahNumber: Schema.Finite,
-      }),
-      returns: () => quranDocumentValidator,
       error: () => ReleaseError,
     })
   )

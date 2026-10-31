@@ -39,3 +39,45 @@ export class MentionRefused extends Schema.TaggedError<MentionRefused>()(
   "MentionRefused",
   refusal("MENTION_REFUSED", "This message mentions someone it may not.")
 ) {}
+
+/** A message with no text, no file and no poll. */
+export class MessageEmpty extends Schema.TaggedError<MessageEmpty>()(
+  "MessageEmpty",
+  refusal("MESSAGE_EMPTY", "Write something or add a file first.")
+) {}
+
+/** An upload that is not the sender's own, or that is already gone. */
+export class UploadGone extends Schema.TaggedError<UploadGone>()(
+  "UploadGone",
+  refusal("UPLOAD_GONE", "This file is no longer here. Add it again.")
+) {}
+
+/** A file that would pass the bytes a school's forum holds. The file is deleted. */
+export class FileQuotaReached extends Schema.TaggedError<FileQuotaReached>()(
+  "FileQuotaReached",
+  refusal(
+    "FILE_QUOTA_REACHED",
+    "This school's chats hold all the files they can."
+  )
+) {}
+
+/** A file whose bytes name no image, PDF or office document. The file is deleted. */
+export class AttachmentRefused extends Schema.TaggedError<AttachmentRefused>()(
+  "AttachmentRefused",
+  refusal(
+    "ATTACHMENT_REFUSED",
+    "Only a photo, a PDF, or a Word, Excel or PowerPoint file can be sent."
+  )
+) {}
+
+/** Another emoji on a message that already carries the most it can. */
+export class ReactionLimit extends Schema.TaggedError<ReactionLimit>()(
+  "ReactionLimit",
+  refusal("REACTION_LIMIT", "This message carries the most emoji it can.")
+) {}
+
+/** A vote that names a choice the poll does not hold, or several in a poll of one choice. */
+export class VoteRefused extends Schema.TaggedError<VoteRefused>()(
+  "VoteRefused",
+  refusal("VOTE_REFUSED", "This poll does not take that vote.")
+) {}

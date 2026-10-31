@@ -23,6 +23,7 @@ const placements = refs.public.tenancy.placements;
 const general = {
   id: expect.any(String),
   kind: "general",
+  last: null,
   name: "general",
   unread: false,
 };
@@ -93,12 +94,19 @@ describe("classroom/forum channels", () => {
         expect(added).toEqual({
           id: expect.any(String),
           kind: "topic",
+          last: null,
           name: "Tugas",
           unread: false,
         });
         expect(listed.page).toEqual([
           general,
-          { id: added.id, kind: "topic", name: "Tugas", unread: false },
+          {
+            id: added.id,
+            kind: "topic",
+            last: null,
+            name: "Tugas",
+            unread: false,
+          },
         ]);
       })
   );

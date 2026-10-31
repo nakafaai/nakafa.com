@@ -16,7 +16,6 @@ import { useTranslations } from "use-intl";
 import { ChoiceGroup } from "@/components/exams/sitting/reason";
 import {
   type Choice,
-  isChoice,
   keyWithoutOption,
   type OptionLabel,
   withOptionAdded,
@@ -79,9 +78,8 @@ export function ChoiceSheet({
   const savedLabel = (option: Choice["options"][number]): OptionLabel =>
     Option.match(
       Arr.findFirst(
-        Arr.flatMap(
-          Arr.filter(question.answers, isChoice),
-          (saved) => saved.options
+        Arr.flatMap(question.answers, (saved) =>
+          saved.kind === "choice" ? saved.options : []
         ),
         (item) => item.id === option.id
       ),

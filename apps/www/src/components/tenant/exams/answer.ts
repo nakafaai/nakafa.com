@@ -10,7 +10,6 @@ import {
   Array as Arr,
   Option,
   pipe,
-  Result,
   Schema,
   String as Str,
 } from "effect";
@@ -305,14 +304,14 @@ export const keyWithoutOption = (
   if (key === null) {
     return null;
   }
-  const remaining = Arr.filterMap(key, (answer) => {
+  const remaining = Arr.flatMap(key, (answer): readonly InteractionKey[] => {
     if (!isChoiceKey(answer)) {
-      return Result.succeed(answer);
+      return [answer];
     }
     const correct = Arr.filter(answer.correct, (id) => id !== optionId);
     return Arr.isReadonlyArrayNonEmpty(correct)
-      ? Result.succeed({ ...answer, correct })
-      : Result.failVoid;
+      ? [{ ...answer, correct }]
+      : [];
   });
   return Arr.isReadonlyArrayNonEmpty(remaining) ? remaining : null;
 };

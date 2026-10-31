@@ -24,13 +24,16 @@ import classGrades from "./tables/classGrades";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
+import classroomFileUse from "./tables/classroomFileUse";
 import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
 import classroomPosts from "./tables/classroomPosts";
 import classroomReads from "./tables/classroomReads";
 import classroomSubmissions from "./tables/classroomSubmissions";
+import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
 import classroomThreads from "./tables/classroomThreads";
+import classroomUploads from "./tables/classroomUploads";
 import commentLikes from "./tables/commentLikes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
@@ -172,13 +175,16 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly classTeachers: typeof classTeachers;
   readonly classes: typeof classes;
   readonly classroomChannels: typeof classroomChannels;
+  readonly classroomFileUse: typeof classroomFileUse;
   readonly classroomLibrary: typeof classroomLibrary;
   readonly classroomMessages: typeof classroomMessages;
   readonly classroomPosts: typeof classroomPosts;
   readonly classroomReads: typeof classroomReads;
   readonly classroomSubmissions: typeof classroomSubmissions;
+  readonly classroomTallies: typeof classroomTallies;
   readonly classroomTasks: typeof classroomTasks;
   readonly classroomThreads: typeof classroomThreads;
+  readonly classroomUploads: typeof classroomUploads;
   readonly commentLikes: typeof commentLikes;
   readonly comments: typeof comments;
   readonly connectorConnections: typeof connectorConnections;
@@ -319,13 +325,16 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   classTeachers,
   classes,
   classroomChannels,
+  classroomFileUse,
   classroomLibrary,
   classroomMessages,
   classroomPosts,
   classroomReads,
   classroomSubmissions,
+  classroomTallies,
   classroomTasks,
   classroomThreads,
+  classroomUploads,
   commentLikes,
   comments,
   connectorConnections,
