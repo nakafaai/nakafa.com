@@ -1,7 +1,9 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { ClassroomUploadsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import classroomPublic from "@repo/backend/confect/_generated/refs/classroom";
+import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
+import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -81,7 +83,7 @@ const attacher = Effect.fn("classroom.forum.files.attacher")(function* (
   slug: TenantSlug
 ) {
   const { runQuery } = yield* QueryRunner;
-  return yield* runQuery(refs.public.classroom.forum.files.canAttach, {
+  return yield* runQuery(classroomPublic.forum.files.canAttach, {
     classId,
     slug,
   }).pipe(
@@ -96,7 +98,7 @@ const discardAll = (files: readonly StorageId[]) =>
   Effect.gen(function* () {
     const { runMutation } = yield* MutationRunner;
     yield* Effect.forEach(files, (storageId) =>
-      runMutation(refs.internal.exams.assets.discard, { storageId })
+      runMutation(examsInternal.assets.discard, { storageId })
     );
   });
 
@@ -117,7 +119,7 @@ const sizeOf = Effect.fn("classroom.forum.files.size")(function* (
   storageId: StorageId
 ) {
   const { runQuery } = yield* QueryRunner;
-  const { size } = yield* runQuery(refs.internal.exams.assets.stored, {
+  const { size } = yield* runQuery(examsInternal.assets.stored, {
     storageId,
   }).pipe(Effect.orDie);
   return size;
@@ -157,23 +159,20 @@ const register = FunctionImpl.make(
         return yield* new AttachmentRefused();
       }
       const { runMutation } = yield* MutationRunner;
-      const upload = yield* runMutation(
-        refs.internal.classroom.forum.files.commit,
-        {
-          authorId,
-          byteSize,
-          classId,
-          contentType: contentType.value,
-          height,
-          kind: Option.isSome(imageTypeOf(yield* headOf(storageId)))
-            ? "image"
-            : "document",
-          name,
-          storageId,
-          thumbnailId,
-          width,
-        }
-      );
+      const upload = yield* runMutation(classroomInternal.forum.files.commit, {
+        authorId,
+        byteSize,
+        classId,
+        contentType: contentType.value,
+        height,
+        kind: Option.isSome(imageTypeOf(yield* headOf(storageId)))
+          ? "image"
+          : "document",
+        name,
+        storageId,
+        thumbnailId,
+        width,
+      });
       if (upload === null) {
         yield* discardAll(files);
         return yield* new FileQuotaReached();
@@ -294,7 +293,7 @@ const sweep = FunctionImpl.make(
     if (stale.length === SWEEP_BATCH) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.classroom.forum.files.sweep,
+        classroomInternal.forum.files.sweep,
         {}
       );
     }
