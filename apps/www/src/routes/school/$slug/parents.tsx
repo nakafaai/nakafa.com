@@ -7,7 +7,7 @@ import { GuardianHome } from "@/components/tenant/guardian/home";
  * parent's email code form, which the layout draws; a signed-in guardian sees each linked
  * child, the NISN check of a pending link, and the released grades of a verified one.
  */
-export const Route = createFileRoute("/school/$slug/orang-tua")({
+export const Route = createFileRoute("/school/$slug/parents")({
   component: SchoolGuardianPage,
 });
 

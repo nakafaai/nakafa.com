@@ -157,7 +157,7 @@ Every address below is planned, except the root of a school host, which is live.
 | `harapan.nakafa.com/connectors`, `/connectors/classroom` | Connectors. A teacher sees only their own connections. |
 | `harapan.nakafa.com/perangkat` | Where a person types the code that the CLI shows (device authorization). |
 | `harapan.nakafa.com/kartu` | Where a student enters the code of a login card (ADR 0009). It works on the school host only. |
-| `harapan.nakafa.com/orang-tua` | Where a parent asks for a sign-in code by email and enters it (ADR 0009). It works on the school host only. |
+| `harapan.nakafa.com/parents` | Where a parent asks for a sign-in code by email and enters it (ADR 0009). It works on the school host only. |
 | `harapan.nakafa.com/api/v1`, `harapan.nakafa.com/mcp` | The school REST API and the school MCP server. They use OAuth 2.0 client credentials. |
 | `harapan.nakafa.com/settings` | Organisation settings, periods, class groups, billing, and the AI quota. |
 | `harapan.nakafa.com/chat` | Nina in the school. A school thread does not read personal memory (K3). |
@@ -224,7 +224,7 @@ its own change, before any school code that depends on it lands.
   text of a message, or an exam token. The one code an email carries is the
   parent's six-digit sign-in code (ADR 0009). It expires after five minutes,
   rests as a keyed hash, and is useless without the code entry page of the school
-  host (`/orang-tua`). Push carries only a notification id and a general title.
+  host (`/parents`). Push carries only a notification id and a general title.
 
 ### Moving a school between cells
 
