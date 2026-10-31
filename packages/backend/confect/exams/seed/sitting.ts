@@ -18,12 +18,14 @@ import { activeOwners, assignRole } from "@repo/backend/confect/access/grant";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import {
   choiceAnswers,
+  essayAnswers,
+  textLabel,
+} from "@repo/backend/confect/exams/blank";
+import {
   encodeAnswers,
   encodeKey,
-  essayAnswers,
   NEW_QUESTION_POINTS,
   NEW_QUESTION_TEMPLATE,
-  textLabel,
 } from "@repo/backend/confect/exams/question";
 import {
   placeSeeded,

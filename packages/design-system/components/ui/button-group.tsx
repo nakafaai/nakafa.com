@@ -4,15 +4,24 @@ import { Separator } from "@repo/design-system/components/ui/separator";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 
+/**
+ * One joined frame: the first part rounds its start, the last rounds its end, and the parts between stand square on one
+ * shared border. Every child that shows is a part, whatever it is, and a form's hidden input is not. A child with no
+ * `data-slot` is a wrapper, so it passes its shape to the controls inside it, and its controls join the row.
+ *
+ * CSS cannot see `display: none`, so a child that hides at some width would still shape its neighbours. A control that
+ * changes form with the width is therefore one wrapper around both forms (`TableSearch`), never two children. Controls
+ * that stand apart do not go in a group: they keep a clear gap.
+ */
 const buttonGroupVariants = cva(
-  "flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 has-[>[data-slot=button-group]]:gap-2 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-md [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
+  "flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 has-[>[data-slot=button-group]]:gap-2 [&>:not([data-slot],[aria-hidden])]:rounded-md [&>:not([data-slot],[aria-hidden])>[data-slot]]:rounded-[inherit] [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
   {
     variants: {
       orientation: {
         horizontal:
-          "[&>[data-slot]:has(~[data-slot])]:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]~[data-slot]]:border-l-0",
+          "[&>:not([aria-hidden]):has(~:not([aria-hidden]))]:rounded-r-none [&>:not([aria-hidden])~:not([aria-hidden])]:rounded-l-none [&>:not([aria-hidden])~:not([aria-hidden])]:border-l-0 [&>:not([aria-hidden])~:not([data-slot],[aria-hidden])>[data-slot]]:border-l-0",
         vertical:
-          "flex-col [&>[data-slot]:has(~[data-slot])]:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]~[data-slot]]:border-t-0",
+          "flex-col [&>:not([aria-hidden]):has(~:not([aria-hidden]))]:rounded-b-none [&>:not([aria-hidden])~:not([aria-hidden])]:rounded-t-none [&>:not([aria-hidden])~:not([aria-hidden])]:border-t-0 [&>:not([aria-hidden])~:not([data-slot],[aria-hidden])>[data-slot]]:border-t-0",
       },
     },
     defaultVariants: {

@@ -1388,6 +1388,18 @@ export declare const api: {
         string
       >;
     };
+    people: {
+      list: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        Array<{
+          id: Id<"tenantPeople">;
+          kind: "student" | "teacher";
+          name: string;
+        }>
+      >;
+    };
     posts: {
       edit: FunctionReference<
         "mutation",
@@ -4453,7 +4465,8 @@ export declare const api: {
               | "numeric"
               | "essay"
               | "match"
-              | "table";
+              | "table"
+              | "reason";
           }>;
           title: string;
         }
@@ -4764,7 +4777,8 @@ export declare const api: {
               | "numeric"
               | "essay"
               | "match"
-              | "table";
+              | "table"
+              | "reason";
           }>;
           title: string;
         }
@@ -5134,7 +5148,8 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
         }
       >;
       answer: FunctionReference<
@@ -5634,7 +5649,8 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
         }
       >;
       copy: FunctionReference<
@@ -5899,7 +5915,8 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
         }
       >;
       move: FunctionReference<
@@ -6180,7 +6197,8 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
         }
       >;
       remove: FunctionReference<
@@ -6456,7 +6474,8 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
         }
       >;
       template: FunctionReference<
@@ -6477,7 +6496,8 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
         },
         {
           answers: Array<
@@ -6737,7 +6757,8 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
         }
       >;
     };

@@ -88,7 +88,9 @@ export function GuardianLinksSettings() {
               <WithAction action="guardian.link">
                 <Button onClick={() => setIsStarting(true)} type="button">
                   <HugeIcons icon={Link01Icon} />
-                  {t("link-add")}
+                  <span className="@max-sm/header:sr-only">
+                    {t("link-add")}
+                  </span>
                 </Button>
               </WithAction>
             </>
