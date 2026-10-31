@@ -25,6 +25,7 @@ import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
+import { readChatTitle } from "@/components/ai/chat/title";
 import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/auth/convex";
 import { SignedInIsland } from "@/components/providers/island";
@@ -191,7 +192,10 @@ function ChatRow({ chat }: { chat: ChatView }) {
   const title = pipe(
     Option.fromUndefinedOr(chat.title),
     Option.filter(Str.isNonEmpty),
-    Option.getOrElse(() => tAi("new-chat"))
+    Option.match({
+      onNone: () => tAi("new-chat"),
+      onSome: (title) => readChatTitle(title, tAi("new-chat")),
+    })
   );
   return (
     <FeedRow>

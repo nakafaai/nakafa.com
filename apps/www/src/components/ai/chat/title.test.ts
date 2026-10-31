@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Effect, MutableRef, Option, Result, Schema, Struct } from "effect";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { useChatRename } from "@/components/ai/chat/title";
+import { readChatTitle, useChatRename } from "@/components/ai/chat/title";
 
 const mocks = vi.hoisted(() => ({
   report: vi.fn(),
@@ -301,5 +302,17 @@ describe("useChatRename", () => {
     expect(hook().isEditing).toBe(false);
     expect(document.activeElement).toBe(element("#menu"));
     expect(mocks.toastError).not.toHaveBeenCalled();
+  });
+});
+
+describe("readChatTitle", () => {
+  it("reads a chat Nina has not named in the learner's language", () => {
+    expect(readChatTitle(DEFAULT_TITLE, "Obrolan baru")).toBe("Obrolan baru");
+  });
+
+  it("keeps a title the chat has earned", () => {
+    expect(readChatTitle("Konsep fungsi", "Obrolan baru")).toBe(
+      "Konsep fungsi"
+    );
   });
 });
