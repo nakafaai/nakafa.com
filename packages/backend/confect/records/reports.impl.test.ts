@@ -15,6 +15,7 @@ import {
   teach,
 } from "@repo/backend/test/classroom";
 import {
+  actedAt,
   grantRole,
   journal,
   TENANCY_NOW,
@@ -204,6 +205,7 @@ describe("records/reports", () => {
         yield* fixture
           .as("teacher")
           .mutation(reports.complete, { reportId: draft.id, slug: nf });
+        vi.setSystemTime(actedAt());
         const approved = yield* fixture
           .as("principal")
           .mutation(reports.approve, { reportId: draft.id, slug: nf });
@@ -240,7 +242,7 @@ describe("records/reports", () => {
             hash: row.hash ?? "",
           })
         ).toEqual({
-          approvedAt: TENANCY_NOW,
+          approvedAt: actedAt(),
           kind: "report",
           outcome: "locked",
           period: "Ganjil 2026/2027",

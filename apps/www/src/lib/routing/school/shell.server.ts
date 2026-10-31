@@ -28,7 +28,7 @@ function readSchoolHostPath(request: Request): Option.Option<string> {
 }
 
 /** Whether the release's static shell answers a request: a school host's page, an address that names no file. */
-function readsSchoolShell(request: Request) {
+export function readsSchoolShell(request: Request) {
   return Option.exists(
     readSchoolHostPath(request),
     (pathname) => !namesFile(pathname)

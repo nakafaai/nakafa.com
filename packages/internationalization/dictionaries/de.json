@@ -11,16 +11,6 @@
     "back-to-learning": "Zurück zu Nakafa",
     "classes": "Klassen",
     "home": "Startseite",
-    "home-rooms": "Prüfungsräume",
-    "home-exams": "Prüfungen",
-    "home-updates": "Neuigkeiten",
-    "home-updates-all": "Alle Neuigkeiten",
-    "home-updates-empty": "Noch nichts Neues.",
-    "home-classes-empty": "Du bist noch in keiner Klasse.",
-    "home-minutes-left": "{count, plural, one {# Minute übrig} other {# Minuten übrig}}",
-    "greeting-morning": "Guten Morgen, {name}",
-    "greeting-afternoon": "Guten Tag, {name}",
-    "greeting-evening": "Guten Abend, {name}",
     "role": {
       "admin": "Admin",
       "auditor": "Prüfer:in",
@@ -36,7 +26,6 @@
       "teacher": "Lehrkraft"
     },
     "sign-in-title": "Anmelden bei {school}",
-    "answers-saved": "Antworten gespeichert",
     "search": "Suchen",
     "search-placeholder": "Schule durchsuchen...",
     "search-description": "Öffne eine Seite, eine Klasse oder eine Einstellung der Schule.",
@@ -195,6 +184,7 @@
     "state-submitted": "Abgegeben",
     "signals": "Ereignisse",
     "signals-empty": "Bisher ist kein Ereignis erfasst.",
+    "signals-offline-note": "Eine verlorene Verbindung erscheint hier mit ihrer Dauer, sobald der Schüler wieder online ist.",
     "signal-exit": "Hat die Prüfung verlassen",
     "signal-return": "Ist zur Prüfung zurückgekehrt",
     "screen-title": "Bildschirm der Person",
@@ -212,6 +202,8 @@
     "signal-copy": "Text kopiert",
     "signal-paste": "Text eingefügt",
     "signal-disconnect": "Verbindung verloren",
+    "signal-offline-seconds": "War {seconds} s ohne Verbindung",
+    "signal-offline-minutes": "War {minutes} min {seconds} s ohne Verbindung",
     "signal-secondTab": "Zweiten Tab geöffnet",
     "reason": "Grund",
     "reason-power-outage": "Stromausfall",
@@ -266,10 +258,19 @@
     "student-unavailable": "Diese Sitzung ist für dich nicht geöffnet, daher frag deine Lehrkraft, wenn du meinst, dass das falsch ist.",
     "finish-title": "Prüfung beenden?",
     "finish-description": "Du kannst deine Antworten nach dem Beenden nicht mehr ändern.",
-    "answers-in": "Deine Antworten sind gespeichert.",
     "title": "Prüfungen",
     "empty": "Es gibt noch keine Prüfungen.",
     "exams-search": "Prüfung suchen",
+    "mine-exam": "Prüfung",
+    "mine-opens": "Öffnet",
+    "mine-status": "Status",
+    "mine-score": "Ergebnis",
+    "mine-open": "Jetzt offen",
+    "mine-upcoming": "Demnächst",
+    "mine-finished": "Beendet",
+    "mine-score-waiting": "Noch nicht freigegeben",
+    "mine-empty": "Noch keine Prüfungen",
+    "mine-empty-description": "Deine Prüfungen erscheinen hier, sobald deine Schule sie plant.",
     "untitled": "Prüfung ohne Titel",
     "title-label": "Prüfungstitel",
     "unavailable": "Diese Prüfung ist nicht verfügbar.",
@@ -329,7 +330,7 @@
     "release-description": "Jede Lernende und jeder Lernende sieht nach der Freigabe die eigene Punktzahl und die eigenen Antworten.",
     "release-action": "Ergebnisse freigeben",
     "released": "Freigegeben",
-    "student-results-title": "Dein Ergebnis",
+    "student-finished": "Du hast diese Prüfung beendet.",
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
     "student-answer": "Deine Antwort: {answer}",
@@ -419,6 +420,8 @@
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
     "student-back-home": "Zur Startseite",
     "seat-last-activity": "Letzte Aktivität {time}.",
+    "seat-away-seconds": "Seit {seconds} s weg.",
+    "seat-away-minutes": "Seit {minutes} min {seconds} s weg.",
     "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
     "title-too-long": "Der Titel darf höchstens {count} Zeichen lang sein.",
     "no-unit-description": "Jede Prüfung gehört zu einer Einheit, also lege zuerst in den Einstellungen eine an oder stelle eine wieder her.",
@@ -645,9 +648,8 @@
     "cohort-status": "Status",
     "cohort-active": "Aktiv",
     "cohort-archived": "Archiviert",
-    "cohort-rename": "Umbenennen",
-    "cohort-rename-description": "Die Klasse behält ihre Schüler, Lehrkräfte und Noten.",
-    "cohort-rename-save": "Speichern",
+    "cohort-edit-description": "Die Klasse behält ihre Schüler, Lehrkräfte und Noten.",
+    "cohort-edit-save": "Speichern",
     "cohort-archive": "Archivieren",
     "cohort-add-footer": "Eine neue Klasse ist sofort aktiv.",
     "cohorts-empty": "Noch keine Klasse.",
@@ -763,7 +765,10 @@
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
         "archived": "Klasse archiviert",
-        "restored": "Klasse wiederhergestellt"
+        "restored": "Klasse wiederhergestellt",
+        "grade": {
+          "set": "Klassenstufe geändert"
+        }
       },
       "connection": {
         "connected": "Verbindung hinzugefügt",
@@ -864,6 +869,12 @@
         },
         "npsn": {
           "set": "NPSN geändert"
+        },
+        "name": {
+          "set": "Einheit umbenannt"
+        },
+        "level": {
+          "set": "Stufe der Einheit geändert"
         }
       },
       "visit": {
@@ -885,6 +896,9 @@
       "roster": {
         "set": "Schülerdaten aktualisiert",
         "imported": "Schüler aus Dapodik importiert"
+      },
+      "login": {
+        "renamed": "Anmeldename geändert"
       }
     },
     "role-description": {
@@ -912,7 +926,7 @@
     "login-person": "Person",
     "login-issued": "Ausgestellt",
     "logins-empty": "Noch keine Anmeldekarte ausgegeben.",
-    "logins-search": "Anmeldenamen suchen",
+    "logins-search": "Anmeldung oder Schüler suchen",
     "members-empty": "Noch niemand ist der Schule beigetreten.",
     "members-empty-description": "Lade auf der Einladungsseite Lehrkräfte oder Administratoren ein, oder lege einen Schüler an.",
     "members-search": "Name suchen",
@@ -929,6 +943,12 @@
     "member-remove-title": "Dieses Mitglied entfernen?",
     "member-remove-description": "Die Person verlässt die Schule, und ihre Rollen enden.",
     "member-remove-confirm": "Entfernen",
+    "person-rename": "Umbenennen",
+    "person-rename-description": "Der neue Name erscheint überall, wo die Schule diese Person führt.",
+    "person-rename-save": "Speichern",
+    "login-rename": "Anmeldenamen ändern",
+    "login-rename-description": "Die Person meldet sich mit dem neuen Namen und demselben Passwort an.",
+    "login-rename-save": "Speichern",
     "invite-action": "Einladen",
     "invites-footer": "Eine Person ohne Konto einladen.",
     "invite-dialog-title": "Person einladen",
@@ -996,7 +1016,8 @@
     "student-add-footer": "Drucke die Karte, bevor du schließt, denn der Code wird nur einmal angezeigt.",
     "student-add-submit": "Schüler hinzufügen",
     "invites-empty": "Keine Einladung wartet.",
-    "invites-search": "Eingeladene suchen",
+    "invites-search": "Name oder E-Mail suchen",
+    "units-search": "Schule oder NPSN suchen",
     "cohort-restore": "Wiederherstellen",
     "period-restore": "Wiederherstellen",
     "no-unit-title": "Noch keine aktive Einheit",
@@ -1624,7 +1645,13 @@
     "push-on": "Einschalten",
     "push-home-screen": "Auf iPhone und iPad kommen Benachrichtigungen nur vom Home-Bildschirm: Tippe auf Teilen, dann Zum Home-Bildschirm, und öffne Nakafa über sein Symbol.",
     "assignment-published": "{actor} hat in {className} eine neue Aufgabe gestellt.",
-    "assignment-published-gone": "Eine Aufgabe, die es nicht mehr gibt."
+    "assignment-published-gone": "Eine Aufgabe, die es nicht mehr gibt.",
+    "exam-starting": "{examTitle} öffnet um {opensAt, time, short} in {room}.",
+    "exam-reminder": "{student} schreibt {examTitle} am {opensAt, date, long} um {opensAt, time, short} in {room}.",
+    "exam-gone": "Eine Prüfung, die nicht mehr auf ihren Beginn wartet.",
+    "grade-released": "Deine Note in {className} wurde freigegeben.",
+    "grade-released-child": "Die Note von {student} in {className} wurde freigegeben.",
+    "grade-gone": "Eine Note, die nicht mehr freigegeben ist."
   },
   "Posts": {
     "placeholder": "Was gibt es Neues?",
@@ -1758,6 +1785,9 @@
     "status-in-progress": "In Bearbeitung",
     "status-completed": "Abgeschlossen",
     "status-expired": "Zeit abgelaufen",
+    "finished-title": "Tryout beendet",
+    "finished-description": "Du hast diesen Versuch beendet, und sein Ergebnis ist gespeichert.",
+    "finished-expired-description": "Die Zeit ist abgelaufen, daher endete dieser Versuch mit deinen bisherigen Antworten.",
     "remaining-time-label": "Verbleibende Zeit für dieses Set",
     "time-days-short": "Tage",
     "time-hours-short": "Std.",
@@ -1931,7 +1961,6 @@
     "picture-animal": "Tier",
     "picture-photo": "Google-Foto",
     "picture-footer-animal": "Jedes Würfeln zeigt ein anderes Tier.",
-    "picture-footer-photo": "Dein Google-Foto erscheint überall, wo dein Name steht.",
     "animal-shuffle": "Tier würfeln",
     "username": "Benutzername",
     "username-placeholder": "lena_schmidt",

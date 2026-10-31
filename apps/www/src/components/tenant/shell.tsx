@@ -55,7 +55,6 @@ import {
   ViewerPreloadContext,
 } from "@/components/tenant/context";
 import type { HomeAccess } from "@/components/tenant/home/access";
-import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import { TenantSearch } from "@/components/tenant/search";
@@ -225,8 +224,11 @@ function TenantSwitcher() {
  * top, the sidebar groups of the viewer, and the viewer's account at its foot, beside
  * the pages. Each page draws its one header, with the sidebar's trigger in it
  * (`SchoolHeader`), so the frame draws none. The exam editor draws its own frame,
- * so on its route the pages render alone. The pathname is read here, not in the
- * shell, so the shell's context value does not change on navigation.
+ * so on its route the pages render alone. No app header stands above a school's
+ * pages, so the frame sets its height to none, and a sticky row under a page's
+ * header, such as the player's toolbar, sits right under that header. The
+ * pathname is read here, not in the shell, so the shell's context value does not
+ * change on navigation.
  */
 function TenantFrame({ children }: { children: ReactNode }) {
   const isEditor = useRouteMatched("/school/$slug/exams/$exam/edit", {
@@ -256,7 +258,9 @@ function TenantFrame({ children }: { children: ReactNode }) {
         <SidebarToggle />
         <TenantAccount />
       </Sidebar>
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset className="[--app-header-top:0rem]">
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   );
 }
@@ -274,7 +278,6 @@ export function TenantShell({
   canOpenGraduation,
   canOpenReports,
   children,
-  greeting,
   home,
   personName,
   profile,
@@ -287,7 +290,6 @@ export function TenantShell({
   canOpenGraduation: boolean;
   canOpenReports: boolean;
   children: ReactNode;
-  greeting: Greeting;
   home: HomeAccess;
   personName: string;
   profile: typeof TenantProfile.Type;
@@ -302,7 +304,6 @@ export function TenantShell({
           canOpenExams,
           canOpenGraduation,
           canOpenReports,
-          greeting,
           logo: profile.logo,
           mascot: profile.mascot,
           home,

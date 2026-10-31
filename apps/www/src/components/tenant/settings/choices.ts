@@ -17,9 +17,10 @@ import {
 import {
   COHORT_GRADE_MAX,
   COHORT_GRADE_MIN,
+  CohortGrade,
 } from "@repo/backend/confect/tenancy/cohort";
 import { languages } from "@repo/internationalization/data/lang";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** Every IANA time zone that the platform knows, as the time zone choices of a unit. */
 export const timeZoneItems = Arr.map(
@@ -63,3 +64,10 @@ export const GRADE_ICONS = [
   BookOpen01Icon,
   Mortarboard01Icon,
 ] as const;
+
+/** The school year that a grade choice holds, if the choice holds one the schema accepts. */
+export function chosenGrade(value: string | null) {
+  return value === null
+    ? Option.none()
+    : Schema.decodeOption(CohortGrade)(Number(value));
+}

@@ -14,10 +14,10 @@ import {
   redeemOn,
   reissue,
 } from "@repo/backend/test/identity";
-import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
+import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Struct } from "effect";
 
-const { list } = refs.public.identity.logins;
+const { list, rename } = refs.public.identity.logins;
 const firstPage = { cursor: null, numItems: 25 };
 const denied = {
   _tag: "AccessDenied",
@@ -211,6 +211,105 @@ describe("identity/logins usernameOf", () => {
         expect(yield* usernameOf(fixture, "guru.baru")).toEqual({
           outcome: "missing",
         });
+      })
+  );
+});
+
+describe("identity/logins rename", () => {
+  /** Whether the school host's sign-in finds an account for the typed login name. */
+  const signsIn = (
+    fixture: Effect.Success<typeof tenancyFixture>,
+    loginName: string
+  ) =>
+    fixture.internal
+      .query(refs.internal.identity.logins.usernameOf, { loginName, slug: nf })
+      .pipe(Effect.map((answer) => answer.outcome === "found"));
+
+  it.effect(
+    "renames a claimed login, read as typed, which then signs in by its new name only, and records the rename once",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const issued = yield* issueFirst(fixture);
+        yield* redeemOn(fixture, issued.code);
+        const before = Arr.length(yield* fixture.run(journal));
+        const renamed = yield* fixture.as("admin").mutation(rename, {
+          loginName: " Siswa.Baru ",
+          personId: fixture.invited,
+          slug: nf,
+        });
+        const again = yield* fixture.as("admin").mutation(rename, {
+          loginName: "siswa.baru",
+          personId: fixture.invited,
+          slug: nf,
+        });
+        const listed = yield* fixture
+          .as("admin")
+          .query(list, { paginationOpts: firstPage, slug: nf });
+        const entries = Arr.drop(yield* fixture.run(journal), before);
+        expect([renamed, again]).toEqual(["siswa.baru", "siswa.baru"]);
+        expect(Arr.map(listed.page, (login) => login.loginName)).toEqual([
+          "siswa.baru",
+        ]);
+        expect(yield* signsIn(fixture, "siswa.baru")).toBe(true);
+        expect(yield* signsIn(fixture, "guru.baru")).toBe(false);
+        expect(entries).toMatchObject([
+          {
+            actor: { id: fixture.people.admin.personId, kind: "person" },
+            change: { type: "login.renamed" },
+            subject: { id: fixture.invited, kind: "person" },
+          },
+        ]);
+      })
+  );
+
+  it.effect(
+    "refuses a name another Person holds, a name the school cannot hold, a Person without a login, and a teacher",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* issueFirst(fixture);
+        yield* fixture.as("admin").mutation(refs.public.identity.cards.enroll, {
+          loginName: "siswa.lain",
+          name: "Siswa Lain",
+          slug: nf,
+        });
+        const admin = fixture.as("admin");
+        const taken = yield* admin
+          .mutation(rename, {
+            loginName: "siswa.lain",
+            personId: fixture.invited,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        const refused = yield* admin
+          .mutation(rename, {
+            loginName: "x",
+            personId: fixture.invited,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        const missing = yield* admin
+          .mutation(rename, {
+            loginName: "siswa.lama",
+            personId: fixture.people.student.personId,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        const teacher = yield* fixture
+          .as("teacher")
+          .mutation(rename, {
+            loginName: "siswa.lama",
+            personId: fixture.invited,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect([taken, refused, missing, teacher]).toMatchObject([
+          { _tag: "LoginNameTaken" },
+          { _tag: "LoginNameRefused", reason: "length" },
+          { _tag: "LoginMissing" },
+          denied,
+        ]);
       })
   );
 });

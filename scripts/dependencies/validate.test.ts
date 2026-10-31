@@ -74,7 +74,7 @@ function validInput(): PolicyInput {
     lock: "",
     manifests,
     rootManifest: {
-      devEngines: { runtime: { version: "24.22.2" } },
+      devEngines: { runtime: { version: "26.13.0" } },
       packageManager: PACKAGE_MANAGER,
     },
     workspace: {
@@ -221,8 +221,8 @@ describe("dependency policy validation", () => {
     },
     {
       name: "a missing held dependency",
-      change: (input) => withoutDependency(input, "react"),
-      problem: "react has 0 declarations; expected at least 1.",
+      change: (input) => withoutDependency(input, "better-auth"),
+      problem: "better-auth has 0 declarations; expected at least 1.",
     },
     {
       name: "an obsolete Next package",
@@ -400,7 +400,7 @@ describe("dependency policy validation", () => {
           devEngines: { runtime: { version: "24.20.0" } },
         },
       }),
-      problem: "The managed Node runtime must be 24.22.2.",
+      problem: "The managed Node runtime must be 26.13.0.",
     },
   ])("reports $name", ({ change, problem }) => {
     assert.deepStrictEqual(validateDependencyPolicy(change(validInput())), [

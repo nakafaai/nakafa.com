@@ -22,8 +22,14 @@ function subscribe(listener: () => void) {
   return () => window.clearInterval(timer);
 }
 
-/** The device time at the last tick. */
+/**
+ * The device time at the last tick. The first read, before any timer ticked, reads the clock at once, so a timer
+ * never draws the epoch for a moment before its first tick.
+ */
 function snapshot() {
+  if (current === 0) {
+    tick();
+  }
   return current;
 }
 

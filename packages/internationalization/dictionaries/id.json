@@ -11,16 +11,6 @@
     "back-to-learning": "Kembali ke Nakafa",
     "classes": "Kelas",
     "home": "Beranda",
-    "home-rooms": "Ruang ujian",
-    "home-exams": "Ujian",
-    "home-updates": "Kabar terbaru",
-    "home-updates-all": "Semua kabar",
-    "home-updates-empty": "Belum ada kabar baru.",
-    "home-classes-empty": "Kamu belum masuk kelas mana pun.",
-    "home-minutes-left": "{count} menit lagi",
-    "greeting-morning": "Selamat pagi, {name}",
-    "greeting-afternoon": "Selamat siang, {name}",
-    "greeting-evening": "Selamat malam, {name}",
     "role": {
       "admin": "Admin",
       "auditor": "Auditor",
@@ -36,7 +26,6 @@
       "teacher": "Guru"
     },
     "sign-in-title": "Masuk ke {school}",
-    "answers-saved": "Jawaban tersimpan",
     "search": "Cari",
     "search-placeholder": "Cari di sekolah...",
     "search-description": "Buka halaman, kelas, atau pengaturan sekolah.",
@@ -195,6 +184,7 @@
     "state-submitted": "Terkumpul",
     "signals": "Kejadian",
     "signals-empty": "Belum ada kejadian yang tercatat.",
+    "signals-offline-note": "Koneksi yang terputus tampil di sini, beserta lamanya, setelah siswa kembali daring.",
     "signal-exit": "Keluar dari ujian",
     "signal-return": "Kembali ke ujian",
     "screen-title": "Layar siswa",
@@ -212,6 +202,8 @@
     "signal-copy": "Menyalin teks",
     "signal-paste": "Menempel teks",
     "signal-disconnect": "Koneksi terputus",
+    "signal-offline-seconds": "Kehilangan koneksi selama {seconds} detik",
+    "signal-offline-minutes": "Kehilangan koneksi selama {minutes} menit {seconds} detik",
     "signal-secondTab": "Membuka tab kedua",
     "reason": "Alasan",
     "reason-power-outage": "Listrik padam",
@@ -266,10 +258,19 @@
     "student-unavailable": "Sesi ini tidak terbuka untukmu, jadi tanyakan guru jika kamu merasa ini keliru.",
     "finish-title": "Selesaikan ujian?",
     "finish-description": "Jawabanmu tidak bisa diubah setelah kamu selesai.",
-    "answers-in": "Jawabanmu sudah tersimpan.",
     "title": "Ujian",
     "empty": "Belum ada ujian.",
     "exams-search": "Cari ujian",
+    "mine-exam": "Ujian",
+    "mine-opens": "Dibuka",
+    "mine-status": "Status",
+    "mine-score": "Nilai",
+    "mine-open": "Sedang dibuka",
+    "mine-upcoming": "Akan datang",
+    "mine-finished": "Selesai",
+    "mine-score-waiting": "Belum dirilis",
+    "mine-empty": "Belum ada ujian",
+    "mine-empty-description": "Ujianmu tampil di sini setelah sekolah menjadwalkannya.",
     "untitled": "Ujian tanpa judul",
     "title-label": "Judul ujian",
     "unavailable": "Ujian ini tidak tersedia.",
@@ -329,7 +330,7 @@
     "release-description": "Setiap siswa melihat skor dan jawabannya sendiri setelah kamu merilisnya.",
     "release-action": "Rilis hasil",
     "released": "Dirilis",
-    "student-results-title": "Hasilmu",
+    "student-finished": "Kamu sudah menyelesaikan ujian ini.",
     "student-score": "{points} dari {total} poin",
     "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
     "student-answer": "Jawabanmu: {answer}",
@@ -419,6 +420,8 @@
     "student-scheduled-footer": "Kolom token terbuka bersama sesi.",
     "student-back-home": "Kembali ke beranda",
     "seat-last-activity": "Aktivitas terakhir {time}.",
+    "seat-away-seconds": "Keluar selama {seconds} detik.",
+    "seat-away-minutes": "Keluar selama {minutes} menit {seconds} detik.",
     "title-needed": "Ujian perlu judul sebelum dapat dibuat.",
     "title-too-long": "Judul paling banyak {count} karakter.",
     "no-unit-description": "Setiap ujian berada di dalam unit, jadi tambahkan atau pulihkan unit di pengaturan dulu.",
@@ -645,9 +648,8 @@
     "cohort-status": "Status",
     "cohort-active": "Aktif",
     "cohort-archived": "Diarsipkan",
-    "cohort-rename": "Ganti nama",
-    "cohort-rename-description": "Siswa, guru, dan nilai di kelas ini tetap sama.",
-    "cohort-rename-save": "Simpan",
+    "cohort-edit-description": "Siswa, guru, dan nilai di kelas ini tetap sama.",
+    "cohort-edit-save": "Simpan",
     "cohort-archive": "Arsipkan",
     "cohort-add-footer": "Rombel baru langsung aktif.",
     "cohorts-empty": "Belum ada rombel.",
@@ -763,7 +765,10 @@
         "created": "Rombel ditambahkan",
         "renamed": "Rombel diganti nama",
         "archived": "Rombel diarsipkan",
-        "restored": "Rombel dipulihkan"
+        "restored": "Rombel dipulihkan",
+        "grade": {
+          "set": "Tingkat rombel diubah"
+        }
       },
       "connection": {
         "connected": "Koneksi ditambahkan",
@@ -864,6 +869,12 @@
         },
         "npsn": {
           "set": "NPSN diubah"
+        },
+        "name": {
+          "set": "Unit diganti nama"
+        },
+        "level": {
+          "set": "Jenjang unit diubah"
         }
       },
       "visit": {
@@ -885,6 +896,9 @@
       "roster": {
         "set": "Data siswa diperbarui",
         "imported": "Siswa diimpor dari Dapodik"
+      },
+      "login": {
+        "renamed": "Nama login diubah"
       }
     },
     "role-description": {
@@ -912,7 +926,7 @@
     "login-person": "Orang",
     "login-issued": "Diterbitkan",
     "logins-empty": "Belum ada kartu masuk yang diterbitkan.",
-    "logins-search": "Cari nama masuk",
+    "logins-search": "Cari nama masuk atau siswa",
     "members-empty": "Belum ada anggota yang bergabung.",
     "members-empty-description": "Tambahkan guru atau admin di halaman undangan, atau tambahkan siswa.",
     "members-search": "Cari nama",
@@ -929,6 +943,12 @@
     "member-remove-title": "Keluarkan anggota ini?",
     "member-remove-description": "Orang ini keluar dari sekolah, dan perannya berakhir.",
     "member-remove-confirm": "Keluarkan",
+    "person-rename": "Ganti nama",
+    "person-rename-description": "Nama baru tampil di setiap daftar sekolah yang memuat orang ini.",
+    "person-rename-save": "Simpan",
+    "login-rename": "Ganti nama login",
+    "login-rename-description": "Siswa masuk dengan nama baru dan kata sandi yang sama.",
+    "login-rename-save": "Simpan",
     "invite-action": "Undang",
     "invites-footer": "Undang orang yang belum punya akun.",
     "invite-dialog-title": "Undang orang",
@@ -996,7 +1016,8 @@
     "student-add-footer": "Cetak kartu sebelum menutupnya, karena kode hanya ditampilkan sekali.",
     "student-add-submit": "Tambah siswa",
     "invites-empty": "Belum ada undangan yang menunggu.",
-    "invites-search": "Cari yang diundang",
+    "invites-search": "Cari nama atau email",
+    "units-search": "Cari sekolah atau NPSN",
     "cohort-restore": "Pulihkan",
     "period-restore": "Pulihkan",
     "no-unit-title": "Belum ada unit aktif",
@@ -1624,7 +1645,13 @@
     "push-on": "Aktifkan",
     "push-home-screen": "Di iPhone dan iPad, notifikasi hanya datang dari Layar Utama: ketuk Bagikan, lalu Tambah ke Layar Utama, dan buka Nakafa dari ikonnya.",
     "assignment-published": "{actor} memberi tugas baru di {className}.",
-    "assignment-published-gone": "Tugas yang sudah tidak ada."
+    "assignment-published-gone": "Tugas yang sudah tidak ada.",
+    "exam-starting": "{examTitle} dibuka pukul {opensAt, time, short} di {room}.",
+    "exam-reminder": "{student} mengikuti {examTitle} pada {opensAt, date, long} pukul {opensAt, time, short} di {room}.",
+    "exam-gone": "Ujian yang tidak lagi menunggu dibuka.",
+    "grade-released": "Nilaimu di {className} sudah dirilis.",
+    "grade-released-child": "Nilai {student} di {className} sudah dirilis.",
+    "grade-gone": "Nilai yang tidak lagi dirilis."
   },
   "Posts": {
     "placeholder": "Apa yang baru?",
@@ -1758,6 +1785,9 @@
     "status-in-progress": "Sedang dikerjakan",
     "status-completed": "Selesai",
     "status-expired": "Waktu habis",
+    "finished-title": "Try out selesai",
+    "finished-description": "Kamu sudah menyelesaikan percobaan ini, dan skornya tersimpan.",
+    "finished-expired-description": "Waktu habis, jadi percobaan ini berakhir dengan jawaban yang sudah kamu isi.",
     "remaining-time-label": "Sisa waktu untuk menyelesaikan set ini",
     "time-days-short": "hari",
     "time-hours-short": "jam",
@@ -1931,7 +1961,6 @@
     "picture-animal": "Hewan",
     "picture-photo": "Foto Google",
     "picture-footer-animal": "Setiap acak memberi hewan lain.",
-    "picture-footer-photo": "Foto Google-mu tampil di mana pun namamu tampil.",
     "animal-shuffle": "Acak hewan",
     "username": "Username",
     "username-placeholder": "budi_santoso",
