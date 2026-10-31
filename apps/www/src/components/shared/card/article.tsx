@@ -43,7 +43,7 @@ export function CardArticle({ article }: Props) {
             </h2>
           </CardTitle>
         </CardHeader>
-        <CardFooter className="flex items-center justify-between">
+        <CardFooter className="flex items-center justify-between gap-2">
           <time
             className="text-muted-foreground text-sm"
             dateTime={article.datePublished}

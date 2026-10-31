@@ -56,7 +56,7 @@ export function RosterGradesExport() {
             ) : (
               <HugeIcons icon={FileExportIcon} />
             )}
-            {t("export-grades")}
+            <span className="max-sm:sr-only">{t("export-grades")}</span>
           </Button>
         }
       />

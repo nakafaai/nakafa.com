@@ -201,7 +201,7 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
   );
 
   return (
-    <Field orientation="horizontal">
+    <Field orientation="responsive">
       <FieldContent>
         <FieldLabel htmlFor={id}>{t("policy-nina-credits")}</FieldLabel>
         <FieldDescription>
