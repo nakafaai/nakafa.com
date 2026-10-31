@@ -1291,7 +1291,21 @@
     "discussion-rename": "Diskussion umbenennen",
     "discussion-rename-description": "Alle in der Klasse sehen den neuen Titel.",
     "library-edit": "Bearbeiten",
-    "library-edit-description": "Die Klasse sieht die Änderung sofort."
+    "library-edit-description": "Die Klasse sieht die Änderung sofort.",
+    "library-no-folder": "Kein Ordner",
+    "library-folder": "Ordner",
+    "library-new-folder": "Neuer Ordner",
+    "library-new-folder-description": "Halte die Dateien der Klasse zusammen, etwa nach Kapiteln.",
+    "library-folder-name": "Name",
+    "library-folder-placeholder": "Kapitel 1",
+    "library-folder-create": "Erstellen",
+    "library-folder-rename": "Umbenennen",
+    "library-folder-rename-description": "Die Klasse sieht den neuen Namen sofort.",
+    "library-folder-remove": "Löschen",
+    "library-folder-remove-title": "Diesen Ordner löschen",
+    "library-folder-remove-description": "Seine Dateien bleiben in der Bibliothek.",
+    "library-folder-empty-description": "Die Dateien und Links dieses Ordners erscheinen hier, die neuesten zuerst.",
+    "library-kind-folder": "Ordner"
   },
   "SchoolGrades": {
     "student": "Schüler",

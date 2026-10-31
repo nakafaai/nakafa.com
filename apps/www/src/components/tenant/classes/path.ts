@@ -6,6 +6,7 @@ import type { ClassView } from "@/components/tenant/classes/view";
 import {
   schoolClassChannelTarget,
   schoolClassForumTarget,
+  schoolClassLibraryTarget,
   schoolClassTarget,
   schoolClassTasksTarget,
 } from "@/lib/routing/school/target";
@@ -33,7 +34,7 @@ const PathChannel = Schema.Struct({
  * channel and the discussion's number and title on a discussion; the class and the tasks on the task
  * list; the class and the library on the library; the tasks and the task's title on a task; and the class and the gradebook on
  * the gradebook. A name that is not known yet is left out, so
- * the path never shows a placeholder. `leaf` is the last name: the discussion's or the task's.
+ * the path never shows a placeholder. `leaf` is the last name: the discussion's, the folder's or the task's.
  */
 export const classPath = (
   view: typeof ClassView.Type,
@@ -80,6 +81,14 @@ export const classPath = (
       ...last,
     ],
     library: () => [klass, { label: root.library }],
+    folder: () => [
+      klass,
+      {
+        label: root.library,
+        target: schoolClassLibraryTarget(root.slug, root.classSlug),
+      },
+      ...last,
+    ],
     grades: () => [klass, { label: root.grades }],
     tasks: () => [klass, { label: root.tasks }],
     task: () => [

@@ -43,6 +43,12 @@ export class ClassLimit extends Schema.TaggedError<ClassLimit>()(
   refusal("CLASS_LIMIT", "This cohort holds the most classes it can.")
 ) {}
 
+/** Adding a folder to a class library that already holds the most folders it can. */
+export class FolderLimit extends Schema.TaggedError<FolderLimit>()(
+  "FolderLimit",
+  refusal("FOLDER_LIMIT", "This library holds the most folders it can.")
+) {}
+
 /** Teaching a class to a Person who already teaches the most classes of its period. */
 export class PersonClassLimit extends Schema.TaggedError<PersonClassLimit>()(
   "PersonClassLimit",

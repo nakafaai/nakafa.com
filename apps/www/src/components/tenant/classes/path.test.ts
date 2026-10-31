@@ -46,6 +46,30 @@ describe("class page path", () => {
     );
   });
 
+  it("names a folder after a link to the library", () => {
+    const folder = classPath(
+      {
+        _tag: "folder",
+        folderId: Schema.decodeUnknownSync(Id("classroomFolders"))("bab-1"),
+      },
+      root,
+      none,
+      Option.some("Bab 1")
+    );
+    expect(Arr.map(folder, (item) => item.label)).toEqual([
+      "Fisika X-1",
+      "Library",
+      "Bab 1",
+    ]);
+    expect(Arr.get(folder, 1).pipe(Option.map((item) => item.target))).toEqual(
+      Option.some(
+        expect.objectContaining({
+          to: "/school/$slug/classes/$classSlug/library",
+        })
+      )
+    );
+  });
+
   it("names the library and the gradebook after the class", () => {
     expect(
       Arr.map(

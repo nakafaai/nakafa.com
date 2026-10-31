@@ -63,7 +63,9 @@ export function ClassTabs({
         </Link>
         <Link
           activeOptions={EXACT_ACTIVE_OPTIONS}
-          className={classTab({ active: tab === "library" })}
+          className={classTab({
+            active: tab === "library" || tab === "folder",
+          })}
           params={params}
           to="/school/$slug/classes/$classSlug/library"
         >
