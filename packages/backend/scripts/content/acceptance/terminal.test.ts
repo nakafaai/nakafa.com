@@ -40,7 +40,7 @@ describe("acceptance terminal", () => {
     () =>
       Effect.gen(function* () {
         const previous = process.listeners("SIGHUP");
-        const interrupt = vi.spyOn(process, "emit").mockReturnValue(process);
+        const interrupt = vi.spyOn(process, "emit").mockReturnValue(true);
         yield* withTerminal(
           Effect.gen(function* () {
             yield* Effect.addFinalizer(() =>

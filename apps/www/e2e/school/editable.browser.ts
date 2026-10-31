@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { giveRole } from "@/e2e/support/roles";
 import {
   createSchool,
@@ -48,6 +49,7 @@ for (const viewport of [
     const context = await browser.newContext({ viewport });
     await Effect.runPromise(signInOwner(context, school.slug, address("/")));
     const page = await context.newPage();
+    const changes = await Effect.runPromise(trackChanges(page, []));
 
     // The Integration role belongs to a client, so a person is never offered it.
     await page.goto(address("/settings/roles"));
@@ -123,11 +125,14 @@ for (const viewport of [
     await expect(
       page.getByRole("combobox", { name: "Currency" })
     ).toContainText("SGD");
+    const sentBefore = changes.sent;
     await page
       .locator('[data-slot="card"]')
       .filter({ hasText: "Country and currency" })
       .getByRole("button", { name: "Save" })
       .click();
+    // The reload waits for the server, since it would cancel a save still on its way.
+    await saved(changes, sentBefore);
     await page.reload();
     await expect(page.getByRole("combobox", { name: "Country" })).toContainText(
       "Singapore",
