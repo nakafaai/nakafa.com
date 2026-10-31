@@ -8,6 +8,7 @@ import {
   ImportRow,
   ImportSummary,
   RosterLine,
+  SourcedImport,
   SourcedRow,
 } from "@repo/backend/confect/roster/schema";
 import { PeriodAccess } from "@repo/backend/confect/tenancy/access";
@@ -41,6 +42,7 @@ export default GroupSpec.make()
         periodId: Id("tenantPeriods"),
         rows: Schema.Array(SourcedRow).check(Schema.isMaxLength(IMPORT_BATCH)),
         slug: TenantSlug,
+        source: SourcedImport,
       }),
       returns: () => ImportSummary,
       error: () => AccessDenied,

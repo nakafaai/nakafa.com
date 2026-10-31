@@ -56,7 +56,11 @@ describe("roster/imports applySourced", () => {
 
         const first = yield* fixture
           .as("counselor")
-          .mutation(applySourced, { ...names, rows: [row] });
+          .mutation(applySourced, {
+            ...names,
+            rows: [row],
+            source: "oneroster",
+          });
         const second = yield* fixture.as("counselor").mutation(applySourced, {
           ...names,
           rows: [{ ...row, name: "Raka P." }],
@@ -101,6 +105,7 @@ describe("roster/imports applySourced", () => {
         yield* fixture.as("counselor").mutation(applySourced, {
           ...names,
           rows: [{ name: "Raka Pratama", sourcedId: "user-1" }],
+          source: "oneroster",
         });
         const [person] = yield* fixture.run(peopleNamed("Raka Pratama"));
 
@@ -121,6 +126,7 @@ describe("roster/imports applySourced", () => {
         const summary = yield* fixture.as("counselor").mutation(applySourced, {
           ...names,
           rows: [{ name: "Raka Pratama", sourcedId: "user-1" }],
+          source: "oneroster",
         });
         expect(summary).toEqual({ added: 0, changed: 1, skipped: 0 });
       })
@@ -135,6 +141,7 @@ describe("roster/imports applySourced", () => {
       yield* fixture.as("counselor").mutation(applySourced, {
         ...names,
         rows: [{ name: "Raka Pratama", sourcedId: "user-1" }],
+        source: "oneroster",
       });
       const [person] = yield* fixture.run(peopleNamed("Raka Pratama"));
       yield* fixture.run(
@@ -151,6 +158,7 @@ describe("roster/imports applySourced", () => {
       const summary = yield* fixture.as("counselor").mutation(applySourced, {
         ...names,
         rows: [{ name: "Raka Pratama", sourcedId: "user-1" }],
+        source: "oneroster",
       });
 
       expect(summary).toEqual({ added: 0, changed: 0, skipped: 1 });

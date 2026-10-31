@@ -3388,6 +3388,7 @@
     }
   },
   "Connectors": {
+    "course-import": "Impor siswa",
     "drive": "Google Drive",
     "drive-description": "File yang kamu pilih di Google Drive, untuk catatan dan impor.",
     "calendar": "Google Calendar",

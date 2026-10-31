@@ -3388,6 +3388,7 @@
     }
   },
   "Connectors": {
+    "course-import": "Import students",
     "drive": "Google Drive",
     "drive-description": "Files you pick in Google Drive, for your notes and imports.",
     "calendar": "Google Calendar",

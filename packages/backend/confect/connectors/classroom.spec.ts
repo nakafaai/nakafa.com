@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/confect/connectors/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { ImportSummary } from "@repo/backend/confect/roster/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
@@ -33,8 +34,10 @@ const ImportTarget = Schema.Struct({
  * courses that the school's Classroom connection teaches, with their number of
  * students and the class each is linked to, beside the school's active classes, and links a course to a class or
  * removes the link. A sync then imports each linked course's published
- * coursework with a deadline into its class's tasks, once each. Students are not
- * matched until the member ID gate of ADR 0015 passes.
+ * coursework with a deadline into its class's tasks, once each. An Admin imports a
+ * linked course's students into its class group, each by Google's user ID. They stay
+ * unclaimed, because a student is not matched to an account until the member ID gate
+ * of ADR 0015 passes.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -65,6 +68,26 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([AuthFailure, AccessDenied, ConnectorOff, GoogleFailed]),
     }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicAction({
+      name: "importRoster",
+      args: () => ({ courseId: Schema.NonEmptyString, slug: TenantSlug }),
+      returns: () => ImportSummary,
+      error: () =>
+        Schema.Union([AuthFailure, AccessDenied, ConnectorOff, GoogleFailed]),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "place",
+      args: () => ({ classId: Id("classes") }),
+      returns: () =>
+        Schema.Struct({
+          cohortName: Schema.String,
+          periodId: Id("tenantPeriods"),
+        }),
+    })
   )
   .addFunction(
     FunctionSpec.publicMutation({

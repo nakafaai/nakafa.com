@@ -513,6 +513,7 @@ section says why.
 | A standalone workpool for connectors, and the cap on the pages of each school in it | The cap is built: a sweep every 10 minutes takes at most 50 due connections and at most 5 of one owner, leases each for 15 minutes, and schedules its run 2 seconds apart; a source that changed is read again in 30 minutes, a quiet one in 3 hours. The runs use the scheduler until the pool is declared, which needs the component's code generated against a deployment. |
 | Workspace guide in the setup flow | Planned |
 | Dapodik XLSX import and export (`confect/roster`, `components/tenant/roster`), read and written in the browser; see the amendment above | Built |
+| The roster import of a linked Classroom course (`connectors/classroom:importRoster`), through the roster's own apply: each student by Google's user ID, placed in the class group of the linked class and left unclaimed. The match to an account waits for the Classroom member ID gate. | Built |
 | The OneRoster CSV import, read and written in the browser as the Dapodik file is, so no file reaches the server | Built |
 
 ## References

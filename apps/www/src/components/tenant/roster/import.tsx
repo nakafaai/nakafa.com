@@ -127,7 +127,12 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
                 Arr.chunksOf(sourcedOf(rows), IMPORT_BATCH),
                 (batch) =>
                   Effect.tryPromise(() =>
-                    applySourced({ periodId, rows: batch, slug })
+                    applySourced({
+                      periodId,
+                      rows: batch,
+                      slug,
+                      source: "oneroster",
+                    })
                   ).pipe(Effect.flatMap(Effect.fromResult)),
                 { discard: true }
               )

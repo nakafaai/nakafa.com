@@ -25,7 +25,7 @@ import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
 /** Journals one batch on the period as `roster.imported` with its counts, and answers them. */
 const journalBatch = Effect.fn("roster.imports.journal")(function* (
-  source: "dapodik" | "oneroster",
+  source: "classroom" | "dapodik" | "oneroster",
   outcomes: readonly string[]
 ) {
   const { person: actor } = yield* Member;
@@ -65,21 +65,21 @@ const apply = FunctionImpl.make(
 );
 
 /**
- * Applies one batch of OneRoster rows in one transaction: a retry adds no duplicate, because
- * each source identity names its student.
+ * Applies one batch of OneRoster or Classroom rows in one transaction: a retry adds no
+ * duplicate, because each source identity names its student.
  */
 const applySourced = FunctionImpl.make(
   databaseSchema,
   spec,
   "applySourced",
-  Effect.fn("roster.imports.applySourced")(function* ({ rows }) {
+  Effect.fn("roster.imports.applySourced")(function* ({ rows, source }) {
     const { person: actor } = yield* Member;
     const period = yield* Period;
     const keys = yield* schoolKeys(period.tenantId);
     const outcomes = yield* Effect.forEach(rows, (row) =>
       applySourcedRow(personActor(actor), period, keys, row)
     );
-    return yield* journalBatch("oneroster", outcomes);
+    return yield* journalBatch(source, outcomes);
   })
 );
 

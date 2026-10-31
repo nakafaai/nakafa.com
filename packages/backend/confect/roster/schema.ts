@@ -73,6 +73,9 @@ export const SourcedRow = Schema.Struct({
   sourcedId: SourcedId,
 });
 
+/** The sources whose rows carry their own identity: a OneRoster file, and a Classroom course. */
+export const SourcedImport = Schema.Literals(["classroom", "oneroster"]);
+
 /** What one batch did: the students it added, the ones it changed, and the rows it skipped. */
 export const ImportSummary = Schema.Struct({
   added: Schema.Finite,
