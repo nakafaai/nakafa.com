@@ -209,7 +209,7 @@ describe("material lesson navigation", () => {
     expect(
       readMaterialNavigation(
         previewPage,
-        publishedContext(previewProjection.parentPath)
+        toMaterialPlacement(publishedContext(previewProjection.parentPath))
       )
     ).toMatchObject({
       context: undefined,
@@ -224,7 +224,7 @@ describe("material lesson navigation", () => {
     expect(
       readMaterialNavigation(
         publishedPage,
-        publishedContext(previewProjection.parentPath)
+        toMaterialPlacement(publishedContext(previewProjection.parentPath))
       )
     ).toMatchObject({
       context,
@@ -303,7 +303,12 @@ describe("material lesson navigation", () => {
       readMaterialPath(
         readMaterialNavigation(publishedPage, {
           ...placement,
-          trail: [{ label: "Nowhere", publicPath: "" }],
+          trail: [
+            {
+              label: "Nowhere",
+              publicPath: PublicPathSchema.make("articles/too/deep/path"),
+            },
+          ],
         }),
         "Function concept"
       )
@@ -314,7 +319,7 @@ describe("material lesson navigation", () => {
     expect(
       readMaterialNavigation(
         publishedPage,
-        publishedContext(previewProjection.publicPath)
+        toMaterialPlacement(publishedContext(previewProjection.publicPath))
       )
     ).toMatchObject({
       pagination: {
@@ -360,7 +365,7 @@ describe("material lesson navigation", () => {
       expect(
         readMaterialNavigation(
           { ...publishedPage, route, siblings: [route, next] },
-          verified
+          toMaterialPlacement(verified)
         )
       ).toMatchObject({
         context,
