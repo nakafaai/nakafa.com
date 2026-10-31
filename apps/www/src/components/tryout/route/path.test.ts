@@ -3,6 +3,7 @@ import { Option } from "effect";
 import {
   getTryoutAttemptAuthHref,
   getTryoutAttemptHref,
+  getTryoutAttemptLock,
   getTryoutCrumbTarget,
   getTryoutHref,
   getTryoutPageHref,
@@ -28,13 +29,35 @@ describe("tryout route paths", () => {
     expect(getTryoutPublicPathHref("try-out/indonesia/tka")).toBe(
       "/try-out/indonesia/tka"
     );
+    expect(getTryoutAttemptLock("attempt/id", 42)).toEqual({
+      name: "attemptId",
+      until: 42,
+      value: "attempt/id",
+    });
     expect(getTryoutAttemptHref("try-out/id/set-1/section", "attempt/id")).toBe(
       "/try-out/id/set-1/section?attemptId=attempt%2Fid"
     );
     expect(
+      getTryoutAttemptHref(
+        "try-out/id/set-1/section",
+        "attempt/id",
+        Option.some("single")
+      )
+    ).toBe("/try-out/id/set-1/section?attemptId=attempt%2Fid&view=single");
+    expect(
       getTryoutAttemptAuthHref("id", "try-out/id/set-1/section", "attempt/id")
     ).toBe(
       "/id/auth?redirect=%2Fid%2Ftry-out%2Fid%2Fset-1%2Fsection%3FattemptId%3Dattempt%252Fid"
+    );
+    expect(
+      getTryoutAttemptAuthHref(
+        "id",
+        "try-out/id/set-1/section",
+        "attempt/id",
+        Option.some("single")
+      )
+    ).toBe(
+      "/id/auth?redirect=%2Fid%2Ftry-out%2Fid%2Fset-1%2Fsection%3FattemptId%3Dattempt%252Fid%26view%3Dsingle"
     );
   });
 

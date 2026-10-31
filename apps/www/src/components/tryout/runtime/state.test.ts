@@ -4,6 +4,7 @@ import {
   getTryoutRuntimeState,
   isTryoutRuntimeRunning,
   isTryoutStateLive,
+  selectActionAttempt,
 } from "@/components/tryout/runtime/state";
 
 const NOW = 1000;
@@ -35,6 +36,45 @@ describe("getActiveTryoutAttempt", () => {
     expect(
       getActiveTryoutAttempt(createAttempt("in-progress", NOW), NOW)
     ).toBeNull();
+  });
+});
+
+describe("selectActionAttempt", () => {
+  const running = { expiresAt: NOW + 1, status: "in-progress" } as const;
+  const finished = { expiresAt: NOW - 1, status: "completed" } as const;
+
+  it("holds no attempt while the learner read is pending", () => {
+    expect(
+      selectActionAttempt({
+        activeAttempt: running,
+        currentAttempt: running,
+        pending: true,
+      })
+    ).toBeUndefined();
+  });
+
+  it("reads an attempt whose time ran out here as none, and any other as the page's own", () => {
+    expect(
+      selectActionAttempt({
+        activeAttempt: null,
+        currentAttempt: running,
+        pending: false,
+      })
+    ).toBeNull();
+    expect(
+      selectActionAttempt({
+        activeAttempt: running,
+        currentAttempt: running,
+        pending: false,
+      })
+    ).toBe(running);
+    expect(
+      selectActionAttempt({
+        activeAttempt: null,
+        currentAttempt: finished,
+        pending: false,
+      })
+    ).toBe(finished);
   });
 });
 

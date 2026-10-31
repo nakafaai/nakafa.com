@@ -4,17 +4,12 @@ import {
   CodeBlockSource,
 } from "@repo/design-system/components/ai/code-block";
 import { CodeBlockContent } from "@repo/design-system/components/code-block/content";
-import { codeBlockDarkModeVariants } from "@repo/design-system/components/code-block/variants";
+import { codeBodyVariants } from "@repo/design-system/components/code-block/variants";
 import { SimpleIcon } from "@repo/design-system/components/icons/simple";
 import { CodeFence } from "@repo/design-system/components/markdown/react/fence";
 import { useFenceSource } from "@repo/design-system/components/markdown/react/source";
-import {
-  codeFenceBodyVariants,
-  codeFencePreVariants,
-} from "@repo/design-system/components/markdown/react/variants";
 import { DEFAULT_CODE_THEMES } from "@repo/design-system/lib/code-block/highlight";
 import { languageIconMap } from "@repo/design-system/lib/code-block/icons";
-import { cn } from "cn";
 
 /**
  * Renders one fenced response block, highlighted, with the shared code controls.
@@ -37,16 +32,11 @@ export function MarkdownCodeBlock() {
         language={language}
       >
         <CodeBlockContent
-          className={cn(
-            codeBlockDarkModeVariants(),
-            codeFenceBodyVariants(),
-            className
-          )}
+          className={codeBodyVariants({ className })}
           data-code-block
           data-language={language}
           data-nakafa="code-block"
           language={language}
-          preClassName={codeFencePreVariants()}
           themes={DEFAULT_CODE_THEMES}
           transparentBackground
         >

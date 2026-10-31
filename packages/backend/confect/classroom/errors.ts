@@ -85,6 +85,15 @@ export class TaskClosed extends Schema.TaggedError<TaskClosed>()(
   refusal("TASK_CLOSED", "This task closed at its deadline.")
 ) {}
 
+/** A change of a task's points once work is handed in, whose points the students already work toward. */
+export class TaskPointsFixed extends Schema.TaggedError<TaskPointsFixed>()(
+  "TaskPointsFixed",
+  refusal(
+    "TASK_POINTS_FIXED",
+    "This task's points are fixed once work is handed in."
+  )
+) {}
+
 /** Points beyond the points a task is worth. */
 export class ScoreOutOfRange extends Schema.TaggedError<ScoreOutOfRange>()(
   "ScoreOutOfRange",

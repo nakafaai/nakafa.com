@@ -1,18 +1,14 @@
 "use client";
 
 import { CodeBlockText } from "@repo/design-system/components/code-block/text";
+import { codeBodyVariants } from "@repo/design-system/components/code-block/variants";
 import { DiagramFrame } from "@repo/design-system/components/markdown/diagram";
 import { CodeFence } from "@repo/design-system/components/markdown/react/fence";
 import {
   FenceSourceContext,
   useFenceSource,
 } from "@repo/design-system/components/markdown/react/source";
-import {
-  codeFenceBodyVariants,
-  codeFencePreVariants,
-} from "@repo/design-system/components/markdown/react/variants";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { cn } from "cn";
 import { type ComponentProps, lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 
@@ -43,10 +39,7 @@ function CodeBlockPlaceholder() {
 
   return (
     <CodeFence language={language}>
-      <CodeBlockText
-        className={cn(codeFenceBodyVariants(), className)}
-        preClassName={codeFencePreVariants()}
-      >
+      <CodeBlockText className={codeBodyVariants({ className })}>
         {code}
       </CodeBlockText>
     </CodeFence>

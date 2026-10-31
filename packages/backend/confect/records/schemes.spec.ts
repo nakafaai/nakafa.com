@@ -13,8 +13,9 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
 /**
- * The grading scheme versions of a school. An Admin stores a version that takes
- * effect after the newest one, and each grade keeps the version that judged it.
+ * The grading scheme versions of a school. An Admin lists them, the newest first,
+ * and stores a version that takes effect after the newest one, and each grade keeps
+ * the version that judged it.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -31,4 +32,12 @@ export default GroupSpec.make()
       returns: () => SchemeView,
       error: () => Schema.Union([AccessDenied, SchemeNotLater]),
     }).middleware(TenantAccess, { action: "scheme.manage" })
+  )
+  .addFunction(
+    FunctionSpec.publicPaginatedQuery({
+      name: "list",
+      args: () => ({ slug: TenantSlug }),
+      item: () => SchemeView,
+      error: () => AccessDenied,
+    }).middleware(TenantAccess, { action: "scheme.view" })
   );

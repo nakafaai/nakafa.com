@@ -69,6 +69,7 @@ describe("page head", () => {
     const social = createSeoHead(facts).social;
     expect(social["og:url"]).toBe("https://nakafa.com/en/subjects/aljabar");
     expect(social["og:site_name"]).toBe("Nakafa");
+    expect(social["og:locale"]).toBe("en_US");
     expect(social["twitter:card"]).toBe("summary_large_image");
   });
 

@@ -20,6 +20,12 @@ const NESTED = answerTurn({
   suggestions: GERMAN_SUGGESTIONS,
 });
 const TABLE = answerTurn({ markdown: ANSWER.table, order: 4 });
+// A table under a sentence, in the last answer, so the answer's actions come under it.
+const LED_TABLE = answerTurn({
+  markdown:
+    "Titik didih dua zat:\n\n| Zat | Titik didih |\n| --- | --- |\n| Air | 100 °C |\n| Etanol | 78 °C |",
+  order: 5,
+});
 
 /** How far each element that matches `selector` ends past the right edge of the row, and how many match. */
 const reachBeyond = (row: Locator, selector: string) =>
@@ -119,6 +125,34 @@ const keepsLongContentInTheColumn = async (page: Page) => {
   }
 };
 
+/**
+ * A table's frame ends with its last row, above the answer's actions. The scroll
+ * area under the frame fills its parent by default, and a frame that filled the
+ * answer ran past its rows and under the actions.
+ */
+const keepsTableFrameToItsRows = async (page: Page) => {
+  const edges = await (await drawnRow(page, LED_TABLE.answer)).evaluate(
+    (row) => ({
+      actions:
+        row
+          .querySelector('[data-slot="message-footer"]')
+          ?.getBoundingClientRect().top ?? null,
+      frame:
+        row
+          .querySelector('[data-slot="table-container"]')
+          ?.getBoundingClientRect().bottom ?? null,
+      rows:
+        row.querySelector('[data-slot="table"]')?.getBoundingClientRect()
+          .bottom ?? null,
+    })
+  );
+
+  expect(edges.actions).not.toBeNull();
+  // The frame's border is one pixel under the last row.
+  expect.soft((edges.frame ?? 0) - (edges.rows ?? 0)).toBeLessThanOrEqual(1.5);
+  expect.soft(edges.frame ?? 0).toBeLessThanOrEqual(edges.actions ?? 0);
+};
+
 test.describe("Nina's answer", () => {
   test.describe.configure({ timeout: 240_000 });
 
@@ -132,13 +166,15 @@ test.describe("Nina's answer", () => {
         yield* openServedChat(
           page,
           origin,
-          chatOf([CODE, LINK, NESTED, TABLE])
+          chatOf([CODE, LINK, NESTED, TABLE, LED_TABLE])
         );
         yield* Effect.promise(async () => {
           await test.step("keep the controls of a code block inside it", () =>
             keepsCodeControlsInside(page));
           await test.step("keep long content in the column", () =>
             keepsLongContentInTheColumn(page));
+          await test.step("keep a table's frame to its rows, above the answer's actions", () =>
+            keepsTableFrameToItsRows(page));
         });
       })
     );
