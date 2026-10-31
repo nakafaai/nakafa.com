@@ -27,10 +27,42 @@ export function isStaleChunkError(error: unknown): error is Error {
   );
 }
 
+/** The start of the storage key that marks the reload of one address. */
+const RELOAD_MARK = "nakafa:stale-chunk:";
+
 /** The storage key that marks the reload of one address. */
 function markOf(address: string) {
-  return `nakafa:stale-chunk:${address}`;
+  return `${RELOAD_MARK}${address}`;
 }
+
+/**
+ * Reloads a tab that outlived a deploy, from the head, before any script can
+ * fail. A press that loads a module on intent reaches no error boundary, so
+ * `useRouteFailure` never sees it. The build's preload helper reports every
+ * failed import here, and the script shares that hook's mark, so one address
+ * reloads once between them and a chunk that is really gone reaches its error.
+ * It holds back every failure while the page goes, so none of them draws an error
+ * for a moment, and a tab without storage never reloads.
+ */
+export const STALE_CHUNK_SCRIPT = `(function () {
+  var reloading = false;
+  window.addEventListener("vite:preloadError", function (event) {
+    if (!reloading) {
+      var mark = "${RELOAD_MARK}" + location.pathname;
+      try {
+        if (sessionStorage.getItem(mark) !== null) {
+          return;
+        }
+        sessionStorage.setItem(mark, "1");
+      } catch (error) {
+        return;
+      }
+      reloading = true;
+      location.reload();
+    }
+    event.preventDefault();
+  });
+})();`;
 
 /**
  * Reloads the page once at its address for a chunk of an earlier deploy, so the

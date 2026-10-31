@@ -32,6 +32,7 @@ import {
 } from "@/components/state/localized";
 import { ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/analytics/consent/bootstrap";
 import { signedInHintScript } from "@/lib/auth/hint";
+import { STALE_CHUNK_SCRIPT } from "@/lib/chunks/stale";
 import { PLACEMENT_PREPAINT_SCRIPT } from "@/lib/content/material/prepaint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
@@ -42,7 +43,6 @@ import {
   NotFoundPageData,
   readNotFoundPageLocale,
 } from "@/lib/routing/not-found";
-import { STALE_CHUNK_SCRIPT } from "@/lib/routing/stale";
 import { SCROLL_AREA_PROPERTIES_SCRIPT } from "@/lib/scroll/prepaint";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";
 import { THEME_PREPAINT_SCRIPT } from "@/lib/theme/prepaint";
