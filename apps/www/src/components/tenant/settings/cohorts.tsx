@@ -22,10 +22,10 @@ import {
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
+import { chosenGrade } from "@/components/tenant/settings/choices";
 import {
   CohortGradeField,
   CohortNameField,
-  chosenGrade,
 } from "@/components/tenant/settings/cohort/fields";
 import {
   CohortGradeFilter,

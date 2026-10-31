@@ -21,10 +21,10 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { chosenGrade } from "@/components/tenant/settings/choices";
 import {
   CohortGradeField,
   CohortNameField,
-  chosenGrade,
 } from "@/components/tenant/settings/cohort/fields";
 import {
   archiveCohortChange,

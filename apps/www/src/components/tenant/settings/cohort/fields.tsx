@@ -1,4 +1,3 @@
-import { CohortGrade } from "@repo/backend/confect/tenancy/cohort";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
@@ -9,16 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { gradeItems } from "@/components/tenant/settings/choices";
-
-/** The school year that a grade choice holds, if the choice holds one the schema accepts. */
-export function chosenGrade(value: string | null) {
-  return value === null
-    ? Option.none()
-    : Schema.decodeOption(CohortGrade)(Number(value));
-}
 
 /** The name of a cohort, as the dialogs that add and edit one ask for it. */
 export function CohortNameField({
