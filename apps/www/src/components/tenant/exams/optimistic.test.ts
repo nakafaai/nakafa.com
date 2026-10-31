@@ -16,23 +16,18 @@ import {
   insertDraftExam,
   insertedAfter,
   type ListedExam,
-  mediaQuestion,
-  mediaUpdate,
   movedQuestion,
   moveUpdate,
   placeholderQuestion,
   pointedQuestion,
   pointsUpdate,
   type Question,
-  readingUpdate,
-  readQuestionWith,
   removedQuestion,
   removeUpdate,
   renamedExam,
   renameUpdate,
   scoredQuestion,
   scoringUpdate,
-  sharedReadings,
   templateUpdate,
 } from "@/components/tenant/exams/optimistic";
 
@@ -433,92 +428,6 @@ describe("pointedQuestion", () => {
 
     expect(pointed.questions[0]).toEqual(first);
     expect(pointed.questions[1]).toEqual({ ...second, points: 5 });
-  });
-});
-
-describe("question media", () => {
-  const video = { alt: "Video", kind: "video", video: "dQw4w9WgXcQ" } as const;
-
-  it("sets the media of one question and keeps the others", () => {
-    const changed = mediaQuestion(viewOf([first, second]), second.id, [video]);
-
-    expect(changed.questions[0]).toEqual(first);
-    expect(changed.questions[1]).toEqual({ ...second, media: [video] });
-  });
-
-  it("shows the media of a question in the store while the server saves it", () => {
-    const view = viewOf([first, second]);
-    const { localStore, setQuery } = storeHolding(Option.some(view));
-
-    mediaUpdate(localStore, {
-      examId,
-      media: [video],
-      questionId: first.id,
-      slug,
-    });
-
-    expect(setQuery).toHaveBeenCalledWith(
-      exams.exams.open,
-      { examId, slug },
-      Option.some(mediaQuestion(view, first.id, [video]))
-    );
-  });
-});
-
-describe("shared readings", () => {
-  const reading = Schema.decodeSync(Id("editorDocuments"))("reading-1");
-  const held = { ...first, reading };
-
-  it("offers each other question's reading once, by the first question that holds it", () => {
-    const third = {
-      ...second,
-      id: Schema.decodeSync(Id("examQuestions"))("q3"),
-      reading,
-    };
-
-    expect(sharedReadings([held, second, third], second.id)).toEqual([
-      { number: 1, reading, source: held.id },
-    ]);
-    expect(sharedReadings([held, second], held.id)).toEqual([]);
-  });
-
-  it("shares a reading, takes one away, and leaves a new reading to the server", () => {
-    const view = viewOf([held, second]);
-
-    expect(readQuestionWith(view, second.id, held.id).questions[1]).toEqual({
-      ...second,
-      reading,
-    });
-    expect(readQuestionWith(view, first.id, "none").questions[0]).toEqual({
-      ...held,
-      reading: null,
-    });
-    expect(readQuestionWith(view, first.id, "new")).toBe(view);
-    expect(
-      readQuestionWith(
-        view,
-        first.id,
-        Schema.decodeSync(Id("examQuestions"))("gone")
-      ).questions[0]
-    ).toEqual({ ...held, reading: null });
-  });
-
-  it("shows the reading of a question in the store while the server saves it", () => {
-    const view = viewOf([held, second]);
-    const { localStore, setQuery } = storeHolding(Option.some(view));
-
-    readingUpdate(localStore, {
-      examId,
-      questionId: first.id,
-      slug,
-      source: "none",
-    });
-
-    expect(setQuery).toHaveBeenCalledWith(
-      exams.exams.open,
-      { examId, slug },
-      Option.some(readQuestionWith(view, first.id, "none"))
-    );
   });
 });
 

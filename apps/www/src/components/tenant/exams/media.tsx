@@ -29,11 +29,9 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { PaperMedia } from "@/components/exams/sitting/media";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
+import { mediaUpdate } from "@/components/tenant/exams/attached";
 import { sendStorageFile } from "@/components/tenant/exams/image";
-import {
-  mediaUpdate,
-  type Question,
-} from "@/components/tenant/exams/optimistic";
+import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
 
 /** The audio files a teacher picks from. */
