@@ -117,37 +117,42 @@ export function PaperParts({ children }: { children: ReactNode }) {
 }
 
 /**
- * One statement or answer of a matching, as the student's paper sets it: its number or letter, its text, and
- * under a statement the select the student pairs it with, out of reach, since the key is marked in the teacher's layer.
+ * One statement or answer of a matching, as the student's paper sets it: its number or letter and its text,
+ * with what stands under it, the select of a statement.
  */
 export function PaperPart({
+  below,
   children,
   name,
-  pairs,
 }: {
+  /** What stands under the part: `PaperPairSelect` under a statement, nothing under an answer. */
+  below: ReactNode;
   children: ReactNode;
   name: string;
-  /** Whether the part is a statement, which the student pairs with an answer. */
-  pairs: boolean;
 }) {
-  const t = useTranslations("Exams");
-
   return (
     <li className="grid gap-2">
       <div className="flex min-w-0 items-start gap-3">
         <span className="font-medium tabular-nums">{name}.</span>
         <div className="min-w-0 flex-1">{children}</div>
       </div>
-      {pairs ? (
-        <div inert>
-          <Select>
-            <SelectTrigger aria-hidden className="w-32">
-              <SelectValue placeholder={t("pair-choose")} />
-            </SelectTrigger>
-          </Select>
-        </div>
-      ) : null}
+      {below}
     </li>
+  );
+}
+
+/** The select a student pairs a statement with, out of reach, since the key is marked in the teacher's layer. */
+export function PaperPairSelect() {
+  const t = useTranslations("Exams");
+
+  return (
+    <div inert>
+      <Select>
+        <SelectTrigger aria-hidden className="w-32">
+          <SelectValue placeholder={t("pair-choose")} />
+        </SelectTrigger>
+      </Select>
+    </div>
   );
 }
 

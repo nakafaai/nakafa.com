@@ -28,6 +28,7 @@ import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import {
+  PaperPairSelect,
   PaperPart,
   PaperParts,
   PaperPartText,
@@ -124,7 +125,11 @@ function PartColumn({
               ? String(index + 1)
               : optionLetter(index, script);
           return (
-            <PaperPart key={part.id} name={name} pairs={kind === "statements"}>
+            <PaperPart
+              below={kind === "statements" ? <PaperPairSelect /> : null}
+              key={part.id}
+              name={name}
+            >
               <OptionRow
                 // The editor starts from the label the server holds, or the label on screen for a new part.
                 label={Option.match(

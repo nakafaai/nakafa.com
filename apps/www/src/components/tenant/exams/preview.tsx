@@ -1,5 +1,6 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { useInViewport } from "@mantine/hooks";
+import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
 import {
@@ -35,6 +36,7 @@ import {
   PaperField,
   PaperOption,
   PaperOptions,
+  PaperPairSelect,
   PaperPairs,
   PaperPart,
   PaperParts,
@@ -198,7 +200,11 @@ function PartSketch({
     <div className="grid content-start gap-2">
       <PaperParts>
         {Arr.map(parts, (part, index) => (
-          <PaperPart key={part.id} name={letterOf(index)} pairs={pairs}>
+          <PaperPart
+            below={pairs ? <PaperPairSelect /> : null}
+            key={part.id}
+            name={letterOf(index)}
+          >
             <OptionSketch label={part.label} />
           </PaperPart>
         ))}
@@ -215,26 +221,22 @@ function PartSketch({
  * column's header, then each numbered statement with an empty mark under every column.
  */
 function TableSketch({
-  columns,
-  label,
-  statements,
+  table,
 }: {
-  columns: readonly { readonly id: string; readonly label: OptionLabel }[];
-  label: string;
-  statements: readonly { readonly id: string; readonly label: OptionLabel }[];
+  table: Extract<Interaction, { kind: "matrix" }>;
 }) {
   const t = useTranslations("Exams");
 
   return (
     <TryoutChoiceTable
-      columns={Arr.map(columns, (column) => ({
+      columns={Arr.map(table.columns, (column) => ({
         id: column.id,
         label: <OptionSketch label={column.label} />,
       }))}
       disabled
-      label={label}
+      label={table.label}
       statementLabel={t("statement-placeholder")}
-      statements={Arr.map(statements, (statement) => ({
+      statements={Arr.map(table.statements, (statement) => ({
         id: statement.id,
         label: <OptionSketch label={statement.label} />,
         marked: undefined,
@@ -314,13 +316,7 @@ export function PaperSketch({
       })}
       {Option.match(tableOf(question.answers), {
         onNone: () => null,
-        onSome: (table) => (
-          <TableSketch
-            columns={table.columns}
-            label={table.label}
-            statements={table.statements}
-          />
-        ),
+        onSome: (table) => <TableSketch table={table} />,
       })}
       <PaperField answers={question.answers} />
       {addsOption ? <OptionAddRoom /> : null}
