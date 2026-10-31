@@ -1,11 +1,11 @@
 import {
-  type DefaultRuleSchema,
-  scoreCeiling,
-} from "@nakafa/aksara-contracts/assessment/scoring";
-import {
   type JointRule,
   jointCeiling,
 } from "@nakafa/aksara-contracts/assessment/joint";
+import {
+  type DefaultRuleSchema,
+  scoreCeiling,
+} from "@nakafa/aksara-contracts/assessment/scoring";
 import type {
   QuestionPoints,
   QuestionTemplate,
@@ -99,4 +99,7 @@ export const scoringPoints = (
 export const templatePoints = (
   points: typeof QuestionPoints.Type,
   template: QuestionTemplate
-) => (template === "reason" ? Math.max(points, jointCeiling(ANSWER_AND_REASON)) : points);
+) =>
+  template === "reason"
+    ? Math.max(points, jointCeiling(ANSWER_AND_REASON))
+    : points;

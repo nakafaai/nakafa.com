@@ -232,9 +232,8 @@ only, each at its own address (ADR 0026).
   The parent enters it on the code entry page of the school host
   (`/parents`, ADR 0026), the only page that accepts it. It is the one code
   that an email carries (ADR 0027): it lives five minutes, rests as a keyed hash,
-  and is useless without that page. Signing in is not consent for a child (K2).
-  Consent is recorded with a second check, and ADR 0012 defines the verified
-  parent relation. Built on 26 October 2026 (ADR 0034, Implementation Status): the
+  and is useless without that page. A parent's consent to the link is recorded
+  with a second check, and ADR 0012 defines the verified parent relation. Built on 26 October 2026 (ADR 0034, Implementation Status): the
   school host's endpoint `/school/guardian/sign-in` redeems the code, and an
   address that the school did not link gets the same answer and no mail.
 - **Microsoft Entra ID and SAML.** These come after Google, for the schools that

@@ -1,15 +1,10 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { CreditStateError } from "@repo/backend/confect/credits/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { BioTooLong } from "@repo/backend/confect/users/bio";
 import { UserPicture } from "@repo/backend/confect/users/picture";
-import {
-  selfSelectableUserRoleValidator,
-  userRoleValidator,
-} from "@repo/backend/confect/users/schema";
+import { selfSelectableUserRoleValidator } from "@repo/backend/confect/users/schema";
 import { UsernameRejected } from "@repo/backend/confect/users/username";
 import { MascotCode } from "@repo/mascot/code";
 import { Schema } from "effect";

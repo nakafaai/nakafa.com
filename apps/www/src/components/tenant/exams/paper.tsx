@@ -244,7 +244,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
                 {question.reading === null ? null : (
                   <ReadingSketch documentId={question.reading} read={read} />
                 )}
-                <PreviewProse article doc={prompt} size="page" />
+                <PreviewProse article doc={prompt} size="paper" />
               </PaperPrompt>
               <PaperSketch question={question} withControls />
             </QuestionPaper>
@@ -259,7 +259,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
             {question.reading === null ? null : (
               <ReadingSketch documentId={question.reading} read={read} />
             )}
-            <PreviewProse article doc={prompt} size="page" />
+            <PreviewProse article doc={prompt} size="paper" />
           </PaperPrompt>
           <PaperSketch question={question} withControls />
         </QuestionPaper>
@@ -323,6 +323,7 @@ function LivePaper({
             <ExamDocument
               label={t("reading-text", { number })}
               placeholder={t("reading-placeholder")}
+              size="paper"
             />
           </ExamText>
         )}
@@ -348,6 +349,7 @@ function LivePaper({
           <ExamDocument
             label={t("question-text", { number })}
             placeholder={t("prompt-placeholder")}
+            size="paper"
           />
         </ExamText>
       </PaperPrompt>

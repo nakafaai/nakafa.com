@@ -144,7 +144,7 @@ export function ReadingSketch({
     saved: true,
   });
 
-  return <PreviewProse article doc={doc} size="page" />;
+  return <PreviewProse article doc={doc} size="paper" />;
 }
 
 /** The document a text draws while its document is not known: one empty paragraph, as an editor holds one. */
@@ -167,7 +167,7 @@ export function PreviewProse({
 }: {
   article: boolean;
   doc: Option.Option<Node>;
-  size: "line" | "page";
+  size: "line" | "page" | "paper";
 }) {
   const shown = useDeferredValue(Option.getOrElse(doc, () => EMPTY_TEXT));
   // The text is drawn again only when it changes, not on every redraw of the page.
@@ -398,7 +398,7 @@ export function QuestionPreview({
         inert
       >
         <QuestionPaper>
-          <PreviewProse article doc={doc} size="page" />
+          <PreviewProse article doc={doc} size="paper" />
           <PaperSketch question={question} />
         </QuestionPaper>
       </div>
