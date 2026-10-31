@@ -1,6 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { snapshotBatchReceiptValidator } from "@repo/backend/confect/contentRelease/spec";
+import {
+  snapshotBatchReceiptValidator,
+  snapshotFamilyValidator,
+} from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 
 /** Stores one decoded family row in its domain-owned physical table. */
@@ -9,11 +12,7 @@ export default GroupSpec.make().addFunction(
     name: "stageSnapshotBatch",
     args: () => ({
       batchIndex: Schema.Finite,
-      family: Schema.Union([
-        Schema.Literal("program"),
-        Schema.Literal("quran"),
-        Schema.Literal("tryout"),
-      ]),
+      family: snapshotFamilyValidator,
       releaseId: Schema.String,
       rowJson: Schema.mutable(Schema.Array(Schema.String)),
       snapshotId: Schema.String,

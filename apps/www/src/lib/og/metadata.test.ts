@@ -1,8 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { createTestPublication } from "@repo/backend/test/content/publication";
-import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Effect, Layer } from "effect";
 import { getMetadataFromSlug } from "@/lib/og/metadata";
@@ -76,27 +75,24 @@ beforeEach(() => {
   });
 });
 describe("current content reference metadata", () => {
-  it.effect(
-    "uses signed snapshot metadata and keeps defaults for absent routes",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestPublication(fixture.source);
-        routeMocks.read.mockImplementation(context.query);
-        expect(
-          yield* getMetadataFromSlug("en", ["try-out", "indonesia"])
-        ).toMatchObject({
-          title: "Indonesia",
-          authors: [
-            {
-              name: "Nakafa",
-            },
-          ],
-        });
-        expect(
-          yield* getMetadataFromSlug("en", ["try-out", "missing-country"])
-        ).toEqual(translatedDefaults);
-      })
+  it.effect("uses snapshot metadata and keeps defaults for absent routes", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld();
+      routeMocks.read.mockImplementation(world.visitor.query);
+      expect(
+        yield* getMetadataFromSlug("en", ["try-out", "indonesia-en"])
+      ).toMatchObject({
+        title: "Try-out",
+        authors: [
+          {
+            name: "Nakafa",
+          },
+        ],
+      });
+      expect(
+        yield* getMetadataFromSlug("en", ["try-out", "missing-country"])
+      ).toEqual(translatedDefaults);
+    })
   );
   it.effect("reads complete metadata from the current signed reference", () =>
     Effect.gen(function* () {

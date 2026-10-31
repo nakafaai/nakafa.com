@@ -147,7 +147,6 @@ describe("content publication request decoding", () => {
       "stageRecovery",
       "stageRelease",
       "stageSnapshot",
-      "stageTryoutRuntimeBundle",
       "status",
       "verify",
     ] as const) {

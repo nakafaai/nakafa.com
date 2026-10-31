@@ -29,7 +29,7 @@ import { Array as Arr, Effect, flow, MutableHashSet } from "effect";
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 type TryoutEndReason = NonNullable<TryoutAttempt["endReason"]>;
-type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
+type TryoutSection = TryoutAttempt["sections"][number];
 
 /** Creates an expired section attempt for a section the user never opened. */
 const createExpiredSectionAttempt = Effect.fn(
@@ -39,7 +39,7 @@ const createExpiredSectionAttempt = Effect.fn(
   now: number;
   responseIndex: TryoutResponseIndex;
   scoreSource: TryoutScoreSource;
-  snapshot: TryoutSectionSnapshot;
+  frozen: TryoutSection;
 }) {
   const writer = yield* DatabaseWriter;
   const score = yield* scoreTryoutSection({
@@ -47,7 +47,7 @@ const createExpiredSectionAttempt = Effect.fn(
     placements: args.responseIndex.placements,
     responses: args.responseIndex.responses,
     source: args.scoreSource,
-    totalQuestions: args.snapshot.questionCount,
+    totalQuestions: args.frozen.questionCount,
   });
   const sectionScore = yield* getSectionScoreSnapshot(score);
   yield* writer
@@ -59,13 +59,12 @@ const createExpiredSectionAttempt = Effect.fn(
       endReason: "time-expired",
       expiresAt: args.attempt.expiresAt,
       lastActivityAt: args.now,
-      sectionIdentity: args.snapshot.sectionIdentity,
-      sectionKey: args.snapshot.sectionKey,
-      sectionOrder: args.snapshot.sectionOrder,
+      sectionKey: args.frozen.sectionKey,
+      sectionOrder: args.frozen.sectionOrder,
       score: sectionScore,
       startedAt: args.attempt.expiresAt,
       status: "expired",
-      totalQuestions: args.snapshot.questionCount,
+      totalQuestions: args.frozen.questionCount,
       tryoutAttemptId: args.attempt._id,
     })
     .pipe(Effect.orDie);
@@ -84,8 +83,8 @@ const createMissingExpiredSectionAttempts = Effect.fn(
   const attemptedSectionKeys = MutableHashSet.fromIterable(
     Arr.map(args.sections, (section) => section.sectionKey)
   );
-  for (const snapshot of args.attempt.sectionSnapshots) {
-    if (MutableHashSet.has(attemptedSectionKeys, snapshot.sectionKey)) {
+  for (const frozen of args.attempt.sections) {
+    if (MutableHashSet.has(attemptedSectionKeys, frozen.sectionKey)) {
       continue;
     }
     yield* createExpiredSectionAttempt({
@@ -93,10 +92,10 @@ const createMissingExpiredSectionAttempts = Effect.fn(
       now: args.now,
       responseIndex: selectSectionResponseIndex(
         args.responseIndex,
-        snapshot.sectionIdentity
+        frozen.sectionKey
       ),
       scoreSource: args.scoreSource,
-      snapshot,
+      frozen,
     });
   }
 });
@@ -133,12 +132,12 @@ export const finalizeSectionAttempt = Effect.fn(
       );
       sectionResponseIndex = selectSectionResponseIndex(
         attemptResponseIndex,
-        args.section.sectionIdentity
+        args.section.sectionKey
       );
     } else {
       const placements = yield* loadSectionPlacements(
         args.attempt,
-        completion.snapshot
+        completion.frozen
       );
       sectionResponseIndex = yield* loadSectionResponseIndex(
         args.attempt,
@@ -148,7 +147,7 @@ export const finalizeSectionAttempt = Effect.fn(
       scoreSource = yield* loadSectionScoreSource({
         attempt: args.attempt,
         placements: sectionResponseIndex.placements,
-        sectionIdentity: args.section.sectionIdentity,
+        sectionKey: args.section.sectionKey,
       });
     }
     const finalization = yield* readSectionFinalization({
@@ -222,7 +221,7 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
         attempt: args.attempt,
         responseIndex: selectSectionResponseIndex(
           responseIndex,
-          section.sectionIdentity
+          section.sectionKey
         ),
         scoreSource,
         section,
@@ -251,7 +250,7 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
       .table("tryoutAttempts")
       .patch(args.attempt._id, {
         completedSectionKeys: Arr.map(
-          args.attempt.sectionSnapshots,
+          args.attempt.sections,
           (section) => section.sectionKey
         ),
         lastActivityAt: args.now,
@@ -261,7 +260,7 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
       attempt: {
         ...args.attempt,
         completedSectionKeys: Arr.map(
-          args.attempt.sectionSnapshots,
+          args.attempt.sections,
           (section) => section.sectionKey
         ),
         lastActivityAt: args.now,
@@ -303,11 +302,11 @@ const readSectionFinalization = Effect.fn(
 /** Selects one section from an already-validated attempt response graph. */
 function selectSectionResponseIndex(
   responseIndex: TryoutResponseIndex,
-  sectionIdentity: string
+  sectionKey: string
 ): TryoutResponseIndex {
   const placements = Arr.filter(
     responseIndex.placements,
-    (placement) => placement.sectionIdentity === sectionIdentity
+    (placement) => placement.sectionKey === sectionKey
   );
   const placementIds = MutableHashSet.fromIterable(
     Arr.map(placements, (placement) => placement._id)

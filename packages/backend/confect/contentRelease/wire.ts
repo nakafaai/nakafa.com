@@ -21,7 +21,6 @@ import {
   canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
-import type { SignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { encodeJsonText } from "@repo/utilities/json";
 
 /** Stores one signed release without introducing a second wire canonicalizer. */
@@ -72,11 +71,4 @@ export function encodeRendererJson(
   renderer: typeof RendererManifestEnvelopeSchema.Type
 ) {
   return encodeJsonText(renderer);
-}
-
-/** Stores one schema-decoded signed runtime bundle without a mirror format. */
-export function encodeTryoutRuntimeBundleJson(
-  bundle: SignedTryoutRuntimeBundle
-) {
-  return encodeJsonText(bundle);
 }

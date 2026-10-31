@@ -21,15 +21,9 @@ import {
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 
-/** One calibrated item as scoring reads it, with the placement it calibrates. */
+/** One calibrated item as scoring reads it, with the item family it calibrates. */
 const TryoutIrtItemSchema = irtScaleItemsTable.Fields.mapFields(
-  Struct.pick([
-    "difficulty",
-    "discrimination",
-    "placementIdentity",
-    "placementRowHash",
-    "scaleVersionId",
-  ])
+  Struct.pick(["difficulty", "discrimination", "family", "scaleVersionId"])
 );
 
 /** The exact IRT scale version one frozen attempt or section is scored against. */
@@ -65,16 +59,14 @@ export const loadSectionIrtSource = Effect.fn(
 )(function* (args: {
   readonly attempt: TryoutAttempt;
   readonly placements: readonly TryoutPlacement[];
-  readonly sectionIdentity: string;
+  readonly sectionKey: string;
 }) {
   const database = yield* DatabaseReader;
   const scale = yield* loadAttemptScale(args.attempt);
   const runs = yield* database
     .table("irtCalibrationRuns")
-    .index("by_scaleVersionId_and_sectionIdentity_and_startedAt", (query) =>
-      query
-        .eq("scaleVersionId", scale._id)
-        .eq("sectionIdentity", args.sectionIdentity)
+    .index("by_scaleVersionId_and_sectionKey_and_startedAt", (query) =>
+      query.eq("scaleVersionId", scale._id).eq("sectionKey", args.sectionKey)
     )
     .take(2)
     .pipe(Effect.mapError(toTryoutRuntimeError));
@@ -151,14 +143,14 @@ const loadAttemptScale = Effect.fn("tryouts.runtime.loadAttemptScale")(
   }
 );
 
-/** Verifies one frozen scale belongs to the same signed attempt snapshot. */
+/** Verifies one frozen scale belongs to the attempt's set in the snapshot it started from. */
 function scaleBelongsToAttempt(
   scale: Docs["irtScaleVersions"],
   attempt: TryoutAttempt
 ) {
   return (
     scale.setIdentity === attempt.setIdentity &&
-    scale.tryoutSnapshotId === attempt.tryoutSnapshotId
+    scale.assessmentSnapshotId === attempt.assessmentSnapshotId
   );
 }
 
@@ -172,7 +164,7 @@ const loadAttemptScaleItems = Effect.fn(
   const database = yield* DatabaseReader;
   const items = yield* database
     .table("irtScaleItems")
-    .index("by_scaleVersionId_and_placementIdentity", (query) =>
+    .index("by_scaleVersionId_and_family", (query) =>
       query.eq("scaleVersionId", scale._id)
     )
     .take(placements.length + 1)
@@ -184,7 +176,7 @@ const loadAttemptScaleItems = Effect.fn(
   });
 });
 
-/** Verifies exact one-to-one scale item coverage for immutable placements. */
+/** Verifies exact one-to-one scale item coverage for the families of immutable placements. */
 const validateIrtScaleItems = Effect.fn(
   "tryouts.runtime.validateIrtScaleItems"
 )(function* (args: {
@@ -198,45 +190,35 @@ const validateIrtScaleItems = Effect.fn(
       "IRT scale item count does not match the placement inventory."
     );
   }
-  const placementsByIdentity = MutableHashMap.empty<string, TryoutPlacement>();
+  const placementsByFamily = MutableHashMap.empty<string, TryoutPlacement>();
   for (const placement of args.placements) {
-    if (MutableHashMap.has(placementsByIdentity, placement.placementIdentity)) {
+    if (MutableHashMap.has(placementsByFamily, placement.family)) {
       return yield* new TryoutResponseIntegrityError({
         code: "TRYOUT_PLACEMENT_DUPLICATE",
-        message: "Try-out placement has a duplicate immutable identity.",
+        message: "Try-out placement repeats an item family.",
       });
     }
-    MutableHashMap.set(
-      placementsByIdentity,
-      placement.placementIdentity,
-      placement
-    );
+    MutableHashMap.set(placementsByFamily, placement.family, placement);
   }
-  const itemIdentities = MutableHashSet.empty<string>();
+  const itemFamilies = MutableHashSet.empty<string>();
   let validated: TryoutIrtSource["items"][number][] = [];
   for (const item of args.items) {
-    if (MutableHashSet.has(itemIdentities, item.placementIdentity)) {
+    if (MutableHashSet.has(itemFamilies, item.family)) {
       return yield* tryoutRuntimeError(
         "TRYOUT_IRT_ITEM_DUPLICATE",
-        "IRT scale contains a duplicate placement item."
+        "IRT scale contains a duplicate item family."
       );
     }
     const placement = Option.getOrUndefined(
-      MutableHashMap.get(placementsByIdentity, item.placementIdentity)
+      MutableHashMap.get(placementsByFamily, item.family)
     );
-    if (
-      !(
-        placement &&
-        item.scaleVersionId === args.scale._id &&
-        item.placementRowHash === placement.placementRowHash
-      )
-    ) {
+    if (!placement || item.scaleVersionId !== args.scale._id) {
       return yield* tryoutRuntimeError(
         "TRYOUT_IRT_ITEM_STALE",
-        "IRT scale item is missing or stale for one try-out question."
+        "IRT scale item is missing for one try-out question."
       );
     }
-    MutableHashSet.add(itemIdentities, item.placementIdentity);
+    MutableHashSet.add(itemFamilies, item.family);
     validated = Arr.append(validated, {
       item,
       placementId: placement._id,

@@ -9,6 +9,7 @@ import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import assessmentFlags from "./tables/assessmentFlags";
+import assessmentRows from "./tables/assessmentRows";
 import billingAccounts from "./tables/billingAccounts";
 import billingCheckouts from "./tables/billingCheckouts";
 import billingCounters from "./tables/billingCounters";
@@ -134,10 +135,7 @@ import tenantVisits from "./tables/tenantVisits";
 import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
 import tryoutAttempts from "./tables/tryoutAttempts";
-import tryoutCatalog from "./tables/tryoutCatalog";
-import tryoutPlacements from "./tables/tryoutPlacements";
 import tryoutResponses from "./tables/tryoutResponses";
-import tryoutRuntimeBundles from "./tables/tryoutRuntimeBundles";
 import tryoutScores from "./tables/tryoutScores";
 import tryoutSectionAttempts from "./tables/tryoutSectionAttempts";
 import tryoutSetProgress from "./tables/tryoutSetProgress";
@@ -156,6 +154,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly articleCatalog: typeof articleCatalog;
   readonly articleCategories: typeof articleCategories;
   readonly assessmentFlags: typeof assessmentFlags;
+  readonly assessmentRows: typeof assessmentRows;
   readonly billingAccounts: typeof billingAccounts;
   readonly billingCheckouts: typeof billingCheckouts;
   readonly billingCounters: typeof billingCounters;
@@ -281,10 +280,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly tenants: typeof tenants;
   readonly tryoutAttemptPlacements: typeof tryoutAttemptPlacements;
   readonly tryoutAttempts: typeof tryoutAttempts;
-  readonly tryoutCatalog: typeof tryoutCatalog;
-  readonly tryoutPlacements: typeof tryoutPlacements;
   readonly tryoutResponses: typeof tryoutResponses;
-  readonly tryoutRuntimeBundles: typeof tryoutRuntimeBundles;
   readonly tryoutScores: typeof tryoutScores;
   readonly tryoutSectionAttempts: typeof tryoutSectionAttempts;
   readonly tryoutSetProgress: typeof tryoutSetProgress;
@@ -302,6 +298,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   articleCatalog,
   articleCategories,
   assessmentFlags,
+  assessmentRows,
   billingAccounts,
   billingCheckouts,
   billingCounters,
@@ -427,10 +424,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   tenants,
   tryoutAttemptPlacements,
   tryoutAttempts,
-  tryoutCatalog,
-  tryoutPlacements,
   tryoutResponses,
-  tryoutRuntimeBundles,
   tryoutScores,
   tryoutSectionAttempts,
   tryoutSetProgress,

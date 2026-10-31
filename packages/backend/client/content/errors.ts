@@ -1,13 +1,8 @@
-import { ProtectedContentRuntimeRequestSchema } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentRuntimeFailureCodeSchema } from "@nakafa/aksara-contracts/runtime/result";
 import { PublicContentRuntimeRequestSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import { NetworkRetryCodeSchema } from "@repo/backend/client/network";
 import { Schema } from "effect";
 
-const ContentRuntimeRequestSchema = Schema.Union([
-  PublicContentRuntimeRequestSchema,
-  ProtectedContentRuntimeRequestSchema,
-]);
 /** The private Convex runtime exchange failed before verification. */
 export class ContentTransportError extends Schema.TaggedError<ContentTransportError>()(
   "ContentTransportError",
@@ -34,7 +29,7 @@ export class ContentTransportError extends Schema.TaggedError<ContentTransportEr
 export class ContentRuntimeMissingError extends Schema.TaggedError<ContentRuntimeMissingError>()(
   "ContentRuntimeMissingError",
   {
-    request: ContentRuntimeRequestSchema,
+    request: PublicContentRuntimeRequestSchema,
   }
 ) {}
 /** Convex rejected a signed runtime request with a sanitized code. */

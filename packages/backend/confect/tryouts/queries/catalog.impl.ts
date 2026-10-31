@@ -1,7 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import spec from "@repo/backend/confect/tryouts/queries/catalog.spec";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { readFeaturedTryout } from "@repo/backend/content/tryout/featured";
 import {
   readTryoutLocalizedPath,
@@ -22,9 +21,7 @@ const getFeaturedQuestion = FunctionImpl.make(
   spec,
   "getFeaturedQuestion",
   Effect.fn("tryouts.queries.catalog.getFeaturedQuestion")(function* (args) {
-    return yield* readFeaturedTryout(args.appLocale).pipe(
-      Effect.provide(tryoutLayer)
-    );
+    return yield* readFeaturedTryout(args.appLocale);
   })
 );
 const getMetadata = FunctionImpl.make(
@@ -32,7 +29,7 @@ const getMetadata = FunctionImpl.make(
   spec,
   "getMetadata",
   Effect.fn("tryouts.queries.catalog.getMetadata")(function* (args) {
-    return yield* readTryoutMetadata(args).pipe(Effect.provide(tryoutLayer));
+    return yield* readTryoutMetadata(args);
   })
 );
 const getLocalizedPath = FunctionImpl.make(
@@ -40,9 +37,7 @@ const getLocalizedPath = FunctionImpl.make(
   spec,
   "getLocalizedPath",
   Effect.fn("tryouts.queries.catalog.getLocalizedPath")(function* (args) {
-    return yield* readTryoutLocalizedPath(args).pipe(
-      Effect.provide(tryoutLayer)
-    );
+    return yield* readTryoutLocalizedPath(args);
   })
 );
 const getHubPage = FunctionImpl.make(
@@ -50,7 +45,7 @@ const getHubPage = FunctionImpl.make(
   spec,
   "getHubPage",
   Effect.fn("tryouts.queries.catalog.getHubPage")(function* (args) {
-    return yield* readTryoutHubPage(args).pipe(Effect.provide(tryoutLayer));
+    return yield* readTryoutHubPage(args);
   })
 );
 const getCountryPage = FunctionImpl.make(
@@ -58,7 +53,7 @@ const getCountryPage = FunctionImpl.make(
   spec,
   "getCountryPage",
   Effect.fn("tryouts.queries.catalog.getCountryPage")(function* (args) {
-    return yield* readTryoutCountryPage(args).pipe(Effect.provide(tryoutLayer));
+    return yield* readTryoutCountryPage(args);
   })
 );
 const getExamPage = FunctionImpl.make(
@@ -66,7 +61,7 @@ const getExamPage = FunctionImpl.make(
   spec,
   "getExamPage",
   Effect.fn("tryouts.queries.catalog.getExamPage")(function* (args) {
-    return yield* readTryoutExamPage(args).pipe(Effect.provide(tryoutLayer));
+    return yield* readTryoutExamPage(args);
   })
 );
 const getTrackPage = FunctionImpl.make(
@@ -74,7 +69,7 @@ const getTrackPage = FunctionImpl.make(
   spec,
   "getTrackPage",
   Effect.fn("tryouts.queries.catalog.getTrackPage")(function* (args) {
-    return yield* readTryoutTrackPage(args).pipe(Effect.provide(tryoutLayer));
+    return yield* readTryoutTrackPage(args);
   })
 );
 const getSetPage = FunctionImpl.make(
@@ -82,7 +77,7 @@ const getSetPage = FunctionImpl.make(
   spec,
   "getSetPage",
   Effect.fn("tryouts.queries.catalog.getSetPage")(function* (args) {
-    return yield* readTryoutSetPage(args).pipe(Effect.provide(tryoutLayer));
+    return yield* readTryoutSetPage(args);
   })
 );
 const getSectionPage = FunctionImpl.make(
@@ -90,7 +85,7 @@ const getSectionPage = FunctionImpl.make(
   spec,
   "getSectionPage",
   Effect.fn("tryouts.queries.catalog.getSectionPage")(function* (args) {
-    return yield* readTryoutSectionPage(args).pipe(Effect.provide(tryoutLayer));
+    return yield* readTryoutSectionPage(args);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

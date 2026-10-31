@@ -224,9 +224,7 @@ const writeStaticArtifacts: Plugin = {
 const NODE_ONLY_CONTRACT_PATHS = [
   "artifact/verify",
   "preview/auth",
-  "runtime/protected/verify",
   "runtime/verify",
-  "tryout/runtime/verify",
 ];
 
 const contractsRequire = createRequire(import.meta.url);

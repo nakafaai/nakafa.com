@@ -1,4 +1,4 @@
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/page";
 import {
   listArgsValidator,
   trackSetPageValidator,
@@ -201,8 +201,8 @@ export function visitorSetView(
       state.failedKey,
       (failed) => failed === visitorWindowKey(request, size)
     ),
-    hasMore: !state.committed.page.isDone && size < TRYOUT_CATALOG_LIMIT,
-    nextSize: Math.min(size + TRYOUT_SET_PAGE_SIZE, TRYOUT_CATALOG_LIMIT),
+    hasMore: !state.committed.page.isDone && size < TRACK_SET_PAGE_LIMIT,
+    nextSize: Math.min(size + TRYOUT_SET_PAGE_SIZE, TRACK_SET_PAGE_LIMIT),
     offline: false,
     rows: state.committed.page.page,
     snapshotId: state.committed.page.snapshotId,

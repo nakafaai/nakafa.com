@@ -40,8 +40,7 @@ const performRequest = Effect.fn("contentRelease.performRequest")(function* (
     request.operation === "stageProjectionBatch" ||
     request.operation === "stageArtifactBatch" ||
     request.operation === "stageSnapshot" ||
-    request.operation === "stageSnapshotBatch" ||
-    request.operation === "stageTryoutRuntimeBundle"
+    request.operation === "stageSnapshotBatch"
   ) {
     return yield* stagePublication(request, activeKeyId);
   }

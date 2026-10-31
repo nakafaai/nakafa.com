@@ -1,10 +1,11 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import tryoutAttemptPlacementsTable from "@repo/backend/confect/_generated/tables/tryoutAttemptPlacements";
-import { evaluate } from "@repo/backend/confect/response/evaluation";
-import { Outcome } from "@repo/backend/confect/response/model";
-import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
+import { Grade } from "@repo/backend/confect/assessment/grade";
+import { gradeAnswer } from "@repo/backend/confect/tryouts/response/answer";
 import { responseIntegrity } from "@repo/backend/confect/tryouts/response/spec";
+import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
+import type { TryoutSection } from "@repo/backend/confect/tryouts/runtime/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Array as Arr,
@@ -13,6 +14,7 @@ import {
   MutableHashMap,
   MutableHashSet,
   Option,
+  Result,
   Schema,
 } from "effect";
 
@@ -20,26 +22,22 @@ type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
-type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
 const ResponsePlacementLinkSchema = Schema.Struct({
   placement: tryoutAttemptPlacementsTable.Doc,
   sectionAttemptId: IdSchema("tryoutSectionAttempts"),
 });
 type ResponsePlacementLink = typeof ResponsePlacementLinkSchema.Type;
-/** Indexes one unique frozen section graph by immutable identity. */
-export const validateTryoutSectionSnapshots = Effect.fn(
-  "tryouts.response.validateSectionSnapshots"
-)(function* (snapshots: readonly TryoutSectionSnapshot[]) {
-  const snapshotsByIdentity = MutableHashMap.empty<
-    string,
-    TryoutSectionSnapshot
-  >();
-  const sectionKeys = MutableHashSet.empty<string>();
+
+/** Indexes an attempt's frozen sections by key, failing when one holds no questions or a key or order repeats. */
+export const validateTryoutSections = Effect.fn(
+  "tryouts.response.validateSections"
+)(function* (sections: readonly TryoutSection[]) {
+  const sectionsByKey = MutableHashMap.empty<string, TryoutSection>();
   const sectionOrders = MutableHashSet.empty<number>();
-  for (const snapshot of snapshots) {
+  for (const section of sections) {
     if (
-      !Number.isSafeInteger(snapshot.questionCount) ||
-      snapshot.questionCount < 1
+      !Number.isSafeInteger(section.questionCount) ||
+      section.questionCount < 1
     ) {
       return yield* responseIntegrity(
         "TRYOUT_PLACEMENT_COUNT_MISMATCH",
@@ -47,76 +45,54 @@ export const validateTryoutSectionSnapshots = Effect.fn(
       );
     }
     if (
-      MutableHashMap.has(snapshotsByIdentity, snapshot.sectionIdentity) ||
-      MutableHashSet.has(sectionKeys, snapshot.sectionKey) ||
-      MutableHashSet.has(sectionOrders, snapshot.sectionOrder)
+      MutableHashMap.has(sectionsByKey, section.sectionKey) ||
+      MutableHashSet.has(sectionOrders, section.sectionOrder)
     ) {
       return yield* responseIntegrity(
         "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
-        "Try-out section snapshots contain a duplicate identity, key, or order."
+        "Try-out sections contain a duplicate key or order."
       );
     }
-    MutableHashMap.set(snapshotsByIdentity, snapshot.sectionIdentity, snapshot);
-    MutableHashSet.add(sectionKeys, snapshot.sectionKey);
-    MutableHashSet.add(sectionOrders, snapshot.sectionOrder);
+    MutableHashMap.set(sectionsByKey, section.sectionKey, section);
+    MutableHashSet.add(sectionOrders, section.sectionOrder);
   }
-  return snapshotsByIdentity;
+  return sectionsByKey;
 });
-/** Resolves and validates the frozen section owned by one response graph. */
-export const requireTryoutResponseSectionSnapshot = Effect.fn(
-  "tryouts.response.requireSectionSnapshot"
-)(function* (attempt: TryoutAttempt, section: TryoutSectionAttempt) {
-  const snapshotsByIdentity = yield* validateTryoutSectionSnapshots(
-    attempt.sectionSnapshots
-  );
-  const snapshot = Option.getOrUndefined(
-    MutableHashMap.get(snapshotsByIdentity, section.sectionIdentity)
+
+/** Resolves the frozen section a running section attempt belongs to, and checks the two agree. */
+export const requireTryoutResponseSection = Effect.fn(
+  "tryouts.response.requireSection"
+)(function* (attempt: TryoutAttempt, sectionAttempt: TryoutSectionAttempt) {
+  const sectionsByKey = yield* validateTryoutSections(attempt.sections);
+  const section = Option.getOrUndefined(
+    MutableHashMap.get(sectionsByKey, sectionAttempt.sectionKey)
   );
   if (
-    !snapshot ||
-    section.tryoutAttemptId !== attempt._id ||
-    section.sectionKey !== snapshot.sectionKey ||
-    section.sectionOrder !== snapshot.sectionOrder ||
-    section.totalQuestions !== snapshot.questionCount
+    !section ||
+    sectionAttempt.tryoutAttemptId !== attempt._id ||
+    sectionAttempt.sectionOrder !== section.sectionOrder ||
+    sectionAttempt.totalQuestions !== section.questionCount
   ) {
     return yield* responseIntegrity(
       "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
-      "Try-out section attempt differs from its frozen snapshot."
+      "Try-out section attempt differs from its frozen section."
     );
   }
-  return snapshot;
+  return section;
 });
-/** Validates placements against one exact attempt-owned section snapshot. */
-export const validateTryoutResponsePlacements = Effect.fn(
-  "tryouts.response.validatePlacements"
-)(function* (
-  attemptId: Id<"tryoutAttempts">,
-  snapshot: TryoutSectionSnapshot,
-  placements: readonly TryoutPlacement[]
-) {
-  if (
-    Arr.some(
-      placements,
-      (placement) =>
-        placement.tryoutAttemptId !== attemptId ||
-        placement.sectionIdentity !== snapshot.sectionIdentity ||
-        placement.sectionKey !== snapshot.sectionKey
-    )
-  ) {
-    return yield* responseIntegrity(
-      "TRYOUT_RESPONSE_LINK_MISMATCH",
-      "Try-out placement differs from its frozen section snapshot."
-    );
-  }
-});
-/** Validates one complete placement inventory against frozen section slots. */
+
+/**
+ * Validates an attempt's complete placement inventory against its frozen sections: one place for
+ * each question of each section, numbered from 1 within its section, and each item family once, as
+ * an item takes one place in a paper.
+ */
 export const validateTryoutResponsePlacementInventory = Effect.fn(
   "tryouts.response.validatePlacementInventory"
 )(function* (input: {
   readonly attemptId: Id<"tryoutAttempts">;
   readonly expectedQuestionCount: number;
   readonly placements: readonly TryoutPlacement[];
-  readonly snapshots: readonly TryoutSectionSnapshot[];
+  readonly sections: readonly TryoutSection[];
 }) {
   if (
     !Number.isSafeInteger(input.expectedQuestionCount) ||
@@ -127,72 +103,67 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
       "Try-out attempts must contain a positive whole number of questions."
     );
   }
-  yield* validateTryoutSectionSnapshots(input.snapshots);
-  const snapshotQuestionCount = Arr.reduce(
-    input.snapshots,
+  const sectionsByKey = yield* validateTryoutSections(input.sections);
+  const sectionQuestionCount = Arr.reduce(
+    input.sections,
     0,
-    (total, snapshot) => total + snapshot.questionCount
+    (total, section) => total + section.questionCount
   );
   if (
-    snapshotQuestionCount !== input.expectedQuestionCount ||
+    sectionQuestionCount !== input.expectedQuestionCount ||
     input.placements.length !== input.expectedQuestionCount
   ) {
     return yield* responseIntegrity(
       "TRYOUT_PLACEMENT_COUNT_MISMATCH",
-      "Try-out placement count does not match its frozen snapshot."
+      "Try-out placement count does not match its frozen sections."
     );
   }
-  const sections = MutableHashMap.fromIterable(
-    Arr.map(input.snapshots, (snapshot) => [
-      snapshot.sectionIdentity,
-      {
-        questionOrders: MutableHashSet.empty<number>(),
-        snapshot,
-      },
-    ])
-  );
-  const placementIdentities = MutableHashSet.empty<string>();
+  const slots = MutableHashSet.empty<string>();
+  const families = MutableHashSet.empty<string>();
   for (const placement of input.placements) {
     const section = Option.getOrUndefined(
-      MutableHashMap.get(sections, placement.sectionIdentity)
+      MutableHashMap.get(sectionsByKey, placement.sectionKey)
     );
-    if (
-      !section ||
-      placement.tryoutAttemptId !== input.attemptId ||
-      placement.sectionKey !== section.snapshot.sectionKey
-    ) {
+    if (!section || placement.tryoutAttemptId !== input.attemptId) {
       return yield* responseIntegrity(
         "TRYOUT_RESPONSE_LINK_MISMATCH",
-        "Try-out placement differs from its frozen section snapshot."
+        "Try-out placement differs from its frozen sections."
       );
     }
-    const questionOrder = placement.questionOrder;
     if (
-      !Number.isSafeInteger(questionOrder) ||
-      questionOrder < 1 ||
-      questionOrder > section.snapshot.questionCount
+      !Number.isSafeInteger(placement.questionOrder) ||
+      placement.questionOrder < 1 ||
+      placement.questionOrder > section.questionCount
     ) {
       return yield* responseIntegrity(
         "TRYOUT_PLACEMENT_COUNT_MISMATCH",
-        "Try-out placement slots do not match its frozen section snapshot."
+        "Try-out placement slots do not match its frozen section."
       );
     }
-    const { questionOrders } = section;
+    const slot = `${placement.sectionKey} ${placement.questionOrder}`;
     if (
-      MutableHashSet.has(questionOrders, questionOrder) ||
-      MutableHashSet.has(placementIdentities, placement.placementIdentity)
+      MutableHashSet.has(slots, slot) ||
+      MutableHashSet.has(families, placement.family)
     ) {
       return yield* responseIntegrity(
         "TRYOUT_PLACEMENT_DUPLICATE",
-        "Try-out placement inventory contains a duplicate identity or slot."
+        "Try-out placement inventory contains a duplicate item or slot."
       );
     }
-    MutableHashSet.add(questionOrders, questionOrder);
-    MutableHashSet.add(placementIdentities, placement.placementIdentity);
+    MutableHashSet.add(slots, slot);
+    MutableHashSet.add(families, placement.family);
   }
   return input.placements;
 });
-/** Validates response rows against the verified placement inventory and keeps their stored order. */
+
+const sameGrade = Schema.toEquivalence(Grade);
+
+/**
+ * Validates response rows against their verified placements and keeps their stored order. Each
+ * response links to its placement and section, answers its placement once, and keeps the grade its
+ * placement's frozen rule gives it now; a grade that waits for a person defers to the stored one,
+ * which a person may already have decided.
+ */
 export const indexTryoutResponses = Effect.fn(
   "tryouts.response.indexIntegrity"
 )(function* (input: {
@@ -224,36 +195,23 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out placement has more than one response."
       );
     }
-    const evaluated = yield* Effect.fromResult(
-      evaluate(link.placement.responseSpec, response.selection)
-    ).pipe(
-      Effect.mapError(() =>
-        responseIntegrity(
-          "TRYOUT_RESPONSE_SELECTION_MISMATCH",
-          "Try-out response differs from its frozen response definition."
-        )
-      )
+    const regraded = gradeAnswer(
+      yield* readPlacedQuestion(link.placement),
+      response.response
     );
     if (
-      evaluated.isComplete !== response.isComplete ||
-      !confirms(evaluated.outcome, readOutcome(response))
+      Result.isFailure(regraded) ||
+      !(
+        regraded.success.grade.status === "pending" ||
+        sameGrade(regraded.success.grade, response.grade)
+      )
     ) {
       return yield* responseIntegrity(
-        "TRYOUT_RESPONSE_SELECTION_MISMATCH",
-        "Try-out response evaluation differs from its stored result."
+        "TRYOUT_RESPONSE_GRADE_MISMATCH",
+        "Try-out response differs from the grade of its frozen question."
       );
     }
     MutableHashSet.add(placementIds, response.placementId);
   }
   return input.responses;
 });
-const sameOutcome = Schema.toEquivalence(Outcome);
-
-/**
- * Reports whether a deterministic evaluation reproduces a stored outcome. An
- * evaluation it cannot decide is `pending`, so it defers to the stored one,
- * which the grader may already have decided.
- */
-function confirms(evaluated: Outcome, stored: Outcome) {
-  return evaluated.status === "pending" || sameOutcome(evaluated, stored);
-}
