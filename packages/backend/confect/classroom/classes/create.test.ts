@@ -35,6 +35,7 @@ describe("classroom/classes create", () => {
           {
             id: expect.any(String),
             kind: "general",
+            last: null,
             name: "general",
             unread: false,
           },

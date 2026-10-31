@@ -1,8 +1,7 @@
 # Backend scripts
 
 These scripts verify signed content releases and durable customer state, run
-one real Nina turn, measure Nina's judgments, and test the embedding model of
-knowledge search. Package scripts in `packages/backend/package.json` are the
+one real Nina turn, and measure Nina's judgments. Package scripts in `packages/backend/package.json` are the
 command source of truth.
 
 ## Signed content ownership
@@ -46,8 +45,7 @@ These commands never read production tables or use production credentials.
 
 ## Dev deployment scripts
 
-The release gate, the judgment measurement and the model test of knowledge
-search run the Convex CLI on the dev deployment of this checkout, through
+The release gate and the judgment measurement run the Convex CLI on the dev deployment of this checkout, through
 `development/cli.ts`. That module reads `CONVEX_DEPLOYMENT` from the
 environment and then from `packages/backend/.env.local`, where the CLI looks for
 it too. A script goes on only when that names a dev deployment, and it refuses
@@ -122,42 +120,3 @@ sent. Run it again whenever a judgment's instructions, the decision model or the
 labelled set change, and set the new thresholds in
 `confect/nina/judgment/catalog.ts` from what it prints. [ADR
 0022](../../../docs/adr/0022-memory.md) holds the tables of 12 October 2026.
-
-## Knowledge search model test
-
-```sh
-bun --filter @repo/backend knowledge:compare
-bun --filter @repo/backend knowledge:compare --model=qwen/qwen3-embedding-8b --locale=id
-```
-
-The test decides which embedding model knowledge search uses. It runs on the
-dev deployment, which must run the current functions and hold the section index
-of its active release (the build is `contents/sections/build:run`, started by
-hand with no arguments), and it needs no other setting. The test starts the
-internal function `contents/sections/compare:rank` with `convex run`, and reads
-its answer from what the CLI prints.
-
-For every embedding model of the gateway and every language, the deployment
-embeds the stored sections of that language and each question of
-`knowledge/questions/`, and the test prints how many questions had their right
-section within the top five, how many were left out because their label no
-longer fits the index, how many sections the model refused (`refused`), and how
-long a question took to embed. The sections are embedded as the build embeds
-them: a section whose text a model refuses is left out of the ranking and
-counted, and a question about it counts as missed, because a build with that
-model would leave the section out of the index. A model that refuses every text
-of a batch is not scored, and its run gives no answer. The questions are
-labeled with the Aksara corpus; a lesson that was edited since leaves its
-questions out, with the reason. `--model` and `--locale` narrow the test to one
-model or one language. A run is one call of the function, which the CLI waits
-for in one request, and Node ends a request that gets no answer after five
-minutes, so a run gets five minutes and a run that needs more is printed with an
-`error` that says it did not answer. A run that gets no answer is printed with
-an `error`, and the other runs still count. The `error` holds the facts of the
-failure when the gateway refused a request, which the function answers instead
-of failing because the CLI drops the data of the error it prints, says to build
-the index when it holds no section of the language, and holds the start of what
-the CLI printed when the CLI could not run the function, such as when the dev
-deployment does not have it yet. The command exits with 1 when any run gave no
-answer. The test changes no stored section: the vectors of a candidate model are
-made for the run and kept nowhere.
