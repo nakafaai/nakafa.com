@@ -82,7 +82,10 @@ describe("retired profile address redirects", () => {
           clientEnv.VITE_CONVEX_SITE_URL,
           headers
         );
-        expect(mocks.layerOptions).toHaveBeenCalledWith({ auth: TOKEN });
+        expect(mocks.layerOptions).toHaveBeenCalledWith({
+          auth: TOKEN,
+          fetch: expect.any(Function),
+        });
         expect(mocks.query).toHaveBeenCalledOnce();
         expect(mocks.query.mock.calls[0]?.[0]).toBe(
           auth.queries.getCurrentUser

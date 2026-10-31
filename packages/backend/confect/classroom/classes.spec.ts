@@ -99,6 +99,24 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicMutation({
+      name: "changeSubject",
+      args: () => ({
+        classId: Id("classes"),
+        slug: TenantSlug,
+        subject: ClassSubject,
+      }),
+      returns: () => ClassView,
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          ClassNameTaken,
+          ClassSubjectNotAllowed,
+          ClassSubjectTaken,
+        ]),
+    }).middleware(ClassAccess, { action: "class.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
       name: "archive",
       args: () => ({ classId: Id("classes"), slug: TenantSlug }),
       returns: () => ClassView,

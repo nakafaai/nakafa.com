@@ -153,25 +153,72 @@ describe("billing/xendit/session", () => {
     ]);
   });
 
-  it("records a paid top-up with the session as its payment, and grants no Pro for it", async () => {
+  it("records a paid top-up as credits once and grants its pack, and no Pro for it", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const { checkoutId, userId } = await seedCheckout(ctx, "pro.topup");
+      await ctx.db.insert("billingGrants", {
+        product: "pro",
+        source: { kind: "contract", contractId: "contract-topup" },
+        userId,
+        validFrom: 0,
+        validTo: Date.UTC(2100, 0, 1),
+      });
+      const delivery = sessionDelivery("payment_session.completed", "py_1");
+      const outcome = await runInMutation(ctx, processXenditEvent(delivery));
+      const redelivered = await runInMutation(
+        ctx,
+        processXenditEvent(delivery)
+      );
+      return {
+        checkout: (await ctx.db.get(checkoutId))?.status,
+        grants: await ctx.db.query("billingGrants").collect(),
+        lots: await ctx.db.query("creditLots").collect(),
+        outcome,
+        payments: await ctx.db.query("billingPayments").collect(),
+        redelivered,
+      };
+    });
+    expect(result.outcome).toBe("applied");
+    expect(result.redelivered).toBe("unknownSession");
+    expect(result.checkout).toBe("completed");
+    expect(result.payments).toMatchObject([
+      {
+        amount: 59_000,
+        currency: "IDR",
+        kind: "credits",
+        providerPaymentId: "py_1",
+        rail: "xendit",
+        status: "succeeded",
+      },
+    ]);
+    expect(result.lots).toHaveLength(1);
+    expect(result.grants).toHaveLength(1);
+  });
+
+  it("keeps a paid top-up on record for an operator when Pro ended before it was paid", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       await seedCheckout(ctx, "pro.topup");
       const outcome = await runInMutation(
         ctx,
-        processXenditEvent(sessionDelivery("payment_session.completed", null))
+        processXenditEvent(sessionDelivery("payment_session.completed", "py_1"))
       );
       return {
-        grants: await ctx.db.query("billingGrants").collect(),
+        lots: await ctx.db.query("creditLots").collect(),
         outcome,
         payments: await ctx.db.query("billingPayments").collect(),
+        scheduled: await ctx.db.system.query("_scheduled_functions").collect(),
       };
     });
     expect(result.outcome).toBe("applied");
-    expect(result.payments).toMatchObject([
-      { amount: 59_000, providerPaymentId: "ps_1" },
-    ]);
-    expect(result.grants).toEqual([]);
+    expect(result.payments).toMatchObject([{ kind: "credits" }]);
+    expect(result.lots).toHaveLength(0);
+    expect(result.scheduled).not.toContainEqual(
+      expect.objectContaining({
+        name: expect.stringContaining("refundWithoutPro"),
+      })
+    );
   });
 
   it("starts the monthly plan when its first month is paid: the subscription runs until its first renewal, the payment is its first cycle, Pro is granted, and its plan opens on the saved channel", async () => {
@@ -333,7 +380,57 @@ describe("billing/xendit/session", () => {
     expect(outcome).toBe("railMismatch");
   });
 
-  it("fails without writing when the checkout's account is gone or its offer has no price there", async () => {
+  it("names a paid pack by its session when Xendit names no payment", async () => {
+    const t = createBillingTestConvex();
+    const payments = await t.run(async (ctx) => {
+      const { userId } = await seedCheckout(ctx, "pro.topup");
+      await ctx.db.insert("billingGrants", {
+        product: "pro",
+        source: { kind: "contract", contractId: "contract-topup" },
+        userId,
+        validFrom: 0,
+        validTo: Date.UTC(2100, 0, 1),
+      });
+      await runInMutation(
+        ctx,
+        processXenditEvent(sessionDelivery("payment_session.completed", null))
+      );
+      return await ctx.db.query("billingPayments").collect();
+    });
+    expect(payments).toMatchObject([
+      { kind: "credits", providerPaymentId: "ps_1" },
+    ]);
+  });
+
+  it("grants nothing for a pass whose payment is already on record", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const { accountId } = await seedCheckout(ctx, "pro.pass.1");
+      await ctx.db.insert("billingPayments", {
+        accountId,
+        amount: 79_000,
+        currency: "IDR",
+        kind: "pass",
+        method: "session",
+        paidAt: 0,
+        providerPaymentId: "py_1",
+        providerUpdatedAt: Date.UTC(2100, 0, 1),
+        rail: "xendit",
+        status: "succeeded",
+      });
+      const outcome = await runInMutation(
+        ctx,
+        processXenditEvent(sessionDelivery("payment_session.completed", "py_1"))
+      );
+      return {
+        grants: await ctx.db.query("billingGrants").collect(),
+        outcome,
+      };
+    });
+    expect(result).toEqual({ grants: [], outcome: "applied" });
+  });
+
+  it("fails without writing when the checkout's account is gone, its offer has no price there, or a school holds a pack", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const gone = await seedCheckout(ctx, "pro.pass.1");
@@ -356,10 +453,29 @@ describe("billing/xendit/session", () => {
         ctx,
         processXenditEvent(sessionDelivery("payment_session.completed", "py_1"))
       );
+      const school = await seedCheckout(ctx, "pro.topup");
+      await ctx.db.delete(dollars.checkoutId);
+      const tenantId = await ctx.db.insert("tenants", {
+        country: "ID",
+        currency: "IDR",
+        kind: "school",
+        name: "Sekolah Billing",
+        policies: { emailDomains: [], nina: false, studentThreads: false },
+        slug: "sekolah-billing",
+        status: "active",
+      });
+      await ctx.db.patch(school.accountId, {
+        owner: { kind: "tenant", tenantId },
+      });
+      const schoolPack = await exitInMutation(
+        ctx,
+        processXenditEvent(sessionDelivery("payment_session.completed", "py_1"))
+      );
       return {
         missing: Exit.isFailure(missing),
         payments: await ctx.db.query("billingPayments").collect(),
         priceless: Exit.isFailure(priceless),
+        schoolPack: Exit.isFailure(schoolPack),
         unpricedPass: Exit.isFailure(unpricedPass),
       };
     });
@@ -367,6 +483,7 @@ describe("billing/xendit/session", () => {
       missing: true,
       payments: [],
       priceless: true,
+      schoolPack: true,
       unpricedPass: true,
     });
   });

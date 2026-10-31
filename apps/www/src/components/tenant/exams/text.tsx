@@ -1,7 +1,5 @@
-import { QueryResult, useQuery } from "@confect/react";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import type { Id } from "@repo/backend/confect/_generated/id";
-import editors from "@repo/backend/confect/_generated/refs/editor";
 import { MAX_STEP_BYTES } from "@repo/backend/confect/editor/batch";
 import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import { Collab } from "@repo/design-system/components/editor/collab";
@@ -27,6 +25,7 @@ import { refusePaste } from "@/components/tenant/exams/picture";
 import { usePageDocument } from "@/components/tenant/exams/preview";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
+import { ExamSteps, ExamStepsBoundary } from "@/components/tenant/exams/steps";
 import {
   createPromptSync,
   type PromptSync,
@@ -154,9 +153,7 @@ export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
   const convex = useConvex();
   const [sync] = useState(createPromptSync);
   const show = useExamLive((state) => state.show);
-  const clientId = useStore(sync, (state) => state.clientId);
-  const version = useStore(sync, (state) => state.version);
-  const opened = clientId !== null;
+  const opened = useStore(sync, (state) => state.clientId !== null);
   const stored = usePageDocument({
     documentId,
     editing: false,
@@ -174,10 +171,6 @@ export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
         doc.firstChild?.isTextblock === true &&
         doc.firstChild.childCount === 0
     )
-  );
-  const reply = useQuery(
-    editors.steps.since,
-    clientId === null ? "skip" : { clientId, documentId, slug, version }
   );
   const session = useRef<SyncSession | null>(null);
   const view = useRef<EditorView | null>(null);
@@ -202,17 +195,6 @@ export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
       Effect.runFork(Fiber.interrupt(round));
     }
   }, [gone]);
-
-  // A `behind` reply makes the round reopen the document from its snapshot, so it starts one too.
-  useEffect(() => {
-    if (
-      QueryResult.isSuccess(reply) &&
-      (reply.value._tag === "behind" ||
-        (reply.value._tag === "steps" && reply.value.steps.length > 0))
-    ) {
-      replaceWaiting(waiting, runRound(session.current, view.current, sync));
-    }
-  }, [reply, sync]);
 
   // A page that closes sends what the editor holds at once, and asks first while the server does not hold it yet,
   // since the send may not leave in time.
@@ -342,6 +324,18 @@ export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
       stored={stored}
     >
       {children}
+      <ExamStepsBoundary>
+        <ExamSteps
+          documentId={documentId}
+          onSteps={() =>
+            replaceWaiting(
+              waiting,
+              runRound(session.current, view.current, sync)
+            )
+          }
+          sync={sync}
+        />
+      </ExamStepsBoundary>
     </ExamDocumentWiringProvider>
   );
 }

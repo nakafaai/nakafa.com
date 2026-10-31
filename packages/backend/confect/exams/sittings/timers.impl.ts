@@ -6,6 +6,7 @@ import {
   openSitting,
   submitAttempt,
 } from "@repo/backend/confect/exams/sittings/closing";
+import { sweepLate } from "@repo/backend/confect/exams/sittings/sweep";
 import timers from "@repo/backend/confect/exams/sittings/timers.spec";
 import { Effect, Layer } from "effect";
 
@@ -45,11 +46,21 @@ const submitFunction = FunctionImpl.make(
   })
 );
 
+const sweepFunction = FunctionImpl.make(
+  databaseSchema,
+  timers,
+  "sweep",
+  Effect.fn("exams.sittings.timers.sweep.function")(function* () {
+    return yield* sweepLate();
+  })
+);
+
 /** Implements the scheduled steps of a sitting, which only the scheduler calls. */
 export default GroupImpl.make(databaseSchema, timers).pipe(
   Layer.provide(openFunction),
   Layer.provide(closeDueFunction),
   Layer.provide(closeAttemptFunction),
   Layer.provide(submitFunction),
+  Layer.provide(sweepFunction),
   GroupImpl.finalize
 );
