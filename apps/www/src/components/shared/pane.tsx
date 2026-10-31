@@ -95,7 +95,7 @@ export function PaneBody({ children }: { children: ReactNode }) {
 /** A detail's footer: its actions at the end, on a second row where a narrow pane cannot hold them in one. */
 export function PaneFooter({ children }: { children: ReactNode }) {
   return (
-    <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-4 py-3">
+    <footer className="bg-muted/70 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-4 py-3">
       {children}
     </footer>
   );

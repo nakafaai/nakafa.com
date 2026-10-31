@@ -54,7 +54,7 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
   const t = useTranslations();
 
   return (
-    <SheetHeaderPrimitive className="border-b p-3">
+    <SheetHeaderPrimitive className="p-3">
       <div className="flex items-center justify-between gap-2">
         {/* Only the name is the dialog's title: the buttons are not part of it. */}
         <SheetTitle className="text-chat flex items-center gap-2 px-2">

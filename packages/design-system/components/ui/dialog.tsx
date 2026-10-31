@@ -116,7 +116,10 @@ function DialogContent({
 function DialogHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-2 p-6 pb-3 max-sm:pb-4", className)}
+      className={cn(
+        "flex flex-col gap-2 border-b p-6 pb-4 has-[+[data-slot=dialog-footer]]:border-b-0",
+        className
+      )}
       data-slot="dialog-header"
       {...props}
     />
@@ -164,7 +167,7 @@ function DialogPanel({
   return (
     <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade={scrollFade}>
       <div
-        className={cn("min-w-0 p-6 pt-1", className)}
+        className={cn("min-w-0 p-6", className)}
         data-slot="dialog-panel"
         {...props}
       />
