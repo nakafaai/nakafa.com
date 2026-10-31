@@ -115,7 +115,7 @@ const PromptText = Schema.fromJsonString(ContentDocumentSchema);
  * contract's content does not name shows something, so a stored text it refuses counts as written.
  */
 export const promptEmpty = (text: string) =>
-  Option.exists(Schema.decodeUnknownOption(PromptText)(text), labelEmpty);
+  Option.exists(Schema.decodeOption(PromptText)(text), labelEmpty);
 
 /**
  * What keeps a question from being sat, or none when it is ready: a part that shows nothing first, since the
