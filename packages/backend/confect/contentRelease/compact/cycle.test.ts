@@ -20,12 +20,12 @@ import { DateTime, Effect } from "effect";
 const NOW = DateTime.toEpochMillis(DateTime.nowUnsafe());
 
 /** Runs the idle proof for the stored compaction row in its own mutation. */
-function idle(t: TestConvex<typeof schema>, historyFloor = 0) {
+function idle(t: TestConvex<typeof schema>) {
   return t.mutation(async (ctx) => {
     const compaction = await ctx.db.query("contentCompaction").unique();
     assert.ok(compaction);
     return await Effect.runPromise(
-      isCompactionIdle(compaction, historyFloor).pipe(
+      isCompactionIdle(compaction).pipe(
         Effect.provide(mutationLayer(confectSchema, ctx))
       )
     );
