@@ -129,6 +129,24 @@ describe("exams/figure", () => {
     }
   });
 
+  it("reads the words of a title that holds math, which a field cannot show", () => {
+    const line = made(graph);
+    if (line.component !== "MathVisual") {
+      throw new Error("A graph is a math visual.");
+    }
+    const titled = {
+      ...line,
+      props: {
+        ...line.props,
+        title: [
+          { text: "Grafik ", type: "text" },
+          { attrs: { latex: "y = x" }, type: "mathInline" },
+        ],
+      },
+    } as const;
+    expect(Option.getOrThrow(draftOf(titled)).title).toBe("Grafik ");
+  });
+
   it("offers no draft for a figure a teacher cannot make here, and keeps a graph it cannot read as it stands", () => {
     const circle: FigureAttrs = {
       alt: "Lingkaran",
