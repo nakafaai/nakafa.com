@@ -5,7 +5,6 @@ import {
   validateAbortedRelease,
 } from "@repo/backend/confect/contentRelease/abort";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { requireCurrentRelease } from "@repo/backend/confect/contentRelease/generation";
 import {
   loadRelease,
   loadState,
@@ -138,7 +137,6 @@ export const statusProgram = Effect.fn("contentRelease.status")(function* (
       releaseId,
     } satisfies ReleaseStatus;
   }
-  yield* requireCurrentRelease(release.releaseJson, releaseId);
   const signed = yield* decodeReleaseJson(release.releaseJson);
   if (signed.manifestHash !== manifestHash) {
     return yield* releaseFail(

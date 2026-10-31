@@ -138,12 +138,4 @@ describe("contentRelease/compact/cycle", () => {
 
     expect(await idle(t)).toBe(false);
   });
-  it("is not idle while a bootstrap floor sits above the completed floor", async () => {
-    const t = convexTest(schema, convexModules);
-    await seedReleases(t, [3, 4]);
-    await t.mutation((ctx) => insertCompaction(ctx, { compactedFloor: 3 }));
-
-    expect(await idle(t, 4)).toBe(false);
-    expect(await idle(t, 3)).toBe(true);
-  });
 });

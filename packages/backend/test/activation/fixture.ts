@@ -7,10 +7,7 @@ import {
   invertContentSnapshots,
   snapshotRowCount,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import {
-  CURRENT_CONTENT_GENERATION,
-  RETIRED_CONTENT_GENERATION,
-} from "@repo/backend/confect/contentRelease/generation";
+import { CURRENT_CONTENT_GENERATION } from "@repo/backend/confect/contentRelease/generation";
 import { TEST_DIGEST } from "@repo/backend/test/content/release";
 import {
   insertTestState,
@@ -36,54 +33,49 @@ export const RECOVERY = {
   sequence: 2,
 } satisfies TestIdentity;
 
-/** The retired release that a bootstrap replaces, active under the 0.51 generation. */
-const RETIRED_BASE = {
+/** The active release that a full replacement extends. */
+const REPLACED_BASE = {
   manifestHash: `sha256:${"b".repeat(64)}`,
-  releaseId: "release-retired-base",
+  releaseId: "release-replaced-base",
   sequence: 1,
 } satisfies TestIdentity;
 
-/** The first 1.0.0 release, declared over the retired base. */
-export const BOOTSTRAP = {
+/** A verified candidate that replaces every family of its base. */
+export const REPLACEMENT = {
   manifestHash: `sha256:${"c".repeat(64)}`,
-  releaseId: "release-bootstrap",
+  releaseId: "release-replacement",
   sequence: 2,
 } satisfies TestIdentity;
 
-/** A retained inverse that a bootstrap must never carry. */
-export const BOOTSTRAP_RECOVERY = {
+/** The retained inverse of the replacement. */
+export const REPLACEMENT_RECOVERY = {
   manifestHash: `sha256:${"d".repeat(64)}`,
-  releaseId: "release-bootstrap-recovery",
+  releaseId: "release-replacement-recovery",
   sequence: 3,
 } satisfies TestIdentity;
 
 /**
- * Seeds one verified candidate over the retired base, with its declaration,
- * generation, snapshots and optional inverse chosen by the test. A null
- * generation leaves the active release's generation unrecorded.
+ * Seeds one verified candidate that replaces its base, with its generation,
+ * snapshots and optional inverse chosen by the test. A null generation leaves
+ * the active release's generation unrecorded.
  */
-export async function seedRetiredCandidate(
+export async function seedReplacementCandidate(
   ctx: Parameters<typeof insertTestState>[0],
   options: {
-    readonly bootstrap: boolean;
-    readonly generation?:
-      | typeof CURRENT_CONTENT_GENERATION
-      | typeof RETIRED_CONTENT_GENERATION
-      | null;
+    readonly generation?: typeof CURRENT_CONTENT_GENERATION | null;
     readonly recovery?: boolean;
     readonly snapshots?: ContentSnapshotSet;
   }
 ) {
   await insertZeroRelease(ctx, {
-    ...RETIRED_BASE,
+    ...REPLACED_BASE,
     ownership: { base: [], result: ContentFamilySchema.literals },
     role: "candidate",
     status: "completed",
   });
   await insertZeroRelease(ctx, {
-    ...BOOTSTRAP,
-    base: RETIRED_BASE,
-    bootstrap: options.bootstrap,
+    ...REPLACEMENT,
+    base: REPLACED_BASE,
     ownership: {
       base: ContentFamilySchema.literals,
       result: ContentFamilySchema.literals,
@@ -94,9 +86,9 @@ export async function seedRetiredCandidate(
   });
   if (options.recovery) {
     await insertZeroRelease(ctx, {
-      ...BOOTSTRAP_RECOVERY,
-      base: BOOTSTRAP,
-      originReleaseId: BOOTSTRAP.releaseId,
+      ...REPLACEMENT_RECOVERY,
+      base: REPLACEMENT,
+      originReleaseId: REPLACEMENT.releaseId,
       ownership: { base: ContentFamilySchema.literals, result: [] },
       role: "recovery",
       snapshots: options.snapshots && invertContentSnapshots(options.snapshots),
@@ -104,44 +96,14 @@ export async function seedRetiredCandidate(
     });
   }
   await insertTestState(ctx, {
-    active: RETIRED_BASE,
-    candidate: BOOTSTRAP,
+    active: REPLACED_BASE,
+    candidate: REPLACEMENT,
     generation:
       options.generation === undefined
-        ? RETIRED_CONTENT_GENERATION
+        ? CURRENT_CONTENT_GENERATION
         : options.generation,
     nextSequence: 4,
-    recovery: options.recovery ? BOOTSTRAP_RECOVERY : undefined,
-  });
-}
-
-/** Seeds one completed bootstrap as the active release, with a recovery row that has no slot. */
-export async function seedActiveBootstrap(
-  ctx: Parameters<typeof insertTestState>[0]
-) {
-  await insertZeroRelease(ctx, {
-    ...BOOTSTRAP,
-    base: RETIRED_BASE,
-    bootstrap: true,
-    ownership: {
-      base: ContentFamilySchema.literals,
-      result: ContentFamilySchema.literals,
-    },
-    role: "candidate",
-    status: "completed",
-  });
-  await insertZeroRelease(ctx, {
-    ...BOOTSTRAP_RECOVERY,
-    base: BOOTSTRAP,
-    originReleaseId: BOOTSTRAP.releaseId,
-    ownership: { base: ContentFamilySchema.literals, result: [] },
-    role: "recovery",
-    status: "verified",
-  });
-  await insertTestState(ctx, {
-    active: BOOTSTRAP,
-    generation: CURRENT_CONTENT_GENERATION,
-    nextSequence: 4,
+    recovery: options.recovery ? REPLACEMENT_RECOVERY : undefined,
   });
 }
 
