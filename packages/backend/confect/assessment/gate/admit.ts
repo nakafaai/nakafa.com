@@ -38,7 +38,11 @@ function isStale(incoming: Version, latest: Option.Option<Version>) {
 
 /** Whether a closing attempt still takes a write under its rule, because its deadline passed only a moment ago. */
 function inAllowance(rule: Rule, attempt: Attempt, now: number) {
-  return attempt.state === "closing" && now < attempt.deadline + rule.allowance;
+  return (
+    rule.allowance > 0 &&
+    attempt.state === "closing" &&
+    now < attempt.deadline + rule.allowance
+  );
 }
 
 /**
