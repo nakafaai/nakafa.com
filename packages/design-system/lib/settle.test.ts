@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { untilPageRead, untilPageSettled } from "@repo/design-system/lib/settle";
-import { Effect, Fiber, TestClock } from "effect";
+import { Effect, Fiber } from "effect";
 
 /** Gives the window an idle callback that the test controls, and returns the stubs. */
 function stubIdleCallback() {
