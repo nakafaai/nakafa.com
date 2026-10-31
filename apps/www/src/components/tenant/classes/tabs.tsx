@@ -4,6 +4,7 @@ import {
   LibraryIcon,
   MessageMultiple01Icon,
   Task01Icon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
@@ -15,7 +16,7 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
  * The toolbar row of a class under its header, one height on every view: its home, its forum, its
- * library, its tasks, and its gradebook for a viewer who keeps the class's grades, each with its
+ * library, its tasks, its people, and its gradebook for a viewer who keeps the class's grades, each with its
  * icon, the current one marked as the page. On a narrow screen the row scrolls within itself,
  * never the page.
  */
@@ -78,6 +79,15 @@ export function ClassTabs({
         >
           <HugeIcons icon={Task01Icon} />
           {t("tabs-tasks")}
+        </Link>
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={classTab({ active: tab === "people" })}
+          params={params}
+          to="/school/$slug/classes/$classSlug/people"
+        >
+          <HugeIcons icon={UserGroupIcon} />
+          {t("tabs-people")}
         </Link>
         {canGrade ? (
           <Link

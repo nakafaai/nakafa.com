@@ -9,7 +9,7 @@ import {
 import { Schema } from "effect";
 
 /** What a write answers: its result, a refusal of what the client may not do, or a repeat of its key with another request. */
-export const WriteAnswer = Schema.Union([
+const WriteAnswer = Schema.Union([
   Schema.Struct({ outcome: Schema.Literal("applied"), summary: ImportSummary }),
   Schema.Struct({ outcome: Schema.Literal("forbidden") }),
   Schema.Struct({ outcome: Schema.Literal("conflict") }),

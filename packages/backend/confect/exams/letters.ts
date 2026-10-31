@@ -1,4 +1,5 @@
 import type { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
+import { REASON_ID } from "@repo/backend/confect/exams/scoring";
 import { Array as Arr, Option, Schema } from "effect";
 
 /** The label of an option, a statement or an answer: a rich document of its own. */
@@ -103,3 +104,17 @@ export const optionLetter = (
         String.fromCharCode(LETTER_A + index)
       )
     : String.fromCharCode(LETTER_A + index);
+
+/** Whether an option is one of a two-tier question's reasons. */
+export const isReasonOption = (optionId: string) =>
+  optionId.startsWith(`${REASON_ID}-`);
+
+/**
+ * The place of one option among a question's options in order, within its own choice: a two-tier question's
+ * reasons count from the start again, so a result names each one by the letter its paper showed.
+ */
+export const optionPlace = (optionIds: readonly string[], index: number) =>
+  Option.match(Arr.findFirstIndex(optionIds, isReasonOption), {
+    onNone: () => index,
+    onSome: (first) => (index >= first ? index - first : index),
+  });

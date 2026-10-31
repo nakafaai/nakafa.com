@@ -10,12 +10,7 @@ import {
 } from "@repo/backend/confect/tenancy/policy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import {
   Field,
   FieldContent,
@@ -99,11 +94,10 @@ function SchoolStudentsPolicy({ policies }: { policies: SchoolPolicies }) {
   const t = useTranslations("SchoolSettings");
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("policy-students")}</CardTitle>
-        <CardDescription>{t("policy-students-description")}</CardDescription>
-      </CardHeader>
+    <CardSection
+      description={t("policy-students-description")}
+      title={t("policy-students")}
+    >
       <CardContent>
         <FieldGroup>
           <SchoolSwitchPolicy
@@ -277,11 +271,10 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
   }
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("policy-domains")}</CardTitle>
-        <CardDescription>{t("policy-domains-description")}</CardDescription>
-      </CardHeader>
+    <CardSection
+      description={t("policy-domains-description")}
+      title={t("policy-domains")}
+    >
       <CardContent>
         <Textarea
           aria-invalid={problem !== null}

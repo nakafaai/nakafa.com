@@ -380,7 +380,7 @@ function AuditExport() {
       }
     >
       <HugeIcons icon={Download01Icon} />
-      {t("audit-export")}
+      <span className="@max-sm/header:sr-only">{t("audit-export")}</span>
     </Button>
   );
 }

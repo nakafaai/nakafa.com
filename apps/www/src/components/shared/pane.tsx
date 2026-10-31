@@ -50,7 +50,10 @@ export function PaneHeader({
   }
 
   return (
-    <header className="flex min-h-14 shrink-0 items-center gap-2 border-b px-4 py-2">
+    <header
+      className="flex min-h-14 shrink-0 items-center gap-2 border-b px-4 py-2"
+      data-slot="pane-header"
+    >
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <h2 className="text-sm font-medium wrap-anywhere" dir="auto">
           {title}
@@ -92,7 +95,7 @@ export function PaneBody({ children }: { children: ReactNode }) {
 /** A detail's footer: its actions at the end, on a second row where a narrow pane cannot hold them in one. */
 export function PaneFooter({ children }: { children: ReactNode }) {
   return (
-    <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-4 py-3">
+    <footer className="bg-muted/70 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-4 py-3">
       {children}
     </footer>
   );

@@ -23,7 +23,7 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { roleIcon } from "@/components/tenant/roles";
-import { assignGrantChange } from "@/components/tenant/settings/mutation";
+import { assignGrantChange } from "@/components/tenant/settings/grants";
 import {
   type PersonId,
   SchoolPersonPicker,

@@ -16,11 +16,6 @@ export const selfSelectableUserRoleValidator = Schema.Literals([
 ]);
 
 /**
- * User role validator (nullable) - for return types
- */
-export const userRoleValidator = Schema.NullOr(userRoleOptionsValidator);
-
-/**
  * User plan validator
  * Currently supports: free and pro
  * Can be extended in the future

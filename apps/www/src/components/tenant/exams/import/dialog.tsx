@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useImportFile } from "@/components/tenant/exams/import/calls";
 import { ImportFileField } from "@/components/tenant/exams/import/field";
+import { IMPORT_ACCEPT } from "@/components/tenant/exams/import/file";
 import { useExam } from "@/components/tenant/exams/provider";
 
 /**
@@ -62,8 +63,11 @@ export function ImportQuestions({
     >
       <FieldGroup>
         <ImportFileField
+          accept={IMPORT_ACCEPT}
           description={t("import-hint")}
+          drop={t("import-drop")}
           file={file}
+          label={t("import-label")}
           onFile={setFile}
         />
       </FieldGroup>

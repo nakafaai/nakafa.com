@@ -8,7 +8,7 @@ import {
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 
 /** The most rows one export reads: the target of a school's file, as an import is held to it. */
-export const EXPORT_LIMIT = 5000;
+const EXPORT_LIMIT = 5000;
 
 /** The cells that make a spreadsheet read a value as a formula (OWASP, CSV injection). */
 const FORMULA_START = /^[=+\-@\t\r]/u;
@@ -17,7 +17,7 @@ const FORMULA_START = /^[=+\-@\t\r]/u;
 const CSV_SPECIAL = /[",\r\n]/u;
 
 /** One sheet of an export: its header, then its rows of text. */
-export const ExportSheet = Schema.Struct({
+const ExportSheet = Schema.Struct({
   header: Schema.Array(Schema.String),
   rows: Schema.Array(Schema.Array(Schema.String)),
 });
@@ -44,17 +44,18 @@ export const encodeCsv = (sheet: typeof ExportSheet.Type) =>
   );
 
 /** A sheet as the bytes of an XLSX file, through the library the Dapodik export uses (ADR 0015). */
-export const encodeXlsx = (sheet: typeof ExportSheet.Type) =>
-  Effect.promise(async () => {
-    const { default: writeXlsxFile } = await import(
-      "write-excel-file/universal"
-    );
-    const cells = Arr.map(Arr.prepend(sheet.rows, sheet.header), (row) =>
-      Arr.map(row, (value) => ({ value }))
-    );
-    const blob = await writeXlsxFile(cells).toBlob();
-    return new Uint8Array(await blob.arrayBuffer());
-  });
+export const encodeXlsx = Effect.fn("integrations.exports.xlsx")(function* (
+  sheet: typeof ExportSheet.Type
+) {
+  const { default: writeXlsxFile } = yield* Effect.promise(
+    () => import("write-excel-file/universal")
+  );
+  const cells = Arr.map(Arr.prepend(sheet.rows, sheet.header), (row) =>
+    Arr.map(row, (value) => ({ value }))
+  );
+  const blob = yield* Effect.promise(() => writeXlsxFile(cells).toBlob());
+  return new Uint8Array(yield* Effect.promise(() => blob.arrayBuffer()));
+});
 
 /** One read's page, the shape every read of the school API answers. */
 type Page<A> =

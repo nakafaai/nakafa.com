@@ -3,8 +3,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import spec from "@repo/backend/confect/contentRelease/program.spec";
 import { readProgramCatalog } from "@repo/backend/content/program/catalog";
 import { programLayer } from "@repo/backend/content/program/confect";
-import { readProgramContext } from "@repo/backend/content/program/context";
-import { readProgramPage } from "@repo/backend/content/program/page";
+import { readProgramPlacement } from "@repo/backend/content/program/context";
 import { readProgramPath } from "@repo/backend/content/program/path";
 import { readProgramRoute } from "@repo/backend/content/program/route";
 import {
@@ -12,7 +11,7 @@ import {
   readProgramSitemap,
 } from "@repo/backend/content/program/sitemap";
 import { readProgramSubjects } from "@repo/backend/content/program/subjects";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 const catalog = FunctionImpl.make(
   databaseSchema,
@@ -39,7 +38,7 @@ const context = FunctionImpl.make(
   spec,
   "context",
   Effect.fn("contentRelease.program.context")(function* (args) {
-    return yield* readProgramContext(
+    return yield* readProgramPlacement(
       args.appLocale,
       {
         contentKey: args.contentKey,
@@ -52,7 +51,8 @@ const context = FunctionImpl.make(
       args.expectedActiveReleaseId
     ).pipe(
       Effect.provide(programLayer),
-      Effect.map(({ context: resolved, managed }) => ({
+      Effect.map(({ ancestors, context: resolved, managed }) => ({
+        ancestorJson: Arr.map(ancestors, ({ rowJson }) => rowJson),
         groupJson: resolved?.groupJson ?? null,
         managed,
         mappingJson: resolved?.mappingJson ?? null,
@@ -60,19 +60,6 @@ const context = FunctionImpl.make(
         resolvedCanonicalPath: resolved?.resolvedCanonicalPath ?? null,
       }))
     );
-  })
-);
-const page = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "page",
-  Effect.fn("contentRelease.program.page")(function* (args) {
-    return yield* readProgramPage(
-      args.appLocale,
-      args.expectedManifestHash,
-      args.expectedReleaseId,
-      args.paginationOpts
-    ).pipe(Effect.provide(programLayer));
   })
 );
 const path = FunctionImpl.make(
@@ -128,7 +115,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(catalog),
   Layer.provide(subjects),
   Layer.provide(context),
-  Layer.provide(page),
   Layer.provide(path),
   Layer.provide(route),
   Layer.provide(sitemapBuckets),

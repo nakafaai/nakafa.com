@@ -21,7 +21,7 @@ export const requireUnfrozen = Effect.fn("exams.freeze.require")(function* (
 });
 
 /**
- * The question a document belongs to, as its prompt, its rubric, or its explanation. A document
+ * The question a document belongs to, as its prompt, its reading, its rubric, or its explanation. A document
  * that no question holds belongs to no question, so none is returned.
  */
 const questionOwning = Effect.fn("exams.freeze.owner")(function* (
@@ -35,6 +35,14 @@ const questionOwning = Effect.fn("exams.freeze.owner")(function* (
     .pipe(Effect.orDie);
   if (Option.isSome(prompt)) {
     return prompt;
+  }
+  const reading = yield* reader
+    .table("examQuestions")
+    .index("by_reading", (query) => query.eq("reading", documentId))
+    .first()
+    .pipe(Effect.orDie);
+  if (Option.isSome(reading)) {
+    return reading;
   }
   const rubric = yield* reader
     .table("examQuestions")
@@ -52,7 +60,7 @@ const questionOwning = Effect.fn("exams.freeze.owner")(function* (
 });
 
 /**
- * Refuses an edit of a document a question owns, its prompt, rubric, or explanation, once a sitting
+ * Refuses an edit of a document a question owns, its prompt, reading, rubric, or explanation, once a sitting
  * of that question's exam has finished, so the paper the students sat, its scoring guide, and its
  * explanation cannot change. A document that no question owns belongs to no exam, and it passes.
  */
