@@ -19,12 +19,13 @@ import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { createDocument } from "@repo/backend/confect/editor/create";
 import { storedDocument } from "@repo/backend/confect/editor/document";
 import {
+  choiceAnswers,
   encodeAnswers,
   encodeKey,
   essayAnswers,
   NEW_QUESTION_POINTS,
   NEW_QUESTION_TEMPLATE,
-  newChoiceAnswers,
+  textLabel,
 } from "@repo/backend/confect/exams/question";
 import {
   createEmptyDocument,
@@ -54,6 +55,9 @@ const UPCOMING_ROOM = "Lab 3";
 
 /** One day, how far ahead the seeded upcoming sitting opens. */
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** The words of a seeded question's four options, since the schedule refuses an option that shows nothing. */
+const OPTION_TEXTS = ["Merah", "Kuning", "Hijau", "Biru"] as const;
 
 /** The key of a seeded question: its first option is the correct answer. */
 const FIRST_OPTION_KEY: Arr.NonEmptyReadonlyArray<InteractionKey> = [
@@ -137,8 +141,8 @@ export const ownerUserId = Effect.fn("exams.seed.owner")(function* (
 
 /**
  * Places one seeded question after `after`: the prompt document it is given, empty rubric and
- * explanation documents, and one choice whose first option is the correct answer. It returns the
- * question's ID.
+ * explanation documents, and one choice of four written options whose first is the correct
+ * answer. It returns the question's ID.
  */
 export const seedQuestion = Effect.fn("exams.seed.question")(function* (
   exam: Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">,
@@ -152,7 +156,9 @@ export const seedQuestion = Effect.fn("exams.seed.question")(function* (
   }).pipe(Effect.orDie);
   const rubric = yield* createEmptyDocument(exam).pipe(Effect.orDie);
   const explanation = yield* createEmptyDocument(exam).pipe(Effect.orDie);
-  const answers = yield* encodeAnswers(newChoiceAnswers());
+  const answers = yield* encodeAnswers(
+    choiceAnswers(Arr.map(OPTION_TEXTS, textLabel))
+  );
   const key = yield* encodeKey(FIRST_OPTION_KEY);
   return yield* placeQuestion(exam, after, {
     answers,

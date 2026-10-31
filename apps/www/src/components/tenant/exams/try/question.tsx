@@ -7,6 +7,7 @@ import {
   NO_RESPONSE,
   typedText,
 } from "@repo/backend/confect/assessment/response";
+import { paperAnswers } from "@repo/backend/confect/exams/parts";
 import { ClientOnly } from "@tanstack/react-router";
 import { Option, Record as Rec } from "effect";
 import { lazy, Suspense } from "react";
@@ -63,10 +64,12 @@ export function ExamTryQuestion({
   const choose = useExamTry((state) => state.choose);
   const flag = useExamTry((state) => state.flag);
   const flagged = useExamTry((state) => Rec.has(state.flags, question.id));
-  const choice = choiceOf(question.answers);
-  const entry = writtenOf(question.answers);
-  const pairing = pairingOf(question.answers);
-  const table = tableOf(question.answers);
+  // The try shows the paper a student would meet, which leaves out every part that shows nothing.
+  const answers = paperAnswers(question.answers);
+  const choice = choiceOf(answers);
+  const entry = writtenOf(answers);
+  const pairing = pairingOf(answers);
+  const table = tableOf(answers);
 
   return (
     <PlayerQuestion

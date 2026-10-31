@@ -200,11 +200,12 @@ export const SignalView = Schema.Struct({
 /**
  * One question of a student's paper: its number in the exam and its interactions without any
  * answer key. Its prompt is read on its own, by `PromptView`, and what the student saved for it
- * by `SavedView`, so an answer never makes the paper read again.
+ * by `SavedView`, so an answer never makes the paper read again. The paper leaves out every part
+ * that shows nothing, so a question whose every part is empty holds no interaction.
  */
 const PaperQuestion = Schema.Struct({
   id: Id("examQuestions"),
-  interactions: Schema.NonEmptyArray(InteractionSchema),
+  interactions: Schema.Array(InteractionSchema),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
 });
 
@@ -245,7 +246,7 @@ export const PromptView = Schema.Struct({
  */
 export const ScreenView = Schema.Struct({
   at: Schema.Finite,
-  interactions: Schema.NonEmptyArray(InteractionSchema),
+  interactions: Schema.Array(InteractionSchema),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   prompt: Schema.String,
   response: Schema.NullOr(ExamResponse),

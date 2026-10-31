@@ -3,17 +3,18 @@ import {
   letterScript,
   optionLetter,
 } from "@repo/backend/confect/exams/letters";
+import { questionGap } from "@repo/backend/confect/exams/parts";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
   fixedOptions,
-  needsKey,
+  type QuestionTemplate,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { statusIconVariants } from "@repo/design-system/lib/status";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Match, Option } from "effect";
 import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -72,6 +73,14 @@ const ExamText = lazy(() =>
   }))
 );
 
+/** The mark of a question with a part that shows nothing, in the words of its template. */
+const emptyMark = (template: QuestionTemplate) =>
+  Match.value(template).pipe(
+    Match.when("match", () => "page-empty-match" as const),
+    Match.when("table", () => "page-empty-table" as const),
+    Match.orElse(() => "page-empty-choice" as const)
+  );
+
 /** The props of one page of the canvas. */
 interface ExamPageProps {
   /** The canvas that scrolls the pages, which decides how far a page is from the view. */
@@ -122,20 +131,27 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
           onChange={editing.setTemplate}
           template={editing.displayed.template}
         />
-        {editing.displayed.key === null &&
-        needsKey(editing.displayed.template) ? (
-          <span className="text-muted-foreground flex items-center gap-1 text-xs">
-            <HugeIcons
-              aria-hidden="true"
-              className={statusIconVariants({
-                className: "size-3.5",
-                tone: "warning",
-              })}
-              icon={Alert02Icon}
-            />
-            {t("page-no-key")}
-          </span>
-        ) : null}
+        {/* What keeps the question from being scheduled, as the schedule names it: an empty part, or no key. */}
+        {Option.match(questionGap(editing.displayed), {
+          onNone: () => null,
+          onSome: (gap) => (
+            <span className="text-muted-foreground flex items-center gap-1 text-xs">
+              <HugeIcons
+                aria-hidden="true"
+                className={statusIconVariants({
+                  className: "size-3.5",
+                  tone: "warning",
+                })}
+                icon={Alert02Icon}
+              />
+              {t(
+                gap === "empty"
+                  ? emptyMark(editing.displayed.template)
+                  : "page-no-key"
+              )}
+            </span>
+          ),
+        })}
       </div>
       {editable ? <PageActions index={index} question={question} /> : null}
     </div>

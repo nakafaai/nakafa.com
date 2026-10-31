@@ -5,6 +5,7 @@ import type {
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { rules } from "@repo/backend/confect/assessment/gate/rules";
 import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
+import { paperAnswers } from "@repo/backend/confect/exams/parts";
 import { questionAnswers } from "@repo/backend/confect/exams/question";
 import {
   heldSection,
@@ -16,10 +17,10 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 
 /**
- * One question of the paper: its interactions decoded from the question row. The question's
- * answer key is never read, so it never reaches the paper. The prompt is read by `prompt`, one
- * question at a time, and what the student saved by `saved`, so the paper stays small and no
- * answer makes it read again.
+ * One question of the paper: its interactions decoded from the question row, with no part that
+ * shows nothing (`paperAnswers`). The question's answer key is never read, so it never reaches the
+ * paper. The prompt is read by `prompt`, one question at a time, and what the student saved by
+ * `saved`, so the paper stays small and no answer makes it read again.
  */
 const paperQuestion = Effect.fn("exams.sittings.paper.question")(function* (
   questionId: ExamQuestionsDoc["_id"],
@@ -31,7 +32,7 @@ const paperQuestion = Effect.fn("exams.sittings.paper.question")(function* (
     .pipe(Effect.orDie);
   return {
     id: row._id,
-    interactions: yield* questionAnswers(row.answers),
+    interactions: paperAnswers(yield* questionAnswers(row.answers)),
     number,
   };
 });
