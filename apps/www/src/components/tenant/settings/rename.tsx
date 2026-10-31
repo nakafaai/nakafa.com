@@ -40,7 +40,9 @@ export function PersonRenameDialog({
   const rename = useMutation(tenancy.people.rename).withOptimisticUpdate(
     renamePersonChange
   );
-  const [name, setName] = useState(person.name);
+  // The field holds what the admin typed, and the person's own name until they type.
+  const [typed, setName] = useState<string | null>(null);
+  const name = typed ?? person.name;
   const next = name.trim();
   const canSave = next !== person.name && Schema.is(PersonName)(next);
 

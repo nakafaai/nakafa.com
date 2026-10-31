@@ -22,7 +22,8 @@ export const MATH_STEPS = Math.floor(
  * Reaching the last step is no shortfall, since a run that has checked all it
  * needs writes its answer there too: the prompt asks the model to name any
  * calculation it did not check, and a provider that still calls a tool in the
- * last step is cut by the step cap and reported as partial.
+ * last step has that call refused by the AI SDK, ends at the step cap and is
+ * reported as partial.
  *
  * Reference: https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
  */

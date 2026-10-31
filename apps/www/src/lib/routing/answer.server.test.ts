@@ -176,24 +176,21 @@ describe("decisions before the router", () => {
       })
   );
 
-  it.effect("moves a trailing slash before the router", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served("/en/articles/belajar/");
+  it.effect(
+    "moves a trailing slash and a non-public spelling before the router",
+    () =>
+      Effect.gen(function* () {
+        for (const [address, location] of [
+          ["/en/articles/belajar/", "/en/articles/belajar"],
+          ["/en/curricula/x", "/en/curriculum/x"],
+        ] as const) {
+          const { handle, response } = yield* served(address);
 
-      expect(response.status).toBe(308);
-      expect(response.headers.get("location")).toBe("/en/articles/belajar");
-      expect(handle).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("moves a non-public spelling before the router", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served("/en/curricula/x");
-
-      expect(response.status).toBe(308);
-      expect(response.headers.get("location")).toBe("/en/curriculum/x");
-      expect(handle).not.toHaveBeenCalled();
-    })
+          expect(response.status).toBe(308);
+          expect(response.headers.get("location")).toBe(location);
+          expect(handle).not.toHaveBeenCalled();
+        }
+      })
   );
 
   it.effect("moves a migrated address before the router", () =>
