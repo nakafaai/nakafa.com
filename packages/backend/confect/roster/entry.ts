@@ -60,53 +60,29 @@ export const blindNisn = Effect.fn("roster.entry.blind")(function* (
   return yield* blindText(keys, NISN_BLIND, nisn).pipe(Effect.orDie);
 });
 
-/** The view of a roster row that staff read: whether a NISN is on file, and the age flag. */
+/** The view of a roster row that staff read: whether a NISN is on file. */
 export const rosterViewOf = (
   personId: GenericId.GenericId<"tenantPeople">,
   entry: Option.Option<RosterEntriesDoc>
-): typeof RosterView.Type => {
-  const row = Option.getOrUndefined(entry);
-  return {
-    hasNisn: row?.nisn !== undefined,
-    personId,
-    ...(row?.underAgeLimit === undefined
-      ? {}
-      : { underAgeLimit: row.underAgeLimit }),
-  };
-};
+): typeof RosterView.Type => ({ hasNisn: Option.isSome(entry), personId });
 
-/**
- * Writes the roster row of one student: the NISN, sealed and blinded under the
- * school key, when one is given, and the age flag. A NISN that is not given keeps
- * the one on file, so setting the flag alone never drops it.
- */
+/** Writes the roster row of one student: the NISN, sealed and blinded under the school key. */
 export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
   keys: TenantKeys,
   person: TenantPeopleDoc,
-  facts: {
-    readonly nisn: Option.Option<typeof Nisn.Type>;
-    readonly underAgeLimit: boolean;
-  }
+  nisn: typeof Nisn.Type
 ) {
   const existing = yield* rosterEntryOf(person._id);
-  const nisn = yield* Option.match(facts.nisn, {
-    onNone: () => Effect.succeed(Option.getOrUndefined(existing)?.nisn),
-    onSome: (value) =>
-      Effect.gen(function* () {
-        const sealed = yield* sealText(
-          keys,
-          { ...NISN_BLIND, row: [person._id] },
-          value
-        );
-        const blind = yield* blindText(keys, NISN_BLIND, value);
-        return { blind, sealed };
-      }).pipe(Effect.orDie),
-  });
+  const sealed = yield* sealText(
+    keys,
+    { ...NISN_BLIND, row: [person._id] },
+    nisn
+  ).pipe(Effect.orDie);
+  const blind = yield* blindText(keys, NISN_BLIND, nisn).pipe(Effect.orDie);
   const row: typeof rosterEntryValidator.Type = {
-    ...(nisn === undefined ? {} : { nisn }),
+    nisn: { blind, sealed },
     personId: person._id,
     tenantId: person.tenantId,
-    underAgeLimit: facts.underAgeLimit,
   };
   const writer = yield* DatabaseWriter;
   yield* Option.match(existing, {
@@ -128,13 +104,10 @@ export const openNisn = Effect.fn("roster.entry.open")(function* (
   keys: TenantKeys,
   entry: RosterEntriesDoc
 ) {
-  if (entry.nisn === undefined) {
-    return Option.none<typeof Nisn.Type>();
-  }
   const text = yield* openText(
     keys,
     { ...NISN_BLIND, row: [entry.personId] },
     entry.nisn.sealed
   );
-  return Option.some(yield* Schema.decodeEffect(Nisn)(text));
+  return yield* Schema.decodeEffect(Nisn)(text);
 }, Effect.orDie);

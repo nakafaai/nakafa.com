@@ -67,7 +67,7 @@ const printable = FunctionImpl.make(
         schoolKeys(letter.tenantId),
       ]);
     const [nisn, npsn] = yield* Effect.all([
-      openNisn(keys, entry).pipe(Effect.flatMap(Effect.fromOption)),
+      openNisn(keys, entry),
       Effect.fromNullishOr(unit.npsn),
     ]).pipe(Effect.orDie);
     const locale = unit.contentLanguage;

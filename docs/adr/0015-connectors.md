@@ -84,11 +84,9 @@ below).
   XLSX is the only path. When the API runs, the XLSX path is replaced in the same
   release. `confect/connectors` owns the import of the format, and Records owns
   the XLSX export of report data for Dapodik and e-Ijazah (ADR 0033).
-- The Dapodik import reads a student's name, NISN, level, and class group name,
-  and the date of birth only to set the student's under-age flag on the roster.
-  The date is not kept (ADR 0034). It reads no NIK, no address, and no other
-  column. The columns of each Dapodik version are recorded from a pilot school's
-  export.
+- The Dapodik import reads a student's name, NISN, level, and class group name.
+  It reads no date of birth, no NIK, no address, and no other column. The columns
+  of each Dapodik version are recorded from a pilot school's export.
 - A file import (the Dapodik XLSX, and the OneRoster CSV of ADR 0029) reads in an
   action, checks the file, shows a preview before it applies anything, and
   deletes the file once the import is applied or cancelled. For an XLSX file the
@@ -447,8 +445,8 @@ section says why.
 
 - **The import lives in `confect/roster`, not `confect/connectors`.** A file
   holds no token and opens no connection, so it needs no connection kind and no
-  sealed secret. The roster owns the student's NISN and under-age flag (ADR
-  0034), so it owns the rows a Dapodik file brings: `roster/imports:apply`
+  sealed secret. The roster owns the student's NISN (ADR 0034), so it owns the
+  rows a Dapodik file brings: `roster/imports:apply`
   writes one batch, `roster/imports:list` reads the period's students a page at
   a time, and `roster/exports:lines` reads them all for the export. The browser
   half is `apps/www/src/components/tenant/roster`.
@@ -458,10 +456,8 @@ section says why.
   cancelled. The built import reads the XLSX in the Admin's browser with
   `read-excel-file`, which loads only when the Admin chooses a file, and the file
   never leaves the device. Only the read columns reach the server: the name, the
-  NISN, the class group, and the under-age flag, which the browser derives from
-  the birth date and then drops. No birth date, NIK, address, or other column is
-  read or sent, so no file is stored, and no file needs deleting. This keeps more
-  of the rule than an upload would: the date never reaches Nakafa at all.
+  NISN, and the class group. No birth date, NIK, address, or other column is read
+  or sent, so no file is stored, and no file needs deleting.
 - The server checks each row as it would a row typed by hand: the NISN as ten
   digits, the name as a Person name, the class group as a cohort name. A row that
   fails a check is shown in the preview with its reason and not sent.
@@ -477,11 +473,9 @@ section says why.
   when the period holds one. Each batch journals `roster.imported` with the source
   and the counts of rows added, changed, and skipped (ADR 0016).
 - The columns are found by their header text, so the title rows above the header
-  are skipped: `Nama`, `NISN`, `Rombel Saat Ini`, and `Tanggal Lahir` or `Tgl
-  Lahir`. A row that holds neither a name nor a NISN, such as the sub-header row
-  under the parents' column groups, is skipped. A birth date is read from a date
-  cell, a spreadsheet date number, or text as `YYYY-MM-DD`, `DD/MM/YYYY`,
-  `DD-MM-YYYY`, or `22 Agustus 2011`. A NISN kept in a number cell gets back the
+  are skipped: `Nama`, `NISN`, and `Rombel Saat Ini`. A row that holds neither a
+  name nor a NISN, such as the sub-header row under the parents' column groups, is
+  skipped. A NISN kept in a number cell gets back the
   leading zeros the number lost. The exact layout of each Dapodik version is
   still to be confirmed with a pilot school's export, and a sheet without the
   `Nama` and `NISN` header is refused with a message.

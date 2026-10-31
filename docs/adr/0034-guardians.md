@@ -8,15 +8,11 @@ and K3 (approved 13 October 2026). Counsel reviews the wording (K20), and nothin
 waits for that review. The Implementation Status table at the end says which parts
 are live.
 
-Amended on 18 October 2026 for the age marker: the school roster keeps a flag that
-a student is under the age limit, and no birth date (see Age). ADR 0015 and ADR
-0027 follow it.
-
 Amended on 31 October 2026 by the owner's standing rule of 2 October 2026: signing
 in means acceptance, and for a user under 18 that a parent, guardian, or teacher has
 agreed. A school's data processing agreement covers its students. No gate refuses a
-student, so the under-18 gate is removed (see Age). The consent ledger stays,
-because a guardian's access to a child depends on it.
+student, so the under-18 gate is removed, and the age flag it read goes with it (see
+Age). The consent ledger stays, because a guardian's access to a child depends on it.
 
 ## Context
 
@@ -114,24 +110,15 @@ withdrawal is done (blueprint, Orang tua, requests).
 
 ### Age
 
-- The age limit comes from the country profile (ADR 0032). For Indonesia it is
-  under 18, which the profile reads from UU 35/2014 Pasal 1 angka 1 (a secondary
-  copy until counsel confirms it, K20).
-- No birth date is stored. The blueprint's Dapodik rule reads a birth date only as
-  an age marker and does not store it (ADR 0015). The import compares the date
-  with the limit, keeps the answer, and drops the date. The answer is one flag on
-  the student's roster row, `underAgeLimit`. The import reads no NIK (K13).
-- A roster row with no flag counts as under the limit, so quiet hours apply until
-  the school sets the flag. Staff can set it by hand when a student is entered, and
-  each roster import sets it again. A student who turns 18 keeps the flag until the
-  next import. That errs toward quiet hours, never away from them.
+- Nakafa keeps no age. No birth date and no age flag are stored, and the import reads
+  no birth date and no NIK (ADR 0015, K13).
 - No gate refuses a student. Signing in means the user accepts the Terms and the
   Privacy Policy and, for a user under 18, that a parent, guardian, or teacher has
   agreed. A school's data processing agreement covers its students. A student uses
   Nina, the class forum, and every other feature from the first sign-in, with or
   without a guardian's link.
-- Quiet hours follow the same flag. They are on for a student under the limit and
-  for a student with no flag, and only the school's DPIA can relax them (ADR 0027).
+- Quiet hours are on for every student, and only the school's DPIA can relax them
+  (ADR 0027).
 
 ### Notices and channels
 
@@ -152,9 +139,7 @@ withdrawal is done (blueprint, Orang tua, requests).
   a guardian's view.
 - Every consent is a row with a time, a method, a policy version, and a checker,
   so a school can show which check admitted a guardian and under which rule.
-- The roster's `underAgeLimit` flag is the only new age value. It sits on the
-  roster row, has one reader (quiet hours), and leaves with the
-  roster when the school leaves. No birth date is stored anywhere.
+- No age value is stored anywhere.
 - Withdrawal cannot be undone by a click. A guardian who withdraws links again
   through the same verification, and the old rows stay in the ledger.
 
@@ -166,10 +151,7 @@ withdrawal is done (blueprint, Orang tua, requests).
 - A `guardian` relation with the role's name. The role grants nothing, so the
   relation name should say what the link is (ADR 0012).
 - An update of the consent state in place. The ledger must show every change.
-- Storing the birth date and computing the age at each check. The blueprint says
-  the date is not stored, and one flag answers every question that quiet hours ask.
-- The flag on the tenant person row. That row is shared by every role of a school,
-  and the flag is a roster fact (ADR 0011).
+- Storing a birth date or an age flag. Nothing reads an age.
 - A guardian code accepted on nakafa.com. ADR 0009 accepts a parent's code only on
   the school host, at `/parents`, so a code typed anywhere else finds nothing.
 
@@ -188,7 +170,7 @@ withdrawal is done (blueprint, Orang tua, requests).
 | `verifiedParent` relation and the link rows | Built, S7: `guardianLinks` and the `guardianLink` kind (`confect/guardians`). Admin and Staff start, list, check by hand, and revoke links (`guardians/links`). An address reuses its guardian Person, and one address holds one live link to a student. |
 | `guardianCodes` and the email code at `/parents` | Built, S8: `guardians/codes:send` mails the code from the mutation that draws it, through `confect/emails`, and answers the same for every address. The HMAC uses `LOGIN_CARD_SECRET` under the purpose label `nakafa/identity/guardian-code/v1`, bound to the school and the address (`identity/secret.ts`). The school host's Better Auth endpoint `/school/guardian/sign-in` (`auth/guardian.ts`) redeems the code through `guardians/codes:redeem`, binds the guardian Person with the claim method `code`, and makes the session. A sweep deletes expired codes hourly. |
 | `guardianConsents` and the NISN second check | Built, S8: the guardian's check compares the blind of the typed NISN with the roster's (`guardians/family:confirm`). Three mismatches leave only the staff check. Withdrawal writes the `withdrawn` row with the method of its grant and ends the link in one transaction. |
-| The under-age flag on the school roster | Built: `rosterEntries` holds `underAgeLimit` and the NISN, sealed and blinded under the school key (`confect/roster`). Admin and Staff set it with `roster/entries:set`. The Dapodik import sets it again when it lands (ADR 0015). |
+| The NISN on the school roster | Built: `rosterEntries` holds the NISN, sealed and blinded under the school key (`confect/roster`). Admin and Staff set it with `roster/entries:set`, and the Dapodik import sets it (ADR 0015). |
 | Guardian notices and the rename of the notification relation | Planned, S9 |
 | Parent home, shared narratives, and requests | Partly built, S10: the parent home at `/parents` lists each linked child, runs the NISN check, shows the released grades of a verified link, and withdraws consent. Shared narratives wait for Insight (ADR 0035), and report copy and correction requests are a later slice. |
 
