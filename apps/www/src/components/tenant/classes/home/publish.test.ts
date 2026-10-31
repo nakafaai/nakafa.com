@@ -28,6 +28,7 @@ const stored: ClassPost = {
   email: true,
   id: Schema.decodeUnknownSync(Id("classroomPosts"))("post-1"),
   mine: true,
+  pinned: false,
   text: args.text,
 };
 

@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
+import { PinLimit } from "@repo/backend/confect/classroom/errors";
 import { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import { PostText, PostView } from "@repo/backend/confect/classroom/posts/post";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
@@ -11,9 +12,10 @@ import { Schema } from "effect";
 
 /**
  * The announcements of a class, on its home (ADR 0025). Whoever reads the forum
- * reads them, newest first. A subject teacher posts one, with the choice to send
- * it by email too, and edits or removes their own. An announcement of another
- * class is refused as a missing object.
+ * reads them, newest first, and the pinned ones on their own. A subject teacher
+ * posts one, with the choice to send it by email too, edits or removes their own,
+ * and pins any announcement of the class. An announcement of another class is
+ * refused as a missing object.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -25,6 +27,27 @@ export default GroupSpec.make()
       item: () => PostView,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "forum.read", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "pinned",
+      args: () => ({ classId: Id("classes"), slug: TenantSlug }),
+      returns: () => Schema.Array(PostView),
+      error: () => AccessDenied,
+    }).middleware(ClassAccess, { action: "forum.read", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "pin",
+      args: () => ({
+        classId: Id("classes"),
+        pinned: Schema.Boolean,
+        postId: Id("classroomPosts"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, PinLimit]),
+    }).middleware(ClassAccess, { action: "post.publish", arg: "classId" })
   )
   .addFunction(
     FunctionSpec.publicMutation({
