@@ -8,7 +8,6 @@ import {
   changedOption,
   choiceOf,
   emptyLabel,
-  entryOf,
   holdsLabel,
   keyWithoutOption,
   markedKey,
@@ -420,12 +419,7 @@ describe("withOptionRemoved", () => {
   });
 });
 
-describe("entryOf, acceptedKey and acceptedOf", () => {
-  it("finds the text entry of a short answer, and none in a choice", () => {
-    expect(entryOf([entry])).toEqual(Option.some(entry));
-    expect(entryOf([choice])).toEqual(Option.none());
-  });
-
+describe("acceptedKey and acceptedOf", () => {
   it("accepts each text once, cleaned as the contract takes it, ignoring case and extra spaces", () => {
     const key = acceptedKey(
       [entry],

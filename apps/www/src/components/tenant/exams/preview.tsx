@@ -21,13 +21,8 @@ import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { useCallback, useDeferredValue, useMemo } from "react";
 import { useTranslations } from "use-intl";
-import {
-  choiceOf,
-  entryOf,
-  type OptionLabel,
-} from "@/components/tenant/exams/answer";
+import { choiceOf, type OptionLabel } from "@/components/tenant/exams/answer";
 import { matchOf } from "@/components/tenant/exams/match";
-import { numberEntryOf } from "@/components/tenant/exams/number";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
@@ -37,8 +32,7 @@ import {
 } from "@/components/tenant/exams/provider";
 import {
   OptionAddRoom,
-  PaperLine,
-  PaperNumber,
+  PaperField,
   PaperOption,
   PaperOptions,
   PaperPairs,
@@ -328,12 +322,7 @@ export function PaperSketch({
           />
         ),
       })}
-      {Option.isSome(entryOf(question.answers)) ? <PaperLine /> : null}
-      {Option.match(numberEntryOf(question.answers), {
-        onNone: () => null,
-        onSome: (entry) => <PaperNumber unit={entry.unit} />,
-      })}
-      {question.template === "essay" ? <PaperLine essay /> : null}
+      <PaperField answers={question.answers} />
       {addsOption ? <OptionAddRoom /> : null}
     </>
   );

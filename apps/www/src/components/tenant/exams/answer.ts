@@ -292,18 +292,6 @@ export const keyWithoutOption = (
   );
 };
 
-/** The text entry interaction, which a short answer holds. */
-type TextEntry = Extract<Interaction, { kind: "textEntry" }>;
-
-/** Whether an interaction is a text entry. */
-const isTextEntry = (answer: Interaction): answer is TextEntry =>
-  answer.kind === "textEntry";
-
-/** The first text entry of a question's answers, or none when the answers hold no text entry. */
-export const entryOf = (
-  answers: readonly Interaction[]
-): Option.Option<TextEntry> => Arr.findFirst(answers, isTextEntry);
-
 /** The answers a key accepts for a short answer, in the order the teacher wrote them, or none without a key. */
 export const acceptedOf = (
   key: readonly InteractionKey[] | null
