@@ -5,12 +5,8 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Effect, type Option } from "effect";
+import { Effect } from "effect";
 import { useTranslations } from "use-intl";
-import {
-  type InboxFirstPage,
-  useInbox,
-} from "@/components/notifications/inbox";
 import { markAllReadInLists } from "@/components/notifications/mutation";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -20,27 +16,23 @@ import { reportClientException } from "@/lib/analytics/client";
  * and final, so the header never changes while the inbox loads; with no unread row it
  * marks nothing.
  * Its icon and its words show, or on a phone its icon alone, named for assistive
- * technology, so a header stays one row. It stays inert until the live inbox takes
- * a change, and a refusal by the server rolls the change back and shows the shared
- * error toast.
+ * technology, so a header stays one row. A press before the inbox loads still sends:
+ * the server marks every unread row, and the inbox loads them read. A refusal by the
+ * server rolls the change back and shows the shared error toast.
  */
 export function MarkAllRead({
-  first,
   slug,
 }: {
-  first: Option.Option<InboxFirstPage>;
   /** The one school whose rows it marks; every school's without it. */
   slug: TenantSlug | undefined;
 }) {
   const t = useTranslations("Notifications");
-  const { ready } = useInbox(first, slug);
   const readAll = useMutation(notifications.inbox.readAll).withOptimisticUpdate(
     markAllReadInLists
   );
 
   return (
     <Button
-      inert={!ready}
       onClick={() =>
         Effect.runPromise(
           Effect.tryPromise(() =>

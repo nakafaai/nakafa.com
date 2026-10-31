@@ -39,7 +39,7 @@ export function SchoolNotifications({ all }: { all: boolean }) {
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {/* Mark all read stands before the filter from the first paint, ready and final. */}
-        <MarkAllRead first={Option.none()} slug={scope} />
+        <MarkAllRead slug={scope} />
         <InboxFilter all={all} />
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col py-6">

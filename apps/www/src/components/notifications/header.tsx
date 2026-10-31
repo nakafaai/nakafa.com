@@ -24,10 +24,7 @@ export function NotificationsHeader({
   return (
     <BreadcrumbHeader
       value={{
-        action:
-          rows.length > 0 ? (
-            <MarkAllRead first={first} slug={undefined} />
-          ) : undefined,
+        action: rows.length > 0 ? <MarkAllRead slug={undefined} /> : undefined,
         home: HOME_TARGET,
         homeLabel: tCommon("home"),
         items: [{ label: t("title") }],
