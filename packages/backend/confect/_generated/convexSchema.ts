@@ -76,6 +76,8 @@ import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
 import gradingSchemes from "./tables/gradingSchemes";
+import graduationLetters from "./tables/graduationLetters";
+import graduations from "./tables/graduations";
 import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
@@ -223,6 +225,8 @@ export default $defineSchema({
   examSittings: $Table.tableDefinition(examSittings),
   exams: $Table.tableDefinition(exams),
   gradingSchemes: $Table.tableDefinition(gradingSchemes),
+  graduationLetters: $Table.tableDefinition(graduationLetters),
+  graduations: $Table.tableDefinition(graduations),
   guardianCodes: $Table.tableDefinition(guardianCodes),
   guardianConsents: $Table.tableDefinition(guardianConsents),
   guardianLinks: $Table.tableDefinition(guardianLinks),
