@@ -84,6 +84,7 @@ import guardianLinks from "./tables/guardianLinks";
 import integrationClients from "./tables/integrationClients";
 import integrationDeliveries from "./tables/integrationDeliveries";
 import integrationDevices from "./tables/integrationDevices";
+import integrationRequests from "./tables/integrationRequests";
 import integrationTokens from "./tables/integrationTokens";
 import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
@@ -233,6 +234,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly integrationClients: typeof integrationClients;
   readonly integrationDeliveries: typeof integrationDeliveries;
   readonly integrationDevices: typeof integrationDevices;
+  readonly integrationRequests: typeof integrationRequests;
   readonly integrationTokens: typeof integrationTokens;
   readonly integrationWebhooks: typeof integrationWebhooks;
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
@@ -381,6 +383,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   integrationClients,
   integrationDeliveries,
   integrationDevices,
+  integrationRequests,
   integrationTokens,
   integrationWebhooks,
   irtCalibrationRuns,
