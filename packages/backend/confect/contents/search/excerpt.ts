@@ -25,6 +25,18 @@ export function buildContentSearchExcerpt(
   return sliceExcerpt(text, matchIndex);
 }
 
+/**
+ * A document's searched text without the title it opens with. A result shows its
+ * title above its excerpt, so the excerpt starts where the title ends.
+ */
+export function textAfterTitle(text: string, title: string) {
+  const body = normalizeText(text);
+  const heading = normalizeText(title);
+  return body.startsWith(heading)
+    ? body.slice(heading.length).trimStart()
+    : body;
+}
+
 /** Only the final term in each query variant may match a word prefix. */
 function getQueryTokens(queryTexts: readonly string[]) {
   return Arr.flatMap(queryTexts, (queryText) => {

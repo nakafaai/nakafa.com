@@ -52,6 +52,7 @@ import {
   roomsOfGroup,
 } from "@/components/tenant/exams/filter";
 import { RoomMenu } from "@/components/tenant/exams/move";
+import { RoomSeats } from "@/components/tenant/exams/seats";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -329,6 +330,9 @@ function RoomsTable({
                 title={t("rooms-state")}
               />
             </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              {t("rooms-seats")}
+            </TableHead>
             <TableHead className="px-2 sm:px-4" />
           </TableRow>
         </TableHeader>
@@ -407,6 +411,11 @@ function RoomItem({
           label={t(`room-state-${room.state}`)}
           tone={ROOM_STATE_LOOKS[room.state].tone}
         />
+      </TableCell>
+      <TableCell className="px-2 text-center sm:px-4">
+        {room.state === "open" ? (
+          <RoomSeats sittingId={room.id} slug={slug} />
+        ) : null}
       </TableCell>
       <TableCell className="px-2 text-end sm:px-4">
         <RoomMenu examId={examId} room={room} slug={slug} />

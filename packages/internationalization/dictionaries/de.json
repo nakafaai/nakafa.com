@@ -190,7 +190,7 @@
     "state-submitted": "Abgegeben",
     "signals": "Ereignisse",
     "signals-empty": "Bisher ist kein Ereignis erfasst.",
-    "signals-offline-note": "Eine verlorene Verbindung erscheint hier mit ihrer Dauer, sobald der Schüler wieder online ist.",
+    "signals-offline-note": "Eine verlorene Verbindung erscheint am Platz, solange sie dauert, und hier, sobald der Schüler wieder online ist.",
     "signal-exit": "Hat die Prüfung verlassen",
     "signal-return": "Ist zur Prüfung zurückgekehrt",
     "screen-title": "Bildschirm der Person",
@@ -381,6 +381,8 @@
     "rooms-opens": "Beginn",
     "rooms-closes": "Ende",
     "rooms-state": "Status",
+    "rooms-seats": "Plätze",
+    "rooms-seats-summary": "{working} arbeiten, {away} abwesend, {offline} getrennt, {locked} gesperrt, {finished} fertig.",
     "room-state-scheduled": "Geplant",
     "room-state-open": "Offen",
     "room-state-closed": "Geschlossen",
@@ -1629,6 +1631,7 @@
     "classification": "Bildung"
   },
   "Common": {
+    "page-navigation": "Seitennavigation",
     "contributor-description": "Diese Person baut Nakafa mit auf.",
     "undo": "Rückgängig",
     "arabic-fatha": "Fatha",
