@@ -1,5 +1,6 @@
 import {
   CheckmarkSquare02Icon,
+  DecimalsArrowRightIcon,
   FlowConnectionIcon,
   InputTextIcon,
   LinkSquare02Icon,
@@ -26,7 +27,7 @@ import { useTranslations } from "use-intl";
 /**
  * The icon each template shows by: a radio for one answer, a check box for several, a thumb up and
  * down for true or false, a flow from a statement to its reason for cause and effect, a text
- * field for a short answer, a note for an essay, a link for matching, and a table for a true or false
+ * field for a short answer, a decimal point for a numeric answer, a note for an essay, a link for matching, and a table for a true or false
  * table.
  */
 const TEMPLATE_ICON = {
@@ -35,6 +36,7 @@ const TEMPLATE_ICON = {
   choices: CheckmarkSquare02Icon,
   essay: NoteEditIcon,
   match: LinkSquare02Icon,
+  numeric: DecimalsArrowRightIcon,
   short: InputTextIcon,
   table: Table02Icon,
   truefalse: ThumbsUpDownIcon,
@@ -47,6 +49,7 @@ const TEMPLATE_NAME = {
   choices: "template-choices",
   essay: "template-essay",
   match: "template-match",
+  numeric: "template-numeric",
   short: "template-short",
   table: "template-table",
   truefalse: "template-truefalse",

@@ -18,8 +18,11 @@ const LEARNER_NAME = "Acceptance Learner";
 /** The essay the student writes, which the teacher grades by hand. */
 const ESSAY = "Tumbuhan mengubah cahaya, air dan karbon dioksida menjadi gula.";
 
-/** The points of the seeded exam: one for each of its eight keyed questions, and four for its essay. */
-const FULL_SCORE = "12 of 12 points";
+/** The points of the seeded exam: one for each of its nine keyed questions, and four for its essay. */
+const FULL_SCORE = "13 of 13 points";
+
+/** The keys of the digits pad that write three quarters, by their names: zero, the decimal point, seven, five. */
+const THREE_QUARTERS_KEYS = ["٠", "Decimal point", "٧", "٥"] as const;
 
 /** One question of the student's paper, by its number. */
 const question = (page: Page, number: number) =>
@@ -27,7 +30,8 @@ const question = (page: Page, number: number) =>
 
 /**
  * Answers every question of the seeded exam the way its key reads, from the single choices to the essay, as a
- * student does on the paper: a radio, check boxes, a typed answer, the pairs, the table's marks, and the essay.
+ * student does on the paper: a radio, check boxes, a typed answer, a number on the Arabic digits pad, the pairs,
+ * the table's marks, and the essay.
  */
 async function answerEveryTemplate(student: Page) {
   // The two single choices: the first option of each is correct.
@@ -57,13 +61,29 @@ async function answerEveryTemplate(student: Page) {
   });
   await typed.fill("jakarta");
   await typed.blur();
+  // A numeric answer of three quarters, written on the Arabic digits pad, which the server reads as 0.75.
+  const number = question(student, 7).getByRole("textbox", {
+    exact: true,
+    name: "Question 7",
+  });
+  await number.click();
+  await question(student, 7)
+    .getByRole("button", { name: "Arabic digits" })
+    .click();
+  const pad = student.locator('[data-slot="arabic-number-pad"]');
+  for (const name of THREE_QUARTERS_KEYS) {
+    await pad.getByRole("button", { exact: true, name }).click();
+  }
+  await expect(number).toHaveValue("٠٫٧٥");
+  await student.keyboard.press("Escape");
+  await number.blur();
   // Matching: Indonesia with Jakarta (B), Jepang with Tokyo (C), Jerman with Berlin (A).
   for (const [statement, letter] of [
     ["1", "B"],
     ["2", "C"],
     ["3", "A"],
   ] as const) {
-    await question(student, 7)
+    await question(student, 8)
       .getByRole("combobox", { name: `Answer for statement ${statement}` })
       .click();
     await student.getByRole("option", { exact: true, name: letter }).click();
@@ -74,15 +94,15 @@ async function answerEveryTemplate(student: Page) {
     ["Matahari mengelilingi Bumi.", "Salah"],
     ["Es lebih ringan dari air.", "Benar"],
   ] as const) {
-    await question(student, 8)
+    await question(student, 9)
       .getByRole("radiogroup", { name: statement })
       .getByRole("radio", { exact: true, name: column })
       .click();
   }
   // The essay.
-  const essay = question(student, 9).getByRole("textbox", {
+  const essay = question(student, 10).getByRole("textbox", {
     exact: true,
-    name: "Question 9",
+    name: "Question 10",
   });
   await essay.fill(ESSAY);
   await essay.blur();
@@ -124,7 +144,7 @@ test("a student sits a question of every template, the server scores each one, t
     .getByPlaceholder("Enter the token from your proctor")
     .fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
-  await expect(question(student, 9)).toBeVisible({
+  await expect(question(student, 10)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   await Effect.runPromise(expectNoOverflow(student, "paper"));
@@ -152,7 +172,7 @@ test("a student sits a question of every template, the server scores each one, t
   await teacher.getByRole("button", { exact: true, name: "Questions" }).click();
   const questions = teacher.getByRole("dialog", { name: "Questions" });
   await questions
-    .getByRole("button", { exact: true, name: "Question 9" })
+    .getByRole("button", { exact: true, name: "Question 10" })
     .click();
   const answers = teacher.getByRole("table").filter({
     has: teacher.getByRole("columnheader", { exact: true, name: "Points" }),
@@ -182,7 +202,7 @@ test("a student sits a question of every template, the server scores each one, t
     student.getByText("Your teacher released these results.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(student.getByText(FULL_SCORE)).toBeVisible();
-  await expect(student.getByText("Correct", { exact: true })).toHaveCount(9);
+  await expect(student.getByText("Correct", { exact: true })).toHaveCount(10);
   await expect(student.getByText("Incorrect", { exact: true })).toHaveCount(0);
   await Effect.runPromise(expectNoOverflow(student, "results"));
   await test.info().attach("results", {

@@ -1,4 +1,10 @@
 import { Input } from "@repo/design-system/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@repo/design-system/components/ui/input-group";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
@@ -121,6 +127,29 @@ export function PaperLine({ essay = false }: { essay?: boolean }) {
       disabled
       placeholder={t("short-placeholder")}
     />
+  );
+}
+
+/**
+ * The line a numeric answer leaves on a paper: one field the student types a number in, with the unit beside it
+ * when the teacher gave one, as the student's paper draws it. It takes no typing in the editor.
+ */
+export function PaperNumber({ unit }: { unit: string | undefined }) {
+  const t = useTranslations("Exams");
+  return (
+    <InputGroup data-disabled>
+      <InputGroupInput
+        aria-label={t("number-line")}
+        disabled
+        inputMode="decimal"
+        placeholder={t("number-placeholder")}
+      />
+      {unit === undefined ? null : (
+        <InputGroupAddon align="inline-end">
+          <InputGroupText>{unit}</InputGroupText>
+        </InputGroupAddon>
+      )}
+    </InputGroup>
   );
 }
 

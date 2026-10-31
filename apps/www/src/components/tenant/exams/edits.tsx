@@ -19,6 +19,10 @@ import {
 } from "@/components/tenant/exams/answer";
 import { pairsKey } from "@/components/tenant/exams/match";
 import {
+  type NumberSetting,
+  withNumber,
+} from "@/components/tenant/exams/number";
+import {
   answerUpdate,
   type Question,
   templateUpdate,
@@ -193,6 +197,13 @@ export function useQuestionEditing(question: Question) {
   const setAccepted = (texts: readonly string[]) =>
     saveAnswers((base) => ({ ...base, key: acceptedKey(base.answers, texts) }));
 
+  /**
+   * Sets a numeric answer, which saves at once: the entry takes the fraction rule and the unit, and the key the
+   * number and its tolerance, or none while they are no number the contract grades (`withNumber`).
+   */
+  const setNumber = (setting: NumberSetting) =>
+    saveAnswers((base) => ({ ...base, ...withNumber(base.answers, setting) }));
+
   /** Sets the pairs of a matching question's key, which saves at once once they pair every statement (`pairsKey`). */
   const setPairs = (pairs: readonly ExamPair[]) =>
     saveAnswers((base) => ({ ...base, key: pairsKey(base.answers, pairs) }));
@@ -207,6 +218,7 @@ export function useQuestionEditing(question: Question) {
     saveAnswers,
     setAccepted,
     setCells,
+    setNumber,
     setPairs,
     setTemplate,
   };

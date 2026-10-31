@@ -4,6 +4,7 @@ import {
 } from "@nakafa/aksara-contracts/assessment/identity";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { numericKeyFits } from "@repo/backend/confect/assessment/number";
 import type {
   ExamCell,
   ExamPair,
@@ -47,13 +48,19 @@ export const cellsFit = (
 /**
  * Whether one answer fits one interaction. A choice takes an answer of its own kind,
  * whose correct options are options of that choice, and at most `maxChoices` of them,
- * a text entry takes accepted answers of its own kind, a match takes pairs that pair
+ * a text entry takes accepted answers of its own kind, a numeric entry takes a number of its own kind
+ * that the contract grades (`numericKeyFits`), a match takes pairs that pair
  * every statement once (`pairsFit`), and a table takes cells that mark every statement once
  * (`cellsFit`). Any other kind of interaction fits no answer.
  */
 const answerFits = (interaction: Interaction, answer: InteractionKey) => {
   if (interaction.kind === "textEntry") {
     return answer.kind === "textEntry";
+  }
+  if (interaction.kind === "numericEntry") {
+    return (
+      answer.kind === "numericEntry" && numericKeyFits(interaction, answer)
+    );
   }
   if (interaction.kind === "matrix") {
     return (

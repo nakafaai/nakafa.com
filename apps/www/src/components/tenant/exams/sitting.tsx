@@ -60,11 +60,12 @@ const UNIT_AUDIENCE = "unit";
 /**
  * The sentence that names a question whose key is missing, in the words of its template: a choice,
  * a set of choices, true or false and cause and effect take their correct answer, a short answer an
- * accepted answer, a matching its pairs, and a true or false table a mark for every statement.
+ * accepted answer, a numeric answer its number, a matching its pairs, and a true or false table a mark for every statement.
  */
 const keyNotice = (template: QuestionTemplate) =>
   Match.value(template).pipe(
     Match.when("short", () => "schedule-key-short" as const),
+    Match.when("numeric", () => "schedule-key-numeric" as const),
     Match.when("match", () => "schedule-key-match" as const),
     Match.when("table", () => "schedule-key-table" as const),
     Match.orElse(() => "schedule-key-choice" as const)

@@ -20,7 +20,8 @@ import { Array as Arr, Effect, Match, Option, Schema } from "effect";
  * fixed options; and cause and effect (`cause`), a single-answer choice of the
  * five fixed relations between a statement and its reason, which the prompt
  * holds; a short answer (`short`), a text entry that the key's accepted
- * answers score; an essay (`essay`), a long written answer that the teacher
+ * answers score; a numeric answer (`numeric`), a number that the key's value,
+ * within its tolerance, scores; an essay (`essay`), a long written answer that the teacher
  * scores by the rubric; matching (`match`), where the student pairs each
  * statement with one answer; and a true or false table (`table`), where the
  * student marks each statement true or false. A new question starts as
@@ -32,6 +33,7 @@ export const QuestionTemplate = Schema.Literals([
   "truefalse",
   "cause",
   "short",
+  "numeric",
   "essay",
   "match",
   "table",
@@ -135,6 +137,7 @@ export const takesRubric = (template: QuestionTemplate) =>
     Match.when("truefalse", () => false),
     Match.when("cause", () => false),
     Match.when("short", () => false),
+    Match.when("numeric", () => false),
     Match.when("essay", () => true),
     Match.when("match", () => false),
     Match.when("table", () => false),
@@ -225,7 +228,7 @@ const tableFits = (answer: Interaction) =>
 
 /**
  * Whether the interactions of a question are the ones its template takes: distinct interactions,
- * each a text entry for a short answer, a long text for an essay, a match for matching (`matchFits`), a
+ * each a text entry for a short answer, a numeric entry for a numeric answer, a long text for an essay, a match for matching (`matchFits`), a
  * table for a true or false table (`tableFits`),
  * and each a choice that fits the template (`choiceFits`) for
  * every other template. A question that holds any other interaction is refused.
@@ -238,6 +241,7 @@ export const answersFit = (
   Arr.every(answers, (answer) =>
     Match.value(template).pipe(
       Match.when("short", () => answer.kind === "textEntry"),
+      Match.when("numeric", () => answer.kind === "numericEntry"),
       Match.when("essay", () => answer.kind === "extendedText"),
       Match.when("match", () => matchFits(answer)),
       Match.when("table", () => tableFits(answer)),
@@ -385,6 +389,21 @@ export const choiceAnswers = (
 export const shortAnswers = (): readonly [
   Extract<Interaction, { kind: "textEntry" }>,
 ] => [{ id: "entry", kind: "textEntry", label: NEW_CHOICE_LABEL }];
+
+/**
+ * The interactions of a numeric answer: one numeric entry, which the key's value scores. It takes no
+ * fraction and shows no unit until the teacher gives it one.
+ */
+export const numericAnswers = (): readonly [
+  Extract<Interaction, { kind: "numericEntry" }>,
+] => [
+  {
+    acceptsFractions: false,
+    id: "number",
+    kind: "numericEntry",
+    label: NEW_CHOICE_LABEL,
+  },
+];
 
 /** The statements and the answers a new matching question starts with. */
 const NEW_MATCH_PARTS = 3;

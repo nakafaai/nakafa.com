@@ -39,6 +39,7 @@ import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
 import { TableSheet } from "@/components/tenant/exams/matrix";
+import { numberEntryOf } from "@/components/tenant/exams/number";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -57,6 +58,7 @@ import { ExamDocument } from "@/components/tenant/exams/rich";
 import { activeQuestion } from "@/components/tenant/exams/selection";
 import {
   PaperLine,
+  PaperNumber,
   PaperOption,
   PaperOptions,
   QuestionPaper,
@@ -449,6 +451,10 @@ function LivePaper({
         </PaperOptions>
       )}
       {Option.isSome(entryOf(displayed.answers)) ? <PaperLine /> : null}
+      {Option.match(numberEntryOf(displayed.answers), {
+        onNone: () => null,
+        onSome: (entry) => <PaperNumber unit={entry.unit} />,
+      })}
       {displayed.template === "essay" ? <PaperLine essay /> : null}
       {canAddOption ? (
         <div className={chosen ? undefined : "invisible"}>

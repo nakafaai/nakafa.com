@@ -5,16 +5,19 @@ import { Array as Arr, Option, Result } from "effect";
 /** The choice interaction, whose response is the options the student chose. */
 export type Choice = Extract<Interaction, { readonly kind: "choice" }>;
 
-/** A written interaction: a short answer's text entry or an essay's long text, whose response is text. */
+/**
+ * A written interaction: a short answer's text entry, a numeric answer's numeric entry, or an essay's long
+ * text, whose response is text.
+ */
 export type Written = Extract<
   Interaction,
-  { readonly kind: "extendedText" | "textEntry" }
+  { readonly kind: "extendedText" | "numericEntry" | "textEntry" }
 >;
 
 /**
  * The written interaction of a question, when the question holds exactly one interaction and that
- * interaction is a text entry or a long text, as a short answer and an essay do. This is the rule that
- * the server applies.
+ * interaction is a text entry, a numeric entry or a long text, as a short answer, a numeric answer and an
+ * essay do. This is the rule that the server applies.
  */
 export function writtenOf(
   interactions: readonly Interaction[]
@@ -25,7 +28,9 @@ export function writtenOf(
   return Arr.findFirst(
     interactions,
     (interaction): interaction is Written =>
-      interaction.kind === "textEntry" || interaction.kind === "extendedText"
+      interaction.kind === "textEntry" ||
+      interaction.kind === "numericEntry" ||
+      interaction.kind === "extendedText"
   );
 }
 
