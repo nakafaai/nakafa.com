@@ -1,11 +1,13 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { ensurePostHogErasureConfigured } from "@repo/backend/confect/analytics/erasure/action";
 import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import {
   cleanLocalRuntime,
   initializeLocalRuntime,
   LocalRuntimeJson,
   localApplicationEnvironment,
+  localEnvironment,
   readLocalRuntime,
   releaseLocalRuntime,
   reserveLocalRuntime,
@@ -55,6 +57,16 @@ const initialize = (source = environment, statuses: readonly number[] = []) => {
   );
   return temporaryRoots;
 };
+
+describe("local acceptance environment", () => {
+  it.effect("passes the erasure check that account deletion starts with", () =>
+    ensurePostHogErasureConfigured({
+      deletionApiKey: localEnvironment.POSTHOG_ERASURE_API_KEY,
+      host: localEnvironment.POSTHOG_HOST,
+      projectId: localEnvironment.POSTHOG_PROJECT_ID,
+    })
+  );
+});
 
 describe("owned signed acceptance runtime", () => {
   afterEach(() => vi.resetAllMocks());

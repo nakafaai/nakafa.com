@@ -79,7 +79,7 @@ const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
  * inert client, so a browser test reaches Google's consent address and the
  * callback, and no exchange with Google succeeds.
  */
-const localEnvironment = {
+export const localEnvironment = {
   ACCEPTANCE_SEED: "true",
   GOOGLE_CONNECTORS: "drive,calendar,classroom",
   GOOGLE_CONNECTOR_CLIENT_ID:
@@ -98,9 +98,11 @@ const localEnvironment = {
   POLAR_ACCESS_TOKEN: "build-disabled",
   POLAR_SERVER: "sandbox",
   POLAR_WEBHOOK_SECRET: "build-disabled",
+  // Account deletion refuses to start unless these pass the erasure check, so the
+  // host and the project have the shape of real ones. PostHog refuses the key.
   POSTHOG_ERASURE_API_KEY: "build-disabled",
-  POSTHOG_HOST: "https://example.invalid",
-  POSTHOG_PROJECT_ID: "0",
+  POSTHOG_HOST: "https://eu.i.posthog.com",
+  POSTHOG_PROJECT_ID: "1",
   POSTHOG_PROJECT_TOKEN: "build-disabled",
   RESEND_API_KEY: "build-disabled",
   RESEND_WEBHOOK_SECRET: "build-disabled",
