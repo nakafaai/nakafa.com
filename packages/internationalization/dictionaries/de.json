@@ -830,7 +830,9 @@
         "hidden": "Nachricht ausgeblendet"
       },
       "scheme": {
-        "stored": "Notenschema-Version hinzugefügt"
+        "stored": "Notenschema-Version hinzugefügt",
+        "amended": "Version des Bewertungsschemas korrigiert",
+        "removed": "Version des Bewertungsschemas gelöscht"
       },
       "report": {
         "locked": "Zeugnis gesperrt"
@@ -1122,6 +1124,11 @@
     "grading-search": "Stufe suchen",
     "grading-new": "Neue Version",
     "grading-new-description": "Sie bewertet jede Note, die ab jetzt eingetragen wird. Frühere Noten behalten ihre Version.",
+    "grading-edit": "Bearbeiten",
+    "grading-edit-description": "Diese Version hat noch keine Note bewertet, die Korrektur ändert also nichts Bestehendes.",
+    "grading-remove": "Löschen",
+    "grading-remove-title": "Diese Version löschen?",
+    "grading-remove-description": "Die Version davor gilt dann wieder.",
     "grading-effective": "Gilt ab",
     "grading-kktp": "KKTP",
     "grading-bands": "Stufen",
@@ -2903,6 +2910,10 @@
     "school-refusal-scheme-not-later": {
       "title": "Es gibt schon eine neuere Version.",
       "description": "Lade die Seite neu, um sie zu sehen, und speichere dann deine."
+    },
+    "school-refusal-scheme-used": {
+      "title": "Diese Version bleibt, wie sie ist.",
+      "description": "Sie hat bereits Noten bewertet. Lege stattdessen eine neue Version an."
     },
     "school-roster-no-period": {
       "title": "Noch kein aktiver Zeitraum.",

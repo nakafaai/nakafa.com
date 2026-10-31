@@ -830,7 +830,9 @@
         "hidden": "Pesan disembunyikan"
       },
       "scheme": {
-        "stored": "Versi skema nilai ditambahkan"
+        "stored": "Versi skema nilai ditambahkan",
+        "amended": "Versi skema nilai dikoreksi",
+        "removed": "Versi skema nilai dihapus"
       },
       "report": {
         "locked": "Rapor dikunci"
@@ -1122,6 +1124,11 @@
     "grading-search": "Cari predikat",
     "grading-new": "Versi baru",
     "grading-new-description": "Versi ini menilai setiap nilai yang dimasukkan mulai sekarang. Nilai sebelumnya tetap memakai versinya.",
+    "grading-edit": "Ubah",
+    "grading-edit-description": "Versi ini belum menilai apa pun, jadi koreksi tidak mengubah nilai yang sudah ada.",
+    "grading-remove": "Hapus",
+    "grading-remove-title": "Hapus versi ini?",
+    "grading-remove-description": "Versi sebelumnya berlaku lagi.",
     "grading-effective": "Berlaku sejak",
     "grading-kktp": "KKTP",
     "grading-bands": "Predikat",
@@ -2903,6 +2910,10 @@
     "school-refusal-scheme-not-later": {
       "title": "Ada versi yang lebih baru.",
       "description": "Muat ulang halaman untuk melihatnya, lalu simpan versimu."
+    },
+    "school-refusal-scheme-used": {
+      "title": "Versi ini tidak bisa diubah.",
+      "description": "Versi ini sudah menilai siswa. Tambahkan versi baru."
     },
     "school-roster-no-period": {
       "title": "Belum ada periode aktif.",

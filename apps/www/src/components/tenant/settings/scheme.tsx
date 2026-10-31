@@ -27,10 +27,12 @@ import { useTenant } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { saveSchool } from "@/components/tenant/settings/save";
 import {
+  amendSchemeChange,
   checkedScheme,
   draftOfScheme,
   nextEffectiveFrom,
   type SchemeDraft,
+  type SchemeVersion,
   SchemeVersionsContext,
   storeSchemeChange,
 } from "@/components/tenant/settings/versions";
@@ -52,7 +54,9 @@ export function SchemeVersionAdd() {
         label={t("grading-new")}
         onClick={() => setOpenings((count) => count + 1)}
       />
-      {openings === 0 ? null : <SchemeVersionDialog key={openings} />}
+      {openings === 0 ? null : (
+        <SchemeVersionDialog editing={Option.none()} key={openings} />
+      )}
     </>
   );
 }
@@ -63,7 +67,12 @@ export function SchemeVersionAdd() {
  * before the Admin types. Save waits for a scheme the server accepts, and the version shows first at once, dated now
  * or just after the newest version.
  */
-function SchemeVersionDialog() {
+export function SchemeVersionDialog({
+  editing,
+}: {
+  /** The version the dialog corrects, or none when it writes a new one. */
+  editing: Option.Option<SchemeVersion>;
+}) {
   const t = useTranslations("SchoolSettings");
   const { newest, ready } = use(SchemeVersionsContext);
   const common = useTranslations("Common");
@@ -72,12 +81,20 @@ function SchemeVersionDialog() {
   const store = useMutation(records.schemes.store).withOptimisticUpdate(
     storeSchemeChange
   );
+  const amend = useMutation(records.schemes.amend).withOptimisticUpdate(
+    amendSchemeChange
+  );
   const [open, setOpen] = useState(true);
   // The form holds only what the Admin changed, and shows the version in force until then.
   const [edited, setDraft] = useState<typeof SchemeDraft.Type | null>(null);
   const draft =
     edited ??
-    draftOfScheme(Option.getOrElse(newest, () => DEFAULT_GRADING_SCHEME));
+    draftOfScheme(
+      Option.getOrElse(
+        Option.orElse(editing, () => newest),
+        () => DEFAULT_GRADING_SCHEME
+      )
+    );
   const checked = checkedScheme(draft);
 
   const save = () => {
@@ -89,10 +106,15 @@ function SchemeVersionDialog() {
     startTransition(() =>
       saveSchool(
         () =>
-          store({
-            ...checked.value,
-            effectiveFrom: nextEffectiveFrom(now, newest),
-            slug,
+          Option.match(editing, {
+            onNone: () =>
+              store({
+                ...checked.value,
+                effectiveFrom: nextEffectiveFrom(now, newest),
+                slug,
+              }),
+            onSome: (version) =>
+              amend({ ...checked.value, schemeId: version.id, slug }),
           }),
         SOURCE
       )
@@ -111,7 +133,11 @@ function SchemeVersionDialog() {
 
   return (
     <ResponsiveDialog
-      description={t("grading-new-description")}
+      description={t(
+        Option.isSome(editing)
+          ? "grading-edit-description"
+          : "grading-new-description"
+      )}
       footer={
         <>
           <Button
@@ -132,7 +158,7 @@ function SchemeVersionDialog() {
       }
       open={open}
       setOpen={setOpen}
-      title={t("grading-new")}
+      title={t(Option.isSome(editing) ? "grading-edit" : "grading-new")}
     >
       <FieldSet disabled={!ready}>
         <FieldGroup>
