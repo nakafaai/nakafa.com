@@ -1,22 +1,15 @@
 import { HttpClient } from "@confect/js";
 import { useMutation } from "@confect/react";
-import {
-  Alert02Icon,
-  Delete02Icon,
-  Login01Icon,
-} from "@hugeicons/core-free-icons";
+import { Delete02Icon, Login01Icon } from "@hugeicons/core-free-icons";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import {
-  Alert,
-  AlertDescription,
-} from "@repo/design-system/components/ui/alert";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { FieldError } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -74,9 +67,6 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
       return;
     }
     setOpen(nextOpen);
-    if (!nextOpen) {
-      setError(null);
-    }
   }
   /** Runs the durable account-deletion flow from the browser event boundary. */
   function handleDelete() {
@@ -192,16 +182,17 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
             )}
           </>
         }
+        // The error is forgotten once the dialog has closed, so the closing dialog keeps its line.
+        onOpenChangeComplete={(next) => {
+          if (!next) {
+            setError(null);
+          }
+        }}
         open={open}
         setOpen={handleOpenChange}
         title={t("delete-account-dialog-title")}
       >
-        {error && (
-          <Alert variant="destructive">
-            <HugeIcons icon={Alert02Icon} />
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        )}
+        <FieldError>{error ? errorMessage : null}</FieldError>
       </ResponsiveDialog>
     </>
   );

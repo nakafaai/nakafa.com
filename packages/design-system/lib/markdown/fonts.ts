@@ -1,6 +1,12 @@
 /// <reference path="../../types/fonts.d.ts" />
 
-import { Array as Arr, Effect, MutableHashSet, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashSet,
+  Predicate,
+  Schema,
+} from "effect";
 import ams from "katex/dist/fonts/KaTeX_AMS-Regular.woff2";
 import mainBold from "katex/dist/fonts/KaTeX_Main-Bold.woff2";
 import mainItalic from "katex/dist/fonts/KaTeX_Main-Italic.woff2";
@@ -60,10 +66,26 @@ const MATH_FONT_CLASSES: readonly (readonly [MathFont, readonly string[]])[] = [
 
 const CLASS_ATTRIBUTE = /class="([^"]*)"/g;
 
-/** The faces nearly every formula draws with, as CSS font shorthands. */
-const CORE_MATH_FONTS = ["1em KaTeX_Main", "italic 1em KaTeX_Math"] as const;
+/**
+ * Each face as the CSS font shorthand that selects it through the `@font-face`
+ * rules of KaTeX's stylesheet, which the global stylesheet carries on every page.
+ */
+const MATH_FONT_SHORTHANDS = {
+  "AMS-Regular": "1em KaTeX_AMS",
+  "Main-Bold": "bold 1em KaTeX_Main",
+  "Main-Italic": "italic 1em KaTeX_Main",
+  "Main-Regular": "1em KaTeX_Main",
+  "Math-Italic": "italic 1em KaTeX_Math",
+  "Size1-Regular": "1em KaTeX_Size1",
+  "Size2-Regular": "1em KaTeX_Size2",
+  "Size3-Regular": "1em KaTeX_Size3",
+  "Size4-Regular": "1em KaTeX_Size4",
+} satisfies Record<MathFont, string>;
 
-/** Expected browser failure while loading the core math faces early. */
+/** The faces nearly every formula draws with. */
+const CORE_MATH_FONTS: readonly MathFont[] = ["Main-Regular", "Math-Italic"];
+
+/** Expected browser failure while loading math faces early. */
 export class MathFontLoadError extends Schema.TaggedError<MathFontLoadError>()(
   "MathFontLoadError",
   {
@@ -72,20 +94,33 @@ export class MathFontLoadError extends Schema.TaggedError<MathFontLoadError>()(
 ) {}
 
 /**
- * Loads the core math faces before any formula renders, for surfaces such as
- * a chat whose math arrives after the page. The browser's font loading API
- * fetches the faces KaTeX's stylesheet declares without a preload hint that
- * would warn when a conversation holds no math.
+ * Loads math faces before the formulas that draw with them render: the core
+ * faces for surfaces such as a chat whose math arrives after the page, or the
+ * faces a page's formulas declare before a navigation shows it. The browser's
+ * font loading API fetches the faces KaTeX's stylesheet declares without a
+ * preload hint that would warn when no formula draws with them.
  */
 export const loadMathFonts = Effect.fn("designSystem.markdown.loadMathFonts")(
-  function* (fonts: Pick<FontFaceSet, "load">) {
+  function* (
+    fonts: Pick<FontFaceSet, "load">,
+    faces: readonly MathFont[] = CORE_MATH_FONTS
+  ) {
     yield* Effect.tryPromise({
       try: () =>
-        Promise.all(Arr.map(CORE_MATH_FONTS, (font) => fonts.load(font))),
+        Promise.all(
+          Arr.map(faces, (face) => fonts.load(MATH_FONT_SHORTHANDS[face]))
+        ),
       catch: (cause) => new MathFontLoadError({ cause }),
     });
   }
 );
+
+/** Whether a value names a face this module can load early. */
+export function isMathFont(value: unknown): value is MathFont {
+  return (
+    Predicate.isString(value) && Predicate.hasProperty(MATH_FONT_FILES, value)
+  );
+}
 
 /** Reads the KaTeX faces one rendered formula draws with, from its classes. */
 export function readMathFonts(html: string): readonly MathFont[] {

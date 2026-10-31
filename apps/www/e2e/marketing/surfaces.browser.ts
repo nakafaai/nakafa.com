@@ -15,7 +15,6 @@ import {
 } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
-import { DRAWER_TITLE } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
@@ -123,7 +122,7 @@ const verifyContributorPayloads = Effect.fn(
 )(function* (page: Page) {
   yield* loadMarketingPage(page, "/en/contributor");
   const gallery = page.locator("[data-contributor-gallery]");
-  const drawer = page.locator("[data-contributor-drawer]");
+  const dialog = page.getByRole("dialog");
   const firstContributor = yield* readFirstContributor(contributors);
   const firstTrigger = gallery.locator(
     `[data-contributor-username="${firstContributor.username}"]`
@@ -132,11 +131,11 @@ const verifyContributorPayloads = Effect.fn(
   // Opening and closing proves this detached client boundary is interactive
   // before the tooltip-specific hover and focus checks begin.
   yield* Effect.promise(() => firstTrigger.click());
-  yield* Effect.promise(() => expect(drawer).toHaveCount(1));
+  yield* Effect.promise(() => expect(dialog).toHaveCount(1));
   yield* Effect.promise(() => page.keyboard.press("Escape"));
-  yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+  yield* Effect.promise(() => expect(dialog).toHaveCount(0));
   yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
-  // Closing the drawer can scroll a different trigger under the last click.
+  // Closing the dialog can scroll a different trigger under the last click.
   // Remove pointer ownership before verifying the focused tooltip contract.
   yield* Effect.promise(() => page.mouse.move(0, 0));
   yield* Effect.promise(() => page.keyboard.press("Tab"));
@@ -168,22 +167,16 @@ const verifyContributorPayloads = Effect.fn(
       `[data-contributor-username="${contributor.username}"]`
     );
     yield* Effect.promise(() => trigger.click());
-    yield* Effect.promise(() => expect(drawer).toHaveCount(1));
+    yield* Effect.promise(() => expect(dialog).toHaveCount(1));
     yield* Effect.promise(() =>
-      expect(drawer).toHaveAttribute(
-        "data-contributor-username",
-        contributor.username
-      )
+      expect(dialog.getByRole("heading")).toHaveText(contributor.name)
     );
     yield* Effect.promise(() =>
-      expect(drawer.locator(DRAWER_TITLE)).toHaveText(contributor.name)
-    );
-    yield* Effect.promise(() =>
-      expect(drawer).toHaveAccessibleName(contributor.name)
+      expect(dialog).toHaveAccessibleName(contributor.name)
     );
 
     const actualSocialLinks = yield* Effect.promise(() =>
-      drawer
+      dialog
         .locator('a[target="_blank"]')
         .evaluateAll((links) =>
           links.map((link) => link.getAttribute("href")).sort()
@@ -201,7 +194,7 @@ const verifyContributorPayloads = Effect.fn(
     );
 
     yield* Effect.promise(() => page.keyboard.press("Escape"));
-    yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+    yield* Effect.promise(() => expect(dialog).toHaveCount(0));
     yield* Effect.promise(() => expect(trigger).toBeFocused());
   }
 });
@@ -220,7 +213,7 @@ const verifyContributorPage = Effect.fn("NakafaE2E.verifyContributorPage")(
     yield* Effect.promise(() => expect(lastTrigger).toBeEnabled());
     yield* Effect.promise(() => lastTrigger.press("Enter"));
     yield* Effect.promise(() =>
-      expect(page.locator("[data-contributor-drawer]")).toHaveCount(1)
+      expect(page.getByRole("dialog")).toHaveCount(1)
     );
   }
 );
@@ -242,7 +235,7 @@ for (const viewport of targetViewports) {
   });
 }
 
-test.describe("detached contributor payloads", () => {
+test.describe("the contributor gallery's one dialog", () => {
   test.use({
     viewport: {
       height: desktopViewport.height,
@@ -250,7 +243,7 @@ test.describe("detached contributor payloads", () => {
     },
   });
 
-  test("renders every contributor through one drawer root", async ({
+  test("renders every contributor through one dialog root", async ({
     page,
   }) => {
     await Effect.runPromise(

@@ -210,7 +210,6 @@ export function TableSheet({
               <PaperTableMark key={column.id}>
                 <Radio
                   aria-labelledby={`${id}-${column.id}`}
-                  className="cursor-pointer"
                   value={column.id}
                 />
               </PaperTableMark>
