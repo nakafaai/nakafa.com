@@ -1,4 +1,4 @@
-import type { Locale } from "@repo/internationalization/src/locale";
+import { LOCALES, type Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Record as Rec } from "effect";
 
 /**
@@ -65,4 +65,17 @@ export function readCanonicalSpelling(
       ? Option.some(canonical)
       : Option.none()
   );
+}
+
+/**
+ * The one locale whose public spelling a segment is, or none when no locale or
+ * more than one spells a segment so. A bare address that starts with such a
+ * spelling, such as `/materi/...`, names its locale itself, and the rest of the
+ * address is that locale's slugs.
+ */
+export function readSpellingLocale(spelling: string): Option.Option<Locale> {
+  const locales = Arr.filter(LOCALES, (locale) =>
+    Option.isSome(readCanonicalSpelling(locale, spelling))
+  );
+  return locales.length === 1 ? Arr.head(locales) : Option.none();
 }

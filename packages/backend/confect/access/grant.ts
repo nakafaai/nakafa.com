@@ -23,7 +23,7 @@ import {
   OwnerRole,
 } from "@repo/backend/confect/access/schema";
 import { ensureStudentSeat } from "@repo/backend/confect/billing/seats";
-import type { TenantActor } from "@repo/backend/confect/journal/schema";
+import { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   personAuthority,
@@ -256,7 +256,7 @@ export const ensureOwnerRemains = Effect.fn("access.grant.ownerRemains")(
 
 /**
  * Owner and Admin roles also need `owner.manage`, which only Owners hold, so an
- * Admin can neither give nor end an Admin role.
+ * Admin can neither give an Admin role nor end another person's (`revokeGrant`).
  */
 export const authorizeOwnerRole = Effect.fn("access.grant.ownerRole")(
   function* (role: BuiltinRole) {
@@ -268,8 +268,10 @@ export const authorizeOwnerRole = Effect.fn("access.grant.ownerRole")(
 
 /**
  * Ends one active grant the way the access lane's revoke path does: the grant's
- * own `grant.revoke` decision, the Owner rule for Owner and Admin roles, and the
- * last-Owner rule, all before the grant ends and is recorded under its holder.
+ * own `grant.revoke` decision, the Owner rule for another person's Owner and Admin
+ * roles, and the last-Owner rule, all before the grant ends and is recorded under
+ * its holder. A person may end an Owner or Admin role of their own: the last-Owner
+ * rule still keeps the school a signed-in Owner.
  */
 export const revokeGrant = Effect.fn("access.grant.revoke")(function* (
   actor: typeof TenantActor.Type,
@@ -277,7 +279,10 @@ export const revokeGrant = Effect.fn("access.grant.revoke")(function* (
   holder: TenantPeopleDoc
 ) {
   yield* grantAuthority.check("grant.revoke", grant);
-  yield* authorizeOwnerRole(grant.role.key);
+  const own = TenantActor.guards.person(actor) && actor.id === grant.personId;
+  if (!own) {
+    yield* authorizeOwnerRole(grant.role.key);
+  }
   yield* ensureOwnerRemains(grant);
   yield* endGrant(actor, grant, holder, "revoked");
 });

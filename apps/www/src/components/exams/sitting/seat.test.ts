@@ -1,8 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 import {
+  awaySince,
+  awayTime,
   isDisconnected,
   lastActivityOf,
   matchesFilter,
@@ -105,5 +107,46 @@ describe("matchesFilter", () => {
   it("shows only a submitted attempt under finished", () => {
     expect(matchesFilter("finished", attempt("submitted"))).toBe(true);
     expect(matchesFilter("finished", attempt("locked"))).toBe(false);
+  });
+});
+
+describe("awaySince", () => {
+  it("counts an away seat from the exit or disconnect that no return followed", () => {
+    expect(
+      awaySince(
+        attempt("inProgress", {
+          away: true,
+          latestSignal: { at: 4000, kind: "exit" },
+        })
+      )
+    ).toStrictEqual(Option.some(4000));
+  });
+
+  it("counts nothing for a student who is here, locked, or finished, even after leaving", () => {
+    expect(awaySince(attempt("inProgress"))).toStrictEqual(Option.none());
+    expect(
+      awaySince(
+        attempt("locked", {
+          away: true,
+          latestSignal: { at: 4000, kind: "exit" },
+        })
+      )
+    ).toStrictEqual(Option.none());
+    expect(awaySince(attempt("inProgress", { away: true }))).toStrictEqual(
+      Option.none()
+    );
+  });
+});
+
+describe("awayTime", () => {
+  it("tells the time away in whole minutes and seconds", () => {
+    expect(awayTime(1000, 1000 + 125_400)).toStrictEqual({
+      minutes: 2,
+      seconds: 5,
+    });
+  });
+
+  it("never tells a negative time when this device's clock is behind the server's", () => {
+    expect(awayTime(5000, 3000)).toStrictEqual({ minutes: 0, seconds: 0 });
   });
 });

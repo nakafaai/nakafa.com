@@ -3,7 +3,11 @@ import {
   QueryResult,
   useMutation,
 } from "@confect/react";
-import { Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import {
+  Delete02Icon,
+  MoreHorizontalIcon,
+  UserStar01Icon,
+} from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -16,7 +20,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { startTransition, useState } from "react";
@@ -28,6 +32,7 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
+import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { revokeGrantChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
@@ -90,7 +95,6 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
         />
       ),
       id: "role",
-      meta: { align: "center" },
     }),
     grantColumns.accessor(scopeName, {
       enableSorting: false,
@@ -109,12 +113,9 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
       id: "scope",
     }),
     grantColumns.display({
-      cell: (info) =>
-        info.row.original.revocable ? (
-          <SchoolGrantMenu grant={info.row.original} />
-        ) : null,
+      cell: (info) => <SchoolGrantMenu grant={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 
@@ -129,11 +130,12 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
 }
 
 /**
- * A grant's row menu, which revokes the grant behind a confirmation. A draft grant, still
- * on its way to the server, has an inert menu. Revoking the viewer's own grant may end the
- * role that opens the settings, so the page first leaves for the school's home and the
- * revoke follows there with one sentence: the settings page never turns into a refusal
- * under the viewer.
+ * A grant's row menu: Give a role, which opens the grant dialog for the grant's person, and Revoke, which revokes
+ * the grant behind a confirmation. A grant that keeps the school's last Owner cannot be revoked, so its Revoke is
+ * disabled. A draft grant, still on its way to the server, has an inert menu. Revoking the viewer's own grant may end the
+ * role that opens the settings, so the page first leaves for the notifications, which every member keeps, and the
+ * revoke follows there with one sentence: the settings page never turns into a refusal under the viewer. Once the role
+ * has ended, the school's root, read afresh, lands the viewer on the main page of the role they keep.
  */
 function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
   const { slug } = useTenant();
@@ -144,7 +146,9 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
   );
   const viewer = useViewerQuery();
   const navigate = useNavigate();
+  const router = useRouter();
   const [isRevoking, setIsRevoking] = useState(false);
+  const [isGiving, setIsGiving] = useState(false);
   const own =
     QueryResult.isSuccess(viewer) && viewer.value.person.id === grant.person.id;
 
@@ -163,8 +167,13 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
             </Button>
           }
         />
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onClick={() => setIsGiving(true)}>
+            <HugeIcons icon={UserStar01Icon} />
+            {t("roles-assign-dialog")}
+          </DropdownMenuItem>
           <DropdownMenuItem
+            disabled={!grant.revocable}
             onClick={() => setIsRevoking(true)}
             variant="destructive"
           >
@@ -173,6 +182,11 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <SchoolGrantDialog
+        open={isGiving}
+        person={grant.person}
+        setOpen={setIsGiving}
+      />
       <ResponsiveDialog
         description={t("grant-revoke-description")}
         footer={
@@ -192,19 +206,31 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
                     await navigate({
                       params: { slug },
                       replace: true,
-                      to: "/school/$slug",
+                      to: "/school/$slug/notifications",
                     });
                   }
+                  // The saved revoke marks the role as ended, so the page lands on what the viewer keeps.
+                  let ended = false;
                   await saveSchool(
                     () => revoke({ grantId: grant.id, slug }),
                     SOURCE,
                     own
-                      ? () =>
+                      ? () => {
+                          ended = true;
                           toast.success({
                             title: "school-own-role-ended.title",
-                          })
+                          });
+                        }
                       : undefined
                   );
+                  if (ended) {
+                    await router.invalidate();
+                    await navigate({
+                      params: { slug },
+                      replace: true,
+                      to: "/school/$slug",
+                    });
+                  }
                 });
               }}
               type="button"

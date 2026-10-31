@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
 import {
   mostCopies,
+  shownLabels,
   shownTexts,
   watchCopies,
+  watchLabels,
   watchTexts,
 } from "@/e2e/support/shown";
 
@@ -82,4 +84,42 @@ test("the copy recorder counts the copies one frame shows, not the ones the docu
 
   await expect(page.locator(".copy:visible")).toHaveCount(1);
   expect(await mostCopies(page)).toBe(2);
+});
+
+/**
+ * The label recorder must hold a button that turned into another for a moment, or a test that clicks a button and
+ * then finds its words unchanged would pass on a page that swapped it for a frame. It must also keep one entry for a
+ * change that leaves the words as they were, so a record of one set means the words never changed.
+ */
+test("the label recorder holds a button that turned into another only for a moment", async ({
+  page,
+}) => {
+  // A blank document: the recorder is under test, not a product page.
+  await page.setContent(
+    "<!doctype html><title>recorder</title><footer><button>Save</button></footer>"
+  );
+  await watchLabels(page.locator("footer"));
+
+  // A change that keeps the words is no new entry.
+  await page.evaluate(() => {
+    document.querySelector("button")?.setAttribute("disabled", "");
+    document.querySelector("footer")?.append(" ");
+  });
+  expect(await shownLabels(page)).toEqual([["Save"]]);
+
+  // The words change and come back in the same task. The page reads the change in a microtask that the change
+  // itself queues, which runs before this one.
+  await page.evaluate(() => {
+    const button = document.querySelector("button");
+    if (button === null) {
+      return;
+    }
+    button.textContent = "Remove";
+    queueMicrotask(() => {
+      button.textContent = "Save";
+    });
+  });
+
+  await expect(page.locator("button")).toHaveText("Save");
+  expect(await shownLabels(page)).toEqual([["Save"], ["Remove"], ["Save"]]);
 });

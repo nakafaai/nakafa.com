@@ -18,7 +18,7 @@ export const attemptResults = Effect.fn("exams.results.rows.attempt")(
   ) {
     return yield* (yield* DatabaseReader)
       .table("examResults")
-      .index("by_sittingId_and_personId", (query) =>
+      .index("by_sittingId_and_personId_and_questionId", (query) =>
         query.eq("sitting", sittingId).eq("person", personId)
       )
       .take(MAX_EXAM_QUESTIONS)
@@ -38,10 +38,28 @@ export const questionResults = Effect.fn("exams.results.rows.question")(
   ) {
     return yield* (yield* DatabaseReader)
       .table("examResults")
-      .index("by_sittingId_and_questionId", (query) =>
+      .index("by_sittingId_and_questionId_and_verdict", (query) =>
         query.eq("sitting", sittingId).eq("question", questionId)
       )
       .take(limit)
       .pipe(Effect.orDie);
   }
 );
+
+/** The scored row of one question of one student in one sitting, if the student was scored on it. */
+export const personResult = Effect.fn("exams.results.rows.person")(function* (
+  sittingId: ExamSittingsDoc["_id"],
+  personId: TenantPeopleDoc["_id"],
+  questionId: ExamQuestionsDoc["_id"]
+) {
+  return yield* (yield* DatabaseReader)
+    .table("examResults")
+    .index("by_sittingId_and_personId_and_questionId", (query) =>
+      query
+        .eq("sitting", sittingId)
+        .eq("person", personId)
+        .eq("question", questionId)
+    )
+    .first()
+    .pipe(Effect.orDie);
+});

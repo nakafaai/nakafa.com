@@ -40,7 +40,7 @@ export function YoutubePlayer({ label, videoId }: Props) {
   return (
     <button
       aria-label={label}
-      className="group relative block size-full cursor-pointer"
+      className="group relative block size-full"
       onClick={() => setIsPlaying(true)}
       type="button"
     >

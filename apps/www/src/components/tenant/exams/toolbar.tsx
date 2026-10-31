@@ -7,7 +7,7 @@ import {
 } from "@repo/design-system/components/editor/picture";
 import { DocumentToolbar } from "@repo/design-system/components/editor/toolbar";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Function as Fn, Option } from "effect";
 import { useCallback } from "react";
 import type { PendingPicture } from "@/components/tenant/exams/editing";
 import { storeExamImage } from "@/components/tenant/exams/image";
@@ -141,5 +141,25 @@ export function ExamToolbar() {
         title={labels.pictures.add}
       />
     </>
+  );
+}
+
+/**
+ * The toolbar before the exam is read: every control in its place, disabled, so the row stands under the header
+ * from the first paint.
+ */
+export function ExamToolbarFrame() {
+  const labels = useDocumentLabels();
+
+  return (
+    <PicturesProvider
+      begin={Fn.constVoid}
+      labels={labels.pictures}
+      urls={NO_ADDRESSES}
+    >
+      <fieldset className="min-w-0" disabled>
+        <DocumentToolbar editor={null} labels={labels.toolbar} />
+      </fieldset>
+    </PicturesProvider>
   );
 }

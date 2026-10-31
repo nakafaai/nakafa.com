@@ -107,7 +107,7 @@ describe("task optimistic updates", () => {
     const handed = {
       ...fresh,
       handedIn: 4,
-      mine: { late: true, score: null, updatedAt: 150 },
+      mine: { late: true, score: null, text: "x", updatedAt: 150 },
     };
     expect(setQuery.mock.calls).toEqual([
       [
@@ -129,7 +129,12 @@ describe("task optimistic updates", () => {
           {
             args: { classId, slug, task: "ringkasan" },
             value: Option.some(
-              task("ringkasan", { late: false, score: 40, updatedAt: 1 })
+              task("ringkasan", {
+                late: false,
+                score: 40,
+                text: "x",
+                updatedAt: 1,
+              })
             ),
           },
         ],
@@ -144,7 +149,7 @@ describe("task optimistic updates", () => {
     expect(again.setQuery.mock.calls[0]?.[2]).toEqual(
       Option.some({
         ...task("ringkasan", null),
-        mine: { late: false, score: 40, updatedAt: 50 },
+        mine: { late: false, score: 40, text: "y", updatedAt: 50 },
       })
     );
   });
