@@ -131,10 +131,6 @@ never be given Gmail. A connection lives in the data cell of its owner
 (ADR 0026): a school connection is stored in the school's deployment, and a
 personal connection in the account's home cell.
 
-A student under the age limit of the country profile gets Nina, the forum, and
-grading only after a parent's consent is recorded (K2, ADR 0032). A connection
-exists to feed Nina, so such a student can make none until then.
-
 A connection is active or in the `reconnect` state. It enters `reconnect` when
 Google refuses its token, for example because the user took access away in their
 Google account, or when the account of the member who made a school connection
