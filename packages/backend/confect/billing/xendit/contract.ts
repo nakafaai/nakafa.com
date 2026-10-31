@@ -49,6 +49,8 @@ export const XenditPlanRequest = Schema.Struct({
   ),
   immediate_payment: Schema.Literal(false),
   failed_cycle_action: Schema.Literals(["RESUME", "STOP"]),
+  /** How Xendit tells the buyer of a failed attempt, at the attempts `failed_attempt_notifications` names. */
+  notification_channels: Schema.Array(Schema.Literal("EMAIL")),
   locale: Schema.optionalKey(Schema.String),
   description: Schema.optionalKey(Schema.String),
 });

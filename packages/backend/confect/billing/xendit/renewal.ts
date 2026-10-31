@@ -118,6 +118,7 @@ export function planRequest(input: {
     payment_tokens: [{ payment_token_id: renewal.tokenId, rank: 1 }],
     immediate_payment: false,
     failed_cycle_action: "STOP",
+    notification_channels: ["EMAIL"],
     locale,
     description: OFFER_DESCRIPTIONS[locale][renewal.offer],
   };
