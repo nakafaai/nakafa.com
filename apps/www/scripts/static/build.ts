@@ -16,12 +16,12 @@ import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 import { readTwinTitle } from "@/lib/llms/format";
 import { buildRootLlmsIndexText } from "@/lib/llms/index/public";
 import { readOgCopy } from "@/lib/og/copy.server";
-import { renderSecurityTxt, SECURITY_TXT_PATH } from "@/lib/security/txt";
 import { staticPagePath } from "@/lib/routing/prerendered";
 import {
   readSubjectMap,
   SubjectLocaleSchema,
 } from "@/lib/routing/public/subject";
+import { renderSecurityTxt, SECURITY_TXT_PATH } from "@/lib/security/txt";
 import { readRssText } from "@/lib/seo/feed";
 import { readManifestText } from "@/lib/seo/manifest";
 import { readSitemapFiles } from "@/lib/sitemap/files";

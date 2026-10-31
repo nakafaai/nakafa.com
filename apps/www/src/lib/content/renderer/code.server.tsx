@@ -1,6 +1,6 @@
 import { CodeBlockMdx } from "@repo/design-system/components/markdown/code/client";
-import { highlightCode } from "@repo/design-system/lib/code-block/highlight";
 import type { CodeBlockData } from "@repo/design-system/lib/code-block/context";
+import { highlightCode } from "@repo/design-system/lib/code-block/highlight";
 import { Effect, Option } from "effect";
 
 /**

@@ -1,9 +1,9 @@
 import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/agent/constants";
 import { languages } from "@repo/internationalization/data/lang";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { CONTENT_LICENSE_NAME, CONTENT_LICENSE_URL } from "@repo/seo/license";
 import { sha256Hex } from "@repo/utilities/digest";
 import { Array as Arr, Effect } from "effect";
-import { CONTENT_LICENSE_NAME, CONTENT_LICENSE_URL } from "@repo/seo/license";
 
 const NAKAFA_SKILL_NAME = "nakafa";
 const NAKAFA_SKILL_DESCRIPTION =

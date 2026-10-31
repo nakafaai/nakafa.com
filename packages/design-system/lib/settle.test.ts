@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { untilPageRead, untilPageSettled } from "@repo/design-system/lib/settle";
+import {
+  untilPageRead,
+  untilPageSettled,
+} from "@repo/design-system/lib/settle";
 import { Effect, Fiber } from "effect";
 
 /** Gives the window an idle callback that the test controls, and returns the stubs. */
@@ -86,24 +89,30 @@ describe("waiting for the page to settle", () => {
     })
   );
 
-  it.effect("waits for a gesture on a settled page, and later pages start at once", () =>
-    Effect.gen(function* () {
-      stubReadyState("complete");
-      const removed = vi.spyOn(window, "removeEventListener");
+  it.effect(
+    "waits for a gesture on a settled page, and later pages start at once",
+    () =>
+      Effect.gen(function* () {
+        stubReadyState("complete");
+        const removed = vi.spyOn(window, "removeEventListener");
 
-      const waiting = yield* Effect.forkChild(untilPageRead);
-      yield* Effect.yieldNow;
-      yield* Effect.yieldNow;
-      expect(waiting.pollUnsafe()).toBeUndefined();
+        const waiting = yield* Effect.forkChild(untilPageRead);
+        yield* Effect.yieldNow;
+        yield* Effect.yieldNow;
+        expect(waiting.pollUnsafe()).toBeUndefined();
 
-      window.dispatchEvent(new Event("pointermove"));
-      yield* Fiber.join(waiting);
-      expect(removed).toHaveBeenCalledWith("pointermove", expect.any(Function), {
-        capture: true,
-      });
-      removed.mockRestore();
+        window.dispatchEvent(new Event("pointermove"));
+        yield* Fiber.join(waiting);
+        expect(removed).toHaveBeenCalledWith(
+          "pointermove",
+          expect.any(Function),
+          {
+            capture: true,
+          }
+        );
+        removed.mockRestore();
 
-      yield* untilPageRead;
-    })
+        yield* untilPageRead;
+      })
   );
 });

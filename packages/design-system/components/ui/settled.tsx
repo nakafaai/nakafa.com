@@ -1,4 +1,7 @@
-import { untilPageRead, untilPageSettled } from "@repo/design-system/lib/settle";
+import {
+  untilPageRead,
+  untilPageSettled,
+} from "@repo/design-system/lib/settle";
 import { Effect, Fiber } from "effect";
 import { type ReactNode, useEffect, useState } from "react";
 

@@ -35,11 +35,7 @@ interface MarkdownCitation {
 }
 
 /** The lines that tell an answer service whose page it read and how to cite it. */
-function citationLines(
-  citation: MarkdownCitation,
-  title: string,
-  url: string
-) {
+function citationLines(citation: MarkdownCitation, title: string, url: string) {
   const authors = Arr.join(citation.authors, ", ");
   return [
     `Author: ${authors}`,
@@ -80,9 +76,12 @@ export function buildHeader({
   ];
 }
 
+/** The Markdown that opens a heading of the first level. */
+const TITLE_MARKER = /^# /u;
+
 /** The title that a Markdown twin opens with, which `buildHeader` writes on its first line. */
 export function readTwinTitle(text: string) {
-  return Str.replace(/^# /u, "")(Arr.headNonEmpty(Str.split(text, "\n")));
+  return Str.replace(TITLE_MARKER, "")(Arr.headNonEmpty(Str.split(text, "\n")));
 }
 
 /** Returns one stable agent-facing description from authored MDX metadata. */

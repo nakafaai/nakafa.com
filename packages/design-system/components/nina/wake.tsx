@@ -1,7 +1,7 @@
 import { Frame } from "@repo/design-system/components/nina/frame";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { modeOf, type Options } from "@repo/mascot/nina/options";
 import { untilPageRead } from "@repo/design-system/lib/settle";
+import { modeOf, type Options } from "@repo/mascot/nina/options";
 import { Array as Arr, Effect, Fiber } from "effect";
 import { type ReactNode, startTransition, useState } from "react";
 
@@ -62,10 +62,7 @@ function whenNear(element: Element, then: () => void) {
       );
       near.observe(element);
       return Effect.sync(() => near.disconnect());
-    }).pipe(
-      Effect.andThen(untilPageRead),
-      Effect.andThen(Effect.sync(then))
-    )
+    }).pipe(Effect.andThen(untilPageRead), Effect.andThen(Effect.sync(then)))
   );
   return () => {
     Effect.runFork(Fiber.interrupt(watching));

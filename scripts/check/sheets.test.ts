@@ -3,9 +3,9 @@ import { inspectStylesheet } from "#scripts/check/sheets";
 
 describe("inspectStylesheet", () => {
   it.each([
-    'html:has([data-open]) { color: red; }',
-    'a {} body.dark:has(dialog) main { color: red; }',
-    ':root:not(.light):has(dialog) { color: red; }',
+    "html:has([data-open]) { color: red; }",
+    "a {} body.dark:has(dialog) main { color: red; }",
+    ":root:not(.light):has(dialog) { color: red; }",
   ])("rejects %s", (rule) => {
     expect(inspectStylesheet("a.css", rule)).toHaveLength(1);
   });

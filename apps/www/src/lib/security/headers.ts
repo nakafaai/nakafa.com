@@ -1,10 +1,10 @@
 import { postHogProxyKeys } from "@repo/analytics/keys";
 import { agentTrustKeys, convexSiteServerKeys } from "@repo/backend/keys";
+import { CONTENT_LICENSE_URL } from "@repo/seo/license";
 import {
   createLoopbackConnectSources,
   createSecurityHeaders,
 } from "@repo/site";
-import { CONTENT_LICENSE_URL } from "@repo/seo/license";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Option, Result, Schema } from "effect";
 
