@@ -2,7 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate } from "@tanstack/react-router";
-import { Array as Arr } from "effect";
+import { Array as Arr, Deferred, Effect } from "effect";
 import {
   type ComponentProps,
   useEffect,
@@ -80,11 +80,10 @@ export function useChatAdmission({
     shownNow.current = shown;
   });
   const viewerId = gate.viewerId;
-  // A send pressed before the viewer is known waits for the viewer, so no
-  // composer is disabled before the learner acts and no early send is lost.
-  // The composer shows the send as waiting until the viewer is known.
-  const [waiting, setWaiting] = useState(false);
-  const held = useRef<PromptInputMessage | null>(null);
+  // A send pressed before Convex confirms the viewer shows at once, as every
+  // send does, and goes out once the viewer is known. This is the answer it
+  // waits for: whether the viewer may send.
+  const held = useRef<Deferred.Deferred<boolean> | null>(null);
   // The prompt stays until the admission is refused, or until the surface that
   // shows it hides or ends, so the composer waits for the chat it opens.
   const busy = admitting || prompt !== null;
@@ -103,104 +102,107 @@ export function useChatAdmission({
     };
   }, [viewerId]);
 
-  function admitPrompt(message: PromptInputMessage) {
-    // Any send that comes here ends the wait for the viewer. One that comes
-    // while the viewer is still unknown is held again below.
-    setWaiting(false);
+  /** Admits a send the learner pressed, or a prompt a page asked. */
+  function submit(message: PromptInputMessage) {
     const query = message.text?.trim();
     if (!query || busy) {
       return false;
     }
-    if (gate.pending) {
-      held.current = message;
-      setWaiting(true);
-      return false;
-    }
-    if (!gate.admit()) {
+    if (!(gate.pending || gate.admit())) {
       return false;
     }
     const draft = { ...message, text: query };
     const submittedFrom = activation.current;
     const submittedBy = session.getState().userId;
+
+    /**
+     * Takes the prompt back. Its words go back to the composer wherever the
+     * learner has gone meanwhile, ahead of anything typed since, so they are
+     * never lost. Another account that has signed in since does not get them.
+     */
+    function takeBack() {
+      setPrompt(null);
+      setText((typed) =>
+        restoreRefusedText({
+          refused: query,
+          sentBy: submittedBy,
+          signedInAs: session.getState().userId,
+          typed,
+        })
+      );
+      return false;
+    }
+
+    /** Sends the prompt, and opens its chat once the server admits it. */
+    function sendDraft() {
+      return send(draft)
+        .then((receipt) => {
+          if (!receipt) {
+            return takeBack();
+          }
+          if (activation.current !== submittedFrom || !shownNow.current) {
+            // The learner left, or closed the surface, before the answer came back.
+            // The chat exists now, so they are told once and may open it, but they
+            // are not moved. The admission has settled, so its prompt is no longer
+            // on its way, even if the surface is shown again before it hides.
+            setPrompt(null);
+            toast.info(
+              { title: "admitted-elsewhere.title" },
+              {
+                action: {
+                  label: "open",
+                  onClick: () => onComplete(receipt.chatId),
+                },
+              }
+            );
+            return true;
+          }
+          setPrompt({
+            text: receipt.prompt.text,
+            files: Arr.map(receipt.prompt.files, ({ filename, ...file }) => ({
+              ...file,
+              type: "file",
+              ...(filename === undefined ? {} : { filename }),
+            })),
+          });
+          onComplete(receipt.chatId);
+          return true;
+        })
+        .catch((defect: unknown) => {
+          // A defect ends the admission without an answer, so its prompt leaves at
+          // once and the composer is not held. The defect still reaches the caller.
+          // The words stay out of the composer: the server may already have admitted
+          // them, and a second send would repeat the prompt.
+          setPrompt(null);
+          return Promise.reject(defect);
+        });
+    }
+
     // No async transition holds the admission. React makes every transition that
     // starts while one is pending wait for its end, the navigation to another
     // chat included, so the learner could not leave until the answer came back.
     // The text goes first: if the store refuses the write, no prompt is left on its way.
     setText("");
     setPrompt({ text: draft.text, files: draft.files ?? [] });
-    return send(draft)
-      .then((receipt) => {
-        if (!receipt) {
-          // The words go back to the composer wherever the learner has gone
-          // meanwhile, ahead of anything typed since, so a refusal never loses
-          // them. Another account that has signed in since does not get them.
-          setPrompt(null);
-          setText((typed) =>
-            restoreRefusedText({
-              refused: query,
-              sentBy: submittedBy,
-              signedInAs: session.getState().userId,
-              typed,
-            })
-          );
-          return false;
-        }
-        if (activation.current !== submittedFrom || !shownNow.current) {
-          // The learner left, or closed the surface, before the answer came back.
-          // The chat exists now, so they are told once and may open it, but they
-          // are not moved. The admission has settled, so its prompt is no longer
-          // on its way, even if the surface is shown again before it hides.
-          setPrompt(null);
-          toast.info(
-            { title: "admitted-elsewhere.title" },
-            {
-              action: {
-                label: "open",
-                onClick: () => onComplete(receipt.chatId),
-              },
-            }
-          );
-          return true;
-        }
-        setPrompt({
-          text: receipt.prompt.text,
-          files: Arr.map(receipt.prompt.files, ({ filename, ...file }) => ({
-            ...file,
-            type: "file",
-            ...(filename === undefined ? {} : { filename }),
-          })),
-        });
-        onComplete(receipt.chatId);
-        return true;
-      })
-      .catch((defect: unknown) => {
-        // A defect ends the admission without an answer, so its prompt leaves at
-        // once and the composer is not held. The defect still reaches the caller.
-        // The words stay out of the composer: the server may already have admitted
-        // them, and a second send would repeat the prompt.
-        setPrompt(null);
-        return Promise.reject(defect);
-      });
-  }
-
-  /** Admits a send the learner pressed, unless one is already held for the viewer. */
-  function submit(message: PromptInputMessage) {
-    if (waiting) {
-      return false;
+    if (!gate.pending) {
+      return sendDraft();
     }
-    return admitPrompt(message);
+    const viewerKnown = Deferred.makeUnsafe<boolean>();
+    held.current = viewerKnown;
+    return Effect.runPromise(Deferred.await(viewerKnown)).then((admitted) =>
+      admitted ? sendDraft() : takeBack()
+    );
   }
 
   /**
-   * Admits the send held for the viewer, or sends it to sign-in, once the viewer
-   * is known. It reads the viewer, the surface and the draft as they are then. A
-   * composer that left meanwhile drops the send, and its words stay in the draft.
+   * Answers the send held for the viewer once the viewer is known: it goes out,
+   * or its words go back and sign-in opens for a session that has signed out.
    */
   const admitHeld = useEffectEvent(() => {
-    const message = held.current;
+    const viewerKnown = held.current;
     held.current = null;
-    if (message !== null) {
-      admitPrompt(message);
+    if (viewerKnown !== null) {
+      Deferred.doneUnsafe(viewerKnown, Effect.succeed(gate.admit()));
     }
   });
 
@@ -210,5 +212,18 @@ export function useChatAdmission({
     }
   }, [gate.pending]);
 
-  return { disabled: busy || waiting, prompt, promptId, submit };
+  // A surface that ends or hides before the viewer is known gives the held
+  // words back to the composer's draft, and sends nothing.
+  useEffect(
+    () => () => {
+      const viewerKnown = held.current;
+      held.current = null;
+      if (viewerKnown !== null) {
+        Deferred.doneUnsafe(viewerKnown, Effect.succeed(false));
+      }
+    },
+    []
+  );
+
+  return { disabled: busy, prompt, promptId, submit };
 }
