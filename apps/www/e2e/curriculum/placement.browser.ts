@@ -7,6 +7,7 @@ const MATERIAL_PATH =
 const MATERIAL_CONTEXT =
   "merdeka~class-11-mathematics-function-composition-inverse-function";
 const CURRICULUM_PATH = "/en/curriculum/merdeka/class-11/mathematics";
+const CLASS_ADDRESS = /\/curriculum\/merdeka\/class-11$/u;
 
 /** The two widths the breadcrumb row is proven at: a phone and a desktop. */
 const VIEWPORTS = [
@@ -176,7 +177,7 @@ test("the path of a lesson under a curriculum hint links the curriculum and the 
   const classLink = path.locator('a[href$="/curriculum/merdeka/class-11"]');
   await expect(classLink).toBeVisible();
   await classLink.click();
-  await expect(page).toHaveURL(/\/curriculum\/merdeka\/class-11$/u);
+  await expect(page).toHaveURL(CLASS_ADDRESS);
 });
 
 test("the path of a lesson under a curriculum hint folds behind one menu on a phone", async ({
