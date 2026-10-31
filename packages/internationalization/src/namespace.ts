@@ -30,6 +30,7 @@ const messageNamespaceFlags = {
   Memory: true,
   Metadata: true,
   Notifications: true,
+  Operators: true,
   Player: true,
   Posts: true,
   Pricing: true,

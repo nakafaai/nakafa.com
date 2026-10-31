@@ -1517,6 +1517,44 @@
     "school-limit-line": "Mendirikan sekolah lagi perlu berbicara dengan pendiri dulu.",
     "address-check-failed": "Alamat ini belum bisa diperiksa, jadi ketik ulang untuk mencoba lagi."
   },
+  "Operators": {
+    "title": "Sekolah",
+    "search": "Cari sekolah",
+    "open": "Buka sekolah",
+    "open-description": "Buka sekolah sesuai kontrak yang ditandatangani. Pemiliknya menerima undangan.",
+    "empty": "Belum ada sekolah",
+    "refused": "Khusus staf Nakafa",
+    "refused-description": "Halaman ini membuka sekolah lewat kontrak. Siapa pun bisa membuka sekolahnya di /school/new.",
+    "name": "Sekolah",
+    "name-placeholder": "SMA Harapan Bangsa",
+    "address": "Alamat",
+    "address-placeholder": "harapan",
+    "kind-label": "Jenis",
+    "kind": {
+      "school": "Sekolah",
+      "foundation": "Yayasan"
+    },
+    "country": "Negara",
+    "level": "Jenjang",
+    "owner": "Nama pemilik",
+    "owner-placeholder": "Ayu Lestari",
+    "email": "Email pemilik",
+    "email-placeholder": "ayu@harapan.sch.id",
+    "plan-label": "Lisensi",
+    "plan": {
+      "tenant": "Seluruh organisasi",
+      "unit": "Satu sekolah"
+    },
+    "dpa": "Versi DPA",
+    "license": "Versi lisensi konten",
+    "version-placeholder": "2026-10",
+    "units": "Unit",
+    "status-label": "Status",
+    "status": {
+      "active": "Aktif",
+      "suspended": "Ditangguhkan"
+    }
+  },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
     "description": "Belajar Matematika, Sains, Komputer, AI, dan persiapan ujian di Nakafa. Materi gratis dari SD sampai universitas dengan latihan dan pembahasan.",
@@ -2264,6 +2302,14 @@
     "school-refusal-graduated": {
       "title": "Sudah lulus dari sekolah ini.",
       "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
+    },
+    "school-refusal-not-operator": {
+      "title": "Hanya staf Nakafa yang bisa melakukan ini.",
+      "description": "Masuk dengan akun operator."
+    },
+    "school-refusal-provision": {
+      "title": "Sekolah ini tidak bisa dibuka dengan data tersebut.",
+      "description": "Periksa alamat dan unit sekolahnya."
     },
     "school-refusal-unit-limit": {
       "title": "Batas sekolah sudah penuh.",
