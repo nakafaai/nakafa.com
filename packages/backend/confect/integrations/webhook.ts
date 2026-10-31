@@ -44,7 +44,7 @@ const drawSecret = Effect.fn("integrations.webhook.secret")(function* (
   client: IntegrationClientsDoc
 ) {
   const { token: secret } = yield* issueToken().pipe(Effect.orDie);
-  const keys = yield* readTenantKeys(client.tenantId);
+  const keys = yield* readTenantKeys(client.tenantId).pipe(Effect.orDie);
   const sealed = yield* sealText(keys, secretField(client._id), secret).pipe(
     Effect.orDie
   );
@@ -56,7 +56,7 @@ export const openSecret = Effect.fn("integrations.webhook.open")(function* (
   webhook: IntegrationWebhooksDoc,
   sealed: ArrayBuffer
 ) {
-  const keys = yield* readTenantKeys(webhook.tenantId);
+  const keys = yield* readTenantKeys(webhook.tenantId).pipe(Effect.orDie);
   return yield* openText(keys, secretField(webhook.clientId), sealed).pipe(
     Effect.orDie
   );
@@ -252,7 +252,7 @@ export const endWebhook = Effect.fn("integrations.webhook.end")(function* (
       Struct.assign(Struct.omit(webhook, ["_creationTime", "_id"]), {
         revokedAt: at,
         secret: null,
-        status: "revoked",
+        status: "revoked" as const,
       })
     )
     .pipe(Effect.orDie);

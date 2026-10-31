@@ -82,12 +82,10 @@ export const attemptOf = (attempt: Parameters<typeof send>[0]) =>
         status: "failed" as const,
       }))
     ),
-    Effect.catch(() =>
-      Effect.succeed({
-        code: null,
-        ms: 0,
-        reason: "network" as const,
-        status: "failed" as const,
-      })
-    )
+    Effect.orElseSucceed(() => ({
+      code: null,
+      ms: 0,
+      reason: "network" as const,
+      status: "failed" as const,
+    }))
   );
