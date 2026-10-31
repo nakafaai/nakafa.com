@@ -63,14 +63,16 @@ function useRoomSeats(
   );
   const seats = useLastValue(read);
   const { start } = useTimeout(() => setReading(true), REFRESH_MILLISECONDS);
-  const answered = QueryResult.isSuccess(read);
+  // The answer ends the read during the render, so the subscription goes as soon as the answer comes.
+  if (reading && QueryResult.isSuccess(read)) {
+    setReading(false);
+  }
 
   useEffect(() => {
-    if (answered) {
-      setReading(false);
+    if (!reading) {
       start();
     }
-  }, [answered, start]);
+  }, [reading, start]);
 
   return seats;
 }
