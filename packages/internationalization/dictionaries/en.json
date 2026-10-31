@@ -1515,7 +1515,15 @@
     "finish": "Open school",
     "required-error": "Choose an answer.",
     "school-limit-line": "Founding more schools needs a conversation first.",
-    "address-check-failed": "We could not check this address, so type it again to retry."
+    "address-check-failed": "We could not check this address, so type it again to retry.",
+    "entry-title": "Go to your school",
+    "entry-student": "Type your school's address, or scan the QR code from your teacher.",
+    "entry-parent": "Type the address of your child's school to go there.",
+    "entry-field": "School address",
+    "entry-hint": "It is in the link from the school, like harapan.nakafa.com.",
+    "entry-invalid": "Type a school address like harapan.nakafa.com.",
+    "entry-submit": "Continue",
+    "entry-open": "Open a school"
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
@@ -1690,7 +1698,8 @@
     "input": "Input",
     "output": "Output",
     "bacteria": "Bacteria",
-    "time": "Time"
+    "time": "Time",
+    "school": "School"
   },
   "LearningPrograms": {
     "metadata-title": "Start learning with Nakafa",

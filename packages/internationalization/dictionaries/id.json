@@ -1515,7 +1515,15 @@
     "finish": "Buka sekolah",
     "required-error": "Pilih satu jawaban.",
     "school-limit-line": "Mendirikan sekolah lagi perlu berbicara dengan pendiri dulu.",
-    "address-check-failed": "Alamat ini belum bisa diperiksa, jadi ketik ulang untuk mencoba lagi."
+    "address-check-failed": "Alamat ini belum bisa diperiksa, jadi ketik ulang untuk mencoba lagi.",
+    "entry-title": "Masuk ke sekolahmu",
+    "entry-student": "Tulis alamat sekolahmu, atau pindai kode QR dari gurumu.",
+    "entry-parent": "Tulis alamat sekolah anakmu untuk masuk.",
+    "entry-field": "Alamat sekolah",
+    "entry-hint": "Alamatnya ada di tautan dari sekolah, seperti harapan.nakafa.com.",
+    "entry-invalid": "Tulis alamat sekolah seperti harapan.nakafa.com.",
+    "entry-submit": "Masuk",
+    "entry-open": "Buka sekolah"
   },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
@@ -1690,7 +1698,8 @@
     "input": "Masukan",
     "output": "Keluaran",
     "bacteria": "Bakteri",
-    "time": "Waktu"
+    "time": "Waktu",
+    "school": "Sekolah"
   },
   "LearningPrograms": {
     "metadata-title": "Mulai belajar di Nakafa",
