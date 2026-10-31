@@ -22,7 +22,6 @@ const PROFILE = Schema.decodeSync(TenantProfile)({
 
 const LINKS = {
   dataProcessing: "https://nakafa.com/en/data-processing-agreement",
-  dataProcessing: "https://nakafa.com/en/data-processing-agreement",
   privacy: "https://nakafa.com/en/privacy",
   terms: "https://nakafa.com/en/terms",
 };
