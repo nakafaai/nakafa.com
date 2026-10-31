@@ -185,11 +185,27 @@ function refreshInOneTab(send: () => Promise<Response>) {
     : send();
 }
 
+/**
+ * A session refresh as the server takes it. Better Auth's client sends it with no
+ * body, and its router refuses a POST that names no JSON with a 415, which reads
+ * as a failed session and leaves the page without one, so the refresh carries an
+ * empty JSON object.
+ */
+const refreshRequest = (init: RequestInit | undefined): RequestInit => {
+  const headers = new Headers(init?.headers);
+  headers.set("Content-Type", "application/json");
+  return { ...init, body: "{}", headers };
+};
+
 /** The fetch that Better Auth's browser client calls for every request. */
 export const authFetch = (input: RequestInfo | URL, init?: RequestInit) => {
   if (isSessionRead(input, init)) {
     return Effect.runPromise(readSession(fetch, input, init));
   }
-  const send = () => Effect.runPromise(requestWithDeadline(fetch, input, init));
-  return isSessionRefresh(input, init) ? refreshInOneTab(send) : send();
+  if (isSessionRefresh(input, init)) {
+    return refreshInOneTab(() =>
+      Effect.runPromise(requestWithDeadline(fetch, input, refreshRequest(init)))
+    );
+  }
+  return Effect.runPromise(requestWithDeadline(fetch, input, init));
 };
