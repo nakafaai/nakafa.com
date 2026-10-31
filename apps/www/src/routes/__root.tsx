@@ -33,6 +33,7 @@ import {
 import { signedInHintScript } from "@/lib/auth/hint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
+import { KEPT_ACCOUNT_SCRIPT } from "@/lib/identity/prepaint";
 import { EARLY_PRESS_SCRIPT } from "@/lib/press/prepaint";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import {
@@ -147,6 +148,10 @@ function RootDocument({ children }: { children: ReactNode }) {
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: signedInHintScript() }}
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{ __html: KEPT_ACCOUNT_SCRIPT }}
         />
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
