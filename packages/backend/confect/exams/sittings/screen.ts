@@ -7,6 +7,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { rules } from "@repo/backend/confect/assessment/gate/rules";
+import { paperAnswers } from "@repo/backend/confect/exams/parts";
 import { questionAnswers } from "@repo/backend/confect/exams/question";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { attemptIn } from "@repo/backend/confect/exams/sittings/attempt";
@@ -87,8 +88,9 @@ export const look = Effect.fn("exams.sittings.screen.look")(function* (args: {
 
 /**
  * One student's screen as the proctor's panel draws it (K25): the question the student's screen shows
- * now, with its number, its prompt as the document stands, its interactions without any key, and the
- * response the student saved, and when the student moved there. It is null before the student opens a
+ * now, with its number, its prompt as the document stands, its interactions as the paper shows them
+ * (`paperAnswers`) without any key, the response the student saved, and when the student moved there.
+ * It is null before the student opens a
  * question. The attempt must belong to the sitting the proctor may view. The panel draws the screen from
  * this data, never from a picture of it.
  */
@@ -120,7 +122,7 @@ export const screen = Effect.fn("exams.sittings.screen")(function* (args: {
     .pipe(Effect.orDie);
   return {
     at: stored.value.at,
-    interactions: yield* questionAnswers(question.answers),
+    interactions: paperAnswers(yield* questionAnswers(question.answers)),
     // The questions before it in the exam's order, as the exam holds them now.
     number:
       Arr.takeWhile(sitting.exam.questions, (id) => id !== question._id)

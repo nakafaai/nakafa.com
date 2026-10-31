@@ -5,7 +5,12 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { encodeKey } from "@repo/backend/confect/exams/question";
+import {
+  choiceAnswers,
+  encodeAnswers,
+  encodeKey,
+  textLabel,
+} from "@repo/backend/confect/exams/question";
 import type { EnterOutcome } from "@repo/backend/confect/exams/sittings/contract";
 import {
   RoomName,
@@ -116,8 +121,8 @@ export const keyedSchool = Effect.fn("test.sittings.keyedSchool")(function* (
 });
 
 /**
- * An exam with one question whose correct answer is marked, so the exam can be scheduled. The
- * teacher writes it by default. Returns the exam's ID.
+ * An exam with one question whose options are written and whose correct answer is marked, so the exam can
+ * be scheduled. The teacher writes it by default. Returns the exam's ID.
  */
 export const keyedExam = Effect.fn("test.sittings.keyedExam")(function* (
   fixture: SittingFixture,
@@ -134,6 +139,14 @@ export const keyedExam = Effect.fn("test.sittings.keyedExam")(function* (
             return yield* Effect.die("the questions of the tests are choices");
           }
           const [option] = interaction.options;
+          // The options keep their IDs and take words, one per option.
+          const answers = yield* encodeAnswers(
+            choiceAnswers(
+              Arr.makeBy(interaction.options.length, (index) =>
+                textLabel(`Pilihan ${index + 1}`)
+              )
+            )
+          );
           const key = yield* encodeKey([
             {
               correct: [option.id],
@@ -143,7 +156,7 @@ export const keyedExam = Effect.fn("test.sittings.keyedExam")(function* (
           ]);
           yield* (yield* DatabaseWriter)
             .table("examQuestions")
-            .patch(question.id, { key });
+            .patch(question.id, { answers, key });
         })
       )
     )

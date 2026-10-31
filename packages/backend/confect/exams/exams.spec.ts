@@ -16,7 +16,7 @@ import {
   ScheduleResult,
 } from "@repo/backend/confect/exams/sittings/contract";
 import {
-  KeysMissing,
+  QuestionsUnready,
   ScheduleInvalid,
 } from "@repo/backend/confect/exams/sittings/errors";
 import {
@@ -96,7 +96,8 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => ScheduleResult,
-      error: () => Schema.Union([AccessDenied, KeysMissing, ScheduleInvalid]),
+      error: () =>
+        Schema.Union([AccessDenied, QuestionsUnready, ScheduleInvalid]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(
