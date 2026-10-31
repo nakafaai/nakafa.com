@@ -1,43 +1,28 @@
-import type { GenericId } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { DELIVERY_RETENTION } from "@repo/backend/confect/integrations/hook";
 import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
-import {
-  DELIVERY_RETENTION,
-  type WebhookChanges,
-} from "@repo/backend/confect/integrations/hook";
-import { readsSubject } from "@repo/backend/confect/integrations/subject";
-import { cursorOf } from "@repo/backend/confect/journal/store";
-import { systemActor } from "@repo/backend/confect/tenancy/actor";
-import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
-import { createTenantKey } from "@repo/backend/confect/vault/keys";
-import {
-  scheduledJobs,
-  slugOf,
-  TENANCY_NOW,
-  tenancyFixture,
-} from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect, Option, Schema } from "effect";
+  attempts,
+  cursorRow,
+  firstAttempt,
+  jobsOf,
+  nf,
+  RECEIVER,
+  seeded,
+  stateOf,
+  unitChange,
+} from "@repo/backend/test/hooks";
+import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import { Array as Arr, Duration, Effect, Option } from "effect";
 
 /** The fetch that delivery calls, stubbed once for the file. */
 const fetcher = vi.fn<typeof fetch>();
 vi.stubGlobal("fetch", fetcher);
 
-const nf = slugOf("nf");
-const clients = refs.public.integrations.clients;
 const webhooks = refs.public.integrations.webhooks;
 const { deliver, prepare, prune, run, settle, sweep } =
   refs.internal.integrations.hooks;
-const RECEIVER = "https://93.184.216.34/hook";
-const goneGrade = Schema.decodeUnknownSync(Id("classGrades"))("1gone");
-const goneLink = Schema.decodeUnknownSync(Id("guardianLinks"))("1gone");
-
-type Fixture = Effect.Success<typeof tenancyFixture>;
-type DeliveryId = GenericId.GenericId<"integrationDeliveries">;
 
 /** Fake timers keep every scheduled run from starting before the test looks at it. */
 beforeEach(() => {
@@ -48,105 +33,6 @@ beforeEach(() => {
 afterEach(() => {
   fetcher.mockReset();
 });
-
-/** A client that reads units and people, and its webhook of `changes`. */
-const seeded = Effect.fn("test.hooks.seeded")(function* (
-  fixture: Fixture,
-  changes: typeof WebhookChanges.Type = ["unit.created"]
-) {
-  yield* fixture.run(createTenantKey(fixture.tenants.nf));
-  const client = yield* fixture.as("admin").mutation(clients.create, {
-    actions: ["person.view", "unit.view"],
-    name: "Sinkron Harapan",
-    scope: { kind: "tenant" },
-    slug: nf,
-  });
-  const webhook = yield* fixture.as("admin").mutation(webhooks.create, {
-    changes,
-    clientId: client.id,
-    slug: nf,
-    url: RECEIVER,
-  });
-  return { clientId: client.id, webhookId: webhook.id };
-});
-
-/** Journals one change of the school's SMA unit, as the school's work does. */
-const unitChange = (fixture: Fixture, type: "unit.archived" | "unit.created") =>
-  fixture.run(
-    Effect.gen(function* () {
-      const unit = yield* (yield* DatabaseReader)
-        .table("tenantUnits")
-        .get(fixture.units.sma)
-        .pipe(Effect.orDie);
-      return yield* unitAuthority.record(systemActor, unit, { type });
-    })
-  );
-
-/** The attempts of a webhook, oldest first. */
-const attempts = (
-  fixture: Fixture,
-  webhookId: GenericId.GenericId<"integrationWebhooks">
-) =>
-  fixture.run(
-    Effect.flatMap(DatabaseReader, (reader) =>
-      reader
-        .table("integrationDeliveries")
-        .index("by_webhookId", (query) => query.eq("webhookId", webhookId))
-        .take(50)
-        .pipe(Effect.orDie)
-    )
-  );
-
-/** One published change, run into its first attempt. */
-const firstAttempt = Effect.fn("test.hooks.first")(function* (
-  fixture: Fixture,
-  webhookId: GenericId.GenericId<"integrationWebhooks">
-) {
-  yield* unitChange(fixture, "unit.created");
-  yield* fixture.internal.mutation(run, { webhookId });
-  const rows = yield* attempts(fixture, webhookId);
-  return Option.getOrThrow(Arr.last(rows))._id;
-});
-
-/** Scheduled functions of one name, by the end of their path. */
-const jobsOf = (fixture: Fixture, name: string) =>
-  fixture
-    .run(scheduledJobs)
-    .pipe(
-      Effect.map((jobs) =>
-        Arr.filter(
-          jobs,
-          (job) =>
-            job.name.startsWith("integrations/hooks") && job.name.endsWith(name)
-        )
-      )
-    );
-
-/** A webhook's journal cursor, which leaves the test's transaction as its plain row. */
-const cursorRow = (
-  fixture: Fixture,
-  webhookId: GenericId.GenericId<"integrationWebhooks">
-) =>
-  fixture.run(
-    Effect.map(
-      cursorOf(webhookId, fixture.tenants.nf, null),
-      Option.getOrNull
-    )
-  );
-
-/** Reads one attempt's state. */
-const stateOf = (fixture: Fixture, deliveryId: DeliveryId) =>
-  fixture.run(
-    Effect.flatMap(DatabaseReader, (reader) =>
-      reader
-        .table("integrationDeliveries")
-        .get(deliveryId)
-        .pipe(
-          Effect.orDie,
-          Effect.map((row) => row.state)
-        )
-    )
-  );
 
 describe("integrations/hooks run", () => {
   it.effect(
@@ -559,65 +445,5 @@ describe("integrations/hooks prune", () => {
 
       expect(yield* jobsOf(fixture, ":prune")).toHaveLength(1);
     })
-  );
-});
-
-describe("readsSubject", () => {
-  /** The client of a seeded webhook and its school, the principal of a delivery. */
-  const principal = (
-    fixture: Fixture,
-    clientId: GenericId.GenericId<"integrationClients">
-  ) =>
-    fixture.run(
-      Effect.gen(function* () {
-        const reader = yield* DatabaseReader;
-        const client = yield* reader
-          .table("integrationClients")
-          .get(clientId)
-          .pipe(Effect.orDie);
-        const tenant = yield* reader
-          .table("tenants")
-          .get(client.tenantId)
-          .pipe(Effect.orDie);
-        return { client, tenant };
-      })
-    );
-
-  it.effect(
-    "decides each kind that publishes through that kind's authority",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const { clientId } = yield* seeded(fixture);
-        const read = yield* principal(fixture, clientId);
-        const reads = (
-          subject: Parameters<typeof readsSubject>[0]["subject"]
-        ) => fixture.run(readsSubject({ subject }, read));
-
-        expect(yield* reads({ id: fixture.units.sma, kind: "unit" })).toBe(
-          true
-        );
-        expect(yield* reads({ id: fixture.people.admin.personId, kind: "person" })
-        ).toBe(true);
-      })
-  );
-
-  it.effect(
-    "closes a subject that is gone, and a kind that publishes nothing",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const { clientId } = yield* seeded(fixture);
-        const read = yield* principal(fixture, clientId);
-        const reads = (
-          subject: Parameters<typeof readsSubject>[0]["subject"]
-        ) => fixture.run(readsSubject({ subject }, read));
-
-        expect(yield* reads({ id: goneGrade, kind: "grade" })).toBe(false);
-        expect(yield* reads({ id: goneLink, kind: "guardianLink" })).toBe(
-          false
-        );
-        expect(yield* reads({ id: clientId, kind: "integration" })).toBe(false);
-      })
   );
 });

@@ -3,7 +3,6 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/ex
 export const addMinutes = registeredFunctions.addMinutes;
 export const allowDevice = registeredFunctions.allowDevice;
 export const answer = registeredFunctions.answer;
-export const attempt = registeredFunctions.attempt;
 export const cancel = registeredFunctions.cancel;
 export const changeToken = registeredFunctions.changeToken;
 export const close = registeredFunctions.close;

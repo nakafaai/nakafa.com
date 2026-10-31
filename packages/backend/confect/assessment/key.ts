@@ -109,3 +109,22 @@ export const keyFits = (
       Arr.every(answers, (answer) => answerFits(interaction, answer))
     );
   });
+
+/**
+ * Whether a key on its way fits the interactions of its question: each answer fits the interaction it names, and
+ * no interaction holds two. A question of two choices takes its marks one at a time, so one may still be open.
+ * `keyFits` decides whether the key is whole.
+ */
+export const keyPartsFit = (
+  interactions: readonly Interaction[],
+  key: readonly InteractionKey[]
+): boolean =>
+  hasUniqueIds(interactions) &&
+  hasDistinctIds(Arr.map(key, (answer) => answer.interaction)) &&
+  Arr.every(key, (answer) =>
+    Arr.some(
+      interactions,
+      (interaction) =>
+        interaction.id === answer.interaction && answerFits(interaction, answer)
+    )
+  );

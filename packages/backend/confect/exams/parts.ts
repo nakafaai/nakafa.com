@@ -1,4 +1,4 @@
-import type { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
+import { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import {
   keyMissing,
@@ -97,8 +97,25 @@ export const paperAnswers = (
   );
 
 /** Why a question keeps its exam from being scheduled: a part that shows nothing, or a key it needs and lacks. */
-export const QuestionGap = Schema.Literals(["empty", "key"]);
-export type QuestionGap = typeof QuestionGap.Type;
+const QuestionGap = Schema.Literals(["empty", "key"]);
+type QuestionGap = typeof QuestionGap.Type;
+
+/**
+ * Why the schedule refuses a question: a gap the page sees in the question itself (`questionGap`), or a prompt with
+ * no words, which only the server reads, since the prompt is a document of its own.
+ */
+export const ScheduleGap = Schema.Literals([...QuestionGap.literals, "prompt"]);
+export type ScheduleGap = typeof ScheduleGap.Type;
+
+/** A stored prompt as JSON text, read as the contract's document. */
+const PromptText = Schema.fromJsonString(ContentDocumentSchema);
+
+/**
+ * Whether a prompt as it stands shows nothing, as `labelEmpty` reads a label. A document that holds a block the
+ * contract's content does not name shows something, so a stored text it refuses counts as written.
+ */
+export const promptEmpty = (text: string) =>
+  Option.exists(Schema.decodeOption(PromptText)(text), labelEmpty);
 
 /**
  * What keeps a question from being sat, or none when it is ready: a part that shows nothing first, since the

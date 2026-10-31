@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { storedDocument } from "@repo/backend/confect/editor/document";
+import { snapshotOf } from "@repo/backend/confect/editor/store";
+import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
 import {
-  choiceAnswers,
+  EMPTY_PROMPT_TEXT,
   encodeAnswers,
-  textLabel,
 } from "@repo/backend/confect/exams/question";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
@@ -16,6 +18,7 @@ import {
   OPENS_AT,
   scheduleSitting,
   sittingRow,
+  writePrompt,
 } from "@repo/backend/test/sittings";
 import {
   actedAt,
@@ -25,6 +28,8 @@ import {
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
+
+const { open } = refs.public.exams.exams;
 
 /** A token: six characters of the alphabet, with no I, O, 0, or 1 (ADR 0013). */
 const TOKEN = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/u;
@@ -267,6 +272,52 @@ describe("exams/sittings schedule", () => {
   );
 
   it.effect(
+    "refuses a question whose prompt has no words, and takes one whose edits are still folding",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Tanpa soal");
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacher.query(open, { examId, slug: nf });
+        const [question] = exam.questions;
+        const schedule = scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            const snapshot = yield* snapshotOf(question.prompt);
+            yield* writer.table("editorSnapshots").patch(snapshot._id, {
+              content: yield* storedDocument(EMPTY_PROMPT_TEXT).pipe(
+                Effect.orDie
+              ),
+            });
+          })
+        );
+        const failure = yield* schedule.pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "QuestionsUnready",
+          questions: [{ gap: "prompt", number: 1 }],
+        });
+
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("editorDocuments")
+              .patch(question.prompt, { head: 300 })
+              .pipe(Effect.orDie)
+          )
+        );
+        const made = yield* schedule;
+        expect(made.id).toBeDefined();
+      })
+  );
+
+  it.effect(
     "schedules an exam whose essay has no key, since the teacher scores an essay",
     () =>
       Effect.gen(function* () {
@@ -284,6 +335,7 @@ describe("exams/sittings schedule", () => {
             slug: nf,
             template: "essay",
           });
+        yield* fixture.run(writePrompt(question.prompt));
         const made = yield* scheduleSitting(fixture, {
           closesAt: CLOSES_AT,
           examId: exam.id,

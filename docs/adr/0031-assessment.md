@@ -162,6 +162,17 @@ evidence and not a formal proof. The engine version is pinned, because issue
 - The older rule, that multiple choice is all or nothing and partial credit is
   only for rubrics, is superseded.
 
+### 4b. Media beside a question's documents
+
+The contract's document holds no audio or video block, at 4.0.0 as at 2.0.0. A
+school question keeps a media list beside its documents instead, so no contract
+change and no second document definition is needed. Audio is uploaded, at most
+3 MB a clip, about eight minutes at 48 kbps: on 31 Oct 2026 Convex measured 2.4 GB
+of the plan's 50 GB of egress in 19 days, so three clips for 3,000 students fit a
+month's plan once. Video is a teacher's YouTube link, played from
+`youtube-nocookie.com`, because video through Convex storage would spend the
+egress. Each item carries words that say what it holds.
+
 ### 5. IRT: the live estimator and the decided design
 
 Live today, in `packages/backend/confect/tryouts/runtime/estimate.ts`:

@@ -5,6 +5,9 @@ import { getSessionCookie, stripSecureCookiePrefix } from "better-auth/cookies";
 /** The name Better Auth's Convex plugin gives the cookie of the Convex token, before the site's prefix. */
 const CONVEX_TOKEN_COOKIE = "convex_jwt";
 
+/** The name Better Auth gives the session cookie, before the site's prefix. */
+const SESSION_TOKEN_COOKIE = "session_token";
+
 /** The cookie prefix of this site, as Better Auth writes it (`readAuthCookiePrefix`). */
 function siteCookiePrefix() {
   return readAuthCookiePrefix(new URL(siteUrlKeys().SITE_URL));
@@ -32,10 +35,17 @@ export function readConvexTokenCookie(request: Request | Headers) {
   });
 }
 
-/** Whether one Set-Cookie name is this site's Convex token cookie, with or without the secure prefix. */
+/** Whether one Set-Cookie name is this site's cookie of that name, with or without the secure prefix. */
+function isSiteCookieName(name: string, cookie: string) {
+  return stripSecureCookiePrefix(name) === `${siteCookiePrefix()}.${cookie}`;
+}
+
+/** Whether one Set-Cookie name is this site's Convex token cookie. */
 export function isConvexTokenCookieName(name: string) {
-  return (
-    stripSecureCookiePrefix(name) ===
-    `${siteCookiePrefix()}.${CONVEX_TOKEN_COOKIE}`
-  );
+  return isSiteCookieName(name, CONVEX_TOKEN_COOKIE);
+}
+
+/** Whether one Set-Cookie name is this site's session cookie. */
+export function isSessionCookieName(name: string) {
+  return isSiteCookieName(name, SESSION_TOKEN_COOKIE);
 }

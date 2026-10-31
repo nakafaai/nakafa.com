@@ -11,7 +11,7 @@ import {
   matchAnswers,
   newChoiceAnswers,
   tableAnswers,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
 import { Array as Arr } from "effect";
 
 const ALL_OR_NOTHING: ScoringRule = { kind: "allOrNothing" };

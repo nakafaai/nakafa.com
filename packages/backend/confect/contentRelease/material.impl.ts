@@ -1,7 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import spec from "@repo/backend/confect/contentRelease/material.spec";
-import { readPartnerApiPage } from "@repo/backend/confect/contentRelease/partner/page";
 import { materialLayer } from "@repo/backend/content/material/confect";
 import {
   readLatestMaterials,
@@ -46,17 +45,6 @@ const navigation = FunctionImpl.make(
       materialKey,
       expectedActiveReleaseId
     ).pipe(Effect.provide(materialLayer));
-  })
-);
-const apiPage = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "apiPage",
-  Effect.fn("contentRelease.material.apiPage")(function* (args) {
-    return yield* readPartnerApiPage({
-      ...args,
-      family: "material",
-    });
   })
 );
 const bucket = FunctionImpl.make(
@@ -139,7 +127,6 @@ const publications = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(lesson),
   Layer.provide(navigation),
-  Layer.provide(apiPage),
   Layer.provide(bucket),
   Layer.provide(latest),
   Layer.provide(publication),

@@ -1,3 +1,4 @@
+import { figureExtensions } from "@repo/editor/figure";
 import { imageExtensions } from "@repo/editor/image";
 import {
   type MathViews,
@@ -153,6 +154,7 @@ type DocumentMark = keyof typeof MARKS;
  */
 const NO_DOCUMENT_VIEWS = {
   ...NO_MATH_VIEWS,
+  figure: null,
   image: null,
   marks: {},
 };
@@ -165,12 +167,13 @@ const NO_DOCUMENT_VIEWS = {
  * document's own, and so is its link, so each holds only the attributes the contract names.
  * A table is the contract's table, of rows and cells that hold blocks, with the spans of
  * a cell and no other attribute. The formulas are the contract's inline and block math,
- * drawn by the given views, the image is drawn by its view, and each mark's element takes its
+ * drawn by the given views, the image and the figure by theirs, and each mark's element takes its
  * class (`NO_DOCUMENT_VIEWS` draws every one as plain DOM).
  */
 export function documentExtensions(
   rules: DocumentRules,
   views: MathViews & {
+    readonly figure: NodeViewRenderer | null;
     readonly image: NodeViewRenderer | null;
     /** The class of each mark's element, which the caller that draws the document gives. */
     readonly marks: Partial<Record<DocumentMark, string>>;
@@ -195,6 +198,7 @@ export function documentExtensions(
     DocumentTableCell,
     ...mathExtensions(views),
     ...imageExtensions(views.image),
+    ...figureExtensions(views.figure),
     ...Arr.map(rules.marks, (mark, index) =>
       MARKS[mark](TOP_PRIORITY - index, rules.isLinkAllowed).configure({
         HTMLAttributes: { class: views.marks[mark] },

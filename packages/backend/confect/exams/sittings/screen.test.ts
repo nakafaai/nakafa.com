@@ -4,7 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { newChoiceAnswers } from "@repo/backend/confect/exams/question";
+import { newChoiceAnswers } from "@repo/backend/confect/exams/blank";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import {

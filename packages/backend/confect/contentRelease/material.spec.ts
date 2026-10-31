@@ -2,13 +2,11 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
-  materialApiPageValidator,
   materialModelValidator,
   materialNavigationValidator,
 } from "@repo/backend/confect/contentRelease/material/spec";
 import {
   appLocaleValidator,
-  releaseApiPageArgs,
   releasePageArgs,
   releasePageValidator,
 } from "@repo/backend/confect/contentRelease/spec";
@@ -86,14 +84,6 @@ export default GroupSpec.make()
         materialKey: Schema.String,
       }),
       returns: () => materialNavigationValidator,
-      error: () => ReleaseError,
-    })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "apiPage",
-      args: () => releaseApiPageArgs,
-      returns: () => materialApiPageValidator,
       error: () => ReleaseError,
     })
   )

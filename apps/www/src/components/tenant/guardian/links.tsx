@@ -89,7 +89,9 @@ export function GuardianLinksSettings() {
               <WithAction action="guardian.link">
                 <Button onClick={() => setIsStarting(true)} type="button">
                   <HugeIcons icon={Link01Icon} />
-                  {t("link-add")}
+                  <span className="@max-sm/header:sr-only">
+                    {t("link-add")}
+                  </span>
                 </Button>
               </WithAction>
             </>
@@ -183,6 +185,11 @@ function GuardianLinkTable() {
       filterFn: "includesString",
       header: t("student"),
       id: "student",
+      sortFn: "text",
+    }),
+    linkColumns.accessor((link) => link.guardian.name, {
+      header: t("guardian-name"),
+      id: "guardian",
       sortFn: "text",
     }),
     linkColumns.accessor((link) => link.email, {

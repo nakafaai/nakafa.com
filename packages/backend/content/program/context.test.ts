@@ -166,6 +166,7 @@ describe("contentRelease/program/context", () => {
             }
           );
           expect(result).toEqual({
+            ancestorJson: [],
             groupJson: null,
             managed: false,
             mappingJson: null,
@@ -199,6 +200,7 @@ describe("contentRelease/program/context", () => {
                 }
               )
             ).toMatchObject({
+              ancestorJson: [expect.any(String)],
               groupJson: expect.any(String),
               mappingJson: expect.any(String),
               parentJson: expect.any(String),

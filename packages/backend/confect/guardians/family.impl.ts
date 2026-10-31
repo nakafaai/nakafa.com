@@ -83,9 +83,9 @@ const confirm = FunctionImpl.make(
       return "verified";
     }
     const typed = Schema.decodeOption(Nisn)(Str.trim(nisn));
-    const entry = Option.map(
+    const entry = Option.flatMap(
       yield* rosterEntryOf(link.studentPersonId),
-      (row) => row.nisn
+      (row) => Option.fromNullishOr(row.nisn)
     );
     if (
       !isLive(link, now) ||

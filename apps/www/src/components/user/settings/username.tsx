@@ -5,12 +5,7 @@ import {
   readUsername,
   USERNAME_MAX_LENGTH,
 } from "@repo/backend/confect/users/username";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import {
   Field,
   FieldDescription,
@@ -142,17 +137,16 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
         }
       }}
     >
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("username")}</CardTitle>
-          {current === undefined ? null : (
-            <CardDescription>
-              {t("username-description", {
+      <CardSection
+        description={
+          current === undefined
+            ? t("username-about")
+            : t("username-description", {
                 address: `${MAIN_DOMAIN}${profileHref(current)}`,
-              })}
-            </CardDescription>
-          )}
-        </CardHeader>
+              })
+        }
+        title={t("username")}
+      >
         <CardContent>
           <Field data-invalid={invalid}>
             <FieldLabel className="sr-only" htmlFor="user-settings-username">
