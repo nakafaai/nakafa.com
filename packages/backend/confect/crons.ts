@@ -88,6 +88,15 @@ export default CronJobs.make()
     )
   )
   .add(
+    /** Sends the notice mails that are due, as many as the day's limit leaves (ADR 0027). */
+    CronJob.make(
+      "send notice mails",
+      Duration.minutes(5),
+      emailsInternal.digest.internal.send,
+      {}
+    )
+  )
+  .add(
     CronJob.make(
       "reconcile Polar subscriptions",
       Duration.hours(POLAR_RECONCILE_INTERVAL_HOURS),

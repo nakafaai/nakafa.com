@@ -113,6 +113,8 @@ import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
+import noticeMailBudget from "./tables/noticeMailBudget";
+import noticeMails from "./tables/noticeMails";
 import notifications from "./tables/notifications";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
@@ -267,6 +269,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly ninaSummaries: typeof ninaSummaries;
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
+  readonly noticeMailBudget: typeof noticeMailBudget;
+  readonly noticeMails: typeof noticeMails;
   readonly notifications: typeof notifications;
   readonly onboardingProfiles: typeof onboardingProfiles;
   readonly operators: typeof operators;
@@ -420,6 +424,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   ninaSummaries,
   ninaTurns,
   ninaUploads,
+  noticeMailBudget,
+  noticeMails,
   notifications,
   onboardingProfiles,
   operators,

@@ -114,6 +114,8 @@ export type NinaMemoryRestoresDoc = Document.Document<typeof schemaDefinition, "
 export type NinaSummariesDoc = Document.Document<typeof schemaDefinition, "ninaSummaries">;
 export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns">;
 export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
+export type NoticeMailBudgetDoc = Document.Document<typeof schemaDefinition, "noticeMailBudget">;
+export type NoticeMailsDoc = Document.Document<typeof schemaDefinition, "noticeMails">;
 export type NotificationsDoc = Document.Document<typeof schemaDefinition, "notifications">;
 export type OnboardingProfilesDoc = Document.Document<typeof schemaDefinition, "onboardingProfiles">;
 export type OperatorsDoc = Document.Document<typeof schemaDefinition, "operators">;
@@ -268,6 +270,8 @@ export interface Docs {
   ninaSummaries: NinaSummariesDoc;
   ninaTurns: NinaTurnsDoc;
   ninaUploads: NinaUploadsDoc;
+  noticeMailBudget: NoticeMailBudgetDoc;
+  noticeMails: NoticeMailsDoc;
   notifications: NotificationsDoc;
   onboardingProfiles: OnboardingProfilesDoc;
   operators: OperatorsDoc;

@@ -1958,6 +1958,8 @@
     "push-home-screen": "Auf iPhone und iPad kommen Benachrichtigungen nur vom Home-Bildschirm: Tippe auf Teilen, dann Zum Home-Bildschirm, und öffne Nakafa über sein Symbol.",
     "assignment-published": "{actor} hat in {className} eine neue Aufgabe gestellt.",
     "assignment-published-gone": "Eine Aufgabe, die es nicht mehr gibt.",
+    "assignment-deadline": "In {className} endet bald die Frist einer Aufgabe.",
+    "assignment-missed": "{student} hat eine Aufgabe in {className} nicht rechtzeitig abgegeben.",
     "exam-starting": "{examTitle} öffnet um {opensAt, time, short} in {room}.",
     "exam-reminder": "{student} schreibt {examTitle} am {opensAt, date, long} um {opensAt, time, short} in {room}.",
     "exam-gone": "Eine Prüfung, die nicht mehr auf ihren Beginn wartet.",

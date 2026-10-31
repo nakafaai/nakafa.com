@@ -14,6 +14,7 @@ import {
 } from "@repo/backend/confect/classroom/forum/mention";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
+import { queueMail } from "@repo/backend/confect/notifications/mail";
 import { schedulePush } from "@repo/backend/confect/notifications/schedule";
 import { Array as Arr, Duration, Effect, Option } from "effect";
 
@@ -105,6 +106,15 @@ export const noticeMentions = Effect.fn("classroom.forum.notice.write")(
             mentioned.person,
             mentioned.grants,
             row.unitId
+          );
+          yield* queueMail(
+            "forumMention",
+            Arr.some(mentioned.grants, (grant) => grant.role.key === "student")
+              ? "student"
+              : "teacher",
+            mentioned.person,
+            row.unitId,
+            Option.none()
           );
         }),
       { discard: true }

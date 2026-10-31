@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/classroom/tasks/task";
 import { classTask } from "@repo/backend/confect/classroom/tasks/views";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
+import { moveTaskNotices } from "@repo/backend/confect/notifications/tasks";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { Effect, Struct } from "effect";
@@ -37,7 +38,17 @@ export const editTask = Effect.fn("classroom.tasks.edit")(function* (args: {
   const before = yield* openText(keys, taskField(found), found.sealedText).pipe(
     Effect.orDie
   );
+  const moved =
+    args.deadline === found.deadline
+      ? {}
+      : {
+          jobs: yield* moveTaskNotices(
+            { ...found, deadline: args.deadline },
+            row.unitId
+          ),
+        };
   const edited = Struct.assign(found, {
+    ...moved,
     deadline: args.deadline,
     latePolicy: args.latePolicy,
     points: args.points,

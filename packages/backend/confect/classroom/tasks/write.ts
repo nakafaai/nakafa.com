@@ -14,6 +14,7 @@ import {
   type LatePolicy,
   taskField,
 } from "@repo/backend/confect/classroom/tasks/task";
+import { scheduleTaskNotices } from "@repo/backend/confect/notifications/tasks";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { sealText } from "@repo/backend/confect/vault/text";
 import { Clock, Duration, Effect, Option } from "effect";
@@ -78,7 +79,8 @@ export const writeTask = Effect.fn("classroom.tasks.write")(function* (
     return sent.value;
   }
   const fields = { classId: row._id, clientKey: draft.clientKey };
-  const taskId = yield* (yield* DatabaseWriter)
+  const writer = yield* DatabaseWriter;
+  const taskId = yield* writer
     .table("classroomTasks")
     .insert({
       ...fields,
@@ -107,5 +109,13 @@ export const writeTask = Effect.fn("classroom.tasks.write")(function* (
     notificationsInternal.fanout.run,
     { cursor: null, phase: "students", source: { _tag: "task", taskId } }
   );
+  const jobs = yield* scheduleTaskNotices(
+    { _id: taskId, deadline: draft.deadline },
+    row.unitId
+  );
+  yield* writer
+    .table("classroomTasks")
+    .patch(taskId, { jobs })
+    .pipe(Effect.orDie);
   return yield* reader.table("classroomTasks").get(taskId).pipe(Effect.orDie);
 });
