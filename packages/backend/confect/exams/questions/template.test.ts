@@ -9,7 +9,7 @@ import {
   shortAnswers,
   tableAnswers,
   textLabel,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";

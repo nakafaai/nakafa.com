@@ -5,9 +5,9 @@ import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
   matchAnswers,
   newChoiceAnswers,
-  type QuestionView,
   tableAnswers,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
+import type { QuestionView } from "@repo/backend/confect/exams/question";
 import { reasonAnswers } from "@repo/backend/confect/exams/reason";
 import { scoreResponse } from "@repo/backend/confect/exams/results/score";
 import {

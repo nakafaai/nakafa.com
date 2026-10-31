@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import billing from "@repo/backend/confect/_generated/refs/billing";
+import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { isNotFound } from "@tanstack/react-router";
@@ -169,10 +170,19 @@ describe("memoryScreenHandler", () => {
 });
 
 describe("connectorsScreenHandler", () => {
-  it("answers the private head of the account's connectors", async () => {
+  it("answers the first connections, what is offered, and the private head", async () => {
     sessionWith(Option.some("token"));
+    answerQueries([
+      [
+        connectors.connections.listOwn,
+        { isDone: true, page: ["connection-1"] },
+      ],
+      [connectors.google.offered, ["drive"]],
+    ]);
     const screen = await connectorsScreenHandler({ data: { locale: "en" } });
     expect(screen).toMatchObject({
+      first: { isDone: true, page: ["connection-1"] },
+      offered: ["drive"],
       seo: { canonicalPath: "/en", indexable: false, title: "Connectors" },
     });
   });

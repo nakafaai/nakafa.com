@@ -2,7 +2,7 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import {
   emptyLabel,
   newChoiceAnswers,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
 import { REASON_ID } from "@repo/backend/confect/exams/scoring";
 import { Array as Arr } from "effect";
 

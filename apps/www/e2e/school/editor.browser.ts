@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
@@ -33,6 +33,14 @@ const OPTIONS = [
  */
 const UNREADY_MESSAGE =
   "Write every option of question 2, or remove the empty ones.";
+
+/** Writes the first question's words, which the schedule asks of every question. */
+const writePrompt = async (page: Page) => {
+  const prompt = page.getByRole("textbox", { name: "Question 1 text" });
+  await expect(prompt).toBeEditable({ timeout: readinessTimeoutMilliseconds });
+  await prompt.click();
+  await page.keyboard.type("Pilih organel yang menghasilkan energi.");
+};
 
 test("a teacher creates an exam, adds questions, writes one, and finds it all when the editor opens again, with the mark on each question that is not ready", async ({
   browser,
@@ -198,7 +206,8 @@ test("a teacher schedules a sitting of an exam whose question has its key, and t
   await dialog.getByRole("button", { name: "Create exam" }).click();
   await page.waitForURL(EDITOR_PATH);
 
-  // The exam starts with one question, which takes the four options and the key of the second.
+  // The exam starts with one question, which takes its words, the four options and the key of the second.
+  await writePrompt(page);
   for (const option of OPTIONS) {
     const field = page.getByRole("textbox", {
       name: `Question 1, option ${option.letter}`,
@@ -261,7 +270,8 @@ test("a teacher schedules an exam, and its editor still takes changes, with no s
   await page.waitForURL(EDITOR_PATH);
   const editorUrl = page.url();
 
-  // The exam starts with one question, which takes the four options and the key of the second.
+  // The exam starts with one question, which takes its words, the four options and the key of the second.
+  await writePrompt(page);
   for (const option of OPTIONS) {
     const field = page.getByRole("textbox", {
       name: `Question 1, option ${option.letter}`,

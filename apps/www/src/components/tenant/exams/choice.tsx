@@ -28,6 +28,7 @@ import { OptionRow } from "@/components/tenant/exams/option";
 import { useExamLocked } from "@/components/tenant/exams/provider";
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import { PaperOption, PaperOptions } from "@/components/tenant/exams/sheet";
+import type { Unstored } from "@/components/tenant/exams/writer";
 
 /** The name of a choice on its paper: its place in an answer and its reason, and none in a question of one choice. */
 export const choiceTitle = (
@@ -111,7 +112,7 @@ export function ChoiceSheet({
                         }))
                     : null
                 }
-                onSave={(label: OptionLabel, unstored: () => void) =>
+                onSave={(label: OptionLabel, unstored: Unstored) =>
                   saveAnswers(
                     (draft) => ({
                       ...draft,

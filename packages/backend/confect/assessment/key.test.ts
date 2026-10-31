@@ -11,7 +11,7 @@ import {
   matchAnswers,
   newChoiceAnswers,
   tableAnswers,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
 import { reasonAnswers } from "@repo/backend/confect/exams/reason";
 import { type Array as Arr, Schema } from "effect";
 
