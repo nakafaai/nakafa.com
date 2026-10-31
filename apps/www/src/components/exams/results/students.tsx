@@ -3,13 +3,23 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   HourglassIcon,
+  MoreHorizontalIcon,
   SquareLock01Icon,
   UserGroupIcon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -27,15 +37,19 @@ import {
   useSessionSettled,
 } from "@/components/exams/results/context";
 import { DataFailure } from "@/components/shared/failure";
+import { PaneTableRow } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { ColumnChoice } from "@/components/shared/table/column";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
-import { matchesSearch } from "@/components/shared/table/search";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
-import { useTableFilters } from "@/components/shared/table/toolbar";
+import {
+  useServerSearch,
+  useTableFilters,
+} from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { useKeptRows } from "@/lib/data/kept";
 
 /** The students of one page of the list. The next page loads as the list's end comes into view. */
 const STUDENT_PAGE_SIZE = 50;
@@ -107,9 +121,10 @@ function NotYet() {
 }
 
 /**
- * One student's row: the name, which opens the student's answers beside the list, the state, and the
- * scores of a submitted attempt, with the time it was submitted. Counts and scores sit to the right
- * in figures of one width, so the eye runs down each column, and a value not there yet says so.
+ * One student's row, which opens the student's answers beside the list when pressed, as the name does for a
+ * keyboard: the name, the state, and the scores of a submitted attempt, with the time it was submitted. Counts and
+ * scores stand in the middle in figures of one width, so the eye runs down each column, and a value not there yet
+ * says so.
  */
 function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
@@ -122,8 +137,8 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const close = usePanes((state) => state.close);
 
   return (
-    <TableRow data-state={chosen ? "selected" : undefined}>
-      <TableCell>
+    <PaneTableRow id={row.attemptId}>
+      <TableCell className="px-2 sm:px-4">
         <Button
           aria-pressed={chosen}
           className="h-auto px-0"
@@ -134,26 +149,26 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
           {row.name}
         </Button>
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell className="px-2 text-center sm:px-4">
         <TableStatus
           icon={STATE_LOOKS[row.state].icon}
           label={t(stateKeys[row.state])}
           tone={STATE_LOOKS[row.state].tone}
         />
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.points === null ? <NotYet /> : `${row.points} / ${total}`}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.answered ?? <NotYet />}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.pending ?? <NotYet />}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         <AwayCell awaySeconds={row.awaySeconds} exits={row.exits} />
       </TableCell>
-      <TableCell className="tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.submittedAt === null ? (
           <NotYet />
         ) : (
@@ -167,7 +182,45 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
           )
         )}
       </TableCell>
-    </TableRow>
+      <TableCell className="px-2 text-end sm:px-4">
+        <StudentRowMenu attemptId={row.attemptId} />
+      </TableCell>
+    </PaneTableRow>
+  );
+}
+
+/** The row menu of one student: Answers, which opens the student's answers beside the list. */
+function StudentRowMenu({
+  attemptId,
+}: {
+  readonly attemptId: (typeof StudentRowSchema.Type)["attemptId"];
+}) {
+  const t = useTranslations("Exams");
+  const common = useTranslations("Common");
+  const show = usePanes((state) => state.show);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label={common("more-actions")}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <HugeIcons icon={MoreHorizontalIcon} />
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => show(attemptId)}>
+            <HugeIcons icon={ViewIcon} />
+            {t("results-answers")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -201,25 +254,30 @@ function StudentTable({
     <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
       <TableHeader>
         <TableRow>
-          <TableHead>{t("results-name")}</TableHead>
-          <TableHead className="w-40 text-center">
+          <TableHead className="px-2 sm:px-4">{t("results-name")}</TableHead>
+          <TableHead className="w-40 px-2 text-center sm:px-4">
             <ColumnChoice
               column="status"
               options={statusChoices}
               title={t("results-status")}
             />
           </TableHead>
-          <TableHead className="w-28 text-right">
+          <TableHead className="w-28 px-2 text-center sm:px-4">
             {t("results-score")}
           </TableHead>
-          <TableHead className="w-28 text-right">
+          <TableHead className="w-28 px-2 text-center sm:px-4">
             {t("results-answered")}
           </TableHead>
-          <TableHead className="w-28 text-right">
+          <TableHead className="w-28 px-2 text-center sm:px-4">
             {t("results-pending")}
           </TableHead>
-          <TableHead className="w-36 text-right">{t("results-away")}</TableHead>
-          <TableHead className="w-44">{t("results-finished")}</TableHead>
+          <TableHead className="w-36 px-2 text-center sm:px-4">
+            {t("results-away")}
+          </TableHead>
+          <TableHead className="w-44 px-2 text-center sm:px-4">
+            {t("results-finished")}
+          </TableHead>
+          <TableHead className="w-12 px-2 sm:px-4" />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -233,25 +291,35 @@ function StudentTable({
 
 /**
  * The students of a sitting, one row each, with their score, answered and pending counts, and the time
- * they finished. A status filter reads only the attempts in that state, and a name search filters the rows
- * that are loaded. The list reads one page at a time through an intersection sentinel, not a button, so a
- * search that matches no loaded row keeps reading the next page until one matches or the list ends.
+ * they finished. The server reads the filters: a status reads only the attempts in that state, and a name
+ * search reads the students whose names match it, best match first. The list reads one page at a time
+ * through an intersection sentinel, not a button, so a page of a search that holds no match keeps reading
+ * the next page until one matches or the list ends.
  */
 export function StudentsTable() {
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
-  const search = useTableFilters((state) => state.search);
+  const search = useServerSearch();
   const chosen = useTableFilters((state) => state.chosen);
   const status = Option.getOrElse(
     chosenOne(chosen, "status", Schema.is(StatusFilter)),
     (): StatusFilter => "all"
   );
-  const scope =
-    status === "all" ? { sittingId, slug } : { sittingId, slug, state: status };
+  const scope = {
+    sittingId,
+    slug,
+    ...(status === "all" ? {} : { state: status }),
+    ...(search === "" ? {} : { search }),
+  };
   const students = usePaginatedQuery(
     exams.results.results.byStudent,
     settled ? scope : "skip",
     { initialNumItems: STUDENT_PAGE_SIZE }
+  );
+  // A new status's or search's first page loads behind the rows the table already shows, so the table never blanks.
+  const kept = useKeptRows(
+    PaginatedQueryResult.isLoadingFirstPage(students),
+    students.results
   );
 
   if (
@@ -260,37 +328,35 @@ export function StudentsTable() {
   ) {
     throw students.error;
   }
-  if (PaginatedQueryResult.isLoadingFirstPage(students)) {
+  if (Option.isNone(kept)) {
     return null;
   }
   return (
     <StudentRowsSection
       exhausted={PaginatedQueryResult.isExhausted(students)}
       failed={PaginatedQueryResult.isFailure(students)}
-      filtering={status !== "all" || search.trim() !== ""}
+      filtering={status !== "all" || search !== ""}
       loadMore={
         PaginatedQueryResult.isCanLoadMore(students)
           ? () => students.loadMore(STUDENT_PAGE_SIZE)
           : null
       }
-      rows={students.results}
-      search={search}
+      rows={kept.value}
     />
   );
 }
 
 /**
  * The rows of the students' table below its filters: the failure of its read above the rows it holds,
- * the rows that match the search, and the empty state once the list is exhausted with no match, or
- * with no student at all. A list that still loads, or that failed, shows no empty state.
+ * the rows the server read for the filters, and the empty state once the list is exhausted with no
+ * match, or with no student at all. A list that still loads, or that failed, shows no empty state.
  */
 function StudentRowsSection({
   exhausted,
   failed,
   filtering,
   loadMore,
-  rows: students,
-  search,
+  rows,
 }: {
   /** Whether the list has no more pages, so an empty table is the end of the list and not a wait. */
   exhausted: boolean;
@@ -299,17 +365,15 @@ function StudentRowsSection({
   /** Loads the next page of students, or none when the list has no more pages. */
   loadMore: (() => void) | null;
   rows: readonly (typeof StudentRowSchema.Type)[];
-  search: string;
 }) {
   const t = useTranslations("Exams");
-  const rows = Arr.filter(students, (row) => matchesSearch(row.name, search));
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {/* While a filter or a search narrows the list, the table keeps its head, so the status choice stays in reach. */}
       {rows.length > 0 || filtering ? <StudentTable rows={rows} /> : null}
-      {/* A page that holds no match is not the end of the search while later pages still load, so
-          the empty state waits for the last page, and the table shows nothing in the meantime. */}
+      {/* A page of a search can hold no match while later pages still load, so the empty state
+          waits for the last page, and the table shows nothing in the meantime. */}
       {exhausted && rows.length === 0 ? (
         <TableEmpty
           act="reading"

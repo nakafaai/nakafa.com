@@ -121,3 +121,15 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
     );
   });
 }
+
+test("search, chat and sign-in answer noindex, so no engine indexes a learner's screen", async ({
+  page,
+}) => {
+  for (const path of ["/en/search", "/en/chat", "/en/auth"]) {
+    await page.goto(path);
+    await expect(page.locator('meta[name="robots"]'), path).toHaveAttribute(
+      "content",
+      /noindex/
+    );
+  }
+});

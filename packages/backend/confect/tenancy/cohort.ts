@@ -1,6 +1,7 @@
+import type { TenantCohortsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { isSingleLine } from "@repo/utilities/line";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 /** Cohorts one period may hold, archived ones included. Every list of cohorts reads at most this many. */
 export const COHORT_LIMIT = 200;
@@ -44,3 +45,9 @@ export const tenantCohortValidator = Schema.Struct({
   tenantId: Id("tenants"),
   unitId: Id("tenantUnits"),
 });
+
+/** One cohort as the wire shows it. */
+export const cohortView = (cohort: TenantCohortsDoc) =>
+  Struct.renameKeys(Struct.pick(cohort, ["_id", "grade", "name", "status"]), {
+    _id: "id",
+  });

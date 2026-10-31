@@ -71,7 +71,7 @@ export function ZoomMenu({
           <DropdownMenuGroup>
             {Arr.map(ZOOM_PRESETS, (preset) => (
               <DropdownMenuRadioItem
-                className="cursor-pointer tabular-nums"
+                className="tabular-nums"
                 key={preset}
                 value={String(preset)}
               >
@@ -82,11 +82,11 @@ export function ZoomMenu({
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuRadioItem className="cursor-pointer" value="fit">
+            <DropdownMenuRadioItem value="fit">
               <HugeIcons icon={FitToScreenIcon} />
               {t("zoom-fit")}
             </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem className="cursor-pointer" value="fill">
+            <DropdownMenuRadioItem value="fill">
               <HugeIcons icon={ArrowExpandIcon} />
               {t("zoom-fill")}
             </DropdownMenuRadioItem>

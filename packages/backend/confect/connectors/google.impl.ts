@@ -353,7 +353,7 @@ const store = FunctionImpl.make(
         (row) =>
           row.connector === args.connector && sameOwner(row.owner, args.owner)
       ),
-      (row) => disconnect(actor, row),
+      (row) => disconnect(actor, row, "keep"),
       { discard: true }
     );
     const connectionId = yield* connect(actor, args.owner, {

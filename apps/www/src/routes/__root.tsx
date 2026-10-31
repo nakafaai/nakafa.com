@@ -1,5 +1,7 @@
 import "@fontsource-variable/inter";
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import { PageScrollbar } from "@repo/design-system/components/ui/scrollbar";
+import { DrawerStage } from "@repo/design-system/components/ui/stage";
 import { ThemeProvider } from "@repo/design-system/providers/theme";
 import { textDirection } from "@repo/internationalization/src/direction";
 import {
@@ -30,6 +32,8 @@ import {
 } from "@/components/state/localized";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
+import { readStandaloneMessages } from "@/lib/i18n/standalone";
+import { KEPT_ACCOUNT_SCRIPT } from "@/lib/identity/prepaint";
 import { EARLY_PRESS_SCRIPT } from "@/lib/press/prepaint";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import {
@@ -62,6 +66,13 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { title: SOCIAL_SITE_NAME },
+      // The description of a document whose route names none, such as the
+      // School shell. A route's own description wins: the head keeps the deepest
+      // route's tag of each name.
+      {
+        name: "description",
+        content: readStandaloneMessages(DEFAULT_LOCALE).Document.description,
+      },
       { charSet: "utf-8" },
       {
         name: "viewport",
@@ -140,6 +151,10 @@ function RootDocument({ children }: { children: ReactNode }) {
         />
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{ __html: KEPT_ACCOUNT_SCRIPT }}
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: EARLY_PRESS_SCRIPT }}
         />
         <HeadContent />
@@ -154,8 +169,11 @@ function RootDocument({ children }: { children: ReactNode }) {
         <ThemeProvider>
           <Announcer />
           <MotionConfig reducedMotion="user">
-            <ContentPageAnchorProvider>{children}</ContentPageAnchorProvider>
+            <DrawerStage>
+              <ContentPageAnchorProvider>{children}</ContentPageAnchorProvider>
+            </DrawerStage>
           </MotionConfig>
+          <PageScrollbar />
         </ThemeProvider>
         <Scripts />
       </body>
