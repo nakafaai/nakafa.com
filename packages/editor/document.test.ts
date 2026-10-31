@@ -120,6 +120,7 @@ describe("documentExtensions", () => {
         { ...RULES, marks: ["bold", "italic", "link"] },
         {
           ...NO_MATH_VIEWS,
+          figure: null,
           image: null,
           marks: { bold: "marked", link: "linked" },
         }

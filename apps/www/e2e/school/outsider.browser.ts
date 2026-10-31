@@ -96,9 +96,7 @@ test("the not-member page leads with Sign in with a card, keeps Check again for 
 
   await card.click();
   await expect(
-    page.getByText(
-      "Sign in with the username and card from your admin."
-    )
+    page.getByText("Sign in with the username and card from your admin.")
   ).toBeVisible();
   await context.close();
 });
