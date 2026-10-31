@@ -63,6 +63,14 @@ export default CronJobs.make()
   )
   .add(
     CronJob.make(
+      "delete unsent chat files",
+      Duration.hours(24),
+      internal.classroom.forum.files.sweep,
+      {}
+    )
+  )
+  .add(
+    CronJob.make(
       "reclaim unused Nina files",
       Duration.hours(24),
       internal.storage.sweep,

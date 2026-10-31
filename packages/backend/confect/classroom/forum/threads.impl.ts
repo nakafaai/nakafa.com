@@ -1,5 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type { ClassroomThreadsDoc } from "@repo/backend/confect/_generated/docs";
+import type {
+  ClassroomMessagesDoc,
+  ClassroomThreadsDoc,
+} from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -10,9 +13,15 @@ import {
   classAccess,
   subjectTeacherOf,
 } from "@repo/backend/confect/classroom/authority";
-import { DiscussionsClosed } from "@repo/backend/confect/classroom/forum/errors";
+import { takeUploads } from "@repo/backend/confect/classroom/forum/attach";
+import {
+  DiscussionsClosed,
+  MessageEmpty,
+  MessageHidden,
+} from "@repo/backend/confect/classroom/forum/errors";
 import {
   classChannel,
+  classMessage,
   classThread,
   missing,
 } from "@repo/backend/confect/classroom/forum/lookup";
@@ -23,7 +32,10 @@ import {
   noticeMentions,
 } from "@repo/backend/confect/classroom/forum/notice";
 import { opensDiscussions } from "@repo/backend/confect/classroom/forum/policy";
-import { titleField } from "@repo/backend/confect/classroom/forum/thread";
+import {
+  TITLE_MAX_LENGTH,
+  titleField,
+} from "@repo/backend/confect/classroom/forum/thread";
 import spec from "@repo/backend/confect/classroom/forum/threads.spec";
 import {
   discussionView,
@@ -34,8 +46,16 @@ import {
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { sealText } from "@repo/backend/confect/vault/text";
-import { Clock, Effect, Layer, Option, Struct } from "effect";
+import { openText, sealText } from "@repo/backend/confect/vault/text";
+import {
+  Array as Arr,
+  Clock,
+  Effect,
+  Layer,
+  Option,
+  String as Str,
+  Struct,
+} from "effect";
 
 /**
  * A discussion as its own page shows it: its channel, its summary, and the
@@ -57,6 +77,54 @@ const threadView = Effect.fn("classroom.forum.threads.view")(function* (
     id: thread._id,
     opening: yield* messageView(opening),
   };
+});
+
+/**
+ * One page of a class's discussions, the newest first, each read for the viewer.
+ * The read is indexed by class and bounded by the page size.
+ */
+const list = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "list",
+  Effect.fn("classroom.forum.threads.list")(function* ({ paginationOpts }) {
+    const row = yield* Class;
+    const found = yield* (yield* DatabaseReader)
+      .table("classroomThreads")
+      .index(
+        "by_classId_and_number",
+        (query) => query.eq("classId", row._id),
+        "desc"
+      )
+      .paginate(paginationOpts)
+      .pipe(Effect.orDie);
+    return Struct.assign(found, {
+      page: yield* Effect.forEach(found.page, (thread) =>
+        Effect.map(discussionView(thread), (discussion) => ({
+          channelId: thread.channelId,
+          discussion,
+        }))
+      ),
+    });
+  })
+);
+
+/** The number the next discussion of the allowed class takes. */
+const nextNumber = Effect.fn("classroom.forum.threads.next")(function* () {
+  const row = yield* Class;
+  const last = yield* (yield* DatabaseReader)
+    .table("classroomThreads")
+    .index(
+      "by_classId_and_number",
+      (query) => query.eq("classId", row._id),
+      "desc"
+    )
+    .first()
+    .pipe(Effect.orDie);
+  return Option.match(last, {
+    onNone: () => 1,
+    onSome: (found) => found.number + 1,
+  });
 });
 
 /**
@@ -107,15 +175,6 @@ const open = FunctionImpl.make(
       return yield* new DiscussionsClosed();
     }
     const checked = yield* checkMentions(row, mentions);
-    const last = yield* reader
-      .table("classroomThreads")
-      .index(
-        "by_classId_and_number",
-        (query) => query.eq("classId", row._id),
-        "desc"
-      )
-      .first()
-      .pipe(Effect.orDie);
     const keys = yield* schoolKeys(row.tenantId);
     const fields = { channelId: channel._id, classId: row._id, clientKey };
     const createdAt = yield* Clock.currentTimeMillis;
@@ -126,10 +185,7 @@ const open = FunctionImpl.make(
         ...fields,
         authorId: principal.person._id,
         createdAt,
-        number: Option.match(last, {
-          onNone: () => 1,
-          onSome: (found) => found.number + 1,
-        }),
+        number: yield* nextNumber(),
         replies: 0,
         sealedTitle: yield* sealText(keys, titleField(fields), title).pipe(
           Effect.orDie
@@ -246,6 +302,7 @@ const reply = FunctionImpl.make(
   spec,
   "reply",
   Effect.fn("classroom.forum.threads.reply")(function* ({
+    attachments,
     clientKey,
     mentions,
     number,
@@ -271,8 +328,12 @@ const reply = FunctionImpl.make(
       }
       return yield* messageView(sent.value);
     }
+    if (text === "" && Arr.isReadonlyArrayEmpty(attachments)) {
+      return yield* new MessageEmpty();
+    }
     const checked = yield* checkMentions(row, mentions);
     const fields = { channelId: thread.channelId, classId: row._id, clientKey };
+    const files = yield* takeUploads(attachments);
     const createdAt = yield* Clock.currentTimeMillis;
     const writer = yield* DatabaseWriter;
     const messageId = yield* writer
@@ -289,6 +350,7 @@ const reply = FunctionImpl.make(
         ).pipe(Effect.orDie),
         tenantId: row.tenantId,
         threadId: thread._id,
+        ...(Arr.isReadonlyArrayEmpty(files) ? {} : { attachments: files }),
       })
       .pipe(Effect.orDie);
     yield* noticeMentions(messageId, row, createdAt, checked);
@@ -314,7 +376,105 @@ const reply = FunctionImpl.make(
   })
 );
 
+/**
+ * The title a thread takes from the message it starts from, as Discord names one:
+ * the first line of its text, else its poll's question, else its first file's name,
+ * cut to what a title holds.
+ */
+const titleOfMessage = Effect.fn("classroom.forum.threads.titleOf")(function* (
+  message: ClassroomMessagesDoc
+) {
+  const keys = yield* schoolKeys(message.tenantId);
+  const text =
+    message.sealedText === null
+      ? ""
+      : yield* openText(keys, messageField(message), message.sealedText);
+  const line = Option.getOrElse(Arr.head(Str.split(text, "\n")), () => "");
+  if (line !== "") {
+    return Str.trim(Str.slice(0, TITLE_MAX_LENGTH)(line));
+  }
+  const view = yield* messageView(message);
+  return Str.trim(
+    Str.slice(
+      0,
+      TITLE_MAX_LENGTH
+    )(
+      view.poll?.question ??
+        Option.getOrElse(
+          Option.map(Arr.head(view.attachments), (file) => file.name),
+          () => "…"
+        )
+    )
+  );
+}, Effect.orDie);
+
+/**
+ * Starts a thread from a message of a channel, as Slack and Discord let any message
+ * take one, under the next number of the class. Starting one that stands answers
+ * its number and writes nothing. A student starts one only while the school lets
+ * students open discussions, and a reply or a hidden message starts none.
+ */
+const start = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "start",
+  Effect.fn("classroom.forum.threads.start")(function* ({ messageId }) {
+    const principal = yield* Member;
+    const row = yield* Class;
+    const message = yield* classMessage(messageId, "forum.post");
+    if (message.threadId !== undefined) {
+      return yield* missing("forum.post");
+    }
+    if (message.sealedText === null) {
+      return yield* new MessageHidden();
+    }
+    const reader = yield* DatabaseReader;
+    if (message.startsThreadId !== undefined) {
+      const { number } = yield* reader
+        .table("classroomThreads")
+        .get(message.startsThreadId)
+        .pipe(Effect.orDie);
+      return { number };
+    }
+    if (!(yield* opensDiscussions(row, principal))) {
+      return yield* new DiscussionsClosed();
+    }
+    const number = yield* nextNumber();
+    const writer = yield* DatabaseWriter;
+    const fields = Struct.pick(message, ["channelId", "classId", "clientKey"]);
+    const createdAt = yield* Clock.currentTimeMillis;
+    const threadId = yield* writer
+      .table("classroomThreads")
+      .insert({
+        ...fields,
+        authorId: principal.person._id,
+        createdAt,
+        number,
+        replies: 0,
+        sealedTitle: yield* sealText(
+          yield* schoolKeys(row.tenantId),
+          titleField(fields),
+          yield* titleOfMessage(message)
+        ).pipe(Effect.orDie),
+        tenantId: row.tenantId,
+      })
+      .pipe(Effect.orDie);
+    yield* writer
+      .table("classroomMessages")
+      .replace(
+        message._id,
+        Struct.assign(Struct.omit(message, ["_creationTime", "_id"]), {
+          startsThreadId: threadId,
+        })
+      )
+      .pipe(Effect.orDie);
+    return { number };
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(list),
+  Layer.provide(start),
   Layer.provide(open),
   Layer.provide(rename),
   Layer.provide(get),

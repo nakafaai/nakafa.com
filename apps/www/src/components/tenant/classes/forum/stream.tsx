@@ -42,6 +42,7 @@ import {
   useChannelScope,
   useReadPlace,
 } from "@/components/tenant/classes/forum/scope";
+import { TalliesProvider } from "@/components/tenant/classes/forum/tallies";
 
 /** How long the reader's view stays still before the read mark moves to it. */
 const MARK_DELAY_MILLISECONDS = 600;
@@ -101,77 +102,88 @@ export function MessageStream({
   );
 
   return (
-    <Primitive.Provider autoScroll defaultScrollPosition="last-anchor">
-      <MessageScroller className="min-h-0 flex-1">
-        <MessageScrollerViewport
-          aria-label={t("messages")}
-          preserveScrollOnPrepend
-        >
-          <MessageScrollerContent className="w-full gap-4 px-4 py-4">
-            {loadOlder === undefined && Option.isSome(opening) ? (
-              <MessageScrollerItem>
-                <Marker className="mb-4" role="separator" variant="separator">
-                  <MarkerContent>
-                    {dayOf(opening.value.createdAt)}
-                  </MarkerContent>
-                </Marker>
-                <ForumMessageRow message={opening.value} opens />
-              </MessageScrollerItem>
-            ) : null}
-            {Arr.map(messages, (message, index) => (
-              // The client key stays the same from the send to the server's answer, so the row
-              // and anything open in it outlive the placeholder ID.
-              <MessageScrollerItem
-                className="data-[jumped=true]:bg-muted/60 rounded-xl transition-colors"
-                data-jumped={
-                  Option.contains(jump, message.id) ? "true" : undefined
-                }
-                key={message.clientKey}
-                messageId={message.clientKey}
-                scrollAnchor={Option.contains(unread, message.clientKey)}
-              >
-                {index === 0 && loadOlder ? (
-                  <Intersection onIntersect={loadOlder} />
-                ) : null}
-                {Option.match(
-                  opensDay(
-                    messages,
-                    index,
-                    loadOlder !== undefined,
-                    opening,
-                    dayOf
-                  ),
-                  {
-                    onNone: () => null,
-                    onSome: (day) => (
-                      <Marker
-                        className="mb-4"
-                        role="separator"
-                        variant="separator"
-                      >
-                        <MarkerContent>{day}</MarkerContent>
-                      </Marker>
-                    ),
-                  }
-                )}
-                {Option.contains(divided, message.clientKey) ? (
+    <TalliesProvider
+      since={Option.match(Arr.head(messages), {
+        onNone: () => 0,
+        onSome: (oldest) => oldest.createdAt,
+      })}
+    >
+      <Primitive.Provider autoScroll defaultScrollPosition="last-anchor">
+        <MessageScroller className="min-h-0 flex-1">
+          <MessageScrollerViewport
+            aria-label={t("messages")}
+            preserveScrollOnPrepend
+          >
+            <MessageScrollerContent className="mx-auto w-full max-w-3xl gap-4 px-4 py-4">
+              {loadOlder === undefined && Option.isSome(opening) ? (
+                <MessageScrollerItem>
                   <Marker className="mb-4" role="separator" variant="separator">
-                    <MarkerContent>{t("unread-divider")}</MarkerContent>
+                    <MarkerContent>
+                      {dayOf(opening.value.createdAt)}
+                    </MarkerContent>
                   </Marker>
-                ) : null}
-                <ForumMessageRow
-                  message={message}
-                  opens={opensRun(messages, index, kept)}
-                />
-              </MessageScrollerItem>
-            ))}
-          </MessageScrollerContent>
-        </MessageScrollerViewport>
-        <MessageScrollerButton aria-label={t("scroll-to-latest")} />
-      </MessageScroller>
-      <ReadTracker at={at} messages={messages} />
-      <JumpTo jump={jump} loadOlder={loadOlder} messages={messages} />
-    </Primitive.Provider>
+                  <ForumMessageRow message={opening.value} opens />
+                </MessageScrollerItem>
+              ) : null}
+              {Arr.map(messages, (message, index) => (
+                // The client key stays the same from the send to the server's answer, so the row
+                // and anything open in it outlive the placeholder ID.
+                <MessageScrollerItem
+                  className="data-[jumped=true]:bg-muted/60 rounded-xl transition-colors"
+                  data-jumped={
+                    Option.contains(jump, message.id) ? "true" : undefined
+                  }
+                  key={message.clientKey}
+                  messageId={message.clientKey}
+                  scrollAnchor={Option.contains(unread, message.clientKey)}
+                >
+                  {index === 0 && loadOlder ? (
+                    <Intersection onIntersect={loadOlder} />
+                  ) : null}
+                  {Option.match(
+                    opensDay(
+                      messages,
+                      index,
+                      loadOlder !== undefined,
+                      opening,
+                      dayOf
+                    ),
+                    {
+                      onNone: () => null,
+                      onSome: (day) => (
+                        <Marker
+                          className="mb-4"
+                          role="separator"
+                          variant="separator"
+                        >
+                          <MarkerContent>{day}</MarkerContent>
+                        </Marker>
+                      ),
+                    }
+                  )}
+                  {Option.contains(divided, message.clientKey) ? (
+                    <Marker
+                      className="mb-4"
+                      role="separator"
+                      variant="separator"
+                    >
+                      <MarkerContent>{t("unread-divider")}</MarkerContent>
+                    </Marker>
+                  ) : null}
+                  <ForumMessageRow
+                    message={message}
+                    opens={opensRun(messages, index, kept)}
+                  />
+                </MessageScrollerItem>
+              ))}
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
+          <MessageScrollerButton aria-label={t("scroll-to-latest")} />
+        </MessageScroller>
+        <ReadTracker at={at} messages={messages} />
+        <JumpTo jump={jump} loadOlder={loadOlder} messages={messages} />
+      </Primitive.Provider>
+    </TalliesProvider>
   );
 }
 

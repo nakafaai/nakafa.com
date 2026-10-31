@@ -51,6 +51,7 @@ export function ForumDiscussion({
   canPost,
   everyone,
   jump,
+  opens,
   thread,
 }: {
   canManage: boolean;
@@ -58,6 +59,8 @@ export function ForumDiscussion({
   /** Whether the viewer, a subject teacher, may mention everyone. */
   everyone: boolean;
   jump: Option.Option<Id<"classroomMessages">>;
+  /** Whether the viewer may start a thread. */
+  opens: boolean;
   thread: Thread;
 }) {
   const t = useTranslations("Classroom");
@@ -78,6 +81,7 @@ export function ForumDiscussion({
             channelId={thread.channelId}
             everyone={everyone}
             jump={Option.none()}
+            opens={opens}
           />
         </PanesList>
         <PanesDetail
@@ -94,11 +98,13 @@ export function ForumDiscussion({
             <ChannelScopeContext
               value={{
                 canManage,
+                canPost,
                 channelId: thread.channelId,
                 classId,
                 discussion: thread.discussion.number,
                 everyone,
                 jump,
+                opens: false,
                 slug,
               }}
             >

@@ -37,6 +37,7 @@ export function ForumChannel({
   channelId,
   everyone,
   jump,
+  opens,
 }: {
   canManage: boolean;
   canPost: boolean;
@@ -44,6 +45,8 @@ export function ForumChannel({
   /** Whether the viewer, a subject teacher, may mention everyone. */
   everyone: boolean;
   jump: Option.Option<Id<"classroomMessages">>;
+  /** Whether the viewer may start a thread. */
+  opens: boolean;
 }) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
@@ -52,17 +55,19 @@ export function ForumChannel({
     <ChannelScopeContext
       value={{
         canManage,
+        canPost,
         channelId,
         classId,
         discussion: undefined,
         everyone,
         jump,
+        opens,
         slug,
       }}
     >
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
         <ChannelMessages key={channelId} />
-        <footer className="shrink-0 px-4 pt-2 pb-4">
+        <footer className="mx-auto w-full max-w-3xl shrink-0 px-4 pt-2 pb-4">
           {canPost ? (
             <ForumComposer />
           ) : (

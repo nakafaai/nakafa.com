@@ -17,11 +17,9 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { PanesProvider } from "@/components/shared/panes";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
-import {
-  CHANNEL_PAGE_SIZE,
-  ChannelList,
-} from "@/components/tenant/classes/channels";
+import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
+import { ForumFrame, ForumPick } from "@/components/tenant/classes/forum/frame";
 import { StartDiscussion } from "@/components/tenant/classes/forum/start";
 import { ForumDiscussion } from "@/components/tenant/classes/forum/thread";
 import {
@@ -244,11 +242,11 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
 
 /**
  * The view under the class's header, as wide as the page, each with the header's actions it
- * holds: one channel fills the body as a chat does, with New discussion for whoever the server
- * lets open one there, and one discussion beside its channel; the class's announcements, with New
- * announcement for its subject teachers, and one task scroll within it; the channel list, the
- * library and the task list each draw their header and their one table card; and the gradebook
- * shares its filters and its panes between its header and its body.
+ * holds: the forum keeps the list of chats beside one chat, with New discussion for whoever the
+ * server lets open one there, or one discussion beside its chat; the class's announcements, with
+ * New announcement for its subject teachers, and one task scroll within it; the library and the
+ * task list each draw their header and their one table card; and the gradebook shares its filters
+ * and its panes between its header and its body.
  */
 function ClassBody({
   found,
@@ -270,15 +268,16 @@ function ClassBody({
         <ClassHeader>
           {klass.opens ? <StartDiscussion channelId={view.channelId} /> : null}
         </ClassHeader>
-        <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
+        <ForumFrame shown="chat">
           <ForumChannel
             canManage={canManage}
             canPost={canPost}
             channelId={view.channelId}
             everyone={everyone}
             jump={view.jump}
+            opens={klass.opens}
           />
-        </div>
+        </ForumFrame>
       </>
     );
   }
@@ -286,18 +285,21 @@ function ClassBody({
     return (
       <>
         <ClassHeader />
-        {Option.match(found, {
-          onNone: () => null,
-          onSome: (thread) => (
-            <ForumDiscussion
-              canManage={canManage}
-              canPost={canPost}
-              everyone={everyone}
-              jump={view.jump}
-              thread={thread}
-            />
-          ),
-        })}
+        <ForumFrame shown="thread">
+          {Option.match(found, {
+            onNone: () => null,
+            onSome: (thread) => (
+              <ForumDiscussion
+                canManage={canManage}
+                canPost={canPost}
+                everyone={everyone}
+                jump={view.jump}
+                opens={klass.opens}
+                thread={thread}
+              />
+            ),
+          })}
+        </ForumFrame>
       </>
     );
   }
@@ -355,7 +357,14 @@ function ClassBody({
       </TableFiltersProvider>
     );
   }
-  return <ChannelList />;
+  return (
+    <>
+      <ClassHeader />
+      <ForumFrame shown="rail">
+        <ForumPick />
+      </ForumFrame>
+    </>
+  );
 }
 
 /**

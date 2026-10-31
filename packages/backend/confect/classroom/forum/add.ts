@@ -62,6 +62,6 @@ export const add = FunctionImpl.make(
       .table("classroomChannels")
       .get(channelId)
       .pipe(Effect.orDie);
-    return channelView(created, false);
+    return channelView(created, { last: null, unread: false });
   })
 );
