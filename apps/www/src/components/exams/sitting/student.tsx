@@ -30,6 +30,7 @@ import {
   useEnterSitting,
 } from "@/components/exams/sitting/admit";
 import { isActive, takesAnswers } from "@/components/exams/sitting/attempt";
+import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
 import { useReaderLoaded } from "@/components/exams/sitting/document";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
@@ -90,10 +91,15 @@ export function StudentSitting({
   if (QueryResult.isFailure(view)) {
     return (
       <PaperFrame
-        title={Option.match(kept, {
-          onNone: () => t("sitting"),
-          onSome: (last) => last.sitting.examTitle,
-        })}
+        bar={
+          <PaperBar
+            back={<PaperBack />}
+            title={Option.match(kept, {
+              onNone: () => t("sitting"),
+              onSome: (last) => last.sitting.examTitle,
+            })}
+          />
+        }
       >
         <StudentFailure error={view.error} />
       </PaperFrame>
@@ -101,7 +107,11 @@ export function StudentSitting({
   }
   // A paused read, as while Convex confirms the session again, keeps its last answer, so a running paper stays.
   if (Option.isNone(kept)) {
-    return <PaperFrame title={t("sitting")} />;
+    return (
+      <PaperFrame
+        bar={<PaperBar back={<PaperBack />} title={t("sitting")} />}
+      />
+    );
   }
   const { attempt, sitting } = kept.value;
   if (attempt !== null && admitted !== null && isActive(attempt.state)) {
@@ -115,7 +125,11 @@ export function StudentSitting({
     );
   }
   if (joining && enterable) {
-    return <PaperFrame title={sitting.examTitle} />;
+    return (
+      <PaperFrame
+        bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+      />
+    );
   }
   if (attempt !== null && !takesAnswers(attempt.state)) {
     return <StudentOutcome attempt={attempt} sitting={sitting} />;
@@ -125,7 +139,9 @@ export function StudentSitting({
   }
 
   return (
-    <PaperFrame title={sitting.examTitle}>
+    <PaperFrame
+      bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+    >
       <SittingBody>
         <form onSubmit={entry.submit}>
           <CardSection>
@@ -254,7 +270,9 @@ function StudentScheduled({
   const locale = useLocale();
 
   return (
-    <PaperFrame title={sitting.examTitle}>
+    <PaperFrame
+      bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+    >
       <SittingBody>
         <CardSection>
           <CardHeader>

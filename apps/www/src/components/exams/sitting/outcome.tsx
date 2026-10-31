@@ -3,6 +3,7 @@ import { CardHeader, CardTitle } from "@repo/design-system/components/ui/card";
 import { useTranslations } from "use-intl";
 import { StudentResults } from "@/components/exams/results/student";
 import type { AttemptValue } from "@/components/exams/sitting/attempt";
+import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
 import { PaperFrame } from "@/components/exams/sitting/recovery";
 import {
@@ -33,7 +34,9 @@ export function StudentOutcome({
   const t = useTranslations("Exams");
 
   return (
-    <PaperFrame title={sitting.examTitle}>
+    <PaperFrame
+      bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+    >
       <SittingBody>
         {attempt.state === "submitted" ? (
           <StudentResults sittingId={sitting.id} />

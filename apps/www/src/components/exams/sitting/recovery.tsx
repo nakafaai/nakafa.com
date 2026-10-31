@@ -12,18 +12,19 @@ import { PlayerProvider } from "@/components/player/provider";
  * try-out does, and the frame never changes on the way into the paper or out of it.
  */
 export function PaperFrame({
+  bar,
   children,
-  title,
 }: {
+  /** The bar over the screen, the paper's own (`PaperBar`). */
+  readonly bar: ReactNode;
   /** The screen under the bar, where the paper's questions stand; none while the paper is on its way. */
   readonly children?: ReactNode;
-  readonly title: string;
 }) {
   const mode = useSittingMode();
 
   return (
     <PlayerProvider keys={[]} mode={mode}>
-      <PaperBar back={<PaperBack />} title={title} />
+      {bar}
       <PlayerMain navigator={null}>{children}</PlayerMain>
     </PlayerProvider>
   );
@@ -33,7 +34,11 @@ export function PaperFrame({
 function PaperHold({ children }: { readonly children: ReactNode }) {
   const t = useTranslations("Exams");
 
-  return <PaperFrame title={t("sitting")}>{children}</PaperFrame>;
+  return (
+    <PaperFrame bar={<PaperBar back={<PaperBack />} title={t("sitting")} />}>
+      {children}
+    </PaperFrame>
+  );
 }
 
 /**
