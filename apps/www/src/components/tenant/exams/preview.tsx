@@ -20,8 +20,9 @@ import { drawDocument } from "@repo/design-system/components/editor/prose";
 import { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
-import { useCallback, useDeferredValue, useMemo } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
+import { DrawnFigures, figurePlaces } from "@/components/assessment/drawn";
 import { choiceOf, type OptionLabel } from "@/components/tenant/exams/answer";
 import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
@@ -144,11 +145,13 @@ export function PreviewProse({
   size: "line" | "page";
 }) {
   const shown = useDeferredValue(Option.getOrElse(doc, () => EMPTY_TEXT));
+  const [figures, setFigures] = useState<readonly HTMLElement[]>([]);
   // The text is drawn again only when it changes, not on every redraw of the page.
   const draw = useCallback(
     (element: HTMLDivElement | null) => {
       if (element !== null) {
         drawDocument(element, shown, article);
+        setFigures(figurePlaces(element));
       }
     },
     [article, shown]
@@ -163,6 +166,7 @@ export function PreviewProse({
         )}
         ref={draw}
       />
+      <DrawnFigures doc={shown} places={figures} />
     </div>
   );
 }

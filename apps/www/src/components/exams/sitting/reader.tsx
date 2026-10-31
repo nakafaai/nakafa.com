@@ -7,7 +7,8 @@ import {
 import { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { use, useCallback, useMemo } from "react";
+import { use, useCallback, useMemo, useState } from "react";
+import { DrawnFigures, figurePlaces } from "@/components/assessment/drawn";
 import { SittingPictures } from "@/components/exams/sitting/pictures";
 import { assessmentSchema } from "@/lib/editor/assessment";
 
@@ -68,6 +69,7 @@ export function SittingReader({
   readonly size?: "line" | "page";
 }) {
   const urls = use(SittingPictures);
+  const [figures, setFigures] = useState<readonly HTMLElement[]>([]);
   const content = useMemo(
     () => Node.fromJSON(assessmentSchema, document),
     [document]
@@ -77,16 +79,20 @@ export function SittingReader({
       if (element !== null) {
         drawDocument(element, content, size === "page");
         drawPictures(element, urls);
+        setFigures(figurePlaces(element));
       }
     },
     [content, size, urls]
   );
 
   return (
-    <div
-      className={editorDocument({ size, text: "article" })}
-      data-slot="sitting-document"
-      ref={draw}
-    />
+    <>
+      <div
+        className={editorDocument({ size, text: "article" })}
+        data-slot="sitting-document"
+        ref={draw}
+      />
+      <DrawnFigures doc={content} places={figures} />
+    </>
   );
 }
