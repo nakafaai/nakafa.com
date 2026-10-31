@@ -8,38 +8,48 @@ import { AI_SDK_COHORT } from "#scripts/dependencies/policy";
 export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
-    "4.1.0",
-    "Effect 4.1.0 is the latest release and is reviewed here, but the cohort stays on 4.0.5 (EFFECT_COHORT_VERSION). 4.1.0 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. Every published @nakafa/aksara-contracts (1.0.0, 1.0.1 and 2.0.0) peers effect 4.0.5 exactly, and its dist/hash/digest.js calls Crypto.make from effect when the module loads, so on 4.1 every contracts import fails. nakafa.com therefore moves to 4.1.0 in the change that adopts contracts 3.0.0, the release built on 4.1 (nakafaai/aksara#497), which follows the contracts 2.0 adoption (#1434, #1436); that change is #1524. Checked 30 October 2026.",
+    "4.1.1",
+    "Effect 4.1.1 is the latest release and is reviewed here, but the cohort stays on 4.0.5 (EFFECT_COHORT_VERSION). 4.1 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. alchemy 2.0.0-beta.84, the latest Alchemy release, imports the removed effect/Crypto in its OAuthFlow, so @alchemy.run/cloudflare cannot load and alchemy deploy fails on 4.1; the fix is merged upstream (alchemy-run/alchemy#2754) and unreleased. #1524 moves the cohort with contracts 3.x and Confect 10.5.0 once Alchemy releases it. Checked 31 October 2026.",
   ],
   [
     "@effect/platform-browser@latest",
-    "4.1.0",
-    "@effect/platform-browser follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.1",
+    "@effect/platform-browser follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/platform-node@latest",
-    "4.1.0",
-    "@effect/platform-node follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.1",
+    "@effect/platform-node follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/platform-node-shared@latest",
-    "4.1.0",
-    "@effect/platform-node-shared follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.1",
+    "@effect/platform-node-shared follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/vitest@latest",
-    "4.1.0",
-    "@effect/vitest follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.1",
+    "@effect/vitest follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/ai-openai-compat@latest",
-    "4.1.0",
-    "@effect/ai-openai-compat follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.1",
+    "@effect/ai-openai-compat follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/ai-openrouter@latest",
-    "4.1.0",
-    "@effect/ai-openrouter follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.1",
+    "@effect/ai-openrouter follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+  ],
+  [
+    "@effect/platform-bun@latest",
+    "4.1.1",
+    "@effect/platform-bun follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+  ],
+  [
+    "@confect/core@latest",
+    "10.5.0",
+    "Confect moves with the Effect cohort (CONFECT_COHORT_VERSION). 10.5.0 fixes confect codegen and dev on Effect 4.1 (rjdellecese/confect#882), and its core, server, client, CLI and test packages admit only effect ~4.1.0, so every Confect package stays on 10.4.1 until #1524 moves the cohort.",
   ],
   [
     "@effect/tsgo@latest",
@@ -59,14 +69,14 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "3.0.0",
-    "nakafa.com declares 2.0.0, the first release with the assessment snapshot, which peers effect 4.0.5 exactly. 3.0.0 (30 October 2026) builds the contracts on effect/crypto and peers effect exactly 4.1.0, so it moves with the Effect cohort in #1524, after 2.0.0 lands.",
+    "3.0.1",
+    "nakafa.com declares 2.0.0, the first release with the assessment snapshot, which peers effect 4.0.5 exactly. 3.0.0 (30 October 2026) builds the contracts on effect/crypto and peers effect exactly 4.1.0, and 3.0.1 republishes the same wire format (nakafaai/aksara#500), so the contracts move with the Effect cohort in #1524.",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "ai@latest",
-    "7.0.158",
-    "AI SDK packages move as one reviewed cohort. 7.0.157 is the adopted release: @convex-dev/agent 0.7.9 carries the TS2590 fixes for 7.0.141 and later (convex/agent#414 and #424). 7.0.158, published on 2026-10-30 at 15:38 UTC, repairs partial JSON and extends the experimental sandbox session, which Nakafa does not use, and moves with the next package upgrade.",
+    "7.0.159",
+    "AI SDK packages move as one reviewed cohort. 7.0.159 is the latest release and the adopted one: @convex-dev/agent 0.7.9 carries the TS2590 fixes for 7.0.141 and later (convex/agent#414 and #424), 7.0.158 repairs partial JSON and extends the experimental sandbox session, which Nakafa does not use, and the gateway module (confect/gateway) typechecks against 7.0.159. Checked 31 October 2026.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
