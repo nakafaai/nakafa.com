@@ -9,6 +9,8 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { quietHoursEnd } from "@repo/backend/confect/notifications/clock";
+import type { NoticeKind } from "@repo/backend/confect/notifications/rules";
+import { switchedOff } from "@repo/backend/confect/notifications/switched";
 import { namedTimeZone } from "@repo/utilities/timezone";
 import {
   Array as Arr,
@@ -21,18 +23,22 @@ import {
 
 /**
  * Schedules the push of one new inbox row (ADR 0027). A recipient without an
- * account, or whose account has no browser subscribed, gets none, so nothing is
- * scheduled for it. Quiet hours, 21:00 to 06:00 on the clock of the class's
+ * account, who switched this kind's push off, or whose account has no browser
+ * subscribed, gets none, so nothing is scheduled for it. Quiet hours, 21:00 to 06:00 on the clock of the class's
  * unit, hold the push of a student until they end; the inbox row is there at
  * once either way. Every other recipient's push leaves at once.
  */
 export const schedulePush = Effect.fn("notifications.schedule.push")(function* (
+  kind: typeof NoticeKind.Type,
   notificationId: GenericId.GenericId<"notifications">,
   person: TenantPeopleDoc,
   grants: readonly TenantGrantsDoc[],
   unitId: GenericId.GenericId<"tenantUnits">
 ) {
   if (person.account.state !== "claimed") {
+    return;
+  }
+  if (Option.isSome(yield* switchedOff(person._id, kind, "push"))) {
     return;
   }
   const reader = yield* DatabaseReader;

@@ -137,8 +137,10 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   and the invitation. A resend refreshes that row to the resend's time and marks
   it unread. Revoking the invitation deletes the row, and a revoked invitation
   that a run reads later gets none.
-- Preferences are kept for each kind and each channel (`notificationPreferences`,
-  planned). The email for an invitation and for the account is always sent.
+- Preferences are kept for each kind and each channel (`noticePreferences`). A row
+  is a channel the Person switched off, so a Person with no rows gets everything,
+  and the inbox row always stays. The email for an invitation and for the account
+  is always sent.
 - The fan-out is never one transaction. A workpool (`@convex-dev/workpool`, a
   dependency of `packages/backend` today) works in batches of 100 recipients.
   An `@all` of a teacher follows the same rule (ADR 0025).
@@ -410,7 +412,7 @@ sitting does not show.
 | The bounds of the inbox: one request reads at most `HELD_SCHOOL_LIMIT`, 100 schools, and is refused past it with `NotificationScopeTooLarge`; each page of the consumer, the read-all, and the purge holds 50, half of the 100-entry list page of ADR 0016; a page cursor that names more than `HELD_SCHOOL_LIMIT` rows is refused with `NotificationCursorInvalid` | Live |
 | The minute sweep that starts a run for each pending journal cursor | Built |
 | `pushSubscriptions`, subscribe and unsubscribe, the push sender, and the push of mention and announcement rows held by quiet hours | Built; live once the operator sets the VAPID keys |
-| `notificationPreferences` | Planned, program wave B |
+| `noticePreferences`, read by the push and the mail queue, and the switches on the School inbox | Built |
 | Task reminders and late-task notices from the scheduler, `confect/notifications/tasks.ts` | Built |
 | The notice mail queue, `noticeMails`, its daily limit, and the sweep in `confect/emails/digest` | Built |
 | The notify consumer for the change types other than `person.invited` | Planned, program wave B |

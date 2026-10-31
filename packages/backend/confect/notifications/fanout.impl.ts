@@ -155,6 +155,13 @@ const nextRun = (
     : Option.none();
 };
 
+/** The kind of notice each fan-out tells, which says whose push it may send. */
+const KIND_OF = {
+  "announcement.posted": "classAnnouncement",
+  "assignment.published": "taskPublished",
+  "forum.mentioned": "forumMention",
+} as const;
+
 /** Queues a row's place in the daily digest: a mention of everyone and a new task go there, an announcement does not. */
 const digestOf = Effect.fn("notifications.fanout.digest")(function* (
   notice: typeof Notice.Type,
@@ -233,6 +240,7 @@ const run = FunctionImpl.make(
             })
             .pipe(Effect.orDie);
           yield* schedulePush(
+            KIND_OF[notice.value.fields.changeType],
             notificationId,
             person,
             principal.grants,

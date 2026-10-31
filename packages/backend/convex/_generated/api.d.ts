@@ -9721,6 +9721,46 @@ export declare const api: {
       >;
       readAll: FunctionReference<"mutation", "public", { slug?: string }, null>;
     };
+    preferences: {
+      list: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          channel: "push" | "email";
+          kind:
+            | "forumMention"
+            | "classAnnouncement"
+            | "taskPublished"
+            | "taskDeadline"
+            | "gradeReleased"
+            | "taskMissed"
+            | "examStart"
+            | "examGuardianReminder"
+            | "invitation";
+        }>
+      >;
+      set: FunctionReference<
+        "mutation",
+        "public",
+        {
+          channel: "push" | "email";
+          kind:
+            | "forumMention"
+            | "classAnnouncement"
+            | "taskPublished"
+            | "taskDeadline"
+            | "gradeReleased"
+            | "taskMissed"
+            | "examStart"
+            | "examGuardianReminder"
+            | "invitation";
+          on: boolean;
+          slug: string;
+        },
+        null
+      >;
+    };
     push: {
       publicKey: FunctionReference<"query", "public", {}, string | null>;
       subscribe: FunctionReference<

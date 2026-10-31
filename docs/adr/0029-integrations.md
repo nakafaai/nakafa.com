@@ -67,11 +67,11 @@ written against it.
 | Public REST | `api.nakafa.com/v1` | None | Live |
 | Public MCP | `mcp.nakafa.com/mcp` | None | Live |
 | Public CLI | `@nakafa/cli` 0.1.1 | None | Live, read only |
-| School REST | `harapan.nakafa.com/api/v1` | A bearer token | Planned |
-| School MCP | `harapan.nakafa.com/mcp` | A bearer token | Planned |
+| School REST | `harapan.nakafa.com/api/v1` | A bearer token | Built |
+| School MCP | `harapan.nakafa.com/mcp` | A bearer token | Built |
 | School CLI | `nakafa login harapan.nakafa.com` | Device authorization | Planned |
-| Webhooks | The receiver's address | An HMAC signature | Planned |
-| Exports | CSV and XLSX files | The caller's token or session | Planned |
+| Webhooks | The receiver's address | An HMAC signature | Built |
+| Exports | CSV and XLSX files | The caller's token or session | Built |
 
 The public addresses stay keyless and never accept a school path (ADR 0006,
 ADR 0026). An export is made by a reader behind `decide`, so it holds exactly

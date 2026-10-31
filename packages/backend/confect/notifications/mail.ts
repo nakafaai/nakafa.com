@@ -10,6 +10,7 @@ import type {
   NoticeKind,
   Relation,
 } from "@repo/backend/confect/notifications/rules";
+import { switchedOff } from "@repo/backend/confect/notifications/switched";
 import { DigestChange } from "@repo/email/templates/digest/content";
 import { namedTimeZone } from "@repo/utilities/timezone";
 import {
@@ -82,6 +83,9 @@ export const queueMail = Effect.fn("notifications.mail.queue")(function* (
     (delivery) => delivery.channel === "email"
   );
   if (Option.isNone(email) || person.account.state !== "claimed") {
+    return;
+  }
+  if (Option.isSome(yield* switchedOff(person._id, kind, "email"))) {
     return;
   }
   const now = yield* Clock.currentTimeMillis;

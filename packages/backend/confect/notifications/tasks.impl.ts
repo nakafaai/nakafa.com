@@ -42,7 +42,13 @@ const noticeStudent = Effect.fn("notifications.tasks.student")(function* (
     })
     .pipe(Effect.orDie);
   const principal = yield* principalOf(student, tenant);
-  yield* schedulePush(notificationId, student, principal.grants, klass.unitId);
+  yield* schedulePush(
+    "taskDeadline",
+    notificationId,
+    student,
+    principal.grants,
+    klass.unitId
+  );
 });
 
 /** Writes the late-task notice for each guardian of a student, with its push and its mail. */
@@ -73,6 +79,7 @@ const noticeGuardians = Effect.fn("notifications.tasks.guardians")(function* (
           .pipe(Effect.orDie);
         const principal = yield* principalOf(guardian, tenant);
         yield* schedulePush(
+          "taskMissed",
           notificationId,
           guardian,
           principal.grants,

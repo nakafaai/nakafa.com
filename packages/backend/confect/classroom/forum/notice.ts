@@ -110,6 +110,7 @@ export const noticeMentions = Effect.fn("classroom.forum.notice.write")(
             })
             .pipe(Effect.orDie);
           yield* schedulePush(
+            "forumMention",
             notificationId,
             mentioned.person,
             mentioned.grants,

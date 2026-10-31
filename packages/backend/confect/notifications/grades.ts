@@ -41,6 +41,7 @@ export const noticeGradeReleased = Effect.fn("notifications.grades.released")(
           });
           const principal = yield* principalOf(person, tenant);
           yield* schedulePush(
+            "gradeReleased",
             notificationId,
             person,
             principal.grants,

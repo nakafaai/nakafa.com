@@ -81,7 +81,13 @@ const noticeOf = Effect.fn("classroom.forum.nina.notice")(function* (
       tenantId: klass.tenantId,
     })
     .pipe(Effect.orDie);
-  yield* schedulePush(notificationId, person, principal.grants, klass.unitId);
+  yield* schedulePush(
+    "forumMention",
+    notificationId,
+    person,
+    principal.grants,
+    klass.unitId
+  );
   yield* queueMail(
     "forumMention",
     "teacher",

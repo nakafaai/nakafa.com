@@ -42,6 +42,7 @@ const noticeStudent = Effect.fn("notifications.sittings.student")(function* (
     .pipe(Effect.orDie);
   const principal = yield* principalOf(student, tenant);
   yield* schedulePush(
+    "examStart",
     notificationId,
     student,
     principal.grants,
