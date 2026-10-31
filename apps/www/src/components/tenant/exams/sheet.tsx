@@ -91,17 +91,12 @@ export function PaperOption({
       >
         {letter}
       </span>
-      <div className="min-w-0 flex-1">{children}</div>
+      {/* A touch screen shows the remove control at all times, so the text stops short of it. */}
+      <div className="min-w-0 flex-1 pointer-coarse:group-has-[[data-remove]]/option:pe-8">
+        {children}
+      </div>
     </div>
   );
-}
-
-/**
- * The room that one control of an option takes beside its text. The paper keeps it on its static copy,
- * where the control stands when the editor mounts, so an option is as wide in both.
- */
-export function ControlRoom() {
-  return <span aria-hidden className="size-9 shrink-0" />;
 }
 
 /**
@@ -226,7 +221,11 @@ export function PaperTableNumber({ number }: { number: number }) {
 
 /** The statement of a row. */
 export function PaperTableStatement({ children }: { children: ReactNode }) {
-  return <div className="min-w-0 border-t px-3 py-2">{children}</div>;
+  return (
+    <div className="min-w-0 border-t px-3 py-2 pointer-coarse:has-[[data-remove]]:pe-10">
+      {children}
+    </div>
+  );
 }
 
 /**
