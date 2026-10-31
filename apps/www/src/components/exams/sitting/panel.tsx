@@ -317,20 +317,22 @@ function SignalList({
           title={t("signals-empty-title")}
         />
       ) : null}
-      {Arr.map(signals.results, (signal) =>
-        (signal.kind === "exit" || signal.kind === "disconnect") &&
-        Option.contains(away, signal.at) ? (
-          <p key={`${signal.at}-${signal.kind}`}>
-            <SignalAway kind={signal.kind} since={signal.at} />
+      {Arr.map(signals.results, (signal) => {
+        // A const keeps the kind's narrowing inside the callbacks below, which a property read does not.
+        const kind = signal.kind;
+        return (kind === "exit" || kind === "disconnect") &&
+          Option.contains(away, signal.at) ? (
+          <p key={`${signal.at}-${kind}`}>
+            <SignalAway kind={kind} since={signal.at} />
           </p>
         ) : (
-          <p key={`${signal.at}-${signal.kind}`}>
-            {signal.kind === "exit" || signal.kind === "disconnect"
+          <p key={`${signal.at}-${kind}`}>
+            {kind === "exit" || kind === "disconnect"
               ? Option.match(awayFor(signals.results, signal), {
-                  onNone: () => t(signalLabels[signal.kind]),
+                  onNone: () => t(signalLabels[kind]),
                   onSome: (seconds) =>
                     t(
-                      GONE_KEYS[signal.kind][
+                      GONE_KEYS[kind][
                         seconds < SECONDS_IN_MINUTE ? "seconds" : "minutes"
                       ],
                       {
@@ -339,10 +341,10 @@ function SignalList({
                       }
                     ),
                 })
-              : t(signalLabels[signal.kind])}
+              : t(signalLabels[kind])}
           </p>
-        )
-      )}
+        );
+      })}
       {PaginatedQueryResult.isCanLoadMore(signals) ? (
         <Intersection onIntersect={() => signals.loadMore(SIGNAL_PAGE_SIZE)} />
       ) : null}

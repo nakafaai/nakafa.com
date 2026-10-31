@@ -9,7 +9,7 @@ import {
   openedSitting,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, DateTime, Effect } from "effect";
 
 const { signal, signals } = refs.public.exams.sittings;
 
@@ -96,7 +96,8 @@ describe("exams/sittings signal", () => {
           sittingId: made.id,
           token: made.token,
         });
-        const startedAt = Date.now();
+        // The fake clock, which the server reads too, where the sitting's fixtures left it.
+        const startedAt = DateTime.toEpochMillis(DateTime.nowUnsafe());
         const send = (kind: "disconnect" | "return", since: number) =>
           fixture.as("student").mutation(signal, {
             attemptId: entered.attempt,
