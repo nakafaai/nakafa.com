@@ -42,12 +42,12 @@ import {
   PanesProvider,
   usePanes,
 } from "@/components/shared/panes";
+import { reloadPage } from "@/components/shared/reload";
 import { columnAlign } from "@/components/shared/table/align";
 import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
-import { reloadPage } from "@/components/shared/reload";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
