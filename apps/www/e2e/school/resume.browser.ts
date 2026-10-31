@@ -194,3 +194,34 @@ test("a server failure of a paper's read keeps the student in the paper's frame,
   ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
   await studentContext.close();
 });
+
+test("a server failure of one read keeps a teacher in the school, and the page comes back by itself", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const teacher = await ownerContext.newPage();
+  const changes = await Effect.runPromise(trackChanges(teacher, []));
+  await teacher.goto(address("/exams"));
+  const create = teacher.getByRole("button", { name: "Create exam" });
+  await expect(create).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  // The list's read fails with a failure that names no refusal, as a function that ran out of time does, so the page
+  // leaves and the school's shell stays around it.
+  changes.failQuery("exams/exams:list", "ServerBroke");
+  await teacher.reload();
+  const shell = teacher.getByRole("link", { exact: true, name: "Exams" });
+  await expect(shell).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(
+    teacher.getByRole("heading", { name: "Something broke" })
+  ).toHaveCount(0);
+
+  // The server answers again, and the page is back with no press.
+  changes.recoverQuery();
+  await expect(create).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await ownerContext.close();
+});

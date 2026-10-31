@@ -7,7 +7,6 @@ import { Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ReadRecovery } from "@/components/exams/sitting/boundary";
 import { dashboardArgs } from "@/components/exams/sitting/change";
 import {
   type SittingData,
@@ -24,6 +23,7 @@ import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import { ReadRecovery } from "@/components/tenant/read/recovery";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
@@ -165,7 +165,11 @@ export function DashboardRecovery({
 }: {
   readonly children: ReactNode;
 }) {
-  return <ReadRecovery frame={SittingDashboardRetry}>{children}</ReadRecovery>;
+  return (
+    <ReadRecovery frame={SittingDashboardRetry} retry={SittingRetry}>
+      {children}
+    </ReadRecovery>
+  );
 }
 
 /** The page when the dashboard could not be read for a reason a reload may fix: the header, then why and the retry. */
