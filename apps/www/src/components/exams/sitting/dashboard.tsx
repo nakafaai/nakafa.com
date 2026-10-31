@@ -106,16 +106,16 @@ export function SittingDashboard({
         <PanesProvider>
           <SittingHeader examId={examId} />
           <SittingFilterRow />
-          <Panes>
-            <PanesList>
-              <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">
-                <SittingOfflineContext value={offline}>
+          <SittingOfflineContext value={offline}>
+            <Panes>
+              <PanesList>
+                <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">
                   <SittingSeats />
-                </SittingOfflineContext>
-              </div>
-            </PanesList>
-            <SittingPanel />
-          </Panes>
+                </div>
+              </PanesList>
+              <SittingPanel />
+            </Panes>
+          </SittingOfflineContext>
         </PanesProvider>
       </SittingDataContext>
     </SittingStoreContext>
