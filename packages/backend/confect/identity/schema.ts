@@ -6,7 +6,7 @@ import { Schema } from "effect";
 export const LOGIN_NAME_MIN_LENGTH = 3;
 export const LOGIN_NAME_MAX_LENGTH = 32;
 /** The characters a school login name may hold: lowercase letters, digits, dots, underscores, and hyphens. */
-export const LOGIN_NAME_PATTERN = /^[a-z0-9._-]+$/;
+export const LOGIN_NAME_PATTERN = /^[a-z0-9._-]+$/u;
 
 /**
  * A school login name: the name a student types on the school host. The

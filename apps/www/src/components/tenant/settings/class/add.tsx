@@ -35,17 +35,18 @@ type CohortId = Cohort["id"];
 
 /**
  * The classrooms page's one action: the Add classroom button and the dialog it opens, for an active cohort of the
- * period and, outside an SD unit, the subject it learns. The button waits disabled until the period is known and
- * stays disabled for a unit with no active period. The dialog closes as the add is sent, and its values clear once
- * the server accepts the classroom.
+ * period and, outside an SD unit, the subject it learns. The button is ready from the first paint, and the dialog
+ * waits for the period: its cohort choice holds until the period's cohorts are read, and a unit with no active period
+ * says to open one first. The dialog closes as the add is sent, and its values clear once the server accepts the
+ * classroom.
  */
 export function SchoolClassAdd({
-  periodId,
+  active,
   sd,
   slug,
 }: {
-  /** The active period whose cohort the classroom joins, or null while it is not known or the unit has none. */
-  periodId: Period["id"] | null;
+  /** The read of the active period whose cohort the classroom joins: its ID, or null for a unit with none. */
+  active: QueryResult.QueryResult<Period["id"] | null, unknown>;
   /** Whether the unit is an SD, whose cohort learns in one classroom named for the cohort and without a subject. */
   sd: boolean;
   slug: TenantSlug;
@@ -62,6 +63,9 @@ export function SchoolClassAdd({
   const [subject, setSubject] = useState("");
   const next = subject.trim();
   const isComplete = cohortId !== null && (sd || Schema.is(ClassSubject)(next));
+  const periodId = QueryResult.isSuccess(active) ? active.value : null;
+  const hasNoPeriod = QueryResult.isSuccess(active) && active.value === null;
+  const startsAs = sd ? t("class-add-homeroom") : t("class-add-footer");
 
   const submit = () => {
     if (cohortId === null || !(sd || Schema.is(ClassSubject)(next))) {
@@ -82,15 +86,11 @@ export function SchoolClassAdd({
 
   return (
     <>
-      <Button
-        disabled={periodId === null}
-        onClick={() => setIsOpen(true)}
-        type="button"
-      >
+      <Button onClick={() => setIsOpen(true)} type="button">
         {t("class-create")}
       </Button>
       <ResponsiveDialog
-        description={sd ? t("class-add-homeroom") : t("class-add-footer")}
+        description={hasNoPeriod ? t("class-add-no-period") : startsAs}
         footer={
           <>
             <Button

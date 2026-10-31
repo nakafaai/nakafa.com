@@ -11,12 +11,12 @@ import { publicPathTarget } from "@/lib/routing/target";
  * list opens the card and on its last row. A linked row also lights up on hover.
  */
 const cardRow = cva(
-  "group flex w-full items-center gap-2 px-6 py-3 in-[[data-slot=card]>ul:first-child]:group-first/list:pt-(--card-spacing) group-last/list:pb-(--card-spacing)",
+  "group flex w-full items-center gap-2 px-6 py-3 group-last/list:pb-(--card-spacing) in-[[data-slot=card]>ul:first-child]:group-first/list:pt-(--card-spacing)",
   {
     variants: {
       linked: {
         false: "",
-        true: "scroll-mt-28 transition-colors ease-out hover:bg-accent hover:text-accent-foreground",
+        true: "hover:bg-accent hover:text-accent-foreground scroll-mt-28 transition-colors ease-out",
       },
     },
   }

@@ -82,10 +82,10 @@ function MarkFace({ mark }: { mark: string }) {
   return (
     <span
       aria-hidden="true"
-      className="relative inline-block bg-clip-text pt-[0.2em] pb-[0.8em] font-quran text-[0.9em] leading-none [-webkit-text-fill-color:transparent] [background-image:linear-gradient(to_bottom,currentColor_50%,transparent_50%_74%,currentColor_74%)]"
+      className="font-quran relative inline-block [background-image:linear-gradient(to_bottom,currentColor_50%,transparent_50%_74%,currentColor_74%)] bg-clip-text pt-[0.2em] pb-[0.8em] text-[0.9em] leading-none [-webkit-text-fill-color:transparent]"
     >
       {`${MARK_SEAT}${mark}`}
-      <span className="absolute top-[52%] left-1/2 size-[0.85em] -translate-x-1/2 -translate-y-1/2 rounded-full border border-current border-dotted opacity-50" />
+      <span className="absolute top-[52%] left-1/2 size-[0.85em] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dotted border-current opacity-50" />
     </span>
   );
 }
@@ -105,7 +105,7 @@ function ArabicKey({
   return (
     <Button
       aria-label={label}
-      className="w-full px-0 font-keypad text-lg"
+      className="font-keypad w-full px-0 text-lg"
       onClick={() => onKey(text)}
       onMouseDown={(event) => event.preventDefault()}
       size="default"

@@ -28,14 +28,14 @@ function EvilBrushHandle({
       >
         <div
           className={cn(
-            "relative flex h-4 w-1.5 items-center justify-center rounded-md bg-muted-foreground transition-colors group-hover:bg-foreground",
+            "bg-muted-foreground group-hover:bg-foreground relative flex h-4 w-1.5 items-center justify-center rounded-md transition-colors",
             isLeft ? "-left-1.5" : "-right-1.5"
           )}
         >
           <div className="flex flex-col gap-0.5">
-            <div className="h-0.5 w-0.5 rounded-full bg-background/70" />
-            <div className="h-0.5 w-0.5 rounded-full bg-background/70" />
-            <div className="h-0.5 w-0.5 rounded-full bg-background/70" />
+            <div className="bg-background/70 h-0.5 w-0.5 rounded-full" />
+            <div className="bg-background/70 h-0.5 w-0.5 rounded-full" />
+            <div className="bg-background/70 h-0.5 w-0.5 rounded-full" />
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@ function EvilBrushHandle({
       {label && (
         <div
           className={cn(
-            "pointer-events-none absolute -bottom-3 -translate-y-1/2 whitespace-nowrap rounded-[3px] bg-foreground px-1 py-px font-medium text-[8px] text-background leading-tight opacity-0 group-hover:opacity-100",
+            "bg-foreground text-background pointer-events-none absolute -bottom-3 -translate-y-1/2 rounded-[3px] px-1 py-px text-[8px] leading-tight font-medium whitespace-nowrap opacity-0 group-hover:opacity-100",
             isLeft ? "left-1.5" : "right-1.5"
           )}
         >

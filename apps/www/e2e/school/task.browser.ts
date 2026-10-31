@@ -15,10 +15,10 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The last quarter hour of a day, as the time list names it in a 12 or a 24 hour locale. */
-const LATE_EVENING = /^(11:45\sPM|23:45)$/u;
+const LATE_EVENING = /^(?:11:45\sPM|23:45)$/u;
 
 /** The address of the task the test publishes. */
-const TASK_PATH = /\/classes\/fisika-x-1\/tasks\/latihan-gerak-lurus$/;
+const TASK_PATH = /\/classes\/fisika-x-1\/tasks\/latihan-gerak-lurus$/u;
 
 /**
  * Publishes the task `Latihan Gerak Lurus`, due late on 30 October 2027, from the tasks of the class that

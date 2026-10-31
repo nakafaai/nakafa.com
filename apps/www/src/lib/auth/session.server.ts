@@ -16,11 +16,10 @@ import {
   Option,
   Result,
   Schema,
-  String as Str,
 } from "effect";
-import { Base64Url } from "effect/encoding";
 import { FetchHttpClient } from "effect/http";
 import { SessionJson } from "@/lib/auth/answer";
+import { readTokenClaims } from "@/lib/auth/claims";
 import {
   isConvexTokenCookieName,
   readConvexTokenCookie,
@@ -55,20 +54,6 @@ const SessionAnswer = Schema.Struct({
 });
 
 type SessionAnswer = typeof SessionAnswer.Type;
-
-/**
- * The claims of a Convex token that name its session. Better Auth's Convex plugin
- * signs the user's fields, the session ID and the expiry, in seconds, with the
- * user ID as the subject.
- */
-const TokenClaims = Schema.fromJsonString(
-  Schema.Struct({
-    exp: Schema.Finite,
-    name: Schema.String,
-    sessionId: Schema.String,
-    sub: Schema.String,
-  })
-);
 
 /** How long before its expiry a token is no longer used: a read that starts with it must end while Convex still accepts it. */
 const TOKEN_EXPIRY_MARGIN = Duration.minutes(1);
@@ -190,11 +175,7 @@ const readTokenSession = Effect.fn("www.auth.session.cached")(function* (
     return Option.none();
   }
   const now = yield* Clock.currentTimeMillis;
-  return Arr.get(Str.split(token, "."), 1).pipe(
-    Option.flatMap((payload) =>
-      Result.getSuccess(Base64Url.decodeString(payload))
-    ),
-    Option.flatMap(Schema.decodeOption(TokenClaims)),
+  return readTokenClaims(token).pipe(
     Option.filter(
       (claims) =>
         claims.exp * 1000 - Duration.toMillis(TOKEN_EXPIRY_MARGIN) > now

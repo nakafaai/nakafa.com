@@ -6,7 +6,7 @@ import { Array as Arr, HashMap, HashSet, Order } from "effect";
 
 /** One gradient between two tones, as `background-image` takes it. */
 const TILE_PATTERN =
-  /^linear-gradient\((\d+)deg,(oklch\(0\.56 0\.12 (\d+)\)),(oklch\(0\.66 0\.125 (\d+)\))\)$/u;
+  /^linear-gradient\((?<angle>\d+)deg,(?<from>oklch\(0\.56 0\.12 (?<hue>\d+)\)),(?<to>oklch\(0\.66 0\.125 (?<beside>\d+)\))\)$/u;
 /** These seeds reach all 360 hues, both sides of each, and all eight directions. */
 const SEEDS = Arr.makeBy(10_000, (index) => `seed-${index}`);
 /**

@@ -64,7 +64,7 @@ const MATH_FONT_CLASSES: readonly (readonly [MathFont, readonly string[]])[] = [
   ["Size4-Regular", ["delim-size4"]],
 ];
 
-const CLASS_ATTRIBUTE = /class="([^"]*)"/g;
+const CLASS_ATTRIBUTE = /class="(?<classes>[^"]*)"/gu;
 
 /**
  * Each face as the CSS font shorthand that selects it through the `@font-face`

@@ -52,7 +52,7 @@ export function CardMaterial({ material }: Props) {
               </h2>
               <a
                 aria-label={`Link to ${material.title}`}
-                className="ml-3 hidden shrink-0 text-muted-foreground group-hover:inline-block"
+                className="text-muted-foreground ml-3 hidden shrink-0 group-hover:inline-block"
                 href={`#${id}`}
                 title={material.title}
               >
@@ -75,7 +75,7 @@ export function CardMaterial({ material }: Props) {
             </span>
             <HugeIcons
               className={cn(
-                "size-4 text-muted-foreground transition-transform",
+                "text-muted-foreground size-4 transition-transform",
                 isOpen ? "" : "rotate-180"
               )}
               icon={ArrowDown01Icon}

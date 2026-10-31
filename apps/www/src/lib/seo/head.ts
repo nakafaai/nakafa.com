@@ -35,7 +35,7 @@ const GOOGLEBOT_PRIVATE = "noindex,nofollow,noimageindex";
  * One alternate link of a head: a locale's address with its `hreflang`, or a
  * representation of the page with its `type`, such as its Markdown version.
  */
-const HeadAlternate = Schema.Struct({
+export const HeadAlternate = Schema.Struct({
   hreflang: Schema.optionalKey(Schema.String),
   href: Schema.String,
 });

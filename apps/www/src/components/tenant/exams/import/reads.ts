@@ -39,7 +39,7 @@ export const wordReads = (
 };
 
 /** The mark of picture N in a Word file's text, as the Word reader writes it. */
-const PICTURE_MARK = /\[image (\d+)\]/gu;
+const PICTURE_MARK = /\[image (?<digits>\d+)\]/gu;
 
 /** What a picture mark holds before its number. */
 const MARK_START = "[image ";

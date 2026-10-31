@@ -55,13 +55,13 @@ const MONTHS = [
 ];
 
 /** A date written as `YYYY-MM-DD`. */
-const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+const ISO_DATE = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/u;
 /** A date written as `DD/MM/YYYY` or `DD-MM-YYYY`. */
-const LOCAL_DATE = /^(\d{2})[/-](\d{2})[/-](\d{4})$/;
+const LOCAL_DATE = /^(?<day>\d{2})[/-](?<month>\d{2})[/-](?<year>\d{4})$/u;
 /** A date written as `D Month YYYY`, with the month's Indonesian name. */
-const NAMED_DATE = /^(\d{1,2}) ([a-z]+) (\d{4})$/;
+const NAMED_DATE = /^(?<day>\d{1,2}) (?<month>[a-z]+) (?<year>\d{4})$/u;
 /** A run of white space inside a header text. */
-const SPACES = /\s+/g;
+const SPACES = /\s+/gu;
 
 /** A text cell, trimmed, lowercase, with runs of space as one space. */
 const keyOf = (cell: Cell) =>

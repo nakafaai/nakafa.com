@@ -20,7 +20,7 @@ export function Message({
   return (
     <div
       className={cn(
-        "group/message relative flex w-full min-w-0 gap-2 text-chat data-[align=end]:flex-row-reverse",
+        "group/message text-chat relative flex w-full min-w-0 gap-2 data-[align=end]:flex-row-reverse",
         className
       )}
       data-align={align}
@@ -34,7 +34,7 @@ export function MessageAvatar({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex w-fit min-w-8 shrink-0 items-center justify-center self-end overflow-hidden rounded-full bg-muted group-has-data-[slot=message-footer]/message:-translate-y-8",
+        "bg-muted flex w-fit min-w-8 shrink-0 items-center justify-center self-end overflow-hidden rounded-full group-has-data-[slot=message-footer]/message:-translate-y-8",
         className
       )}
       data-slot="message-avatar"
@@ -47,7 +47,7 @@ export function MessageContent({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "wrap-break-word flex w-full min-w-0 flex-col gap-2.5 group-data-[align=end]/message:*:data-slot:self-end",
+        "flex w-full min-w-0 flex-col gap-2.5 wrap-break-word group-data-[align=end]/message:*:data-slot:self-end",
         className
       )}
       data-slot="message-content"
@@ -60,7 +60,7 @@ export function MessageHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex min-w-0 max-w-full items-center px-3 font-medium text-muted-foreground text-xs group-has-data-[variant=ghost]/message:px-0",
+        "text-muted-foreground flex max-w-full min-w-0 items-center px-3 text-xs font-medium group-has-data-[variant=ghost]/message:px-0",
         className
       )}
       data-slot="message-header"
@@ -73,7 +73,7 @@ export function MessageFooter({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex min-w-0 max-w-full items-center text-muted-foreground text-xs group-data-[align=end]/message:justify-end",
+        "text-muted-foreground flex max-w-full min-w-0 items-center text-xs group-data-[align=end]/message:justify-end",
         className
       )}
       data-slot="message-footer"

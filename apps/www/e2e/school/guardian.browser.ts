@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { seedGuardianCode } from "@/e2e/support/guardian";
 import {
   createSchool,
@@ -22,7 +23,7 @@ function lineCount(element: Element) {
   ).size;
 }
 
-test("an admin links a parent, who signs in with the email code, opens the child beside the list, checks the NISN, reads the child, and withdraws consent", async ({
+test("an admin links a parent and corrects the mistyped email, the parent signs in with the email code, opens the child beside the list, checks the NISN, reads the child, and withdraws consent", async ({
   browser,
   baseURL,
 }) => {
@@ -31,10 +32,12 @@ test("an admin links a parent, who signs in with the email code, opens the child
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
   const email = `ibu.${school.slug}@example.com`;
+  const mistyped = `ibu.${school.slug}@exampel.com`;
 
   const admin = await browser.newContext();
   await Effect.runPromise(signInOwner(admin, school.slug, address("/")));
   const settings = await admin.newPage();
+  const changes = await Effect.runPromise(trackChanges(settings, []));
   await settings.goto(address("/settings/guardians"));
   await expect(settings.getByText("No parent is linked yet.")).toBeVisible();
   const add = settings
@@ -46,11 +49,26 @@ test("an admin links a parent, who signs in with the email code, opens the child
   await dialog.getByRole("combobox", { name: "Student" }).click();
   await settings.getByRole("option", { name: "Siswa Uji" }).click();
   await dialog.getByLabel("Parent's name").fill("Ibu Uji");
-  await dialog.getByLabel("Parent email").fill(email);
+  await dialog.getByLabel("Parent email").fill(mistyped);
   await dialog.getByRole("button", { name: "Link a parent" }).click();
   const row = settings.getByRole("row").filter({ hasText: "Siswa Uji" });
+  await expect(row).toContainText(mistyped);
+  await expect(row).toContainText("Pending");
+
+  // The mistyped email is corrected in place, from a dialog filled in with it, and the link stays pending.
+  await row.getByRole("button", { name: "More actions" }).click();
+  await settings.getByRole("menuitem", { name: "Change email" }).click();
+  const correction = settings.getByRole("dialog");
+  const corrected = correction.getByLabel("Parent email");
+  await expect(corrected).toHaveValue(mistyped);
+  const saveEmail = correction.getByRole("button", { name: "Save email" });
+  await expect(saveEmail).toBeDisabled();
+  await corrected.fill(email);
+  const readdressedBefore = changes.sent;
+  await saveEmail.click();
   await expect(row).toContainText(email);
   await expect(row).toContainText("Pending");
+  await saved(changes, readdressedBefore);
 
   const parent = await browser.newContext();
   const home = await parent.newPage();

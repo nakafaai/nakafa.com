@@ -4,7 +4,7 @@ import { issueToken, matchesToken } from "@repo/utilities/token";
 import { Effect } from "effect";
 
 /** A Base64Url text of 32 random bytes, which is 43 characters without padding. */
-const BASE64URL_OF_32_BYTES = /^[A-Za-z0-9_-]{43}$/;
+const BASE64URL_OF_32_BYTES = /^[A-Za-z0-9_-]{43}$/u;
 
 describe("utilities/token", () => {
   it.effect(

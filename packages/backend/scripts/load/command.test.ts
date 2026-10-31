@@ -1,0 +1,225 @@
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import type { AcceptanceModeError } from "@repo/backend/scripts/content/acceptance/mode";
+import { PRODUCTION_CONCURRENCY } from "@repo/backend/scripts/content/acceptance/process";
+import { runLoadCommand } from "@repo/backend/scripts/load/command";
+import { BLUEPRINT_PLAN } from "@repo/backend/scripts/load/plan";
+import { Recorder, recorderLayer } from "@repo/backend/scripts/load/recorder";
+import type { LoadInput } from "@repo/backend/scripts/load/run";
+import { sessionCookie, TokenFailed } from "@repo/backend/scripts/load/token";
+import { FetchClient } from "@repo/utilities/http/client";
+import {
+  Array as Arr,
+  Effect,
+  Fiber,
+  FileSystem,
+  Layer,
+  MutableRef,
+} from "effect";
+import { TestClock } from "effect/testing";
+
+const mocks = vi.hoisted(() => ({
+  backend: vi.fn(),
+  capture: vi.fn(),
+  convex: vi.fn(),
+  issue: vi.fn(),
+  open: vi.fn(),
+  lease: vi.fn(),
+  owner: vi.fn(),
+  run: vi.fn(),
+  school: vi.fn(),
+}));
+vi.mock(
+  "@repo/backend/scripts/content/acceptance/local",
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import("@repo/backend/scripts/content/acceptance/local")
+    >()),
+    leaseReservedLocalRuntime: mocks.lease,
+  })
+);
+vi.mock(
+  "@repo/backend/scripts/content/acceptance/process",
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import("@repo/backend/scripts/content/acceptance/process")
+    >()),
+    withLocalBackend: (
+      _runtime: unknown,
+      program: unknown,
+      concurrency: unknown
+    ) => {
+      mocks.backend(concurrency);
+      return program;
+    },
+  })
+);
+vi.mock("@repo/backend/scripts/content/acceptance/convex", () => ({
+  runLocalConvex: mocks.convex,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/school", () => ({
+  createAcceptanceSchool: mocks.school,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/owner", () => ({
+  createAcceptanceOwner: mocks.owner,
+}));
+vi.mock("@repo/backend/scripts/load/logs", () => ({
+  captureLogs: mocks.capture,
+}));
+vi.mock("@repo/backend/scripts/load/run", () => ({ runLoad: mocks.run }));
+vi.mock("@repo/backend/scripts/load/token", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@repo/backend/scripts/load/token")
+  >()),
+  issueToken: mocks.issue,
+}));
+vi.mock("@repo/backend/scripts/load/wire", () => ({ openWire: mocks.open }));
+
+/** The services the command reads: the platform, and the HTTP client the backend start asks with. */
+const services = Layer.merge(nodeServicesLayer, FetchClient);
+
+const runtime = {
+  backend: "/backend",
+  query: "http://127.0.0.1:3210",
+  site: "http://127.0.0.1:3211",
+};
+
+describe("load command", () => {
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it.effect("refuses a command without its report file", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.flip(runLoadCommand("/root", []));
+      expect(failure.message).toContain(
+        "load <report-file> [students] [minutes]"
+      );
+    }).pipe(Effect.scoped, Effect.provide(services))
+  );
+
+  it.effect("refuses to run before a runtime is prepared", () =>
+    Effect.gen(function* () {
+      mocks.lease.mockReturnValue(Effect.succeedNone);
+      const failure = yield* Effect.flip(
+        runLoadCommand("/root", ["report.json"])
+      );
+      expect(failure.message).toBe(
+        "Run bun run acceptance:prepare before a load test."
+      );
+      expect(mocks.run).not.toHaveBeenCalled();
+    }).pipe(Effect.scoped, Effect.provide(services))
+  );
+
+  it.effect(
+    "runs the blueprint's plan with the students and minutes it names, against the runtime's backend at production's concurrency",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const directory = yield* fs.makeTempDirectoryScoped();
+        mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
+        mocks.run.mockReturnValue(Effect.void);
+        mocks.convex.mockReturnValue(Effect.succeed("printed"));
+        mocks.capture.mockReturnValue(Effect.void);
+        mocks.owner.mockReturnValue(Effect.void);
+        mocks.school.mockImplementation((_root: string, path: string) =>
+          fs.writeFileString(path, '{"name":"Sekolah 1","slug":"acc-1"}')
+        );
+        yield* runLoadCommand("/root", ["report.json", "300", "10"]);
+        expect(mocks.backend).toHaveBeenCalledWith(PRODUCTION_CONCURRENCY);
+        const [input] = mocks.run.mock.calls[0] ?? [];
+        const load: LoadInput<AcceptanceModeError, never> = input;
+        expect(load.output).toBe("report.json");
+        expect(load.plan).toEqual({
+          ...BLUEPRINT_PLAN,
+          minutes: 10,
+          rooms: 5,
+          students: 300,
+        });
+        mocks.open.mockReturnValue("the connection");
+        mocks.issue.mockReturnValue(Effect.succeed("jwt"));
+        expect(load.connect("session-1")).toBe("the connection");
+        const address: string = mocks.open.mock.calls[0]?.[0];
+        const token: Effect.Effect<string | null, never, Recorder> =
+          mocks.open.mock.calls[0]?.[1];
+        expect(address).toBe(runtime.query);
+        expect(yield* token.pipe(Effect.provide(recorderLayer))).toBe("jwt");
+        expect(mocks.issue).toHaveBeenCalledWith(
+          runtime.site,
+          yield* sessionCookie("session-1")
+        );
+        expect(yield* load.school(directory)).toBe("acc-1");
+        expect(mocks.school).toHaveBeenCalledWith(
+          "/root",
+          `${directory}/school.json`
+        );
+        expect(mocks.owner).toHaveBeenCalledWith(
+          "/root",
+          "acc-1",
+          `${directory}/owner.json`
+        );
+        expect(yield* load.run("Stored answers", ["data"], ["secret"])).toBe(
+          "printed"
+        );
+        expect(mocks.convex).toHaveBeenCalledWith(
+          runtime,
+          "Stored answers",
+          ["data"],
+          ["secret"]
+        );
+        yield* load.capture("functions.jsonl");
+        expect(mocks.capture).toHaveBeenCalledWith(runtime, "functions.jsonl");
+      }).pipe(Effect.scoped, Effect.provide(services))
+  );
+
+  it.effect(
+    "leaves a tab signed out once the backend still refuses its token after the retries, and records the request",
+    () =>
+      Effect.gen(function* () {
+        mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
+        mocks.run.mockReturnValue(Effect.void);
+        yield* runLoadCommand("/root", ["report.json"]);
+        const load: LoadInput<AcceptanceModeError, never> =
+          mocks.run.mock.calls[0]?.[0];
+        const attempts = MutableRef.make(0);
+        mocks.issue.mockReturnValue(
+          Effect.suspend(() => {
+            MutableRef.increment(attempts);
+            return Effect.fail(new TokenFailed({ status: 503 }));
+          })
+        );
+        mocks.open.mockReturnValue("the connection");
+        expect(load.connect("session-1")).toBe("the connection");
+        const token: Effect.Effect<string | null, never, Recorder> =
+          mocks.open.mock.calls[0]?.[1];
+        const signedOut = yield* Effect.gen(function* () {
+          const fiber = yield* Effect.forkChild(token);
+          // Each retry sleeps only once the attempt before it failed, so the clock moves one wait at a time.
+          yield* Effect.forEach(
+            Arr.range(1, 6),
+            () =>
+              Effect.andThen(Effect.yieldNow, TestClock.adjust("4 seconds")),
+            { discard: true }
+          );
+          const settled = yield* Fiber.join(fiber);
+          return { samples: yield* (yield* Recorder).samples, token: settled };
+        }).pipe(Effect.provide(recorderLayer));
+        expect(signedOut.token).toBeNull();
+        expect(signedOut.samples).toEqual([
+          expect.objectContaining({ failed: true, name: "auth:token" }),
+        ]);
+        expect(MutableRef.get(attempts)).toBe(6);
+      }).pipe(Effect.scoped, Effect.provide(services))
+  );
+
+  it.effect(
+    "runs the blueprint's own plan when the command names no size",
+    () =>
+      Effect.gen(function* () {
+        mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
+        mocks.run.mockReturnValue(Effect.void);
+        yield* runLoadCommand("/root", ["report.json"]);
+        expect(mocks.run.mock.calls[0]?.[0].plan).toEqual(BLUEPRINT_PLAN);
+      }).pipe(Effect.scoped, Effect.provide(services))
+  );
+});

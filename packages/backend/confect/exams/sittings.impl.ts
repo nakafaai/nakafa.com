@@ -15,7 +15,7 @@ import { finish } from "@repo/backend/confect/exams/sittings/finish";
 import { flag } from "@repo/backend/confect/exams/sittings/flag";
 import { images } from "@repo/backend/confect/exams/sittings/images";
 import { mine } from "@repo/backend/confect/exams/sittings/mine";
-import { paper } from "@repo/backend/confect/exams/sittings/paper";
+import { paper, saved } from "@repo/backend/confect/exams/sittings/paper";
 import {
   addMinutes,
   allowDevice,
@@ -197,6 +197,15 @@ const paperFunction = FunctionImpl.make(
   })
 );
 
+const savedFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "saved",
+  Effect.fn("exams.sittings.saved.function")(function* (args) {
+    return yield* saved(args);
+  })
+);
+
 const promptFunction = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -269,7 +278,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(attemptFunction),
   Layer.provide(studentFunction),
   Layer.provide(signalsFunction),
-  Layer.provide(paperFunction),
+  // The paper and what the student saved on it in one step, so the group stays within one pipe.
+  Layer.provide(Layer.mergeAll(paperFunction, savedFunction)),
   Layer.provide(promptFunction),
   Layer.provide(imagesFunction),
   Layer.provide(answerFunction),

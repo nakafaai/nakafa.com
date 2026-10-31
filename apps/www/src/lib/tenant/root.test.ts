@@ -32,13 +32,15 @@ vi.mock("@repo/internationalization/src/messages", async (importOriginal) => {
 });
 
 /** A module a source imports by name, statically or on demand: `from "@/x"` or `import("@/x")`. */
-const IMPORT = /(?:\bfrom|\bimport\()\s*"([^"]+)"/g;
+const IMPORT = /(?:\bfrom|\bimport\()\s*"(?<module>[^"]+)"/gu;
 
 /** A translator bound to one namespace, such as `const t = useTranslations("School")`. */
-const TRANSLATOR = /\bconst\s+(\w+)\s*=\s*useTranslations\(\s*"(\w+)"\s*\)/g;
+const TRANSLATOR =
+  /\bconst\s+(?<name>\w+)\s*=\s*useTranslations\(\s*"(?<namespace>\w+)"\s*\)/gu;
 
 /** A message read by a literal key, such as `t("title")` or `t.rich("title"`. */
-const READ = /\b(\w+)(?:\.(?:has|markup|raw|rich))?\(\s*"([^"]+)"/g;
+const READ =
+  /\b(?<translator>\w+)(?:\.(?:has|markup|raw|rich))?\(\s*"(?<key>[^"]+)"/gu;
 
 /** The workspace folders that a module name names, so the walk follows the app's own modules and the design system's. */
 const MODULE_ROOTS = [

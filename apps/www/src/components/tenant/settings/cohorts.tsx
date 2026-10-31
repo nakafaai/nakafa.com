@@ -125,8 +125,8 @@ function SchoolCohortsContent() {
 
 /**
  * Renders the cohorts of one unit's active period. A unit with no active period shows an empty
- * state, which links to the periods, and Add cohort stays disabled, because a cohort belongs to a
- * period. A failed read of the active period shows its own sentence and Try again.
+ * state, which links to the periods, because a cohort belongs to a period. A failed read of the
+ * active period shows its own sentence and Try again.
  */
 function SchoolCohortsOfUnit() {
   const { slug } = useTenant();
@@ -173,9 +173,8 @@ function useActivePeriod(slug: TenantSlug) {
 }
 
 /**
- * The cohorts page's actions, the same in every state from the first paint: the unit choice, the search and Add
- * cohort, which waits disabled until the period is known and stays disabled for a unit with no active period, so the
- * header never grows when the period answers.
+ * The cohorts page's actions, drawn final from the first paint and never changed by the period's answer: the unit
+ * choice, the search and Add cohort, whose dialog waits for the period itself.
  */
 function CohortsActions({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
@@ -185,10 +184,7 @@ function CohortsActions({ slug }: { slug: TenantSlug }) {
     <>
       <CohortsUnitChoice />
       <TableSearch placeholder={t("cohorts-search")} />
-      <SchoolCohortAdd
-        periodId={QueryResult.isSuccess(active) ? active.value : null}
-        slug={slug}
-      />
+      <SchoolCohortAdd active={active} slug={slug} />
     </>
   );
 }
@@ -250,15 +246,16 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
 
 /**
  * The page's one action: the Add cohort button and the dialog it opens, for a name and a
- * school year. The dialog closes as the add is sent, and its values clear once the server
- * accepts the cohort.
+ * school year. The button is ready from the first paint, and the dialog waits for the period:
+ * Save holds until the active period is known, and a unit with none says to open one first.
+ * The dialog closes as the add is sent, and its values clear once the server accepts the cohort.
  */
 function SchoolCohortAdd({
-  periodId,
+  active,
   slug,
 }: {
-  /** The active period the cohort joins, or null while it is not known or the unit has none. */
-  periodId: Period["id"] | null;
+  /** The read of the active period the cohort joins: its ID, or null for a unit with none. */
+  active: QueryResult.QueryResult<Period["id"] | null, unknown>;
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
@@ -274,6 +271,8 @@ function SchoolCohortAdd({
   const next = name.trim();
   const grade = chosenGrade(gradeValue);
   const isComplete = Option.isSome(grade) && Schema.is(CohortName)(next);
+  const periodId = QueryResult.isSuccess(active) ? active.value : null;
+  const hasNoPeriod = QueryResult.isSuccess(active) && active.value === null;
 
   const submit = () => {
     if (
@@ -304,15 +303,13 @@ function SchoolCohortAdd({
 
   return (
     <>
-      <Button
-        disabled={periodId === null}
-        onClick={() => setIsOpen(true)}
-        type="button"
-      >
+      <Button onClick={() => setIsOpen(true)} type="button">
         {t("cohort-create")}
       </Button>
       <ResponsiveDialog
-        description={t("cohort-add-footer")}
+        description={
+          hasNoPeriod ? t("cohort-add-no-period") : t("cohort-add-footer")
+        }
         footer={
           <>
             <Button
@@ -323,7 +320,7 @@ function SchoolCohortAdd({
               {common("cancel")}
             </Button>
             <Button
-              disabled={!isComplete || isPending}
+              disabled={periodId === null || !isComplete || isPending}
               inert={isPending}
               onClick={submit}
               type="button"

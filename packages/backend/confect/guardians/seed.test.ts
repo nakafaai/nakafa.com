@@ -14,7 +14,7 @@ import { Effect } from "effect";
 const { code } = refs.internal.guardians.seed;
 
 /** A sign-in code as the parent receives it. */
-const CODE = /^\d{6}$/;
+const CODE = /^\d{6}$/u;
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });

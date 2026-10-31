@@ -45,7 +45,7 @@ export function CatalogCard({ action, children, title }: CatalogCardProps) {
           <h2>{title}</h2>
         </CardTitle>
       </CardHeader>
-      <CardFooter className="border-t bg-muted/50 p-(--card-spacing)">
+      <CardFooter className="bg-muted/50 border-t p-(--card-spacing)">
         {action({
           "aria-label": `${actionLabel} ${title}`,
           children: actionLabel,

@@ -8,7 +8,7 @@ const GITHUB_BUILDER = "https://github.com/actions/runner/github-hosted";
 const GitSha = Schema.String.check(Schema.isPattern(/^[a-f0-9]{40}$/u));
 const Sha512 = Schema.String.check(Schema.isPattern(/^[a-f0-9]{128}$/u));
 const Version = Schema.String.check(
-  Schema.isPattern(/^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/u)
+  Schema.isPattern(/^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$/u)
 );
 const PackageName = Schema.String.check(
   Schema.isPattern(/^@[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*$/u)

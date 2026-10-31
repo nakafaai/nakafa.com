@@ -1,4 +1,3 @@
-import { SectionVisibilitySchema } from "@nakafa/aksara-contracts/assessment/catalog";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -15,26 +14,25 @@ import {
 import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
 import { requireSection } from "@repo/backend/confect/tryouts/runtime/placement";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Duration, Effect, flow, Option, Schema } from "effect";
+import { Array as Arr, Duration, Effect, flow, Schema } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
-const InternalEntrySectionSchema = Schema.Struct({
+const EntrySectionSchema = Schema.Struct({
   sectionKey: Schema.String,
-  visibility: SectionVisibilitySchema,
 });
-type InternalEntrySection = typeof InternalEntrySectionSchema.Type;
+type EntrySection = typeof EntrySectionSchema.Type;
 const startSectionResult = Object.freeze({
   kind: "started",
 });
 
-/** Ensures atomic section start is only used for a set-owned internal entry. */
-export const requireInternalEntrySection = Effect.fn(
-  "tryouts.runtime.requireInternalEntrySection"
-)(function* (sections: readonly InternalEntrySection[], sectionKey: string) {
-  const section = Option.getOrUndefined(
-    Arr.findFirst(sections, (row) => row.sectionKey === sectionKey)
-  );
-  if (section?.visibility !== "internal-entry") {
+/**
+ * Ensures the section a start opens belongs to the set: its internal entry, which the set page runs, or
+ * one of its public sections, which the learner started from that section's own page.
+ */
+export const requireEntrySection = Effect.fn(
+  "tryouts.runtime.requireEntrySection"
+)(function* (sections: readonly EntrySection[], sectionKey: string) {
+  if (!Arr.some(sections, (row) => row.sectionKey === sectionKey)) {
     return yield* new TryoutRuntimeError({
       code: "TRYOUT_ENTRY_SECTION_NOT_FOUND",
       message: "Try-out entry section is not available for this set.",

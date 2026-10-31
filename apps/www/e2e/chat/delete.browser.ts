@@ -196,9 +196,12 @@ const movesOnWhenDeleted = Effect.fn("NakafaE2E.deleteMovesOn")(function* (
   yield* Effect.promise(async () => {
     await expect(sidebarRowOf(page, oldest.chatId)).toHaveCount(0);
     changes.release();
-    await expect(page).toHaveURL(new RegExp(`/en/@${learner.username}/chat$`), {
-      timeout: readinessTimeoutMilliseconds,
-    });
+    await expect(page).toHaveURL(
+      new RegExp(`/en/@${learner.username}/chat$`, "u"),
+      {
+        timeout: readinessTimeoutMilliseconds,
+      }
+    );
     await saved(changes, before);
     await expect(rowOf(page, oldest.chatId)).toHaveCount(0);
     expect(await shownTexts(page)).toEqual([]);
@@ -227,7 +230,9 @@ const staysWhenRefused = Effect.fn("NakafaE2E.deleteStaysWhenRefused")(
       changes.release();
       await expect(page.getByText(FAILED).first()).toBeVisible();
       await expect(sidebarRowOf(page, oldest.chatId)).toHaveText("Oldest chat");
-      await expect(page).toHaveURL(new RegExp(`/en/chat/${oldest.chatId}$`));
+      await expect(page).toHaveURL(
+        new RegExp(`/en/chat/${oldest.chatId}$`, "u")
+      );
       await expect(chatMenuOf(page)).toBeVisible({
         timeout: readinessTimeoutMilliseconds,
       });
@@ -281,9 +286,12 @@ const leavesWhenDeletedElsewhere = Effect.fn(
     oldest.chatId
   );
   yield* Effect.promise(async () => {
-    await expect(page).toHaveURL(new RegExp(`/en/@${learner.username}/chat$`), {
-      timeout: readinessTimeoutMilliseconds,
-    });
+    await expect(page).toHaveURL(
+      new RegExp(`/en/@${learner.username}/chat$`, "u"),
+      {
+        timeout: readinessTimeoutMilliseconds,
+      }
+    );
     await expect(page.getByText(DELETED_ELSEWHERE)).toBeVisible();
     await expect(rowOf(page, oldest.chatId)).toHaveCount(0);
     expect(await shownTexts(page)).toEqual([]);

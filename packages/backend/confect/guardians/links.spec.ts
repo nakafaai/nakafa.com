@@ -18,7 +18,8 @@ import { Schema } from "effect";
 /**
  * The guardian links of one school, as its Admin and Staff (Staf TU) keep them
  * (ADR 0034): start a link with the guardian's address, list the school's links,
- * check one by hand when the roster holds no NISN, and revoke one.
+ * check one by hand when the roster holds no NISN, correct the address of a
+ * pending one, and revoke one.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -52,6 +53,21 @@ export default GroupSpec.make()
       error: () => Schema.Union([AccessDenied, LinkClosed]),
     }).middleware(GuardianLinkAccess, {
       action: "guardian.verify",
+      arg: "linkId",
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "readdress",
+      args: () => ({
+        email: Email,
+        linkId: Id("guardianLinks"),
+        slug: TenantSlug,
+      }),
+      returns: () => LinkView,
+      error: () => Schema.Union([AccessDenied, LinkClosed, LinkRefused]),
+    }).middleware(GuardianLinkAccess, {
+      action: "guardian.readdress",
       arg: "linkId",
     })
   )

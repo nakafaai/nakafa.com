@@ -7,13 +7,13 @@ import { readOnce } from "@/lib/convex/read";
 const EXPORT_PAGE = 200;
 
 /** A cell that a spreadsheet would run as a formula starts with one of these (OWASP, CSV injection). */
-const FORMULA_START = /^[=+\-@\t\r]/;
+const FORMULA_START = /^[=+\-@\t\r]/u;
 
 /** The mark that tells a spreadsheet the file is UTF-8. */
 const BYTE_ORDER_MARK = "\uFEFF";
 
 /** A cell that holds a comma, a quote or a line break is quoted (RFC 4180). */
-const NEEDS_QUOTES = /[",\r\n]/;
+const NEEDS_QUOTES = /[",\r\n]/u;
 
 /**
  * Reads the school's whole audit trail, newest first, one page per Convex read on the browser's

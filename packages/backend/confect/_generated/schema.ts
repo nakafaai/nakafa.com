@@ -76,6 +76,8 @@ import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
 import gradingSchemes from "./tables/gradingSchemes";
+import graduationLetters from "./tables/graduationLetters";
+import graduations from "./tables/graduations";
 import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
@@ -221,6 +223,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly examSittings: typeof examSittings;
   readonly exams: typeof exams;
   readonly gradingSchemes: typeof gradingSchemes;
+  readonly graduationLetters: typeof graduationLetters;
+  readonly graduations: typeof graduations;
   readonly guardianCodes: typeof guardianCodes;
   readonly guardianConsents: typeof guardianConsents;
   readonly guardianLinks: typeof guardianLinks;
@@ -365,6 +369,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   examSittings,
   exams,
   gradingSchemes,
+  graduationLetters,
+  graduations,
   guardianCodes,
   guardianConsents,
   guardianLinks,

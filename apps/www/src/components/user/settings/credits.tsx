@@ -138,7 +138,7 @@ function CreditUsage({
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_auto]">
       <div className="col-start-1 row-start-1 grid gap-0.5">
-        <p className="font-medium text-sm">{period}</p>
+        <p className="text-sm font-medium">{period}</p>
         <p className="text-muted-foreground text-sm">{resets}</p>
       </div>
       {children === undefined ? null : (
@@ -146,7 +146,7 @@ function CreditUsage({
           {children}
         </div>
       )}
-      <p className="col-start-2 row-start-1 text-end text-muted-foreground text-sm tabular-nums sm:col-start-3">
+      <p className="text-muted-foreground col-start-2 row-start-1 text-end text-sm tabular-nums sm:col-start-3">
         {used}
       </p>
     </div>

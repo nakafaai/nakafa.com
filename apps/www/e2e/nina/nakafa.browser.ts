@@ -15,10 +15,10 @@ import {
 import { onChat, onSheet } from "@/e2e/support/transcript/open";
 
 /**
- * The button of a result: Nakafa renders each result as a link inside a
- * button, and a link that a button renders takes the role of a button.
+ * The role of a result: Nakafa draws each result as a link, styled as a
+ * button, so a screen reader and a search by link find it (#1443).
  */
-const RESULT = "button";
+const RESULT = "link";
 
 test.describe("Nina lessons on a phone", () => {
   test.use({ viewport: { height: 2600, width: 320 } });

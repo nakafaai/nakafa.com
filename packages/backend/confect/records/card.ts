@@ -40,8 +40,8 @@ export const reportOf = Effect.fn("records.card.of")(function* (
 
 /**
  * The subject lines of a student's report: each released grade the student holds in a
- * class of the cohort in its period, judged by the scheme its entry named, in the order
- * of the class names. A draft grade is not on a report.
+ * class of the cohort in its period, with the class's subject, judged by the scheme its
+ * entry named, in the order of the class names. A draft grade is not on a report.
  */
 export const releasedSubjects = Effect.fn("records.card.subjects")(function* (
   report: Pick<ReportCardsDoc, "cohortId" | "periodId" | "personId">
@@ -70,6 +70,7 @@ export const releasedSubjects = Effect.fn("records.card.subjects")(function* (
           ...(view.band === undefined ? {} : { band: view.band }),
           className: cls.name,
           kktp: view.kktp,
+          ...(cls.subject === undefined ? {} : { subject: cls.subject }),
           value: view.value,
         };
         return Option.some(line);

@@ -13,9 +13,9 @@ interface ExpressionProps {
  */
 export function Expression({ value }: ExpressionProps) {
   return (
-    <div className="min-w-0 max-w-full">
+    <div className="max-w-full min-w-0">
       <ScrollArea scrollFade>
-        <span className="inline-flex w-max items-center whitespace-nowrap py-1 text-muted-foreground [&_.katex]:text-muted-foreground">
+        <span className="text-muted-foreground [&_.katex]:text-muted-foreground inline-flex w-max items-center py-1 whitespace-nowrap">
           <InlineMath>{value}</InlineMath>
         </span>
       </ScrollArea>

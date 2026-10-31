@@ -42,7 +42,7 @@ export const waitForServedRoute = Effect.fn("NakafaE2E.waitForServedRoute")(
  * `/assets/`. Aborting them after a page has loaded fails whatever that page
  * loads next.
  */
-export const APP_CHUNK_PATH = /\/assets\/.*\.js(?:\?.*)?$/;
+export const APP_CHUNK_PATH = /\/assets\/.*\.js(?:\?.*)?$/u;
 
 /**
  * Routes every chunk the page asks for. A chunk whose code holds `marker` goes
