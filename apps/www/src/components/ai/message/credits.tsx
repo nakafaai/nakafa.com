@@ -82,7 +82,7 @@ export function AiChatMessageCredits() {
               <div className="space-y-1">
                 {/* Input */}
                 {tokens.input > 0 && (
-                  <div className="flex items-center justify-between rounded-sm bg-muted p-2 text-sm">
+                  <div className="bg-muted flex items-center justify-between rounded-sm p-2 text-sm">
                     <div className="flex items-center gap-2">
                       <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
                       <span>{t("input-tokens")}</span>
@@ -95,7 +95,7 @@ export function AiChatMessageCredits() {
 
                 {/* Output */}
                 {tokens.output > 0 && (
-                  <div className="flex items-center justify-between rounded-sm bg-muted p-2 text-sm">
+                  <div className="bg-muted flex items-center justify-between rounded-sm p-2 text-sm">
                     <div className="flex items-center gap-2">
                       <HugeIcons className="size-4" icon={ArrowRight02Icon} />
                       <span>{t("output-tokens")}</span>
@@ -108,7 +108,7 @@ export function AiChatMessageCredits() {
 
                 {/* Total */}
                 {tokens.total > 0 && (
-                  <div className="flex items-center justify-between rounded-sm bg-secondary p-2 text-secondary-foreground text-sm">
+                  <div className="bg-secondary text-secondary-foreground flex items-center justify-between rounded-sm p-2 text-sm">
                     <div className="flex items-center gap-2">
                       <HugeIcons className="size-4" icon={Summation01Icon} />
                       <span>{t("total-tokens")}</span>

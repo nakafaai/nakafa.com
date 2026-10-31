@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { elementById } from "@repo/design-system/lib/element";
 import {
   focusNavigator,
   focusQuestion,
@@ -28,7 +29,7 @@ describe("player focus", () => {
 
   it("knows when focus is outside the sidebar", () => {
     mountPlayer();
-    document.getElementById("first")?.focus();
+    elementById("first")?.focus();
 
     expect(isFocusInNavigator()).toBe(false);
   });
@@ -45,7 +46,7 @@ describe("player focus", () => {
 
   it("does nothing on a page without a sidebar", () => {
     document.body.innerHTML = "<button id='lone' type='button'></button>";
-    document.getElementById("lone")?.focus();
+    elementById("lone")?.focus();
 
     focusNavigator();
 

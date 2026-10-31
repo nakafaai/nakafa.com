@@ -17,11 +17,11 @@ import { Array as Arr, Schema } from "effect";
  */
 export function getHeadings(content: string): ParsedHeading[] {
   const cleanedContent = content
-    .replace(/<CodeBlock[\s\S]*?\/>/gm, "")
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/~~~[\s\S]*?~~~/g, "");
+    .replace(/<CodeBlock[\s\S]*?\/>/gmu, "")
+    .replace(/```[\s\S]*?```/gu, "")
+    .replace(/~~~[\s\S]*?~~~/gu, "");
 
-  const markdownHeadingRegex = /^\s*(#{1,6})(?:\s+(.*))?$/gm;
+  const markdownHeadingRegex = /^\s*(?<marks>#{1,6})(?:\s+(?<text>.*))?$/gmu;
   const entries = Arr.map(
     Arr.fromIterable(cleanedContent.matchAll(markdownHeadingRegex)),
     (match) => {

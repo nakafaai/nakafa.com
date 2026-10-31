@@ -1,3 +1,4 @@
+import { elementById } from "@repo/design-system/lib/element";
 import { focusIsLost } from "@repo/design-system/lib/focus";
 import { useLayoutEffect, useRef } from "react";
 import {
@@ -35,8 +36,8 @@ export function useFocusAfterClose(
       return;
     }
     focusFirst([
-      opener ? document.getElementById(memoryRowId(opener)) : null,
-      document.getElementById(MEMORY_ADD_ID),
+      opener ? elementById(memoryRowId(opener)) : null,
+      elementById(MEMORY_ADD_ID),
     ]);
   }, [host, opener, open]);
 }

@@ -40,7 +40,7 @@ export function MessageScrollerViewport({
     >
       <ScrollAreaPrimitive.Viewport
         className={cn(
-          "size-full min-h-0 min-w-0 overscroll-contain outline-none contain-content data-pending-scroll:invisible",
+          "size-full min-h-0 min-w-0 overscroll-contain contain-content outline-none data-pending-scroll:invisible",
           className
         )}
         data-slot="message-scroller-viewport"
@@ -91,7 +91,7 @@ export function MessageScrollerButton({
   return (
     <Primitive.Button
       className={cn(
-        "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border-border bg-background text-foreground transition-[translate,scale,opacity] hover:bg-muted data-[active=false]:pointer-events-none data-[active=false]:translate-y-full data-[active=true]:translate-y-0 data-[active=false]:scale-95 data-[active=true]:scale-100 data-[active=false]:opacity-0 data-[active=true]:opacity-100 motion-reduce:transition-none",
+        "border-border bg-background text-foreground hover:bg-muted absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full transition-[translate,scale,opacity] data-[active=false]:pointer-events-none data-[active=false]:translate-y-full data-[active=false]:scale-95 data-[active=false]:opacity-0 data-[active=true]:translate-y-0 data-[active=true]:scale-100 data-[active=true]:opacity-100 motion-reduce:transition-none",
         className
       )}
       data-slot="message-scroller-button"

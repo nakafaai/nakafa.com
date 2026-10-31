@@ -74,7 +74,7 @@ const sheetOpensChat = (page: Page) => async () => {
   await expect(inTheSheet(page).getByText(UNAVAILABLE)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(page).toHaveURL(new RegExp(`${LESSON_PATH}$`));
+  await expect(page).toHaveURL(new RegExp(`${LESSON_PATH}$`, "u"));
 };
 
 for (const width of [390, 1440]) {

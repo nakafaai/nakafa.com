@@ -29,10 +29,10 @@ export function DiagramFrame({
       )}
       data-nakafa="mermaid-card"
     >
-      <div className="flex items-center justify-between gap-2 bg-muted/80 p-1 text-muted-foreground text-sm">
+      <div className="bg-muted/80 text-muted-foreground flex items-center justify-between gap-2 p-1 text-sm">
         <div className="flex min-w-0 items-center gap-2 px-4 py-1.5">
           <HugeIcons className="size-4" icon={FlowchartIcon} />
-          <span className="ml-1 truncate text-foreground" title={title}>
+          <span className="text-foreground ml-1 truncate" title={title}>
             {title}
           </span>
         </div>
@@ -40,7 +40,7 @@ export function DiagramFrame({
             neither the header nor the title changes size when they arrive. */}
         <div className="flex min-h-9 min-w-27 items-center">{actions}</div>
       </div>
-      <div className="flex h-80 bg-muted/40 p-4 text-base sm:h-96">
+      <div className="bg-muted/40 flex h-80 p-4 text-base sm:h-96">
         {children}
       </div>
     </div>

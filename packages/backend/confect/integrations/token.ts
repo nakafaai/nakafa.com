@@ -51,7 +51,7 @@ const LIMITS = {
 const limits = new RateLimiter(components.agentRateLimiter, LIMITS);
 
 /** The slash a resource indicator may end its path with. */
-const TRAILING_SLASH = /\/$/;
+const TRAILING_SLASH = /\/$/u;
 
 /** The paths of a school host that a resource indicator may name, and the resource each names. */
 const RESOURCE_PATHS: Readonly<Record<string, typeof TokenResource.Type>> = {

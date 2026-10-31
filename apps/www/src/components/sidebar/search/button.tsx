@@ -29,7 +29,7 @@ export function SidebarSearchButton({
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton
-          className="justify-between text-muted-foreground"
+          className="text-muted-foreground justify-between"
           isActive={open}
           onClick={onOpen}
           onFocus={onIntent}

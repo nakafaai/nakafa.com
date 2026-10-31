@@ -6,7 +6,7 @@ import { Schema } from "effect";
 
 /**
  * One guardian link (ADR 0034). The school's Admin and Staff (Staf TU) read the
- * links, check one by hand, and revoke one. The guardian of the link holds the
+ * links, check one by hand, correct a pending link's address, and revoke one. The guardian of the link holds the
  * `guardian` relation: they run the NISN check and withdraw consent, and no role,
  * not even Owner, may do either for them. A verified link is the `verifiedParent`
  * relation, the only way a guardian reaches the child's released records.
@@ -22,6 +22,12 @@ export const guardianLinkKind = Kind.make("guardianLink", "guardianLinks", {
       access: "write",
       grantedBy: "relations",
       relations: ["guardian"],
+    },
+    "guardian.readdress": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin", "staff"],
     },
     "guardian.revoke": {
       access: "transition",
@@ -65,6 +71,11 @@ export const guardianLinkKind = Kind.make("guardianLink", "guardianLinks", {
     Schema.Struct({
       student: Id("tenantPeople"),
       type: Schema.Literal("guardian.revoked"),
+    }),
+    Schema.Struct({
+      guardian: Id("tenantPeople"),
+      student: Id("tenantPeople"),
+      type: Schema.Literal("guardian.readdressed"),
     }),
   ],
   published: ["guardian.linked", "guardian.withdrawn"],

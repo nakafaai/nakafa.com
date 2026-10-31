@@ -35,7 +35,7 @@ export function FeatureText({ children }: { children: ReactNode }) {
 /** The title of a feature, at the size of every section title. */
 export function FeatureTitle({ children }: { children: ReactNode }) {
   return (
-    <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+    <h2 className="text-3xl tracking-tight text-balance sm:text-4xl">
       {children}
     </h2>
   );
@@ -44,7 +44,7 @@ export function FeatureTitle({ children }: { children: ReactNode }) {
 /** The one sentence under a feature's title. */
 export function FeatureLead({ children }: { children: ReactNode }) {
   return (
-    <p className="max-w-md text-pretty text-lg text-muted-foreground">
+    <p className="text-muted-foreground max-w-md text-lg text-pretty">
       {children}
     </p>
   );

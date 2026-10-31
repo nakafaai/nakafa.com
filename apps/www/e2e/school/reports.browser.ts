@@ -12,10 +12,10 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** A web address, as an opened PDF has. */
-const WEB_ADDRESS = /^https?:\/\//;
+const WEB_ADDRESS = /^https?:\/\//u;
 
 /** The hash at the end of a check page's address. */
-const CHECK_HASH = /\/verify\/([0-9a-f]{64})$/;
+const CHECK_HASH = /\/verify\/(?<hash>[0-9a-f]{64})$/u;
 
 /** Opens the row menu of one student on a report list and chooses one item. */
 async function chooseFromRow(page: Page, student: string, item: string) {
@@ -174,9 +174,7 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   await checkPage.goto(
     hostAddress(baseURL, "localhost", `/en/verify/${"0".repeat(64)}`)
   );
-  await expect(
-    checkPage.getByText("No report card has this code.")
-  ).toBeVisible();
+  await expect(checkPage.getByText("No document has this code.")).toBeVisible();
   await visitor.close();
   await owner.close();
   await teacher.close();

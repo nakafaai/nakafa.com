@@ -115,12 +115,12 @@ export function StartNameQuestion() {
               type="text"
               value={slug}
             />
-            <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center gap-1.5 text-muted-foreground text-sm">
+            <span className="text-muted-foreground pointer-events-none absolute inset-y-0 end-3 flex items-center gap-1.5 text-sm">
               {Option.contains(state, "free") ? (
                 <>
                   <HugeIcons
                     aria-hidden="true"
-                    className="size-4 text-primary"
+                    className="text-primary size-4"
                     icon={CheckmarkCircle02Icon}
                   />
                   <span className="sr-only">{t("address-free")}</span>

@@ -324,10 +324,10 @@ const workerIsNoBrowser: Plugin = {
 };
 
 /** The font files that the font-src policy must load from this origin, never inline. */
-const FONT_FILE_PATTERN = /\.woff2?$/;
+const FONT_FILE_PATTERN = /\.woff2?$/u;
 
 /** The Node built-in specifiers, which have no browser build. */
-const NODE_BUILTIN_SPECIFIER = /^node:/;
+const NODE_BUILTIN_SPECIFIER = /^node:/u;
 
 /**
  * Alchemy's Cloudflare plugin runs the Worker in workerd under `vite dev`,

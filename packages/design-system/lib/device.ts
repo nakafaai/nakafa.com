@@ -1,5 +1,5 @@
 const MOBILE_REGEX =
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/iu;
 
 /**
  * Checks if the current device is a mobile device based on user agent

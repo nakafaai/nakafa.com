@@ -183,7 +183,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
           open
         >
           <AutocompleteInput
-            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
+            className="focus-visible:border-border h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-0"
             clearLabel={tCommon("clear-search")}
             placeholder={tTryouts("attempt-menu-search-placeholder")}
             showClear

@@ -2,43 +2,80 @@ import type { OptimisticLocalStore } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
-import type { PaperView } from "@repo/backend/confect/exams/sittings/contract";
+import type {
+  PaperView,
+  SavedView,
+} from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, HashMap, Option, Schema, Tuple } from "effect";
 
-/** The paper of a student's open attempt, as the server reads it. */
-export type PaperValue = typeof PaperView.Type;
+/** What a student saved on the paper of an open attempt, as the server reads it. */
+export type SavedValue = typeof SavedView.Type;
+
+/**
+ * The paper as the student sees it: each question of the server's paper, with the response and
+ * version that the student saved for it, or `null` when none is saved, and whether it is flagged.
+ * The two come from separate queries, so an answer reads again only what the student saved.
+ */
+export function mergePaper(paper: typeof PaperView.Type, saved: SavedValue) {
+  const answers = HashMap.fromIterable(
+    Arr.map(saved.answers, (answer) => Tuple.make(answer.question, answer))
+  );
+  return {
+    questions: Arr.map(paper.questions, (question) => {
+      const answer = HashMap.get(answers, question.id);
+      return {
+        ...question,
+        flagged: Arr.contains(saved.flagged, question.id),
+        response: Option.match(answer, {
+          onNone: () => null,
+          onSome: (found) => found.response,
+        }),
+        version: Option.match(answer, {
+          onNone: () => null,
+          onSome: (found) => found.version,
+        }),
+      };
+    }),
+  };
+}
+
+/** The paper of a student's open attempt, with what the student saved on it. */
+export type PaperValue = ReturnType<typeof mergePaper>;
 
 /** One question of the paper, with its interactions and its saved response. */
 export type PaperQuestion = PaperValue["questions"][number];
 
 /**
- * The paper with the response of one question replaced, numbered with `version`. The screen shows a chosen
- * option or typed text with this change at once. The server's answer then replaces it, and a refused answer rolls it back.
+ * What the student saved with the response of one question replaced, numbered with `version`. The screen shows
+ * a chosen option or typed text with this change at once. The server's answer then replaces it, and a refused
+ * answer rolls it back.
  */
-export function setPaperResponse(
-  paper: PaperValue,
+export function setSavedResponse(
+  saved: SavedValue,
   questionId: PaperQuestion["id"],
   response: ExamResponse,
   version: number
-): PaperValue {
+): SavedValue {
   return {
-    questions: Arr.map(paper.questions, (question) =>
-      question.id === questionId ? { ...question, response, version } : question
+    answers: Arr.append(
+      Arr.filter(saved.answers, (answer) => answer.question !== questionId),
+      { question: questionId, response, version }
     ),
+    flagged: saved.flagged,
   };
 }
 
-/** The paper with one question flagged or unflagged. The screen shows the flag at once, and a refused flag rolls it back. */
-export function setPaperFlag(
-  paper: PaperValue,
+/** What the student saved with one question flagged or unflagged. The screen shows the flag at once, and a refused flag rolls it back. */
+export function setSavedFlag(
+  saved: SavedValue,
   questionId: PaperQuestion["id"],
   flagged: boolean
-): PaperValue {
+): SavedValue {
+  const others = Arr.filter(saved.flagged, (id) => id !== questionId);
   return {
-    questions: Arr.map(paper.questions, (question) =>
-      question.id === questionId ? { ...question, flagged } : question
-    ),
+    answers: saved.answers,
+    flagged: flagged ? Arr.append(others, questionId) : others,
   };
 }
 
@@ -58,13 +95,14 @@ const PaperKey = Schema.Struct({
 });
 
 /**
- * Replaces the paper that the local store holds for one student with `change` of it, when the store holds
- * it, so an answer or a flag shows at once and Convex rolls it back when the server refuses the call.
+ * Replaces what the local store holds as saved for one student with `change` of it, when the store holds it,
+ * so an answer or a flag shows at once and Convex rolls it back when the server refuses the call. The paper
+ * itself is never touched, so no answer reads it again.
  */
-export function changePaper(
+export function changeSaved(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   key: typeof PaperKey.Type,
-  change: (paper: PaperValue) => PaperValue
+  change: (saved: SavedValue) => SavedValue
 ) {
   const args = {
     deviceId: key.deviceId,
@@ -72,11 +110,11 @@ export function changePaper(
     slug: key.slug,
   };
   const current = Option.getOrUndefined(
-    localStore.getQuery(exams.sittings.paper, args)
+    localStore.getQuery(exams.sittings.saved, args)
   );
   if (current !== undefined) {
     localStore.setQuery(
-      exams.sittings.paper,
+      exams.sittings.saved,
       args,
       Option.some(change(current))
     );

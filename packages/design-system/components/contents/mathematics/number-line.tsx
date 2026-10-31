@@ -191,7 +191,7 @@ function NumberLineBody() {
               </div>
             ))}
 
-            <div className="absolute top-1/2 h-px w-full bg-foreground" />
+            <div className="bg-foreground absolute top-1/2 h-px w-full" />
 
             {Arr.map(processedSegments, (segment) => (
               <div
@@ -199,7 +199,7 @@ function NumberLineBody() {
               >
                 {!!segment.label && (
                   <div
-                    className="absolute top-0 -translate-x-1/2 whitespace-nowrap font-medium text-sm"
+                    className="absolute top-0 -translate-x-1/2 text-sm font-medium whitespace-nowrap"
                     style={{ left: `${segment.startPos + segment.width / 2}%` }}
                   >
                     {segment.label}
@@ -221,14 +221,14 @@ function NumberLineBody() {
                       {!!segment.showPoints && (
                         <div
                           className={cn(
-                            "size-4 rounded-full border border-foreground",
+                            "border-foreground size-4 rounded-full border",
                             segment.startInclusive
                               ? "bg-foreground"
                               : "bg-background"
                           )}
                         />
                       )}
-                      <div className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm">
+                      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-sm whitespace-nowrap">
                         {segment.startLabel ?? (
                           <InlineMath math={segment.start.toString()} />
                         )}
@@ -245,14 +245,14 @@ function NumberLineBody() {
                       {!!segment.showPoints && (
                         <div
                           className={cn(
-                            "size-4 rounded-full border border-foreground",
+                            "border-foreground size-4 rounded-full border",
                             segment.endInclusive
                               ? "bg-foreground"
                               : "bg-background"
                           )}
                         />
                       )}
-                      <div className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm">
+                      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-sm whitespace-nowrap">
                         {segment.endLabel ?? (
                           <InlineMath math={segment.end.toString()} />
                         )}

@@ -114,7 +114,7 @@ function PricingPagePlans() {
     >
       <div className="mx-auto w-full max-w-7xl">
         <h1
-          className="text-balance text-center text-3xl tracking-tight sm:text-4xl"
+          className="text-center text-3xl tracking-tight text-balance sm:text-4xl"
           id="pricing-heading"
         >
           {t("prices-title")}

@@ -56,7 +56,7 @@ export function HeaderSearch() {
 
   return (
     <Button
-      className="w-full justify-between text-muted-foreground sm:w-80"
+      className="text-muted-foreground w-full justify-between sm:w-80"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();

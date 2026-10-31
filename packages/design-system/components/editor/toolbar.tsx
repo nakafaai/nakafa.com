@@ -65,7 +65,7 @@ function readWrapped(row: HTMLElement) {
 function BarGroup(props: Omit<ComponentProps<"div">, "className">) {
   return (
     <div
-      className="flex shrink-0 items-center gap-0.5 before:me-1 before:h-5 before:w-px before:bg-border first:before:hidden data-wrapped:invisible"
+      className="before:bg-border flex shrink-0 items-center gap-0.5 before:me-1 before:h-5 before:w-px first:before:hidden data-wrapped:invisible"
       {...props}
     />
   );

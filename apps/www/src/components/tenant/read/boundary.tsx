@@ -109,6 +109,6 @@ function PageFailure({ error }: { error: unknown }) {
 function DeniedPart() {
   const t = useTranslations("Common");
   return (
-    <p className="p-4 text-muted-foreground text-sm">{t("part-denied")}</p>
+    <p className="text-muted-foreground p-4 text-sm">{t("part-denied")}</p>
   );
 }

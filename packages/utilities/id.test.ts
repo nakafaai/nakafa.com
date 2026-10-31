@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { createStableId } from "@repo/utilities/id";
 
-const STABLE_ID_PATTERN = /^json-ld-[a-z0-9]+$/;
+const STABLE_ID_PATTERN = /^json-ld-[a-z0-9]+$/u;
 
 describe("createStableId", () => {
   it("returns the same id for the same input", () => {

@@ -144,7 +144,7 @@ export function ChatSharing({
             const isPublic = visibility === "public";
             return (
               <button
-                className="group flex items-start gap-4 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+                className="group hover:bg-accent hover:text-accent-foreground flex items-start gap-4 p-4 transition-colors ease-out"
                 key={visibility}
                 onClick={() => handleUpdateVisibility(visibility)}
                 type="button"
@@ -157,14 +157,14 @@ export function ChatSharing({
                     />
                     <span className="text-sm">{t(visibility)}</span>
                   </div>
-                  <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground">
+                  <p className="text-muted-foreground group-hover:text-accent-foreground text-start text-sm">
                     {t(`${visibility}-description`)}
                   </p>
                 </div>
 
                 <HugeIcons
                   className={cn(
-                    "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out group-hover:text-accent-foreground",
+                    "text-primary group-hover:text-accent-foreground size-4 shrink-0 opacity-0 transition-opacity ease-out",
                     !!isSelected && "opacity-100"
                   )}
                   icon={Tick01Icon}

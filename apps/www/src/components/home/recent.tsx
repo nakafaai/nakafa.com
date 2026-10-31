@@ -42,7 +42,7 @@ export function HomeContinueLearning({
         {t("continue-learning")}
         <HugeIcons className="size-4" icon={Progress03Icon} />
       </h2>
-      <div className="grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+      <div className="bg-card text-card-foreground grid divide-y overflow-hidden rounded-xl border shadow-sm">
         {Arr.zipWith(subjects, looks, (subject, look) => (
           <MaterialRow
             key={`${subject.content_id}:${subject.contextKey}`}

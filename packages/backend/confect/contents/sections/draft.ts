@@ -11,7 +11,7 @@ import {
 import { embeddingModelId } from "@repo/backend/confect/gateway/model";
 import { Array as Arr, String as Str } from "effect";
 
-const LEADING_HEADING = /^#{1,6}[^\n]*(?:\n|$)/;
+const LEADING_HEADING = /^#{1,6}[^\n]*(?:\n|$)/u;
 const PATH_SEPARATOR = " > ";
 const LONE_SURROGATE = /[\uD800-\uDFFF]/gu;
 

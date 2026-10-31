@@ -23,6 +23,7 @@ import {
   linkViewOf,
 } from "@repo/backend/confect/guardians/link";
 import spec from "@repo/backend/confect/guardians/links.spec";
+import { readdressLink } from "@repo/backend/confect/guardians/readdress";
 import { LINK_TERM } from "@repo/backend/confect/guardians/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -173,6 +174,19 @@ const verify = FunctionImpl.make(
   })
 );
 
+/** Staff correct the address of a pending link, which keeps its term (`readdressLink`). */
+const readdress = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "readdress",
+  Effect.fn("guardians.links.readdress")(function* ({ email }) {
+    const { person: actor } = yield* Member;
+    const link = yield* GuardianLink;
+    const next = yield* readdressLink(link, email, actor);
+    return yield* linkViewOf(next, yield* Clock.currentTimeMillis);
+  })
+);
+
 /**
  * Revokes a link: the relation ends at once and the guardian reaches the child no
  * more. An ended link answers as it stands and journals nothing.
@@ -197,6 +211,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(start),
   Layer.provide(list),
   Layer.provide(verify),
+  Layer.provide(readdress),
   Layer.provide(revoke),
   Layer.provide(session),
   Layer.provide(member),

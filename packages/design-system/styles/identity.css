@@ -29,19 +29,19 @@
   @keyframes thing-draw {
     0%,
     10% {
-      stroke-dashoffset: 1;
       opacity: 1;
+      stroke-dashoffset: 1;
     }
 
     36%,
     90% {
-      stroke-dashoffset: 0;
       opacity: 1;
+      stroke-dashoffset: 0;
     }
 
     100% {
-      stroke-dashoffset: 0;
       opacity: 0;
+      stroke-dashoffset: 0;
     }
   }
 
@@ -83,13 +83,13 @@
     0%,
     60%,
     100% {
-      translate: 0 0;
       opacity: 0.6;
+      translate: 0 0;
     }
 
     30% {
-      translate: 0 -3.5px;
       opacity: 1;
+      translate: 0 -3.5px;
     }
   }
 
@@ -146,13 +146,13 @@
   @keyframes thing-glide {
     0%,
     100% {
-      translate: 0 0;
       rotate: 0deg;
+      translate: 0 0;
     }
 
     50% {
-      translate: 2px -3px;
       rotate: -4deg;
+      translate: 2px -3px;
     }
   }
 }

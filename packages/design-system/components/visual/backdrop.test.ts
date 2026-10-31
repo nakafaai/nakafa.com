@@ -3,6 +3,7 @@ import {
   holdBackdrop,
   measureBackdrop,
 } from "@repo/design-system/components/visual/backdrop";
+import { elementById } from "@repo/design-system/lib/element";
 import { Effect } from "effect";
 
 /** The width the test viewport reports, scrollbars included. */
@@ -23,7 +24,7 @@ function renderPage() {
     </main>
     <footer id="footer">Footer</footer>
   `;
-  const card = document.getElementById("card");
+  const card = elementById("card");
   if (!card) {
     throw new Error("The test page has no card.");
   }

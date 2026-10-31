@@ -152,7 +152,7 @@ export function PageScrollbar() {
       aria-hidden="true"
       className={cn(
         scrollTrackVariants({ orientation: "vertical" }),
-        "fixed inset-e-0 top-0 z-10 pointer-coarse:hidden h-svh"
+        "fixed inset-e-0 top-0 z-10 h-svh pointer-coarse:hidden"
       )}
       data-slot="page-scrollbar"
       hidden

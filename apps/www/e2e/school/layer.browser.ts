@@ -5,13 +5,13 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The page of the first question, whose name starts with its number. */
-const FIRST_QUESTION = /^Question 1\b/;
+const FIRST_QUESTION = /^Question 1\b/u;
 
 /** The page of the second question, whose name starts with its number. */
-const SECOND_QUESTION = /^Question 2\b/;
+const SECOND_QUESTION = /^Question 2\b/u;
 
 /** The grip of the first page, which names the question by its place. */
 const GRIP_OF_FIRST = "Reorder question 1";

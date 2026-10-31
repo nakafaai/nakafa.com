@@ -19,11 +19,15 @@ const convex = vi.hoisted(() => ({
 
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: class {
+    /** The recorder that every query of this client reaches. */
+    readonly calls = convex;
+    /** The last token, which these reads do not check. */
+    token: string | undefined;
     query(reference: unknown, args: unknown) {
-      return convex.query(reference, args);
+      return this.calls.query(reference, args);
     }
-    setAuth() {
-      // The token is not what these reads check.
+    setAuth(token: string) {
+      this.token = token;
     }
   },
 }));

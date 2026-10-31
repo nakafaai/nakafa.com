@@ -22,7 +22,7 @@ import {
 } from "@/e2e/support/requests";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const JAVASCRIPT_RESOURCE_PATTERN = /^\/assets\/.+\.js$/;
+const JAVASCRIPT_RESOURCE_PATTERN = /^\/assets\/.+\.js$/u;
 const RESOURCE_IDLE_MILLISECONDS = 1000;
 // Resource settling keeps its own budget, apart from readiness.
 const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
@@ -105,7 +105,7 @@ const countJavascriptResources = Effect.fn(
 )(function* (page: Page) {
   return yield* Effect.promise(() =>
     page.evaluate((patternSource) => {
-      const pattern = new RegExp(patternSource);
+      const pattern = new RegExp(patternSource, "u");
       const urls = performance
         .getEntriesByType("resource")
         .map(({ name }) => name)
@@ -126,7 +126,7 @@ const readJavascriptRun = Effect.fn("NakafaE2E.readJavascriptRun")(function* (
 ) {
   return yield* Effect.promise(() =>
     page.evaluate((patternSource) => {
-      const pattern = new RegExp(patternSource);
+      const pattern = new RegExp(patternSource, "u");
       const resources = performance
         .getEntriesByType("resource")
         .filter(

@@ -10,7 +10,7 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport } from "@/e2e/support/viewport";
 
-const PRICING_PATH_PATTERN = /\/id\/pricing$/;
+const PRICING_PATH_PATTERN = /\/id\/pricing$/u;
 
 // The page shows the price in the currency of the visitor's time zone, and these checks read the dollar
 // price, so every test runs where no euro or rupiah zone applies, whatever zone the machine is in.

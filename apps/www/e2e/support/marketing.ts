@@ -13,9 +13,7 @@ class MarketingContributorMissing extends Schema.TaggedError<MarketingContributo
   "MarketingContributorMissing",
   {}
 ) {
-  get message() {
-    return "The marketing contributor fixture is empty.";
-  }
+  override readonly message = "The marketing contributor fixture is empty.";
 }
 
 /** One required homepage surface was absent from the rendered document. */
@@ -99,7 +97,8 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
           missingFragmentReferences: [
             ...new Set(
               fragmentReferences.filter(
-                (fragmentId) => !document.getElementById(fragmentId)
+                (fragmentId) =>
+                  !document.querySelector(`#${CSS.escape(fragmentId)}`)
               )
             ),
           ],

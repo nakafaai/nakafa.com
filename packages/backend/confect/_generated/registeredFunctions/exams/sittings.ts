@@ -25,6 +25,7 @@ export default {
 ["student"]: RegisteredConvexFunction.register({ ...definitions["student"], handler: forward(definitions["student"].handler) }),
 ["signals"]: RegisteredConvexFunction.register({ ...definitions["signals"], handler: forward(definitions["signals"].handler) }),
 ["paper"]: RegisteredConvexFunction.register({ ...definitions["paper"], handler: forward(definitions["paper"].handler) }),
+["saved"]: RegisteredConvexFunction.register({ ...definitions["saved"], handler: forward(definitions["saved"].handler) }),
 ["prompt"]: RegisteredConvexFunction.register({ ...definitions["prompt"], handler: forward(definitions["prompt"].handler) }),
 ["images"]: RegisteredConvexFunction.register({ ...definitions["images"], handler: forward(definitions["images"].handler) }),
 ["answer"]: RegisteredConvexFunction.register({ ...definitions["answer"], handler: forward(definitions["answer"].handler) }),

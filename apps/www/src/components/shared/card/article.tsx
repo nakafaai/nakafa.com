@@ -35,9 +35,9 @@ export function CardArticle({ article }: Props) {
       title={article.title}
     >
       <Card className="relative h-full overflow-hidden">
-        <div className="absolute inset-0 h-0 bg-primary transition-[height] group-hover:h-4" />
+        <div className="bg-primary absolute inset-0 h-0 transition-[height] group-hover:h-4" />
         <CardHeader>
-          <CardTitle className="text-pretty font-medium leading-snug">
+          <CardTitle className="leading-snug font-medium text-pretty">
             <h2 className="scroll-mt-28" id={id} title={article.title}>
               {article.title}
             </h2>

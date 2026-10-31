@@ -28,9 +28,9 @@ const FAILED_TITLE = en.Ai["chat-failed"];
 const FAILED_COPY = en.Ai["chat-failed-description"];
 const RETRY = en.Ai.retry;
 /** The Google sign-in button a signed-out visitor is offered. */
-const GOOGLE_SIGN_IN = /google/i;
+const GOOGLE_SIGN_IN = /google/iu;
 /** The application's code chunks, and the request the new chat page's weather widget makes. */
-const CHUNK = /\/assets\/.+\.js$/;
+const CHUNK = /\/assets\/.+\.js$/u;
 const WEATHER_REQUEST = "/api/weather";
 
 /** The failure card of a chat surface, which is the `Empty` part the card is built from. */
@@ -174,7 +174,7 @@ test.describe("A chat that cannot be read, at 1440px", () => {
         yield* Effect.promise(async () => {
           await sidebarRows(page).filter({ hasText: TITLE }).click();
           await expect(page).toHaveURL(
-            new RegExp(`/en/chat/${started.chatId}$`),
+            new RegExp(`/en/chat/${started.chatId}$`, "u"),
             { timeout: readinessTimeoutMilliseconds }
           );
           await expect(promptWith(onThePage(page), PROMPT)).toBeVisible({

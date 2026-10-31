@@ -27,7 +27,7 @@ const TRIANGLE_ROUTE =
   "/en/subjects/mathematics/trigonometry/right-triangle-naming";
 const UNIT_CIRCLE_ROUTE =
   "/en/subjects/mathematics/trigonometry/trigonometry-concept";
-const HYPOTENUSE_LABEL = /^c$/;
+const HYPOTENUSE_LABEL = /^c$/u;
 const TRIANGLE_SCENE = '[data-scene="triangle"]';
 /** How long one edit may take to show in the field before it is tried again. */
 const EDIT_PROBE_TIMEOUT_MILLISECONDS = 1000;

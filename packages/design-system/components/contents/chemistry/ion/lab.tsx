@@ -125,7 +125,7 @@ export function IonLab({ title, description, labels }: IonLabProps) {
 
         <section
           aria-label={labels.electronChange}
-          className="grid min-h-10 place-items-center text-3xl text-muted-foreground md:min-h-44"
+          className="text-muted-foreground grid min-h-10 place-items-center text-3xl md:min-h-44"
         >
           <HugeIcons
             aria-hidden="true"
@@ -248,7 +248,7 @@ function ParticleCard({
     >
       <div className="flex w-full max-w-64 flex-col gap-4">
         <div className="space-y-1">
-          <div className="font-medium text-sm">{stage}</div>
+          <div className="text-sm font-medium">{stage}</div>
           <div className="text-muted-foreground text-sm">{title}</div>
         </div>
         <div className="text-5xl sm:text-6xl">

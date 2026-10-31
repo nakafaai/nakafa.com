@@ -57,7 +57,7 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
     <SheetHeaderPrimitive className="border-b p-3">
       <div className="flex items-center justify-between gap-2">
         {/* Only the name is the dialog's title: the buttons are not part of it. */}
-        <SheetTitle className="flex items-center gap-2 px-2 text-chat">
+        <SheetTitle className="text-chat flex items-center gap-2 px-2">
           <HugeIcons className="size-4" icon={StarsIcon} />
           <span>Nina</span>
         </SheetTitle>
