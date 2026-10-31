@@ -86,11 +86,15 @@ const tenantSchemes = Kind.extend(tenant, {
   changes: [
     Schema.Struct({
       scheme: Id("gradingSchemes"),
-      type: Schema.Literals([
-        "scheme.amended",
-        "scheme.removed",
-        "scheme.stored",
-      ]),
+      type: Schema.Literal("scheme.amended"),
+    }),
+    Schema.Struct({
+      scheme: Id("gradingSchemes"),
+      type: Schema.Literal("scheme.removed"),
+    }),
+    Schema.Struct({
+      scheme: Id("gradingSchemes"),
+      type: Schema.Literal("scheme.stored"),
     }),
   ],
   published: [],
