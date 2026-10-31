@@ -28,14 +28,11 @@ import {
   makeQuranSnapshot,
   makeQuranSnapshotRow,
 } from "@repo/backend/test/quran/snapshot";
+import { makeAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
 import {
   TEST_STAGE_SNAPSHOT,
   TEST_STAGE_SNAPSHOT_BATCH,
 } from "@repo/backend/test/snapshot/routes";
-import {
-  makeTryoutSnapshotManifest,
-  makeTryoutSnapshotRows,
-} from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Struct } from "effect";
 
@@ -95,18 +92,18 @@ describe("contentRelease/snapshot/batch", () => {
         });
       })
   );
-  it.live.each(["quran", "tryout"] as const)(
+  it.live.each(["quran", "assessment"] as const)(
     "stages and replays %s rows through the registered mutation without counter drift",
     (family) =>
       Effect.gen(function* () {
-        const manifest = yield* family === "quran"
-          ? makeQuranSnapshot()
-          : makeTryoutSnapshotManifest();
+        const assessment = yield* makeAssessmentTestSnapshot();
+        const manifest =
+          family === "quran" ? yield* makeQuranSnapshot() : assessment.manifest;
         const snapshotId = contentSnapshotId(manifest);
         const rows =
           family === "quran"
             ? [yield* makeQuranSnapshotRow(snapshotId)]
-            : yield* makeTryoutSnapshotRows();
+            : assessment.rows;
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
@@ -161,8 +158,7 @@ describe("contentRelease/snapshot/batch", () => {
             batches: await ctx.db.query("snapshotBatches").collect(),
             quranRows: await ctx.db.query("quranRows").collect(),
             quranSearch: await ctx.db.query("quranSearch").collect(),
-            catalog: await ctx.db.query("tryoutCatalog").collect(),
-            placements: await ctx.db.query("tryoutPlacements").collect(),
+            assessmentRows: await ctx.db.query("assessmentRows").collect(),
             release: await ctx.db.query("contentReleases").unique(),
           }))
         );
@@ -173,8 +169,9 @@ describe("contentRelease/snapshot/batch", () => {
         });
         expect(state.quranRows).toHaveLength(family === "quran" ? 1 : 0);
         expect(state.quranSearch).toHaveLength(family === "quran" ? 1 : 0);
-        expect(state.catalog).toHaveLength(family === "tryout" ? 1 : 0);
-        expect(state.placements).toHaveLength(family === "tryout" ? 1 : 0);
+        expect(state.assessmentRows).toHaveLength(
+          family === "assessment" ? rows.length : 0
+        );
       })
   );
   it.live.each([0, 1])(

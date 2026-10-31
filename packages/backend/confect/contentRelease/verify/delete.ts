@@ -13,13 +13,7 @@ import { Effect, Option, Schema } from "effect";
 /** Rejects a delete whose content identity still owns a visible route. */
 const checkDeletedRoute = Effect.fn("contentRelease.checkDeletedRoute")(
   function* (row: Docs["contentItems"], head: ContentHead) {
-    if (head.family === "question") {
-      return;
-    }
     const database = yield* DatabaseReader;
-    const publicPath = yield* Effect.fromNullishOr(head.publicPath).pipe(
-      Effect.orDie
-    );
     const appLocale = yield* Schema.decodeEffect(AppLocaleSchema)(
       head.artifactLocale
     ).pipe(Effect.orDie);
@@ -30,7 +24,7 @@ const checkDeletedRoute = Effect.fn("contentRelease.checkDeletedRoute")(
         (query) =>
           query
             .eq("appLocale", appLocale)
-            .eq("publicPath", publicPath)
+            .eq("publicPath", head.publicPath)
             .lte("sequence", row.sequence),
         "desc"
       )

@@ -1,6 +1,5 @@
 import { CompiledContentPayloadSchema } from "@nakafa/aksara-contracts/content";
 import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
-import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { Effect, Option, Schema } from "effect";
@@ -95,27 +94,11 @@ export const requireCurrentRelease = Effect.fn(
 });
 
 /**
- * Whether the try-out snapshot is replaced or holds no snapshot. Its placements
- * bind question artifacts, so keeping the base snapshot would keep the retired
- * generation's try-out bodies active. Program and Quran snapshots hold structured
- * rows that bind no artifact and whose contract the generation change left
- * unchanged, so a bootstrap may inherit them, as the publisher does when their
- * data did not change.
- */
-function replacesTryoutSnapshot(snapshots: ContentSnapshotSet) {
-  return (
-    snapshots.tryout.mode === "replace" ||
-    snapshots.tryout.resultSnapshotId === null
-  );
-}
-
-/**
  * Whether a verified candidate may replace the retired generation as a
  * bootstrap. The backend decides from its own stored state and the signed
  * counts, never from what the publisher declares: the candidate must extend the
  * active release, that release must still be in the retired generation, the
- * result must hold only upserted heads, the try-out snapshot must be replaced
- * or empty, and no recovery may be staged.
+ * result must hold only upserted heads, and no recovery may be staged.
  */
 export function isBootstrapCandidate(
   manifest: ContentReleaseManifest,
@@ -129,7 +112,6 @@ export function isBootstrapCandidate(
     manifest.baseReleaseId === state.activeReleaseId &&
     state.activeContentGeneration === RETIRED_CONTENT_GENERATION &&
     manifest.resultCount === manifest.upsertCount &&
-    replacesTryoutSnapshot(manifest.snapshots) &&
     state.recoveryReleaseId === undefined
   );
 }
