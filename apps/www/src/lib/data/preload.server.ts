@@ -49,16 +49,15 @@ export const preloadConfectQuery = Effect.fn("www.data.preloadQuery")(
         ref,
         args,
         (reference, encodedArgs) => client.query(reference, encodedArgs),
-        (cause) => new PreloadFailed({ cause })
+        (cause) => {
+          const failure = new PreloadFailed({ cause });
+          return cause instanceof ConvexGatewayFailure
+            ? new RetryableNetworkAttempt({ failure })
+            : failure;
+        }
       ).pipe(
         Effect.catchTag("SchemaError", (cause) =>
           Effect.fail(new PreloadFailed({ cause }))
-        ),
-        Effect.mapError((error) =>
-          Schema.is(PreloadFailed)(error) &&
-          error.cause instanceof ConvexGatewayFailure
-            ? new RetryableNetworkAttempt({ failure: error })
-            : error
         )
       ),
       new PreloadFailed({ cause: "deadline" })
