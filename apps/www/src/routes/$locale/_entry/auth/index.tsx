@@ -66,14 +66,14 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
       : toRouterHead(
           createSeoHead({
             absoluteTitle: loaderData.title,
-            canonicalPath: `/${params.locale}`,
+            canonicalPath: `/${params.locale}/auth`,
             description: loaderData.description,
             image: getAppSocialArtwork({
               key: "home",
               locale: params.locale,
               publicPath: "",
             }),
-            indexable: false,
+            indexable: true,
             jsonLd: [],
             locale: params.locale,
             parts: [],

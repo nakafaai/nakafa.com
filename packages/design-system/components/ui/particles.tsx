@@ -8,6 +8,7 @@ import {
 import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { createFramePace } from "@repo/design-system/lib/pace";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
@@ -154,6 +155,9 @@ export function Particles({
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const animationFrameRef = useRef<number | null>(null);
+  // A frame that the pace skips still counts, so the particles keep their speed.
+  const waitedFrames = useRef(0);
+  const pace = useStableMutableValue(createFramePace);
   const dpr =
     typeof window === "undefined"
       ? 1
@@ -310,7 +314,17 @@ export function Particles({
   }, [mousePositionRef]);
 
   const animate = useCallback(() => {
-    onMouseMove();
+    waitedFrames.current += 1;
+    const startedAt = performance.now();
+    if (!pace.isDue(startedAt)) {
+      animationFrameRef.current = window.requestAnimationFrame(animate);
+      return;
+    }
+    const step = waitedFrames.current;
+    waitedFrames.current = 0;
+    if (!isMobile) {
+      onMouseMove();
+    }
     clearContext();
     // The frame visits the circles in the order the in-place loop did: a circle
     // that leaves the canvas is replaced at the end, and the circle that slides
@@ -325,8 +339,8 @@ export function Particles({
         break;
       }
       updateAlpha(circle, canvasSize.current.w, canvasSize.current.h);
-      circle.x += circle.dx;
-      circle.y += circle.dy;
+      circle.x += circle.dx * step;
+      circle.y += circle.dy * step;
 
       // Only apply mouse-based movement on non-mobile devices
       if (isMobile) {
@@ -365,6 +379,7 @@ export function Particles({
       MutableList.toArray(queue)
     );
     animationFrameRef.current = window.requestAnimationFrame(animate);
+    pace.rest(startedAt, performance.now());
   }, [
     circleParams,
     clearContext,
@@ -373,6 +388,7 @@ export function Particles({
     staticity,
     isMobile,
     onMouseMove,
+    pace,
   ]);
 
   const startAnimation = useCallback(() => {

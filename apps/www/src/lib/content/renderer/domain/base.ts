@@ -1,5 +1,4 @@
 import { AgentContext } from "@repo/design-system/components/markdown/agent-context";
-import { CodeBlockMdx } from "@repo/design-system/components/markdown/code/client";
 import {
   BlockMath,
   InlineMath,
@@ -14,6 +13,7 @@ import {
 import { baseComponentNames } from "@repo/design-system/lib/markdown/names";
 import { MermaidMdx, Youtube } from "@/lib/content/renderer/client/base/media";
 import { MathVisual } from "@/lib/content/renderer/client/base/visual/math";
+import { CodeBlockServer } from "@/lib/content/renderer/code.server";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Statically registered implementations for signed base custom components. */
@@ -28,7 +28,7 @@ export const baseRenderers = [
   },
   {
     name: baseComponentNames.codeBlock,
-    component: CodeBlockMdx,
+    component: CodeBlockServer,
   },
   {
     name: baseComponentNames.contentBlock,

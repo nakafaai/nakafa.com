@@ -125,14 +125,24 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
   });
 }
 
-test("search, chat and sign-in answer noindex, so no engine indexes a learner's screen", async ({
+test("search and chat answer noindex, so no engine indexes a learner's screen", async ({
   page,
 }) => {
-  for (const path of ["/en/search", "/en/chat", "/en/auth"]) {
+  for (const path of ["/en/search", "/en/chat"]) {
     await page.goto(path);
     await expect(page.locator('meta[name="robots"]'), path).toHaveAttribute(
       "content",
       NOINDEX
     );
   }
+});
+
+test("sign-in stays open to search, so a learner who looks for it finds it", async ({
+  page,
+}) => {
+  await page.goto("/en/auth");
+  await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute(
+    "content",
+    NOINDEX
+  );
 });

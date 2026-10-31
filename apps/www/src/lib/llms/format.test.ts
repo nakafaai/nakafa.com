@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import { ENGLISH_LANGUAGE_NAMES } from "@/lib/llms/constants";
 import {
   AGENT_MARKDOWN_DIRECTIVE,
@@ -8,6 +9,7 @@ import {
   getLlmsMarkdownPath,
   getLocaleLabel,
   getMdxDescription,
+  readTwinTitle,
   stripLlmsRouteExtension,
 } from "@/lib/llms/format";
 
@@ -25,6 +27,49 @@ describe("llms formatting helpers", () => {
         publicPath: "///articles/education///",
       })
     ).toBe("/id/articles/education.md");
+  });
+
+  it("names the author, the dates, the license and a citation", () => {
+    const header = buildHeader({
+      citation: {
+        authors: ["Nabil", "Shifna"],
+        dateModified: "2026-02-01",
+        datePublished: "2026-01-01",
+      },
+      description: "Description",
+      title: "Numbers",
+      url: "https://nakafa.com/en/subjects/numbers",
+    });
+
+    expect(header).toContain("Author: Nabil, Shifna");
+    expect(header).toContain("Published: 2026-01-01");
+    expect(header).toContain("Updated: 2026-02-01");
+    expect(header).toContain(
+      'Cite as: Nabil, Shifna, "Numbers", Nakafa, https://nakafa.com/en/subjects/numbers'
+    );
+    expect(
+      buildHeader({
+        citation: { authors: ["Nabil"], datePublished: "2026-01-01" },
+        description: "Description",
+        title: "Numbers",
+        url: "https://nakafa.com/en/subjects/numbers",
+      })
+    ).not.toContain("Updated: 2026-02-01");
+  });
+
+  it("reads a twin's title from the header's first line", () => {
+    expect(
+      readTwinTitle(
+        Arr.join(
+          buildHeader({
+            description: "Description",
+            title: "Numbers",
+            url: "https://nakafa.com/en/subjects/numbers",
+          }),
+          "\n"
+        )
+      )
+    ).toBe("Numbers");
   });
 
   it("builds markdown headers with optional source metadata", () => {

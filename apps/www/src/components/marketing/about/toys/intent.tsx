@@ -1,5 +1,5 @@
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { AfterPageSettled } from "@repo/design-system/components/ui/settled";
+import { AfterPageRead } from "@repo/design-system/components/ui/settled";
 import { lazy, Suspense } from "react";
 
 /**
@@ -13,15 +13,15 @@ const HomeToyLayer = lazy(() =>
 );
 
 /**
- * Mounts the toys once the page has loaded and settled, so they come on screen
- * without a scroll, a pointer or a touch, and their animations never compete
- * with the page's own loading. A toy needs the live layout to find its place,
+ * Mounts the toys once the page has its reader, so they come on screen at the
+ * first gesture, or by themselves a few seconds after the page settles, and their
+ * animations never compete with the page's own loading. A toy needs the live layout to find its place,
  * so the server draws none. A layer that fails to load leaves the page as it
  * is, and its absence never reaches the error page.
  */
 export function HomeToys() {
   return (
-    <AfterPageSettled>
+    <AfterPageRead>
       <ErrorBoundary fallback={null}>
         <Suspense fallback={null}>
           <Suspense fallback={null}>
@@ -29,6 +29,6 @@ export function HomeToys() {
           </Suspense>
         </Suspense>
       </ErrorBoundary>
-    </AfterPageSettled>
+    </AfterPageRead>
   );
 }

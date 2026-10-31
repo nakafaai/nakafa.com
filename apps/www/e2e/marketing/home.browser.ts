@@ -212,6 +212,8 @@ test("home page keeps the hero when the particle field fails to load", async ({
                 PARTICLES_MARKER
               );
               yield* openRoute(page, "/en", "denied");
+              // The field is decoration, which waits for the reader's first gesture.
+              yield* Effect.promise(() => page.mouse.move(10, 10));
               // Waits for the page's requests to settle, so the aborted chunk has failed before the hero is checked.
               yield* Effect.promise(() => page.waitForLoadState("networkidle"));
               yield* Effect.sync(() =>

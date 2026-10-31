@@ -51,12 +51,8 @@ const FaqPageInput = Schema.Struct({
   url: Schema.String,
 });
 
-/** The Quran surah that one book page describes, with its author and its size. */
+/** The Quran surah that one book page describes, with its size. */
 const BookInput = Schema.Struct({
-  author: Schema.Struct({
-    "@type": Schema.Literal("Person"),
-    name: Schema.String,
-  }),
   description: Schema.String,
   inLanguage: Schema.String,
   name: Schema.String,
@@ -125,7 +121,6 @@ export function makeBookNode(input: typeof BookInput.Type) {
     inLanguage: input.inLanguage,
     bookFormat: "EBook",
     isAccessibleForFree: true,
-    author: input.author,
     position: input.position,
     numberOfPages: input.totalPages,
   };
@@ -144,7 +139,6 @@ export function makeEducationalOrganizationNode(
   return {
     ...ORGANIZATION,
     "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
     alternateName: input.alternateName,
     areaServed: COMPANY_IDENTITY.registeredAddress.country,
     description: input.description,

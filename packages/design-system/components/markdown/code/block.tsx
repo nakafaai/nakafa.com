@@ -61,7 +61,10 @@ export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
       <CodeBlockBody>
         {(item) => (
           <CodeBlockItem key={item.language} value={item.language}>
-            <CodeBlockContent language={item.language}>
+            <CodeBlockContent
+              language={item.language}
+              {...(item.html === undefined ? {} : { serverHtml: item.html })}
+            >
               {item.code}
             </CodeBlockContent>
           </CodeBlockItem>

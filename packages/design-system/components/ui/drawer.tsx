@@ -1,5 +1,6 @@
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { cn } from "cn";
 import { type ComponentProps, createContext, use } from "react";
 
@@ -167,6 +168,9 @@ function DrawerContent({
           data-slot="drawer-popup"
           data-snap-points={hasSnapPoints ? "" : undefined}
           data-swipe-axis={swipeAxis}
+          render={(popupProps, state) => (
+            <StagedPopup {...popupProps} open={state.open} />
+          )}
           {...props}
           ref={recordStageScroll}
         >

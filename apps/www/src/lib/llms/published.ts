@@ -23,7 +23,11 @@ import {
 import { getRawAksaraUrl } from "@/lib/content/repository";
 import { readContentStore } from "@/lib/content/store/read";
 import { BASE_URL } from "@/lib/llms/constants";
-import { buildHeader, getMdxDescription } from "@/lib/llms/format";
+import {
+  buildHeader,
+  getMdxDescription,
+  type MarkdownCitation,
+} from "@/lib/llms/format";
 
 /** Exact public content identity required for agent-facing markdown. */
 const PublishedMarkdownInputSchema = Schema.Struct({
@@ -36,6 +40,7 @@ export type PublishedMarkdownInput = typeof PublishedMarkdownInputSchema.Type;
 
 /** Builds agent markdown from reviewed MDX and immutable Git provenance. */
 const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
+  citation,
   description,
   appLocale,
   publicPath,
@@ -44,6 +49,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   sourceRevision,
   title,
 }: {
+  citation?: MarkdownCitation;
   description: string;
   appLocale: AppLocale;
   publicPath: string;
@@ -63,6 +69,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   return Arr.join(
     [
       ...buildHeader({
+        ...(citation === undefined ? {} : { citation }),
         description,
         ...(source === undefined ? {} : { source }),
         title,
@@ -119,14 +126,25 @@ export const readPublishedText = Effect.fn("www.llms.published.read")(
       material: decodeMaterialProjection,
       page: decodePublishedPage,
     }[input.family](source.projection, input);
+    const { metadata } = projection;
     return yield* buildPublishedText({
-      description: getMdxDescription(projection.metadata),
+      // A lesson and an article name their authors, and a site page speaks for Nakafa.
+      ...("authors" in metadata
+        ? {
+            citation: {
+              authors: Arr.map(metadata.authors, ({ name }) => name),
+              dateModified: metadata.dateModified,
+              datePublished: metadata.datePublished,
+            },
+          }
+        : {}),
+      description: getMdxDescription(metadata),
       appLocale: input.appLocale,
       publicPath: projection.publicPath,
       rawMdx: source.rawMdx,
       sourcePath: source.sourcePath,
       sourceRevision: source.sourceRevision,
-      title: projection.metadata.title,
+      title: metadata.title,
     });
   }
 );
