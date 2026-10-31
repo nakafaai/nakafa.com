@@ -3,7 +3,8 @@ import type { SeatKind } from "@repo/backend/confect/exams/seed/contract";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
 import type { LoadPlan } from "@repo/backend/scripts/load/plan";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Crypto, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
+import { SecureRandom } from "effect/crypto";
 import { Base64Url, Hex } from "effect/encoding";
 
 /**
@@ -46,7 +47,7 @@ const seatAll = Effect.fn("load.seed.seats")(function* <E, R>(
     readonly slug: string;
   }
 ) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const seats = yield* Effect.forEach(
     Arr.makeBy(seating.count, (index) => index),
     Effect.fn(function* (index) {
@@ -90,7 +91,7 @@ export const seedRun = Effect.fn("load.seed")(function* <E, R>(
   plan: LoadPlan,
   slug: string
 ) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const runId = Hex.encode(yield* crypto.randomBytes(3));
   const seeded = yield* encodeArguments({
     questions: plan.questions,

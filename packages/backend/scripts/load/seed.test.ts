@@ -1,7 +1,7 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { BLUEPRINT_PLAN, LoadPlan } from "@repo/backend/scripts/load/plan";
 import { seedRun } from "@repo/backend/scripts/load/seed";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { Array as Arr, Effect, MutableList, Schema } from "effect";
 
 /** The arguments of one seats call, as the Convex CLI receives them. */
@@ -96,6 +96,6 @@ describe("load seed", () => {
         ).toEqual([0, 1, 0]);
         expect(seeded.proctors).toHaveLength(4);
         expect(seeded.students[0]?.token).toBe(batches[0]?.seats[0]?.token);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 });
