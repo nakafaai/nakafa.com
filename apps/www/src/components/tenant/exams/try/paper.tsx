@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
-import { SittingBar } from "@/components/exams/sitting/bar";
+import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { PlayerFlag } from "@/components/player/flag";
 import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
@@ -19,7 +19,6 @@ import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
-import { PlayerViewSwitch } from "@/components/player/view";
 import {
   TrySlugContext,
   TryStoreContext,
@@ -36,12 +35,12 @@ import { TargetLink } from "@/lib/routing/link";
 import { schoolExamEditTarget } from "@/lib/routing/school/target";
 
 /**
- * One exam as its students will meet it, for its teacher to try: the sitting's own player, with the
- * school's header, the navigator and its legend, the flag and the keys, and the same questions in the
- * same order with the same controls. The answers and the flags stay in this page's store and are
- * never sent, so a try leaves no attempt and no score behind. The header holds the view and its one
- * action, which returns to the editor. Its links are plain ones, because a school host has no locale
- * in its paths.
+ * One exam as its students will meet it, for its teacher to try: the sitting's own player, full screen
+ * with the player's header, the navigator and its legend, the flag and the keys, and the same questions
+ * in the same order with the same controls. The answers and the flags stay in this page's store and are
+ * never sent, so a try leaves no attempt and no score behind. The header holds the way back, the view
+ * and its one action, which both return to the editor. Its links are plain ones, because a school host
+ * has no locale in its paths.
  */
 export function ExamTryPaper({
   examId,
@@ -83,14 +82,16 @@ export function ExamTryPaper({
           mode="list"
         >
           <PlayerKeys locked={false} questions={models} />
-          <SittingBar examTitle={exam.title || t("untitled")}>
-            <PlayerViewSwitch />
+          <PaperBar
+            back={<PaperBack examId={examId} />}
+            title={exam.title || t("untitled")}
+          >
             {gone ? null : (
               <TargetLink className={buttonVariants()} target={editor}>
                 {t("try-finish")}
               </TargetLink>
             )}
-          </SittingBar>
+          </PaperBar>
           <PlayerMain
             navigator={
               <PlayerSidebar>

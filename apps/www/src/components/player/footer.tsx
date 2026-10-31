@@ -13,9 +13,11 @@ import { readNeighbor, readPosition } from "@/components/player/order";
 import { usePlayer } from "@/components/player/provider";
 
 /**
- * The controls under the questions in one row: previous at the start, the middle controls (the flag, and the
- * navigator opener below the large breakpoint) in the centre, and next at the end. The three zones
- * keep their places whatever the labels say, so nothing moves when next becomes review. It sticks to the
+ * The controls under the questions in one row: previous at the start, the navigator opener below the large
+ * breakpoint in the centre, with the flag of one question at a time beside it out of the row's flow
+ * (`PlayerFlag`), and next at the end. The outer zones take equal widths, so the centre sits on the
+ * screen's middle by construction, and previous and next keep their places whatever the labels say or the
+ * view shows, so nothing moves when next becomes review or the view changes. It sticks to the
  * bottom of the screen, so a learner moves on without scrolling back. The list measures it through
  * `data-player-footer`, so the end of the list counts as reached once it clears the footer.
  */
@@ -32,7 +34,9 @@ export function PlayerFooter({ children }: { children?: ReactNode }) {
         <div className="flex justify-start">
           <PlayerPrevious />
         </div>
-        <div className="flex items-center gap-2">{children}</div>
+        <div className="relative flex items-center self-stretch">
+          {children}
+        </div>
         <div className="flex justify-end">
           <PlayerNext />
         </div>
