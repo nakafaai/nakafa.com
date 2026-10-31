@@ -39,7 +39,7 @@ describe("notifications/detail", () => {
           slug: nf,
           text: "Ulangan hari Senin.",
         });
-        yield* teacher.mutation(tasks.publish, {
+        yield* teacher.mutation(tasks.publish, { targets: null,
           classId: forum.classId,
           clientKey: "detail-task",
           deadline: TENANCY_NOW + 86_400_000,
