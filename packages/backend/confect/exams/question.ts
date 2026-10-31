@@ -10,7 +10,7 @@ import {
 } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { keyFits } from "@repo/backend/confect/exams/key";
+import { keyFits } from "@repo/backend/confect/assessment/key";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 
 /**

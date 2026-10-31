@@ -75,16 +75,13 @@ export const refusals: readonly (typeof Refusal.Type)[] = [
   },
 ];
 
-/** A selection the question rejects, and why. */
-const Rejection = Schema.Struct({
-  pick: Pick,
-  reason: Schema.Literals(["selection", "kind"]),
-});
+/** A selection the question rejects. */
+const Rejection = Schema.Struct({ pick: Pick });
 
-/** The selections that do not belong to their question. */
+/** The selections that do not fit their question: an option it does not offer, and another kind. */
 export const rejections: readonly (typeof Rejection.Type)[] = [
-  { pick: "invalid", reason: "selection" },
-  { pick: "kind", reason: "kind" },
+  { pick: "invalid" },
+  { pick: "kind" },
 ];
 
 /** A change that ends an answer's right to be written, and the refusal it causes. */

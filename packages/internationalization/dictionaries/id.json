@@ -258,6 +258,7 @@
     "title": "Ujian",
     "empty": "Belum ada ujian.",
     "exams-search": "Cari ujian",
+    "rooms-search": "Cari ruang",
     "mine-exam": "Ujian",
     "mine-opens": "Dibuka",
     "mine-status": "Status",
@@ -486,7 +487,10 @@
     "column-of": "Soal {number}, kolom {name}",
     "column-placeholder": "Kolom",
     "cell-of": "Kolom untuk pernyataan {name} soal {number}",
-    "cell-hint": "Setiap pernyataan memilih satu kolom, dan kunci tersimpan setelah semua pernyataan punya kolom."
+    "cell-hint": "Setiap pernyataan memilih satu kolom, dan kunci tersimpan setelah semua pernyataan punya kolom.",
+    "room-move": "Jadwalkan ulang",
+    "room-move-description": "Siswa dan tokennya tetap. Pengingatnya dikirim lagi untuk waktu baru.",
+    "room-move-save": "Simpan"
   },
   "SchoolSettings": {
     "student-add-name-placeholder": "Ayu Lestari",
@@ -850,7 +854,8 @@
         "finish": "Percobaan ujian diselesaikan",
         "close": "Sesi ujian ditutup",
         "cancel": "Ruang ujian dibatalkan",
-        "join": "Siswa bergabung dengan kode ruang"
+        "join": "Siswa bergabung dengan kode ruang",
+        "reschedule": "Ruang ujian dipindah ke waktu baru"
       },
       "exam": {
         "results": {
@@ -1776,7 +1781,9 @@
     "incorrect": "Salah",
     "reset": "Ulangi",
     "explanation": "Pembahasan",
-    "number-count": "Nomor {count}"
+    "number-count": "Nomor {count}",
+    "prompt": "Soal",
+    "reading": "Bacaan"
   },
   "Player": {
     "navigator": "Soal",
@@ -2626,6 +2633,14 @@
     },
     "school-own-role-ended": {
       "title": "Peranmu sudah berakhir."
+    },
+    "school-refusal-room-opened": {
+      "title": "Ruang ini sudah dibuka.",
+      "description": "Ruang yang sudah dibuka tetap pada waktu dan namanya."
+    },
+    "school-refusal-schedule-invalid": {
+      "title": "Waktu ini tidak bisa dipakai.",
+      "description": "Pilih waktu mulai yang belum lewat, dan waktu selesai sesudahnya."
     }
   },
   "Ai": {

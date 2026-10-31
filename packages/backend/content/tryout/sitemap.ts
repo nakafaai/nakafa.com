@@ -3,39 +3,43 @@ import {
   CONTENT_SITEMAP_ROUTE_PAGE_SIZE,
   compareSitemapPaths,
 } from "@repo/backend/confect/contentRelease/sitemap";
-import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
-import { Array as Arr, Effect, MutableList } from "effect";
+import {
+  loadTryoutCatalog,
+  type PublishedCatalog,
+} from "@repo/backend/content/tryout/catalog";
+import { Array as Arr, Effect } from "effect";
 
-type TryoutCatalog = Effect.Success<ReturnType<typeof loadTryoutCatalog>>;
-/** Selects canonical public paths from one verified localized catalog. */
-function listTryoutSitemapPaths(catalog: TryoutCatalog) {
-  const paths = MutableList.make<string>();
-  for (const { row } of catalog.entries) {
-    if (row.publicPath !== undefined) {
-      MutableList.append(paths, row.publicPath);
-    }
-  }
-  return Arr.sort(MutableList.toArray(paths), compareSitemapPaths);
+/** Lists the public paths of one locale's catalog in sitemap order. */
+function listTryoutSitemapPaths(catalog: PublishedCatalog) {
+  return Arr.sort(
+    Arr.flatMap(catalog.rows, ({ publicPath }) =>
+      publicPath === undefined ? [] : [publicPath]
+    ),
+    compareSitemapPaths
+  );
 }
-/** Reads the bounded sitemap inventory for one active try-out locale. */
+
+/** Reads the size of the sitemap of one locale of the active release. */
 export const readTryoutSitemapCount = Effect.fn(
   "contentRelease.readTryoutSitemapCount"
 )(function* (locale: AppLocaleCode) {
-  const catalog = yield* loadTryoutCatalog(locale);
+  const routeCount = listTryoutSitemapPaths(
+    yield* loadTryoutCatalog(locale)
+  ).length;
   return {
-    pageCount: Math.ceil(catalog.routeCount / CONTENT_SITEMAP_ROUTE_PAGE_SIZE),
-    routeCount: catalog.routeCount,
+    pageCount: Math.ceil(routeCount / CONTENT_SITEMAP_ROUTE_PAGE_SIZE),
+    routeCount,
   };
 });
-/** Reads one exact bounded page of verified public try-out paths. */
+
+/** Reads one bounded page of the public try-out paths of one locale of the active release. */
 export const readTryoutSitemapPage = Effect.fn(
   "contentRelease.readTryoutSitemapPage"
 )(function* (locale: AppLocaleCode, page: number) {
   if (!Number.isSafeInteger(page) || page < 0) {
     return null;
   }
-  const catalog = yield* loadTryoutCatalog(locale);
-  const paths = listTryoutSitemapPaths(catalog);
+  const paths = listTryoutSitemapPaths(yield* loadTryoutCatalog(locale));
   const start = page * CONTENT_SITEMAP_ROUTE_PAGE_SIZE;
   if (start >= paths.length) {
     return null;

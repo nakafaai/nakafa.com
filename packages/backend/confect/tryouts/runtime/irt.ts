@@ -1,3 +1,4 @@
+import { isCorrectGrade } from "@repo/backend/confect/tryouts/response/answer";
 import { estimateIrtScore } from "@repo/backend/confect/tryouts/runtime/estimate";
 import type { TryoutIrtSource } from "@repo/backend/confect/tryouts/runtime/irt/items";
 import {
@@ -11,8 +12,9 @@ import { Array as Arr, Effect, HashMap, Option, Tuple } from "effect";
 
 /**
  * Scores a section or complete attempt from its validated calibration links.
- * IRT observes correct or not correct: a pending answer enters the estimate as
- * not correct and keeps the score provisional until the grader decides it.
+ * IRT observes correct, every point of the question earned, or not correct: a
+ * grade that waits for a person enters the estimate as not correct and keeps
+ * the score provisional until the person decides it.
  */
 export const scoreIrt = Effect.fn("tryouts.runtime.scoreIrt")(function* (
   answers: readonly ScoredAnswer[],
@@ -25,8 +27,8 @@ export const scoreIrt = Effect.fn("tryouts.runtime.scoreIrt")(function* (
   const estimate = yield* estimateIrtScore(
     Arr.getSomes(
       Arr.map(source.items, ({ item, placementId }) =>
-        Option.map(HashMap.get(byPlacement, placementId), ({ outcome }) => ({
-          isCorrect: outcome?.status === "correct",
+        Option.map(HashMap.get(byPlacement, placementId), ({ grade }) => ({
+          isCorrect: isCorrectGrade(grade),
           item,
         }))
       )

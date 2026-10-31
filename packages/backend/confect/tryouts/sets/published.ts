@@ -1,15 +1,11 @@
-import {
-  type AppLocaleCode,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
-import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { CatalogSetSchema } from "@nakafa/aksara-contracts/assessment/catalog";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { TRYOUT_PROGRESS_IDENTITY_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { isTryoutProgressWithinReadBudget } from "@repo/backend/confect/tryouts/progress/size";
+import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
 import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
 import {
@@ -21,9 +17,11 @@ import type {
   TrackIdentity,
 } from "@repo/backend/confect/tryouts/sets/spec";
 import { emptySetPage } from "@repo/backend/confect/tryouts/sets/spec";
-import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
-import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
+import {
+  loadTryoutCatalog,
+  type PublishedCatalog,
+} from "@repo/backend/content/tryout/catalog";
+import { readSetFacts } from "@repo/backend/content/tryout/facts";
 import {
   readPublishedSetSections,
   readPublishedTrackSets,
@@ -31,23 +29,25 @@ import {
 import {
   Array as Arr,
   Effect,
+  HashMap,
   Match,
   MutableHashMap,
   Option,
   Order,
 } from "effect";
 
+type CatalogSet = typeof CatalogSetSchema.Type;
 type Progress = Docs["tryoutSetProgress"];
 type User = Docs["users"];
+
+/** Rows read for one set to detect a duplicate progress row. */
+const PROGRESS_IDENTITY_LIMIT = 2;
 
 /** Resolves one authorized, filtered, sorted page from the signed catalog. */
 export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
   function* (args: ListArgs) {
     const [catalog, auth] = yield* Effect.all(
-      [
-        loadTryoutCatalog(args.locale).pipe(Effect.provide(tryoutLayer)),
-        getOptionalAppUserForRead(),
-      ],
+      [loadTryoutCatalog(args.locale), getOptionalAppUserForRead()],
       {
         concurrency: 2,
       }
@@ -86,7 +86,7 @@ export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
   }
 );
 
-/** Joins every authored set with at most one stable user progress row. */
+/** Joins every set of a track with its facts, its sections, and at most one progress row of the user. */
 const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
   function* (
     catalog: PublishedCatalog,
@@ -100,21 +100,29 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
     const progress = user
       ? yield* loadProgress(found.sets, user)
       : MutableHashMap.empty<string, Progress>();
+    const facts = yield* readSetFacts(catalog.snapshotId, found.sets);
     return yield* Effect.forEach(
       found.sets,
       Effect.fn("tryouts.sets.projectPublished")(function* (set) {
-        const sections = yield* readPublishedSetSections(found.index, set);
+        const setFacts = yield* Effect.fromOption(
+          HashMap.get(facts, tryoutSetIdentityOf(set))
+        ).pipe(
+          // The facts were read for every set of the track.
+          Effect.orDie
+        );
         const row = Option.getOrNull(
-          MutableHashMap.get(progress, tryoutCatalogIdentity(set))
+          MutableHashMap.get(progress, tryoutSetIdentityOf(set))
         );
         return {
           durationSeconds: Arr.reduce(
-            sections,
+            setFacts.sections,
             0,
             (total, section) => total + section.timeLimitSeconds
           ),
+          facts: setFacts,
           progress: row,
           runningAttempt: yield* readRunningAttempt(row, identity.locale),
+          sections: readPublishedSetSections(found.index, set),
           set,
         };
       })
@@ -143,9 +151,9 @@ const readRunningAttempt = Effect.fn("tryouts.sets.readRunningAttempt")(
   }
 );
 
-/** Loads progress only for the exact sets in the active signed catalog. */
+/** Loads progress only for the sets of the active catalog's track. */
 const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
-  sets: readonly TryoutSet[],
+  sets: readonly CatalogSet[],
   user: User
 ) {
   const entries = yield* Effect.forEach(
@@ -163,7 +171,7 @@ const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
     if (MutableHashMap.has(byIdentity, entry.identity)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        "Signed try-out catalog has duplicate set identities."
+        "The try-out catalog holds one set twice."
       );
     }
     MutableHashMap.set(byIdentity, entry.identity, entry.row);
@@ -171,9 +179,9 @@ const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
   return byIdentity;
 });
 
-/** Reads at most one user progress row for one exact authored route. */
+/** Reads at most one progress row of the user for one set. */
 const loadSetProgress = Effect.fn("tryouts.sets.loadPublishedSetProgress")(
-  function* (set: TryoutSet, user: User) {
+  function* (set: CatalogSet, user: User) {
     const database = yield* DatabaseReader;
     const rows = yield* database
       .table("tryoutSetProgress")
@@ -185,12 +193,12 @@ const loadSetProgress = Effect.fn("tryouts.sets.loadPublishedSetProgress")(
           .eq("trackKey", set.trackKey)
           .eq("setKey", set.setKey)
       )
-      .take(TRYOUT_PROGRESS_IDENTITY_LIMIT)
+      .take(PROGRESS_IDENTITY_LIMIT)
       .pipe(Effect.orDie);
     if (rows.length > 1) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        "Signed try-out progress has duplicate route identities."
+        "Try-out progress holds one set twice."
       );
     }
     const row = rows[0];
@@ -200,21 +208,14 @@ const loadSetProgress = Effect.fn("tryouts.sets.loadPublishedSetProgress")(
     if (!isTryoutProgressWithinReadBudget(row)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        "Signed try-out progress exceeds its catalog read budget."
+        "Try-out progress exceeds its read budget."
       );
     }
-    const identity = tryoutCatalogIdentity(set);
-    if (
-      row.setIdentity &&
-      row.setIdentity !==
-        tryoutCatalogIdentity({
-          ...set,
-          appLocale: AppLocaleSchema.make(row.appLocale),
-        })
-    ) {
+    const identity = tryoutSetIdentityOf(set);
+    if (row.setIdentity !== identity) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        "Signed try-out progress conflicts with its route identity."
+        "Try-out progress names another set than its keys."
       );
     }
     return {
@@ -232,9 +233,7 @@ function sortJoinedSets(
   /** Authored order, which also breaks every tie. */
   const authoredOrder = (left: PublishedSetRow, right: PublishedSetRow) =>
     left.set.order - right.set.order ||
-    tryoutCatalogIdentity(left.set).localeCompare(
-      tryoutCatalogIdentity(right.set)
-    );
+    tryoutSetIdentityOf(left.set).localeCompare(tryoutSetIdentityOf(right.set));
   /** Applies the requested direction to one field difference. */
   const directed = (
     difference: number,
@@ -267,9 +266,13 @@ function sortJoinedSets(
       return directed(leftScore - rightScore, left, right);
     }),
     Match.when(
-      "readyQuestionCount",
+      "questionCount",
       () => (left, right) =>
-        directed(left.set.questionCount - right.set.questionCount, left, right)
+        directed(
+          left.facts.questionCount - right.facts.questionCount,
+          left,
+          right
+        )
     ),
     Match.when(
       "durationSeconds",

@@ -7,8 +7,8 @@ import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
 import { ShellLock } from "@/components/sidebar/lock";
+import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
-import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import {
   type TryoutFinish,
   useTryoutFinish,
@@ -49,8 +49,8 @@ interface TryoutSetPageClientProps {
     sectionRoutes: readonly SetPage["sections"][number][];
   } | null;
   children: ReactNode;
-  /** The signed questions of a running attempt, rendered on the server. */
-  content: TryoutRunningContent | null;
+  /** The decoded question bodies of the attempt: the running section's, or a finished one's for its review. */
+  content: readonly TryoutBody[] | null;
   page: SetPage;
   restartTarget: TryoutSetRestartTarget | null;
   route: TryoutSetRoute;
@@ -81,7 +81,7 @@ export function TryoutSetPageClient({
   route,
 }: TryoutSetPageClientProps) {
   return (
-    <TryoutContentContext value={{ content }}>
+    <TryoutContentContext value={{ bodies: content }}>
       <TryoutSetPageContext value={{ page, restartTarget, route }}>
         {binding !== null && isTryoutStateLive(binding.initialState) ? (
           <LiveTryoutSetPage binding={binding} key={binding.attemptId}>

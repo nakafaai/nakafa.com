@@ -1,10 +1,10 @@
+import type {
+  CatalogCountrySchema,
+  CatalogTrackSchema,
+} from "@nakafa/aksara-contracts/assessment/catalog";
+import { KebabKeySchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type {
-  TryoutCountry,
-  TryoutTrack,
-} from "@nakafa/aksara-contracts/tryout/catalog";
-import { TryoutKeySchema } from "@nakafa/aksara-contracts/tryout/key";
 import { Effect, HashMap, Option, Result, Schema } from "effect";
 import type { Locale } from "use-intl";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/lib/og/artwork";
 
 const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = HashMap.fromIterable<
-  TryoutCountry["countryKey"],
+  (typeof CatalogCountrySchema.Type)["countryKey"],
   ArtworkIdentity
 >([
   ["germany", "tryout/germany/index"],
@@ -22,7 +22,7 @@ const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = HashMap.fromIterable<
 ]);
 
 const TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY = HashMap.fromIterable<
-  TryoutTrack["trackKey"],
+  (typeof CatalogTrackSchema.Type)["trackKey"],
   ArtworkIdentity
 >([
   ["compulsory-mathematics", "subject/mathematics"],
@@ -31,8 +31,8 @@ const TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY = HashMap.fromIterable<
 ]);
 
 const TryoutExamArtworkIdentitySchema = Schema.Struct({
-  countryKey: TryoutKeySchema,
-  examKey: TryoutKeySchema,
+  countryKey: KebabKeySchema,
+  examKey: KebabKeySchema,
   appLocale: ActiveAppLocaleSchema,
   publicPath: PublicPathSchema.pipe(
     Schema.check(
@@ -105,7 +105,7 @@ export function resolveTryoutExamArtwork(
 /** Resolves reviewed card artwork for one signed try-out country. */
 export function getTryoutCountryCatalogArtwork(
   locale: Locale,
-  source: Pick<TryoutCountry, "countryKey">
+  source: Pick<typeof CatalogCountrySchema.Type, "countryKey">
 ) {
   const identity = Option.getOrUndefined(
     HashMap.get(TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY, source.countryKey)
@@ -117,7 +117,10 @@ export function getTryoutCountryCatalogArtwork(
 /** Resolves subject or year artwork for one signed try-out track. */
 export function getTryoutTrackCatalogArtwork(
   locale: Locale,
-  source: Pick<TryoutTrack, "countryKey" | "examKey" | "trackKey" | "trackKind">
+  source: Pick<
+    typeof CatalogTrackSchema.Type,
+    "countryKey" | "examKey" | "trackKey" | "trackKind"
+  >
 ) {
   let identity: ArtworkIdentity | undefined;
   if (

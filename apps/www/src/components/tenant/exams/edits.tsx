@@ -1,11 +1,11 @@
 import { useMutation } from "@confect/react";
 import { useCallbackRef } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import type {
   ExamCell,
   ExamPair,
-} from "@repo/backend/confect/exams/sittings/response";
+} from "@repo/backend/confect/assessment/response";
+import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Array as Arr, Effect, Match } from "effect";
 import { useRef, useState } from "react";

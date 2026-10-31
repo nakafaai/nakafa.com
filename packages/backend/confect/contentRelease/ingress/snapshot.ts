@@ -1,5 +1,9 @@
 "use node";
 
+import {
+  hashAssessmentRow,
+  makeAssessmentSnapshot,
+} from "@nakafa/aksara-contracts/assessment/snapshot";
 import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
 import {
   verifyProgramSnapshotHash,
@@ -15,9 +19,6 @@ import type {
   StageSnapshotBatchRequest,
   StageSnapshotRequest,
 } from "@nakafa/aksara-contracts/transport/snapshot";
-import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/hash/catalog";
-import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/hash/placement";
-import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
@@ -66,14 +67,16 @@ export const verifySnapshotManifest = Effect.fn(
       "Quran snapshot manifest"
     );
   }
-  const { snapshotId, ...identity } = snapshot.manifest;
-  const hashed = yield* makeTryoutSnapshot(identity).pipe(
-    Effect.mapError(contractFailure)
-  );
+  const { activeAppLocales, counts, rowDigest, snapshotId } = snapshot.manifest;
+  const hashed = yield* makeAssessmentSnapshot({
+    activeAppLocales,
+    counts,
+    rowDigest,
+  }).pipe(Effect.mapError(contractFailure));
   return yield* requireHash(
     hashed.snapshotId,
     snapshotId,
-    "Try-out snapshot manifest"
+    "Assessment snapshot manifest"
   );
 });
 
@@ -116,23 +119,13 @@ const verifySnapshotRow = Effect.fn("contentRelease.verifySnapshotRow")(
         "Quran snapshot row"
       );
     }
-    if (row.rowKind === "catalog") {
-      const actual = yield* makeTryoutCatalogRecord(row.record.row).pipe(
-        Effect.mapError(contractFailure)
-      );
-      return yield* requireHash(
-        actual.rowHash,
-        row.record.rowHash,
-        "Try-out snapshot row"
-      );
-    }
-    const actual = yield* makeTryoutPlacementRecord(row.record.row).pipe(
+    const actual = yield* hashAssessmentRow(row.record.row).pipe(
       Effect.mapError(contractFailure)
     );
     return yield* requireHash(
-      actual.rowHash,
+      actual,
       row.record.rowHash,
-      "Try-out snapshot row"
+      "Assessment snapshot row"
     );
   }
 );

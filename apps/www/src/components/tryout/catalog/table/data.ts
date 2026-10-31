@@ -1,6 +1,6 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/page";
 import { encodeJsonText } from "@repo/utilities/json";
 import { useConvexConnectionState } from "convex/react";
 import { useState } from "react";
@@ -103,7 +103,7 @@ function useResultWindow(selection: string) {
     extend: () =>
       setWindow({
         selection,
-        size: Math.min(size + TRYOUT_SET_PAGE_SIZE, TRYOUT_CATALOG_LIMIT),
+        size: Math.min(size + TRYOUT_SET_PAGE_SIZE, TRACK_SET_PAGE_LIMIT),
       }),
   };
 }

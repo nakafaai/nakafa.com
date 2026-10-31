@@ -22,7 +22,6 @@ import { getTryoutPublicPath } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import type { TrackListRequestSchema } from "@/components/tryout/route/search";
 import { readRequestToken } from "@/components/tryout/route/token.server";
-import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getOgUrl } from "@/lib/seo/social";
@@ -123,19 +122,9 @@ const readTryoutRouteLabels = Effect.fn("www.tryout.route.readLabels")(
 );
 
 /**
- * The Aksara source tree of one catalog path at its revision. A catalog without
- * a revision names no source, so the link is absent.
+ * The hub: the country-first catalog and its breadcrumbs. A try-out catalog's
+ * revision is an authored date, not a commit, so it names no source tree.
  */
-function readAksaraSourceUrl<
-  Revision extends Parameters<typeof getAksaraTreeUrl>[0]["revision"],
->(path: string, sourceRevision: Revision | null | undefined) {
-  return Option.fromNullishOr(sourceRevision).pipe(
-    Option.map((revision) => getAksaraTreeUrl({ path, revision })),
-    Option.getOrUndefined
-  );
-}
-
-/** The hub: the country-first catalog, its breadcrumbs and its source tree. */
 export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
   function* (locale: Locale) {
     const [page, labels, tTryouts] = yield* Effect.all(
@@ -161,10 +150,6 @@ export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
       }),
       labels,
       page,
-      sourceUrl: readAksaraSourceUrl(
-        "packages/corpus/tryout",
-        page.sourceRevision
-      ),
     };
   }
 );
@@ -214,10 +199,6 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
       kind: "found" as const,
       labels,
       selectorLabel: tTryouts("country-selector-label"),
-      sourceUrl: readAksaraSourceUrl(
-        `packages/corpus/tryout/${input.country}`,
-        page.value.sourceRevision
-      ),
     };
   }
 );

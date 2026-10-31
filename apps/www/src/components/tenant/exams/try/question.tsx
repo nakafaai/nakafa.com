@@ -6,7 +6,7 @@ import {
   markedCells,
   NO_RESPONSE,
   typedText,
-} from "@repo/backend/confect/exams/sittings/response";
+} from "@repo/backend/confect/assessment/response";
 import { ClientOnly } from "@tanstack/react-router";
 import { Option, Record as Rec } from "effect";
 import { lazy, Suspense, useId } from "react";

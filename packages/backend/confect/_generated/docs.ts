@@ -10,6 +10,7 @@ export type ArticleBucketsDoc = Document.Document<typeof schemaDefinition, "arti
 export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "articleCatalog">;
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
 export type AssessmentFlagsDoc = Document.Document<typeof schemaDefinition, "assessmentFlags">;
+export type AssessmentRowsDoc = Document.Document<typeof schemaDefinition, "assessmentRows">;
 export type BillingAccountsDoc = Document.Document<typeof schemaDefinition, "billingAccounts">;
 export type BillingCheckoutsDoc = Document.Document<typeof schemaDefinition, "billingCheckouts">;
 export type BillingCountersDoc = Document.Document<typeof schemaDefinition, "billingCounters">;
@@ -135,10 +136,7 @@ export type TenantVisitsDoc = Document.Document<typeof schemaDefinition, "tenant
 export type TenantsDoc = Document.Document<typeof schemaDefinition, "tenants">;
 export type TryoutAttemptPlacementsDoc = Document.Document<typeof schemaDefinition, "tryoutAttemptPlacements">;
 export type TryoutAttemptsDoc = Document.Document<typeof schemaDefinition, "tryoutAttempts">;
-export type TryoutCatalogDoc = Document.Document<typeof schemaDefinition, "tryoutCatalog">;
-export type TryoutPlacementsDoc = Document.Document<typeof schemaDefinition, "tryoutPlacements">;
 export type TryoutResponsesDoc = Document.Document<typeof schemaDefinition, "tryoutResponses">;
-export type TryoutRuntimeBundlesDoc = Document.Document<typeof schemaDefinition, "tryoutRuntimeBundles">;
 export type TryoutScoresDoc = Document.Document<typeof schemaDefinition, "tryoutScores">;
 export type TryoutSectionAttemptsDoc = Document.Document<typeof schemaDefinition, "tryoutSectionAttempts">;
 export type TryoutSetProgressDoc = Document.Document<typeof schemaDefinition, "tryoutSetProgress">;
@@ -157,6 +155,7 @@ export interface Docs {
   articleCatalog: ArticleCatalogDoc;
   articleCategories: ArticleCategoriesDoc;
   assessmentFlags: AssessmentFlagsDoc;
+  assessmentRows: AssessmentRowsDoc;
   billingAccounts: BillingAccountsDoc;
   billingCheckouts: BillingCheckoutsDoc;
   billingCounters: BillingCountersDoc;
@@ -282,10 +281,7 @@ export interface Docs {
   tenants: TenantsDoc;
   tryoutAttemptPlacements: TryoutAttemptPlacementsDoc;
   tryoutAttempts: TryoutAttemptsDoc;
-  tryoutCatalog: TryoutCatalogDoc;
-  tryoutPlacements: TryoutPlacementsDoc;
   tryoutResponses: TryoutResponsesDoc;
-  tryoutRuntimeBundles: TryoutRuntimeBundlesDoc;
   tryoutScores: TryoutScoresDoc;
   tryoutSectionAttempts: TryoutSectionAttemptsDoc;
   tryoutSetProgress: TryoutSetProgressDoc;

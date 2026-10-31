@@ -1,11 +1,11 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import type { TryoutSetIdentity } from "@repo/backend/confect/tryouts/route";
 import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
 import { getTryoutStatusRank } from "@repo/backend/confect/tryouts/status";
-import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PaginationOptions } from "convex/server";
 import { Effect, Option } from "effect";
@@ -133,7 +133,7 @@ export function readAttemptSetIdentity(attempt: TryoutAttempt) {
 }
 
 /** Checks that route keys select one resolved logical set identity. */
-export function matchesAttemptIdentity(
+function matchesAttemptIdentity(
   attemptIdentity: TryoutSetIdentity,
   routeIdentity: TryoutSetIdentity
 ) {

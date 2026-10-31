@@ -7,8 +7,8 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import {
+  ContentProjectionSchema,
   familyForProjection,
-  RoutedContentProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/spec";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
@@ -30,7 +30,7 @@ const ActiveContentRouteSchema = Schema.Union([
   Schema.Struct({
     activeReleaseId: ReleaseIdSchema,
     kind: Schema.Literal("found"),
-    projection: RoutedContentProjectionSchema,
+    projection: ContentProjectionSchema,
   }),
 ]);
 type ActiveContentRoute = typeof ActiveContentRouteSchema.Type;
@@ -51,7 +51,7 @@ const decodeActiveProjection = Effect.fn(
   }
 ) {
   const projection = yield* Schema.decodeEffect(
-    Schema.fromJsonString(RoutedContentProjectionSchema)
+    Schema.fromJsonString(ContentProjectionSchema)
   )(input.projectionJson, {
     onExcessProperty: "error",
   }).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
