@@ -1396,15 +1396,6 @@ export declare const api: {
           text: string;
         },
         {
-          attachments: Array<{
-            address: string | null;
-            byteSize: number;
-            height: number | null;
-            kind: "document" | "image";
-            name: string;
-            thumbnail: string | null;
-            width: number | null;
-          }>;
           author: { id: Id<"tenantPeople">; name: string };
           clientKey: string;
           createdAt: number;
@@ -1412,6 +1403,7 @@ export declare const api: {
           email: boolean;
           id: Id<"classroomPosts">;
           mine: boolean;
+          pinned: boolean;
           text: string;
         }
       >;
@@ -1434,15 +1426,6 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-            attachments: Array<{
-              address: string | null;
-              byteSize: number;
-              height: number | null;
-              kind: "document" | "image";
-              name: string;
-              thumbnail: string | null;
-              width: number | null;
-            }>;
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
@@ -1450,11 +1433,39 @@ export declare const api: {
             email: boolean;
             id: Id<"classroomPosts">;
             mine: boolean;
+            pinned: boolean;
             text: string;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      pin: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          pinned: boolean;
+          postId: Id<"classroomPosts">;
+          slug: string;
+        },
+        null
+      >;
+      pinned: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        Array<{
+          author: { id: Id<"tenantPeople">; name: string };
+          clientKey: string;
+          createdAt: number;
+          editedAt: number | null;
+          email: boolean;
+          id: Id<"classroomPosts">;
+          mine: boolean;
+          pinned: boolean;
+          text: string;
+        }>
       >;
       publish: FunctionReference<
         "mutation",
@@ -1467,15 +1478,6 @@ export declare const api: {
           text: string;
         },
         {
-          attachments: Array<{
-            address: string | null;
-            byteSize: number;
-            height: number | null;
-            kind: "document" | "image";
-            name: string;
-            thumbnail: string | null;
-            width: number | null;
-          }>;
           author: { id: Id<"tenantPeople">; name: string };
           clientKey: string;
           createdAt: number;
@@ -1483,6 +1485,7 @@ export declare const api: {
           email: boolean;
           id: Id<"classroomPosts">;
           mine: boolean;
+          pinned: boolean;
           text: string;
         }
       >;
