@@ -6,7 +6,7 @@ import { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
 const { open } = refs.public.exams.exams;
-const { points } = refs.public.exams.questions;
+const { copy, points, scoring, template } = refs.public.exams.questions;
 
 describe("exams/questions points", () => {
   it.effect(
@@ -36,6 +36,68 @@ describe("exams/questions points", () => {
         const lowest = yield* setPoints(1);
         const highest = yield* setPoints(100);
         expect([lowest.points, highest.points]).toEqual([1, 100]);
+      })
+  );
+
+  it.effect(
+    "scores a table by the rule the teacher chooses, raises points too few for its steps, copies it, and a template without parts reads all or nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Aturan skor");
+        const [first] = exam.questions;
+        const ids = { examId: exam.id, questionId: first.id, slug: nf };
+        const refused = yield* teacher
+          .mutation(scoring, { ...ids, scoring: "wrongParts" })
+          .pipe(Effect.flip);
+        expect(String(refused)).toContain("SCORING_DOES_NOT_FIT");
+
+        const table = yield* teacher.mutation(template, {
+          ...ids,
+          labels: ["Benar", "Salah"],
+          revision: first.revision,
+          template: "table",
+        });
+        expect(table.scoring).toEqual({ kind: "allOrNothing" });
+        const bands = yield* teacher.mutation(scoring, {
+          ...ids,
+          scoring: "wrongParts",
+        });
+        expect(bands.scoring.kind).toBe("wrongParts");
+        expect(bands.points).toBe(2);
+        expect(bands.revision).toBe(table.revision);
+
+        yield* teacher.mutation(points, { ...ids, points: 5 });
+        const shares = yield* teacher.mutation(scoring, {
+          ...ids,
+          scoring: "perPart",
+        });
+        expect(shares.scoring).toEqual({
+          floor: 0,
+          kind: "perPart",
+          penaltyPerWrongPart: 1,
+          pointsPerPart: 1,
+        });
+        expect(shares.points).toBe(5);
+
+        const copied = yield* teacher.mutation(copy, ids);
+        const opened = yield* teacher.query(open, {
+          examId: exam.id,
+          slug: nf,
+        });
+        expect(
+          opened.questions.find((question) => question.id === copied.id)
+            ?.scoring.kind
+        ).toBe("perPart");
+
+        const short = yield* teacher.mutation(template, {
+          ...ids,
+          labels: [],
+          revision: shares.revision,
+          template: "short",
+        });
+        expect(short.scoring).toEqual({ kind: "allOrNothing" });
       })
   );
 });

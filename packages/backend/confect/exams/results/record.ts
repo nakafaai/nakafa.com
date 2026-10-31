@@ -8,10 +8,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { questionView } from "@repo/backend/confect/exams/question";
-import {
-  pointsOf,
-  scoreResponse,
-} from "@repo/backend/confect/exams/results/score";
+import { scoreResponse } from "@repo/backend/confect/exams/results/score";
 import { integrityOf } from "@repo/backend/confect/exams/sittings/away";
 import { Effect, Option } from "effect";
 
@@ -41,13 +38,13 @@ const recordQuestion = Effect.fn("exams.results.record.question")(function* (
     onNone: () => [],
     onSome: (answer) => answer.response,
   });
-  const verdict = scoreResponse(view.answers, view.key, response);
+  const { points, verdict } = scoreResponse(view, response);
   yield* (yield* DatabaseWriter)
     .table("examResults")
     .insert({
       attempt: attempt._id,
       person: attempt.person,
-      points: pointsOf(verdict, view.points),
+      points,
       question: questionId,
       response,
       sitting: sitting._id,

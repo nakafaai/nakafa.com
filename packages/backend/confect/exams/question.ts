@@ -8,9 +8,14 @@ import {
   type InteractionKey,
   InteractionKeySchema,
 } from "@nakafa/aksara-contracts/assessment/key";
+import { DefaultRuleSchema } from "@nakafa/aksara-contracts/assessment/scoring";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { keyFits } from "@repo/backend/confect/assessment/key";
+import {
+  ALL_OR_NOTHING,
+  takesScoring,
+} from "@repo/backend/confect/exams/scoring";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 
 /**
@@ -66,10 +71,11 @@ export const QuestionPoints = Schema.Int.check(
  * interactions, and `key` is the JSON text of its answer key, or null while no
  * option is marked correct, because the contract refuses a key with no correct
  * option. `revision` counts the answer and key edits, so a stale edit is refused.
- * `points` is the weight of the question. `prompt`, `rubric`, and `explanation` are
- * documents of their own: the question's text, the teacher's scoring guide, and the
- * explanation a learner reads after the result. Each of them is written by the
- * collaborative editor, and each one is frozen with its exam.
+ * `points` is the weight of the question, and `scoring` the rule that shares it among the
+ * parts of an answer, absent until the teacher chooses one. `prompt`, `rubric`, and
+ * `explanation` are documents of their own: the question's text, the teacher's scoring
+ * guide, and the explanation a learner reads after the result. Each of them is written by
+ * the collaborative editor, and each one is frozen with its exam.
  */
 export const questionValidator = Schema.Struct({
   answers: Schema.String,
@@ -80,6 +86,7 @@ export const questionValidator = Schema.Struct({
   prompt: Id("editorDocuments"),
   revision: Schema.Natural,
   rubric: Id("editorDocuments"),
+  scoring: Schema.optionalKey(DefaultRuleSchema),
   template: QuestionTemplate,
   tenantId: Id("tenants"),
   updatedAt: Schema.Finite,
@@ -270,9 +277,9 @@ const KeyText = Schema.fromJsonString(
 );
 
 /**
- * One question as the wire shows it: its ID, its template, its points, its prompt, rubric
- * and explanation documents, its interactions, its key (null until one option is marked),
- * and its revision. Only the teacher's editor reads this view; a learner's paper reads the
+ * One question as the wire shows it: its ID, its template, its points and the rule that
+ * scores them, its prompt, rubric and explanation documents, its interactions, its key (null
+ * until one option is marked), and its revision. Only the teacher's editor reads this view; a learner's paper reads the
  * interactions alone, so the key, the rubric, and the explanation never reach it.
  */
 export const QuestionView = Schema.Struct({
@@ -284,6 +291,7 @@ export const QuestionView = Schema.Struct({
   prompt: Id("editorDocuments"),
   revision: Schema.Natural,
   rubric: Id("editorDocuments"),
+  scoring: DefaultRuleSchema,
   template: QuestionTemplate,
 });
 export type QuestionView = typeof QuestionView.Type;
@@ -329,6 +337,9 @@ export const questionView = Effect.fn("exams.question.view")(function* (
     prompt: row.prompt,
     revision: row.revision,
     rubric: row.rubric,
+    scoring: takesScoring(row.template)
+      ? (row.scoring ?? ALL_OR_NOTHING)
+      : ALL_OR_NOTHING,
     template: row.template,
   } satisfies QuestionView;
 });
