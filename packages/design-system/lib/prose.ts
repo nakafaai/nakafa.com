@@ -118,6 +118,9 @@ export const tableCellVariants = cva(
  */
 export const blockGapVariants = cva("my-4 first:mt-0 last:mb-0");
 
+/** A picture's surface, in a lesson, a response and a question alike: its corners, its border and the ground under it. */
+export const pictureVariants = cva("rounded-xl border bg-muted");
+
 /** A formula on its own line: the card that holds it. */
 export const mathBlockVariants = cva(
   "overflow-hidden rounded-xl border bg-card text-card-foreground"
