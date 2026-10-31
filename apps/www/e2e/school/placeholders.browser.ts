@@ -214,8 +214,17 @@ test("every search placeholder shows whole in every language: a table page's box
     ).toEqual([]);
     await page.keyboard.press("Escape");
 
-    // The palette's field is one field for every palette, the school's and Nakafa's.
-    await page.keyboard.press("ControlOrMeta+K");
+    // The palette's field is one field for every palette, the school's and Nakafa's. A phone opens it from
+    // the search row at the head of the sidebar's sheet.
+    await page
+      .locator('[data-sidebar="trigger"]')
+      .filter({ visible: true })
+      .first()
+      .click();
+    await page
+      .locator('[data-mobile="true"][data-slot="sidebar"]')
+      .getByRole("button", { name: "Search the school..." })
+      .click();
     const palette = '[role="dialog"] [data-slot="autocomplete-input"]';
     await expect(page.locator(palette)).toBeVisible();
     expect(
