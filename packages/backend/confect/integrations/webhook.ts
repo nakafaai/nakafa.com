@@ -43,27 +43,23 @@ const secretField = (clientId: GenericId.GenericId<"integrationClients">) =>
 const drawSecret = Effect.fn("integrations.webhook.secret")(function* (
   client: IntegrationClientsDoc
 ) {
-  const { token: secret } = yield* issueToken().pipe(Effect.orDie);
-  const keys = yield* readTenantKeys(client.tenantId).pipe(Effect.orDie);
-  const sealed = yield* sealText(keys, secretField(client._id), secret).pipe(
-    Effect.orDie
-  );
+  const { token: secret } = yield* issueToken();
+  const keys = yield* readTenantKeys(client.tenantId);
+  const sealed = yield* sealText(keys, secretField(client._id), secret);
   return { sealed, secret };
-});
+}, Effect.orDie);
 
 /** Opens a webhook's signing secret. A secret that does not open is a defect: only this module seals one. */
 export const openSecret = Effect.fn("integrations.webhook.open")(function* (
   webhook: IntegrationWebhooksDoc,
   sealed: ArrayBuffer
 ) {
-  const keys = yield* readTenantKeys(webhook.tenantId).pipe(Effect.orDie);
-  return yield* openText(keys, secretField(webhook.clientId), sealed).pipe(
-    Effect.orDie
-  );
-});
+  const keys = yield* readTenantKeys(webhook.tenantId);
+  return yield* openText(keys, secretField(webhook.clientId), sealed);
+}, Effect.orDie);
 
 /** Refuses a list that names a change the client's own action list does not open. */
-export const requireReadableChanges = Effect.fn("integrations.webhook.changes")(
+const requireReadableChanges = Effect.fn("integrations.webhook.changes")(
   function* (
     client: IntegrationClientsDoc,
     changes: typeof WebhookChanges.Type

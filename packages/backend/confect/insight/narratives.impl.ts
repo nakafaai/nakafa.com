@@ -62,13 +62,11 @@ const write = FunctionImpl.make(
           updatedAt,
         }),
       onSome: (narrative) =>
-        writer
-          .table("insightNarratives")
-          .patch(narrative._id, {
-            authorId: person._id,
-            sealedText,
-            updatedAt,
-          }),
+        writer.table("insightNarratives").patch(narrative._id, {
+          authorId: person._id,
+          sealedText,
+          updatedAt,
+        }),
     }).pipe(Effect.orDie);
     return null;
   })

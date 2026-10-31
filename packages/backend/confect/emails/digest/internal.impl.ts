@@ -52,7 +52,7 @@ const mailOf = Effect.fn("emails.digest.mail")(function* (
   personId: GenericId.GenericId<"tenantPeople">,
   now: number,
   catalog: Effect.Success<ReturnType<typeof readPageCatalog>>,
-  siteUrl: string
+  siteUrl: URL
 ) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;

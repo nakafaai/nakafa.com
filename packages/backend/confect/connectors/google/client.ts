@@ -13,23 +13,27 @@ import {
  * The Google connectors this deployment offers, from `GOOGLE_CONNECTORS`: their
  * names, separated by commas. An unset or empty list offers none, which is how
  * production stays off until Google's review of a connector's scopes passes. A
- * name that is no Google connector is left out.
+ * name that is no Google connector is left out, and so is Drive without
+ * `GOOGLE_PICKER_API_KEY`, because a teacher reaches Drive only through the Picker.
  */
 export const readOfferedConnectors = Effect.fn("connectors.google.offered")(
   function* () {
-    const listed = yield* Config.option(
-      Config.String("GOOGLE_CONNECTORS")
-    ).pipe(Effect.orDie);
+    const listed = yield* Config.option(Config.String("GOOGLE_CONNECTORS"));
+    const picker = yield* Config.option(Config.String("GOOGLE_PICKER_API_KEY"));
     return Option.match(listed, {
       onNone: () => [],
       onSome: (text) =>
-        Arr.dedupe(
-          Arr.filterMap(text.split(","), (name) =>
-            Schema.decodeUnknownResult(GoogleConnector)(name.trim())
-          )
+        Arr.filter(
+          Arr.dedupe(
+            Arr.filterMap(text.split(","), (name) =>
+              Schema.decodeUnknownResult(GoogleConnector)(name.trim())
+            )
+          ),
+          (connector) => connector !== "drive" || Option.isSome(picker)
         ),
     });
-  }
+  },
+  Effect.orDie
 );
 
 /**
@@ -54,14 +58,14 @@ export const readGoogleClient = Effect.fn("connectors.google.client")(
  * What Google's Picker needs beside the user's token: the browser key of the
  * connectors project, from `GOOGLE_PICKER_API_KEY`, and the project's number,
  * which leads the client's ID and lets the Picker grant a picked file to the
- * client. A deployment that does not offer Drive, or has no key, fails with
- * `ConnectorOff`.
+ * client. A deployment that does not offer Drive fails with `ConnectorOff`, and
+ * one that offers it holds the key.
  */
 export const readPickerKeys = Effect.fn("connectors.google.pickerKeys")(
   function* () {
     const client = yield* readGoogleClient("drive");
     const apiKey = yield* Config.String("GOOGLE_PICKER_API_KEY").pipe(
-      Effect.mapError(() => new ConnectorOff())
+      Effect.orDie
     );
     return { apiKey, appId: Arr.headNonEmpty(Str.split(client.id, "-")) };
   }

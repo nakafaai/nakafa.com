@@ -29,6 +29,8 @@ import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import guardiansInternal from "@repo/backend/confect/_generated/refs/guardians.server";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import identityInternal from "@repo/backend/confect/_generated/refs/identity.server";
+import insight from "@repo/backend/confect/_generated/refs/insight";
+import insightInternal from "@repo/backend/confect/_generated/refs/insight.server";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import journal from "@repo/backend/confect/_generated/refs/journal";
@@ -139,6 +141,7 @@ const domainModules = {
   exams,
   guardians,
   identity,
+  insight,
   integrations,
   journal,
   learningPreferences,
@@ -168,6 +171,7 @@ const internalModules = {
   exams: examsInternal,
   guardians: guardiansInternal,
   identity: identityInternal,
+  insight: insightInternal,
   integrations: integrationsInternal,
   nina: ninaInternal,
   notifications: notificationsInternal,
