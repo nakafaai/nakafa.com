@@ -50,8 +50,11 @@ for (const viewport of [
     );
     await chooseFile(page, await sheetFile("daftar_pd.xlsx", CROWD_ROWS));
     await expect(
-      page.getByRole("row").filter({ hasText: `Siswa ${CROWD}` })
-    ).toHaveCount(1);
+      page
+        .getByRole("cell", { exact: true, name: `Siswa ${CROWD}` })
+        .filter({ visible: true })
+        .first()
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await page
       .locator("header")
       .getByRole("button", { name: "Import students" })

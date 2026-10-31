@@ -156,7 +156,11 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
 
   const columns = memberColumns.columns([
     memberColumns.accessor((member) => member.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => (
+        <span className="font-medium" dir="auto">
+          {info.getValue()}
+        </span>
+      ),
       filterFn: "includesString",
       header: t("member-name"),
       id: "name",

@@ -14,9 +14,9 @@ import {
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** What a School page draws once it has read its data: an empty state, a table, or a card. */
+/** What a School page draws once it has read its data: an empty state, a table, a card, or a feed's row. */
 const DRAWN =
-  '[data-slot="empty"], [data-slot="table"], main [data-slot="card"]';
+  '[data-slot="empty"], [data-slot="table"], main [data-slot="card"], [data-slot="feed-row"]';
 
 /** Every page an Owner opens in a school that holds nothing yet but the Owner. */
 const OWNER_PAGES = [

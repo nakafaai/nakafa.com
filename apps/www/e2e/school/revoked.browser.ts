@@ -53,10 +53,11 @@ test("a teacher whose role ends while proctoring a room sees what a reload shows
     `/exams/${sitting.examId}/sittings/${sitting.sittingId}`
   );
   await teacher.goto(room);
-  const changeToken = teacher
-    .locator('[data-slot="page-header"]')
-    .getByRole("button", { name: "Change token" });
-  await waitUntilTakenOver(changeToken);
+  // The room's token is the header's button, which only a proctor of the room holds.
+  const token = teacher.locator("header").getByRole("button", {
+    name: `Show the room's QR code, token ${sitting.token}`,
+  });
+  await waitUntilTakenOver(token);
 
   // The Owner ends the Teacher's role elsewhere while the room is open.
   const owner = await ownerContext.newPage();
@@ -66,7 +67,7 @@ test("a teacher whose role ends while proctoring a room sees what a reload shows
   // The open room closes itself as a reload would: the page says it is not found, and its actions are gone.
   const notFound = teacher.getByRole("heading", { level: 1, name: NOT_FOUND });
   await expect(notFound).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(changeToken).toHaveCount(0);
+  await expect(token).toHaveCount(0);
   await expect(teacher).toHaveURL(room);
   await teacher.reload();
   await expect(notFound).toBeVisible({ timeout: readinessTimeoutMilliseconds });
