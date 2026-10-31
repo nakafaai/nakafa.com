@@ -342,7 +342,7 @@
     "student-locked-title": "Dieser Versuch ist gesperrt.",
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
-    "student-answer": "Deine Antwort: {answer}",
+    "student-answer": "Deine Antwort: <typed>{answer}</typed>",
     "student-answers": "Deine Antworten",
     "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
     "schedule": "Planen",

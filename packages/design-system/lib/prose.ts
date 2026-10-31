@@ -6,9 +6,12 @@ import { cva } from "class-variance-authority";
  * string of an article's text lives here and nowhere else.
  */
 
-/** A paragraph, whose lines stop at about 75 characters. */
+/**
+ * A paragraph, whose lines stop at about 75 characters. Its box keeps to the start side of its own words
+ * (`me-auto`), so an Arabic paragraph in a Latin page starts at the page's right edge, not inside a box on the left.
+ */
 export const paragraphVariants = cva(
-  "my-4 max-w-xl leading-relaxed text-pretty tabular-nums first:mt-0 last:mb-0"
+  "my-4 me-auto max-w-xl leading-relaxed text-pretty tabular-nums first:mt-0 last:mb-0"
 );
 
 /** A heading's box: its room above and below, and the size of its level. */
@@ -61,11 +64,11 @@ export const listVariants = cva("my-4 space-y-4 last:mb-0", {
 /**
  * One item of a list, whose first paragraph sits on the marker's line. The item owns the room for its marker,
  * its margin on its start side, so an item in Arabic keeps that room on the right and its neighbour in Latin on
- * the left. It sets `text-start` itself, because WebKit aligns the text of a list item with the direction of its
- * list and not its own.
+ * the left. Its box keeps to the same side (`me-auto`), as a paragraph's does. It sets `text-start` itself, because
+ * WebKit aligns the text of a list item with the direction of its list and not its own.
  */
 export const listItemVariants = cva(
-  "ms-8 max-w-xl ps-1 text-start leading-relaxed text-pretty [&>*+*]:mt-4 [&>p:first-child]:inline"
+  "ms-8 me-auto max-w-xl ps-1 text-start leading-relaxed text-pretty [&>*+*]:mt-4 [&>p:first-child]:inline"
 );
 
 /** A superscript or a subscript, at the annotation size. */

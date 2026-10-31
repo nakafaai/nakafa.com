@@ -41,7 +41,7 @@ function AnswerItem({
           {t(verdictKeys[question.verdict])}
         </span>
       </div>
-      <p className="text-sm whitespace-pre-wrap">
+      <p className="text-sm whitespace-pre-wrap" dir="auto">
         {shown === "" ? t("student-no-answer") : shown}
       </p>
       <div className="flex items-center justify-between gap-4 text-sm">

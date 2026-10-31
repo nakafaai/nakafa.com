@@ -342,7 +342,7 @@
     "student-locked-title": "This attempt is locked.",
     "student-score": "{points} of {total} points",
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
-    "student-answer": "Your answer: {answer}",
+    "student-answer": "Your answer: <typed>{answer}</typed>",
     "student-answers": "Your answers",
     "student-results-released": "Your teacher released these results.",
     "schedule": "Schedule",
