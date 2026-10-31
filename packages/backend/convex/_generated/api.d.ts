@@ -2547,6 +2547,7 @@ export declare const api: {
           publicPath: string;
         },
         {
+          ancestorJson: Array<string>;
           groupJson: string | null;
           managed: boolean;
           mappingJson: string | null;
@@ -17238,6 +17239,18 @@ export declare const internal: {
           width: number;
         },
         { id: Id<"examAssets"> }
+      >;
+      commitAudio: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          byteSize: number;
+          contentType: "audio/mp4" | "audio/mpeg" | "audio/ogg" | "audio/wav";
+          examId: Id<"exams">;
+          storageId: Id<"_storage">;
+          userId: Id<"users">;
+        },
+        { id: Id<"examAudio"> }
       >;
       discard: FunctionReference<
         "mutation",
