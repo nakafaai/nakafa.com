@@ -21,7 +21,7 @@ import { EmptyNina } from "@/components/state/empty";
  */
 export function TableFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border bg-card [&_[data-slot=table-cell]]:whitespace-nowrap">
+    <div className="bg-card overflow-hidden rounded-xl border [&_[data-slot=table-cell]]:whitespace-nowrap">
       {children}
     </div>
   );
@@ -52,7 +52,7 @@ export function TablePageBody({
       data-slot="table-page-body"
     >
       <div
-        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm"
+        className="bg-card text-card-foreground flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-sm"
         data-slot="table-card"
       >
         {children}

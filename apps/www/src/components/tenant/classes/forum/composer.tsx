@@ -126,7 +126,7 @@ export function ForumComposer() {
   return (
     <form action={submit} className="flex w-full min-w-0 flex-col gap-2">
       {Option.isSome(unsent) ? (
-        <div className="flex items-center justify-between gap-2 text-destructive text-sm">
+        <div className="text-destructive flex items-center justify-between gap-2 text-sm">
           <span>{t("send-failed")}</span>
           <Button
             onClick={() =>
@@ -144,7 +144,7 @@ export function ForumComposer() {
           </Button>
         </div>
       ) : null}
-      <InputGroup className="rounded-3xl bg-muted/50 text-chat shadow-none">
+      <InputGroup className="bg-muted/50 text-chat rounded-3xl shadow-none">
         <InputGroupTextarea
           {...picker.fieldProps}
           aria-label={placeholder}

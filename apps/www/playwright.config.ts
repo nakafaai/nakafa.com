@@ -1,4 +1,4 @@
-import { defineConfig, type Project } from "@playwright/test";
+import { defineConfig, devices, type Project } from "@playwright/test";
 import { acceptanceOrigin } from "@repo/backend/scripts/content/acceptance/origin";
 import {
   Array as Arr,
@@ -42,6 +42,11 @@ const LEARNER_TESTS = [
 // Nina's chats, on their page and in the sheet. They seed their own chats and
 // take as long as the whole learner suite, so they run in their own leg too.
 const CHAT_TESTS = ["**/chat/**/*.browser.ts", "**/nina/**/*.browser.ts"];
+
+// Every School page, role and worst case, which the browsers suite runs again in
+// Firefox, desktop Safari, an Android phone and an iPhone, after Chromium's run
+// in the shared runtime: a school must work on every device its people bring.
+const SCHOOL_TESTS = "**/school/**/*.browser.ts";
 
 /**
  * How many workers run a suite whose tests measure no timing across tests: one,
@@ -113,6 +118,26 @@ const PROJECTS = {
     use: { browserName: "webkit" },
     workers: 1,
   },
+  "school-firefox": {
+    testMatch: SCHOOL_TESTS,
+    use: devices["Desktop Firefox"],
+    workers: WORKERS,
+  },
+  "school-safari": {
+    testMatch: SCHOOL_TESTS,
+    use: devices["Desktop Safari"],
+    workers: WORKERS,
+  },
+  "school-android": {
+    testMatch: SCHOOL_TESTS,
+    use: devices["Pixel 7"],
+    workers: WORKERS,
+  },
+  "school-iphone": {
+    testMatch: SCHOOL_TESTS,
+    use: devices["iPhone 15"],
+    workers: WORKERS,
+  },
 } satisfies Record<string, Omit<Project, "dependencies" | "name">>;
 
 type ProjectName = keyof typeof PROJECTS;
@@ -126,6 +151,12 @@ const SUITES = {
   chat: ["chat"],
   visual: ["visual"],
   navigation: ["isolated-navigation", "webkit"],
+  browsers: [
+    "school-firefox",
+    "school-safari",
+    "school-android",
+    "school-iphone",
+  ],
 } satisfies Record<string, readonly ProjectName[]>;
 
 type SuiteName = keyof typeof SUITES;

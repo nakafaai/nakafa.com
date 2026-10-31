@@ -246,7 +246,7 @@ const verifyRefusedDeletion = Effect.fn("NakafaE2E.verifyRefusedDeletion")(
         page.getByRole("dialog").getByText(app.Auth["delete-account-error"])
       ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
       await expect(deletionCard(page)).toBeVisible();
-      await expect(page).toHaveURL(new RegExp(`${appRoutes.settings}$`));
+      await expect(page).toHaveURL(new RegExp(`${appRoutes.settings}$`, "u"));
       expect(card.left).toBe(false);
     });
   }

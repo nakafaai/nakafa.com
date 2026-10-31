@@ -12,7 +12,7 @@ const LLMS_ROUTE = "/llms.mdx";
 export function llmsRouteUrl(path: string) {
   return `${BASE_URL}${LLMS_ROUTE}${path}`;
 }
-export const MARKDOWN_EXTENSIONS = /\.(?:md|mdx|txt)$/;
+export const MARKDOWN_EXTENSIONS = /\.(?:md|mdx|txt)$/u;
 export const ENGLISH_LANGUAGE_NAMES = new Intl.DisplayNames(["en"], {
   type: "language",
 });

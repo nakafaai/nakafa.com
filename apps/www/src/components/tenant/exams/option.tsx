@@ -222,7 +222,7 @@ export function OptionRow({
           ) : (
             <Button
               aria-label={removeName}
-              className="opacity-0 pointer-coarse:opacity-100 group-focus-within/option:opacity-100 group-hover/option:opacity-100"
+              className="opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
               disabled={locked}
               onClick={remove}
               size="icon"

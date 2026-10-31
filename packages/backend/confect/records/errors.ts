@@ -39,3 +39,33 @@ export class ReportClosed extends Schema.TaggedError<ReportClosed>()(
   "ReportClosed",
   refusal("REPORT_CLOSED", "This report card has moved on from that step.")
 ) {}
+
+/** A class group outside its unit's last grade, or a unit without one, which has no graduation (ADR 0033, S6). */
+export class GraduationNotFinal extends Schema.TaggedError<GraduationNotFinal>()(
+  "GraduationNotFinal",
+  refusal("GRADUATION_NOT_FINAL", "Only the last grade of a unit graduates.")
+) {}
+
+/** A decision on graduation that has issued letters, which keep its number and date. */
+export class GraduationIssued extends Schema.TaggedError<GraduationIssued>()(
+  "GraduationIssued",
+  refusal(
+    "GRADUATION_ISSUED",
+    "This decision has issued letters, so it no longer changes."
+  )
+) {}
+
+/** A date of graduation that is not a day of the unit's calendar. */
+export class GraduationDateInvalid extends Schema.TaggedError<GraduationDateInvalid>()(
+  "GraduationDateInvalid",
+  refusal("GRADUATION_DATE_INVALID", "This date is not a day of the calendar.")
+) {}
+
+/** An issue of letters before the principal recorded the decision on graduation. */
+export class GraduationUndecided extends Schema.TaggedError<GraduationUndecided>()(
+  "GraduationUndecided",
+  refusal(
+    "GRADUATION_UNDECIDED",
+    "Record the decision on graduation before issuing letters."
+  )
+) {}

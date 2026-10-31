@@ -40,7 +40,7 @@ function isThemeKey(key: string): key is ThemeKey {
 }
 
 const VALID_THEME_KEYS = Arr.filter(Rec.keys(THEMES), isThemeKey);
-const CHART_KEY_SAFE_CHAR_PATTERN = /^[A-Za-z0-9_-]$/;
+const CHART_KEY_SAFE_CHAR_PATTERN = /^[A-Za-z0-9_-]$/u;
 
 export type ChartConfig = ChartContainerProps["config"];
 

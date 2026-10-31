@@ -12,7 +12,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** Where the dialog sends a teacher without Drive: the account's connections. */
 const CONNECTIONS_ADDRESS = /\/en\/user\/settings\/connectors$/u;
 
-const VIDEO_ROW = /Video gerak lurus/;
+const VIDEO_ROW = /Video gerak lurus/u;
 
 /** The leading bytes of a PDF, which the server keeps. */
 const PDF_BYTES = Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n");

@@ -34,9 +34,29 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-report-closed.description",
     title: "school-refusal-report-closed.title",
   },
+  RosterPeriodMissing: {
+    description: "school-roster-no-period.description",
+    title: "school-roster-no-period.title",
+  },
   ReportNotPlaced: {
     description: "school-refusal-report-not-placed.description",
     title: "school-refusal-report-not-placed.title",
+  },
+  GraduationDateInvalid: {
+    description: "school-refusal-graduation-date.description",
+    title: "school-refusal-graduation-date.title",
+  },
+  GraduationIssued: {
+    description: "school-refusal-graduation-issued.description",
+    title: "school-refusal-graduation-issued.title",
+  },
+  GraduationNotFinal: {
+    description: "school-refusal-graduation-not-final.description",
+    title: "school-refusal-graduation-not-final.title",
+  },
+  GraduationUndecided: {
+    description: "school-refusal-graduation-undecided.description",
+    title: "school-refusal-graduation-undecided.title",
   },
   DeviceUnknown: {
     description: "school-refusal-device-unknown.description",

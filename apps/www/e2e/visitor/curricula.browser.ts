@@ -41,7 +41,7 @@ test("a visitor's curricula open no socket and send no session read, and a curri
           page.getByRole("link", { name: VIEW_OPTIONS }).first().click()
         );
         yield* Effect.promise(() =>
-          expect(page).toHaveURL(new RegExp(`${CURRICULA_PATH}/[^/?#]+`))
+          expect(page).toHaveURL(new RegExp(`${CURRICULA_PATH}/[^/?#]+`, "u"))
         );
         yield* Effect.sync(() => {
           expect(MutableList.toArray(sockets)).toStrictEqual([]);

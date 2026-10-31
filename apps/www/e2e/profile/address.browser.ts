@@ -11,10 +11,10 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 /** The name of the synthetic learner, which the account button and the profile show. */
 const LEARNER_NAME = "Acceptance Learner";
 /** What a crawler reads on a profile, which many minors have. */
-const NO_INDEX = /noindex/;
-const NO_IMAGE_INDEX = /noimageindex/;
+const NO_INDEX = /noindex/u;
+const NO_IMAGE_INDEX = /noimageindex/u;
 /** Where the bare address of a profile goes: the same address in a language. */
-const LOCALIZED_ADDRESS = /\/[a-z]{2}\/@nobody_has_this$/;
+const LOCALIZED_ADDRESS = /\/[a-z]{2}\/@nobody_has_this$/u;
 
 test("a learner opens their own profile at the username address, which keeps the tabs and stays out of search", async ({
   baseURL,
@@ -23,9 +23,9 @@ test("a learner opens their own profile at the username address, which keeps the
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
       const { learner } = yield* openChatPage(page, origin);
-      const profile = new RegExp(`/en/@${learner.username}$`);
-      const comments = new RegExp(`/en/@${learner.username}/comments$`);
-      const chat = new RegExp(`/en/@${learner.username}/chat$`);
+      const profile = new RegExp(`/en/@${learner.username}$`, "u");
+      const comments = new RegExp(`/en/@${learner.username}/comments$`, "u");
+      const chat = new RegExp(`/en/@${learner.username}/chat$`, "u");
       yield* Effect.promise(() => page.goto(appRoutes.settings));
 
       yield* Effect.promise(async () => {
@@ -86,7 +86,7 @@ test("the retired id address leads its own learner to the username address for g
           );
           expect(answer.status(), tab).toBe(308);
           expect(answer.headers().location, tab).toMatch(
-            new RegExp(`/en/@${learner.username}${tab}$`)
+            new RegExp(`/en/@${learner.username}${tab}$`, "u")
           );
         }
         // A profile has no Markdown version, so the request is not sent on.

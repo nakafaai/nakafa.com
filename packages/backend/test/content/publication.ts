@@ -1,3 +1,4 @@
+import { DatabaseSchema } from "@confect/server";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
@@ -202,5 +203,3 @@ class TestPublicationError extends Data.TaggedError("TestPublicationError")<{
   readonly table?: TableNames;
   readonly cause: unknown;
 }> {}
-
-import { DatabaseSchema } from "@confect/server";

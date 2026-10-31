@@ -24,10 +24,10 @@ import {
 import { Array as Arr, Effect, Exit, Struct } from "effect";
 
 /** A report hash: 64 lowercase hex digits. */
-const HASH = /^[0-9a-f]{64}$/;
+const HASH = /^[0-9a-f]{64}$/u;
 
 /** A web address, as a stored file's has. */
-const WEB_ADDRESS = /^https?:\/\//;
+const WEB_ADDRESS = /^https?:\/\//u;
 
 const reports = refs.public.records.reports;
 const grades = refs.public.records.grades;
@@ -312,9 +312,15 @@ describe("records/reports", () => {
             band: "Baik",
             className: "Biologi X-1",
             kktp: "reached",
+            subject: "Biologi",
             value: 90,
           },
-          { className: "Fisika X-1", kktp: "reached", value: 82 },
+          {
+            className: "Fisika X-1",
+            kktp: "reached",
+            subject: "Fisika",
+            value: 82,
+          },
         ]);
       })
   );

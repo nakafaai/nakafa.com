@@ -18,7 +18,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const SEEDED_COHORT = "X-1";
 
 /** The address of one cohort's page. */
-const COHORT_PAGE = /\/settings\/cohorts\/[^/]+$/;
+const COHORT_PAGE = /\/settings\/cohorts\/[^/]+$/u;
 
 /** Adds one cohort of grade 7 to the active period, from the cohorts page. */
 async function addCohort(page: Page, name: string) {

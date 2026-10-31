@@ -3,22 +3,22 @@ import renderA11yString from "katex/contrib/render-a11y-string";
 import { Lexer, type Token } from "marked";
 
 /** A formula on its own line, between `$$` delimiters. */
-const BLOCK_FORMULA = /\$\$([^$]+)\$\$/g;
+const BLOCK_FORMULA = /\$\$(?<tex>[^$]+)\$\$/gu;
 
 /** A formula inside a line, between `$` delimiters. */
-const INLINE_FORMULA = /\$([^$]+)\$/g;
+const INLINE_FORMULA = /\$(?<tex>[^$]+)\$/gu;
 
 /** A run of white space, which the spoken words keep as one space. */
-const SPACE = /\s+/g;
+const SPACE = /\s+/gu;
 
 /**
  * A formula that is a plain number, such as `10`, `3.14` or `2{,}5`, or one identifier, such as `x`. Its
  * MathML holds the same characters, so a screen reader reads it in its own language.
  */
-const PLAIN_FORMULA = /^(?:\d+(?:(?:\{[.,]\}|[.,])\d+)*|[A-Za-z])$/;
+const PLAIN_FORMULA = /^(?:\d+(?:(?:\{[.,]\}|[.,])\d+)*|[A-Za-z])$/u;
 
 /** The braces of a decimal comma, `{,}`, which a plain number's MathML does not hold. */
-const BRACE = /[{}]/g;
+const BRACE = /[{}]/gu;
 
 /**
  * A formula as words, with a space on each side. A plain number or identifier keeps the text its MathML

@@ -31,7 +31,7 @@ import { useTableFilters } from "@/components/shared/table/toolbar";
  * filters the rows, takes the muted fill.
  */
 const headButton = cva(
-  "min-w-0 max-w-[calc(100%+1rem)] overflow-hidden sm:max-w-[calc(100%+1.75rem)]",
+  "max-w-[calc(100%+1rem)] min-w-0 overflow-hidden sm:max-w-[calc(100%+1.75rem)]",
   {
     defaultVariants: { active: false, align: "center" },
     variants: {

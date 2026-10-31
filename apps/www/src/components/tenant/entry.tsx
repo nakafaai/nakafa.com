@@ -49,7 +49,7 @@ export function TenantEntry({ title }: { title: string }) {
           }
           legal={<AuthLegal links={legal} />}
         >
-          <h1 className="font-semibold text-2xl">{title}</h1>
+          <h1 className="text-2xl font-semibold">{title}</h1>
         </SignInScreen>
       </EntryShellPanel>
       <EntryShellArtwork />

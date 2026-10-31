@@ -75,7 +75,7 @@ test.describe("A send pressed before the viewer is known", () => {
           await expect(promptIn(sheet)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
-          await expect(page).toHaveURL(new RegExp(`${LESSON_PATH}$`));
+          await expect(page).toHaveURL(new RegExp(`${LESSON_PATH}$`, "u"));
         });
       })
     );

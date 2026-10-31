@@ -14,9 +14,10 @@ const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 
 /**
  * What a seeded sitting holds besides its exam: a room of the same exam for the next day
- * (`upcoming`), or an essay that the student writes and the teacher grades (`essay`).
+ * (`upcoming`), an essay that the student writes and the teacher grades (`essay`), or a last
+ * question whose prompt holds every block and mark once (`prose`).
  */
-const SittingExtra = Schema.Literals(["upcoming", "essay"]);
+const SittingExtra = Schema.Literals(["upcoming", "essay", "prose"]);
 
 /**
  * Seeds one proctored sitting of a keyed exam in the running local acceptance backend. The
@@ -24,8 +25,9 @@ const SittingExtra = Schema.Literals(["upcoming", "essay"]);
  * sitting opens now and closes an hour later. A `crowd` seats that many extra students with
  * attempts in progress, so a test reads a dashboard of more than one page. The exam, the
  * sitting, and its token go to `output` for a browser test to read back. Each call seeds a
- * new exam and sitting. `upcoming` also schedules a room of the same exam for the next day, and
- * `essay` adds an essay to the exam, which the student writes and the teacher grades.
+ * new exam and sitting. `upcoming` also schedules a room of the same exam for the next day,
+ * `essay` adds an essay to the exam, which the student writes and the teacher grades, and `prose`
+ * ends the exam with a question whose prompt holds every block and mark once.
  */
 export const createAcceptanceSitting = Effect.fn(
   "contentAcceptance.createSitting"
@@ -62,7 +64,7 @@ export const createAcceptanceSitting = Effect.fn(
 
 /** The usage of the sitting mode: the school, the learner, the file for the sitting, then the optional crowd and extra. */
 const USAGE =
-  "sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay]";
+  "sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay|prose]";
 const SittingArguments = Schema.Tuple([
   Schema.String,
   Schema.String,
@@ -74,7 +76,8 @@ const SittingArguments = Schema.Tuple([
 /**
  * The sitting mode of the acceptance command line: seeds one proctored sitting for
  * the learner that the command names, with the optional number of extra students,
- * the optional upcoming room or essay, and writes the sitting to the file that the command names.
+ * the optional upcoming room, essay or prose question, and writes the sitting to the file that the
+ * command names.
  */
 export const sittingMode = {
   mode: "sitting",

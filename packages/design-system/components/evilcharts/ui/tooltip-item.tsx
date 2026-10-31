@@ -139,7 +139,7 @@ function TooltipItem({
   return (
     <div
       className={cn(
-        "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
+        "[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5",
         indicator === "dot" && "items-center",
         isDeemphasized && "text-muted-foreground"
       )}
@@ -190,7 +190,7 @@ function TooltipValue({
   return (
     <span
       className={cn(
-        "font-medium font-mono tabular-nums",
+        "font-mono font-medium tabular-nums",
         isDeemphasized ? "text-muted-foreground" : "text-foreground"
       )}
     >

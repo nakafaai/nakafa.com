@@ -15,7 +15,8 @@ declare global {
 }
 
 /** The child sitemaps that the sitemap index lists, by their path. */
-const SITEMAP = /<loc>https:\/\/nakafa\.com(\/sitemap\/[^<]+\.xml)<\/loc>/gu;
+const SITEMAP =
+  /<loc>https:\/\/nakafa\.com(?<path>\/sitemap\/[^<]+\.xml)<\/loc>/gu;
 
 /**
  * The English lessons and articles the sitemaps publish, article category pages
@@ -25,13 +26,14 @@ const SITEMAP = /<loc>https:\/\/nakafa\.com(\/sitemap\/[^<]+\.xml)<\/loc>/gu;
 const families = [
   {
     count: 2,
-    location: /<loc>https:\/\/nakafa\.com(\/en\/subjects\/[^<]+)<\/loc>/gu,
+    location:
+      /<loc>https:\/\/nakafa\.com(?<path>\/en\/subjects\/[^<]+)<\/loc>/gu,
     sitemap: /^\/sitemap\/material_en_p\d+\.xml$/u,
   },
   {
     count: 1,
     location:
-      /<loc>https:\/\/nakafa\.com(\/en\/articles\/[^/<]+\/[^/<]+)<\/loc>/gu,
+      /<loc>https:\/\/nakafa\.com(?<path>\/en\/articles\/[^/<]+\/[^/<]+)<\/loc>/gu,
     sitemap: /^\/sitemap\/article_en_p\d+\.xml$/u,
   },
 ] as const;

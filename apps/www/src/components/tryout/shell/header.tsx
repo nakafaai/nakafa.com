@@ -52,7 +52,7 @@ export function TryoutPageHeader({
         </div>
       </div>
       <h1
-        className="min-w-0 truncate font-medium text-base md:max-w-xs md:text-center"
+        className="min-w-0 truncate text-base font-medium md:max-w-xs md:text-center"
         title={title}
       >
         {title}

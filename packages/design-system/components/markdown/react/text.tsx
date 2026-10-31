@@ -42,7 +42,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
     <Heading data-nakafa="heading-6" Tag="h6" {...props} enableLink={false} />
   ),
   hr: ({ node: _node, ...props }) => (
-    <hr className="my-4 border-border" data-nakafa="hr" {...props} />
+    <hr className="border-border my-4" data-nakafa="hr" {...props} />
   ),
   img: ({ node: _node, ...props }) => (
     <MarkdownImage data-nakafa="image" {...props} />

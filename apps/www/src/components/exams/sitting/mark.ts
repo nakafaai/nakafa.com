@@ -4,7 +4,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Schema } from "effect";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
-import { changePaper, setPaperFlag } from "@/components/exams/sitting/paper";
+import { changeSaved, setSavedFlag } from "@/components/exams/sitting/paper";
 
 /** One flag that the student sets or clears, which names the question and its sitting. */
 const FlagInput = Schema.Struct({
@@ -18,13 +18,13 @@ type FlagInput = typeof FlagInput.Type;
 
 /**
  * Flags or unflags one question for review. The paper shows the flag at once, and a refused flag rolls it back,
- * because the paper is read again from the server. The flag is the server's, so the browser keeps none.
+ * because what the student saved is read again from the server. The flag is the server's, so the browser keeps none.
  */
 function useFlagMutation() {
   return useMutation(exams.sittings.flag).withOptimisticUpdate(
     (localStore, args) =>
-      changePaper(localStore, args, (paper) =>
-        setPaperFlag(paper, args.questionId, args.flagged)
+      changeSaved(localStore, args, (saved) =>
+        setSavedFlag(saved, args.questionId, args.flagged)
       )
   );
 }

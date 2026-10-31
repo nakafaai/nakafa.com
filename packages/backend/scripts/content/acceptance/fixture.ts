@@ -39,6 +39,14 @@ export const SittingFixture = Schema.fromJsonString(
 );
 
 /**
+ * The graduating class group that a browser test opens: its ID and its name. The local
+ * acceptance runtime writes it, and the browser test reads it back.
+ */
+export const GraduationFixture = Schema.fromJsonString(
+  Schema.Struct({ cohort: Schema.String, cohortId: Schema.String })
+);
+
+/**
  * The history of a class's general channel that a browser test reads: the channel, the class,
  * and the seeded messages, oldest first. The local acceptance runtime writes it, and the browser
  * test reads it back.

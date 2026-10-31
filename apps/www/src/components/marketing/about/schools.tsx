@@ -23,13 +23,13 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
   return (
     <MarketingSection id="school">
       <div className="mx-auto w-full max-w-7xl">
-        <div className="grid gap-10 rounded-xl bg-nina-ink px-6 py-16 text-nina-face lg:grid-cols-2 lg:items-center lg:px-16">
+        <div className="bg-nina-ink text-nina-face grid gap-10 rounded-xl px-6 py-16 lg:grid-cols-2 lg:items-center lg:px-16">
           <div className="grid justify-items-start gap-6">
             <div className="grid gap-3">
-              <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+              <h2 className="text-3xl tracking-tight text-balance sm:text-4xl">
                 {t("school-title")}
               </h2>
-              <p className="max-w-xl text-pretty text-base">
+              <p className="max-w-xl text-base text-pretty">
                 {t("school-lead")}
               </p>
             </div>
@@ -42,7 +42,7 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
                 {tCommon("open-school")}
               </Link>
               <a
-                className="font-medium text-sm underline-offset-4 hover:underline"
+                className="text-sm font-medium underline-offset-4 hover:underline"
                 href={`mailto:${COMPANY_IDENTITY.email}`}
                 rel="noopener noreferrer"
                 target="_blank"

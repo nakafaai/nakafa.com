@@ -48,8 +48,8 @@ const examColumns = createColumnHelper<typeof dataTableFeatures, ListedExam>();
  * server has not
  * saved yet is disabled until it answers. The next page loads when the end of the list comes
  * into view, so the list has no button. The header holds the search and the page's one create action, shown when
- * the viewer can create an exam in at least one place, from the first paint, so it never changes shape: Create waits
- * disabled while the first page loads, and an empty school's list says so under it. An exam that is still saving does
+ * the viewer can create an exam in at least one place, from the first paint and final, so it never changes: Create's
+ * dialog waits while the first page loads, and an empty school's list says so under it. An exam that is still saving does
  * not end the empty state. A failed read of the list shows its own sentence and a retry, and a viewer who lost the
  * school's access is sent to the refused page.
  */
@@ -89,8 +89,8 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
           {tenant.home.canCreate ? (
             <CreateExam
               choices={tenant.home.choices}
-              disabled={loadingFirst}
               slug={slug}
+              waiting={loadingFirst}
             />
           ) : null}
         </SchoolHeader>
