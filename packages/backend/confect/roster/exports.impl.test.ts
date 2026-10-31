@@ -13,7 +13,7 @@ import { Nisn } from "@repo/backend/confect/roster/schema";
 import { cohort, denied, nf, period } from "@repo/backend/test/classroom";
 import { asStaffSchool } from "@repo/backend/test/guardians";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
+import { Array as Arr, Effect, Schema, String as Str } from "effect";
 
 const { lines } = refs.public.roster.exports;
 
@@ -70,10 +70,7 @@ describe("roster/exports", () => {
                   const person = yield* (yield* DatabaseReader)
                     .table("tenantPeople")
                     .get(personId);
-                  yield* writeRosterEntry(keys, person, {
-                    nisn: Option.some(student.nisn),
-                    underAgeLimit: true,
-                  });
+                  yield* writeRosterEntry(keys, person, student.nisn);
                 }).pipe(Effect.orDie),
               { discard: true }
             )

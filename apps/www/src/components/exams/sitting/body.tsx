@@ -1,31 +1,13 @@
-import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
 
 /**
- * The body of a sitting screen: the page's width up to the app's cap, with long words breaking
- * so nothing is cut at the card's edge. A screen that waits on one step stands in the middle of
- * the body; the results screen starts at its top, as other school pages do.
+ * The body of a student's sitting screen under its bar, in the paper's own column: the screen's cards in one
+ * stack, with long words breaking so nothing is cut at a card's edge.
  */
-const sittingBodyVariants = cva(
-  "mx-auto flex w-full max-w-7xl min-w-0 flex-1 flex-col items-center p-6 wrap-anywhere",
-  {
-    defaultVariants: { align: "center" },
-    variants: { align: { center: "justify-center", top: "justify-start" } },
-  }
-);
-
-/**
- * The body of a student's sitting screen under its bar: the rest of the page's height, with the
- * screen's card or sentence at a readable width, so the frame fills the page and the words never
- * stretch across it.
- */
-export function SittingBody({
-  align,
-  children,
-}: VariantProps<typeof sittingBodyVariants> & { children: ReactNode }) {
+export function SittingBody({ children }: { readonly children: ReactNode }) {
   return (
-    <div className={sittingBodyVariants({ align })} data-slot="sitting-body">
-      <div className="grid w-full max-w-2xl gap-6">{children}</div>
+    <div className="grid gap-6 wrap-anywhere" data-slot="sitting-body">
+      {children}
     </div>
   );
 }

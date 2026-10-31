@@ -18,27 +18,12 @@ describe("components/tenant/settings/entry", () => {
       { personId, slug },
       { hasNisn: false, personId }
     );
-    setRosterEntryChange(local.store, {
-      nisn,
-      personId,
-      slug,
-      underAgeLimit: true,
-    });
+    setRosterEntryChange(local.store, { nisn, personId, slug });
     expect(
       Option.getOrThrow(
         local.store.getQuery(roster.entries.get, { personId, slug })
       )
-    ).toEqual({ hasNisn: true, personId, underAgeLimit: true });
-    setRosterEntryChange(local.store, {
-      personId,
-      slug,
-      underAgeLimit: false,
-    });
-    expect(
-      Option.getOrThrow(
-        local.store.getQuery(roster.entries.get, { personId, slug })
-      )
-    ).toEqual({ hasNisn: true, personId, underAgeLimit: false });
+    ).toEqual({ hasNisn: true, personId });
   });
 
   it("leaves another school's row and an unloaded row as they are", () => {
@@ -48,12 +33,7 @@ describe("components/tenant/settings/entry", () => {
       { personId, slug: otherSlug },
       { hasNisn: false, personId }
     );
-    setRosterEntryChange(local.store, {
-      nisn,
-      personId,
-      slug,
-      underAgeLimit: true,
-    });
+    setRosterEntryChange(local.store, { nisn, personId, slug });
     expect(local.written()).toEqual([]);
   });
 });

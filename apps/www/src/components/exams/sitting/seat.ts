@@ -1,4 +1,4 @@
-import { Number as Num, Option, Schema } from "effect";
+import { HashMap, Number as Num, Option, Schema } from "effect";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 
 /** The filters of the dashboard, in the order the filter row shows them. */
@@ -44,6 +44,28 @@ export function lastActivityOf(
   return answeredAt === null
     ? attempt.lastActiveAt
     : Num.max(attempt.lastActiveAt, answeredAt);
+}
+
+/**
+ * The attempt as its seat shows it, once presence says the student went silent while the attempt runs. The student
+ * reads as disconnected since then, so the seat's frame, its clock and the filter all follow it. A student who left
+ * the exam stays away, since the exit says more, and a locked or finished seat keeps its state.
+ */
+export function seenOffline(
+  attempt: DashboardAttempt,
+  offline: HashMap.HashMap<DashboardAttempt["id"], number>
+): DashboardAttempt {
+  if (attempt.state !== "inProgress" || attempt.away) {
+    return attempt;
+  }
+  return Option.match(HashMap.get(offline, attempt.id), {
+    onNone: () => attempt,
+    onSome: (since) => ({
+      ...attempt,
+      away: true,
+      latestSignal: { at: since, kind: "disconnect" },
+    }),
+  });
 }
 
 /** The seconds of one minute, which a long time away is told in. */

@@ -2,12 +2,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { DateTime } from "effect";
 import {
   type Cell,
-  isUnderAgeLimit,
   readDapodikSheet,
   studentsOf,
 } from "@/components/tenant/roster/dapodik";
-
-const TODAY = DateTime.makeUnsafe("2026-10-26T00:00:00Z");
 
 /** A date cell, as the sheet reader gives a cell with a date format. */
 const dateCell = (iso: string) => DateTime.toDateUtc(DateTime.makeUnsafe(iso));
@@ -197,149 +194,68 @@ const sheet: readonly (readonly Cell[])[] = [
 ];
 
 describe("readDapodikSheet", () => {
-  it("finds the header below the title rows and reads only the name, NISN, class group, and age", () => {
-    const read = readDapodikSheet(sheet, TODAY);
+  it("finds the header below the title rows and reads only the name, NISN, and class group", () => {
+    const read = readDapodikSheet(sheet);
     expect(read.outcome).toBe("read");
     const rows = read.outcome === "read" ? read.rows : [];
+    const student = (
+      line: number,
+      name: string,
+      nisn: string,
+      cohortName?: string
+    ) => ({
+      line,
+      outcome: "row",
+      row: { ...(cohortName ? { cohortName } : {}), name, nisn },
+    });
     expect(rows).toEqual([
-      {
-        line: 7,
-        outcome: "row",
-        row: {
-          cohortName: "VII-A",
-          name: "Raka Pratama",
-          nisn: "0012345678",
-          underAgeLimit: true,
-        },
-      },
-      {
-        line: 8,
-        outcome: "row",
-        row: { name: "Sari  Dewi", nisn: "0098765432", underAgeLimit: false },
-      },
+      student(7, "Raka Pratama", "0012345678", "VII-A"),
+      student(8, "Sari  Dewi", "0098765432"),
       { line: 9, outcome: "problem", problem: "nisn" },
       { line: 10, outcome: "problem", problem: "name" },
-      { line: 11, outcome: "problem", problem: "birth" },
+      student(11, "Ani", "0022222222", "VII-B"),
       { line: 12, outcome: "problem", problem: "cohort" },
-      {
-        line: 13,
-        outcome: "row",
-        row: {
-          cohortName: "VII-C",
-          name: "Eka",
-          nisn: "0044444444",
-          underAgeLimit: true,
-        },
-      },
+      student(13, "Eka", "0044444444", "VII-C"),
       { line: 14, outcome: "problem", problem: "name" },
-      {
-        line: 15,
-        outcome: "row",
-        row: {
-          cohortName: "VII-C",
-          name: "Fajar",
-          nisn: "0066666666",
-          underAgeLimit: false,
-        },
-      },
-      {
-        line: 16,
-        outcome: "row",
-        row: {
-          cohortName: "VII-C",
-          name: "Gita",
-          nisn: "0077777777",
-          underAgeLimit: true,
-        },
-      },
-      { line: 17, outcome: "problem", problem: "birth" },
-      { line: 18, outcome: "problem", problem: "birth" },
-      { line: 19, outcome: "problem", problem: "birth" },
-      {
-        line: 20,
-        outcome: "row",
-        row: {
-          cohortName: "VII-C",
-          name: "Kiki",
-          nisn: "0020202020",
-          underAgeLimit: true,
-        },
-      },
+      student(15, "Fajar", "0066666666", "VII-C"),
+      student(16, "Gita", "0077777777", "VII-C"),
+      student(17, "Hana", "0088888888", "VII-C"),
+      student(18, "Indra", "0099999999", "VII-C"),
+      student(19, "Joko", "0010101010", "VII-C"),
+      student(20, "Kiki", "0020202020", "VII-C"),
     ]);
-    expect(studentsOf(rows)).toHaveLength(6);
-  });
-
-  it("reads the short birth date header of an older export", () => {
-    const read = readDapodikSheet(
-      [
-        ["Nama", "NISN", "Tgl Lahir"],
-        ["Raka", "0012345678", "01/01/2000"],
-      ],
-      TODAY
-    );
-    expect(read.outcome === "read" ? studentsOf(read.rows) : []).toEqual([
-      { name: "Raka", nisn: "0012345678", underAgeLimit: false },
-    ]);
+    expect(studentsOf(rows)).toHaveLength(10);
   });
 
   it("refuses a sheet without the header, and one without a student below it", () => {
     expect(
-      readDapodikSheet(
-        [
-          ["Nama", "Kelas"],
-          ["Raka", "VII"],
-        ],
-        TODAY
-      )
+      readDapodikSheet([
+        ["Nama", "Kelas"],
+        ["Raka", "VII"],
+      ])
     ).toEqual({
       outcome: "refused",
       problem: "header",
     });
     expect(
-      readDapodikSheet(
-        [
-          ["NISN", "Nama"],
-          [null, null],
-        ],
-        TODAY
-      )
+      readDapodikSheet([
+        ["NISN", "Nama"],
+        [null, null],
+      ])
     ).toEqual({
       outcome: "refused",
       problem: "empty",
     });
   });
 
-  it("reads a sheet without a birth date column as under the limit", () => {
-    const read = readDapodikSheet(
-      [
-        ["Nama", "NISN"],
-        ["Raka", 12_345.5],
-      ],
-      TODAY
-    );
+  it("refuses a NISN that a number cell holds with a fraction", () => {
+    const read = readDapodikSheet([
+      ["Nama", "NISN"],
+      ["Raka", 12_345.5],
+    ]);
     expect(read).toEqual({
       outcome: "read",
       rows: [{ line: 2, outcome: "problem", problem: "nisn" }],
     });
-    const padded = readDapodikSheet(
-      [
-        ["Nama", "NISN"],
-        ["Raka", "0012345678"],
-      ],
-      TODAY
-    );
-    expect(padded.outcome === "read" ? studentsOf(padded.rows) : []).toEqual([
-      { name: "Raka", nisn: "0012345678", underAgeLimit: true },
-    ]);
-  });
-});
-
-describe("isUnderAgeLimit", () => {
-  it("counts a student under the limit until the birthday of eighteen years", () => {
-    const birth = DateTime.makeUnsafe("2008-10-27T00:00:00Z");
-    expect(isUnderAgeLimit(birth, TODAY)).toBe(true);
-    expect(
-      isUnderAgeLimit(birth, DateTime.makeUnsafe("2026-10-27T00:00:00Z"))
-    ).toBe(false);
   });
 });
