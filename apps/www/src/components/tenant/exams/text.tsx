@@ -18,6 +18,7 @@ import type { Transaction } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { useConvex } from "convex/react";
 import { Effect, Fiber, Option, Ref } from "effect";
+import { sendableSteps } from "prosemirror-collab";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
@@ -221,6 +222,27 @@ export function ExamText({
       replaceWaiting(waiting, runRound(session.current, view.current, sync));
     }
   }, [reply, sync]);
+
+  // A page that closes sends what the editor holds at once, and asks first while the server does not hold it yet,
+  // since the send may not leave in time.
+  useEffect(() => {
+    const flush = () => {
+      replaceWaiting(waiting, runRound(session.current, view.current, sync));
+    };
+    const askFirst = (event: BeforeUnloadEvent) => {
+      const editor = view.current;
+      if (editor !== null && sendableSteps(editor.state) !== null) {
+        flush();
+        event.preventDefault();
+      }
+    };
+    window.addEventListener("pagehide", flush);
+    window.addEventListener("beforeunload", askFirst);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      window.removeEventListener("beforeunload", askFirst);
+    };
+  }, [sync]);
 
   // The text closes: stop the open and the waiting round, then send what the editor holds, unless the exam is
   // gone and the server takes nothing more.

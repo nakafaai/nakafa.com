@@ -176,9 +176,21 @@ export function OptionRow({
     const flush = () => {
       Effect.runFork(saver.flush);
     };
+    // A page that closes with words the server does not hold yet asks first, since a save may not leave in time.
+    const askFirst = (event: BeforeUnloadEvent) => {
+      if (
+        editor.current !== null &&
+        !holdsLabel(editor.current.getJSON(), previous.current)
+      ) {
+        flush();
+        event.preventDefault();
+      }
+    };
     window.addEventListener("pagehide", flush);
+    window.addEventListener("beforeunload", askFirst);
     return () => {
       window.removeEventListener("pagehide", flush);
+      window.removeEventListener("beforeunload", askFirst);
       flush();
     };
   }, [saver]);
