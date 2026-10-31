@@ -124,7 +124,6 @@ describe("classroom/forum channel archive and removal", () => {
               clientKey: "late-reply",
               mentions: [],
               number,
-              poll: null,
               text: "Balas",
             })
             .pipe(Effect.flip),
