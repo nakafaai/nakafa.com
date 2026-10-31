@@ -57,7 +57,7 @@ const NAME_LIMIT = 160;
 
 /** The file as its message shows it before the server answers, from what this device holds. */
 export const shownFile = (
-  file: TrayFile
+  file: typeof TrayFile.Type
 ): ForumMessage["attachments"][number] => ({
   address: Option.getOrNull(file.preview),
   byteSize: file.byteSize,
