@@ -17120,6 +17120,12 @@ export declare const internal: {
       >;
     };
     seed: {
+      expired: FunctionReference<
+        "mutation",
+        "internal",
+        { email: string; slug: string },
+        null
+      >;
       student: FunctionReference<
         "mutation",
         "internal",

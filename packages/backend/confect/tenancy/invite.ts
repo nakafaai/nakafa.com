@@ -78,7 +78,7 @@ const INVITE_SWEEP_BATCH_SIZE = 50;
  * The most invites of one address that one read takes. A school invites an address
  * a few times at most, so the bound is never reached in use.
  */
-const ADDRESS_INVITE_LIMIT = 32;
+export const ADDRESS_INVITE_LIMIT = 32;
 
 /**
  * Expires the pending invites whose term has passed, as the system. Each invite
