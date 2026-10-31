@@ -1,4 +1,3 @@
-import { Array as Arr } from "effect";
 import {
   getProMonthlyPricingFor,
   type PricingCurrency,
@@ -18,32 +17,17 @@ export function drinkKey(
 }
 
 /**
- * The currency symbol of a price, as its locale writes it. A zero in a currency
- * format always has exactly one currency part, so the symbol is that part.
- */
-export function currencySymbol(formatter: Intl.NumberFormat) {
-  const currencyParts = Arr.filter(
-    formatter.formatToParts(0),
-    (part) => part.type === "currency"
-  );
-  return Arr.join(
-    Arr.map(currencyParts, (part) => part.value),
-    ""
-  );
-}
-
-/**
  * The free and pro prices of one currency, as its locale writes them. The page
  * renders every currency, so no request country selects one.
  *
  * Reference: https://polar.sh/docs/features/products#multiple-payment-currencies
  */
 export function getProPricingDisplay(currency: PricingCurrency) {
-  const { formatter, price } = getProMonthlyPricingFor(currency);
+  const { format, price } = getProMonthlyPricingFor(currency);
 
   return {
-    free: { text: formatter.format(0) },
-    pro: { text: formatter.format(price.amount) },
-    proYearly: { text: formatter.format(price.yearlyAmount) },
+    free: { text: format(0) },
+    pro: { text: format(price.amount) },
+    proYearly: { text: format(price.yearlyAmount) },
   };
 }

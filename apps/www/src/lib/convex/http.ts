@@ -6,7 +6,7 @@ import {
   RetryableNetworkAttempt,
   retryNetworkAttempt,
 } from "@repo/backend/client/network";
-import { Data, Effect, Layer, Result, Schema } from "effect";
+import { Data, Effect, HashSet, Layer, Result, Schema } from "effect";
 import { clientEnv } from "@/env.public";
 
 type HttpClientOptions = Parameters<typeof HttpClient.layer>[1];
@@ -24,6 +24,28 @@ const RefusedQuery = Schema.fromJsonString(
   })
 );
 
+/** The statuses of a gateway in front of Convex that could not reach it. */
+const GATEWAY_STATUSES = HashSet.make(502, 503, 504);
+
+/**
+ * A gateway in front of Convex answered in Convex's place, so no function ran.
+ * `ConvexHttpClient` throws an error status's body as the message, and a gateway
+ * writes that body as it likes, so only the status can name this failure.
+ */
+export class ConvexGatewayFailure extends Data.TaggedError(
+  "ConvexGatewayFailure"
+)<{ readonly status: number }> {}
+
+/** The fetch of a Convex HTTP client, which turns a gateway's answer into its failure. */
+export const failAtGateway =
+  (send: typeof fetch): typeof fetch =>
+  (input, init) =>
+    send(input, init).then((response) =>
+      HashSet.has(GATEWAY_STATUSES, response.status)
+        ? Promise.reject(new ConvexGatewayFailure({ status: response.status }))
+        : response
+    );
+
 /**
  * One attempt of a query that Convex did not answer within its deadline. It is
  * the cause of the client's own error, so the retry policy treats it like any
@@ -34,7 +56,7 @@ class QueryDeadline extends Data.TaggedError("QueryDeadline") {}
 /**
  * Whether repeating a query is safe: Convex queries only read, and this
  * failure either happened before Convex ran the query, or the attempt missed
- * its deadline, or the connection dropped before Convex answered. Function
+ * its deadline, or a gateway or a dropped connection stood between it and Convex. Function
  * errors and decoding failures are never transient.
  */
 function isTransientQueryFailure(error: unknown) {
@@ -42,7 +64,7 @@ function isTransientQueryFailure(error: unknown) {
     return false;
   }
   const { cause } = error;
-  if (cause instanceof QueryDeadline) {
+  if (cause instanceof QueryDeadline || cause instanceof ConvexGatewayFailure) {
     return true;
   }
   if (
@@ -104,9 +126,10 @@ export const withQueryRetry = <E, R>(
  * school gate of the proxy, does not repeat a failed read.
  */
 export function httpSingleAttemptLayer(options?: HttpClientOptions) {
-  return options === undefined
-    ? HttpClient.layer(clientEnv.VITE_CONVEX_URL)
-    : HttpClient.layer(clientEnv.VITE_CONVEX_URL, options);
+  return HttpClient.layer(clientEnv.VITE_CONVEX_URL, {
+    ...options,
+    fetch: failAtGateway(fetch),
+  });
 }
 
 /** Provides the Convex HTTP client for this deployment with query retries. */

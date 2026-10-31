@@ -16,7 +16,12 @@ import {
   Option,
 } from "effect";
 import { TestClock } from "effect/testing";
-import { httpLayer, withQueryRetry } from "@/lib/convex/http";
+import {
+  ConvexGatewayFailure,
+  failAtGateway,
+  httpLayer,
+  withQueryRetry,
+} from "@/lib/convex/http";
 
 const DEPLOYMENT_URL = "https://example.convex.cloud";
 
@@ -52,6 +57,13 @@ function dropped() {
         code: "UND_ERR_SOCKET",
       }),
     }),
+  });
+}
+
+/** A gateway that answered in Convex's place. */
+function gateway(status: number) {
+  return new HttpClient.HttpClientError({
+    cause: new ConvexGatewayFailure({ status }),
   });
 }
 
@@ -115,7 +127,42 @@ afterEach(() => {
   mutationMock.mockReset();
 });
 
+describe("failAtGateway", () => {
+  it.each([502, 503, 504])("names a gateway's %i", async (status) => {
+    const send = vi.fn<typeof fetch>();
+    send.mockResolvedValueOnce(new Response("bad gateway", { status }));
+
+    await expect(
+      failAtGateway(send)("https://example.convex.cloud")
+    ).rejects.toEqual(new ConvexGatewayFailure({ status }));
+  });
+
+  it("hands Convex's own answers to the client, its error statuses included", async () => {
+    const send = vi.fn<typeof fetch>();
+    send.mockResolvedValueOnce(new Response("refused", { status: 500 }));
+
+    const response = await failAtGateway(send)("https://example.convex.cloud");
+
+    expect(response.status).toBe(500);
+  });
+});
+
 describe("Convex HTTP query retries", () => {
+  it.effect("reads again after a gateway answers in Convex's place", () =>
+    Effect.gen(function* () {
+      const script = scriptQuery(
+        Effect.fail(gateway(502)),
+        Effect.fail(gateway(504)),
+        Effect.succeed([])
+      );
+
+      const exit = yield* runQuery();
+
+      expect(Exit.isSuccess(exit)).toBe(true);
+      expect(script.runs()).toBe(3);
+    })
+  );
+
   it.effect("retries queries Convex refused or never answered", () =>
     Effect.gen(function* () {
       const query = scriptQuery(

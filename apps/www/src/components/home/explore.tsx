@@ -120,7 +120,7 @@ export function HomeExplore() {
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         {Arr.map(items, (item) => (
           <ExploreCard
             key={item.id}
@@ -147,9 +147,9 @@ function ExploreCard({
   return (
     <TargetLink className="group flex flex-col items-center gap-2" {...link}>
       <div className="bg-card flex aspect-[1/0.95] w-full items-center justify-center rounded-xl border">
-        {children}
+        <div className="scale-75 sm:scale-100">{children}</div>
       </div>
-      <h2>{title}</h2>
+      <h2 className="text-center text-sm sm:text-base">{title}</h2>
     </TargetLink>
   );
 }

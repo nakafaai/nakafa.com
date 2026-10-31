@@ -12,8 +12,9 @@ import {
 } from "@/components/tryout/section/metrics";
 
 /**
- * Renders strategy-aware score and correctness metrics, then the metrics the
- * caller composed after them, such as a set's time limit.
+ * Renders score and correctness metrics, then the metrics the
+ * caller composed after them, such as a set's time limit. A score that is not
+ * settled yet says so in its own label, so no badge has to explain the number.
  */
 export function TryoutScoreMetrics({
   children,
@@ -23,10 +24,11 @@ export function TryoutScoreMetrics({
   score: TryoutScoreResult;
 }) {
   const tTryouts = useTranslations("Tryouts");
-  const scoreLabel =
-    score.scoringStrategy === "irt"
-      ? tTryouts("score-label-irt")
-      : tTryouts("score-label-standard");
+  const scoreLabel = tTryouts(
+    score.scoreStatus === "provisional"
+      ? "score-label-estimated"
+      : "score-label-standard"
+  );
 
   return (
     <TryoutPartStats>

@@ -12,6 +12,12 @@ export const KNOWN_SESSION_KEY = "nakafa-session";
 export const KNOWN_ACCOUNT_KEY = "nakafa-account";
 
 /**
+ * Where the browser keeps the schools the account menu last showed for that
+ * session (`saveKnownSchools`). They go when the session does.
+ */
+export const KNOWN_SCHOOLS_KEY = "nakafa-schools";
+
+/**
  * Where a school host keeps the frame its school layout last drew, with the
  * session it drew it for (`lib/tenant/kept.ts`). It goes when the session does.
  */

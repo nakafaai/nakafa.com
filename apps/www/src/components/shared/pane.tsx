@@ -1,12 +1,12 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@repo/design-system/components/ui/drawer";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
-import {
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@repo/design-system/components/ui/sheet";
 import { TableRow } from "@repo/design-system/components/ui/table";
 import { Option } from "effect";
 import type { ReactNode } from "react";
@@ -16,7 +16,7 @@ import { usePaneMode, usePanes } from "@/components/shared/panes";
 /**
  * A detail's header: its title, and what it shows on a second line; both wrap rather than
  * cut off. Beside the list a row's detail holds the button that closes it; an always-on
- * detail has none, and the phone's sheet has its own.
+ * detail has none. The phone's drawer holds the same button, for a reader who does not swipe.
  */
 export function PaneHeader({
   description,
@@ -30,12 +30,22 @@ export function PaneHeader({
 
   if (place === "sheet") {
     return (
-      <SheetHeader>
-        <SheetTitle dir="auto">{title}</SheetTitle>
+      <DrawerHeader className="relative px-10">
+        <DrawerTitle dir="auto">{title}</DrawerTitle>
         {description === undefined ? null : (
-          <SheetDescription dir="auto">{description}</SheetDescription>
+          <DrawerDescription dir="auto">{description}</DrawerDescription>
         )}
-      </SheetHeader>
+        <Button
+          aria-label={t("close")}
+          className="absolute end-2 top-2"
+          onClick={close}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        >
+          <HugeIcons icon={Cancel01Icon} />
+        </Button>
+      </DrawerHeader>
     );
   }
 

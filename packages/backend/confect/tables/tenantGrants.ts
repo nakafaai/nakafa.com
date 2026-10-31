@@ -25,9 +25,4 @@ export default Table.make(() =>
     "tenantId",
     "role.key",
     "status",
-  ])
-  .index("by_status_and_term_kind_and_term_expiresAt", [
-    "status",
-    "term.kind",
-    "term.expiresAt",
   ]);

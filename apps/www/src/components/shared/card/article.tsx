@@ -5,11 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { useTranslations } from "use-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
@@ -50,23 +45,9 @@ export function CardArticle({ article }: Props) {
           >
             {formatPublished(article.datePublished)}
           </time>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Badge variant="secondary">
-                  {article.official ? t("official") : t("contributor")}
-                </Badge>
-              }
-            />
-
-            <TooltipContent>
-              <p>
-                {article.official
-                  ? t("official-description")
-                  : t("contributor-description")}
-              </p>
-            </TooltipContent>
-          </Tooltip>
+          {article.official ? null : (
+            <Badge variant="secondary">{t("contributor")}</Badge>
+          )}
         </CardFooter>
       </Card>
     </PublicPathLink>

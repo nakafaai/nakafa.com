@@ -9,20 +9,23 @@ import { useLiveSession } from "@/components/providers/live";
  * that reads Convex mounts here and the visitor's variant shows instead. The
  * client is the store's, so every island of a page shares one socket. While a
  * learner's session still loads, the variant is inert, so a click waits for the
- * client instead of acting as a visitor's click.
+ * client instead of acting as a visitor's click, unless the variant `keepsPress`:
+ * it answers a press in that moment itself, and shows it, so no press is lost.
  */
 export function ConvexIsland({
   children,
   fallback = null,
+  keepsPress = false,
 }: {
   children: ReactNode;
   fallback?: ReactNode;
+  keepsPress?: boolean;
 }) {
   const client = useLiveSession((state) => state.client);
   const isSessionPending = useLiveSession((state) => state.isPending);
   if (Option.isNone(client)) {
     return (
-      <div className="contents" inert={isSessionPending}>
+      <div className="contents" inert={isSessionPending && !keepsPress}>
         {fallback}
       </div>
     );

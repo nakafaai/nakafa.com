@@ -2,20 +2,22 @@ import { StopIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import type { PlayerCellModel } from "@/components/player/model";
 import { PlayerGrid } from "@/components/player/navigator/grid";
 import { usePlayer } from "@/components/player/provider";
 import { readReview } from "@/components/player/review";
-import { useEarlyPress } from "@/lib/press/replay";
 
 /**
  * The one primary action: a button that opens the review before it finishes
  * the questions. The review lists the flagged questions and the unanswered
  * ones, and picking a number closes it and goes to that question, once the
- * dialog has finished closing. Confirming keeps the dialog and the button as
- * they are until the page changes. The button is in the page's HTML, so a press
+ * dialog has finished closing. Confirming keeps the dialog as it is until the
+ * page changes, and the pressed button's icon turns into the loader at once, so
+ * a slow network never looks like a press that did nothing. The button is in the page's HTML, so a press
  * before React takes the page over opens the review once React mounts it
  * (`useEarlyPress`): a learner who comes back to a running attempt and finishes
  * at once never presses a dead button.
@@ -73,13 +75,14 @@ export function PlayerFinish({
               {tCommon("cancel")}
             </Button>
             <Button
+              aria-busy={pending || undefined}
               disabled={locked}
               inert={pending}
               onClick={onFinish}
               type="button"
               variant="destructive"
             >
-              <HugeIcons icon={StopIcon} />
+              {pending ? <Spinner /> : <HugeIcons icon={StopIcon} />}
               {label}
             </Button>
           </>

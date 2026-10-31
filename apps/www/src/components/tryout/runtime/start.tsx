@@ -3,11 +3,17 @@ import { createContext, type ReactNode, use, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 
 /**
- * Where the start of one try-out page stands: idle; starting an attempt that opens no section, while
- * its button waits for the page it leads to; or opening a section, while the page draws the player
- * that the section runs in.
+ * Where the start of one try-out page stands: idle; pressed before the page could answer, while the
+ * button shows its loader until the page's client and reads arrive; starting an attempt that opens no
+ * section, while its button waits for the page it leads to; or opening a section, while the page draws
+ * the player that the section runs in.
  */
-const TryoutStartPhaseSchema = Schema.Literals(["idle", "starting", "opening"]);
+const TryoutStartPhaseSchema = Schema.Literals([
+  "idle",
+  "pressed",
+  "starting",
+  "opening",
+]);
 
 type TryoutStartPhase = typeof TryoutStartPhaseSchema.Type;
 
