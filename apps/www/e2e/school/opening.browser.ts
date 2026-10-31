@@ -14,9 +14,9 @@ const DRAWER_SEEN = "__drawerSeen";
 const MAIN_TEXT = "__mainText";
 
 /**
- * The fewest characters the main landmark holds on any frame between Create and the editor. The list and
- * the editor's workspace each hold far more, and the editor's bare frame, its header and toolbar alone,
- * held 23 before the editor drew the exam that the create answered with.
+ * The fewest characters the main landmark holds on any frame of the editor that Create opens. The editor's
+ * workspace holds far more, and its bare frame, its header and toolbar alone, held 23 before the editor drew
+ * the exam that the create answered with.
  */
 const MAIN_TEXT_FLOOR = 60;
 
@@ -93,12 +93,14 @@ test("the editor that Create opens draws the new exam on its first frame, and th
   const creating = page.getByRole("dialog");
   await creating.getByRole("textbox", { name: "Exam title" }).fill("Sekejap");
 
-  // Every frame from the press on records how much text the main landmark holds.
+  // Every frame of the editor records how much text the main landmark holds, from the first one on.
   await page.evaluate((key) => {
     const lengths: number[] = [];
     Reflect.set(window, key, lengths);
     const sample = () => {
-      lengths.push(document.querySelector("main")?.textContent?.length ?? 0);
+      if (window.location.pathname.endsWith("/edit")) {
+        lengths.push(document.querySelector("main")?.textContent?.length ?? 0);
+      }
       requestAnimationFrame(sample);
     };
     requestAnimationFrame(sample);

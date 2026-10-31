@@ -1,20 +1,20 @@
-import { Input } from "@repo/design-system/components/ui/input";
+import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import { Checkbox } from "@repo/design-system/components/ui/checkbox";
+import { Radio } from "@repo/design-system/components/ui/radio-group";
 import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from "@repo/design-system/components/ui/input-group";
-import { Textarea } from "@repo/design-system/components/ui/textarea";
+  Select,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
+import { Function as Fn, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { SittingField } from "@/components/exams/sitting/field";
+import { writtenOf } from "@/components/exams/sitting/response";
 import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
 import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
-
-/** The lines an essay's area shows, as a paper leaves room for a few paragraphs. */
-const ESSAY_ROWS = 6;
 
 /**
  * The frame of a paper: a page in the shape of the thumbnails, which a longer question makes taller,
@@ -64,181 +64,114 @@ export function PaperOptions({ children }: { children: ReactNode }) {
 }
 
 /**
- * One option of the paper: its letter, then its rich text, framed as the player frames an option. The
- * frame is the player's own choice frame in the unselected variant, and only the teacher's letter is
- * added to it. The letter is as tall as one line of the frame's text, so the first line of the text
- * and the letter share a line box, and a longer text grows the frame below them. The text is edited
- * here, so the frame takes the text cursor and lets the text be selected, where the button surface
- * would block both.
+ * One option of the paper, as the player draws it: the student's own control, unmarked and out of reach, a
+ * radio for one answer and a check box for several, then its rich text, in the player's choice frame. Only the
+ * cursor differs, since the text is edited here. The key is marked by letter in the teacher's layer, and the
+ * letters run in the paper's reading order.
  */
 export function PaperOption({
   children,
-  letter,
+  multiple,
 }: {
   children: ReactNode;
-  letter: string;
+  /** Whether the question takes several answers, so the student meets check boxes. */
+  multiple: boolean;
 }) {
   return (
     <div
       className={cn(
+        "flex items-center gap-2 text-sm leading-none font-medium",
         choiceFrame(getTryoutSelectableChoiceVariant({ checked: false })),
-        "flex cursor-text items-start gap-3 select-text"
+        "cursor-text select-text"
       )}
     >
-      <span
-        aria-hidden
-        className="bg-muted grid size-6 shrink-0 place-items-center rounded-md text-sm font-medium"
-      >
-        {letter}
+      <span className="contents" inert>
+        {multiple ? (
+          <Checkbox className="mt-1 shrink-0" />
+        ) : (
+          <Radio className="mt-1 shrink-0" value="" />
+        )}
       </span>
-      {/* A touch screen shows the remove control at all times, so the text stops short of it. */}
-      <div className="min-w-0 flex-1 pointer-coarse:group-has-[[data-remove]]/option:pe-8">
-        {children}
+      <PaperPartText>{children}</PaperPartText>
+    </div>
+  );
+}
+
+/** The text of an option or a statement. A touch screen shows the remove control at all times, so the text stops short of it. */
+export function PaperPartText({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-w-0 flex-1 pointer-coarse:group-has-[[data-remove]]/option:pe-8">
+      {children}
+    </div>
+  );
+}
+
+/** The two columns of a matching, as the student's paper sets them. */
+export function PaperPairs({ children }: { children: ReactNode }) {
+  return <div className="grid min-w-0 gap-6 md:grid-cols-2">{children}</div>;
+}
+
+/** The parts of one column of a matching, as the student's paper lists them. */
+export function PaperParts({ children }: { children: ReactNode }) {
+  return <ol className="grid content-start gap-3">{children}</ol>;
+}
+
+/**
+ * One statement or answer of a matching, as the student's paper sets it: its number or letter and its text,
+ * with what stands under it, the select of a statement.
+ */
+export function PaperPart({
+  below,
+  children,
+  name,
+}: {
+  /** What stands under the part: `PaperPairSelect` under a statement, nothing under an answer. */
+  below: ReactNode;
+  children: ReactNode;
+  name: string;
+}) {
+  return (
+    <li className="grid gap-2">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="font-medium tabular-nums">{name}.</span>
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
-    </div>
+      {below}
+    </li>
   );
 }
 
-/**
- * The answer field of a short answer or an essay, as the student finds it on the paper: an empty line
- * for a short answer, and an empty area of several lines for an essay. The teacher writes the accepted
- * answers or the rubric in the layer, never on the paper, so the field takes no text here.
- */
-export function PaperLine({ essay = false }: { essay?: boolean }) {
+/** The select a student pairs a statement with, out of reach, since the key is marked in the teacher's layer. */
+export function PaperPairSelect() {
   const t = useTranslations("Exams");
-  if (essay) {
-    return (
-      <Textarea
-        aria-label={t("essay-area")}
-        disabled
-        placeholder={t("essay-placeholder")}
-        rows={ESSAY_ROWS}
-      />
-    );
-  }
-  return (
-    <Input
-      aria-label={t("short-line")}
-      disabled
-      placeholder={t("short-placeholder")}
-    />
-  );
-}
 
-/**
- * The line a numeric answer leaves on a paper: one field the student types a number in, with the unit beside it
- * when the teacher gave one, as the student's paper draws it. It takes no typing in the editor.
- */
-export function PaperNumber({ unit }: { unit: string | undefined }) {
-  const t = useTranslations("Exams");
   return (
-    <InputGroup data-disabled>
-      <InputGroupInput
-        aria-label={t("number-line")}
-        disabled
-        inputMode="decimal"
-        placeholder={t("number-placeholder")}
-      />
-      {unit === undefined ? null : (
-        <InputGroupAddon align="inline-end">
-          <InputGroupText>{unit}</InputGroupText>
-        </InputGroupAddon>
-      )}
-    </InputGroup>
-  );
-}
-
-/**
- * A true or false table on a paper, as the student's player draws it: one bordered grid, a numbers column, the
- * statements, then a column for each choice. The live editor and the drawing without editors both build on it, so a
- * page keeps its size when its editors mount. A choice column is at least 6rem wide, and on a narrow paper the choice
- * columns together start at half the table, so the statements heading keeps its room.
- */
-export function PaperTable({
-  children,
-  columns,
-}: {
-  children: ReactNode;
-  /** How many choices the table has, each a column of its own. */
-  columns: number;
-}) {
-  return (
-    <div
-      className="grid min-w-0 overflow-hidden rounded-xl border"
-      style={{
-        gridTemplateColumns: `auto minmax(0, 1fr) repeat(${columns}, minmax(min(6rem, calc(50% / ${columns})), auto))`,
-      }}
-    >
-      {children}
+    <div inert>
+      <Select>
+        <SelectTrigger aria-hidden className="w-32">
+          <SelectValue placeholder={t("pair-choose")} />
+        </SelectTrigger>
+      </Select>
     </div>
   );
 }
 
 /**
- * The header row of a paper's table: an empty cell over the numbers, the statements' heading, then each column's
- * header. Its cells share their first baseline, so each column's words stand on the line of the statements' heading
- * whatever padding and line height each cell has.
+ * The field of a written answer on a paper: the student's own field, with its keypad and its unit, out of
+ * reach. The teacher writes the accepted answers or the rubric in the layer, never on the paper.
  */
-export function PaperTableHead({
-  children,
-  heading,
-}: {
-  children: ReactNode;
-  heading: string;
-}) {
-  return (
-    <div className="bg-muted/50 col-span-full grid grid-cols-subgrid items-baseline text-sm font-medium">
-      <div aria-hidden="true" className="py-3 pl-4" />
-      <div className="px-3 py-3">{heading}</div>
-      {children}
-    </div>
-  );
-}
-
-/** The header of one choice's column, which names the marks under it. */
-export function PaperTableHeader({
-  children,
-  id,
-}: {
-  children: ReactNode;
-  id?: string;
-}) {
-  return (
-    <div className="px-2 py-2 text-center" id={id}>
-      {children}
-    </div>
-  );
-}
-
-/** The number at the start of a statement's row. */
-export function PaperTableNumber({ number }: { number: number }) {
-  return (
-    <span className="flex items-start border-t py-3.5 pl-4 font-medium tabular-nums">
-      {number}.
-    </span>
-  );
-}
-
-/** The statement of a row. */
-export function PaperTableStatement({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-w-0 border-t px-3 py-2 pointer-coarse:has-[[data-remove]]:pe-10">
-      {children}
-    </div>
-  );
-}
-
-/**
- * The cell of a row under one column: the empty circle the student marks for that choice. The teacher's paper
- * draws it unmarked, since the key is marked in the teacher's layer.
- */
-export function PaperTableMark() {
-  return (
-    <div className="flex min-h-12 items-center justify-center border-t px-2 py-3">
-      <span
-        aria-hidden
-        className="border-input bg-background size-4 rounded-full border shadow-xs"
-      />
-    </div>
-  );
+export function PaperField({ answers }: { answers: readonly Interaction[] }) {
+  return Option.match(writtenOf(answers), {
+    onNone: () => null,
+    onSome: (entry) => (
+      <div inert>
+        <SittingField
+          entry={entry}
+          labelledBy=""
+          onType={Fn.constVoid}
+          text=""
+        />
+      </div>
+    ),
+  });
 }
