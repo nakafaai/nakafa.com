@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer, Schema } from "effect";
@@ -115,6 +116,24 @@ describe("published material places", () => {
           publicPath: previewProjection.publicPath,
         });
       })
+  );
+
+  it.effect("pins the read when its caller reads several in one release", () =>
+    Effect.gen(function* () {
+      const activeReleaseId = ReleaseIdSchema.make("release-material");
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed([]));
+
+      yield* readPublishedMaterialPlacements(
+        "en",
+        previewProjection,
+        activeReleaseId
+      );
+
+      expect(runtimeQueryMock).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
+      );
+    })
   );
 
   it.effect("answers no place for a material that no curriculum shows", () =>

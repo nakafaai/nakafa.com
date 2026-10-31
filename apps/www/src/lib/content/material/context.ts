@@ -8,6 +8,7 @@ import {
   decodePublishedMaterialContext,
   type PublishedMaterialIdentity,
 } from "@/lib/content/material/projection";
+import type { ContentReleasePin } from "@/lib/content/published/release";
 import { httpLayer } from "@/lib/convex/http";
 
 /**
@@ -16,9 +17,16 @@ import { httpLayer } from "@/lib/convex/http";
  */
 export const readPublishedMaterialPlacements = Effect.fn(
   "NakafaMaterial.readPublishedPlacements"
-)(function* (locale: Locale, material: PublishedMaterialIdentity) {
+)(function* (
+  locale: Locale,
+  material: PublishedMaterialIdentity,
+  expectedActiveReleaseId?: ContentReleasePin
+) {
   const places = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(contentRelease.program.placements, {
+      ...(expectedActiveReleaseId === undefined
+        ? {}
+        : { expectedActiveReleaseId }),
       appLocale: AppLocaleSchema.make(locale),
       contentKey: material.contentKey,
       materialKey: material.materialKey,

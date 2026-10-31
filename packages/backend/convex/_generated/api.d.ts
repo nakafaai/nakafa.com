@@ -2537,6 +2537,7 @@ export declare const api: {
         {
           appLocale: "en" | "id" | "de";
           contentKey: string;
+          expectedActiveReleaseId?: string | null;
           materialKey: string;
           parentPath: string;
           publicPath: string;

@@ -86,6 +86,9 @@ export default GroupSpec.make()
     FunctionSpec.publicQuery({
       name: "placements",
       args: () => ({
+        expectedActiveReleaseId: Schema.optionalKey(
+          Schema.Union([Schema.String, Schema.Null])
+        ),
         appLocale: appLocaleValidator,
         contentKey: Schema.String,
         materialKey: Schema.String,

@@ -38,12 +38,16 @@ const placements = FunctionImpl.make(
   spec,
   "placements",
   Effect.fn("contentRelease.program.placements")(function* (args) {
-    return yield* readProgramPlacements(args.appLocale, {
-      contentKey: args.contentKey,
-      materialKey: args.materialKey,
-      parentPath: args.parentPath,
-      publicPath: args.publicPath,
-    }).pipe(Effect.provide(programLayer));
+    return yield* readProgramPlacements(
+      args.appLocale,
+      {
+        contentKey: args.contentKey,
+        materialKey: args.materialKey,
+        parentPath: args.parentPath,
+        publicPath: args.publicPath,
+      },
+      args.expectedActiveReleaseId
+    ).pipe(Effect.provide(programLayer));
   })
 );
 const path = FunctionImpl.make(

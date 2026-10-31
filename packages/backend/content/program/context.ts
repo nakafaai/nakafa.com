@@ -172,8 +172,14 @@ export const readProgramPlacements = Effect.fn(
   "contentRelease.readProgramPlacements"
 )(function* (
   appLocale: PublicationRow<"curriculumRoutes">["appLocale"],
-  input: Omit<ProgramContextInput, "nodeKey" | "programKey">
+  input: Omit<ProgramContextInput, "nodeKey" | "programKey">,
+  expectedActiveReleaseId?: string | null
 ) {
+  yield* requireExpectedActiveRelease(
+    yield* loadActiveIdentity(),
+    expectedActiveReleaseId,
+    "Curriculum places"
+  );
   const owner = yield* loadProgramOwner(appLocale);
   if (!(owner.managed && owner.selected)) {
     return [];

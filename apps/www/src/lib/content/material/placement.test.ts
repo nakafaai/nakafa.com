@@ -1,5 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Option, Schema } from "effect";
+import { CurriculumNodeKeySchema } from "@nakafa/aksara-contracts/program/curriculum";
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
+import { Option } from "effect";
 import type { MaterialPlacement } from "@/lib/content/material/navigation";
 import {
   createPlacementStore,
@@ -8,15 +10,17 @@ import {
   placementHint,
 } from "@/lib/content/material/placement";
 
-const place = (nodeKey: string): MaterialPlacement =>
-  Schema.decodeUnknownSync(Schema.Any)({
-    context: { nodeKey, programKey: "merdeka" },
-    hash: "functions",
-    label: "Functions",
-    parent: { publicPath: "curriculum/merdeka/class-11/mathematics" },
-    resolvedCanonicalPath: "subjects/mathematics/functions",
-    trail: [],
-  });
+const place = (nodeKey: string): MaterialPlacement => ({
+  context: {
+    nodeKey: CurriculumNodeKeySchema.make(nodeKey),
+    programKey: LearningProgramKeySchema.make("merdeka"),
+  },
+  hash: "functions",
+  label: "Functions",
+  parent: { publicPath: "curriculum/merdeka/class-11/mathematics" },
+  resolvedCanonicalPath: "subjects/mathematics/functions",
+  trail: [],
+});
 
 describe("lesson placement", () => {
   it("finds the place that the reader's hint names among the places of the lesson", () => {
