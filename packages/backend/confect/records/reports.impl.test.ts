@@ -312,9 +312,15 @@ describe("records/reports", () => {
             band: "Baik",
             className: "Biologi X-1",
             kktp: "reached",
+            subject: "Biologi",
             value: 90,
           },
-          { className: "Fisika X-1", kktp: "reached", value: 82 },
+          {
+            className: "Fisika X-1",
+            kktp: "reached",
+            subject: "Fisika",
+            value: 82,
+          },
         ]);
       })
   );

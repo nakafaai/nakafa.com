@@ -239,6 +239,8 @@ describe("access/catalog", () => {
           "exam.results.released",
           "exam.results.graded",
           "report.locked",
+          "graduation.decided",
+          "letter.locked",
           "guardian.started",
           "guardian.linked",
           "guardian.withdrawn",

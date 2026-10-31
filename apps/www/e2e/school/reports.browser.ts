@@ -174,9 +174,7 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   await checkPage.goto(
     hostAddress(baseURL, "localhost", `/en/verify/${"0".repeat(64)}`)
   );
-  await expect(
-    checkPage.getByText("No report card has this code.")
-  ).toBeVisible();
+  await expect(checkPage.getByText("No document has this code.")).toBeVisible();
   await visitor.close();
   await owner.close();
   await teacher.close();
