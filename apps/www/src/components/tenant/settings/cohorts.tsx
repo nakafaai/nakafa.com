@@ -3,6 +3,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -19,7 +20,9 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { chosenGrade } from "@/components/tenant/settings/choices";
@@ -182,9 +185,13 @@ function CohortsActions({ slug }: { slug: TenantSlug }) {
 
   return (
     <>
-      <CohortsUnitChoice />
-      <TableSearch placeholder={t("cohorts-search")} />
-      <SchoolCohortAdd active={active} slug={slug} />
+      <ButtonGroup>
+        <CohortsUnitChoice />
+        <TableSearch placeholder={t("cohorts-search")} />
+      </ButtonGroup>
+      <WithAction action="cohort.manage">
+        <SchoolCohortAdd active={active} slug={slug} />
+      </WithAction>
     </>
   );
 }
@@ -303,9 +310,10 @@ function SchoolCohortAdd({
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} type="button">
-        {t("cohort-create")}
-      </Button>
+      <SchoolHeaderAdd
+        label={t("cohort-create")}
+        onClick={() => setIsOpen(true)}
+      />
       <ResponsiveDialog
         description={
           hasNoPeriod ? t("cohort-add-no-period") : t("cohort-add-footer")
@@ -416,12 +424,15 @@ function SchoolCohortTable({
       id: "status",
     }),
     cohortColumns.display({
-      cell: (info) =>
-        info.row.original.status === "archived" ? (
-          <SchoolCohortRestore cohort={info.row.original} slug={slug} />
-        ) : (
-          <SchoolCohortMenu cohort={info.row.original} slug={slug} />
-        ),
+      cell: (info) => (
+        <WithAction action="cohort.manage">
+          {info.row.original.status === "archived" ? (
+            <SchoolCohortRestore cohort={info.row.original} slug={slug} />
+          ) : (
+            <SchoolCohortMenu cohort={info.row.original} slug={slug} />
+          )}
+        </WithAction>
+      ),
       id: "actions",
       meta: { align: "menu" },
     }),

@@ -19,7 +19,7 @@ import type {
   StageSnapshotBatchRequest,
   StageSnapshotRequest,
 } from "@nakafa/aksara-contracts/transport/snapshot";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
@@ -153,7 +153,7 @@ export const stageSnapshot = Effect.fn("contentRelease.stageSnapshot")(
     const { runMutation } = yield* MutationRunner;
     yield* verifySnapshotManifest(request.snapshot);
     return yield* runMutation(
-      refs.internal.contentRelease.snapshot.manifest.stageSnapshot,
+      contentReleaseInternal.snapshot.manifest.stageSnapshot,
       {
         releaseId: request.releaseId,
         snapshotJson: encodeSnapshotJson(request.snapshot),
@@ -169,7 +169,7 @@ export const stageSnapshotBatch = Effect.fn(
   const { runMutation } = yield* MutationRunner;
   yield* verifySnapshotBatch(request.family, request.snapshotId, request.rows);
   return yield* runMutation(
-    refs.internal.contentRelease.snapshot.batch.stageSnapshotBatch,
+    contentReleaseInternal.snapshot.batch.stageSnapshotBatch,
     {
       batchIndex: request.batchIndex,
       family: request.family,

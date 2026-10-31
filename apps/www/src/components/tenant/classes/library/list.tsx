@@ -8,8 +8,10 @@ import {
   Image01Icon,
   Link04Icon,
   Pdf02Icon,
+  PencilEdit02Icon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -38,6 +40,7 @@ import {
 } from "@/components/tenant/classes/forum/call";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { AddToLibrary } from "@/components/tenant/classes/library/create";
+import { LibraryEditDialog } from "@/components/tenant/classes/library/edit";
 import {
   type LibraryItem,
   removeItemUpdate,
@@ -293,31 +296,56 @@ function LibraryTitle({ row }: { row: LibraryRow }) {
   );
 }
 
-/** The menu of a saved item for a teacher: Remove, which asks first and takes the row away at once. */
+/**
+ * The menu of a saved item for a teacher: Edit, which opens its dialog, and Remove, which asks first
+ * and takes the row away at once.
+ */
 function LibraryRemove({ item }: { item: LibraryItem }) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
   const remove = useMutation(classroom.library.remove);
+  const [editing, setEditing] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
 
   return (
-    <ConfirmRowMenu
-      action={t("library-remove")}
-      confirm={t("library-remove")}
-      description={t("library-remove-description")}
-      icon={Delete02Icon}
-      onConfirm={() =>
-        runForumCall(
-          forumCall(() =>
-            remove.withOptimisticUpdate(removeItemUpdate)({
-              classId,
-              itemId: item.id,
-              slug,
-            })
-          ),
-          toastForumFailure
-        )
-      }
-      title={t("library-remove-title")}
-    />
+    <>
+      <ConfirmRowMenu
+        action={t("library-remove")}
+        confirm={t("library-remove")}
+        description={t("library-remove-description")}
+        icon={Delete02Icon}
+        onConfirm={() =>
+          runForumCall(
+            forumCall(() =>
+              remove.withOptimisticUpdate(removeItemUpdate)({
+                classId,
+                itemId: item.id,
+                slug,
+              })
+            ),
+            toastForumFailure
+          )
+        }
+        title={t("library-remove-title")}
+      >
+        <DropdownMenuItem
+          onClick={() => {
+            setEditing((count) => count + 1);
+            setIsEditing(true);
+          }}
+        >
+          <HugeIcons icon={PencilEdit02Icon} />
+          {t("library-edit")}
+        </DropdownMenuItem>
+      </ConfirmRowMenu>
+      {editing === 0 ? null : (
+        <LibraryEditDialog
+          item={item}
+          key={editing}
+          open={isEditing}
+          setOpen={setIsEditing}
+        />
+      )}
+    </>
   );
 }

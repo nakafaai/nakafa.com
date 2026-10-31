@@ -1,5 +1,5 @@
 import { MAX_PUBLICATION_REQUEST_BYTES } from "@nakafa/aksara-contracts/transport/limits";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { ActionRunner } from "@repo/backend/confect/_generated/services";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
@@ -76,7 +76,7 @@ const publicationRoute = Effect.fn("contentRelease.publicationRoute")(
       return yield* rejectOversizedDispatch();
     }
     return yield* runAction(
-      refs.internal.contentRelease.ingress.dispatch.dispatch,
+      contentReleaseInternal.ingress.dispatch.dispatch,
       body.success
     ).pipe(Effect.orDie);
   }

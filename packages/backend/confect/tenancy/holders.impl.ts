@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -35,7 +35,7 @@ const schedule = FunctionImpl.make(
     if (!page.isDone) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.tenancy.holders.schedule,
+        tenancyInternal.holders.schedule,
         { cursor: page.continueCursor, email }
       );
     }

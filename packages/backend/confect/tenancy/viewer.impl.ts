@@ -1,8 +1,12 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type { UsersDoc } from "@repo/backend/confect/_generated/docs";
+import type {
+  TenantGrantsDoc,
+  UsersDoc,
+} from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
+import { actionsOpenTo } from "@repo/backend/confect/access/catalog";
 import { grantView } from "@repo/backend/confect/access/grant";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import member from "@repo/backend/confect/middleware/member.impl";
@@ -37,8 +41,21 @@ const accountOf = (appUser: UsersDoc) => {
 };
 
 /**
+ * Every action the member's roles open anywhere in the school, an Owner's as an Admin's, which
+ * tells the app the pages the member reaches. Each function still decides on its own object.
+ */
+const reachOf = (grants: readonly TenantGrantsDoc[]) =>
+  Arr.dedupe(
+    Arr.flatMap(grants, (grant) =>
+      grant.role.key === "owner"
+        ? actionsOpenTo("admin")
+        : actionsOpenTo(grant.role.key)
+    )
+  );
+
+/**
  * The member's tenant with its settings, its units with theirs and the actions the
- * caller may take on each, the caller's grants, and the tenant capabilities: one
+ * caller may take on each, the caller's grants, the actions its roles open, and the tenant capabilities: one
  * indexed read past the member check. A unit's actions come from the row and the
  * grants the member check already read. Archived units come last, so a settings
  * page can bring one back.
@@ -74,6 +91,7 @@ const get = FunctionImpl.make(
       can: yield* tenantAuthority.allowed(tenant),
       grants: Arr.map(grants, grantView),
       person: { id: person._id, kind: person.kind, name: person.name },
+      reach: reachOf(grants),
       tenant: Struct.assign(Struct.assign(profile, tenantSettings(tenant)), {
         id: tenant._id,
       }),

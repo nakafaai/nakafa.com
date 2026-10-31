@@ -1,12 +1,12 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { getXenditCheckoutLocale } from "@repo/backend/confect/billing/locale";
 import {
-  type ProCheckoutOffer,
   XenditCheckoutError,
+  type XenditCheckoutOffer,
   xenditCheckoutErrorCode,
 } from "@repo/backend/confect/billing/spec";
 import type { XenditSessionRequest } from "@repo/backend/confect/billing/xendit/contract";
@@ -15,24 +15,26 @@ import { createSession } from "@repo/backend/confect/billing/xendit/sessions";
 import { randomUuid } from "@repo/utilities/uuid";
 import { DateTime, Effect } from "effect";
 
-type ProOffer = typeof ProCheckoutOffer.Type;
+type CheckoutOffer = typeof XenditCheckoutOffer.Type;
 type XenditLocale = ReturnType<typeof getXenditCheckoutLocale>;
 
-/** What the buyer reads on Xendit's page and in Xendit's messages for each Pro offer, in the page's language. */
+/** What the buyer reads on Xendit's page and in Xendit's messages for each offer, in the page's language. */
 export const OFFER_DESCRIPTIONS = {
   en: {
     "pro.monthly": "Nakafa Pro, renews every month",
     "pro.pass.1": "Nakafa Pro for 1 month",
     "pro.pass.3": "Nakafa Pro for 3 months",
     "pro.pass.12": "Nakafa Pro for 12 months",
+    "pro.topup": "1,000 Nina credits",
   },
   id: {
     "pro.monthly": "Nakafa Pro, diperpanjang setiap bulan",
     "pro.pass.1": "Nakafa Pro selama 1 bulan",
     "pro.pass.3": "Nakafa Pro selama 3 bulan",
     "pro.pass.12": "Nakafa Pro selama 12 bulan",
+    "pro.topup": "1.000 kredit Nina",
   },
-} satisfies Record<XenditLocale, Record<ProOffer, string>>;
+} satisfies Record<XenditLocale, Record<CheckoutOffer, string>>;
 
 /**
  * The channels of a monthly plan's first payment: the ones a recurring plan can
@@ -44,8 +46,8 @@ export const OFFER_DESCRIPTIONS = {
 const RENEWABLE_CHANNELS = ["CARDS"];
 
 /**
- * The hosted session one Pro offer opens: one payment through any channel
- * Xendit offers for a pass, and for the monthly plan the first month through a
+ * The hosted session one offer opens: one payment through any channel Xendit
+ * offers for a pass or a credit pack, and for the monthly plan the first month through a
  * channel Xendit saves, which the recurring plan opened after the payment
  * charges every month after.
  */
@@ -53,7 +55,7 @@ export function proSessionRequest(input: {
   readonly amount: number;
   readonly customerId: string;
   readonly locale: ActiveAppLocaleCode;
-  readonly offer: ProOffer;
+  readonly offer: CheckoutOffer;
   readonly referenceId: string;
   readonly returnUrl: string;
 }): XenditSessionRequest {
@@ -109,12 +111,12 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
     readonly amount: number;
     readonly appUserId: Docs["users"]["_id"];
     readonly locale: ActiveAppLocaleCode;
-    readonly offer: ProOffer;
+    readonly offer: CheckoutOffer;
     readonly successUrl: string;
   }) {
     const { runMutation } = yield* MutationRunner;
     const prepared = yield* runMutation(
-      refs.internal.billing.xendit.checkout.prepare,
+      billingInternal.xendit.checkout.prepare,
       { offer: input.offer, userId: input.appUserId }
     ).pipe(Effect.catchTag("SchemaError", Effect.die));
     if (prepared.openUrl !== null) {
@@ -128,7 +130,7 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
           email: prepared.email,
         }).pipe(
           Effect.tap((id) =>
-            runMutation(refs.internal.billing.checkout.recordCustomer, {
+            runMutation(billingInternal.checkout.recordCustomer, {
               accountId: prepared.accountId,
               providerCustomerId: id,
             }).pipe(Effect.orDie)
@@ -151,7 +153,7 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
         message: `Session ${session.payment_session_id} has no payment link.`,
       });
     }
-    yield* runMutation(refs.internal.billing.xendit.checkout.admit, {
+    yield* runMutation(billingInternal.xendit.checkout.admit, {
       accountId: prepared.accountId,
       event: {
         name: "checkout started",

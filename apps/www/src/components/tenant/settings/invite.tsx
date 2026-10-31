@@ -33,6 +33,7 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { roleIcon } from "@/components/tenant/roles";
 import { addMemberChange } from "@/components/tenant/settings/accounts";
 import { cardOffered } from "@/components/tenant/settings/offer";
@@ -65,9 +66,10 @@ export function SchoolInviteAction() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} type="button">
-        {t("invite-action")}
-      </Button>
+      <SchoolHeaderAdd
+        label={t("invite-action")}
+        onClick={() => setOpen(true)}
+      />
       <SchoolInviteDialog open={open} setOpen={setOpen} />
     </>
   );

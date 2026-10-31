@@ -23,6 +23,7 @@ import {
 } from "@/lib/content/article/catalog";
 import {
   readPublishedArticleCategory,
+  readPublishedCategoryAlternates,
   readPublishedCategoryPage,
 } from "@/lib/content/article/category";
 import {
@@ -35,8 +36,9 @@ import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 import { serverHandler } from "@/lib/server/fn";
 import { readStaticData } from "@/lib/static/data";
@@ -114,6 +116,7 @@ const readArticleCategory = createServerFn({ method: "GET" })
           namespace: "Articles",
         });
         const categoryPath = `/articles/${model.route}`;
+        const alternates = yield* readPublishedCategoryAlternates(model);
         const breadcrumbs = createBreadcrumbItems(locale, [
           { name: tCommon("home"), path: "" },
           { name: tCommon("articles"), path: "/articles" },
@@ -122,6 +125,13 @@ const readArticleCategory = createServerFn({ method: "GET" })
 
         return outcome("Found", {
           page: {
+            // A category's slug differs by locale, so its language links come from the catalog.
+            alternates: toHeadAlternates(
+              createResolvedRouteAlternates(
+                { appLocale: locale, publicPath: `articles/${model.route}` },
+                alternates
+              )
+            ),
             articles: catalog.articles,
             breadcrumbs,
             category: model.category,
@@ -182,6 +192,7 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
     const url = `${COMPANY_IDENTITY.url}/${locale}${categoryPath}`;
     return toRouterHead(
       createSeoHead({
+        alternates: loaderData.alternates,
         canonicalPath: `/${locale}${categoryPath}`,
         description,
         image: getOgUrl(locale, categoryPath),

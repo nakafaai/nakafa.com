@@ -8,11 +8,14 @@ import {
 } from "@/lib/seo/head";
 
 /**
- * The title of a try-out page. A plain title takes the site name, and an absolute
- * title is the whole title, as the reference names its retained and preview pages.
+ * The title of a try-out page. A plain title takes the site name, parts run from the
+ * most to the least telling and the title budget drops the last that do not fit, and
+ * an absolute title is the whole title, as the reference names its retained and
+ * preview pages.
  */
 const TryoutPageTitleSchema = Schema.Union([
   Schema.String,
+  Schema.Array(Schema.String),
   Schema.Struct({ absolute: Schema.String }),
 ]);
 
@@ -20,9 +23,12 @@ type TryoutPageTitle = typeof TryoutPageTitleSchema.Type;
 
 /** The title facts of a page: a plain title is one part of the site title, and an absolute one stands alone. */
 function titleFacts(title: TryoutPageTitle) {
-  return typeof title === "string"
-    ? { parts: [title] }
-    : { absoluteTitle: title.absolute, parts: [] };
+  if (typeof title === "string") {
+    return { parts: [title] };
+  }
+  return "absolute" in title
+    ? { absoluteTitle: title.absolute, parts: [] }
+    : { parts: title };
 }
 
 /**

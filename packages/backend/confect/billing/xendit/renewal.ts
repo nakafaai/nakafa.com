@@ -1,6 +1,6 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -130,7 +130,7 @@ const turnOff = Effect.fn("billing.xendit.renewal.turnOff")(function* (
 ) {
   yield* (yield* Scheduler).runAfter(
     Duration.zero,
-    refs.internal.billing.xendit.cancel.deactivate,
+    billingInternal.xendit.cancel.deactivate,
     { planId }
   );
 });

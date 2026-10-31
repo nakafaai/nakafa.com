@@ -1,7 +1,7 @@
 import type { GenericId } from "@confect/core";
 import type { JournalEntriesDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -67,11 +67,9 @@ const scheduleRun = Effect.fn("notifications.inbox.scheduleRun")(function* (
   tenantId: GenericId.GenericId<"tenants">,
   delay: Duration.Duration
 ) {
-  yield* (yield* Scheduler).runAfter(
-    delay,
-    refs.internal.notifications.consume.run,
-    { tenantId }
-  );
+  yield* (yield* Scheduler).runAfter(delay, notificationsInternal.consume.run, {
+    tenantId,
+  });
 });
 
 /**

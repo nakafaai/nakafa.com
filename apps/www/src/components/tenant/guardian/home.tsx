@@ -41,6 +41,7 @@ import {
   PanesProvider,
   usePanes,
 } from "@/components/shared/panes";
+import { columnAlign } from "@/components/shared/table/align";
 import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
@@ -337,19 +338,23 @@ function GuardianGradeTable({ grades }: { grades: readonly ChildGrade[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>{t("grade-class")}</TableHead>
-            <TableHead className="text-end">{t("grade-value")}</TableHead>
-            <TableHead>{t("grade-note")}</TableHead>
+            <TableHead className={columnAlign({ align: "start" })}>
+              {t("grade-class")}
+            </TableHead>
+            <TableHead className={columnAlign()}>{t("grade-value")}</TableHead>
+            <TableHead className={columnAlign()}>{t("grade-note")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {Arr.map(grades, (grade) => (
             <TableRow key={grade.id}>
-              <TableCell dir="auto">{grade.className}</TableCell>
-              <TableCell className="text-end tabular-nums">
-                {grade.value}
+              <TableCell className={columnAlign({ align: "start" })} dir="auto">
+                {grade.className}
               </TableCell>
-              <TableCell>{grade.band ?? t(`kktp-${grade.kktp}`)}</TableCell>
+              <TableCell className={columnAlign()}>{grade.value}</TableCell>
+              <TableCell className={columnAlign()}>
+                {grade.band ?? t(`kktp-${grade.kktp}`)}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

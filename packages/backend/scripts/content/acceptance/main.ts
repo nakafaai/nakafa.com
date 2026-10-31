@@ -17,6 +17,7 @@ import { inviteMode } from "@repo/backend/scripts/content/acceptance/invite";
 import { learnerMode } from "@repo/backend/scripts/content/acceptance/learner";
 import { cleanMode } from "@repo/backend/scripts/content/acceptance/local";
 import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
+import { operatorMode } from "@repo/backend/scripts/content/acceptance/operator";
 import { ownerMode } from "@repo/backend/scripts/content/acceptance/owner";
 import { profileMode } from "@repo/backend/scripts/content/acceptance/profile";
 import { schoolMode } from "@repo/backend/scripts/content/acceptance/school";
@@ -46,6 +47,7 @@ export const acceptanceModes: readonly AcceptanceMode[] = [
   startMode,
   cleanMode,
   learnerMode,
+  operatorMode,
   schoolMode,
   ownerMode,
   teacherMode,

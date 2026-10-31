@@ -6,6 +6,7 @@ import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { toPublicPath } from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Record as Rec, Result, Schema } from "effect";
+import { createSEODescription } from "@/lib/seo/descriptions";
 import {
   OPEN_GRAPH_LOCALES,
   SOCIAL_IMAGE_SIZE,
@@ -93,6 +94,7 @@ export function createSeoHead(facts: PageFacts): SeoHead {
     facts.absoluteTitle ?? createSEOTitle(facts.parts, SOCIAL_SITE_NAME);
   const canonical = new URL(toPublicPath(facts.canonicalPath), SITE_ORIGIN)
     .href;
+  const description = createSEODescription([facts.description]);
   const image = {
     alt: title,
     height: String(SOCIAL_IMAGE_SIZE.height),
@@ -107,12 +109,12 @@ export function createSeoHead(facts: PageFacts): SeoHead {
         href: alternate.href,
       })),
     canonical,
-    description: facts.description,
+    description,
     googlebot: facts.indexable ? GOOGLEBOT_INDEXABLE : GOOGLEBOT_PRIVATE,
     jsonLd: [...facts.jsonLd],
     robots: facts.indexable ? ROBOTS_INDEXABLE : "noindex,nofollow",
     social: {
-      "og:description": facts.description,
+      "og:description": description,
       "og:image": image.url,
       "og:image:alt": image.alt,
       "og:image:height": image.height,
@@ -124,7 +126,7 @@ export function createSeoHead(facts: PageFacts): SeoHead {
       "og:url": canonical,
       "twitter:card": TWITTER_CARD,
       "twitter:creator": SOCIAL_TWITTER_ACCOUNT,
-      "twitter:description": facts.description,
+      "twitter:description": description,
       "twitter:image": image.url,
       "twitter:image:alt": image.alt,
       "twitter:site": SOCIAL_TWITTER_ACCOUNT,

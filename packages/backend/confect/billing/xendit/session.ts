@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -20,6 +20,7 @@ import {
   RailMismatch,
 } from "@repo/backend/confect/billing/spec";
 import { applySubscriptionState } from "@repo/backend/confect/billing/subscriptions";
+import { applyTopUpPaid } from "@repo/backend/confect/billing/topup";
 import { XenditSessionEvent } from "@repo/backend/confect/billing/xendit/contract";
 import {
   applyInvoiceSessionPaid,
@@ -133,10 +134,40 @@ const applyPassPaid = Effect.fn("billing.xendit.session.passPaid")(function* (
     .pipe(Effect.orDie);
   yield* (yield* Scheduler).runAt(
     DateTime.makeUnsafe(Math.max(now, end - PASS_REMINDER_LEAD_MS)),
-    refs.internal.billing.reminder.delivery.deliver,
+    billingInternal.reminder.delivery.deliver,
     { grantId, locale: checkout.locale }
   );
   yield* scheduleProjection(account.owner);
+});
+
+/**
+ * Records a paid credit pack once and grants it to the account's owner. Xendit
+ * names the payment once a pay session completes; the session ID stands in when
+ * it does not.
+ */
+const applyPackPaid = Effect.fn("billing.xendit.session.packPaid")(function* (
+  checkout: Docs["billingCheckouts"],
+  paymentId: string
+) {
+  const account = yield* readXenditAccount(checkout.accountId);
+  const amount = billingOfferPrice(checkout.offer, account.currency);
+  // Checkout opens a session only for a priced offer, and only a personal account buys a pack, so anything else is a broken record.
+  if (amount === null || account.owner.kind !== "personal") {
+    return yield* new BillingRowMissing({
+      table: "billingCheckouts",
+      message: `${checkout.offer} is not a ${account.currency} pack of a learner.`,
+    });
+  }
+  yield* applyTopUpPaid({
+    accountId: account._id,
+    userId: account.owner.userId,
+    rail: "xendit",
+    providerPaymentId: paymentId,
+    amount,
+    currency: account.currency,
+    refundableAmount: amount,
+    providerUpdatedAt: yield* Clock.currentTimeMillis,
+  });
 });
 
 /**
@@ -196,7 +227,7 @@ const applyFirstMonthPaid = Effect.fn("billing.xendit.session.firstMonthPaid")(
     }
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.billing.xendit.renewal.open,
+      billingInternal.xendit.renewal.open,
       { locale: checkout.locale, subscriptionId }
     );
   }
@@ -215,10 +246,10 @@ const closeCheckout = Effect.fn("billing.xendit.session.close")(function* (
 
 /**
  * A hosted session completed. A session that pays a school invoice pays the
- * invoice, and its School grant is written. A pass is recorded and granted. The
- * monthly plan's first month starts its subscription: the payment, Pro until
- * the first renewal, and the recurring plan that charges the channel the
- * session saved.
+ * invoice, and its School grant is written. A credit pack and a pass are recorded
+ * and granted. The monthly plan's first month starts its subscription: the
+ * payment, Pro until the first renewal, and the recurring plan that charges the
+ * channel the session saved.
  */
 export const applySessionCompleted = Effect.fn(
   "billing.xendit.session.completed"
@@ -235,6 +266,8 @@ export const applySessionCompleted = Effect.fn(
     session.value.payment_id ?? session.value.payment_session_id;
   if (checkout.value.invoiceId !== null) {
     yield* applyInvoiceSessionPaid(checkout.value.invoiceId, paymentId);
+  } else if (billingOffer(checkout.value.offer).product === "credits") {
+    yield* applyPackPaid(checkout.value, paymentId);
   } else if (billingOffer(checkout.value.offer).interval === "pass") {
     yield* applyPassPaid(checkout.value, paymentId);
   } else {

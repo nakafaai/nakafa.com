@@ -1,6 +1,6 @@
 import { useMutation } from "@confect/react";
 import access from "@repo/backend/confect/_generated/refs/access";
-import { BuiltinRole } from "@repo/backend/confect/access/schema";
+import { BuiltinRole, OwnerRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -33,6 +33,18 @@ import { saveSchool } from "@/components/tenant/settings/save";
 const SOURCE = "components/tenant/settings/grant";
 
 /**
+ * The roles the viewer may give a person. The Integration role belongs to an integration client
+ * alone, and only an Owner gives the two roles that lead the school.
+ */
+export const givenRoles = (viewer: Option.Option<BuiltinRole>) =>
+  Arr.filter(
+    BuiltinRole.literals,
+    (role) =>
+      role !== "integration" &&
+      (Option.contains(viewer, "owner") || !Schema.is(OwnerRole)(role))
+  );
+
+/**
  * The dialog that gives a role of the whole school to a person: one the viewer chooses, or the `person` that the
  * dialog was opened for, such as a member's row, who shows by name. The request goes out first, and the dialog closes
  * at once, so the grant shows in the table.
@@ -47,9 +59,8 @@ export function SchoolGrantDialog({
   person?: { readonly id: PersonId; readonly name: string };
   setOpen: (open: boolean) => void;
 }) {
-  const { slug } = useTenant();
+  const { role: viewerRole, slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const tSchool = useTranslations("School");
   const common = useTranslations("Common");
   const id = useId();
   const assign = useMutation(access.grants.assign).withOptimisticUpdate(
@@ -60,11 +71,6 @@ export function SchoolGrantDialog({
   const [role, setRole] = useState<BuiltinRole | undefined>(undefined);
   // The grant's person and role stay selected until the server accepts it, and the submit waits for it.
   const [isPending, startAssigning] = useTransition();
-
-  const roleItems = Arr.map(BuiltinRole.literals, (value) => ({
-    label: tSchool(`role.${value}`),
-    value,
-  }));
 
   return (
     <ResponsiveDialog
@@ -134,32 +140,64 @@ export function SchoolGrantDialog({
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-role`}>{t("grant-role")}</FieldLabel>
-          <Select
-            items={roleItems}
-            onValueChange={(value) => {
-              const chosen = Schema.decodeUnknownOption(BuiltinRole)(value);
-              if (Option.isSome(chosen)) {
-                setRole(chosen.value);
-              }
-            }}
+          <SchoolRoleSelect
+            id={`${id}-role`}
+            onChoose={setRole}
+            roles={givenRoles(viewerRole)}
             value={role}
-          >
-            <SelectTrigger className="w-full" id={`${id}-role`}>
-              <SelectValue placeholder={t("roles-role-placeholder")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {Arr.map(roleItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <HugeIcons icon={roleIcon(item.value)} />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          />
         </Field>
       </FieldGroup>
     </ResponsiveDialog>
+  );
+}
+
+/**
+ * The role picker of a person: each role by its name and its own icon. `roles` names what the
+ * person may be given.
+ */
+export function SchoolRoleSelect({
+  id,
+  onChoose,
+  roles,
+  value,
+}: {
+  id: string;
+  onChoose: (role: BuiltinRole) => void;
+  roles: readonly BuiltinRole[];
+  value: BuiltinRole | undefined;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const tSchool = useTranslations("School");
+  const roleItems = Arr.map(roles, (role) => ({
+    label: tSchool(`role.${role}`),
+    value: role,
+  }));
+
+  return (
+    <Select
+      items={roleItems}
+      onValueChange={(next) => {
+        const chosen = Schema.decodeUnknownOption(BuiltinRole)(next);
+        if (Option.isSome(chosen)) {
+          onChoose(chosen.value);
+        }
+      }}
+      value={value}
+    >
+      <SelectTrigger className="w-full" id={id}>
+        <SelectValue placeholder={t("roles-role-placeholder")} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          {Arr.map(roleItems, (item) => (
+            <SelectItem key={item.value} value={item.value}>
+              <HugeIcons icon={roleIcon(item.value)} />
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }

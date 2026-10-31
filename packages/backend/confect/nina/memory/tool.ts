@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   CapabilityDenied,
@@ -65,7 +65,7 @@ export const runMemory = Effect.fn("nina.memory.tool")(function* ({
   readonly userId: Docs["users"]["_id"];
 }) {
   const { memories, paused } = yield* (yield* QueryRunner)
-    .runQuery(refs.internal.nina.memory.lookup, {
+    .runQuery(ninaInternal.memory.lookup, {
       now: yield* Clock.currentTimeMillis,
       query,
       userId,

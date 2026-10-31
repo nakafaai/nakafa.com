@@ -4,7 +4,8 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleasePublic from "@repo/backend/confect/_generated/refs/contentRelease";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { activeIdentityValidator } from "@repo/backend/content/publication/spec";
@@ -18,14 +19,12 @@ import { Array as Arr, Effect } from "effect";
 
 type ReleasePin = typeof activeIdentityValidator.Type;
 const articleCategoriesReference =
-  refs.internal.contentRelease.article.internal.readAgentTaxonomy;
-const articleBucketsReference =
-  refs.public.contentRelease.article.sitemapBuckets;
-const materialBucketsReference =
-  refs.public.contentRelease.material.sitemapBuckets;
-const tryoutTaxonomyReference = refs.public.contentRelease.tryout.taxonomy;
-const quranCatalogReference = refs.public.contentRelease.quran.surahs;
-const activeReleaseReference = refs.public.contentRelease.runtime.active.read;
+  contentReleaseInternal.article.internal.readAgentTaxonomy;
+const articleBucketsReference = contentReleasePublic.article.sitemapBuckets;
+const materialBucketsReference = contentReleasePublic.material.sitemapBuckets;
+const tryoutTaxonomyReference = contentReleasePublic.tryout.taxonomy;
+const quranCatalogReference = contentReleasePublic.quran.surahs;
+const activeReleaseReference = contentReleasePublic.runtime.active.read;
 
 /** Reads public taxonomy from one release-pinned signed publication. */
 export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(

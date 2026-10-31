@@ -27,6 +27,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
@@ -63,9 +64,10 @@ export function SchoolRolesSettings() {
                 <span className="max-sm:sr-only">{t("roles-guide")}</span>
               </Button>
             </ButtonGroup>
-            <Button onClick={() => setIsGiving(true)} type="button">
-              {t("roles-assign")}
-            </Button>
+            <SchoolHeaderAdd
+              label={t("roles-assign")}
+              onClick={() => setIsGiving(true)}
+            />
           </>
         }
       >

@@ -1,5 +1,5 @@
 import type { ExamsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -44,7 +44,7 @@ export const removeExam = Effect.fn("exams.exam.remove")(function* (
     .pipe(Effect.orDie);
   yield* (yield* Scheduler).runAfter(
     Duration.zero,
-    refs.internal.exams.assets.sweep,
+    examsInternal.assets.sweep,
     { examId: exam._id }
   );
 });

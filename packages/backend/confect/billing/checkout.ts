@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   ActionCtx as ActionCtxService,
   MutationRunner,
@@ -160,7 +160,7 @@ export const createLearnerCheckout = Effect.fn(
     }),
     admitCheckout: Clock.currentTimeMillis.pipe(
       Effect.flatMap((timestamp) =>
-        runMutation(refs.internal.billing.checkout.admitCheckout, {
+        runMutation(billingInternal.checkout.admitCheckout, {
           event: {
             name: "checkout started",
             properties: {

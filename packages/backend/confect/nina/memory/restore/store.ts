@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -46,11 +46,9 @@ export const keepRestore = Effect.fn("nina.memory.restore.keep")(function* (
       memoryId: memory._id,
     })
     .pipe(Effect.orDie);
-  yield* (yield* Scheduler).runAfter(
-    MEMORY_UNDO,
-    refs.internal.nina.memory.purge,
-    { id }
-  );
+  yield* (yield* Scheduler).runAfter(MEMORY_UNDO, ninaInternal.memory.purge, {
+    id,
+  });
 });
 
 /**

@@ -99,6 +99,27 @@ export const register = Effect.fn("integrations.client.register")(function* (
   return { id: clientId, secret };
 });
 
+/** Changes a client's name and action list and journals the change; its scope and secret stay. */
+export const changeClient = Effect.fn("integrations.client.change")(function* (
+  actor: typeof TenantActor.Type,
+  client: IntegrationClientsDoc,
+  input: {
+    actions: typeof ClientActions.Type;
+    name: typeof IntegrationName.Type;
+  }
+) {
+  const changed = Struct.assign(client, input);
+  yield* (yield* DatabaseWriter)
+    .table("integrationClients")
+    .replace(client._id, Struct.omit(changed, ["_creationTime", "_id"]))
+    .pipe(Effect.orDie);
+  yield* integrationAuthority.record(actor, client, {
+    client: client._id,
+    type: "integration.changed",
+  });
+  return changed;
+});
+
 /**
  * Draws a new secret for an active client and stores its digest, so the digest
  * of the old secret is gone at once, and deletes the client's access tokens, so

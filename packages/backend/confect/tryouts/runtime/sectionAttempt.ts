@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -40,7 +40,10 @@ export const requireEntrySection = Effect.fn(
   }
 });
 
-/** Starts one section attempt and its timer inside an active try-out attempt. */
+/**
+ * Starts one section attempt and its timer inside an attempt the gate admitted
+ * (`tryoutGate.startSection`), which checked its owner, state, and deadline.
+ */
 export const startSectionAttempt = Effect.fn(
   "tryouts.runtime.startSectionAttempt"
 )(function* (args: {
@@ -50,18 +53,6 @@ export const startSectionAttempt = Effect.fn(
 }) {
   const scheduler = yield* Scheduler;
   const writer = yield* DatabaseWriter;
-  if (args.attempt.status !== "in-progress") {
-    return yield* new TryoutAttemptStateError({
-      code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-      message: "Try-out attempt is not active.",
-    });
-  }
-  if (args.now >= args.attempt.expiresAt) {
-    return yield* new TryoutAttemptStateError({
-      code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-      message: "Try-out attempt time has expired.",
-    });
-  }
   const existing = yield* loadSectionAttempt({
     attemptId: args.attempt._id,
     sectionKey: args.sectionKey,
@@ -113,7 +104,7 @@ export const startSectionAttempt = Effect.fn(
   yield* scheduler
     .runAfter(
       Duration.millis(Math.max(0, expiresAt - args.now)),
-      refs.internal.tryouts.mutations.expiry.section,
+      tryoutsInternal.mutations.expiry.section,
       {
         expiresAt,
         sectionAttemptId,

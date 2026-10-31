@@ -128,7 +128,7 @@
   "SchoolRoster": {
     "import": "Importieren",
     "export": "Exportieren",
-    "export-grades": "Noten exportieren",
+    "export-grades": "Zeugnisnoten",
     "export-grades-label": "Zeugnisnoten einer Klasse",
     "export-grades-loading": "Klassen werden geladen",
     "export-grades-no-period": "Noch kein aktiver Zeitraum.",
@@ -155,7 +155,8 @@
     "status-birth": "Geburtsdatum unlesbar",
     "status-cohort": "Klassenname zu lang",
     "cancel": "Abbrechen",
-    "apply": "Schüler importieren"
+    "apply": "Schüler importieren",
+    "export-students": "Schülerliste"
   },
   "Exams": {
     "minutes-placeholder": "10",
@@ -342,7 +343,7 @@
     "student-locked-title": "Dieser Versuch ist gesperrt.",
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
-    "student-answer": "Deine Antwort: {answer}",
+    "student-answer": "Deine Antwort: <typed>{answer}</typed>",
     "student-answers": "Deine Antworten",
     "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
     "schedule": "Planen",
@@ -476,9 +477,7 @@
     "template-short": "Kurzantwort",
     "template-numeric": "Zahlenantwort",
     "short-placeholder": "Antwort eingeben",
-    "short-line": "Antwortzeile",
     "number-placeholder": "Zahl eingeben",
-    "number-line": "Zahlenfeld",
     "number-key": "Richtige Zahl",
     "number-value-placeholder": "0,75",
     "number-tolerance-placeholder": "0,01",
@@ -501,13 +500,10 @@
     "accepted-hint": "Groß- und Kleinschreibung und zusätzliche Leerzeichen zählen nicht, und jede andere Antwort wartet auf deine Bewertung.",
     "template-essay": "Aufsatz",
     "essay-placeholder": "Antwort schreiben",
-    "essay-area": "Antwortfeld",
     "verdict-partial": "Teilweise richtig",
     "results-points": "Punkte",
     "grade-of": "Punkte von {name}",
     "template-match": "Zuordnung",
-    "match-statements": "Aussagen",
-    "match-answers": "Antworten",
     "statement-of": "Frage {number}, Aussage {name}",
     "answer-of": "Frage {number}, Antwort {name}",
     "statement-placeholder": "Aussage",
@@ -714,6 +710,8 @@
     "class-cohort-none": "Lege zuerst eine Klasse an",
     "class-subject": "Fach",
     "class-subject-placeholder": "Physik",
+    "class-subject-change": "Fach ändern",
+    "class-subject-change-description": "Die Klasse behält ihre Lernenden, Lehrkräfte und Aufgaben, und ihre Adresse bleibt.",
     "class-name": "Name",
     "class-name-placeholder": "Physik 7A",
     "class-status": "Status",
@@ -867,7 +865,8 @@
         "created": "Client angelegt",
         "rotated": "Geheimnis erneuert",
         "revoked": "Client gesperrt",
-        "authorized": "Gerät verbunden"
+        "authorized": "Gerät verbunden",
+        "changed": "Client bearbeitet"
       },
       "invite": {
         "expired": "Einladung abgelaufen",
@@ -1138,7 +1137,18 @@
     "grading-save": "Version speichern",
     "grading-status": "Status",
     "grading-current": "Gültig",
-    "grading-earlier": "Früher"
+    "grading-earlier": "Früher",
+    "grant-change": "Rolle ändern",
+    "grant-change-description": "Die neue Rolle ersetzt diese für {name}.",
+    "invite-readdress": "E-Mail ändern",
+    "invite-readdress-description": "Die alte Einladung endet, und eine neue geht an diese E-Mail.",
+    "client-edit": "Client bearbeiten",
+    "client-edit-description": "Sein Bereich und sein Geheimnis bleiben unverändert.",
+    "locale-title": "Land und Währung",
+    "locale-description": "Wo diese Schule liegt und in welcher Währung ihr Tarif läuft.",
+    "locale-country": "Land",
+    "locale-currency": "Währung",
+    "locale-footer": "Jede Änderung wird im Prüfprotokoll festgehalten."
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1252,8 +1262,8 @@
     "task-points": "Punkte",
     "task-points-for": "Punkte für {name}",
     "task-late": "Späte Abgabe",
-    "task-late-accept": "Angenommen und als verspätet markiert",
-    "task-late-close": "Nach der Frist nicht angenommen",
+    "task-late-accept": "Als verspätet markiert",
+    "task-late-close": "Nicht angenommen",
     "task-status": "Stand",
     "task-handed-in-count": "{count, plural, one {# abgegeben} other {# abgegeben}}",
     "task-not-handed-in": "Nicht abgegeben",
@@ -1275,7 +1285,13 @@
     "task-edit": "Aufgabe bearbeiten",
     "task-edit-description": "Ihre Adresse bleibt, also öffnet jeder Link sie weiter.",
     "task-edit-save": "Speichern",
-    "task-points-fixed": "Die Punkte stehen fest, sobald Arbeit abgegeben ist."
+    "task-points-fixed": "Die Punkte stehen fest, sobald Arbeit abgegeben ist.",
+    "channel-rename": "Kanal umbenennen",
+    "channel-rename-description": "Alle in der Klasse sehen den neuen Namen.",
+    "discussion-rename": "Diskussion umbenennen",
+    "discussion-rename-description": "Alle in der Klasse sehen den neuen Titel.",
+    "library-edit": "Bearbeiten",
+    "library-edit-description": "Die Klasse sieht die Änderung sofort."
   },
   "SchoolGrades": {
     "student": "Schüler",
@@ -1502,20 +1518,71 @@
       }
     },
     "size-title": "Wie viele Schüler habt ihr?",
-    "size-description": "Kostenlos starten, egal wie groß.",
+    "size-description": "Kostenlos starten. Wir empfehlen einen Tarif für deine Größe.",
     "size": {
       "s": "Unter 100",
       "m": "100 bis 499",
       "l": "500 bis 999",
       "xl": "1.000 oder mehr"
     },
+    "plan-free": "Tarif Free, bis {limit} Schüler.",
+    "plan-school": "Tarif School, pro Schüler bezahlt.",
+    "plan-founder": "Tarif School, mit Hilfe des Gründers.",
     "founder-line": "Der Gründer hilft großen Schulen beim Start.",
     "founder-link": "Mit dem Gründer sprechen",
+    "link-copy": "Link kopieren",
+    "link-copied": "Link kopiert",
     "consent": "Mit der Eröffnung akzeptierst du die <terms>Nutzungsbedingungen</terms> und die <privacy>Datenschutzerklärung</privacy>.",
     "finish": "Schule eröffnen",
     "required-error": "Wähle eine Antwort.",
     "school-limit-line": "Für weitere Schulen brauchst du zuerst ein Gespräch mit dem Gründer.",
-    "address-check-failed": "Diese Adresse konnte nicht geprüft werden, also gib sie noch einmal ein."
+    "address-check-failed": "Diese Adresse konnte nicht geprüft werden, also gib sie noch einmal ein.",
+    "entry-title": "Zu deiner Schule",
+    "entry-student": "Gib die Adresse deiner Schule ein oder scanne den QR-Code deiner Lehrkraft.",
+    "entry-parent": "Gib die Adresse der Schule deines Kindes ein.",
+    "entry-field": "Schuladresse",
+    "entry-hint": "Sie steht im Link der Schule, zum Beispiel harapan.nakafa.com.",
+    "entry-invalid": "Gib eine Schuladresse wie harapan.nakafa.com ein.",
+    "entry-submit": "Weiter",
+    "entry-open": "Schule eröffnen"
+  },
+  "Operators": {
+    "title": "Schulen",
+    "search": "Schulen suchen",
+    "open": "Schule eröffnen",
+    "open-description": "Eröffne eine Schule nach ihrem unterschriebenen Vertrag. Ihre Inhaberin oder ihr Inhaber erhält die Einladung.",
+    "empty": "Noch keine Schule",
+    "refused": "Für Nakafa-Mitarbeitende",
+    "refused-description": "Diese Seite eröffnet Schulen nach Vertrag. Alle anderen eröffnen ihre Schule unter /school/new.",
+    "name": "Schule",
+    "name-placeholder": "SMA Harapan Bangsa",
+    "address": "Adresse",
+    "address-placeholder": "harapan",
+    "kind-label": "Art",
+    "kind": {
+      "school": "Schule",
+      "foundation": "Stiftung"
+    },
+    "country": "Land",
+    "level": "Stufe",
+    "owner": "Name der Inhaberin oder des Inhabers",
+    "owner-placeholder": "Ayu Lestari",
+    "email": "E-Mail der Inhaberin oder des Inhabers",
+    "email-placeholder": "ayu@harapan.sch.id",
+    "plan-label": "Lizenz",
+    "plan": {
+      "tenant": "Ganze Organisation",
+      "unit": "Eine Schule"
+    },
+    "dpa": "AVV-Version",
+    "license": "Version der Inhaltslizenz",
+    "version-placeholder": "2026-10",
+    "units": "Einheiten",
+    "status-label": "Status",
+    "status": {
+      "active": "Aktiv",
+      "suspended": "Gesperrt"
+    }
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
@@ -1690,7 +1757,8 @@
     "input": "Eingabe",
     "output": "Ausgabe",
     "bacteria": "Bakterien",
-    "time": "Zeit"
+    "time": "Zeit",
+    "school": "Schule"
   },
   "LearningPrograms": {
     "metadata-title": "Mit Nakafa lernen",
@@ -1854,6 +1922,9 @@
   "Tryouts": {
     "title": "Welchen Probetest möchtest du heute bearbeiten?",
     "metadata-description": "Wähle auf Nakafa ein Land, eine Prüfung und einen Probetest aus.",
+    "track-metadata-description": "Wähle auf Nakafa einen Probetest für {exam}: mit Zeitlimit und sofortiger Auswertung.",
+    "set-metadata-description": "Mach {exam} {set} auf Nakafa: ein Probetest mit Zeitlimit und sofortiger Auswertung.",
+    "section-metadata-description": "Übe {section} aus {exam} {set} auf Nakafa: ein Probetest mit Zeitlimit und sofortiger Auswertung.",
     "country-selector-label": "Land",
     "exam-selector-label": "Prüfung",
     "open-country-cta": "Prüfungen anzeigen",
@@ -2132,6 +2203,7 @@
     "payments-description": "Die erfolgreichen Zahlungen, die neueste zuerst.",
     "payment-date": "Datum",
     "payment-for": "Für",
+    "payment-via": "Über",
     "payment-amount": "Betrag",
     "payment-credits": "Nina-Credits",
     "payment-cycle": "Pro-Abo",
@@ -2264,6 +2336,14 @@
     "school-refusal-graduated": {
       "title": "Bereits abgeschlossen.",
       "description": "Diese Person kann nicht erneut in eine Klasse."
+    },
+    "school-refusal-not-operator": {
+      "title": "Das können nur Nakafa-Mitarbeitende.",
+      "description": "Melde dich mit einem Operator-Konto an."
+    },
+    "school-refusal-provision": {
+      "title": "Diese Schule lässt sich so nicht eröffnen.",
+      "description": "Prüfe die Adresse und die Einheiten der Schule."
     },
     "school-refusal-unit-limit": {
       "title": "Kein Platz für eine weitere Schule.",
@@ -2830,6 +2910,14 @@
     "school-roster-no-period": {
       "title": "Noch kein aktiver Zeitraum.",
       "description": "Öffne zuerst einen Zeitraum für diese Einheit."
+    },
+    "school-refusal-channel-name-taken": {
+      "title": "Dieser Kanalname ist schon vergeben.",
+      "description": "Wähle für diese Klasse einen anderen Namen."
+    },
+    "school-refusal-channel-fixed": {
+      "title": "Der allgemeine Kanal behält seinen Namen.",
+      "description": "Benenne stattdessen einen Themenkanal um."
     }
   },
   "Ai": {

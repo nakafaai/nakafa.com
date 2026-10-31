@@ -1,32 +1,25 @@
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { monospace } from "@repo/design-system/lib/monospace";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
   createFileRoute,
   type ErrorComponentProps,
+  lazyRouteComponent,
   notFound,
-  Outlet,
   useRouter,
 } from "@tanstack/react-router";
-import { cn } from "cn";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactElement, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { AppProviders } from "@/components/providers/app";
 import { ActionLink } from "@/components/state/action";
 import { Broken, BrokenRetry } from "@/components/state/broken";
 import { useRouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
-import { canOpenExams } from "@/components/tenant/exams/access";
 import { loadEntryForm } from "@/components/tenant/forms";
-import { canOpenGraduation } from "@/components/tenant/graduation/access";
 import { TenantMissing } from "@/components/tenant/missing";
-import { TenantOutsider } from "@/components/tenant/outsider";
+import { SchoolPending } from "@/components/tenant/pending";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { canOpenReports } from "@/components/tenant/reports/access";
-import { TenantShell } from "@/components/tenant/shell";
 import { reportClientException } from "@/lib/analytics/client";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { loadKnownSession } from "@/lib/auth/known";
@@ -34,9 +27,7 @@ import { type AuthLegalLinks, authLegalLinks } from "@/lib/auth/legal";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
 import {
-  canManageSchool,
   outsiderOf,
-  roleOf,
   type SchoolFrame,
   type SchoolRead,
 } from "@/lib/tenant/frame";
@@ -50,7 +41,27 @@ import {
 } from "@/lib/tenant/kept";
 import { SchoolReadFailed, SchoolReadsLive } from "@/lib/tenant/read";
 import { readSchoolLocale } from "@/lib/tenant/root";
-import { readBrowserVisit, reusesVisitFrame } from "@/lib/tenant/visit";
+import {
+  readBrowserVisit,
+  retryVisitRead,
+  reusesVisitFrame,
+} from "@/lib/tenant/visit";
+
+/**
+ * The shell of a member's school, with every provider and control it mounts. A student who has not
+ * signed in reads none of it on a slow phone: its code loads for a browser that holds a session,
+ * beside the frame read, and the layout waits for it before a member's page commits.
+ */
+const SchoolMember = lazyRouteComponent(
+  () => import("@/components/tenant/member"),
+  "SchoolMember"
+);
+
+/** The page of an account that is not a member. Only that account reads its code. */
+const TenantOutsider = lazyRouteComponent(
+  () => import("@/components/tenant/outsider"),
+  "TenantOutsider"
+);
 
 /**
  * The search params of the school entry. `sign-in=username` opens the username form
@@ -114,6 +125,7 @@ function readVisitFrame(
   );
   return Effect.runPromise(
     readBrowserVisit({ legal, locale, signedIn, slug }).pipe(
+      retryVisitRead,
       Effect.tap(({ legal: links, school, sessionId }) =>
         school._tag === "Refused"
           ? dropKeptFrame()
@@ -220,6 +232,9 @@ export const Route = createFileRoute("/school/$slug")({
     // The entry's form, which only a visitor's or an outsider's page shows, starts beside
     // them too, since its address already names it.
     const code = Route.options.component?.preload?.();
+    const shell = hasSignedInHint(document.cookie)
+      ? SchoolMember.preload?.()
+      : undefined;
     const entry = loadEntryForm({
       guardian: Arr.some(
         matches,
@@ -246,6 +261,12 @@ export const Route = createFileRoute("/school/$slug")({
     if (frame.school._tag === "Visitor" || frame.school._tag === "Outsider") {
       await entry;
     }
+    if (frame.school._tag === "Outsider") {
+      await TenantOutsider.preload?.();
+    }
+    if (frame.school._tag === "Member") {
+      await (shell ?? SchoolMember.preload?.());
+    }
     await code;
     return { legal: frame.legal, school: frame.school, slug: params.slug };
   },
@@ -253,6 +274,9 @@ export const Route = createFileRoute("/school/$slug")({
     const school = match.context.school;
     return school === undefined ? {} : schoolHead(school.profile.name);
   },
+  pendingComponent: SchoolPending,
+  pendingMinMs: 0,
+  pendingMs: Number.POSITIVE_INFINITY,
   component: SchoolLayout,
   errorComponent: SchoolError,
   notFoundComponent: SchoolRefused,
@@ -312,27 +336,7 @@ function SchoolLayout(): ReactElement {
       <TenantOutsider account={school.account} school={school.profile.name} />
     );
   }
-  const { viewer } = school;
-  return (
-    <AppProviders pageNavigation={null}>
-      <TenantShell
-        account={viewer.account}
-        canManage={canManageSchool(viewer.can)}
-        canOpenExams={canOpenExams(viewer)}
-        canOpenGraduation={canOpenGraduation(viewer)}
-        canOpenReports={canOpenReports(viewer)}
-        home={school.home}
-        personName={viewer.person.name}
-        profile={school.profile}
-        role={roleOf(viewer.grants)}
-        viewer={viewer}
-      >
-        <div className={cn(monospace, "contents")}>
-          <Outlet />
-        </div>
-      </TenantShell>
-    </AppProviders>
-  );
+  return <SchoolMember school={school} />;
 }
 
 /** The page of a school that the gate refused: no school has the address, or the viewer may not open it. */

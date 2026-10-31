@@ -34,8 +34,8 @@ const classArgs = { classId: Id("classes"), slug: TenantSlug };
  * leading bytes, keeps only a PDF or an image, and deletes any other file. The
  * address of a file is read after the access check of each read (ADR 0028). A
  * teacher may also import a file picked in Google Drive, which the server reads
- * with the teacher's own Drive connection and checks the same way.
- * `commit` is internal: only the registration calls it.
+ * with the teacher's own Drive connection and checks the same way. A teacher
+ * retitles any item and readdresses a link. `commit` is internal: only the registration calls it.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -126,6 +126,22 @@ export default GroupSpec.make()
           GoogleFailed,
         ]),
     }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "edit",
+      args: () => ({
+        ...classArgs,
+        address: Schema.NullOr(LinkAddress),
+        itemId: Id("classroomLibrary"),
+        title: LibraryTitle,
+      }),
+      returns: () => Schema.Null,
+      error: () => AccessDenied,
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(ClassAccess, { action: "library.manage", arg: "classId" })
   )
   .addFunction(
     FunctionSpec.publicMutation({

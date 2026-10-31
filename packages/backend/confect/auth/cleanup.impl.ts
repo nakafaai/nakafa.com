@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { drainDeletedUserDataProgram } from "@repo/backend/confect/auth/cleanup";
@@ -24,7 +24,7 @@ const drainDeletedUserData = FunctionImpl.make(
   Effect.fn("auth.cleanup.drainDeletedUserData")(function* (args) {
     const { runMutation } = yield* MutationRunner;
     yield* drainDeletedUserDataProgram(
-      runMutation(refs.internal.auth.cleanup.cleanupDeletedUser, {
+      runMutation(authInternal.cleanup.cleanupDeletedUser, {
         userId: args.userId,
       }).pipe(
         Effect.mapError(toUserCleanupError),

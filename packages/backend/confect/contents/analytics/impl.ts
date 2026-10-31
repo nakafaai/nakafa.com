@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -43,7 +43,7 @@ export const scheduleAllContentAnalyticsPartitions = Effect.fn(
       yield* scheduler
         .runAfter(
           Duration.millis(0),
-          refs.internal.contents.mutations.analytics
+          contentsInternal.mutations.analytics
             .scheduleContentAnalyticsPartition,
           {
             partition,
@@ -132,8 +132,7 @@ export const claimContentAnalyticsPartition = Effect.fn(
     yield* scheduler
       .runAfter(
         Duration.millis(0),
-        refs.internal.contents.mutations.analytics
-          .processContentAnalyticsPartition,
+        contentsInternal.mutations.analytics.processContentAnalyticsPartition,
         {
           leaseVersion,
           partition: args.partition,

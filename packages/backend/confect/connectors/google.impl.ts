@@ -1,6 +1,6 @@
 import type { GenericId, Ref } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -250,9 +250,7 @@ const claim = FunctionImpl.make(
  * connection.
  */
 const connectClaimed = Effect.fn("connectors.google.connectClaimed")(function* (
-  claimed: NonNullable<
-    Ref.Returns<typeof refs.internal.connectors.google.claim>
-  >,
+  claimed: NonNullable<Ref.Returns<typeof connectorsInternal.google.claim>>,
   code: string,
   userId: GenericId.GenericId<"users">
 ) {
@@ -267,7 +265,7 @@ const connectClaimed = Effect.fn("connectors.google.connectClaimed")(function* (
     return yield* new ScopesMissing();
   }
   const { runMutation } = yield* MutationRunner;
-  yield* runMutation(refs.internal.connectors.google.store, {
+  yield* runMutation(connectorsInternal.google.store, {
     connector: claimed.connector,
     owner: claimed.owner,
     personId: claimed.personId,
@@ -293,7 +291,7 @@ const finish = FunctionImpl.make(
   Effect.fn("connectors.google.finish")(function* ({ code, state }) {
     const { appUser } = yield* requireAuth();
     const { runMutation } = yield* MutationRunner;
-    const claimed = yield* runMutation(refs.internal.connectors.google.claim, {
+    const claimed = yield* runMutation(connectorsInternal.google.claim, {
       state,
       userId: appUser._id,
     }).pipe(Effect.orDie);
@@ -369,7 +367,7 @@ const store = FunctionImpl.make(
         .patch(connectionId, { nextSyncAt: now })
         .pipe(Effect.orDie);
       yield* (yield* Scheduler)
-        .runAfter(Duration.zero, refs.internal.connectors.sync.run, {
+        .runAfter(Duration.zero, connectorsInternal.sync.run, {
           connectionId,
         })
         .pipe(Effect.orDie);

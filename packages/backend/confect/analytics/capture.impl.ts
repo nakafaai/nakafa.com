@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { components } from "@repo/backend/confect/_generated/components";
-import refs from "@repo/backend/confect/_generated/refs";
+import analyticsInternal from "@repo/backend/confect/_generated/refs/analytics.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   ActionCtx as ActionCtxService,
@@ -62,7 +62,7 @@ const deliverProductEvent = FunctionImpl.make(
         catch: toProductAnalyticsCaptureError,
       }),
       isUserEligible: runQuery(
-        refs.internal.analytics.capture.isProductAnalyticsUserEligible,
+        analyticsInternal.capture.isProductAnalyticsUserEligible,
         {
           userId: args.distinctId,
         }

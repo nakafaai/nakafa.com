@@ -80,7 +80,7 @@ const prependToChannel = (
  * Changes the summary of one discussion wherever the store holds it: in its own page and on the
  * message that opens it in its channel.
  */
-const changeDiscussion = (
+export const changeDiscussion = (
   localStore: LocalStore.OptimisticLocalStore,
   number: number,
   change: (discussion: Discussion) => Discussion

@@ -13,7 +13,7 @@ import {
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime, Option } from "effect";
@@ -31,7 +31,9 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   PeriodDialog,
@@ -118,15 +120,19 @@ function SchoolPeriodsContent() {
       actions={
         unit === undefined ? undefined : (
           <>
-            {units.length > 1 ? (
-              <SchoolUnitChoice
-                onChoose={setChosenUnit}
-                unitId={unit.id}
-                units={units}
-              />
-            ) : null}
-            <TableSearch placeholder={t("periods-search")} />
-            <SchoolPeriodAdd unitId={unit.id} />
+            <ButtonGroup>
+              {units.length > 1 ? (
+                <SchoolUnitChoice
+                  onChoose={setChosenUnit}
+                  unitId={unit.id}
+                  units={units}
+                />
+              ) : null}
+              <TableSearch placeholder={t("periods-search")} />
+            </ButtonGroup>
+            <WithAction action="period.manage">
+              <SchoolPeriodAdd unitId={unit.id} />
+            </WithAction>
           </>
         )
       }
@@ -219,12 +225,15 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
       id: "status",
     }),
     periodColumns.display({
-      cell: (info) =>
-        info.row.original.status === "archived" ? (
-          <SchoolPeriodRestore period={info.row.original} slug={slug} />
-        ) : (
-          <SchoolPeriodMenu period={info.row.original} slug={slug} />
-        ),
+      cell: (info) => (
+        <WithAction action="period.manage">
+          {info.row.original.status === "archived" ? (
+            <SchoolPeriodRestore period={info.row.original} slug={slug} />
+          ) : (
+            <SchoolPeriodMenu period={info.row.original} slug={slug} />
+          )}
+        </WithAction>
+      ),
       id: "actions",
       meta: { align: "menu" },
     }),
@@ -265,9 +274,7 @@ function SchoolPeriodAdd({ unitId }: { unitId: UnitId }) {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} type="button">
-        {t("period-add")}
-      </Button>
+      <SchoolHeaderAdd label={t("period-add")} onClick={() => setOpen(true)} />
       <PeriodDialog
         description={t("period-add-footer")}
         fields={NEW_PERIOD}

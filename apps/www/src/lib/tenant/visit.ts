@@ -1,6 +1,6 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Locale } from "@repo/internationalization/src/locale";
-import { Effect, Option } from "effect";
+import { Duration, Effect, Option, Schedule } from "effect";
 import { readTokenClaims } from "@/lib/auth/claims";
 import type { AuthLegalLinks } from "@/lib/auth/legal";
 import { readBrowserSessionToken } from "@/lib/auth/token";
@@ -84,3 +84,24 @@ export const readBrowserVisit = Effect.fn("www.tenant.readBrowserVisit")(
     };
   }
 );
+
+/** The wait before a failed school read tries again, which doubles with each try. */
+const READ_RETRY_WAIT = Duration.millis(400);
+
+/** How many more times a failed school read tries. */
+const READ_RETRIES = 2;
+
+/**
+ * Tries a school's first read again on a failure. A phone on a weak network loses a request now and
+ * then, and one lost request must not stand for a broken school: the page shows its failure only
+ * once the network has failed the read each time.
+ */
+export const retryVisitRead = <A, R>(
+  read: Effect.Effect<A, SchoolReadFailed, R>
+) =>
+  read.pipe(
+    Effect.retry({
+      schedule: Schedule.exponential(READ_RETRY_WAIT),
+      times: READ_RETRIES,
+    })
+  );

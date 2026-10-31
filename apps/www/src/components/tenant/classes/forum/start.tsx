@@ -24,6 +24,7 @@ import {
 import { openDiscussion } from "@/components/tenant/classes/forum/send";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 
 /**
  * Opens a numbered discussion in the channel: a title and a first message. The dialog closes on
@@ -100,7 +101,10 @@ export function StartDiscussion({
 
   return (
     <>
-      <Button onClick={() => setShown(true)}>{t("discussion-new")}</Button>
+      <SchoolHeaderAdd
+        label={t("discussion-new")}
+        onClick={() => setShown(true)}
+      />
       <ResponsiveDialog
         description={t("discussion-new-description")}
         footer={

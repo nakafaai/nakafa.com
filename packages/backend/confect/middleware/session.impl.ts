@@ -1,6 +1,6 @@
 import { MiddlewareImpl } from "@confect/server";
 import { components } from "@repo/backend/confect/_generated/components";
-import refs from "@repo/backend/confect/_generated/refs";
+import usersInternal from "@repo/backend/confect/_generated/refs/users.server";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
   ActionCtx,
@@ -111,7 +111,7 @@ export default MiddlewareImpl.makeByFunctionType(schema, SessionMiddleware, {
     const authId = yield* readSessionAuthId(yield* ActionCtx);
     const { runQuery } = yield* QueryRunner;
     const appUser = authId
-      ? yield* runQuery(refs.internal.users.queries.getUserByAuthId, {
+      ? yield* runQuery(usersInternal.queries.getUserByAuthId, {
           authId,
         }).pipe(
           Effect.mapError(authReadFailure),

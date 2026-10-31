@@ -1,6 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -9,10 +9,10 @@ import {
 import irtScaleVersions from "@repo/backend/confect/_generated/tables/irtScaleVersions";
 import tryoutAttempts from "@repo/backend/confect/_generated/tables/tryoutAttempts";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
+import { tryoutGate } from "@repo/backend/confect/tryouts/gate";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { createAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import type { TryoutSection } from "@repo/backend/confect/tryouts/runtime/schema";
-import { startSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
 import {
   type FrozenPlacement,
   freezeAttempt,
@@ -135,16 +135,15 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
     yield* createAttemptPlacements(attempt, placements);
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
-      yield* startSectionAttempt({
-        attempt,
-        now: input.now,
+      yield* tryoutGate.startSection(attempt.userId, {
+        attemptId: attempt._id,
         sectionKey: entrySectionKey,
       });
     }
     yield* scheduler
       .runAfter(
         Duration.millis(Math.max(0, attempt.expiresAt - input.now)),
-        refs.internal.tryouts.mutations.expiry.attempt,
+        tryoutsInternal.mutations.expiry.attempt,
         {
           attemptId: attempt._id,
           expiresAt: attempt.expiresAt,

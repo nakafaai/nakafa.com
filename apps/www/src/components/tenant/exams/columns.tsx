@@ -27,7 +27,12 @@ import {
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { ExamDocument } from "@/components/tenant/exams/rich";
-import { PaperOption } from "@/components/tenant/exams/sheet";
+import {
+  PaperPairSelect,
+  PaperPart,
+  PaperParts,
+  PaperPartText,
+} from "@/components/tenant/exams/sheet";
 
 /** One part of a match or a table: its ID and its rich text. */
 type Part = Pick<
@@ -39,19 +44,17 @@ type Part = Pick<
 type PartKind = "answers" | "statements";
 
 /**
- * The words of each kind of column: its heading, the name of a part's editor and of its remove control for
- * assistive technology, and the hint an empty part shows.
+ * The words of each kind of column: the name of a part's editor and of its remove control for assistive
+ * technology, and the hint an empty part shows.
  */
 const PART_WORDS = {
   answers: {
     editor: "answer-of",
-    heading: "match-answers",
     placeholder: "answer-placeholder",
     remove: "answer-remove-of",
   },
   statements: {
     editor: "statement-of",
-    heading: "match-statements",
     placeholder: "statement-placeholder",
     remove: "statement-remove-of",
   },
@@ -73,7 +76,7 @@ interface PartColumnProps {
   readonly chosen: boolean;
   /** Whether the exam is locked, so the parts take no change. */
   readonly frozen: boolean;
-  /** What the column holds, which names its parts and words its heading. */
+  /** What the column holds, which names its parts. */
   readonly kind: PartKind;
   /** The number of the question, which names each part for assistive technology. */
   readonly number: number;
@@ -92,9 +95,10 @@ interface PartColumnProps {
 }
 
 /**
- * One column of parts on a question's paper: each part with its letter or number, its rich text, and the
- * control that removes it, then the action that adds one. The paper sets two columns side by side on a
- * wide paper and one above the other on a narrow one, as the student's paper does.
+ * One column of parts on a question's paper, as the student's paper sets it: each part with its letter or
+ * number and its rich text, and each statement with the select the student pairs it by. The teacher's control
+ * removes a part, and the action below adds one. The paper sets two columns side by side on a wide paper and
+ * one above the other on a narrow one, as the student's paper does.
  */
 function PartColumn({
   add,
@@ -114,39 +118,43 @@ function PartColumn({
 
   return (
     <div className="grid content-start gap-2">
-      <p className="text-muted-foreground text-sm font-medium">
-        {t(words.heading)}
-      </p>
-      {Arr.map(parts, (part, index) => {
-        const name =
-          kind === "statements"
-            ? String(index + 1)
-            : optionLetter(index, script);
-        return (
-          <OptionRow
-            key={part.id}
-            // The editor starts from the label the server holds, or the label on screen for a new part.
-            label={Option.match(
-              Arr.findFirst(saved, (item) => item.id === part.id),
-              { onNone: () => part.label, onSome: (item) => item.label }
-            )}
-            locked={frozen}
-            onRemove={onRemove === null ? null : () => onRemove(part.id)}
-            onSave={(label: OptionLabel, unstored: () => void) =>
-              onLabel(part.id, label, unstored)
-            }
-            removeName={t(words.remove, { name, number })}
-          >
-            <PaperOption letter={name}>
-              <ExamDocument
-                label={t(words.editor, { name, number })}
-                placeholder={t(words.placeholder)}
-                size="line"
-              />
-            </PaperOption>
-          </OptionRow>
-        );
-      })}
+      <PaperParts>
+        {Arr.map(parts, (part, index) => {
+          const name =
+            kind === "statements"
+              ? String(index + 1)
+              : optionLetter(index, script);
+          return (
+            <PaperPart
+              below={kind === "statements" ? <PaperPairSelect /> : null}
+              key={part.id}
+              name={name}
+            >
+              <OptionRow
+                // The editor starts from the label the server holds, or the label on screen for a new part.
+                label={Option.match(
+                  Arr.findFirst(saved, (item) => item.id === part.id),
+                  { onNone: () => part.label, onSome: (item) => item.label }
+                )}
+                locked={frozen}
+                onRemove={onRemove === null ? null : () => onRemove(part.id)}
+                onSave={(label: OptionLabel, unstored: () => void) =>
+                  onLabel(part.id, label, unstored)
+                }
+                removeName={t(words.remove, { name, number })}
+              >
+                <PaperPartText>
+                  <ExamDocument
+                    label={t(words.editor, { name, number })}
+                    placeholder={t(words.placeholder)}
+                    size="line"
+                  />
+                </PaperPartText>
+              </OptionRow>
+            </PaperPart>
+          );
+        })}
+      </PaperParts>
       {add === null || frozen ? null : (
         <div className={chosen ? undefined : "invisible"}>
           <Button onClick={add.run} size="sm" type="button" variant="outline">

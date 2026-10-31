@@ -1,5 +1,5 @@
 import type { GenericId } from "@confect/core";
-import refs from "@repo/backend/confect/_generated/refs";
+import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import {
   MutationRunner,
   QueryRunner,
@@ -19,7 +19,7 @@ export const ownDriveAccess = Effect.fn("connectors.google.driveAccess")(
   function* (userId: GenericId.GenericId<"users">) {
     const { runQuery } = yield* QueryRunner;
     const { runMutation } = yield* MutationRunner;
-    const target = yield* runQuery(refs.internal.connectors.drive.ownTarget, {
+    const target = yield* runQuery(connectorsInternal.drive.ownTarget, {
       userId,
     }).pipe(Effect.orDie);
     if (target === null) {
@@ -30,7 +30,7 @@ export const ownDriveAccess = Effect.fn("connectors.google.driveAccess")(
       Effect.provide(FetchClient),
       Effect.tapError((failure) =>
         failure.reason === "revoked"
-          ? runMutation(refs.internal.connectors.sync.reconnect, {
+          ? runMutation(connectorsInternal.sync.reconnect, {
               connectionId: target.connectionId,
             }).pipe(Effect.orDie)
           : Effect.void

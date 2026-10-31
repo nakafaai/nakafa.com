@@ -1,5 +1,5 @@
 import { FunctionImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
@@ -32,7 +32,7 @@ import { Array as Arr, Effect, flow } from "effect";
 const PRO_CHECKOUT_OFFERS = ["pro.monthly", "pro.yearly"] as const;
 
 /** An offer the buyer's rail does not sell now. The learner sees the checkout failure, and the reason is logged. */
-function offerUnavailable(cause: { readonly message: string }) {
+export function offerUnavailable(cause: { readonly message: string }) {
   return Effect.logWarning("Pro offer is not sold to this buyer", {
     message: cause.message,
   }).pipe(
@@ -62,7 +62,7 @@ export const generateCheckoutLink = FunctionImpl.make(
     const { appUser } = yield* requireAuth();
     const { runQuery } = yield* QueryRunner;
     const request = yield* validateCheckoutRequest(args);
-    const holding = yield* runQuery(refs.internal.billing.checkout.proHolding, {
+    const holding = yield* runQuery(billingInternal.checkout.proHolding, {
       userId: appUser._id,
     }).pipe(
       Effect.mapError(checkoutSessionIoError),

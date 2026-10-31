@@ -2,7 +2,7 @@ import type {
   ExamAttemptsDoc,
   ExamSittingsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -115,7 +115,7 @@ export const closeDue = Effect.fn("exams.sittings.timers.closeDue")(
     if (page.length === CLOSE_PAGE) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.exams.sittings.timers.closeDue,
+        examsInternal.sittings.timers.closeDue,
         args
       );
     }

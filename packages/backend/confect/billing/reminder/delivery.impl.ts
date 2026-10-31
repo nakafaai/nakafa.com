@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   MutationRunner,
@@ -20,12 +20,12 @@ const deliver = FunctionImpl.make(
     const { runQuery } = yield* QueryRunner;
     const { runMutation } = yield* MutationRunner;
     return yield* deliverPassReminderProgram(
-      runQuery(refs.internal.billing.reminder.internal.readInput, {
+      runQuery(billingInternal.reminder.internal.readInput, {
         grantId,
         locale,
       }).pipe(Effect.catchTag("SchemaError", Effect.die)),
       (message) =>
-        runMutation(refs.internal.billing.reminder.internal.enqueue, {
+        runMutation(billingInternal.reminder.internal.enqueue, {
           grantId,
           ...message,
         }).pipe(Effect.catchTag("SchemaError", Effect.die))

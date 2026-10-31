@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import creditsInternal from "@repo/backend/confect/_generated/refs/credits.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -257,7 +257,7 @@ export const grantTopUpLot = Effect.fn("credits.lots.grant")(function* (input: {
     .pipe(Effect.orDie);
   yield* (yield* Scheduler).runAt(
     DateTime.makeUnsafe(expiresAt),
-    refs.internal.credits.lots.expire,
+    creditsInternal.lots.expire,
     { lotId }
   );
   return lotId;

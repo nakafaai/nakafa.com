@@ -177,6 +177,8 @@ function StudentExamsTable({
     sittingColumns.display({
       cell: (info) => <SittingAction sitting={info.row.original} />,
       id: "action",
+      // A student on a phone reaches Start at the row's edge, with the table scrolled anywhere.
+      meta: { align: "menu" },
     }),
   ]);
 

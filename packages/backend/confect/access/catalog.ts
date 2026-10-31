@@ -86,6 +86,22 @@ export const opensTo = (action: string, role: typeof RuleRole.Type): boolean =>
     )
   );
 
+/**
+ * Every action that some rule of the catalog grants through `role`, of every kind. It tells the
+ * app which pages a role reaches; each function still decides for itself on its own object.
+ */
+export const actionsOpenTo = (role: typeof RuleRole.Type): readonly string[] =>
+  Arr.flatMap(entries, (entry) =>
+    Arr.map(
+      Arr.filter(
+        Record.toEntries<string, Rule>(entry.actions),
+        ([, rule]) =>
+          rule.grantedBy === "roles" && Arr.contains(rule.roles, role)
+      ),
+      ([name]) => name
+    )
+  );
+
 /** Actions evaluated on the tenant itself, its own and every extension's. */
 export const TenantAction = Kind.actions(entries, "tenant");
 

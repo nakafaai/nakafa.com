@@ -22,7 +22,6 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { PanePortal } from "@/components/shared/panes";
 import {
   choiceOf,
-  entryOf,
   keyWithoutOption,
   type OptionLabel,
   withOptionAdded,
@@ -39,7 +38,6 @@ import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
 import { TableSheet } from "@/components/tenant/exams/matrix";
-import { numberEntryOf } from "@/components/tenant/exams/number";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -57,10 +55,10 @@ import {
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import { activeQuestion } from "@/components/tenant/exams/selection";
 import {
-  PaperLine,
-  PaperNumber,
+  PaperField,
   PaperOption,
   PaperOptions,
+  PaperPairs,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
 import { tableOf } from "@/components/tenant/exams/table";
@@ -374,7 +372,7 @@ function LivePaper({
         />
       </ExamText>
       {match === null ? null : (
-        <div className="grid min-w-0 gap-6 md:grid-cols-2">
+        <PaperPairs>
           <MatchColumn
             chosen={chosen}
             editing={editing}
@@ -393,7 +391,7 @@ function LivePaper({
             question={question}
             side="targets"
           />
-        </div>
+        </PaperPairs>
       )}
       {table === null ? null : (
         <TableSheet
@@ -436,7 +434,7 @@ function LivePaper({
                 number,
               })}
             >
-              <PaperOption letter={optionLetter(index, script)}>
+              <PaperOption multiple={choice.maxChoices !== 1}>
                 <ExamDocument
                   label={t("option-of", {
                     letter: optionLetter(index, script),
@@ -450,12 +448,7 @@ function LivePaper({
           ))}
         </PaperOptions>
       )}
-      {Option.isSome(entryOf(displayed.answers)) ? <PaperLine /> : null}
-      {Option.match(numberEntryOf(displayed.answers), {
-        onNone: () => null,
-        onSome: (entry) => <PaperNumber unit={entry.unit} />,
-      })}
-      {displayed.template === "essay" ? <PaperLine essay /> : null}
+      <PaperField answers={displayed.answers} />
       {canAddOption ? (
         <div className={chosen ? undefined : "invisible"}>
           <Button

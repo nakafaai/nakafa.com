@@ -14,7 +14,7 @@ import {
 import { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { add, list } = refs.public.classroom.forum.channels;
+const { add, list, rename } = refs.public.classroom.forum.channels;
 const classes = refs.public.classroom.classes;
 const grants = refs.public.access.grants;
 const placements = refs.public.tenancy.placements;
@@ -316,5 +316,100 @@ describe("classroom/forum channels", () => {
           denied("resource"),
         ]);
       })
+  );
+
+  it.effect(
+    "renames a topic channel, a change of case included, and refuses a taken name, the general channel, and a student",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const x1 = yield* cohort(fixture, term.id, "VII-2");
+        const made = yield* classOf(fixture, x1.id, "Fisika");
+        yield* teach(fixture, made.id, fixture.people.teacher.personId);
+        const teacher = fixture.as("teacher");
+        const classArgs = { classId: made.id, slug: nf };
+        const tugas = yield* teacher.mutation(add, {
+          ...classArgs,
+          name: "Tugas",
+        });
+        yield* teacher.mutation(add, { ...classArgs, name: "Ulangan" });
+        expect(
+          yield* teacher.mutation(rename, {
+            ...classArgs,
+            channelId: tugas.id,
+            name: "TUGAS",
+          })
+        ).toBeNull();
+        yield* teacher.mutation(rename, {
+          ...classArgs,
+          channelId: tugas.id,
+          name: "Tugas rumah",
+        });
+        const { page } = yield* teacher.query(list, {
+          ...classArgs,
+          ...firstPage,
+        });
+        expect(Arr.map(page, (channel) => channel.name)).toEqual([
+          "general",
+          "Tugas rumah",
+          "Ulangan",
+        ]);
+        const [first] = page;
+        const refusals = yield* Effect.all([
+          teacher
+            .mutation(rename, {
+              ...classArgs,
+              channelId: tugas.id,
+              name: "ulangan",
+            })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(rename, {
+              ...classArgs,
+              channelId: first?.id ?? tugas.id,
+              name: "Umum",
+            })
+            .pipe(Effect.flip),
+          fixture
+            .as("student")
+            .mutation(rename, {
+              ...classArgs,
+              channelId: tugas.id,
+              name: "Liar",
+            })
+            .pipe(Effect.flip),
+        ]);
+        expect(refusals).toMatchObject([
+          { _tag: "ChannelNameTaken" },
+          { _tag: "ChannelFixed", code: "CHANNEL_FIXED" },
+          denied("role"),
+        ]);
+      })
+  );
+
+  it.effect("refuses a channel of another class as a missing object", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const term = yield* period(fixture, fixture.units.smp);
+      const x1 = yield* cohort(fixture, term.id, "VII-3");
+      const fisika = yield* classOf(fixture, x1.id, "Fisika");
+      const kimia = yield* classOf(fixture, x1.id, "Kimia");
+      const added = yield* fixture.as("admin").mutation(add, {
+        classId: kimia.id,
+        name: "Tugas",
+        slug: nf,
+      });
+      const refused = yield* fixture
+        .as("admin")
+        .mutation(rename, {
+          channelId: added.id,
+          classId: fisika.id,
+          name: "Asing",
+          slug: nf,
+        })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject(denied("resource"));
+    })
   );
 });

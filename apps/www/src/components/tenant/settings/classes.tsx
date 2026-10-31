@@ -10,6 +10,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { ClassStatus } from "@repo/backend/confect/classroom/class";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -28,6 +29,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
@@ -123,19 +125,23 @@ function ClassesActions() {
 
   return (
     <>
-      {chosen !== null && chosen.units.length > 1 ? (
-        <SchoolUnitChoice
-          onChoose={chosen.onChoose}
-          unitId={chosen.unit.id}
-          units={chosen.units}
+      <ButtonGroup>
+        {chosen !== null && chosen.units.length > 1 ? (
+          <SchoolUnitChoice
+            onChoose={chosen.onChoose}
+            unitId={chosen.unit.id}
+            units={chosen.units}
+          />
+        ) : null}
+        <TableSearch placeholder={t("classes-search")} />
+      </ButtonGroup>
+      <WithAction action="class.create">
+        <SchoolClassAdd
+          active={active}
+          sd={chosen !== null && chosen.unit.level === "sd"}
+          slug={slug}
         />
-      ) : null}
-      <TableSearch placeholder={t("classes-search")} />
-      <SchoolClassAdd
-        active={active}
-        sd={chosen !== null && chosen.unit.level === "sd"}
-        slug={slug}
-      />
+      </WithAction>
     </>
   );
 }
@@ -308,12 +314,15 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
       id: "status",
     }),
     classColumns.display({
-      cell: (info) =>
-        info.row.original.status === "archived" ? (
-          <SchoolClassRestore row={info.row.original} slug={slug} />
-        ) : (
-          <SchoolClassMenu row={info.row.original} slug={slug} />
-        ),
+      cell: (info) => (
+        <WithAction action="class.create">
+          {info.row.original.status === "archived" ? (
+            <SchoolClassRestore row={info.row.original} slug={slug} />
+          ) : (
+            <SchoolClassMenu row={info.row.original} slug={slug} />
+          )}
+        </WithAction>
+      ),
       id: "actions",
       meta: { align: "menu" },
     }),

@@ -7,26 +7,16 @@ import { tryoutGate } from "@repo/backend/confect/tryouts/gate";
 import spec, {
   SECTION_COMPLETED_RESULT,
 } from "@repo/backend/confect/tryouts/mutations/sections.spec";
-import { requireOwnedAttempt } from "@repo/backend/confect/tryouts/runtime/score";
-import { startSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
-import { Clock, Effect, Layer } from "effect";
+import { Effect, Layer } from "effect";
 
+/** Opens one section of the caller's attempt through the live-attempt gate. */
 const start = FunctionImpl.make(
   databaseSchema,
   spec,
   "start",
   Effect.fn("tryouts.mutations.sections.start")(function* (args) {
     const { appUser } = yield* requireAuth();
-    const attempt = yield* requireOwnedAttempt({
-      attemptId: args.attemptId,
-      userId: appUser._id,
-    });
-    const now = yield* Clock.currentTimeMillis;
-    return yield* startSectionAttempt({
-      attempt,
-      now,
-      sectionKey: args.sectionKey,
-    });
+    return yield* tryoutGate.startSection(appUser._id, args);
   })
 );
 
