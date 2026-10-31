@@ -376,13 +376,12 @@ describe("exams/sittings answer", () => {
           }).pipe(Effect.flip);
           expect(stale).toMatchObject({ _tag: "StaleAnswer" });
         }
-        const { questions } = yield* fixture
+        const { answers } = yield* fixture
           .as("student")
-          .query(paper, { deviceId: deviceOf(1), sittingId, slug: nf });
-        expect(questions[0]).toMatchObject({
-          response: ["option-2"],
-          version: 3,
-        });
+          .query(saved, { deviceId: deviceOf(1), sittingId, slug: nf });
+        expect(answers).toEqual([
+          { question, response: ["option-2"], version: 3 },
+        ]);
       })
   );
 

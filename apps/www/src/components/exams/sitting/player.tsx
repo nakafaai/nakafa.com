@@ -50,6 +50,13 @@ import { PlayerQuestions } from "@/components/player/questions";
 import { PlayerTimer } from "@/components/player/timer";
 import { PlayerViewSwitch } from "@/components/player/view";
 
+/** The error of a query that failed, or none while it loads or once it answered. */
+function failureOf<A, E>(result: QueryResult.QueryResult<A, E>) {
+  return QueryResult.isFailure(result)
+    ? Option.some(result.error)
+    : Option.none();
+}
+
 /**
  * The student's running attempt in the shared player: the school's header with the exam's name, the time
  * left, and the one primary action, then the paper with its navigator, its keys, and its view. A locked
@@ -125,11 +132,9 @@ export function StudentPlayer({
   }
 
   // Both reads pass the same gate, so either one's refusal is the attempt's.
-  const failure = QueryResult.isFailure(paperResult)
-    ? Option.some(paperResult.error)
-    : QueryResult.isFailure(savedResult)
-      ? Option.some(savedResult.error)
-      : Option.none();
+  const failure = Option.orElse(failureOf(paperResult), () =>
+    failureOf(savedResult)
+  );
   // A retired device holds the attempt no more, so its bar keeps the time and offers no Finish.
   const retired = Option.exists(failure, isRetiredDevice);
 

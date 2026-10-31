@@ -101,6 +101,7 @@ describe("load student", () => {
           "query:student",
           "mutation:enter",
           "query:paper",
+          "query:saved",
           "query:prompt",
           "mutation:look",
           "mutation:answer",
