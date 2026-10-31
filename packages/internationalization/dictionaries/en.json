@@ -342,7 +342,7 @@
     "student-locked-title": "This attempt is locked.",
     "student-score": "{points} of {total} points",
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
-    "student-answer": "Your answer: {answer}",
+    "student-answer": "Your answer: <typed>{answer}</typed>",
     "student-answers": "Your answers",
     "student-results-released": "Your teacher released these results.",
     "schedule": "Schedule",
@@ -476,9 +476,7 @@
     "template-short": "Short answer",
     "template-numeric": "Numeric answer",
     "short-placeholder": "Type your answer",
-    "short-line": "Answer line",
     "number-placeholder": "Type a number",
-    "number-line": "Number field",
     "number-key": "Correct number",
     "number-value-placeholder": "0.75",
     "number-tolerance-placeholder": "0.01",
@@ -501,13 +499,10 @@
     "accepted-hint": "Case and extra spaces do not count, and any other answer waits for you to mark.",
     "template-essay": "Essay",
     "essay-placeholder": "Write your answer",
-    "essay-area": "Answer area",
     "verdict-partial": "Partly correct",
     "results-points": "Points",
     "grade-of": "Points of {name}",
     "template-match": "Matching",
-    "match-statements": "Statements",
-    "match-answers": "Answers",
     "statement-of": "Question {number}, statement {name}",
     "answer-of": "Question {number}, answer {name}",
     "statement-placeholder": "Statement",
@@ -1502,20 +1497,71 @@
       }
     },
     "size-title": "How many students do you have?",
-    "size-description": "Free to start, whatever the size.",
+    "size-description": "Free to start. We suggest a plan for your size.",
     "size": {
       "s": "Under 100",
       "m": "100 to 499",
       "l": "500 to 999",
       "xl": "1,000 or more"
     },
+    "plan-free": "Free plan, up to {limit} students.",
+    "plan-school": "School plan, paid per student.",
+    "plan-founder": "School plan, with the founder's help.",
     "founder-line": "The founder can help a large school set up.",
     "founder-link": "Talk to the founder",
+    "link-copy": "Copy link",
+    "link-copied": "Link copied",
     "consent": "Opening a school accepts the <terms>Terms</terms> and the <privacy>Privacy Policy</privacy>.",
     "finish": "Open school",
     "required-error": "Choose an answer.",
     "school-limit-line": "Founding more schools needs a conversation first.",
-    "address-check-failed": "We could not check this address, so type it again to retry."
+    "address-check-failed": "We could not check this address, so type it again to retry.",
+    "entry-title": "Go to your school",
+    "entry-student": "Type your school's address, or scan the QR code from your teacher.",
+    "entry-parent": "Type the address of your child's school to go there.",
+    "entry-field": "School address",
+    "entry-hint": "It is in the link from the school, like harapan.nakafa.com.",
+    "entry-invalid": "Type a school address like harapan.nakafa.com.",
+    "entry-submit": "Continue",
+    "entry-open": "Open a school"
+  },
+  "Operators": {
+    "title": "Schools",
+    "search": "Search schools",
+    "open": "Open school",
+    "open-description": "Open a school under its signed contract. Its Owner gets the invite.",
+    "empty": "No school yet",
+    "refused": "For Nakafa staff",
+    "refused-description": "This page opens schools under a contract. Anyone can open their own at /school/new.",
+    "name": "School",
+    "name-placeholder": "SMA Harapan Bangsa",
+    "address": "Address",
+    "address-placeholder": "harapan",
+    "kind-label": "Type",
+    "kind": {
+      "school": "School",
+      "foundation": "Foundation"
+    },
+    "country": "Country",
+    "level": "Level",
+    "owner": "Owner's name",
+    "owner-placeholder": "Ayu Lestari",
+    "email": "Owner's email",
+    "email-placeholder": "ayu@harapan.sch.id",
+    "plan-label": "Licence",
+    "plan": {
+      "tenant": "Whole organisation",
+      "unit": "One school"
+    },
+    "dpa": "DPA version",
+    "license": "Content licence version",
+    "version-placeholder": "2026-10",
+    "units": "Units",
+    "status-label": "Status",
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    }
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
@@ -1690,7 +1736,8 @@
     "input": "Input",
     "output": "Output",
     "bacteria": "Bacteria",
-    "time": "Time"
+    "time": "Time",
+    "school": "School"
   },
   "LearningPrograms": {
     "metadata-title": "Start learning with Nakafa",
@@ -2265,6 +2312,14 @@
     "school-refusal-graduated": {
       "title": "Already graduated from this school.",
       "description": "A graduated student cannot be placed in a cohort again."
+    },
+    "school-refusal-not-operator": {
+      "title": "Only Nakafa staff can do this.",
+      "description": "Sign in with an operator account."
+    },
+    "school-refusal-provision": {
+      "title": "This school can't open with these details.",
+      "description": "Check the address and the school's units."
     },
     "school-refusal-unit-limit": {
       "title": "No room for another school.",

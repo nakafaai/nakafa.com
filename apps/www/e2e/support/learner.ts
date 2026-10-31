@@ -38,3 +38,26 @@ export const signInLearner = Effect.fn("NakafaE2E.signInLearner")(
   Effect.scoped,
   Effect.provide(nodeServicesLayer)
 );
+
+/**
+ * Signs a new synthetic operator into one browser context: a learner whose account the
+ * running local acceptance runtime granted operator access to.
+ */
+export const signInOperator = Effect.fn("NakafaE2E.signInOperator")(
+  function* (context: BrowserContext, baseURL: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({
+      prefix: "nakafa-operator-",
+    });
+    const output = `${directory}/cookie.json`;
+    yield* runAcceptanceCommand("operator", output).pipe(
+      Effect.retry({ times: 2 })
+    );
+    const cookie = yield* fs
+      .readFileString(output)
+      .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+    yield* addSessionCookie(context, cookie, baseURL);
+  },
+  Effect.scoped,
+  Effect.provide(nodeServicesLayer)
+);

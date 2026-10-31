@@ -8,7 +8,7 @@ import type {
   StageRecoveryRequestSchema,
   StageReleaseRequestSchema,
 } from "@nakafa/aksara-contracts/transport/request";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import {
   MutationRunner,
   QueryRunner,
@@ -90,17 +90,16 @@ const stageRelease = Effect.fn("contentRelease.stageSignedRelease")(function* (
     rendererJson: encodeRendererJson(renderer),
   };
   if (request.operation === "stageRelease") {
-    yield* runMutation(
-      refs.internal.contentRelease.manifest.stageRelease,
-      args
-    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    yield* runMutation(contentReleaseInternal.manifest.stageRelease, args).pipe(
+      Effect.catchTag("SchemaError", Effect.die)
+    );
   } else {
     yield* runMutation(
-      refs.internal.contentRelease.manifest.stageRecovery,
+      contentReleaseInternal.manifest.stageRecovery,
       args
     ).pipe(Effect.catchTag("SchemaError", Effect.die));
   }
-  return yield* runQuery(refs.internal.contentRelease.status.getStatus, {
+  return yield* runQuery(contentReleaseInternal.status.getStatus, {
     manifestHash: signed.manifestHash,
     releaseId: signed.manifest.releaseId,
   }).pipe(Effect.catchTag("SchemaError", Effect.die));
@@ -139,7 +138,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
     }
     if (request.operation === "stageItemBatch") {
       const value = yield* runMutation(
-        refs.internal.contentRelease.items.stageItemBatch,
+        contentReleaseInternal.items.stageItemBatch,
         {
           batchIndex: request.batchIndex,
           itemJson: Arr.map(request.items, encodeItemJson),
@@ -154,7 +153,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
     }
     if (request.operation === "stageRouteBatch") {
       const value = yield* runMutation(
-        refs.internal.contentRelease.routes.stageRouteBatch,
+        contentReleaseInternal.routes.stageRouteBatch,
         {
           batchIndex: request.batchIndex,
           releaseId: request.releaseId,
@@ -169,7 +168,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
     }
     if (request.operation === "stageProjectionBatch") {
       const value = yield* runMutation(
-        refs.internal.contentRelease.items.stageProjectionBatch,
+        contentReleaseInternal.items.stageProjectionBatch,
         {
           batchIndex: request.batchIndex,
           projectionJson: Arr.map(request.projections, encodeProjectionJson),
@@ -184,7 +183,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
     }
     yield* verifyArtifactBatch(request, activeKeyId);
     const value = yield* runMutation(
-      refs.internal.contentRelease.artifacts.stageArtifactBatch,
+      contentReleaseInternal.artifacts.stageArtifactBatch,
       {
         artifactJson: Arr.map(request.artifacts, encodeArtifactJson),
         batchIndex: request.batchIndex,

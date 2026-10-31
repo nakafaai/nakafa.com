@@ -3,7 +3,7 @@ import {
   type PublicContentRuntimeRequest,
   type PublicContentRuntimeResponse,
 } from "@nakafa/aksara-contracts/runtime/spec";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   encodeRuntimeResult,
@@ -50,7 +50,7 @@ const resolvePublicRuntimeBatch = Effect.fn(
 )(function* (requests: readonly PublicContentRuntimeRequest[]) {
   const { runQuery } = yield* QueryRunner;
   const rows = yield* runQuery(
-    refs.internal.contentRelease.runtime.publication.internal.readBatch,
+    contentReleaseInternal.runtime.publication.internal.readBatch,
     {
       requests: Arr.map(requests, ({ appLocale, publicPath }) => ({
         appLocale,

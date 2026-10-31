@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -125,7 +125,7 @@ const send = FunctionImpl.make(
     }
     const { runQuery } = yield* QueryRunner;
     const { runMutation } = yield* MutationRunner;
-    const found = yield* runQuery(refs.internal.notifications.deliver.notice, {
+    const found = yield* runQuery(notificationsInternal.deliver.notice, {
       notificationId,
     }).pipe(Effect.orDie);
     if (found === null) {
@@ -138,7 +138,7 @@ const send = FunctionImpl.make(
         sendPush(target, found.payload, keys.value, nowSeconds).pipe(
           Effect.flatMap((outcome) =>
             outcome === "gone"
-              ? runMutation(refs.internal.notifications.deliver.forget, {
+              ? runMutation(notificationsInternal.deliver.forget, {
                   endpoint: target.endpoint,
                 }).pipe(Effect.orDie)
               : Effect.void

@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -222,10 +222,9 @@ const cleanupDeletedUserBilling = FunctionImpl.make(
   Effect.fn("billing.deletion.cleanupDeletedUserBilling")(function* (args) {
     const { runQuery } = yield* QueryRunner;
     const { runMutation } = yield* MutationRunner;
-    const accounts = yield* runQuery(
-      refs.internal.billing.deletion.readAccounts,
-      { userId: args.userId }
-    ).pipe(
+    const accounts = yield* runQuery(billingInternal.deletion.readAccounts, {
+      userId: args.userId,
+    }).pipe(
       Effect.mapError(billingStateError),
       Effect.catchDefect(flow(billingStateError, Effect.fail))
     );
@@ -246,7 +245,7 @@ const cleanupDeletedUserBilling = FunctionImpl.make(
     let hasMore = true;
     while (hasMore) {
       const subscriptions = yield* runQuery(
-        refs.internal.billing.deletion.readSubscriptions,
+        billingInternal.deletion.readSubscriptions,
         { userId: args.userId }
       ).pipe(
         Effect.mapError(billingStateError),
@@ -260,7 +259,7 @@ const cleanupDeletedUserBilling = FunctionImpl.make(
           );
         }
       }
-      hasMore = yield* runMutation(refs.internal.billing.deletion.deleteRows, {
+      hasMore = yield* runMutation(billingInternal.deletion.deleteRows, {
         subscriptionIds: Arr.map(
           subscriptions,
           (subscription) => subscription.subscriptionId

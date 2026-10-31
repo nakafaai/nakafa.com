@@ -342,7 +342,7 @@
     "student-locked-title": "Percobaan ini dikunci.",
     "student-score": "{points} dari {total} poin",
     "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
-    "student-answer": "Jawabanmu: {answer}",
+    "student-answer": "Jawabanmu: <typed>{answer}</typed>",
     "student-answers": "Jawabanmu",
     "student-results-released": "Gurumu sudah merilis hasil ini.",
     "schedule": "Jadwalkan",
@@ -476,9 +476,7 @@
     "template-short": "Isian singkat",
     "template-numeric": "Jawaban angka",
     "short-placeholder": "Ketik jawabanmu",
-    "short-line": "Kolom jawaban",
     "number-placeholder": "Ketik angka",
-    "number-line": "Kolom angka",
     "number-key": "Angka yang benar",
     "number-value-placeholder": "0,75",
     "number-tolerance-placeholder": "0,01",
@@ -501,13 +499,10 @@
     "accepted-hint": "Huruf besar dan spasi berlebih tidak dihitung, dan jawaban lain menunggu kamu nilai.",
     "template-essay": "Uraian",
     "essay-placeholder": "Tulis jawabanmu",
-    "essay-area": "Kolom uraian",
     "verdict-partial": "Sebagian benar",
     "results-points": "Poin",
     "grade-of": "Poin {name}",
     "template-match": "Menjodohkan",
-    "match-statements": "Pernyataan",
-    "match-answers": "Jawaban",
     "statement-of": "Soal {number}, pernyataan {name}",
     "answer-of": "Soal {number}, jawaban {name}",
     "statement-placeholder": "Pernyataan",
@@ -1502,20 +1497,71 @@
       }
     },
     "size-title": "Berapa siswa di sekolahmu?",
-    "size-description": "Gratis untuk mulai, berapa pun jumlahnya.",
+    "size-description": "Gratis untuk mulai. Kami sarankan paket sesuai jumlahnya.",
     "size": {
       "s": "Di bawah 100",
       "m": "100 sampai 499",
       "l": "500 sampai 999",
       "xl": "1.000 atau lebih"
     },
+    "plan-free": "Paket Gratis, sampai {limit} siswa.",
+    "plan-school": "Paket School, bayar per siswa.",
+    "plan-founder": "Paket School, dibantu pendiri.",
     "founder-line": "Pendiri bisa membantu sekolah besar bersiap.",
     "founder-link": "Bicara dengan pendiri",
+    "link-copy": "Salin tautan",
+    "link-copied": "Tautan disalin",
     "consent": "Membuka sekolah berarti menyetujui <terms>Syarat Layanan</terms> dan <privacy>Kebijakan Privasi</privacy>.",
     "finish": "Buka sekolah",
     "required-error": "Pilih satu jawaban.",
     "school-limit-line": "Mendirikan sekolah lagi perlu berbicara dengan pendiri dulu.",
-    "address-check-failed": "Alamat ini belum bisa diperiksa, jadi ketik ulang untuk mencoba lagi."
+    "address-check-failed": "Alamat ini belum bisa diperiksa, jadi ketik ulang untuk mencoba lagi.",
+    "entry-title": "Masuk ke sekolahmu",
+    "entry-student": "Tulis alamat sekolahmu, atau pindai kode QR dari gurumu.",
+    "entry-parent": "Tulis alamat sekolah anakmu untuk masuk.",
+    "entry-field": "Alamat sekolah",
+    "entry-hint": "Alamatnya ada di tautan dari sekolah, seperti harapan.nakafa.com.",
+    "entry-invalid": "Tulis alamat sekolah seperti harapan.nakafa.com.",
+    "entry-submit": "Masuk",
+    "entry-open": "Buka sekolah"
+  },
+  "Operators": {
+    "title": "Sekolah",
+    "search": "Cari sekolah",
+    "open": "Buka sekolah",
+    "open-description": "Buka sekolah sesuai kontrak yang ditandatangani. Pemiliknya menerima undangan.",
+    "empty": "Belum ada sekolah",
+    "refused": "Khusus staf Nakafa",
+    "refused-description": "Halaman ini membuka sekolah lewat kontrak. Siapa pun bisa membuka sekolahnya di /school/new.",
+    "name": "Sekolah",
+    "name-placeholder": "SMA Harapan Bangsa",
+    "address": "Alamat",
+    "address-placeholder": "harapan",
+    "kind-label": "Jenis",
+    "kind": {
+      "school": "Sekolah",
+      "foundation": "Yayasan"
+    },
+    "country": "Negara",
+    "level": "Jenjang",
+    "owner": "Nama pemilik",
+    "owner-placeholder": "Ayu Lestari",
+    "email": "Email pemilik",
+    "email-placeholder": "ayu@harapan.sch.id",
+    "plan-label": "Lisensi",
+    "plan": {
+      "tenant": "Seluruh organisasi",
+      "unit": "Satu sekolah"
+    },
+    "dpa": "Versi DPA",
+    "license": "Versi lisensi konten",
+    "version-placeholder": "2026-10",
+    "units": "Unit",
+    "status-label": "Status",
+    "status": {
+      "active": "Aktif",
+      "suspended": "Ditangguhkan"
+    }
   },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
@@ -1690,7 +1736,8 @@
     "input": "Masukan",
     "output": "Keluaran",
     "bacteria": "Bakteri",
-    "time": "Waktu"
+    "time": "Waktu",
+    "school": "Sekolah"
   },
   "LearningPrograms": {
     "metadata-title": "Mulai belajar di Nakafa",
@@ -2265,6 +2312,14 @@
     "school-refusal-graduated": {
       "title": "Sudah lulus dari sekolah ini.",
       "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
+    },
+    "school-refusal-not-operator": {
+      "title": "Hanya staf Nakafa yang bisa melakukan ini.",
+      "description": "Masuk dengan akun operator."
+    },
+    "school-refusal-provision": {
+      "title": "Sekolah ini tidak bisa dibuka dengan data tersebut.",
+      "description": "Periksa alamat dan unit sekolahnya."
     },
     "school-refusal-unit-limit": {
       "title": "Batas sekolah sudah penuh.",

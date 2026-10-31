@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import type { Docs, TenantsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -46,7 +46,7 @@ export const requestInvoiceSession = Effect.fn(
   }
   yield* (yield* Scheduler).runAfter(
     Duration.zero,
-    refs.internal.billing.xendit.invoice.open,
+    billingInternal.xendit.invoice.open,
     { invoiceId, offer }
   );
 });

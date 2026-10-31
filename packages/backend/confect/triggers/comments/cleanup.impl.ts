@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Id } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import triggersInternal from "@repo/backend/confect/_generated/refs/triggers.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -23,7 +23,7 @@ const scheduleNextPass = Effect.fn(
   const scheduler = yield* Scheduler;
   yield* scheduler.runAfter(
     Duration.millis(0),
-    refs.internal.triggers.comments.cleanup.cleanupDeletedComment,
+    triggersInternal.comments.cleanup.cleanupDeletedComment,
     { commentId }
   );
   return null;

@@ -56,7 +56,24 @@ async function expectParagraphsInTheirDirection(prompt: Locator) {
     await expect
       .poll(() => block.evaluate((node) => getComputedStyle(node).direction))
       .toBe(paragraph.direction);
+    await expectParagraphAtItsStart(prompt, block, paragraph.direction);
   }
+}
+
+/**
+ * A paragraph's lines stop before the prompt's width, so its box keeps to the side its words start on: an Arabic
+ * paragraph reaches the prompt's right edge, and a Latin one the left.
+ */
+async function expectParagraphAtItsStart(
+  prompt: Locator,
+  paragraph: Locator,
+  direction: (typeof PARAGRAPHS)[number]["direction"]
+) {
+  const side = direction === "rtl" ? ("right" as const) : ("left" as const);
+  const edgeOf = (block: Locator) =>
+    block.evaluate((node, edge) => node.getBoundingClientRect()[edge], side);
+  const [frame, box] = await Promise.all([edgeOf(prompt), edgeOf(paragraph)]);
+  expect(Math.abs(frame - box)).toBeLessThan(1);
 }
 
 /** Whether the browser holds a loaded Noto Naskh Arabic face that draws the Arabic sample. */

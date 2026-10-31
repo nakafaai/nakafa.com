@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   MutationCtx as MutationCtxService,
@@ -120,7 +120,7 @@ const sweepAccountDeletionRetention = FunctionImpl.make(
         yield* scheduler
           .runAfter(
             Duration.millis(0),
-            refs.internal.auth.deletion.sweepAccountDeletionRetention,
+            authInternal.deletion.sweepAccountDeletionRetention,
             {}
           )
           .pipe(Effect.catchDefect(flow(toUserCleanupError, Effect.fail)));

@@ -1,5 +1,5 @@
 import { FunctionImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -48,7 +48,7 @@ export const revoke = FunctionImpl.make(
   Effect.fn("connectors.revoke.run")(function* ({ connectionId }) {
     const { runQuery } = yield* QueryRunner;
     const { runMutation } = yield* MutationRunner;
-    const token = yield* runQuery(refs.internal.connectors.sync.revocable, {
+    const token = yield* runQuery(connectorsInternal.sync.revocable, {
       connectionId,
     }).pipe(Effect.orDie);
     if (token !== null) {
@@ -62,7 +62,7 @@ export const revoke = FunctionImpl.make(
           Effect.logWarning("connectors.revoke.refused", failure.reason)
         ),
         Effect.ensuring(
-          runMutation(refs.internal.connectors.sync.destroy, {
+          runMutation(connectorsInternal.sync.destroy, {
             connectionId,
           }).pipe(Effect.orDie)
         )

@@ -1,6 +1,6 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { getXenditCheckoutLocale } from "@repo/backend/confect/billing/locale";
@@ -116,7 +116,7 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
   }) {
     const { runMutation } = yield* MutationRunner;
     const prepared = yield* runMutation(
-      refs.internal.billing.xendit.checkout.prepare,
+      billingInternal.xendit.checkout.prepare,
       { offer: input.offer, userId: input.appUserId }
     ).pipe(Effect.catchTag("SchemaError", Effect.die));
     if (prepared.openUrl !== null) {
@@ -130,7 +130,7 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
           email: prepared.email,
         }).pipe(
           Effect.tap((id) =>
-            runMutation(refs.internal.billing.checkout.recordCustomer, {
+            runMutation(billingInternal.checkout.recordCustomer, {
               accountId: prepared.accountId,
               providerCustomerId: id,
             }).pipe(Effect.orDie)
@@ -153,7 +153,7 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
         message: `Session ${session.payment_session_id} has no payment link.`,
       });
     }
-    yield* runMutation(refs.internal.billing.xendit.checkout.admit, {
+    yield* runMutation(billingInternal.xendit.checkout.admit, {
       accountId: prepared.accountId,
       event: {
         name: "checkout started",

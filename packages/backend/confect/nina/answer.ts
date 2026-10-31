@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { reportFailure } from "@repo/backend/confect/nina/diagnostics";
@@ -37,7 +37,7 @@ export const answerTurn = Effect.fn("nina.response.run")(function* (args: {
   readonly turnId: Docs["ninaTurns"]["_id"];
 }) {
   const { runMutation: mutate } = yield* MutationRunner;
-  const turn = yield* mutate(refs.internal.nina.lifecycle.claim, args).pipe(
+  const turn = yield* mutate(ninaInternal.lifecycle.claim, args).pipe(
     Effect.orDie
   );
   if (!turn) {
@@ -71,7 +71,7 @@ export const answerTurn = Effect.fn("nina.response.run")(function* (args: {
         ? Option.getOrUndefined(exit.value)
         : undefined;
       return Effect.flatMap(timing.read, (reached) =>
-        mutate(refs.internal.nina.lifecycle.recover, {
+        mutate(ninaInternal.lifecycle.recover, {
           ...args,
           ...(failure ? { failure } : {}),
           ...(history ? { history } : {}),

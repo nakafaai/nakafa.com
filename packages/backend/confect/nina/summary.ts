@@ -1,7 +1,7 @@
 import { Agent, type MessageDoc } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import {
   ActionCtx,
   MutationRunner,
@@ -89,12 +89,12 @@ const readOrders = Effect.fn("nina.summary.orders")(function* (
   target: number
 ) {
   const { runQuery: query } = yield* QueryRunner;
-  const folded = yield* query(refs.internal.nina.summaries.uncovered, {
+  const folded = yield* query(ninaInternal.summaries.uncovered, {
     before: target + 1,
     chatId: turn.chatId,
     through: covered,
   }).pipe(Effect.orDie);
-  const again = yield* query(refs.internal.nina.summaries.asked, {
+  const again = yield* query(ninaInternal.summaries.asked, {
     before: turn.order + 1,
     chatId: turn.chatId,
     questions: Arr.dedupe(Arr.map(folded, questionKey)),
@@ -159,7 +159,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
     );
   }
   const { runQuery: query } = yield* QueryRunner;
-  const anchor = yield* query(refs.internal.nina.summaries.anchor, {
+  const anchor = yield* query(ninaInternal.summaries.anchor, {
     chatId: turn.chatId,
     order: target,
   }).pipe(Effect.orDie);
@@ -199,7 +199,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       return;
     }
     const { runQuery: query } = yield* QueryRunner;
-    const current = yield* query(refs.internal.nina.summaries.read, {
+    const current = yield* query(ninaInternal.summaries.read, {
       chatId: turn.chatId,
     }).pipe(Effect.orDie);
     const covered = current?.throughOrder ?? null;
@@ -260,7 +260,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     // call spent its tokens, and they count on the summary if the chat has one.
     const stored = summary !== "" && finishReason !== "length";
     yield* (yield* MutationRunner)
-      .runMutation(refs.internal.nina.summaries.save, {
+      .runMutation(ninaInternal.summaries.save, {
         chatId: turn.chatId,
         ...(stored
           ? {

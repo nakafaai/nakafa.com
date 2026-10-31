@@ -24,6 +24,7 @@ import { Array as Arr, DateTime, Effect, Option } from "effect";
 import { startTransition, use, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { saveSchool } from "@/components/tenant/settings/save";
 import {
   checkedScheme,
@@ -47,9 +48,10 @@ export function SchemeVersionAdd() {
 
   return (
     <>
-      <Button onClick={() => setOpenings((count) => count + 1)} type="button">
-        {t("grading-new")}
-      </Button>
+      <SchoolHeaderAdd
+        label={t("grading-new")}
+        onClick={() => setOpenings((count) => count + 1)}
+      />
       {openings === 0 ? null : <SchemeVersionDialog key={openings} />}
     </>
   );

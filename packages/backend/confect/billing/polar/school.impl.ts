@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingPublic from "@repo/backend/confect/_generated/refs/billing";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   ActionCtx,
@@ -39,7 +39,7 @@ const checkout = FunctionImpl.make(
   }) {
     const { appUser } = yield* requireAuth();
     const { runQuery } = yield* QueryRunner;
-    const school = yield* runQuery(refs.public.billing.school.overview, {
+    const school = yield* runQuery(billingPublic.school.overview, {
       slug,
     }).pipe(Effect.catchTag("SchemaError", Effect.die));
     const quote = Arr.findFirst(

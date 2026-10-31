@@ -4,7 +4,7 @@ import type {
   TenantPeopleDoc,
   TenantsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -139,7 +139,7 @@ const run = FunctionImpl.make(
     if (!page.isDone) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.notifications.sittings.run,
+        notificationsInternal.sittings.run,
         { cursor: page.continueCursor, notice, sittingId }
       );
     }

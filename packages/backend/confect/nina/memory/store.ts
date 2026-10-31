@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -213,7 +213,7 @@ export const drainMemories = Effect.fn("nina.memory.store.drain")(function* (
   if (deleted === MEMORY_BATCH) {
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.nina.memory.drain,
+      ninaInternal.memory.drain,
       { through, userId }
     );
   }

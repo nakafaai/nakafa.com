@@ -1,7 +1,7 @@
 "use node";
 
 import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { parseStoredJson } from "@repo/backend/confect/contentRelease/parse";
@@ -20,7 +20,7 @@ export function readProofStream(releaseId: string) {
   return Stream.paginate(-1, (afterIndex) =>
     QueryRunner.pipe(
       Effect.flatMap(({ runQuery }) =>
-        runQuery(refs.internal.contentRelease.proof.read.page, {
+        runQuery(contentReleaseInternal.proof.read.page, {
           afterIndex,
           releaseId,
         })
@@ -41,7 +41,7 @@ export function readResultStream(releaseId: string) {
   return Stream.paginate(null, (cursor: CatalogCursor | null) =>
     QueryRunner.pipe(
       Effect.flatMap(({ runQuery }) =>
-        runQuery(refs.internal.contentRelease.proof.catalog.page, {
+        runQuery(contentReleaseInternal.proof.catalog.page, {
           cursor,
           releaseId,
         })
@@ -81,7 +81,7 @@ export function readRouteStream(releaseId: string) {
   return Stream.paginate(-1, (afterIndex) =>
     QueryRunner.pipe(
       Effect.flatMap(({ runQuery }) =>
-        runQuery(refs.internal.contentRelease.proof.read.routePage, {
+        runQuery(contentReleaseInternal.proof.read.routePage, {
           afterIndex,
           releaseId,
         })

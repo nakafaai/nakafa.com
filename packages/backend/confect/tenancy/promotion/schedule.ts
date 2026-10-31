@@ -1,5 +1,5 @@
 import type { GenericId } from "@confect/core";
-import refs from "@repo/backend/confect/_generated/refs";
+import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
 import { Scheduler } from "@repo/backend/confect/_generated/services";
 import { Duration, Effect } from "effect";
 
@@ -14,7 +14,7 @@ export const scheduleRun = Effect.fn("tenancy.promotion.schedule.run")(
   ) {
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.tenancy.promotion.run.run,
+      tenancyInternal.promotion.run.run,
       { actorId, promotionId }
     );
   }

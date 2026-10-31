@@ -24,6 +24,7 @@ import { Array as Arr, Option, Result, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { createClassChange } from "@/components/tenant/settings/class/changes";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
@@ -86,9 +87,10 @@ export function SchoolClassAdd({
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} type="button">
-        {t("class-create")}
-      </Button>
+      <SchoolHeaderAdd
+        label={t("class-create")}
+        onClick={() => setIsOpen(true)}
+      />
       <ResponsiveDialog
         description={hasNoPeriod ? t("class-add-no-period") : startsAs}
         footer={

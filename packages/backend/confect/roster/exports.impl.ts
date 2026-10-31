@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import rosterPublic from "@repo/backend/confect/_generated/refs/roster";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
@@ -30,7 +30,7 @@ const linesFrom = (
 > =>
   Effect.gen(function* () {
     const { runQuery } = yield* QueryRunner;
-    const page = yield* runQuery(refs.public.roster.imports.list, {
+    const page = yield* runQuery(rosterPublic.imports.list, {
       ...args,
       paginationOpts: { cursor, numItems: EXPORT_PAGE },
     }).pipe(

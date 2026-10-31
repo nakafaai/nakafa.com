@@ -3,7 +3,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@repo/design-system/components/ui/breadcrumb";
 import { cn } from "cn";
@@ -13,7 +12,7 @@ import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbMenu } from "@/components/shared/breadcrumb/menu";
-import type { LinkTarget } from "@/lib/routing/link";
+import { Link, type LinkTarget } from "@/lib/routing/link";
 
 /**
  * Builds one segment of a breadcrumb path. A segment without a target is the
@@ -163,8 +162,9 @@ export function BreadcrumbHeaderFold({
 }
 
 /**
- * Renders one visible current or linked breadcrumb segment, with the separator before
- * it. A `className` applies to both, so a path can hide a segment whole.
+ * Renders one visible breadcrumb segment, with the separator before it. Every segment
+ * is a link: the current page's links to itself and keeps its search, and it reads as the
+ * current page. A `className` applies to both, so a path can hide a segment whole.
  */
 export function BreadcrumbHeaderSegment({
   className,
@@ -178,9 +178,14 @@ export function BreadcrumbHeaderSegment({
       <>
         <BreadcrumbSeparator className={cn("shrink-0", className)} />
         <BreadcrumbItem className={cn("min-w-0", className)} dir="auto">
-          <BreadcrumbPage className="truncate" lang={item.language}>
+          <BreadcrumbLink
+            aria-current="page"
+            className="text-foreground truncate"
+            lang={item.language}
+            render={<Link search={true} to="." />}
+          >
             {item.label}
-          </BreadcrumbPage>
+          </BreadcrumbLink>
         </BreadcrumbItem>
       </>
     );

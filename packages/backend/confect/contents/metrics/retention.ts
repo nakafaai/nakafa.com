@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -82,7 +82,7 @@ export const pruneLearningPopularity = Effect.fn(
       yield* scheduler
         .runAfter(
           Duration.millis(0),
-          refs.internal.contents.mutations.popularity.pruneLearningPopularity,
+          contentsInternal.mutations.popularity.pruneLearningPopularity,
           {}
         )
         .pipe(Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail)));

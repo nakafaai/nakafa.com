@@ -1,7 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -224,7 +225,7 @@ const run = FunctionImpl.make(
     ) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.emails.notice.internal.send,
+        emailsInternal.notice.internal.send,
         { postId: source.postId, recipients }
       );
     }
@@ -232,7 +233,7 @@ const run = FunctionImpl.make(
     if (Option.isSome(next)) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.notifications.fanout.run,
+        notificationsInternal.fanout.run,
         { ...next.value, source }
       );
     }

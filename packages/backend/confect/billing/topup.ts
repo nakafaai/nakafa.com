@@ -1,5 +1,5 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import { Scheduler } from "@repo/backend/confect/_generated/services";
 import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import { hasActiveProGrant } from "@repo/backend/confect/billing/grants";
@@ -74,7 +74,7 @@ export const applyTopUpPaid = Effect.fn("billing.topup.applyPaid")(function* (
     if (order.rail === "polar" && order.refundableAmount > 0) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.billing.topup.refundWithoutPro,
+        billingInternal.topup.refundWithoutPro,
         {
           orderId: order.providerPaymentId,
           refundableAmount: order.refundableAmount,

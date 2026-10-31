@@ -21,6 +21,7 @@ import {
 import { publishPost } from "@/components/tenant/classes/home/publish";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 
 /**
  * Posts an announcement to the class: its text, and whether it also goes by email (ADR 0027). The
@@ -68,7 +69,7 @@ export function NewAnnouncement() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>{t("post-new")}</Button>
+      <SchoolHeaderAdd label={t("post-new")} onClick={() => setOpen(true)} />
       <ResponsiveDialog
         description={t("post-new-description")}
         footer={

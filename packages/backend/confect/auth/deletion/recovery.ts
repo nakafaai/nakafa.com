@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -92,7 +92,7 @@ export const sweepAccountDeletionRecoveryProgram = Effect.fn(
         .pipe(Effect.orDie);
       yield* scheduler.runAfter(
         Duration.zero,
-        refs.internal.auth.deletion.recovery.recoverAccountDeletion,
+        authInternal.deletion.recovery.recoverAccountDeletion,
         { authId: preparation.authId, expectedPreparation }
       );
     }

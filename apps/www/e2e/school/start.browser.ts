@@ -1,9 +1,9 @@
-import { expect, type Frame, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
-import { hostAddress } from "@/e2e/support/school";
+import { finishSchoolStart } from "@/e2e/support/school";
 
 /** The address of the Exams page, where a member lands. */
 const EXAMS_ADDRESS = /\/exams$/u;
@@ -57,46 +57,7 @@ test("a new account opens its own school in five questions and lands in it as it
 
   await page.getByRole("radio", { name: "100 to 499" }).click();
   await expect(page.getByRole("link", { name: "Terms" })).toBeVisible();
-  // The page opens the school's own host at SITE_URL's port. A verify run may
-  // serve the site on another port, where that navigation commits the browser's
-  // error page, so the test waits for the page's own navigation to commit, on
-  // either, before it opens the host at the port this run serves.
-  const opened = Effect.runPromise(
-    Effect.callback<void>((resume) => {
-      const committed = (frame: Frame) => {
-        const url = new URL(frame.url());
-        if (
-          frame === page.mainFrame() &&
-          (url.hostname === `${slug}.localhost` ||
-            url.protocol === "chrome-error:")
-        ) {
-          page.off("framenavigated", committed);
-          resume(Effect.void);
-        }
-      };
-      page.on("framenavigated", committed);
-    })
-  );
-  await page.getByRole("button", { name: "Open school" }).click();
-
-  // The school shows at once, then its own address opens.
-  await expect(page.getByText(name, { exact: true })).toBeVisible();
-  await opened;
-  await page.goto(hostAddress(baseURL, `${slug}.localhost`, "/"));
-
-  // The account's session reaches the school's host as it does in production.
-  const schoolHome = hostAddress(baseURL, `${slug}.localhost`, "/");
-  const cookies = await context.cookies(String(baseURL));
-  await context.addCookies(
-    Arr.map(cookies, (cookie) => ({
-      httpOnly: cookie.httpOnly,
-      name: cookie.name,
-      sameSite: cookie.sameSite,
-      url: schoolHome,
-      value: cookie.value,
-    }))
-  );
-  await page.reload();
+  await Effect.runPromise(finishSchoolStart(page, baseURL, { name, slug }));
   // The new Owner lands on the exams, the Owner's main page, with its one action.
   await page.waitForURL(EXAMS_ADDRESS);
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();

@@ -4,7 +4,7 @@ import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
@@ -42,12 +42,9 @@ export const validateReleaseRenderer = Effect.fn(
 export const loadStageEnvelope = Effect.fn("contentRelease.loadStageEnvelope")(
   function* (releaseId: string) {
     const { runQuery } = yield* QueryRunner;
-    const stored = yield* runQuery(
-      refs.internal.contentRelease.envelope.byRelease,
-      {
-        releaseId,
-      }
-    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    const stored = yield* runQuery(contentReleaseInternal.envelope.byRelease, {
+      releaseId,
+    }).pipe(Effect.catchTag("SchemaError", Effect.die));
     const release = yield* decodeReleaseJson(stored.releaseJson);
     const renderer = yield* decodeRendererJson(stored.rendererJson);
     const verified = yield* validateReleaseRenderer(release, renderer);

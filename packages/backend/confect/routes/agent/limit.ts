@@ -1,5 +1,5 @@
 import { NAKAFA_EDGE_CLIENT_IP_HEADER } from "@repo/backend/agent/edge";
-import refs from "@repo/backend/confect/_generated/refs";
+import routesInternal from "@repo/backend/confect/_generated/refs/routes.server";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
@@ -13,7 +13,7 @@ export const enforceAgentReadLimit = Effect.fn("agent.enforceReadLimit")(
   function* (request: Request) {
     const { runMutation } = yield* MutationRunner;
     const key = yield* readClientKey(request);
-    yield* runMutation(refs.internal.routes.agent.quota.consume, { key }).pipe(
+    yield* runMutation(routesInternal.agent.quota.consume, { key }).pipe(
       Effect.catchTag("SchemaError", (error) =>
         Effect.fail(
           new NakafaAgentDataReadError({
