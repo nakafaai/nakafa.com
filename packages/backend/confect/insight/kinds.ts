@@ -25,6 +25,7 @@ const classInsight = Kind.extend(classKind, {
     Schema.Struct({ type: Schema.Literal("insight.narrative.shared") }),
     Schema.Struct({ type: Schema.Literal("insight.narrative.withdrawn") }),
   ],
+  published: [],
 });
 
 /** The school's impact assessment, which switches Insight on: its Owner and Admin record it, and the change is journaled. */
@@ -43,6 +44,7 @@ const schoolInsight = Kind.extend(tenant, {
       version: Schema.String,
     }),
   ],
+  published: [],
 });
 
 export const insight = {
