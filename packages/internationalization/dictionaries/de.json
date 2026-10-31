@@ -1509,9 +1509,13 @@
     "plan-founder": "Tarif School, mit Hilfe des Gründers.",
     "founder-line": "Der Gründer hilft großen Schulen beim Start.",
     "founder-link": "Mit dem Gründer sprechen",
+<<<<<<< HEAD
     "link-copy": "Link kopieren",
     "link-copied": "Link kopiert",
     "consent": "Mit der Eröffnung akzeptierst du die <terms>Nutzungsbedingungen</terms> und die <privacy>Datenschutzerklärung</privacy>.",
+=======
+    "consent": "Mit der Eröffnung akzeptierst du die <terms>Nutzungsbedingungen</terms>, die <privacy>Datenschutzerklärung</privacy> und Version {version} des <dpa>Auftragsverarbeitungsvertrags</dpa>.",
+>>>>>>> 77007e68fa (Accept the data processing agreement when a school opens, and record its version)
     "finish": "Schule eröffnen",
     "required-error": "Wähle eine Antwort.",
     "school-limit-line": "Für weitere Schulen brauchst du zuerst ein Gespräch mit dem Gründer.",

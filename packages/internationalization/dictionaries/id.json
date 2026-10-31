@@ -1509,9 +1509,13 @@
     "plan-founder": "Paket School, dibantu pendiri.",
     "founder-line": "Pendiri bisa membantu sekolah besar bersiap.",
     "founder-link": "Bicara dengan pendiri",
+<<<<<<< HEAD
     "link-copy": "Salin tautan",
     "link-copied": "Tautan disalin",
     "consent": "Membuka sekolah berarti menyetujui <terms>Syarat Layanan</terms> dan <privacy>Kebijakan Privasi</privacy>.",
+=======
+    "consent": "Membuka sekolah berarti menyetujui <terms>Syarat Layanan</terms>, <privacy>Kebijakan Privasi</privacy>, dan <dpa>Perjanjian Pemrosesan Data</dpa> versi {version}.",
+>>>>>>> 77007e68fa (Accept the data processing agreement when a school opens, and record its version)
     "finish": "Buka sekolah",
     "required-error": "Pilih satu jawaban.",
     "school-limit-line": "Mendirikan sekolah lagi perlu berbicara dengan pendiri dulu.",
