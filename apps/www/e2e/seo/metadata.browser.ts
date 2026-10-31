@@ -12,6 +12,9 @@ class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing
   { href: Schema.String }
 ) {}
 
+/** The robots directive that keeps a page out of search indexes. */
+const NOINDEX = /noindex/u;
+
 /** Captures the rendered lesson identity and its canonical metadata. */
 const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (
   page: Page
@@ -129,7 +132,7 @@ test("search, chat and sign-in answer noindex, so no engine indexes a learner's 
     await page.goto(path);
     await expect(page.locator('meta[name="robots"]'), path).toHaveAttribute(
       "content",
-      /noindex/
+      NOINDEX
     );
   }
 });

@@ -17,6 +17,15 @@ const LEARNER_NAME = "Acceptance Learner";
 /** The row of the first room of the seeded exam, which is open, in the rooms list. */
 const OPEN_ROOM_ROW = /Lab 2/u;
 
+/** The away seat's time since the student left: the minutes, once there are any, and the seconds. */
+const AWAY_TIME = /Away for (?:(?<minutes>\d+) min )?(?<seconds>\d+) s\./u;
+
+/** The proctor panel's line for a student who left the exam and has not come back. */
+const LEFT_TIME = /^Left the exam for (?:\d+ min )?\d+ s$/u;
+
+/** The proctor panel's line for a student whose device lost the network. */
+const OFFLINE_TIME = /^Lost the connection for (?:\d+ min )?\d+ s$/u;
+
 /** Students seated before the learner, more than one dashboard page of 100 holds. */
 const CROWD = 101;
 
@@ -87,9 +96,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await expect(seat).toHaveAttribute("data-frame", "away");
   // The away seat counts the time since the student left, each second, where a present seat shows its last activity.
   const awaySeconds = async () => {
-    const away = (await seat.textContent())?.match(
-      /Away for (?:(\d+) min )?(\d+) s\./
-    );
+    const away = (await seat.textContent())?.match(AWAY_TIME);
     return away === null || away === undefined
       ? -1
       : Number(away[1] ?? 0) * 60 + Number(away[2]);
@@ -99,9 +106,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await expect.poll(awaySeconds).toBeGreaterThan(firstReading);
   await seat.click();
   // The panel counts the same exit on, until the student comes back.
-  await expect(
-    proctor.getByText(/^Left the exam for (?:\d+ min )?\d+ s$/)
-  ).toBeVisible();
+  await expect(proctor.getByText(LEFT_TIME)).toBeVisible();
 
   const dialog = proctor.getByRole("dialog");
 
@@ -140,9 +145,9 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   // with the moment it went offline, so the proctor's panel tells how long the student was offline.
   await studentContext.setOffline(true);
   await studentContext.setOffline(false);
-  await expect(
-    proctor.getByText(/^Lost the connection for (?:\d+ min )?\d+ s$/)
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(proctor.getByText(OFFLINE_TIME)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
 
   await closeSitting(proctor);
   // The close moves the attempt to closing, and the student's screen says so at once; the
