@@ -47,6 +47,7 @@ import { TableKey } from "@/components/tenant/exams/cells";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
+import { MediaField } from "@/components/tenant/exams/media";
 import { numberSettingOf } from "@/components/tenant/exams/number";
 import { NumberKey } from "@/components/tenant/exams/numeric";
 import {
@@ -287,6 +288,7 @@ export function TeacherLayer({
         questionId={question.id}
       />
       <ReadingField editable={editable} question={question} />
+      <MediaField editable={editable} question={question} />
       {takesScoring(shown.template) ? (
         <ScoringField
           editable={editable}

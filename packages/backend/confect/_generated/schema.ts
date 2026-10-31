@@ -72,6 +72,7 @@ import editorSteps from "./tables/editorSteps";
 import examAnswers from "./tables/examAnswers";
 import examAssets from "./tables/examAssets";
 import examAttempts from "./tables/examAttempts";
+import examAudio from "./tables/examAudio";
 import examQuestions from "./tables/examQuestions";
 import examResults from "./tables/examResults";
 import examScreens from "./tables/examScreens";
@@ -222,6 +223,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly examAnswers: typeof examAnswers;
   readonly examAssets: typeof examAssets;
   readonly examAttempts: typeof examAttempts;
+  readonly examAudio: typeof examAudio;
   readonly examQuestions: typeof examQuestions;
   readonly examResults: typeof examResults;
   readonly examScreens: typeof examScreens;
@@ -371,6 +373,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   examAnswers,
   examAssets,
   examAttempts,
+  examAudio,
   examQuestions,
   examResults,
   examScreens,

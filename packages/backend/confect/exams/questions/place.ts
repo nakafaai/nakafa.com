@@ -26,6 +26,7 @@ type QuestionFields = Pick<
   | "answers"
   | "explanation"
   | "key"
+  | "media"
   | "points"
   | "prompt"
   | "reading"
@@ -61,6 +62,7 @@ export const placeQuestion = Effect.fn("exams.question.place")(function* (
       examId: exam._id,
       explanation: fields.explanation,
       key: fields.key,
+      ...(fields.media === undefined ? {} : { media: fields.media }),
       points: fields.points,
       prompt: fields.prompt,
       ...(fields.reading === undefined ? {} : { reading: fields.reading }),

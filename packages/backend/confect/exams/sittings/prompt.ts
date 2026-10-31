@@ -7,6 +7,7 @@ import { rules } from "@repo/backend/confect/assessment/gate/rules";
 import { FoldPending } from "@repo/backend/confect/editor/errors";
 import { decodedSteps, foldedText } from "@repo/backend/confect/editor/result";
 import { snapshotOf, stepsThrough } from "@repo/backend/confect/editor/store";
+import { playableMedia } from "@repo/backend/confect/exams/questions/media";
 import {
   placementOf,
   sittingGate,
@@ -47,8 +48,9 @@ export const prompt = Effect.fn("exams.sittings.prompt")(function* (args: {
         Effect.fail(toSittingError(refusal))
       )
     );
-  const { reading } = live.question;
+  const { media, reading } = live.question;
   return {
+    media: yield* playableMedia(media),
     prompt: yield* currentPrompt(live.question.prompt),
     reading: reading === undefined ? null : yield* currentPrompt(reading),
   };

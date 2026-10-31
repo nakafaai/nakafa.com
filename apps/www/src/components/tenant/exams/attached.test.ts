@@ -5,6 +5,8 @@ import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
 import {
+  mediaQuestion,
+  mediaUpdate,
   readingUpdate,
   readQuestionWith,
   sharedReadings,
@@ -22,6 +24,7 @@ const question = (id: string): Question => ({
   explanation: promptId(`explanation-${id}`),
   id: questionId(id),
   key: null,
+  media: [],
   points: 1,
   prompt: promptId(`prompt-${id}`),
   reading: null,
@@ -52,6 +55,35 @@ const storeHolding = (current: Option.Option<ExamView>) => {
     setQuery,
   };
 };
+
+describe("question media", () => {
+  const video = { alt: "Video", kind: "video", video: "dQw4w9WgXcQ" } as const;
+
+  it("sets the media of one question and keeps the others", () => {
+    const changed = mediaQuestion(viewOf([first, second]), second.id, [video]);
+
+    expect(changed.questions[0]).toEqual(first);
+    expect(changed.questions[1]).toEqual({ ...second, media: [video] });
+  });
+
+  it("shows the media of a question in the store while the server saves it", () => {
+    const view = viewOf([first, second]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+
+    mediaUpdate(localStore, {
+      examId,
+      media: [video],
+      questionId: first.id,
+      slug,
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some(mediaQuestion(view, first.id, [video]))
+    );
+  });
+});
 
 describe("shared readings", () => {
   const reading = promptId("reading-1");
