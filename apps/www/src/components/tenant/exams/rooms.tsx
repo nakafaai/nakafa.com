@@ -46,6 +46,8 @@ import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
+  TableSearch,
+  useServerSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
@@ -205,6 +207,7 @@ function ExamRoomsContent({
           onSome: (label) => ({ title: label }),
         })}
       >
+        <TableSearch placeholder={t("rooms-search")} />
         {tenant.canOpenExams ? (
           <Link
             className={buttonVariants({ variant: "outline" })}
@@ -224,10 +227,11 @@ function ExamRoomsContent({
 
 /**
  * The rooms in a table that loads more rows as its end comes into view, its state column choosing the state the server
- * reads. The table waits for its first page, so no empty state shows before the rows arrive. A page can hold no room
- * the viewer may see, so an empty page keeps the end in view until the list is exhausted, and only then does the table
- * say why it is empty: an exam with no room yet shows its empty state alone, and a chosen state with no room keeps the
- * table's head, so its choice stays in reach, above one sentence.
+ * reads and the header's search the room names it reads (`useServerSearch`). The table waits for its first page, so no
+ * empty state shows before the rows arrive. A page can hold no room the viewer may see, so an empty page keeps the end
+ * in view until the list is exhausted, and only then does the table say why it is empty: an exam with no room yet shows
+ * its empty state alone, and a chosen state or a search with no room keeps the table's head, so the choice stays in
+ * reach, above one sentence.
  */
 function RoomsTable({
   examId,
@@ -248,9 +252,10 @@ function RoomsTable({
     chosenOne(chosen, "group", Schema.is(Schema.String)),
     () => "all"
   );
+  const search = useServerSearch();
   const pagination = usePaginatedQuery(
     exams.rooms.list,
-    isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
+    isSettled ? roomsArgs({ examId, slug }, filter, search) : "skip",
     { initialNumItems: ROOM_PAGE_SIZE }
   );
   // A new filter's first page loads behind the rooms the table already shows, so the table never blanks.
@@ -278,7 +283,7 @@ function RoomsTable({
   if (empty && pagination._tag !== "Exhausted") {
     return <RoomsMore loadMore={loadMore} />;
   }
-  if (empty && filter === "all") {
+  if (empty && filter === "all" && search === "") {
     return (
       <TableEmpty
         act="pointing"

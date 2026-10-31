@@ -4,7 +4,10 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ExamAccess } from "@repo/backend/confect/exams/access";
 import { ExamSummary } from "@repo/backend/confect/exams/exam";
 import { RoomRow } from "@repo/backend/confect/exams/rooms";
-import { SittingState } from "@repo/backend/confect/exams/sittings/schema";
+import {
+  RoomName,
+  SittingState,
+} from "@repo/backend/confect/exams/sittings/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -23,6 +26,7 @@ export default GroupSpec.make()
       name: "list",
       args: () => ({
         examId: Id("exams"),
+        search: Schema.optionalKey(RoomName),
         slug: TenantSlug,
         state: Schema.optionalKey(SittingState),
       }),
