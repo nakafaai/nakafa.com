@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
+  chosenGrade,
   gradeItems,
   languageItems,
   timeZoneItems,
@@ -30,5 +31,11 @@ describe("components/tenant/settings/choices", () => {
     expect(Arr.every(gradeItems, (item) => item.label === item.value)).toBe(
       true
     );
+  });
+
+  it("reads the school year a grade choice holds, and none for no choice or one out of range", () => {
+    expect(chosenGrade("7")).toStrictEqual(Option.some(7));
+    expect(chosenGrade(null)).toStrictEqual(Option.none());
+    expect(chosenGrade("14")).toStrictEqual(Option.none());
   });
 });

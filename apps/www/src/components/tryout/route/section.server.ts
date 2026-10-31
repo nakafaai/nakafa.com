@@ -6,7 +6,6 @@ import { Clock, Effect, Option, Schema } from "effect";
 import type { PlayerModeParam } from "@/components/player/mode";
 import { readPlayerMode } from "@/components/player/mode.server";
 import { readTryoutSectionPage } from "@/components/tryout/catalog/source.server";
-import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
 import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
 import {
   readCurrentTryoutSection,
@@ -21,10 +20,8 @@ import {
 } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import {
-  readAttemptReview,
-  readPreviewRoute,
+  readAttemptContent,
   readRetainedHead,
-  readRunningSectionContent,
 } from "@/components/tryout/route/surface.server";
 import { readRequestToken } from "@/components/tryout/route/token.server";
 import { serverHandler } from "@/lib/server/fn";
@@ -99,14 +96,6 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
         intent.value.view
       );
     }
-    const preview = yield* readTryoutQuestionPreview(locale, sectionPath);
-    if (Option.isSome(preview)) {
-      return yield* readPreviewRoute({
-        locale,
-        preview: preview.value,
-        publicPath: sectionPath,
-      });
-    }
     const page = yield* readTryoutSectionPage(locale, sectionPath);
     if (!page) {
       return { kind: "notFound" as const };
@@ -135,10 +124,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       )
     );
     const content = Option.isSome(attempt)
-      ? yield* readRunningSectionContent({ attempt: attempt.value })
-      : Option.none();
-    const review = Option.isSome(attempt)
-      ? yield* readAttemptReview({ attempt: attempt.value, locale })
+      ? yield* readAttemptContent({ attempt: attempt.value })
       : Option.none();
     return {
       binding: Option.getOrNull(binding),
@@ -150,7 +136,6 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
         onNone: () => page,
         onSome: (value) => value.page,
       }),
-      review: Option.getOrUndefined(review),
       route,
       setPath: selectTryoutSectionReturnPath({
         attemptPage: attempt,
@@ -208,7 +193,7 @@ const readRetainedSectionRoute = Effect.fn(
   const attempt = running.value;
   return {
     binding: yield* readSectionBinding(attempt, view),
-    content: Option.getOrNull(yield* readRunningSectionContent({ attempt })),
+    content: Option.getOrNull(yield* readAttemptContent({ attempt })),
     head: yield* readRetainedHead({
       description: attempt.page.section.description,
       locale: input.locale,
@@ -218,12 +203,6 @@ const readRetainedSectionRoute = Effect.fn(
     kind: "attempt" as const,
     now: yield* Clock.currentTimeMillis,
     page: attempt.page,
-    review: Option.getOrUndefined(
-      yield* readAttemptReview({
-        attempt,
-        locale: input.locale,
-      })
-    ),
     route: input.route,
     setPath: selectTryoutSectionReturnPath({
       attemptPage: Option.some(attempt),

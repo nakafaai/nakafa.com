@@ -1,12 +1,13 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import {
+  chosenOptions,
+  isAnswered,
+} from "@repo/backend/confect/assessment/response";
+import { letterScript } from "@repo/backend/confect/exams/letters";
 import type {
   examResultValidator,
   Verdict,
 } from "@repo/backend/confect/exams/results/schema";
-import {
-  chosenOptions,
-  isAnswered,
-} from "@repo/backend/confect/exams/sittings/response";
 import { Array as Arr, Match } from "effect";
 
 /** The option IDs of a question's choices, in the order the choices list them. */
@@ -43,6 +44,34 @@ export const pairIdsOf = (interactions: readonly Interaction[]) => ({
         Arr.map(matrix.columns, (part) => part.id)
       ),
       Match.orElse(() => [])
+    )
+  ),
+});
+
+/**
+ * The scripts that name a question's options and the answers of its matches or the columns of its tables:
+ * Arabic letters for a set written in Arabic, Latin ones for any other, read from the labels, so a result
+ * names an option, a pair or a cell as the student's paper did.
+ */
+export const scriptsOf = (interactions: readonly Interaction[]) => ({
+  optionScript: letterScript(
+    Arr.flatMap(interactions, (interaction) =>
+      interaction.kind === "choice"
+        ? Arr.map(interaction.options, (option) => option.label)
+        : []
+    )
+  ),
+  targetScript: letterScript(
+    Arr.flatMap(interactions, (interaction) =>
+      Match.value(interaction).pipe(
+        Match.when({ kind: "match" }, (match) =>
+          Arr.map(match.targets, (part) => part.label)
+        ),
+        Match.when({ kind: "matrix" }, (matrix) =>
+          Arr.map(matrix.columns, (part) => part.label)
+        ),
+        Match.orElse(() => [])
+      )
     )
   ),
 });

@@ -1,5 +1,5 @@
-import { useMounted } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { AfterPageSettled } from "@repo/design-system/components/ui/settled";
 import { lazy, Suspense } from "react";
 
 /**
@@ -13,26 +13,22 @@ const HomeToyLayer = lazy(() =>
 );
 
 /**
- * Mounts the toys as soon as React has taken the page over, so they come on
- * screen with the page and never wait for a scroll, a pointer or a touch. A
- * toy needs the live layout to find its place, so the server draws none. A
- * layer that fails to load leaves the page as it is, and its absence never
- * reaches the error page.
+ * Mounts the toys once the page has loaded and settled, so they come on screen
+ * without a scroll, a pointer or a touch, and their animations never compete
+ * with the page's own loading. A toy needs the live layout to find its place,
+ * so the server draws none. A layer that fails to load leaves the page as it
+ * is, and its absence never reaches the error page.
  */
 export function HomeToys() {
-  const mounted = useMounted();
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
-    <ErrorBoundary fallback={null}>
-      <Suspense fallback={null}>
+    <AfterPageSettled>
+      <ErrorBoundary fallback={null}>
         <Suspense fallback={null}>
-          <HomeToyLayer />
+          <Suspense fallback={null}>
+            <HomeToyLayer />
+          </Suspense>
         </Suspense>
-      </Suspense>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </AfterPageSettled>
   );
 }

@@ -1,4 +1,5 @@
 import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
@@ -67,6 +68,7 @@ export function Graph({ title, description }: GraphProps) {
     <LineEquationCard
       cameraPosition={[0, 0, 20]}
       data={data}
+      facts={<LineReadouts />}
       header={<VisualCardHeader description={description} title={title} />}
     />
   );

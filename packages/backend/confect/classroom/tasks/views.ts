@@ -3,7 +3,10 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
-import { taskField } from "@repo/backend/confect/classroom/tasks/task";
+import {
+  submissionField,
+  taskField,
+} from "@repo/backend/confect/classroom/tasks/task";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { openText } from "@repo/backend/confect/vault/text";
 import { Effect, Option } from "effect";
@@ -41,7 +44,7 @@ export const ownSubmission = Effect.fn("classroom.tasks.own")(function* (
     .pipe(Effect.orDie);
 });
 
-/** One task as the viewer sees it: its text opened with the school key, and the viewer's own work. */
+/** One task as the viewer sees it: its text and the viewer's own work, each opened with the school key. */
 export const taskView = Effect.fn("classroom.tasks.view")(function* (
   task: ClassroomTasksDoc
 ) {
@@ -52,14 +55,19 @@ export const taskView = Effect.fn("classroom.tasks.view")(function* (
     handedIn: task.handedIn,
     id: task._id,
     latePolicy: task.latePolicy,
-    mine: Option.match(mine, {
-      onNone: () => null,
-      onSome: (found) => ({
-        late: found.late,
-        score: found.score ?? null,
-        updatedAt: found.updatedAt,
-      }),
-    }),
+    mine: yield* Option.match(mine, {
+      onNone: () => Effect.succeed(null),
+      onSome: (found) =>
+        Effect.map(
+          openText(keys, submissionField(found), found.sealedText),
+          (text) => ({
+            late: found.late,
+            score: found.score ?? null,
+            text,
+            updatedAt: found.updatedAt,
+          })
+        ),
+    }).pipe(Effect.orDie),
     points: task.points,
     slug: task.slug,
     text: yield* openText(keys, taskField(task), task.sealedText).pipe(

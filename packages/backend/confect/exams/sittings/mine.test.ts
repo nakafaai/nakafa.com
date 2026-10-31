@@ -9,7 +9,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { HOME_RESULT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
+import { STUDENT_RESULT_LIMIT } from "@repo/backend/confect/exams/sittings/mine";
 import { nf } from "@repo/backend/test/editor";
 import {
   CLOSES_AT as CLOSES,
@@ -424,7 +424,7 @@ describe("exams/sittings mine", () => {
         });
         const listed = yield* fixture.as("student").query(mine, { slug: nf });
         // The live sitting, and the newest closed sittings the home lists.
-        expect(listed).toHaveLength(HOME_RESULT_LIMIT + 1);
+        expect(listed).toHaveLength(STUDENT_RESULT_LIMIT + 1);
         expect(
           Option.getOrNull(Arr.findFirst(listed, (row) => row.id === made.id))
         ).toMatchObject({

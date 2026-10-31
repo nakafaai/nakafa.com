@@ -1,183 +1,67 @@
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
-import { tryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import {
-  matchesAttemptIdentity,
-  readAttemptSetIdentity,
-} from "@repo/backend/confect/tryouts/runtime/lookup";
-import { publicationLayer } from "@repo/backend/content/publication/confect";
-import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
-import {
-  readPublishedSectionPageFromIndex,
-  readPublishedSetPageFromIndex,
+  readPublishedSectionPage,
+  readPublishedSetPage,
 } from "@repo/backend/content/tryout/published";
-import {
-  readTryoutSetSelection,
-  type TryoutSetSelection,
-} from "@repo/backend/content/tryout/selection";
-import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { readTryoutSetSelection } from "@repo/backend/content/tryout/selection";
+import { Effect } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
-const AttemptPathSchema = Schema.Struct({
-  locale: AppLocaleCodeSchema,
-  publicPath: Schema.String,
-});
-type AttemptPath = typeof AttemptPathSchema.Type;
 
-/** Reads and verifies one set page from the attempt-owned source snapshot. */
-export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
+/**
+ * Reads the set-local catalog that holds one route of an attempt's set, in one locale, from the
+ * snapshot the attempt started from, so a later release never changes a retained attempt's pages.
+ * The caller resolved the route from that snapshot (`readAttemptDestination`).
+ */
+const readAttemptSelection = Effect.fn("tryouts.attempt.readSelection")(
   function* (
-    args: AttemptPath,
     attempt: TryoutAttempt,
-    identity: TryoutSetIdentity
+    locale: AppLocaleCode,
+    publicPath: string
   ) {
-    const selection = yield* readAttemptSetSelection(args, attempt, identity);
-    const publicPath = Option.map(
-      Arr.head(selection.sets),
-      (set) => set.publicPath
+    return yield* Effect.fromNullishOr(
+      yield* readTryoutSetSelection({
+        appLocale: locale,
+        publicPath,
+        snapshotId: attempt.assessmentSnapshotId,
+      })
+    ).pipe(
+      // The route was read from this snapshot's own catalog.
+      Effect.orDie
     );
-    const page = yield* readPublishedSetPageFromIndex(
-      selection,
-      args.publicPath === attempt.setPublicPath &&
-        Option.isSome(publicPath) &&
-        publicPath.value
-        ? publicPath.value
-        : args.publicPath
-    );
-    if (!page) {
-      return yield* tryoutRuntimeError(
-        "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-        "Frozen try-out set page no longer matches its attempt snapshot."
-      );
-    }
-    return page;
   }
 );
 
-/** Reads and verifies one section page from the attempt-owned source snapshot. */
+/** Reads one set page of an attempt, at its set's route in one locale, from the snapshot it started from. */
+export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
+  function* (attempt: TryoutAttempt, locale: AppLocaleCode, setPath: string) {
+    const selection = yield* readAttemptSelection(attempt, locale, setPath);
+    return yield* Effect.fromNullishOr(
+      yield* readPublishedSetPage(selection)
+    ).pipe(
+      // The selection was read through this set's own route.
+      Effect.orDie
+    );
+  }
+);
+
+/**
+ * Reads one section page of an attempt, at its section's route in one locale, from the snapshot it
+ * started from.
+ */
 export const readAttemptSectionPage = Effect.fn(
   "tryouts.attempt.readSectionPage"
-)(function* (args: AttemptPath, attempt: TryoutAttempt) {
-  const identity = readAttemptSetIdentity(attempt);
-  const selection = yield* readAttemptSetSelection(args, attempt, identity);
-  const original = Option.getOrUndefined(
-    Arr.findFirst(
-      attempt.sectionSnapshots,
-      (section) => section.publicPath === args.publicPath
-    )
-  );
-  const localized = Option.getOrUndefined(
-    Arr.findFirst(
-      selection.sections,
-      (section) => section.sectionKey === original?.sectionKey
-    )
-  );
-  const page = yield* readPublishedSectionPageFromIndex(
-    selection,
-    localized?.publicPath ?? args.publicPath
-  );
-  if (!page) {
-    return yield* tryoutRuntimeError(
-      "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-      "Frozen try-out section page no longer matches its attempt snapshot."
-    );
-  }
-  return page;
-});
-
-/** Reads and checks the complete immutable set-local catalog for one attempt. */
-const readAttemptSetSelection = Effect.fn("tryouts.attempt.readSetSelection")(
-  function* (
-    args: AttemptPath,
-    attempt: TryoutAttempt,
-    identity: TryoutSetIdentity
-  ) {
-    yield* loadVerifiedSnapshot("tryout", attempt.tryoutSnapshotId).pipe(
-      Effect.provide(publicationLayer)
-    );
-    const selection = yield* readTryoutSetSelection({
-      appLocale: attempt.appLocale,
-      publicPath: attempt.setPublicPath,
-      snapshotId: attempt.tryoutSnapshotId,
-    }).pipe(Effect.provide(tryoutLayer));
-    if (!(selection && matchesAttemptSelection(attempt, identity, selection))) {
-      return yield* tryoutRuntimeError(
-        "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-        "Frozen try-out catalog no longer matches its attempt snapshot."
-      );
-    }
-    if (args.locale === attempt.appLocale) {
-      return selection;
-    }
-    const publicPath = yield* readAttemptDestination(attempt, args.locale);
-    const localized = publicPath
-      ? yield* readTryoutSetSelection({
-          appLocale: args.locale,
-          publicPath,
-          snapshotId: attempt.tryoutSnapshotId,
-        }).pipe(Effect.provide(tryoutLayer))
-      : null;
-    if (!localized) {
-      return yield* tryoutRuntimeError(
-        "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-        "The retained exam has no page in this language."
-      );
-    }
-    return localized;
-  }
-);
-
-/** Checks every attempt-owned set and section field against signed source rows. */
-function matchesAttemptSelection(
+)(function* (
   attempt: TryoutAttempt,
-  identity: TryoutSetIdentity,
-  selection: TryoutSetSelection
+  locale: AppLocaleCode,
+  sectionPath: string
 ) {
-  const set = Arr.head(selection.sets);
-  if (
-    Option.isNone(set) ||
-    selection.sets.length !== 1 ||
-    set.value.appLocale !== identity.locale ||
-    !matchesAttemptIdentity(identity, {
-      countryKey: set.value.countryKey,
-      examKey: set.value.examKey,
-      locale: identity.locale,
-      setKey: set.value.setKey,
-      trackKey: set.value.trackKey,
-    }) ||
-    tryoutCatalogIdentity(set.value) !== attempt.setIdentity ||
-    set.value.publicPath !== attempt.setPublicPath ||
-    set.value.questionCount !== attempt.totalQuestions ||
-    set.value.scoringStrategy !== attempt.scoringStrategy ||
-    set.value.sectionCount !== attempt.sectionSnapshots.length ||
-    selection.sectionRecords.length !== attempt.sectionSnapshots.length
-  ) {
-    return false;
-  }
-  return Arr.every(attempt.sectionSnapshots, (snapshot) => {
-    const record = Option.getOrUndefined(
-      Arr.findFirst(
-        selection.sectionRecords,
-        ({ row }) => tryoutCatalogIdentity(row) === snapshot.sectionIdentity
-      )
-    );
-    if (!record) {
-      return false;
-    }
-    const { row } = record;
-    return (
-      record.rowHash === snapshot.sectionRowHash &&
-      row.order === snapshot.sectionOrder &&
-      row.publicPath === snapshot.publicPath &&
-      row.questionCount === snapshot.questionCount &&
-      row.questionSourcePath === snapshot.questionSourcePath &&
-      row.sectionKey === snapshot.sectionKey &&
-      row.sourceRevision === snapshot.sourceRevision &&
-      row.timeLimitSeconds === snapshot.timeLimitSeconds
-    );
-  });
-}
+  const selection = yield* readAttemptSelection(attempt, locale, sectionPath);
+  return yield* Effect.fromNullishOr(
+    yield* readPublishedSectionPage(selection)
+  ).pipe(
+    // The selection was read through this section's own route.
+    Effect.orDie
+  );
+});

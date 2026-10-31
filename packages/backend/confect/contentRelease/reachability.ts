@@ -1,6 +1,7 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { releaseSnapshotTransitionValidator } from "@repo/backend/confect/contentRelease/spec";
+import { Record as Rec } from "effect";
 
 /** Snapshot transition facts the history cleaner reads for one family. */
 type ReleaseSnapshotTransition = typeof releaseSnapshotTransitionValidator.Type;
@@ -43,10 +44,8 @@ export function releaseReachability(
     manifestHash: signed.manifestHash,
     originKind: signed.manifest.origin.kind,
     rendererManifestHash: signed.manifest.rendererManifestHash,
-    snapshotTransitions: {
-      program: snapshotTransition(signed.manifest.snapshots.program),
-      quran: snapshotTransition(signed.manifest.snapshots.quran),
-      tryout: snapshotTransition(signed.manifest.snapshots.tryout),
-    },
+    snapshotTransitions: Rec.map(signed.manifest.snapshots, (state) =>
+      snapshotTransition(state)
+    ),
   };
 }

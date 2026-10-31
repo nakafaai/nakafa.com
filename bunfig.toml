@@ -5,7 +5,3 @@ exact = true
 linker = "isolated"
 # Supply-chain gate: a release younger than one day is not resolved for a new install.
 minimumReleaseAge = 86400
-# The Aksara contracts 1.0.0 release is the owner's own package, published 2026-10-24 20:13 UTC.
-# The application code imports its ./tree subpath, which 0.51.0 does not export, so the pin
-# cannot wait for the release age. Remove this entry once the release is one day old.
-minimumReleaseAgeExcludes = ["@nakafa/aksara-contracts@1.0.0"]

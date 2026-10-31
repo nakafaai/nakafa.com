@@ -77,7 +77,7 @@ test("a member with no class sees no Classes group in the sidebar", async ({
   await page.goto(schoolHome);
 
   const sidebar = page.locator('[data-slot="sidebar-content"]');
-  await expect(sidebar.getByRole("link", { name: "Home" })).toBeVisible();
+  await expect(sidebar.getByRole("link", { name: "Exams" })).toBeVisible();
   await page.waitForLoadState("networkidle");
   await expect(sidebar.getByText("Classes", { exact: true })).toHaveCount(0);
   await context.close();

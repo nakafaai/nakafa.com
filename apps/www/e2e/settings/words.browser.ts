@@ -12,7 +12,7 @@ import {
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
-  namesAcrossHydration,
+  namesAsDrawn,
   namesOf,
   titleOf,
   writeWorst,
@@ -79,7 +79,7 @@ const foundBy = (page: Page, query: string) =>
 
 /**
  * The rows say what the learner wrote and not the Markdown that stores it, the
- * search finds it, and the server's rows say the same as the browser's. A name
+ * search finds it, and a new load draws the same words from its first frame. A name
  * keeps the direction of its own words, a long address keeps its whole text in
  * its title, and words that show nothing are called Untitled.
  */
@@ -97,13 +97,14 @@ const verifyWords = Effect.fn("NakafaE2E.verifyWords")(function* (
   yield* Effect.promise(() => live(changes));
   yield* Effect.forEach(WRITTEN, (memory) => writeWorst(page, changes, memory));
 
-  // The rows the browser just made, and the rows the server renders for them.
+  // The rows the browser just made, and the rows a new load draws for them in
+  // its first frame and once it has settled.
   expect(yield* Effect.promise(() => namesOf(page))).toEqual(NAMES);
-  const across = yield* namesAcrossHydration(page, MEMORY_PATH);
+  const drawn = yield* namesAsDrawn(page, MEMORY_PATH);
 
-  expect(across.served).toEqual(NAMES);
-  expect(across.hydrated).toEqual(NAMES);
-  expect(across.said).toEqual([]);
+  expect(drawn.first).toEqual(NAMES);
+  expect(drawn.settled).toEqual(NAMES);
+  expect(drawn.said).toEqual([]);
 
   const rows = yield* Effect.promise(() => rowsOf(page));
 
@@ -129,7 +130,7 @@ const verifyWords = Effect.fn("NakafaE2E.verifyWords")(function* (
 test.describe("Memory rows with the words learners write", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
 
-  test("say the words, find them, and say them as the server does", async ({
+  test("say the words, find them, and say them from the first frame", async ({
     baseURL,
     page,
   }) => {

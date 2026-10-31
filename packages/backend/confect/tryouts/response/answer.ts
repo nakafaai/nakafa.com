@@ -1,18 +1,59 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { fitsQuestion } from "@repo/backend/confect/assessment/fit";
 import type { Version } from "@repo/backend/confect/assessment/gate/rules";
-import type { Evaluated, Outcome } from "@repo/backend/confect/response/model";
-import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
-import { Effect, Number as Num, Option, Struct } from "effect";
+import { Grade, grade } from "@repo/backend/confect/assessment/grade";
+import {
+  ExamResponse,
+  isAnswered,
+} from "@repo/backend/confect/assessment/response";
+import { TryoutResponseUnfitError } from "@repo/backend/confect/tryouts/response/spec";
+import type { PlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
+import { Effect, Number as Num, Option, Result, Schema, Struct } from "effect";
+
+/** A learner's admitted answer to one place: the response and how its frozen rule grades it. */
+export const GradedAnswer = Schema.Struct({
+  grade: Grade,
+  response: ExamResponse,
+});
+export type GradedAnswer = typeof GradedAnswer.Type;
+
+/** Whether a grade earns every point of its question, which counts it correct. */
+export const isCorrectGrade = (graded: Grade) =>
+  graded.status === "scored" && graded.category === graded.ceiling;
+
+/**
+ * Grades one response to a place with the place's frozen interaction, key, and rule
+ * (`readPlacedQuestion`). A response that does not fit the interaction (`fitsQuestion`) is refused. It
+ * returns a `Result`, not an Effect, so the integrity check re-grades stored answers with the same
+ * synchronous step.
+ */
+export function gradeAnswer(
+  question: PlacedQuestion,
+  response: ExamResponse
+): Result.Result<GradedAnswer, TryoutResponseUnfitError> {
+  if (!fitsQuestion([question.interaction], response)) {
+    return Result.fail(
+      new TryoutResponseUnfitError({
+        code: "TRYOUT_RESPONSE_UNFIT",
+        message: "Try-out response does not fit its frozen question.",
+      })
+    );
+  }
+  return Result.succeed({
+    grade: grade({ ...question, response }),
+    response,
+  });
+}
 
 /** What an absent answer adds to its section's counters. */
 const uncounted = { answered: 0, correct: 0 };
 
-/** What one answer adds to its section's counters: complete answers and correct outcomes. */
-function countOf(isComplete: boolean, outcome: Outcome) {
+/** What one answer adds to its section's counters: answered questions and correct grades. */
+function countOf(answer: GradedAnswer) {
   return {
-    answered: isComplete ? 1 : 0,
-    correct: outcome.status === "correct" ? 1 : 0,
+    answered: isAnswered(answer.response) ? 1 : 0,
+    correct: isCorrectGrade(answer.grade) ? 1 : 0,
   };
 }
 
@@ -39,7 +80,7 @@ function timeSpentOf(section: Docs["tryoutSectionAttempts"], now: number) {
  */
 export const writeAnswer = Effect.fn("tryouts.response.writeAnswer")(
   function* (input: {
-    readonly answer: Option.Option<Evaluated>;
+    readonly answer: Option.Option<GradedAnswer>;
     readonly attempt: Docs["tryoutAttempts"];
     readonly now: number;
     readonly placement: Docs["tryoutAttemptPlacements"];
@@ -66,10 +107,8 @@ export const writeAnswer = Effect.fn("tryouts.response.writeAnswer")(
       yield* responses.delete(stored.value._id);
     } else {
       const fields = {
-        isComplete: answer.value.isComplete,
-        isCorrect: answer.value.outcome.status === "correct",
-        outcome: answer.value.outcome,
-        selection: answer.value.selection,
+        grade: answer.value.grade,
+        response: answer.value.response,
         timeSpent: timeSpentOf(section, now),
         updatedAt: now,
         version,
@@ -96,11 +135,11 @@ export const writeAnswer = Effect.fn("tryouts.response.writeAnswer")(
     }
     const before = Option.match(stored, {
       onNone: () => uncounted,
-      onSome: (response) => countOf(response.isComplete, readOutcome(response)),
+      onSome: countOf,
     });
     const after = Option.match(answer, {
       onNone: () => uncounted,
-      onSome: (evaluated) => countOf(evaluated.isComplete, evaluated.outcome),
+      onSome: countOf,
     });
     yield* writer
       .table("tryoutSectionAttempts")

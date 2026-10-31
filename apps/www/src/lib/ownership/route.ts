@@ -118,6 +118,11 @@ export function isApplicationRoutePath(
     return isUserPath(segments);
   }
 
+  // The public check of a report card's QR code names one hash below `verify`.
+  if (root === "verify") {
+    return segments.length === 1;
+  }
+
   return false;
 }
 

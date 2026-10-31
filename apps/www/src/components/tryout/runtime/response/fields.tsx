@@ -1,104 +1,100 @@
+import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import {
+  chosenOptions,
+  type ExamResponse,
+  markedCells,
+} from "@repo/backend/confect/assessment/response";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
-import { Array as Arr, HashMap, HashSet, Option } from "effect";
-import type { ReactNode } from "react";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
+import {
+  type Choice,
+  markedWith,
+  type TablePart,
+  toggleOption,
+} from "@/components/exams/sitting/response";
 import {
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,
 } from "@/components/tryout/runtime/choice/surface";
 import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
-import {
-  categoryLabelId,
-  optionLabelId,
-  statementLabelId,
-} from "@/components/tryout/runtime/response/id";
-import {
-  assignCategorySelection,
-  type TryoutResponseSelection,
-  toggleMultipleChoiceSelection,
-} from "@/components/tryout/runtime/response/state";
-import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
+import { optionLabelId } from "@/components/tryout/runtime/response/id";
+import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label";
 
-type OnResponseChange = (selection: TryoutResponseSelection | null) => void;
-
-/** Props of one response field set: `value` holds the response and the callbacks it drives. */
-export interface TryoutResponseFieldsProps {
+/** Props of one response field set: `value` holds the question's interaction, its response, and the save. */
+interface TryoutResponseFieldsProps {
   value: {
+    /** The key's answer, which marks each option or statement while it stays answerable, as a demo shows it. */
+    readonly answer?: InteractionKey | undefined;
     readonly id: string;
+    readonly interaction: Interaction;
     readonly locked: boolean;
-    readonly onChange: OnResponseChange;
-    /** Label of one response option or statement, marked correct or not once revealed. */
-    readonly renderLabel: (value: {
-      readonly correctness?: boolean | undefined;
-      readonly id: string;
-      readonly label: string;
-    }) => ReactNode;
-    readonly responseSpec: TryoutRenderableResponseSpec;
-    readonly revealAnswers?: boolean;
-    readonly selection: TryoutResponseSelection | null;
+    readonly onChange: (response: ExamResponse | null) => void;
+    readonly response: ExamResponse | null;
   };
 }
 
-/** Renders every response kind through one persistence-neutral surface. */
+/**
+ * Renders the one interaction of a question as the learner answers it: a choice that takes one option as
+ * radios, a choice that takes more as checks, and a matrix as one table with a row per statement. The 2.0
+ * corpus compiles only these two kinds, so any other renders nothing.
+ */
 export function TryoutResponseFields({ value }: TryoutResponseFieldsProps) {
-  const t = useTranslations("Tryouts");
-  const answerLabel = t("answer");
-  if (value.responseSpec.kind === "single-choice") {
-    return <SingleChoiceFields answerLabel={answerLabel} value={value} />;
+  const { interaction } = value;
+  if (interaction.kind === "matrix") {
+    return <MatrixFields table={interaction} value={value} />;
   }
-  if (value.responseSpec.kind === "multiple-choice") {
-    return <MultipleChoiceFields answerLabel={answerLabel} value={value} />;
+  if (interaction.kind !== "choice") {
+    return null;
   }
-  return <CategoryFields value={value} />;
+  return interaction.maxChoices === 1 ? (
+    <SingleChoiceFields choice={interaction} value={value} />
+  ) : (
+    <MultipleChoiceFields choice={interaction} value={value} />
+  );
 }
 
 function SingleChoiceFields({
-  answerLabel,
+  choice,
   value,
 }: {
-  answerLabel: string;
+  choice: Choice;
   value: TryoutResponseFieldsProps["value"];
 }) {
-  const { id, locked, onChange, responseSpec, selection } = value;
-  if (responseSpec.kind !== "single-choice") {
-    return null;
-  }
-  const selected =
-    selection?.kind === "single-choice" ? selection.optionKey : "";
+  const t = useTranslations("Tryouts");
+  const { id, locked, onChange, response } = value;
+  const selected = Option.getOrElse(
+    Arr.head(chosenOptions(response ?? [])),
+    () => ""
+  );
   const labelId = `${id}-answer-label`;
   return (
     <fieldset className="min-w-0 border-0 p-0">
       <legend className="sr-only" id={labelId}>
-        {answerLabel}
+        {t("answer")}
       </legend>
       <RadioGroup
         aria-labelledby={labelId}
         className="grid grid-cols-1 gap-2 md:grid-cols-2"
         disabled={locked}
-        onValueChange={(optionKey) =>
-          onChange({ kind: "single-choice", optionKey })
-        }
+        onValueChange={(optionId) => onChange([optionId])}
         value={selected}
       >
-        {Arr.map(responseSpec.options, (option) => (
+        {Arr.map(choice.options, (option) => (
           <TryoutSelectableRadioOption
-            appearance={previewAppearance(
-              value.revealAnswers,
-              option.isCorrect
-            )}
-            checked={selected === option.optionKey}
+            appearance={revealedAppearance(value.answer, option.id)}
+            checked={selected === option.id}
             disabled={locked}
-            id={optionLabelId(id, option.optionKey)}
-            key={option.optionKey}
-            label={value.renderLabel({
-              correctness: previewCorrectness(
-                value.revealAnswers,
-                option.isCorrect
-              ),
-              id: optionLabelId(id, option.optionKey),
-              label: option.label,
-            })}
-            value={option.optionKey}
+            id={optionLabelId(id, option.id)}
+            key={option.id}
+            label={
+              <TryoutResponseLabel
+                correctness={revealedCorrectness(value.answer, option.id)}
+                document={option.label}
+              />
+            }
+            value={option.id}
           />
         ))}
       </RadioGroup>
@@ -107,115 +103,114 @@ function SingleChoiceFields({
 }
 
 function MultipleChoiceFields({
-  answerLabel,
+  choice,
   value,
 }: {
-  answerLabel: string;
+  choice: Choice;
   value: TryoutResponseFieldsProps["value"];
 }) {
-  const { id, locked, onChange, responseSpec, selection } = value;
-  if (responseSpec.kind !== "multiple-choice") {
-    return null;
-  }
-  const selected = HashSet.fromIterable(
-    selection?.kind === "multiple-choice" ? selection.optionKeys : []
-  );
+  const t = useTranslations("Tryouts");
+  const { id, locked, onChange, response } = value;
+  const chosen = chosenOptions(response ?? []);
   return (
     <fieldset className="grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2">
-      <legend className="sr-only">{answerLabel}</legend>
-      {Arr.map(responseSpec.options, (option) => (
+      <legend className="sr-only">{t("answer")}</legend>
+      {Arr.map(choice.options, (option) => (
         <TryoutSelectableMultipleChoice
-          appearance={previewAppearance(value.revealAnswers, option.isCorrect)}
-          checked={HashSet.has(selected, option.optionKey)}
+          appearance={revealedAppearance(value.answer, option.id)}
+          checked={Arr.contains(chosen, option.id)}
           disabled={locked}
-          id={optionLabelId(id, option.optionKey)}
-          key={option.optionKey}
-          label={value.renderLabel({
-            correctness: previewCorrectness(
-              value.revealAnswers,
-              option.isCorrect
-            ),
-            id: optionLabelId(id, option.optionKey),
-            label: option.label,
-          })}
-          onCheckedChange={() =>
-            onChange(
-              toggleMultipleChoiceSelection(
-                { responseSpec, selection },
-                option.optionKey
-              )
-            )
+          id={optionLabelId(id, option.id)}
+          key={option.id}
+          label={
+            <TryoutResponseLabel
+              correctness={revealedCorrectness(value.answer, option.id)}
+              document={option.label}
+            />
           }
+          onCheckedChange={(checked) => {
+            const next = toggleOption(
+              chosen,
+              option.id,
+              checked,
+              choice.maxChoices
+            );
+            // A choice with no option checked holds no answer, so it clears.
+            onChange(Arr.isReadonlyArrayNonEmpty(next) ? next : null);
+          }}
         />
       ))}
     </fieldset>
   );
 }
 
-/** A true or false response as a printed exam sets it: one table, a row per statement and a column per category. */
-function CategoryFields({
+/** A matrix as a printed exam sets it: one table, a row per statement and a column per choice. */
+function MatrixFields({
+  table,
   value,
 }: {
+  table: TablePart;
   value: TryoutResponseFieldsProps["value"];
 }) {
-  const { id, locked, onChange, responseSpec, selection } = value;
-  if (responseSpec.kind !== "category") {
-    return null;
-  }
-  const assigned = HashMap.fromIterable(
-    selection?.kind === "category"
-      ? Arr.map(selection.assignments, (assignment) => [
-          assignment.statementKey,
-          assignment.categoryKey,
-        ])
-      : []
-  );
+  const { locked, onChange, response } = value;
+  const cells = markedCells(response ?? []);
   return (
     <TryoutChoiceTable
-      columns={Arr.map(responseSpec.categories, (category) => ({
-        id: category.categoryKey,
-        label: value.renderLabel({
-          id: categoryLabelId(id, category.categoryKey),
-          label: category.label,
-        }),
+      columns={Arr.map(table.columns, (column) => ({
+        id: column.id,
+        label: <TryoutResponseLabel document={column.label} />,
       }))}
       disabled={locked}
-      onMark={(statementKey, categoryKey) =>
-        onChange(
-          assignCategorySelection(
-            { responseSpec, selection },
-            statementKey,
-            categoryKey
-          )
-        )
+      onMark={(statement, column) =>
+        onChange({
+          cells: markedWith(table.statements, cells, { column, statement }),
+        })
       }
-      statements={Arr.map(responseSpec.statements, (statement) => ({
-        correct: value.revealAnswers ? statement.correctCategoryKey : undefined,
-        id: statement.statementKey,
-        label: value.renderLabel({
-          id: statementLabelId(id, statement.statementKey),
-          label: statement.label,
-        }),
+      statements={Arr.map(table.statements, (statement) => ({
+        correct:
+          value.answer?.kind === "matrix"
+            ? Option.getOrUndefined(
+                Option.map(
+                  Arr.findFirst(
+                    value.answer.answers,
+                    (cell) => cell.statement === statement.id
+                  ),
+                  (cell) => cell.column
+                )
+              )
+            : undefined,
+        id: statement.id,
+        label: <TryoutResponseLabel document={statement.label} />,
         marked: Option.getOrUndefined(
-          HashMap.get(assigned, statement.statementKey)
+          Option.map(
+            Arr.findFirst(cells, (cell) => cell.statement === statement.id),
+            (cell) => cell.column
+          )
         ),
       }))}
     />
   );
 }
 
-function previewAppearance(
-  revealAnswers: boolean | undefined,
-  isCorrect: boolean | undefined
+/** How an option shows while it stays answerable: open, or marked by the key once it is revealed. */
+function revealedAppearance(
+  answer: InteractionKey | undefined,
+  optionId: string
 ) {
-  return revealAnswers && isCorrect !== undefined
-    ? ({ isCorrect, kind: "revealed" } as const)
+  return answer?.kind === "choice"
+    ? ({
+        isCorrect: Arr.contains(answer.correct, optionId),
+        kind: "revealed",
+      } as const)
     : ({ kind: "selectable" } as const);
 }
 
-function previewCorrectness(
-  revealAnswers: boolean | undefined,
-  isCorrect: boolean | undefined
+/** Whether an option is correct, once the key is revealed. */
+function revealedCorrectness(
+  answer: InteractionKey | undefined,
+  optionId: string
 ) {
-  return revealAnswers ? isCorrect : undefined;
+  return answer?.kind === "choice"
+    ? Arr.contains(answer.correct, optionId)
+    : undefined;
 }

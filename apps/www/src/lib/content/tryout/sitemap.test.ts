@@ -2,11 +2,10 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import {
-  createTestPublication,
-  makeRuntimeSource,
-} from "@repo/backend/test/content/publication";
-import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
+import { client } from "@repo/backend/test/client";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Layer } from "effect";
 import {
   readPublishedTryoutSitemap,
@@ -72,43 +71,41 @@ describe("published try-out sitemap", () => {
     })
   );
   it.effect.each(APP_LOCALE_CODES)(
-    "reads the complete authenticated %s route inventory",
+    "reads the complete %s route inventory",
     (locale) =>
       Effect.gen(function* () {
-        const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestPublication(fixture.source);
-        runtimeQueryMock.mockImplementation(context.query);
+        const world = yield* tryoutWorld();
+        runtimeQueryMock.mockImplementation(world.visitor.query);
+        const set = fixtureSetPath("set-1", locale);
         expect(yield* readPublishedTryoutSitemapCount(locale)).toEqual({
           pageCount: 1,
-          routeCount: 5,
+          routeCount: 6,
         });
         expect(yield* readPublishedTryoutSitemap(locale, 0)).toEqual({
           paths: [
-            "try-out/indonesia",
-            "try-out/indonesia/tka",
-            "try-out/indonesia/tka/matematika-wajib",
-            "try-out/indonesia/tka/matematika-wajib/set-1",
-            "try-out/indonesia/tka/matematika-wajib/set-1/matematika-wajib",
+            `try-out/indonesia-${locale}`,
+            `try-out/indonesia/snbt-${locale}`,
+            `try-out/indonesia/snbt/2027-${locale}`,
+            set,
+            `${set}/section-a`,
+            `${set}/section-b`,
           ],
         });
         expect(yield* readPublishedTryoutSitemap(locale, 1)).toBeNull();
         expect(yield* readPublishedTryoutSitemap(locale, -1)).toBeNull();
       })
   );
-  it.effect(
-    "fails closed when the authenticated release has no try-out snapshot",
-    () =>
-      Effect.gen(function* () {
-        const inactive = yield* createTestPublication(
-          (yield* makeRuntimeSource()).source
-        );
-        runtimeQueryMock.mockImplementation(inactive.query);
-        expect(
-          yield* readPublishedTryoutSitemapCount("id").pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "ReleaseError",
-          code: "CONTENT_RELEASE_MISSING",
-        });
-      })
+  it.effect("fails closed when no release is active", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockImplementation(
+        client(createConvexTestWithBetterAuth()).query
+      );
+      expect(
+        yield* readPublishedTryoutSitemapCount("id").pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "ReleaseError",
+        code: "CONTENT_RELEASE_MISSING",
+      });
+    })
   );
 });

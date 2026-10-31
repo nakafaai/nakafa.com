@@ -1,5 +1,6 @@
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { Schema } from "effect";
+import { TryoutAttemptReview } from "@/components/tryout/review/screen";
 import { readTryoutSectionFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
@@ -60,9 +61,6 @@ export const Route = createFileRoute(
 
 function TryoutSectionPage() {
   const route = Route.useLoaderData();
-  if (route.kind === "preview") {
-    return route.preview;
-  }
   return (
     <TryoutClockProvider initialNow={route.now}>
       <TryoutSectionPageClient
@@ -72,7 +70,7 @@ function TryoutSectionPage() {
         route={route.route}
         setPath={route.setPath}
       >
-        {route.review}
+        <TryoutAttemptReview binding={route.binding} />
       </TryoutSectionPageClient>
     </TryoutClockProvider>
   );

@@ -14,7 +14,6 @@ import {
   TEST_PAGE_PATH,
   TEST_PAGE_SOURCE,
 } from "@repo/backend/test/content/page";
-import { TEST_QUESTION_CONTENT_KEY } from "@repo/backend/test/content/question";
 import {
   TEST_RELEASE_ID,
   testDeleteJson,
@@ -250,31 +249,27 @@ describe("contentRelease/verify/item", () => {
       operation: "delete",
     });
   });
-  it.each(["material", "question"] as const)(
-    "writes and idempotently replays one body-free %s delete",
-    async (family) => {
-      const t = convexTest(schema, convexModules);
-      await stageDeleteFixture(t, family);
-      await expect(
-        t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
-      ).resolves.toBeNull();
-      await expect(
-        t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
-      ).resolves.toBeNull();
-      const heads = await t.run((ctx) => ctx.db.query("contentHeads").take(3));
-      expect(
-        Option.getOrUndefined(
-          Arr.findFirst(heads, ({ sequence }) => sequence === 2)
-        )
-      ).toMatchObject({
-        contentKey:
-          family === "question" ? TEST_QUESTION_CONTENT_KEY : "test:deleted",
-        family,
-        operation: "delete",
-        releaseId: TEST_RELEASE_ID,
-      });
-    }
-  );
+  it("writes and idempotently replays one body-free material delete", async () => {
+    const t = convexTest(schema, convexModules);
+    await stageDeleteFixture(t, "material");
+    await expect(
+      t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).resolves.toBeNull();
+    await expect(
+      t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).resolves.toBeNull();
+    const heads = await t.run((ctx) => ctx.db.query("contentHeads").take(3));
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(heads, ({ sequence }) => sequence === 2)
+      )
+    ).toMatchObject({
+      contentKey: "test:deleted",
+      family: "material",
+      operation: "delete",
+      releaseId: TEST_RELEASE_ID,
+    });
+  });
   it("rejects missing artifact and projection bodies", async () => {
     const artifact = convexTest(schema, convexModules);
     await stageUpsertFixture(artifact);

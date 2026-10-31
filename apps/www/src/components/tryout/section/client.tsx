@@ -6,8 +6,8 @@ import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
 import { ShellLock } from "@/components/sidebar/lock";
+import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
-import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { TryoutPlayer } from "@/components/tryout/player/client";
 import {
@@ -52,8 +52,8 @@ interface TryoutSectionPageClientProps {
     startPath: string | null;
   } | null;
   children: ReactNode;
-  /** The signed questions of a running section, rendered on the server. */
-  content: TryoutRunningContent | null;
+  /** The decoded question bodies of the attempt: the running section's, or a finished one's for its review. */
+  content: readonly TryoutBody[] | null;
   page: TryoutSectionPage;
   route: TryoutSectionRoute;
   setPath: string;
@@ -86,7 +86,7 @@ export function TryoutSectionPageClient({
   setPath,
 }: TryoutSectionPageClientProps) {
   return (
-    <TryoutContentContext value={{ content }}>
+    <TryoutContentContext value={{ bodies: content }}>
       <TryoutSectionPageContext value={{ page, route, setPath }}>
         {binding !== null && isTryoutStateLive(binding.initialState) ? (
           <LiveTryoutSectionPage

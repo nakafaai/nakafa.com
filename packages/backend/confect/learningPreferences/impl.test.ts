@@ -14,7 +14,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { activateTryoutStartSource } from "@repo/backend/test/tryout/source";
+import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
 
@@ -192,7 +192,7 @@ describe("learningPreferences/impl", () => {
       const user = await seedAuthenticatedUser(ctx, {
         now: 1,
       });
-      await activateTryoutStartSource(ctx, "visible");
+      await activateAssessmentTestSnapshot(ctx);
       return user.userId;
     });
     expect(

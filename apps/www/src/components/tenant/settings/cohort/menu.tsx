@@ -14,21 +14,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
+import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { chosenGrade } from "@/components/tenant/settings/choices";
+import {
+  CohortGradeField,
+  CohortNameField,
+} from "@/components/tenant/settings/cohort/fields";
 import {
   archiveCohortChange,
-  renameCohortChange,
+  editCohortChange,
   restoreCohortChange,
 } from "@/components/tenant/settings/groups";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -70,9 +70,9 @@ export function SchoolCohortRestore({
 }
 
 /**
- * A cohort's row menu: it renames the cohort in a dialog that saves only a name the cohort
- * does not have yet, or archives it. An archived cohort has no menu, because the server
- * refuses every write to it, so its cell stays empty.
+ * A cohort's row menu: Edit opens a dialog of its name and its school year, which starts from what the cohort holds
+ * and saves only a change, or Archive. An archived cohort has no menu, because the server refuses every write to it,
+ * so its cell stays empty.
  */
 export function SchoolCohortMenu({
   cohort,
@@ -90,13 +90,22 @@ export function SchoolCohortMenu({
   const restore = useMutation(tenancy.cohorts.restore).withOptimisticUpdate(
     restoreCohortChange
   );
-  const rename = useMutation(tenancy.cohorts.rename).withOptimisticUpdate(
-    renameCohortChange
+  const edit = useMutation(tenancy.cohorts.edit).withOptimisticUpdate(
+    editCohortChange
   );
-  const [isRenaming, setIsRenaming] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(cohort.name);
+  const [gradeValue, setGradeValue] = useState<string | null>(
+    String(cohort.grade)
+  );
   const next = name.trim();
-  const canSave = next !== cohort.name && Schema.is(CohortName)(next);
+  const grade = chosenGrade(gradeValue);
+  const canSave =
+    Schema.is(CohortName)(next) &&
+    Option.exists(
+      grade,
+      (chosen) => chosen !== cohort.grade || next !== cohort.name
+    );
 
   return (
     <div className="flex justify-end">
@@ -117,11 +126,12 @@ export function SchoolCohortMenu({
           <DropdownMenuItem
             onClick={() => {
               setName(cohort.name);
-              setIsRenaming(true);
+              setGradeValue(String(cohort.grade));
+              setIsEditing(true);
             }}
           >
             <HugeIcons icon={PencilEdit02Icon} />
-            {t("cohort-rename")}
+            {common("edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() =>
@@ -155,11 +165,11 @@ export function SchoolCohortMenu({
         </DropdownMenuContent>
       </DropdownMenu>
       <ResponsiveDialog
-        description={t("cohort-rename-description")}
+        description={t("cohort-edit-description")}
         footer={
           <>
             <Button
-              onClick={() => setIsRenaming(false)}
+              onClick={() => setIsEditing(false)}
               type="button"
               variant="outline"
             >
@@ -168,34 +178,40 @@ export function SchoolCohortMenu({
             <Button
               disabled={!canSave}
               onClick={() => {
-                setIsRenaming(false);
+                if (Option.isNone(grade)) {
+                  return;
+                }
+                setIsEditing(false);
                 startTransition(() =>
                   saveSchool(
-                    () => rename({ cohortId: cohort.id, name: next, slug }),
+                    () =>
+                      edit({
+                        cohortId: cohort.id,
+                        grade: grade.value,
+                        name: next,
+                        slug,
+                      }),
                     SOURCE
                   )
                 );
               }}
               type="button"
             >
-              {t("cohort-rename-save")}
+              {t("cohort-edit-save")}
             </Button>
           </>
         }
-        open={isRenaming}
-        setOpen={setIsRenaming}
-        title={t("cohort-rename")}
+        open={isEditing}
+        setOpen={setIsEditing}
+        title={cohort.name}
       >
         <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor={`${id}-name`}>{t("cohort-name")}</FieldLabel>
-            <Input
-              id={`${id}-name`}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={t("cohort-name-placeholder")}
-              value={name}
-            />
-          </Field>
+          <CohortNameField id={`${id}-name`} onChange={setName} value={name} />
+          <CohortGradeField
+            id={`${id}-grade`}
+            onChange={setGradeValue}
+            value={gradeValue}
+          />
         </FieldGroup>
       </ResponsiveDialog>
     </div>

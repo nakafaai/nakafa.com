@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/page";
 import { Effect, Option } from "effect";
 import { selectionKey } from "@/components/tryout/catalog/table/keys";
 import type {
@@ -154,11 +154,11 @@ describe("visitor set list state", () => {
     const full = requestVisitorSets(
       startVisitorSets(bootstrap),
       request,
-      TRYOUT_CATALOG_LIMIT
+      TRACK_SET_PAGE_LIMIT
     );
     expect(visitorSetView(full, request)).toMatchObject({
       hasMore: false,
-      nextSize: TRYOUT_CATALOG_LIMIT,
+      nextSize: TRACK_SET_PAGE_LIMIT,
     });
   });
 

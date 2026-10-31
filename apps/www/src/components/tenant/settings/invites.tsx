@@ -31,6 +31,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -42,6 +43,7 @@ import {
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
+import { roleLooks } from "@/components/tenant/roles";
 import {
   type CardView,
   SchoolCardDialog,
@@ -125,6 +127,7 @@ function SchoolInvitesBody() {
 /** The invites in a data table, or the table's empty state when there is none. */
 function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
   const t = useTranslations("SchoolSettings");
+  const tSchool = useTranslations("School");
 
   if (Arr.isReadonlyArrayEmpty(invites)) {
     return (
@@ -137,30 +140,46 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
   }
 
   const columns = inviteColumns.columns([
-    inviteColumns.accessor((invite) => invite.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+    // The name with the address after it, so the header's search finds an invitee by either; the cell shows the name.
+    inviteColumns.accessor((invite) => `${invite.name} ${invite.email}`, {
+      cell: (info) => (
+        <span className="font-medium">{info.row.original.name}</span>
+      ),
       filterFn: "includesString",
       header: t("invite-name"),
       id: "name",
       sortFn: "text",
     }),
     inviteColumns.accessor((invite) => invite.email, {
-      filterFn: "includesString",
       header: t("invite-email"),
       id: "email",
       sortFn: "text",
     }),
-    inviteColumns.display({
+    inviteColumns.accessor((invite) => invite.roles, {
       cell: (info) => (
         <div className="inline-flex flex-wrap justify-center gap-1">
-          {Arr.map(info.row.original.roles, (role) => (
+          {Arr.map(info.getValue(), (role) => (
             <RoleBadge key={role} role={role} />
           ))}
         </div>
       ),
-      header: t("invite-role"),
+      enableSorting: false,
+      filterFn: "anyOf",
+      header: () => (
+        <ColumnFilter
+          column="role"
+          options={Arr.map(
+            Arr.dedupe(Arr.flatMap(invites, (invite) => invite.roles)),
+            (role) => ({
+              icon: roleLooks[role].icon,
+              label: tSchool(`role.${role}`),
+              value: role,
+            })
+          )}
+          title={t("invite-role")}
+        />
+      ),
       id: "role",
-      meta: { align: "center" },
     }),
     inviteColumns.accessor((invite) => invite.expiresAt, {
       cell: (info) =>
@@ -180,7 +199,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     inviteColumns.display({
       cell: (info) => <SchoolInviteMenu invite={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

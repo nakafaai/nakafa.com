@@ -1,13 +1,32 @@
 import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
+import {
+  Calendar01Icon,
+  Calendar03Icon,
+  CalendarCheckIn01Icon,
+  CalendarsIcon,
+  Certificate01Icon,
+  MoreHorizontalIcon,
+} from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
@@ -18,6 +37,14 @@ import { Link } from "@/lib/routing/link";
 
 /** One class group whose report cards the viewer opens. */
 type CohortItem = Ref.Returns<typeof records.reports.cohorts>[number];
+
+/** The icons of the periods in the period filter, one calendar for each. */
+const PERIOD_ICONS = [
+  Calendar03Icon,
+  Calendar01Icon,
+  CalendarCheckIn01Icon,
+  CalendarsIcon,
+] as const;
 
 /** The columns of the class group list. */
 const cohortColumns = createColumnHelper<
@@ -58,9 +85,31 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
       sortFn: "text",
     }),
     cohortColumns.accessor((cohort) => cohort.period, {
-      header: t("period"),
+      enableSorting: false,
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="period"
+          options={namedOptions(
+            Arr.dedupe(
+              Arr.map(
+                QueryResult.isSuccess(cohorts) ? cohorts.value : [],
+                (cohort) => cohort.period
+              )
+            ),
+            PERIOD_ICONS
+          )}
+          title={t("period")}
+        />
+      ),
       id: "period",
-      sortFn: "text",
+    }),
+    cohortColumns.display({
+      cell: (info) => (
+        <ReportCohortMenu cohortId={info.row.original.id} slug={slug} />
+      ),
+      id: "actions",
+      meta: { align: "menu" },
     }),
   ]);
 
@@ -89,5 +138,49 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
         ) : null}
       </div>
     </TableFiltersProvider>
+  );
+}
+
+/** The row menu of one class group: Open, to its students' report cards. */
+function ReportCohortMenu({
+  cohortId,
+  slug,
+}: {
+  cohortId: CohortItem["id"];
+  slug: TenantSlug;
+}) {
+  const common = useTranslations("Common");
+
+  return (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              render={
+                <Link
+                  params={{ cohortId, slug }}
+                  to="/school/$slug/reports/$cohortId"
+                >
+                  <HugeIcons icon={Certificate01Icon} />
+                  {common("open")}
+                </Link>
+              }
+            />
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

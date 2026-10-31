@@ -1,11 +1,10 @@
 import { createContext } from "react";
-import type { TryoutRunningContent } from "@/components/tryout/content/model";
+import type { TryoutBody } from "@/components/tryout/content/body";
 
 /**
- * The signed questions of the running section, rendered on the server, which
- * the page gives the player's articles. It holds the page's content, fixed for
- * one page, so it never changes above the streamed bodies.
+ * The decoded question bodies of the running section, which the page gives the player's articles.
+ * It holds the page's bodies, fixed for one page, so it never changes above the streamed questions.
  */
 export const TryoutContentContext = createContext<{
-  readonly content: TryoutRunningContent | null;
+  readonly bodies: readonly TryoutBody[] | null;
 } | null>(null);
