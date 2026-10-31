@@ -3,6 +3,7 @@ import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { getTileShifts } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Predicate } from "effect";
+import { type RefObject, useEffect, useRef } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
@@ -32,24 +33,38 @@ type HubCountries = TryoutHubClientProps["page"]["countries"];
 type HubCountry = HubCountries[number];
 
 /**
- * Renders the country-first try-out hub. A visitor's country cards only link. A
- * learner's cards also save the chosen country through the page's live client,
- * which mounts only once the page holds one.
+ * Renders the country-first try-out hub. The cards are the same for a visitor and a learner, so they stand
+ * outside the page's live client and never redraw when it arrives. A learner's pick also saves the chosen
+ * country, through the part that mounts only once the page holds a client.
  */
 export function TryoutHubClient({ page }: TryoutHubClientProps) {
+  const savePick = useRef<((country: HubCountry) => void) | null>(null);
+
   if (page.countries.length === 0) {
     return <ComingSoon />;
   }
 
   return (
-    <ConvexIsland fallback={<TryoutHubCountries countries={page.countries} />}>
-      <TryoutHubSignedCountries countries={page.countries} />
-    </ConvexIsland>
+    <>
+      <TryoutHubCountries
+        countries={page.countries}
+        onPick={(country) => savePick.current?.(country)}
+      />
+      <ConvexIsland>
+        <TryoutHubPreference countries={page.countries} savePick={savePick} />
+      </ConvexIsland>
+    </>
   );
 }
 
-/** A learner's country cards: a click saves the country as the learner's choice, once the learner is signed in. */
-function TryoutHubSignedCountries({ countries }: { countries: HubCountries }) {
+/** Saves a learner's pick as their choice, once the learner is signed in. It draws nothing. */
+function TryoutHubPreference({
+  countries,
+  savePick,
+}: {
+  countries: HubCountries;
+  savePick: RefObject<((country: HubCountry) => void) | null>;
+}) {
   const locale = useLocale();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
@@ -74,9 +89,14 @@ function TryoutHubSignedCountries({ countries }: { countries: HubCountries }) {
     ).then(() => undefined);
   }
 
-  return (
-    <TryoutHubCountries countries={countries} onPick={handleCountryClick} />
-  );
+  useEffect(() => {
+    savePick.current = handleCountryClick;
+    return () => {
+      savePick.current = null;
+    };
+  });
+
+  return null;
 }
 
 /** The country cards of the hub. A card reports its pick only when the page passes `onPick`. */
