@@ -23,7 +23,10 @@ import {
   TrySlugContext,
   TryStoreContext,
 } from "@/components/tenant/exams/try/context";
-import { ExamTryQuestion } from "@/components/tenant/exams/try/question";
+import {
+  ExamTryQuestion,
+  TryReveal,
+} from "@/components/tenant/exams/try/question";
 import { projectTryQuestions } from "@/components/tenant/exams/try/questions";
 import { createExamTry } from "@/components/tenant/exams/try/store";
 import {
@@ -103,15 +106,17 @@ export function ExamTryPaper({
             <p className="text-muted-foreground text-sm">
               {gone ? <ExamGone /> : t("try-note")}
             </p>
-            <PlayerQuestions>
-              {Arr.map(exam.questions, (question, index) => (
-                <ExamTryQuestion
-                  key={question.id}
-                  number={index + 1}
-                  question={question}
-                />
-              ))}
-            </PlayerQuestions>
+            <TryReveal documentId={exam.questions[0]?.prompt}>
+              <PlayerQuestions>
+                {Arr.map(exam.questions, (question, index) => (
+                  <ExamTryQuestion
+                    key={question.id}
+                    number={index + 1}
+                    question={question}
+                  />
+                ))}
+              </PlayerQuestions>
+            </TryReveal>
           </PlayerMain>
           <PlayerFooter>
             <PlayerFlag locked={false} questions={models} />

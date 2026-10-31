@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { make } from "@repo/backend/confect/assessment/gate/admit";
-import { Rule } from "@repo/backend/confect/assessment/gate/rules";
+import { Rule, rules } from "@repo/backend/confect/assessment/gate/rules";
 import { Attempt } from "@repo/backend/confect/assessment/gate/store";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { TestClock } from "effect/testing";
@@ -95,6 +95,7 @@ const memory = Effect.fn("test.gate.memory")(function* (state: Memory) {
     placement: (id: string) => target(id === "q", rows),
     section: (id: string) =>
       target(id === "s", Effect.succeed({ version: state.version })),
+    writeAllowance: 0,
   });
   return { gate, log: Ref.get(log) };
 });
@@ -304,7 +305,7 @@ describe("assessment/gate/admit", () => {
     Effect.gen(function* () {
       yield* setNow;
       const { gate } = yield* memory(attempt({ state: "locked" }));
-      const admitRule = Rule.make({ deadline: "live", lock: "admit" });
+      const admitRule = Rule.make({ ...rules.answer, lock: "admit" });
       const admitted = yield* gate.admit(
         admitRule,
         "learner",

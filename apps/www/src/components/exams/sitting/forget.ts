@@ -1,11 +1,12 @@
 import type { GenericId } from "@confect/core";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
 import { Array as Arr, Effect } from "effect";
+import { forgetSittingDevice } from "@/components/exams/sitting/device";
 import { keptAttempt, submittedKeysOf } from "@/components/exams/sitting/keep";
 import { keptStorage } from "@/components/player/storage";
 import { reportClientException } from "@/lib/analytics/client";
 
-/** Drops what the browser keeps for a submitted attempt. A browser that refuses storage reports it. */
+/** Drops what the browser keeps for a submitted attempt, its device included. A browser that refuses storage reports it. */
 export function forgetKeptAttempt(
   sittingId: GenericId.GenericId<"examSittings">,
   attemptId: GenericId.GenericId<"examAttempts">
@@ -19,7 +20,9 @@ export function forgetKeptAttempt(
           reportClientException(error, {
             source: "components/exams/sitting/kept",
           })
-        )
+        ),
+        Effect.andThen(forgetSittingDevice(sittingId)),
+        Effect.catchTag("SittingDeviceStorageFailed", () => Effect.void)
       )
   );
 }

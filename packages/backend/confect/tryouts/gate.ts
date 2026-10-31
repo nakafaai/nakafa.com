@@ -254,6 +254,7 @@ const gate = make({
   placement: (placementId: Id<"tryoutAttemptPlacements">) =>
     loadPlacement(placementId, loadAnswering),
   section: loadSection,
+  writeAllowance: 0,
 });
 
 /** What a flag needs once admitted: the attempt and the question's placement, and no answer rows. */

@@ -16,6 +16,7 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Effect, Option } from "effect";
 import {
   type FormEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useId,
@@ -30,13 +31,21 @@ import {
   useEnterSitting,
 } from "@/components/exams/sitting/admit";
 import { isActive, takesAnswers } from "@/components/exams/sitting/attempt";
-import { SittingBar } from "@/components/exams/sitting/bar";
+import {
+  PaperBack,
+  PaperBar,
+  SittingBar,
+} from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
+import { useReaderLoaded } from "@/components/exams/sitting/document";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
 import { entersBySelf, roomEntryOf } from "@/components/exams/sitting/join";
+import { useSittingMode } from "@/components/exams/sitting/mode";
 import { StudentOutcome } from "@/components/exams/sitting/outcome";
 import { StudentPlayer } from "@/components/exams/sitting/player";
 import { SittingRetry } from "@/components/exams/sitting/retry";
+import { PlayerMain } from "@/components/player/frame";
+import { PlayerProvider } from "@/components/player/provider";
 import {
   CardSection,
   CardSectionActions,
@@ -56,7 +65,9 @@ type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
  * sitting that has not opened shows its opening time and no token field. Before the student is admitted,
  * the screen shows the token field. Once the sitting opens, a device that the browser keeps enters without a
  * token, because it already owns the attempt, and a student who scanned the room's QR code enters with its
- * code, which the field then shows in case the proctor has changed the token since. An admitted student sees
+ * code, which the field then shows in case the proctor has changed the token since. The browser holds both
+ * before the first paint, so a page that enters by itself shows the paper's frame from its first frame and
+ * never the token field, which comes back only when the entry is refused. An admitted student sees
  * the paper while the attempt is open, and one sentence for a lock. Any attempt that no longer takes answers shows its sentence and its results, so a reload after
  * a close or a finish still shows how it ended. Every screen keeps the school's header, so a phone can return
  * to the school home.
@@ -78,18 +89,29 @@ export function StudentSitting({
   const enter = useEnterSitting();
   const [admitted, setAdmitted] = useState<Admitted | null>(null);
   const [message, setMessage] = useState<typeof EntryMessage.Type | null>(null);
-  const [tokenText, setTokenText] = useState("");
+  // What the page enters with by itself, taken once: a room's code is spent as it is read.
+  const [selfEntry] = useState(() =>
+    Effect.runSync(roomEntryOf(sittingId, window.location.hash))
+  );
+  const [tokenText, setTokenText] = useState(() =>
+    Option.getOrElse(selfEntry, () => "")
+  );
+  // The page's own entry has not been answered yet, so it shows the paper's frame.
+  const [joining, setJoining] = useState(() => Option.isSome(selfEntry));
   const resumed = useRef(false);
   const tokenId = useId();
   // The entry waits for the server's answer: a second press would send a second device with the same token.
   const [entering, startEntering] = useTransition();
   // The page enters by itself once, when the sitting has opened.
   const enterable = QueryResult.isSuccess(view) && entersBySelf(view.value);
+  // The paper's reader loads while the student enters, so the paper draws at once.
+  useReaderLoaded(enterable);
   // A sitting cancelled, or closed to the student, while its page is open keeps its exam's title above the refusal.
   const kept = useLastValue(view);
 
   /** Shows the admission, or the sentence that explains why the entry was refused. */
   const receive = useCallback((next: Admission) => {
+    setJoining(false);
     if (next._tag === "admitted") {
       setAdmitted(next);
       setMessage(null);
@@ -103,23 +125,12 @@ export function StudentSitting({
       return;
     }
     resumed.current = true;
-    Effect.runPromise(
-      roomEntryOf(sittingId, window.location.hash).pipe(
-        Effect.flatMap((entry) =>
-          Option.match(entry, {
-            onNone: () => Effect.void,
-            onSome: (token) =>
-              Effect.sync(() => {
-                setTokenText(token);
-                startEntering(async () => {
-                  await enter({ sittingId, slug, token }, receive);
-                });
-              }),
-          })
-        )
-      )
-    );
-  }, [enter, enterable, receive, sittingId, slug]);
+    if (Option.isSome(selfEntry)) {
+      startEntering(async () => {
+        await enter({ sittingId, slug, token: selfEntry.value }, receive);
+      });
+    }
+  }, [enter, enterable, receive, selfEntry, sittingId, slug]);
 
   if (QueryResult.isFailure(view)) {
     return (
@@ -134,10 +145,17 @@ export function StudentSitting({
       </>
     );
   }
-  if (!QueryResult.isSuccess(view)) {
-    return <SittingBar examTitle={t("sitting")} />;
+  // A paused read, as while Convex confirms the session again, keeps its last answer, so a running paper stays.
+  if (Option.isNone(kept)) {
+    return joining ? (
+      <JoiningPaper>
+        <PaperBar back={<PaperBack />} title={t("sitting")} />
+      </JoiningPaper>
+    ) : (
+      <SittingBar examTitle={t("sitting")} />
+    );
   }
-  const { attempt, sitting } = view.value;
+  const { attempt, sitting } = kept.value;
   if (attempt !== null && admitted !== null && isActive(attempt.state)) {
     return (
       <StudentPlayer
@@ -146,6 +164,13 @@ export function StudentSitting({
         sitting={sitting}
         slug={slug}
       />
+    );
+  }
+  if (joining && enterable) {
+    return (
+      <JoiningPaper>
+        <PaperBar back={<PaperBack />} title={sitting.examTitle} />
+      </JoiningPaper>
     );
   }
   if (attempt !== null && !takesAnswers(attempt.state)) {
@@ -202,6 +227,18 @@ export function StudentSitting({
         </form>
       </SittingBody>
     </>
+  );
+}
+
+/** The paper's frame while the page enters by itself: full screen from the first frame, under its bar, with the paper to come. */
+function JoiningPaper({ children }: { readonly children: ReactNode }) {
+  const mode = useSittingMode();
+
+  return (
+    <PlayerProvider keys={[]} mode={mode}>
+      {children}
+      <PlayerMain navigator={null}>{null}</PlayerMain>
+    </PlayerProvider>
   );
 }
 

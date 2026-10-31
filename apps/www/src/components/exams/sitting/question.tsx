@@ -11,23 +11,25 @@ import {
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import { useMemo } from "react";
-import { useTranslations } from "use-intl";
+import { type ReactNode, useMemo } from "react";
 import {
   keepResponse,
   useChooseAnswer,
 } from "@/components/exams/sitting/answer";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import {
-  PromptReserve,
   SittingDocument,
+  useReaderLoaded,
 } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
 import { useKeptText } from "@/components/exams/sitting/kept";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
 import { useFlagQuestion } from "@/components/exams/sitting/mark";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
-import type { PaperQuestion } from "@/components/exams/sitting/paper";
+import type {
+  PaperQuestion,
+  PaperValue,
+} from "@/components/exams/sitting/paper";
 import {
   pictureIdsOfDocuments,
   SittingPictures,
@@ -49,6 +51,45 @@ import {
 } from "@/components/player/question";
 
 /**
+ * Keeps the paper out of sight until it can draw its first question: the reader has loaded, and the first
+ * prompt has answered, as the prompts of a paper answer together. So the student meets the paper whole, as the
+ * try-out shows its questions, and no option moves when its prompt arrives. A prompt that cannot be read yet
+ * answers too, with the failure that the question shows as nothing.
+ */
+export function PaperReveal({
+  children,
+  deviceId,
+  paper,
+  sittingId,
+  slug,
+}: {
+  readonly children: ReactNode;
+  readonly deviceId: string;
+  readonly paper: PaperValue;
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+  readonly slug: TenantSlug;
+}) {
+  const loaded = useReaderLoaded(true);
+  const first = Arr.head(paper.questions);
+  const prompt = useQuery(
+    exams.sittings.prompt,
+    Option.isSome(first)
+      ? { deviceId, questionId: first.value.id, sittingId, slug }
+      : "skip"
+  );
+
+  return (
+    <div
+      className={
+        loaded && !QueryResult.isLoading(prompt) ? undefined : "invisible"
+      }
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
  * One question of the paper: its number, its prompt as the editor holds it now, and its options or its
  * answer line. The player's footer flags the current question. A choice or a typed answer is kept in the
  * browser before it is sent, so a reload
@@ -68,7 +109,6 @@ export function SittingQuestion({
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
-  const t = useTranslations("Exams");
   const ids = readQuestionIds(question.number);
   const prompt = useQuery(exams.sittings.prompt, {
     deviceId,
@@ -170,16 +210,8 @@ export function SittingQuestion({
       <PlayerQuestionHeader number={question.number} />
       <SittingPictures value={addresses}>
         <PlayerQuestionPrompt>
-          {promptDocument === null && !QueryResult.isSuccess(prompt) ? (
-            <PromptReserve />
-          ) : null}
           {promptDocument === null ? null : (
-            // The reader takes its document once, so a changed prompt remounts it.
-            <SittingDocument
-              document={promptDocument}
-              key={promptText}
-              label={t("prompt-label")}
-            />
+            <SittingDocument document={promptDocument} />
           )}
         </PlayerQuestionPrompt>
         <PlayerQuestionAnswer>

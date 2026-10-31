@@ -309,7 +309,6 @@
     "add-question": "Add question",
     "copy": "Copy question",
     "copy-of": "Copy question {number}",
-    "prompt-label": "Question text",
     "prompt-placeholder": "Write the question here.",
     "results-title": "Results",
     "results-name": "Student",

@@ -63,11 +63,7 @@ export function SittingPairs({
           <li className="grid gap-2" key={source.id}>
             <div className="flex min-w-0 items-start gap-3">
               <span className="font-medium tabular-nums">{index + 1}.</span>
-              <SittingDocument
-                document={source.label}
-                label={match.label}
-                size="line"
-              />
+              <SittingDocument document={source.label} size="line" />
             </div>
             <Select
               items={items}
@@ -110,11 +106,7 @@ export function SittingPairs({
         {Arr.map(match.targets, (target, index) => (
           <li className="flex min-w-0 items-start gap-3" key={target.id}>
             <span className="font-medium">{letterOf(index)}.</span>
-            <SittingDocument
-              document={target.label}
-              label={match.label}
-              size="line"
-            />
+            <SittingDocument document={target.label} size="line" />
           </li>
         ))}
       </ol>
