@@ -18,4 +18,6 @@ export default Table.make(() => examAttemptValidator)
     "deadline",
   ])
   .index("by_personId", ["person"])
-  .index("by_personId_and_state", ["person", "state"]);
+  .index("by_personId_and_state", ["person", "state"])
+  // The attempts of every room past their deadline, which the sweep sends on when their job did not happen.
+  .index("by_state_and_deadline", ["state", "deadline"]);

@@ -4,8 +4,9 @@ import { Schema } from "effect";
 
 /**
  * The scheduled steps of a sitting and its attempts: the opening, the closing in pages,
- * the close of one attempt after added minutes, and the submission. Only the scheduler
- * calls them, with no identity, so they carry no access check (ADR 0013).
+ * the close of one attempt after added minutes, the submission, and the sweep that sends
+ * again a step that did not happen. Only the scheduler calls them, with no identity, so
+ * they carry no access check (ADR 0013).
  */
 export default GroupSpec.make()
   .addFunction(
@@ -36,6 +37,13 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "submit",
       args: () => ({ attemptId: Id("examAttempts") }),
+      returns: () => Schema.Null,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "sweep",
+      args: () => ({}),
       returns: () => Schema.Null,
     })
   );

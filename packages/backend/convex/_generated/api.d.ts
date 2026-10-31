@@ -16003,6 +16003,7 @@ export declare const internal: {
           { attemptId: Id<"examAttempts"> },
           null
         >;
+        sweep: FunctionReference<"mutation", "internal", {}, null>;
       };
     };
   };
