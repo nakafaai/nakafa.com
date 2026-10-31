@@ -87,6 +87,8 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     failingRefusal: Option.none<unknown>(),
     held: false,
     listed: false,
+    /** The function whose next change is lost on the way; none while nothing is lost. */
+    losing: Option.none<string>(),
     /** The HTTP origin of the backend the page talks to; empty until its connection opened. */
     origin: "",
     /**
@@ -231,6 +233,14 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
           noticeSent(frame.value);
         }
         if (
+          Option.isSome(call) &&
+          Option.contains(changes.losing, call.value.udfPath)
+        ) {
+          // A page that closes first takes the change with it: no server sees it, and no answer comes.
+          changes.losing = Option.none();
+          return;
+        }
+        if (
           changes.failing &&
           Option.isSome(call) &&
           (changes.failingPath === "" ||
@@ -337,6 +347,14 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
       changes.failing = true;
       changes.failingPath = udfPath;
       changes.failingRefusal = Option.fromNullishOr(refusal);
+    },
+    /**
+     * Loses the next change to the function `udfPath`, as a page that closes
+     * while it is on its way does: the server never gets it, and the page
+     * hears nothing, so its optimistic result stands until the page goes.
+     */
+    loseNext(udfPath: string) {
+      changes.losing = Option.some(udfPath);
     },
     /**
      * Fails every answer of a query of the function `udfPath` until

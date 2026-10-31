@@ -26,6 +26,8 @@ import {
   removeUpdate,
   renamedExam,
   renameUpdate,
+  scoredQuestion,
+  scoringUpdate,
   templateUpdate,
 } from "@/components/tenant/exams/optimistic";
 
@@ -52,6 +54,7 @@ const question = (id: string, revision = 0): Question => ({
   id: questionId(id),
   key: null,
   points: 1,
+  scoring: { kind: "allOrNothing" },
   prompt: promptId(`prompt-${id}`),
   revision,
   rubric: promptId(`rubric-${id}`),
@@ -255,6 +258,7 @@ describe("placeholderQuestion", () => {
       points: 3,
       prompt: promptId("draft-prompt"),
       rubric: promptId("draft-rubric"),
+      scoring: { kind: "allOrNothing" },
       template: "choice",
     });
 
@@ -420,6 +424,38 @@ describe("pointedQuestion", () => {
 
     expect(pointed.questions[0]).toEqual(first);
     expect(pointed.questions[1]).toEqual({ ...second, points: 5 });
+  });
+});
+
+describe("scoredQuestion", () => {
+  it("gives one question its rule, raises points too few for its steps, and keeps the others", () => {
+    const scored = scoredQuestion(viewOf([first, second]), second.id, "wrongParts");
+
+    expect(scored.questions[0]).toEqual(first);
+    expect(scored.questions[1]).toMatchObject({
+      points: 2,
+      scoring: { kind: "wrongParts" },
+    });
+  });
+});
+
+describe("scoringUpdate", () => {
+  it("shows the rule of a question in the store while the server saves it", () => {
+    const view = viewOf([first, second]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+
+    scoringUpdate(localStore, {
+      examId,
+      questionId: first.id,
+      scoring: "perPart",
+      slug,
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some(scoredQuestion(view, first.id, "perPart"))
+    );
   });
 });
 

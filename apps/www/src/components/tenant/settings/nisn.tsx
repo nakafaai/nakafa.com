@@ -4,14 +4,11 @@ import { Nisn } from "@repo/backend/confect/roster/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
-  FieldContent,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Switch } from "@repo/design-system/components/ui/switch";
 import { Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -50,36 +47,20 @@ export function RosterEntryDialog({
     setRosterEntryChange
   );
   const [nisnText, setNisnText] = useState("");
-  const [underAgeChoice, setUnderAge] = useState<boolean | null>(null);
   const loaded = QueryResult.isSuccess(entry)
     ? Option.some(entry.value)
     : Option.none();
   const stored = Option.exists(loaded, (view) => view.hasNisn);
-  const storedUnderAge = Option.exists(
-    loaded,
-    (view) => view.underAgeLimit === true
-  );
-  const underAge = underAgeChoice ?? storedUnderAge;
   const nisn = Schema.decodeOption(Nisn)(nisnText.trim());
-  const canSave =
-    Option.isSome(loaded) &&
-    (nisnText.trim() === "" || Option.isSome(nisn)) &&
-    (Option.isSome(nisn) || underAge !== storedUnderAge);
 
   const submit = () => {
-    if (!canSave) {
+    if (Option.isNone(loaded) || Option.isNone(nisn)) {
       return;
     }
     setOpen(false);
     startTransition(() =>
       saveSchool(
-        () =>
-          save({
-            ...(Option.isSome(nisn) ? { nisn: nisn.value } : {}),
-            personId: person.id,
-            slug,
-            underAgeLimit: underAge,
-          }),
+        () => save({ nisn: nisn.value, personId: person.id, slug }),
         SOURCE
       )
     );
@@ -97,7 +78,11 @@ export function RosterEntryDialog({
           >
             {common("cancel")}
           </Button>
-          <Button disabled={!canSave} onClick={submit} type="button">
+          <Button
+            disabled={Option.isNone(loaded) || Option.isNone(nisn)}
+            onClick={submit}
+            type="button"
+          >
             {t("roster-entry-save")}
           </Button>
         </>
@@ -117,22 +102,6 @@ export function RosterEntryDialog({
             onChange={(event) => setNisnText(event.target.value)}
             placeholder={t(stored ? "roster-nisn-stored" : "roster-nisn-none")}
             value={nisnText}
-          />
-        </Field>
-        <Field orientation="horizontal">
-          <FieldContent>
-            <FieldLabel htmlFor={`${id}-age`}>
-              {t("roster-under-age")}
-            </FieldLabel>
-            <FieldDescription>
-              {t("roster-under-age-description")}
-            </FieldDescription>
-          </FieldContent>
-          <Switch
-            checked={underAge}
-            disabled={Option.isNone(loaded)}
-            id={`${id}-age`}
-            onCheckedChange={setUnderAge}
           />
         </Field>
       </FieldGroup>

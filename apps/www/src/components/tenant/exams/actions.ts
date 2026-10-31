@@ -5,6 +5,7 @@ import {
   NEW_QUESTION_TEMPLATE,
   newChoiceAnswers,
 } from "@repo/backend/confect/exams/question";
+import { ALL_OR_NOTHING } from "@repo/backend/confect/exams/scoring";
 import { Effect, Function as Fn, Option } from "effect";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
@@ -36,11 +37,11 @@ const act = <A, E>(action: Effect.Effect<A, E>) =>
 
 /**
  * A question the server has not saved yet, with its own placeholder IDs: one for each document it
- * owns, and its own ID. It takes the answers, the key, the points, and the template it starts with,
+ * owns, and its own ID. It takes the answers, the key, the points, the rule, and the template it starts with,
  * and the documents it shows at once.
  */
 const placeholderDraft = (
-  question: Pick<Question, "answers" | "key" | "points" | "template">
+  question: Pick<Question, "answers" | "key" | "points" | "scoring" | "template">
 ) =>
   Effect.all({
     explanation: placeholderDocumentId,
@@ -107,6 +108,7 @@ export function useQuestionActions() {
         answers: newChoiceAnswers(),
         key: null,
         points: NEW_QUESTION_POINTS,
+        scoring: ALL_OR_NOTHING,
         template: NEW_QUESTION_TEMPLATE,
       }).pipe(
         Effect.flatMap((draft) =>

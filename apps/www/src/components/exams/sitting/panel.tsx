@@ -6,13 +6,14 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
-import { useState } from "react";
+import { use, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
   type DashboardAttempt,
   dashboardArgs,
 } from "@/components/exams/sitting/change";
 import {
+  SittingOfflineContext,
   useMayProctor,
   useSittingData,
   useSittingStore,
@@ -32,6 +33,7 @@ import {
   awaySince,
   awayTime,
   SECONDS_IN_MINUTE,
+  seenOffline,
 } from "@/components/exams/sitting/seat";
 import { useSittingClock } from "@/components/exams/sitting/timer";
 import { DataFailure } from "@/components/shared/failure";
@@ -131,8 +133,12 @@ function SelectedPanel() {
     ? later.value.attempts.page
     : [];
   const page = cursor === undefined ? value.attempts.page : laterPage;
+  const offline = use(SittingOfflineContext);
   const current = Option.getOrUndefined(
-    Arr.findFirst(page, (row) => row.id === seat)
+    Option.map(
+      Arr.findFirst(page, (row) => row.id === seat),
+      (row) => seenOffline(row, offline)
+    )
   );
 
   return (
@@ -169,7 +175,7 @@ function StudentPanel({ attempt }: { readonly attempt: DashboardAttempt }) {
           <StudentScreen attemptId={attempt.id} key={`screen-${attempt.id}`} />
           <div className="grid gap-2">
             <p className="text-muted-foreground text-sm">{t("signals")}</p>
-            {/* The device sends a lost connection once it is back, so its time never shows while the student is offline. */}
+            {/* The seat shows a lost connection while it lasts; the device can only send its length once it is back. */}
             <p className="text-muted-foreground text-xs">
               {t("signals-offline-note")}
             </p>

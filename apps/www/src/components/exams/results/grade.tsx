@@ -122,7 +122,9 @@ export function GradeField({
           if (event.key === "Enter") {
             event.currentTarget.blur();
           }
-          if (event.key === "Escape") {
+          // Escape takes a typed number back and stops there, so the sheet of answers stays open.
+          if (event.key === "Escape" && draft !== null) {
+            event.stopPropagation();
             setDraft(null);
           }
         }}

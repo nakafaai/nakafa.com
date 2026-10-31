@@ -98,12 +98,9 @@ import is a source and an export is a product of Records.
   A consumer reads the value from the grade row when it loads the subject, and
   it checks permission then (ADR 0027).
 - A subject grade is the teacher's judgment, not active grading (GLOSSARY, Active
-  grading). The consent gate of ADR 0034 therefore does not check it, and S1
-  refuses no student for being under the age limit. Nakafa makes no judgment of the
-  student's work in S1: the KKTP status and band are the school's scheme applied
-  to the teacher's value. Active grading that Nakafa makes waits for the gate in
-  its own slice. Counsel reviews this reading (K20) before the gradebook screen
-  (S2) reaches a school.
+  grading), and S1 refuses no student for being under the age limit. Nakafa makes
+  no judgment of the student's work in S1: the KKTP status and band are the school's
+  scheme applied to the teacher's value.
 
 ### Access
 
@@ -272,8 +269,6 @@ Only the release and the lock are journaled.
   because the blueprint sets the scale and not the value, so the owner sets it.
   A school keeps the value it stored at its first entry, so the owner's choice
   reaches a school through an Admin's stored version, not a rewrite.
-- Whether counsel reads K2 to cover a teacher's subject grade. S1 reads it as the
-  teacher's judgment (GLOSSARY, Active grading).
 - The final retention numbers for each data type (K10, owner).
 - Counsel's review of the legal basis of report cards and the verification page
   (K20).

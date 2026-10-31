@@ -31,7 +31,6 @@ import {
   Duration,
   Effect,
   Layer,
-  Option,
   Schema,
   Struct,
 } from "effect";
@@ -122,10 +121,7 @@ const graduation = FunctionImpl.make(
         })
         .pipe(Effect.orDie);
     }
-    yield* writeRosterEntry(yield* schoolKeys(tenant._id), learner, {
-      nisn: Option.some(SEED_NISN),
-      underAgeLimit: false,
-    });
+    yield* writeRosterEntry(yield* schoolKeys(tenant._id), learner, SEED_NISN);
     const name = `${grade}-Lulus`;
     const cohortId = yield* writer
       .table("tenantCohorts")

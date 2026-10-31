@@ -240,3 +240,12 @@ test.describe("dedicated pricing page with reduced motion", () => {
     );
   });
 });
+
+test("the Pro action stands at rest in the page's first HTML, so a press before React counts", async ({
+  page,
+}) => {
+  const response = await page.request.get("/en/pricing");
+  const html = await response.text();
+
+  expect(html).toMatch(/<button(?![^>]*\sdisabled)[^>]*\sdata-press=/u);
+});
