@@ -4,6 +4,7 @@ import {
   type Locale,
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/cache";
@@ -61,6 +62,19 @@ function markdownResponse(text: string) {
   return new Response(text, { headers: MARKDOWN_HEADERS });
 }
 
+/**
+ * Answers the Markdown of one page, which names the page as its canonical
+ * address, as the page's static twin does.
+ */
+function pageResponse(text: string, { cleanSlug, locale }: LlmsMarkdownTarget) {
+  return new Response(text, {
+    headers: {
+      ...MARKDOWN_HEADERS,
+      Link: `<${SITE_ORIGIN}/${locale}/${cleanSlug}>; rel="canonical"`,
+    },
+  });
+}
+
 /** Answers the body of one index, or a plain not found when the index names no body. */
 function indexResponse(text: Option.Option<string>) {
   return Option.match(text, {
@@ -77,7 +91,8 @@ function indexResponse(text: Option.Option<string>) {
  * without a soft 404.
  */
 export const answerLlmsMarkdown = Effect.fn("www.llms.markdown.answer")(
-  function* ({ cleanSlug, hasLocalePrefix, locale }: LlmsMarkdownTarget) {
+  function* (target: LlmsMarkdownTarget) {
+    const { cleanSlug, hasLocalePrefix, locale } = target;
     if (hasLocalePrefix && isPublicLlmsLocaleIndexRoute(cleanSlug)) {
       return indexResponse(
         Option.fromNullishOr(yield* getLlmsSectionIndexText(`llms/${locale}`))
@@ -127,7 +142,7 @@ export const answerLlmsMarkdown = Effect.fn("www.llms.markdown.answer")(
       yield* getLlmsMarkdownText({ cleanSlug, locale })
     );
     if (Option.isSome(markdownText)) {
-      return markdownResponse(markdownText.value);
+      return pageResponse(markdownText.value, target);
     }
 
     return new Response(

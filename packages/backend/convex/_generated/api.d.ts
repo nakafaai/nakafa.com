@@ -7028,6 +7028,12 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        { loginName: string; personId: Id<"tenantPeople">; slug: string },
+        string
+      >;
     };
   };
   integrations: {
@@ -7336,6 +7342,7 @@ export declare const api: {
                 }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
+              | { grade: number; type: "cohort.grade.set" }
               | { type: "cohort.archived" }
               | { type: "cohort.restored" }
               | {
@@ -7451,6 +7458,7 @@ export declare const api: {
               | { type: "person.released" }
               | { reason?: "break-glass"; type: "person.removed" }
               | { type: "person.renamed" }
+              | { type: "login.renamed" }
               | { cohort: Id<"tenantCohorts">; type: "person.placed" }
               | {
                   from: Id<"tenantCohorts">;
@@ -7611,6 +7619,21 @@ export declare const api: {
               | { type: "unit.archived" }
               | { type: "unit.unarchived" }
               | { npsn: string; type: "unit.npsn.set" }
+              | { name: string; type: "unit.name.set" }
+              | {
+                  level:
+                    | "paud"
+                    | "sd"
+                    | "mi"
+                    | "smp"
+                    | "mts"
+                    | "sma"
+                    | "ma"
+                    | "smk"
+                    | "slb"
+                    | "other";
+                  type: "unit.level.set";
+                }
               | {
                   minutes: number;
                   reason: "support" | "onboarding" | "incident";
@@ -9090,6 +9113,22 @@ export declare const api: {
           status: "active" | "archived";
         }
       >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          grade: number;
+          name: string;
+          slug: string;
+        },
+        {
+          grade: number;
+          id: Id<"tenantCohorts">;
+          name: string;
+          status: "active" | "archived";
+        }
+      >;
       get: FunctionReference<
         "query",
         "public",
@@ -9135,17 +9174,6 @@ export declare const api: {
           page: Array<{ id: Id<"tenantPeople">; name: string }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
-        }
-      >;
-      rename: FunctionReference<
-        "mutation",
-        "public",
-        { cohortId: Id<"tenantCohorts">; name: string; slug: string },
-        {
-          grade: number;
-          id: Id<"tenantCohorts">;
-          name: string;
-          status: "active" | "archived";
         }
       >;
       restore: FunctionReference<
@@ -10393,6 +10421,40 @@ export declare const api: {
           npsn: string | null;
           status: "active" | "archived";
           timeZone: string;
+        }
+      >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+          slug: string;
+          unitId: Id<"tenantUnits">;
+        },
+        {
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
         }
       >;
       list: FunctionReference<

@@ -192,6 +192,7 @@
     "state-submitted": "Submitted",
     "signals": "Signals",
     "signals-empty": "No signal has been recorded.",
+    "signals-offline-note": "A lost connection shows here, with how long it lasted, once the student is back online.",
     "signal-exit": "Left the exam",
     "signal-return": "Came back to the exam",
     "screen-title": "Student screen",
@@ -209,6 +210,8 @@
     "signal-copy": "Copied text",
     "signal-paste": "Pasted text",
     "signal-disconnect": "Lost the connection",
+    "signal-offline-seconds": "Lost the connection for {seconds} s",
+    "signal-offline-minutes": "Lost the connection for {minutes} min {seconds} s",
     "signal-secondTab": "Opened a second tab",
     "reason": "Reason",
     "reason-power-outage": "Power outage",
@@ -416,6 +419,8 @@
     "student-scheduled-footer": "The token field opens with the sitting.",
     "student-back-home": "Back to home",
     "seat-last-activity": "Last activity {time}.",
+    "seat-away-seconds": "Away for {seconds} s.",
+    "seat-away-minutes": "Away for {minutes} min {seconds} s.",
     "title-needed": "The exam needs a title before you can create it.",
     "title-too-long": "The title can have at most {count} characters.",
     "no-unit-description": "Every exam belongs to a unit, so add or restore one in the settings first.",
@@ -642,9 +647,8 @@
     "cohort-status": "Status",
     "cohort-active": "Active",
     "cohort-archived": "Archived",
-    "cohort-rename": "Rename",
-    "cohort-rename-description": "The class keeps its students, teachers and grades.",
-    "cohort-rename-save": "Save",
+    "cohort-edit-description": "The class keeps its students, teachers and grades.",
+    "cohort-edit-save": "Save",
     "cohort-archive": "Archive",
     "cohort-add-footer": "A new cohort starts active.",
     "cohorts-empty": "No cohort yet.",
@@ -754,7 +758,10 @@
         "created": "Cohort added",
         "renamed": "Cohort renamed",
         "archived": "Cohort archived",
-        "restored": "Cohort restored"
+        "restored": "Cohort restored",
+        "grade": {
+          "set": "Cohort grade changed"
+        }
       },
       "connection": {
         "connected": "Connection added",
@@ -855,6 +862,12 @@
         },
         "npsn": {
           "set": "NPSN changed"
+        },
+        "name": {
+          "set": "Unit renamed"
+        },
+        "level": {
+          "set": "Unit level changed"
         }
       },
       "visit": {
@@ -876,6 +889,9 @@
       "roster": {
         "set": "Student record updated",
         "imported": "Students imported from Dapodik"
+      },
+      "login": {
+        "renamed": "Login name changed"
       }
     },
     "role-description": {
@@ -920,6 +936,12 @@
     "member-remove-title": "Remove this member?",
     "member-remove-description": "The person leaves the school, and its roles end.",
     "member-remove-confirm": "Remove",
+    "person-rename": "Rename",
+    "person-rename-description": "The new name shows wherever the school lists this person.",
+    "person-rename-save": "Save",
+    "login-rename": "Change login name",
+    "login-rename-description": "The student signs in with the new name and the same password.",
+    "login-rename-save": "Save",
     "invite-action": "Invite",
     "invites-footer": "Invite a person who has no account yet.",
     "invite-dialog-title": "Invite a person",
@@ -1869,7 +1891,6 @@
     "picture-animal": "Animal",
     "picture-photo": "Google photo",
     "picture-footer-animal": "Each shuffle shows another animal.",
-    "picture-footer-photo": "Your Google photo shows wherever your name does.",
     "animal-shuffle": "Shuffle animal",
     "username": "Username",
     "username-placeholder": "alex_rivera",
