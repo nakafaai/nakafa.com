@@ -28,6 +28,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { DataFailure } from "@/components/shared/failure";
 import {
   PaneBody,
   PaneFooter,
@@ -46,6 +47,7 @@ import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { reloadPage } from "@/components/shared/reload";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
@@ -55,6 +57,7 @@ import {
 } from "@/components/tenant/guardian/change";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { SchoolHeader } from "@/components/tenant/header";
+import { isLostAccess } from "@/components/tenant/refusal";
 import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/guardian/home";
@@ -76,6 +79,10 @@ export function GuardianHome() {
   const { slug } = useTenant();
   const children = useQuery(guardians.family.children, { slug });
 
+  if (QueryResult.isFailure(children) && isLostAccess(children.error)) {
+    throw children.error;
+  }
+
   return (
     <TableFiltersProvider>
       <PanesProvider>
@@ -84,6 +91,9 @@ export function GuardianHome() {
           title={t("home-title")}
         />
         <div className="flex w-full min-w-0 flex-1 flex-col">
+          {QueryResult.isFailure(children) ? (
+            <DataFailure onRetry={reloadPage} />
+          ) : null}
           {QueryResult.isSuccess(children) ? (
             <GuardianChildren items={children.value} />
           ) : null}
@@ -276,6 +286,9 @@ function GuardianGrades({ child }: { child: ChildItem }) {
   return (
     <>
       <PaneBody>
+        {QueryResult.isFailure(grades) ? (
+          <DataFailure onRetry={reloadPage} />
+        ) : null}
         {QueryResult.isSuccess(grades) ? (
           <GuardianGradeTable grades={grades.value} />
         ) : null}
