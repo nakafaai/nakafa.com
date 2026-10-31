@@ -15,6 +15,11 @@ import { courseWork } from "@repo/backend/confect/connectors/google/classroom";
 import { readGoogleClient } from "@repo/backend/confect/connectors/google/client";
 import { refreshAccess } from "@repo/backend/confect/connectors/google/oauth";
 import { eventTitleField } from "@repo/backend/confect/connectors/mirror";
+import {
+  destroy,
+  revocable,
+  revoke,
+} from "@repo/backend/confect/connectors/revoke";
 import { connectionToken } from "@repo/backend/confect/connectors/secret";
 import spec from "@repo/backend/confect/connectors/sync.spec";
 import { Space } from "@repo/backend/confect/space";
@@ -352,5 +357,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(storeEvents),
   Layer.provide(settle),
   Layer.provide(reconnect),
+  Layer.provide(revocable),
+  Layer.provide(revoke),
+  Layer.provide(destroy),
   GroupImpl.finalize
 );

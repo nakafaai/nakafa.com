@@ -27,8 +27,12 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, tryoutViewports } from "@/e2e/support/viewport";
 
-/** The height of a window that is short enough for the sidebar to scroll. */
-const SHORT_WINDOW_HEIGHT = 400;
+/**
+ * The height of a window that is short enough for the sidebar to scroll: the column under the header
+ * and over the footer (8rem together) keeps 192 px, about four of the six rows that a section's 30
+ * numbers take in it.
+ */
+const SHORT_WINDOW_HEIGHT = 320;
 
 /** An address whose `view` parameter names one question at a time. */
 const SINGLE_VIEW_ADDRESS = /[?&]view=single(&|$)/;

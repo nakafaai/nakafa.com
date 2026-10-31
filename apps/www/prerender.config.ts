@@ -22,6 +22,7 @@ import {
 import {
   notFoundOutputPath,
   notFoundPagePath,
+  schoolNotFoundPath,
   staticNotFoundDocument,
 } from "#www/src/lib/static/notfound";
 import { deferStaticScripts } from "#www/src/lib/static/scripts";
@@ -276,18 +277,29 @@ export const verifyPrerenderedPages = (pages: readonly string[]): Plugin => ({
 });
 
 /**
- * The not-found page of each locale, as TanStack prerenders it from the
- * `/_notfound/$locale` route into that locale's `404.html`. The assets answer a
+ * The not-found pages of each locale, as TanStack prerenders them. The
+ * `/_notfound/$locale` route writes that locale's `404.html`: the assets answer a
  * missing address with the nearest `404.html` and a 404 status, so a missing
- * address shows the app's own page in the language of its path.
+ * address shows the app's own page in the language of its path. The
+ * `/_notfound/school/$locale` route writes the page that the Worker answers a
+ * refused school page with, at its own address.
  */
-export const notFoundPages = LOCALES.map((locale) => ({
-  path: notFoundPagePath(locale),
-  prerender: {
-    autoSubfolderIndex: false,
-    outputPath: notFoundOutputPath(locale),
+export const notFoundPages = LOCALES.flatMap((locale) => [
+  {
+    path: notFoundPagePath(locale),
+    prerender: {
+      autoSubfolderIndex: false,
+      outputPath: notFoundOutputPath(locale),
+    },
   },
-}));
+  {
+    path: schoolNotFoundPath(locale),
+    prerender: {
+      autoSubfolderIndex: false,
+      outputPath: schoolNotFoundPath(locale),
+    },
+  },
+]);
 
 /**
  * Turns each prerendered not-found page into a static document: it keeps the markup,
@@ -306,8 +318,9 @@ export const writeNotFoundPages = (pages: readonly string[]): Plugin => ({
         return Promise.resolve();
       }
       const outDir = builder.environments.client.config.build.outDir;
-      for (const locale of LOCALES) {
-        const file = join(outDir, `${notFoundOutputPath(locale)}.html`);
+      /** Rewrites one prerendered not-found page as its static document, and returns the document. */
+      const writeStatic = (output: string) => {
+        const file = join(outDir, `${output}.html`);
         const prerendered = readFileSync(file, "utf8");
         const page = Option.match(readStaticCalls(prerendered), {
           onNone: () => prerendered,
@@ -315,6 +328,11 @@ export const writeNotFoundPages = (pages: readonly string[]): Plugin => ({
         });
         const document = staticNotFoundDocument(page, THEME_PREPAINT_SCRIPT);
         writeFileSync(file, document);
+        return document;
+      };
+      for (const locale of LOCALES) {
+        const document = writeStatic(notFoundOutputPath(locale));
+        writeStatic(schoolNotFoundPath(locale));
         if (locale === DEFAULT_LOCALE) {
           writeFileSync(join(outDir, "404.html"), document);
         }

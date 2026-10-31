@@ -114,7 +114,9 @@ function SittingResultsContent({
     throw overview.error;
   }
   if (!QueryResult.isSuccess(overview)) {
-    return null;
+    // The header is there from the first paint, with the path the address knows; the room, the search, Questions and
+    // Release fill in when the overview is read, at the header's end, so nothing that shows moves.
+    return <ExamsCrumbHeader />;
   }
   const { can, questions, releasedAt, sitting } = overview.value;
   if (sitting.examId !== examId) {

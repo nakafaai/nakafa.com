@@ -1,5 +1,5 @@
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
-import { Array as Arr, type Option, Order } from "effect";
+import { Array as Arr, type Option, Order, Schema } from "effect";
 
 /** The part of a sitting that its order reads: its state, when it opens, and the student's attempt in it. */
 type Listed = Pick<
@@ -46,4 +46,20 @@ export function enterableSitting<A extends Listed>(
     sittings,
     (sitting) => sitting.state === "open" && sitting.attempt !== "submitted"
   );
+}
+
+/** Where a sitting stands for its student: open to enter now, still to open, or finished for the student. */
+export const SittingStatus = Schema.Literals(["open", "upcoming", "finished"]);
+
+/**
+ * Where a sitting stands for its student, as the student's exams list shows it: finished once the student submitted
+ * it or it closed, open while it takes the student's answers, and upcoming before it opens.
+ */
+export function sittingStatusOf(
+  sitting: Pick<typeof StudentSittingRow.Type, "attempt" | "state">
+): typeof SittingStatus.Type {
+  if (sitting.attempt === "submitted" || sitting.state === "closed") {
+    return "finished";
+  }
+  return sitting.state === "open" ? "open" : "upcoming";
 }

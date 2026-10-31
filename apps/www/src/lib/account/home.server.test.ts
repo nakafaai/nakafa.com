@@ -164,7 +164,10 @@ describe("homeScreenHandler", () => {
     expect(screen.recentLooks).toHaveLength(1);
     expect(screen.trending).toEqual([]);
     expect(screen.trendingLooks).toEqual([]);
-    expect(screen.seo).toMatchObject({ canonicalPath: "/en", indexable: true });
+    expect(screen.seo).toMatchObject({
+      canonicalPath: "/en",
+      indexable: false,
+    });
   });
 
   it.effect("reads the gate and the page together, in one round trip", () =>
@@ -225,11 +228,11 @@ describe("homeScreenHandler", () => {
 });
 
 describe("chatIndexScreenHandler", () => {
-  it("answers the new chat head with its canonical address", async () => {
+  it("answers the new chat head with its canonical address, unindexed", async () => {
     const screen = await chatIndexScreenHandler({ data: { locale: "en" } });
     expect(screen.seo).toMatchObject({
       canonicalPath: "/en/chat",
-      indexable: true,
+      indexable: false,
     });
   });
 });
@@ -312,7 +315,7 @@ describe("searchScreenHandler", () => {
     const screen = await searchScreenHandler({ data: { locale: "en" } });
     expect(screen).toMatchObject({
       name: undefined,
-      seo: { canonicalPath: "/en/search", indexable: true },
+      seo: { canonicalPath: "/en/search", indexable: false },
     });
     expect(mocks.preloadConfectQuery).not.toHaveBeenCalled();
   });

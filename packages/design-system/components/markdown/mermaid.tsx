@@ -7,19 +7,11 @@ import {
 import { Mermaid } from "@repo/design-system/components/ai/mermaid";
 import { DiagramFrame } from "@repo/design-system/components/markdown/diagram";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogPanel,
-  DialogTitle,
-  DialogTrigger,
-} from "@repo/design-system/components/ui/dialog";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { normalizeMermaidChart } from "@repo/design-system/lib/markdown/mermaid";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
-import { createContext, use, useMemo } from "react";
+import { createContext, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 
 interface Props {
@@ -30,8 +22,10 @@ interface Props {
   title: string;
 }
 
-/** What the diagram's card and its dialog draw: the source, the settings and the words. */
-type MermaidFigure = Pick<Props, "chart" | "className" | "config" | "title">;
+/** What the diagram's card and its dialog draw: the source, the settings and the words, and how the card opens the dialog. */
+type MermaidFigure = Pick<Props, "chart" | "className" | "config" | "title"> & {
+  readonly openDialog: () => void;
+};
 
 const MermaidFigureContext = createContext<MermaidFigure | null>(null);
 
@@ -48,24 +42,21 @@ function useMermaidFigure() {
 /** The diagram in its card, with the controls that open it and copy its source. */
 function DiagramCard() {
   const t = useTranslations("Ai");
-  const { chart, className, config, title } = useMermaidFigure();
+  const { chart, className, config, openDialog, title } = useMermaidFigure();
 
   return (
     <DiagramFrame
       actions={
         <>
-          <DialogTrigger
-            render={
-              <Button
-                aria-label={t("open-diagram")}
-                size="icon"
-                title={t("open-diagram")}
-                variant="ghost"
-              >
-                <HugeIcons icon={Maximize02Icon} />
-              </Button>
-            }
-          />
+          <Button
+            aria-label={t("open-diagram")}
+            onClick={openDialog}
+            size="icon"
+            title={t("open-diagram")}
+            variant="ghost"
+          >
+            <HugeIcons icon={Maximize02Icon} />
+          </Button>
           <CodeBlockSource code={chart} language="mermaid">
             <CodeBlockDownloadButton />
             <CodeBlockCopyButton />
@@ -113,26 +104,30 @@ export function MermaidMdx({
   title,
 }: Props) {
   const renderableChart = normalizeMermaidChart(chart);
+  const [open, setOpen] = useState(false);
   const figure = useMemo(
-    () => ({ chart: renderableChart, className, config, title }),
+    () => ({
+      chart: renderableChart,
+      className,
+      config,
+      openDialog: () => setOpen(true),
+      title,
+    }),
     [className, config, renderableChart, title]
   );
 
   return (
     <MermaidFigureContext value={figure}>
-      <Dialog>
-        <DiagramCard />
-
-        <DialogContent size="wide">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-          <DialogPanel>
-            <DialogDiagram />
-          </DialogPanel>
-        </DialogContent>
-      </Dialog>
+      <DiagramCard />
+      <ResponsiveDialog
+        description={description}
+        open={open}
+        setOpen={setOpen}
+        size="wide"
+        title={title}
+      >
+        <DialogDiagram />
+      </ResponsiveDialog>
     </MermaidFigureContext>
   );
 }

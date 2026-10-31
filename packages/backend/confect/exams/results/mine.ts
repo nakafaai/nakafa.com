@@ -57,10 +57,12 @@ export const attemptAnswers = Effect.fn("exams.results.mine.answers")(
               id: questionId,
               number: index + 1,
               optionIds: summary.optionIds,
+              optionScript: summary.optionScript,
               points: summary.points,
               response: row.response,
               sourceIds: summary.sourceIds,
               targetIds: summary.targetIds,
+              targetScript: summary.targetScript,
               verdict: row.verdict,
             })
           )

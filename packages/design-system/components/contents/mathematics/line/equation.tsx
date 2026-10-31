@@ -1,6 +1,5 @@
 import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
 import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
-import { LineFacts } from "@repo/design-system/components/contents/mathematics/line/facts";
 import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import type {
   AuthoredLine,
@@ -41,10 +40,14 @@ interface SceneProps {
 
 interface Props extends SceneProps {
   description: ReactNode;
+  /** The scene's readouts, drawn where the card is composed (`LineFacts`), so their math stays there. */
+  facts: ReactNode;
   title: ReactNode;
 }
 
 interface CardProps extends SceneProps {
+  /** The scene's readouts for the footer (`LineFacts`), drawn by the caller. */
+  facts: ReactNode;
   /** The card's header. A graph that builds its own title and description passes it here. */
   header: ReactNode;
 }
@@ -61,14 +64,15 @@ export function LineEquation({ description, title, ...scene }: Props) {
 
 /**
  * The line-equation card under a header its caller builds, as the unit-circle card takes one:
- * the scene with its actions, and the readouts of the scene in the footer. The footer is drawn
- * on the server, so its math never reaches the browser; the scene parts read the scene from
- * `LineEquationProvider`.
+ * the scene with its actions, and the readouts of the scene in the footer. A lesson draws the
+ * readouts on the server, so their math never reaches the browser; the scene parts read the
+ * scene from `LineEquationProvider`.
  */
 export function LineEquationCard({
   cameraPosition,
   cameraTarget,
   data,
+  facts,
   header,
   showZAxis,
 }: CardProps) {
@@ -87,9 +91,7 @@ export function LineEquationCard({
         {header}
         <DeferredLineScene />
         <CoordinateControls />
-        <VisualCardFooter>
-          <LineFacts lines={config.lines} />
-        </VisualCardFooter>
+        <VisualCardFooter>{facts}</VisualCardFooter>
       </VisualCard>
     </LineEquationProvider>
   );
