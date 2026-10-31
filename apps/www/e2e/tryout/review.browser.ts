@@ -3,18 +3,14 @@ import { Effect, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import type { Changes } from "@/e2e/support/changes";
 import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
+import {
+  entrySetHref,
+  finishEntryAttempt,
+  startEntryAttempt,
+} from "@/e2e/support/entry";
 import { activate } from "@/e2e/support/input";
-import { confirmFinish, questionArticle } from "@/e2e/support/player";
-import { appRoutes } from "@/e2e/support/route";
+import { questionArticle } from "@/e2e/support/player";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { waitUntilTakenOver } from "@/e2e/support/window";
-
-/**
- * The set the owner reviewed in production: TKA compulsory mathematics, one
- * internal-entry section of 25 questions, so the attempt runs and is reviewed
- * on the set page itself.
- */
-const SET = `${appRoutes.tryout}/indonesia/tka/compulsory-mathematics/set-1`;
 
 /** The questions of the set, each reviewed on the set page once the attempt ends. */
 const QUESTIONS = 25;
@@ -60,36 +56,13 @@ const takeAttempt = Effect.fn("NakafaE2E.takeTryoutAttempt")(function* (
   primary: string,
   answer: boolean
 ) {
-  const start = page
-    .locator("main")
-    .getByRole("button", { exact: true, name: action });
-  yield* Effect.promise(() =>
-    expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
-  );
-  yield* Effect.promise(() => waitUntilTakenOver(start));
-  yield* activate(start, false);
-  yield* activate(
-    page
-      .getByRole("dialog")
-      .getByRole("button", { exact: true, name: primary }),
-    false
-  );
-  yield* Effect.promise(() =>
-    expect(
-      page.getByRole("button", { exact: true, name: "Finish" })
-    ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-  );
+  yield* startEntryAttempt(page, action, primary);
   if (answer) {
     const option = questionArticle(page, 1).getByRole("radio").first();
     yield* activate(option, false);
     yield* Effect.promise(() => expect(option).toBeChecked());
   }
-  yield* confirmFinish(page, false);
-  yield* Effect.promise(() =>
-    expect(
-      page.getByRole("button", { exact: true, name: "Finish" })
-    ).toBeHidden({ timeout: readinessTimeoutMilliseconds })
-  );
+  yield* finishEntryAttempt(page);
 });
 
 /**
@@ -230,7 +203,9 @@ test.describe("The review of a finished try-out", () => {
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
         yield* runAcceptanceCommand("xendit", learner.userId, "plan");
-        yield* Effect.promise(() => page.goto(SET, { waitUntil: "commit" }));
+        yield* Effect.promise(() =>
+          page.goto(entrySetHref, { waitUntil: "commit" })
+        );
 
         // The first attempt answers question 1, and its review shows that pick.
         yield* takeAttempt(page, "Start", "Start", true);
@@ -263,7 +238,9 @@ test.describe("The review of a finished try-out", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         yield* openChatPage(page, origin);
-        yield* Effect.promise(() => page.goto(SET, { waitUntil: "commit" }));
+        yield* Effect.promise(() =>
+          page.goto(entrySetHref, { waitUntil: "commit" })
+        );
         yield* takeAttempt(page, "Start", "Start free", true);
         yield* Effect.promise(async () => {
           await expect(
