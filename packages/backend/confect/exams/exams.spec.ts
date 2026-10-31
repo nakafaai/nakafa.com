@@ -45,7 +45,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
         title: ExamTitle,
       }),
-      returns: () => Schema.Struct({ id: Id("exams") }),
+      returns: () => ExamView,
       error: () => Schema.Union([AccessDenied, DocumentTooLarge]),
     })
   )

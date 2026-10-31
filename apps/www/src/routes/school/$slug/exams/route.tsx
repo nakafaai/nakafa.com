@@ -1,5 +1,10 @@
 import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
+import { useState } from "react";
 import { canOpenExams, canOpenRooms } from "@/components/tenant/exams/access";
+import {
+  CreatedExamsContext,
+  createCreatedExams,
+} from "@/components/tenant/exams/created";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { TenantSection } from "@/components/tenant/section";
 
@@ -18,10 +23,18 @@ export const Route = createFileRoute("/school/$slug/exams")({
   notFoundComponent: SchoolPageNotFound,
 });
 
+/**
+ * The pages of a school's exams. They share the store of the exams created in this visit, so the editor
+ * that a create opens draws the new exam on its first frame.
+ */
 function SchoolExamsLayout() {
+  const [created] = useState(createCreatedExams);
+
   return (
     <TenantSection section="exams">
-      <Outlet />
+      <CreatedExamsContext value={created}>
+        <Outlet />
+      </CreatedExamsContext>
     </TenantSection>
   );
 }
