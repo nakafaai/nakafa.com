@@ -28,7 +28,7 @@ const fitsChoice = (choice: Choice, response: readonly string[]) =>
 
 /**
  * Whether a response fits the one interaction of a question: a choice takes the options it holds
- * (`fitsChoice`), a text entry takes one line of typed text, an essay takes written text, blank text
+ * (`fitsChoice`), a text entry and a numeric entry take one line of typed text, an essay takes written text, blank text
  * included in both, which leaves the question unanswered, and a match takes pairs that pair each of its
  * statements and answers at most once (`pairsFit`), none or some of them included, and a table takes cells
  * that mark each statement at most once (`cellsFit`). A question of any other shape, or of
@@ -49,6 +49,11 @@ export const fitsQuestion = (
       ),
       Match.when(
         { kind: "textEntry" },
+        () =>
+          isTextResponse(response) && response.text.length <= TEXT_RESPONSE_MAX
+      ),
+      Match.when(
+        { kind: "numericEntry" },
         () =>
           isTextResponse(response) && response.text.length <= TEXT_RESPONSE_MAX
       ),

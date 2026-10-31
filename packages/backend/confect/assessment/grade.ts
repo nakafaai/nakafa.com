@@ -6,6 +6,7 @@ import {
   type ScoringRule,
   scoreCeiling,
 } from "@nakafa/aksara-contracts/assessment/scoring";
+import { matchesNumber } from "@repo/backend/confect/assessment/number";
 import {
   chosenOptions,
   type ExamResponse,
@@ -147,7 +148,10 @@ const scoreParts = (rule: ScoringRule, parts: Parts): Grade => {
  * parts (`scoreParts`). A text entry is one part: an answer that one accepted answer matches after the
  * contract's normalization (`matchesAnswerKey`) scores the ceiling, and any other answer waits for a
  * person. A text key compares normalized text and reads no language, so every delivery language grades
- * it the same. A written text, an interaction without a key, and every other kind wait for a person.
+ * it the same. A numeric entry is one part that its key decides alone: its number, in any script and with
+ * either decimal point, within the key's tolerance (`matchesNumber`), scores the ceiling, and any other
+ * answer scores nothing, since a number is right or wrong. A written text, an interaction without a key,
+ * and every other kind wait for a person.
  */
 export function grade({
   interaction,
@@ -174,6 +178,17 @@ export function grade({
       matchesAnswerKey(key.accepted, response.text, TEXT_KEY_LANGUAGE)
       ? { category: ceiling, ceiling, status: "scored" }
       : { ceiling, status: "pending" };
+  }
+  if (key.kind === "numericEntry" && interaction.kind === "numericEntry") {
+    return {
+      category:
+        isTextResponse(response) &&
+        matchesNumber(interaction, key, response.text)
+          ? ceiling
+          : 0,
+      ceiling,
+      status: "scored",
+    };
   }
   if (
     parts !== undefined &&

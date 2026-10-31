@@ -44,6 +44,8 @@ import { TableKey } from "@/components/tenant/exams/cells";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
+import { numberSettingOf } from "@/components/tenant/exams/number";
+import { NumberKey } from "@/components/tenant/exams/numeric";
 import {
   pointsUpdate,
   type Question,
@@ -283,6 +285,15 @@ export function TeacherLayer({
           onChange={editing.setAccepted}
         />
       ) : null}
+      {shown.template === "numeric" ? (
+        <NumberKey
+          answers={shown.answers}
+          editable={editable}
+          number={number}
+          onChange={editing.setNumber}
+          setting={numberSettingOf(shown.answers, shown.key)}
+        />
+      ) : null}
       {Option.match(matchOf(shown.answers), {
         onNone: () => null,
         onSome: (match) => (
@@ -309,6 +320,7 @@ export function TeacherLayer({
       })}
       {keyed &&
       shown.template !== "short" &&
+      shown.template !== "numeric" &&
       shown.template !== "match" &&
       shown.template !== "table" ? (
         <AnswerKey

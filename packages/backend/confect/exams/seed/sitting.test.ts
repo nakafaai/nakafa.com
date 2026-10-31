@@ -251,6 +251,7 @@ describe("exams seed sitting", () => {
           "truefalse",
           "cause",
           "short",
+          "numeric",
           "match",
           "table",
           "essay",

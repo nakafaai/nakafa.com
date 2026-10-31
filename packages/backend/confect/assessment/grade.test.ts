@@ -238,6 +238,23 @@ describe("assessment/grade", () => {
       ceiling: 1,
       status: "pending",
     });
+    // An essay's key holds criteria, which a teacher reads: the grader scores none of them.
+    expect(
+      gradeOf(
+        essay,
+        {
+          criteria: [
+            {
+              criterion: "steps",
+              levels: [{ descriptor: "Lengkap", level: "complete" }],
+            },
+          ],
+          interaction: "essay",
+          kind: "extendedText",
+        },
+        { text: "An essay." }
+      )
+    ).toEqual({ ceiling: 1, status: "pending" });
     expect(gradeOf(choice, undefined, ["option-1"])).toEqual({
       ceiling: 1,
       status: "pending",
@@ -245,12 +262,34 @@ describe("assessment/grade", () => {
     expect(
       gradeOf(choice, { ...choiceKey, interaction: "other" }, ["option-1"])
     ).toEqual({ ceiling: 1, status: "pending" });
-    expect(
-      gradeOf(
-        numeric,
-        { interaction: "numeric", kind: "numericEntry", value: "2" },
-        { text: "2" }
-      )
-    ).toEqual({ ceiling: 1, status: "pending" });
+  });
+
+  it("scores a typed number its key holds, in any script and with either decimal point, and any other number 0", () => {
+    const half: InteractionKey = {
+      interaction: "numeric",
+      kind: "numericEntry",
+      tolerance: { kind: "absolute", value: "0.01" },
+      value: "0.5",
+    };
+    for (const typed of ["0.5", "0,5", "٠٫٥", "0.51"]) {
+      expect(gradeOf(numeric, half, { text: typed })).toEqual({
+        category: 1,
+        ceiling: 1,
+        status: "scored",
+      });
+    }
+    for (const typed of ["0.52", "1/2", "setengah"]) {
+      expect(gradeOf(numeric, half, { text: typed })).toEqual({
+        category: 0,
+        ceiling: 1,
+        status: "scored",
+      });
+    }
+    // A numeric key is right or wrong, so no answer it reads waits for a person, an answer of another shape included.
+    expect(gradeOf(numeric, half, ["option-1"])).toEqual({
+      category: 0,
+      ceiling: 1,
+      status: "scored",
+    });
   });
 });

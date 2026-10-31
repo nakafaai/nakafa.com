@@ -122,6 +122,34 @@ describe("exams/key keyFits", () => {
     ).toBe(true);
   });
 
+  it("fits a numeric interaction with a number the contract grades, and refuses one it does not, or another kind", () => {
+    const number = Schema.decodeSync(InteractionSchema)({
+      acceptsFractions: false,
+      id: "number",
+      kind: "numericEntry",
+      label: "Number",
+    });
+    expect(
+      keyFits(
+        [number],
+        [{ interaction: "number", kind: "numericEntry", value: "0.75" }]
+      )
+    ).toBe(true);
+    // A value the contract does not spell canonically, such as the comma a teacher may type, grades nothing.
+    expect(
+      keyFits(
+        [number],
+        [{ interaction: "number", kind: "numericEntry", value: "0,75" }]
+      )
+    ).toBe(false);
+    expect(
+      keyFits(
+        [number],
+        [{ correct: ["option-1"], interaction: "number", kind: "choice" }]
+      )
+    ).toBe(false);
+  });
+
   it("refuses interactions that share an identifier, even when the key answers that identifier once", () => {
     expect(
       keyFits(

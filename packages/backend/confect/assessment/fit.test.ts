@@ -5,6 +5,7 @@ import {
   essayAnswers,
   matchAnswers,
   newChoiceAnswers,
+  numericAnswers,
   shortAnswers,
   tableAnswers,
 } from "@repo/backend/confect/exams/question";
@@ -30,6 +31,17 @@ describe("exams/sittings fitsQuestion", () => {
       fitsQuestion(entry, { text: "a".repeat(TEXT_RESPONSE_MAX + 1) })
     ).toBe(false);
     expect(fitsQuestion(entry, ["option-1"])).toBe(false);
+  });
+
+  it("takes one line of typed number in a numeric answer, any text included, and refuses a longer line or options", () => {
+    const number = numericAnswers();
+
+    expect(fitsQuestion(number, { text: "0,75" })).toBe(true);
+    expect(fitsQuestion(number, { text: "tiga" })).toBe(true);
+    expect(
+      fitsQuestion(number, { text: "1".repeat(TEXT_RESPONSE_MAX + 1) })
+    ).toBe(false);
+    expect(fitsQuestion(number, ["option-1"])).toBe(false);
   });
 
   it("takes written text in an essay, past a short answer's length", () => {

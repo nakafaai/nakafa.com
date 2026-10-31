@@ -97,6 +97,17 @@ const typed = question(
   }
 );
 
+/** A numeric entry of three quarters, with no tolerance, then within an absolute and a relative one. */
+const numeric = question(
+  {
+    acceptsFractions: true,
+    id: "number",
+    kind: "numericEntry",
+    label: "Pecahan",
+  },
+  { interaction: "number", kind: "numericEntry", value: "0.75" }
+);
+
 const essay = question(
   { id: "essay", kind: "extendedText", label: "Jelaskan" },
   {
@@ -148,7 +159,7 @@ describe("nina/prompt/focus", () => {
     );
   });
 
-  it("lists a match's pairs, a text entry's accepted answers, and a written answer alone", () => {
+  it("lists a match's pairs, a text entry's accepted answers, a numeric entry's number, and a written answer alone", () => {
     expect(
       formatFocusAnswer(match, { pairs: [{ source: "city", target: "other" }] })
     ).toContain("  - correct pair: Indonesia\n  - learner's pair: Jerman");
@@ -166,6 +177,47 @@ describe("nina/prompt/focus", () => {
     expect(formatFocusAnswer(typed, null)).toContain(
       "- learner's answer: no answer"
     );
+    expect(formatFocusAnswer(numeric, { text: "3/4" })).toBe(
+      Arr.join(
+        [
+          "## Answer Key",
+          "",
+          "- correct number: 0.75",
+          "- learner's answer: 3/4",
+        ],
+        "\n"
+      )
+    );
+    expect(
+      formatFocusAnswer(
+        {
+          ...numeric,
+          key: {
+            interaction: "number",
+            kind: "numericEntry",
+            tolerance: { kind: "absolute", value: "0.01" },
+            value: "0.75",
+          },
+        },
+        null
+      )
+    ).toContain(
+      "- correct number: 0.75 (within ±0.01)\n- learner's answer: no answer"
+    );
+    expect(
+      formatFocusAnswer(
+        {
+          ...numeric,
+          key: {
+            interaction: "number",
+            kind: "numericEntry",
+            tolerance: { kind: "relative", value: "0.1" },
+            value: "0.75",
+          },
+        },
+        { text: "0,7" }
+      )
+    ).toContain("- correct number: 0.75 (within ±0.1 × 0.75)");
     const written: ExamResponse = { text: "Karena dua tambah dua." };
     expect(formatFocusAnswer(essay, written)).toBe(
       "## Learner's Answer\n\nKarena dua tambah dua."

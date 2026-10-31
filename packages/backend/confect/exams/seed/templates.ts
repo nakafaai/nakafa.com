@@ -8,6 +8,7 @@ import {
   encodeKey,
   matchAnswers,
   NEW_QUESTION_POINTS,
+  numericAnswers,
   QuestionTemplate,
   shortAnswers,
   tableAnswers,
@@ -91,6 +92,24 @@ const short = (): TemplateQuestion => ({
   template: "short",
 });
 
+/** A numeric answer of three quarters, which takes the fraction as well as the decimal, within a hundredth. */
+const numeric = (): TemplateQuestion => {
+  const [number] = numericAnswers();
+  return {
+    answers: [{ ...number, acceptsFractions: true }],
+    key: [
+      {
+        interaction: "number",
+        kind: "numericEntry",
+        tolerance: { kind: "absolute", value: "0.01" },
+        value: "0.75",
+      },
+    ],
+    paragraphs: ["Tulis tiga perempat sebagai bilangan."],
+    template: "numeric",
+  };
+};
+
 /** A matching of three countries and their capitals, each country paired with one capital. */
 const match = (): TemplateQuestion => {
   const [pairs] = matchAnswers();
@@ -165,7 +184,7 @@ const table = (): TemplateQuestion => {
 /**
  * Places one question of every template but the single choice and the essay after `after`, in the order
  * the editor's type menu lists them: a complex multiple choice, true or false, cause and effect, a short
- * answer, a matching, and a true or false table. Each has every part written and a key that fits it, so the
+ * answer, a numeric answer, a matching, and a true or false table. Each has every part written and a key that fits it, so the
  * exam schedules, and a browser test sits and scores every template. It returns the last question's ID.
  */
 export const seedTemplates = Effect.fn("exams.seed.templates")(function* (
@@ -173,7 +192,7 @@ export const seedTemplates = Effect.fn("exams.seed.templates")(function* (
   after: ExamQuestionsDoc["_id"]
 ) {
   const placed = yield* Effect.reduce(
-    [choices(), trueFalse(), cause(), short(), match(), table()],
+    [choices(), trueFalse(), cause(), short(), numeric(), match(), table()],
     () => ({ last: after, questions: exam.questions }),
     (state, question) =>
       Effect.gen(function* () {
