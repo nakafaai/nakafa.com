@@ -14,7 +14,7 @@ export function SchoolSettingsHeader({ children }: { children?: ReactNode }) {
   const leafPath = useLeafRoutePath();
   const tenant = useTenant();
   const t = useTranslations("SchoolSettings");
-  const section = getSchoolSettingsSection(tenant.slug, leafPath);
+  const section = getSchoolSettingsSection(tenant.slug, leafPath, tenant.reach);
   const label = t(section.labelKey);
 
   return (

@@ -106,6 +106,14 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-class-limit.description",
     title: "school-refusal-class-limit.title",
   },
+  ChannelFixed: {
+    description: "school-refusal-channel-fixed.description",
+    title: "school-refusal-channel-fixed.title",
+  },
+  ChannelNameTaken: {
+    description: "school-refusal-channel-name-taken.description",
+    title: "school-refusal-channel-name-taken.title",
+  },
   ClassNameTaken: {
     description: "school-refusal-class-name-taken.description",
     title: "school-refusal-class-name-taken.title",

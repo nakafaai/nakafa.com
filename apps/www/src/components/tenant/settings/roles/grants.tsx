@@ -6,6 +6,7 @@ import {
 import {
   Delete02Icon,
   MoreHorizontalIcon,
+  UserEdit01Icon,
   UserStar01Icon,
 } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
@@ -34,6 +35,7 @@ import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { revokeGrantChange } from "@/components/tenant/settings/mutation";
+import { SchoolRoleChangeDialog } from "@/components/tenant/settings/roles/change";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { isDraft } from "@/components/tenant/settings/state";
@@ -130,9 +132,9 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
 }
 
 /**
- * A grant's row menu: Give a role, which opens the grant dialog for the grant's person, and Revoke, which revokes
- * the grant behind a confirmation. A grant that keeps the school's last Owner cannot be revoked, so its Revoke is
- * disabled. A draft grant, still on its way to the server, has an inert menu. Revoking the viewer's own grant may end the
+ * A grant's row menu: Give a role, which opens the grant dialog for the grant's person, Change role, which swaps the
+ * role in one step, and Revoke, which revokes the grant behind a confirmation. A grant that keeps the school's last
+ * Owner can end in neither way, so its Change role and its Revoke are disabled. A draft grant, still on its way to the server, has an inert menu. Revoking the viewer's own grant may end the
  * role that opens the settings, so the page first leaves for the notifications, which every member keeps, and the
  * revoke follows there with one sentence: the settings page never turns into a refusal under the viewer. Once the role
  * has ended, the school's root, read afresh, lands the viewer on the main page of the role they keep.
@@ -149,6 +151,8 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
   const router = useRouter();
   const [isRevoking, setIsRevoking] = useState(false);
   const [isGiving, setIsGiving] = useState(false);
+  const [changing, setChanging] = useState(0);
+  const [isChanging, setIsChanging] = useState(false);
   const own =
     QueryResult.isSuccess(viewer) && viewer.value.person.id === grant.person.id;
 
@@ -174,6 +178,16 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!grant.revocable}
+            onClick={() => {
+              setChanging((count) => count + 1);
+              setIsChanging(true);
+            }}
+          >
+            <HugeIcons icon={UserEdit01Icon} />
+            {t("grant-change")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!grant.revocable}
             onClick={() => setIsRevoking(true)}
             variant="destructive"
           >
@@ -187,6 +201,14 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
         person={grant.person}
         setOpen={setIsGiving}
       />
+      {changing === 0 ? null : (
+        <SchoolRoleChangeDialog
+          grant={grant}
+          key={changing}
+          open={isChanging}
+          setOpen={setIsChanging}
+        />
+      )}
       <ResponsiveDialog
         description={t("grant-revoke-description")}
         footer={

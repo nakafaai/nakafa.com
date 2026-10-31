@@ -1,10 +1,7 @@
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import {
-  CreditCardIcon,
   Diamond02Icon,
   Invoice01Icon,
-  Mail01Icon,
-  MoreHorizontalIcon,
   Wallet01Icon,
 } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
@@ -16,26 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Radio,
   RadioGroup,
 } from "@repo/design-system/components/ui/radio-group";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { Array as Arr, Option } from "effect";
 import { useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -45,9 +28,9 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { SchoolInvoicesCard } from "@/components/tenant/settings/invoices";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsPage } from "@/components/tenant/settings/section";
 import {
@@ -61,7 +44,6 @@ import {
   type SchoolBilling,
   type SchoolOffer,
   schoolPayChange,
-  transferMailto,
 } from "@/lib/billing/school";
 import { isActiveLocale } from "@/lib/i18n/active";
 
@@ -345,133 +327,5 @@ function SchoolTermOption({
         </span>
       </span>
     </label>
-  );
-}
-
-/** The invoices of the school, newest first, each with the way it is paid while it is open. */
-function SchoolInvoicesCard({ billing: overview }: { billing: SchoolBilling }) {
-  const t = useTranslations("SchoolSettings");
-  const locale = useLocale();
-
-  return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("billing-invoices")}</CardTitle>
-        <CardDescription>{t("billing-invoices-description")}</CardDescription>
-      </CardHeader>
-      {Arr.isReadonlyArrayNonEmpty(overview.invoices) ? (
-        <CardContent>
-          <TableFrame>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("invoice-number")}</TableHead>
-                  <TableHead>{t("invoice-term")}</TableHead>
-                  <TableHead>{t("invoice-students")}</TableHead>
-                  <TableHead>{t("invoice-total")}</TableHead>
-                  <TableHead>{t("invoice-status")}</TableHead>
-                  <TableHead>
-                    <span className="sr-only">{t("invoice-pay")}</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Arr.map(overview.invoices, (invoice) => (
-                  <TableRow key={`${invoice.number}-${invoice.periodStart}`}>
-                    <TableCell className="font-medium">
-                      {invoice.number}
-                    </TableCell>
-                    <TableCell>
-                      {t("billing-term-dates", {
-                        end: formatBillingDate(invoice.periodEnd - 1, locale),
-                        start: formatBillingDate(invoice.periodStart, locale),
-                      })}
-                    </TableCell>
-                    <TableCell>{formatCount(invoice.seats, locale)}</TableCell>
-                    <TableCell>
-                      {formatMinorAmount(invoice.total, invoice.currency)}
-                    </TableCell>
-                    <TableCell>{t(`invoice-${invoice.status}`)}</TableCell>
-                    <TableCell className="text-end">
-                      <SchoolInvoiceAction invoice={invoice} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableFrame>
-        </CardContent>
-      ) : null}
-      <CardSectionFooter
-        hint={
-          Arr.isReadonlyArrayNonEmpty(overview.invoices)
-            ? t("billing-invoices-footer")
-            : t("billing-invoices-empty")
-        }
-      />
-    </CardSection>
-  );
-}
-
-/**
- * How an open invoice is paid, behind the row's menu: on its hosted payment page
- * while it holds one, or by bank transfer to Nakafa, which an operator records. A
- * paid or void invoice needs nothing, and an invoice still being issued has no
- * number to quote yet.
- */
-function SchoolInvoiceAction({
-  invoice,
-}: {
-  invoice: SchoolBilling["invoices"][number];
-}) {
-  const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
-
-  if (invoice.status !== "open" || invoice.number === "") {
-    return null;
-  }
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            aria-label={common("more-actions")}
-            size="icon-sm"
-            variant="ghost"
-          >
-            <HugeIcons icon={MoreHorizontalIcon} />
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end" className="w-48">
-        {invoice.paymentLink === null ? (
-          <DropdownMenuItem
-            render={
-              <a
-                href={transferMailto(invoice.number)}
-                title={t("invoice-transfer")}
-              />
-            }
-          >
-            <HugeIcons icon={Mail01Icon} />
-            {t("invoice-transfer")}
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem
-            render={
-              <a
-                href={invoice.paymentLink}
-                rel="noopener"
-                target="_blank"
-                title={t("invoice-pay")}
-              />
-            }
-          >
-            <HugeIcons icon={CreditCardIcon} />
-            {t("invoice-pay")}
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

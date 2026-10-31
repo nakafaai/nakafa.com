@@ -7,6 +7,7 @@ import {
   ChannelView,
 } from "@repo/backend/confect/classroom/forum/channel";
 import {
+  ChannelFixed,
   ChannelLimit,
   ChannelNameTaken,
 } from "@repo/backend/confect/classroom/forum/errors";
@@ -18,7 +19,8 @@ import { Schema } from "effect";
 /**
  * The channels of a class. Whoever may read the class reads its channels, the
  * general channel first, and an archived class keeps them readable. A subject
- * teacher of the class or an Admin adds a topic channel to an active class.
+ * teacher of the class or an Admin adds a topic channel to an active class, and
+ * renames a topic channel of it.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -41,5 +43,18 @@ export default GroupSpec.make()
       }),
       returns: () => ChannelView,
       error: () => Schema.Union([AccessDenied, ChannelLimit, ChannelNameTaken]),
+    }).middleware(ClassAccess, { action: "forum.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "rename",
+      args: () => ({
+        channelId: Id("classroomChannels"),
+        classId: Id("classes"),
+        name: ChannelName,
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, ChannelFixed, ChannelNameTaken]),
     }).middleware(ClassAccess, { action: "forum.manage", arg: "classId" })
   );

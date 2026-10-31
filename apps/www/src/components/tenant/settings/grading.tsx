@@ -18,6 +18,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { SchemeVersionAdd } from "@/components/tenant/settings/scheme";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
@@ -72,7 +73,9 @@ export function SchoolGradingSettings() {
           actions={
             <>
               <TableSearch placeholder={t("grading-search")} />
-              <SchemeVersionAdd />
+              <WithAction action="scheme.manage">
+                <SchemeVersionAdd />
+              </WithAction>
             </>
           }
         >

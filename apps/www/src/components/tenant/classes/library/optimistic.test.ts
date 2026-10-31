@@ -5,6 +5,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
 import {
   addLinkUpdate,
+  editItemUpdate,
   type LibraryItem,
   removeItemUpdate,
 } from "@/components/tenant/classes/library/optimistic";
@@ -91,6 +92,58 @@ describe("class library optimistic updates", () => {
         classroom.library.list,
         listArgs(classId, "older"),
         Option.some({ isDone: true, page: [] }),
+      ],
+    ]);
+  });
+
+  it("shows an item's new title and address in the page that holds it, and keeps an address none replaces", () => {
+    const { localStore, setQuery } = storeOf(pages);
+    editItemUpdate(localStore, {
+      address: "https://example.com/baru",
+      classId,
+      itemId: first.id,
+      slug,
+      title: "Video baru",
+    });
+    editItemUpdate(localStore, {
+      address: null,
+      classId,
+      itemId: second.id,
+      slug,
+      title: "Materi baru",
+    });
+    expect(setQuery.mock.calls).toEqual([
+      [
+        classroom.library.list,
+        listArgs(classId, null),
+        Option.some({
+          isDone: false,
+          page: [
+            {
+              ...first,
+              address: "https://example.com/baru",
+              title: "Video baru",
+            },
+          ],
+        }),
+      ],
+      [
+        classroom.library.list,
+        listArgs(classId, "older"),
+        Option.some({ isDone: true, page: [second] }),
+      ],
+      [
+        classroom.library.list,
+        listArgs(classId, null),
+        Option.some({ isDone: false, page: [first] }),
+      ],
+      [
+        classroom.library.list,
+        listArgs(classId, "older"),
+        Option.some({
+          isDone: true,
+          page: [{ ...second, title: "Materi baru" }],
+        }),
       ],
     ]);
   });

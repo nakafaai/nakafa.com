@@ -17,6 +17,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
@@ -24,8 +25,7 @@ import {
   RosterFileChoice,
 } from "@/components/tenant/roster/choose";
 import { type ReadRow, studentsOf } from "@/components/tenant/roster/dapodik";
-import { RosterStudentsExport } from "@/components/tenant/roster/export";
-import { RosterGradesExport } from "@/components/tenant/roster/grades";
+import { RosterExport } from "@/components/tenant/roster/export";
 import { activePeriodOf } from "@/components/tenant/roster/period";
 import { RosterPreviewTable } from "@/components/tenant/roster/preview";
 import {
@@ -86,7 +86,7 @@ function RosterImportContent() {
 
 /**
  * The import into one unit's active period. The header holds its actions enabled from the first
- * paint and waits for nothing: until a file is read the unit choice, Export, Export grades and
+ * paint and waits for nothing: until a file is read the unit choice, Export and
  * Import, each of which reads the period itself after its press, and the body says what to do; once
  * a file is read the header shows the search and status filter of the preview with Cancel and
  * Import students, and the preview is the body. The rows go to the server in batches of
@@ -174,16 +174,17 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
         <>
           <ButtonGroup>
             <RosterUnitChoice />
-            <RosterStudentsExport />
-            <RosterGradesExport />
+            <RosterExport />
           </ButtonGroup>
-          <RosterFileChoice
-            onProblem={setProblem}
-            onRows={(rows) => {
-              setProblem(undefined);
-              setPreview(rows);
-            }}
-          />
+          <WithAction action="roster.import">
+            <RosterFileChoice
+              onProblem={setProblem}
+              onRows={(rows) => {
+                setProblem(undefined);
+                setPreview(rows);
+              }}
+            />
+          </WithAction>
         </>
       }
     >

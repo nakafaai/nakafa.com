@@ -14,6 +14,7 @@ const rendered: TenantValue = {
   logo: "https://files.example.com/rendered.png",
   mascot: Schema.decodeSync(MascotCode)("cat.0.243e66.right.open"),
   name: "Yayasan Lama",
+  reach: [],
   role: Option.some("owner"),
   slug: Schema.decodeSync(TenantSlug)("harapan"),
 };

@@ -20,16 +20,17 @@ import {
 } from "@repo/backend/confect/tenancy/authority";
 import {
   InviteDomainRefused,
-  InviteExpired,
-  InviteNotPending,
   InvitePending,
   InviteRateLimited,
   PersonClaimed,
 } from "@repo/backend/confect/tenancy/errors";
 import {
   expireInvite,
+  pendingOrRefused,
+  retireExpiredInvites,
   writeInvite,
 } from "@repo/backend/confect/tenancy/invite";
+import { readdress } from "@repo/backend/confect/tenancy/invites.readdress";
 import spec from "@repo/backend/confect/tenancy/invites.spec";
 import {
   list,
@@ -62,7 +63,8 @@ const inviteResends = new RateLimiter(components.agentRateLimiter, {
  * Invites one unclaimed Person to the school at an address. The address must be
  * on a domain the school admits, and the Person has at most one pending invite.
  * A pending invite whose term has ended no longer counts: it is expired here,
- * because its scheduled expiry may not have run yet.
+ * because its scheduled expiry may not have run yet. The new invite takes the place
+ * of the Person's expired ones in the school's list.
  */
 const invite = FunctionImpl.make(
   databaseSchema,
@@ -90,6 +92,7 @@ const invite = FunctionImpl.make(
       }
       yield* expireInvite(pending.value, person);
     }
+    yield* retireExpiredInvites(person._id);
     const written = yield* writeInvite(
       personActor(actor),
       person,
@@ -119,16 +122,7 @@ const resend = FunctionImpl.make(
     if (person.account.state === "claimed") {
       return yield* new PersonClaimed();
     }
-    const now = yield* Clock.currentTimeMillis;
-    if (
-      stored.state.status === "expired" ||
-      (stored.state.status === "pending" && stored.expiresAt <= now)
-    ) {
-      return yield* new InviteExpired();
-    }
-    if (stored.state.status !== "pending") {
-      return yield* new InviteNotPending();
-    }
+    const now = yield* pendingOrRefused(stored);
     const ctx = yield* MutationCtx;
     const quota = yield* Effect.tryPromise(() =>
       inviteResends.limit(ctx, "inviteResend", { key: person._id })
@@ -153,6 +147,7 @@ const resend = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(invite),
+  Layer.provide(readdress),
   Layer.provide(revoke),
   Layer.provide(resend),
   Layer.provide(session),

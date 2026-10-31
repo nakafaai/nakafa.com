@@ -57,6 +57,18 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicMutation({
+      name: "change",
+      args: () => ({
+        grantId: Id("tenantGrants"),
+        role: BuiltinRole,
+        slug: TenantSlug,
+      }),
+      returns: () => Id("tenantGrants"),
+      error: () => Schema.Union([GrantRejected, AccessDenied]),
+    }).middleware(GrantAccess, { action: "grant.view", arg: "grantId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
       name: "revoke",
       args: () => ({ grantId: Id("tenantGrants"), slug: TenantSlug }),
       returns: () => Schema.Null,

@@ -23,6 +23,7 @@ import {
   PaneHeader,
 } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
+import { columnAlign } from "@/components/shared/table/align";
 import { TableFrame } from "@/components/shared/table/frame";
 import type { GraduationLine } from "@/components/tenant/graduation/sheet";
 import { checkAddress } from "@/components/tenant/reports/check";
@@ -91,15 +92,24 @@ export function GraduationLineDetail({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t("subject")}</TableHead>
-                    <TableHead className="text-end">{t("value")}</TableHead>
+                    <TableHead className={columnAlign({ align: "start" })}>
+                      {t("subject")}
+                    </TableHead>
+                    <TableHead className={columnAlign()}>
+                      {t("value")}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {Arr.map(found.transcript.subjects, (subject) => (
                     <TableRow key={subject.subject}>
-                      <TableCell dir="auto">{subject.subject}</TableCell>
-                      <TableCell className="text-end tabular-nums">
+                      <TableCell
+                        className={columnAlign({ align: "start" })}
+                        dir="auto"
+                      >
+                        {subject.subject}
+                      </TableCell>
+                      <TableCell className={columnAlign()}>
                         {twoDecimals(subject.value)}
                       </TableCell>
                     </TableRow>
@@ -107,8 +117,10 @@ export function GraduationLineDetail({
                 </TableBody>
                 <TableFooter>
                   <TableRow>
-                    <TableCell>{t("average")}</TableCell>
-                    <TableCell className="text-end tabular-nums">
+                    <TableCell className={columnAlign({ align: "start" })}>
+                      {t("average")}
+                    </TableCell>
+                    <TableCell className={columnAlign()}>
                       {twoDecimals(found.transcript.average)}
                     </TableCell>
                   </TableRow>

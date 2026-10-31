@@ -144,6 +144,7 @@ export function viewer(): Viewer {
     can: ["tenant.manage"],
     grants: [],
     person: { id: personId, kind: "member", name: "Admin" },
+    reach: ["tenant.manage"],
     tenant: {
       country: "ID",
       currency: "IDR",

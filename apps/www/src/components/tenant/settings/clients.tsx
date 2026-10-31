@@ -10,6 +10,7 @@ import {
   Delete02Icon,
   Key01Icon,
   MoreHorizontalIcon,
+  PencilEdit02Icon,
   Plug01Icon,
   Unlink01Icon,
 } from "@hugeicons/core-free-icons";
@@ -45,7 +46,10 @@ import {
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
+import {
+  SchoolClientCreateDialog,
+  SchoolClientEditDialog,
+} from "@/components/tenant/settings/client";
 import { SchoolDeviceDialog } from "@/components/tenant/settings/device";
 import { revokeClientChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -265,6 +269,8 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
   const [isPending, startTransition] = useTransition();
   const [isRevoking, setIsRevoking] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [editing, setEditing] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
 
   return (
     <div className="flex justify-end">
@@ -281,6 +287,15 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
           }
         />
         <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem
+            onClick={() => {
+              setEditing((count) => count + 1);
+              setIsEditing(true);
+            }}
+          >
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("client-edit")}
+          </DropdownMenuItem>
           <DropdownMenuItem
             disabled={isPending}
             onClick={() =>
@@ -342,6 +357,14 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
         setOpen={setIsRevoking}
         title={t("client-revoke-title")}
       />
+      {editing === 0 ? null : (
+        <SchoolClientEditDialog
+          client={client}
+          key={editing}
+          open={isEditing}
+          setOpen={setIsEditing}
+        />
+      )}
       <SchoolDeviceDialog
         client={client}
         open={isConnecting}

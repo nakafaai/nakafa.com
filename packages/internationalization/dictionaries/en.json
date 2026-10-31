@@ -128,7 +128,7 @@
   "SchoolRoster": {
     "import": "Import",
     "export": "Export",
-    "export-grades": "Export grades",
+    "export-grades": "Report grades",
     "export-grades-label": "Report grades of a class group",
     "export-grades-loading": "Loading class groups",
     "export-grades-no-period": "No active period yet.",
@@ -155,7 +155,8 @@
     "status-birth": "Birth date unreadable",
     "status-cohort": "Class group name too long",
     "cancel": "Cancel",
-    "apply": "Import students"
+    "apply": "Import students",
+    "export-students": "Student list"
   },
   "Exams": {
     "minutes-placeholder": "10",
@@ -862,7 +863,8 @@
         "created": "Client created",
         "rotated": "Secret rotated",
         "revoked": "Client revoked",
-        "authorized": "Device connected"
+        "authorized": "Device connected",
+        "changed": "Client edited"
       },
       "invite": {
         "expired": "Invite expired",
@@ -1133,7 +1135,18 @@
     "grading-save": "Save version",
     "grading-status": "Status",
     "grading-current": "In force",
-    "grading-earlier": "Earlier"
+    "grading-earlier": "Earlier",
+    "grant-change": "Change role",
+    "grant-change-description": "The new role replaces this one for {name}.",
+    "invite-readdress": "Change email",
+    "invite-readdress-description": "The old invite ends, and a new one goes to this email.",
+    "client-edit": "Edit client",
+    "client-edit-description": "Its scope and secret stay as they are.",
+    "locale-title": "Country and currency",
+    "locale-description": "Where this school is, and the currency of its plan.",
+    "locale-country": "Country",
+    "locale-currency": "Currency",
+    "locale-footer": "Every change is recorded in the audit trail."
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1247,8 +1260,8 @@
     "task-points": "Points",
     "task-points-for": "Points for {name}",
     "task-late": "Late work",
-    "task-late-accept": "Taken and marked late",
-    "task-late-close": "Not taken after the deadline",
+    "task-late-accept": "Marked late",
+    "task-late-close": "Not taken",
     "task-status": "Status",
     "task-handed-in-count": "{count, plural, one {# handed in} other {# handed in}}",
     "task-not-handed-in": "Not handed in",
@@ -1270,7 +1283,13 @@
     "task-edit": "Edit task",
     "task-edit-description": "Its address stays, so every link to it still opens it.",
     "task-edit-save": "Save",
-    "task-points-fixed": "Points are fixed once work is handed in."
+    "task-points-fixed": "Points are fixed once work is handed in.",
+    "channel-rename": "Rename channel",
+    "channel-rename-description": "Everyone in the class sees the new name.",
+    "discussion-rename": "Rename discussion",
+    "discussion-rename-description": "Everyone in the class sees the new title.",
+    "library-edit": "Edit",
+    "library-edit-description": "The class sees the change at once."
   },
   "SchoolGrades": {
     "student": "Student",
@@ -2888,6 +2907,14 @@
     "school-roster-no-period": {
       "title": "No active period yet.",
       "description": "Open a period for this unit first."
+    },
+    "school-refusal-channel-name-taken": {
+      "title": "This channel name is already used.",
+      "description": "Choose another name for this class."
+    },
+    "school-refusal-channel-fixed": {
+      "title": "The general channel keeps its name.",
+      "description": "Rename a topic channel instead."
     }
   },
   "Ai": {

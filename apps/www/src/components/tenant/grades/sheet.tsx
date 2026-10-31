@@ -54,6 +54,7 @@ import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableSearch } from "@/components/shared/table/toolbar";
 import {
   enterChange,
@@ -68,16 +69,16 @@ const SOURCE = "components/tenant/grades/sheet";
 /** How many students one page of the gradebook loads, and each page after it. */
 const GRADEBOOK_PAGE_SIZE = 50;
 
-/** The states a line's grade is in, each with its icon, as the list, its filter, and the open student show them. */
-const LINE_STATE_ICONS = {
-  draft: Edit02Icon,
-  none: CircleIcon,
-  released: SentIcon,
-};
-
 /** The state of a line: no grade yet, a draft, or released. */
 const stateOf = (line: SheetLine) =>
   line.grade === null ? "none" : line.grade.state;
+
+/** The states a line's grade is in, each with its look, as the list, its filter, and the open student show them. */
+const LINE_STATE_LOOKS = {
+  draft: { icon: Edit02Icon, tone: "info" },
+  none: { icon: CircleIcon, tone: "neutral" },
+  released: { icon: SentIcon, tone: "success" },
+} as const satisfies Record<ReturnType<typeof stateOf>, StatusLook>;
 
 /** The columns of the gradebook. */
 const lineColumns = createColumnHelper<typeof dataTableFeatures, SheetLine>();
@@ -206,10 +207,10 @@ export function ClassGradebook({
     }),
     lineColumns.accessor(stateOf, {
       cell: (info) => (
-        <span className="flex items-center gap-2">
-          <HugeIcons icon={LINE_STATE_ICONS[info.getValue()]} />
-          {t(`state-${info.getValue()}`)}
-        </span>
+        <TableStatus
+          {...LINE_STATE_LOOKS[info.getValue()]}
+          label={t(`state-${info.getValue()}`)}
+        />
       ),
       enableSorting: false,
       filterFn: "oneOf",
@@ -217,7 +218,7 @@ export function ClassGradebook({
         <ColumnFilter
           column="state"
           options={Arr.map(["none", "draft", "released"] as const, (state) => ({
-            icon: LINE_STATE_ICONS[state],
+            icon: LINE_STATE_LOOKS[state].icon,
             label: t(`state-${state}`),
             value: state,
           }))}
@@ -346,10 +347,10 @@ function GradeLineDetail({ lines }: { lines: readonly SheetLine[] }) {
                 : (found.grade.band ?? t(`kktp-${found.grade.kktp}`))}
             </PaneFact>
             <PaneFact label={t("state")}>
-              <span className="flex items-center gap-2">
-                <HugeIcons icon={LINE_STATE_ICONS[stateOf(found)]} />
-                {t(`state-${stateOf(found)}`)}
-              </span>
+              <TableStatus
+                {...LINE_STATE_LOOKS[stateOf(found)]}
+                label={t(`state-${stateOf(found)}`)}
+              />
             </PaneFact>
             <PaneFact label={t("kktp")}>
               <span className="tabular-nums">{scheme.kktp}</span>
