@@ -421,7 +421,7 @@ test("an admin sees that no login card is issued yet on Student accounts, and th
 });
 
 for (const width of [390, 1440]) {
-  test(`an admin who revokes their own Admin role leaves the settings for the school's home, with one sentence, at ${width}`, async ({
+  test(`an admin who revokes their own Admin role leaves the settings for the main page of the role they keep, with one sentence, at ${width}`, async ({
     browser,
     baseURL,
   }) => {
@@ -449,13 +449,15 @@ for (const width of [390, 1440]) {
     await giveRole(owner, ADMIN_GRANT);
     await ownerContext.close();
 
-    // The Admin revokes the role that opens the settings: the page leaves for the school's
-    // home before the role ends, so the settings never turn into the not-found page.
+    // The Admin revokes the role that opens the settings: the page leaves for the notifications
+    // before the role ends, so the settings never turn into the not-found page. An invite gives no
+    // grant of its own, so the learner keeps no role, and the school's root then lands them on their
+    // own exams.
     const admin = await learnerContext.newPage();
     await admin.goto(address("/settings/roles"));
     await revokeRole(admin, ADMIN_GRANT);
 
-    await expect(admin).toHaveURL(address("/"));
+    await expect(admin).toHaveURL(address("/sittings"));
     await expect(admin.getByText("Your role has ended.")).toBeVisible();
     await expect(admin.getByText("We can't find this page")).toHaveCount(0);
     await learnerContext.close();
