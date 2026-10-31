@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseWriter,
@@ -266,7 +266,7 @@ const expire = FunctionImpl.make(
     if (deleted === MEMORY_BATCH) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.nina.memory.expire,
+        ninaInternal.memory.expire,
         {}
       );
     }

@@ -9,7 +9,7 @@ import type {
   PublicationRoutePageRequest,
   PublicationStatusRequest,
 } from "@nakafa/aksara-contracts/transport/request";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import {
   MutationRunner,
   QueryRunner,
@@ -50,7 +50,7 @@ export const readPublication = Effect.fn("contentRelease.readPublication")(
         request.activeManifestHash,
         request.activeReleaseId
       );
-      const value = yield* runQuery(refs.internal.contentRelease.heads.page, {
+      const value = yield* runQuery(contentReleaseInternal.heads.page, {
         activeManifestHash: request.activeManifestHash,
         activeReleaseId: request.activeReleaseId,
         cursor: request.cursor,
@@ -74,13 +74,10 @@ export const readPublication = Effect.fn("contentRelease.readPublication")(
       };
     }
     if (request.operation === "status") {
-      const value = yield* runQuery(
-        refs.internal.contentRelease.status.getStatus,
-        {
-          manifestHash: request.manifestHash,
-          releaseId: request.releaseId,
-        }
-      ).pipe(Effect.catchTag("SchemaError", Effect.die));
+      const value = yield* runQuery(contentReleaseInternal.status.getStatus, {
+        manifestHash: request.manifestHash,
+        releaseId: request.releaseId,
+      }).pipe(Effect.catchTag("SchemaError", Effect.die));
       if (value.phase !== "missing") {
         const bundle = yield* loadVerifiedRelease(request.releaseId);
         yield* matchManifest(
@@ -106,12 +103,9 @@ export const readPublication = Effect.fn("contentRelease.readPublication")(
         value,
       };
     }
-    const value = yield* runMutation(
-      refs.internal.contentRelease.cleanup.cleanup,
-      {
-        releaseId: request.releaseId,
-      }
-    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    const value = yield* runMutation(contentReleaseInternal.cleanup.cleanup, {
+      releaseId: request.releaseId,
+    }).pipe(Effect.catchTag("SchemaError", Effect.die));
     return {
       ok: true,
       operation: request.operation,

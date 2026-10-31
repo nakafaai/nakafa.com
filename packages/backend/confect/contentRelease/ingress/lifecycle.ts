@@ -9,7 +9,7 @@ import type {
   PublicationAcceptRequest,
   VerifyReleaseRequest,
 } from "@nakafa/aksara-contracts/transport/request";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import {
   MutationRunner,
   QueryRunner,
@@ -48,7 +48,7 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
   release: SignedRequest["release"]
 ) {
   const { runQuery } = yield* QueryRunner;
-  const envelope = yield* runQuery(refs.internal.contentRelease.envelope.get, {
+  const envelope = yield* runQuery(contentReleaseInternal.envelope.get, {
     manifestHash: release.manifestHash,
     releaseId: release.manifest.releaseId,
   }).pipe(Effect.catchTag("SchemaError", Effect.die));
@@ -70,17 +70,14 @@ const pollVerification = Effect.fn("contentRelease.pollVerification")(
   function* (manifestHash: string, releaseId: string) {
     const { runMutation } = yield* MutationRunner;
     const { runQuery } = yield* QueryRunner;
-    const observed = yield* runQuery(
-      refs.internal.contentRelease.proof.poll.status,
-      {
-        manifestHash,
-        releaseId,
-      }
-    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    const observed = yield* runQuery(contentReleaseInternal.proof.poll.status, {
+      manifestHash,
+      releaseId,
+    }).pipe(Effect.catchTag("SchemaError", Effect.die));
     if (observed.phase !== "pending") {
       return observed;
     }
-    return yield* runMutation(refs.internal.contentRelease.proof.poll.poll, {
+    return yield* runMutation(contentReleaseInternal.proof.poll.poll, {
       manifestHash,
       releaseId,
     }).pipe(Effect.catchTag("SchemaError", Effect.die));
@@ -93,13 +90,10 @@ export const advancePublication = Effect.fn(
 )(function* (request: LifecycleRequest) {
   const { runMutation } = yield* MutationRunner;
   if (request.operation === "accept") {
-    const value = yield* runMutation(
-      refs.internal.contentRelease.accept.accept,
-      {
-        recoveryId: request.recoveryId,
-        releaseId: request.releaseId,
-      }
-    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    const value = yield* runMutation(contentReleaseInternal.accept.accept, {
+      recoveryId: request.recoveryId,
+      releaseId: request.releaseId,
+    }).pipe(Effect.catchTag("SchemaError", Effect.die));
     return {
       ok: true,
       operation: request.operation,
@@ -107,12 +101,9 @@ export const advancePublication = Effect.fn(
     };
   }
   if (request.operation === "abort") {
-    const value = yield* runMutation(
-      refs.internal.contentRelease.manifest.abort,
-      {
-        releaseId: request.releaseId,
-      }
-    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    const value = yield* runMutation(contentReleaseInternal.manifest.abort, {
+      releaseId: request.releaseId,
+    }).pipe(Effect.catchTag("SchemaError", Effect.die));
     return {
       ok: true,
       operation: request.operation,
@@ -154,7 +145,7 @@ export const advancePublication = Effect.fn(
   const coordinator = modelBuildCoordinatorLayer;
   if (request.operation === "activate") {
     const prepared = yield* runMutation(
-      refs.internal.contentRelease.activate.prepare,
+      contentReleaseInternal.activate.prepare,
       {
         manifestHash: release.manifestHash,
         releaseId,
@@ -167,7 +158,7 @@ export const advancePublication = Effect.fn(
       );
     }
     const result = yield* runMutation(
-      refs.internal.contentRelease.activate.activate,
+      contentReleaseInternal.activate.activate,
       {
         manifestHash: release.manifestHash,
         releaseId,
@@ -181,7 +172,7 @@ export const advancePublication = Effect.fn(
     };
   }
   const prepared = yield* runMutation(
-    refs.internal.contentRelease.activate.prepareRecovery,
+    contentReleaseInternal.activate.prepareRecovery,
     {
       manifestHash: release.manifestHash,
       releaseId,
@@ -194,7 +185,7 @@ export const advancePublication = Effect.fn(
     );
   }
   const result = yield* runMutation(
-    refs.internal.contentRelease.activate.activateRecovery,
+    contentReleaseInternal.activate.activateRecovery,
     {
       manifestHash: release.manifestHash,
       releaseId,

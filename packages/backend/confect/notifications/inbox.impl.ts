@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -128,15 +128,11 @@ const readAll = FunctionImpl.make(
     yield* Effect.forEach(
       schools,
       ({ person }) =>
-        scheduler.runAfter(
-          Duration.zero,
-          refs.internal.notifications.read.run,
-          {
-            cursor: null,
-            personId: person._id,
-            readAt,
-          }
-        ),
+        scheduler.runAfter(Duration.zero, notificationsInternal.read.run, {
+          cursor: null,
+          personId: person._id,
+          readAt,
+        }),
       { discard: true }
     );
     return null;

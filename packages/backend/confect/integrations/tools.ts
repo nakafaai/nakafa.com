@@ -9,7 +9,7 @@ import {
   toMcpInputSchema,
   toMcpOutputSchema,
 } from "@repo/backend/agent/mcp/schema";
-import refs from "@repo/backend/confect/_generated/refs";
+import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   ApiCohort,
@@ -121,7 +121,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
     const run = <A extends Readonly<Record<string, unknown>>>(
       program: Effect.Effect<A, NakafaAgentInputError, QueryRunner>
     ) => runMcpTool(program.pipe(Effect.provideContext(services)), requestId);
-    const reads = refs.internal.integrations.reads;
+    const reads = integrationsInternal.reads;
 
     yield* server.addTool({
       annotations: Context.empty(),

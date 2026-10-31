@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   MutationRunner,
   QueryRunner,
@@ -37,7 +37,7 @@ const adoptCustomerByEmail = Effect.fn("billing.customer.adoptByEmail")(
     }
     const { runQuery } = yield* QueryRunner;
     const mayAdopt = yield* runQuery(
-      refs.internal.billing.checkout.mayAdoptCustomer,
+      billingInternal.checkout.mayAdoptCustomer,
       { externalId: held.externalId, userId }
     ).pipe(
       Effect.mapError(checkoutSessionIoError),
@@ -98,12 +98,9 @@ export const ensureProviderCustomer = Effect.fn(
   "billing.customer.ensureProvider"
 )(function* (userId: Docs["users"]["_id"]) {
   const { runMutation } = yield* MutationRunner;
-  const opened = yield* runMutation(
-    refs.internal.billing.checkout.openAccount,
-    {
-      userId,
-    }
-  ).pipe(
+  const opened = yield* runMutation(billingInternal.checkout.openAccount, {
+    userId,
+  }).pipe(
     Effect.mapError(checkoutSessionIoError),
     Effect.catchDefect(flow(checkoutSessionIoError, Effect.fail))
   );
@@ -121,7 +118,7 @@ export const ensureProviderCustomer = Effect.fn(
     externalId: opened.authId,
     name: opened.name,
   });
-  yield* runMutation(refs.internal.billing.checkout.recordCustomer, {
+  yield* runMutation(billingInternal.checkout.recordCustomer, {
     accountId: opened.accountId,
     providerCustomerId: customer.id,
   }).pipe(

@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import triggersInternal from "@repo/backend/confect/_generated/refs/triggers.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -50,7 +50,7 @@ export const commentsHandler = Effect.fn(
   const oldComment = change.oldDoc;
   yield* scheduler.runAfter(
     Duration.millis(0),
-    refs.internal.triggers.comments.cleanup.cleanupDeletedComment,
+    triggersInternal.comments.cleanup.cleanupDeletedComment,
     {
       commentId: change.id,
     }

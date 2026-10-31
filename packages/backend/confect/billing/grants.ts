@@ -1,6 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -121,16 +121,14 @@ export const scheduleProjection = Effect.fn(
 )(function* (owner: Space) {
   const scheduler = yield* Scheduler;
   if (owner.kind === "personal") {
-    yield* scheduler.runAfter(
-      Duration.zero,
-      refs.internal.billing.grants.project,
-      { userId: owner.userId }
-    );
+    yield* scheduler.runAfter(Duration.zero, billingInternal.grants.project, {
+      userId: owner.userId,
+    });
     return;
   }
   yield* scheduler.runAfter(
     Duration.zero,
-    refs.internal.billing.grants.projectSchool,
+    billingInternal.grants.projectSchool,
     { tenantId: owner.tenantId, cursor: null }
   );
 });
@@ -141,7 +139,7 @@ export const scheduleSchoolProjection = Effect.fn(
 )(function* (tenantId: Docs["tenants"]["_id"]) {
   yield* (yield* Scheduler).runAfter(
     Duration.zero,
-    refs.internal.billing.grants.projectSchool,
+    billingInternal.grants.projectSchool,
     { tenantId, cursor: null }
   );
 });
@@ -320,7 +318,7 @@ export const projectUserPlan = Effect.fn("billing.grants.projectUserPlan")(
     if (Option.isSome(latest)) {
       yield* (yield* Scheduler).runAt(
         DateTime.makeUnsafe(latest.value.validTo),
-        refs.internal.billing.grants.project,
+        billingInternal.grants.project,
         { userId }
       );
     }
@@ -358,7 +356,7 @@ export const projectSchoolPage = Effect.fn("billing.grants.projectSchoolPage")(
     if (!page.isDone) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.billing.grants.projectSchool,
+        billingInternal.grants.projectSchool,
         { tenantId, cursor: page.continueCursor }
       );
     }

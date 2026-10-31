@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -229,7 +229,7 @@ export const disconnect = Effect.fn("connectors.connection.disconnect")(
       return;
     }
     yield* (yield* Scheduler)
-      .runAfter(Duration.zero, refs.internal.connectors.sync.revoke, {
+      .runAfter(Duration.zero, connectorsInternal.sync.revoke, {
         connectionId: row._id,
       })
       .pipe(Effect.orDie);

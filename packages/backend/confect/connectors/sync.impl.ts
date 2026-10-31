@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -105,7 +105,7 @@ const sweep = FunctionImpl.make(
             Effect.andThen(
               scheduler.runAfter(
                 Duration.times(RUN_SPREAD, index),
-                refs.internal.connectors.sync.run,
+                connectorsInternal.sync.run,
                 { connectionId: row._id }
               )
             )
@@ -153,13 +153,13 @@ const syncClassroom = Effect.fn("connectors.sync.classroom")(function* (
 ) {
   const { runQuery } = yield* QueryRunner;
   const { runMutation } = yield* MutationRunner;
-  const linked = yield* runQuery(refs.internal.connectors.classroom.links, {
+  const linked = yield* runQuery(connectorsInternal.classroom.links, {
     connectionId,
   }).pipe(Effect.orDie);
   const stored = yield* Effect.forEach(linked, ({ courseId }) =>
     courseWork(accessToken, courseId).pipe(
       Effect.flatMap((works) =>
-        runMutation(refs.internal.connectors.classroom.storeWork, {
+        runMutation(connectorsInternal.classroom.storeWork, {
           connectionId,
           courseId,
           works,
@@ -167,7 +167,7 @@ const syncClassroom = Effect.fn("connectors.sync.classroom")(function* (
       )
     )
   );
-  yield* runMutation(refs.internal.connectors.sync.settle, {
+  yield* runMutation(connectorsInternal.sync.settle, {
     changed: Arr.some(stored, (result) => result.changed),
     connectionId,
   }).pipe(Effect.orDie);
@@ -183,7 +183,7 @@ const syncCalendar = Effect.fn("connectors.sync.calendar")(function* (
     accessToken,
     yield* Clock.currentTimeMillis
   );
-  yield* runMutation(refs.internal.connectors.sync.storeEvents, {
+  yield* runMutation(connectorsInternal.sync.storeEvents, {
     connectionId,
     events,
   }).pipe(Effect.orDie);
@@ -204,7 +204,7 @@ const run = FunctionImpl.make(
   Effect.fn("connectors.sync.run")(function* ({ connectionId }) {
     const { runQuery } = yield* QueryRunner;
     const { runMutation } = yield* MutationRunner;
-    const found = yield* runQuery(refs.internal.connectors.sync.target, {
+    const found = yield* runQuery(connectorsInternal.sync.target, {
       connectionId,
     }).pipe(Effect.orDie);
     if (
@@ -227,7 +227,7 @@ const run = FunctionImpl.make(
       Effect.provide(FetchClient),
       Effect.catchTag("GoogleFailed", (failure) =>
         failure.reason === "revoked"
-          ? runMutation(refs.internal.connectors.sync.reconnect, {
+          ? runMutation(connectorsInternal.sync.reconnect, {
               connectionId,
             })
           : Effect.logWarning("connectors.sync.google", failure.reason)

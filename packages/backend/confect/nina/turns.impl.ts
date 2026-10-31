@@ -7,7 +7,7 @@ import {
   NinaPromptError,
 } from "@repo/backend/client/nina/prompt";
 import { components } from "@repo/backend/confect/_generated/components";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -182,11 +182,9 @@ const start = FunctionImpl.make(
     // The one check that follows a run, for the moment it must have started. A
     // run that started settles itself, and the recovery sweep settles a turn
     // that stays open past its deadline.
-    yield* scheduler.runAfter(
-      START_DEADLINE,
-      refs.internal.nina.lifecycle.expire,
-      { turnId }
-    );
+    yield* scheduler.runAfter(START_DEADLINE, ninaInternal.lifecycle.expire, {
+      turnId,
+    });
     yield* captureProductEvent({
       distinctId: appUser._id,
       event: {

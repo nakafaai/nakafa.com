@@ -1,5 +1,5 @@
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { registry } from "@repo/backend/confect/nina/capability/registry";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
@@ -16,7 +16,7 @@ import { Clock, Effect } from "effect";
 const readFocus = Effect.fn("nina.instructions.focus")(
   function* (turnId: NinaTurnsDoc["_id"]) {
     const source = yield* (yield* QueryRunner).runQuery(
-      refs.internal.nina.focus.read,
+      ninaInternal.focus.read,
       {
         turnId,
       }
@@ -41,7 +41,7 @@ const readBrief = Effect.fn("nina.instructions.brief")(function* (
     "chatId" | "order" | "page" | "promptMessageId" | "userId"
   >
 ) {
-  return yield* (yield* QueryRunner).runQuery(refs.internal.nina.brief.read, {
+  return yield* (yield* QueryRunner).runQuery(ninaInternal.brief.read, {
     chatId: turn.chatId,
     now: yield* Clock.currentTimeMillis,
     order: turn.order,

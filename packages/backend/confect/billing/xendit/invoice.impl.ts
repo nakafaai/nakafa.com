@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -28,10 +28,9 @@ const open = FunctionImpl.make(
     function* ({ invoiceId, offer }) {
       const { runQuery } = yield* QueryRunner;
       const { runMutation } = yield* MutationRunner;
-      const invoice = yield* runQuery(
-        refs.internal.billing.xendit.invoice.payable,
-        { invoiceId }
-      ).pipe(Effect.orDie);
+      const invoice = yield* runQuery(billingInternal.xendit.invoice.payable, {
+        invoiceId,
+      }).pipe(Effect.orDie);
       if (invoice === null) {
         return null;
       }
@@ -42,7 +41,7 @@ const open = FunctionImpl.make(
           message: `Session ${session.payment_session_id} has no payment link.`,
         });
       }
-      yield* runMutation(refs.internal.billing.xendit.invoice.record, {
+      yield* runMutation(billingInternal.xendit.invoice.record, {
         accountId: invoice.accountId,
         expiresAt: DateTime.toEpochMillis(session.expires_at),
         invoiceId,

@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import {
   MutationRunner,
   type QueryRunner,
@@ -65,7 +65,7 @@ const handleSchoolMcp = Effect.gen(function* () {
     return mcpOptionsResponse(request);
   }
   const { runMutation } = yield* MutationRunner;
-  const check = yield* runMutation(refs.internal.integrations.tokens.check, {
+  const check = yield* runMutation(integrationsInternal.tokens.check, {
     resource: "mcp",
     token: Option.getOrElse(bearerOf(request), () => ""),
   }).pipe(Effect.orDie);

@@ -7,7 +7,7 @@ import {
   renderQuranTafsirAccessMarkdown,
 } from "@repo/backend/client/quran/markdown";
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
@@ -39,9 +39,9 @@ const QuranContentSourceSchema = Schema.Struct({
 });
 type QuranContentSource = typeof QuranContentSourceSchema.Type;
 const contentSourceReference =
-  refs.internal.contentRelease.reference.internal.readAgentContent;
+  contentReleaseInternal.reference.internal.readAgentContent;
 const publicRuntimeReference =
-  refs.internal.contentRelease.runtime.publication.internal.read;
+  contentReleaseInternal.runtime.publication.internal.read;
 
 /** Resolves and reads one public reference entirely inside Convex. */
 export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (

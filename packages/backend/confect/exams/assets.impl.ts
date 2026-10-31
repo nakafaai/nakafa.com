@@ -1,6 +1,7 @@
 import { BlobNotFoundError, FunctionImpl, GroupImpl } from "@confect/server";
 import { Id } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import examsPublic from "@repo/backend/confect/_generated/refs/exams";
+import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -60,7 +61,7 @@ const canAdd = FunctionImpl.make(
 const refuse = (storageId: StorageId) =>
   Effect.gen(function* () {
     const { runMutation } = yield* MutationRunner;
-    yield* runMutation(refs.internal.exams.assets.discard, { storageId });
+    yield* runMutation(examsInternal.assets.discard, { storageId });
   });
 
 /**
@@ -100,12 +101,12 @@ const register = FunctionImpl.make(
     function* ({ examId, height, slug, storageId, width }) {
       const { appUser } = yield* requireAuth();
       const { runQuery } = yield* QueryRunner;
-      yield* runQuery(refs.public.exams.assets.canAdd, { examId, slug }).pipe(
+      yield* runQuery(examsPublic.assets.canAdd, { examId, slug }).pipe(
         Effect.catchTag("NotMember", () =>
           Effect.fail(new AccessDenied({ action: "exam.edit", reason: "role" }))
         )
       );
-      const { size } = yield* runQuery(refs.internal.exams.assets.stored, {
+      const { size } = yield* runQuery(examsInternal.assets.stored, {
         storageId,
       }).pipe(Effect.orDie);
       if (size > IMAGE_BYTE_LIMIT) {
@@ -126,7 +127,7 @@ const register = FunctionImpl.make(
         onSome: (contentType) =>
           Effect.gen(function* () {
             const { runMutation } = yield* MutationRunner;
-            return yield* runMutation(refs.internal.exams.assets.commit, {
+            return yield* runMutation(examsInternal.assets.commit, {
               byteSize: size,
               contentType,
               examId,
@@ -231,7 +232,7 @@ const sweep = FunctionImpl.make(
     }
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.exams.assets.sweep,
+      examsInternal.assets.sweep,
       { examId }
     );
     return { done: false };

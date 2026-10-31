@@ -4,7 +4,7 @@ import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { RecoveryLookupSchema } from "@nakafa/aksara-contracts/release/current/evidence";
 import { ContentReleaseCurrentSchema } from "@nakafa/aksara-contracts/release/current/state";
 import { verifyContentReleaseBundle } from "@nakafa/aksara-contracts/release/verify";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   ReleaseError,
@@ -33,12 +33,9 @@ export const loadVerifiedRelease = Effect.fn(
   "contentRelease.loadVerifiedRelease"
 )(function* (releaseId: string) {
   const { runQuery } = yield* QueryRunner;
-  const envelope = yield* runQuery(
-    refs.internal.contentRelease.envelope.byRelease,
-    {
-      releaseId,
-    }
-  ).pipe(Effect.catchTag("SchemaError", Effect.die));
+  const envelope = yield* runQuery(contentReleaseInternal.envelope.byRelease, {
+    releaseId,
+  }).pipe(Effect.catchTag("SchemaError", Effect.die));
   const bundle = yield* decodeStoredBundle(
     envelope.releaseJson,
     envelope.rendererJson
@@ -72,7 +69,7 @@ export const readCurrentPublication = Effect.fn(
 )(function* () {
   const { runQuery } = yield* QueryRunner;
   const stored = yield* runQuery(
-    refs.internal.contentRelease.status.current,
+    contentReleaseInternal.status.current,
     {}
   ).pipe(Effect.catchTag("SchemaError", Effect.die));
   const active = stored.active
@@ -129,7 +126,7 @@ export const readRecovery = Effect.fn("contentRelease.readRecovery")(
   }) {
     const { runQuery } = yield* QueryRunner;
     const stored = yield* runQuery(
-      refs.internal.contentRelease.recovery.lookup,
+      contentReleaseInternal.recovery.lookup,
       request
     ).pipe(Effect.catchTag("SchemaError", Effect.die));
     if (stored.kind === "missing") {

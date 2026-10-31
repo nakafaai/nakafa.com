@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import { answerRunFor } from "@repo/backend/confect/nina/runtime";
 import type { ModelMessage } from "ai";
 
@@ -16,13 +16,13 @@ describe("answerRunFor", () => {
       content: [{ type: "text", text: "Explain a limit." }],
     };
 
-    expect(answerRunFor(message)).toBe(refs.internal.nina.response.run);
+    expect(answerRunFor(message)).toBe(ninaInternal.response.run);
   });
 
   it("runs a message whose content is one string in the default runtime", () => {
     const message: ModelMessage = { role: "user", content: "Explain a limit." };
 
-    expect(answerRunFor(message)).toBe(refs.internal.nina.response.run);
+    expect(answerRunFor(message)).toBe(ninaInternal.response.run);
   });
 
   it("runs a message with an image in the default runtime", () => {
@@ -34,24 +34,24 @@ describe("answerRunFor", () => {
       ],
     };
 
-    expect(answerRunFor(message)).toBe(refs.internal.nina.response.run);
+    expect(answerRunFor(message)).toBe(ninaInternal.response.run);
   });
 
   it("runs a file part that holds an image in the default runtime", () => {
     expect(answerRunFor(withFile("image/png"))).toBe(
-      refs.internal.nina.response.run
+      ninaInternal.response.run
     );
   });
 
   it("runs a PDF in the Node runtime", () => {
     expect(answerRunFor(withFile("application/pdf"))).toBe(
-      refs.internal.nina.documents.run
+      ninaInternal.documents.run
     );
   });
 
   it("runs a text file in the Node runtime", () => {
     expect(answerRunFor(withFile("text/plain"))).toBe(
-      refs.internal.nina.documents.run
+      ninaInternal.documents.run
     );
   });
 
@@ -68,6 +68,6 @@ describe("answerRunFor", () => {
       ],
     };
 
-    expect(answerRunFor(message)).toBe(refs.internal.nina.documents.run);
+    expect(answerRunFor(message)).toBe(ninaInternal.documents.run);
   });
 });

@@ -1,5 +1,6 @@
 import { GroupSpec } from "@confect/core";
 import { RefsLoadError } from "@repo/backend/scripts/refs/errors";
+import type { FunctionVisibility } from "convex/server";
 import { Array as Arr, Effect, Predicate, Record } from "effect";
 
 /** Returns the group that a leaf module default-exports, or fails when it exports anything else. */
@@ -19,11 +20,18 @@ export const asLeafGroup = Effect.fn("RefsLeaf.asLeafGroup")(function* (
 });
 
 /**
- * Whether a leaf declares at least one public function, in the leaf itself or in
- * a group nested under it. A mixed leaf counts, and the generator writes it whole.
+ * Whether a leaf declares at least one function of the visibility, in the leaf itself
+ * or in a group nested under it. A mixed leaf counts for both visibilities, and the
+ * generator writes it whole into each domain module that reaches it.
  */
-export const isPublicLeaf = (group: GroupSpec.AnyWithProps): boolean =>
+export const holdsVisibility = (
+  group: GroupSpec.AnyWithProps,
+  visibility: FunctionVisibility
+): boolean =>
   Arr.some(
     Record.values(group.functions),
-    (fn) => fn.functionVisibility === "public"
-  ) || Arr.some(Record.values(group.groups), isPublicLeaf);
+    (fn) => fn.functionVisibility === visibility
+  ) ||
+  Arr.some(Record.values(group.groups), (inner) =>
+    holdsVisibility(inner, visibility)
+  );

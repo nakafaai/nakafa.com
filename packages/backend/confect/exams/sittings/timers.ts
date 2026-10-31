@@ -2,7 +2,7 @@ import type {
   ExamAttemptsDoc,
   ExamSittingsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import {
   DatabaseReader,
   Scheduler,
@@ -23,7 +23,7 @@ export const scheduleOpen = Effect.fn("exams.sittings.timers.open")(function* (
 ) {
   return yield* (yield* Scheduler).runAt(
     DateTime.makeUnsafe(opensAt),
-    refs.internal.exams.sittings.timers.open,
+    examsInternal.sittings.timers.open,
     { sittingId }
   );
 });
@@ -33,7 +33,7 @@ export const scheduleClose = Effect.fn("exams.sittings.timers.close")(
   function* (sittingId: ExamSittingsDoc["_id"], closesAt: number) {
     return yield* (yield* Scheduler).runAt(
       DateTime.makeUnsafe(closesAt),
-      refs.internal.exams.sittings.timers.closeDue,
+      examsInternal.sittings.timers.closeDue,
       { atDeadline: "closesAt", sittingId }
     );
   }
@@ -44,7 +44,7 @@ export const scheduleAttemptClose = Effect.fn("exams.sittings.timers.attempt")(
   function* (attemptId: ExamAttemptsDoc["_id"], deadline: number) {
     return yield* (yield* Scheduler).runAt(
       DateTime.makeUnsafe(deadline),
-      refs.internal.exams.sittings.timers.closeAttempt,
+      examsInternal.sittings.timers.closeAttempt,
       { attemptId }
     );
   }
@@ -75,7 +75,7 @@ export const scheduleSubmit = Effect.fn("exams.sittings.timers.submit")(
   function* (attemptId: ExamAttemptsDoc["_id"], deadline: number) {
     return yield* (yield* Scheduler).runAt(
       DateTime.makeUnsafe(deadline + SUBMIT_DELAY_MS),
-      refs.internal.exams.sittings.timers.submit,
+      examsInternal.sittings.timers.submit,
       { attemptId }
     );
   }

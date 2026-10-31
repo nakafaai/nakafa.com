@@ -1,6 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -76,7 +76,7 @@ export const recordEvent = Effect.fn("billing.events.record")(function* (
   }
   yield* (yield* Scheduler).runAfter(
     Duration.zero,
-    refs.internal.billing.events.process,
+    billingInternal.events.process,
     { eventId: recorded.eventId }
   );
   return recorded;
@@ -166,7 +166,7 @@ export const processEvent = Effect.fn("billing.events.process")(function* (
   eventId: BillingEventId
 ) {
   const { runMutation } = yield* MutationRunner;
-  const applied = yield* runMutation(refs.internal.billing.events.apply, {
+  const applied = yield* runMutation(billingInternal.events.apply, {
     eventId,
   }).pipe(Effect.orDie);
   if (applied.kind === "processed") {
@@ -182,7 +182,7 @@ export const processEvent = Effect.fn("billing.events.process")(function* (
     )
   );
   if (resolution === "linked") {
-    yield* runMutation(refs.internal.billing.events.apply, { eventId }).pipe(
+    yield* runMutation(billingInternal.events.apply, { eventId }).pipe(
       Effect.orDie
     );
   }

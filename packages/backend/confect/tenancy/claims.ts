@@ -1,5 +1,5 @@
 import type { GenericId } from "@confect/core";
-import refs from "@repo/backend/confect/_generated/refs";
+import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
 import {
   DatabaseReader,
   Scheduler,
@@ -22,7 +22,7 @@ export const scheduleRun = Effect.fn("tenancy.claims.schedule")(function* (
 ) {
   yield* (yield* Scheduler).runAfter(
     Duration.zero,
-    refs.internal.tenancy.claims.run,
+    tenancyInternal.claims.run,
     { cursor: null, userId }
   );
 });
@@ -81,7 +81,7 @@ export const claimAfterInvite = Effect.fn("tenancy.claims.afterInvite")(
   function* (email: typeof Email.Type) {
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.tenancy.holders.schedule,
+      tenancyInternal.holders.schedule,
       { cursor: null, email }
     );
   }

@@ -1,5 +1,5 @@
 import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -104,7 +104,7 @@ export const writeTask = Effect.fn("classroom.tasks.write")(function* (
   });
   yield* (yield* Scheduler).runAfter(
     Duration.zero,
-    refs.internal.notifications.fanout.run,
+    notificationsInternal.fanout.run,
     { cursor: null, phase: "students", source: { _tag: "task", taskId } }
   );
   return yield* reader.table("classroomTasks").get(taskId).pipe(Effect.orDie);

@@ -1,5 +1,5 @@
 import type { WorkflowId } from "@convex-dev/workflow";
-import refs from "@repo/backend/confect/_generated/refs";
+import privacyInternal from "@repo/backend/confect/_generated/refs/privacy.server";
 import {
   MutationCtx as MutationCtxService,
   Scheduler,
@@ -53,7 +53,7 @@ export const retryCleanupWorkflowProgram = Effect.fn(
         yield* scheduler
           .runAfter(
             Duration.millis(WORKFLOW_RECOVERY_DELAY_MS),
-            refs.internal.privacy.recovery.retryCleanupWorkflow,
+            privacyInternal.recovery.retryCleanupWorkflow,
             {
               source,
               workflowId,
@@ -84,7 +84,7 @@ export const cleanupWorkflowStorageProgram = Effect.fn(
         yield* scheduler
           .runAfter(
             Duration.millis(WORKFLOW_RECOVERY_DELAY_MS),
-            refs.internal.privacy.recovery.cleanupWorkflowStorage,
+            privacyInternal.recovery.cleanupWorkflowStorage,
             {
               source,
               workflowId,

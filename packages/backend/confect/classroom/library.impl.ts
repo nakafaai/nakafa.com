@@ -1,7 +1,9 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { Id } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import classroomPublic from "@repo/backend/confect/_generated/refs/classroom";
+import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
+import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -162,7 +164,7 @@ const libraryAuthor = Effect.fn("classroom.library.author")(function* (
   slug: TenantSlug
 ) {
   const { runQuery } = yield* QueryRunner;
-  return yield* runQuery(refs.public.classroom.library.canAdd, {
+  return yield* runQuery(classroomPublic.library.canAdd, {
     classId,
     slug,
   }).pipe(
@@ -178,7 +180,7 @@ const libraryAuthor = Effect.fn("classroom.library.author")(function* (
 const refuse = (storageId: StorageId) =>
   Effect.gen(function* () {
     const { runMutation } = yield* MutationRunner;
-    yield* runMutation(refs.internal.exams.assets.discard, { storageId });
+    yield* runMutation(examsInternal.assets.discard, { storageId });
   });
 
 /**
@@ -197,7 +199,7 @@ const register = FunctionImpl.make(
       yield* requireAuth();
       const { runQuery } = yield* QueryRunner;
       const { authorId } = yield* libraryAuthor(classId, slug);
-      const { size } = yield* runQuery(refs.internal.exams.assets.stored, {
+      const { size } = yield* runQuery(examsInternal.assets.stored, {
         storageId,
       }).pipe(Effect.orDie);
       if (size > LIBRARY_BYTE_LIMIT) {
@@ -218,7 +220,7 @@ const register = FunctionImpl.make(
         onSome: (contentType) =>
           Effect.gen(function* () {
             const { runMutation } = yield* MutationRunner;
-            return yield* runMutation(refs.internal.classroom.library.commit, {
+            return yield* runMutation(classroomInternal.library.commit, {
               authorId,
               byteSize: size,
               classId,
@@ -276,7 +278,7 @@ const importDrive = FunctionImpl.make(
         new Blob([bytes], { type: contentType.value })
       );
       const { runMutation } = yield* MutationRunner;
-      return yield* runMutation(refs.internal.classroom.library.commit, {
+      return yield* runMutation(classroomInternal.library.commit, {
         authorId,
         byteSize: bytes.byteLength,
         classId,
