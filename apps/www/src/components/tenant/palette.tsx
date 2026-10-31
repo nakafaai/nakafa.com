@@ -1,6 +1,7 @@
 import { QueryResult } from "@confect/react";
 import {
   Certificate01Icon,
+  ChartBarLineIcon,
   Home01Icon,
   TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
@@ -22,7 +23,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import type { Mascot } from "@repo/mascot/code";
 import { useNavigate } from "@tanstack/react-router";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { type ComponentProps, Fragment, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { CommandKeys } from "@/components/search/keys";
@@ -174,10 +175,11 @@ function TenantPaletteRow({
  * viewer who may manage the school.
  */
 function usePaletteGroups(): readonly PaletteGroup[] {
-  const { canManage, canOpenExams, canOpenReports, slug } = useTenant();
+  const { canManage, canOpenExams, canOpenReports, role, slug } = useTenant();
   const classes = useMyClasses();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
+  const tGrades = useTranslations("SchoolGrades");
   const tReports = useTranslations("SchoolReports");
   const tSettings = useTranslations("SchoolSettings");
 
@@ -189,6 +191,21 @@ function usePaletteGroups(): readonly PaletteGroup[] {
       place: undefined,
       target: { from: LOCALE_ROUTE, params: { slug }, to: "/school/$slug" },
     },
+    ...(Option.contains(role, "student")
+      ? [
+          {
+            icon: { hugeicon: ChartBarLineIcon },
+            key: "grades",
+            label: tGrades("own-title"),
+            place: undefined,
+            target: {
+              from: LOCALE_ROUTE,
+              params: { slug },
+              to: "/school/$slug/grades",
+            },
+          } satisfies PaletteItem,
+        ]
+      : []),
     ...(canOpenExams
       ? [
           {

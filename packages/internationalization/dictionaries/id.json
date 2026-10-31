@@ -1242,7 +1242,15 @@
     "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya.",
     "detail": "Nilai siswa",
     "detail-empty": "Pilih siswa untuk melihat nilainya.",
-    "kktp": "KKTP"
+    "kktp": "KKTP",
+    "own-title": "Nilai saya",
+    "own-search": "Cari kelas",
+    "own-class": "Kelas",
+    "own-period": "Periode",
+    "own-band": "Predikat",
+    "own-band-none": "Tanpa predikat",
+    "own-empty": "Belum ada nilai yang dirilis.",
+    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya."
   },
   "SchoolReports": {
     "title": "Rapor",
