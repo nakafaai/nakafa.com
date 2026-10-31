@@ -36,6 +36,7 @@ const programRouteValidator = Schema.Struct({
   sourceRevision: Schema.Union([Schema.String, Schema.Null]),
 });
 const programContextValidator = Schema.Struct({
+  ancestorJson: Schema.mutable(Schema.Array(Schema.String)),
   groupJson: Schema.Union([Schema.String, Schema.Null]),
   managed: Schema.Boolean,
   mappingJson: Schema.Union([Schema.String, Schema.Null]),
