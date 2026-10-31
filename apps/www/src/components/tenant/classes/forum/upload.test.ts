@@ -19,18 +19,24 @@ vi.mock("@/components/tenant/exams/image", () => ({ sendStorageFile }));
 const paintable = (webp: boolean) => {
   const drawImage = vi.fn();
   const close = vi.fn();
-  vi.stubGlobal(
-    "OffscreenCanvas",
-    vi.fn((width: number) => ({
-      convertToBlob: ({ type }: { readonly type: string }) =>
-        Promise.resolve(
-          new Blob([new Uint8Array(width)], {
-            type: type === "image/webp" && !webp ? "image/png" : type,
-          })
-        ),
-      getContext: () => ({ drawImage }),
-    }))
-  );
+  class FakeCanvas {
+    readonly context = { drawImage };
+    readonly width: number;
+    constructor(width: number) {
+      this.width = width;
+    }
+    getContext() {
+      return this.context;
+    }
+    convertToBlob({ type }: { readonly type: string }) {
+      return Promise.resolve(
+        new Blob([new Uint8Array(this.width)], {
+          type: type === "image/webp" && !webp ? "image/png" : type,
+        })
+      );
+    }
+  }
+  vi.stubGlobal("OffscreenCanvas", FakeCanvas);
   vi.stubGlobal(
     "createImageBitmap",
     vi.fn(() => Promise.resolve({ close, height: 3000, width: 4000 }))
