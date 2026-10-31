@@ -94,16 +94,6 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
           message: `Content head page for ${request.activeReleaseId} is inconsistent.`,
         })
     ),
-    Effect.map((decoded) => ({
-      ...decoded,
-      heads: Arr.map(decoded.heads, ({ publicPath, ...head }) => ({
-        ...head,
-        ...(publicPath === undefined
-          ? {}
-          : {
-              publicPath,
-            }),
-      })),
-    }))
+    Effect.map((decoded) => ({ ...decoded, heads: [...decoded.heads] }))
   );
 });

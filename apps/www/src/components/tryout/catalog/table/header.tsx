@@ -37,7 +37,7 @@ const headings = {
     asc: "set-sort-name-ascending",
     desc: "set-sort-name-descending",
   },
-  readyQuestionCount: {
+  questionCount: {
     label: "set-column-questions",
     asc: "set-sort-questions-ascending",
     desc: "set-sort-questions-descending",
@@ -61,7 +61,7 @@ export function TryoutTableHeader() {
       <TableRow>
         <TryoutSortHeading field="title" />
         <TryoutStatusHeading />
-        <TryoutSortHeading field="readyQuestionCount" />
+        <TryoutSortHeading field="questionCount" />
         <TryoutSortHeading field="durationSeconds" />
         <TryoutSortHeading field="publishedScore" />
       </TableRow>

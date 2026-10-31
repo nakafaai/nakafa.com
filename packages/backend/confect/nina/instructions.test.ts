@@ -258,15 +258,15 @@ describe("Nina instructions", () => {
     expect(await instructionsFor(f)).toHaveProperty("memories", null);
   });
 
-  it("reads a focused question from its signed body and official explanation", async () => {
+  it("reads a focused question and its official explanation", async () => {
     const f = await createFocusTest();
     await f.focusTurn();
     const result = await instructionsFor(f);
     expect(result).toMatchObject({ summary: null });
     for (const expected of [
       "# Focused Try-out Question",
-      "Technical question",
-      "Technical answer",
+      "Soal section-a-item-1",
+      "Pembahasan section-a-item-1",
       "# Focused Question Instructions",
     ]) {
       expect(result).toHaveProperty(

@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Cause, Clock, Effect, Option } from "effect";
 import { settleSent } from "@/components/player/keep";
@@ -13,7 +14,6 @@ import {
 import {
   applyOptimisticTryoutResponse,
   nextTryoutResponseVersion,
-  type TryoutResponseSelection,
   tryoutSubmitFailureOf,
 } from "@/components/tryout/runtime/response/state";
 import type {
@@ -132,17 +132,14 @@ function reportStorageFailure(error: unknown) {
 export function useTryoutResponseSubmit() {
   const send = useSendPick();
 
-  return (
-    question: TryoutRuntimeQuestion,
-    selection: TryoutResponseSelection | null
-  ) => {
+  return (question: TryoutRuntimeQuestion, response: ExamResponse | null) => {
     const answeredAt = Effect.runSync(Clock.currentTimeMillis);
     const version = nextTryoutResponseVersion(question);
     Effect.runSync(
       keptPicks
         .keep(question.placementId, {
           answeredAt,
-          response: selection,
+          response,
           version,
         })
         .pipe(
@@ -151,10 +148,7 @@ export function useTryoutResponseSubmit() {
         )
     );
     Effect.runFork(
-      send(
-        { placementId: question.placementId, selection, version },
-        answeredAt
-      )
+      send({ placementId: question.placementId, response, version }, answeredAt)
     );
   };
 }

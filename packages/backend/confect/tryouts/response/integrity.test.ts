@@ -1,218 +1,180 @@
-import { describe, expect, it } from "@effect/vitest";
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { Id } from "@repo/backend/confect/_generated/id";
-import type { Outcome, Selection } from "@repo/backend/confect/response/model";
+import { assert, describe, expect, it } from "@effect/vitest";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   indexTryoutResponses,
-  validateTryoutSectionSnapshots,
+  validateTryoutResponsePlacementInventory,
+  validateTryoutSections,
 } from "@repo/backend/confect/tryouts/response/integrity";
-import { tryoutSectionSnapshot } from "@repo/backend/test/tryout/runtime";
-import { makeSignedTryoutSection } from "@repo/backend/test/tryout/section";
-import { makeTryoutSection } from "@repo/backend/test/tryouts";
-import { Array as Arr, Effect, Schema } from "effect";
+import { seedTryoutGate } from "@repo/backend/test/tryout/gate";
+import { Effect } from "effect";
 
-const attemptId = Schema.decodeUnknownSync(Id("tryoutAttempts"))("attempt");
-const placementId = Schema.decodeUnknownSync(Id("tryoutAttemptPlacements"))(
-  "placement"
-);
-const sectionAttemptId = Schema.decodeUnknownSync(Id("tryoutSectionAttempts"))(
-  "section"
-);
-const label = { de: "Teil", en: "Part", id: "Bagian" };
-const level = (order: number, points: number) => ({
-  label,
-  levelKey: `level-${order}`,
-  order,
-  points,
-});
-
-function placement(
-  responseSpec: Docs["tryoutAttemptPlacements"]["responseSpec"]
-): Docs["tryoutAttemptPlacements"] {
-  return {
-    _creationTime: 0,
-    _id: placementId,
-    answerArtifactHash: "answer",
-    answerContentKey: "question-1/answer",
-    contentHash: "content",
-    placementIdentity: "placement",
-    placementRowHash: "row",
-    questionArtifactHash: "question",
-    questionContentKey: "question-1/question",
-    questionOrder: 1,
-    rendererDomain: "snbt-math",
-    responseSpec,
-    sectionIdentity: "section",
-    sectionKey: "section",
-    sourcePath: "question-1",
-    sourceRevision: "2026",
-    tryoutAttemptId: attemptId,
-  };
-}
-
-function response(
-  selection: Selection,
-  outcome: Outcome,
-  isComplete = true
-): Docs["tryoutResponses"] {
-  return {
-    _creationTime: 0,
-    _id: Schema.decodeUnknownSync(Id("tryoutResponses"))("response"),
-    answeredAt: 0,
-    isComplete,
-    isCorrect: outcome.status === "correct",
-    outcome,
-    placementId,
-    selection,
-    timeSpent: 0,
-    tryoutAttemptId: attemptId,
-    tryoutSectionAttemptId: sectionAttemptId,
-    updatedAt: 0,
-  };
-}
-
-const capital = placement({
-  key: {
-    acceptedAnswers: ["Jakarta"],
-    collapseWhitespace: true,
-    ignoreCase: true,
-    kind: "text",
-  },
-  kind: "short-answer",
-  language: DeliveryLanguageSchema.make("id"),
-});
-const results = placement({
-  criteria: Arr.map([1, 2], (order) => ({
-    criterionKey: `criterion-${order}`,
-    finalAnswer: {
-      acceptsFractions: false,
-      kind: "number" as const,
-      value: `${order}`,
-    },
-    label,
-    levels: [level(1, 0), level(2, 2)],
-    order,
-  })),
-  kind: "rubric",
-  language: DeliveryLanguageSchema.make("id"),
-});
-const halfRight: Selection = {
-  finalAnswers: [
-    { criterionKey: "criterion-1", text: "1" },
-    { criterionKey: "criterion-2", text: "3" },
-  ],
-  kind: "rubric",
-  text: "",
-};
-
-/** Indexes one stored response against its placement, or returns the failure code. */
-function index(
-  frozen: Docs["tryoutAttemptPlacements"],
-  stored: Docs["tryoutResponses"]
-) {
-  return indexTryoutResponses({
-    attemptId,
-    links: [{ placement: frozen, sectionAttemptId }],
-    responses: [stored],
-  }).pipe(
-    Effect.match({
-      onFailure: (error) => error.code,
-      onSuccess: (indexed) => indexed.length,
-    })
+/** The seeded attempt with its frozen places, in section and question order. */
+const seedInventory = Effect.gen(function* () {
+  const world = yield* seedTryoutGate;
+  const rows = yield* world.run(
+    Effect.gen(function* () {
+      const database = yield* DatabaseReader;
+      return {
+        attempt: yield* database.table("tryoutAttempts").get(world.attemptId),
+        placements: yield* database
+          .table("tryoutAttemptPlacements")
+          .index(
+            "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
+            (query) => query.eq("tryoutAttemptId", world.attemptId)
+          )
+          .collect(),
+      };
+    }).pipe(Effect.orDie)
   );
-}
+  return { attempt: rows.attempt, placements: rows.placements, world };
+});
 
-/** One signed section snapshot as the response integrity check reads it. */
-type SectionSnapshot = ReturnType<typeof tryoutSectionSnapshot>;
-
-/** Builds the two signed section snapshots that the duplicate table varies. */
-const sectionSnapshots = Effect.fn("test.tryouts.response.sectionSnapshots")(
-  function* () {
-    const first = yield* makeSignedTryoutSection(
-      makeTryoutSection({ sectionKey: "first-section" })
-    );
-    const second = yield* makeSignedTryoutSection(
-      makeTryoutSection({ order: 2, sectionKey: "second-section" })
-    );
-    return {
-      firstSnapshot: tryoutSectionSnapshot({ signed: first.signed }),
-      secondSnapshot: tryoutSectionSnapshot({ signed: second.signed }),
-    };
-  }
-);
+/** The code an integrity check fails with. */
+const codeOf = <A, E extends { readonly code: string }>(
+  check: Effect.Effect<A, E>
+) =>
+  check.pipe(
+    Effect.flip,
+    Effect.map(({ code }) => code)
+  );
 
 describe("tryouts/response/integrity", () => {
-  it.live.each([
-    {
-      kind: "identity",
-      vary: (first: SectionSnapshot, second: SectionSnapshot) => ({
-        ...second,
-        sectionIdentity: first.sectionIdentity,
-      }),
-    },
-    {
-      kind: "key",
-      vary: (first: SectionSnapshot, second: SectionSnapshot) => ({
-        ...second,
-        sectionKey: first.sectionKey,
-      }),
-    },
-    {
-      kind: "order",
-      vary: (first: SectionSnapshot, second: SectionSnapshot) => ({
-        ...second,
-        sectionOrder: first.sectionOrder,
-      }),
-    },
-  ])("rejects duplicate snapshot $kind", ({ vary }) =>
-    Effect.gen(function* () {
-      const { firstSnapshot, secondSnapshot } = yield* sectionSnapshots();
-      const error = yield* Effect.flip(
-        validateTryoutSectionSnapshots([
-          firstSnapshot,
-          vary(firstSnapshot, secondSnapshot),
-        ])
-      );
-
-      expect(error).toMatchObject({
-        _tag: "TryoutResponseIntegrityError",
-        code: "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
-      });
-    })
-  );
-
   it.effect(
-    "defers a pending evaluation to the stored decision of the grader",
+    "refuses frozen sections without questions or with a repeated key or order",
     () =>
       Effect.gen(function* () {
-        const unmatched: Selection = { kind: "short-answer", text: "Bandung" };
-
+        const { attempt } = yield* seedInventory;
+        const [first, second] = attempt.sections;
+        assert.ok(first && second);
+        expect(yield* validateTryoutSections(attempt.sections)).toBeDefined();
         expect(
-          yield* index(capital, response(unmatched, { status: "pending" }))
-        ).toBe(1);
+          yield* codeOf(
+            validateTryoutSections([{ ...first, questionCount: 0 }])
+          )
+        ).toBe("TRYOUT_PLACEMENT_COUNT_MISMATCH");
         expect(
-          yield* index(capital, response(unmatched, { status: "correct" }))
-        ).toBe(1);
+          yield* codeOf(
+            validateTryoutSections([
+              first,
+              { ...second, sectionKey: first.sectionKey },
+            ])
+          )
+        ).toBe("TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH");
+        expect(
+          yield* codeOf(
+            validateTryoutSections([
+              first,
+              { ...second, sectionOrder: first.sectionOrder },
+            ])
+          )
+        ).toBe("TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH");
       })
   );
 
-  it.effect("requires a stored partial outcome to earn the same points", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* index(
-          results,
-          response(halfRight, { points: 2, status: "partial" })
-        )
-      ).toBe(1);
-      for (const outcome of [
-        { points: 1, status: "partial" },
-        { status: "correct" },
-      ] satisfies Outcome[]) {
-        expect(yield* index(results, response(halfRight, outcome))).toBe(
-          "TRYOUT_RESPONSE_SELECTION_MISMATCH"
+  it.effect(
+    "accepts one place per question of each section and refuses a wrong count, a foreign place, a slot outside its section, and a repeated slot or family",
+    () =>
+      Effect.gen(function* () {
+        const { attempt, placements, world } = yield* seedInventory;
+        const [first, second, third] = placements;
+        assert.ok(first && second && third);
+        const check = (
+          changed: typeof placements,
+          expectedQuestionCount = attempt.totalQuestions
+        ) =>
+          validateTryoutResponsePlacementInventory({
+            attemptId: attempt._id,
+            expectedQuestionCount,
+            placements: changed,
+            sections: attempt.sections,
+          });
+        expect(yield* check(placements)).toEqual(placements);
+        expect(yield* codeOf(check(placements, 0))).toBe(
+          "TRYOUT_PLACEMENT_COUNT_MISMATCH"
         );
-      }
-    })
+        expect(yield* codeOf(check([first, second]))).toBe(
+          "TRYOUT_PLACEMENT_COUNT_MISMATCH"
+        );
+        expect(
+          yield* codeOf(
+            check([first, second, { ...third, sectionKey: "section-z" }])
+          )
+        ).toBe("TRYOUT_RESPONSE_LINK_MISMATCH");
+        expect(
+          yield* codeOf(
+            check([
+              first,
+              second,
+              { ...third, tryoutAttemptId: world.missingAttemptId },
+            ])
+          )
+        ).toBe("TRYOUT_RESPONSE_LINK_MISMATCH");
+        expect(
+          yield* codeOf(check([first, second, { ...third, questionOrder: 2 }]))
+        ).toBe("TRYOUT_PLACEMENT_COUNT_MISMATCH");
+        expect(
+          yield* codeOf(check([first, { ...second, questionOrder: 1 }, third]))
+        ).toBe("TRYOUT_PLACEMENT_DUPLICATE");
+        expect(
+          yield* codeOf(
+            check([first, { ...second, family: first.family }, third])
+          )
+        ).toBe("TRYOUT_PLACEMENT_DUPLICATE");
+      })
+  );
+
+  it.effect(
+    "defers a grade waiting for a grader to the stored decision, and refuses a stored answer of another place",
+    () =>
+      Effect.gen(function* () {
+        const { attempt, placements, world } = yield* seedInventory;
+        yield* world.answer("learner", "running", "pending", 1);
+        const rows = yield* world.run(
+          Effect.gen(function* () {
+            const database = yield* DatabaseReader;
+            return {
+              placement: yield* database
+                .table("tryoutAttemptPlacements")
+                .get(world.placementId),
+              responses: yield* database
+                .table("tryoutResponses")
+                .index("by_placementId", (query) =>
+                  query.eq("placementId", world.placementId)
+                )
+                .collect(),
+            };
+          }).pipe(Effect.orDie)
+        );
+        const [response] = rows.responses;
+        assert.ok(response);
+        const decided = {
+          ...response,
+          grade: { category: 1, ceiling: 1, status: "scored" as const },
+        };
+        const links = [
+          {
+            placement: rows.placement,
+            sectionAttemptId: world.sectionAttemptId,
+          },
+        ];
+        expect(
+          yield* indexTryoutResponses({
+            attemptId: attempt._id,
+            links,
+            responses: [decided],
+          })
+        ).toEqual([decided]);
+        const [, other] = placements;
+        assert.ok(other);
+        expect(
+          yield* codeOf(
+            indexTryoutResponses({
+              attemptId: attempt._id,
+              links,
+              responses: [{ ...decided, placementId: other._id }],
+            })
+          )
+        ).toBe("TRYOUT_RESPONSE_LINK_MISMATCH");
+      })
   );
 });

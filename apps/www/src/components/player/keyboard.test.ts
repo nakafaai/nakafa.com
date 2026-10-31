@@ -1,10 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
-import {
-  pickOption,
-  readKeyTarget,
-  readPlayerKey,
-} from "@/components/player/keyboard";
+import { readKeyTarget, readPlayerKey } from "@/components/player/keyboard";
 
 type KeyEvent = Parameters<typeof readPlayerKey>[0];
 type KeyContext = Parameters<typeof readPlayerKey>[1];
@@ -146,30 +142,5 @@ describe("readKeyTarget", () => {
       editable: false,
     });
     expect(readKeyTarget(null)).toEqual({ composite: false, editable: false });
-  });
-});
-
-describe("pickOption", () => {
-  const options = [
-    { label: "First", optionKey: "first", order: 1 },
-    { label: "Second", optionKey: "second", order: 2 },
-  ];
-
-  it("selects the option at the position of the digit", () => {
-    expect(pickOption({ kind: "single-choice", options }, 1)).toEqual(
-      Option.some({ kind: "single-choice", optionKey: "second" })
-    );
-  });
-
-  it("selects nothing when the question has fewer options", () => {
-    expect(pickOption({ kind: "single-choice", options }, 2)).toEqual(
-      Option.none()
-    );
-  });
-
-  it("selects nothing in a question that is not single choice", () => {
-    expect(pickOption({ kind: "multiple-choice", options }, 0)).toEqual(
-      Option.none()
-    );
   });
 });

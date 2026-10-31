@@ -1,3 +1,4 @@
+import { ScoringStrategySchema } from "@nakafa/aksara-contracts/assessment/scoring";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import {
@@ -8,9 +9,10 @@ import {
   type EndReason,
   statusOf,
 } from "@repo/backend/confect/assessment/gate/end";
+import { isAnswered } from "@repo/backend/confect/assessment/response";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
-import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
+import { isCorrectGrade } from "@repo/backend/confect/tryouts/response/answer";
 import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
@@ -28,34 +30,30 @@ import {
   readScoredAnswers,
   scoreAnswers,
 } from "@repo/backend/confect/tryouts/runtime/result";
-import { tryoutScoringStrategyValidator } from "@repo/backend/confect/tryouts/score";
 import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
-/** Keeps every stored strategy that counts answers; IRT scores through calibrated items. */
-type AnswerCountScoringStrategy = Exclude<
-  typeof tryoutScoringStrategyValidator.Type,
-  "irt"
->;
-const AnswerCountScoringStrategySchema = Schema.Literals(
-  Arr.filter(
-    tryoutScoringStrategyValidator.literals,
-    (strategy): strategy is AnswerCountScoringStrategy => strategy !== "irt"
-  )
-);
+/** The profile's strategies by kind. */
+const Strategies = ScoringStrategySchema.pipe(Schema.toTaggedUnion("kind"));
+
+/** Every strategy that scores from the answers themselves; IRT scores through calibrated items. */
+const AnswerCountScoringSchema = Schema.Union([
+  Strategies.cases.raw,
+  Strategies.cases.penalized,
+  Strategies.cases.composite,
+]);
 const AnswerCountScoreSourceSchema = Schema.Struct({
   attemptId: Id("tryoutAttempts"),
   kind: Schema.Literal("answer-count"),
-  scoringStrategy: AnswerCountScoringStrategySchema,
+  scoring: AnswerCountScoringSchema,
 });
 type AnswerCountScoreSource = typeof AnswerCountScoreSourceSchema.Type;
 const IrtScoreSourceSchema = Schema.Struct({
   attemptId: Id("tryoutAttempts"),
   irt: TryoutIrtSourceSchema,
   kind: Schema.Literal("irt"),
-  scoringStrategy: Schema.Literal("irt"),
 });
 type IrtScoreSource = typeof IrtScoreSourceSchema.Type;
 const TryoutScoreSourceSchema = Schema.Union([
@@ -66,24 +64,15 @@ export type TryoutScoreSource = typeof TryoutScoreSourceSchema.Type;
 /** Score ownership fields copied from the immutable attempt. */
 type AttemptScoreOwner = Pick<
   TryoutAttempt,
-  "setIdentity" | "tryoutSnapshotId"
+  "assessmentSnapshotId" | "setIdentity"
 >;
-
-/** Hides persistence diagnostics from the attempt ownership boundary. */
-function toAttemptReadError(cause: unknown) {
-  return new TryoutRuntimeError({
-    cause,
-    code: "TRYOUT_RUNTIME_FAILED",
-    message: "Unable to load try-out attempt.",
-  });
-}
 
 /** Loads one complete source reused by terminal section and attempt scoring. */
 export const loadAttemptScoreSource = Effect.fn(
   "tryouts.runtime.loadAttemptScoreSource"
 )(function* (attempt: TryoutAttempt, placements: readonly TryoutPlacement[]) {
-  if (attempt.scoringStrategy !== "irt") {
-    return answerCountScoreSource(attempt, attempt.scoringStrategy);
+  if (attempt.scoring.kind !== "irt") {
+    return answerCountScoreSource(attempt, attempt.scoring);
   }
   const irt = yield* loadAttemptIrtSource(attempt, placements);
   return irtScoreSource(attempt, irt);
@@ -95,10 +84,10 @@ export const loadSectionScoreSource = Effect.fn(
 )(function* (args: {
   readonly attempt: TryoutAttempt;
   readonly placements: readonly TryoutPlacement[];
-  readonly sectionIdentity: string;
+  readonly sectionKey: string;
 }) {
-  if (args.attempt.scoringStrategy !== "irt") {
-    return answerCountScoreSource(args.attempt, args.attempt.scoringStrategy);
+  if (args.attempt.scoring.kind !== "irt") {
+    return answerCountScoreSource(args.attempt, args.attempt.scoring);
   }
   const irt = yield* loadSectionIrtSource(args);
   return irtScoreSource(args.attempt, irt);
@@ -111,14 +100,14 @@ export const requireOwnedAttempt = Effect.fn(
   attemptId: TryoutAttempt["_id"];
   userId: TryoutAttempt["userId"];
 }) {
-  const database = yield* DatabaseReader;
-  const attempt = yield* database
+  const attempt = yield* (yield* DatabaseReader)
     .table("tryoutAttempts")
     .get(args.attemptId)
     .pipe(
-      Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-      Effect.mapError(toAttemptReadError),
-      Effect.catchDefect((cause) => Effect.fail(toAttemptReadError(cause)))
+      Effect.catchTags({
+        DocumentDecodeError: Effect.die,
+        GetByIdFailure: () => Effect.succeed(null),
+      })
     );
   if (!attempt || attempt.userId !== args.userId) {
     return yield* new TryoutAttemptStateError({
@@ -129,26 +118,16 @@ export const requireOwnedAttempt = Effect.fn(
   return attempt;
 });
 
-/** Counts complete answers and correct outcomes for a section or attempt. */
+/** Counts answered questions and correct grades for a section or attempt. */
 export function summarizeResponses(responses: readonly TryoutResponse[]) {
-  return Arr.reduce(
-    responses,
-    {
-      answeredCount: 0,
-      correctAnswers: 0,
-    },
-    (summary, response) => {
-      if (!response.isComplete) {
-        return summary;
-      }
-      return {
-        answeredCount: summary.answeredCount + 1,
-        correctAnswers:
-          summary.correctAnswers +
-          (readOutcome(response).status === "correct" ? 1 : 0),
-      };
-    }
-  );
+  return {
+    answeredCount: Arr.countBy(responses, ({ response }) =>
+      isAnswered(response)
+    ),
+    correctAnswers: Arr.countBy(responses, ({ grade }) =>
+      isCorrectGrade(grade)
+    ),
+  };
 }
 
 /** Scores the placements of one section or attempt with its frozen strategy. */
@@ -161,23 +140,19 @@ export const scoreTryoutSection = Effect.fn("tryouts.runtime.scoreSection")(
     totalQuestions: number;
   }) {
     yield* validateScoreSource(args.attempt, args.source);
-    const answers = readScoredAnswers(
-      args.attempt.sectionSnapshots,
-      args.placements,
-      args.responses
-    );
+    const answers = yield* readScoredAnswers(args.placements, args.responses);
     if (args.source.kind === "irt") {
       return yield* scoreIrt(answers, args.source.irt, args.totalQuestions);
     }
     return yield* scoreAnswers(
       answers,
-      args.source.scoringStrategy,
+      args.source.scoring,
       args.totalQuestions
     );
   }
 );
 
-/** Finalizes one attempt and stores the score snapshot exactly once. */
+/** Finalizes one active attempt and stores its score snapshot. */
 export const finalizeAttemptScore = Effect.fn(
   "tryouts.runtime.finalizeAttemptScore"
 )(function* (args: {
@@ -187,20 +162,8 @@ export const finalizeAttemptScore = Effect.fn(
   responseIndex: TryoutResponseIndex;
   source: TryoutScoreSource;
 }) {
-  const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
-  const existingScore = yield* database
-    .table("tryoutScores")
-    .get("by_tryoutAttemptId", args.attempt._id)
-    .pipe(
-      Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-      Effect.mapError(toTryoutRuntimeError)
-    );
-  if (existingScore) {
-    return {
-      scoreId: existingScore._id,
-    };
-  }
+  // The score and the attempt's terminal status are written together, so an active attempt has no score.
   if (args.attempt.status !== "in-progress") {
     return yield* new TryoutAttemptStateError({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
@@ -252,8 +215,8 @@ export const finalizeAttemptScore = Effect.fn(
 /** Reads score ownership from the immutable signed attempt. */
 function readAttemptScoreOwner(attempt: TryoutAttempt): AttemptScoreOwner {
   return {
+    assessmentSnapshotId: attempt.assessmentSnapshotId,
     setIdentity: attempt.setIdentity,
-    tryoutSnapshotId: attempt.tryoutSnapshotId,
   };
 }
 
@@ -284,16 +247,12 @@ function attemptScoreValues(args: {
   };
 }
 
-/** Creates one count-based score source without any database reads. */
+/** Creates one count-based score source from the attempt's frozen strategy, without any database reads. */
 function answerCountScoreSource(
   attempt: TryoutAttempt,
-  scoringStrategy: AnswerCountScoringStrategy
+  scoring: AnswerCountScoreSource["scoring"]
 ): AnswerCountScoreSource {
-  return {
-    attemptId: attempt._id,
-    kind: "answer-count",
-    scoringStrategy,
-  };
+  return { attemptId: attempt._id, kind: "answer-count", scoring };
 }
 
 /** Creates one IRT score source already bound to its immutable attempt. */
@@ -301,21 +260,14 @@ function irtScoreSource(
   attempt: TryoutAttempt,
   irt: TryoutIrtSource
 ): IrtScoreSource {
-  return {
-    attemptId: attempt._id,
-    irt,
-    kind: "irt",
-    scoringStrategy: "irt",
-  };
+  return { attemptId: attempt._id, irt, kind: "irt" };
 }
 
 /** Rejects a scoring source that was loaded for another attempt or strategy. */
 const validateScoreSource = Effect.fn("tryouts.runtime.validateScoreSource")(
   function* (attempt: TryoutAttempt, source: TryoutScoreSource) {
-    if (
-      source.attemptId !== attempt._id ||
-      source.scoringStrategy !== attempt.scoringStrategy
-    ) {
+    const kind = source.kind === "irt" ? "irt" : source.scoring.kind;
+    if (source.attemptId !== attempt._id || kind !== attempt.scoring.kind) {
       return yield* new TryoutRuntimeError({
         code: "TRYOUT_SCORE_SOURCE_MISMATCH",
         message: "Try-out score source does not match the frozen attempt.",

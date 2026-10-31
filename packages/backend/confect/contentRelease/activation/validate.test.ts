@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import {
-  inheritContentSnapshot,
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
@@ -41,12 +40,6 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { Effect, Option } from "effect";
-
-/** A candidate that keeps the try-out snapshot of its retired base, whose placements bind retired artifacts. */
-const KEPT_TRYOUT_SNAPSHOTS = {
-  ...inheritContentSnapshots(null),
-  tryout: inheritContentSnapshot(TEST_DIGEST),
-};
 
 /** A snapshot-only candidate that rebuilds the program snapshot and upserts no heads. */
 const REPLACED_PROGRAM_SNAPSHOTS = {
@@ -254,11 +247,6 @@ describe("activation bootstrap validation", () => {
         recovery: true,
         snapshots: REPLACED_PROGRAM_SNAPSHOTS,
       },
-    },
-    {
-      message: "no longer meets the bootstrap contract",
-      name: "a stored bootstrap that keeps the base try-out snapshot",
-      options: { bootstrap: true, snapshots: KEPT_TRYOUT_SNAPSHOTS },
     },
   ])("refuses $name", ({ message, options }) =>
     Effect.gen(function* () {

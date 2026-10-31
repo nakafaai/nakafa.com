@@ -1,180 +1,104 @@
-import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
-import { describe, expect, it } from "@effect/vitest";
-import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
-import confectSchema from "@repo/backend/confect/_generated/schema";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
-import { loadTryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
-import type { StartAttemptArgs } from "@repo/backend/confect/tryouts/start/spec";
-import { api } from "@repo/backend/convex/_generated/api";
-import { testSignedRelease } from "@repo/backend/test/content/proof";
-import {
-  activateRenamedTryoutStartSource,
-  activateTryoutStartSource,
-  TRYOUT_START_COUNTRY as COUNTRY,
-  TRYOUT_START_EXAM as EXAM,
-  TRYOUT_START_NOW as NOW,
-  TRYOUT_START_SET as SET,
-  TRYOUT_START_TRACK as TRACK,
-} from "@repo/backend/test/tryout/source";
-import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, Schema } from "effect";
+import { assert, describe, expect, it } from "@effect/vitest";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { catalogNodeIdentity } from "@repo/backend/confect/tryouts/catalog/rows";
+import { makeAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
+import { Array as Arr, Effect, Option } from "effect";
 
-const startArgs: StartAttemptArgs = {
-  countryKey: COUNTRY,
-  examKey: EXAM,
-  locale: "id",
-  setKey: SET,
-  trackKey: TRACK,
-};
-const REUSED_RELEASE_ID = ReleaseIdSchema.make("release-tryout-reused");
-const SignedReleaseJsonSchema = Schema.fromJsonString(
-  SignedContentReleaseSchema
-);
+/** The stored text a row of another fixture snapshot holds, for a row of `kind` and `identity`. */
+const otherRowText = (
+  options: Parameters<typeof makeAssessmentTestSnapshot>[0],
+  match: (text: string) => boolean
+) =>
+  Effect.map(makeAssessmentTestSnapshot(options), ({ rows }) => {
+    const found = Arr.findFirst(
+      Arr.map(rows, canonicalizeContentSnapshotRow),
+      match
+    );
+    assert.ok(Option.isSome(found), "Expected the row in the other fixture.");
+    return found.value;
+  });
+
 describe("tryouts/start/source", () => {
   it.effect(
-    "starts from signed rows after filesystem ownership is removed",
+    "refuses a set whose paper or profile the snapshot holds by another hash",
     () =>
       Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        vi.setSystemTime(NOW);
-        const t = createConvexTestWithBetterAuth();
-        yield* Effect.promise(() =>
-          t.mutation((ctx) => activateTryoutStartSource(ctx, "visible", "raw"))
-        );
-        const source = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            Effect.runPromiseWith(runtimeServices)(
-              loadTryoutStartSource(startArgs).pipe(
-                Effect.provide(
-                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
-                )
-              )
-            )
+        const paperWorld = yield* tryoutWorld({ sets: 2 });
+        yield* paperWorld.replaceRow(
+          "paper",
+          "test-paper-set-1",
+          yield* otherRowText(
+            { sets: 2 },
+            (text) =>
+              text.includes('"kind":"paper"') &&
+              text.includes('"id":"test-paper-set-2"')
           )
         );
-        expect(source).toMatchObject({
-          snapshot: {
-            setIdentity: expect.any(String),
-            snapshotId: expect.any(String),
-          },
+        expect(yield* paperWorld.start().pipe(Effect.flip)).toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("names paper test-paper-set-1"),
+        });
+        const profileWorld = yield* tryoutWorld();
+        yield* profileWorld.replaceRow(
+          "profile",
+          "test-profile",
+          yield* otherRowText(
+            {
+              scoring: {
+                kind: "penalized",
+                marks: { blank: 0, correct: 4, wrong: -1 },
+              },
+            },
+            (text) => text.includes('"kind":"profile"')
+          )
+        );
+        expect(yield* profileWorld.start().pipe(Effect.flip)).toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("names profile test-profile"),
         });
       })
   );
-  it.effect("pins the later release that selects a reused runtime", () =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      vi.setSystemTime(NOW);
-      const t = createConvexTestWithBetterAuth();
-      const seeded = yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const user = await seedAuthenticatedUser(ctx, {
-            now: NOW,
-            suffix: "tryout-reused-runtime",
-          });
-          await activateTryoutStartSource(ctx, "visible", "raw");
-          const [release, state] = await Promise.all([
-            ctx.db.query("contentReleases").unique(),
-            ctx.db.query("contentState").unique(),
-          ]);
-          if (!(release && state)) {
-            throw new Error("Expected one active try-out release fixture.");
-          }
-          const source = Schema.decodeSync(SignedReleaseJsonSchema)(
-            release.releaseJson
-          );
-          return {
-            releaseDocId: release._id,
-            source,
-            sourceReleaseId: source.manifest.releaseId,
-            stateDocId: state._id,
-            user,
-          };
-        })
-      );
-      const reused = yield* testSignedRelease({
-        ...seeded.source.manifest,
-        releaseId: REUSED_RELEASE_ID,
-      });
-      yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          await ctx.db.patch("contentReleases", seeded.releaseDocId, {
-            releaseId: REUSED_RELEASE_ID,
-            releaseJson: encodeJsonText(reused),
-          });
-          await ctx.db.patch("contentState", seeded.stateDocId, {
-            activeManifestHash: reused.manifestHash,
-            activeReleaseId: REUSED_RELEASE_ID,
-          });
-        })
-      );
-      const source = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            loadTryoutStartSource(startArgs).pipe(
-              Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
-            )
-          )
-        )
-      );
-      expect(source).toMatchObject({
-        bundle: {
-          sourceReleaseId: seeded.sourceReleaseId,
-        },
-        releaseId: REUSED_RELEASE_ID,
-      });
-      const authed = t.withIdentity({
-        sessionId: seeded.user.sessionId,
-        subject: seeded.user.authUserId,
-      });
-      const started = yield* Effect.promise(() =>
-        authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
-      );
-      const attempt = yield* Effect.promise(() =>
-        t.query((ctx) => ctx.db.get("tryoutAttempts", started.attemptId))
-      );
-      expect(attempt).toMatchObject({
-        snapshotReleaseId: REUSED_RELEASE_ID,
-      });
-    })
-  );
-  it.effect("resumes one logical set after its public path changes", () =>
-    Effect.gen(function* () {
-      vi.setSystemTime(NOW);
-      const t = createConvexTestWithBetterAuth();
-      const seeded = yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const user = await seedAuthenticatedUser(ctx, {
-            now: NOW,
-            suffix: "tryout-renamed-set",
-          });
-          await activateTryoutStartSource(ctx, "visible", "raw");
-          return user;
-        })
-      );
-      const authed = t.withIdentity({
-        sessionId: seeded.sessionId,
-        subject: seeded.authUserId,
-      });
-      const started = yield* Effect.promise(() =>
-        authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
-      );
-      yield* Effect.promise(() => t.mutation(activateRenamedTryoutStartSource));
-      yield* Effect.promise(() =>
+
+  it.effect(
+    "refuses a snapshot that lost a row or cannot be frozen, and keeps no attempt",
+    () =>
+      Effect.gen(function* () {
+        const missing = yield* tryoutWorld();
+        yield* missing.replaceRow("paper", "test-paper-set-1", "");
+        expect(yield* missing.start().pipe(Effect.flip)).toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("holds no paper row"),
+        });
+        const broken = yield* tryoutWorld();
+        yield* broken.replaceRow("paper", "test-paper-set-1", "{}");
+        expect(yield* broken.start().pipe(Effect.flip)).toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("not an assessment paper row"),
+        });
+        const unplaced = yield* tryoutWorld();
+        yield* unplaced.replaceRow(
+          "catalog",
+          catalogNodeIdentity({
+            appLocale: "id",
+            countryKey: "indonesia",
+            examKey: "snbt",
+            kind: "section",
+            sectionKey: "section-b",
+            setKey: "set-1",
+            trackKey: "2027",
+          }),
+          ""
+        );
+        expect(yield* unplaced.start().pipe(Effect.flip)).toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("Section section-b"),
+        });
         expect(
-          authed.query(api.tryouts.queries.runtime.getSetAttemptState, {
-            locale: "id",
-            attemptId: started.attemptId,
-          })
-        ).resolves.toMatchObject({
-          attempt: {
-            attemptId: started.attemptId,
-          },
-        })
-      );
-    })
+          yield* Effect.promise(() =>
+            unplaced.t.query((ctx) => ctx.db.query("tryoutAttempts").collect())
+          )
+        ).toEqual([]);
+      })
   );
 });

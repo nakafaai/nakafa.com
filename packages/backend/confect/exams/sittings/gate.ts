@@ -17,6 +17,7 @@ import tenantPeople from "@repo/backend/confect/_generated/tables/tenantPeople";
 import { make } from "@repo/backend/confect/assessment/gate/admit";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import type { Candidate } from "@repo/backend/confect/assessment/gate/store";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { recordResults } from "@repo/backend/confect/exams/results/record";
 import type { SittingWithExam } from "@repo/backend/confect/exams/sittings/access";
 import { attemptOf } from "@repo/backend/confect/exams/sittings/attempt";
@@ -31,7 +32,6 @@ import {
   SittingLocked,
 } from "@repo/backend/confect/exams/sittings/errors";
 import { heldOf, readSitting } from "@repo/backend/confect/exams/sittings/held";
-import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { cancelPending } from "@repo/backend/confect/exams/sittings/timers";
 import type { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";

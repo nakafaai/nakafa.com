@@ -1750,7 +1750,9 @@
     "incorrect": "Incorrect",
     "reset": "Reset",
     "explanation": "Explanation",
-    "number-count": "Number {count}"
+    "number-count": "Number {count}",
+    "prompt": "Question",
+    "reading": "Reading"
   },
   "Player": {
     "navigator": "Questions",

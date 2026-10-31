@@ -5,7 +5,6 @@ import { loadAttemptSections } from "@repo/backend/confect/tryouts/runtime/attem
 import { loadAttemptState } from "@repo/backend/confect/tryouts/runtime/attempt/state";
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { loadSectionState } from "@repo/backend/confect/tryouts/runtime/section/questions";
-import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect, Option } from "effect";
 
@@ -14,17 +13,14 @@ export const loadSetAttemptState = Effect.fn(
   "tryouts.runtime.loadSetAttemptState"
 )(function* (attempt: Docs["tryoutAttempts"], appLocale: AppLocaleCode) {
   const sections = yield* loadAttemptSections(attempt);
-  const entrySnapshot = Option.getOrUndefined(
-    Arr.findFirst(
-      attempt.sectionSnapshots,
-      (snapshot) => snapshot.publicPath === undefined
-    )
+  const entryFrozen = Option.getOrUndefined(
+    Arr.findFirst(attempt.sections, (frozen) => frozen.publicPath === undefined)
   );
-  const entrySection = entrySnapshot
+  const entrySection = entryFrozen
     ? Option.getOrUndefined(
         Arr.findFirst(
           sections,
-          (section) => section.sectionKey === entrySnapshot.sectionKey
+          (section) => section.sectionKey === entryFrozen.sectionKey
         )
       )
     : undefined;
@@ -37,10 +33,7 @@ export const loadSetAttemptState = Effect.fn(
       }),
       entry: entrySection
         ? loadSectionState(attempt, entrySection, appLocale)
-        : Effect.succeed({
-            content: noTryoutSectionContentAccess,
-            runtime: null,
-          }),
+        : Effect.succeed({ content: [], runtime: null }),
     },
     {
       concurrency: "unbounded",

@@ -1,49 +1,25 @@
-import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
-
-const layerMock = vi.hoisted(() => vi.fn());
-
-import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import {
-  CONTENT_RUNTIME_RESPONSE_HEADER,
-  CONTENT_RUNTIME_RESPONSE_MARKER,
-  PROTECTED_CONTENT_RUNTIME_PATH,
-} from "@repo/backend/content/endpoint";
-import { decodeProtectedRuntimeRow } from "@repo/backend/content/tryout/exchange";
-import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
-import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 // @vitest-environment node
 
-import {
-  afterEach,
-  assert,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@effect/vitest";
+import { HttpClient } from "@confect/js";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   APP_LOCALE_CODES,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import {
-  createTestPublication,
-  makeRuntimeSource,
-} from "@repo/backend/test/content/publication";
-import { makeLandingSource } from "@repo/backend/test/tryout/landing";
-import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
-import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
-import { renderToStaticMarkup } from "react-dom/server";
+import refs from "@repo/backend/confect/_generated/refs";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { FIXTURE_REVISION } from "@repo/backend/test/assessment/snapshot";
+import { client } from "@repo/backend/test/client";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
+import { Array as Arr, Effect, Layer, Option } from "effect";
 import {
   readFeaturedTryout,
   readTryoutCountryPage,
   readTryoutExamPage,
   readTryoutHubPage,
   readTryoutMetadata,
+  readTryoutSectionAttemptPage,
   readTryoutSectionPage,
-  readTryoutSectionWithBodies,
   readTryoutSetAttemptPage,
   readTryoutSetList,
   readTryoutSetPage,
@@ -51,8 +27,8 @@ import {
 } from "@/components/tryout/catalog/source.server";
 import { resetTestRuntimeCache } from "@/test/store";
 
+const layerMock = vi.hoisted(() => vi.fn());
 const fetchQueryMock = vi.hoisted(() => vi.fn());
-const transportMock = vi.hoisted(() => vi.fn<typeof fetch>());
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -78,9 +54,6 @@ vi.mock(
   "@/lib/content/store/memory",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
-vi.mock("@tanstack/react-start/rsc", () => ({
-  renderServerComponent: (node: unknown) => Promise.resolve(node),
-}));
 vi.mock("@/env.public", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
@@ -90,111 +63,40 @@ vi.mock("@/env", () => ({
     VITE_CONVEX_URL: "https://test.convex.cloud",
   },
 }));
-vi.mock("@repo/site/keys", () => ({
-  contentRuntimeKeys: () => ({
-    CONTENT_READ_TOKEN: "technical-test-token",
-  }),
-}));
-vi.mock("@repo/backend/content/trust", async () => {
-  const { TEST_KEY_RESOLVER } = await import(
-    "@repo/backend/test/content/proof"
-  );
-  return {
-    contentKeyResolver: TEST_KEY_RESOLVER,
-    trustedContentKeys: [],
-  };
-});
-vi.mock("@/lib/content/renderer/manifest", async () => {
-  const { TEST_PROOF_RENDERER } = await import(
-    "@repo/backend/test/content/proof"
-  );
-  const { Effect } = await import("effect");
-  return {
-    rendererManifest: Effect.succeed(TEST_PROOF_RENDERER),
-  };
-});
-const COUNTRY = "try-out/indonesia";
-const EXAM = `${COUNTRY}/tka`;
-const TRACK = `${EXAM}/matematika-wajib`;
-const SET = `${TRACK}/set-1`;
-const SECTION = `${SET}/matematika-wajib`;
+
+/** The routes of the fixture catalog in one app locale, as the fixture snapshot writes them. */
+const COUNTRY = (locale: string) => `try-out/indonesia-${locale}`;
+const EXAM = (locale: string) => `try-out/indonesia/snbt-${locale}`;
+const TRACK = (locale: string) => `try-out/indonesia/snbt/2027-${locale}`;
+const SET = (locale: string) => `try-out/indonesia/snbt/2027/set-1-${locale}`;
+const SECTION = (locale: string) => `${SET(locale)}/section-a`;
+
 beforeEach(() => {
   resetTestRuntimeCache();
   fetchQueryMock.mockReset();
-  transportMock.mockReset();
-  vi.stubGlobal("fetch", transportMock);
 });
-
-/**
- * Publishes the landing question and makes the runtime endpoint answer its
- * signed artifact. Each call gets a fresh response, because a body is read
- * once.
- */
-const serveFeaturedQuestion = Effect.fn("www.tryout.test.featured")(
-  function* () {
-    const fixture = yield* makeTryoutRuntimeSource(
-      undefined,
-      makeLandingSource()
-    );
-    const context = yield* createTestPublication(fixture.source);
-    fetchQueryMock.mockImplementation(context.query);
-    const selected = yield* context.query(
-      refs.public.tryouts.queries.catalog.getFeaturedQuestion,
-      {
-        appLocale: "id",
-      }
-    );
-    const request = yield* makeTryoutRuntimeRequest([selected.question]);
-    const row = yield* context.query(
-      refs.internal.contentRelease.runtime.tryout.internal.read,
-      request
-    );
-    const found = yield* decodeProtectedRuntimeRow(
-      row,
-      yield* decodeProtectedContentRuntimeRequest(request)
-    ).pipe(
-      Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
-    );
-    assert.isNotNull(found);
-    const body = yield* Schema.encodeEffect(JsonTextSchema)(found);
-    transportMock.mockImplementation(() => {
-      const response = new Response(body, {
-        headers: {
-          "content-type": "application/json",
-          [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
-        },
-      });
-      Object.defineProperty(response, "url", {
-        value: `https://runtime.example.test${PROTECTED_CONTENT_RUNTIME_PATH}`,
-      });
-      return Promise.resolve(response);
-    });
-  }
-);
 
 describe("immutable try-out application catalog", () => {
   it.effect(
     "reaches Convex once for each catalog page and its metadata in a release",
     () =>
       Effect.gen(function* () {
-        const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestPublication(fixture.source);
-        fetchQueryMock.mockImplementation(context.query);
-        const metadataArgs = {
-          appLocale: AppLocaleSchema.make("en"),
-          kind: "track",
-          publicPath: TRACK,
-        } as const;
+        const world = yield* tryoutWorld();
+        fetchQueryMock.mockImplementation(world.visitor.query);
         const readAll = () =>
           Effect.all(
             [
               readTryoutHubPage("en"),
-              readTryoutCountryPage("en", COUNTRY),
-              readTryoutExamPage("en", EXAM),
-              readTryoutTrackPage("en", TRACK),
-              readTryoutSetPage("en", SET),
-              readTryoutSectionPage("en", SECTION),
-              readTryoutMetadata(metadataArgs),
+              readTryoutCountryPage("en", COUNTRY("en")),
+              readTryoutExamPage("en", EXAM("en")),
+              readTryoutTrackPage("en", TRACK("en")),
+              readTryoutSetPage("en", SET("en")),
+              readTryoutSectionPage("en", SECTION("en")),
+              readTryoutMetadata({
+                appLocale: AppLocaleSchema.make("en"),
+                kind: "track",
+                publicPath: TRACK("en"),
+              }),
             ],
             { concurrency: "unbounded" }
           );
@@ -222,91 +124,54 @@ describe("immutable try-out application catalog", () => {
       })
   );
   it.effect.each(APP_LOCALE_CODES)(
-    "serves the complete signed %s hierarchy and route metadata",
+    "serves the complete %s hierarchy and route metadata",
     (locale) =>
       Effect.gen(function* () {
-        const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestPublication(fixture.source);
-        fetchQueryMock.mockImplementation(context.query);
+        const world = yield* tryoutWorld();
+        fetchQueryMock.mockImplementation(world.visitor.query);
         const pages = yield* Effect.all(
           [
             readTryoutHubPage(locale),
-            readTryoutCountryPage(locale, COUNTRY),
-            readTryoutExamPage(locale, EXAM),
-            readTryoutTrackPage(locale, TRACK),
-            readTryoutSetPage(locale, SET),
-            readTryoutSectionPage(locale, SECTION),
+            readTryoutCountryPage(locale, COUNTRY(locale)),
+            readTryoutExamPage(locale, EXAM(locale)),
+            readTryoutTrackPage(locale, TRACK(locale)),
+            readTryoutSetPage(locale, SET(locale)),
+            readTryoutSectionPage(locale, SECTION(locale)),
           ],
           { concurrency: "unbounded" }
         );
         expect(pages[0]).toMatchObject({
-          countries: [
-            {
-              title: "Indonesia",
-            },
-          ],
-          sourceRevision: "a".repeat(40),
+          countries: [{ publicPath: COUNTRY(locale) }],
+          sourceRevision: FIXTURE_REVISION,
         });
         expect(Option.getOrThrow(pages[1])).toMatchObject({
-          country: {
-            publicPath: COUNTRY,
-          },
-          exams: [
-            {
-              title: "TKA",
-            },
-          ],
+          country: { publicPath: COUNTRY(locale) },
+          exams: [{ publicPath: EXAM(locale) }],
         });
         expect(pages[2]).toMatchObject({
-          exam: {
-            publicPath: EXAM,
-          },
-          tracks: [
-            {
-              publicPath: TRACK,
-            },
-          ],
+          exam: { publicPath: EXAM(locale) },
+          tracks: [{ publicPath: TRACK(locale) }],
         });
         expect(pages[3]).toMatchObject({
-          track: {
-            publicPath: TRACK,
-          },
+          track: { publicPath: TRACK(locale) },
         });
         expect(pages[4]).toMatchObject({
-          set: {
-            publicPath: SET,
-          },
           sections: [
-            {
-              publicPath: SECTION,
-            },
+            { publicPath: SECTION(locale) },
+            { publicPath: `${SET(locale)}/section-b` },
           ],
+          set: { publicPath: SET(locale) },
         });
         expect(pages[5]).toMatchObject({
-          section: {
-            publicPath: SECTION,
-          },
-          set: {
-            publicPath: SET,
-          },
+          section: { publicPath: SECTION(locale) },
+          set: { publicPath: SET(locale) },
         });
         const metadata = yield* readTryoutMetadata({
           appLocale: AppLocaleSchema.make(locale),
           kind: "track",
-          publicPath: TRACK,
+          publicPath: TRACK(locale),
         });
-        expect(metadata.route).toMatchObject({
-          publicPath: TRACK,
-          title: {
-            en: "Compulsory Mathematics",
-            id: "Matematika Wajib",
-            de: "Pflichtmathematik",
-          }[locale],
-          alternates: Arr.map(APP_LOCALE_CODES, (appLocale) => ({
-            appLocale,
-            publicPath: TRACK,
-          })),
-        });
+        expect(metadata.route).toMatchObject({ publicPath: TRACK(locale) });
         expect(
           Option.isNone(yield* readTryoutCountryPage(locale, "try-out/missing"))
         ).toBe(true);
@@ -368,37 +233,31 @@ describe("immutable try-out application catalog", () => {
       })
   );
   it.effect(
-    "authenticates and renders the real featured question artifact",
+    "decodes the featured question's body with its interaction and key",
     () =>
       Effect.gen(function* () {
-        yield* serveFeaturedQuestion();
-        const featured = yield* readFeaturedTryout("id");
-        expect(renderToStaticMarkup(featured.question)).toBe(
-          "Technical question"
-        );
-        expect(featured.response).toMatchObject({
-          kind: "single-choice",
-          options: [
-            {
-              optionKey: "option-1",
-            },
-            {
-              optionKey: "option-2",
-            },
-          ],
+        const world = yield* tryoutWorld({
+          firstSectionKey: "quantitative-knowledge",
         });
+        fetchQueryMock.mockImplementation(world.visitor.query);
+
+        const featured = yield* readFeaturedTryout("id");
+
+        expect(featured.prompt.type).toBe("doc");
+        expect(featured.interaction.id).toBe(featured.key?.interaction);
       })
   );
   it.effect("asks Convex for the featured question once for each release", () =>
     Effect.gen(function* () {
-      yield* serveFeaturedQuestion();
+      const world = yield* tryoutWorld({
+        firstSectionKey: "quantitative-knowledge",
+      });
+      fetchQueryMock.mockImplementation(world.visitor.query);
 
       const first = yield* readFeaturedTryout("id");
       const second = yield* readFeaturedTryout("id");
 
-      expect(renderToStaticMarkup(second.question)).toBe(
-        renderToStaticMarkup(first.question)
-      );
+      expect(second).toEqual(first);
       expect(
         Arr.filter(
           fetchQueryMock.mock.calls,
@@ -414,18 +273,16 @@ describe("immutable try-out application catalog", () => {
     "preserves unavailable publication failures as typed catalog errors",
     () =>
       Effect.gen(function* () {
-        const context = yield* createTestPublication(
-          (yield* makeRuntimeSource()).source
+        // A deployment with no active release publishes no catalog.
+        fetchQueryMock.mockImplementation(
+          client(createConvexTestWithBetterAuth()).query
         );
-        fetchQueryMock.mockImplementation(context.query);
-        const hubFailure = yield* readTryoutHubPage("en").pipe(Effect.flip);
-        expect(hubFailure).toMatchObject({ _tag: "TryoutCatalogReadError" });
-        const countryFailure = yield* readTryoutCountryPage("en", COUNTRY).pipe(
-          Effect.flip
-        );
-        expect(countryFailure).toMatchObject({
+        expect(yield* readTryoutHubPage("en").pipe(Effect.flip)).toMatchObject({
           _tag: "TryoutCatalogReadError",
         });
+        expect(
+          yield* readTryoutCountryPage("en", COUNTRY("en")).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "TryoutCatalogReadError" });
       })
   );
   it.effect(
@@ -436,16 +293,16 @@ describe("immutable try-out application catalog", () => {
           kind: "retained",
           attemptId: "missing-attempt",
           locale: "en",
-          publicPath: SET,
+          publicPath: SET("en"),
         } as const;
         fetchQueryMock.mockReturnValue(Effect.succeed(null));
         expect(
           yield* readTryoutSetAttemptPage("technical-token", request)
         ).toBeNull();
         expect(
-          yield* readTryoutSectionWithBodies("technical-token", {
+          yield* readTryoutSectionAttemptPage("technical-token", {
             ...request,
-            publicPath: SECTION,
+            publicPath: SECTION("en"),
           })
         ).toBeNull();
         fetchQueryMock.mockReturnValue(
@@ -467,9 +324,9 @@ describe("immutable try-out application catalog", () => {
           },
         });
         expect(
-          yield* readTryoutSectionWithBodies("technical-token", {
+          yield* readTryoutSectionAttemptPage("technical-token", {
             ...request,
-            publicPath: SECTION,
+            publicPath: SECTION("en"),
           }).pipe(Effect.flip)
         ).toMatchObject({
           _tag: "TryoutCatalogReadError",

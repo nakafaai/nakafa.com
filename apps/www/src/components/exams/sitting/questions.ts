@@ -1,7 +1,7 @@
 import {
   type ExamResponse,
   isAnswered,
-} from "@repo/backend/confect/exams/sittings/response";
+} from "@repo/backend/confect/assessment/response";
 import { Array as Arr, Option } from "effect";
 import type {
   PaperQuestion,

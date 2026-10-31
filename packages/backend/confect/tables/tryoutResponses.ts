@@ -1,23 +1,23 @@
 import { Table } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { Outcome, Selection } from "@repo/backend/confect/response/model";
+import { Grade } from "@repo/backend/confect/assessment/grade";
+import { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { Schema } from "effect";
+
+/** One learner's answer to one place of an attempt, graded by its frozen rule when it is written. */
 export default Table.make(() =>
   Schema.Struct({
     tryoutAttemptId: IdSchema("tryoutAttempts"),
     tryoutSectionAttemptId: IdSchema("tryoutSectionAttempts"),
     placementId: IdSchema("tryoutAttemptPlacements"),
-    isComplete: Schema.Boolean,
-    selection: Selection,
-    isCorrect: Schema.Boolean,
-    /** How the answer scores; rows written before outcomes carry only `isCorrect`. */
-    outcome: Schema.optionalKey(Outcome),
+    response: ExamResponse,
+    grade: Grade,
     timeSpent: Schema.Finite,
     answeredAt: Schema.Finite,
     updatedAt: Schema.Finite,
-    /** The version of the write that stored it; rows written before versions carry none. */
-    version: Schema.optionalKey(Version),
+    /** The version of the write that stored it. */
+    version: Version,
   })
 )
   .index("by_tryoutSectionAttemptId_and_answeredAt", [
