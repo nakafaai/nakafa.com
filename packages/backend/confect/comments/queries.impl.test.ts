@@ -253,34 +253,6 @@ describe("comments/queries", () => {
     ]);
   });
 
-  it("reads a comment written before the like count with a count of zero", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const author = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now, suffix: "legacy-author" })
-    );
-    const slug = "articles/legacy";
-    await t.mutation((ctx) =>
-      ctx.db.insert("comments", {
-        slug,
-        text: "Ditulis sebelum hitungan suka",
-        replyCount: 0,
-        userId: author.userId,
-      })
-    );
-
-    const page = await t.query(api.comments.queries.getCommentsBySlug, {
-      slug,
-      paginationOpts,
-    });
-
-    expect(page.page).toMatchObject([
-      {
-        likeCount: 0,
-        liked: false,
-      },
-    ]);
-  });
-
   it("reads a school member's comments to the member alone, and an empty page to anyone else (K15)", async () => {
     const t = createConvexTestWithBetterAuth();
     const author = await t.mutation(async (ctx) => {

@@ -10,8 +10,8 @@ export default Table.make(() =>
     // The top-level comment this reply belongs to. A top-level comment has none.
     threadId: Schema.optionalKey(IdSchema("comments")),
     replyToUserId: Schema.optionalKey(IdSchema("users")),
-    // Kept exact by the like mutations. A row written before the likes table has none.
-    likeCount: Schema.optionalKey(Schema.Finite),
+    // Kept exact by the like mutations.
+    likeCount: Schema.Finite,
     // On a top-level comment, the number of comments in its thread.
     replyCount: Schema.Finite,
   })

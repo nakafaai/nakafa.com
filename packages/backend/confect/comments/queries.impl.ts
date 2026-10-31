@@ -7,7 +7,6 @@ import spec from "@repo/backend/confect/comments/queries.spec";
 import {
   type CommentDoc,
   isCommentLikedBy,
-  likeCountOf,
 } from "@repo/backend/confect/comments/rows";
 import type { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
@@ -29,16 +28,9 @@ function publicAuthor(user: typeof userDataValidator.Type) {
   };
 }
 
-/**
- * A comment as the lists show it: its stored fields, its count of likes (zero before
- * the count was kept), and whether the viewer liked it.
- */
+/** A comment as the lists show it: its stored fields, and whether the viewer liked it. */
 function likedRow(comment: CommentDoc, liked: boolean) {
-  return {
-    ...comment,
-    likeCount: likeCountOf(comment),
-    liked,
-  };
+  return { ...comment, liked };
 }
 
 /**
