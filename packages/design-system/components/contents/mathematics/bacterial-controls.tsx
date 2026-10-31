@@ -11,7 +11,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -96,11 +98,14 @@ export function BacterialSpeeds({
         <SelectValue labels={Arr.map(items, (item) => item.label)} />
       </SelectTrigger>
       <SelectContent>
-        {Arr.map(items, (item) => (
-          <SelectItem key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
+        <SelectGroup>
+          <SelectLabel>{t("speed")}</SelectLabel>
+          {Arr.map(items, (item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
       </SelectContent>
     </Select>
   );

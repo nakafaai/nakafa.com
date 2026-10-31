@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "sort": "Sortieren",
     "filter-by": "Nach {column} filtern",
     "sort-ascending": "Aufsteigend",
     "sort-descending": "Absteigend",
@@ -55,7 +56,7 @@
     "submit": "Anmelden",
     "username-action": "Mit Benutzername anmelden",
     "username-label": "Schul-Benutzername",
-    "outsider-check-again": "Erneut nach meiner Einladung sehen"
+    "outsider-check-again": "Erneut prüfen"
   },
   "SchoolGuardians": {
     "sign-in-action": "Als Elternteil anmelden",
@@ -474,6 +475,7 @@
     "presence-more": "{names} bearbeiten gerade",
     "template-choice": "Einfachauswahl",
     "template-choices": "Mehrfachauswahl",
+    "template-title": "Fragetyp",
     "template-label": "Fragetyp: {type}",
     "template-truefalse": "Richtig oder falsch",
     "template-cause": "Ursache und Wirkung",
@@ -668,6 +670,7 @@
     "invoice-paid": "Bezahlt",
     "invoice-void": "Storniert",
     "invoice-pay": "Bezahlen",
+    "invoice-download": "Rechnung laden",
     "invoice-transfer": "Per Überweisung zahlen",
     "manage-group": "Verwaltung",
     "back-to-school": "Zurück zu {school}",
@@ -906,7 +909,9 @@
         "hidden": "Nachricht ausgeblendet"
       },
       "scheme": {
-        "stored": "Notenschema-Version hinzugefügt"
+        "stored": "Notenschema-Version hinzugefügt",
+        "amended": "Version des Bewertungsschemas korrigiert",
+        "removed": "Version des Bewertungsschemas gelöscht"
       },
       "report": {
         "locked": "Zeugnis gesperrt"
@@ -1200,6 +1205,11 @@
     "grading-search": "Stufe suchen",
     "grading-new": "Neue Version",
     "grading-new-description": "Sie bewertet jede Note ab jetzt.",
+    "grading-edit": "Bearbeiten",
+    "grading-edit-description": "Diese Version hat noch keine Note bewertet, die Korrektur ändert also nichts Bestehendes.",
+    "grading-remove": "Löschen",
+    "grading-remove-title": "Diese Version löschen?",
+    "grading-remove-description": "Die Version davor gilt dann wieder.",
     "grading-effective": "Gilt ab",
     "grading-kktp": "KKTP",
     "grading-bands": "Stufen",
@@ -1665,6 +1675,7 @@
     "plan-founder": "Tarif School, mit Hilfe des Gründers.",
     "founder-line": "Der Gründer hilft großen Schulen beim Start.",
     "founder-link": "Mit dem Gründer sprechen",
+    "contact-label": "Kontakt und Teilen",
     "link-copy": "Link kopieren",
     "link-copied": "Link kopiert",
     "consent": "Mit der Eröffnung akzeptierst du die <terms>Nutzungsbedingungen</terms>, die <privacy>Datenschutzerklärung</privacy> und Version {version} des <dpa>Auftragsverarbeitungsvertrags</dpa>.",
@@ -1751,7 +1762,7 @@
     "year": "Jahr",
     "breadcrumb": "Navigationspfad",
     "sidebar": "Seitenleiste",
-    "toggle-sidebar": "Seitenleiste ein- oder ausblenden",
+    "toggle-sidebar": "Seitenleiste umschalten",
     "notifications": "Benachrichtigungen",
     "close-notification": "Benachrichtigung schließen",
     "clear-search": "Suche löschen",
@@ -1968,9 +1979,7 @@
     "all-schools": "Alle Schulen",
     "topic-label": "Benachrichtigungen filtern",
     "topic-all": "Alle",
-    "topic-exams": "Prüfungen",
-    "topic-classes": "Klassen",
-    "topic-forum": "Forum",
+    "topic-comments": "Kommentare",
     "topic-school": "Schule",
     "topic-empty": "Hier ist noch nichts.",
     "empty": "Du hast noch keine Benachrichtigungen.",
@@ -2164,6 +2173,7 @@
     "shortcut-step": "Vorherige oder nächste Aufgabe",
     "shortcut-pick": "Option wählen",
     "shortcut-navigator": "Aufgabenübersicht",
+    "note": "Zu dieser Prüfung",
     "flag": "Markieren",
     "flag-question": "Frage {number} markieren",
     "review": "Prüfen",
@@ -2228,7 +2238,7 @@
     "login-cta-title": "Weiterlernen",
     "login-cta-description": "Melde dich an, um deinen Fortschritt in Lerninhalten und Probetests zu speichern.",
     "login-cta-action": "Anmelden",
-    "pricing-cta": "Pakete und Preise ansehen",
+    "pricing-cta": "Pakete ansehen",
     "account": "Konto",
     "learning": "Lernen",
     "learning-description": "Wähle deine Rolle und deinen Lehrplan, die dein Lernerlebnis prägen.",
@@ -2247,16 +2257,16 @@
     "plan-pro-description": "Dein Nakafa Pro ist aktiv.",
     "plan-pro-ending-description": "Dein Nakafa Pro endet mit dem Ende dieses Zeitraums.",
     "plan-pro-past-due-description": "Deine letzte Zahlung ist nicht eingegangen.",
-    "plan-pro-footer": "Jederzeit ändern oder kündigen.",
-    "plan-pro-past-due-footer": "Aktualisiere deine Zahlungsmethode.",
+    "plan-pro-footer": "Jederzeit änderbar.",
+    "plan-pro-past-due-footer": "Zahlung offen.",
     "plan-granted-description": "Pro ist auf diesem Konto aktiv.",
     "plan-granted-footer": "Nakafa rechnet ihn nicht ab.",
     "plan-pass-description": "Dein Pro-Pass läuft bis {date}.",
-    "plan-pass-footer": "Der nächste Pass schließt direkt an.",
-    "plan-pass-extend": "Pro verlängern",
-    "plan-xendit-footer": "Jederzeit kündbar.",
-    "plan-xendit-ending-footer": "Nach diesem Zeitraum wird nichts mehr berechnet.",
-    "plan-cancel": "Abo kündigen",
+    "plan-pass-footer": "Restzeit bleibt.",
+    "plan-pass-extend": "Verlängern",
+    "plan-xendit-footer": "Ohne Bindung.",
+    "plan-xendit-ending-footer": "Keine weiteren Kosten.",
+    "plan-cancel": "Kündigen",
     "plan-keep": "Pro behalten",
     "plan-cancel-title": "Pro kündigen?",
     "plan-cancel-description": "Pro bleibt bis {date}, danach wird nichts mehr berechnet.",
@@ -2268,12 +2278,12 @@
     "billing-month": "Monatlich",
     "billing-year": "Jährlich",
     "billing-pass": "{months, plural, one {Pass für # Monat} other {Pass für # Monate}}",
-    "manage-billing": "Abrechnung verwalten",
+    "manage-billing": "Ändern",
     "upgrade": "Upgrade",
     "credits": "Nina-Credits",
     "credits-description": "Nina verbraucht Credits, wenn sie deine Fragen beantwortet.",
     "credits-free-footer": "Pro gibt dir mehr Credits.",
-    "credits-pro-footer": "{credits, number} Credits für {price}.",
+    "credits-pro-footer": "{price} je {credits, number}.",
     "credits-today": "Heute",
     "credits-month": "Diesen Monat",
     "credits-used": "{percent, number} % genutzt",
@@ -2340,9 +2350,14 @@
     "top-up-balance": "Zusatz-Credits",
     "top-up-expires": "Verfällt am {date}",
     "top-up-left": "{count, number} übrig",
-    "buy-credits": "Credits kaufen",
+    "buy-credits": "Kaufen",
     "payments": "Zahlungen",
     "payments-description": "Die erfolgreichen Zahlungen, die neueste zuerst.",
+    "payments-card-description": "Verlauf und Rechnung für jede Zahlung.",
+    "payments-footer": "Alle Rechnungen.",
+    "payments-view": "Ansehen",
+    "payment-download": "Rechnung laden",
+    "payment-portal": "In Polar öffnen",
     "payment-date": "Datum",
     "payment-for": "Für",
     "payment-via": "Über",
@@ -2555,6 +2570,10 @@
     "checkout-error": {
       "title": "Pro-Checkout nicht geöffnet.",
       "description": "Versuche es erneut."
+    },
+    "invoice-error": {
+      "title": "Die Rechnung konnte nicht geladen werden.",
+      "description": "Bitte versuche es noch einmal."
     },
     "portal-error": {
       "title": "Abo-Portal nicht geöffnet.",
@@ -3061,6 +3080,10 @@
     "school-refusal-scheme-not-later": {
       "title": "Es gibt schon eine neuere Version.",
       "description": "Lade die Seite neu, um sie zu sehen, und speichere dann deine."
+    },
+    "school-refusal-scheme-used": {
+      "title": "Diese Version bleibt, wie sie ist.",
+      "description": "Sie hat bereits Noten bewertet. Lege stattdessen eine neue Version an."
     },
     "school-roster-no-period": {
       "title": "Noch kein aktiver Zeitraum.",

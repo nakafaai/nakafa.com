@@ -90,7 +90,7 @@ for (const viewport of sidebarViewports) {
             expect(
               footer.getByRole("link", {
                 exact: true,
-                name: "See plans and pricing",
+                name: "See plans",
               })
             ).toBeVisible()
           );

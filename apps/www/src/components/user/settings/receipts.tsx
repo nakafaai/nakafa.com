@@ -1,19 +1,20 @@
 import type { Ref } from "@confect/core";
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult, useAction, useQuery } from "@confect/react";
 import {
   Coins01Icon,
-  CreditCardIcon,
+  Download04Icon,
   Invoice01Icon,
+  LinkSquare02Icon,
   Money01Icon,
   RepeatIcon,
   Ticket01Icon,
-  Wallet01Icon,
 } from "@hugeicons/core-free-icons";
 import billingRefs from "@repo/backend/confect/_generated/refs/billing";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { RowAction, useInvoiceDownload } from "@/components/billing/invoice";
 import { HeadAlignContext } from "@/components/shared/table/align";
 import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
@@ -21,12 +22,13 @@ import { daysColumn } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { useBillingNavigation } from "@/lib/billing/checkout";
 import {
   BILLING_TIME_ZONE,
   formatBillingDay,
   formatMinorAmount,
-  providerNameOf,
 } from "@/lib/billing/plan";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 /** One receipt as the payments query answers it. */
 type Receipt = Ref.Returns<typeof billingRefs.queries.payments>[number];
@@ -40,12 +42,6 @@ const PAYMENT_KINDS = {
   cycle: { icon: RepeatIcon, label: "payment-cycle" },
   invoice: { icon: Invoice01Icon, label: "payment-invoice" },
   pass: { icon: Ticket01Icon, label: "payment-pass" },
-} as const;
-
-/** The icons of the providers in a filter. */
-const PROVIDER_ICONS = {
-  polar: CreditCardIcon,
-  xendit: Wallet01Icon,
 } as const;
 
 /**
@@ -72,7 +68,42 @@ export function Receipts() {
   );
 }
 
-/** The receipts, newest first: what each bought, its day, the provider that took it, and its amount. */
+/** Draws the invoice of a payment Nakafa sold, and saves it. */
+function InvoiceAction({ payment }: { payment: Receipt }) {
+  const t = useTranslations("Auth");
+  const locale = useLocale();
+  const draw = useAction(billingRefs.receipts.download);
+  const { download, isPending } = useInvoiceDownload();
+
+  if (!isActiveLocale(locale)) {
+    return null;
+  }
+  return (
+    <RowAction
+      icon={Download04Icon}
+      isPending={isPending}
+      label={t("payment-download")}
+      onClick={() => download(() => draw({ locale, paymentId: payment.id }))}
+    />
+  );
+}
+
+/** Opens Polar's portal, which holds the invoices of what Polar sold. */
+function PortalAction() {
+  const t = useTranslations("Auth");
+  const billing = useBillingNavigation();
+
+  return (
+    <RowAction
+      icon={LinkSquare02Icon}
+      isPending={billing.isPending}
+      label={t("payment-portal")}
+      onClick={() => billing.openPortal({ source: "settings-invoice" })}
+    />
+  );
+}
+
+/** The receipts, newest first: what each bought, its day, its amount, and its invoice. */
 function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
   const t = useTranslations("Auth");
   const locale = useLocale();
@@ -83,11 +114,6 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
     icon: kind.icon,
     label: t(kind.label),
     value: t(kind.label),
-  }));
-  const providers = Arr.map(Rec.toEntries(PROVIDER_ICONS), ([rail, icon]) => ({
-    icon,
-    label: providerNameOf(rail),
-    value: providerNameOf(rail),
   }));
   const amounts = namedOptions(Arr.dedupe(Arr.map(payments, amountOf)), [
     Money01Icon,
@@ -115,18 +141,6 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
       id: "date",
       sortFn: "basic",
     }),
-    receiptColumns.accessor((payment) => providerNameOf(payment.rail), {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="provider"
-          options={providers}
-          title={t("payment-via")}
-        />
-      ),
-      id: "provider",
-    }),
     receiptColumns.accessor(amountOf, {
       enableSorting: false,
       filterFn: "oneOf",
@@ -140,7 +154,18 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
         </HeadAlignContext>
       ),
       id: "amount",
-      meta: { align: "end" },
+      meta: { align: "figure" },
+    }),
+    receiptColumns.display({
+      cell: (info) =>
+        info.row.original.rail === "xendit" ? (
+          <InvoiceAction payment={info.row.original} />
+        ) : (
+          <PortalAction />
+        ),
+      header: "",
+      id: "actions",
+      meta: { align: "menu" },
     }),
   ]);
 
@@ -149,7 +174,7 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
       <DataTable
         columns={columns}
         data={payments}
-        rowId={(payment) => `${payment.rail}-${payment.paidAt}`}
+        rowId={(payment) => payment.id}
       />
     </div>
   );
