@@ -25,6 +25,7 @@ import { SittingField } from "@/components/exams/sitting/field";
 import { useKeptText } from "@/components/exams/sitting/kept";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
 import { useFlagQuestion } from "@/components/exams/sitting/mark";
+import { PaperMedia } from "@/components/exams/sitting/media";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import type {
   PaperQuestion,
@@ -34,9 +35,11 @@ import {
   pictureIdsOfDocuments,
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
+import { SittingReason } from "@/components/exams/sitting/reason";
 import {
   choiceOf,
   pairingOf,
+  reasonOf,
   tableOf,
   writtenOf,
 } from "@/components/exams/sitting/response";
@@ -125,6 +128,10 @@ export const SittingQuestion = memo(function SittingQuestion({
     () => choiceOf(question.interactions),
     [question.interactions]
   );
+  const reasons = useMemo(
+    () => reasonOf(question.interactions),
+    [question.interactions]
+  );
   const entry = useMemo(
     () => writtenOf(question.interactions),
     [question.interactions]
@@ -138,6 +145,16 @@ export const SittingQuestion = memo(function SittingQuestion({
     [question.interactions]
   );
   const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
+  const readingText = QueryResult.isSuccess(prompt)
+    ? prompt.value.reading
+    : null;
+  const readingDocument = useMemo(
+    () =>
+      readingText === null
+        ? null
+        : Schema.decodeSync(JsonTextSchema)(readingText),
+    [readingText]
+  );
   const promptDocument = useMemo(
     () =>
       promptText === null
@@ -148,10 +165,11 @@ export const SittingQuestion = memo(function SittingQuestion({
   // The images of the prompt and of the options, resolved in one read by this student's device.
   const pictureIds = useMemo(() => {
     const labels = Arr.appendAll(
-      Option.match(choice, {
-        onNone: () => [],
-        onSome: (found) => Arr.map(found.options, (option) => option.label),
-      }),
+      Arr.flatMap(question.interactions, (interaction) =>
+        interaction.kind === "choice"
+          ? Arr.map(interaction.options, (option) => option.label)
+          : []
+      ),
       Arr.appendAll(
         Option.match(pairing, {
           onNone: () => [],
@@ -172,9 +190,12 @@ export const SittingQuestion = memo(function SittingQuestion({
       )
     );
     return pictureIdsOfDocuments(
-      promptDocument === null ? labels : [promptDocument, ...labels]
+      Arr.filter(
+        [promptDocument, readingDocument, ...labels],
+        (document) => document !== null
+      )
     );
-  }, [choice, pairing, promptDocument, table]);
+  }, [question.interactions, pairing, promptDocument, readingDocument, table]);
   const pictures = useQuery(
     exams.sittings.images,
     pictureIds.length === 0
@@ -211,9 +232,17 @@ export const SittingQuestion = memo(function SittingQuestion({
       <PlayerQuestionHeader number={question.number} />
       <SittingPictures value={addresses}>
         <PlayerQuestionPrompt>
-          {promptDocument === null ? null : (
-            <SittingDocument document={promptDocument} />
-          )}
+          <div className="grid gap-6">
+            {QueryResult.isSuccess(prompt) ? (
+              <PaperMedia items={prompt.value.media} />
+            ) : null}
+            {readingDocument === null ? null : (
+              <SittingDocument document={readingDocument} />
+            )}
+            {promptDocument === null ? null : (
+              <SittingDocument document={promptDocument} />
+            )}
+          </div>
         </PlayerQuestionPrompt>
         <PlayerQuestionAnswer>
           {Option.isSome(choice) ? (
@@ -221,6 +250,14 @@ export const SittingQuestion = memo(function SittingQuestion({
               choice={choice.value}
               labelledBy={ids.title}
               onChoose={onChoose}
+              response={chosenOptions(question.response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(reasons) ? (
+            <SittingReason
+              answer={reasons.value[0]}
+              onChoose={onChoose}
+              reason={reasons.value[1]}
               response={chosenOptions(question.response ?? NO_RESPONSE)}
             />
           ) : null}

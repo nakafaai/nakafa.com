@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import {
+  ChannelArchived,
   MessageHidden,
   ReactionLimit,
   VoteRefused,
@@ -47,7 +48,13 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => Schema.Null,
-      error: () => Schema.Union([AccessDenied, MessageHidden, ReactionLimit]),
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          ChannelArchived,
+          MessageHidden,
+          ReactionLimit,
+        ]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   )
   .addFunction(
@@ -60,6 +67,12 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => Schema.Null,
-      error: () => Schema.Union([AccessDenied, MessageHidden, VoteRefused]),
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          ChannelArchived,
+          MessageHidden,
+          VoteRefused,
+        ]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   );

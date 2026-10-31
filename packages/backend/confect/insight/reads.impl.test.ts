@@ -4,6 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type { QuestionTag } from "@repo/backend/confect/insight/schema";
 import {
   forumClass,
   keyedFixture,
@@ -24,6 +25,10 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(TENANCY_NOW);
 });
+
+/** Whether no question of an exam names a competency. */
+const untagged = (tags: readonly (typeof QuestionTag.Type)[]) =>
+  Arr.every(tags, (found) => found.competency === null);
 
 describe("insight", () => {
   it.effect(
@@ -110,9 +115,7 @@ describe("insight", () => {
         yield* tag(null);
         expect(
           yield* teacher.query(list, { examId: made.examId, slug: nf })
-        ).toSatisfy((tags: readonly { competency: string | null }[]) =>
-          Arr.every(tags, (found) => found.competency === null)
-        );
+        ).toSatisfy(untagged);
       })
   );
 
@@ -136,9 +139,7 @@ describe("insight", () => {
       });
       expect(
         yield* teacher.query(list, { examId: made.examId, slug: nf })
-      ).toSatisfy((tags: readonly { competency: string | null }[]) =>
-        Arr.every(tags, (found) => found.competency === null)
-      );
+      ).toSatisfy(untagged);
     })
   );
 

@@ -3,7 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
 
 /** The notices of a task: its deadline nears for the students, or passed for the guardians of those who did not hand in. */
-export const TaskNotice = Schema.Literals(["taskDeadline", "taskMissed"]);
+const TaskNotice = Schema.Literals(["taskDeadline", "taskMissed"]);
 
 /**
  * Writes the inbox rows of a task's deadline, one page of the class's students per run (ADR 0027). Publishing a task

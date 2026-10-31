@@ -5,6 +5,7 @@ import { Kind } from "@repo/backend/confect/access/kind";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
+import { PlayableMedia } from "@repo/backend/confect/exams/media";
 import {
   AttemptState,
   RoomName,
@@ -232,11 +233,13 @@ export const SavedView = Schema.Struct({
 });
 
 /**
- * One question's prompt as the document stands now, which is the editor's stored text with every
- * edit after its snapshot applied (ADR 0028).
+ * One question's prompt and its shared reading, if it has one, as the documents stand now, which is
+ * the editor's stored text with every edit after its snapshot applied (ADR 0028), and its media as the paper plays it.
  */
 export const PromptView = Schema.Struct({
+  media: Schema.Array(PlayableMedia),
   prompt: Schema.String,
+  reading: Schema.NullOr(Schema.String),
 });
 
 /**

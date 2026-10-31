@@ -8,6 +8,9 @@ import { finishSchoolStart } from "@/e2e/support/school";
 /** The address of the Exams page, where a member lands. */
 const EXAMS_ADDRESS = /\/exams$/u;
 
+/** The address of the data processing agreement, which the last question links to. */
+const DPA_ADDRESS = /\/en\/data-processing-agreement$/u;
+
 test("a new account opens its own school in five questions and lands in it as its Owner", async ({
   baseURL,
   browser,
@@ -57,6 +60,9 @@ test("a new account opens its own school in five questions and lands in it as it
 
   await page.getByRole("radio", { name: "100 to 499" }).click();
   await expect(page.getByRole("link", { name: "Terms" })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Data Processing Agreement" })
+  ).toHaveAttribute("href", DPA_ADDRESS);
   await Effect.runPromise(finishSchoolStart(page, baseURL, { name, slug }));
   // The new Owner lands on the exams, the Owner's main page, with its one action.
   await page.waitForURL(EXAMS_ADDRESS);

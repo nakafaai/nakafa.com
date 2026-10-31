@@ -4,12 +4,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -144,13 +139,10 @@ export function StudentSitting({
     >
       <SittingBody>
         <form onSubmit={entry.submit}>
-          <CardSection>
-            <CardHeader>
-              <CardTitle>{t("student-enter")}</CardTitle>
-              <CardDescription>
-                {t("student-room-line", { room: sitting.room })}
-              </CardDescription>
-            </CardHeader>
+          <CardSection
+            description={t("student-room-line", { room: sitting.room })}
+            title={t("student-enter")}
+          >
             <CardContent>
               <Field>
                 <FieldLabel htmlFor={entry.tokenId}>{t("token")}</FieldLabel>
@@ -274,13 +266,10 @@ function StudentScheduled({
       bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
     >
       <SittingBody>
-        <CardSection>
-          <CardHeader>
-            <CardTitle>{t("sitting")}</CardTitle>
-            <CardDescription>
-              {t("student-room-line", { room: sitting.room })}
-            </CardDescription>
-          </CardHeader>
+        <CardSection
+          description={t("student-room-line", { room: sitting.room })}
+          title={t("sitting")}
+        >
           <CardContent>
             <p>
               {t("student-opens-at", {

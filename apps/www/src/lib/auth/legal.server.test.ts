@@ -8,7 +8,7 @@ import { getShellPageNavigation } from "@/lib/content/page/navigation";
 
 let pages: Pick<
   PageNavigation,
-  "privacyPolicyPath" | "termsOfServicePath"
+  "dataProcessingPath" | "privacyPolicyPath" | "termsOfServicePath"
 > | null = null;
 
 vi.mock("@/lib/content/page/navigation", () => ({
@@ -16,23 +16,23 @@ vi.mock("@/lib/content/page/navigation", () => ({
 }));
 
 const signedLinks = {
+  dataProcessing: new URL("/id/data-processing-agreement", SITE_ORIGIN).href,
   privacy: new URL("/id/privacy-policy", SITE_ORIGIN).href,
   terms: new URL("/id/terms-of-service", SITE_ORIGIN).href,
 };
 
 describe("sign-in legal links", () => {
-  it.effect(
-    "links the privacy and terms pages of the locale on the main site",
-    () =>
-      Effect.gen(function* () {
-        pages = {
-          privacyPolicyPath: "privacy-policy",
-          termsOfServicePath: "terms-of-service",
-        };
-        const links = yield* readAuthLegalLinks("id");
-        expect(Option.getOrNull(links)).toStrictEqual(signedLinks);
-        expect(getShellPageNavigation).toHaveBeenCalledWith("id");
-      })
+  it.effect("links the legal pages of the locale on the main site", () =>
+    Effect.gen(function* () {
+      pages = {
+        dataProcessingPath: "data-processing-agreement",
+        privacyPolicyPath: "privacy-policy",
+        termsOfServicePath: "terms-of-service",
+      };
+      const links = yield* readAuthLegalLinks("id");
+      expect(Option.getOrNull(links)).toStrictEqual(signedLinks);
+      expect(getShellPageNavigation).toHaveBeenCalledWith("id");
+    })
   );
 
   it.effect("answers none when no signed page answers", () =>

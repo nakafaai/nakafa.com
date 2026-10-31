@@ -5,16 +5,9 @@ import access from "@repo/backend/confect/_generated/refs/access";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { applyPolicy } from "@repo/backend/confect/tenancy/policy";
-import { INVITE_TERM, Npsn } from "@repo/backend/confect/tenancy/schema";
+import { Npsn } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import {
-  Array as Arr,
-  DateTime,
-  Duration,
-  Option,
-  Schema,
-  Struct,
-} from "effect";
+import { Array as Arr, DateTime, Option, Schema, Struct } from "effect";
 import {
   type Client,
   draftText,
@@ -22,7 +15,6 @@ import {
   type Invite,
   isFirstPage,
   mapUnit,
-  type Person,
   revokeClient,
   type Unit,
   withoutItem,
@@ -163,22 +155,6 @@ export function changeGrantPages(
       );
     }
   }
-}
-
-/** The loaded Person with this ID, read from any loaded list of people, or none when no list holds it. */
-function nameOfPerson(
-  localStore: OptimisticLocalStore.OptimisticLocalStore,
-  personId: Person["id"]
-) {
-  return Arr.findFirst(
-    Arr.flatMap(localStore.getAllQueries(tenancy.people.list), (query) =>
-      Option.match(query.value, {
-        onNone: (): Person[] => [],
-        onSome: (result) => [...result.page],
-      })
-    ),
-    (person) => person.id === personId
-  );
 }
 
 /** Shows the policy the school chose at once. */
@@ -391,61 +367,4 @@ export const resendDeliveryChange: OptimisticUpdate<
       }
     }
   }
-};
-
-/** Lists a new grant at once, at the top of the school's grants, when its Person is loaded. */
-export const assignGrantChange: OptimisticUpdate<
-  typeof access.grants.assign
-> = (localStore, { personId, role, scope, slug }) => {
-  const person = nameOfPerson(localStore, personId);
-  if (Option.isNone(person)) {
-    return;
-  }
-  const draft: Grant = {
-    id: Schema.decodeUnknownSync(Id("tenantGrants"))(draftText()),
-    person: { id: person.value.id, name: person.value.name },
-    revocable: true,
-    role: { key: role, kind: "builtin" },
-    scope,
-  };
-  changeGrantPages(localStore, slug, isFirstPage, (page) =>
-    Arr.prepend(page, draft)
-  );
-};
-
-/** Takes a grant off every loaded list of the school's grants at once. */
-export const revokeGrantChange: OptimisticUpdate<
-  typeof access.grants.revoke
-> = (localStore, { grantId, slug }) => {
-  changeGrantPages(
-    localStore,
-    slug,
-    () => true,
-    (page) => withoutItem(page, grantId)
-  );
-};
-
-/** Lists a new invite at once, at the top of the pending invites, when its Person is loaded. */
-export const inviteChange: OptimisticUpdate<typeof tenancy.invites.invite> = (
-  localStore,
-  { email, personId, slug }
-) => {
-  const person = nameOfPerson(localStore, personId);
-  if (Option.isNone(person)) {
-    return;
-  }
-  const draft: Invite = {
-    email,
-    expiresAt:
-      DateTime.toEpochMillis(DateTime.nowUnsafe()) +
-      Duration.toMillis(INVITE_TERM),
-    id: Schema.decodeUnknownSync(Id("tenantInvites"))(draftText()),
-    name: person.value.name,
-    personId,
-    roles: [],
-    status: "pending",
-  };
-  changeInviteLists(localStore, slug, isFirstPage, (page) =>
-    Arr.prepend(page, draft)
-  );
 };

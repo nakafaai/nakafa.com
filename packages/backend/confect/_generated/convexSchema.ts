@@ -74,6 +74,7 @@ import editorSteps from "./tables/editorSteps";
 import examAnswers from "./tables/examAnswers";
 import examAssets from "./tables/examAssets";
 import examAttempts from "./tables/examAttempts";
+import examAudio from "./tables/examAudio";
 import examQuestions from "./tables/examQuestions";
 import examResults from "./tables/examResults";
 import examScreens from "./tables/examScreens";
@@ -237,6 +238,7 @@ export default $defineSchema({
   examAnswers: $Table.tableDefinition(examAnswers),
   examAssets: $Table.tableDefinition(examAssets),
   examAttempts: $Table.tableDefinition(examAttempts),
+  examAudio: $Table.tableDefinition(examAudio),
   examQuestions: $Table.tableDefinition(examQuestions),
   examResults: $Table.tableDefinition(examResults),
   examScreens: $Table.tableDefinition(examScreens),

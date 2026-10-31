@@ -1,7 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import spec from "@repo/backend/confect/contentRelease/article.spec";
-import { readPartnerApiPage } from "@repo/backend/confect/contentRelease/partner/page";
 import { articleLayer } from "@repo/backend/content/article/confect";
 import {
   readArticleBucket,
@@ -33,17 +32,6 @@ const delivery = FunctionImpl.make(
     return yield* readArticleDelivery(appLocale, publicPath).pipe(
       Effect.provide(articleLayer)
     );
-  })
-);
-const apiPage = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "apiPage",
-  Effect.fn("contentRelease.article.apiPage")(function* (args) {
-    return yield* readPartnerApiPage({
-      ...args,
-      family: "article",
-    });
   })
 );
 const route = FunctionImpl.make(
@@ -146,7 +134,6 @@ const sitemapPage = FunctionImpl.make(
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(delivery),
-  Layer.provide(apiPage),
   Layer.provide(route),
   Layer.provide(publications),
   Layer.provide(categories),

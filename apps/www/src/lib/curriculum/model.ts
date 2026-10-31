@@ -2,7 +2,6 @@ import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import {
   CURRICULUM_NAMESPACES,
   CurriculumRouteSchema,
-  isRenderableCurriculumLevel,
   type CurriculumRoute as PublishedCurriculumRoute,
 } from "@nakafa/aksara-contracts/program/curriculum";
 import {
@@ -15,7 +14,10 @@ import type { Locale } from "use-intl";
 import { readPublishedMaterialCards } from "@/lib/content/program/cards";
 import { readPublishedProgramCatalog } from "@/lib/content/program/catalog";
 import { readPublishedProgramRoute } from "@/lib/content/program/route";
-import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
+import {
+  getCurriculumIndexHref,
+  isRenderableCurriculumView,
+} from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** The params of the curriculum route, as the router decodes them. */
@@ -52,11 +54,6 @@ type CurriculumCatalogModel = typeof CurriculumCatalogModelSchema.Type;
 export type CurriculumRouteModel = Effect.Success<
   ReturnType<typeof resolveRuntimeCurriculumRoute>
 >;
-
-/** Checks whether one signed route owns a learner-renderable page. */
-export function isRenderableCurriculumView(route: CurriculumViewRoute) {
-  return isRenderableCurriculumLevel(route.level) && route.sitemap;
-}
 
 /** Resolves one route through the signed Aksara owner. */
 export const resolveRuntimeCurriculumRoute = Effect.fn(

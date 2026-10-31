@@ -1,7 +1,7 @@
 import { Ref } from "@confect/core";
 import { Id, type TableNames } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
-import { newChoiceAnswers } from "@repo/backend/confect/exams/question";
+import { newChoiceAnswers } from "@repo/backend/confect/exams/blank";
 import { StaleAnswer } from "@repo/backend/confect/exams/sittings/errors";
 import type { Wire } from "@repo/backend/scripts/load/wire";
 import { getFunctionName } from "convex/server";

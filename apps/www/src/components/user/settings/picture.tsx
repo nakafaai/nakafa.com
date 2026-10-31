@@ -1,11 +1,6 @@
 import { photoOf, UserPicture } from "@repo/backend/confect/users/picture";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
@@ -102,11 +97,7 @@ export function UserSettingsPicture({ user }: { user: CurrentUser }) {
   };
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("picture")}</CardTitle>
-        <CardDescription>{t("picture-description")}</CardDescription>
-      </CardHeader>
+    <CardSection description={t("picture-description")} title={t("picture")}>
       <CardContent className="flex flex-col items-start gap-4">
         <PersonAvatar
           className="size-18"

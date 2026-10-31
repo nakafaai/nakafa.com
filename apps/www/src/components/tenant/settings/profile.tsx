@@ -3,12 +3,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { LogoType } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
@@ -160,11 +155,7 @@ function SchoolProfileCard({
         currency={tenant.currency}
         slug={slug}
       />
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("logo-title")}</CardTitle>
-          <CardDescription>{t("logo-description")}</CardDescription>
-        </CardHeader>
+      <CardSection description={t("logo-description")} title={t("logo-title")}>
         <CardContent>
           <SchoolMark
             logo={preview ?? tenant.logo}
@@ -227,11 +218,10 @@ function SchoolProfileCard({
           title={t("logo-remove-title")}
         />
       </CardSection>
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("address-title")}</CardTitle>
-          <CardDescription>{t("address-description")}</CardDescription>
-        </CardHeader>
+      <CardSection
+        description={t("address-description")}
+        title={t("address-title")}
+      >
         <CardContent>
           <Input
             aria-label={t("address-title")}
