@@ -221,7 +221,7 @@ describe("dependency updates", () => {
             stdout: outdatedTable("unreviewed-library"),
           };
         }
-        if (args[1] === "react@latest") {
+        if (args[1] === "mermaid@latest") {
           return { exitCode: 1, stderr: "", stdout: "" };
         }
         if (args[1] === "effect@latest") {
@@ -238,7 +238,7 @@ describe("dependency updates", () => {
       assert.strictEqual(result.status, 1);
       assert.strictEqual(result.inspections, 2);
       assert.deepStrictEqual(result.errors, [
-        "Unable to inspect reviewed dependency react@latest.\n" +
+        "Unable to inspect reviewed dependency mermaid@latest.\n" +
           "registry unavailable\n" +
           "@effect/platform-node@latest returned invalid registry metadata.\n" +
           `@effect/platform-node-shared@latest is now 99.0.0; last reviewed ${sharedPlatformReview[1]}.\n` +

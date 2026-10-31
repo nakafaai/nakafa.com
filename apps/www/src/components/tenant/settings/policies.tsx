@@ -288,11 +288,9 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
           placeholder={t("policy-domains-placeholder")}
           value={draft}
         />
-        {problem === null ? null : (
-          <FieldError className="max-w-md" id={errorId}>
-            {problem}
-          </FieldError>
-        )}
+        <FieldError className="max-w-md" id={errorId}>
+          {problem}
+        </FieldError>
       </CardContent>
       <CardSectionFooter hint={t("policy-domains-footer")}>
         <CardSectionActions>

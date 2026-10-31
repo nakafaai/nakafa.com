@@ -1,7 +1,9 @@
 import { LOCALES } from "@repo/internationalization/src/locale";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
 // The Vite config imports this module, and only package imports resolve there.
 import { LLMS_CACHE_CONTROL } from "#www/src/lib/llms/cache";
+import { LLMS_MARKDOWN_MEDIA_TYPE } from "#www/src/lib/llms/routes";
 import { SHELL_PATH } from "#www/src/lib/routing/shell";
 import type { HeaderRule, WwwHeader } from "#www/src/lib/security/headers";
 
@@ -25,7 +27,18 @@ const RSS_HEADERS: readonly WwwHeader[] = [
 
 const LLMS_HEADERS: readonly WwwHeader[] = [
   { key: "Cache-Control", value: LLMS_CACHE_CONTROL },
-  { key: "Content-Type", value: "text/markdown; charset=utf-8" },
+  { key: "Content-Type", value: LLMS_MARKDOWN_MEDIA_TYPE },
+];
+
+/**
+ * The Markdown twin of a page at `/<page>.md` names its page as the canonical
+ * address, so a search engine that reads the twin keeps the page and folds the
+ * twin into it. The splat holds the page's path without the leading slash, and
+ * the link joins the discovery links of the page rule.
+ */
+const MARKDOWN_TWIN_HEADERS: readonly WwwHeader[] = [
+  { key: "Content-Type", value: LLMS_MARKDOWN_MEDIA_TYPE },
+  { key: "Link", value: `<${SITE_ORIGIN}/:splat>; rel="canonical"` },
 ];
 
 const MANIFEST_HEADERS: readonly WwwHeader[] = [
@@ -109,6 +122,7 @@ export const STATIC_HEADER_RULES: readonly HeaderRule[] = [
   { path: "/sitemap/*", headers: SITEMAP_HEADERS },
   { path: "/rss.xml", headers: RSS_HEADERS },
   { path: "/llms.txt", headers: LLMS_HEADERS },
+  { path: "/*.md", headers: MARKDOWN_TWIN_HEADERS },
   { path: "/manifest.webmanifest", headers: MANIFEST_HEADERS },
   { path: "/_data/*", headers: STATIC_ANSWER_HEADERS },
   { path: SHELL_PATH, headers: SHELL_HEADERS },
