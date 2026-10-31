@@ -7,6 +7,11 @@ import { AI_SDK_COHORT } from "#scripts/dependencies/policy";
  */
 export const REGISTRY_REVIEWS = [
   [
+    "alchemy@latest",
+    "2.0.0-beta.84",
+    "Alchemy's latest release does not run on Effect 4.1, so ALCHEMY_COHORT pins the preview build of the fix. The first release past this one replaces the pins.",
+  ],
+  [
     "effect@latest",
     "4.1.1",
     "Effect 4.1.1 is the latest release and is reviewed here, but the cohort stays on 4.1.0 (EFFECT_COHORT_VERSION), the exact peer of the contracts. 4.1 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. alchemy 2.0.0-beta.84, the latest Alchemy release, imports the removed effect/Crypto in its OAuthFlow, so @alchemy.run/cloudflare cannot load and alchemy deploy fails on 4.1; the fix is merged upstream (alchemy-run/alchemy#2754) and unreleased. #1524 moves the cohort with contracts 3.x and Confect 10.5.0 once Alchemy releases it. Checked 31 October 2026.",
