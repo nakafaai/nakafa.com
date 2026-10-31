@@ -9,6 +9,7 @@ import {
   archiveUnitChange,
   assignGrantChange,
   editUnitChange,
+  finishSetupChange,
   inviteChange,
   removeLogoChange,
   revokeClientChange,
@@ -265,6 +266,20 @@ describe("components/tenant/settings/mutation", () => {
         "number",
         "object",
       ]);
+    });
+  });
+
+  describe("the setup of the school", () => {
+    it("takes the setup out of the sidebar at once", () => {
+      const local = createLocalStore();
+      local.seed(tenancy.viewer.get, { slug }, viewer());
+
+      finishSetupChange(local.store, { slug });
+
+      expect(
+        Option.getOrThrow(local.store.getQuery(tenancy.viewer.get, { slug }))
+          .tenant.setupDone
+      ).toBe(true);
     });
   });
 

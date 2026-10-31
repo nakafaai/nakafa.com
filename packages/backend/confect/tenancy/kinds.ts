@@ -97,6 +97,7 @@ export const tenant = Kind.make("tenant", "tenants", {
       name: TenantName,
       type: Schema.Literal("tenant.name.set"),
     }),
+    Schema.Struct({ type: Schema.Literal("tenant.setup.finished") }),
   ],
   published: [],
   relations: ["member"],

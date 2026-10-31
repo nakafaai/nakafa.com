@@ -154,6 +154,7 @@ export function viewer(): Viewer {
       mascot,
       name: "Nakafa",
       policies: { emailDomains: [], nina: false, studentThreads: false },
+      setupDone: false,
       slug,
       status: "active",
     },
