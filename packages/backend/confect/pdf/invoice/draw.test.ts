@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { drawInvoicePdf } from "@repo/pdf/invoice/draw";
+import { drawInvoicePdf } from "@repo/backend/confect/pdf/invoice/draw";
 import { Effect, Exit } from "effect";
 
 /** A paid pack, as a learner downloads it. */

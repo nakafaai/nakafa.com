@@ -1,7 +1,7 @@
-import { renderPdf } from "@repo/pdf/render";
-import type { ReportInput } from "@repo/pdf/report/contract";
-import { REPORT_COPY } from "@repo/pdf/report/copy";
-import { ReportDocument } from "@repo/pdf/report/document";
+import { renderPdf } from "@repo/backend/confect/pdf/render";
+import type { ReportInput } from "@repo/backend/confect/pdf/report/contract";
+import { REPORT_COPY } from "@repo/backend/confect/pdf/report/copy";
+import { ReportDocument } from "@repo/backend/confect/pdf/report/document";
 import { Effect } from "effect";
 import { createElement } from "react";
 

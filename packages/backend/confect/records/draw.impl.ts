@@ -6,9 +6,9 @@ import {
   QueryRunner,
   StorageActionWriter,
 } from "@repo/backend/confect/_generated/services";
+import { drawLetterPdf } from "@repo/backend/confect/pdf/letter/draw";
+import { drawReportPdf } from "@repo/backend/confect/pdf/report/draw";
 import spec from "@repo/backend/confect/records/draw.spec";
-import { drawLetterPdf } from "@repo/pdf/letter/draw";
-import { drawReportPdf } from "@repo/pdf/report/draw";
 import { Effect, Layer } from "effect";
 
 /** The PDF's media type. */

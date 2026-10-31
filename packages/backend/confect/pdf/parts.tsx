@@ -1,6 +1,6 @@
-import "takumi-pdf/primitives";
-import { PDF_FONT } from "@repo/pdf/render";
+import { PDF_FONT } from "@repo/backend/confect/pdf/render";
 import type { ReactNode } from "react";
+import type {} from "takumi-pdf/primitives";
 import { renderSVG } from "uqr";
 
 /** One page of a document: Inter at the size documents read at. */

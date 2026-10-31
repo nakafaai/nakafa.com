@@ -87,11 +87,6 @@
           "deny": ["app", "backend", "design-system", "mail"]
         }
       },
-      "pdf": {
-        "dependencies": {
-          "deny": ["app", "backend", "contents", "design-system", "mail"]
-        }
-      },
       "mail": {
         "dependencies": {
           "deny": ["app", "backend", "contents"]

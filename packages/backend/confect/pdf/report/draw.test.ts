@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { drawReportPdf } from "@repo/pdf/report/draw";
+import { drawReportPdf } from "@repo/backend/confect/pdf/report/draw";
 import { DateTime, Effect } from "effect";
 
 /** A printable report with two subject lines, one judged by a band. */

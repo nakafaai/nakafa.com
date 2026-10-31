@@ -15,7 +15,7 @@
   "overrides": [
     {
       // `tw` is the Tailwind prop of takumi-pdf, whose documents render to a PDF and never reach the DOM.
-      "includes": ["packages/pdf/**/*.tsx"],
+      "includes": ["packages/backend/confect/pdf/**/*.tsx"],
       "linter": {
         "rules": {
           "suspicious": {

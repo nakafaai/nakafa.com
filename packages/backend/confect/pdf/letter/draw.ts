@@ -1,6 +1,6 @@
-import type { LetterInput } from "@repo/pdf/letter/contract";
-import { LetterDocument } from "@repo/pdf/letter/document";
-import { renderPdf } from "@repo/pdf/render";
+import type { LetterInput } from "@repo/backend/confect/pdf/letter/contract";
+import { LetterDocument } from "@repo/backend/confect/pdf/letter/document";
+import { renderPdf } from "@repo/backend/confect/pdf/render";
 import { Effect } from "effect";
 import { createElement } from "react";
 

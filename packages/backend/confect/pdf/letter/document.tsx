@@ -1,8 +1,11 @@
-import "takumi-pdf/primitives";
-import type { LetterInput } from "@repo/pdf/letter/contract";
-import { indonesianDate, indonesianValue } from "@repo/pdf/letter/words";
-import { Seal, Sheet } from "@repo/pdf/parts";
+import type { LetterInput } from "@repo/backend/confect/pdf/letter/contract";
+import {
+  indonesianDate,
+  indonesianValue,
+} from "@repo/backend/confect/pdf/letter/words";
+import { Seal, Sheet } from "@repo/backend/confect/pdf/parts";
 import { Array as Arr } from "effect";
+import type {} from "takumi-pdf/primitives";
 
 /** The note a checked document carries, in Indonesian. */
 const CHECK_NOTE =
