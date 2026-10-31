@@ -338,6 +338,8 @@
     "release-action": "Rilis hasil",
     "released": "Dirilis",
     "student-finished": "Kamu sudah menyelesaikan ujian ini.",
+    "student-closed-title": "Ujian ini sudah ditutup.",
+    "student-locked-title": "Percobaan ini dikunci.",
     "student-score": "{points} dari {total} poin",
     "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
     "student-answer": "Jawabanmu: {answer}",
