@@ -1113,6 +1113,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1135,6 +1136,7 @@ export declare const api: {
             numItems: number;
           };
           slug: string;
+          standing?: "open" | "handedIn" | "late" | "scored";
         },
         {
           continueCursor: string;
@@ -1147,6 +1149,7 @@ export declare const api: {
             mine: {
               late: boolean;
               score: number | null;
+              text: string;
               updatedAt: number;
             } | null;
             points: number;
@@ -1179,6 +1182,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1204,6 +1208,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1243,6 +1248,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
           task: string;
         },
@@ -1273,6 +1279,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -3787,37 +3794,6 @@ export declare const api: {
         },
         { id: Id<"exams"> }
       >;
-      home: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        {
-          live: Array<{
-            closesAt: number;
-            cohortId: Id<"tenantCohorts"> | null;
-            examId: Id<"exams">;
-            examTitle: string;
-            id: Id<"examSittings">;
-            opensAt: number;
-            room: string;
-            state: "scheduled" | "open" | "closed";
-            timeZone: string;
-            unitId: Id<"tenantUnits">;
-          }>;
-          next: Array<{
-            closesAt: number;
-            cohortId: Id<"tenantCohorts"> | null;
-            examId: Id<"exams">;
-            examTitle: string;
-            id: Id<"examSittings">;
-            opensAt: number;
-            room: string;
-            state: "scheduled" | "open" | "closed";
-            timeZone: string;
-            unitId: Id<"tenantUnits">;
-          }>;
-        }
-      >;
       list: FunctionReference<
         "query",
         "public",
@@ -5813,6 +5789,7 @@ export declare const api: {
               id: Id<"examQuestions">;
               number: number;
               optionIds: Array<string>;
+              optionScript: "arabic" | "latin";
               points: number;
               response:
                 | Array<string>
@@ -5821,6 +5798,7 @@ export declare const api: {
                 | { cells: Array<{ column: string; statement: string }> };
               sourceIds: Array<string>;
               targetIds: Array<string>;
+              targetScript: "arabic" | "latin";
               verdict: "correct" | "incorrect" | "partial" | "pending";
             }>;
           } | null
@@ -5838,8 +5816,10 @@ export declare const api: {
               numItems: number;
             };
             questionId: Id<"examQuestions">;
+            search?: string;
             sittingId: Id<"examSittings">;
             slug: string;
+            verdict?: "correct" | "incorrect" | "partial" | "pending";
           },
           {
             continueCursor: string;
@@ -5871,6 +5851,7 @@ export declare const api: {
               maximumRowsRead?: number;
               numItems: number;
             };
+            search?: string;
             sittingId: Id<"examSittings">;
             slug: string;
             state?: "inProgress" | "locked" | "closing" | "submitted";
@@ -5916,6 +5897,7 @@ export declare const api: {
               id: Id<"examQuestions">;
               number: number;
               optionIds: Array<string>;
+              optionScript: "arabic" | "latin";
               points: number;
               response:
                 | Array<string>
@@ -5924,6 +5906,7 @@ export declare const api: {
                 | { cells: Array<{ column: string; statement: string }> };
               sourceIds: Array<string>;
               targetIds: Array<string>;
+              targetScript: "arabic" | "latin";
               verdict: "correct" | "incorrect" | "partial" | "pending";
             }>;
           } | null
@@ -5938,9 +5921,11 @@ export declare const api: {
               id: Id<"examQuestions">;
               number: number;
               optionIds: Array<string>;
+              optionScript: "arabic" | "latin";
               points: number;
               sourceIds: Array<string>;
               targetIds: Array<string>;
+              targetScript: "arabic" | "latin";
             }>;
             releasedAt: number | null;
             sitting: {
@@ -6013,7 +5998,10 @@ export declare const api: {
           page: Array<{
             canCancel: boolean;
             closesAt: number;
-            group: { kind: "cohort" | "unit"; name: string };
+            group:
+              | { kind: "unit"; unitId: Id<"tenantUnits"> }
+              | { cohortId: Id<"tenantCohorts">; kind: "cohort" };
+            groupName: string;
             id: Id<"examSittings">;
             opensAt: number;
             room: string;
@@ -6704,6 +6692,7 @@ export declare const api: {
             | "secondTab"
             | "disconnect"
             | "return";
+          since?: number;
           slug: string;
         },
         null
@@ -7016,6 +7005,12 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        { loginName: string; personId: Id<"tenantPeople">; slug: string },
+        string
+      >;
     };
   };
   integrations: {
@@ -7324,6 +7319,7 @@ export declare const api: {
                 }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
+              | { grade: number; type: "cohort.grade.set" }
               | { type: "cohort.archived" }
               | { type: "cohort.restored" }
               | {
@@ -7412,6 +7408,7 @@ export declare const api: {
               | { type: "period.archived" }
               | { type: "period.restored" }
               | { type: "period.rename" }
+              | { type: "period.rescheduled" }
               | {
                   added: number;
                   changed: number;
@@ -7438,6 +7435,7 @@ export declare const api: {
               | { type: "person.released" }
               | { reason?: "break-glass"; type: "person.removed" }
               | { type: "person.renamed" }
+              | { type: "login.renamed" }
               | { cohort: Id<"tenantCohorts">; type: "person.placed" }
               | {
                   from: Id<"tenantCohorts">;
@@ -7598,6 +7596,21 @@ export declare const api: {
               | { type: "unit.archived" }
               | { type: "unit.unarchived" }
               | { npsn: string; type: "unit.npsn.set" }
+              | { name: string; type: "unit.name.set" }
+              | {
+                  level:
+                    | "paud"
+                    | "sd"
+                    | "mi"
+                    | "smp"
+                    | "mts"
+                    | "sma"
+                    | "ma"
+                    | "smk"
+                    | "slb"
+                    | "other";
+                  type: "unit.level.set";
+                }
               | {
                   minutes: number;
                   reason: "support" | "onboarding" | "incident";
@@ -8106,7 +8119,10 @@ export declare const api: {
               | "person.invited"
               | "forum.mentioned"
               | "announcement.posted"
-              | "assignment.published";
+              | "assignment.published"
+              | "exam.starting"
+              | "exam.reminder"
+              | "grade.released";
             createdAt: number;
             detail: {
               actor: string;
@@ -8117,6 +8133,14 @@ export declare const api: {
               messageId: Id<"classroomMessages"> | null;
               task: string | null;
             } | null;
+            exam: {
+              examTitle: string;
+              opensAt: number;
+              room: string;
+              sittingId: Id<"examSittings">;
+              student: string | null;
+            } | null;
+            grade: { className: string; student: string | null } | null;
             id: Id<"notifications">;
             readAt?: number;
             subject:
@@ -8161,7 +8185,10 @@ export declare const api: {
             | "person.invited"
             | "forum.mentioned"
             | "announcement.posted"
-            | "assignment.published";
+            | "assignment.published"
+            | "exam.starting"
+            | "exam.reminder"
+            | "grade.released";
           createdAt: number;
           detail: {
             actor: string;
@@ -8172,6 +8199,14 @@ export declare const api: {
             messageId: Id<"classroomMessages"> | null;
             task: string | null;
           } | null;
+          exam: {
+            examTitle: string;
+            opensAt: number;
+            room: string;
+            sittingId: Id<"examSittings">;
+            student: string | null;
+          } | null;
+          grade: { className: string; student: string | null } | null;
           id: Id<"notifications">;
           readAt?: number;
           subject:
@@ -9103,6 +9138,22 @@ export declare const api: {
           status: "active" | "archived";
         }
       >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          grade: number;
+          name: string;
+          slug: string;
+        },
+        {
+          grade: number;
+          id: Id<"tenantCohorts">;
+          name: string;
+          status: "active" | "archived";
+        }
+      >;
       get: FunctionReference<
         "query",
         "public",
@@ -9148,17 +9199,6 @@ export declare const api: {
           page: Array<{ id: Id<"tenantPeople">; name: string }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
-        }
-      >;
-      rename: FunctionReference<
-        "mutation",
-        "public",
-        { cohortId: Id<"tenantCohorts">; name: string; slug: string },
-        {
-          grade: number;
-          id: Id<"tenantCohorts">;
-          name: string;
-          status: "active" | "archived";
         }
       >;
       restore: FunctionReference<
@@ -9467,6 +9507,24 @@ export declare const api: {
           status: "planned" | "active" | "archived";
         }
       >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          end: string;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          start: string;
+        },
+        {
+          end: string;
+          id: Id<"tenantPeriods">;
+          name: string;
+          start: string;
+          status: "planned" | "active" | "archived";
+        }
+      >;
       list: FunctionReference<
         "query",
         "public",
@@ -9500,18 +9558,6 @@ export declare const api: {
         "mutation",
         "public",
         { periodId: Id<"tenantPeriods">; slug: string },
-        {
-          end: string;
-          id: Id<"tenantPeriods">;
-          name: string;
-          start: string;
-          status: "planned" | "active" | "archived";
-        }
-      >;
-      rename: FunctionReference<
-        "mutation",
-        "public",
-        { name: string; periodId: Id<"tenantPeriods">; slug: string },
         {
           end: string;
           id: Id<"tenantPeriods">;
@@ -10400,6 +10446,40 @@ export declare const api: {
           npsn: string | null;
           status: "active" | "archived";
           timeZone: string;
+        }
+      >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+          slug: string;
+          unitId: Id<"tenantUnits">;
+        },
+        {
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
         }
       >;
       list: FunctionReference<
@@ -13896,8 +13976,26 @@ export declare const internal: {
       >;
     };
     sync: {
+      destroy: FunctionReference<
+        "mutation",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
       reconnect: FunctionReference<
         "mutation",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      revocable: FunctionReference<
+        "query",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        string | null
+      >;
+      revoke: FunctionReference<
+        "action",
         "internal",
         { connectionId: Id<"connectorConnections"> },
         null
@@ -17439,6 +17537,18 @@ export declare const internal: {
         "mutation",
         "internal",
         { cursor: string | null; personId: Id<"tenantPeople">; readAt: number },
+        null
+      >;
+    };
+    sittings: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: string | null;
+          notice: "examStart" | "examGuardianReminder";
+          sittingId: Id<"examSittings">;
+        },
         null
       >;
     };

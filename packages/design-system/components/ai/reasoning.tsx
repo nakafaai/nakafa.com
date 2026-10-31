@@ -7,6 +7,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { DateTime, Effect, Fiber, Schema } from "effect";
 import {
@@ -166,40 +167,64 @@ const ThinkingMessage = memo(() => {
 });
 ThinkingMessage.displayName = "ThinkingMessage";
 
+/** What the row says: the thought's spinner, how long it took, and the chevron of a thought that opens. */
+function ReasoningSummary() {
+  const hasContent = useReasoning((reasoning) => reasoning.hasContent);
+  const isOpen = useReasoning((reasoning) => reasoning.isOpen);
+  const isStreaming = useReasoning((reasoning) => reasoning.isStreaming);
+
+  return (
+    <>
+      <Spinner className="size-4" icon={BrainIcon} isLoading={isStreaming} />
+      <ThinkingMessage />
+      {hasContent ? (
+        <HugeIcons
+          className={cn(
+            "size-4 shrink-0 transition-transform",
+            isOpen ? "rotate-180" : "rotate-0"
+          )}
+          icon={ArrowDown01Icon}
+        />
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * The row that sums a thought up. It opens the thought where it has words to show; a thought
+ * without them, such as a saved one, is the same row as plain text, so nothing invites a press
+ * that would open nothing.
+ */
+const reasoningTriggerVariants = cva(
+  "flex w-fit max-w-full items-center gap-2 text-start text-muted-foreground text-sm transition-colors",
+  {
+    variants: {
+      opens: {
+        false: "",
+        true: "hover:text-foreground",
+      },
+    },
+  }
+);
+
 export const ReasoningTrigger = memo(
   ({ className, children, ...props }: ReasoningTriggerProps) => {
     const hasContent = useReasoning((reasoning) => reasoning.hasContent);
-    const isOpen = useReasoning((reasoning) => reasoning.isOpen);
-    const isStreaming = useReasoning((reasoning) => reasoning.isStreaming);
+
+    if (!hasContent) {
+      return (
+        <div className={reasoningTriggerVariants({ className, opens: false })}>
+          {children ?? <ReasoningSummary />}
+        </div>
+      );
+    }
 
     return (
       <CollapsibleTrigger
-        className={cn(
-          "flex w-fit max-w-full items-center gap-2 text-start text-muted-foreground text-sm transition-colors",
-          hasContent && "cursor-pointer hover:text-foreground",
-          className
-        )}
+        className={reasoningTriggerVariants({ className, opens: true })}
         {...props}
       >
-        {children ?? (
-          <>
-            <Spinner
-              className="size-4"
-              icon={BrainIcon}
-              isLoading={isStreaming}
-            />
-            <ThinkingMessage />
-            {hasContent ? (
-              <HugeIcons
-                className={cn(
-                  "size-4 shrink-0 transition-transform",
-                  isOpen ? "rotate-180" : "rotate-0"
-                )}
-                icon={ArrowDown01Icon}
-              />
-            ) : null}
-          </>
-        )}
+        {children ?? <ReasoningSummary />}
       </CollapsibleTrigger>
     );
   }

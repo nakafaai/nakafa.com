@@ -8,6 +8,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { type KeyboardEvent, useRef, useState } from "react";
@@ -159,7 +160,7 @@ export function ExamGrid() {
   const dragged = useRef<QuestionId | null>(null);
   const [selected, setSelected] = useState<readonly QuestionId[]>([]);
   const [asking, setAsking] = useState(false);
-  const area = useRef<HTMLElement>(null);
+  const area = useRef<HTMLDivElement>(null);
   // Escape goes back to the canvas from anywhere in the grid, or from the page itself. The delete question and the
   // footer's menus sit outside the grid and take their own Escape.
   useHotkeys([
@@ -226,10 +227,13 @@ export function ExamGrid() {
   };
 
   return (
-    <section
+    // The grid scrolls in its scroll area's viewport, under an overlay bar that takes no room; its bar of
+    // actions sticks to the viewport's top.
+    <ScrollArea
       aria-label={t("grid")}
-      className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-muted/40"
+      className="min-w-0 flex-1 bg-muted/40"
       ref={area}
+      render={<section />}
     >
       {editable ? (
         <div className="sticky top-0 z-10 flex min-h-12 flex-wrap items-center gap-2 border-b bg-background px-4 py-2">
@@ -342,6 +346,6 @@ export function ExamGrid() {
         setOpen={setAsking}
         title={t("remove-many-title", { count: chosen.length })}
       />
-    </section>
+    </ScrollArea>
   );
 }

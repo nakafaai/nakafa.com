@@ -7,7 +7,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The entry address that holds the school username form alone. */
-const USERNAME_ADDRESS = /masuk=username/;
+const USERNAME_ADDRESS = /sign-in=username/;
 
 test("a wrong card code is refused with one message that does not say whether the username exists", async ({
   page,
@@ -22,11 +22,15 @@ test("a wrong card code is refused with one message that does not say whether th
   await page.getByLabel("School username").fill("guru.tidak");
   await page.getByLabel("Card code").fill("ABCDE-FGHJK");
   await page.getByLabel("Password").fill("correct horse battery");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  const signIn = page.getByRole("button", { name: "Sign in" });
+  const pressed = await signIn.boundingBox();
+  await signIn.click();
 
   await expect(page.locator("form").getByRole("alert")).toHaveText(
     "The username or card code is not right."
   );
+  // The message takes the line the form keeps for it, so the button stays where it was pressed.
+  expect((await signIn.boundingBox())?.y).toBe(pressed?.y);
 });
 
 test("a sign-in without the username or password answers at once and asks the server nothing", async ({
@@ -41,7 +45,7 @@ test("a sign-in without the username or password answers at once and asks the se
     }
   });
   await page.goto(
-    hostAddress(baseURL, `${school.slug}.localhost`, "/?masuk=username")
+    hostAddress(baseURL, `${school.slug}.localhost`, "/?sign-in=username")
   );
   await waitUntilTakenOver(page.getByRole("button", { name: "Sign in" }));
 

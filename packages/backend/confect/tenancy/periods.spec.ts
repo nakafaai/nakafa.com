@@ -26,7 +26,7 @@ const PeriodView = Schema.Struct({
 });
 
 /**
- * The periods of a school. Its Admin creates, opens, and archives them; the
+ * The periods of a school. Its Admin creates, edits, opens, and archives them; the
  * roles that read the school's plan read them, and an archived school or period
  * refuses every write.
  */
@@ -82,13 +82,16 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicMutation({
-      name: "rename",
+      name: "edit",
       args: () => ({
+        end: Schema.String,
         name: PeriodName,
         periodId: Id("tenantPeriods"),
         slug: TenantSlug,
+        start: Schema.String,
       }),
       returns: () => PeriodView,
-      error: () => AccessDenied,
+      error: () =>
+        Schema.Union([AccessDenied, PeriodDatesInvalid, PeriodOverlaps]),
     }).middleware(PeriodAccess, { action: "period.manage", arg: "periodId" })
   );

@@ -31,7 +31,11 @@ function scope(args: TryoutSetRequest, viewer: string | null) {
   ]);
 }
 
-/** Retention is scoped to one principal and track, including while requests change. */
+/**
+ * Retention is scoped to one principal and track, including while requests change. A visitor's rows hold
+ * nothing personal, so when the page's viewer becomes a learner they stay on screen until the learner's own
+ * rows arrive, and the table never empties between the two; another learner's rows never stay.
+ */
 function useCommittedResult(
   bootstrap: TryoutSetTableProps["bootstrap"],
   activeScope: string,
@@ -45,6 +49,9 @@ function useCommittedResult(
     value: bootstrap,
   });
   if (committed.scope !== activeScope) {
+    if (candidate === undefined && committed.value?.result.viewerId === null) {
+      return committed.value;
+    }
     setCommitted({ scope: activeScope, value: candidate });
     return candidate;
   }

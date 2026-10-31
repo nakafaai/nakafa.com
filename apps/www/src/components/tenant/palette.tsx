@@ -151,12 +151,7 @@ function TenantPaletteRow({
   onOpen: () => void;
 }) {
   return (
-    <CommandItem
-      className="cursor-pointer"
-      disabled={disabled}
-      onClick={onOpen}
-      value={item}
-    >
+    <CommandItem disabled={disabled} onClick={onOpen} value={item}>
       {"mascot" in item.icon ? (
         <PersonAvatar className="size-4" mascot={item.icon.mascot} />
       ) : (

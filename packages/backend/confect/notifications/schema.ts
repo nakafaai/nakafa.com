@@ -51,25 +51,81 @@ const AssignmentRow = Schema.Struct({
   taskId: Id("classroomTasks"),
 });
 
+/** The row of a sitting that opens soon, for one student it expects. Its subject is the sitting. */
+const ExamStartRow = Schema.Struct({
+  ...rowFields,
+  changeType: Schema.Literal("exam.starting"),
+  sittingId: Id("examSittings"),
+});
+
 /**
- * One inbox row: one recipient Person and one invitation, mention,
- * announcement, or new task, told apart by `changeType`. It holds IDs and codes only, and its
- * text is read from its subject when it is opened (ADR 0027).
+ * The row of a child's coming sitting, for one guardian with a verified link to the child. Its subject is the
+ * sitting, and it names the child, since a guardian can follow more than one.
+ */
+const ExamReminderRow = Schema.Struct({
+  ...rowFields,
+  changeType: Schema.Literal("exam.reminder"),
+  sittingId: Id("examSittings"),
+  studentPersonId: Id("tenantPeople"),
+});
+
+/**
+ * The row of a released grade, for its student and for each guardian with a verified link to the student. Its subject
+ * is the grade, and it names the student, so a guardian's row says whose grade it is.
+ */
+const GradeReleasedRow = Schema.Struct({
+  ...rowFields,
+  changeType: Schema.Literal("grade.released"),
+  gradeId: Id("classGrades"),
+  studentPersonId: Id("tenantPeople"),
+});
+
+/**
+ * One inbox row: one recipient Person and one invitation, mention, announcement, new task, coming sitting, child's
+ * coming sitting, or released grade, told apart by `changeType`. It holds IDs and codes only, and its text is read from its subject when
+ * it is opened (ADR 0027).
  */
 export const Notification = Schema.Union([
   InvitationRow,
   MentionRow,
   AnnouncementRow,
   AssignmentRow,
+  ExamStartRow,
+  ExamReminderRow,
+  GradeReleasedRow,
 ]);
 
-/** What a row tells: an invitation, a mention, an announcement, or a new task. */
+/** What a row tells: an invitation, a mention, an announcement, a new task, a coming sitting, or a released grade. */
 const NotificationType = Schema.Literals([
   "person.invited",
   "forum.mentioned",
   "announcement.posted",
   "assignment.published",
+  "exam.starting",
+  "exam.reminder",
+  "grade.released",
 ]);
+
+/**
+ * The sitting a sitting row opens, read when the row is read while the sitting still waits to open: the exam's title,
+ * its room, when it opens, and, for a guardian, the child it is for.
+ */
+const ExamDetail = Schema.Struct({
+  examTitle: Schema.String,
+  opensAt: Schema.Finite,
+  room: Schema.String,
+  sittingId: Id("examSittings"),
+  student: Schema.NullOr(Schema.String),
+});
+
+/**
+ * The grade a grade row tells of, read when the row is read while the grade stays released: its class's name, and,
+ * on a guardian's row, the student's name.
+ */
+const GradeDetail = Schema.Struct({
+  className: Schema.String,
+  student: Schema.NullOr(Schema.String),
+});
 
 /**
  * The place a class row opens, read from its source when the row is read, while
@@ -90,12 +146,15 @@ export const ClassDetail = Schema.Struct({
 /**
  * One inbox row as the wire shows it, with the school that holds it. A class row
  * carries its detail while the recipient still reads its class and its source
- * still stands, and no detail otherwise.
+ * still stands, and a sitting row its exam while the sitting still waits to open;
+ * otherwise neither.
  */
 export const NotificationView = Schema.Struct({
   changeType: NotificationType,
   createdAt: Schema.Finite,
   detail: Schema.NullOr(ClassDetail),
+  exam: Schema.NullOr(ExamDetail),
+  grade: Schema.NullOr(GradeDetail),
   id: Id("notifications"),
   readAt: Schema.optionalKey(Schema.Finite),
   subject: SubjectView,
@@ -110,11 +169,21 @@ export const NotificationView = Schema.Struct({
 export const notificationView = (
   row: NotificationsDoc,
   tenant: typeof TenantProfile.Type,
-  detail: typeof ClassDetail.Type | null
+  {
+    detail,
+    exam,
+    grade,
+  }: {
+    readonly detail: typeof ClassDetail.Type | null;
+    readonly exam: typeof ExamDetail.Type | null;
+    readonly grade: typeof GradeDetail.Type | null;
+  }
 ) => ({
   changeType: row.changeType,
   createdAt: row.createdAt,
   detail,
+  exam,
+  grade,
   id: row._id,
   subject: row.subject,
   tenant,

@@ -65,7 +65,8 @@ export function SittingDashboard({
     );
   }
   if (!QueryResult.isSuccess(state)) {
-    return null;
+    // The header is there from the first paint, with the path the address knows; the room fills in when it is read.
+    return <SittingDashboardShell />;
   }
   if (state.value.sitting.examId !== examId) {
     return (
@@ -133,6 +134,21 @@ function SittingRefusal({
       </div>
     </>
   );
+}
+
+/**
+ * The page while the dashboard is read: the school's header with the path to the exams, which the address and the
+ * viewer already know, so the page has its header from the first paint. The exam's crumb, the room and the proctor's
+ * actions fill in at the header's end when the room is read, so nothing that shows moves.
+ */
+function SittingDashboardShell() {
+  const t = useTranslations("Exams");
+  const tenant = useTenant();
+  const examsItems: readonly BreadcrumbHeaderItem[] = tenant.canOpenExams
+    ? [{ label: t("title"), target: schoolExamsTarget(tenant.slug) }]
+    : [];
+
+  return <SchoolHeader items={examsItems} />;
 }
 
 /** The page when the dashboard could not be read for a reason a reload may fix: the header, then why and the retry. */

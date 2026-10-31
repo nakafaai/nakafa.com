@@ -1,10 +1,11 @@
 import { KeyboardIcon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
 import { FormulaKeypad } from "@repo/design-system/components/editor/keypad";
+import { formulaProblem } from "@repo/design-system/components/editor/render";
 import {
-  drawFormula,
-  formulaProblem,
-} from "@repo/design-system/components/editor/render";
+  BlockMath,
+  InlineMath,
+} from "@repo/design-system/components/markdown/math";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -141,12 +142,14 @@ function MathField({
  * JavaScript holds it. Closing the popover saves the
  * formula, unless the writer pressed Escape, which keeps the formula as it was. A blank formula
  * is never saved, and a formula that KaTeX does not parse is saved and drawn as its error, with
- * KaTeX's reason in one sentence.
+ * KaTeX's reason in one sentence. The formula the writer just inserted holds nothing yet to keep,
+ * so Escape or a blank close takes it back out (`onDiscard`) instead of leaving its placeholder.
  */
 export function FormulaEdit({
   block,
   labels,
   latex,
+  onDiscard,
   onSave,
   opening,
 }: {
@@ -166,6 +169,8 @@ export function FormulaEdit({
     open: string;
   };
   latex: string;
+  /** Takes the formula the writer just inserted back out of the text, when it closes without one. */
+  onDiscard: () => void;
   onSave: (latex: string) => void;
   /** Whether the editor opens as the formula first draws, as it does for the formula the writer just inserted. */
   opening: boolean;
@@ -202,6 +207,10 @@ export function FormulaEdit({
       setOpen(false);
       if (!discarded.current && draft.trim() !== "") {
         onSave(draft.trim());
+        return;
+      }
+      if (opening) {
+        onDiscard();
       }
       return;
     }
@@ -219,15 +228,15 @@ export function FormulaEdit({
 
   return (
     <Popover onOpenChange={openEditor} open={open}>
+      {/* A formula on its own line is the lesson's card, a block, so its button spans the line. */}
       <PopoverTrigger
         render={
           <button
             aria-label={labels.open}
-            className={
-              block
-                ? "block w-full cursor-pointer overflow-x-auto text-start"
-                : "inline cursor-pointer"
-            }
+            className={cn(
+              "cursor-pointer",
+              block ? "block w-full text-start" : "inline"
+            )}
             type="button"
           />
         }
@@ -302,8 +311,10 @@ export function FormulaEdit({
 }
 
 /**
- * The drawn formula, which KaTeX draws from its LaTeX and never from any other source. The server and
- * the browser draw it alike, so the first HTML already shows the formula, chemistry included.
+ * The drawn formula, as the lesson page draws it: a formula on its own line in the lesson's card, and an
+ * inline formula with the lesson's inline pieces, both drawn by KaTeX from the LaTeX alone. The server and
+ * the browser draw it alike, so the first HTML already shows the formula, chemistry included (`render.ts`
+ * registers it on KaTeX).
  */
 export function FormulaMarkup({
   block,
@@ -312,10 +323,5 @@ export function FormulaMarkup({
   block: boolean;
   latex: string;
 }) {
-  return (
-    <span
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
-      dangerouslySetInnerHTML={{ __html: drawFormula(latex, block) }}
-    />
-  );
+  return block ? <BlockMath math={latex} /> : <InlineMath math={latex} />;
 }

@@ -4,7 +4,6 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { LINK_TERM } from "@repo/backend/confect/guardians/schema";
 import {
   classOf,
   cohort,
@@ -29,7 +28,7 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect, Exit } from "effect";
+import { Array as Arr, Effect, Exit } from "effect";
 
 const { children, confirm, grades, withdraw } = refs.public.guardians.family;
 
@@ -149,7 +148,7 @@ describe("guardians/family children and confirm", () => {
           })
         ).toBe("refused");
         yield* setRoster(fixture, { nisn: NISN, underAgeLimit: true });
-        vi.setSystemTime(TENANCY_NOW + Duration.toMillis(LINK_TERM));
+        vi.setSystemTime(link.expiresAt);
         expect(
           yield* guardian.mutation(confirm, {
             linkId: link.id,

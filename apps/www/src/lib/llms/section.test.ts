@@ -163,9 +163,13 @@ describe("llms section indexes", () => {
 
     expect(empty).toContain("0 bounded published partitions");
     expect(empty).not.toContain("/page/0/llms.txt");
-    expect(single).toContain(`${BASE_URL}/llms/en/articles/page/0/llms.txt`);
+    expect(single).toContain(
+      `${BASE_URL}/llms.mdx/llms/en/articles/page/0/llms.txt`
+    );
     expect(single).not.toContain("last bounded content page");
-    expect(multiple).toContain(`${BASE_URL}/llms/en/articles/page/2/llms.txt`);
+    expect(multiple).toContain(
+      `${BASE_URL}/llms.mdx/llms/en/articles/page/2/llms.txt`
+    );
     expect(multiple).toContain("3 bounded published partitions");
   });
 

@@ -144,7 +144,7 @@ export function ChatSharing({
             const isPublic = visibility === "public";
             return (
               <button
-                className="group flex cursor-pointer items-start gap-4 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+                className="group flex items-start gap-4 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
                 key={visibility}
                 onClick={() => handleUpdateVisibility(visibility)}
                 type="button"
