@@ -17,11 +17,9 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { PanesProvider } from "@/components/shared/panes";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
-import {
-  CHANNEL_PAGE_SIZE,
-  ChannelList,
-} from "@/components/tenant/classes/channels";
+import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
+import { ForumFrame, ForumPick } from "@/components/tenant/classes/forum/frame";
 import { StartDiscussion } from "@/components/tenant/classes/forum/start";
 import { ForumDiscussion } from "@/components/tenant/classes/forum/thread";
 import {
@@ -35,6 +33,7 @@ import { LibraryList } from "@/components/tenant/classes/library/list";
 import { LibraryUploadsScope } from "@/components/tenant/classes/library/scope";
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { classPath } from "@/components/tenant/classes/path";
+import { PeopleList } from "@/components/tenant/classes/people";
 import {
   ClassScopeContext,
   useClassScope,
@@ -149,6 +148,7 @@ function ClassPage({
         can: resolved.value.can,
         classId: resolved.value.id,
         classSlug,
+        opens: resolved.value.opens,
         slug,
       }}
     >
@@ -202,6 +202,9 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
   const listed = PaginatedQueryResult.isFailure(channels)
     ? []
     : channels.results;
+  const open = Option.flatMap(channelId, (id) =>
+    Arr.findFirst(listed, (channel) => channel.id === id)
+  );
   const path = classPath(
     view,
     {
@@ -210,18 +213,14 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
       grades: t("tabs-grades"),
       library: t("tabs-library"),
       name: klass.name,
+      people: t("tabs-people"),
       slug,
       tasks: t("tabs-tasks"),
     },
-    Option.map(
-      Option.flatMap(channelId, (id) =>
-        Arr.findFirst(listed, (channel) => channel.id === id)
-      ),
-      (channel) => ({
-        id: channel.id,
-        label: channelLabel(channel, t("general-channel")),
-      })
-    ),
+    Option.map(open, (channel) => ({
+      id: channel.id,
+      label: channelLabel(channel, t("general-channel")),
+    })),
     QueryResult.isSuccess(task)
       ? Option.some(task.value.title)
       : Option.map(found, (shown) =>
@@ -236,7 +235,11 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
     <ClassHeaderProvider items={path} tab={view._tag} title={klass.name}>
       {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
       <div className="flex h-svh min-h-0 flex-col">
-        <ClassBody found={found} klass={klass} />
+        <ClassBody
+          archived={Option.exists(open, (channel) => channel.archived)}
+          found={found}
+          klass={klass}
+        />
       </div>
     </ClassHeaderProvider>
   );
@@ -244,23 +247,26 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
 
 /**
  * The view under the class's header, as wide as the page, each with the header's actions it
- * holds: one channel fills the body as a chat does, with New discussion for whoever the server
- * lets open one there, and one discussion beside its channel; the class's announcements, with New
- * announcement for its subject teachers, and one task scroll within it; the channel list, the
- * library and the task list each draw their header and their one table card; and the gradebook
- * shares its filters and its panes between its header and its body.
+ * holds: the forum keeps the list of chats beside one chat, with New discussion for whoever the
+ * server lets open one there, or one discussion beside its chat; the class's announcements, with
+ * New announcement for its subject teachers, and one task scroll within it; the library and the
+ * task list each draw their header and their one table card; and the gradebook shares its filters
+ * and its panes between its header and its body.
  */
 function ClassBody({
+  archived,
   found,
   klass,
 }: {
+  /** Whether the channel on the page is archived, so it takes nothing new. */
+  archived: boolean;
   found: Option.Option<Ref.Returns<typeof classroom.forum.threads.get>>;
   klass: Resolved;
 }) {
   const view = useClassView();
   const { slug } = useClassScope();
   const canManage = Arr.contains(klass.can, "forum.manage");
-  const canPost = Arr.contains(klass.can, "forum.post");
+  const canPost = Arr.contains(klass.can, "forum.post") && !archived;
   // A subject teacher, the one who posts announcements, may mention everyone (ADR 0025).
   const everyone = Arr.contains(klass.can, "post.publish");
 
@@ -270,7 +276,7 @@ function ClassBody({
         <ClassHeader>
           {klass.opens ? <StartDiscussion channelId={view.channelId} /> : null}
         </ClassHeader>
-        <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
+        <ForumFrame shown="chat">
           <ForumChannel
             canManage={canManage}
             canPost={canPost}
@@ -278,7 +284,7 @@ function ClassBody({
             everyone={everyone}
             jump={view.jump}
           />
-        </div>
+        </ForumFrame>
       </>
     );
   }
@@ -286,18 +292,20 @@ function ClassBody({
     return (
       <>
         <ClassHeader />
-        {Option.match(found, {
-          onNone: () => null,
-          onSome: (thread) => (
-            <ForumDiscussion
-              canManage={canManage}
-              canPost={canPost}
-              everyone={everyone}
-              jump={view.jump}
-              thread={thread}
-            />
-          ),
-        })}
+        <ForumFrame shown="thread">
+          {Option.match(found, {
+            onNone: () => null,
+            onSome: (thread) => (
+              <ForumDiscussion
+                canManage={canManage}
+                canPost={canPost}
+                everyone={everyone}
+                jump={view.jump}
+                thread={thread}
+              />
+            ),
+          })}
+        </ForumFrame>
       </>
     );
   }
@@ -322,6 +330,9 @@ function ClassBody({
   }
   if (view._tag === "tasks") {
     return <TaskList />;
+  }
+  if (view._tag === "people") {
+    return <PeopleList />;
   }
   if (view._tag === "grades") {
     return (
@@ -355,7 +366,14 @@ function ClassBody({
       </TableFiltersProvider>
     );
   }
-  return <ChannelList />;
+  return (
+    <>
+      <ClassHeader />
+      <ForumFrame shown="rail">
+        <ForumPick />
+      </ForumFrame>
+    </>
+  );
 }
 
 /**

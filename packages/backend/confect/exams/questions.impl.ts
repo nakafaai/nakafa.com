@@ -5,13 +5,18 @@ import { examAccess } from "@repo/backend/confect/exams/authority";
 import { requireUnfrozen } from "@repo/backend/confect/exams/freeze";
 import { answerQuestion } from "@repo/backend/confect/exams/questions/answer";
 import { copyQuestion } from "@repo/backend/confect/exams/questions/copy";
+import { setMedia } from "@repo/backend/confect/exams/questions/media";
 import { moveQuestion } from "@repo/backend/confect/exams/questions/move";
 import { addQuestion } from "@repo/backend/confect/exams/questions/place";
-import { setPoints } from "@repo/backend/confect/exams/questions/points";
+import {
+  setPoints,
+  setScoring,
+} from "@repo/backend/confect/exams/questions/points";
 import {
   questionOf,
   readQuestion,
 } from "@repo/backend/confect/exams/questions/read";
+import { setReading } from "@repo/backend/confect/exams/questions/reading";
 import { removeQuestion } from "@repo/backend/confect/exams/questions/remove";
 import { switchTemplate } from "@repo/backend/confect/exams/questions/template";
 import spec from "@repo/backend/confect/exams/questions.spec";
@@ -86,6 +91,48 @@ const points = FunctionImpl.make(
   })
 );
 
+/** Sets the media of a question of the exam, and returns the question. */
+const media = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "media",
+  Effect.fn("exams.questions.media")(function* ({ media, questionId }) {
+    const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
+    const question = yield* questionOf(exam, questionId);
+    yield* setMedia(exam, question, media);
+    return yield* readQuestion(questionId);
+  })
+);
+
+/** Gives a question of the exam a reading or takes it away, and returns the question. */
+const reading = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "reading",
+  Effect.fn("exams.questions.reading")(function* ({ questionId, source }) {
+    const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
+    const question = yield* questionOf(exam, questionId);
+    yield* setReading(exam, question, source);
+    return yield* readQuestion(questionId);
+  })
+);
+
+/** Sets the rule that scores a question of the exam, and returns the question. */
+const scoring = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "scoring",
+  Effect.fn("exams.questions.scoring")(function* ({ questionId, scoring }) {
+    const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
+    const question = yield* questionOf(exam, questionId);
+    yield* setScoring(question, scoring);
+    return yield* readQuestion(questionId);
+  })
+);
+
 /** Saves the answers and the key of a question at the revision the editor saw, and returns the question. */
 const answer = FunctionImpl.make(
   databaseSchema,
@@ -124,7 +171,7 @@ const template = FunctionImpl.make(
   })
 );
 
-/** Implements the questions group of `questions.spec.ts`: add, copy, remove, move, answer, points, and template. */
+/** Implements the questions group of `questions.spec.ts`: add, copy, remove, move, answer, points, media, reading, scoring, and template. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(add),
   Layer.provide(copy),
@@ -132,6 +179,9 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(move),
   Layer.provide(answer),
   Layer.provide(points),
+  Layer.provide(media),
+  Layer.provide(reading),
+  Layer.provide(scoring),
   Layer.provide(template),
   Layer.provide(session),
   Layer.provide(member),

@@ -20,9 +20,16 @@ import { drawDocument } from "@repo/design-system/components/editor/prose";
 import { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
-import { useCallback, useDeferredValue, useMemo } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
-import { choiceOf, type OptionLabel } from "@/components/tenant/exams/answer";
+import { DrawnFigures, figurePlaces } from "@/components/assessment/drawn";
+import { ChoiceGroup } from "@/components/exams/sitting/reason";
+import {
+  type Choice,
+  isChoice,
+  type OptionLabel,
+} from "@/components/tenant/exams/answer";
+import { choiceTitle } from "@/components/tenant/exams/choice";
 import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -121,6 +128,26 @@ export function usePageDocument({
     : Option.orElse(served, () => live);
 }
 
+/** A question's shared reading drawn without an editor, over its prompt. */
+export function ReadingSketch({
+  documentId,
+  read,
+}: {
+  readonly documentId: Id<"editorDocuments">;
+  /** Whether the server's document may be read now. */
+  readonly read: boolean;
+}) {
+  const doc = usePageDocument({
+    documentId,
+    editing: false,
+    open: false,
+    read,
+    saved: true,
+  });
+
+  return <PreviewProse article doc={doc} size="paper" />;
+}
+
 /** The document a text draws while its document is not known: one empty paragraph, as an editor holds one. */
 const EMPTY_TEXT = Node.fromJSON(assessmentSchema, {
   content: [{ type: "paragraph" }],
@@ -141,14 +168,16 @@ export function PreviewProse({
 }: {
   article: boolean;
   doc: Option.Option<Node>;
-  size: "line" | "page";
+  size: "line" | "page" | "paper";
 }) {
   const shown = useDeferredValue(Option.getOrElse(doc, () => EMPTY_TEXT));
+  const [figures, setFigures] = useState<readonly HTMLElement[]>([]);
   // The text is drawn again only when it changes, not on every redraw of the page.
   const draw = useCallback(
     (element: HTMLDivElement | null) => {
       if (element !== null) {
         drawDocument(element, shown, article);
+        setFigures(figurePlaces(element));
       }
     },
     [article, shown]
@@ -163,6 +192,7 @@ export function PreviewProse({
         )}
         ref={draw}
       />
+      <DrawnFigures doc={shown} places={figures} />
     </div>
   );
 }
@@ -263,31 +293,20 @@ export function PaperSketch({
   withControls?: boolean;
 }) {
   const locked = useExamLocked();
-  const choice = choiceOf(question.answers);
   // A template that fixes its options takes no added option, so its page keeps no room for the action.
   const addsOption =
-    withControls &&
-    !locked &&
-    Option.isNone(fixedOptions(question.template)) &&
-    Option.exists(
-      choice,
-      (current) => current.options.length < CHOICE_OPTIONS_MAX
-    );
+    withControls && !locked && Option.isNone(fixedOptions(question.template));
 
   return (
     <>
-      {Option.isSome(choice) ? (
-        <PaperOptions>
-          {Arr.map(choice.value.options, (option) => (
-            <PaperOption
-              key={option.id}
-              multiple={choice.value.maxChoices !== 1}
-            >
-              <OptionSketch label={option.label} />
-            </PaperOption>
-          ))}
-        </PaperOptions>
-      ) : null}
+      {Arr.map(Arr.filter(question.answers, isChoice), (choice) => (
+        <ChoiceSketch
+          adds={addsOption && choice.options.length < CHOICE_OPTIONS_MAX}
+          choice={choice}
+          key={choice.id}
+          template={question.template}
+        />
+      ))}
       {Option.match(matchOf(question.answers), {
         onNone: () => null,
         onSome: (match) => (
@@ -319,7 +338,34 @@ export function PaperSketch({
         onSome: (table) => <TableSketch table={table} />,
       })}
       <PaperField answers={question.answers} />
-      {addsOption ? <OptionAddRoom /> : null}
+    </>
+  );
+}
+
+/** One choice of a page drawn without its editors, a reason under its name, as the page draws it with them. */
+function ChoiceSketch({
+  adds,
+  choice,
+  template,
+}: {
+  /** Whether the page keeps the room of the action that adds an option. */
+  readonly adds: boolean;
+  readonly choice: Choice;
+  /** The question's template, which names its choices when it holds two. */
+  readonly template: Question["template"];
+}) {
+  return (
+    <>
+      <ChoiceGroup title={choiceTitle(template, choice.id)}>
+        <PaperOptions>
+          {Arr.map(choice.options, (option) => (
+            <PaperOption key={option.id} multiple={choice.maxChoices !== 1}>
+              <OptionSketch label={option.label} />
+            </PaperOption>
+          ))}
+        </PaperOptions>
+      </ChoiceGroup>
+      {adds ? <OptionAddRoom /> : null}
     </>
   );
 }
@@ -356,7 +402,7 @@ export function QuestionPreview({
         inert
       >
         <QuestionPaper>
-          <PreviewProse article doc={doc} size="page" />
+          <PreviewProse article doc={doc} size="paper" />
           <PaperSketch question={question} />
         </QuestionPaper>
       </div>

@@ -35,10 +35,12 @@ export const channelNameKey = (name: string) => name.toLowerCase();
 
 /**
  * A channel of one class. `position` orders the list from 0, the general channel,
- * and a topic channel takes the position after the last one. `tenantId` is copied
- * from the class for indexing and for the tenant check of every read.
+ * and a topic channel takes the position after the last one. `archivedAt` marks a
+ * channel that stays readable and takes nothing new. `tenantId` is copied from the
+ * class for indexing and for the tenant check of every read.
  */
 export const channelValidator = Schema.Struct({
+  archivedAt: Schema.optionalKey(Schema.Finite),
   classId: Id("classes"),
   createdAt: Schema.Finite,
   kind: ChannelKind,
@@ -48,20 +50,39 @@ export const channelValidator = Schema.Struct({
 });
 
 /**
- * One channel as the wire shows it, and whether a message came to it after the
- * viewer last read it.
+ * The newest message of a channel as a chat list shows it: when it came, who
+ * wrote it, whether the viewer did, the start of its text, or null once a teacher
+ * hid it, and what it carries, which stands for a message without text.
+ */
+const ChannelLast = Schema.Struct({
+  at: Schema.Finite,
+  author: Schema.String,
+  media: Schema.NullOr(Schema.Literals(["document", "image", "poll"])),
+  mine: Schema.Boolean,
+  text: Schema.NullOr(Schema.String),
+});
+
+/**
+ * One channel as the wire shows it: whether it is archived, its newest message, and
+ * whether that message came after the viewer last read the channel.
  */
 export const ChannelView = Schema.Struct({
+  archived: Schema.Boolean,
   id: Id("classroomChannels"),
   kind: ChannelKind,
+  last: Schema.NullOr(ChannelLast),
   name: ChannelName,
   unread: Schema.Boolean,
 });
 
-/** One channel of a class as the wire shows it, unread or not for the viewer. */
-export const channelView = (row: ClassroomChannelsDoc, unread: boolean) => ({
+/** One channel of a class as the wire shows it, with what the viewer's list says of its newest message. */
+export const channelView = (
+  row: ClassroomChannelsDoc,
+  latest: Pick<typeof ChannelView.Type, "last" | "unread">
+) => ({
+  ...latest,
+  archived: row.archivedAt !== undefined,
   id: row._id,
   kind: row.kind,
   name: row.name,
-  unread,
 });

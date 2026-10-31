@@ -4,12 +4,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -30,11 +25,7 @@ import {
   useEnterSitting,
 } from "@/components/exams/sitting/admit";
 import { isActive, takesAnswers } from "@/components/exams/sitting/attempt";
-import {
-  PaperBack,
-  PaperBar,
-  SittingBar,
-} from "@/components/exams/sitting/bar";
+import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
 import { useReaderLoaded } from "@/components/exams/sitting/document";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
@@ -94,25 +85,27 @@ export function StudentSitting({
 
   if (QueryResult.isFailure(view)) {
     return (
-      <>
-        <SittingBar
-          examTitle={Option.match(kept, {
-            onNone: () => t("sitting"),
-            onSome: (last) => last.sitting.examTitle,
-          })}
-        />
+      <PaperFrame
+        bar={
+          <PaperBar
+            back={<PaperBack />}
+            title={Option.match(kept, {
+              onNone: () => t("sitting"),
+              onSome: (last) => last.sitting.examTitle,
+            })}
+          />
+        }
+      >
         <StudentFailure error={view.error} />
-      </>
+      </PaperFrame>
     );
   }
   // A paused read, as while Convex confirms the session again, keeps its last answer, so a running paper stays.
   if (Option.isNone(kept)) {
-    return joining ? (
-      <PaperFrame>
-        <PaperBar back={<PaperBack />} title={t("sitting")} />
-      </PaperFrame>
-    ) : (
-      <SittingBar examTitle={t("sitting")} />
+    return (
+      <PaperFrame
+        bar={<PaperBar back={<PaperBack />} title={t("sitting")} />}
+      />
     );
   }
   const { attempt, sitting } = kept.value;
@@ -128,9 +121,9 @@ export function StudentSitting({
   }
   if (joining && enterable) {
     return (
-      <PaperFrame>
-        <PaperBar back={<PaperBack />} title={sitting.examTitle} />
-      </PaperFrame>
+      <PaperFrame
+        bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+      />
     );
   }
   if (attempt !== null && !takesAnswers(attempt.state)) {
@@ -141,17 +134,15 @@ export function StudentSitting({
   }
 
   return (
-    <>
-      <SittingBar examTitle={sitting.examTitle} />
+    <PaperFrame
+      bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+    >
       <SittingBody>
         <form onSubmit={entry.submit}>
-          <CardSection>
-            <CardHeader>
-              <CardTitle>{t("student-enter")}</CardTitle>
-              <CardDescription>
-                {t("student-room-line", { room: sitting.room })}
-              </CardDescription>
-            </CardHeader>
+          <CardSection
+            description={t("student-room-line", { room: sitting.room })}
+            title={t("student-enter")}
+          >
             <CardContent>
               <Field>
                 <FieldLabel htmlFor={entry.tokenId}>{t("token")}</FieldLabel>
@@ -184,7 +175,7 @@ export function StudentSitting({
           </CardSection>
         </form>
       </SittingBody>
-    </>
+    </PaperFrame>
   );
 }
 
@@ -271,16 +262,14 @@ function StudentScheduled({
   const locale = useLocale();
 
   return (
-    <>
-      <SittingBar examTitle={sitting.examTitle} />
+    <PaperFrame
+      bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+    >
       <SittingBody>
-        <CardSection>
-          <CardHeader>
-            <CardTitle>{t("sitting")}</CardTitle>
-            <CardDescription>
-              {t("student-room-line", { room: sitting.room })}
-            </CardDescription>
-          </CardHeader>
+        <CardSection
+          description={t("student-room-line", { room: sitting.room })}
+          title={t("sitting")}
+        >
           <CardContent>
             <p>
               {t("student-opens-at", {
@@ -296,7 +285,7 @@ function StudentScheduled({
           <CardSectionFooter hint={t("student-scheduled-footer")} />
         </CardSection>
       </SittingBody>
-    </>
+    </PaperFrame>
   );
 }
 

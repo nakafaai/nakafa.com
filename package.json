@@ -102,7 +102,7 @@
     "micromark-extension-math@3.1.0>katex": "0.19.1",
     "minimatch": "11.0.3",
     "prosemirror-transform": "1.12.4",
-    "seroval": "1.7.5",
+    "seroval": "1.7.6",
     "seroval-plugins": "1.7.6"
   },
   "devDependencies": {
@@ -115,7 +115,7 @@
     "@repo/testing": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@sigstore/bundle": "5.0.0",
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.6",
     "effect": "catalog:",
     "esbuild": "0.28.2",
     "portless": "0.15.12",

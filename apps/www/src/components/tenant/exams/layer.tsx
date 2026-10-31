@@ -9,8 +9,10 @@ import {
   QUESTION_POINTS_MAX,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
+import { REASON_ID, takesScoring } from "@repo/backend/confect/exams/scoring";
 import {
   Field,
+  FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldTitle,
@@ -36,14 +38,16 @@ import { AcceptedAnswers } from "@/components/tenant/exams/accepted";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   acceptedOf,
+  type Choice,
   changedOption,
-  choiceOf,
+  isChoice,
   markedOptions,
 } from "@/components/tenant/exams/answer";
 import { TableKey } from "@/components/tenant/exams/cells";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
+import { MediaField } from "@/components/tenant/exams/media";
 import { numberSettingOf } from "@/components/tenant/exams/number";
 import { NumberKey } from "@/components/tenant/exams/numeric";
 import {
@@ -53,7 +57,9 @@ import {
 import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
+import { ReadingField } from "@/components/tenant/exams/reading";
 import { ExamDocument } from "@/components/tenant/exams/rich";
+import { ScoringField } from "@/components/tenant/exams/scoring";
 import { tableOf } from "@/components/tenant/exams/table";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
@@ -136,6 +142,17 @@ const KeyOption = Schema.Struct({
 });
 type KeyOption = typeof KeyOption.Type;
 
+/** The options of a choice as its key names them, in the script of their labels, as the paper names them. */
+const keyOptions = (choice: Choice): readonly KeyOption[] => {
+  const script = letterScript(
+    Arr.map(choice.options, (option) => option.label)
+  );
+  return Arr.map(choice.options, (option, index) => ({
+    id: option.id,
+    letter: optionLetter(index, script),
+  }));
+};
+
 /** The props of the answer key of one question. */
 interface AnswerKeyProps {
   /** Whether the teacher may mark the key now. */
@@ -150,6 +167,8 @@ interface AnswerKeyProps {
   readonly onMark: (optionId: string) => void;
   /** The options of the question, in the order the paper shows them. */
   readonly options: readonly KeyOption[];
+  /** Whether the key marks a question's reason, not its answer. */
+  readonly reason: boolean;
 }
 
 /**
@@ -164,11 +183,15 @@ function AnswerKey({
   number,
   onMark,
   options,
+  reason,
 }: AnswerKeyProps) {
   const t = useTranslations("Exams");
   const items = Arr.map(options, (option) => (
     <ToggleGroupItem
-      aria-label={t("key-option", { letter: option.letter, number })}
+      aria-label={t(reason ? "key-reason" : "key-option", {
+        letter: option.letter,
+        number,
+      })}
       key={option.id}
       value={option.id}
     >
@@ -178,7 +201,7 @@ function AnswerKey({
 
   return (
     <Field orientation="horizontal">
-      <FieldTitle>{t("answer-key")}</FieldTitle>
+      <FieldTitle>{t(reason ? "reason-key" : "answer-key")}</FieldTitle>
       {multiple ? (
         <ToggleGroup
           disabled={!editable}
@@ -255,19 +278,6 @@ export function TeacherLayer({
   const frozen = isLocked(exam);
   const locked = useExamLocked();
   const editable = live && !locked;
-  const options = Option.match(choiceOf(shown.answers), {
-    onNone: (): readonly KeyOption[] => [],
-    onSome: (choice) => {
-      // The options are named in the script of their labels, as the paper names them.
-      const script = letterScript(
-        Arr.map(choice.options, (option) => option.label)
-      );
-      return Arr.map(choice.options, (option, index) => ({
-        id: option.id,
-        letter: optionLetter(index, script),
-      }));
-    },
-  });
   const keyed = needsKey(shown.template);
 
   return (
@@ -277,6 +287,15 @@ export function TeacherLayer({
         points={question.points}
         questionId={question.id}
       />
+      <ReadingField editable={editable} question={question} />
+      <MediaField editable={editable} question={question} />
+      {takesScoring(shown.template) ? (
+        <ScoringField
+          editable={editable}
+          kind={question.scoring.kind}
+          questionId={question.id}
+        />
+      ) : null}
       {shown.template === "short" ? (
         <AcceptedAnswers
           accepted={acceptedOf(shown.key)}
@@ -323,14 +342,25 @@ export function TeacherLayer({
       shown.template !== "numeric" &&
       shown.template !== "match" &&
       shown.template !== "table" ? (
-        <AnswerKey
-          editable={editable}
-          marked={markedOptions(shown.key)}
-          multiple={shown.template === "choices"}
-          number={number}
-          onMark={editing.markOption}
-          options={options}
-        />
+        <>
+          {Arr.map(Arr.filter(shown.answers, isChoice), (choice) => (
+            <AnswerKey
+              editable={editable}
+              key={choice.id}
+              marked={Arr.filter(markedOptions(shown.key), (id) =>
+                Arr.some(choice.options, (option) => option.id === id)
+              )}
+              multiple={shown.template === "choices"}
+              number={number}
+              onMark={editing.markOption}
+              options={keyOptions(choice)}
+              reason={choice.id === REASON_ID}
+            />
+          ))}
+          {shown.template === "reason" ? (
+            <FieldDescription>{t("reason-score-hint")}</FieldDescription>
+          ) : null}
+        </>
       ) : null}
       {takesRubric(shown.template) ? (
         <NoteField title={t("rubric")}>

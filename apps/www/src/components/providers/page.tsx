@@ -7,6 +7,7 @@ import {
 import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { AuthSessionContext } from "@/components/auth/context";
+import { useSignedInHint } from "@/components/auth/session";
 import {
   LiveSessionContext,
   useLiveSession,
@@ -91,6 +92,7 @@ export function PageProviders({
       Effect.runFork(Fiber.interrupt(starting));
     };
   }, [store]);
+  useSignedInHint(store);
 
   return (
     <LiveSessionContext value={store}>

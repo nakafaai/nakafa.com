@@ -22,9 +22,10 @@ and quiet hours cover every student account while no age is stored.
 
 Amended on 18 October 2026: the sitting change is `sitting.schedule`, the name
 that the live scheduling writes (ADR 0016 keeps a stored change name), and
-`grade.released` belongs to Records (ADR 0033). The Dapodik import sets an
-under-age flag on the school roster and keeps no birth date, so quiet hours follow
-the flag once it is set (ADR 0034).
+`grade.released` belongs to Records (ADR 0033).
+
+Amended on 31 October 2026: Nakafa keeps no age and no under-age flag (ADR 0034),
+so quiet hours cover every student.
 
 ## Context
 
@@ -259,9 +260,9 @@ sitting does not show.
 
 - Quiet hours run from 21:00 to 06:00 in the school's time zone. They are on for
   every student account. The Indonesian profile puts them on for an account
-  under 18 (ADR 0032), and no birth date is stored, so they cover every student
-  until the school roster sets the under-age flag (ADR 0034). A school can relax
-  them only as its data protection impact assessment (DPIA) allows.
+  under 18 (ADR 0032), and Nakafa keeps no age, so they cover every student. A
+  school can relax them only as its data protection impact assessment (DPIA)
+  allows.
 - Quiet hours, reminders, and digests use the IANA time zone of the school the
   notification is about (ADR 0032). Instants are stored in UTC.
 - A reminder stores its anchor and its Timing, not its send instant. The anchor

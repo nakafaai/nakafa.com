@@ -12,6 +12,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ForumComposer } from "@/components/tenant/classes/forum/composer";
 import {
   ChannelScopeContext,
@@ -29,7 +30,7 @@ export const MESSAGE_PAGE_SIZE = 30;
  * One channel of a class as a chat: its messages fill the room it is given, oldest at the top and
  * the newest at the bottom, and the composer is its footer, for a member of the class or a subject
  * teacher. The school's leaders read the channel and write in none, so they see a sentence that
- * says who writes there in place of the composer.
+ * says who writes there in place of the composer, and an archived channel says so in its place.
  */
 export function ForumChannel({
   canManage,
@@ -47,11 +48,23 @@ export function ForumChannel({
 }) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
+  const channels = usePaginatedQuery(
+    classroom.forum.channels.list,
+    { classId, slug },
+    { initialNumItems: CHANNEL_PAGE_SIZE }
+  );
+  const archived =
+    !PaginatedQueryResult.isFailure(channels) &&
+    Arr.some(
+      channels.results,
+      (channel) => channel.id === channelId && channel.archived
+    );
 
   return (
     <ChannelScopeContext
       value={{
         canManage,
+        canPost,
         channelId,
         classId,
         discussion: undefined,
@@ -62,12 +75,12 @@ export function ForumChannel({
     >
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
         <ChannelMessages key={channelId} />
-        <footer className="shrink-0 px-4 pt-2 pb-4">
+        <footer className="mx-auto w-full max-w-3xl shrink-0 px-4 pt-2 pb-4">
           {canPost ? (
             <ForumComposer />
           ) : (
             <p className="text-muted-foreground text-center text-sm">
-              {t("read-only")}
+              {t(archived ? "channel-archived" : "read-only")}
             </p>
           )}
         </footer>

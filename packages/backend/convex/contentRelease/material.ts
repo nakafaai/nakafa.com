@@ -1,6 +1,5 @@
 import registeredFunctions from "../../confect/_generated/registeredFunctions/contentRelease/material";
 
-export const apiPage = registeredFunctions.apiPage;
 export const bucket = registeredFunctions.bucket;
 export const latest = registeredFunctions.latest;
 export const lesson = registeredFunctions.lesson;

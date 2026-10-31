@@ -52,6 +52,38 @@ export function choiceOf(
 }
 
 /**
+ * The answer and the reason of a question, when the question holds exactly those two choices. This is the rule
+ * that the server applies to a question of two choices.
+ */
+export function reasonOf(
+  interactions: readonly Interaction[]
+): Option.Option<readonly [Choice, Choice]> {
+  const [answer, reason, ...rest] = interactions;
+  return answer?.kind === "choice" &&
+    reason?.kind === "choice" &&
+    !Arr.isReadonlyArrayNonEmpty(rest)
+    ? Option.some([answer, reason])
+    : Option.none();
+}
+
+/** The options of one choice among those that a response holds. */
+export const heldBy = (choice: Choice, response: readonly string[]) =>
+  Arr.filter(response, (id) =>
+    Arr.some(choice.options, (option) => option.id === id)
+  );
+
+/** The response once one choice holds `next`, beside what the other choices of the question hold. */
+export const withHeld = (
+  choice: Choice,
+  next: readonly string[],
+  response: readonly string[]
+) =>
+  Arr.appendAll(
+    Arr.filter(response, (id) => !Arr.contains(heldBy(choice, response), id)),
+    next
+  );
+
+/**
  * The option that a digit key picks: the option at `index` of a single choice. A question of
  * another shape, or a multiple choice, has no option that a digit key picks.
  */

@@ -13,13 +13,17 @@ import {
   KeyDoesNotFit,
   QuestionHistoryLong,
   RevisionStale,
+  ScoringDoesNotFit,
 } from "@repo/backend/confect/exams/errors";
+import { MEDIA_MAX, QuestionMedia } from "@repo/backend/confect/exams/media";
 import {
   QuestionPoints,
   QuestionTemplate,
   QuestionView,
+  ReadingSource,
   TemplateLabels,
 } from "@repo/backend/confect/exams/question";
+import { ScoringKind } from "@repo/backend/confect/exams/scoring";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -107,6 +111,45 @@ export default GroupSpec.make()
       }),
       returns: () => QuestionView,
       error: () => Schema.Union([AccessDenied, ExamFrozen]),
+    }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "media",
+      args: () => ({
+        examId: Id("exams"),
+        media: Schema.Array(QuestionMedia).check(Schema.isMaxLength(MEDIA_MAX)),
+        questionId: Id("examQuestions"),
+        slug: TenantSlug,
+      }),
+      returns: () => QuestionView,
+      error: () => Schema.Union([AccessDenied, ExamFrozen]),
+    }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "reading",
+      args: () => ({
+        examId: Id("exams"),
+        questionId: Id("examQuestions"),
+        slug: TenantSlug,
+        source: ReadingSource,
+      }),
+      returns: () => QuestionView,
+      error: () => Schema.Union([AccessDenied, DocumentTooLarge, ExamFrozen]),
+    }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "scoring",
+      args: () => ({
+        examId: Id("exams"),
+        questionId: Id("examQuestions"),
+        scoring: ScoringKind,
+        slug: TenantSlug,
+      }),
+      returns: () => QuestionView,
+      error: () => Schema.Union([AccessDenied, ExamFrozen, ScoringDoesNotFit]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(

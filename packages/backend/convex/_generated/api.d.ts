@@ -602,11 +602,30 @@ export declare const api: {
           "public",
           { classId: Id<"classes">; name: string; slug: string },
           {
+            archived: boolean;
             id: Id<"classroomChannels">;
             kind: "general" | "topic";
+            last: {
+              at: number;
+              author: string;
+              media: "document" | "image" | "poll" | null;
+              mine: boolean;
+              text: string | null;
+            } | null;
             name: string;
             unread: boolean;
           }
+        >;
+        archive: FunctionReference<
+          "mutation",
+          "public",
+          {
+            archived: boolean;
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            slug: string;
+          },
+          null
         >;
         list: FunctionReference<
           "query",
@@ -627,14 +646,32 @@ export declare const api: {
             continueCursor: string;
             isDone: boolean;
             page: Array<{
+              archived: boolean;
               id: Id<"classroomChannels">;
               kind: "general" | "topic";
+              last: {
+                at: number;
+                author: string;
+                media: "document" | "image" | "poll" | null;
+                mine: boolean;
+                text: string | null;
+              } | null;
               name: string;
               unread: boolean;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
           }
+        >;
+        remove: FunctionReference<
+          "mutation",
+          "public",
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            slug: string;
+          },
+          null
         >;
         rename: FunctionReference<
           "mutation",
@@ -644,6 +681,48 @@ export declare const api: {
             classId: Id<"classes">;
             name: string;
             slug: string;
+          },
+          null
+        >;
+      };
+      files: {
+        canAttach: FunctionReference<
+          "query",
+          "public",
+          { classId: Id<"classes">; slug: string },
+          { authorId: Id<"tenantPeople"> }
+        >;
+        register: FunctionReference<
+          "action",
+          "public",
+          {
+            classId: Id<"classes">;
+            height: number | null;
+            name: string;
+            slug: string;
+            storageId: Id<"_storage">;
+            thumbnailId: Id<"_storage"> | null;
+            width: number | null;
+          },
+          {
+            byteSize: number;
+            id: Id<"classroomUploads">;
+            kind: "document" | "image";
+          }
+        >;
+        uploadUrl: FunctionReference<
+          "mutation",
+          "public",
+          { classId: Id<"classes">; slug: string },
+          string
+        >;
+        withdraw: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            slug: string;
+            uploadId: Id<"classroomUploads">;
           },
           null
         >;
@@ -659,6 +738,15 @@ export declare const api: {
             text: string;
           },
           {
+            attachments: Array<{
+              address: string | null;
+              byteSize: number;
+              height: number | null;
+              kind: "document" | "image";
+              name: string;
+              thumbnail: string | null;
+              width: number | null;
+            }>;
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
@@ -676,6 +764,11 @@ export declare const api: {
               | { _tag: "everyone" }
             >;
             mine: boolean;
+            poll: {
+              multiple: boolean;
+              options: Array<string>;
+              question: string;
+            } | null;
             text: string | null;
           }
         >;
@@ -688,6 +781,15 @@ export declare const api: {
             slug: string;
           },
           {
+            attachments: Array<{
+              address: string | null;
+              byteSize: number;
+              height: number | null;
+              kind: "document" | "image";
+              name: string;
+              thumbnail: string | null;
+              width: number | null;
+            }>;
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
@@ -705,6 +807,11 @@ export declare const api: {
               | { _tag: "everyone" }
             >;
             mine: boolean;
+            poll: {
+              multiple: boolean;
+              options: Array<string>;
+              question: string;
+            } | null;
             text: string | null;
           }
         >;
@@ -728,6 +835,15 @@ export declare const api: {
             continueCursor: string;
             isDone: boolean;
             page: Array<{
+              attachments: Array<{
+                address: string | null;
+                byteSize: number;
+                height: number | null;
+                kind: "document" | "image";
+                name: string;
+                thumbnail: string | null;
+                width: number | null;
+              }>;
               author: { id: Id<"tenantPeople">; name: string };
               clientKey: string;
               createdAt: number;
@@ -745,6 +861,11 @@ export declare const api: {
                 | { _tag: "everyone" }
               >;
               mine: boolean;
+              poll: {
+                multiple: boolean;
+                options: Array<string>;
+                question: string;
+              } | null;
               text: string | null;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -755,16 +876,31 @@ export declare const api: {
           "mutation",
           "public",
           {
+            attachments: Array<Id<"classroomUploads">>;
             channelId: Id<"classroomChannels">;
             classId: Id<"classes">;
             clientKey: string;
             mentions: Array<
               { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
             >;
+            poll: {
+              multiple: boolean;
+              options: Array<string>;
+              question: string;
+            } | null;
             slug: string;
             text: string;
           },
           {
+            attachments: Array<{
+              address: string | null;
+              byteSize: number;
+              height: number | null;
+              kind: "document" | "image";
+              name: string;
+              thumbnail: string | null;
+              width: number | null;
+            }>;
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
@@ -782,6 +918,11 @@ export declare const api: {
               | { _tag: "everyone" }
             >;
             mine: boolean;
+            poll: {
+              multiple: boolean;
+              options: Array<string>;
+              question: string;
+            } | null;
             text: string | null;
           }
         >;
@@ -821,6 +962,47 @@ export declare const api: {
           { at: number | null }
         >;
       };
+      tallies: {
+        react: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            emoji: string;
+            messageId: Id<"classroomMessages">;
+            slug: string;
+          },
+          null
+        >;
+        since: FunctionReference<
+          "query",
+          "public",
+          {
+            classId: Id<"classes">;
+            place:
+              | { _tag: "channel"; channelId: Id<"classroomChannels"> }
+              | { _tag: "discussion"; number: number };
+            since: number;
+            slug: string;
+          },
+          Array<{
+            messageId: Id<"classroomMessages">;
+            reactions: Array<{ count: number; emoji: string; mine: boolean }>;
+            votes: Array<{ count: number; mine: boolean; option: number }>;
+          }>
+        >;
+        vote: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            messageId: Id<"classroomMessages">;
+            options: Array<number>;
+            slug: string;
+          },
+          null
+        >;
+      };
       threads: {
         get: FunctionReference<
           "query",
@@ -837,6 +1019,15 @@ export declare const api: {
             };
             id: Id<"classroomThreads">;
             opening: {
+              attachments: Array<{
+                address: string | null;
+                byteSize: number;
+                height: number | null;
+                kind: "document" | "image";
+                name: string;
+                thumbnail: string | null;
+                width: number | null;
+              }>;
               author: { id: Id<"tenantPeople">; name: string };
               clientKey: string;
               createdAt: number;
@@ -854,8 +1045,45 @@ export declare const api: {
                 | { _tag: "everyone" }
               >;
               mine: boolean;
+              poll: {
+                multiple: boolean;
+                options: Array<string>;
+                question: string;
+              } | null;
               text: string | null;
             };
+          }
+        >;
+        list: FunctionReference<
+          "query",
+          "public",
+          {
+            classId: Id<"classes">;
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              channelId: Id<"classroomChannels">;
+              discussion: {
+                lastReplyAt: number | null;
+                number: number;
+                replies: number;
+                title: string;
+                unread: boolean;
+              };
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
           }
         >;
         open: FunctionReference<
@@ -883,6 +1111,15 @@ export declare const api: {
             };
             id: Id<"classroomThreads">;
             opening: {
+              attachments: Array<{
+                address: string | null;
+                byteSize: number;
+                height: number | null;
+                kind: "document" | "image";
+                name: string;
+                thumbnail: string | null;
+                width: number | null;
+              }>;
               author: { id: Id<"tenantPeople">; name: string };
               clientKey: string;
               createdAt: number;
@@ -900,6 +1137,11 @@ export declare const api: {
                 | { _tag: "everyone" }
               >;
               mine: boolean;
+              poll: {
+                multiple: boolean;
+                options: Array<string>;
+                question: string;
+              } | null;
               text: string | null;
             };
           }
@@ -935,6 +1177,15 @@ export declare const api: {
             continueCursor: string;
             isDone: boolean;
             page: Array<{
+              attachments: Array<{
+                address: string | null;
+                byteSize: number;
+                height: number | null;
+                kind: "document" | "image";
+                name: string;
+                thumbnail: string | null;
+                width: number | null;
+              }>;
               author: { id: Id<"tenantPeople">; name: string };
               clientKey: string;
               createdAt: number;
@@ -952,6 +1203,11 @@ export declare const api: {
                 | { _tag: "everyone" }
               >;
               mine: boolean;
+              poll: {
+                multiple: boolean;
+                options: Array<string>;
+                question: string;
+              } | null;
               text: string | null;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -962,6 +1218,7 @@ export declare const api: {
           "mutation",
           "public",
           {
+            attachments: Array<Id<"classroomUploads">>;
             classId: Id<"classes">;
             clientKey: string;
             mentions: Array<
@@ -972,6 +1229,15 @@ export declare const api: {
             text: string;
           },
           {
+            attachments: Array<{
+              address: string | null;
+              byteSize: number;
+              height: number | null;
+              kind: "document" | "image";
+              name: string;
+              thumbnail: string | null;
+              width: number | null;
+            }>;
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
@@ -989,8 +1255,23 @@ export declare const api: {
               | { _tag: "everyone" }
             >;
             mine: boolean;
+            poll: {
+              multiple: boolean;
+              options: Array<string>;
+              question: string;
+            } | null;
             text: string | null;
           }
+        >;
+        start: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            messageId: Id<"classroomMessages">;
+            slug: string;
+          },
+          { number: number }
         >;
       };
     };
@@ -1105,6 +1386,18 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string },
         string
+      >;
+    };
+    people: {
+      list: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        Array<{
+          id: Id<"tenantPeople">;
+          kind: "student" | "teacher";
+          name: string;
+        }>
       >;
     };
     posts: {
@@ -1803,22 +2096,6 @@ export declare const api: {
   };
   contentRelease: {
     article: {
-      apiPage: FunctionReference<
-        "query",
-        "public",
-        {
-          appLocale: "en" | "id" | "de";
-          cursor: string | null;
-          limit: number;
-          prefix: string;
-        },
-        {
-          activeReleaseId: string;
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{ appLocale: "en" | "id" | "de"; publicPath: string }>;
-        }
-      >;
       bucket: FunctionReference<
         "query",
         "public",
@@ -2037,22 +2314,6 @@ export declare const api: {
       >;
     };
     material: {
-      apiPage: FunctionReference<
-        "query",
-        "public",
-        {
-          appLocale: "en" | "id" | "de";
-          cursor: string | null;
-          limit: number;
-          prefix: string;
-        },
-        {
-          activeReleaseId: string;
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{ appLocale: "en" | "id" | "de"; publicPath: string }>;
-        }
-      >;
       bucket: FunctionReference<
         "query",
         "public",
@@ -2283,38 +2544,6 @@ export declare const api: {
           mappingJson: string | null;
           parentJson: string | null;
           resolvedCanonicalPath: string | null;
-        }
-      >;
-      page: FunctionReference<
-        "query",
-        "public",
-        {
-          appLocale: "en" | "id" | "de";
-          expectedManifestHash: string | null;
-          expectedReleaseId: string | null;
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-        },
-        {
-          activeManifestHash: string | null;
-          activeReleaseId: string | null;
-          managed: boolean;
-          result: {
-            continueCursor: string;
-            isDone: boolean;
-            page: Array<string>;
-            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-            splitCursor?: string | null;
-          };
-          snapshotId: string | null;
-          sourceRevision: string | null;
-          stale: boolean;
         }
       >;
       path: FunctionReference<
@@ -3213,282 +3442,6 @@ export declare const api: {
           }>;
         }
       >;
-      surah: FunctionReference<
-        "query",
-        "public",
-        { appLocale: "en" | "id" | "de"; surahNumber: number },
-        {
-          activeManifestHash: string | null;
-          activeReleaseId: string | null;
-          appLocale: "en" | "id" | "de";
-          managed: boolean;
-          preBismillah: {
-            arabic: string;
-            translation: {
-              notes: Array<{
-                number: number;
-                referenceOffset: number;
-                text: string;
-              }>;
-              segments: Array<
-                | { kind: "text"; offset: number; value: string }
-                | { kind: "note"; number: number; offset: number }
-              >;
-            };
-          } | null;
-          snapshotId: string | null;
-          sourceOrigin:
-            | { kind: "git"; sha: string }
-            | { kind: "rollback"; releaseId: string }
-            | null;
-          sourceRevision: string | null;
-          sources:
-            | {
-                arabic: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "tanzil-text";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-                translation: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "quranenc-english";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | {
-                arabic: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "tanzil-text";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-                translation: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "quranenc-indonesian";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | {
-                arabic: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "tanzil-text";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-                translation: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "quranenc-german";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | null;
-          surah: {
-            kind: "quran-surah";
-            name: {
-              arabic: string;
-              sourceMeaning:
-                | { de: string; en: string; id: string }
-                | { appLocale: "en"; text: string };
-              transliteration: string;
-            };
-            number: number;
-            numberOfVerses: number;
-            revelation: { order: number; place: "Meccan" | "Medinan" };
-          } | null;
-          tafsirAccess:
-            | {
-                appLocale: "id";
-                kind: "embedded";
-                notice: string;
-                source: {
-                  artifact: {
-                    byteCount: number;
-                    digest: string;
-                    fileCount: number;
-                  };
-                  id: "quranenc-tafsir";
-                  kind: "embedded";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: {
-                    artifact: {
-                      byteCount: number;
-                      digest: string;
-                      fileCount: number;
-                    };
-                    url: string;
-                  };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | {
-                appLocale: "en";
-                kind: "external";
-                notice: string;
-                source: {
-                  id: "mokhtasar-english";
-                  kind: "external";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: { access: "link-only"; url: string };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | {
-                appLocale: "de";
-                kind: "external";
-                notice: string;
-                source: {
-                  id: "mokhtasar-german";
-                  kind: "external";
-                  label: string;
-                  notice: string;
-                  publisher: string;
-                  retrievedAt: string;
-                  sourceUrl: string;
-                  terms: { access: "link-only"; url: string };
-                  updateUrl: string;
-                  version: string;
-                };
-              }
-            | null;
-          verses: Array<{
-            arabic: string;
-            number: { inQuran: number; inSurah: number };
-            translation: {
-              notes: Array<{
-                number: number;
-                referenceOffset: number;
-                text: string;
-              }>;
-              segments: Array<
-                | { kind: "text"; offset: number; value: string }
-                | { kind: "note"; number: number; offset: number }
-              >;
-            };
-          }>;
-        }
-      >;
       surahs: FunctionReference<
         "query",
         "public",
@@ -3831,6 +3784,15 @@ export declare const api: {
         { examId: Id<"exams">; slug: string },
         {}
       >;
+      media: FunctionReference<
+        "query",
+        "public",
+        { examId: Id<"exams">; questionId: Id<"examQuestions">; slug: string },
+        Array<
+          | { alt: string; kind: "audio"; url: string }
+          | { alt: string; kind: "video"; video: string }
+        >
+      >;
       register: FunctionReference<
         "action",
         "public",
@@ -3842,6 +3804,12 @@ export declare const api: {
           width: number;
         },
         { id: Id<"examAssets"> }
+      >;
+      registerAudio: FunctionReference<
+        "action",
+        "public",
+        { examId: Id<"exams">; slug: string; storageId: Id<"_storage"> },
+        { id: Id<"examAudio"> }
       >;
       uploadUrl: FunctionReference<
         "mutation",
@@ -4120,10 +4088,27 @@ export declare const api: {
                   kind: "extendedText";
                 }
             > | null;
+            media: Array<
+              | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+              | { alt: string; kind: "video"; video: string }
+            >;
             points: number;
             prompt: Id<"editorDocuments">;
+            reading: Id<"editorDocuments"> | null;
             revision: number;
             rubric: Id<"editorDocuments">;
+            scoring:
+              | { kind: "allOrNothing" }
+              | {
+                  floor: number;
+                  kind: "perPart";
+                  penaltyPerWrongPart?: number;
+                  pointsPerPart: number;
+                }
+              | {
+                  bands: Array<{ points: number; wrong: number }>;
+                  kind: "wrongParts";
+                };
             template:
               | "choice"
               | "choices"
@@ -4133,7 +4118,8 @@ export declare const api: {
               | "numeric"
               | "essay"
               | "match"
-              | "table";
+              | "table"
+              | "reason";
           }>;
           title: string;
         }
@@ -4419,10 +4405,27 @@ export declare const api: {
                   kind: "extendedText";
                 }
             > | null;
+            media: Array<
+              | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+              | { alt: string; kind: "video"; video: string }
+            >;
             points: number;
             prompt: Id<"editorDocuments">;
+            reading: Id<"editorDocuments"> | null;
             revision: number;
             rubric: Id<"editorDocuments">;
+            scoring:
+              | { kind: "allOrNothing" }
+              | {
+                  floor: number;
+                  kind: "perPart";
+                  penaltyPerWrongPart?: number;
+                  pointsPerPart: number;
+                }
+              | {
+                  bands: Array<{ points: number; wrong: number }>;
+                  kind: "wrongParts";
+                };
             template:
               | "choice"
               | "choices"
@@ -4432,7 +4435,8 @@ export declare const api: {
               | "numeric"
               | "essay"
               | "match"
-              | "table";
+              | "table"
+              | "reason";
           }>;
           title: string;
         }
@@ -4777,10 +4781,27 @@ export declare const api: {
                 kind: "extendedText";
               }
           > | null;
+          media: Array<
+            | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+            | { alt: string; kind: "video"; video: string }
+          >;
           points: number;
           prompt: Id<"editorDocuments">;
+          reading: Id<"editorDocuments"> | null;
           revision: number;
           rubric: Id<"editorDocuments">;
+          scoring:
+            | { kind: "allOrNothing" }
+            | {
+                floor: number;
+                kind: "perPart";
+                penaltyPerWrongPart?: number;
+                pointsPerPart: number;
+              }
+            | {
+                bands: Array<{ points: number; wrong: number }>;
+                kind: "wrongParts";
+              };
           template:
             | "choice"
             | "choices"
@@ -4790,7 +4811,8 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
         }
       >;
       answer: FunctionReference<
@@ -5265,10 +5287,27 @@ export declare const api: {
                 kind: "extendedText";
               }
           > | null;
+          media: Array<
+            | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+            | { alt: string; kind: "video"; video: string }
+          >;
           points: number;
           prompt: Id<"editorDocuments">;
+          reading: Id<"editorDocuments"> | null;
           revision: number;
           rubric: Id<"editorDocuments">;
+          scoring:
+            | { kind: "allOrNothing" }
+            | {
+                floor: number;
+                kind: "perPart";
+                penaltyPerWrongPart?: number;
+                pointsPerPart: number;
+              }
+            | {
+                bands: Array<{ points: number; wrong: number }>;
+                kind: "wrongParts";
+              };
           template:
             | "choice"
             | "choices"
@@ -5278,7 +5317,8 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
         }
       >;
       copy: FunctionReference<
@@ -5518,10 +5558,27 @@ export declare const api: {
                 kind: "extendedText";
               }
           > | null;
+          media: Array<
+            | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+            | { alt: string; kind: "video"; video: string }
+          >;
           points: number;
           prompt: Id<"editorDocuments">;
+          reading: Id<"editorDocuments"> | null;
           revision: number;
           rubric: Id<"editorDocuments">;
+          scoring:
+            | { kind: "allOrNothing" }
+            | {
+                floor: number;
+                kind: "perPart";
+                penaltyPerWrongPart?: number;
+                pointsPerPart: number;
+              }
+            | {
+                bands: Array<{ points: number; wrong: number }>;
+                kind: "wrongParts";
+              };
           template:
             | "choice"
             | "choices"
@@ -5531,7 +5588,287 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
+        }
+      >;
+      media: FunctionReference<
+        "mutation",
+        "public",
+        {
+          examId: Id<"exams">;
+          media: Array<
+            | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+            | { alt: string; kind: "video"; video: string }
+          >;
+          questionId: Id<"examQuestions">;
+          slug: string;
+        },
+        {
+          answers: Array<
+            | {
+                id: string;
+                kind: "choice";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                options: Array<{ id: string; label: any }>;
+                shuffle: boolean;
+              }
+            | {
+                columns: Array<{ id: string; label: any }>;
+                id: string;
+                kind: "matrix";
+                label: string;
+                shuffle: boolean;
+                statements: Array<{ id: string; label: any }>;
+              }
+            | {
+                id: string;
+                kind: "match";
+                label: string;
+                shuffle: boolean;
+                sources: Array<{ id: string; label: any; maxMatches: number }>;
+                targets: Array<{ id: string; label: any; maxMatches: number }>;
+              }
+            | {
+                id: string;
+                items: Array<{ id: string; label: any }>;
+                kind: "order";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                shuffle: boolean;
+              }
+            | {
+                id: string;
+                kind: "inlineChoice";
+                label: string;
+                options: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                }>;
+                shuffle: boolean;
+              }
+            | {
+                expectedLength?: number;
+                id: string;
+                kind: "textEntry";
+                label: string;
+              }
+            | {
+                acceptsFractions: boolean;
+                id: string;
+                kind: "numericEntry";
+                label: string;
+                unit?: string;
+              }
+            | { id: string; kind: "mathEntry"; label: string }
+            | {
+                areas: Array<
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "rect";
+                    }
+                  | {
+                      coords: Array<number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "circle";
+                    }
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "ellipse";
+                    }
+                  | {
+                      coords: Array<
+                        number | number | number | number | number | number
+                      >;
+                      id: string;
+                      label: string;
+                      shape: "poly";
+                    }
+                  | { id: string; label: string; shape: "default" }
+                >;
+                id: string;
+                image: {
+                  alt: string;
+                  asset: string;
+                  height: number;
+                  width: number;
+                };
+                kind: "hotspot";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+              }
+            | {
+                choices: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                  maxMatches: number;
+                }>;
+                gaps: Array<{ id: string }>;
+                id: string;
+                kind: "gapMatch";
+                label: string;
+                shuffle: boolean;
+              }
+            | {
+                count: number;
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                id: string;
+                kind: "graphPoint";
+                label: string;
+                placing: "points" | "lines";
+                snap?: number;
+              }
+            | {
+                expectedLines?: number;
+                id: string;
+                kind: "extendedText";
+                label: string;
+              }
+          >;
+          explanation: Id<"editorDocuments">;
+          id: Id<"examQuestions">;
+          key: Array<
+            | { correct: Array<string>; interaction: string; kind: "choice" }
+            | {
+                answers: Array<{ column: string; statement: string }>;
+                interaction: string;
+                kind: "matrix";
+              }
+            | {
+                interaction: string;
+                kind: "match";
+                pairs: Array<{ source: string; target: string }>;
+              }
+            | { interaction: string; kind: "order"; sequence: Array<string> }
+            | { correct: string; interaction: string; kind: "inlineChoice" }
+            | {
+                accepted: {
+                  acceptedAnswers: Array<string>;
+                  collapseWhitespace: boolean;
+                  ignoreCase: boolean;
+                  kind: "text";
+                };
+                interaction: string;
+                kind: "textEntry";
+              }
+            | {
+                interaction: string;
+                kind: "numericEntry";
+                tolerance?: { kind: "absolute" | "relative"; value: string };
+                value: string;
+              }
+            | { expression: string; interaction: string; kind: "mathEntry" }
+            | { correct: Array<string>; interaction: string; kind: "hotspot" }
+            | {
+                interaction: string;
+                kind: "gapMatch";
+                pairs: Array<{ choice: string; gap: string }>;
+              }
+            | {
+                interaction: string;
+                kind: "graphPoint";
+                target:
+                  | { kind: "points"; points: Array<{ x: number; y: number }> }
+                  | {
+                      kind: "lines";
+                      lines: Array<{
+                        through: Array<
+                          { x: number; y: number } | { x: number; y: number }
+                        >;
+                      }>;
+                    };
+                tolerance: number;
+              }
+            | {
+                criteria: Array<{
+                  criterion: string;
+                  levels: Array<{ descriptor: string; level: string }>;
+                }>;
+                interaction: string;
+                kind: "extendedText";
+              }
+          > | null;
+          media: Array<
+            | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+            | { alt: string; kind: "video"; video: string }
+          >;
+          points: number;
+          prompt: Id<"editorDocuments">;
+          reading: Id<"editorDocuments"> | null;
+          revision: number;
+          rubric: Id<"editorDocuments">;
+          scoring:
+            | { kind: "allOrNothing" }
+            | {
+                floor: number;
+                kind: "perPart";
+                penaltyPerWrongPart?: number;
+                pointsPerPart: number;
+              }
+            | {
+                bands: Array<{ points: number; wrong: number }>;
+                kind: "wrongParts";
+              };
+          template:
+            | "choice"
+            | "choices"
+            | "truefalse"
+            | "cause"
+            | "short"
+            | "numeric"
+            | "essay"
+            | "match"
+            | "table"
+            | "reason";
         }
       >;
       move: FunctionReference<
@@ -5787,10 +6124,27 @@ export declare const api: {
                 kind: "extendedText";
               }
           > | null;
+          media: Array<
+            | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+            | { alt: string; kind: "video"; video: string }
+          >;
           points: number;
           prompt: Id<"editorDocuments">;
+          reading: Id<"editorDocuments"> | null;
           revision: number;
           rubric: Id<"editorDocuments">;
+          scoring:
+            | { kind: "allOrNothing" }
+            | {
+                floor: number;
+                kind: "perPart";
+                penaltyPerWrongPart?: number;
+                pointsPerPart: number;
+              }
+            | {
+                bands: Array<{ points: number; wrong: number }>;
+                kind: "wrongParts";
+              };
           template:
             | "choice"
             | "choices"
@@ -5800,34 +6154,18 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
         }
       >;
-      remove: FunctionReference<
-        "mutation",
-        "public",
-        { examId: Id<"exams">; questionId: Id<"examQuestions">; slug: string },
-        { questions: Array<Id<"examQuestions">> }
-      >;
-      template: FunctionReference<
+      reading: FunctionReference<
         "mutation",
         "public",
         {
           examId: Id<"exams">;
-          labels: Array<string>;
           questionId: Id<"examQuestions">;
-          revision: number;
           slug: string;
-          template:
-            | "choice"
-            | "choices"
-            | "truefalse"
-            | "cause"
-            | "short"
-            | "numeric"
-            | "essay"
-            | "match"
-            | "table";
+          source: "new" | "none" | Id<"examQuestions">;
         },
         {
           answers: Array<
@@ -6062,10 +6400,27 @@ export declare const api: {
                 kind: "extendedText";
               }
           > | null;
+          media: Array<
+            | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+            | { alt: string; kind: "video"; video: string }
+          >;
           points: number;
           prompt: Id<"editorDocuments">;
+          reading: Id<"editorDocuments"> | null;
           revision: number;
           rubric: Id<"editorDocuments">;
+          scoring:
+            | { kind: "allOrNothing" }
+            | {
+                floor: number;
+                kind: "perPart";
+                penaltyPerWrongPart?: number;
+                pointsPerPart: number;
+              }
+            | {
+                bands: Array<{ points: number; wrong: number }>;
+                kind: "wrongParts";
+              };
           template:
             | "choice"
             | "choices"
@@ -6075,7 +6430,578 @@ export declare const api: {
             | "numeric"
             | "essay"
             | "match"
-            | "table";
+            | "table"
+            | "reason";
+        }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { examId: Id<"exams">; questionId: Id<"examQuestions">; slug: string },
+        { questions: Array<Id<"examQuestions">> }
+      >;
+      scoring: FunctionReference<
+        "mutation",
+        "public",
+        {
+          examId: Id<"exams">;
+          questionId: Id<"examQuestions">;
+          scoring: "allOrNothing" | "perPart" | "wrongParts";
+          slug: string;
+        },
+        {
+          answers: Array<
+            | {
+                id: string;
+                kind: "choice";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                options: Array<{ id: string; label: any }>;
+                shuffle: boolean;
+              }
+            | {
+                columns: Array<{ id: string; label: any }>;
+                id: string;
+                kind: "matrix";
+                label: string;
+                shuffle: boolean;
+                statements: Array<{ id: string; label: any }>;
+              }
+            | {
+                id: string;
+                kind: "match";
+                label: string;
+                shuffle: boolean;
+                sources: Array<{ id: string; label: any; maxMatches: number }>;
+                targets: Array<{ id: string; label: any; maxMatches: number }>;
+              }
+            | {
+                id: string;
+                items: Array<{ id: string; label: any }>;
+                kind: "order";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                shuffle: boolean;
+              }
+            | {
+                id: string;
+                kind: "inlineChoice";
+                label: string;
+                options: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                }>;
+                shuffle: boolean;
+              }
+            | {
+                expectedLength?: number;
+                id: string;
+                kind: "textEntry";
+                label: string;
+              }
+            | {
+                acceptsFractions: boolean;
+                id: string;
+                kind: "numericEntry";
+                label: string;
+                unit?: string;
+              }
+            | { id: string; kind: "mathEntry"; label: string }
+            | {
+                areas: Array<
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "rect";
+                    }
+                  | {
+                      coords: Array<number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "circle";
+                    }
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "ellipse";
+                    }
+                  | {
+                      coords: Array<
+                        number | number | number | number | number | number
+                      >;
+                      id: string;
+                      label: string;
+                      shape: "poly";
+                    }
+                  | { id: string; label: string; shape: "default" }
+                >;
+                id: string;
+                image: {
+                  alt: string;
+                  asset: string;
+                  height: number;
+                  width: number;
+                };
+                kind: "hotspot";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+              }
+            | {
+                choices: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                  maxMatches: number;
+                }>;
+                gaps: Array<{ id: string }>;
+                id: string;
+                kind: "gapMatch";
+                label: string;
+                shuffle: boolean;
+              }
+            | {
+                count: number;
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                id: string;
+                kind: "graphPoint";
+                label: string;
+                placing: "points" | "lines";
+                snap?: number;
+              }
+            | {
+                expectedLines?: number;
+                id: string;
+                kind: "extendedText";
+                label: string;
+              }
+          >;
+          explanation: Id<"editorDocuments">;
+          id: Id<"examQuestions">;
+          key: Array<
+            | { correct: Array<string>; interaction: string; kind: "choice" }
+            | {
+                answers: Array<{ column: string; statement: string }>;
+                interaction: string;
+                kind: "matrix";
+              }
+            | {
+                interaction: string;
+                kind: "match";
+                pairs: Array<{ source: string; target: string }>;
+              }
+            | { interaction: string; kind: "order"; sequence: Array<string> }
+            | { correct: string; interaction: string; kind: "inlineChoice" }
+            | {
+                accepted: {
+                  acceptedAnswers: Array<string>;
+                  collapseWhitespace: boolean;
+                  ignoreCase: boolean;
+                  kind: "text";
+                };
+                interaction: string;
+                kind: "textEntry";
+              }
+            | {
+                interaction: string;
+                kind: "numericEntry";
+                tolerance?: { kind: "absolute" | "relative"; value: string };
+                value: string;
+              }
+            | { expression: string; interaction: string; kind: "mathEntry" }
+            | { correct: Array<string>; interaction: string; kind: "hotspot" }
+            | {
+                interaction: string;
+                kind: "gapMatch";
+                pairs: Array<{ choice: string; gap: string }>;
+              }
+            | {
+                interaction: string;
+                kind: "graphPoint";
+                target:
+                  | { kind: "points"; points: Array<{ x: number; y: number }> }
+                  | {
+                      kind: "lines";
+                      lines: Array<{
+                        through: Array<
+                          { x: number; y: number } | { x: number; y: number }
+                        >;
+                      }>;
+                    };
+                tolerance: number;
+              }
+            | {
+                criteria: Array<{
+                  criterion: string;
+                  levels: Array<{ descriptor: string; level: string }>;
+                }>;
+                interaction: string;
+                kind: "extendedText";
+              }
+          > | null;
+          media: Array<
+            | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+            | { alt: string; kind: "video"; video: string }
+          >;
+          points: number;
+          prompt: Id<"editorDocuments">;
+          reading: Id<"editorDocuments"> | null;
+          revision: number;
+          rubric: Id<"editorDocuments">;
+          scoring:
+            | { kind: "allOrNothing" }
+            | {
+                floor: number;
+                kind: "perPart";
+                penaltyPerWrongPart?: number;
+                pointsPerPart: number;
+              }
+            | {
+                bands: Array<{ points: number; wrong: number }>;
+                kind: "wrongParts";
+              };
+          template:
+            | "choice"
+            | "choices"
+            | "truefalse"
+            | "cause"
+            | "short"
+            | "numeric"
+            | "essay"
+            | "match"
+            | "table"
+            | "reason";
+        }
+      >;
+      template: FunctionReference<
+        "mutation",
+        "public",
+        {
+          examId: Id<"exams">;
+          labels: Array<string>;
+          questionId: Id<"examQuestions">;
+          revision: number;
+          slug: string;
+          template:
+            | "choice"
+            | "choices"
+            | "truefalse"
+            | "cause"
+            | "short"
+            | "numeric"
+            | "essay"
+            | "match"
+            | "table"
+            | "reason";
+        },
+        {
+          answers: Array<
+            | {
+                id: string;
+                kind: "choice";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                options: Array<{ id: string; label: any }>;
+                shuffle: boolean;
+              }
+            | {
+                columns: Array<{ id: string; label: any }>;
+                id: string;
+                kind: "matrix";
+                label: string;
+                shuffle: boolean;
+                statements: Array<{ id: string; label: any }>;
+              }
+            | {
+                id: string;
+                kind: "match";
+                label: string;
+                shuffle: boolean;
+                sources: Array<{ id: string; label: any; maxMatches: number }>;
+                targets: Array<{ id: string; label: any; maxMatches: number }>;
+              }
+            | {
+                id: string;
+                items: Array<{ id: string; label: any }>;
+                kind: "order";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                shuffle: boolean;
+              }
+            | {
+                id: string;
+                kind: "inlineChoice";
+                label: string;
+                options: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                }>;
+                shuffle: boolean;
+              }
+            | {
+                expectedLength?: number;
+                id: string;
+                kind: "textEntry";
+                label: string;
+              }
+            | {
+                acceptsFractions: boolean;
+                id: string;
+                kind: "numericEntry";
+                label: string;
+                unit?: string;
+              }
+            | { id: string; kind: "mathEntry"; label: string }
+            | {
+                areas: Array<
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "rect";
+                    }
+                  | {
+                      coords: Array<number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "circle";
+                    }
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "ellipse";
+                    }
+                  | {
+                      coords: Array<
+                        number | number | number | number | number | number
+                      >;
+                      id: string;
+                      label: string;
+                      shape: "poly";
+                    }
+                  | { id: string; label: string; shape: "default" }
+                >;
+                id: string;
+                image: {
+                  alt: string;
+                  asset: string;
+                  height: number;
+                  width: number;
+                };
+                kind: "hotspot";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+              }
+            | {
+                choices: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                  maxMatches: number;
+                }>;
+                gaps: Array<{ id: string }>;
+                id: string;
+                kind: "gapMatch";
+                label: string;
+                shuffle: boolean;
+              }
+            | {
+                count: number;
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                id: string;
+                kind: "graphPoint";
+                label: string;
+                placing: "points" | "lines";
+                snap?: number;
+              }
+            | {
+                expectedLines?: number;
+                id: string;
+                kind: "extendedText";
+                label: string;
+              }
+          >;
+          explanation: Id<"editorDocuments">;
+          id: Id<"examQuestions">;
+          key: Array<
+            | { correct: Array<string>; interaction: string; kind: "choice" }
+            | {
+                answers: Array<{ column: string; statement: string }>;
+                interaction: string;
+                kind: "matrix";
+              }
+            | {
+                interaction: string;
+                kind: "match";
+                pairs: Array<{ source: string; target: string }>;
+              }
+            | { interaction: string; kind: "order"; sequence: Array<string> }
+            | { correct: string; interaction: string; kind: "inlineChoice" }
+            | {
+                accepted: {
+                  acceptedAnswers: Array<string>;
+                  collapseWhitespace: boolean;
+                  ignoreCase: boolean;
+                  kind: "text";
+                };
+                interaction: string;
+                kind: "textEntry";
+              }
+            | {
+                interaction: string;
+                kind: "numericEntry";
+                tolerance?: { kind: "absolute" | "relative"; value: string };
+                value: string;
+              }
+            | { expression: string; interaction: string; kind: "mathEntry" }
+            | { correct: Array<string>; interaction: string; kind: "hotspot" }
+            | {
+                interaction: string;
+                kind: "gapMatch";
+                pairs: Array<{ choice: string; gap: string }>;
+              }
+            | {
+                interaction: string;
+                kind: "graphPoint";
+                target:
+                  | { kind: "points"; points: Array<{ x: number; y: number }> }
+                  | {
+                      kind: "lines";
+                      lines: Array<{
+                        through: Array<
+                          { x: number; y: number } | { x: number; y: number }
+                        >;
+                      }>;
+                    };
+                tolerance: number;
+              }
+            | {
+                criteria: Array<{
+                  criterion: string;
+                  levels: Array<{ descriptor: string; level: string }>;
+                }>;
+                interaction: string;
+                kind: "extendedText";
+              }
+          > | null;
+          media: Array<
+            | { alt: string; asset: Id<"examAudio">; kind: "audio" }
+            | { alt: string; kind: "video"; video: string }
+          >;
+          points: number;
+          prompt: Id<"editorDocuments">;
+          reading: Id<"editorDocuments"> | null;
+          revision: number;
+          rubric: Id<"editorDocuments">;
+          scoring:
+            | { kind: "allOrNothing" }
+            | {
+                floor: number;
+                kind: "perPart";
+                penaltyPerWrongPart?: number;
+                pointsPerPart: number;
+              }
+            | {
+                bands: Array<{ points: number; wrong: number }>;
+                kind: "wrongParts";
+              };
+          template:
+            | "choice"
+            | "choices"
+            | "truefalse"
+            | "cause"
+            | "short"
+            | "numeric"
+            | "essay"
+            | "match"
+            | "table"
+            | "reason";
         }
       >;
     };
@@ -6366,6 +7292,17 @@ export declare const api: {
       >;
     };
     screens: {
+      beat: FunctionReference<
+        "mutation",
+        "public",
+        {
+          attemptId: Id<"examAttempts">;
+          deviceId: string;
+          session: string;
+          slug: string;
+        },
+        { token: string }
+      >;
       look: FunctionReference<
         "mutation",
         "public",
@@ -6376,6 +7313,12 @@ export declare const api: {
           slug: string;
         },
         null
+      >;
+      offline: FunctionReference<
+        "query",
+        "public",
+        { sittingId: Id<"examSittings">; slug: string },
+        Array<{ attemptId: Id<"examAttempts">; since: number }>
       >;
       screen: FunctionReference<
         "query",
@@ -6566,6 +7509,18 @@ export declare const api: {
             | null;
         } | null
       >;
+      seats: FunctionReference<
+        "query",
+        "public",
+        { sittingId: Id<"examSittings">; slug: string },
+        {
+          away: number;
+          finished: number;
+          locked: number;
+          offline: number;
+          working: number;
+        }
+      >;
     };
     sittings: {
       addMinutes: FunctionReference<
@@ -6612,17 +7567,6 @@ export declare const api: {
           version: number;
         },
         null
-      >;
-      attempt: FunctionReference<
-        "query",
-        "public",
-        { sittingId: Id<"examSittings">; slug: string },
-        {
-          deadline: number;
-          id: Id<"examAttempts">;
-          startedAt: number;
-          state: "inProgress" | "locked" | "closing" | "submitted";
-        } | null
       >;
       cancel: FunctionReference<
         "mutation",
@@ -7019,7 +7963,14 @@ export declare const api: {
           sittingId: Id<"examSittings">;
           slug: string;
         },
-        { prompt: string }
+        {
+          media: Array<
+            | { alt: string; kind: "audio"; url: string }
+            | { alt: string; kind: "video"; video: string }
+          >;
+          prompt: string;
+          reading: string | null;
+        }
       >;
       reschedule: FunctionReference<
         "mutation",
@@ -8031,6 +8982,10 @@ export declare const api: {
                 }
               | {
                   client: Id<"integrationClients">;
+                  type: "integration.changed";
+                }
+              | {
+                  client: Id<"integrationClients">;
                   type: "integration.rotated";
                 }
               | {
@@ -8201,6 +9156,7 @@ export declare const api: {
                   type: "tenant.provisioned";
                 }
               | { size: "s" | "m" | "l" | "xl"; type: "tenant.founded" }
+              | { dpaVersion: string; type: "tenant.dpa.accepted" }
               | { country: string; currency: string; type: "tenant.locale.set" }
               | { type: "tenant.logo.removed" }
               | { type: "tenant.logo.set" }
@@ -9441,20 +10397,6 @@ export declare const api: {
           value: number;
         }
       >;
-      mine: FunctionReference<
-        "query",
-        "public",
-        { classId: Id<"classes">; slug: string },
-        Array<{
-          band?: string;
-          classId: Id<"classes">;
-          id: Id<"classGrades">;
-          kktp: "reached" | "notReached";
-          personId: Id<"tenantPeople">;
-          state: "draft" | "released";
-          value: number;
-        }>
-      >;
       own: FunctionReference<
         "query",
         "public",
@@ -9849,26 +10791,13 @@ export declare const api: {
         "query",
         "public",
         { personId: Id<"tenantPeople">; slug: string },
-        {
-          hasNisn: boolean;
-          personId: Id<"tenantPeople">;
-          underAgeLimit?: boolean;
-        }
+        { hasNisn: boolean; personId: Id<"tenantPeople"> }
       >;
       set: FunctionReference<
         "mutation",
         "public",
-        {
-          nisn?: string;
-          personId: Id<"tenantPeople">;
-          slug: string;
-          underAgeLimit: boolean;
-        },
-        {
-          hasNisn: boolean;
-          personId: Id<"tenantPeople">;
-          underAgeLimit?: boolean;
-        }
+        { nisn: string; personId: Id<"tenantPeople">; slug: string },
+        { hasNisn: boolean; personId: Id<"tenantPeople"> }
       >;
     };
     exports: {
@@ -9885,12 +10814,7 @@ export declare const api: {
         "public",
         {
           periodId: Id<"tenantPeriods">;
-          rows: Array<{
-            cohortName?: string;
-            name: string;
-            nisn: string;
-            underAgeLimit: boolean;
-          }>;
+          rows: Array<{ cohortName?: string; name: string; nisn: string }>;
           slug: string;
         },
         { added: number; changed: number; skipped: number }
@@ -11577,14 +12501,6 @@ export declare const api: {
           { kind: "free-attempt" } | { kind: "included" }
         >;
       };
-      attempt: {
-        isLockedByAttemptId: FunctionReference<
-          "query",
-          "public",
-          { attemptId: string },
-          boolean
-        >;
-      };
       attemptPage: {
         getSection: FunctionReference<
           "query",
@@ -12634,17 +13550,6 @@ export declare const api: {
         { picture: "animal" | "photo" },
         null
       >;
-      syncUserInfoForChat: FunctionReference<
-        "mutation",
-        "public",
-        {},
-        {
-          credits: number;
-          role:
-            "teacher" | "student" | "parent" | "administrator" | null | null;
-          userId: Id<"users">;
-        }
-      >;
       updateBio: FunctionReference<"mutation", "public", { bio: string }, null>;
       updateUsername: FunctionReference<
         "mutation",
@@ -13562,6 +14467,43 @@ export declare const internal: {
   };
   classroom: {
     forum: {
+      channels: {
+        sweep: FunctionReference<
+          "mutation",
+          "internal",
+          { channelId: Id<"classroomChannels"> },
+          null
+        >;
+      };
+      files: {
+        commit: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            authorId: Id<"tenantPeople">;
+            byteSize: number;
+            classId: Id<"classes">;
+            contentType: string;
+            height: number | null;
+            kind: "document" | "image";
+            name: string;
+            storageId: Id<"_storage">;
+            thumbnailId: Id<"_storage"> | null;
+            width: number | null;
+          },
+          {
+            byteSize: number;
+            id: Id<"classroomUploads">;
+            kind: "document" | "image";
+          } | null
+        >;
+        sweep: FunctionReference<
+          "mutation",
+          "internal",
+          {},
+          { deleted: number }
+        >;
+      };
       seed: {
         history: FunctionReference<
           "mutation",
@@ -15350,61 +16292,6 @@ export declare const internal: {
           }
         >;
       };
-      compare: {
-        rank: FunctionReference<
-          "action",
-          "internal",
-          {
-            locale: "en" | "id" | "de";
-            model:
-              | "google/gemini-embedding-001"
-              | "google/gemini-embedding-2"
-              | "openai/text-embedding-3-large"
-              | "openai/text-embedding-3-small"
-              | "qwen/qwen3-embedding-4b"
-              | "qwen/qwen3-embedding-8b";
-            questions: Array<{
-              contentKey: string;
-              ordinal: number;
-              question: string;
-            }>;
-          },
-          | { kind: "empty" }
-          | {
-              kind: "ranked";
-              pool: number;
-              refused: number;
-              verdicts: Array<{
-                milliseconds: number;
-                section: { heading: string; rank: number } | null;
-              }>;
-            }
-          | {
-              failure:
-                | { _tag: "GatewayConfigurationError"; message: string }
-                | {
-                    _tag: "GatewayFailure";
-                    reason:
-                      | "rate-limit"
-                      | "quota"
-                      | "auth"
-                      | "configuration"
-                      | "invalid"
-                      | "too-large"
-                      | "timeout"
-                      | "unavailable"
-                      | "network"
-                      | "interrupted"
-                      | "unknown";
-                    retryAfter?: number;
-                    retryable?: boolean;
-                    status?: number;
-                    type?: string;
-                  };
-              kind: "failed";
-            }
-        >;
-      };
       hits: {
         resolve: FunctionReference<
           "query",
@@ -15472,20 +16359,6 @@ export declare const internal: {
               releaseId: string;
               unchanged: number;
             }
-        >;
-        page: FunctionReference<
-          "query",
-          "internal",
-          { appLocale: "en" | "id" | "de"; cursor: string | null },
-          {
-            next: string | null;
-            sections: Array<{
-              contentKey: string;
-              headingPath: Array<string>;
-              ordinal: number;
-              text: string;
-            }>;
-          }
         >;
         prune: FunctionReference<
           "mutation",
@@ -15573,45 +16446,6 @@ export declare const internal: {
               releaseId: string;
               surah: number;
               unchanged: number;
-            }
-        >;
-      };
-      search: {
-        search: FunctionReference<
-          "action",
-          "internal",
-          {
-            limit?: number;
-            locale: "en" | "id" | "de";
-            query: string;
-            section?: "articles" | "material" | "tryout" | "quran";
-          },
-          | { kind: "empty" }
-          | {
-              hits: Array<{
-                anchor: string;
-                appLocale: "en" | "id" | "de";
-                contentKey: string;
-                excerpt: string;
-                headingPath: Array<string>;
-                ordinal: number;
-                reference: {
-                  alignmentId: string;
-                  assetId: string;
-                  conceptId: string;
-                  content_id: string;
-                  description: string;
-                  learningObjectId: string;
-                  lensId: string;
-                  locale: "en" | "id" | "de";
-                  markdown_url?: string;
-                  route: string;
-                  section: "articles" | "material" | "tryout" | "quran";
-                  title: string;
-                  url: string;
-                };
-              }>;
-              kind: "hits";
             }
         >;
       };
@@ -17275,13 +18109,21 @@ export declare const internal: {
     };
   };
   records: {
-    letters: {
-      draw: FunctionReference<
+    draw: {
+      letter: FunctionReference<
         "action",
         "internal",
         { letterId: Id<"graduationLetters"> },
         null
       >;
+      report: FunctionReference<
+        "action",
+        "internal",
+        { reportId: Id<"reportCards"> },
+        null
+      >;
+    };
+    letters: {
       lock: FunctionReference<
         "mutation",
         "internal",
@@ -17314,12 +18156,6 @@ export declare const internal: {
       >;
     };
     prints: {
-      draw: FunctionReference<
-        "action",
-        "internal",
-        { reportId: Id<"reportCards"> },
-        null
-      >;
       lock: FunctionReference<
         "mutation",
         "internal",
@@ -17554,32 +18390,6 @@ export declare const internal: {
         "query",
         "internal",
         { authId: string },
-        {
-          _creationTime: number;
-          _id: Id<"users">;
-          authId: string;
-          authVerificationCleanupCursor?: string;
-          bio?: string;
-          credits: number;
-          creditsResetAt: number;
-          deletedAt?: number;
-          deletionCleanupStartedAt?: number;
-          deletionPreparedAt?: number;
-          email: string;
-          image?: string;
-          mascot: string;
-          name: string;
-          picture?: "animal" | "photo";
-          plan: "free" | "pro";
-          planCreditGrantId?: Id<"creditTransactions">;
-          role?: "teacher" | "student" | "parent" | "administrator";
-          username?: string;
-        } | null
-      >;
-      getUserById: FunctionReference<
-        "query",
-        "internal",
-        { userId: Id<"users"> },
         {
           _creationTime: number;
           _id: Id<"users">;

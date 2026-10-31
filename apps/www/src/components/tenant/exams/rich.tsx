@@ -5,6 +5,7 @@ import {
   DocumentEditor,
   type DocumentEditorInstance,
 } from "@repo/design-system/components/editor/document";
+import { FiguresProvider } from "@repo/design-system/components/editor/figure";
 import { FormulaLabelsProvider } from "@repo/design-system/components/editor/formula";
 import {
   PicturesProvider,
@@ -23,6 +24,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { ExamFigure } from "@/components/tenant/exams/figure/view";
 import { queuePictureFile } from "@/components/tenant/exams/picture";
 import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam, useExamEditing } from "@/components/tenant/exams/provider";
@@ -95,7 +97,7 @@ interface ExamDocumentProps {
   /** The hint shown while the text is empty. */
   readonly placeholder: string;
   /** The room the text takes at least: an option takes one line, and a prompt a page of writing. */
-  readonly size?: "line" | "page";
+  readonly size?: "line" | "page" | "paper";
 }
 
 /**
@@ -175,23 +177,25 @@ export function ExamDocument({
         labels={labels.pictures}
         urls={addresses}
       >
-        {opening ? <PreviewProse article doc={stored} size={size} /> : null}
-        <div className={opening ? "hidden" : "contents"}>
-          <DocumentEditor
-            content={content}
-            extensions={allExtensions}
-            label={label}
-            onChange={onChange}
-            onEditor={(editor) => {
-              own.current = editor;
-              editor.registerPlugin(pictureIdsPlugin(setPictureIds));
-              onEditor(editor);
-            }}
-            onFocus={activate}
-            placeholder={placeholder}
-            size={size}
-          />
-        </div>
+        <FiguresProvider view={ExamFigure}>
+          {opening ? <PreviewProse article doc={stored} size={size} /> : null}
+          <div className={opening ? "hidden" : "contents"}>
+            <DocumentEditor
+              content={content}
+              extensions={allExtensions}
+              label={label}
+              onChange={onChange}
+              onEditor={(editor) => {
+                own.current = editor;
+                editor.registerPlugin(pictureIdsPlugin(setPictureIds));
+                onEditor(editor);
+              }}
+              onFocus={activate}
+              placeholder={placeholder}
+              size={size}
+            />
+          </div>
+        </FiguresProvider>
       </PicturesProvider>
     </FormulaLabelsProvider>
   );

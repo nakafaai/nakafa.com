@@ -48,6 +48,17 @@ export class AnswersDoNotFit extends Schema.TaggedError<AnswersDoNotFit>()(
   }
 ) {}
 
+/** A scoring rule for a question whose answer has no parts to share its points among. */
+export class ScoringDoesNotFit extends Schema.TaggedError<ScoringDoesNotFit>()(
+  "ScoringDoesNotFit",
+  {
+    ...refusal(
+      "SCORING_DOES_NOT_FIT",
+      "This question has no parts to score one by one."
+    ),
+  }
+) {}
+
 /**
  * A question whose edits since its last saved snapshot take more than one read of the
  * step log, so a copy cannot hold its whole current text yet. The editor saves the

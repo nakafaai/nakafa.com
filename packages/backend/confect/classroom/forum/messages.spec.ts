@@ -3,15 +3,21 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import {
+  ChannelArchived,
   MentionRefused,
+  MessageEmpty,
   MessageHidden,
+  UploadGone,
 } from "@repo/backend/confect/classroom/forum/errors";
 import { Mentions } from "@repo/backend/confect/classroom/forum/mention";
 import {
   ClientKey,
+  MessageBody,
   MessageText,
+  MessageUploads,
   MessageView,
 } from "@repo/backend/confect/classroom/forum/message";
+import { PollDraft } from "@repo/backend/confect/classroom/forum/poll";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -44,15 +50,24 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "send",
       args: () => ({
+        attachments: MessageUploads,
         channelId: Id("classroomChannels"),
         classId: Id("classes"),
         clientKey: ClientKey,
         mentions: Mentions,
+        poll: Schema.NullOr(PollDraft),
         slug: TenantSlug,
-        text: MessageText,
+        text: MessageBody,
       }),
       returns: () => MessageView,
-      error: () => Schema.Union([AccessDenied, MentionRefused]),
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          ChannelArchived,
+          MentionRefused,
+          MessageEmpty,
+          UploadGone,
+        ]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   )
   .addFunction(
@@ -65,7 +80,7 @@ export default GroupSpec.make()
         text: MessageText,
       }),
       returns: () => MessageView,
-      error: () => Schema.Union([AccessDenied, MessageHidden]),
+      error: () => Schema.Union([AccessDenied, ChannelArchived, MessageHidden]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   )
   .addFunction(

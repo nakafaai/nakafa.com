@@ -1,4 +1,5 @@
 import { QueryResult, useMutation } from "@confect/react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { IntegrationName } from "@repo/backend/confect/integrations/schema";
@@ -22,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -123,11 +125,13 @@ export function SchoolClientCreateDialog({
             {common("cancel")}
           </Button>
           <Button
+            aria-busy={isPending || undefined}
             disabled={Option.isNone(clientName)}
             inert={isPending}
             onClick={submit}
             type="button"
           >
+            <Spinner icon={Add01Icon} isLoading={isPending} />
             {t("client-create")}
           </Button>
         </>

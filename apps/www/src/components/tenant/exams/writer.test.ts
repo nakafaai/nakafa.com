@@ -8,10 +8,14 @@ import {
   withOptionLabel,
 } from "@/components/tenant/exams/answer";
 import {
+  isUnrefused,
   makeQuestionWriter,
   type QuestionDraft,
   SaveDropped,
 } from "@/components/tenant/exams/writer";
+
+/** A call that never finished, as `sentAction` fails with it. */
+class CallUnanswered extends Data.TaggedError("ExamCallFailed") {}
 
 /** The label of an option that holds `text` as one paragraph, the shape the option editor writes. */
 const labelOf = (text: string): OptionLabel => ({
@@ -273,6 +277,60 @@ describe("makeQuestionWriter", () => {
         const stored = yield* Ref.get(server.stored);
         expect(stored.revision).toBe(5);
         expect(textsOf(stored)).toEqual(["", "Paris", "Rome", "Bern"]);
+      })
+  );
+
+  it.effect(
+    "sends a call that went unanswered again before it counts, so one function that ran out of time loses no words",
+    () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make(0);
+        const writer = yield* makeQuestionWriter(
+          (draft) =>
+            Ref.updateAndGet(calls, (count) => count + 1).pipe(
+              Effect.flatMap((count) =>
+                count < 3
+                  ? Effect.fail(new CallUnanswered())
+                  : Effect.succeed({ ...draft, revision: draft.revision + 1 })
+              )
+            ),
+          Effect.succeed(draftAt(4))
+        );
+
+        const landed = yield* Effect.forkChild(
+          writer.save(typeOption("option-2", "Lyon"))
+        );
+        yield* Effect.yieldNow;
+        yield* TestClock.adjust("2 seconds");
+        yield* Fiber.join(landed);
+        expect(yield* Ref.get(calls)).toBe(3);
+      })
+  );
+
+  it.effect(
+    "fails a call that stays unanswered through its retries, which the page keeps for the teacher, unlike a refusal",
+    () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make(0);
+        const writer = yield* makeQuestionWriter(
+          () =>
+            Ref.update(calls, (count) => count + 1).pipe(
+              Effect.andThen(Effect.fail(new CallUnanswered()))
+            ),
+          Effect.succeed(draftAt(4))
+        );
+
+        const failed = yield* Effect.forkChild(
+          Effect.flip(writer.save(typeOption("option-2", "Lyon")))
+        );
+        yield* Effect.yieldNow;
+        yield* TestClock.adjust("2 seconds");
+        const failure = yield* Fiber.join(failed);
+        expect(yield* Ref.get(calls)).toBe(3);
+        expect(isUnrefused(failure)).toBe(true);
+        expect(isUnrefused(new SaveDropped())).toBe(true);
+        expect(isUnrefused({ _tag: "RevisionStale" })).toBe(true);
+        expect(isUnrefused(new AnswersRefused())).toBe(false);
       })
   );
 });

@@ -14,7 +14,6 @@ import {
   DashboardView,
   EnterOutcome,
   ExpectedSeat,
-  HeldAttempt,
   PaperView,
   PromptView,
   SavedView,
@@ -233,14 +232,6 @@ export default GroupSpec.make()
     }).middleware(SittingAccess, {
       action: "sitting.schedule",
       arg: "sittingId",
-    })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "attempt",
-      args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
-      returns: () => Schema.NullOr(HeldAttempt),
-      error: () => Schema.Never,
     })
   )
   .addFunction(

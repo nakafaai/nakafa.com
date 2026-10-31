@@ -6,7 +6,6 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { storedDocument } from "@repo/backend/confect/editor/document";
-import { EMPTY_PROMPT_TEXT } from "@repo/backend/confect/exams/question";
 import {
   insertStep,
   nf,
@@ -86,8 +85,41 @@ describe("exams/sittings prompt", () => {
           sittingId: made.id,
         });
         expect(reply).toEqual({
-          prompt: yield* storedDocument(EMPTY_PROMPT_TEXT).pipe(Effect.orDie),
+          prompt: yield* storedDocument(paragraphText("Soal")).pipe(
+            Effect.orDie
+          ),
+          reading: null,
         });
+      })
+  );
+
+  it.effect(
+    "gives the student a question's shared reading with its prompt",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        const questionId = yield* firstQuestion(fixture, made.id);
+        const reading = yield* promptDocumentOf(fixture, questionId);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("examQuestions")
+              .patch(questionId, { reading })
+              .pipe(Effect.orDie)
+          )
+        );
+        const reply = yield* promptOf(fixture, {
+          deviceId: deviceOf(1),
+          questionId,
+          sittingId: made.id,
+        });
+        expect(reply.reading).toBe(reply.prompt);
       })
   );
 
@@ -111,9 +143,10 @@ describe("exams/sittings prompt", () => {
           sittingId: made.id,
         });
         expect(reply).toEqual({
-          prompt: yield* storedDocument(paragraphText("Edited")).pipe(
+          prompt: yield* storedDocument(paragraphText("EditedSoal")).pipe(
             Effect.orDie
           ),
+          reading: null,
         });
       })
   );

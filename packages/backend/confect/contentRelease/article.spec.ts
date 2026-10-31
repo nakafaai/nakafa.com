@@ -1,11 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
-import { articleApiPageValidator } from "@repo/backend/confect/contentRelease/article/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   appLocaleValidator,
   artifactLocaleValidator,
-  releaseApiPageArgs,
   releasePageArgs,
   releasePageValidator,
   rendererDomainValidator,
@@ -104,14 +102,6 @@ export default GroupSpec.make()
           model: articleModelValidator,
           runtimeJson: Schema.Union([Schema.String, Schema.Null]),
         }),
-      error: () => ReleaseError,
-    })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "apiPage",
-      args: () => releaseApiPageArgs,
-      returns: () => articleApiPageValidator,
       error: () => ReleaseError,
     })
   )

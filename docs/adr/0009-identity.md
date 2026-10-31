@@ -187,9 +187,12 @@ only, each at its own address (ADR 0026).
   its Google issuer and subject, never by its email address. The one exception
   is an invite claim (ADR 0011), which matches the verified email of an account
   to the address of an invite once, to bind a Person. Google sign-in, on the main site and from the school host's
-  login page, and the domain check are live. The belajar.id match is planned:
-  it needs the hosted domain and address forms that belajar.id accounts carry,
-  measured on a pilot school's accounts.
+  login page, and the domain check are live. belajar.id is the ministry's
+  Workspace, which gives each level and role its own subdomain, such as
+  `guru.sma.belajar.id`, so a listed `belajar.id` stands for all of its subdomains.
+  Every other domain matches as written. The owner decided on 31 October 2026 not to
+  wait for a pilot school's accounts: the published forms are enough, and the match
+  covers any subdomain, so a form not yet seen passes too.
 - **Username.** A school issues a username that is unique within the school. It
   is stored in the school's login table and maps to a Better Auth username that
   is unique within the cell, because each cell holds its own Better Auth rows
@@ -229,9 +232,8 @@ only, each at its own address (ADR 0026).
   The parent enters it on the code entry page of the school host
   (`/parents`, ADR 0026), the only page that accepts it. It is the one code
   that an email carries (ADR 0027): it lives five minutes, rests as a keyed hash,
-  and is useless without that page. Signing in is not consent for a child (K2).
-  Consent is recorded with a second check, and ADR 0012 defines the verified
-  parent relation. Built on 26 October 2026 (ADR 0034, Implementation Status): the
+  and is useless without that page. A parent's consent to the link is recorded
+  with a second check, and ADR 0012 defines the verified parent relation. Built on 26 October 2026 (ADR 0034, Implementation Status): the
   school host's endpoint `/school/guardian/sign-in` redeems the code, and an
   address that the school did not link gets the same answer and no mail.
 - **Microsoft Entra ID and SAML.** These come after Google, for the schools that

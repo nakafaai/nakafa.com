@@ -23,7 +23,7 @@ import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
  * prompt would run over the options below it.
  */
 const questionPaper = cva(
-  "bg-background flex aspect-4/3 w-full min-w-0 flex-col gap-6 rounded-xl p-6 shadow-sm md:p-10",
+  "bg-background flex aspect-4/3 w-full min-w-0 flex-col gap-8 rounded-xl p-6 shadow-sm md:p-10",
   {
     defaultVariants: { selected: false },
     variants: {
@@ -49,6 +49,11 @@ export function QuestionPaper({
   selected?: boolean;
 }) {
   return <div className={questionPaper({ selected })}>{children}</div>;
+}
+
+/** A question's text on its paper: its reading, when it has one, over its prompt, as the student reads them. */
+export function PaperPrompt({ children }: { children: ReactNode }) {
+  return <div className="grid gap-6">{children}</div>;
 }
 
 /** The room of the action that adds an option, which a page keeps while its editors are not mounted. */

@@ -21,8 +21,10 @@ const placements = refs.public.tenancy.placements;
 
 /** The general channel of every class, as the list shows it. */
 const general = {
+  archived: false,
   id: expect.any(String),
   kind: "general",
+  last: null,
   name: "general",
   unread: false,
 };
@@ -91,14 +93,23 @@ describe("classroom/forum channels", () => {
           .as("teacher")
           .query(list, { ...firstPage, classId: made.id, slug: nf });
         expect(added).toEqual({
+          archived: false,
           id: expect.any(String),
           kind: "topic",
+          last: null,
           name: "Tugas",
           unread: false,
         });
         expect(listed.page).toEqual([
           general,
-          { id: added.id, kind: "topic", name: "Tugas", unread: false },
+          {
+            archived: false,
+            id: added.id,
+            kind: "topic",
+            last: null,
+            name: "Tugas",
+            unread: false,
+          },
         ]);
       })
   );

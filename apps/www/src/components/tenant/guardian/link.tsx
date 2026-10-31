@@ -4,6 +4,7 @@ import {
   MoreHorizontalIcon,
   PencilEdit02Icon,
   Unlink01Icon,
+  UserEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -18,12 +19,14 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { GuardianLinkAddressDialog } from "@/components/tenant/guardian/address";
 import {
   revokeLinkChange,
   verifyLinkChange,
 } from "@/components/tenant/guardian/change";
+import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { isDraft } from "@/components/tenant/settings/state";
 
@@ -33,7 +36,7 @@ const SOURCE = "components/tenant/guardian/link";
 export type LinkItem = PaginatedQueryItem<typeof guardians.links.list>;
 
 /**
- * The actions of a live link in its open pane: correct its email and check it by hand while it is pending, and end it.
+ * The actions of a live link in its open pane: rename the parent, correct its email and check it by hand while it is pending, and end it.
  */
 export function GuardianLinkActions({ link }: { link: LinkItem }) {
   const t = useTranslations("SchoolGuardians");
@@ -45,6 +48,9 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
   const [isRevoking, setIsRevoking] = useState(false);
   // Each opening of the email dialog mounts it again, so it starts from the link as it is then.
   const [readdressing, setReaddressing] = useState(0);
+  // Each opening of the name dialog mounts it again, so it starts from the name as it is then.
+  const [renaming, setRenaming] = useState(0);
+  const [isRenaming, setIsRenaming] = useState(false);
 
   return (
     <>
@@ -56,6 +62,19 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
         <HugeIcons icon={Unlink01Icon} />
         {t("link-revoke")}
       </Button>
+      <WithAction action="person.manage">
+        <Button
+          onClick={() => {
+            setRenaming((count) => count + 1);
+            setIsRenaming(true);
+          }}
+          type="button"
+          variant="outline"
+        >
+          <HugeIcons icon={UserEdit01Icon} />
+          {t("link-rename")}
+        </Button>
+      </WithAction>
       {link.status === "pending" ? (
         <>
           <Button
@@ -82,6 +101,14 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
       {readdressing === 0 ? null : (
         <GuardianLinkAddressDialog key={readdressing} link={link} />
       )}
+      {renaming === 0 ? null : (
+        <PersonRenameDialog
+          key={renaming}
+          open={isRenaming}
+          person={link.guardian}
+          setOpen={setIsRenaming}
+        />
+      )}
       <GuardianLinkRevokeDialog
         link={link}
         open={isRevoking}
@@ -92,7 +119,7 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
 }
 
 /**
- * A live link's row menu: correct its email and check it by hand while it is pending, and end it behind a
+ * A live link's row menu: rename the parent, correct its email and check it by hand while it is pending, and end it behind a
  * confirmation. A link the server has not answered yet keeps its menu inert, and an ended link has no menu, so its
  * cell stays empty.
  */
@@ -107,6 +134,9 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
   const [isRevoking, setIsRevoking] = useState(false);
   // Each opening of the email dialog mounts it again, so it starts from the link as it is then.
   const [readdressing, setReaddressing] = useState(0);
+  // Each opening of the name dialog mounts it again, so it starts from the name as it is then.
+  const [renaming, setRenaming] = useState(0);
+  const [isRenaming, setIsRenaming] = useState(false);
 
   if (link.status !== "pending" && link.status !== "verified") {
     return null;
@@ -128,6 +158,17 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
           }
         />
         <DropdownMenuContent align="end" className="w-48">
+          <WithAction action="person.manage">
+            <DropdownMenuItem
+              onClick={() => {
+                setRenaming((count) => count + 1);
+                setIsRenaming(true);
+              }}
+            >
+              <HugeIcons icon={UserEdit01Icon} />
+              {t("link-rename")}
+            </DropdownMenuItem>
+          </WithAction>
           {link.status === "pending" ? (
             <>
               <DropdownMenuItem
@@ -160,6 +201,14 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
       </DropdownMenu>
       {readdressing === 0 ? null : (
         <GuardianLinkAddressDialog key={readdressing} link={link} />
+      )}
+      {renaming === 0 ? null : (
+        <PersonRenameDialog
+          key={renaming}
+          open={isRenaming}
+          person={link.guardian}
+          setOpen={setIsRenaming}
+        />
       )}
       <GuardianLinkRevokeDialog
         link={link}

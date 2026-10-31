@@ -247,6 +247,8 @@ export const hideUpdate: OptimisticUpdate<
 > = (localStore, args) => {
   changeMessage(localStore, args.messageId, (message) => ({
     ...message,
+    attachments: [],
+    poll: null,
     text: null,
   }));
 };

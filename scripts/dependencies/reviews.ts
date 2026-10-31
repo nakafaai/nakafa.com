@@ -69,8 +69,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "4.0.0",
-    "nakafa.com declares 4.0.0, the newest release, which peers effect 4.1.0 exactly: 3.0.0 moved the contracts onto effect/crypto, and 4.0.0 reads a typed number with any decimal separator and Arabic-Indic digits.",
+    "4.1.0",
+    "nakafa.com declares 4.1.0, the newest release, which peers effect 4.1.0 exactly: 3.0.0 moved the contracts onto effect/crypto, and 4.0.0 reads a typed number with any decimal separator and Arabic-Indic digits.",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [

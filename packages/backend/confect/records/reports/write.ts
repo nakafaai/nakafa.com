@@ -167,7 +167,7 @@ export const approve = FunctionImpl.make(
       updatedAt: now,
     });
     yield* (yield* Scheduler)
-      .runAfter(Duration.zero, recordsInternal.prints.draw, {
+      .runAfter(Duration.zero, recordsInternal.draw.report, {
         reportId: report._id,
       })
       .pipe(Effect.orDie);
