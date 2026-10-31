@@ -1,5 +1,6 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { LocalDeploymentJson } from "@repo/backend/scripts/content/acceptance/deployment";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
@@ -11,6 +12,7 @@ import { createLocalSigningIdentity } from "@repo/backend/scripts/content/accept
 import { isPortOccupied, occupyPort } from "@repo/backend/test/acceptance";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
+  Array as Arr,
   Deferred,
   Effect,
   Fiber,
@@ -19,6 +21,7 @@ import {
   Logger,
   MutableList,
   Path,
+  Schema,
   Sink,
   Stream,
 } from "effect";
@@ -53,7 +56,7 @@ const fixture = Effect.gen(function* () {
   yield* fs.makeDirectory(state, { recursive: true });
   yield* fs.writeFileString(
     `${state}/config.json`,
-    JSON.stringify(LOCAL_DEPLOYMENT)
+    yield* Schema.encodeEffect(LocalDeploymentJson)(LOCAL_DEPLOYMENT)
   );
   const runtime: LocalRuntime = {
     analytics: "http://127.0.0.1:43312",
@@ -72,7 +75,7 @@ const fixture = Effect.gen(function* () {
 });
 
 const isDeploy = (command: ChildProcess.Command) =>
-  command._tag === "StandardCommand" && command.args.includes("deploy");
+  command._tag === "StandardCommand" && Arr.contains(command.args, "deploy");
 
 const spawner = Effect.fn("ProcessTest.spawner")(function* (
   options: {
