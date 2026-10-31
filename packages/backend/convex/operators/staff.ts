@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/op
 
 export const grant = registeredFunctions.grant;
 export const revoke = registeredFunctions.revoke;
+export const experimental_reuseContext = true;

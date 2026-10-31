@@ -4,3 +4,4 @@ export const canRead = registeredFunctions.canRead;
 export const discard = registeredFunctions.discard;
 export const pictures = registeredFunctions.pictures;
 export const read = registeredFunctions.read;
+export const experimental_reuseContext = true;

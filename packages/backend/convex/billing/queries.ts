@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/bi
 export const overview = registeredFunctions.overview;
 export const payments = registeredFunctions.payments;
 export const proOffers = registeredFunctions.proOffers;
+export const experimental_reuseContext = true;

@@ -4,3 +4,4 @@ export const edit = registeredFunctions.edit;
 export const hide = registeredFunctions.hide;
 export const page = registeredFunctions.page;
 export const send = registeredFunctions.send;
+export const experimental_reuseContext = true;

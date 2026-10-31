@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/co
 
 export const ownTarget = registeredFunctions.ownTarget;
 export const pickerToken = registeredFunctions.pickerToken;
+export const experimental_reuseContext = true;

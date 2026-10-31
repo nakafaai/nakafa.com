@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/co
 
 export const stageItemBatch = registeredFunctions.stageItemBatch;
 export const stageProjectionBatch = registeredFunctions.stageProjectionBatch;
+export const experimental_reuseContext = true;

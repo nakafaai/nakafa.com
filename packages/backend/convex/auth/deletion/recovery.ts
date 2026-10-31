@@ -2,3 +2,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 
 export const recoverAccountDeletion = registeredFunctions.recoverAccountDeletion;
 export const sweepAccountDeletionRecovery = registeredFunctions.sweepAccountDeletionRecovery;
+export const experimental_reuseContext = true;

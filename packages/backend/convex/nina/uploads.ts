@@ -5,3 +5,4 @@ export const discard = registeredFunctions.discard;
 export const release = registeredFunctions.release;
 export const reserve = registeredFunctions.reserve;
 export const save = registeredFunctions.save;
+export const experimental_reuseContext = true;

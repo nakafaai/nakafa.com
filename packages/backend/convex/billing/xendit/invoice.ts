@@ -3,3 +3,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 export const open = registeredFunctions.open;
 export const payable = registeredFunctions.payable;
 export const record = registeredFunctions.record;
+export const experimental_reuseContext = true;

@@ -5,3 +5,4 @@ export const deny = registeredFunctions.deny;
 export const poll = registeredFunctions.poll;
 export const start = registeredFunctions.start;
 export const sweep = registeredFunctions.sweep;
+export const experimental_reuseContext = true;

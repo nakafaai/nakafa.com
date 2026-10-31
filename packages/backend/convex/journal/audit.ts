@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/jo
 
 export const actors = registeredFunctions.actors;
 export const list = registeredFunctions.list;
+export const experimental_reuseContext = true;

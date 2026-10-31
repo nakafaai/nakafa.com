@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/ni
 
 export const claim = registeredFunctions.claim;
 export const save = registeredFunctions.save;
+export const experimental_reuseContext = true;

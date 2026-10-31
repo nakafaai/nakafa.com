@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/te
 export const setLocale = registeredFunctions.setLocale;
 export const setName = registeredFunctions.setName;
 export const setPolicy = registeredFunctions.setPolicy;
+export const experimental_reuseContext = true;

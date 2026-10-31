@@ -9,3 +9,4 @@ export const publications = registeredFunctions.publications;
 export const route = registeredFunctions.route;
 export const sitemapBuckets = registeredFunctions.sitemapBuckets;
 export const sitemapPage = registeredFunctions.sitemapPage;
+export const experimental_reuseContext = true;

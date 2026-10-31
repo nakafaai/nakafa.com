@@ -6,3 +6,4 @@ export const links = registeredFunctions.links;
 export const preview = registeredFunctions.preview;
 export const storeWork = registeredFunctions.storeWork;
 export const target = registeredFunctions.target;
+export const experimental_reuseContext = true;

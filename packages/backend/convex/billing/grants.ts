@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/bi
 
 export const project = registeredFunctions.project;
 export const projectSchool = registeredFunctions.projectSchool;
+export const experimental_reuseContext = true;

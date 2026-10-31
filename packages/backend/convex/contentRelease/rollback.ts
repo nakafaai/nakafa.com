@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/co
 
 export const prepareRollback = registeredFunctions.prepareRollback;
 export const prepareRoutes = registeredFunctions.prepareRoutes;
+export const experimental_reuseContext = true;

@@ -9,3 +9,4 @@ export const settle = registeredFunctions.settle;
 export const storeEvents = registeredFunctions.storeEvents;
 export const sweep = registeredFunctions.sweep;
 export const target = registeredFunctions.target;
+export const experimental_reuseContext = true;
