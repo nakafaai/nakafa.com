@@ -173,6 +173,31 @@ describe("insight", () => {
       })
   );
 
+  it.effect("names no competency for a question of another exam", () =>
+    Effect.gen(function* () {
+      const fixture = yield* keyedFixture;
+      const made = yield* sat(fixture);
+      const elsewhere = yield* keyedExam(fixture, "Ujian Lain");
+      const exam = yield* fixture.run(
+        Effect.flatMap(DatabaseReader, (reader) =>
+          reader.table("exams").get(elsewhere).pipe(Effect.orDie)
+        )
+      );
+      const teacher = fixture.as("teacher");
+      yield* teacher.mutation(set, {
+        competency: "Gerak",
+        examId: made.examId,
+        questionId: Arr.getUnsafe(exam.questions, 0),
+        slug: nf,
+      });
+      expect(
+        yield* teacher.query(list, { examId: made.examId, slug: nf })
+      ).toSatisfy((tags: readonly { competency: string | null }[]) =>
+        Arr.every(tags, (found) => found.competency === null)
+      );
+    })
+  );
+
   it.effect(
     "lets a teacher write a narrative, share it with a guardian, and take it back",
     () =>
