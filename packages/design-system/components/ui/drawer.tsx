@@ -187,11 +187,12 @@ function DrawerContent({
   );
 }
 
+/** The title and its description, ruled off from what follows, as a sheet's header is. */
 function DrawerHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex shrink-0 flex-col gap-0.5 p-4 pb-0 group-data-[swipe-axis=y]/drawer-popup:text-center md:gap-1.5 md:text-left",
+        "flex shrink-0 flex-col gap-0.5 border-b p-4 last:border-b-0 group-data-[swipe-axis=y]/drawer-popup:text-center md:gap-1.5 md:text-left",
         className
       )}
       data-slot="drawer-header"
@@ -219,14 +220,15 @@ function DrawerPanel({ className, ...props }: ComponentProps<"div">) {
 }
 
 /**
- * The actions, stacked. A caller writes the way out first and the main action last, as a dialog's row reads,
- * so the column turns them over and the main action stands on top, as in shadcn's own.
+ * The actions, stacked on the tinted, ruled band a dialog's footer stands on. A caller writes the way out first
+ * and the main action last, as a dialog's row reads, so the column turns them over and the main action stands on
+ * top, as in shadcn's own. Right under the header, the header's rule is the only one.
  */
 function DrawerFooter({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "mt-auto flex shrink-0 flex-col-reverse gap-2 p-4 pt-0 [&>[data-slot=button]]:w-full",
+        "bg-muted/70 mt-auto flex shrink-0 flex-col-reverse gap-2 border-t p-4 [[data-slot=drawer-header]+&]:border-t-0 [&>[data-slot=button]]:w-full",
         className
       )}
       data-slot="drawer-footer"
