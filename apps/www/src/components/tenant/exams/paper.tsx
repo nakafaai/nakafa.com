@@ -12,6 +12,7 @@ import {
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { statusIconVariants } from "@repo/design-system/lib/status";
 import { Array as Arr, Option } from "effect";
 import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
@@ -126,7 +127,10 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
           <span className="text-muted-foreground flex items-center gap-1 text-xs">
             <HugeIcons
               aria-hidden="true"
-              className="text-primary size-3.5"
+              className={statusIconVariants({
+                className: "size-3.5",
+                tone: "warning",
+              })}
               icon={Alert02Icon}
             />
             {t("page-no-key")}
