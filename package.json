@@ -108,7 +108,6 @@
     "@repo/testing": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@sigstore/bundle": "5.0.0",
-    "@turbo/gen": "2.11.10",
     "@types/node": "24.19.2",
     "effect": "catalog:",
     "esbuild": "0.28.2",
@@ -117,8 +116,7 @@
     "turbo": "2.11.10",
     "typescript": "catalog:",
     "ultracite": "8.1.0",
-    "vitest": "catalog:",
-    "yaml": "2.9.1"
+    "vitest": "catalog:"
   },
   "packageManager": "bun@1.4.4",
   "engines": {
