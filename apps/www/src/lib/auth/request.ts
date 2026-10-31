@@ -45,6 +45,14 @@ const ADDRESS_BASE = "https://auth.invalid";
 const SESSION_REFRESH_LOCK = "nakafa.session.refresh";
 
 /**
+ * The body of a session refresh, which says nothing. It has to exist: Better
+ * Auth's client sends the refresh with no body, the proxy forwards that as an
+ * empty stream, and the server refuses a stream that is not typed as JSON and
+ * cannot parse an empty one.
+ */
+const SESSION_REFRESH_BODY = "{}";
+
+/**
  * Fails at once when the caller's signal aborts. The browser owns that signal,
  * so this watches it instead of creating one.
  */
@@ -172,6 +180,13 @@ function isSessionRefresh(
   );
 }
 
+/** The request of a session refresh, as the server reads it. */
+function withRefreshBody(init: RequestInit | undefined) {
+  const headers = new Headers(init?.headers);
+  headers.set("content-type", "application/json");
+  return { ...init, body: SESSION_REFRESH_BODY, headers };
+}
+
 /**
  * Sends a session refresh under a lock that every tab of the browser shares.
  * Tabs read the same session, so each one is told to refresh it, and one row
@@ -190,6 +205,11 @@ export const authFetch = (input: RequestInfo | URL, init?: RequestInit) => {
   if (isSessionRead(input, init)) {
     return Effect.runPromise(readSession(fetch, input, init));
   }
-  const send = () => Effect.runPromise(requestWithDeadline(fetch, input, init));
-  return isSessionRefresh(input, init) ? refreshInOneTab(send) : send();
+  if (isSessionRefresh(input, init)) {
+    const refresh = withRefreshBody(init);
+    return refreshInOneTab(() =>
+      Effect.runPromise(requestWithDeadline(fetch, input, refresh))
+    );
+  }
+  return Effect.runPromise(requestWithDeadline(fetch, input, init));
 };

@@ -362,6 +362,20 @@ describe("authFetch", () => {
     expect(fetcher).toHaveBeenCalledOnce();
   });
 
+  it("sends a session refresh as JSON, because the server refuses it without", async () => {
+    fetcher.mockResolvedValueOnce(new Response("refreshed"));
+
+    await authFetch(AUTH_URL, {
+      headers: { accept: "application/json" },
+      method: "POST",
+    });
+
+    const sent = new Request(AUTH_URL, fetcher.mock.calls[0]?.[1]);
+    expect(sent.headers.get("content-type")).toBe("application/json");
+    expect(sent.headers.get("accept")).toBe("application/json");
+    await expect(sent.json()).resolves.toStrictEqual({});
+  });
+
   it("lets one tab refresh the session at a time, so the second finds it fresh", async () => {
     let held: Promise<unknown> = Promise.resolve();
     vi.stubGlobal("navigator", {
