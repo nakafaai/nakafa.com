@@ -1,7 +1,10 @@
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import {
+  Cancel01Icon,
+  CheckmarkBadge01Icon,
   CreditCardIcon,
   Diamond02Icon,
+  Edit02Icon,
   Invoice01Icon,
   Mail01Icon,
   MoreHorizontalIcon,
@@ -45,7 +48,9 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { columnAlign } from "@/components/shared/table/align";
 import { TableFrame } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -94,6 +99,17 @@ export function SchoolBillingSettings({ slug }: { slug: TenantSlug }) {
     </SettingsPage>
   );
 }
+
+/** The look of each state of an invoice in its table. */
+const INVOICE_LOOKS = {
+  draft: { icon: Edit02Icon, tone: "neutral" },
+  open: { icon: Invoice01Icon, tone: "warning" },
+  paid: { icon: CheckmarkBadge01Icon, tone: "success" },
+  void: { icon: Cancel01Icon, tone: "neutral" },
+} as const satisfies Record<
+  SchoolBilling["invoices"][number]["status"],
+  StatusLook
+>;
 
 /** Reads the school's billing once the viewer's session has settled, then shows its plan and its invoices. */
 function SchoolBillingBody({ slug }: { slug: TenantSlug }) {
@@ -365,12 +381,22 @@ function SchoolInvoicesCard({ billing: overview }: { billing: SchoolBilling }) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("invoice-number")}</TableHead>
-                  <TableHead>{t("invoice-term")}</TableHead>
-                  <TableHead>{t("invoice-students")}</TableHead>
-                  <TableHead>{t("invoice-total")}</TableHead>
-                  <TableHead>{t("invoice-status")}</TableHead>
-                  <TableHead>
+                  <TableHead className={columnAlign({ align: "start" })}>
+                    {t("invoice-number")}
+                  </TableHead>
+                  <TableHead className={columnAlign()}>
+                    {t("invoice-term")}
+                  </TableHead>
+                  <TableHead className={columnAlign()}>
+                    {t("invoice-students")}
+                  </TableHead>
+                  <TableHead className={columnAlign()}>
+                    {t("invoice-total")}
+                  </TableHead>
+                  <TableHead className={columnAlign()}>
+                    {t("invoice-status")}
+                  </TableHead>
+                  <TableHead className={columnAlign({ align: "menu" })}>
                     <span className="sr-only">{t("invoice-pay")}</span>
                   </TableHead>
                 </TableRow>
@@ -378,21 +404,33 @@ function SchoolInvoicesCard({ billing: overview }: { billing: SchoolBilling }) {
               <TableBody>
                 {Arr.map(overview.invoices, (invoice) => (
                   <TableRow key={`${invoice.number}-${invoice.periodStart}`}>
-                    <TableCell className="font-medium">
+                    <TableCell
+                      className={columnAlign({
+                        align: "start",
+                        className: "font-medium",
+                      })}
+                    >
                       {invoice.number}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className={columnAlign()}>
                       {t("billing-term-dates", {
                         end: formatBillingDate(invoice.periodEnd - 1, locale),
                         start: formatBillingDate(invoice.periodStart, locale),
                       })}
                     </TableCell>
-                    <TableCell>{formatCount(invoice.seats, locale)}</TableCell>
-                    <TableCell>
+                    <TableCell className={columnAlign()}>
+                      {formatCount(invoice.seats, locale)}
+                    </TableCell>
+                    <TableCell className={columnAlign()}>
                       {formatMinorAmount(invoice.total, invoice.currency)}
                     </TableCell>
-                    <TableCell>{t(`invoice-${invoice.status}`)}</TableCell>
-                    <TableCell className="text-end">
+                    <TableCell className={columnAlign()}>
+                      <TableStatus
+                        {...INVOICE_LOOKS[invoice.status]}
+                        label={t(`invoice-${invoice.status}`)}
+                      />
+                    </TableCell>
+                    <TableCell className={columnAlign({ align: "menu" })}>
                       <SchoolInvoiceAction invoice={invoice} />
                     </TableCell>
                   </TableRow>
