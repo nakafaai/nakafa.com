@@ -252,6 +252,71 @@ for (const width of [390, 1440]) {
   });
 }
 
+/** The background of a memory's row, which lights up under the pointer when the row takes a press. */
+const rowBackground = (row: Locator) =>
+  row
+    .locator('[class*="group/row"]')
+    .evaluate((element) => getComputedStyle(element).backgroundColor);
+
+/** Longer than the row's colour transition, so a hover has finished drawing. */
+const HOVER_SETTLE_MILLISECONDS = 400;
+
+/**
+ * A memory the server has not stored yet has no press to take, so its row does
+ * not light up under the pointer. Once the server stores it, it does.
+ */
+const verifyPendingRow = Effect.fn("NakafaE2E.verifyPendingRow")(function* (
+  page: Page,
+  baseURL: string
+) {
+  const changes = yield* openMemoryPage(page, baseURL);
+
+  yield* Effect.promise(async () => {
+    const row = memoryRow(page, WRITTEN);
+    await expect(page.getByText(EMPTY)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await page.getByRole("button", { name: "Add memory" }).click();
+    await opened(page, "");
+    const before = changes.sent;
+    changes.hold();
+    await page.keyboard.type(WRITTEN);
+    await editorOf(page).press("Escape");
+    await expect(editorOf(page)).toHaveCount(0);
+    await expect(row.getByRole("button").first()).toBeDisabled();
+
+    const resting = await rowBackground(row);
+    await row.hover();
+    await page.waitForTimeout(HOVER_SETTLE_MILLISECONDS);
+    expect(await rowBackground(row)).toBe(resting);
+
+    changes.release();
+    await saved(changes, before);
+    await expect(row.getByRole("button").first()).toBeEnabled();
+    await page.mouse.move(0, 0);
+    await row.hover();
+    await expect.poll(() => rowBackground(row)).not.toBe(resting);
+  });
+});
+
+test.describe("A memory still being stored at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("does not light its row under the pointer until it is stored", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.fromNullishOr(baseURL).pipe(
+          Effect.flatMap((origin) => verifyPendingRow(page, origin))
+        )
+      )
+    );
+  });
+});
+
 /**
  * Writes a memory where the marks have no room in the editor's row and sit
  * behind More. The groups stay open while the learner writes the address of a

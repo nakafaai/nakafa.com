@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 
-test("a member sees the school in the sidebar and the page's one action in Beranda", async ({
+test("a member lands on the exams, with the school in the sidebar and the page's one action", async ({
   browser,
   baseURL,
 }) => {
@@ -16,9 +16,16 @@ test("a member sees the school in the sidebar and the page's one action in Beran
   const response = await page.goto(schoolHome);
 
   expect(response?.status()).toBe(200);
+  // The school has no home of its own: its root opens the owner's main page, the exams, before anything draws.
+  await page.waitForURL(/\/exams$/u);
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
   await expect(page.getByText(school.name, { exact: true })).toHaveCount(1);
-  await expect(page.getByRole("link", { name: "Home" })).toBeVisible();
+  // The sidebar holds no Home: the exams are the owner's first page.
+  await expect(
+    page
+      .locator('[data-sidebar="sidebar"]')
+      .getByRole("link", { exact: true, name: "Home" })
+  ).toHaveCount(0);
   await context.close();
 });
 

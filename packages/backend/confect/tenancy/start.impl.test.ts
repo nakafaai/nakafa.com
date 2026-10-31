@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { loginAddress } from "@repo/backend/confect/identity/address";
 import {
+  actedAt,
   slugOf,
   TENANCY_NOW,
   tenancyFixture,
@@ -101,6 +102,7 @@ describe("tenancy/start", () => {
             slug: slugOf("harapan"),
           },
         });
+        vi.setSystemTime(actedAt());
         const opened = yield* founder.client.mutation(open, harapan("harapan"));
         expect(opened).toEqual({
           address: "https://harapan.nakafa.com/",
@@ -124,7 +126,7 @@ describe("tenancy/start", () => {
         ).toEqual([
           {
             account: {
-              claimedAt: TENANCY_NOW,
+              claimedAt: actedAt(),
               method: "founder",
               state: "claimed",
               userId: founder.userId,
@@ -389,6 +391,7 @@ describe("tenancy/start", () => {
         yield* founder.client.mutation(save, {
           answer: { kind: "role", value: "principal" },
         });
+        vi.setSystemTime(actedAt());
         const saved = yield* founder.client.mutation(save, {
           answer: { kind: "size", value: "xl" },
         });
@@ -397,7 +400,7 @@ describe("tenancy/start", () => {
           levels: ["sd", "smp"],
           role: "principal",
           size: "xl",
-          updatedAt: TENANCY_NOW,
+          updatedAt: actedAt(),
         });
         expect(yield* founder.client.query(draft, {})).toEqual(saved);
       })

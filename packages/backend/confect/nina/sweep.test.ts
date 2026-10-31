@@ -309,6 +309,9 @@ describe("Nina turn sweep", () => {
       seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
     );
     await f.t.mutation(claim, { turnId: f.turnId });
+    // The consent and the claim commit first, so the stop has its own moment.
+    const stoppedAt = NOW + 1000;
+    vi.setSystemTime(stoppedAt);
     await f.owner.mutation(cancel, { chatId: f.chatId });
     expect((await f.inspect()).turn?.state.status).toBe("running");
 
@@ -321,7 +324,7 @@ describe("Nina turn sweep", () => {
     // The turn finished when the learner stopped it, not when the sweep found it.
     expect(state.turn?.state).toEqual({
       status: "cancelled",
-      finishedAt: NOW,
+      finishedAt: stoppedAt,
     });
     expect(state.user?.credits).toBe(10);
     expect(state.chat?.activeTurnId).toBeUndefined();

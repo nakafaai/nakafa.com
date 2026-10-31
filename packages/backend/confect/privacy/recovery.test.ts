@@ -126,6 +126,17 @@ async function readJobs(
     (job) => job.name === `privacy/recovery:${name}`
   );
 }
+/**
+ * How long after the transaction that scheduled it a job is due. The workflow
+ * commits several times at each frozen instant, and convex-test runs each
+ * transaction after the commits before it, so a retry is read against the
+ * transaction that scheduled it rather than against the frozen clock.
+ */
+function delayAfterScheduling(
+  job: Awaited<ReturnType<typeof readJobs>>[number]
+) {
+  return job.scheduledTime - Math.floor(job._creationTime);
+}
 async function expectErased(fixture: Awaited<ReturnType<typeof admit>>) {
   expect(fixture.requests()).toEqual([
     {
@@ -177,13 +188,16 @@ describe("privacy workflow recovery", () => {
       });
       await fixture.t.finishAllScheduledFunctions(vi.runAllTimers);
       await expectErased(fixture);
-      expect(await readJobs(fixture, "retryCleanupWorkflow")).toEqual([
+      const retries = await readJobs(fixture, "retryCleanupWorkflow");
+      expect(retries).toEqual([
         expect.objectContaining({
-          scheduledTime: NOW + WORKFLOW_RECOVERY_DELAY_MS,
           state: {
             kind: "success",
           },
         }),
+      ]);
+      expect(Arr.map(retries, delayAfterScheduling)).toEqual([
+        WORKFLOW_RECOVERY_DELAY_MS,
       ]);
     }
   );
@@ -200,9 +214,9 @@ describe("privacy workflow recovery", () => {
       await fixture.t.finishAllScheduledFunctions(vi.runAllTimers);
       await expectErased(fixture);
       const jobs = await readJobs(fixture, "retryCleanupWorkflow");
-      expect(Arr.map(jobs, (job) => job.scheduledTime)).toEqual([
-        NOW + WORKFLOW_RECOVERY_DELAY_MS,
-        NOW + 2 * WORKFLOW_RECOVERY_DELAY_MS,
+      expect(Arr.map(jobs, delayAfterScheduling)).toEqual([
+        WORKFLOW_RECOVERY_DELAY_MS,
+        WORKFLOW_RECOVERY_DELAY_MS,
       ]);
       expect(Arr.every(jobs, (job) => job.state.kind === "success")).toBe(true);
     }
