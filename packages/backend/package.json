@@ -92,6 +92,7 @@
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@scalar/openapi-parser": "0.29.19",
+    "@types/react": "catalog:",
     "@vitest/coverage-istanbul": "catalog:",
     "auth": "1.6.33",
     "convex-test": "0.0.66",
