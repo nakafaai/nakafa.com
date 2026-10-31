@@ -1,6 +1,5 @@
 import {
   Empty,
-  EmptyDescription,
   EmptyHeader,
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
@@ -58,7 +57,6 @@ function NewChatWelcome() {
         <EmptyHeader>
           <EmptyNina act="cheering" />
           <EmptyTitle className="text-chat">{t("new-chat-title")}</EmptyTitle>
-          <EmptyDescription>{t("new-chat-description")}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     </MessageScrollerItem>

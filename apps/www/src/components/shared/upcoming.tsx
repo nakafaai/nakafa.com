@@ -1,6 +1,5 @@
 import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { Heading } from "@repo/design-system/components/markdown/heading";
-import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
@@ -17,14 +16,11 @@ export function ComingSoon({ className }: { className?: string }) {
         {t("title")}
       </Heading>
 
-      <Paragraph>{t("description")}</Paragraph>
-
       <a
         className={buttonVariants()}
         href={getGithubUrl({ path: "" })}
         rel="noopener noreferrer"
         target="_blank"
-        title={t("contribute")}
       >
         <HugeIcons icon={LoveKoreanFingerIcon} />
         {t("contribute")}

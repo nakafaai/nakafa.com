@@ -1,7 +1,6 @@
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import {
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
@@ -114,7 +113,6 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
       <CardSection>
         <CardHeader>
           <CardTitle>{t("role")}</CardTitle>
-          <CardDescription>{t("role-description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form.Field name="role">

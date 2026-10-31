@@ -1,8 +1,4 @@
-import {
-  FileIcon,
-  InformationCircleIcon,
-  Rocket01Icon,
-} from "@hugeicons/core-free-icons";
+import { FileIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
 import {
   Empty,
   EmptyDescription,
@@ -65,12 +61,7 @@ export function SearchResults({
   }
 
   if (!query) {
-    return (
-      <div className="text-muted-foreground flex items-center justify-center gap-1 text-sm">
-        <HugeIcons className="size-4" icon={Rocket01Icon} />
-        <p>{t("search-help")}</p>
-      </div>
-    );
+    return null;
   }
 
   if (isLoading) {

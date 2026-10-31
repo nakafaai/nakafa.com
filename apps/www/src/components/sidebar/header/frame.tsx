@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import {
   domAnimation,
   LazyMotion,
@@ -8,7 +9,6 @@ import {
 } from "motion/react";
 // biome-ignore lint/performance/noNamespaceImport: Motion documents this namespace for the smaller LazyMotion entrypoint.
 import * as m from "motion/react-m";
-import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useRouteMatched } from "@/lib/routing/link";
 
