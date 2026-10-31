@@ -12,24 +12,15 @@ import type {
   WithContext,
 } from "schema-dts";
 
-/** The names of the site's own organization, in the locale of the page that carries it. */
+/**
+ * The names of the site's own organization and the subjects it knows about, in
+ * the locale of the page that carries it.
+ */
 const EducationalOrganizationInput = Schema.Struct({
   alternateName: Schema.String,
   description: Schema.String,
+  knowsAbout: Schema.Array(Schema.String),
 });
-
-/** The subjects that the educational organization says it knows about. */
-const EDUCATIONAL_SUBJECTS = [
-  "Education",
-  "Mathematics",
-  "Science",
-  "Computer Science",
-  "Artificial Intelligence",
-  "K-12 Education",
-  "University Level Education",
-  "Online Learning",
-  "Educational Technology",
-];
 
 /** One page that a collection lists, with the facts it names. */
 const CollectionItem = Schema.Struct({
@@ -160,7 +151,7 @@ export function makeEducationalOrganizationNode(
     foundingDate: "2021",
     founder: FOUNDER,
     image: COMPANY_IDENTITY.logoUrl,
-    knowsAbout: EDUCATIONAL_SUBJECTS,
+    knowsAbout: [...input.knowsAbout],
   };
 }
 
@@ -171,15 +162,21 @@ export const WebsiteInput = Schema.Struct({
   locale: Schema.String,
 });
 
-/** The search action of the site: its search page answers the query that the template names. */
-const searchAction = {
-  "@type": "SearchAction",
-  target: {
-    "@type": "EntryPoint",
-    urlTemplate: `${COMPANY_IDENTITY.url}/search?q={search_term_string}`,
-  },
-  "query-input": "required name=search_term_string",
-} as const;
+/**
+ * The search action of one locale: that locale's search page answers the query
+ * that the template names, so a search from a page lands in its own language
+ * without a redirect.
+ */
+function searchActionOf(locale: string) {
+  return {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${COMPANY_IDENTITY.url}/${locale}/search?q={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  } as const;
+}
 
 /**
  * The WebSite node of the site, with the search action that the site's search
@@ -202,6 +199,6 @@ export function makeWebsiteNode(
     publisher: ORGANIZATION_REFERENCE,
     maintainer: ORGANIZATION_REFERENCE,
     inLanguage: input.locale,
-    potentialAction: searchAction,
+    potentialAction: searchActionOf(input.locale),
   };
 }
