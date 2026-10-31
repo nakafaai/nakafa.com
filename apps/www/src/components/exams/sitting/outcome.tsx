@@ -14,10 +14,7 @@ import {
 const stoppedCards = {
   closing: { hint: "student-attempt-closed", title: "student-closed-title" },
   locked: { hint: "student-locked", title: "student-locked-title" },
-} as const satisfies Record<
-  Exclude<AttemptValue["state"], "inProgress" | "submitted">,
-  { readonly hint: string; readonly title: string }
->;
+} as const;
 
 /**
  * An attempt that takes no answers, shown without an entry: the exam's name, then a finished attempt's own

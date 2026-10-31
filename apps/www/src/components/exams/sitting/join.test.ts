@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import {
   entersBySelf,
+  pageRoomEntry,
   roomEntryOf,
   roomJoinAddress,
 } from "@/components/exams/sitting/join";
@@ -18,6 +19,17 @@ describe("roomJoinAddress", () => {
     expect(
       roomJoinAddress("http://acc-1.localhost:3000", "w17dbtag", "X26U2H")
     ).toBe("http://acc-1.localhost:3000/sittings/w17dbtag#X26U2H");
+  });
+});
+
+describe("pageRoomEntry", () => {
+  it("enters with the code after the hash of the page's own address", () => {
+    window.location.hash = "#x26u2h";
+    try {
+      expect(pageRoomEntry("w17dbtag")).toEqual(Option.some("X26U2H"));
+    } finally {
+      window.location.hash = "";
+    }
   });
 });
 
