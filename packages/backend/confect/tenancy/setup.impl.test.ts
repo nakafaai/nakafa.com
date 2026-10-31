@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { cohort, nf, period } from "@repo/backend/test/classroom";
+import { cohort, nf, openPeriod, period } from "@repo/backend/test/classroom";
 import { examBy } from "@repo/backend/test/exams";
 import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
@@ -18,6 +18,7 @@ describe("tenancy/setup state", () => {
       expect(before).toMatchObject({ exam: false, period: false });
 
       const term = yield* period(fixture, fixture.units.smp);
+      yield* openPeriod(fixture, term.id);
       yield* cohort(fixture, term.id, "VII-A");
       yield* examBy(fixture, "admin", "Ulangan Harian");
 
