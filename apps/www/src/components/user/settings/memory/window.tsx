@@ -37,8 +37,9 @@ const ROW_SIZE = 72;
  * view are in the page, and the page scrolls the window, not a box of its own.
  * A shorter list is all in the page, because there is nothing to leave out.
  *
- * The server renders the first page, and the window hands the page the same
- * rows in the same places, so hydration moves nothing. Until the learner first
+ * The page renders in the browser only (ADR 0038 D2), and the window draws its
+ * first page in its first render (`ssrCount`), each row at a multiple of its
+ * height, so no row moves once it is drawn. Until the learner first
  * scrolls, the window keeps exactly the `MEMORY_PAGE` rows it started with, so
  * it cannot start with more rows than there are memories, and it would not show
  * a row that a short list gained. A short list is therefore a plain list: its
