@@ -82,13 +82,17 @@ export const guardianLinkKind = Kind.make("guardianLink", "guardianLinks", {
   relations: ["guardian", "verifiedParent"],
 });
 
-/** Staff starts a link for a student: the action is ruled on the student's Person. */
+/**
+ * Staff starts a link for a student, and a student for themself: the action is ruled on
+ * the student's Person, and `self` is the only relation that opens it. The link still
+ * waits for the guardian's code and the second check (ADR 0034).
+ */
 const guardianPerson = Kind.extend(person, {
   actions: {
     "guardian.link": {
       access: "write",
       grantedBy: "roles",
-      relations: [],
+      relations: ["self"],
       roles: ["admin", "staff"],
     },
   },

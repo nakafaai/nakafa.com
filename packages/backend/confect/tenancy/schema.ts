@@ -167,6 +167,7 @@ export const tenantValidator = Schema.Struct({
   logo: Schema.optionalKey(Id("_storage")),
   name: TenantName,
   policies: TenantPolicies,
+  setupDoneAt: Schema.optionalKey(Schema.Finite),
   slug: TenantSlug,
   status: TenantStatus,
 });

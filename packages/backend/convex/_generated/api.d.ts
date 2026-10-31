@@ -7246,6 +7246,17 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      mine: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          email: string;
+          guardianName: string;
+          id: Id<"guardianLinks">;
+          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+        }>
+      >;
       readdress: FunctionReference<
         "mutation",
         "public",
@@ -8338,6 +8349,7 @@ export declare const api: {
                   type: "tenant.policy.set";
                 }
               | { name: string; type: "tenant.name.set" }
+              | { type: "tenant.setup.finished" }
               | { scheme: Id<"gradingSchemes">; type: "scheme.stored" }
               | { type: "tenant.suspended" }
               | { type: "tenant.reactivated" }
@@ -11299,6 +11311,15 @@ export declare const api: {
         }
       >;
     };
+    setup: {
+      finish: FunctionReference<"mutation", "public", { slug: string }, null>;
+      state: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        { cohort: boolean; exam: boolean; period: boolean; student: boolean }
+      >;
+    };
     start: {
       address: FunctionReference<
         "query",
@@ -11593,6 +11614,7 @@ export declare const api: {
               ninaDailyCredits?: number;
               studentThreads: boolean;
             };
+            setupDone: boolean;
             slug: string;
             status: "active" | "suspended";
           };

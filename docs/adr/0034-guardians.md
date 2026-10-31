@@ -33,6 +33,9 @@ The consent ledger that exists is for analytics only. `consents/schema.ts` keys
 it by user and by analytics category, so the guardian ledger is a new table
 (`guardianConsents`) and the analytics ledger stays as it is.
 
+Amended on 31 October 2026: a student starts a link for themself, and the link
+waits for the same guardian checks (see Linking a guardian).
+
 ## Decision
 
 ### The relation
@@ -53,8 +56,11 @@ it by user and by analytics category, so the guardian ledger is a new table
 ### Linking a guardian
 
 1. The school's Admin or Staff (Staf TU) starts a link: the student, and the
-   guardian's email address. The link is a row with the same 14-day expiry as an
-   invite (GLOSSARY, Invite). Nothing is sent to a guardian who has no link.
+   guardian's email address. A student starts one for themself from the Parents
+   page, through the `self` relation of `guardian.link`, and holds at most four
+   live links. Either way nothing about the link is verified yet. The link is a
+   row with the same 14-day expiry as an invite (GLOSSARY, Invite). Nothing is sent
+   to a guardian who has no link.
 2. The guardian signs in on the school host at `/parents` with the six-digit
    code sent to that address. The code lives five minutes. Three wrong tries void
    it, and the same request limit as the sign-in applies.

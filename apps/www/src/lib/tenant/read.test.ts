@@ -86,6 +86,7 @@ const VIEWER: SchoolViewer = {
     mascot: MASCOT,
     name: "Harapan",
     policies: { emailDomains: [], nina: false, studentThreads: false },
+    setupDone: false,
     slug: "harapan",
     status: "active",
   }),

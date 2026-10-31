@@ -1,11 +1,14 @@
+import { QueryResult } from "@confect/react";
 import {
   Analytics01Icon,
   Certificate01Icon,
   ChartBarLineIcon,
+  CheckListIcon,
   MortarboardIcon,
   Notification01Icon,
   Settings01Icon,
   TaskEdit01Icon,
+  UserLove01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -17,7 +20,7 @@ import { Option } from "effect";
 import { useTranslations } from "use-intl";
 import { SettingsReturnProvider } from "@/components/shared/settings/return";
 import { TenantClassesGroup } from "@/components/tenant/classes/nav";
-import { useTenant } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { showsStudentHome } from "@/components/tenant/home/access";
 import { SchoolSettingsNav } from "@/components/tenant/settings/nav";
@@ -50,6 +53,35 @@ export function TenantNavigation() {
 }
 
 /**
+ * The entry of the school's setup, which stays until the Owner or an Admin finishes it. It
+ * waits for the viewer, so a finished school never shows it for a moment.
+ */
+function TenantSetupItem() {
+  const { slug } = useTenant();
+  const viewer = useViewerQuery();
+  const matchRoute = useMatchRoute();
+  const t = useTranslations("SchoolSettings");
+
+  if (!QueryResult.isSuccess(viewer) || viewer.value.tenant.setupDone) {
+    return null;
+  }
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        isActive={
+          matchRoute({ params: { slug }, to: "/school/$slug/setup" }) !== false
+        }
+        render={<Link params={{ slug }} to="/school/$slug/setup" />}
+        tooltip={t("setup-title")}
+      >
+        <HugeIcons icon={CheckListIcon} />
+        <span className="truncate">{t("setup-title")}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
+/**
  * The school's own groups, as the learner's sidebar has them: first the main pages with no label,
  * the notifications for everyone, a student's own exams, grades and report cards, the exams, the
  * school's report cards, and the graduation for a viewer who may open them, then the management
@@ -65,6 +97,7 @@ function TenantSchoolGroups() {
   const matchRoute = useMatchRoute();
   const tExams = useTranslations("Exams");
   const tGrades = useTranslations("SchoolGrades");
+  const tGuardians = useTranslations("SchoolGuardians");
   const tInsight = useTranslations("SchoolInsight");
   const tNotifications = useTranslations("Notifications");
   const tGraduation = useTranslations("SchoolGraduation");
@@ -109,6 +142,21 @@ function TenantSchoolGroups() {
         ) : null}
         {Option.contains(role, "student") ? (
           <>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={
+                  matchRoute({
+                    params: { slug },
+                    to: "/school/$slug/family",
+                  }) !== false
+                }
+                render={<Link params={{ slug }} to="/school/$slug/family" />}
+                tooltip={tGuardians("family-title")}
+              >
+                <HugeIcons icon={UserLove01Icon} />
+                <span className="truncate">{tGuardians("family-title")}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={
@@ -215,6 +263,7 @@ function TenantSchoolGroups() {
       </TenantSidebarGroup>
       {Option.isSome(settings) ? (
         <TenantSidebarGroup label={tSettings("manage-group")}>
+          <TenantSetupItem />
           <SidebarMenuItem>
             <SidebarMenuButton
               render={<TargetLink target={settings.value} />}

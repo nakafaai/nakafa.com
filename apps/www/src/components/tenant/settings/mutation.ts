@@ -302,6 +302,16 @@ export const revokeClientChange: OptimisticUpdate<
   );
 };
 
+/** Takes the setup out of the sidebar at once. */
+export const finishSetupChange: OptimisticUpdate<
+  typeof tenancy.setup.finish
+> = (localStore, { slug }) => {
+  patchViewer(localStore, slug, (viewer) => ({
+    ...viewer,
+    tenant: { ...viewer.tenant, setupDone: true },
+  }));
+};
+
 /** Lists a new grant at once, at the top of the school's grants, when its Person is loaded. */
 export const assignGrantChange: OptimisticUpdate<
   typeof access.grants.assign

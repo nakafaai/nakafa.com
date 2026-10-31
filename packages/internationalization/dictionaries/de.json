@@ -58,6 +58,9 @@
     "outsider-check-again": "Erneut nach meiner Einladung sehen"
   },
   "SchoolGuardians": {
+    "family-title": "Meine Eltern",
+    "family-invite": "Elternteil einladen",
+    "family-empty-description": "Füge die E-Mail deiner Eltern hinzu, damit sie sich anmelden und deine Noten sehen können.",
     "sign-in-action": "Als Elternteil anmelden",
     "email-label": "E-Mail der Eltern",
     "email-placeholder": "eltern@beispiel.de",
@@ -527,6 +530,26 @@
     "room-move-save": "Speichern"
   },
   "SchoolSettings": {
+    "setup-title": "Schule einrichten",
+    "setup-finish": "Einrichtung beenden",
+    "setup-open": "Öffnen",
+    "setup-done": "Erledigt",
+    "setup-plan": "Tarif und Vertrag",
+    "setup-plan-description": "Sieh deinen Tarif, deine Schüler und was die Schule zahlt.",
+    "setup-country": "Länderprofil",
+    "setup-country-description": "Land, Zeitzone, Sprache und Währung bestimmen Uhr, Kalender und Preise der Schule.",
+    "setup-country-zone": "Zeitzone",
+    "setup-country-language": "Sprache",
+    "setup-country-currency": "Währung",
+    "setup-country-name": "Land",
+    "setup-period": "Zeitraum und Klassengruppen",
+    "setup-period-description": "Öffne den laufenden Zeitraum und füge seine Klassengruppen hinzu.",
+    "setup-import": "Schüler importieren",
+    "setup-import-description": "Hole deine Schüler aus einer Dapodik-Datei oder einem OneRoster-CSV-Zip.",
+    "setup-policies": "Schulrichtlinien",
+    "setup-policies-description": "Lege fest, was Schüler dürfen und wer beitreten darf.",
+    "setup-exam": "Eine Prüfung testen",
+    "setup-exam-description": "Schreibe eine Prüfung und teste sie als Schüler.",
     "student-add-name-placeholder": "Ayu Lestari",
     "invite-name-placeholder": "Budi Santoso",
     "invite-email-placeholder": "budi@example.com",
@@ -926,6 +949,9 @@
         }
       },
       "tenant": {
+        "setup": {
+          "finished": "Einrichtung abgeschlossen"
+        },
         "provisioned": "Schule eröffnet",
         "founded": "Schule gegründet",
         "locale": {

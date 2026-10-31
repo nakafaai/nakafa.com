@@ -39,7 +39,11 @@ export const ViewerView = Schema.Struct({
   }),
   reach: Schema.Array(Schema.String),
   tenant: TenantProfile.mapFields(
-    Struct.assign({ id: Id("tenants"), ...TenantSettings.fields })
+    Struct.assign({
+      id: Id("tenants"),
+      setupDone: Schema.Boolean,
+      ...TenantSettings.fields,
+    })
   ),
   units: Schema.Array(
     Schema.Struct({
