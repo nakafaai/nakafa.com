@@ -1,5 +1,4 @@
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
-import { CardHeader, CardTitle } from "@repo/design-system/components/ui/card";
 import { useTranslations } from "use-intl";
 import { StudentResults } from "@/components/exams/results/student";
 import type { AttemptValue } from "@/components/exams/sitting/attempt";
@@ -13,8 +12,16 @@ import {
 
 /** The card of each state of an attempt that takes no answers before it is finished: its title and its sentence. */
 const stoppedCards = {
-  closing: { hint: "student-attempt-closed", title: "student-closed-title" },
-  locked: { hint: "student-locked", title: "student-locked-title" },
+  closing: {
+    description: "student-closed-description",
+    hint: "student-attempt-closed",
+    title: "student-closed-title",
+  },
+  locked: {
+    description: "student-locked-description",
+    hint: "student-locked",
+    title: "student-locked-title",
+  },
 } as const;
 
 /**
@@ -42,10 +49,10 @@ export function StudentOutcome({
           <StudentResults sittingId={sitting.id} />
         ) : null}
         {attempt.state === "closing" || attempt.state === "locked" ? (
-          <CardSection>
-            <CardHeader>
-              <CardTitle>{t(stoppedCards[attempt.state].title)}</CardTitle>
-            </CardHeader>
+          <CardSection
+            description={t(stoppedCards[attempt.state].description)}
+            title={t(stoppedCards[attempt.state].title)}
+          >
             <CardSectionFooter hint={t(stoppedCards[attempt.state].hint)} />
           </CardSection>
         ) : null}

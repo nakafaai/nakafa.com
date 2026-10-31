@@ -1,8 +1,19 @@
+import {
+  type CurriculumRoute,
+  isRenderableCurriculumLevel,
+} from "@nakafa/aksara-contracts/program/curriculum";
 import { PATHNAMES } from "@repo/internationalization/src/pathnames";
 import type { Locale } from "use-intl";
 import { curriculumTarget } from "@/lib/routing/target";
 
 const curriculumPathnames = PATHNAMES["/curricula"];
+
+/** Checks whether one signed route owns a learner-renderable page. */
+export function isRenderableCurriculumView(
+  route: Pick<CurriculumRoute, "level" | "sitemap">
+) {
+  return isRenderableCurriculumLevel(route.level) && route.sitemap;
+}
 
 /** Returns the localized curriculum index href without a locale prefix. */
 export function getCurriculumIndexHref(locale: Locale) {

@@ -2,6 +2,10 @@ import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
+import {
+  expectGroupsKeepShape,
+  readControlProblems,
+} from "@/e2e/support/controls";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -85,16 +89,16 @@ const examPaths = (sitting: { examId: string; sittingId: string }) => [
 const classPaths = ["/classes/fisika-x-1", "/classes/fisika-x-1/forum"];
 
 /**
- * Reads every header row that is drawn, the page's own or the app's bar: its
- * height, and the elements inside it whose box reaches past its right or bottom
- * edge. Elements hidden at this width and the screen reader's one-pixel boxes are
+ * Reads every header row that is drawn, the page's own, an open pane's, or the
+ * app's bar: its height, and the elements inside it whose box reaches past its
+ * right or bottom edge. Elements hidden at this width and the screen reader's one-pixel boxes are
  * left out, and so are the shapes inside a drawing: an SVG draws them only within
  * its own box, which is measured instead.
  */
 function readHeaders() {
   return Array.from(
     document.querySelectorAll<HTMLElement>(
-      '[data-slot="page-header"], [data-slot="app-header"]'
+      '[data-slot="page-header"], [data-slot="pane-header"], [data-slot="app-header"]'
     )
   )
     .filter((header) => header.getBoundingClientRect().height > 0)
@@ -154,7 +158,14 @@ const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
           const headers = yield* Effect.promise(() =>
             page.evaluate(readHeaders)
           );
+          const controls = yield* Effect.promise(() =>
+            readControlProblems(page)
+          );
           yield* Effect.sync(() => {
+            expect(
+              controls,
+              `${label} at ${width}px: a group is not one frame, or two controls stand too close`
+            ).toEqual([]);
             if (width < DESKTOP_PX) {
               expect(headers.length, `${label} at ${width}px`).toBeGreaterThan(
                 0
@@ -174,6 +185,10 @@ const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
         }),
       { discard: true }
     );
+    yield* Effect.promise(() =>
+      page.setViewportSize(viewportSize(desktopViewport))
+    );
+    yield* expectGroupsKeepShape(page, label);
   }
 );
 
@@ -220,6 +235,7 @@ test("a signed-in learner's pages keep their headers to one row at every width",
   baseURL,
   browser,
 }) => {
+  test.slow();
   await Effect.runPromise(
     Effect.forEach(
       learnerRoutes,
@@ -238,14 +254,16 @@ test("a signed-in learner's pages keep their headers to one row at every width",
 
 /**
  * Signs one account of a school into a fresh desktop context and checks the header of each of
- * its pages at every width, one page after another in the same tab.
+ * its pages at every width, one page after another in the same tab. `reach` takes a page to the
+ * state whose header is checked, such as an open pane or a running paper.
  */
 const checkSchoolPages = <E>(
   browser: Parameters<typeof withBrowserContext>[0],
   baseURL: string,
   signIn: (context: BrowserContext) => Effect.Effect<void, E>,
   address: (path: string) => string,
-  paths: readonly string[]
+  paths: readonly string[],
+  reach: (page: Page) => Effect.Effect<void> = () => Effect.void
 ) =>
   withBrowserContext(
     browser,
@@ -266,6 +284,7 @@ const checkSchoolPages = <E>(
                 page.setViewportSize(viewportSize(desktopViewport))
               );
               yield* Effect.promise(() => page.goto(address(path)));
+              yield* reach(page);
               yield* expectOneRowHeaders(page, `school ${path}`);
             }),
           { discard: true }
@@ -273,10 +292,27 @@ const checkSchoolPages = <E>(
       })
   );
 
+/** Presses the table's first row, whose pane opens beside the list on a desktop. */
+const openPane = (page: Page) =>
+  Effect.promise(async () => {
+    await page.locator("tr[data-pressable] td").first().click();
+    await expect(page.locator('[data-slot="pane-header"]')).toBeVisible();
+  });
+
+/** Enters a sitting with its token, so the page shows the running paper's header. */
+const startPaper = (token: string) => (page: Page) =>
+  Effect.promise(async () => {
+    const field = page.getByPlaceholder("Enter the token from your proctor");
+    await field.fill(token);
+    await page.getByRole("button", { name: "Enter sitting" }).click();
+    await expect(field).toBeHidden();
+  });
+
 test("a school's own pages keep their headers to one row at every width", async ({
   baseURL,
   browser,
 }) => {
+  test.slow();
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
@@ -295,6 +331,7 @@ test("an exam's pages keep their headers to one row at every width, for its Owne
   baseURL,
   browser,
 }) => {
+  test.slow();
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
@@ -334,12 +371,33 @@ test("an exam's pages keep their headers to one row at every width, for its Owne
       [`/sittings/${sitting.sittingId}`]
     )
   );
+  await Effect.runPromise(
+    checkSchoolPages(
+      browser,
+      String(baseURL),
+      (context) => Effect.promise(() => context.addCookies(cookies)),
+      address,
+      [`/sittings/${sitting.sittingId}`],
+      startPaper(sitting.token)
+    )
+  );
+  await Effect.runPromise(
+    checkSchoolPages(
+      browser,
+      String(baseURL),
+      (context) => Effect.promise(() => context.addCookies(ownerCookies)),
+      address,
+      [`/exams/${sitting.examId}/sittings/${sitting.sittingId}`],
+      openPane
+    )
+  );
 });
 
 test("a class and its forum keep their headers to one row at every width", async ({
   baseURL,
   browser,
 }) => {
+  test.slow();
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);

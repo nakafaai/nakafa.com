@@ -6,7 +6,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
 /** Which steps of the setup the school's own data already shows as done. */
-export const SetupState = Schema.Struct({
+const SetupState = Schema.Struct({
   cohort: Schema.Boolean,
   exam: Schema.Boolean,
   period: Schema.Boolean,

@@ -6,32 +6,41 @@ import {
   readOneRoster,
 } from "@/components/tenant/roster/oneroster";
 
-const USERS = [
-  "sourcedId,status,givenName,familyName,email",
-  "u1,active,Raka,Pratama,raka@school.example",
-  "u2,,Nadia,Putri,",
-  "u3,tobedeleted,Bima,Santoso,",
-  "t1,active,Ayu,Lestari,ayu@school.example",
-  "u4,active,,,",
-].join("\n");
+const USERS = Arr.join(
+  [
+    "sourcedId,status,givenName,familyName,email",
+    "u1,active,Raka,Pratama,raka@school.example",
+    "u2,,Nadia,Putri,",
+    "u3,tobedeleted,Bima,Santoso,",
+    "t1,active,Ayu,Lestari,ayu@school.example",
+    "u4,active,,,",
+  ],
+  "\n"
+);
 
-const CLASSES = [
-  "sourcedId,status,title,classType",
-  "c1,active,X-1,homeroom",
-  "c2,active,Fisika X-1,scheduled",
-  "c3,tobedeleted,X-2,homeroom",
-].join("\n");
+const CLASSES = Arr.join(
+  [
+    "sourcedId,status,title,classType",
+    "c1,active,X-1,homeroom",
+    "c2,active,Fisika X-1,scheduled",
+    "c3,tobedeleted,X-2,homeroom",
+  ],
+  "\n"
+);
 
-const ENROLLMENTS = [
-  "sourcedId,status,classSourcedId,userSourcedId,role",
-  "e1,active,c1,u1,student",
-  "e2,active,c2,u1,student",
-  "e3,active,c2,u2,student",
-  "e4,active,c1,t1,teacher",
-  "e5,active,c1,u3,student",
-  "e6,tobedeleted,c1,u2,student",
-  "e7,active,c3,u4,student",
-].join("\n");
+const ENROLLMENTS = Arr.join(
+  [
+    "sourcedId,status,classSourcedId,userSourcedId,role",
+    "e1,active,c1,u1,student",
+    "e2,active,c2,u1,student",
+    "e3,active,c2,u2,student",
+    "e4,active,c1,t1,teacher",
+    "e5,active,c1,u3,student",
+    "e6,tobedeleted,c1,u2,student",
+    "e7,active,c3,u4,student",
+  ],
+  "\n"
+);
 
 const BUNDLE = {
   "classes.csv": CLASSES,

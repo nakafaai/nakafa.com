@@ -71,13 +71,13 @@ export const SkillView = Schema.Struct({
 });
 
 /** One competency of one student as a teacher sees it, with the chance of reaching the KKTP. */
-export const TeacherSkillView = Schema.Struct({
+const TeacherSkillView = Schema.Struct({
   ...SkillView.fields,
   chance: Schema.Finite,
 });
 
 /** One student of a class as a teacher sees it. */
-export const StudentInsight = Schema.Struct({
+const StudentInsight = Schema.Struct({
   id: Id("tenantPeople"),
   name: Schema.String,
   narrative: Schema.NullOr(

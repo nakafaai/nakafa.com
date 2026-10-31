@@ -59,67 +59,93 @@ export function SchoolSetup() {
         </Button>
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-3 py-6">
-        <SetupStep
-          description={t("setup-plan-description")}
-          done={false}
-          target={settings("/school/$slug/settings/billing")}
-          title={t("setup-plan")}
-        />
-        <SetupStep
-          description={t("setup-country-description")}
-          done={false}
-          target={settings("/school/$slug/settings/profile")}
-          title={t("setup-country")}
-        >
-          <SetupCountry />
+        <SetupStep done={false}>
+          <SetupText
+            description={t("setup-plan-description")}
+            title={t("setup-plan")}
+          />
+          <TargetLink
+            className={buttonVariants({ size: "sm", variant: "outline" })}
+            target={settings("/school/$slug/settings/billing")}
+          >
+            {t("setup-open")}
+          </TargetLink>
+        </SetupStep>
+        <SetupStep done={false}>
+          <SetupText
+            description={t("setup-country-description")}
+            title={t("setup-country")}
+          >
+            <SetupCountry />
+          </SetupText>
+          <TargetLink
+            className={buttonVariants({ size: "sm", variant: "outline" })}
+            target={settings("/school/$slug/settings/profile")}
+          >
+            {t("setup-open")}
+          </TargetLink>
         </SetupStep>
         <SetupStep
-          description={t("setup-period-description")}
           done={Option.exists(done, (state) => state.period && state.cohort)}
-          target={settings("/school/$slug/settings/periods")}
-          title={t("setup-period")}
-        />
-        <SetupStep
-          description={t("setup-import-description")}
-          done={Option.exists(done, (state) => state.student)}
-          target={settings("/school/$slug/settings/roster")}
-          title={t("setup-import")}
-        />
-        <SetupStep
-          description={t("setup-policies-description")}
-          done={false}
-          target={settings("/school/$slug/settings/policies")}
-          title={t("setup-policies")}
-        />
-        <SetupStep
-          description={t("setup-exam-description")}
-          done={Option.exists(done, (state) => state.exam)}
-          target={{
-            from: LOCALE_ROUTE,
-            params: { slug },
-            to: "/school/$slug/exams",
-          }}
-          title={t("setup-exam")}
-        />
+        >
+          <SetupText
+            description={t("setup-period-description")}
+            title={t("setup-period")}
+          />
+          <TargetLink
+            className={buttonVariants({ size: "sm", variant: "outline" })}
+            target={settings("/school/$slug/settings/periods")}
+          >
+            {t("setup-open")}
+          </TargetLink>
+        </SetupStep>
+        <SetupStep done={Option.exists(done, (state) => state.student)}>
+          <SetupText
+            description={t("setup-import-description")}
+            title={t("setup-import")}
+          />
+          <TargetLink
+            className={buttonVariants({ size: "sm", variant: "outline" })}
+            target={settings("/school/$slug/settings/roster")}
+          >
+            {t("setup-open")}
+          </TargetLink>
+        </SetupStep>
+        <SetupStep done={false}>
+          <SetupText
+            description={t("setup-policies-description")}
+            title={t("setup-policies")}
+          />
+          <TargetLink
+            className={buttonVariants({ size: "sm", variant: "outline" })}
+            target={settings("/school/$slug/settings/policies")}
+          >
+            {t("setup-open")}
+          </TargetLink>
+        </SetupStep>
+        <SetupStep done={Option.exists(done, (state) => state.exam)}>
+          <SetupText
+            description={t("setup-exam-description")}
+            title={t("setup-exam")}
+          />
+          <TargetLink
+            className={buttonVariants({ size: "sm", variant: "outline" })}
+            target={{
+              from: LOCALE_ROUTE,
+              params: { slug },
+              to: "/school/$slug/exams",
+            }}
+          >
+            {t("setup-open")}
+          </TargetLink>
+        </SetupStep>
       </LayoutContent>
     </>
   );
 }
 
-/** One step: its state, what it is for, and the page that does it. */
-function SetupStep({
-  children,
-  description,
-  done,
-  target,
-  title,
-}: {
-  children?: ReactNode;
-  description: string;
-  done: boolean;
-  target: LinkTarget;
-  title: string;
-}) {
+/** One step: its state, and what its caller composes beside it. */
+function SetupStep({ children, done }: { children: ReactNode; done: boolean }) {
   const t = useTranslations("SchoolSettings");
 
   return (
@@ -133,20 +159,27 @@ function SetupStep({
         }
         icon={done ? CheckmarkCircle02Icon : CircleIcon}
       />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h2 className="text-sm font-medium">{title}</h2>
-        <p className="text-muted-foreground text-sm text-pretty">
-          {description}
-        </p>
-        {children}
-      </div>
-      <TargetLink
-        className={buttonVariants({ size: "sm", variant: "outline" })}
-        target={target}
-      >
-        {t("setup-open")}
-      </TargetLink>
+      {children}
     </section>
+  );
+}
+
+/** What a step is for, with anything more it shows under its words. */
+function SetupText({
+  children,
+  description,
+  title,
+}: {
+  children?: ReactNode;
+  description: string;
+  title: string;
+}) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <h2 className="text-sm font-medium">{title}</h2>
+      <p className="text-muted-foreground text-sm text-pretty">{description}</p>
+      {children}
+    </div>
   );
 }
 

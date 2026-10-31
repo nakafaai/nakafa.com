@@ -8,10 +8,10 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
-  encodeAnswers,
   newChoiceAnswers,
   shortAnswers,
-} from "@repo/backend/confect/exams/question";
+} from "@repo/backend/confect/exams/blank";
+import { encodeAnswers } from "@repo/backend/confect/exams/question";
 import { WRITE_ALLOWANCE_MS } from "@repo/backend/confect/exams/sittings/gate";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";

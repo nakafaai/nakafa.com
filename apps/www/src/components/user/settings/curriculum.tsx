@@ -3,11 +3,7 @@ import type { InvokeReturn } from "@confect/react";
 import { QueryResult, useQuery } from "@confect/react";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
-import {
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import {
   Select,
@@ -189,10 +185,10 @@ function UserSettingsCurriculumForm({
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-curriculum-form">
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("curriculum")}</CardTitle>
-        </CardHeader>
+      <CardSection
+        description={t("curriculum-description")}
+        title={t("curriculum")}
+      >
         <CardContent>
           <form.Field name="preferredCurriculumProgramKey">
             {(field) => (

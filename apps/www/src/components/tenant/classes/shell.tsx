@@ -33,6 +33,7 @@ import { LibraryList } from "@/components/tenant/classes/library/list";
 import { LibraryUploadsScope } from "@/components/tenant/classes/library/scope";
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { classPath } from "@/components/tenant/classes/path";
+import { PeopleList } from "@/components/tenant/classes/people";
 import {
   ClassScopeContext,
   useClassScope,
@@ -201,6 +202,9 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
   const listed = PaginatedQueryResult.isFailure(channels)
     ? []
     : channels.results;
+  const open = Option.flatMap(channelId, (id) =>
+    Arr.findFirst(listed, (channel) => channel.id === id)
+  );
   const path = classPath(
     view,
     {
@@ -209,18 +213,14 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
       grades: t("tabs-grades"),
       library: t("tabs-library"),
       name: klass.name,
+      people: t("tabs-people"),
       slug,
       tasks: t("tabs-tasks"),
     },
-    Option.map(
-      Option.flatMap(channelId, (id) =>
-        Arr.findFirst(listed, (channel) => channel.id === id)
-      ),
-      (channel) => ({
-        id: channel.id,
-        label: channelLabel(channel, t("general-channel")),
-      })
-    ),
+    Option.map(open, (channel) => ({
+      id: channel.id,
+      label: channelLabel(channel, t("general-channel")),
+    })),
     QueryResult.isSuccess(task)
       ? Option.some(task.value.title)
       : Option.map(found, (shown) =>
@@ -235,7 +235,11 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
     <ClassHeaderProvider items={path} tab={view._tag} title={klass.name}>
       {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
       <div className="flex h-svh min-h-0 flex-col">
-        <ClassBody found={found} klass={klass} />
+        <ClassBody
+          archived={Option.exists(open, (channel) => channel.archived)}
+          found={found}
+          klass={klass}
+        />
       </div>
     </ClassHeaderProvider>
   );
@@ -250,16 +254,19 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
  * and its panes between its header and its body.
  */
 function ClassBody({
+  archived,
   found,
   klass,
 }: {
+  /** Whether the channel on the page is archived, so it takes nothing new. */
+  archived: boolean;
   found: Option.Option<Ref.Returns<typeof classroom.forum.threads.get>>;
   klass: Resolved;
 }) {
   const view = useClassView();
   const { slug } = useClassScope();
   const canManage = Arr.contains(klass.can, "forum.manage");
-  const canPost = Arr.contains(klass.can, "forum.post");
+  const canPost = Arr.contains(klass.can, "forum.post") && !archived;
   // A subject teacher, the one who posts announcements, may mention everyone (ADR 0025).
   const everyone = Arr.contains(klass.can, "post.publish");
 
@@ -323,6 +330,9 @@ function ClassBody({
   }
   if (view._tag === "tasks") {
     return <TaskList />;
+  }
+  if (view._tag === "people") {
+    return <PeopleList />;
   }
   if (view._tag === "grades") {
     return (

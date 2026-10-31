@@ -34,7 +34,7 @@ import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
-import { revokeGrantChange } from "@/components/tenant/settings/mutation";
+import { revokeGrantChange } from "@/components/tenant/settings/grants";
 import { SchoolRoleChangeDialog } from "@/components/tenant/settings/roles/change";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";

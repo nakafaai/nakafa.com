@@ -10,6 +10,11 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";
 import { useCallback } from "react";
 import type { PendingPicture } from "@/components/tenant/exams/editing";
+import { FigureDialog } from "@/components/tenant/exams/figure/dialog";
+import {
+  FigureMenu,
+  FigureMenuFrame,
+} from "@/components/tenant/exams/figure/menu";
 import { storeExamImage } from "@/components/tenant/exams/image";
 import {
   queuePictureFile,
@@ -127,9 +132,14 @@ export function ExamToolbar() {
         urls={NO_ADDRESSES}
       >
         <fieldset className="min-w-0" disabled={!canEdit}>
-          <DocumentToolbar editor={active} labels={labels.toolbar} />
+          <DocumentToolbar
+            editor={active}
+            extra={<FigureMenu />}
+            labels={labels.toolbar}
+          />
         </fieldset>
       </PicturesProvider>
+      <FigureDialog />
       <PictureAltDialog
         alt=""
         description={labels.pictures.addDescription}
@@ -158,7 +168,11 @@ export function ExamToolbarFrame() {
       urls={NO_ADDRESSES}
     >
       <fieldset className="min-w-0" disabled>
-        <DocumentToolbar editor={null} labels={labels.toolbar} />
+        <DocumentToolbar
+          editor={null}
+          extra={<FigureMenuFrame />}
+          labels={labels.toolbar}
+        />
       </fieldset>
     </PicturesProvider>
   );
