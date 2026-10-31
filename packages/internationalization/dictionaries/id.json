@@ -111,6 +111,7 @@
     "status-withdrawn": "Ditarik",
     "status-mismatch": "Data tidak cocok",
     "link-verify": "Verifikasi manual",
+    "link-rename": "Ganti nama orang tua",
     "link-readdress": "Ubah email",
     "link-readdress-description": "Orang tua meminta kode dengan email baru.",
     "link-readdress-save": "Simpan email",
