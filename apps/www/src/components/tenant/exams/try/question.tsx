@@ -133,7 +133,6 @@ export function ExamTryQuestion({
         {Option.isSome(reasons) ? (
           <SittingReason
             answer={reasons.value[0]}
-            labelledBy={ids.title}
             onChoose={(next) => choose(question.id, next)}
             reason={reasons.value[1]}
             response={chosenOptions(response ?? NO_RESPONSE)}

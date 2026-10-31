@@ -11,7 +11,6 @@ import {
   CHOICE_OPTIONS_MAX,
   fixedOptions,
 } from "@repo/backend/confect/exams/question";
-import { REASON_ID } from "@repo/backend/confect/exams/scoring";
 import {
   editorContent,
   editorDocument,
@@ -29,6 +28,7 @@ import {
   isChoice,
   type OptionLabel,
 } from "@/components/tenant/exams/answer";
+import { choiceTitle } from "@/components/tenant/exams/choice";
 import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -300,6 +300,7 @@ export function PaperSketch({
           adds={addsOption && choice.options.length < CHOICE_OPTIONS_MAX}
           choice={choice}
           key={choice.id}
+          template={question.template}
         />
       ))}
       {Option.match(matchOf(question.answers), {
@@ -341,14 +342,17 @@ export function PaperSketch({
 function ChoiceSketch({
   adds,
   choice,
+  template,
 }: {
   /** Whether the page keeps the room of the action that adds an option. */
   readonly adds: boolean;
   readonly choice: Choice;
+  /** The question's template, which names its choices when it holds two. */
+  readonly template: Question["template"];
 }) {
   return (
     <>
-      <ChoiceGroup reason={choice.id === REASON_ID}>
+      <ChoiceGroup title={choiceTitle(template, choice.id)}>
         <PaperOptions>
           {Arr.map(choice.options, (option) => (
             <PaperOption key={option.id} multiple={choice.maxChoices !== 1}>

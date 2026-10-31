@@ -483,6 +483,7 @@
     "reading-placeholder": "Write the reading",
     "template-reason": "Answer and reason",
     "reason-title": "Reason",
+    "reason-answer": "Answer",
     "reason-option": "Reason {letter}",
     "reason-of": "Question {number}, reason {letter}",
     "reason-add": "Add reason",

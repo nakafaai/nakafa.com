@@ -3,7 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const { open } = refs.public.exams.exams;
 const { copy, points, scoring, template } = refs.public.exams.questions;
@@ -87,9 +87,14 @@ describe("exams/questions points", () => {
           slug: nf,
         });
         expect(
-          opened.questions.find((question) => question.id === copied.id)
-            ?.scoring.kind
-        ).toBe("perPart");
+          Option.map(
+            Arr.findFirst(
+              opened.questions,
+              (question) => question.id === copied.id
+            ),
+            (question) => question.scoring.kind
+          )
+        ).toEqual(Option.some("perPart"));
 
         const short = yield* teacher.mutation(template, {
           ...ids,
