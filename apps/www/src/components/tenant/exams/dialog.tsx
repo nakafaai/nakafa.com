@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   EXAM_TITLE_MAX_LENGTH,
@@ -13,6 +14,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -179,7 +181,11 @@ export function CreateExam({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>{t("create")}</Button>
+      {/* The label gives way to the icon when the header has too little room for it, as at 200 percent text on a phone. */}
+      <Button onClick={() => setOpen(true)}>
+        <HugeIcons aria-hidden="true" icon={Add01Icon} />
+        <span className="@max-sm/header:sr-only">{t("create")}</span>
+      </Button>
       <ResponsiveDialog
         description={t("create-description")}
         footer={

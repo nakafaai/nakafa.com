@@ -148,7 +148,9 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     // The name with the address after it, so the header's search finds an invitee by either; the cell shows the name.
     inviteColumns.accessor((invite) => `${invite.name} ${invite.email}`, {
       cell: (info) => (
-        <span className="font-medium">{info.row.original.name}</span>
+        <span className="font-medium" dir="auto">
+          {info.row.original.name}
+        </span>
       ),
       filterFn: "includesString",
       header: t("invite-name"),

@@ -27,6 +27,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import type { StatusTone } from "@repo/design-system/lib/status";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { type ComponentProps, startTransition, useState } from "react";
@@ -39,7 +40,6 @@ import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
-import type { StatusTone } from "@/components/shared/table/tone";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -63,7 +63,7 @@ const SOURCE = "components/tenant/settings/members";
  * a joined member reads as done.
  */
 const STATUS_LOOKS = {
-  cardIssued: { icon: IdCardIcon, tone: "primary" },
+  cardIssued: { icon: IdCardIcon, tone: "info" },
   invited: { icon: MailSend01Icon, tone: "info" },
   joined: { icon: UserCircleIcon, tone: "success" },
   notInvited: { icon: UserAdd01Icon, tone: "warning" },
@@ -156,7 +156,11 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
 
   const columns = memberColumns.columns([
     memberColumns.accessor((member) => member.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => (
+        <span className="font-medium" dir="auto">
+          {info.getValue()}
+        </span>
+      ),
       filterFn: "includesString",
       header: t("member-name"),
       id: "name",
