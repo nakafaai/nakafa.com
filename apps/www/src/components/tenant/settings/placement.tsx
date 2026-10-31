@@ -51,18 +51,20 @@ type CohortId = Cohort["id"];
 
 /**
  * The page's action that places a student of the school in the cohort: the Add student
- * button, and the dialog it opens for one student. The dialog closes as the placement is
- * sent, and its student clears once the server accepts it.
+ * button, ready from the first paint, and the dialog it opens for one student. The dialog
+ * waits for the cohort: Save holds until the cohort is read, and an archived cohort says to
+ * restore it first. The dialog closes as the placement is sent, and its student clears once
+ * the server accepts it.
  */
 export function SchoolPlacementAdd({
   cohortId,
-  disabled,
   slug,
+  status,
 }: {
   cohortId: CohortId;
-  /** Whether the action waits, while the cohort is not read yet or once it is archived. */
-  disabled: boolean;
   slug: TenantSlug;
+  /** The cohort's status, unknown until the cohort is read. */
+  status: Cohort["status"] | undefined;
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
@@ -91,11 +93,15 @@ export function SchoolPlacementAdd({
 
   return (
     <>
-      <Button disabled={disabled} onClick={() => setIsOpen(true)} type="button">
+      <Button onClick={() => setIsOpen(true)} type="button">
         {t("placement-add")}
       </Button>
       <ResponsiveDialog
-        description={t("placement-add-footer")}
+        description={
+          status === "archived"
+            ? t("placement-add-archived")
+            : t("placement-add-footer")
+        }
         footer={
           <>
             <Button
@@ -106,7 +112,9 @@ export function SchoolPlacementAdd({
               {common("cancel")}
             </Button>
             <Button
-              disabled={personId === undefined || isPending}
+              disabled={
+                status !== "active" || personId === undefined || isPending
+              }
               inert={isPending}
               onClick={submit}
               type="button"

@@ -7,6 +7,7 @@ import {
   Field,
   FieldGroup,
   FieldLabel,
+  FieldSet,
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
@@ -36,22 +37,17 @@ import {
 const SOURCE = "components/tenant/settings/scheme";
 
 /**
- * The grading page's one action, New version, and the dialog it opens. It waits disabled until the versions are
- * read, so the dialog opens filled in with the version in force, or the built-in scheme before the first. Each
- * opening is a dialog of its own, so its fields start from the version in force then.
+ * The grading page's one action, New version, and the dialog it opens. The button is ready from the first paint, and
+ * the dialog fills in with the version in force, or the built-in scheme before the first, once the versions are read.
+ * Each opening is a dialog of its own, so its fields start from the version in force then.
  */
 export function SchemeVersionAdd() {
   const t = useTranslations("SchoolSettings");
-  const { ready } = use(SchemeVersionsContext);
   const [openings, setOpenings] = useState(0);
 
   return (
     <>
-      <Button
-        disabled={!ready}
-        onClick={() => setOpenings((count) => count + 1)}
-        type="button"
-      >
+      <Button onClick={() => setOpenings((count) => count + 1)} type="button">
         {t("grading-new")}
       </Button>
       {openings === 0 ? null : <SchemeVersionDialog key={openings} />}
@@ -61,12 +57,13 @@ export function SchemeVersionAdd() {
 
 /**
  * The dialog of a new version: its KKTP and its bands, each band a label and the value it starts from, which the
- * Admin adds and removes. Save waits for a scheme the server accepts, and the version shows first at once, dated now
+ * Admin adds and removes. While the versions are read its fields wait, so they fill in with the version in force
+ * before the Admin types. Save waits for a scheme the server accepts, and the version shows first at once, dated now
  * or just after the newest version.
  */
 function SchemeVersionDialog() {
   const t = useTranslations("SchoolSettings");
-  const { newest } = use(SchemeVersionsContext);
+  const { newest, ready } = use(SchemeVersionsContext);
   const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
@@ -123,7 +120,7 @@ function SchemeVersionDialog() {
             {common("cancel")}
           </Button>
           <Button
-            disabled={Option.isNone(checked)}
+            disabled={!ready || Option.isNone(checked)}
             onClick={save}
             type="button"
           >
@@ -135,92 +132,97 @@ function SchemeVersionDialog() {
       setOpen={setOpen}
       title={t("grading-new")}
     >
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor={`${id}-kktp`}>{t("grading-kktp")}</FieldLabel>
-          <NumberField
-            id={`${id}-kktp`}
-            max={100}
-            min={0}
-            onValueChange={(kktp) => setDraft({ ...draft, kktp })}
-            value={draft.kktp}
-          >
-            <NumberFieldGroup>
-              <NumberFieldDecrement />
-              <NumberFieldInput />
-              <NumberFieldIncrement />
-            </NumberFieldGroup>
-          </NumberField>
-        </Field>
-        {Arr.map(draft.bands, (band) => (
-          <div className="flex items-end gap-3" key={band.key}>
-            <Field className="min-w-0 flex-1">
-              <FieldLabel htmlFor={`${id}-${band.key}-label`}>
-                {t("grading-band-label")}
-              </FieldLabel>
-              <Input
-                id={`${id}-${band.key}-label`}
-                maxLength={40}
-                onChange={(event) =>
-                  setDraft({
-                    ...draft,
-                    bands: Arr.map(draft.bands, (row) =>
-                      row.key === band.key
-                        ? { ...row, label: event.target.value }
-                        : row
-                    ),
-                  })
-                }
-                placeholder={t("grading-band-label-placeholder")}
-                value={band.label}
-              />
-            </Field>
-            <Field className="w-36 shrink-0">
-              <FieldLabel htmlFor={`${id}-${band.key}-minimum`}>
-                {t("grading-band-minimum")}
-              </FieldLabel>
-              <NumberField
-                id={`${id}-${band.key}-minimum`}
-                max={100}
-                min={0}
-                onValueChange={(minimum) =>
-                  setDraft({
-                    ...draft,
-                    bands: Arr.map(draft.bands, (row) =>
-                      row.key === band.key ? { ...row, minimum } : row
-                    ),
-                  })
-                }
-                value={band.minimum}
-              >
-                <NumberFieldGroup>
-                  <NumberFieldInput />
-                </NumberFieldGroup>
-              </NumberField>
-            </Field>
-            <Button
-              aria-label={t("grading-band-remove")}
-              onClick={() =>
-                setDraft({
-                  ...draft,
-                  bands: Arr.filter(draft.bands, (row) => row.key !== band.key),
-                })
-              }
-              size="icon"
-              type="button"
-              variant="ghost"
+      <FieldSet disabled={!ready}>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor={`${id}-kktp`}>{t("grading-kktp")}</FieldLabel>
+            <NumberField
+              id={`${id}-kktp`}
+              max={100}
+              min={0}
+              onValueChange={(kktp) => setDraft({ ...draft, kktp })}
+              value={draft.kktp}
             >
-              <HugeIcons icon={Delete02Icon} />
+              <NumberFieldGroup>
+                <NumberFieldDecrement />
+                <NumberFieldInput />
+                <NumberFieldIncrement />
+              </NumberFieldGroup>
+            </NumberField>
+          </Field>
+          {Arr.map(draft.bands, (band) => (
+            <div className="flex items-end gap-3" key={band.key}>
+              <Field className="min-w-0 flex-1">
+                <FieldLabel htmlFor={`${id}-${band.key}-label`}>
+                  {t("grading-band-label")}
+                </FieldLabel>
+                <Input
+                  id={`${id}-${band.key}-label`}
+                  maxLength={40}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      bands: Arr.map(draft.bands, (row) =>
+                        row.key === band.key
+                          ? { ...row, label: event.target.value }
+                          : row
+                      ),
+                    })
+                  }
+                  placeholder={t("grading-band-label-placeholder")}
+                  value={band.label}
+                />
+              </Field>
+              <Field className="w-36 shrink-0">
+                <FieldLabel htmlFor={`${id}-${band.key}-minimum`}>
+                  {t("grading-band-minimum")}
+                </FieldLabel>
+                <NumberField
+                  id={`${id}-${band.key}-minimum`}
+                  max={100}
+                  min={0}
+                  onValueChange={(minimum) =>
+                    setDraft({
+                      ...draft,
+                      bands: Arr.map(draft.bands, (row) =>
+                        row.key === band.key ? { ...row, minimum } : row
+                      ),
+                    })
+                  }
+                  value={band.minimum}
+                >
+                  <NumberFieldGroup>
+                    <NumberFieldInput />
+                  </NumberFieldGroup>
+                </NumberField>
+              </Field>
+              <Button
+                aria-label={t("grading-band-remove")}
+                onClick={() =>
+                  setDraft({
+                    ...draft,
+                    bands: Arr.filter(
+                      draft.bands,
+                      (row) => row.key !== band.key
+                    ),
+                  })
+                }
+                size="icon"
+                type="button"
+                variant="ghost"
+              >
+                <HugeIcons icon={Delete02Icon} />
+              </Button>
+            </div>
+          ))}
+          <div>
+            <Button onClick={addBand} type="button" variant="outline">
+              <HugeIcons icon={Add01Icon} />
+              {t("grading-band-add")}
             </Button>
           </div>
-        ))}
-        <div>
-          <Button onClick={addBand} type="button" variant="outline">
-            <HugeIcons icon={Add01Icon} />
-            {t("grading-band-add")}
-          </Button>
-        </div>
-      </FieldGroup>
+        </FieldGroup>
+      </FieldSet>
     </ResponsiveDialog>
   );
 }
