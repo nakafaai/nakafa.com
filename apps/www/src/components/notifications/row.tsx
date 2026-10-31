@@ -53,7 +53,7 @@ export function NotificationRow({
  * link, so a modifier click or a middle click opens it as the browser opens any link.
  * The overlay of `after:` covers the row, as the chats list does.
  */
-export function NotificationAction({
+function NotificationAction({
   children,
   href,
   onAuxPress,

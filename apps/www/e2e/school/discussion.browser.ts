@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect, Option } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   hostAddress,
@@ -35,6 +36,7 @@ for (const viewport of [
       signInClassTeacher(context, school.slug, address("/"))
     );
     const page = await context.newPage();
+    const changes = await Effect.runPromise(trackChanges(page, []));
     await page.goto(address("/classes/fisika-x-1/forum"));
     const general = page.getByRole("link", { name: "General", exact: true });
     await waitUntilTakenOver(general);
@@ -74,14 +76,17 @@ for (const viewport of [
       discussion.getByText("Tuliskan contohnya di sini.")
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
-    // A reply shows at once in the discussion, and the server keeps it.
+    // A reply shows at once in the discussion, and the server keeps it once it answered: a reload
+    // drops a change still on its way.
     const field = discussion.getByRole("textbox", { name: "Write a reply" });
     await field.fill("Karena gaya gesek melawan arah gerak.");
+    const repliedBefore = changes.sent;
     await field.press("Enter");
     await expect(
       discussion.getByText("Karena gaya gesek melawan arah gerak.")
     ).toBeVisible();
     await expect(field).toHaveValue("");
+    await saved(changes, repliedBefore);
     await page.reload();
     await expect(
       page

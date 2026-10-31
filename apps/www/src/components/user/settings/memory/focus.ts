@@ -1,5 +1,5 @@
 import { elementById } from "@repo/design-system/lib/element";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, String as Str } from "effect";
 import type { Memory } from "@/components/user/settings/memory/list";
 
 /**
@@ -96,5 +96,36 @@ export function focusFirst(candidates: readonly (HTMLElement | null)[]) {
     if (candidate && document.activeElement === candidate) {
       return;
     }
+  }
+}
+
+/** The focus a list hands on when no element of it held the focus. */
+export const NOTHING_HANDED: Option.Option<string> = Option.none();
+
+/**
+ * Hands the focus on as the list leaves the page with the focus in it. A short
+ * list and the window of a long one take each other's place as memories come
+ * and go, and the focus in the list that leaves would fall to the body. It goes
+ * to the search field, which stays, and the element that held it is named, so
+ * the list that takes the leaving one's place can give it back
+ * (`takeHandedFocus`). None when the focus was not in the list.
+ */
+export function handFocusOn(list: HTMLElement | null): Option.Option<string> {
+  const held = document.activeElement;
+  if (list === null || held === null || !list.contains(held)) {
+    return NOTHING_HANDED;
+  }
+  focusFirst([elementById(MEMORY_SEARCH_ID)]);
+  return Option.liftPredicate(held.id, Str.isNonEmpty);
+}
+
+/**
+ * Gives the focus back to the element that the list which left named, when the
+ * list that took its place holds it. The focus stays on the search field when
+ * that element is not on the page, such as a row the window does not draw.
+ */
+export function takeHandedFocus(handed: Option.Option<string>) {
+  if (Option.isSome(handed)) {
+    focusFirst([elementById(handed.value)]);
   }
 }

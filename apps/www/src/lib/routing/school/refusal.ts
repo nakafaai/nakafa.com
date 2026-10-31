@@ -5,8 +5,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { Data, Effect, Option } from "effect";
-import { clientEnv } from "@/env.public";
-import { readSessionToken } from "@/lib/auth/token.server";
+import { readSessionCookie } from "@/lib/auth/cookie.server";
 import { httpSingleAttemptLayer } from "@/lib/convex/http";
 import { readSchoolSlug } from "@/lib/routing/school/host";
 
@@ -18,33 +17,26 @@ import { readSchoolSlug } from "@/lib/routing/school/host";
 class SchoolReadDeadline extends Data.TaggedError("SchoolReadDeadline") {}
 
 /**
- * Reads whether the school refuses the viewer, in one query: the backend decides
- * the school's existence and the caller's view of it together
- * (`tenancy.profile.refusal`). A visitor's query carries no session, and a signed-in
- * caller's carries its token, so the backend reads the same identity the layout reads.
+ * Reads whether the school refuses a visitor, in one query with no session: the
+ * backend decides the school's existence (`tenancy.profile.refusal`).
  */
 const readRefusal = Effect.fn("www.routing.school.refusal")(function* (
-  slug: TenantSlug,
-  headers: Headers
+  slug: TenantSlug
 ) {
-  const token = yield* readSessionToken(
-    clientEnv.VITE_CONVEX_SITE_URL,
-    headers
-  );
   return yield* HttpClient.HttpClient.pipe(
     Effect.flatMap((client) => client.query(tenancy.profile.refusal, { slug })),
-    Effect.provide(
-      httpSingleAttemptLayer(token === undefined ? undefined : { auth: token })
-    )
+    Effect.provide(httpSingleAttemptLayer())
   );
 });
 
 /**
- * Decides, before a school page streams, whether the school refuses the request
+ * Decides, before a school page streams, whether the school refuses a visitor
  * (ADR 0026). The answer is the locale of the not-found page, negotiated from the
  * request, or none when the school tree answers. A request whose host names no
  * school has none, and so has a method that is not a document read: only a GET or
- * HEAD request is a page.
+ * HEAD request is a page. A request with a session reads nothing here: the
+ * page's own gate reads the viewer in the browser and draws the refusal, so a
+ * signed-in page gets the school shell at once instead of after two reads.
  *
  * The whole gate waits at most NETWORK_ATTEMPT_DEADLINE, so a school that does not
  * answer holds the page for that long at most (ADR 0026). A failed or late read
@@ -58,11 +50,12 @@ export const readSchoolRefusal = Effect.fn("www.routing.school.pageRefusal")(
     if (
       Option.isNone(slug) ||
       isSharedPath(url.pathname) ||
-      (request.method !== "GET" && request.method !== "HEAD")
+      (request.method !== "GET" && request.method !== "HEAD") ||
+      readSessionCookie(request) !== null
     ) {
       return Option.none();
     }
-    const refused = yield* readRefusal(slug.value, request.headers).pipe(
+    const refused = yield* readRefusal(slug.value).pipe(
       Effect.timeoutOrElse({
         duration: NETWORK_ATTEMPT_DEADLINE,
         orElse: () => Effect.fail(new SchoolReadDeadline()),

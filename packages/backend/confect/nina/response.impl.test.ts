@@ -7,7 +7,12 @@ import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure
 import { turnHalted } from "@repo/backend/confect/nina/halt";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
-import { createNinaTest, ninaModel, ninaStream } from "@repo/backend/test/nina";
+import {
+  createNinaTest,
+  fireDueJobs,
+  ninaModel,
+  ninaStream,
+} from "@repo/backend/test/nina";
 import {
   createCapturingTest,
   level,
@@ -254,7 +259,7 @@ describe("The Nina response run and the memory tool", () => {
     // Settlement schedules the turn's follow-up work (title, suggestions, memory and
     // seal) at zero delay. The test runs it here, so none of it is still pending when
     // the next test advances the clock and finds it.
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     expect(model.doStreamCalls).toHaveLength(1);
     return Arr.map(model.doStreamCalls[0]?.tools ?? [], (tool) => tool.name);
   }
@@ -314,7 +319,7 @@ describe("The Nina response among its follow-up work", () => {
     const f = await createCapturingTest();
     const generate = turnModel();
     await f.t.action(run, { turnId: f.turnId });
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     expect(generate).toHaveBeenCalledTimes(3);
     expect(await f.turn()).toMatchObject({
       remembered: 1,
@@ -338,7 +343,7 @@ describe("The Nina response among its follow-up work", () => {
     );
     const generate = turnModel();
     await f.t.action(run, { turnId: f.turnId });
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     // The capture, the suggestions and the fold each asked the model once.
     expect(generate).toHaveBeenCalledTimes(3);
     const agents = Arr.map((await f.turn())?.usage ?? [], ({ agent }) => agent);
@@ -361,7 +366,7 @@ describe("The Nina response among its follow-up work", () => {
       Effect.die(new Error("Private summary detail"))
     );
     await f.t.action(run, { turnId: f.turnId });
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     expect(generate).toHaveBeenCalledTimes(3);
     expect(await f.turn()).toMatchObject({
       remembered: 1,
@@ -386,7 +391,7 @@ describe("The Nina response among its follow-up work", () => {
     const generate = turnModel();
     vi.stubEnv("VAULT_ROOT_KEYS", "");
     await f.t.action(run, { turnId: f.turnId });
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     expect(generate).toHaveBeenCalledTimes(3);
     expect(await f.turn()).toMatchObject({
       state: { status: "complete" },

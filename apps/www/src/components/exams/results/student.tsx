@@ -58,9 +58,9 @@ function AnswerItem({
 }
 
 /**
- * The student's own result under the sentence of a submitted attempt. Until the teacher releases the
- * results, the card says when they come. After the release it shows the score, and each question with the
- * answer that the student chose and its verdict, and no key or explanation.
+ * The card of a finished attempt, at the top of its page: it says the exam is finished. Until the teacher
+ * releases the results, its footer says when they come. After the release it shows the score first, then
+ * each question with the answer that the student chose and its verdict, and no key or explanation.
  */
 export function StudentResults({
   sittingId,
@@ -75,7 +75,7 @@ export function StudentResults({
       fallback={(failure) => (
         <CardSection>
           <CardHeader>
-            <CardTitle>{t("student-results-title")}</CardTitle>
+            <CardTitle>{t("student-finished")}</CardTitle>
           </CardHeader>
           <CardContent>{failure}</CardContent>
           <CardSectionFooter hint={t("student-results-footer")} />
@@ -113,7 +113,7 @@ function StudentResultsContent({
     return (
       <CardSection>
         <CardHeader>
-          <CardTitle>{t("student-results-title")}</CardTitle>
+          <CardTitle>{t("student-finished")}</CardTitle>
         </CardHeader>
         <CardSectionFooter hint={t("student-results-footer")} />
       </CardSection>
@@ -124,10 +124,12 @@ function StudentResultsContent({
   return (
     <CardSection>
       <CardHeader>
-        <CardTitle>{t("student-results-title")}</CardTitle>
+        <CardTitle>{t("student-finished")}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3 text-sm">
-        <p className="font-medium">{t("student-score", { points, total })}</p>
+        <p className="text-2xl font-semibold tabular-nums">
+          {t("student-score", { points, total })}
+        </p>
         <ul aria-label={t("student-answers")} className="grid gap-3">
           {Arr.map(questions, (question) => (
             <AnswerItem key={question.number} question={question} />

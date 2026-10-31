@@ -128,7 +128,7 @@ for (const viewport of WIDTHS) {
   });
 }
 
-test("the player's navigator column sticks right under its toolbar, its scroll area inside it", async ({
+test("the player's navigator column sticks right under its header, its scroll area inside it", async ({
   baseURL,
   browser,
 }) => {
@@ -157,11 +157,12 @@ test("the player's navigator column sticks right under its toolbar, its scroll a
   const column = page.locator("[data-player-sidebar]");
   await expect(column).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   const placed = await column.evaluate((aside) => {
-    const toolbar = document.querySelector("[data-player-toolbar]");
+    // The player's one header row is the page header; no toolbar row sits under it.
+    const header = document.querySelector('[data-slot="page-header"]');
     return {
       position: getComputedStyle(aside).position,
       top: Math.round(aside.getBoundingClientRect().top),
-      under: Math.round(toolbar?.getBoundingClientRect().bottom ?? -1),
+      under: Math.round(header?.getBoundingClientRect().bottom ?? -1),
     };
   });
   expect(placed.position).toBe("sticky");

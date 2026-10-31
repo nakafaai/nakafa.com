@@ -115,15 +115,31 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await expect(prompt.locator("th")).toHaveCount(2);
 
   // A formula comes from the slash menu, and its editor opens at once, ready to type in. The LaTeX
-  // tab takes x^2, and a press outside the popover closes it and saves the formula.
+  // tab takes x^2, and a press outside the popover closes it and saves the formula. The press lands
+  // on the prompt's first line, far above the formula on the last, where the popover, which stands
+  // over or under its formula, never reaches.
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
   await menu.getByRole("option", { name: "Formula" }).click();
   await page.getByRole("tab", { name: "LaTeX" }).click();
   await page.getByRole("textbox", { name: "LaTeX" }).fill("x^2");
-  await prompt.click();
-  await expect(prompt.locator('[data-formula="inline"] .katex')).toBeVisible();
+  await prompt.click({ position: { x: 8, y: 8 } });
+  await expect(page.getByRole("tab", { name: "LaTeX" })).toHaveCount(0);
+  await expect(
+    prompt.locator(
+      '[data-formula="inline"] annotation[encoding="application/x-tex"]'
+    )
+  ).toHaveText("x^2");
   await expect(prompt.locator(".katex-error")).toHaveCount(0);
+
+  // A formula inserted and left with Escape takes itself back out, so no placeholder stays in the text.
+  const formulas = prompt.locator("[data-formula]");
+  await expect(formulas).toHaveCount(1);
+  await toolbar.getByRole("button", { exact: true, name: "Formula" }).click();
+  await expect(page.getByRole("tab", { name: "LaTeX" })).toBeVisible();
+  await expect(formulas).toHaveCount(2);
+  await page.keyboard.press("Escape");
+  await expect(formulas).toHaveCount(1);
 
   // An image comes from the toolbar's image control. The file is a one-pixel PNG that a browser
   // decodes, and the alt text dialog asks for its alt text before the image is added to the document.

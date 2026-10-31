@@ -56,9 +56,8 @@ const EXAM_PAGE = /\/en\/try-out\/indonesia\/snbt$/u;
 /** The pages of a signed-in learner, each with its own header. */
 const learnerRoutes = ["/en/chat", "/en/user/settings", "/en/notifications"];
 
-/** The pages of a school host that an Owner sees without an exam: the home, the exams, and every setting. */
+/** The pages of a school host that an Owner sees without an exam: the exams and every setting. */
 const schoolPaths = [
-  "/",
   "/exams",
   "/settings/profile",
   "/settings/units",
@@ -90,8 +89,7 @@ const classPaths = ["/classes/fisika-x-1", "/classes/fisika-x-1/forum"];
  * height, and the elements inside it whose box reaches past its right or bottom
  * edge. Elements hidden at this width and the screen reader's one-pixel boxes are
  * left out, and so are the shapes inside a drawing: an SVG draws them only within
- * its own box, which is measured instead, as the half of Nina that rises from the
- * school home's header shows.
+ * its own box, which is measured instead.
  */
 function readHeaders() {
   return Array.from(

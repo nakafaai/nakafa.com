@@ -1,11 +1,8 @@
-import { expect, type Locator, type Page, type Route } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { LAST_SERVER, NEWEST } from "@/e2e/support/list";
 import { MEMORY_PATH, memoryRow } from "@/e2e/support/memory";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-
-/** The scripts of the page itself. */
-const SCRIPTS = /\/assets\/.*\.js/u;
 
 /** Where one row of the list stands in the document, or none when it is not in the page. */
 const placeOf = (page: Page, text: string) =>
@@ -66,66 +63,83 @@ export const waitUntilTakenOver = (control: Locator) =>
     .toBe(true);
 
 /**
- * Loads the page with its scripts held back, so it shows only what the server
- * rendered, notes where the first and the last row of the server's page stand,
- * lets the scripts run, and checks that the rows stand in the same places once
- * React has taken them over and once the window has taken the last of them in
- * and out of the page. The page says nothing in its console on the way.
+ * Loads the Memory page and notes where the newest row and the last row of the
+ * first page stand in the first frame that draws them both, then checks that
+ * they stand in the same places once the page has settled, and once the window
+ * has taken the last of them in and out of the page. The account screens render
+ * in the browser only (ADR 0038 D2), so that first frame is the window's first
+ * render, which places every row of the first page at a multiple of its height.
+ * The page says nothing in its console on the way.
  */
-export const hydratesInPlace = Effect.fn("NakafaE2E.hydratesInPlace")(
-  function* (page: Page) {
-    yield* Effect.promise(async () => {
-      const held = MutableList.make<Route>();
-      const said = MutableList.make<string>();
-      const listen = (message: { text: () => string; type: () => string }) => {
-        if (message.type() === "error" || message.type() === "warning") {
-          MutableList.append(said, `${message.type()}: ${message.text()}`);
-        }
-      };
-
-      page.on("console", listen);
-      await page.route(SCRIPTS, (route) => {
-        MutableList.append(held, route);
-      });
-      await page.goto(MEMORY_PATH, { waitUntil: "domcontentloaded" });
-      await expect(memoryRow(page, LAST_SERVER)).toBeVisible();
-      const first = await placeOf(page, NEWEST);
-      const last = await placeOf(page, LAST_SERVER);
-      expect(first).not.toBeNull();
-      expect(last).not.toBeNull();
-      // The scripts were asked for and never answered: React has not run.
-      expect(held.length).toBeGreaterThan(0);
-      expect(await isHydrated(firstRow(page))).toBe(false);
-
-      for (const route of MutableList.toArray(held)) {
-        await route.continue();
+export const drawsInPlace = Effect.fn("NakafaE2E.drawsInPlace")(function* (
+  page: Page
+) {
+  yield* Effect.promise(async () => {
+    const said = MutableList.make<string>();
+    const listen = (message: { text: () => string; type: () => string }) => {
+      if (message.type() === "error" || message.type() === "warning") {
+        MutableList.append(said, `${message.type()}: ${message.text()}`);
       }
-      await page.unroute(SCRIPTS);
-      await expect
-        .poll(() => isHydrated(firstRow(page)), {
-          timeout: readinessTimeoutMilliseconds,
-        })
-        .toBe(true);
-      // The browser has not scrolled, so every row of the server's page is still there.
-      expect(await placeOf(page, NEWEST)).toEqual(first);
-      expect(await placeOf(page, LAST_SERVER)).toEqual(last);
+    };
 
-      // Scrolling to the last row takes the rows above it out of the page, and
-      // it stands where it stood.
-      await page.evaluate(
-        (top) => window.scrollTo(0, top - 300),
-        last?.top ?? 0
-      );
-      await expect(memoryRow(page, LAST_SERVER)).toBeVisible();
-      await expect(memoryRow(page, NEWEST)).toHaveCount(0);
-      expect(await placeOf(page, LAST_SERVER)).toEqual(last);
-      expect(MutableList.toArray(said)).toEqual([]);
-
-      page.off("console", listen);
-      await page.evaluate(() => window.scrollTo(0, 0));
+    page.on("console", listen);
+    const watch = await page.addInitScript(
+      ({ newest, last }) => {
+        const place = (needle: string) => {
+          const row = [...document.querySelectorAll("main ul > li")].find(
+            (item) => item.textContent?.includes(needle)
+          );
+          if (!row) {
+            return null;
+          }
+          const box = row.getBoundingClientRect();
+          return {
+            height: box.height,
+            left: box.left,
+            top: box.top + window.scrollY,
+            width: box.width,
+          };
+        };
+        const look = () => {
+          const first = place(newest);
+          const end = place(last);
+          if (first && end) {
+            Reflect.set(window, "nakafaFirstPlaces", { end, first });
+            return;
+          }
+          requestAnimationFrame(look);
+        };
+        requestAnimationFrame(look);
+      },
+      { last: LAST_SERVER, newest: NEWEST }
+    );
+    await page.goto(MEMORY_PATH);
+    await expect(memoryRow(page, LAST_SERVER)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
     });
-  }
-);
+    await page.waitForLoadState("networkidle");
+    const drawn = await page.evaluate(() =>
+      Reflect.get(window, "nakafaFirstPlaces")
+    );
+    expect(drawn).toEqual({
+      end: await placeOf(page, LAST_SERVER),
+      first: await placeOf(page, NEWEST),
+    });
+    const last = await placeOf(page, LAST_SERVER);
+
+    // Scrolling to the last row takes the rows above it out of the page, and
+    // it stands where it stood.
+    await page.evaluate((top) => window.scrollTo(0, top - 300), last?.top ?? 0);
+    await expect(memoryRow(page, LAST_SERVER)).toBeVisible();
+    await expect(memoryRow(page, NEWEST)).toHaveCount(0);
+    expect(await placeOf(page, LAST_SERVER)).toEqual(last);
+    expect(MutableList.toArray(said)).toEqual([]);
+
+    page.off("console", listen);
+    await watch.dispose();
+    await page.evaluate(() => window.scrollTo(0, 0));
+  });
+});
 
 /**
  * The same check with the text of the page half as large again from its first
@@ -134,8 +148,8 @@ export const hydratesInPlace = Effect.fn("NakafaE2E.hydratesInPlace")(
  * match the places the window gives the rows before it has measured any. At
  * this size the two lines of every row still fit in that height.
  */
-export const hydratesInPlaceAtLargeText = Effect.fn(
-  "NakafaE2E.hydratesInPlaceAtLargeText"
+export const drawsInPlaceAtLargeText = Effect.fn(
+  "NakafaE2E.drawsInPlaceAtLargeText"
 )(function* (page: Page) {
   const larger = yield* Effect.promise(() =>
     page.addInitScript(() => {
@@ -159,7 +173,7 @@ export const hydratesInPlaceAtLargeText = Effect.fn(
     })
   );
 
-  yield* hydratesInPlace(page);
+  yield* drawsInPlace(page);
   yield* Effect.promise(async () => {
     const rootSize = await page.evaluate(
       () => getComputedStyle(document.documentElement).fontSize

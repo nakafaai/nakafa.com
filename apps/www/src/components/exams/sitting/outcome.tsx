@@ -5,21 +5,21 @@ import type { AttemptValue } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
 
-/** The copy key of each state of an attempt that takes no answers. */
+/** The copy key of each state of an attempt that takes no answers before it is finished. */
 const sentenceKeys = {
   closing: "student-attempt-closed",
   locked: "student-locked",
-  submitted: "answers-in",
 } satisfies Record<
-  Exclude<AttemptValue["state"], "inProgress">,
-  "answers-in" | "student-attempt-closed" | "student-locked"
+  Exclude<AttemptValue["state"], "inProgress" | "submitted">,
+  "student-attempt-closed" | "student-locked"
 >;
 
 /**
- * An attempt that takes no answers, shown without an entry: the exam's name, the one sentence of its state,
- * and the student's own results once the teacher releases them. This screen forgets nothing: the finish
- * forgets the kept state once the server confirms it, and this screen shows the finish before that, so a
- * refused finish that rolls back would otherwise lose the answers that the student has not sent yet.
+ * An attempt that takes no answers, shown without an entry: the exam's name, then a finished attempt's own
+ * result card at the top, which says the exam is finished and shows the score once the teacher releases it,
+ * or the one sentence of a closing or locked attempt. This screen forgets nothing: the finish forgets the
+ * kept state once the server confirms it, and this screen shows the finish before that, so a refused finish
+ * that rolls back would otherwise lose the answers that the student has not sent yet.
  */
 export function StudentOutcome({
   attempt,
@@ -34,11 +34,11 @@ export function StudentOutcome({
     <>
       <SittingBar examTitle={sitting.examTitle} />
       <SittingBody align="top">
-        {attempt.state === "inProgress" ? null : (
-          <p>{t(sentenceKeys[attempt.state])}</p>
-        )}
         {attempt.state === "submitted" ? (
           <StudentResults sittingId={sitting.id} />
+        ) : null}
+        {attempt.state === "closing" || attempt.state === "locked" ? (
+          <p>{t(sentenceKeys[attempt.state])}</p>
         ) : null}
       </SittingBody>
     </>

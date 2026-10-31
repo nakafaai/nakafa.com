@@ -30,9 +30,10 @@ export const foldedText = Effect.fn("editor.result.folded")(function* (
   snapshot: Pick<EditorSnapshotsDoc, "content" | "version">,
   steps: readonly Step[]
 ) {
-  const start = yield* snapshotNode(assessmentModel, snapshot.content);
+  const model = assessmentModel();
+  const start = yield* snapshotNode(model, snapshot.content);
   const folded = yield* foldSteps(
-    assessmentModel,
+    model,
     documentId,
     start,
     snapshot.version,

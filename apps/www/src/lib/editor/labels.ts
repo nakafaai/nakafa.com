@@ -52,11 +52,13 @@ export function useDocumentLabels() {
         invalid: t("formula-invalid"),
         keyboard: t("formula-keyboard"),
         keys: {
+          chemistry: t("formula-chemistry"),
           delete: t("formula-delete"),
           functions: t("formula-functions"),
           greek: t("formula-greek"),
           left: t("formula-left"),
           numbers: t("formula-numbers"),
+          physics: t("formula-physics"),
           right: t("formula-right"),
           symbols: t("formula-symbols"),
         },

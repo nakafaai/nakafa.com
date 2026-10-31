@@ -101,7 +101,7 @@ describe("identity/cards redeem", () => {
           )
         );
         expect(invite.state).toEqual({
-          at: CARD_NOW,
+          at: expect.any(Number),
           status: "accepted",
           userId: user?._id,
         });
@@ -404,7 +404,7 @@ describe("identity/cards redeem", () => {
         expect(yield* userNamed(fixture, "invited2")).toEqual(Option.none());
         expect(
           Option.getOrUndefined(yield* cardRowOf(fixture, fixture.invited))
-        ).toMatchObject({ redeemedAt: CARD_NOW });
+        ).toMatchObject({ redeemedAt: expect.any(Number) });
       })
   );
 

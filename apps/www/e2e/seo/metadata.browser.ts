@@ -7,6 +7,9 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { paginationNavigation } from "@/e2e/support/selector";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** A robots directive that keeps a page out of search indexes. */
+const NOINDEX = /noindex/;
+
 class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing>()(
   "LessonNavigationMissing",
   { href: Schema.String }

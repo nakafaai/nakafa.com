@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
@@ -11,20 +12,23 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** How long the student was away, in minutes and seconds. */
+const AWAY_TEXT = /Away for (?:(?<minutes>\d+) min )?(?<seconds>\d+) s\./u;
+
+/** The proctor's line for a student who left the exam. */
+const LEFT_TEXT = /^Left the exam for (?:\d+ min )?\d+ s$/u;
+
+/** The proctor's line for a student whose device lost the network. */
+const LOST_TEXT = /^Lost the connection for (?:\d+ min )?\d+ s$/u;
+
+/** The address of the student's sittings page. */
+const SITTINGS_ADDRESS = /\/sittings$/u;
+
 /** The name that the acceptance runtime gives every learner it invites. */
 const LEARNER_NAME = "Acceptance Learner";
 
 /** The row of the first room of the seeded exam, which is open, in the rooms list. */
-const OPEN_ROOM_ROW = /Lab 2/u;
-
-/** The away seat's time since the student left: the minutes, once there are any, and the seconds. */
-const AWAY_TIME = /Away for (?:(?<minutes>\d+) min )?(?<seconds>\d+) s\./u;
-
-/** The proctor panel's line for a student who left the exam and has not come back. */
-const LEFT_TIME = /^Left the exam for (?:\d+ min )?\d+ s$/u;
-
-/** The proctor panel's line for a student whose device lost the network. */
-const OFFLINE_TIME = /^Lost the connection for (?:\d+ min )?\d+ s$/u;
+const OPEN_ROOM_ROW = /Lab 2/;
 
 /** Students seated before the learner, more than one dashboard page of 100 holds. */
 const CROWD = 101;
@@ -96,7 +100,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await expect(seat).toHaveAttribute("data-frame", "away");
   // The away seat counts the time since the student left, each second, where a present seat shows its last activity.
   const awaySeconds = async () => {
-    const away = (await seat.textContent())?.match(AWAY_TIME);
+    const away = (await seat.textContent())?.match(AWAY_TEXT);
     return away === null || away === undefined
       ? -1
       : Number(away[1] ?? 0) * 60 + Number(away[2]);
@@ -106,7 +110,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await expect.poll(awaySeconds).toBeGreaterThan(firstReading);
   await seat.click();
   // The panel counts the same exit on, until the student comes back.
-  await expect(proctor.getByText(LEFT_TIME)).toBeVisible();
+  await expect(proctor.getByText(LEFT_TEXT)).toBeVisible();
 
   const dialog = proctor.getByRole("dialog");
 
@@ -145,7 +149,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   // with the moment it went offline, so the proctor's panel tells how long the student was offline.
   await studentContext.setOffline(true);
   await studentContext.setOffline(false);
-  await expect(proctor.getByText(OFFLINE_TIME)).toBeVisible({
+  await expect(proctor.getByText(LOST_TEXT)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
 
@@ -169,7 +173,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await proctorContext.close();
 });
 
-test("a proctor lists the rooms of an exam and opens one from the list, and a student finds the open room on the school home", async ({
+test("a proctor lists the rooms of an exam and opens one from the list, and a student finds the open room in their exams", async ({
   baseURL,
   browser,
 }) => {
@@ -201,7 +205,7 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
   await scheduling.getByRole("textbox", { name: "Room" }).fill("Lab 3");
   await scheduling.getByRole("button", { name: "Schedule" }).click();
   // Once the server saves the room, the editor goes to the exam's rooms, which list both rooms.
-  await proctor.waitForURL(new RegExp(`/exams/${sitting.examId}$`, "u"));
+  await proctor.waitForURL(new RegExp(`/exams/${sitting.examId}$`));
   await expect(
     proctor.getByRole("heading", { name: "Ujian Acceptance" })
   ).toBeVisible();
@@ -219,22 +223,23 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
 
   await rooms.getByRole("link", { name: "Lab 2" }).click();
   await proctor.waitForURL(
-    new RegExp(`/exams/${sitting.examId}/sittings/${sitting.sittingId}$`, "u")
+    new RegExp(`/exams/${sitting.examId}/sittings/${sitting.sittingId}$`)
   );
   // The dashboard's header path returns to the exam's rooms.
   await proctor
     .locator('[data-slot="page-header"]')
     .getByRole("link", { name: "Ujian Acceptance" })
     .click();
-  await proctor.waitForURL(new RegExp(`/exams/${sitting.examId}$`, "u"));
+  await proctor.waitForURL(new RegExp(`/exams/${sitting.examId}$`));
 
   const student = await studentContext.newPage();
   await student.goto(address("/"));
-  // The home draws once Convex holds the session and the student's sittings answer. The open exam comes first in the
-  // student's exams, and its Start enters the sitting.
+  // The school's root opens the student's own exams. They draw once Convex holds the session and the student's
+  // sittings answer: the open exam comes first, and its Start enters the sitting.
+  await student.waitForURL(SITTINGS_ADDRESS);
   await expect(
     student
-      .getByRole("region", { name: "Exams", exact: true })
+      .getByRole("table")
       .getByRole("link", { name: "Start exam", exact: true })
   ).toHaveAttribute(
     "href",
@@ -273,6 +278,8 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
 
   const student = await studentContext.newPage();
+  // The page's changes are followed, so the reload below waits until the server took the flag.
+  const changes = await Effect.runPromise(trackChanges(student, []));
   await student.goto(address(`/sittings/${sitting.sittingId}`));
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
@@ -303,6 +310,7 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     exact: true,
     name: "Flag question 2",
   });
+  const sentBefore = changes.sent;
   await flag.click();
   await expect(flag).toHaveAttribute("aria-pressed", "true");
   await expect(
@@ -320,7 +328,10 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
   ).toBeVisible();
 
   // A reload brings back the flag from the server's shared flags table, so the flag survives a closed tab. The
-  // answer is not checked here: the server may hold it already, so the check would pass either way.
+  // answer is not checked here: the server may hold it already, so the check would pass either way. The page
+  // shows the flag before the server has it, and a reload drops a change still on its way, so the reload waits
+  // until the server answered every change.
+  await saved(changes, sentBefore);
   await student.reload();
   await expect(
     navigator.getByRole("button", {

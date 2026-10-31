@@ -3,6 +3,12 @@ import {
   ArrowRight01Icon,
   Delete02Icon,
 } from "@hugeicons/core-free-icons";
+import {
+  KEY_SETS,
+  type KeySet,
+  keyFace,
+  SET_SIGNS,
+} from "@repo/design-system/components/editor/keys";
 import { drawFormula } from "@repo/design-system/components/editor/render";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -13,98 +19,6 @@ import {
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import { useState } from "react";
 
-/**
- * The keys of each set, as the LaTeX a key inserts. `#?` is an empty slot that the caret moves to next, and `#@`
- * takes what the writer had selected, so a fraction keeps a selected number as its numerator.
- */
-const KEY_SETS = {
-  numbers: [
-    "x",
-    "y",
-    "7",
-    "8",
-    "9",
-    String.raw`\frac{#@}{#?}`,
-    "(",
-    ")",
-    "4",
-    "5",
-    "6",
-    String.raw`\times`,
-    "#@^{2}",
-    "#@^{#?}",
-    "1",
-    "2",
-    "3",
-    "-",
-    String.raw`\sqrt{#@}`,
-    String.raw`\sqrt[#?]{#@}`,
-    "0",
-    ".",
-    "=",
-    "+",
-  ],
-  functions: [
-    String.raw`\sin`,
-    String.raw`\cos`,
-    String.raw`\tan`,
-    String.raw`\log`,
-    String.raw`\ln`,
-    "e^{#?}",
-    String.raw`\pi`,
-    String.raw`\infty`,
-    String.raw`\left|#@\right|`,
-    "#@_{#?}",
-    String.raw`\int_{#?}^{#?}`,
-    String.raw`\sum_{#?}^{#?}`,
-    String.raw`\lim_{#?\to#?}`,
-    String.raw`\vec{#@}`,
-    String.raw`\overline{#@}`,
-    String.raw`^{\circ}`,
-    String.raw`\div`,
-    String.raw`\cdot`,
-  ],
-  symbols: [
-    String.raw`\le`,
-    String.raw`\ge`,
-    "<",
-    ">",
-    String.raw`\neq`,
-    String.raw`\approx`,
-    String.raw`\pm`,
-    String.raw`\in`,
-    String.raw`\notin`,
-    String.raw`\subset`,
-    String.raw`\cup`,
-    String.raw`\cap`,
-    String.raw`\emptyset`,
-    String.raw`\angle`,
-    String.raw`\perp`,
-    String.raw`\parallel`,
-    String.raw`\Rightarrow`,
-    String.raw`\Leftrightarrow`,
-  ],
-  greek: [
-    String.raw`\alpha`,
-    String.raw`\beta`,
-    String.raw`\gamma`,
-    String.raw`\delta`,
-    String.raw`\theta`,
-    String.raw`\lambda`,
-    String.raw`\mu`,
-    String.raw`\rho`,
-    String.raw`\sigma`,
-    String.raw`\phi`,
-    String.raw`\omega`,
-    String.raw`\Delta`,
-    String.raw`\Sigma`,
-    String.raw`\Omega`,
-  ],
-} as const;
-
-/** One set of keys, which the keypad's tabs choose. */
-type KeySet = keyof typeof KEY_SETS;
-
 /** What the keys under the sets do: move the caret one character, or delete the one before it. */
 const KeypadCommand = Schema.Literals([
   "deleteBackward",
@@ -113,21 +27,9 @@ const KeypadCommand = Schema.Literals([
 ]);
 type KeypadCommand = typeof KeypadCommand.Type;
 
-/** The key that names each set in its tab, drawn as the formula it stands for. */
-const SET_SIGNS = {
-  functions: "f(x)",
-  greek: String.raw`\alpha\beta`,
-  numbers: "123",
-  symbols: String.raw`\le`,
-} satisfies Record<KeySet, string>;
-
-/** What a key draws: its LaTeX with each slot shown as an empty square. */
-const keyFace = (latex: string) =>
-  latex.replaceAll(/#[?@]/gu, String.raw`\square`);
-
 /**
- * The formula keypad of Nakafa: the numbers, the functions, the symbols and the Greek letters as the design system's
- * outline keys in four sets, each key drawn by KaTeX as the lesson page draws math, then the keys that move the caret
+ * The formula keypad of Nakafa: the numbers, the functions, the symbols, the Greek letters, chemistry and physics as the
+ * design system's outline keys in six sets (`KEY_SETS`), each key drawn by KaTeX as the lesson page draws math, then the keys that move the caret
  * and delete. A key types into the formula field through `onInsert`, and a press keeps the focus in the field, so its
  * caret stays where the writer left it.
  */

@@ -1,4 +1,5 @@
 import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
@@ -141,6 +142,7 @@ export function Graph({ title, description }: GraphProps) {
           showPoints: false,
         },
       ]}
+      facts={<LineReadouts />}
       header={<VisualCardHeader description={description} title={title} />}
     />
   );

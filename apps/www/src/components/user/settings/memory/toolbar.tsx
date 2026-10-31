@@ -16,7 +16,8 @@ import { useMemoryPage } from "@/components/user/settings/memory/provider";
  * the button that opens the editor with a new memory. The head decides what it
  * shows by its own width, not the window's, because the card beside the editor
  * panel is as narrow as the card on a phone. From 24rem the button says what it
- * adds, and the longest placeholder, which is German, still has all its room.
+ * adds. Every language's placeholder keeps all its room in the narrowest card, a
+ * phone's at 320px, where the field draws its words at 16px.
  * The search is the design system's field, whose clear button shows only once
  * the field holds text, so the browser draws no control of its own.
  */

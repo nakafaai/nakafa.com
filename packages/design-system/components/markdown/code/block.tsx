@@ -16,14 +16,24 @@ import {
   CodeBlockSelectValue,
 } from "@repo/design-system/components/code-block/header";
 import type { CodeBlockData } from "@repo/design-system/lib/code-block/context";
+import { Array as Arr, Schema, String as Str } from "effect";
+
+/** The line count of a code block's first source, which its height stands in for while the browser skips it. */
+const CodeLinesStyleSchema = Schema.Struct({ "--code-lines": Schema.Finite });
+
+type CodeLinesStyle = React.CSSProperties & typeof CodeLinesStyleSchema.Type;
 
 /** Composes authored MDX code sources into Nakafa's tabbed code block. */
 export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
+  const style: CodeLinesStyle = {
+    "--code-lines": Arr.length(Str.split(data[0].code, "\n")),
+  };
   return (
     <CodeBlock
       className="content-auto-code my-4"
       data={data}
       defaultValue={data[0].language}
+      style={style}
     >
       <CodeBlockHeader>
         <CodeBlockFiles>

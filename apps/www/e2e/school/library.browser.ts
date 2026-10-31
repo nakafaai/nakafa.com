@@ -46,9 +46,7 @@ for (const viewport of [
     // The teacher has no Drive yet: the dialog says so and links to the account's connections.
     await dialog.getByRole("tab", { name: "Drive" }).click();
     await dialog.getByRole("button", { name: "Choose from Drive" }).click();
-    await expect(
-      dialog.getByText("Connect Google Drive to your account first.")
-    ).toBeVisible();
+    await expect(dialog.getByText("Connect Google Drive first.")).toBeVisible();
     await expect(
       dialog.getByRole("link", { name: "Open connections" })
     ).toHaveAttribute("href", CONNECTIONS_ADDRESS);

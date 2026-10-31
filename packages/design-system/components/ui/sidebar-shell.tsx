@@ -212,12 +212,16 @@ export function SidebarRail({
   );
 }
 
-/** Wraps the page content that sits beside an inset sidebar. */
+/**
+ * Wraps the page content that sits beside an inset sidebar. It takes the width beside the sidebar
+ * and never more (`min-w-0`): content that cannot shrink, such as a wide table or two panes, scrolls or
+ * clips inside its own frame, so no page grows past the screen and scrolls sideways.
+ */
 export function SidebarInset({ className, ...props }: ComponentProps<"main">) {
   return (
     <main
       className={cn(
-        "bg-background relative flex w-full flex-1 flex-col",
+        "bg-background relative flex w-full min-w-0 flex-1 flex-col",
         "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-lg md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:peer-data-[sidebar-state=collapsed]:ml-2",
         className
       )}
