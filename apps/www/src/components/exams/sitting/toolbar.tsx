@@ -15,11 +15,9 @@ import { useSittingStore } from "@/components/exams/sitting/context";
 import { SittingFilter } from "@/components/exams/sitting/seat";
 
 /**
- * The seats' filters, as the row under the room's header: all students, the ones that need
+ * The seats' filters, in the tab bar under the room's header: all students, the ones that need
  * attention, and the finished ones, each with its icon and always in view, so a proctor sees and
- * switches the view of a live sitting in one press. On a phone the row spans the width with its words
- * alone, each as wide as it needs, so "Needs attention" stays inside its border. Pressing the chosen
- * filter again keeps it.
+ * switches the view of a live sitting in one press.
  */
 export function SittingFilterRow() {
   const t = useTranslations("Exams");
