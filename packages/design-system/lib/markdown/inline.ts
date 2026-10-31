@@ -5,7 +5,7 @@ const MATH_DELIMITERS = [
   ["\\[", "\\]"],
   ["\\(", "\\)"],
 ] as const;
-const SPACE = /\s/;
+const SPACE = /\s/u;
 const WORD = /[\p{L}\p{N}]/u;
 
 /** A span whose source has no escapes, so only its closer ends it. */

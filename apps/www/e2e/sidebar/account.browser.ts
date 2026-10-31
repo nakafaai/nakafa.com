@@ -10,7 +10,7 @@ import { desktopViewport } from "@/e2e/support/viewport";
 const SESSION_READ = "**/api/auth/get-session*";
 
 /** Every script of the page, held back so the page shows what its HTML and inline scripts draw. */
-const SCRIPTS = /\/assets\/.*\.js/;
+const SCRIPTS = /\/assets\/.*\.js/u;
 
 /** The member footer of the sidebar. */
 const memberFooter = (page: Page) => page.locator('[data-account="member"]');

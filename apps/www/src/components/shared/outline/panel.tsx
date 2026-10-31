@@ -84,7 +84,7 @@ export function SidebarRight(props: SidebarRightProps) {
     <div className="shrink-0">
       <SidebarRightProvider>
         <SidebarTrigger
-          className="fixed top-20 right-6 z-20 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
+          className="bg-background/80 fixed top-20 right-6 z-20 size-9 backdrop-blur-xs xl:hidden"
           icon={Menu02Icon}
           label={tCommon("on-this-page")}
           size="icon"
@@ -100,7 +100,7 @@ export function SidebarRight(props: SidebarRightProps) {
 export function SidebarRightProvider({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider
-      className="min-w-0 transition-[padding-right] duration-surface motion-reduce:transition-none xl:pr-64 xl:has-[[data-side=right][data-sidebar-state=collapsed]]:pr-12"
+      className="duration-surface min-w-0 transition-[padding-right] motion-reduce:transition-none xl:pr-64 xl:has-[[data-side=right][data-sidebar-state=collapsed]]:pr-12"
       cookieName="sidebar_state:right"
       keyboardShortcut="shift+x"
       sidebarDesktop={1279.98}

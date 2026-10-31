@@ -30,7 +30,7 @@ const WRONG_PASSWORD = "wrong password here";
 /** The address of the second student, which the school invites before its card is printed. */
 const SECOND_ADDRESS = Schema.decodeSync(Email)("kedua@example.com");
 /** The session cookie that a successful sign-in sets on the school host: its name, and a value. */
-const SESSION_COOKIE_PATTERN = /^better-auth\.session_token=[^;]+;/;
+const SESSION_COOKIE_PATTERN = /^better-auth\.session_token=[^;]+;/u;
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 

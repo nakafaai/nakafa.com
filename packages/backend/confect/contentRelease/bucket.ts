@@ -7,7 +7,7 @@ import {
 
 const HASH_PREFIX = "sha256:";
 const BUCKET_LENGTH = 3;
-const BUCKET_PATTERN = /^[a-f\d]{3}$/;
+const BUCKET_PATTERN = /^[a-f\d]{3}$/u;
 const MAXIMUM_HEAD_READS_PER_ROUTE = 6;
 
 /** Maximum deterministic hash buckets addressable by one content family. */

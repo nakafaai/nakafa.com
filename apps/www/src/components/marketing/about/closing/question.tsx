@@ -59,7 +59,7 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
 
   return (
     <h2
-      className="text-balance text-[2.5rem] leading-[1.1] tracking-tight md:text-[3rem] lg:text-[4rem]"
+      className="text-[2.5rem] leading-[1.1] tracking-tight text-balance md:text-[3rem] lg:text-[4rem]"
       ref={ref}
     >
       {before.trim()}

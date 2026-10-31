@@ -109,10 +109,10 @@ export function TenantOutsider({
           ) : (
             <>
               <div className="flex flex-col items-center gap-2 text-center">
-                <h1 className="text-balance font-semibold text-2xl">
+                <h1 className="text-2xl font-semibold text-balance">
                   {t("outsider-title", { school })}
                 </h1>
-                <p className="text-balance text-muted-foreground">
+                <p className="text-muted-foreground text-balance">
                   {t("outsider-description", { account })}
                 </p>
               </div>
@@ -146,10 +146,10 @@ function OutsiderRoomWay({
   return (
     <>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-balance font-semibold text-2xl">
+        <h1 className="text-2xl font-semibold text-balance">
           {t("join-room-title")}
         </h1>
-        <p className="text-balance text-muted-foreground">
+        <p className="text-muted-foreground text-balance">
           {t("join-room-description", { account, school })}
         </p>
       </div>

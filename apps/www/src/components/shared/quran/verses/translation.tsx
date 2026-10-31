@@ -20,7 +20,7 @@ export function QuranTranslation({
   return (
     <>
       <p
-        className={proseClassName ?? "text-pretty leading-relaxed"}
+        className={proseClassName ?? "leading-relaxed text-pretty"}
         data-quran-translation
       >
         {Arr.map(translation.segments, (segment) =>
@@ -33,7 +33,7 @@ export function QuranTranslation({
             >
               <a
                 aria-label={`${label} ${segment.number}`}
-                className="-mx-2 rounded-sm px-2.5 py-1.5 text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="text-primary decoration-primary/40 hover:decoration-primary focus-visible:ring-ring -mx-2 rounded-sm px-2.5 py-1.5 underline underline-offset-2 focus-visible:ring-2 focus-visible:outline-none"
                 href={`#${id}-translation-note-${segment.number}`}
                 id={`${id}-translation-note-reference-${segment.number}-${segment.offset}`}
                 role="doc-noteref"
@@ -47,19 +47,19 @@ export function QuranTranslation({
       {translation.notes.length > 0 ? (
         <aside
           aria-label={`${label}: ${subjectLabel}`}
-          className="space-y-2 text-muted-foreground text-sm"
+          className="text-muted-foreground space-y-2 text-sm"
         >
           <ol className="space-y-2">
             {Arr.map(translation.notes, (note) => (
               <li
-                className="quran-verse-anchor grid grid-cols-[auto_1fr] gap-2 text-pretty leading-relaxed"
+                className="quran-verse-anchor grid grid-cols-[auto_1fr] gap-2 leading-relaxed text-pretty"
                 data-quran-translation-note
                 id={`${id}-translation-note-${note.number}`}
                 key={note.number}
               >
                 <a
                   aria-label={`${subjectLabel}: ${label} ${note.number}`}
-                  className="-mx-1.5 -my-0.5 px-1.5 py-0.5 font-mono text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="text-primary decoration-primary/40 hover:decoration-primary focus-visible:ring-ring -mx-1.5 -my-0.5 px-1.5 py-0.5 font-mono underline underline-offset-2 focus-visible:ring-2 focus-visible:outline-none"
                   href={`#${id}-translation-note-reference-${note.number}-${note.referenceOffset}`}
                   role="doc-backlink"
                 >

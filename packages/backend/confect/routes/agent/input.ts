@@ -1,6 +1,6 @@
 import { Array as Arr, Effect, Schema } from "effect";
 
-const INTEGER_PATTERN = /^-?\d+$/;
+const INTEGER_PATTERN = /^-?\d+$/u;
 
 /** Syntactically malformed HTTP input before domain schema validation. */
 export class AgentHttpInputError extends Schema.TaggedError<AgentHttpInputError>()(

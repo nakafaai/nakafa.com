@@ -28,9 +28,10 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 }));
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
-const LONG_RUN_NOTE = /\[Shortened to about 200 of \d+ tokens\. Read more\.\]$/;
+const LONG_RUN_NOTE =
+  /\[Shortened to about 200 of \d+ tokens\. Read more\.\]$/u;
 const SHORTENED_NOTE =
-  /\n\n\[Shortened to about 200 of \d+ tokens\. Read the next section\.\]$/;
+  /\n\n\[Shortened to about 200 of \d+ tokens\. Read the next section\.\]$/u;
 /** The unit that the large output caps of `purposes` are whole multiples of. */
 const CAP_UNIT = 1024;
 
@@ -307,7 +308,7 @@ describe("Nina call limit", () => {
     });
     // Each turn costs at least one image, so the photos kept fit the history
     // budget, and the oldest photo does not fit.
-    const photos = (encodeJsonText(result).match(/Photo \d+/g) ?? []).length;
+    const photos = (encodeJsonText(result).match(/Photo \d+/gu) ?? []).length;
     expect(photos * languageModel.files.image).toBeLessThanOrEqual(
       NINA_BUDGET.history
     );

@@ -22,7 +22,7 @@ export function AiChatMessageRemembered() {
 
   return (
     <Link
-      className="inline-flex items-center gap-1 rounded-md text-muted-foreground text-xs outline-none transition-colors ease-out hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 inline-flex items-center gap-1 rounded-md text-xs transition-colors ease-out outline-none focus-visible:ring-3"
       title={t("remembered-title")}
       to="/$locale/user/settings/memory"
     >

@@ -21,12 +21,12 @@ export function Hero() {
       id="hero"
     >
       <div className="relative mx-auto grid w-full max-w-3xl justify-items-center gap-6 px-6 pt-28 pb-16 text-center md:pt-24">
-        <h1 className="text-balance text-[2.5rem] leading-[1.05] tracking-tight md:text-[3rem] lg:text-[4rem]">
+        <h1 className="text-[2.5rem] leading-[1.05] tracking-tight text-balance md:text-[3rem] lg:text-[4rem]">
           {t.rich("hero-title", {
             mark: (chunks) => <mark>{chunks}</mark>,
           })}
         </h1>
-        <p className="max-w-md text-pretty text-lg text-muted-foreground md:text-xl">
+        <p className="text-muted-foreground max-w-md text-lg text-pretty md:text-xl">
           {t("hero-tag")}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">

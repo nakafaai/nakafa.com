@@ -173,7 +173,7 @@ export function expireHostOnlySessionCookie(
 }
 
 /** The Domain attribute of a Set-Cookie value, which names the domain that the cookie reaches. */
-const DOMAIN_ATTRIBUTE = /^domain=/i;
+const DOMAIN_ATTRIBUTE = /^domain=/iu;
 
 /**
  * A Set-Cookie value without its Domain attribute, so the browser keeps the cookie

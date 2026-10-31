@@ -39,7 +39,7 @@ const MAXIMUM_FAMILY_HUE_DIFFERENCE = 0.01;
 // These graphic themes intentionally use one high-contrast outline ink for
 // both structural boundaries and controls.
 const UNIFIED_OUTLINE_PROFILES = HashSet.make("neo", "popsicle", "shell");
-const OKLCH_SYNTAX_PATTERN = /^oklch\(.+\)$/;
+const OKLCH_SYNTAX_PATTERN = /^oklch\(.+\)$/u;
 const PERCEPTIBLE_BOUNDARY_PAIRS = [
   ["--border", "--background"],
   ["--border", "--card"],

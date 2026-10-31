@@ -6,7 +6,7 @@ import { Array as Arr, Option, Schema } from "effect";
 
 type SchemaType<T extends Schema.Constraint> = Schema.Schema.Type<T>;
 type SchemaEncoded<T extends Schema.Constraint> = Schema.Codec.Encoded<T>;
-const PUBLIC_ROUTE_SEGMENT_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const PUBLIC_ROUTE_SEGMENT_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const PublicRouteSegmentSchema = Schema.String.pipe(
   Schema.check(Schema.isPattern(PUBLIC_ROUTE_SEGMENT_PATTERN)),
   Schema.brand("@Nakafa/PublicRouteSegment")

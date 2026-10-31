@@ -11,7 +11,7 @@ import { Array as Arr, HashMap, HashSet, Predicate, Tuple } from "effect";
 
 /** The two hues of one gradient, as `getTileGradient` paints them. */
 const HUES =
-  /^linear-gradient\(\d+deg,oklch\(0\.56 0\.12 (\d+)\),oklch\(0\.66 0\.125 (\d+)\)\)$/u;
+  /^linear-gradient\(\d+deg,oklch\(0\.56 0\.12 (?<hue>\d+)\),oklch\(0\.66 0\.125 (?<beside>\d+)\)\)$/u;
 /** These seeds reach every middle hue. */
 const SEEDS = Arr.makeBy(10_000, (index) => `seed-${index}`);
 /** A list of this many tiles always finds room: five tiles before it hide at most 355 of 360 hues. */

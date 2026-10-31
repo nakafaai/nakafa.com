@@ -14,12 +14,12 @@ export function Meter({
       aria-valuemax={100}
       aria-valuemin={0}
       aria-valuenow={percent}
-      className="h-1 w-full overflow-hidden rounded-full bg-muted"
+      className="bg-muted h-1 w-full overflow-hidden rounded-full"
       data-slot="meter"
       role="progressbar"
     >
       <div
-        className="h-full rounded-full bg-primary"
+        className="bg-primary h-full rounded-full"
         style={{ width: `${percent}%` }}
       />
     </div>

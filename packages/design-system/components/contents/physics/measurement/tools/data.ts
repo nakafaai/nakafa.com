@@ -7,7 +7,7 @@ import { Schema } from "effect";
 export const LENGTH_TOOL_ID = "length";
 export const MASS_TOOL_ID = "mass";
 export const TIME_TOOL_ID = "time";
-const TRAILING_DECIMAL_ZERO_PATTERN = /\.?0+$/;
+const TRAILING_DECIMAL_ZERO_PATTERN = /\.?0+$/u;
 
 export const RULER_LENGTH_CM = 8;
 const RULER_DEFAULT_LENGTH_CM = 3.8;

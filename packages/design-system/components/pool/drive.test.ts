@@ -16,7 +16,7 @@ import { createElement, Fragment, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 
 /** The place of a member's center in the pool's transform, as the drive writes it. */
-const PLACE = /translate3d\(([-\d.]+)px, ([-\d.]+)px/;
+const PLACE = /translate3d\((?<x>[-\d.]+)px, (?<y>[-\d.]+)px/u;
 
 /**
  * The frame callbacks that the drive has queued. The test stands in for motion's
@@ -65,16 +65,19 @@ let observed: () => void = () => undefined;
 
 /** A ResizeObserver that keeps its callback, so that the test reports resizes itself. */
 class ResizeObserverDouble {
+  /** Whether the drive watches its pool; the test reports the resizes itself. */
+  observing = false;
+
   constructor(callback: () => void) {
     observed = callback;
   }
 
   observe() {
-    // The test reports the resizes itself, so there is nothing to observe.
+    this.observing = true;
   }
 
   disconnect() {
-    // Nothing is observed, so there is nothing to disconnect.
+    this.observing = false;
   }
 }
 

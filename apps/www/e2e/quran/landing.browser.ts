@@ -9,7 +9,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** How far the verse's number row sits below the headers stuck to the top of the screen. Zero is right under them. */
 function readVerseGap(id: string) {
-  const anchor = document.getElementById(id);
+  const anchor = document.querySelector(`#${CSS.escape(id)}`);
   if (!anchor) {
     return Number.NaN;
   }

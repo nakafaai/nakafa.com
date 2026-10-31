@@ -25,16 +25,16 @@ export function TryoutCountdown({ expiresAt }: { expiresAt: number }) {
     ({ unit, value }) => ({ label: tTryouts(UNIT_LABELS[unit]), value })
   );
   return (
-    <section className="flex flex-col items-center gap-3 rounded-xl border bg-card p-5 shadow-sm [--number-flow-mask-height:0.125em]">
+    <section className="bg-card flex flex-col items-center gap-3 rounded-xl border p-5 shadow-sm [--number-flow-mask-height:0.125em]">
       <NumberFormatGroup>
-        <div className="items-baseline-last flex justify-center gap-2 sm:gap-3">
+        <div className="flex items-baseline-last justify-center gap-2 sm:gap-3">
           {Arr.map(segments, (segment, index) => (
             <Fragment key={segment.label}>
               <div className="grid gap-1 text-center">
-                <span className="text-muted-foreground text-xs uppercase tracking-wide">
+                <span className="text-muted-foreground text-xs tracking-wide uppercase">
                   {segment.label}
                 </span>
-                <span className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
+                <span className="text-foreground font-mono text-5xl leading-none font-light tracking-tighter tabular-nums">
                   <NumberFormat
                     aria-label={segment.label}
                     digits={index === 0 ? undefined : { 1: { max: 5 } }}
@@ -45,7 +45,7 @@ export function TryoutCountdown({ expiresAt }: { expiresAt: number }) {
                 </span>
               </div>
               {index < segments.length - 1 && (
-                <span className="pb-0.5 text-center align-middle font-light font-mono text-3xl text-muted-foreground leading-none">
+                <span className="text-muted-foreground pb-0.5 text-center align-middle font-mono text-3xl leading-none font-light">
                   :
                 </span>
               )}

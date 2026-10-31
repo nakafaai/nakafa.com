@@ -71,7 +71,7 @@ export function UpgradePlanCard() {
           <div className="flex flex-wrap items-baseline gap-x-2">
             {Arr.map(PricingCurrencySchema.literals, (currency) => (
               <CurrencyBranch currency={currency} key={currency}>
-                <span className="font-semibold text-3xl tracking-tight">
+                <span className="text-3xl font-semibold tracking-tight">
                   {getProPricingDisplay(currency).pro.text}
                 </span>
               </CurrencyBranch>

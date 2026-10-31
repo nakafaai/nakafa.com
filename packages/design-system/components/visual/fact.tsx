@@ -5,7 +5,7 @@ function VisualFact({ label, value }: { label: ReactNode; value: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
+      <dd className="text-foreground wrap-break-word">{value}</dd>
     </div>
   );
 }
@@ -21,7 +21,7 @@ function VisualFactTabular({
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
+      <dd className="text-foreground wrap-break-word tabular-nums">{value}</dd>
     </div>
   );
 }
@@ -38,7 +38,7 @@ function VisualFactIndicator({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
-      <dt className="flex items-center gap-2 text-muted-foreground">
+      <dt className="text-muted-foreground flex items-center gap-2">
         {indicatorColor ? (
           <span
             aria-hidden="true"
@@ -48,7 +48,7 @@ function VisualFactIndicator({
         ) : null}
         {label}
       </dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
+      <dd className="text-foreground wrap-break-word tabular-nums">{value}</dd>
     </div>
   );
 }

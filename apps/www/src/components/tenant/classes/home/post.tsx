@@ -57,7 +57,7 @@ export function PostRow({ post }: { post: ClassPost }) {
     <Item data-slot="post" render={<li />} variant="outline">
       <ItemHeader>
         <ItemContent className="min-w-0">
-          <ItemTitle className="wrap-anywhere line-clamp-none" dir="auto">
+          <ItemTitle className="line-clamp-none wrap-anywhere" dir="auto">
             {post.author.name}
           </ItemTitle>
           <ItemDescription>
@@ -74,14 +74,14 @@ export function PostRow({ post }: { post: ClassPost }) {
         <PostEditor onDone={() => setEditing(false)} post={post} />
       ) : (
         <p
-          className="wrap-anywhere basis-full whitespace-pre-wrap text-sm"
+          className="basis-full text-sm wrap-anywhere whitespace-pre-wrap"
           dir="auto"
         >
           {post.text}
         </p>
       )}
       {post.mine && post.email ? (
-        <p className="basis-full text-muted-foreground text-xs">
+        <p className="text-muted-foreground basis-full text-xs">
           {t("post-emailed")}
         </p>
       ) : null}

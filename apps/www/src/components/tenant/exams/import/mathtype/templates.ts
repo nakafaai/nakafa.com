@@ -70,10 +70,10 @@ const RIGHT = 0x2;
 const SUMMATION_LIMITS = 0x40;
 
 /** A superscript of apostrophes alone, which MathType users type for primes. */
-const ONLY_PRIMES = /^'+$/;
+const ONLY_PRIMES = /^'+$/u;
 
 /** A slot that holds one letter or one command, which takes the short vector arrow. */
-const SINGLE_SYMBOL = /^(?:[A-Za-z]|\\[A-Za-z]+)$/;
+const SINGLE_SYMBOL = /^(?:[A-Za-z]|\\[A-Za-z]+)$/u;
 
 /** A template that follows its base, as a script does, and one that stands as a part of its own. */
 const script = (latex: string) => ({ latex, script: true });

@@ -111,7 +111,7 @@ export function ForumDiscussion({
                 {canPost ? (
                   <ForumComposer />
                 ) : (
-                  <p className="text-center text-muted-foreground text-sm">
+                  <p className="text-muted-foreground text-center text-sm">
                     {t("read-only")}
                   </p>
                 )}

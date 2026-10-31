@@ -1,6 +1,6 @@
 import lookup from "country-code-lookup";
 
-const NUMERIC_COUNTRY_CODE_PATTERN = /^\d+$/;
+const NUMERIC_COUNTRY_CODE_PATTERN = /^\d+$/u;
 
 /**
  * Resolves numeric, ISO, or FIPS country codes while preserving unknown labels.

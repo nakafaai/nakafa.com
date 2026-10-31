@@ -10,7 +10,7 @@ import { waitForServedRoute } from "@/e2e/support/route";
 import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const lessonPath = /^\/en\/subjects\//;
+const lessonPath = /^\/en\/subjects\//u;
 
 /**
  * Most lessons render on request, and the server answers each reader with the

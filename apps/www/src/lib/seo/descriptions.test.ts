@@ -2,7 +2,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { createSEODescription } from "@/lib/seo/descriptions";
 
-const LETTER_REGEX = /^[a-zA-Z]$/;
+const LETTER_REGEX = /^[a-zA-Z]$/u;
 
 describe("createSEODescription", () => {
   describe("basic functionality", () => {

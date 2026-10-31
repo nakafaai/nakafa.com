@@ -145,12 +145,12 @@ export function PageScrollbar() {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-e-0 top-0 z-10 flex pointer-coarse:hidden h-svh w-2.5 touch-none select-none p-0.5 opacity-0 transition-opacity delay-300 hover:opacity-100 hover:delay-0 hover:duration-100 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-100 motion-reduce:transition-none"
+      className="fixed inset-e-0 top-0 z-10 flex h-svh w-2.5 touch-none p-0.5 opacity-0 transition-opacity delay-300 select-none hover:opacity-100 hover:delay-0 hover:duration-100 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-100 motion-reduce:transition-none pointer-coarse:hidden"
       data-slot="page-scrollbar"
       hidden
       ref={wirePageScrollbar}
     >
-      <div className="w-full rounded-full bg-muted-foreground" />
+      <div className="bg-muted-foreground w-full rounded-full" />
     </div>
   );
 }

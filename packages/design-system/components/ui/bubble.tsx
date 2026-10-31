@@ -6,7 +6,7 @@ import type { ComponentProps } from "react";
 
 // Source: https://ui.shadcn.com/docs/components/base/bubble
 const bubbleVariants = cva(
-  "group/bubble relative flex w-fit min-w-0 max-w-4/5 flex-col gap-1 data-[align=end]:self-end group-data-[align=end]/message:self-end",
+  "group/bubble relative flex w-fit max-w-4/5 min-w-0 flex-col gap-1 group-data-[align=end]/message:self-end data-[align=end]:self-end",
   {
     variants: {
       variant: {
@@ -48,7 +48,7 @@ export function BubbleContent({
     props: mergeProps<"div">(
       {
         className: cn(
-          "wrap-break-word w-fit min-w-0 max-w-full overflow-hidden rounded-3xl border border-transparent px-3 py-2.5 text-chat group-data-[align=end]/bubble:self-end [button,a]:outline-none [button,a]:transition-colors [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-3 [button,a]:focus-visible:ring-ring/30 [button]:text-left",
+          "text-chat [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-ring/30 w-fit max-w-full min-w-0 overflow-hidden rounded-3xl border border-transparent px-3 py-2.5 wrap-break-word group-data-[align=end]/bubble:self-end [button]:text-left [button,a]:transition-colors [button,a]:outline-none [button,a]:focus-visible:ring-3",
           className
         ),
       },

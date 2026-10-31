@@ -8,7 +8,6 @@ import en from "@repo/internationalization/dictionaries/standalone/en.json" with
 };
 import { Effect, HashSet } from "effect";
 import { NINA_SIZE } from "@/components/state/size";
-import { activateUntilVisible } from "@/e2e/support/input";
 import { expectNoOverflow } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -20,9 +19,13 @@ import {
   desktopViewport,
   touchViewport,
 } from "@/e2e/support/viewport";
+import { isTakenOver, waitUntilTakenOver } from "@/e2e/support/window";
+
+/** The window mark of the first document, which the reload of the first press replaces. */
+const FIRST_DOCUMENT = "nakafaFirstDocument";
 
 /** What a visitor must never read on this page: the error itself. */
-const ERROR_DETAILS = /ChunkLoadError|digest|5XX|\bat \w+ \(/i;
+const ERROR_DETAILS = /ChunkLoadError|digest|5XX|\bat \w+ \(/iu;
 
 /**
  * The routes that break the same way, each with the control whose first press
@@ -93,7 +96,42 @@ const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
         : route.abort("failed")
     )
   );
-  yield* activateUntilVisible(selector, heading, readinessTimeoutMilliseconds);
+  // The first press reloads the page: the first document's mark goes with it.
+  yield* Effect.promise(async () => {
+    await page.evaluate(
+      (mark) => Reflect.set(window, mark, true),
+      FIRST_DOCUMENT
+    );
+    await waitUntilTakenOver(selector);
+    await selector.click();
+    await expect
+      .poll(
+        () =>
+          page.evaluate((mark) => Reflect.get(window, mark), FIRST_DOCUMENT),
+        { timeout: readinessTimeoutMilliseconds }
+      )
+      .not.toBe(true);
+  });
+  // The press after the reload, once React has the reloaded page, meets the chunk
+  // still missing, and the page shows what broke. A chunk the reloaded page needs
+  // may be missing too, and then it shows the state before any press.
+  yield* Effect.promise(async () => {
+    await expect
+      .poll(
+        async () =>
+          (await heading.isVisible()) || (await isTakenOver(selector)),
+        {
+          timeout: readinessTimeoutMilliseconds,
+        }
+      )
+      .toBe(true);
+    if (!(await heading.isVisible())) {
+      await selector.click();
+    }
+    await expect(heading).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+  });
 
   const state = page.getByRole("main");
   yield* Effect.promise(() =>
