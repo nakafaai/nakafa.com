@@ -125,7 +125,6 @@ export const keyPartsFit = (
     Arr.some(
       interactions,
       (interaction) =>
-        interaction.id === answer.interaction &&
-        answerFits(interaction, answer)
+        interaction.id === answer.interaction && answerFits(interaction, answer)
     )
   );

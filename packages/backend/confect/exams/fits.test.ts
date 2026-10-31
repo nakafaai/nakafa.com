@@ -5,7 +5,10 @@ import {
   newChoiceAnswers,
   numericAnswers,
 } from "@repo/backend/confect/exams/question";
-import { reasonAnswers, reasonChoice } from "@repo/backend/confect/exams/reason";
+import {
+  reasonAnswers,
+  reasonChoice,
+} from "@repo/backend/confect/exams/reason";
 import { Array as Arr } from "effect";
 
 describe("exams/fits answersFit", () => {
