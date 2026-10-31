@@ -132,8 +132,7 @@ const answerOf = Effect.fn("contents.sections.answerOf")(function* (
  * model (see `EMBED_CONCURRENCY`), and several requests run at once. When the
  * model refuses every text of a batch, the probe text decides: when the model
  * takes the probe, the refused texts are left out, and when the probe fails, the
- * call fails with that failure. The build and the model test embed with this one
- * rule, each with the model it works for.
+ * call fails with that failure.
  */
 export const embedBatch = Effect.fn("contents.sections.embedBatch")(function* (
   batch: readonly Embeddable[],

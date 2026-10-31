@@ -10,9 +10,9 @@ import {
 } from "@repo/backend/confect/contents/sections/limits";
 import {
   INDEXED_SECTIONS,
+  type searchInputValidator,
   sectionScope,
 } from "@repo/backend/confect/contents/sections/schema";
-import type { searchInputValidator } from "@repo/backend/confect/contents/sections/search.spec";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { Array as Arr, Duration, Effect } from "effect";

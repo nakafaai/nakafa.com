@@ -34,7 +34,7 @@ export const hitsInputValidator = Schema.Struct({
 });
 
 /** The ranked sections, or `empty` when the index cannot answer: its build for the active release has not finished, or it holds nothing near the question. */
-export const hitsResultValidator = Schema.Union([
+const hitsResultValidator = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("empty") }),
   Schema.Struct({
     hits: Schema.Array(hitValidator),

@@ -7,7 +7,6 @@ import spec from "@repo/backend/confect/contents/sections/rows.spec";
 import { finishBuild } from "@repo/backend/confect/contents/sections/state";
 import {
   knownSections,
-  pageTexts,
   storeDocument,
 } from "@repo/backend/confect/contents/sections/store";
 import { Effect, Layer } from "effect";
@@ -60,14 +59,6 @@ const finish = FunctionImpl.make(
     return yield* finishBuild(args);
   })
 );
-const page = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "page",
-  Effect.fn("contents.sections.rows.page")(function* (args) {
-    return yield* pageTexts(args);
-  })
-);
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(lessons),
   Layer.provide(surah),
@@ -75,6 +66,5 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(save),
   Layer.provide(prune),
   Layer.provide(finish),
-  Layer.provide(page),
   GroupImpl.finalize
 );
