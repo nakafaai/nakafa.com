@@ -298,7 +298,6 @@ it("removes the learner's likes on comments with their counts, and keeps the res
   const { t, owner, retained } = await createDeletedOwner("comment-likes");
   const seeded = await t.mutation(async (ctx) => {
     const sharedComment = await ctx.db.insert("comments", {
-      likeCount: 0,
       likeCount: 2,
       replyCount: 0,
       slug: "material/algebra",
@@ -307,7 +306,6 @@ it("removes the learner's likes on comments with their counts, and keeps the res
     });
     // A like on a comment that is already gone must not stop the cleanup.
     const goneComment = await ctx.db.insert("comments", {
-      likeCount: 0,
       likeCount: 0,
       replyCount: 0,
       slug: "material/algebra",

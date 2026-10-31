@@ -262,7 +262,6 @@ describe("comments/queries", () => {
       });
       await ctx.db.insert("comments", {
         likeCount: 0,
-        likeCount: 0,
         replyCount: 0,
         slug: "articles/member",
         text: "Komentar anggota sekolah",
