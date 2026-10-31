@@ -1373,6 +1373,18 @@ export declare const api: {
         string
       >;
     };
+    people: {
+      list: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        Array<{
+          id: Id<"tenantPeople">;
+          kind: "student" | "teacher";
+          name: string;
+        }>
+      >;
+    };
     posts: {
       edit: FunctionReference<
         "mutation",

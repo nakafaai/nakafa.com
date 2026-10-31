@@ -91,8 +91,8 @@ export function SchoolHeader({
 }
 
 /**
- * The action of a school page's header that adds a record, under its name. A header too narrow for the name beside
- * the page's path keeps a plus, so the page's name stays readable, and the name stays for assistive technology.
+ * The action of a school page's header that adds a record, under its name. On a phone it keeps a plus, so the page's
+ * path stays readable beside it, and its name stays for assistive technology.
  */
 export function SchoolHeaderAdd({
   label,
@@ -104,16 +104,16 @@ export function SchoolHeaderAdd({
 }) {
   return (
     <Button
-      className="@xs/header:has-[>svg]:px-4"
+      className="@sm/header:has-[>svg]:px-4"
       onClick={onClick}
       type="button"
     >
       <HugeIcons
         aria-hidden="true"
-        className="@xs/header:hidden"
+        className="@sm/header:hidden"
         icon={Add01Icon}
       />
-      <span className="@max-xs/header:sr-only">{label}</span>
+      <span className="@max-sm/header:sr-only">{label}</span>
     </Button>
   );
 }
