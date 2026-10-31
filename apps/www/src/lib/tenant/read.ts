@@ -3,17 +3,8 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Locale } from "@repo/internationalization/src/locale";
-import {
-  Context,
-  DateTime,
-  Effect,
-  Layer,
-  Option,
-  Result,
-  Schema,
-} from "effect";
+import { Context, Effect, Layer, Option, Result, Schema } from "effect";
 import { homeAccess } from "@/components/tenant/home/access";
-import { greetingOf } from "@/components/tenant/home/greeting";
 import { httpLayer } from "@/lib/convex/http";
 import { readSchoolSignInTitle } from "@/lib/tenant/copy";
 import {
@@ -139,10 +130,8 @@ export const readSchoolFrame = Effect.fn("www.tenant.readSchoolFrame")(
     const reads = yield* SchoolReads;
     const answer = yield* reads.viewer(input.slug, input.token.value);
     if (Result.isSuccess(answer)) {
-      const now = yield* DateTime.now;
       const member: SchoolRead = {
         _tag: "Member",
-        greeting: greetingOf(answer.success, now),
         home: homeAccess(answer.success),
         locale: input.locale,
         profile: answer.success.tenant,

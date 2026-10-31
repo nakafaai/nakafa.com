@@ -101,13 +101,15 @@ async function failFirst(page: Page, failure: Failure) {
  * route fail, and checks that no error state ever shows: the page asks Convex
  * for `read` only once its connection has signed in, and Convex answers it.
  * When every attempt of the first session read fails, the page waits for the
- * session and settles when the network returns.
+ * session and settles when the network returns, at `landing`: the address
+ * itself, or the page it lands on, such as a school root's main page.
  */
 async function opensWithoutError(
   context: BrowserContext,
   address: string,
   read: string,
-  failure: Failure
+  failure: Failure,
+  landing = address
 ) {
   const page = await context.newPage();
   await watchErrorStates(page);
@@ -131,7 +133,7 @@ async function opensWithoutError(
 
   expect(changes.askedSignedOut(read)).toBe(false);
   expect(await errorStatesSeen(page)).toStrictEqual([]);
-  expect(page.url()).toBe(address);
+  expect(page.url()).toBe(landing);
   return page;
 }
 
@@ -148,6 +150,7 @@ for (const width of [390, 1440]) {
       const context = await browser.newContext();
       await Effect.runPromise(signInOwner(context, school.slug, home));
 
+      // The school's root lands the Owner on the exams, its main page: a new school's has none yet, and offers Create exam.
       for (const failure of [
         DROPPED_SESSION,
         UNAVAILABLE_SESSION,
@@ -157,10 +160,11 @@ for (const width of [390, 1440]) {
           context,
           home,
           "tenancy/viewer:get",
-          failure
+          failure,
+          hostAddress(baseURL, `${school.slug}.localhost`, "/exams")
         );
         await expect(
-          page.getByRole("region", { name: "Updates", exact: true })
+          page.getByRole("button", { name: "Create exam" })
         ).toBeVisible();
         await page.close();
       }

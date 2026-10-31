@@ -12,7 +12,6 @@ import {
 } from "@repo/backend/confect/exams/authority";
 import { examListed } from "@repo/backend/confect/exams/exam";
 import spec from "@repo/backend/confect/exams/exams.spec";
-import { readHome } from "@repo/backend/confect/exams/home/read";
 import { addQuestion } from "@repo/backend/confect/exams/questions/place";
 import { readQuestion } from "@repo/backend/confect/exams/questions/read";
 import { removeExam } from "@repo/backend/confect/exams/remove";
@@ -108,19 +107,6 @@ const list = FunctionImpl.make(
 );
 
 /**
- * The school home's exam reads: the rooms the viewer may watch that run now or open within the
- * next day. Each read is bounded, and `readHome` decides each row.
- */
-const home = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "home",
-  Effect.fn("exams.home")(function* () {
-    return yield* readHome();
-  })
-);
-
-/**
  * One exam with its questions in order, and its frozen time once a sitting of it has finished.
  * Each question is one small row, and the exam holds at most the limit of them.
  */
@@ -197,11 +183,10 @@ const cohorts = FunctionImpl.make(
   })
 );
 
-/** Implements the exams group of `exams.spec.ts`: create, list, home, open, rename, remove, schedule, and cohorts. */
+/** Implements the exams group of `exams.spec.ts`: create, list, open, rename, remove, schedule, and cohorts. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(create),
   Layer.provide(list),
-  Layer.provide(home),
   Layer.provide(open),
   Layer.provide(rename),
   Layer.provide(remove),

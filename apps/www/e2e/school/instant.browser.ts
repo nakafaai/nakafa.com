@@ -14,7 +14,7 @@ import {
 const SIDEBAR = '[data-slot="sidebar-content"]';
 
 /** The sidebar items of a manager's school, each by the address its link opens. */
-const SIDEBAR_ITEMS = ["/", "/exams", "/settings/profile"];
+const SIDEBAR_ITEMS = ["/notifications", "/exams", "/settings/profile"];
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -42,7 +42,6 @@ function managerPages(exam: string, sitting: string) {
     "/settings/roster",
     "/settings/guardians",
     "/reports",
-    "/",
   ];
 }
 
@@ -126,7 +125,7 @@ for (const viewport of [
     const studentCalls = recordServerFunctionCalls(student);
     await commitEach(
       student,
-      [`/sittings/${sitting.sittingId}`, "/"],
+      [`/sittings/${sitting.sittingId}`, "/sittings"],
       "student"
     );
 
@@ -197,18 +196,13 @@ test("a click between School pages asks the Worker nothing: each page reads its 
   await page.waitForLoadState("networkidle");
   const calls = recordServerFunctionCalls(page);
 
-  for (const path of ["/settings/units", "/settings/periods", "/", "/exams"]) {
-    const link = sidebar.locator(`a[href="${path}"]`);
-    if (path === "/") {
-      // Home sits in the school's own sidebar, which the settings replace.
-      await page.locator('[data-slot="page-header"] a[href="/"]').click();
-    } else if (path === "/exams") {
-      await sidebar.locator('a[href="/exams"]').click();
-    } else {
-      await link.click();
-    }
+  for (const path of ["/settings/units", "/settings/periods"]) {
+    await sidebar.locator(`a[href="${path}"]`).click();
     await page.waitForURL((url) => url.pathname === path);
   }
+  // The path's first link opens the school's root, which lands the Owner on the exams.
+  await page.locator('[data-slot="page-header"] a[href="/"]').click();
+  await page.waitForURL((url) => url.pathname === "/exams");
   await page.waitForLoadState("networkidle");
 
   expect(MutableList.toArray(calls)).toEqual([]);

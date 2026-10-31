@@ -41,7 +41,9 @@ export function LoginRenameDialog({
   const rename = useMutation(identity.logins.rename).withOptimisticUpdate(
     renameLoginChange
   );
-  const [loginName, setLoginName] = useState(login.loginName);
+  // The field holds what the admin typed, and the login's own name until they type.
+  const [typed, setLoginName] = useState<string | null>(null);
+  const loginName = typed ?? login.loginName;
   const next = loginName.trim().toLowerCase();
   const canSave = next !== "" && next !== login.loginName;
 

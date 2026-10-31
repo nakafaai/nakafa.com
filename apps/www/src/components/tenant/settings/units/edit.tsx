@@ -46,6 +46,54 @@ import {
 const SOURCE = "components/tenant/settings/units/edit";
 
 /**
+ * The edit's fields. Only what the teacher picks or types is kept; until then each field shows what the
+ * school holds. It also says which of the school's three changes the fields hold, and whether Save may store them.
+ */
+function useUnitDraft(unit: Unit) {
+  const [nameText, setName] = useState<string | null>(null);
+  const [levelChoice, setLevel] = useState<typeof UnitLevel.Type | null>(null);
+  const [zoneChoice, setTimeZone] = useState<string | null>(null);
+  const [languageChoice, setContentLanguage] = useState<
+    typeof AppLocaleCodeSchema.Type | null
+  >(null);
+  const [npsnText, setNpsnText] = useState<string | null>(null);
+  const name = (nameText ?? unit.name).trim();
+  const level = levelChoice ?? unit.level;
+  const timeZone = zoneChoice ?? unit.timeZone;
+  const contentLanguage = languageChoice ?? unit.contentLanguage;
+  const npsn = npsnText ?? unit.npsn ?? "";
+  const typed = npsn.trim();
+  const identityChanged = name !== unit.name || level !== unit.level;
+  const localeChanged =
+    timeZone !== unit.timeZone || contentLanguage !== unit.contentLanguage;
+  const npsnChanged = typed !== (unit.npsn ?? "");
+  const npsnValid = typed === "" ? unit.npsn === null : Schema.is(Npsn)(typed);
+  const canSave =
+    (identityChanged || localeChanged || npsnChanged) &&
+    Schema.is(UnitName)(name) &&
+    npsnValid;
+
+  return {
+    canSave,
+    contentLanguage,
+    identityChanged,
+    level,
+    localeChanged,
+    name,
+    nameText,
+    npsn,
+    npsnChanged,
+    setContentLanguage,
+    setLevel,
+    setName,
+    setNpsnText,
+    setTimeZone,
+    timeZone,
+    typed,
+  };
+}
+
+/**
  * The dialog that edits one school of the organisation: its name, its level, its time zone, the language of its pages,
  * and its NPSN. The form starts from what the school holds, Save stores only what changed and closes the dialog at
  * once, and a refused change goes back. Save waits for a name, and an NPSN is eight digits, so Save waits until the
@@ -73,29 +121,24 @@ export function UnitEditDialog({
   const setNpsn = useMutation(tenancy.units.setNpsn).withOptimisticUpdate(
     setNpsnChange
   );
-  // Only what the teacher picks or types is kept; until then each field shows what the school holds.
-  const [nameText, setName] = useState<string | null>(null);
-  const [levelChoice, setLevel] = useState<typeof UnitLevel.Type | null>(null);
-  const [zoneChoice, setTimeZone] = useState<string | null>(null);
-  const [languageChoice, setContentLanguage] = useState<
-    typeof AppLocaleCodeSchema.Type | null
-  >(null);
-  const [npsnText, setNpsnText] = useState<string | null>(null);
-  const name = (nameText ?? unit.name).trim();
-  const level = levelChoice ?? unit.level;
-  const timeZone = zoneChoice ?? unit.timeZone;
-  const contentLanguage = languageChoice ?? unit.contentLanguage;
-  const npsn = npsnText ?? unit.npsn ?? "";
-  const typed = npsn.trim();
-  const identityChanged = name !== unit.name || level !== unit.level;
-  const localeChanged =
-    timeZone !== unit.timeZone || contentLanguage !== unit.contentLanguage;
-  const npsnChanged = typed !== (unit.npsn ?? "");
-  const npsnValid = typed === "" ? unit.npsn === null : Schema.is(Npsn)(typed);
-  const canSave =
-    (identityChanged || localeChanged || npsnChanged) &&
-    Schema.is(UnitName)(name) &&
-    npsnValid;
+  const {
+    canSave,
+    contentLanguage,
+    identityChanged,
+    level,
+    localeChanged,
+    name,
+    nameText,
+    npsn,
+    npsnChanged,
+    setContentLanguage,
+    setLevel,
+    setName,
+    setNpsnText,
+    setTimeZone,
+    timeZone,
+    typed,
+  } = useUnitDraft(unit);
 
   /** Stores what changed and closes the dialog; the table shows the change at once. */
   const save = () => {

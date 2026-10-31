@@ -197,25 +197,43 @@ function answerRead(handler: AuthRouteHandler, request: Request) {
 }
 
 /**
+ * Logs why a Better Auth route failed, with the whole cause and the route's
+ * path, before the failure rejects the route. The server then answers 500 with
+ * an empty body, so this log is the only place that names the failure.
+ */
+function logRouteFailure(request: Request) {
+  return <A, E, R>(self: Effect.Effect<A, E, R>) =>
+    Effect.tapCause(self, (cause) =>
+      Effect.logError(
+        `The Better Auth route ${request.method} ${new URL(request.url).pathname} failed before it answered.`,
+        cause
+      )
+    );
+}
+
+/**
  * Builds the route methods for the Better Auth handler. A network failure that
- * is not repeated rejects the route, and the server answers 500. Reads go
- * through `answerRead`, and writes reach Better Auth with the browser's host.
- * A session read also keeps the signed-in hint (`withSessionHint`).
+ * is not repeated rejects the route, and the server answers 500, after the
+ * failure is logged (`logRouteFailure`). Reads go through `answerRead`, and
+ * writes reach Better Auth with the browser's host. A session read also keeps
+ * the signed-in hint (`withSessionHint`).
  */
 export function createAuthProxy(handler: AuthRouteHandler) {
   return {
     GET: (request: Request) =>
       runServerEffect(
-        new URL(request.url).pathname === SESSION_PATH
+        (new URL(request.url).pathname === SESSION_PATH
           ? Effect.flatMap(answerRead(handler, request), (response) =>
               withSessionHint(request, response)
             )
           : answerRead(handler, request)
+        ).pipe(logRouteFailure(request))
       ),
     POST: (request: Request) =>
       runServerEffect(
         writeAuthResponse(handler, withBrowserHost(request)).pipe(
-          answerAuthDeadline
+          answerAuthDeadline,
+          logRouteFailure(request)
         )
       ),
   };
