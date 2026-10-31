@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from "@effect/vitest";
-import { wordLists } from "@repo/design-system/components/editor/word";
+import {
+  wordLists,
+  wordPaste,
+} from "@repo/design-system/components/editor/word";
+import { Editor } from "@tiptap/core";
+import { StarterKit } from "@tiptap/starter-kit";
+import { Array as Arr } from "effect";
 
 /** One paragraph of a Word list, as Word writes it for the clipboard, with its marker drawn as text. */
 const item = (marker: string, words: string, level = 1, list = 1) =>
@@ -29,9 +35,7 @@ describe("wordLists", () => {
 
   it("nests a deeper item under the item above it", () => {
     expect(
-      wordLists(
-        item("1.", "satu") + item("o", "dalam", 2) + item("2.", "dua")
-      )
+      wordLists(item("1.", "satu") + item("o", "dalam", 2) + item("2.", "dua"))
     ).toBe(
       "<ol><li><p>satu</p><ul><li><p>dalam</p></li></ul></li><li><p>dua</p></li></ol>"
     );
@@ -63,8 +67,24 @@ describe("wordLists", () => {
   });
 
   it("leaves a styled paragraph that names no list as it is", () => {
+    expect(wordLists(`<p style='margin:0'>biasa</p>${item("·", "satu")}`)).toBe(
+      '<p style="margin:0">biasa</p><ul><li><p>satu</p></li></ul>'
+    );
+  });
+});
+
+describe("wordPaste", () => {
+  it("runs every paste of the editor through the reading of Word's lists", () => {
+    const editor = new Editor({
+      element: null,
+      extensions: [StarterKit, wordPaste],
+    });
+
     expect(
-      wordLists(`<p style='margin:0'>biasa</p>${item("·", "satu")}`)
-    ).toBe("<p style=\"margin:0\">biasa</p><ul><li><p>satu</p></li></ul>");
+      Arr.some(
+        editor.extensionManager.plugins,
+        (plugin) => plugin.props.transformPastedHTML === wordLists
+      )
+    ).toBe(true);
   });
 });

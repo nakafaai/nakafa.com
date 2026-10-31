@@ -3,7 +3,7 @@ import { Plugin } from "@tiptap/pm/state";
 import { Array as Arr, Option, String as Str } from "effect";
 
 /** What names a paragraph as an item of a Word list: its level and its list, as `mso-list:l0 level2 lfo1`. */
-const WORD_ITEM = /mso-list:\s*l\d+\s+level(\d+)\s+lfo(\d+)/u;
+const WORD_ITEM = /mso-list:\s*l\d+\s+level(?<level>\d+)\s+lfo(?<list>\d+)/u;
 
 /** A marker that counts, such as `1.`, `a)` or `(iv)`. Every other marker is a bullet. */
 const COUNTED_MARKER = /^\(?[\da-z]+[.)]/iu;
@@ -42,10 +42,15 @@ const takeMarker = (paragraph: HTMLElement): string => {
     Arr.fromIterable(paragraph.childNodes),
     (node) => !isComment(MARKER_OPENS)(node)
   );
-  const marked = Arr.takeWhile(opened, (node) => !isComment(MARKER_CLOSES)(node));
+  const marked = Arr.takeWhile(
+    opened,
+    (node) => !isComment(MARKER_CLOSES)(node)
+  );
   const marker = Arr.isReadonlyArrayNonEmpty(opened)
     ? Arr.take(opened, marked.length + 1)
-    : Arr.fromIterable(paragraph.querySelectorAll("[style*='mso-list:Ignore']"));
+    : Arr.fromIterable(
+        paragraph.querySelectorAll("[style*='mso-list:Ignore']")
+      );
   const text = Arr.join(
     Arr.map(
       Arr.filter(marker, (node) => node.nodeType !== Node.COMMENT_NODE),

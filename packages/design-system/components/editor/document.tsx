@@ -28,7 +28,7 @@ interface DocumentEditorProps {
    * The document the editor opens with, drawn from its first frame, for a caller that holds it as the editor
    * mounts and renders only in the browser. A caller without it fills the editor it receives.
    */
-  content?: JSONContent;
+  content?: JSONContent | undefined;
   /** The extensions that make the document the caller holds, built once by the caller. */
   extensions: readonly AnyExtension[];
   /** The accessible name of the editing surface. */
@@ -72,7 +72,7 @@ export function DocumentEditor({
   // The editor opens with this document, and any later one reaches it through the caller.
   const [opening] = useState(content);
   const editor = useEditor({
-    content: opening,
+    ...(opening === undefined ? {} : { content: opening }),
     editable: false,
     editorProps: {
       attributes: {

@@ -36,7 +36,9 @@ type ExamExtensions = ComponentProps<typeof DocumentEditor>["extensions"];
  */
 interface ExamDocumentWiring {
   /** The document the text opens with, when the owner holds it as the text mounts. */
-  readonly content?: ComponentProps<typeof DocumentEditor>["content"];
+  readonly content?:
+    | ComponentProps<typeof DocumentEditor>["content"]
+    | undefined;
   /** The extensions of this text, built once by the owner, on top of the shared ones. */
   readonly extensions: ExamExtensions;
   /** Called after each transaction of the text, including one another editor brought in. */

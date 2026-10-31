@@ -175,15 +175,16 @@ export function ExamText({
     saved: true,
   });
   // An empty text has nothing to draw, and its editor shows the hint at once.
-  const drawn =
-    !opened &&
-    !Option.exists(
+  const drawn = !(
+    opened ||
+    Option.exists(
       stored,
       (doc) =>
         doc.childCount === 1 &&
         doc.firstChild?.isTextblock === true &&
         doc.firstChild.childCount === 0
-    );
+    )
+  );
   const reply = useQuery(
     editors.steps.since,
     clientId === null ? "skip" : { clientId, documentId, slug, version }
