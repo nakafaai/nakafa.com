@@ -32,6 +32,7 @@ import {
 } from "@/components/state/localized";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
+import { readStandaloneMessages } from "@/lib/i18n/standalone";
 import { EARLY_PRESS_SCRIPT } from "@/lib/press/prepaint";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import {
@@ -64,6 +65,13 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { title: SOCIAL_SITE_NAME },
+      // The description of a document whose route names none, such as the
+      // School shell. A route's own description wins: the head keeps the deepest
+      // route's tag of each name.
+      {
+        name: "description",
+        content: readStandaloneMessages(DEFAULT_LOCALE).Document.description,
+      },
       { charSet: "utf-8" },
       {
         name: "viewport",
