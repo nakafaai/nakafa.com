@@ -136,6 +136,9 @@
   "SchoolRoster": {
     "import": "Impor",
     "export": "Ekspor",
+    "export-grades": "Ekspor nilai",
+    "export-grades-label": "Nilai rapor satu rombel",
+    "export-grades-empty": "Belum ada rombel di periode ini.",
     "file-label": "Daftar peserta didik Dapodik",
     "empty": "Impor siswa dari Dapodik.",
     "empty-description": "Pilih daftar peserta didik hasil ekspor Dapodik. File tetap di perangkat ini.",
@@ -750,6 +753,12 @@
       "report": {
         "locked": "Rapor dikunci"
       },
+      "graduation": {
+        "decided": "Keputusan kelulusan dicatat"
+      },
+      "letter": {
+        "locked": "SKL diterbitkan"
+      },
       "cohort": {
         "created": "Rombel ditambahkan",
         "renamed": "Rombel diganti nama",
@@ -1194,6 +1203,59 @@
     "result": "Hasil",
     "kktp-reached": "Mencapai KKTP",
     "kktp-notReached": "Belum mencapai KKTP"
+  },
+  "SchoolGraduation": {
+    "title": "Kelulusan",
+    "cohort": "Rombel",
+    "unit": "Satuan pendidikan",
+    "period": "Periode",
+    "search-cohorts": "Cari rombel",
+    "cohorts-empty": "Belum ada rombel yang lulus.",
+    "cohorts-empty-description": "Rombel tingkat akhir tiap satuan pendidikan muncul di sini setelah periodenya aktif.",
+    "search-students": "Cari peserta didik",
+    "students-empty": "Belum ada peserta didik di rombel ini.",
+    "students-empty-description": "Peserta didik muncul di sini setelah ditempatkan di rombel.",
+    "student": "Peserta didik",
+    "nisn": "NISN",
+    "nisn-yes": "Tercatat",
+    "nisn-no": "Belum ada",
+    "average": "Rata-rata",
+    "average-none": "Belum ada nilai",
+    "letter": "SKL",
+    "letter-none": "Belum terbit",
+    "letter-issued": "Sedang dibuat",
+    "letter-locked": "Terbit",
+    "letter-number": "Nomor SKL",
+    "ready": "Kesiapan",
+    "ready-ready": "Siap",
+    "ready-npsn": "NPSN belum ada",
+    "ready-decision": "Belum ada keputusan",
+    "ready-nisn": "NISN belum ada",
+    "ready-report": "Rapor belum terkunci",
+    "detail": "Kelulusan peserta didik",
+    "detail-empty": "Pilih peserta didik untuk melihat data transkripnya.",
+    "transcript-empty": "Belum ada rapor terkunci, jadi belum ada data transkrip.",
+    "subject": "Mata pelajaran",
+    "value": "Nilai",
+    "open-letter": "Buka SKL",
+    "open-check": "Buka halaman periksa",
+    "decide": "Keputusan kelulusan",
+    "decide-description": "Keputusan kepala satuan pendidikan untuk {period}, yang berlaku bagi semua rombel tingkat akhir.",
+    "decision": "Nomor keputusan",
+    "decision-placeholder": "421.3/045/SMP.1/2027",
+    "date": "Tanggal kelulusan",
+    "date-placeholder": "Pilih tanggal",
+    "date-description": "Senin pertama Juni untuk SD dan SMP atau Mei untuk SMA dan SMK, digeser bila jatuh pada hari libur.",
+    "place": "Tempat terbit",
+    "place-placeholder": "Bandung",
+    "head": "Kepala satuan pendidikan",
+    "head-placeholder": "Nama dengan gelar",
+    "nip": "NIP",
+    "nip-placeholder": "18 digit",
+    "nip-description": "Kosongkan bila kepala satuan pendidikan bukan ASN.",
+    "save-decision": "Simpan keputusan",
+    "issue": "Terbitkan SKL",
+    "export-readiness": "Ekspor untuk e-Ijazah"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",
@@ -2538,6 +2600,33 @@
     },
     "school-own-role-ended": {
       "title": "Peranmu sudah berakhir."
+    },
+    "school-letters-issued": {
+      "title": "SKL sudah diterbitkan.",
+      "description": "Tiap PDF siap setelah barisnya menunjukkan Terbit."
+    },
+    "school-letters-none": {
+      "title": "Tidak ada SKL yang diterbitkan.",
+      "description": "Kolom Kesiapan menunjukkan yang masih dibutuhkan tiap peserta didik."
+    },
+    "school-graduation-export-failed": {
+      "title": "Berkas tidak tersimpan."
+    },
+    "school-refusal-graduation-date": {
+      "title": "Tanggal ini tidak ada di kalender.",
+      "description": "Pilih hari yang ada untuk kelulusan."
+    },
+    "school-refusal-graduation-issued": {
+      "title": "Keputusan ini sudah dipakai.",
+      "description": "SKL sudah terbit dengan keputusan ini, jadi keputusannya tetap."
+    },
+    "school-refusal-graduation-not-final": {
+      "title": "Rombel ini bukan rombel kelulusan.",
+      "description": "Hanya tingkat akhir satuan pendidikan yang lulus."
+    },
+    "school-refusal-graduation-undecided": {
+      "title": "Belum ada keputusan kelulusan.",
+      "description": "Catat keputusannya sebelum menerbitkan SKL."
     }
   },
   "Ai": {
@@ -3040,14 +3129,18 @@
     "course-name": "{name} {section}"
   },
   "ReportCheck": {
-    "locked": "Rapor ini tercatat.",
-    "locked-description": "Kodenya milik rapor yang dikunci sekolah.",
-    "unknown": "Tidak ada rapor dengan kode ini.",
+    "locked-report": "Rapor ini tercatat.",
+    "locked-report-description": "Kodenya milik rapor yang dikunci sekolah.",
+    "locked-letter": "SKL ini tercatat.",
+    "locked-letter-description": "Kodenya milik SKL yang diterbitkan sekolah.",
+    "unknown": "Tidak ada dokumen dengan kode ini.",
     "unknown-description": "Periksa alamatnya, atau tanyakan sekolah yang menerbitkannya.",
     "school": "Sekolah",
     "kind": "Dokumen",
     "kind-report": "Rapor",
+    "kind-letter": "Surat Keterangan Lulus",
     "period": "Periode",
-    "approved": "Disetujui pada"
+    "approved": "Disetujui pada",
+    "issued": "Diterbitkan pada"
   }
 }

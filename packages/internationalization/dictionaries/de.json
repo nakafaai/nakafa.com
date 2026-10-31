@@ -136,6 +136,9 @@
   "SchoolRoster": {
     "import": "Importieren",
     "export": "Exportieren",
+    "export-grades": "Noten exportieren",
+    "export-grades-label": "Zeugnisnoten einer Klasse",
+    "export-grades-empty": "Keine Klasse in diesem Zeitraum.",
     "file-label": "Schülerliste aus Dapodik",
     "empty": "Importiere die Schüler aus Dapodik.",
     "empty-description": "Wähle die Schülerliste, die Dapodik exportiert hat. Die Datei bleibt auf diesem Gerät.",
@@ -750,6 +753,12 @@
       "report": {
         "locked": "Zeugnis gesperrt"
       },
+      "graduation": {
+        "decided": "Abschlussbeschluss erfasst"
+      },
+      "letter": {
+        "locked": "SKL ausgestellt"
+      },
       "cohort": {
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
@@ -1194,6 +1203,59 @@
     "result": "Ergebnis",
     "kktp-reached": "KKTP erreicht",
     "kktp-notReached": "KKTP nicht erreicht"
+  },
+  "SchoolGraduation": {
+    "title": "Abschluss",
+    "cohort": "Klasse",
+    "unit": "Einheit",
+    "period": "Zeitraum",
+    "search-cohorts": "Klassen suchen",
+    "cohorts-empty": "Noch keine Klasse schließt ab.",
+    "cohorts-empty-description": "Die Klassen der letzten Stufe jeder Einheit erscheinen hier, sobald ihr Zeitraum aktiv ist.",
+    "search-students": "Schüler suchen",
+    "students-empty": "Noch kein Schüler in dieser Klasse.",
+    "students-empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
+    "student": "Schüler",
+    "nisn": "NISN",
+    "nisn-yes": "Erfasst",
+    "nisn-no": "Fehlt",
+    "average": "Durchschnitt",
+    "average-none": "Keine Noten",
+    "letter": "SKL",
+    "letter-none": "Nicht ausgestellt",
+    "letter-issued": "Wird erstellt",
+    "letter-locked": "Ausgestellt",
+    "letter-number": "SKL-Nummer",
+    "ready": "Bereitschaft",
+    "ready-ready": "Bereit",
+    "ready-npsn": "NPSN der Einheit fehlt",
+    "ready-decision": "Noch kein Beschluss",
+    "ready-nisn": "NISN fehlt",
+    "ready-report": "Kein gesperrtes Zeugnis",
+    "detail": "Abschluss des Schülers",
+    "detail-empty": "Wähle einen Schüler, um seine Notenübersicht zu sehen.",
+    "transcript-empty": "Noch kein gesperrtes Zeugnis, daher noch keine Notenübersicht.",
+    "subject": "Fach",
+    "value": "Wert",
+    "open-letter": "SKL öffnen",
+    "open-check": "Prüfseite öffnen",
+    "decide": "Abschlussbeschluss",
+    "decide-description": "Der Beschluss der Schulleitung für {period}, der für alle Abschlussklassen der Einheit gilt.",
+    "decision": "Beschlussnummer",
+    "decision-placeholder": "421.3/045/SMP.1/2027",
+    "date": "Abschlussdatum",
+    "date-placeholder": "Datum wählen",
+    "date-description": "Der erste Montag im Juni für SD und SMP oder im Mai für SMA und SMK, bei einem Feiertag verschoben.",
+    "place": "Ausstellungsort",
+    "place-placeholder": "Bandung",
+    "head": "Schulleitung",
+    "head-placeholder": "Name mit Titeln",
+    "nip": "NIP",
+    "nip-placeholder": "18 Ziffern",
+    "nip-description": "Leer lassen, wenn die Schulleitung nicht verbeamtet ist.",
+    "save-decision": "Beschluss speichern",
+    "issue": "SKL ausstellen",
+    "export-readiness": "Für e-Ijazah exportieren"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -2538,6 +2600,33 @@
     },
     "school-own-role-ended": {
       "title": "Deine Rolle ist beendet."
+    },
+    "school-letters-issued": {
+      "title": "Die SKL sind ausgestellt.",
+      "description": "Jedes PDF ist bereit, sobald seine Zeile Ausgestellt zeigt."
+    },
+    "school-letters-none": {
+      "title": "Keine SKL wurde ausgestellt.",
+      "description": "Die Spalte Bereitschaft zeigt, was jedem Schüler noch fehlt."
+    },
+    "school-graduation-export-failed": {
+      "title": "Die Datei wurde nicht gespeichert."
+    },
+    "school-refusal-graduation-date": {
+      "title": "Dieses Datum gibt es nicht.",
+      "description": "Wähle einen echten Tag für den Abschluss."
+    },
+    "school-refusal-graduation-issued": {
+      "title": "Der Beschluss ist schon in Gebrauch.",
+      "description": "Mit ihm sind SKL ausgestellt, daher bleibt er, wie er ist."
+    },
+    "school-refusal-graduation-not-final": {
+      "title": "Diese Klasse schließt nicht ab.",
+      "description": "Nur die letzte Stufe einer Einheit schließt ab."
+    },
+    "school-refusal-graduation-undecided": {
+      "title": "Noch kein Abschlussbeschluss.",
+      "description": "Erfasse den Beschluss, bevor du SKL ausstellst."
     }
   },
   "Ai": {
@@ -3040,14 +3129,18 @@
     "course-name": "{name} {section}"
   },
   "ReportCheck": {
-    "locked": "Dieses Zeugnis ist erfasst.",
-    "locked-description": "Sein Code gehört zu einem Zeugnis, das die Schule gesperrt hat.",
-    "unknown": "Kein Zeugnis hat diesen Code.",
+    "locked-report": "Dieses Zeugnis ist erfasst.",
+    "locked-report-description": "Sein Code gehört zu einem Zeugnis, das die Schule gesperrt hat.",
+    "locked-letter": "Diese Abschlussbescheinigung ist erfasst.",
+    "locked-letter-description": "Ihr Code gehört zu einer SKL, die die Schule ausgestellt hat.",
+    "unknown": "Kein Dokument hat diesen Code.",
     "unknown-description": "Prüfe die Adresse oder frag die Schule, die es ausgestellt hat.",
     "school": "Schule",
     "kind": "Dokument",
     "kind-report": "Zeugnis",
+    "kind-letter": "Abschlussbescheinigung (SKL)",
     "period": "Zeitraum",
-    "approved": "Genehmigt am"
+    "approved": "Genehmigt am",
+    "issued": "Ausgestellt am"
   }
 }

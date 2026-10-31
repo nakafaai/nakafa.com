@@ -2,6 +2,7 @@ import { QueryResult } from "@confect/react";
 import {
   Certificate01Icon,
   Home01Icon,
+  MortarboardIcon,
   TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import {
@@ -174,10 +175,12 @@ function TenantPaletteRow({
  * viewer who may manage the school.
  */
 function usePaletteGroups(): readonly PaletteGroup[] {
-  const { canManage, canOpenExams, canOpenReports, slug } = useTenant();
+  const { canManage, canOpenExams, canOpenGraduation, canOpenReports, slug } =
+    useTenant();
   const classes = useMyClasses();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
+  const tGraduation = useTranslations("SchoolGraduation");
   const tReports = useTranslations("SchoolReports");
   const tSettings = useTranslations("SchoolSettings");
 
@@ -215,6 +218,21 @@ function usePaletteGroups(): readonly PaletteGroup[] {
               from: LOCALE_ROUTE,
               params: { slug },
               to: "/school/$slug/reports",
+            },
+          } satisfies PaletteItem,
+        ]
+      : []),
+    ...(canOpenGraduation
+      ? [
+          {
+            icon: { hugeicon: MortarboardIcon },
+            key: "graduation",
+            label: tGraduation("title"),
+            place: undefined,
+            target: {
+              from: LOCALE_ROUTE,
+              params: { slug },
+              to: "/school/$slug/graduation",
             },
           } satisfies PaletteItem,
         ]

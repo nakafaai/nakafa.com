@@ -46,6 +46,7 @@ import {
   type SheetProblem,
   studentsOf,
 } from "@/components/tenant/roster/dapodik";
+import { RosterGradesExport } from "@/components/tenant/roster/grades";
 import {
   RosterUnitChoice,
   RosterUnitProvider,
@@ -360,6 +361,7 @@ function RosterImportOfPeriod({
             )}
             {t("export")}
           </Button>
+          <RosterGradesExport periodId={periodId} />
           <Button
             disabled={isReading}
             onClick={() => input.current?.click()}

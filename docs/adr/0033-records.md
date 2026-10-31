@@ -236,6 +236,8 @@ Only the release and the lock are journaled.
 | `grade.released` | `grade` | IDs and the state `released` | Yes, to the notifications consumer and to webhooks |
 | `scheme.stored` | `tenant` | The ID of the stored version | No |
 | `report.locked` | `report` | IDs and the PDF hash | No, until the exports consumer exists |
+| `graduation.decided` | `period` | Nothing but the type (S6) | No |
+| `letter.locked` | `cohort` | The SKL's ID and its PDF hash (S6) | No |
 
 ## Consequences
 
@@ -393,16 +395,17 @@ instead of a pilot school's file. These sources set the rules below:
    and a locked report card in the class group; the others stay out and the readiness list
    says why. A letter copies the decision, the school, its NPSN, the class group, the
    student's name, and the transcript values with their average, takes the SHA-256 of that
-   content with its own ID (`records/letter.ts`), and is locked once its PDF is stored, as a
-   report card is. Its number is the decision's number and the letter's place in the period,
+   content with the graduation's ID (`records/letter.ts`), and is locked once its PDF is
+   stored, as a report card is. Its number is the decision's number and the letter's place in the period,
    `{decision}/{001}`, so every student's number differs (Kepmendikdasmen 177/2026 asks for a
    distinct number per student). The PDF is in Indonesian whatever the unit's language,
    states the decision, the student's name, NISN, and class group, lists the subjects and the
    average, and carries the head's name and NIP or a dash, the hash, and the QR of
    `{SITE_ORIGIN}/{locale}/verify/{hash}`. It holds no place or date of birth: Nakafa stores
    neither (ADR 0034), the NISN names the student nationally, and the e-Ijazah takes the
-   identity Dukcapil matched from Dapodik. The lock is journaled as `letter.locked` with the
-   hash. A correction of an issued letter is a later slice.
+   identity Dukcapil matched from Dapodik. An SKL is read through its class group's page, so
+   the lock is journaled on the class group as `letter.locked`, with the letter's ID and hash.
+   A correction of an issued letter is a later slice.
 5. **The check.** The public check answers a locked SKL as it answers a report: the school,
    the kind `letter`, the period, and the date of issue, and nothing about the student.
 6. **The e-Ijazah readiness export.** For one class group, an XLSX file in Indonesian with one
@@ -419,7 +422,8 @@ instead of a pilot school's file. These sources set the rules below:
    the locked report cards to paste from: a Legger sheet with No, Nama Peserta Didik, NISN,
    and one column per subject, and one sheet per subject with No, Nama Peserta Didik, NISN,
    and Nilai, in the order of the students' names. The values are the report values as
-   locked.
+   locked. The Dapodik page of the School settings, where the Admin and Staff already import
+   and export the student list, saves it for any class group of the active period.
 
 Who may act:
 
@@ -428,4 +432,5 @@ Who may act:
 | Record or change the graduation decision (`graduation.decide` on a period) | The principal |
 | Issue the SKL of a class group (`graduation.issue` on a cohort) | The principal |
 | Open the graduation pages, the transcript data, the SKL files, and the readiness export (`graduation.view` on a cohort) | The principal, the Admin, and Staff (Staf TU), who keep the Dapodik and e-Ijazah data |
+| Offer the graduation pages in the sidebar (`graduation.open` on a unit) | The principal, the Admin, and Staff |
 | Export a class group's report data for Dapodik (`report.export` on a cohort) | The principal, the Admin, and Staff |

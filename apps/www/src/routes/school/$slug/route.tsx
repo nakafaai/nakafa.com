@@ -18,6 +18,7 @@ import { useRouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
+import { canOpenGraduation } from "@/components/tenant/graduation/access";
 import { TenantMissing } from "@/components/tenant/missing";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -168,6 +169,7 @@ function SchoolLayout(): ReactElement {
         account={viewer.account}
         canManage={canManageSchool(viewer.can)}
         canOpenExams={canOpenExams(viewer)}
+        canOpenGraduation={canOpenGraduation(viewer)}
         canOpenReports={canOpenReports(viewer)}
         greeting={school.greeting}
         home={school.home}

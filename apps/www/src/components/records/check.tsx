@@ -5,13 +5,13 @@ import { DateTime } from "effect";
 import { useTranslations } from "use-intl";
 import { EntryShellBody } from "@/components/entry/shell";
 
-/** The answer of the public check of a report card's hash. */
+/** The answer of the public check of a report card's or an SKL's hash. */
 type CheckAnswer = Ref.Returns<typeof records.checks.report>;
 
 /**
- * The public check of a report card's QR code (ADR 0033, S5): a locked report shows its
- * school, the kind of document, its period, and its approval date, and nothing about its
- * student. Any other hash reads the same not-found sentence.
+ * The public check of a report card's or an SKL's QR code (ADR 0033, S5 and S6): a locked
+ * document shows its school, its kind, its period, and the date it was approved or issued, and
+ * nothing about its student. Any other hash reads the same not-found sentence.
  */
 export function ReportCheck({ answer }: { answer: CheckAnswer }) {
   const t = useTranslations("ReportCheck");
@@ -31,17 +31,21 @@ export function ReportCheck({ answer }: { answer: CheckAnswer }) {
     <EntryShellBody>
       <Nina act="waving" label="" size={96} whole />
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="font-semibold text-xl">{t("locked")}</h1>
-        <p className="text-muted-foreground">{t("locked-description")}</p>
+        <h1 className="font-semibold text-xl">{t(`locked-${answer.kind}`)}</h1>
+        <p className="text-muted-foreground">
+          {t(`locked-${answer.kind}-description`)}
+        </p>
       </div>
       <dl className="grid w-full grid-cols-2 gap-x-4 gap-y-2 text-sm">
         <dt className="text-muted-foreground">{t("school")}</dt>
         <dd className="text-right font-medium">{answer.school}</dd>
         <dt className="text-muted-foreground">{t("kind")}</dt>
-        <dd className="text-right font-medium">{t("kind-report")}</dd>
+        <dd className="text-right font-medium">{t(`kind-${answer.kind}`)}</dd>
         <dt className="text-muted-foreground">{t("period")}</dt>
         <dd className="text-right font-medium">{answer.period}</dd>
-        <dt className="text-muted-foreground">{t("approved")}</dt>
+        <dt className="text-muted-foreground">
+          {t(answer.kind === "report" ? "approved" : "issued")}
+        </dt>
         <dd className="text-right font-medium tabular-nums">
           {DateTime.formatIsoDateUtc(DateTime.makeUnsafe(answer.approvedAt))}
         </dd>

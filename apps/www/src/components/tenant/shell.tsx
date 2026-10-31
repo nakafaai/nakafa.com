@@ -271,6 +271,7 @@ export function TenantShell({
   account,
   canManage,
   canOpenExams,
+  canOpenGraduation,
   canOpenReports,
   children,
   greeting,
@@ -283,6 +284,7 @@ export function TenantShell({
   account: typeof ViewerAccount.Type;
   canManage: boolean;
   canOpenExams: boolean;
+  canOpenGraduation: boolean;
   canOpenReports: boolean;
   children: ReactNode;
   greeting: Greeting;
@@ -298,6 +300,7 @@ export function TenantShell({
         value={{
           canManage,
           canOpenExams,
+          canOpenGraduation,
           canOpenReports,
           greeting,
           logo: profile.logo,
