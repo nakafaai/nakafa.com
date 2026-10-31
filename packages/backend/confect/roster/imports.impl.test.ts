@@ -91,7 +91,6 @@ describe("roster/imports applySourced", () => {
         );
         expect(entry.sourcedId).toEqual(expect.any(String));
         expect(entry.sourcedId).not.toBe("user-1");
-        expect(entry.underAgeLimit).toBeUndefined();
       })
   );
 
@@ -117,10 +116,7 @@ describe("roster/imports applySourced", () => {
               .table("tenantPeople")
               .get(person?._id ?? fixture.people.student.personId)
               .pipe(Effect.orDie);
-            yield* writeRosterEntry(keys, row, {
-              nisn: Option.some(NISN),
-              underAgeLimit: true,
-            });
+            yield* writeRosterEntry(keys, row, NISN);
           })
         );
 
@@ -181,13 +177,11 @@ describe("roster/imports", () => {
             cohortName: "vii-a",
             name: "Raka Pratama",
             nisn: NISN,
-            underAgeLimit: true,
           },
           {
             cohortName: "IX-Z",
             name: "Sari Dewi",
             nisn: SECOND,
-            underAgeLimit: false,
           },
         ];
         const summary = yield* fixture
@@ -204,7 +198,7 @@ describe("roster/imports", () => {
             personId: raka?._id ?? fixture.invited,
             slug: nf,
           })
-        ).toMatchObject({ hasNisn: true, underAgeLimit: true });
+        ).toMatchObject({ hasNisn: true });
         const placements = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
             reader
@@ -241,12 +235,11 @@ describe("roster/imports", () => {
         yield* asStaffSchool(fixture);
         const term = yield* period(fixture, fixture.units.smp);
         yield* cohort(fixture, term.id, "VII-A");
-        yield* setRoster(fixture, { nisn: NISN, underAgeLimit: true });
+        yield* setRoster(fixture, NISN);
         const row = {
           cohortName: "VII-A",
           name: "Nama Lain",
           nisn: NISN,
-          underAgeLimit: false,
         };
         const first = yield* fixture
           .as("admin")
@@ -258,11 +251,11 @@ describe("roster/imports", () => {
             personId: fixture.people.student.personId,
             slug: nf,
           })
-        ).toMatchObject({ underAgeLimit: false });
+        ).toMatchObject({ hasNisn: true });
         // A second file without the class group column changes the row and moves no one.
         const again = yield* fixture.as("admin").mutation(apply, {
           periodId: term.id,
-          rows: [{ name: row.name, nisn: NISN, underAgeLimit: false }],
+          rows: [{ name: row.name, nisn: NISN }],
           slug: nf,
         });
         expect(again).toEqual({ added: 0, changed: 1, skipped: 0 });
@@ -274,7 +267,7 @@ describe("roster/imports", () => {
       const fixture = yield* tenancyFixture;
       yield* asStaffSchool(fixture);
       const term = yield* period(fixture, fixture.units.smp);
-      yield* setRoster(fixture, { nisn: NISN, underAgeLimit: true });
+      yield* setRoster(fixture, NISN);
       yield* fixture.run(
         Effect.flatMap(DatabaseWriter, (writer) =>
           writer
@@ -285,7 +278,7 @@ describe("roster/imports", () => {
       expect(
         yield* fixture.as("admin").mutation(apply, {
           periodId: term.id,
-          rows: [{ name: "Student", nisn: NISN, underAgeLimit: true }],
+          rows: [{ name: "Student", nisn: NISN }],
           slug: nf,
         })
       ).toEqual({ added: 0, changed: 0, skipped: 1 });
@@ -297,7 +290,7 @@ describe("roster/imports", () => {
       const fixture = yield* tenancyFixture;
       yield* asStaffSchool(fixture);
       const term = yield* period(fixture, fixture.units.smp);
-      const rows = [{ name: "Raka", nisn: NISN, underAgeLimit: true }];
+      const rows = [{ name: "Raka", nisn: NISN }];
       for (const account of ["teacher", "student"] as const) {
         expect(
           yield* Effect.flip(
@@ -334,7 +327,6 @@ describe("roster/imports", () => {
               cohortName: "VII-A",
               name: "Raka Pratama",
               nisn: NISN,
-              underAgeLimit: true,
             },
           ],
           slug: nf,
@@ -346,8 +338,6 @@ describe("roster/imports", () => {
             personId: fixture.people.student.personId,
             slug: nf,
           });
-        // A roster row that holds only the age flag exports no NISN.
-        yield* setRoster(fixture, { underAgeLimit: true });
         const page = yield* fixture.as("counselor").query(list, {
           paginationOpts: { cursor: null, numItems: 10 },
           periodId: term.id,

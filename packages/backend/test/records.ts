@@ -111,6 +111,5 @@ export const complete = Effect.fn("test.records.complete")(function* (
     nisn: NISN,
     personId: fixture.people.student.personId,
     slug: nf,
-    underAgeLimit: true,
   });
 });

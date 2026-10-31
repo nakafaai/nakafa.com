@@ -2,10 +2,21 @@ import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import { useMounted } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option } from "effect";
-import { createContext, lazy, Suspense, use, useTransition } from "react";
+import {
+  createContext,
+  lazy,
+  Suspense,
+  use,
+  useEffect,
+  useEffectEvent,
+  useState,
+  useTransition,
+} from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { createStore, type StoreApi, useStore } from "zustand";
 import { useLiveSession } from "@/components/providers/live";
 import { reportClientException } from "@/lib/analytics/client";
 import {
@@ -33,13 +44,41 @@ export function usePricingButtonVariant() {
   return variant;
 }
 
-function LoadingButton() {
+/** Whether the Pro action was pressed before the page knew what the press should do. */
+const PricingPressContext = createContext<StoreApi<boolean> | null>(null);
+
+/** Reads the press the Pro action holds, and the two ways it changes. */
+export function usePricingPress() {
+  const store = use(PricingPressContext);
+  if (store === null) {
+    throw new Error("usePricingPress must be used within PricingButton");
+  }
+  return {
+    hold: () => store.setState(true, true),
+    isHeld: useStore(store),
+    release: () => store.setState(false, true),
+  };
+}
+
+/**
+ * The Pro action before the page knows the session. It is in the page's HTML at rest, so a press before
+ * React takes the page over counts once React mounts it, and the action the session asks for answers it.
+ */
+function PendingButton() {
   const variant = usePricingButtonVariant();
+  const locale = useLocale();
   const t = useTranslations("Pricing");
+  const { hold, isHeld } = usePricingPress();
+  const press = useEarlyPress<HTMLButtonElement>(hold);
 
   return (
-    <Button className="w-full" disabled variant={variant}>
-      <Spinner icon={Diamond02Icon} isLoading />
+    <Button
+      {...press}
+      className="w-full"
+      disabled={!isActiveLocale(locale)}
+      variant={variant}
+    >
+      <Spinner icon={Diamond02Icon} isLoading={isHeld} />
       {t("pro-cta")}
     </Button>
   );
@@ -91,6 +130,7 @@ function VisitorButton() {
   const locale = useLocale();
   const t = useTranslations("Pricing");
   const [isPending, startTransition] = useTransition();
+  const { isHeld, release } = usePricingPress();
 
   const handleSignIn = () => {
     if (!isActiveLocale(locale)) {
@@ -109,6 +149,15 @@ function VisitorButton() {
       }
     });
   };
+  const answerPress = useEffectEvent(() => {
+    release();
+    handleSignIn();
+  });
+  useEffect(() => {
+    if (isHeld) {
+      answerPress();
+    }
+  }, [isHeld]);
 
   return (
     <Button
@@ -117,7 +166,7 @@ function VisitorButton() {
       onClick={handleSignIn}
       variant={variant}
     >
-      <Spinner icon={Diamond02Icon} isLoading={isPending} />
+      <Spinner icon={Diamond02Icon} isLoading={isPending || isHeld} />
       {t("pro-cta")}
     </Button>
   );
@@ -129,9 +178,13 @@ function VisitorButton() {
  * mounted, so the first HTML and the hydration both render the visitor's action.
  */
 export function PricingButton({ variant }: { variant: PricingButtonVariant }) {
+  const [press] = useState(() => createStore<boolean>()(() => false));
+
   return (
     <PricingButtonVariantContext value={variant}>
-      <PricingAction />
+      <PricingPressContext value={press}>
+        <PricingAction />
+      </PricingPressContext>
     </PricingButtonVariantContext>
   );
 }
@@ -143,16 +196,16 @@ function PricingAction() {
   const isSessionPending = useLiveSession((state) => state.isPending);
 
   if (!mounted) {
-    return <LoadingButton />;
+    return <PendingButton />;
   }
 
   if (Option.isNone(client)) {
     // A signed-in page's session is still loading, so its Pro action waits instead of offering sign-in.
-    return isSessionPending ? <LoadingButton /> : <VisitorButton />;
+    return isSessionPending ? <PendingButton /> : <VisitorButton />;
   }
 
   return (
-    <Suspense fallback={<LoadingButton />}>
+    <Suspense fallback={<PendingButton />}>
       <BillingButton client={client.value} />
     </Suspense>
   );

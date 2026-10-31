@@ -96,6 +96,12 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   const points = row.getByRole("textbox", {
     name: `Points of ${LEARNER_NAME}`,
   });
+  // Escape takes a slip back and leaves the sheet open, since the teacher is still reading the answers.
+  const shown = await points.inputValue();
+  await points.fill("99");
+  await points.press("Escape");
+  await expect(points).toHaveValue(shown);
+  await expect(questions).toBeVisible();
   await points.fill("3");
   await points.press("Enter");
   await expect(row).toContainText("Partly correct");

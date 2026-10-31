@@ -253,7 +253,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
         <Suspense
           fallback={
             <QuestionPaper selected={chosen}>
-              <PreviewProse article doc={prompt} size="page" />
+              <PreviewProse article doc={prompt} size="paper" />
               <PaperSketch question={question} withControls />
             </QuestionPaper>
           }
@@ -267,7 +267,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
         </Suspense>
       ) : (
         <QuestionPaper selected={chosen}>
-          <PreviewProse article doc={prompt} size="page" />
+          <PreviewProse article doc={prompt} size="paper" />
           <PaperSketch question={question} withControls />
         </QuestionPaper>
       )}
@@ -369,6 +369,7 @@ function LivePaper({
         <ExamDocument
           label={t("question-text", { number })}
           placeholder={t("prompt-placeholder")}
+          size="paper"
         />
       </ExamText>
       {match === null ? null : (
