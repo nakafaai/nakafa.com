@@ -87,16 +87,25 @@ test("the teacher's canvas reaches the screen's edge, and its paper shows each m
   await expect(keys).toHaveText("Choose");
   expect(await keys.evaluate(fitsWhole)).toBe(true);
 
-  // A true or false table's column headings stand on the line of the statements' heading.
+  // A true or false table's column headings stand on the line of the statements' heading. Each column is
+  // given its words first, as a teacher writes them: an empty editor holds only a line break, whose box is
+  // not the box of any words.
   await page.getByRole("button", { name: "Question type: Matching" }).click();
   await page
     .getByRole("menuitemradio", { name: "True or false table" })
     .click();
-  for (const column of ["A", "B"]) {
+  for (const [column, words] of [
+    ["A", "Benar"],
+    ["B", "Salah"],
+  ] as const) {
     const heading = page.getByRole("textbox", {
       name: `Question 1, column ${column}`,
     });
-    await expect(heading).toBeVisible();
+    await expect(heading).toBeEditable();
+    await heading.click();
+    await page.keyboard.press("ControlOrMeta+A");
+    await page.keyboard.type(words);
+    await expect(heading).toHaveText(words);
     const lines = await heading.evaluate(headingLines);
     expect(lines.column).toBe(lines.statements);
     // The heading reads as the student's paper reads it.
