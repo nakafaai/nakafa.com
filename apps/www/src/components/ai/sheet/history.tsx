@@ -61,7 +61,6 @@ function SheetHistoryContent() {
           const isPrivate = chat.visibility === "private";
           return (
             <DropdownMenuItem
-              className="cursor-pointer"
               key={chat._id}
               onClick={() => {
                 setActiveChatId(chat._id);

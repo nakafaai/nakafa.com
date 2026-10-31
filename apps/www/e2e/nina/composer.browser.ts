@@ -20,6 +20,8 @@ const SCRIPTS = /\/assets\/.*\.js/;
 /** What the learner types before the page answers. */
 const EARLY_TEXT = "A question typed before the page answers";
 
+/** The answer that hands a signed-in page its Convex token. */
+const TOKEN_ANSWER = "/api/auth/convex/token";
 /** Better Auth's answer for the session, which a test holds back. */
 const SESSION_ANSWER = "**/api/auth/get-session**";
 
@@ -114,6 +116,18 @@ const verifyComposer = Effect.fn("NakafaE2E.verifyNinaComposer")(function* (
   yield* Effect.promise(() => input.fill(""));
 });
 
+/** Runs a navigation and waits for the signed-in session's Convex token that the page asks for. */
+const settled = Effect.fn("NakafaE2E.settledSession")(function* <E>(
+  page: Page,
+  navigate: Effect.Effect<unknown, E>
+) {
+  const token = page.waitForResponse((response) =>
+    response.url().endsWith(TOKEN_ANSWER)
+  );
+  yield* navigate;
+  yield* Effect.promise(() => token);
+});
+
 const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
   page: Page,
   origin: string
@@ -121,13 +135,21 @@ const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
   // A visitor's attach button asks for sign-in, so a learner attaches.
   yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), origin);
-  yield* Effect.promise(() => page.goto("/en"));
+  // Each surface is checked once the learner's session has settled, with its
+  // Convex token: an attach pressed earlier is held, which its own cases check.
+  yield* settled(
+    page,
+    Effect.promise(() => page.goto("/en"))
+  );
   yield* verifyComposer(page.locator(NINA_SECTION));
 
-  yield* Effect.promise(() => page.goto(CHAT_PATH));
+  yield* settled(
+    page,
+    Effect.promise(() => page.goto(CHAT_PATH))
+  );
   yield* verifyComposer(page.locator("main"));
 
-  yield* openSheet(page);
+  yield* settled(page, openSheet(page));
   // The composer is in the sheet from its first frame, so its geometry is
   // read once the sheet has stopped sliding.
   yield* waitForSlide(page.locator(SHEET_POPUP));

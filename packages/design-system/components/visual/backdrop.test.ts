@@ -35,7 +35,7 @@ function renderPage() {
 
 /**
  * Lays the root out between `left` and `right` of a viewport `viewport`
- * pixels wide, the way gutters or an open scrollbar narrow it.
+ * pixels wide, the way a pinch-zoomed phone or an open scrollbar narrows it.
  */
 function layOutRoot(left: number, right: number, viewport = VIEWPORT_WIDTH) {
   vi.spyOn(window, "innerWidth", "get").mockReturnValue(viewport);
@@ -49,9 +49,9 @@ function inertIds() {
 }
 
 function readRoot() {
-  const { overflow, paddingLeft, paddingRight, scrollbarGutter } =
+  const { overflow, paddingLeft, paddingRight } =
     document.documentElement.style;
-  return { overflow, paddingLeft, paddingRight, scrollbarGutter };
+  return { overflow, paddingLeft, paddingRight };
 }
 
 afterEach(() => {
@@ -77,11 +77,10 @@ describe("measuring the page around a visual card", () => {
   );
 
   it.effect(
-    "turns both scrollbar gutters into padding on top of the root's own",
+    "turns the room at both sides into padding on top of the root's own",
     () =>
       Effect.gen(function* () {
         const card = renderPage();
-        // Windows and Linux reserve `scrollbar-gutter: stable both-edges`.
         layOutRoot(10, 380);
         document.documentElement.style.paddingLeft = "4px";
 
@@ -105,16 +104,18 @@ describe("measuring the page around a visual card", () => {
       })
   );
 
-  it.effect("counts a root margin as the page's own, not as a gutter", () =>
-    Effect.gen(function* () {
-      const card = renderPage();
-      document.documentElement.style.margin = "0 6px 0 8px";
-      layOutRoot(18, 374);
+  it.effect(
+    "counts a root margin as the page's own, not as room at its sides",
+    () =>
+      Effect.gen(function* () {
+        const card = renderPage();
+        document.documentElement.style.margin = "0 6px 0 8px";
+        layOutRoot(18, 374);
 
-      const { padding } = yield* measureBackdrop(card);
+        const { padding } = yield* measureBackdrop(card);
 
-      expect(padding).toEqual({ paddingLeft: "10px", paddingRight: "10px" });
-    })
+        expect(padding).toEqual({ paddingLeft: "10px", paddingRight: "10px" });
+      })
   );
 
   it.effect(
@@ -152,7 +153,7 @@ describe("holding the page behind a visual card", () => {
   );
 
   it.effect(
-    "stops the page scrolling with its gutters closed into padding",
+    "stops the page scrolling with the room at its sides as padding",
     () =>
       Effect.gen(function* () {
         const card = renderPage();
@@ -170,7 +171,6 @@ describe("holding the page behind a visual card", () => {
               overflow: "hidden",
               paddingLeft: "14px",
               paddingRight: "10px",
-              scrollbarGutter: "auto",
             });
           })
         );
@@ -179,7 +179,6 @@ describe("holding the page behind a visual card", () => {
           overflow: "clip",
           paddingLeft: "4px",
           paddingRight: "",
-          scrollbarGutter: "",
         });
       })
   );
