@@ -19,6 +19,7 @@ import {
   VISUAL_CARD_FOOTER,
 } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { isHydrated } from "@/e2e/support/window";
 
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";
@@ -291,9 +292,8 @@ const verifyUnitCircleEditing = Effect.fn("NakafaE2E.verifyUnitCircleEditing")(
         ratio(Math.tan(radians)),
       ];
       for (const input of [formatted, ""]) {
-        // The lab can still hydrate after the reveal. An edit made before it
-        // stays in the field's text but never reaches the visual, so the edit
-        // repeats until the footer shows it.
+        // The footer follows the commit on blur, so the edit repeats until it
+        // shows there.
         yield* Effect.promise(() =>
           expect(async () => {
             await angle.fill(input);
@@ -377,6 +377,9 @@ test("published unit-circle controls preserve finite angles after clearing", asy
                 await angle.scrollIntoViewIfNeeded();
                 await expect(angle).toBeVisible();
                 await expect(angle).toHaveValue("30");
+                // An edit before hydration stays in the field's text, and React
+                // ignores the same text typed again, so it never reaches the visual.
+                expect(await isHydrated(angle)).toBe(true);
               }).toPass({ timeout: revealTimeoutMilliseconds })
             );
             yield* verifyUnitCircleEditing(circle, angle, locale);

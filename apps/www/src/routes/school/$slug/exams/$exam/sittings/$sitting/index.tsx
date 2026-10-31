@@ -1,7 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactElement } from "react";
-import { SittingDashboard } from "@/components/exams/sitting/dashboard";
+import {
+  DashboardRecovery,
+  SittingDashboard,
+} from "@/components/exams/sitting/dashboard";
 import { dashboardSearch } from "@/components/exams/sitting/search";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { readExamId, readSittingId } from "@/lib/tenant/params";
@@ -28,5 +31,9 @@ export const Route = createFileRoute(
 
 function SittingDashboardPage(): ReactElement | null {
   const { examId, sittingId, slug } = Route.useRouteContext();
-  return <SittingDashboard examId={examId} sittingId={sittingId} slug={slug} />;
+  return (
+    <DashboardRecovery>
+      <SittingDashboard examId={examId} sittingId={sittingId} slug={slug} />
+    </DashboardRecovery>
+  );
 }
