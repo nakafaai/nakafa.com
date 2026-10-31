@@ -13,4 +13,7 @@ export default {
 ["storeEvents"]: RegisteredConvexFunction.register({ ...definitions["storeEvents"], handler: forward(definitions["storeEvents"].handler) }),
 ["settle"]: RegisteredConvexFunction.register({ ...definitions["settle"], handler: forward(definitions["settle"].handler) }),
 ["reconnect"]: RegisteredConvexFunction.register({ ...definitions["reconnect"], handler: forward(definitions["reconnect"].handler) }),
+["revocable"]: RegisteredConvexFunction.register({ ...definitions["revocable"], handler: forward(definitions["revocable"].handler) }),
+["revoke"]: RegisteredConvexFunction.register({ ...definitions["revoke"], handler: forward(definitions["revoke"].handler) }),
+["destroy"]: RegisteredConvexFunction.register({ ...definitions["destroy"], handler: forward(definitions["destroy"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../connectors/sync.spec")["default"]>;

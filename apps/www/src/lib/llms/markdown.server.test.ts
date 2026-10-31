@@ -22,7 +22,7 @@ vi.mock("@/lib/llms/index/generate", () => ({
   getLlmsSectionIndexText: getLlmsSectionIndexTextMock,
 }));
 
-const VARY = "Accept, Accept-Encoding";
+const VARY = "Accept-Encoding";
 
 /** Reads the body of one answer. */
 const bodyOf = (response: Response) => Effect.promise(() => response.text());
@@ -142,6 +142,9 @@ describe("llms markdown answer", () => {
       expect(response.status).toBe(200);
       expect(yield* bodyOf(response)).toBe("# Article title");
       expect(response.headers.get("vary")).toBe(VARY);
+      expect(response.headers.get("link")).toBe(
+        '<https://nakafa.com/en/articles/belajar>; rel="canonical"'
+      );
     })
   );
 

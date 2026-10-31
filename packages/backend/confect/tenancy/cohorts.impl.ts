@@ -21,23 +21,17 @@ import {
 import {
   COHORT_LIMIT,
   type CohortStatus,
-  cohortNameKey,
+  cohortView,
 } from "@repo/backend/confect/tenancy/cohort";
 import { restoreCohort } from "@repo/backend/confect/tenancy/cohort.restore";
+import { edit } from "@repo/backend/confect/tenancy/cohorts.edit";
 import spec from "@repo/backend/confect/tenancy/cohorts.spec";
-import { CohortNameTaken } from "@repo/backend/confect/tenancy/errors";
 import { cohortMembers } from "@repo/backend/confect/tenancy/members";
 import {
   checkCohorts,
   insertCohort,
 } from "@repo/backend/confect/tenancy/write/cohort";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
-
-/** One cohort as the wire shows it. */
-const view = (cohort: TenantCohortsDoc) =>
-  Struct.renameKeys(Struct.pick(cohort, ["_id", "grade", "name", "status"]), {
-    _id: "id",
-  });
 
 /** The cohorts of one period by grade, then name, at most COHORT_LIMIT of them. */
 const list = FunctionImpl.make(
@@ -53,7 +47,7 @@ const list = FunctionImpl.make(
       )
       .take(COHORT_LIMIT)
       .pipe(Effect.orDie);
-    return Arr.map(cohorts, view);
+    return Arr.map(cohorts, cohortView);
   })
 );
 
@@ -82,7 +76,7 @@ const detail = FunctionImpl.make(
   "get",
   Effect.fn("tenancy.cohorts.get")(function* () {
     const cohort = yield* Cohort;
-    return Struct.assign(view(cohort), {
+    return Struct.assign(cohortView(cohort), {
       homeroom: yield* homeroomTeacherOf(cohort._id),
       periodId: cohort.periodId,
     });
@@ -142,51 +136,9 @@ const create = FunctionImpl.make(
     const { person } = yield* Member;
     const period = yield* Period;
     yield* checkCohorts(period, [{ grade, name }]);
-    return view(
+    return cohortView(
       yield* insertCohort(personActor(person), period, { grade, name })
     );
-  })
-);
-
-/**
- * Renames one cohort. The name stays unique within its period, and a name that
- * only differs in case from the cohort's own is not taken by the cohort itself.
- */
-const rename = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "rename",
-  Effect.fn("tenancy.cohorts.rename")(function* ({ name }) {
-    const { person } = yield* Member;
-    const cohort = yield* Cohort;
-    if (cohort.name === name) {
-      return view(cohort);
-    }
-    const nameKey = cohortNameKey(name);
-    const sameName = yield* (yield* DatabaseReader)
-      .table("tenantCohorts")
-      .index("by_periodId_and_nameKey", (query) =>
-        query.eq("periodId", cohort.periodId).eq("nameKey", nameKey)
-      )
-      .first()
-      .pipe(Effect.orDie);
-    if (Option.exists(sameName, (other) => other._id !== cohort._id)) {
-      return yield* new CohortNameTaken();
-    }
-    yield* (yield* DatabaseWriter)
-      .table("tenantCohorts")
-      .replace(
-        cohort._id,
-        Struct.assign(Struct.omit(cohort, ["_creationTime", "_id"]), {
-          name,
-          nameKey,
-        })
-      )
-      .pipe(Effect.orDie);
-    yield* cohortAuthority.record(personActor(person), cohort, {
-      type: "cohort.renamed",
-    });
-    return view(Struct.assign(cohort, { name, nameKey }));
   })
 );
 
@@ -209,7 +161,7 @@ const archive = FunctionImpl.make(
     yield* cohortAuthority.record(personActor(person), cohort, {
       type: "cohort.archived",
     });
-    return view(Struct.assign(cohort, { status }));
+    return cohortView(Struct.assign(cohort, { status }));
   })
 );
 
@@ -220,7 +172,7 @@ const restore = FunctionImpl.make(
   "restore",
   Effect.fn("tenancy.cohorts.restore")(function* ({ cohortId }) {
     const { person, tenant } = yield* Member;
-    return view(
+    return cohortView(
       yield* restoreCohort(personActor(person), tenant._id, cohortId)
     );
   })
@@ -232,7 +184,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(activePeriod),
   Layer.provide(members),
   Layer.provide(create),
-  Layer.provide(rename),
+  Layer.provide(edit),
   Layer.provide(archive),
   Layer.provide(restore),
   Layer.provide(session),
