@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { trackChanges } from "@/e2e/support/changes";
 import { closeSitting } from "@/e2e/support/proctor";
 import { giveRole } from "@/e2e/support/roles";
 import {
@@ -178,4 +179,63 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
     { timeout: readinessTimeoutMilliseconds }
   );
   await proctorContext.close();
+});
+
+test("a server failure of the room's read keeps the proctor on the room, and the seats come back by themselves", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `student-${school.slug}@acceptance.example.test`;
+  const studentContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: studentContext,
+      slug: school.slug,
+    })
+  );
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+
+  const proctor = await ownerContext.newPage();
+  const changes = await Effect.runPromise(trackChanges(proctor, []));
+  await proctor.goto(
+    address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
+  );
+  const token = proctor.locator("header").getByRole("button", {
+    name: `Show the room's QR code, token ${sitting.token}`,
+  });
+  await expect(token).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  const student = await studentContext.newPage();
+  await student.goto(address(`/sittings/${sitting.sittingId}`));
+  await waitUntilTakenOver(
+    student.getByRole("button", { name: "Enter sitting" })
+  );
+  await student
+    .getByPlaceholder("Enter the token from your proctor")
+    .fill(sitting.token);
+
+  // The entry changes the room, and the next read of it fails with a failure that names no refusal, as a function
+  // that ran out of time does, so the seats leave and the proctor stays on the room's page.
+  changes.failQuery("exams/sittings:dashboard", "ServerBroke");
+  await student.getByRole("button", { name: "Enter sitting" }).click();
+  await expect(token).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
+  await expect(
+    proctor.getByRole("heading", { name: "Something broke" })
+  ).toHaveCount(0);
+
+  // The server answers again, and the student's seat is there with no press.
+  changes.recoverQuery();
+  await expect(
+    proctor
+      .getByRole("list", { name: "Student seats" })
+      .getByRole("link", { name: LEARNER_NAME })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await Promise.all([studentContext.close(), ownerContext.close()]);
 });
