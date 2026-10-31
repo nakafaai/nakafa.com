@@ -23,11 +23,14 @@ const SCHOOL_HEADERS = {
  * with the browser's instant and the locale time zone, the design system and the
  * toaster. A school renders only in the browser (ADR 0038 D2): the server sends the
  * root document with these headers, and the browser negotiates the locale once here,
- * so the school layout and its boundaries below read the same messages.
+ * so the school layout and its boundaries below read the same messages. The router
+ * runs every beforeLoad before any loader, so the read starts in beforeLoad, beside
+ * the school layout's frame read, and the loader answers it.
  */
 export const Route = createFileRoute("/school")({
   ssr: false,
-  loader: () => Effect.runPromise(readSchoolRoot()),
+  beforeLoad: () => ({ root: Effect.runPromise(readSchoolRoot()) }),
+  loader: ({ context }) => context.root,
   headers: () => SCHOOL_HEADERS,
   component: SchoolRoot,
 });

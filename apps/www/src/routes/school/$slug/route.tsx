@@ -35,9 +35,9 @@ import {
   type SchoolRead,
 } from "@/lib/tenant/frame";
 import { schoolHead } from "@/lib/tenant/head";
-import { SchoolReadsLive } from "@/lib/tenant/read";
+import { SchoolReadFailed, SchoolReadsLive } from "@/lib/tenant/read";
 import { readSchoolLocale } from "@/lib/tenant/root";
-import { readBrowserSchoolFrame, reusesVisitFrame } from "@/lib/tenant/visit";
+import { readBrowserVisit, reusesVisitFrame } from "@/lib/tenant/visit";
 
 /**
  * The search params of the school entry. `sign-in=username` opens the username form
@@ -76,22 +76,22 @@ type SchoolContext = Record<"legal", AuthLegalLinks | null> &
 
 /**
  * Reads the frame of a school in the browser. A visitor's entry page names the
- * privacy and terms pages, so only a visitor reads the locale's legal pages, from
- * the static answer that the build writes for every locale.
+ * privacy and terms pages from the static answer that the build writes for every
+ * locale, which a read with no session takes beside the school's own reads.
  */
-async function readVisitFrame(slug: TenantSlug): Promise<VisitFrame> {
+function readVisitFrame(slug: TenantSlug): Promise<VisitFrame> {
   const locale = readSchoolLocale();
-  const school = await Effect.runPromise(
-    readBrowserSchoolFrame(slug, locale).pipe(Effect.provide(SchoolReadsLive))
+  const legal = Effect.tryPromise({
+    catch: (cause) => new SchoolReadFailed({ cause }),
+    try: () => readStaticData(readMarketingShellFn, { locale }),
+  }).pipe(
+    Effect.map((shell) =>
+      Option.getOrNull(authLegalLinks(locale, shell.pageNavigation))
+    )
   );
-  if (school._tag !== "Visitor") {
-    return { legal: null, school };
-  }
-  const shell = await readStaticData(readMarketingShellFn, { locale });
-  return {
-    legal: Option.getOrNull(authLegalLinks(locale, shell.pageNavigation)),
-    school,
-  };
+  return Effect.runPromise(
+    readBrowserVisit(slug, locale, legal).pipe(Effect.provide(SchoolReadsLive))
+  );
 }
 
 /**
@@ -131,7 +131,16 @@ export const Route = createFileRoute("/school/$slug")({
   }): Promise<SchoolContext> => {
     // The router loads a route's code only after its beforeLoad, so the layout's
     // code starts here, beside the frame read, and the page draws once the frame answers.
+    // The entry's form, which only a visitor's or an outsider's page shows, starts beside
+    // them too, since its address already names it.
     const code = Route.options.component?.preload?.();
+    const entry = loadEntryForm({
+      guardian: Arr.some(
+        matches,
+        (match) => match.routeId === "/school/$slug/parents"
+      ),
+      signIn: search["sign-in"],
+    });
     const { visit } = context;
     const invalid = Arr.some(
       matches,
@@ -146,17 +155,9 @@ export const Route = createFileRoute("/school/$slug")({
       throw notFound();
     }
     // A visitor's entry paints with its form, and so does the username form that an outsider's card
-    // way opens while its account signs out; an outsider never sees the parent's form.
+    // way opens while its account signs out.
     if (frame.school._tag === "Visitor" || frame.school._tag === "Outsider") {
-      await loadEntryForm({
-        guardian:
-          frame.school._tag === "Visitor" &&
-          Arr.some(
-            matches,
-            (match) => match.routeId === "/school/$slug/parents"
-          ),
-        signIn: search["sign-in"],
-      });
+      await entry;
     }
     await code;
     return { legal: frame.legal, school: frame.school, slug: params.slug };

@@ -5,7 +5,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Layer, Option, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { SchoolReadFailed, SchoolReads } from "@/lib/tenant/read";
-import { readBrowserSchoolFrame, reusesVisitFrame } from "@/lib/tenant/visit";
+import { readBrowserVisit, reusesVisitFrame } from "@/lib/tenant/visit";
 
 /** One fetch double for the whole file: the browser's request to the token route. */
 const fetcher = vi.fn<typeof fetch>();
@@ -29,9 +29,18 @@ const UNUSED_READS = Layer.succeed(
   })
 );
 
+/** The legal links of a visitor's entry page, as the static answer of the shell holds them. */
+const LINKS = {
+  privacy: "https://nakafa.com/en/privacy",
+  terms: "https://nakafa.com/en/terms",
+};
+
+/** The read of the legal links, which counts how often the decision asks for it. */
+const legal = vi.fn(() => LINKS);
+
 /** Decides the school in the browser of these tests, whose token route answers with the fetch double. */
 function decide(locale: "en" | "id") {
-  return readBrowserSchoolFrame(SLUG, locale).pipe(
+  return readBrowserVisit(SLUG, locale, Effect.sync(legal)).pipe(
     Effect.provideService(FetchHttpClient.Fetch, fetcher),
     Effect.provide(UNUSED_READS)
   );
@@ -58,6 +67,7 @@ describe("reusesVisitFrame", () => {
 describe("readBrowserSchoolFrame", () => {
   beforeEach(() => {
     fetcher.mockReset();
+    legal.mockClear();
     frame.read.mockReset().mockReturnValue(Effect.succeed({ _tag: "Refused" }));
     vi.stubGlobal("window", {
       location: { origin: "https://harapan.nakafa.com" },
@@ -69,12 +79,16 @@ describe("readBrowserSchoolFrame", () => {
   });
 
   it.effect(
-    "decides the school with the token from the school host's own token route",
+    "decides the school with the token from the school host's own token route, and reads no legal links for it",
     () =>
       Effect.gen(function* () {
         fetcher.mockResolvedValueOnce(Response.json({ token: "token-ayu" }));
 
-        yield* decide("en");
+        expect(yield* decide("en")).toEqual({
+          legal: null,
+          school: { _tag: "Refused" },
+        });
+        expect(legal).not.toHaveBeenCalled();
 
         const [address] = fetcher.mock.calls[0] ?? [];
         expect(String(address)).toBe(
@@ -89,17 +103,33 @@ describe("readBrowserSchoolFrame", () => {
   );
 
   it.effect(
-    "decides a visitor's school when the token route finds no session",
+    "decides a visitor's school when the token route finds no session, with the legal links read beside it",
     () =>
       Effect.gen(function* () {
+        const visitor = { _tag: "Visitor" };
+        frame.read.mockReturnValueOnce(Effect.succeed(visitor));
         fetcher.mockResolvedValueOnce(new Response(null, { status: 401 }));
 
-        yield* decide("id");
+        expect(yield* decide("id")).toEqual({ legal: LINKS, school: visitor });
 
         expect(frame.read).toHaveBeenCalledWith({
           locale: "id",
           slug: SLUG,
           token: Option.none(),
+        });
+        expect(legal).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect(
+    "keeps no legal links for a school that refuses a visitor with no session",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValueOnce(new Response(null, { status: 401 }));
+
+        expect(yield* decide("en")).toEqual({
+          legal: null,
+          school: { _tag: "Refused" },
         });
       })
   );
