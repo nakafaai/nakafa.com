@@ -119,7 +119,7 @@ export function AccountMenu({
             </>
           ) : null}
           <DropdownMenuGroup>
-            <DropdownMenuItem className="cursor-pointer" onClick={onSignOut}>
+            <DropdownMenuItem onClick={onSignOut}>
               <HugeIcons icon={Logout01Icon} />
               {t("logout")}
             </DropdownMenuItem>

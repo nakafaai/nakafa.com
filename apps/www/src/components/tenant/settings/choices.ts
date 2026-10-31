@@ -1,4 +1,20 @@
 import {
+  Atom01Icon,
+  Backpack01Icon,
+  Book01Icon,
+  Book02Icon,
+  Book03Icon,
+  BookOpen01Icon,
+  CalculatorIcon,
+  CompassIcon,
+  Globe02Icon,
+  MicroscopeIcon,
+  Mortarboard01Icon,
+  NotebookIcon,
+  PencilIcon,
+  RulerIcon,
+} from "@hugeicons/core-free-icons";
+import {
   COHORT_GRADE_MAX,
   COHORT_GRADE_MIN,
 } from "@repo/backend/confect/tenancy/cohort";
@@ -26,3 +42,24 @@ export const gradeItems = Arr.makeBy(
     return { label: grade, value: grade };
   }
 );
+
+/**
+ * The icons of study, one for each school year, which the filters of the cohorts' grades and of a list's class groups
+ * draw.
+ */
+export const GRADE_ICONS = [
+  Backpack01Icon,
+  PencilIcon,
+  Book01Icon,
+  RulerIcon,
+  NotebookIcon,
+  CalculatorIcon,
+  Book02Icon,
+  CompassIcon,
+  Globe02Icon,
+  Book03Icon,
+  Atom01Icon,
+  MicroscopeIcon,
+  BookOpen01Icon,
+  Mortarboard01Icon,
+] as const;

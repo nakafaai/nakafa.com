@@ -119,16 +119,12 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       </Suspense>
       <DropdownMenuGroup>
         {username === undefined ? null : (
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => navigate(profileTarget(username))}
-          >
+          <DropdownMenuItem onClick={() => navigate(profileTarget(username))}>
             <HugeIcons icon={UserIcon} />
             {t("profile")}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem
-          className="cursor-pointer"
           onClick={() =>
             navigate({ from: LOCALE_ROUTE, to: "/$locale/notifications" })
           }
@@ -137,7 +133,6 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
           {tNotifications("title")}
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="cursor-pointer"
           onClick={() =>
             navigate({ from: LOCALE_ROUTE, to: "/$locale/user/settings" })
           }

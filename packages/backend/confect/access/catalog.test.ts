@@ -172,6 +172,7 @@ describe("access/catalog", () => {
           "period.archived",
           "period.restored",
           "period.rename",
+          "period.rescheduled",
           "cohort.created",
           "cohort.renamed",
           "cohort.archived",

@@ -22,7 +22,6 @@ function PreferencesMenuItem({
 
   return (
     <DropdownMenuItem
-      className="cursor-pointer"
       onClick={() => consent.setPreferencesOpen(true)}
       onFocus={consent.warmPreferences}
       onPointerEnter={consent.warmPreferences}

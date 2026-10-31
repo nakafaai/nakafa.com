@@ -70,10 +70,11 @@ for (const viewport of [
     await expect(page.getByRole("alert")).toHaveCount(0);
     await expect(calendar.getByText("Not connected.")).toBeVisible();
 
+    // A replayed code goes home, and the root answers in the reader's language, English here.
     await page.goto(
       `${site}/api/connectors/google/callback?state=${state}&code=again`
     );
-    await page.waitForURL(`${site}/`);
+    await page.waitForURL(`${site}/en`);
     await context.close();
   });
 }
