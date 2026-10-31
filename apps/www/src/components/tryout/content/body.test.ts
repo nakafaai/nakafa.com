@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, Option } from "effect";
+import { Effect, Result } from "effect";
 import {
   decodeTryoutBodies,
   joinTryoutBodies,
@@ -42,19 +42,20 @@ describe("joinTryoutBodies", () => {
         [first, second]
       )
     ).toEqual(
-      Option.some([
+      Result.succeed([
         { body: makeTryoutBody("a"), question: first },
         { body: makeTryoutBody("b"), question: second },
       ])
     );
   });
 
-  it("finds nothing when any question has no body", () => {
-    expect(
-      joinTryoutBodies(
-        [makeTryoutBody("a")],
-        [makeTryoutQuestion("a"), makeTryoutQuestion("b")]
-      )
-    ).toEqual(Option.none());
+  it("fails when any question has no body", () => {
+    const joined = joinTryoutBodies(
+      [makeTryoutBody("a")],
+      [makeTryoutQuestion("a"), makeTryoutQuestion("b")]
+    );
+    expect(Result.isFailure(joined) && joined.failure._tag).toBe(
+      "TryoutBodiesMissing"
+    );
   });
 });

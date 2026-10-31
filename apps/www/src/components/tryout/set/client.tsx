@@ -15,6 +15,7 @@ import {
 } from "@/components/tryout/player/finish";
 import { selectTryoutSetLinks } from "@/components/tryout/route/owner";
 import {
+  getTryoutAttemptLock,
   getTryoutPublicPath,
   type TryoutPageAddress,
 } from "@/components/tryout/route/path";
@@ -23,6 +24,7 @@ import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
   isTryoutStateLive,
+  selectActionAttempt,
 } from "@/components/tryout/runtime/state";
 import { TryoutSetEntry } from "@/components/tryout/set/entry";
 import type {
@@ -44,7 +46,7 @@ interface TryoutSetPageClientProps {
   binding: {
     attemptId: Id<"tryoutAttempts">;
     initialState: TryoutSetInitialState;
-    /** The player view the server resolved from the address and the saved view. */
+    /** The player view resolved in the browser from the address and the saved view. */
     mode: PlayerMode;
     sectionRoutes: readonly SetPage["sections"][number][];
   } | null;
@@ -52,14 +54,16 @@ interface TryoutSetPageClientProps {
   /** The decoded question bodies of the attempt: the running section's, or a finished one's for its review. */
   content: readonly TryoutBody[] | null;
   page: SetPage;
+  /** The learner's attempt is still being read, so the action waits for it and takes no press. */
+  pending: boolean;
   restartTarget: TryoutSetRestartTarget | null;
   route: TryoutSetRoute;
 }
 
-/** The page the set client draws: its set page, the attempt to restart, and its route. Fixed for one page. */
+/** The page the set client draws: its set page, whether the learner read is pending, the attempt to restart, and its route. */
 const TryoutSetPageContext = createContext<Pick<
   TryoutSetPageClientProps,
-  "page" | "restartTarget" | "route"
+  "page" | "pending" | "restartTarget" | "route"
 > | null>(null);
 
 /** Reads the page of the surrounding set client. */
@@ -77,12 +81,13 @@ export function TryoutSetPageClient({
   children,
   content,
   page,
+  pending,
   restartTarget,
   route,
 }: TryoutSetPageClientProps) {
   return (
     <TryoutContentContext value={{ bodies: content }}>
-      <TryoutSetPageContext value={{ page, restartTarget, route }}>
+      <TryoutSetPageContext value={{ page, pending, restartTarget, route }}>
         {binding !== null && isTryoutStateLive(binding.initialState) ? (
           <LiveTryoutSetPage binding={binding} key={binding.attemptId}>
             {children}
@@ -175,7 +180,7 @@ function ResolvedTryoutSetPage({
   finish: TryoutFinish | null;
   state: SetState;
 }) {
-  const { page, restartTarget, route } = useTryoutSetPage();
+  const { page, pending, restartTarget, route } = useTryoutSetPage();
   const currentAttempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
   const entrySection = page.entrySection;
@@ -183,10 +188,11 @@ function ResolvedTryoutSetPage({
   const now = useTryoutClock(currentAttempt?.status === "in-progress");
   const activeAttempt = getActiveTryoutAttempt(currentAttempt, now);
 
-  const actionAttempt =
-    currentAttempt?.status === "in-progress" && !activeAttempt
-      ? null
-      : currentAttempt;
+  const actionAttempt = selectActionAttempt({
+    activeAttempt,
+    currentAttempt,
+    pending,
+  });
 
   const startEntrySection = activeAttempt
     ? entrySection
@@ -199,7 +205,8 @@ function ResolvedTryoutSetPage({
     setPath: activeAttempt ? getTryoutPublicPath(route) : links.currentPath,
   });
   const view: TryoutSetOverviewProps["value"] = {
-    actionAttempt,
+    // An action without an attempt is one whose learner read is still pending.
+    ...(actionAttempt === undefined ? {} : { actionAttempt }),
     activeAttempt,
     currentPath: links.currentPath,
     entrySection,
@@ -217,7 +224,12 @@ function ResolvedTryoutSetPage({
   return (
     <>
       {binding?.initialState.attempt.status === "in-progress" ? (
-        <ShellLock />
+        <ShellLock
+          remember={getTryoutAttemptLock(
+            binding.attemptId,
+            binding.initialState.attempt.expiresAt
+          )}
+        />
       ) : null}
       {isInternalEntry && entrySection ? (
         <TryoutInternalSet
