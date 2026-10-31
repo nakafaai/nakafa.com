@@ -14421,6 +14421,7 @@ export declare const internal: {
           "internal",
           { messageId: Id<"classroomMessages"> },
           {
+            classId: Id<"classes">;
             className: string;
             history: Array<{ author: string; text: string }>;
             locale: "en" | "id" | "de";
@@ -14472,6 +14473,47 @@ export declare const internal: {
           title: string;
         },
         { id: Id<"classroomLibrary"> }
+      >;
+    };
+    passages: {
+      build: FunctionReference<
+        "action",
+        "internal",
+        { itemId: Id<"classroomLibrary"> },
+        null
+      >;
+      clear: FunctionReference<
+        "mutation",
+        "internal",
+        { tenantId: Id<"tenants"> },
+        null
+      >;
+      open: FunctionReference<
+        "query",
+        "internal",
+        { ids: Array<Id<"classroomPassages">> },
+        Array<{ text: string; title: string }>
+      >;
+      rebuild: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; tenantId: Id<"tenants"> },
+        null
+      >;
+      source: FunctionReference<
+        "query",
+        "internal",
+        { itemId: Id<"classroomLibrary"> },
+        { contentType: string; storageId: Id<"_storage"> } | null
+      >;
+      store: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          itemId: Id<"classroomLibrary">;
+          passages: Array<{ embedding: Array<number>; text: string }>;
+        },
+        null
       >;
     };
     seed: {

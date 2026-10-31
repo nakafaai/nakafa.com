@@ -4,6 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
 import {
   firstPage,
   forumClass,
@@ -11,7 +12,7 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import { provider } from "@repo/backend/test/gateway";
+import { conceptEmbedder, provider } from "@repo/backend/test/gateway";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -31,6 +32,7 @@ type Fixture = Effect.Success<typeof tenancyFixture>;
 const { list } = refs.public.classroom.forum.channels;
 const { edit, page, send } = refs.public.classroom.forum.messages;
 const { open } = refs.public.classroom.forum.threads;
+const { addLink } = refs.public.classroom.library;
 const { finish, reply } = refs.internal.classroom.forum.nina;
 
 /** Nina answers every question with `output`. */
@@ -128,6 +130,7 @@ describe("classroom/forum nina", () => {
   });
 
   afterEach(() => {
+    provider.embeddingModel.mockReset();
     provider.languageModel.mockReset();
   });
 
@@ -224,6 +227,42 @@ describe("classroom/forum nina", () => {
             .pipe(Effect.flip)
         ).toMatchObject({ _tag: "AccessDenied" });
       })
+  );
+
+  it.effect("answers from the teacher's files in the class's library", () =>
+    Effect.gen(function* () {
+      const fixture = yield* keyedFixture;
+      yield* withPool(fixture, 3);
+      const { forum, messageId } = yield* asked(fixture);
+      const item = yield* fixture.as("teacher").mutation(addLink, {
+        address: "https://nakafa.com",
+        classId: forum.classId,
+        clientKey: "modul-gerak",
+        slug: nf,
+        title: "Modul Gerak",
+      });
+      provider.embeddingModel.mockReturnValueOnce(
+        conceptEmbedder([["percepatan"]])
+      );
+      yield* fixture.internal.mutation(refs.internal.classroom.passages.store, {
+        itemId: item.id,
+        passages: [
+          {
+            embedding: Arr.makeBy(embeddingDimensions, (index) =>
+              index === 0 ? 1 : 0
+            ),
+            text: "Percepatan negatif berarti perlambatan.",
+          },
+        ],
+      });
+      const model = ninaAnswers({ text: "Karena melambat.", unsure: false });
+
+      yield* fixture.internal.action(reply, { messageId });
+
+      const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+      expect(prompt).toContain("Modul Gerak");
+      expect(prompt).toContain("Percepatan negatif berarti perlambatan.");
+    })
   );
 
   it.effect("keeps a reply in its discussion", () =>

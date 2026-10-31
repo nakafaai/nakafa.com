@@ -1,4 +1,5 @@
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { Id } from "@repo/backend/confect/_generated/id";
 import { Array as Arr, Schema } from "effect";
 
 /** The credits one reply of Nina draws from the school's pool (ADR 0025). */
@@ -12,6 +13,7 @@ export const NINA_NAME = "Nina";
 
 /** What one question gives Nina: the class, its language, the question, and the messages before it. */
 export const NinaAsk = Schema.Struct({
+  classId: Id("classes"),
   className: Schema.String,
   history: Schema.Array(
     Schema.Struct({ author: Schema.String, text: Schema.String })
@@ -30,7 +32,7 @@ export const NinaAnswer = Schema.Struct({
 export const FORUM_INSTRUCTIONS = [
   "You are Nina, an AI assistant in a school class forum. Say so if asked.",
   "Answer the question in the language it is written in, briefly, for a school student.",
-  "Use the Nakafa sources you are given, and link a source when you use it.",
+  "Use the sources you are given, the teacher's files first. Name the file or link the source you use.",
   "Never state a grade, judge a student, or repeat what a student wrote about another person.",
   "Set unsure to true when the sources do not answer it, or when a teacher should answer it.",
 ].join("\n");

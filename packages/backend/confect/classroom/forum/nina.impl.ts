@@ -9,6 +9,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
   MutationRunner,
+  QueryRunner,
+  VectorSearch,
 } from "@repo/backend/confect/_generated/services";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import {
@@ -22,6 +24,10 @@ import {
 } from "@repo/backend/confect/classroom/forum/nina";
 import spec from "@repo/backend/confect/classroom/forum/nina.spec";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import {
+  SEARCH_LIMIT,
+  sourcesOf,
+} from "@repo/backend/confect/classroom/passages";
 import { principalOf } from "@repo/backend/confect/classroom/roster";
 import { movePool, schoolHoldOf } from "@repo/backend/confect/credits/pool";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
@@ -197,6 +203,7 @@ const begin = FunctionImpl.make(
       .pipe(Effect.orDie);
     const keys = yield* schoolKeys(question.tenantId);
     return {
+      classId: klass._id,
       className: klass.name,
       history: yield* historyOf(question),
       locale: unit.contentLanguage,
@@ -296,6 +303,27 @@ const answerOf = (ask: typeof NinaAsk.Type, sources: string) =>
     Effect.orElseSucceed(() => null)
   );
 
+/** What the teacher's files say on a question, or nothing when the search fails, which leaves Nakafa's sources to answer. */
+const libraryOf = (ask: typeof NinaAsk.Type) =>
+  Effect.gen(function* () {
+    const { runQuery } = yield* QueryRunner;
+    const vectorSearch = yield* VectorSearch;
+    const embeddings = yield* (yield* Gateway).embed([ask.question]);
+    const found = yield* Effect.forEach(embeddings, (vector) =>
+      vectorSearch("classroomPassages", "by_embedding", {
+        filter: (filter) => filter.eq("classId", ask.classId),
+        limit: SEARCH_LIMIT,
+        vector: Arr.fromIterable(vector),
+      })
+    );
+    return yield* runQuery(classroomInternal.passages.open, {
+      ids: Arr.map(Arr.flatten(found), ({ _id }) => _id),
+    });
+  }).pipe(
+    Effect.provide(GatewayLive),
+    Effect.orElseSucceed(() => [])
+  );
+
 /** Runs one reply: the hold and the read, the model outside any transaction, and the settlement. */
 const reply = FunctionImpl.make(
   databaseSchema,
@@ -309,7 +337,7 @@ const reply = FunctionImpl.make(
     if (ask === null) {
       return null;
     }
-    const sources = yield* findContent({
+    const nakafa = yield* findContent({
       limit: 3,
       locale: ask.locale,
       offset: 0,
@@ -318,7 +346,10 @@ const reply = FunctionImpl.make(
       Effect.map((found) => found.text),
       Effect.orElseSucceed(() => "")
     );
-    const answer = yield* answerOf(ask, sources);
+    const answer = yield* answerOf(
+      ask,
+      sourcesOf(yield* libraryOf(ask), nakafa)
+    );
     yield* runMutation(classroomInternal.forum.nina.finish, {
       answer,
       messageId,

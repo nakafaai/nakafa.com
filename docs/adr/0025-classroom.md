@@ -286,10 +286,10 @@ field the forum composer is. Status of the spike: planned, in program wave B.
 
 The reply is built (`classroom/forum/nina.impl.ts`), as a run of its own rather than a
 turn of a chat, because a class has no chat row: `@Nina` schedules it, `begin` holds 5 credits
-of the school's pool, the model answers from the talk before the question and from
-Nakafa's search with its links, and `finish` writes the message marked `nina` under the
-Person who asked, or passes the question to the class's teachers as a mention and gives
-the credits back. The library's text waits for its index (ADR 0023).
+of the school's pool, the model answers from the talk before the question, from the class
+library's index (ADR 0023) and from Nakafa's search with its links, and `finish` writes the
+message marked `nina` under the Person who asked, or passes the question to the class's
+teachers as a mention and gives the credits back.
 
 ### Class settings
 
