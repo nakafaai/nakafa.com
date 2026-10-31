@@ -461,6 +461,7 @@
     "import-title": "Fragen importieren",
     "import-dialog-description": "Nina setzt die Fragen einer Word- oder PDF-Datei ans Ende dieser Prüfung.",
     "import-submit": "Importieren",
+    "import-forms": "Aus Google Formulare",
     "import-hint": "Word oder PDF, höchstens 20 MB.",
     "import-drop": "Lege eine Word- oder PDF-Datei hier ab oder wähle eine aus.",
     "import-remove": "Datei entfernen",
@@ -2902,6 +2903,10 @@
     "import-mathtype": {
       "title": "Einige Formeln sind Bilder.",
       "description": "Tipp sie im Editor neu ein."
+    },
+    "import-no-drive": {
+      "title": "Verbinde zuerst Google Drive",
+      "description": "Formulare werden über dein Google Drive gelesen. Verbinde es in deinen Kontoeinstellungen."
     },
     "import-empty": {
       "title": "Nina hat keine Frage gefunden.",
