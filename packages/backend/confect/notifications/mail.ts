@@ -49,6 +49,9 @@ export const MAIL_RANKS = [0, 1, 2];
 /** How long a mail waits for room: a notice a week old tells nothing the inbox does not. */
 const MAIL_LIFETIME = Duration.days(7);
 
+/** What one kind of mail tells, and its rank. */
+const MailRoute = Schema.Struct({ change: DigestChange, rank: Schema.Int });
+
 /** What each kind that sends email tells, and its rank. */
 const MAIL_OF = {
   examGuardianReminder: { change: "exam.reminder", rank: 0 },
@@ -58,10 +61,7 @@ const MAIL_OF = {
   taskMissed: { change: "assignment.missed", rank: 1 },
   taskPublished: { change: "assignment.published", rank: 2 },
 } as const satisfies Partial<
-  Record<
-    typeof NoticeKind.Type,
-    { readonly change: typeof DigestChange.Type; readonly rank: number }
-  >
+  Record<typeof NoticeKind.Type, typeof MailRoute.Type>
 >;
 
 /**

@@ -11,6 +11,7 @@ const root = {
   grades: "Grades",
   library: "Library",
   name: "Fisika X-1",
+  people: "People",
   slug,
   tasks: "Tasks",
 };
@@ -53,6 +54,12 @@ describe("class page path", () => {
         (item) => item.label
       )
     ).toEqual(["Fisika X-1", "Library"]);
+    expect(
+      Arr.map(
+        classPath({ _tag: "people" }, root, none, none),
+        (item) => item.label
+      )
+    ).toEqual(["Fisika X-1", "People"]);
     expect(
       Arr.map(
         classPath({ _tag: "grades" }, root, none, none),

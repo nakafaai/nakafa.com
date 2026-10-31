@@ -11,6 +11,7 @@ import {
   MessageHidden,
 } from "@repo/backend/confect/classroom/forum/errors";
 import {
+  channelOpen,
   classMessage,
   missing,
   nextThreadNumber,
@@ -71,6 +72,7 @@ export const start = FunctionImpl.make(
     const principal = yield* Member;
     const row = yield* Class;
     const message = yield* classMessage(messageId, "forum.post");
+    yield* channelOpen(message.channelId);
     if (message.threadId !== undefined) {
       return yield* missing("forum.post");
     }

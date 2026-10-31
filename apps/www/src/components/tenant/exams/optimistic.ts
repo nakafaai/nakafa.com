@@ -9,6 +9,7 @@ import {
   type ScoringKind,
   scoringPoints,
   scoringRule,
+  templatePoints,
 } from "@repo/backend/confect/exams/scoring";
 import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Array as Arr, Option } from "effect";
@@ -91,7 +92,7 @@ export const answeredQuestion = (
 });
 
 /** The query that reads the exam of a mutation, which every exam mutation names. */
-const examQuery = (args: ExamQuery): ExamQuery => ({
+export const examQuery = (args: ExamQuery): ExamQuery => ({
   examId: args.examId,
   slug: args.slug,
 });
@@ -100,7 +101,7 @@ const examQuery = (args: ExamQuery): ExamQuery => ({
  * Applies a change to the exam the editor reads. A store that does not hold the exam
  * is left as it is, so the server's answer is the only one that can change it.
  */
-const changeExam = (
+export const changeExam = (
   localStore: LocalStore.OptimisticLocalStore,
   query: ExamQuery,
   change: (view: ExamView) => ExamView
@@ -144,8 +145,8 @@ export const removeUpdate: OptimisticUpdate<typeof exams.questions.remove> = (
 
 /**
  * The exam with one question in another template: its answers and key converted as the server converts
- * them, with the labels of the options the template fixes (`asTemplate`), and its revision one higher, as
- * the server raises it.
+ * them, with the labels of the options the template fixes (`asTemplate`), its points and its revision raised
+ * as the server raises them.
  */
 const templatedQuestion = (
   view: ExamView,
@@ -166,6 +167,7 @@ const templatedQuestion = (
             question.key,
             change.labels
           ),
+          points: templatePoints(question.points, change.template),
           revision: question.revision + 1,
           template: change.template,
         }

@@ -13,18 +13,18 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { optionLetter } from "@repo/backend/confect/exams/letters";
+import {
+  isReasonOption,
+  optionLetter,
+  optionPlace,
+} from "@repo/backend/confect/exams/letters";
 import type {
   AnswerRow as AnswerRowSchema,
   QuestionSummary as QuestionSummarySchema,
 } from "@repo/backend/confect/exams/results/contract";
 import { Verdict } from "@repo/backend/confect/exams/results/schema";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
@@ -146,10 +146,10 @@ function QuestionResults({ question }: { readonly question: Question }) {
   const share = correctShare(stats.value);
   return (
     <>
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("question", { number: question.number })}</CardTitle>
-        </CardHeader>
+      <CardSection
+        description={t("results-question-description")}
+        title={t("question", { number: question.number })}
+      >
         <CardContent className="grid gap-3 text-sm">
           <p>
             {share === null
@@ -160,9 +160,17 @@ function QuestionResults({ question }: { readonly question: Question }) {
             {Arr.map(stats.value.optionCounts, (option, index) => (
               <li className="flex justify-between gap-4" key={option.optionId}>
                 <span>
-                  {t("option", {
-                    letter: optionLetter(index, question.optionScript),
-                  })}
+                  {t(
+                    isReasonOption(option.optionId)
+                      ? "reason-option"
+                      : "option",
+                    {
+                      letter: optionLetter(
+                        optionPlace(question.optionIds, index),
+                        question.optionScript
+                      ),
+                    }
+                  )}
                 </span>
                 <span className="tabular-nums">{option.count}</span>
               </li>

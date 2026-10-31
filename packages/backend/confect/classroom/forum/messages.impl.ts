@@ -19,9 +19,11 @@ import {
   MessageHidden,
 } from "@repo/backend/confect/classroom/forum/errors";
 import {
+  channelOpen,
   classChannel,
   classMessage,
   missing,
+  refuseArchived,
 } from "@repo/backend/confect/classroom/forum/lookup";
 import { moveMark } from "@repo/backend/confect/classroom/forum/mark";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
@@ -91,6 +93,7 @@ const send = FunctionImpl.make(
     const { person } = yield* Member;
     const row = yield* Class;
     const channel = yield* classChannel(channelId, "forum.post");
+    yield* refuseArchived(channel);
     const reader = yield* DatabaseReader;
     const sent = yield* reader
       .table("classroomMessages")
@@ -151,6 +154,7 @@ const edit = FunctionImpl.make(
     const { person } = yield* Member;
     const row = yield* Class;
     const message = yield* classMessage(messageId, "forum.post");
+    yield* channelOpen(message.channelId);
     if (message.authorId !== person._id) {
       return yield* missing("forum.post");
     }

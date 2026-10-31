@@ -3,6 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   freezeExam,
+  requireDocumentUnfrozen,
   requireUnfrozen,
 } from "@repo/backend/confect/exams/freeze";
 import {
@@ -28,7 +29,8 @@ import {
 import { Array as Arr, Effect } from "effect";
 
 const { open } = refs.public.exams.exams;
-const { add, answer, copy, move, points, remove } = refs.public.exams.questions;
+const { add, answer, copy, move, points, reading, remove } =
+  refs.public.exams.questions;
 const { submit } = refs.public.editor.steps;
 const { closeDue } = refs.internal.exams.sittings.timers;
 
@@ -343,5 +345,30 @@ describe("exams/freeze", () => {
         });
         expect((yield* fixture.run(documentRowOf(documentId))).head).toBe(2);
       })
+  );
+
+  it.effect("freezes a question's shared reading with its exam", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* keyedSchool(fixture);
+      const examId = yield* keyedExam(fixture, "Ujian");
+      const teacher = fixture.as("teacher");
+      const exam = yield* teacher.query(open, { examId, slug: nf });
+      const [question] = exam.questions;
+      const held = yield* teacher.mutation(reading, {
+        examId,
+        questionId: question.id,
+        slug: nf,
+        source: "new",
+      });
+      yield* finishSitting(fixture, examId);
+      const refused = yield* fixture.run(
+        requireDocumentUnfrozen(held.reading ?? question.prompt).pipe(
+          Effect.flip,
+          Effect.map((error) => error._tag)
+        )
+      );
+      expect(refused).toBe("ExamFrozen");
+    })
   );
 });

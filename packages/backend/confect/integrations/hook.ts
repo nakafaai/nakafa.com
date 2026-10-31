@@ -85,7 +85,7 @@ export const integrationWebhookValidator = Schema.Struct({
 );
 
 /** Why one attempt failed: its receiver is no public address, it answered no success, it could not be reached, or it took too long. */
-export const DeliveryFailure = Schema.Literals([
+const DeliveryFailure = Schema.Literals([
   "address",
   "deadline",
   "network",

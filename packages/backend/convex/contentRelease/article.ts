@@ -1,6 +1,5 @@
 import registeredFunctions from "../../confect/_generated/registeredFunctions/contentRelease/article";
 
-export const apiPage = registeredFunctions.apiPage;
 export const bucket = registeredFunctions.bucket;
 export const categories = registeredFunctions.categories;
 export const delivery = registeredFunctions.delivery;

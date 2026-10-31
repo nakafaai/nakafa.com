@@ -25,6 +25,7 @@ import {
   withStatementAdded,
   withStatementRemoved,
 } from "@/components/tenant/exams/table";
+import type { Unstored } from "@/components/tenant/exams/writer";
 import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 
 /** A true or false table, as the page shows it. */
@@ -68,11 +69,7 @@ export function TableSheet({
     );
 
   /** Saves the label a statement's or a column's editor holds. */
-  const saveLabel = (
-    partId: string,
-    label: OptionLabel,
-    unstored: () => void
-  ) =>
+  const saveLabel = (partId: string, label: OptionLabel, unstored: Unstored) =>
     editing.saveAnswers(
       (current) => ({
         ...current,
@@ -116,7 +113,7 @@ export function TableSheet({
               label={labelOf(column, saved("columns"))}
               locked={frozen}
               onRemove={null}
-              onSave={(label: OptionLabel, unstored: () => void) =>
+              onSave={(label: OptionLabel, unstored: Unstored) =>
                 saveLabel(column.id, label, unstored)
               }
               removeName=""
@@ -149,7 +146,7 @@ export function TableSheet({
                   ? () => removeStatement(statement.id)
                   : null
               }
-              onSave={(label: OptionLabel, unstored: () => void) =>
+              onSave={(label: OptionLabel, unstored: Unstored) =>
                 saveLabel(statement.id, label, unstored)
               }
               removeName={t("statement-remove-of", {

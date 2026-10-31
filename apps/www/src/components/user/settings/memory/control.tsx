@@ -1,10 +1,5 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { Label } from "@repo/design-system/components/ui/label";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Switch } from "@repo/design-system/components/ui/switch";
@@ -42,11 +37,10 @@ export function MemoryControl() {
   const clearing = useRef(false);
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{auth("memory")}</CardTitle>
-        <CardDescription>{auth("memory-description")}</CardDescription>
-      </CardHeader>
+    <CardSection
+      description={auth("memory-description")}
+      title={auth("memory")}
+    >
       <CardContent>
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor={REMEMBER_ID}>{t("remember")}</Label>

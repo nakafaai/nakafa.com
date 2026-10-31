@@ -5,6 +5,7 @@ import {
   UserSettings01Icon,
 } from "@hugeicons/core-free-icons";
 import { SCHOOL_FREE_STUDENTS } from "@repo/backend/confect/billing/catalog";
+import { DPA_VERSION } from "@repo/backend/confect/tenancy/contract";
 import {
   SchoolSize,
   StartCountry,
@@ -224,12 +225,16 @@ export function StartSizeQuestion() {
       {legal === null ? null : (
         <p className="text-muted-foreground text-xs text-pretty">
           {t.rich("consent", {
+            dpa: (chunks) => (
+              <StartLink href={legal.dataProcessing}>{chunks}</StartLink>
+            ),
             privacy: (chunks) => (
               <StartLink href={legal.privacy}>{chunks}</StartLink>
             ),
             terms: (chunks) => (
               <StartLink href={legal.terms}>{chunks}</StartLink>
             ),
+            version: DPA_VERSION,
           })}
         </p>
       )}
