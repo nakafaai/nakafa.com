@@ -101,8 +101,9 @@ function AuditWhoFilter() {
     ...(QueryResult.isSuccess(people)
       ? Arr.map(people.value, (person) => person.name)
       : []),
-    t("audit-operator"),
-    t("audit-system"),
+    t("audit-actor.client"),
+    t("audit-actor.operator"),
+    t("audit-actor.system"),
   ]);
 
   return (
