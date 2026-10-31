@@ -215,16 +215,17 @@ export const readProgramPlacements = Effect.fn(
         nodeKey,
         programKey,
       });
-      if (context === null) {
+      if (context === null || context.resolvedCanonicalPath === undefined) {
         return Option.none();
       }
+      const { resolvedCanonicalPath } = context;
       const ancestors = yield* readAncestors(snapshotId, context.parent);
       return Option.some({
         ancestorJson: Arr.map(ancestors, ({ rowJson }) => rowJson),
         groupJson: context.groupJson,
         mappingJson: context.mappingJson,
         parentJson: context.parentJson,
-        resolvedCanonicalPath: context.resolvedCanonicalPath,
+        resolvedCanonicalPath,
       });
     })
   );

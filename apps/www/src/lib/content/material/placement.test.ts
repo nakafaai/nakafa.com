@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumNodeKeySchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { Option } from "effect";
@@ -17,7 +18,11 @@ const place = (nodeKey: string): MaterialPlacement => ({
   },
   hash: "functions",
   label: "Functions",
-  parent: { publicPath: "curriculum/merdeka/class-11/mathematics" },
+  parent: {
+    publicPath: PublicPathSchema.make(
+      "curriculum/merdeka/class-11/mathematics"
+    ),
+  },
   resolvedCanonicalPath: "subjects/mathematics/functions",
   trail: [],
 });
