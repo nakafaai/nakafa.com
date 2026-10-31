@@ -24,10 +24,10 @@ import { GRADE_ICONS } from "@/components/tenant/settings/choices";
  */
 const ROSTER_STATUS_LOOKS = {
   adult: { icon: UserCheck01Icon, tone: "success" },
-  birth: { icon: CalendarRemove01Icon, tone: "danger" },
-  cohort: { icon: UserMultiple02Icon, tone: "danger" },
-  name: { icon: UserQuestion01Icon, tone: "danger" },
-  nisn: { icon: IdentityCardIcon, tone: "danger" },
+  birth: { icon: CalendarRemove01Icon, tone: "destructive" },
+  cohort: { icon: UserMultiple02Icon, tone: "destructive" },
+  name: { icon: UserQuestion01Icon, tone: "destructive" },
+  nisn: { icon: IdentityCardIcon, tone: "destructive" },
   under: { icon: UserLock01Icon, tone: "info" },
 } as const satisfies Record<
   typeof RowProblem.Type | "adult" | "under",

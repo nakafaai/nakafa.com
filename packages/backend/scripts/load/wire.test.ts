@@ -34,11 +34,12 @@ vi.mock("convex/browser", () => ({
     constructor(address: string, options: unknown) {
       mocks.created(address, options);
     }
+    readonly calls = mocks;
     setAuth(fetchToken: () => Promise<string>) {
-      mocks.setAuth(fetchToken);
+      this.calls.setAuth(fetchToken);
     }
     close() {
-      mocks.close();
+      this.calls.close();
       return Promise.resolve();
     }
   },

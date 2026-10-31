@@ -10,11 +10,11 @@ const LOCALES = ["en", "id", "de"] as const;
 
 /** A search field that names its placeholder by a literal message: a table page's search box or a palette's. */
 const SEARCH_FIELD =
-  /<(TableSearch|CommandInput)\b[^>]*?placeholder=\{(t[A-Za-z]*)\("([a-z0-9-]+)"\)\}/g;
+  /<(?<field>TableSearch|CommandInput)\b[^>]*?placeholder=\{(?<translator>t[A-Za-z]*)\("(?<key>[a-z0-9-]+)"\)\}/gu;
 
 /** A translator a component binds to its namespace. */
 const TRANSLATOR =
-  /const (t[A-Za-z]*) = useTranslations\(\s*"([A-Za-z]+)"\s*\)/g;
+  /const (?<name>t[A-Za-z]*) = useTranslations\(\s*"(?<namespace>[A-Za-z]+)"\s*\)/gu;
 
 /** A dictionary: namespaces of messages, where a message may also be a nested group. */
 const Dictionary = Schema.fromJsonString(
@@ -50,17 +50,20 @@ const readSearchPlaceholders = Effect.gen(function* () {
       Effect.map(fs.readFileString(path.join(sources, file)), (source) => {
         const translators = Arr.map(
           Arr.fromIterable(source.matchAll(TRANSLATOR)),
-          (match) => ({ name: match[1] ?? "", namespace: match[2] ?? "" })
+          (match) => ({
+            name: match.groups?.name ?? "",
+            namespace: match.groups?.namespace ?? "",
+          })
         );
         return Arr.flatMap(
           Arr.fromIterable(source.matchAll(SEARCH_FIELD)),
           (match) =>
             Arr.flatMap(translators, (translator) =>
-              translator.name === match[2]
+              translator.name === match.groups?.translator
                 ? [
                     {
-                      field: match[1] ?? "",
-                      key: match[3] ?? "",
+                      field: match.groups?.field ?? "",
+                      key: match.groups?.key ?? "",
                       namespace: translator.namespace,
                     },
                   ]
