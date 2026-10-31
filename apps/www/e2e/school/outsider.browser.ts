@@ -97,7 +97,7 @@ test("the not-member page leads with Sign in with a card, keeps Check again for 
   await card.click();
   await expect(
     page.getByText(
-      "No Google address? Sign in with the school username and card your admin gave you."
+      "Sign in with the username and card from your admin."
     )
   ).toBeVisible();
   await context.close();

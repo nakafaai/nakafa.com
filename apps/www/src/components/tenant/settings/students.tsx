@@ -11,6 +11,7 @@ import {
   Refresh01Icon,
 } from "@hugeicons/core-free-icons";
 import identity from "@repo/backend/confect/_generated/refs/identity";
+import { LoginName } from "@repo/backend/confect/identity/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -22,6 +23,7 @@ import {
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -326,7 +328,9 @@ function SchoolStudentDialog({
   const [loginName, setLoginName] = useState("");
   const parsedName = Schema.decodeOption(PersonName)(name.trim());
   const login = loginName.trim().toLowerCase();
-  const submittable = Option.isSome(parsedName) && login !== "";
+  const parsedLogin = Schema.decodeOption(LoginName)(login);
+  const loginProblem = login !== "" && Option.isNone(parsedLogin);
+  const submittable = Option.isSome(parsedName) && Option.isSome(parsedLogin);
 
   return (
     <ResponsiveDialog
@@ -347,14 +351,19 @@ function SchoolStudentDialog({
             disabled={!submittable}
             inert={isPending}
             onClick={() => {
-              if (Option.isNone(parsedName) || login === "") {
+              if (Option.isNone(parsedName) || Option.isNone(parsedLogin)) {
                 return;
               }
               const studentName = parsedName.value;
               setOpen(false);
               startTransition(() =>
                 saveSchool(
-                  () => enroll({ loginName: login, name: studentName, slug }),
+                  () =>
+                    enroll({
+                      loginName: parsedLogin.value,
+                      name: studentName,
+                      slug,
+                    }),
                   SOURCE,
                   (card) => onAdded({ ...card, name: studentName })
                 )
@@ -387,12 +396,16 @@ function SchoolStudentDialog({
             {t("card-login-name")}
           </FieldLabel>
           <Input
+            aria-invalid={loginProblem}
             id={`${id}-login`}
             onChange={(event) => setLoginName(event.target.value)}
             placeholder={t("card-login-name-placeholder")}
             value={loginName}
           />
           <FieldDescription>{t("student-login-rule")}</FieldDescription>
+          <FieldError>
+            {loginProblem ? t("student-login-rule") : null}
+          </FieldError>
         </Field>
       </FieldGroup>
     </ResponsiveDialog>
