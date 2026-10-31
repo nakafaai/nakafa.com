@@ -157,6 +157,48 @@ test("an entry that the server failed goes again by itself, so the student reach
   await studentContext.close();
 });
 
+test("a Finish that the page closed on goes again on the next visit, so the server holds what the screen said", async ({
+  baseURL,
+  browser,
+}) => {
+  const { changes, student, studentContext } = await studentAtEntry(
+    baseURL,
+    browser,
+    "finish"
+  );
+  await student.getByRole("button", { name: "Enter sitting" }).click();
+  const option = student
+    .getByRole("article", { name: "Question 1" })
+    .getByRole("radio")
+    .first();
+  await expect(option).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  // The call never reaches the server, as on a phone that drops the network, and the screen says finished at once.
+  changes.loseNext("exams/sittings:finish");
+  await student.getByRole("button", { exact: true, name: "Finish" }).click();
+  await student
+    .getByRole("dialog")
+    .getByRole("button", { exact: true, name: "Finish" })
+    .click();
+  const finished = student.getByText("You finished this exam.");
+  await expect(finished).toBeVisible();
+
+  // The page goes, and the next visit sends the Finish that the browser kept.
+  await student.reload();
+  await expect(finished).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect
+    .poll(() => changes.argumentsOf("exams/sittings:finish").length, {
+      timeout: readinessTimeoutMilliseconds,
+    })
+    .toBe(2);
+
+  // The server holds it now: another visit reads the finish, and no paper comes back.
+  await student.reload();
+  await expect(finished).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(student.getByRole("article")).toHaveCount(0);
+  await studentContext.close();
+});
+
 test("a server failure of a paper's read keeps the student in the paper's frame, and the paper comes back by itself", async ({
   baseURL,
   browser,

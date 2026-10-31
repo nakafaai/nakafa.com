@@ -1,7 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import { KeyValueStore } from "effect/persistence";
-import { keptAttempt, submittedKeysOf } from "@/components/exams/sitting/keep";
+import {
+  keptAttempt,
+  keptFinish,
+  submittedKeysOf,
+} from "@/components/exams/sitting/keep";
 
 const SITTING = "sitting-a";
 const ATTEMPT = "attempt-a";
@@ -10,6 +14,38 @@ const QUESTION = "question-a";
 const scoped = <A, E>(
   effect: Effect.Effect<A, E, KeyValueStore.KeyValueStore>
 ) => Effect.provide(effect, KeyValueStore.layerMemory);
+
+describe("keptFinish", () => {
+  it.effect(
+    "holds a Finish for the next visit until the page hears the server, one attempt apart from another",
+    () =>
+      scoped(
+        Effect.gen(function* () {
+          const kept = keptFinish(SITTING, ATTEMPT);
+          expect(yield* kept.held()).toBe(false);
+
+          yield* kept.keep();
+          // A reload reads the same entry, and the other attempt of the sitting holds nothing.
+          expect(yield* keptFinish(SITTING, ATTEMPT).held()).toBe(true);
+          expect(yield* keptFinish(SITTING, "attempt-b").held()).toBe(false);
+
+          yield* kept.drop();
+          expect(yield* kept.held()).toBe(false);
+        })
+      )
+  );
+
+  it.effect("keeps the Finish apart from the answers", () =>
+    scoped(
+      Effect.gen(function* () {
+        yield* keptFinish(SITTING, ATTEMPT).keep();
+        expect(yield* keptAttempt(SITTING, ATTEMPT).read()).toEqual({
+          answers: {},
+        });
+      })
+    )
+  );
+});
 
 describe("keptAttempt", () => {
   it.effect(

@@ -91,7 +91,6 @@ export const SentenceKeySchema = Schema.Literals([
   "Exams.student-results-footer",
   "Exams.student-results-released",
   "Exams.try-note",
-  "Holy.interpretation-description",
   "Landing.faq-account-answer",
   "Landing.faq-accuracy-answer",
   "Landing.faq-credits-answer",

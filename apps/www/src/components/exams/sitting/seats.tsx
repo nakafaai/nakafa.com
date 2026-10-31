@@ -12,13 +12,14 @@ import { rowLineVariants } from "@repo/design-system/lib/row";
 import { getRouteApi } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
   type DashboardAttempt,
   dashboardArgs,
 } from "@/components/exams/sitting/change";
 import {
+  SittingOfflineContext,
   useSittingData,
   useSittingStore,
 } from "@/components/exams/sitting/context";
@@ -30,6 +31,7 @@ import {
   matchesFilter,
   type SeatFrame,
   seatFrame,
+  seenOffline,
 } from "@/components/exams/sitting/seat";
 import { useSittingClock } from "@/components/exams/sitting/timer";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -82,6 +84,7 @@ export function SittingSeats() {
   const t = useTranslations("Exams");
   const { sittingId, slug, value } = useSittingData();
   const filter = useSittingStore((state) => state.filter);
+  const offline = use(SittingOfflineContext);
   const first = value.attempts;
   // The students who have not entered yet hold a seat too, once every attempt is listed, and
   // only the "all" filter shows them, because they have no state to filter by.
@@ -105,7 +108,9 @@ export function SittingSeats() {
   }
   if (
     first.isDone &&
-    !Arr.some(first.page, (attempt) => matchesFilter(filter, attempt)) &&
+    !Arr.some(first.page, (attempt) =>
+      matchesFilter(filter, seenOffline(attempt, offline))
+    ) &&
     !(showExpected && !noExpected)
   ) {
     return (
@@ -182,9 +187,13 @@ function SeatPage({
   readonly cursor: string | null;
 }) {
   const filter = useSittingStore((state) => state.filter);
+  const offline = use(SittingOfflineContext);
 
   return Arr.map(
-    Arr.filter(attempts, (attempt) => matchesFilter(filter, attempt)),
+    Arr.filter(
+      Arr.map(attempts, (attempt) => seenOffline(attempt, offline)),
+      (attempt) => matchesFilter(filter, attempt)
+    ),
     (attempt) => (
       <li key={attempt.id}>
         <SeatLink attempt={attempt} cursor={cursor} />

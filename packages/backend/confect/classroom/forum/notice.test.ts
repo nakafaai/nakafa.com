@@ -51,6 +51,8 @@ describe("classroom/forum mentions", () => {
           { id: fixture.people.student.personId, name: "Student" },
         ]);
         const sent = yield* teacher.mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "mention-message",
           mentions: [
@@ -102,6 +104,7 @@ describe("classroom/forum mentions", () => {
         });
         vi.setSystemTime(TENANCY_NOW + 1000);
         const answered = yield* teacher.mutation(reply, {
+          attachments: [],
           classId: forum.classId,
           clientKey: "mention-reply",
           mentions: [{ _tag: "person", id: fixture.people.student.personId }],
@@ -149,6 +152,8 @@ describe("classroom/forum mentions", () => {
           fixture
             .as("teacher")
             .mutation(send, {
+              attachments: [],
+              poll: null,
               ...forum,
               clientKey: "outside-mention",
               mentions: [{ _tag: "person", id: fixture.people.admin.personId }],
@@ -159,6 +164,8 @@ describe("classroom/forum mentions", () => {
           fixture
             .as("teacher")
             .mutation(send, {
+              attachments: [],
+              poll: null,
               ...forum,
               clientKey: "foreign-mention",
               mentions: [
@@ -171,6 +178,8 @@ describe("classroom/forum mentions", () => {
           fixture
             .as("student")
             .mutation(send, {
+              attachments: [],
+              poll: null,
               ...forum,
               clientKey: "student-everyone",
               mentions: [{ _tag: "everyone" }],
@@ -199,6 +208,8 @@ describe("classroom/forum mentions", () => {
         const term = yield* period(fixture, fixture.units.smp);
         const forum = yield* forumClass(fixture, term.id, "X-3");
         yield* fixture.as("teacher").mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "everyone-message",
           mentions: [
@@ -242,6 +253,8 @@ describe("classroom/forum mentions", () => {
             .pipe(Effect.map(Arr.map((person) => person.name)));
         expect(yield* list()).toEqual(["Raka Pratama", "Student"]);
         const sent = yield* teacher.mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "gone-mention",
           mentions: [{ _tag: "person", id: fixture.people.student.personId }],

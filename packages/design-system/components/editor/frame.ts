@@ -31,7 +31,8 @@ export const editorRow = cva(
 );
 
 /**
- * The room the text takes at least: a prompt takes a page of writing, and a short text such as an
+ * The room the text takes at least: a note takes a page of writing, a prompt on an exam's paper only its
+ * own lines, so it stands where the student reads it, and a short text such as an
  * option takes one line.
  */
 export const editorContent = cva("", {
@@ -39,6 +40,7 @@ export const editorContent = cva("", {
     size: {
       line: "",
       page: "min-h-32",
+      paper: "",
     },
   },
 });
@@ -79,6 +81,7 @@ export const editorDocument = cva(
       size: {
         line: "",
         page: "",
+        paper: "",
       },
       text: {
         article: "",

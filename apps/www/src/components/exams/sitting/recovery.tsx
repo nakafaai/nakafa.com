@@ -7,14 +7,26 @@ import { PlayerMain } from "@/components/player/frame";
 import { PlayerProvider } from "@/components/player/provider";
 import { ReadRecovery } from "@/components/tenant/read/recovery";
 
-/** The paper's frame while the paper is not on screen: full screen, under its bar, with the paper to come. */
-export function PaperFrame({ children }: { readonly children: ReactNode }) {
+/**
+ * The paper's frame around every screen of a sitting that holds no paper: its entry, its waiting, its outcome,
+ * and the moment before the paper arrives, so the whole sitting stands in one full screen under one bar, as a
+ * try-out does, and the frame never changes on the way into the paper or out of it.
+ */
+export function PaperFrame({
+  bar,
+  children,
+}: {
+  /** The bar over the screen, the paper's own (`PaperBar`). */
+  readonly bar: ReactNode;
+  /** The screen under the bar, where the paper's questions stand; none while the paper is on its way. */
+  readonly children?: ReactNode;
+}) {
   const mode = useSittingMode();
 
   return (
     <PlayerProvider keys={[]} mode={mode}>
-      {children}
-      <PlayerMain navigator={null}>{null}</PlayerMain>
+      {bar}
+      <PlayerMain navigator={null}>{children}</PlayerMain>
     </PlayerProvider>
   );
 }
@@ -24,8 +36,7 @@ function PaperHold({ children }: { readonly children: ReactNode }) {
   const t = useTranslations("Exams");
 
   return (
-    <PaperFrame>
-      <PaperBar back={<PaperBack />} title={t("sitting")} />
+    <PaperFrame bar={<PaperBar back={<PaperBack />} title={t("sitting")} />}>
       {children}
     </PaperFrame>
   );
