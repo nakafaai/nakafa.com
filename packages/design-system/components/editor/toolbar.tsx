@@ -28,7 +28,7 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { EditorContext, useCurrentEditor } from "@tiptap/react";
 import { cn } from "cn";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   type ComponentProps,
   type ReactNode,
@@ -45,10 +45,10 @@ interface EditorGroup {
 }
 
 /** A group of the bar that the row has no room for in full: its name, and how many of its controls still show. */
-interface WrappedGroup {
-  readonly name: string;
-  readonly shown: number;
-}
+const WrappedGroup = Schema.Struct({
+  name: Schema.String,
+  shown: Schema.Number,
+});
 
 /**
  * Reads how much of one group the row has room for. The row keeps one line and lets each control that does not
@@ -79,7 +79,7 @@ function readGroup(row: HTMLElement, group: HTMLElement) {
 }
 
 /** The groups the row cut, as one text, so a row that cut the same controls keeps its list. */
-function groupsKey(groups: readonly WrappedGroup[]) {
+function groupsKey(groups: readonly (typeof WrappedGroup.Type)[]) {
   return Arr.join(
     Arr.map(groups, ({ name, shown }) => `${name}:${shown}`),
     " "
@@ -171,7 +171,7 @@ function EditorBar({
 }) {
   const { editor } = useCurrentEditor();
   const row = useRef<HTMLDivElement>(null);
-  const [wrapped, setWrapped] = useState<readonly WrappedGroup[]>([]);
+  const [wrapped, setWrapped] = useState<readonly (typeof WrappedGroup.Type)[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {

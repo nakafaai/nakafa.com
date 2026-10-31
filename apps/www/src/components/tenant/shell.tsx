@@ -188,7 +188,7 @@ function TenantSwitcher() {
             <Suspense fallback={null}>
               <ClientOnly fallback={null}>
                 <Authenticated>
-                  <SidebarMembershipGroup canOpenSchool={false} />
+                  <SidebarMembershipGroup />
                 </Authenticated>
               </ClientOnly>
             </Suspense>
