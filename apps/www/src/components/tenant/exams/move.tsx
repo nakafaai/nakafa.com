@@ -39,7 +39,7 @@ import {
 } from "@/components/tenant/exams/filter";
 import {
   lengthsWith,
-  sittingTimes,
+  movedTimes,
   wallClockOf,
 } from "@/components/tenant/exams/time";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -161,7 +161,7 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
   }));
   const roomName = Str.trim(name);
   const times = Option.flatMap(zone, (named) =>
-    sittingTimes(starts, minutes, named)
+    movedTimes(room, starts, minutes, named)
   );
   const changed =
     roomName !== room.room ||

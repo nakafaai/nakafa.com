@@ -98,3 +98,20 @@ export const sittingTimes = (
       return { closesAt: opensAt + minutes * MINUTE_MS, opensAt };
     })
   );
+
+/**
+ * The instants a moved room takes for the start and the length its dialog shows. While both show the room as it is,
+ * the room keeps its own instants: the start field holds whole minutes, and a stored start may hold seconds, which a
+ * start read back from the field would drop. Otherwise they are the sitting's times of that start and length, or none
+ * when the start is not a time the calendar holds.
+ */
+export const movedTimes = (
+  room: { readonly closesAt: number; readonly opensAt: number },
+  local: string,
+  minutes: number,
+  zone: DateTime.TimeZone
+) =>
+  local === wallClockOf(room.opensAt, zone) &&
+  minutes === Math.round((room.closesAt - room.opensAt) / MINUTE_MS)
+    ? Option.some({ closesAt: room.closesAt, opensAt: room.opensAt })
+    : sittingTimes(local, minutes, zone);

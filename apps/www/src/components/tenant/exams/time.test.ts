@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Option } from "effect";
 import {
   lengthsWith,
+  movedTimes,
   nextQuarter,
   sittingTimes,
   wallClockOf,
@@ -99,6 +100,41 @@ describe("sittingTimes", () => {
 
   it("is none for a day that the calendar does not have", () => {
     expect(sittingTimes("2026-02-30T10:00", 60, jakarta)).toEqual(
+      Option.none()
+    );
+  });
+});
+
+describe("movedTimes", () => {
+  /** A room stored with seconds in its start, as a seed or an import may store it: 09:11:42.5 in Jakarta, for an hour. */
+  const room = {
+    closesAt: millis("2026-11-01T03:11:42.500Z"),
+    opensAt: millis("2026-11-01T02:11:42.500Z"),
+  };
+
+  it("keeps the room's own instants while its start and length show as they are", () => {
+    expect(movedTimes(room, "2026-11-01T09:11", 60, jakarta)).toEqual(
+      Option.some(room)
+    );
+  });
+
+  it("takes the start and the length the viewer chose once either one changes", () => {
+    expect(movedTimes(room, "2026-11-01T10:00", 60, jakarta)).toEqual(
+      Option.some({
+        closesAt: millis("2026-11-01T04:00:00Z"),
+        opensAt: millis("2026-11-01T03:00:00Z"),
+      })
+    );
+    expect(movedTimes(room, "2026-11-01T09:11", 90, jakarta)).toEqual(
+      Option.some({
+        closesAt: millis("2026-11-01T03:41:00Z"),
+        opensAt: millis("2026-11-01T02:11:00Z"),
+      })
+    );
+  });
+
+  it("is none when a changed start is not a time the calendar holds", () => {
+    expect(movedTimes(room, "2026-02-30T09:00", 60, jakarta)).toEqual(
       Option.none()
     );
   });
