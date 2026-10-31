@@ -416,6 +416,8 @@
     "student-scheduled-footer": "The token field opens with the sitting.",
     "student-back-home": "Back to home",
     "seat-last-activity": "Last activity {time}.",
+    "seat-away-seconds": "Away for {seconds} s.",
+    "seat-away-minutes": "Away for {minutes} min {seconds} s.",
     "title-needed": "The exam needs a title before you can create it.",
     "title-too-long": "The title can have at most {count} characters.",
     "no-unit-description": "Every exam belongs to a unit, so add or restore one in the settings first.",

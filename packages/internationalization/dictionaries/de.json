@@ -416,6 +416,8 @@
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
     "student-back-home": "Zur Startseite",
     "seat-last-activity": "Letzte Aktivität {time}.",
+    "seat-away-seconds": "Seit {seconds} s weg.",
+    "seat-away-minutes": "Seit {minutes} min {seconds} s weg.",
     "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
     "title-too-long": "Der Titel darf höchstens {count} Zeichen lang sein.",
     "no-unit-description": "Jede Prüfung gehört zu einer Einheit, also lege zuerst in den Einstellungen eine an oder stelle eine wieder her.",
