@@ -1,5 +1,6 @@
 import { ExamResponse } from "@repo/backend/confect/assessment/response";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
+import { KeyValueStore } from "effect/persistence";
 import { keptAnswers } from "@/components/player/keep";
 
 /** The kept answers of School sittings, each an `ExamResponse`. */
@@ -16,6 +17,29 @@ const sittingAnswers = keptAnswers(ExamResponse);
  */
 export const keptAttempt = (sittingId: string, attemptId: string) =>
   sittingAnswers(`nakafa-sitting-kept:${sittingId}:${attemptId}`);
+
+/**
+ * The Finish that the browser holds while it is on its way, in its own entry beside the answers. A mutation in
+ * flight lives only in the page's memory, so a page that closes first would leave the attempt open behind a screen
+ * that said it finished: the entry stays, and the next visit finishes the attempt after the kept answers. A page
+ * that hears the server's answer drops the entry, so a student who is told a Finish failed and carries on is
+ * never finished later by a reload.
+ */
+export const keptFinish = (sittingId: string, attemptId: string) => {
+  const key = `nakafa-sitting-finish:${sittingId}:${attemptId}`;
+
+  return {
+    drop: Effect.fn("sitting.finish.drop")(function* () {
+      yield* (yield* KeyValueStore.KeyValueStore).remove(key);
+    }),
+    held: Effect.fn("sitting.finish.held")(function* () {
+      return yield* (yield* KeyValueStore.KeyValueStore).has(key);
+    }),
+    keep: Effect.fn("sitting.finish.keep")(function* () {
+      yield* (yield* KeyValueStore.KeyValueStore).set(key, "finish");
+    }),
+  };
+};
 
 /**
  * The sitting and the attempt of each row of a student's list that shows its attempt as submitted, which

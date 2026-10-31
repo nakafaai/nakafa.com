@@ -37,6 +37,8 @@ describe("classroom/forum messages", () => {
         const forum = yield* forumClass(fixture, term.id, "X-1");
         const student = fixture.as("student");
         const first = yield* student.mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "first-message",
           mentions: [],
@@ -45,6 +47,8 @@ describe("classroom/forum messages", () => {
         });
         vi.setSystemTime(TENANCY_NOW + 1000);
         const second = yield* fixture.as("teacher").mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "second-message",
           mentions: [],
@@ -52,6 +56,8 @@ describe("classroom/forum messages", () => {
           text: "Jumat, sebelum jam 12.",
         });
         const retried = yield* student.mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "first-message",
           mentions: [],
@@ -90,6 +96,8 @@ describe("classroom/forum messages", () => {
         const term = yield* period(fixture, fixture.units.smp);
         const forum = yield* forumClass(fixture, term.id, "X-2");
         const sent = yield* fixture.as("student").mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "student-key",
           mentions: [],
@@ -120,6 +128,8 @@ describe("classroom/forum messages", () => {
             .pipe(Effect.flip),
           teacher
             .mutation(send, {
+              attachments: [],
+              poll: null,
               ...forum,
               clientKey: "student-key",
               mentions: [],
@@ -144,6 +154,8 @@ describe("classroom/forum messages", () => {
         const forum = yield* forumClass(fixture, term.id, "X-3");
         const student = fixture.as("student");
         const sent = yield* student.mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "hidden-message",
           mentions: [],
@@ -198,6 +210,8 @@ describe("classroom/forum messages", () => {
         const term = yield* period(fixture, fixture.units.smp);
         const forum = yield* forumClass(fixture, term.id, "XII-1");
         yield* fixture.as("student").mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "student-post",
           mentions: [],
@@ -215,6 +229,8 @@ describe("classroom/forum messages", () => {
         ]);
         const refused = yield* admin
           .mutation(send, {
+            attachments: [],
+            poll: null,
             ...forum,
             clientKey: "admin-post",
             mentions: [],
@@ -236,6 +252,8 @@ describe("classroom/forum messages", () => {
         const other = yield* forumClass(fixture, term.id, "XI-2", false);
         const teacher = fixture.as("teacher");
         const elsewhere = yield* teacher.mutation(send, {
+          attachments: [],
+          poll: null,
           ...other,
           clientKey: "other-class",
           mentions: [],
@@ -253,6 +271,8 @@ describe("classroom/forum messages", () => {
             .pipe(Effect.flip),
           teacher
             .mutation(send, {
+              attachments: [],
+              poll: null,
               channelId: other.channelId,
               classId: own.classId,
               clientKey: "wrong-channel",
