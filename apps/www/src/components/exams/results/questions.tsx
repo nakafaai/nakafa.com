@@ -13,7 +13,11 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { optionLetter } from "@repo/backend/confect/exams/letters";
+import {
+  isReasonOption,
+  optionLetter,
+  optionPlace,
+} from "@repo/backend/confect/exams/letters";
 import type {
   AnswerRow as AnswerRowSchema,
   QuestionSummary as QuestionSummarySchema,
@@ -160,9 +164,17 @@ function QuestionResults({ question }: { readonly question: Question }) {
             {Arr.map(stats.value.optionCounts, (option, index) => (
               <li className="flex justify-between gap-4" key={option.optionId}>
                 <span>
-                  {t("option", {
-                    letter: optionLetter(index, question.optionScript),
-                  })}
+                  {t(
+                    isReasonOption(option.optionId)
+                      ? "reason-option"
+                      : "option",
+                    {
+                      letter: optionLetter(
+                        optionPlace(question.optionIds, index),
+                        question.optionScript
+                      ),
+                    }
+                  )}
                 </span>
                 <span className="tabular-nums">{option.count}</span>
               </li>

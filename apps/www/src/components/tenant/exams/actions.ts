@@ -1,9 +1,9 @@
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { newChoiceAnswers } from "@repo/backend/confect/exams/blank";
 import {
   NEW_QUESTION_POINTS,
   NEW_QUESTION_TEMPLATE,
-  newChoiceAnswers,
 } from "@repo/backend/confect/exams/question";
 import { ALL_OR_NOTHING } from "@repo/backend/confect/exams/scoring";
 import { Effect, Function as Fn, Option } from "effect";

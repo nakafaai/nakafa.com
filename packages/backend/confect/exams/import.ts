@@ -1,11 +1,11 @@
 import type { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { choiceAnswers } from "@repo/backend/confect/exams/blank";
 import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
-  choiceAnswers,
 } from "@repo/backend/confect/exams/question";
 import { refusal } from "@repo/backend/confect/tenancy/errors";
 import { Array as Arr, Option, Schema, String as Str } from "effect";

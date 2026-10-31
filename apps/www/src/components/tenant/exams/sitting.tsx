@@ -68,6 +68,7 @@ const keyNotice = (template: QuestionTemplate) =>
     Match.when("numeric", () => "schedule-key-numeric" as const),
     Match.when("match", () => "schedule-key-match" as const),
     Match.when("table", () => "schedule-key-table" as const),
+    Match.when("reason", () => "schedule-key-reason" as const),
     Match.orElse(() => "schedule-key-choice" as const)
   );
 
