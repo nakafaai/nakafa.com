@@ -17,7 +17,7 @@ const CodeHeights = Schema.Array(
  * the height each takes.
  */
 for (const width of [390, 1440]) {
-  test(`every code block of a lesson stands in at the height it draws at, at ${width}px`, async ({
+  test(`every code block of a page stands in at the height it draws at, at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ height: 900, width });

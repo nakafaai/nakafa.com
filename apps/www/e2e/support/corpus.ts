@@ -18,11 +18,15 @@ export const pinnedRoutes = {
     en: "/en/articles/politics/merah-putih-cabinet-analysis",
     id: "/id/articles/politics/merah-putih-cabinet-analysis",
   },
-  /** A lesson made of code blocks, whose stand-in heights a check measures. */
+  /**
+   * A page of code blocks of several lengths, whose stand-in heights a check
+   * measures. The acceptance release serves no AI and data science lesson, so
+   * the developers page, which draws its code through the same renderer, stands in.
+   */
   code: {
-    de: "/de/faecher/ki-und-data-science/ki-programmierung/rechenoperatoren",
-    en: "/en/subjects/ai-ds/ai-programming/arithmetic-operator",
-    id: "/id/materi/ai-ds/pemrograman-ai/operator-aritmatika",
+    de: "/de/developers",
+    en: "/en/developers",
+    id: "/id/developers",
   },
   exponent: {
     de: "/de/faecher/mathematik/potenzen-und-logarithmen/grundlagen",
