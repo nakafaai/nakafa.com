@@ -949,7 +949,7 @@
       "staff": "Sieht die Pläne, Personen und Versetzungen der Schule.",
       "student": "Lernt in der Schule und beantwortet die eigenen Prüfungen.",
       "guardian": "Folgt dem verknüpften Schüler und erfasst Einwilligungen für ihn.",
-      "proctor": "Beaufsichtigt die Prüfungssitzungen der Schule.",
+      "proctor": "Leitet die Prüfungsräume der Schule: Token, Sperren, Zusatzzeit und Schließen.",
       "auditor": "Sieht die Unterlagen und das Prüfprotokoll der Schule, ohne sie zu ändern.",
       "integration": "Liest die Daten der Schule über die Aktionen seines Clients."
     },

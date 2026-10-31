@@ -949,7 +949,7 @@
       "staff": "Melihat rencana, orang, dan kenaikan kelas sekolah.",
       "student": "Belajar di sekolah dan mengerjakan ujiannya sendiri.",
       "guardian": "Mengikuti siswa yang terhubung dengannya dan mencatat persetujuan untuk siswa tersebut.",
-      "proctor": "Mengawasi sesi ujian sekolah.",
+      "proctor": "Menjalankan ruang ujian sekolah: token, kunci, tambahan waktu, dan penutupan.",
       "auditor": "Melihat catatan dan jejak audit sekolah tanpa mengubahnya.",
       "integration": "Membaca data sekolah melalui aksi yang dimiliki kliennya."
     },

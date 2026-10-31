@@ -7,23 +7,29 @@ import {
 } from "@repo/backend/confect/exams/sittings/schema";
 import { Schema } from "effect";
 
-/** The school roles that proctor a sitting: its teacher and the school's Admin. The Owner is implicit. */
-const sittingProctors: (typeof RuleRole.Type)[] = ["teacher", "admin"];
+/**
+ * The school roles that proctor a sitting: its teacher, the school's Admin, and the Proctor, who runs the
+ * rooms of the units the role covers and writes no exam, grade or setting. The Owner is implicit.
+ */
+const sittingProctors: (typeof RuleRole.Type)[] = [
+  "teacher",
+  "admin",
+  "proctor",
+];
 
 /** The roles that view a sitting's dashboard: the proctors, and the Principal and the Deputy, who take no action. */
 const sittingViewers: (typeof RuleRole.Type)[] = [
-  "teacher",
-  "admin",
+  ...sittingProctors,
   "principal",
   "deputy",
 ];
 
 /**
- * One proctored sitting. A teacher or an Admin whose grant covers its unit, every Owner,
- * and the author of its exam may proctor it, which is the `sitting.proctor` action. The
- * same people, with the Principal and the Deputy, may view it, which is `sitting.view`.
- * The session proctor relation comes later (ADR 0013). A sitting in a closed state or an
- * archived unit locks its writes.
+ * One proctored sitting. A teacher, an Admin, or a Proctor whose grant covers its unit, every
+ * Owner, and the author of its exam may proctor it, which is the `sitting.proctor` action: open
+ * and close it, change its token, lock and unlock an attempt, add minutes, and allow a second
+ * device. The same people, with the Principal and the Deputy, may view it, which is
+ * `sitting.view`. A sitting in a closed state or an archived unit locks its writes.
  */
 export const sittingKind = Kind.make("sitting", "examSittings", {
   actions: {

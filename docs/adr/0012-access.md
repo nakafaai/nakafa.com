@@ -173,6 +173,10 @@ The school roles also hold these actions:
   every Owner, takes every proctor action of every exam sitting of their school,
   the decision on a late record included (ADR 0013). These actions do not let a
   role read the answers, which stay with relations only.
+- The Proctor runs the exam rooms of the scope the grant covers: it finds them
+  through the exam's rooms (`exam.rooms`), reads their dashboards
+  (`sitting.view`), and takes every proctor action of them (`sitting.proctor`).
+  It writes no exam, reads no result or grade, and changes no setting.
 - The Admin creates, opens, and archives the periods of the school
   (`period.manage`); creates, renames, and archives its cohorts, and places and
   moves people in them (`cohort.manage`); and creates, renames, and removes its

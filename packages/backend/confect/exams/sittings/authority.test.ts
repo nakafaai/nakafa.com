@@ -16,6 +16,7 @@ import {
   type SittingFixture,
   scheduleSitting,
   seedAttempt,
+  sittingRow,
 } from "@repo/backend/test/sittings";
 import {
   grantRole,
@@ -175,6 +176,40 @@ describe("exams/sittings authority", () => {
           .as("deputy")
           .query(dashboard, pageArgs(made.id));
         expect(page.attempts.page).toHaveLength(1);
+      })
+  );
+
+  it.effect(
+    "lets a Proctor of the sitting's unit lock an attempt and read the dashboard, and refuses the Proctor the exam itself",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const entered = yield* enterStudent(fixture, made.id, made.token);
+        // The counselor holds no sitting action, so the Proctor grant alone lets the counselor run the room.
+        yield* fixture.run(
+          grantRole(
+            fixture.tenants.nf,
+            fixture.people.counselor.personId,
+            "proctor",
+            { kind: "unit", unitId: fixture.units.smp }
+          )
+        );
+        const proctor = fixture.as("counselor");
+        yield* proctor.mutation(lock, lockArgs(entered.attempt, made.id));
+        expect(yield* attemptRow(fixture, entered.attempt)).toMatchObject({
+          state: "locked",
+        });
+        const page = yield* proctor.query(dashboard, pageArgs(made.id));
+        expect(page.attempts.page).toHaveLength(1);
+        const sitting = yield* sittingRow(fixture, made.id);
+        const refused = yield* proctor
+          .query(refs.public.exams.exams.open, {
+            examId: sitting.examId,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "AccessDenied", reason: "role" });
       })
   );
 

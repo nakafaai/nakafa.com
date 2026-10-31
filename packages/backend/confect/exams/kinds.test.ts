@@ -14,10 +14,33 @@ describe("exams/kinds", () => {
     ).toEqual(["admin", "teacher"]);
   });
 
-  it("opens exam.rooms to the editors and to the sitting viewers, the Principal and the Deputy, and to no other role", () => {
+  it("opens exam.rooms to the editors, the Proctor and the sitting viewers, the Principal and the Deputy, and to no other role", () => {
     expect(
       Arr.filter(RuleRole.literals, (role) => opensTo("exam.rooms", role))
-    ).toEqual(["admin", "principal", "deputy", "teacher"]);
+    ).toEqual(["admin", "principal", "deputy", "teacher", "proctor"]);
+  });
+
+  it("grants the Proctor the rooms and their proctoring, and no exam, grade or setting", () => {
+    expect(
+      Arr.filter(
+        ["exam.rooms", "sitting.proctor", "sitting.view"] as const,
+        (action) => opensTo(action, "proctor")
+      )
+    ).toEqual(["exam.rooms", "sitting.proctor", "sitting.view"]);
+    expect(
+      Arr.filter(
+        [
+          "exam.edit",
+          "exam.view",
+          "grade.enter",
+          "result.grade",
+          "result.release",
+          "result.view",
+          "tenant.manage",
+        ] as const,
+        (action) => opensTo(action, "proctor")
+      )
+    ).toEqual([]);
   });
 
   it("names exam.view as a capability of the tenant and of a unit, so the viewer reads it on both", () => {

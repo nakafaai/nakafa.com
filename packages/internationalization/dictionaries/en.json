@@ -949,7 +949,7 @@
       "staff": "Reads the school's plans, people, and promotions.",
       "student": "Learns in the school and answers its own exams.",
       "guardian": "Follows the student it is linked to and records consent for them.",
-      "proctor": "Watches the school's exam sessions.",
+      "proctor": "Runs the school's exam rooms: their token, locks, extra time and closing.",
       "auditor": "Reads the school's records and audit trail without changing them.",
       "integration": "Reads the school's data through the actions its client holds."
     },
