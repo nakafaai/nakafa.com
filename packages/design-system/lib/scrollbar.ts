@@ -5,7 +5,7 @@ import { cva } from "class-variance-authority";
  * take the thumb, and shows on hover and while its scroller moves, without a fade where motion is reduced.
  */
 export const scrollTrackVariants = cva(
-  "group/scrollbar flex touch-none select-none opacity-0 transition-opacity delay-300 hover:opacity-100 hover:delay-0 hover:duration-100 data-hovering:opacity-100 data-scrolling:opacity-100 data-hovering:delay-0 data-scrolling:delay-0 data-hovering:duration-100 data-scrolling:duration-100 motion-reduce:transition-none",
+  "group/scrollbar flex touch-none opacity-0 transition-opacity delay-300 select-none hover:opacity-100 hover:delay-0 hover:duration-100 data-hovering:opacity-100 data-hovering:delay-0 data-hovering:duration-100 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-100 motion-reduce:transition-none",
   {
     variants: {
       orientation: {
@@ -21,7 +21,7 @@ export const scrollTrackVariants = cva(
  * draws a thin, quiet line at the track's outer edge that grows and darkens while the pointer is on the track.
  */
 export const scrollThumbVariants = cva(
-  "relative flex-1 before:absolute before:rounded-full before:bg-foreground/20 before:transition-[width,height,background-color] before:duration-100 group-hover/scrollbar:before:bg-foreground/40 group-active/scrollbar:before:bg-foreground/40 motion-reduce:before:transition-none",
+  "before:bg-foreground/20 group-hover/scrollbar:before:bg-foreground/40 group-active/scrollbar:before:bg-foreground/40 relative flex-1 before:absolute before:rounded-full before:transition-[width,height,background-color] before:duration-100 motion-reduce:before:transition-none",
   {
     variants: {
       orientation: {
