@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import {
   type RollbackPage,
@@ -44,9 +43,6 @@ const RollbackPageJsonSchema = Schema.fromJsonString(RollbackPageSchema);
 const RoutePageJsonSchema = Schema.fromJsonString(RoutePageSchema);
 const ContentProjectionJsonSchema = Schema.fromJsonString(
   ContentProjectionSchema
-);
-const SignedArtifactJsonSchema = Schema.fromJsonString(
-  SignedContentArtifactSchema
 );
 
 /** Decodes the canonical body response through the shared contract. */
