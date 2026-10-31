@@ -1,6 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
+import { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";

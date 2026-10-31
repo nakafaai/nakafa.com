@@ -10,10 +10,9 @@ import {
   tryoutRouteKeyValidator,
   tryoutSetIdentityValidator,
 } from "@repo/backend/confect/tryouts/route";
-import { tryoutBodyBatchValidator } from "@repo/backend/confect/tryouts/runtime/body";
 import {
   tryoutRuntimeStateValidator,
-  tryoutSectionContentAccessValidator,
+  tryoutSectionContentValidator,
 } from "@repo/backend/confect/tryouts/runtime/spec";
 import { Schema } from "effect";
 
@@ -50,7 +49,7 @@ export type TryoutSectionAttemptPageRequest =
   typeof tryoutSectionAttemptPageRequestValidator.Type;
 const setPageValidator = Schema.Struct({
   exam: publicTryoutExamValidator,
-  entrySection: Schema.Union([publicTryoutSectionValidator, Schema.Null]),
+  entrySection: publicTryoutSectionValidator,
   set: publicTryoutSetValidator,
   sections: Schema.mutable(Schema.Array(publicTryoutSectionValidator)),
   track: publicTryoutTrackValidator,
@@ -75,7 +74,7 @@ const restartTargetValidator = Schema.Union([
 ]);
 const setPageResultFields = {
   attemptId: IdSchema("tryoutAttempts"),
-  content: tryoutSectionContentAccessValidator,
+  content: tryoutSectionContentValidator,
   initialState: tryoutRuntimeStateValidator,
   page: setPageValidator,
   restartTarget: restartTargetValidator,
@@ -98,7 +97,7 @@ export const retainedSectionResultValidator = Schema.Struct({
   activeSectionPublicPath: Schema.Union([Schema.String, Schema.Null]),
   activeSetPublicPath: Schema.Union([Schema.String, Schema.Null]),
   attemptId: IdSchema("tryoutAttempts"),
-  content: tryoutSectionContentAccessValidator,
+  content: tryoutSectionContentValidator,
   initialState: tryoutRuntimeStateValidator,
   kind: Schema.Literal("retained"),
   page: sectionPageValidator,
@@ -107,18 +106,4 @@ export const tryoutSectionAttemptPageResultValidator = Schema.Union([
   Schema.Null,
   redirectResultValidator,
   retainedSectionResultValidator,
-]);
-
-/**
- * A section page with the signed bodies of its content, in the batches that the
- * web plans for it. A finished attempt, or content that is not signed, has none.
- */
-export const sectionWithBodiesResultValidator = Schema.Union([
-  Schema.Null,
-  Schema.Struct({
-    attempt: retainedSectionResultValidator,
-    bodies: Schema.mutable(
-      Schema.Array(Schema.Union([tryoutBodyBatchValidator, Schema.Null]))
-    ),
-  }),
 ]);

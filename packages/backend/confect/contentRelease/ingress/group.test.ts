@@ -4,6 +4,7 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 
 import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import {
   ContentReleaseItemSchema,
   ContentReleaseManifestSchema,
@@ -15,6 +16,7 @@ import { stagePublicationGroup } from "@repo/backend/confect/contentRelease/ingr
 import { stagePublication } from "@repo/backend/confect/contentRelease/ingress/stage";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
+import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_KEY_ID,
   TEST_KEY_RESOLVER,
@@ -22,12 +24,6 @@ import {
   testEmptyManifest,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
-import {
-  TEST_QUESTION_CONTENT_KEY,
-  TEST_QUESTION_PROJECTION,
-  TEST_QUESTION_PROJECTION_JSON,
-  TEST_QUESTION_SOURCE,
-} from "@repo/backend/test/content/question";
 import {
   testPublicationScope,
   testUpsertJson,
@@ -42,6 +38,7 @@ import { Data, Effect, Schema } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-stage-group");
 const UpsertJsonSchema = Schema.fromJsonString(ContentReleaseItemSchema);
+const ProjectionJsonSchema = Schema.fromJsonString(ContentProjectionSchema);
 const RendererJsonSchema = Schema.fromJsonString(
   RendererManifestEnvelopeSchema
 );
@@ -51,80 +48,75 @@ class UnexpectedGroupTestState extends Data.TaggedError(
   readonly operation: "select-program-row";
 }> {}
 describe("content release staging groups", () => {
-  it.effect(
-    "stages authenticated Question projections through a recovery group",
-    () =>
-      Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        const questionItem = yield* Schema.decodeEffect(UpsertJsonSchema)(
-          testUpsertJson({
-            contentKey: TEST_QUESTION_CONTENT_KEY,
-            family: "question",
+  it.effect("stages authenticated projections through a recovery group", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const item = yield* Schema.decodeEffect(UpsertJsonSchema)(
+        testUpsertJson({ releaseId })
+      );
+      const projection = yield* Schema.decodeEffect(ProjectionJsonSchema)(
+        testProjectionJson()
+      );
+      const request = yield* Schema.decodeEffect(StageGroupRequestSchema)({
+        operation: "stageGroup",
+        releaseId,
+        requests: [
+          {
+            batchIndex: 0,
+            items: [item],
+            operation: "stageItemBatch",
             releaseId,
-            rendererDomain: "snbt-general",
-            sourcePath: TEST_QUESTION_SOURCE,
+          },
+          {
+            batchIndex: 0,
+            operation: "stageProjectionBatch",
+            projections: [projection],
+            releaseId,
+          },
+        ],
+      });
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          insertTestRelease(ctx, {
+            releaseId,
+            role: "recovery",
           })
-        );
-        const request = yield* Schema.decodeEffect(StageGroupRequestSchema)({
-          operation: "stageGroup",
-          releaseId,
-          requests: [
-            {
-              batchIndex: 0,
-              items: [questionItem],
-              operation: "stageItemBatch",
-              releaseId,
-            },
-            {
-              batchIndex: 0,
-              operation: "stageProjectionBatch",
-              projections: [TEST_QUESTION_PROJECTION],
-              releaseId,
-            },
-          ],
-        });
-        const t = convexTest(schema, convexModules);
+        )
+      );
+      expect(
         yield* Effect.promise(() =>
-          t.mutation((ctx) =>
-            insertTestRelease(ctx, {
-              releaseId,
-              role: "recovery",
-            })
-          )
-        );
-        expect(
-          yield* Effect.promise(() =>
-            t.action((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                stagePublicationGroup(request).pipe(
-                  Effect.provideService(
-                    ContentVerificationKeyResolver,
-                    TEST_KEY_RESOLVER
-                  ),
-                  Effect.provide(
-                    RegisteredFunction.actionLayer(confectSchema, ctx)
-                  )
+          t.action((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              stagePublicationGroup(request).pipe(
+                Effect.provideService(
+                  ContentVerificationKeyResolver,
+                  TEST_KEY_RESOLVER
+                ),
+                Effect.provide(
+                  RegisteredFunction.actionLayer(confectSchema, ctx)
                 )
               )
             )
           )
-        ).toEqual({
-          ok: true,
-          operation: "stageGroup",
-          value: {
-            releaseId,
-            requestCount: 2,
-          },
-        });
-        expect(
-          yield* Effect.promise(() =>
-            t.run((ctx) => ctx.db.query("contentItems").unique())
-          )
-        ).toMatchObject({
-          projectionJson: TEST_QUESTION_PROJECTION_JSON,
-          projectionReady: true,
-        });
-      })
+        )
+      ).toEqual({
+        ok: true,
+        operation: "stageGroup",
+        value: {
+          releaseId,
+          requestCount: 2,
+        },
+      });
+      expect(
+        yield* Effect.promise(() =>
+          t.run((ctx) => ctx.db.query("contentItems").unique())
+        )
+      ).toMatchObject({
+        projectionJson: testProjectionJson(),
+        projectionReady: true,
+      });
+    })
   );
   it.effect("resumes a committed prefix and retries the complete group", () =>
     Effect.gen(function* () {

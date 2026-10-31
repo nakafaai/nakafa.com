@@ -68,6 +68,7 @@ export function TableSheet({
   table,
 }: TableSheetProps) {
   const t = useTranslations("Exams");
+  const tTryouts = useTranslations("Tryouts");
   const saved = (side: "columns" | "statements") =>
     Arr.flatMap(question.answers, (answer) =>
       answer.kind === "matrix" ? answer[side] : []
@@ -115,7 +116,7 @@ export function TableSheet({
   return (
     <div className="grid min-w-0 gap-3">
       <PaperTable columns={table.columns.length}>
-        <PaperTableHead heading={t("match-statements")}>
+        <PaperTableHead heading={tTryouts("statement")}>
           {Arr.map(table.columns, (column, index) => (
             <PaperTableHeader key={column.id}>
               <OptionRow

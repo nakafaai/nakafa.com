@@ -23,7 +23,7 @@ describe("keptPicks", () => {
       Effect.gen(function* () {
         const pick = {
           answeredAt: 4,
-          response: { kind: "single-choice" as const, optionKey: "option-b" },
+          response: ["option-b"],
           version: 3,
         };
         yield* keptPicks.keep(PLACEMENT, pick);

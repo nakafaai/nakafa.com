@@ -10,7 +10,7 @@ import {
 } from "@repo/backend/confect/tryouts/progress/spec";
 import {
   TryoutResponseIntegrityError,
-  TryoutResponseSelectionError,
+  TryoutResponseUnfitError,
 } from "@repo/backend/confect/tryouts/response/spec";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
@@ -39,7 +39,7 @@ export default GroupSpec.make()
           AuthFailure,
           TryoutRuntimeErrorWire,
           TryoutResponseIntegrityError,
-          TryoutResponseSelectionError,
+          TryoutResponseUnfitError,
           TryoutProgressError,
           TryoutProgressSizeError,
         ]),
@@ -61,7 +61,7 @@ export default GroupSpec.make()
           AuthFailure,
           TryoutRuntimeErrorWire,
           TryoutResponseIntegrityError,
-          TryoutResponseSelectionError,
+          TryoutResponseUnfitError,
           TryoutProgressError,
           TryoutProgressSizeError,
         ]),

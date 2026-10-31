@@ -1,7 +1,7 @@
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import type { TryoutSetIdentity } from "@repo/backend/confect/tryouts/route";
 import { readAttemptHistoryPageBySet } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { loadAttemptScoreResult } from "@repo/backend/confect/tryouts/score/result";
-import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
 import type { PaginationOptions } from "convex/server";
 import { Effect } from "effect";
 

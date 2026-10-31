@@ -196,7 +196,7 @@ function replacedSnapshots(): ContentSnapshotSet {
     rowCount: 1,
     rowDigest: TEST_DIGEST,
   });
-  return { program: replaced, quran: replaced, tryout: replaced };
+  return { assessment: replaced, program: replaced, quran: replaced };
 }
 
 /**
@@ -395,7 +395,7 @@ describe("contentRelease/generation staging", () => {
       })
   );
 
-  it.live("requires the try-out snapshot, not the others, to be replaced", () =>
+  it.live("lets a bootstrap inherit every structured snapshot", () =>
     Effect.gen(function* () {
       const state = {
         activeContentGeneration: RETIRED_CONTENT_GENERATION,
@@ -415,10 +415,10 @@ describe("contentRelease/generation staging", () => {
       ).toBe(true);
       expect(
         isBootstrapCandidate(
-          yield* manifestOf({ ...replaced, tryout: kept }),
+          yield* manifestOf({ ...replaced, assessment: kept }),
           state
         )
-      ).toBe(false);
+      ).toBe(true);
     })
   );
 

@@ -2,7 +2,7 @@ import { useDebouncedCallback, useWindowEvent } from "@mantine/hooks";
 import {
   ESSAY_RESPONSE_MAX,
   TEXT_RESPONSE_MAX,
-} from "@repo/backend/confect/exams/sittings/response";
+} from "@repo/backend/confect/assessment/response";
 import {
   InputGroup,
   InputGroupAddon,

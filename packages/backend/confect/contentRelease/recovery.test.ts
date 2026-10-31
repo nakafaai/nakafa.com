@@ -1,11 +1,13 @@
 import { Ref } from "@confect/core";
 import { afterEach, assert, beforeEach, describe, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
-import { invertContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import {
+  inheritContentSnapshots,
+  invertContentSnapshots,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { activationResultValidator } from "@repo/backend/confect/contentRelease/activation/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { CURRENT_CONTENT_GENERATION } from "@repo/backend/confect/contentRelease/generation";
-import { decodeTryoutRuntimeBundleJson } from "@repo/backend/confect/contentRelease/parse";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -13,7 +15,6 @@ import {
   BASE,
   CANDIDATE,
   expectedReceipt,
-  makeActivationRuntime,
   RECOVERY,
   seedVerifiedPair,
 } from "@repo/backend/test/activation/fixture";
@@ -23,7 +24,6 @@ import {
   patchStoredOriginRelease,
   type TestIdentity,
 } from "@repo/backend/test/content/state";
-import { storeRuntimeFixture } from "@repo/backend/test/runtime/bundle";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Schema } from "effect";
 
@@ -48,37 +48,21 @@ const ActivationResultJsonSchema = Schema.fromJsonString(
 );
 const encodeActivation = Schema.encodeSync(ActivationResultJsonSchema);
 
-/** Creates and stores the distinct result and retained-base runtime pairs. */
-const seedRuntimePair = Effect.fn("test.recovery.seedRuntimePair")(
-  function* () {
-    const result = yield* makeActivationRuntime({
-      hasBaseSnapshot: true,
-    });
-    const retainedBase = yield* makeActivationRuntime({
-      bundleSnapshot: "base",
-      hasBaseSnapshot: true,
-    });
-    const snapshots = result.release.manifest.snapshots;
-    const t = convexTest(schema, convexModules);
-    yield* Effect.promise(() =>
-      t.mutation((ctx) =>
-        seedVerifiedPair(ctx, {
-          base: BASE,
-          candidate: snapshots,
-          recovery: invertContentSnapshots(snapshots),
-        })
-      )
-    );
-    yield* storeRuntimeFixture(t, result);
-    yield* storeRuntimeFixture(t, retainedBase);
-    return {
-      result,
-      retainedBase,
-      snapshots,
-      t,
-    };
-  }
-);
+/** Seeds a verified candidate over the active base and its exact inverse. */
+const seedPair = Effect.fn("test.recovery.seedPair")(function* () {
+  const snapshots = inheritContentSnapshots(null);
+  const t = convexTest(schema, convexModules);
+  yield* Effect.promise(() =>
+    t.mutation((ctx) =>
+      seedVerifiedPair(ctx, {
+        base: BASE,
+        candidate: snapshots,
+        recovery: invertContentSnapshots(snapshots),
+      })
+    )
+  );
+  return { snapshots, t };
+});
 
 /** Captures an expected rejected Convex operation in the Effect error channel. */
 function rejected<A>(operation: () => Promise<A>) {
@@ -118,7 +102,7 @@ describe("contentRelease/recovery", () => {
     "queues the build of the section index once, in the transaction that makes the recovery active",
     () =>
       Effect.gen(function* () {
-        const { t } = yield* seedRuntimePair();
+        const { t } = yield* seedPair();
         /** The releases that section builds were queued for, in order. */
         const queued = () =>
           t.run(async (ctx) =>
@@ -152,7 +136,7 @@ describe("contentRelease/recovery", () => {
   );
   it.effect("activates the retained base with the current renderer", () =>
     Effect.gen(function* () {
-      const { retainedBase, snapshots, t } = yield* seedRuntimePair();
+      const { snapshots, t } = yield* seedPair();
       yield* Effect.promise(() => activateCandidate(t));
       const activation = yield* Effect.promise(() => recoverCandidate(t));
       const [state, publication] = yield* Effect.all([
@@ -183,31 +167,17 @@ describe("contentRelease/recovery", () => {
         state.activeContentGeneration,
         CURRENT_CONTENT_GENERATION
       );
-      const runtime = yield* decodeTryoutRuntimeBundleJson(
-        publication.tryoutRuntimeBundleJson ?? ""
+      assert.strictEqual(
+        publication.active?.receipt.releaseId,
+        RECOVERY.releaseId
       );
-      assert.strictEqual(runtime.bundleHash, retainedBase.bundle.bundleHash);
     })
   );
-  it.effect("looks up completed recovery without the candidate runtime", () =>
+  it.effect("looks up the completed recovery of the active candidate", () =>
     Effect.gen(function* () {
-      const { result, retainedBase, t } = yield* seedRuntimePair();
+      const { t } = yield* seedPair();
       yield* Effect.promise(() => activateCandidate(t));
       yield* Effect.promise(() => recoverCandidate(t));
-      yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const candidateRuntime = await ctx.db
-            .query("tryoutRuntimeBundles")
-            .withIndex("by_bundleHash", (index) =>
-              index.eq("bundleHash", result.bundle.bundleHash)
-            )
-            .unique();
-          if (!candidateRuntime) {
-            throw new Error("Expected one candidate runtime bundle.");
-          }
-          await ctx.db.delete("tryoutRuntimeBundles", candidateRuntime._id);
-        })
-      );
       const recovered = yield* Effect.promise(() =>
         t.query(lookup, {
           recoveryId: RECOVERY.releaseId,
@@ -215,63 +185,6 @@ describe("contentRelease/recovery", () => {
         })
       );
       assert.strictEqual(recovered.kind, "completed");
-      yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const recoveryRuntime = await ctx.db
-            .query("tryoutRuntimeBundles")
-            .withIndex("by_bundleHash", (index) =>
-              index.eq("bundleHash", retainedBase.bundle.bundleHash)
-            )
-            .unique();
-          if (!recoveryRuntime) {
-            throw new Error("Expected one recovery runtime bundle.");
-          }
-          await ctx.db.delete("tryoutRuntimeBundles", recoveryRuntime._id);
-        })
-      );
-      const failure = yield* rejected(() =>
-        t.query(lookup, {
-          recoveryId: RECOVERY.releaseId,
-          releaseId: CANDIDATE.releaseId,
-        })
-      );
-      assert(Ref.isConvexError(failure));
-      assert.strictEqual(
-        (yield* Schema.decodeUnknownEffect(ReleaseError)(failure.data)).code,
-        "CONTENT_RELEASE_INTEGRITY"
-      );
-    })
-  );
-  it.effect("keeps recovery invisible when its permanent pair disappears", () =>
-    Effect.gen(function* () {
-      const { retainedBase, t } = yield* seedRuntimePair();
-      yield* Effect.promise(() => activateCandidate(t));
-      yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const stored = await ctx.db
-            .query("tryoutRuntimeBundles")
-            .withIndex("by_bundleHash", (index) =>
-              index.eq("bundleHash", retainedBase.bundle.bundleHash)
-            )
-            .unique();
-          if (!stored) {
-            throw new Error("Expected one retained-base runtime bundle.");
-          }
-          await ctx.db.delete("tryoutRuntimeBundles", stored._id);
-        })
-      );
-      const failure = yield* rejected(() => recoverCandidate(t));
-      assert(Ref.isConvexError(failure));
-      assert.strictEqual(
-        (yield* Schema.decodeUnknownEffect(ReleaseError)(failure.data)).code,
-        "CONTENT_RELEASE_INTEGRITY"
-      );
-      const state = yield* Effect.promise(() =>
-        t.run((ctx) => ctx.db.query("contentState").unique())
-      );
-      assert.ok(state);
-      assert.strictEqual(state.activeReleaseId, CANDIDATE.releaseId);
-      assert.strictEqual(state.recoveryReleaseId, RECOVERY.releaseId);
     })
   );
   it.effect("returns missing for absent and noncompleted recovery", () =>

@@ -1,214 +1,45 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
-import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/catalog";
-import type { TryoutCatalogCounts } from "@nakafa/aksara-contracts/tryout/snapshot/spec";
-import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
-import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
-import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
-import { findTryoutOwner } from "@repo/backend/content/tryout/owner";
-import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { Array as Arr, Effect, Option, Record as Rec } from "effect";
+import {
+  findActiveAssessment,
+  loadActiveAssessment,
+} from "@repo/backend/confect/tryouts/active";
+import { readCatalogEntries } from "@repo/backend/confect/tryouts/catalog/rows";
+import { Array as Arr, Effect, Option } from "effect";
 
-/** Counts each hierarchy kind in one verified localized catalog. */
-function countCatalog(rows: readonly TryoutCatalogRow[]) {
-  return {
-    country: Arr.filter(rows, ({ kind }) => kind === "country").length,
-    exam: Arr.filter(rows, ({ kind }) => kind === "exam").length,
-    section: Arr.filter(rows, ({ kind }) => kind === "section").length,
-    set: Arr.filter(rows, ({ kind }) => kind === "set").length,
-    track: Arr.filter(rows, ({ kind }) => kind === "track").length,
-  };
-}
-
-/** Divides signed global counts into the exact expected locale inventory. */
-function localizedCounts(
-  counts: TryoutCatalogCounts,
-  localeCount: number
-): TryoutCatalogCounts | undefined {
-  const entries = Rec.toEntries(counts);
-  if (Arr.some(entries, ([, count]) => count % localeCount !== 0)) {
-    return;
-  }
-  return {
-    country: counts.country / localeCount,
-    exam: counts.exam / localeCount,
-    section: counts.section / localeCount,
-    set: counts.set / localeCount,
-    track: counts.track / localeCount,
-  };
-}
-
-/** Divides one signed global count into the exact expected locale inventory. */
-function localizedCount(count: number, localeCount: number) {
-  if (count % localeCount !== 0) {
-    return;
-  }
-  return count / localeCount;
-}
-
-/** Checks the five signed hierarchy counts without relying on key order. */
-function hasExpectedCounts(
-  actual: TryoutCatalogCounts,
-  expected: TryoutCatalogCounts
+/**
+ * Loads the catalog of one app locale of an assessment snapshot, as the try-out pages navigate it:
+ * its rows, and each stored row with the hash and position a search document keeps.
+ */
+const loadSnapshotCatalog = Effect.fn("tryout.catalog.loadSnapshot")(function* (
+  snapshotId: string,
+  locale: AppLocaleCode
 ) {
-  return (
-    actual.country === expected.country &&
-    actual.exam === expected.exam &&
-    actual.section === expected.section &&
-    actual.set === expected.set &&
-    actual.track === expected.track
-  );
-}
-
-/** Finds the complete verified hierarchy when signed try-out is active. */
-export const findTryoutCatalog = Effect.fn("contentRelease.findTryoutCatalog")(
-  function* (locale: AppLocaleCode) {
-    const owner = yield* findTryoutOwner();
-    if (Option.isNone(owner)) {
-      return Option.none();
-    }
-    const { active, snapshot, snapshotId } = owner.value;
-    const catalog = yield* loadStoredTryoutCatalog(locale, {
-      activeManifestHash: active.manifestHash,
-      activeReleaseId: active.releaseId,
-      bundleHash: active.release.tryoutRuntimeBundleHash ?? null,
-      snapshot,
-      snapshotId,
-      sourceRevision: readSourceRevision(active),
-    });
-    return Option.some(catalog);
-  }
-);
-
-/** Loads the complete verified hierarchy for one active try-out locale. */
-export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
-  function* (locale: AppLocaleCode) {
-    const catalog = yield* findTryoutCatalog(locale);
-    if (Option.isSome(catalog)) {
-      return catalog.value;
-    }
-    return yield* releaseFail(
-      "CONTENT_RELEASE_MISSING",
-      "The active signed try-out snapshot is unavailable."
-    );
-  }
-);
-
-/** Loads one retained signed catalog for an authenticated frozen attempt. */
-export const loadTryoutSnapshotCatalog = Effect.fn(
-  "contentRelease.loadTryoutSnapshotCatalog"
-)(function* (locale: AppLocaleCode, snapshotId: string) {
-  const { snapshot } = yield* loadVerifiedSnapshot("tryout", snapshotId);
-  return yield* loadStoredTryoutCatalog(locale, {
-    activeManifestHash: null,
-    activeReleaseId: null,
-    bundleHash: null,
-    snapshot,
-    snapshotId,
-    sourceRevision: null,
-  });
+  const entries = yield* readCatalogEntries(snapshotId, locale);
+  return { entries, rows: Arr.map(entries, ({ row }) => row), snapshotId };
 });
 
-/** Verifies every stored row and signed count for one selected snapshot. */
-const loadStoredTryoutCatalog = Effect.fn(
-  "contentRelease.loadStoredTryoutCatalog"
-)(function* (
-  locale: AppLocaleCode,
-  selection: {
-    readonly activeManifestHash: string | null;
-    readonly activeReleaseId: string | null;
-    readonly bundleHash: string | null;
-    readonly snapshot: Extract<
-      ContentSnapshotManifest,
-      {
-        readonly family: "tryout";
-      }
-    >;
-    readonly snapshotId: string;
-    readonly sourceRevision: string | null;
-  }
+/** The catalog of one app locale of one assessment snapshot. */
+export type PublishedCatalog = Effect.Success<
+  ReturnType<typeof loadSnapshotCatalog>
+>;
+
+/** Finds the catalog of one app locale of the active release, none before any release activates one. */
+export const findTryoutCatalog = Effect.fn("tryout.catalog.find")(function* (
+  locale: AppLocaleCode
 ) {
-  const { activeAppLocales, counts, routeCount } = selection.snapshot.manifest;
-  const expected = localizedCounts(counts, activeAppLocales.length);
-  const expectedRouteCount = localizedCount(
-    routeCount,
-    activeAppLocales.length
+  const active = yield* findActiveAssessment();
+  if (Option.isNone(active)) {
+    return Option.none();
+  }
+  return Option.some(
+    yield* loadSnapshotCatalog(active.value.snapshotId, locale)
   );
-  if (!(expected && expectedRouteCount !== undefined)) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Active try-out catalog counts do not divide across its locales."
-    );
-  }
-  const total = Arr.reduce(
-    Rec.values(expected),
-    0,
-    (count, value) => count + value
-  );
-  if (total > TRYOUT_CATALOG_LIMIT) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_LIMIT",
-      `Try-out catalog exceeds ${TRYOUT_CATALOG_LIMIT} rows per locale.`
-    );
-  }
-  const source = yield* TryoutSource;
-  const stored = yield* source.catalog(selection.snapshotId, locale, total + 1);
-  if (stored.length !== total) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Try-out catalog for ${locale} does not match its signed count.`
-    );
-  }
-  const entries = yield* Effect.forEach(stored, (storedRow) =>
-    verifyTryoutCatalog(storedRow, selection.snapshotId).pipe(
-      Effect.map((row) => ({
-        index: storedRow.index,
-        row,
-        rowHash: storedRow.rowHash,
-        rowJson: storedRow.rowJson,
-      }))
-    )
-  );
-  const rows = Arr.map(entries, ({ row }) => row);
-  if (!hasExpectedCounts(countCatalog(rows), expected)) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Try-out catalog for ${locale} changed its hierarchy counts.`
-    );
-  }
-  const actualRouteCount = Arr.filter(
-    rows,
-    ({ publicPath }) => publicPath !== undefined
-  ).length;
-  if (actualRouteCount !== expectedRouteCount) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Try-out catalog for ${locale} changed its public route count.`
-    );
-  }
-  return {
-    activeManifestHash: selection.activeManifestHash,
-    activeReleaseId: selection.activeReleaseId,
-    bundleHash: selection.bundleHash,
-    entries,
-    routeCount: actualRouteCount,
-    snapshotId: selection.snapshotId,
-    sourceRevision: selection.sourceRevision,
-  };
 });
 
-/** Reads the canonical wire rows used by release diagnostics and previews. */
-export const readTryoutCatalog = Effect.fn("contentRelease.readTryoutCatalog")(
-  function* (locale: AppLocaleCode) {
-    const catalog = yield* loadTryoutCatalog(locale);
-    return {
-      activeManifestHash: catalog.activeManifestHash,
-      activeReleaseId: catalog.activeReleaseId,
-      rowJson: Arr.map(catalog.entries, ({ rowJson }) => rowJson),
-      snapshotId: catalog.snapshotId,
-      sourceRevision: catalog.sourceRevision,
-    };
-  }
-);
+/** Loads the catalog of one app locale of the active release. */
+export const loadTryoutCatalog = Effect.fn("tryout.catalog.load")(function* (
+  locale: AppLocaleCode
+) {
+  const { snapshotId } = yield* loadActiveAssessment();
+  return yield* loadSnapshotCatalog(snapshotId, locale);
+});

@@ -157,7 +157,7 @@ export function PaperTableHead({
   heading: string;
 }) {
   return (
-    <div className="col-span-full grid grid-cols-subgrid bg-muted/50 font-medium text-sm">
+    <div className="col-span-full grid grid-cols-subgrid items-center bg-muted/50 font-medium text-sm">
       <div aria-hidden="true" className="py-3 pl-4" />
       <div className="px-3 py-3">{heading}</div>
       {children}

@@ -1,129 +1,69 @@
-import { assert, describe, expect, it } from "@effect/vitest";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { api } from "@repo/backend/convex/_generated/api";
-import schema from "@repo/backend/convex/schema";
-import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
-import {
-  activateTryoutStartSource,
-  makeTryoutStartHierarchy,
-} from "@repo/backend/test/tryout/source";
-import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Order, pipe } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { client } from "@repo/backend/test/client";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
+import { Effect } from "effect";
 
-describe("public signed try-out publication", () => {
+const tryout = refs.public.contentRelease.tryout;
+const LOCALES = ["en", "id", "de"] as const;
+
+describe("contentRelease/tryout", () => {
   it.effect(
-    "serves the same localized catalog, sitemap, and taxonomy from one signed owner",
+    "serves each locale's sitemap and taxonomy from the active assessment catalog",
     () =>
       Effect.gen(function* () {
-        const t = convexTest(schema, convexModules);
-        const { snapshotId } = yield* Effect.promise(() =>
-          t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"))
-        );
-        for (const appLocale of ACTIVE_APP_LOCALE_CODES) {
-          const expected = makeTryoutStartHierarchy(appLocale, "visible");
-          const catalog = yield* Effect.promise(() =>
-            t.query(api.contentRelease.tryout.catalog, { appLocale })
-          );
-          expect(catalog).toMatchObject({
-            activeReleaseId: TEST_RELEASE_ID,
-            snapshotId,
-          });
-          expect(catalog.rowJson).toHaveLength(expected.length);
+        const world = yield* tryoutWorld({ entry: true, sets: 2 });
+        for (const appLocale of LOCALES) {
           expect(
-            Arr.every(catalog.rowJson, (row) =>
-              row.includes(`"appLocale":"${appLocale}"`)
-            )
-          ).toBe(true);
-          expect(
-            yield* Effect.promise(() =>
-              t.query(api.contentRelease.tryout.sitemapCount, { appLocale })
-            )
+            yield* world.visitor.query(tryout.sitemapCount, { appLocale })
           ).toEqual({ pageCount: 1, routeCount: 5 });
           expect(
-            yield* Effect.promise(() =>
-              t.query(api.contentRelease.tryout.sitemapPage, {
-                appLocale,
-                page: 0,
-              })
-            )
+            yield* world.visitor.query(tryout.sitemapPage, {
+              appLocale,
+              page: 0,
+            })
           ).toEqual({
-            paths: Arr.sort(
-              Arr.flatMap(expected, ({ publicPath }) =>
-                Arr.fromNullishOr(publicPath)
-              ),
-              Order.String
-            ),
+            paths: [
+              `try-out/indonesia-${appLocale}`,
+              `try-out/indonesia/snbt-${appLocale}`,
+              `try-out/indonesia/snbt/2027-${appLocale}`,
+              `try-out/indonesia/snbt/2027/set-1-${appLocale}`,
+              `try-out/indonesia/snbt/2027/set-2-${appLocale}`,
+            ],
           });
           expect(
-            yield* Effect.promise(() =>
-              t.query(api.contentRelease.tryout.sitemapPage, {
-                appLocale,
-                page: 1,
-              })
-            )
-          ).toBeNull();
-          expect(
-            yield* Effect.promise(() =>
-              t.query(api.contentRelease.tryout.taxonomy, { appLocale })
-            )
+            yield* world.visitor.query(tryout.taxonomy, { appLocale })
           ).toEqual({
-            countries: pipe(
-              expected,
-              Arr.filter((row) => row.kind === "country"),
-              Arr.map((row) => ({ id: row.countryKey, label: row.title }))
-            ),
-            exams: pipe(
-              expected,
-              Arr.filter((row) => row.kind === "exam"),
-              Arr.map((row) => ({ id: row.examKey, label: row.title }))
-            ),
+            countries: [{ id: "indonesia", label: "Try-out" }],
+            exams: [{ id: "snbt", label: "Try-out" }],
             routeCount: 5,
           });
         }
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const [row] = Arr.filter(
-              await ctx.db.query("tryoutCatalog").collect(),
-              (candidate) => candidate.appLocale === "id"
-            );
-            assert(row);
-            await ctx.db.patch(row._id, {
-              rowHash: `sha256:${"f".repeat(64)}`,
-            });
-          })
-        );
-        yield* Effect.promise(() =>
+        for (const page of [-1, 1.5, 1]) {
           expect(
-            t.query(api.contentRelease.tryout.catalog, { appLocale: "id" })
-          ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
-          })
-        );
+            yield* world.visitor.query(tryout.sitemapPage, {
+              appLocale: "id",
+              page,
+            })
+          ).toBeNull();
+        }
       })
   );
 
-  it.effect(
-    "rejects reads before publication and returns no page for invalid offsets",
-    () =>
-      Effect.gen(function* () {
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          expect(
-            t.query(api.contentRelease.tryout.catalog, { appLocale: "id" })
-          ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } })
-        );
-        yield* Effect.promise(() =>
-          t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"))
-        );
-        yield* Effect.promise(() =>
-          expect(
-            t.query(api.contentRelease.tryout.sitemapPage, {
-              appLocale: "id",
-              page: -1,
-            })
-          ).resolves.toBeNull()
-        );
-      })
+  it.effect("refuses reads before any release activates a snapshot", () =>
+    Effect.gen(function* () {
+      const visitor = client(createConvexTestWithBetterAuth());
+      expect(
+        yield* visitor
+          .query(tryout.sitemapCount, { appLocale: "id" })
+          .pipe(Effect.flip)
+      ).toMatchObject({ code: "CONTENT_RELEASE_MISSING" });
+      expect(
+        yield* visitor
+          .query(tryout.taxonomy, { appLocale: "id" })
+          .pipe(Effect.flip)
+      ).toMatchObject({ code: "CONTENT_RELEASE_MISSING" });
+    })
   );
 });

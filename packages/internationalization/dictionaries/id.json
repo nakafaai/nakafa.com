@@ -258,6 +258,7 @@
     "title": "Ujian",
     "empty": "Belum ada ujian.",
     "exams-search": "Cari ujian",
+    "rooms-search": "Cari ruang",
     "mine-exam": "Ujian",
     "mine-opens": "Dibuka",
     "mine-status": "Status",
@@ -1750,7 +1751,9 @@
     "incorrect": "Salah",
     "reset": "Ulangi",
     "explanation": "Pembahasan",
-    "number-count": "Nomor {count}"
+    "number-count": "Nomor {count}",
+    "prompt": "Soal",
+    "reading": "Bacaan"
   },
   "Player": {
     "navigator": "Soal",

@@ -258,6 +258,7 @@
     "title": "Exams",
     "empty": "There are no exams yet.",
     "exams-search": "Find an exam",
+    "rooms-search": "Find a room",
     "mine-exam": "Exam",
     "mine-opens": "Opens",
     "mine-status": "Status",
@@ -1750,7 +1751,9 @@
     "incorrect": "Incorrect",
     "reset": "Reset",
     "explanation": "Explanation",
-    "number-count": "Number {count}"
+    "number-count": "Number {count}",
+    "prompt": "Question",
+    "reading": "Reading"
   },
   "Player": {
     "navigator": "Questions",

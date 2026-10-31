@@ -6,8 +6,7 @@ import {
 import { Schema } from "effect";
 export default Table.make(() =>
   Schema.Struct({
-    history: Schema.optionalKey(Schema.Literal(true)),
-    tryoutSnapshotId: Schema.String,
+    assessmentSnapshotId: Schema.String,
     setIdentity: Schema.String,
     model: irtOperationalModelValidator,
     status: irtScaleVersionStatusValidator,
@@ -15,14 +14,9 @@ export default Table.make(() =>
     publishedAt: Schema.Finite,
   })
 )
-  .index("by_setIdentity_and_history_and_publishedAt", [
+  .index("by_setIdentity_and_publishedAt", ["setIdentity", "publishedAt"])
+  .index("by_assessmentSnapshotId_and_setIdentity_and_publishedAt", [
+    "assessmentSnapshotId",
     "setIdentity",
-    "history",
-    "publishedAt",
-  ])
-  .index("by_tryoutSnapshotId_and_setIdentity_and_history_and_publishedAt", [
-    "tryoutSnapshotId",
-    "setIdentity",
-    "history",
     "publishedAt",
   ]);

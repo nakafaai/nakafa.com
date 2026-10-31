@@ -1,36 +1,24 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
-import { TryoutSectionSchema } from "@nakafa/aksara-contracts/tryout/catalog";
-import {
-  tryoutCatalogIdentity,
-  tryoutCatalogNodeIdentity,
-} from "@nakafa/aksara-contracts/tryout/identity";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
-import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
-import { PublishedCatalogIndexSchema } from "@repo/backend/content/tryout/hierarchy";
 import {
-  readTryoutCatalogRowByIdentity,
-  readTryoutCatalogRowByPath,
-} from "@repo/backend/content/tryout/row";
-import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { Array as Arr, Effect, MutableList, Schema } from "effect";
+  readCatalogNode,
+  readCatalogRow,
+  readCatalogSet,
+} from "@repo/backend/confect/tryouts/catalog/rows";
+import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
+import { Effect, Option } from "effect";
 
-const SelectedTryoutSectionSchema = Schema.Struct({
-  row: TryoutSectionSchema,
-  rowHash: Schema.String,
-});
-/** One authenticated section row with its signed immutable digest. */
-type SelectedTryoutSection = typeof SelectedTryoutSectionSchema.Type;
+/** Rejects a set-local catalog that lost a row its set needs. */
+function selectionIntegrity(message: string) {
+  return releaseFail("CONTENT_RELEASE_INTEGRITY", message);
+}
 
-const TryoutSetSelectionSchema = Schema.Struct({
-  ...PublishedCatalogIndexSchema.fields,
-  sectionRecords: Schema.Array(SelectedTryoutSectionSchema),
-});
-/** Complete verified set-local catalog needed by public and attempt reads. */
-export type TryoutSetSelection = typeof TryoutSetSelectionSchema.Type;
-
-/** Reads the verified parent and section rows needed for one set route. */
+/**
+ * Reads the set-local catalog a set or section page needs: the row at the path, the set it is or
+ * belongs to, the set's sections in their authored order, and its track and exam, without reading the
+ * rest of the locale. A set without its country, exam, or track is a broken snapshot. A path that
+ * names no set or section has none.
+ */
 export const readTryoutSetSelection = Effect.fn(
   "tryouts.catalog.readSetSelection"
 )(function* (input: {
@@ -38,128 +26,70 @@ export const readTryoutSetSelection = Effect.fn(
   readonly publicPath: string;
   readonly snapshotId: string;
 }) {
-  const selected = yield* readTryoutCatalogRowByPath(input.snapshotId, input);
-  if (selected?.kind !== "set" && selected?.kind !== "section") {
+  const selected = yield* readCatalogRow(
+    input.snapshotId,
+    input.appLocale,
+    input.publicPath
+  );
+  if (
+    Option.isNone(selected) ||
+    (selected.value.kind !== "set" && selected.value.kind !== "section")
+  ) {
     return null;
   }
-  let set: TryoutSet | null = selected.kind === "set" ? selected : null;
-  if (!set) {
-    const setIdentity = tryoutCatalogNodeIdentity({
-      appLocale: selected.appLocale,
-      countryKey: selected.countryKey,
-      examKey: selected.examKey,
-      kind: "set",
-      setKey: selected.setKey,
-      trackKey: selected.trackKey,
-    });
-    const setRow = yield* readTryoutCatalogRowByIdentity(
-      input.snapshotId,
-      setIdentity
-    );
-    if (setRow?.kind !== "set") {
-      return yield* selectionIntegrity("Signed try-out section lost its set.");
-    }
-    set = setRow;
-  }
-  const parentIdentities = {
-    country: tryoutCatalogNodeIdentity({
-      appLocale: set.appLocale,
-      countryKey: set.countryKey,
-      kind: "country",
-    }),
-    exam: tryoutCatalogNodeIdentity({
-      appLocale: set.appLocale,
-      countryKey: set.countryKey,
-      examKey: set.examKey,
-      kind: "exam",
-    }),
-    track: tryoutCatalogNodeIdentity({
-      appLocale: set.appLocale,
-      countryKey: set.countryKey,
-      examKey: set.examKey,
-      kind: "track",
-      trackKey: set.trackKey,
-    }),
-  };
-  const selectedRows = yield* Effect.all(
-    {
-      country: readTryoutCatalogRowByIdentity(
-        input.snapshotId,
-        parentIdentities.country
-      ),
-      exam: readTryoutCatalogRowByIdentity(
-        input.snapshotId,
-        parentIdentities.exam
-      ),
-      sectionRecords: readTryoutSetSections(input.snapshotId, set),
-      track: readTryoutCatalogRowByIdentity(
-        input.snapshotId,
-        parentIdentities.track
-      ),
-    },
-    {
-      concurrency: "unbounded",
-    }
+  const keys = selected.value;
+  const found = yield* readCatalogSet(
+    input.snapshotId,
+    tryoutSetIdentityOf(keys),
+    input.appLocale
   );
-  if (selectedRows.country?.kind !== "country") {
-    return yield* selectionIntegrity("Signed try-out set lost its country.");
+  if (Option.isNone(found)) {
+    return yield* selectionIntegrity("A try-out section lost its set.");
   }
-  if (selectedRows.exam?.kind !== "exam") {
-    return yield* selectionIntegrity("Signed try-out set lost its exam.");
+  const { sections, set } = found.value;
+  const [country, exam, track] = yield* Effect.all(
+    [
+      readCatalogNode(input.snapshotId, {
+        appLocale: input.appLocale,
+        countryKey: keys.countryKey,
+        kind: "country",
+      }),
+      readCatalogNode(input.snapshotId, {
+        appLocale: input.appLocale,
+        countryKey: keys.countryKey,
+        examKey: keys.examKey,
+        kind: "exam",
+      }),
+      readCatalogNode(input.snapshotId, {
+        appLocale: input.appLocale,
+        countryKey: keys.countryKey,
+        examKey: keys.examKey,
+        kind: "track",
+        trackKey: keys.trackKey,
+      }),
+    ],
+    { concurrency: "unbounded" }
+  );
+  if (Option.isNone(country)) {
+    return yield* selectionIntegrity("A try-out set lost its country.");
   }
-  if (selectedRows.track?.kind !== "track") {
-    return yield* selectionIntegrity("Signed try-out set lost its track.");
+  if (Option.isNone(exam)) {
+    return yield* selectionIntegrity("A try-out set lost its exam.");
   }
-  const index: TryoutSetSelection = {
-    countries: [selectedRows.country],
-    exams: [selectedRows.exam],
-    sectionRecords: selectedRows.sectionRecords,
-    sections: Arr.map(selectedRows.sectionRecords, ({ row }) => row),
-    sets: [set],
-    tracks: [selectedRows.track],
+  if (Option.isNone(track)) {
+    return yield* selectionIntegrity("A try-out set lost its track.");
+  }
+  return {
+    exam: exam.value,
+    row: keys,
+    sections,
+    set,
+    snapshotId: input.snapshotId,
+    track: track.value,
   };
-  return index;
 });
 
-/**
- * Reads and verifies the complete bounded section family for one signed set.
- * @see https://docs.convex.dev/database/reading-data/indexes/
- */
-export const readTryoutSetSections = Effect.fn(
-  "tryouts.catalog.readSetSections"
-)(function* (snapshotId: string, set: TryoutSet) {
-  if (set.sectionCount > TRYOUT_CATALOG_LIMIT) {
-    return yield* selectionIntegrity(
-      `Try-out set exceeds ${TRYOUT_CATALOG_LIMIT} sections.`
-    );
-  }
-  const setIdentity = tryoutCatalogIdentity(set);
-  const source = yield* TryoutSource;
-  const stored = yield* source.sections(
-    snapshotId,
-    setIdentity,
-    set.sectionCount + 1
-  );
-  if (stored.length !== set.sectionCount) {
-    return yield* selectionIntegrity(
-      "Signed try-out set lost one or more sections."
-    );
-  }
-  const sections = MutableList.make<SelectedTryoutSection>();
-  for (const storedSection of stored) {
-    const catalogRow = yield* verifyTryoutCatalog(storedSection, snapshotId);
-    const row = yield* Schema.decodeUnknownEffect(TryoutSectionSchema)(
-      catalogRow
-    ).pipe(Effect.orDie);
-    MutableList.append(sections, {
-      row,
-      rowHash: storedSection.rowHash,
-    });
-  }
-  return MutableList.toArray(sections);
-});
-
-/** Rejects a malformed set-local catalog selection. */
-function selectionIntegrity(message: string) {
-  return releaseFail("CONTENT_RELEASE_INTEGRITY", message);
-}
+/** The set-local catalog of one set or section route. */
+export type TryoutSetSelection = NonNullable<
+  Effect.Success<ReturnType<typeof readTryoutSetSelection>>
+>;
