@@ -11,6 +11,7 @@ import {
   classAuthority,
 } from "@repo/backend/confect/classroom/authority";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { requireStudent } from "@repo/backend/confect/insight/access";
 import { NarrativeMissing } from "@repo/backend/confect/insight/errors";
 import spec from "@repo/backend/confect/insight/narratives.spec";
 import { narrativeField } from "@repo/backend/confect/insight/schema";
@@ -43,6 +44,7 @@ const write = FunctionImpl.make(
   Effect.fn("insight.narratives.write")(function* ({ personId, text }) {
     const { person } = yield* Member;
     const row = yield* Class;
+    yield* requireStudent(personId);
     const fields = { classId: row._id, personId };
     const sealedText = yield* sealText(
       yield* schoolKeys(row.tenantId),
@@ -57,19 +59,31 @@ const write = FunctionImpl.make(
         writer.table("insightNarratives").insert({
           ...fields,
           authorId: person._id,
+          periodId: row.periodId,
           sealedText,
           tenantId: row.tenantId,
           updatedAt,
         }),
       onSome: (narrative) =>
-        writer
-          .table("insightNarratives")
-          .patch(narrative._id, {
-            authorId: person._id,
-            sealedText,
-            updatedAt,
-          }),
+        writer.table("insightNarratives").patch(narrative._id, {
+          authorId: person._id,
+          sealedText,
+          updatedAt,
+        }),
     }).pipe(Effect.orDie);
+    const draft = yield* (yield* DatabaseReader)
+      .table("insightDrafts")
+      .index("by_classId_and_personId", (query) =>
+        query.eq("classId", row._id).eq("personId", personId)
+      )
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isSome(draft) && draft.value.sealedText !== undefined) {
+      yield* writer
+        .table("insightDrafts")
+        .delete(draft.value._id)
+        .pipe(Effect.orDie);
+    }
     return null;
   })
 );

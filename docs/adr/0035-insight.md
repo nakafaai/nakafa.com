@@ -77,9 +77,13 @@ arrive as content.
 - Each forecast is explained on request. A forecast with no reasons is not shown.
 - Forecast accuracy is compared with the real results every month. A new model
   replaces the old one only after it passes that test (blueprint, Insight
-  calibration). The test is a proper scoring rule, such as the Brier score, and its
-  acceptance threshold is an open decision for the owner. The threshold is not in
-  the blueprint, and S13 does not ship a forecast before it is set.
+  calibration). The test is the Brier score, a proper scoring rule. A standing a
+  student comes to a sitting with is a forecast, and the student's whole sitting in
+  that competency is what happened: they reached the KKTP or they did not. Each month
+  the forecast must beat always answering that month's base rate, the plain forecast
+  that knows nothing of a student. A month of fewer than 200 forecasts says too little
+  to fail it. While the newest month fails, teachers see no chance and a line that
+  says why, and the next month's pass brings it back.
 - Item difficulty is labelled an initial estimate until the IRT calibration passes
   (ADR 0031, and the blueprint's calibration rule).
 - A teacher's intervention is recorded as descriptive evidence, never as a cause.
@@ -95,7 +99,10 @@ arrive as content.
 - Private Nina conversations never enter (blueprint, Insight sources).
 - Nina drafts a narrative for the homeroom teacher. The teacher approves it and
   shares it, and the share can be withdrawn from the same page (blueprint, Narasi
-  and K3).
+  and K3). A draft is written from the student's numbers alone, with no name, draws
+  from the school's credit pool as a reply of Nina does (ADR 0025), and is not a
+  narrative until a teacher saves their own words. K6 governs a Jev judgment that
+  informs a grade, and a draft informs no grade, so it does not apply.
 
 ### Limits that always apply
 
@@ -115,6 +122,11 @@ arrive as content.
 - Narratives are kept during the school year, sealed, and deleted with the period.
 - Forecasts are derived. They are kept during the school year and deleted with the
   period, with their reasons.
+- A standing, a narrative and a draft each belong to one period, and a new period
+  starts them over. Archiving a period schedules their deletion 30 days on, because
+  a school can restore a period it archived by mistake, and a restored period keeps
+  everything. A sitting of a unit with no active period has no school year to count
+  in, so Insight leaves it out.
 - A school's end removes all of them after an export, 30 days after it leaves (ADR
   0033, Retention).
 
@@ -140,9 +152,6 @@ arrive as content.
 ## What Stays Open
 
 - The mastery formula and its recorded amendment (owner, before S12).
-- The forecast's acceptance threshold for the monthly test (owner, before S13).
-- The provider of Nina's narrative drafts, and whether the K6 gate applies to
-  them. The blueprint does not state either.
 
 ## Implementation Status
 
@@ -152,6 +161,9 @@ arrive as content.
 | Competency keys in Aksara content (CASE 1.1 mapping) | Planned, Aksara work first |
 | Competency tags typed by the teacher (`insightTags`) | Built |
 | Mastery rows (`insightMastery`), written when a sitting's results are released | Built |
-| Forecasts and their reasons, computed when read | Built, as an initial estimate; the monthly test is planned |
+| Forecasts and their reasons, computed when read | Built |
+| The monthly test (`insightScores`, `insightCalibrations`), which takes a failing forecast off the screen | Built |
 | Insight screens for teachers and students, and teachers' narratives for guardians | Built |
-| Shared practice, Nina's narrative drafts, deletion with the period | Planned |
+| Shared practice, per try-out track, which the student switches on and off (`insightShares`) | Built |
+| Nina's narrative drafts (`insightDrafts`) | Built |
+| Deletion with the period | Built |

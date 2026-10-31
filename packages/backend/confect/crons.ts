@@ -10,6 +10,7 @@ import editorInternal from "@repo/backend/confect/_generated/refs/editor.server"
 import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import guardiansInternal from "@repo/backend/confect/_generated/refs/guardians.server";
+import insightInternal from "@repo/backend/confect/_generated/refs/insight.server";
 import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
@@ -54,6 +55,20 @@ export default CronJobs.make()
       Duration.hours(INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS),
       integrationsInternal.writes.sweep,
       {}
+    )
+  )
+  .add(
+    CronJob.make(
+      "test insight forecasts",
+      Cron.make({
+        minutes: [30],
+        hours: [0],
+        days: [1],
+        months: [],
+        weekdays: [],
+      }),
+      insightInternal.calibration.run,
+      { count: 0, cursor: null, errors: 0, reached: 0 }
     )
   )
   .add(

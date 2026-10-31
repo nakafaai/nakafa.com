@@ -1,4 +1,3 @@
-import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -11,17 +10,9 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import {
-  keyedExam,
-  scheduleSitting,
-  seedAttempt,
-  seedPlacement,
-  sittingRow,
-} from "@repo/backend/test/sittings";
-import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
+import { openClass, sat, scored } from "@repo/backend/test/insight";
+import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
-
-type Fixture = Effect.Success<typeof tenancyFixture>;
 
 const { list, set } = refs.public.insight.tags;
 const { mine, ofClass } = refs.public.insight.reads;
@@ -33,76 +24,24 @@ beforeEach(() => {
   vi.setSystemTime(TENANCY_NOW);
 });
 
-/** A sitting of an exam of the school, with the student's attempt and the questions of its exam. */
-const sat = Effect.fn("test.insight.sat")(function* (fixture: Fixture) {
-  const examId = yield* keyedExam(fixture, "Ujian Fisika");
-  const cohortId = yield* seedPlacement(
-    fixture,
-    fixture.people.student.personId
-  );
-  const made = yield* scheduleSitting(fixture, {
-    closesAt: TENANCY_NOW + 2000,
-    examId,
-    group: { cohortId, kind: "cohort" },
-    opensAt: TENANCY_NOW + 1000,
-  });
-  const sitting = yield* sittingRow(fixture, made.id);
-  const attempt = yield* seedAttempt(fixture, {
-    deadline: TENANCY_NOW + 2000,
-    deviceId: null,
-    person: fixture.people.student.personId,
-    sittingId: made.id,
-    state: "closing",
-  });
-  const exam = yield* fixture.run(
-    Effect.flatMap(DatabaseReader, (reader) =>
-      reader.table("exams").get(sitting.examId).pipe(Effect.orDie)
-    )
-  );
-  return { attempt, examId, questions: exam.questions, sittingId: made.id };
-});
-
-/** Stores one scored answer of the student, as the scoring writes it. */
-const scored = (
-  fixture: Fixture,
-  made: {
-    readonly attempt: GenericId.GenericId<"examAttempts">;
-    readonly sittingId: GenericId.GenericId<"examSittings">;
-  },
-  question: GenericId.GenericId<"examQuestions">,
-  points: number
-) =>
-  fixture.run(
-    Effect.flatMap(DatabaseWriter, (writer) =>
-      writer.table("examResults").insert({
-        attempt: made.attempt,
-        person: fixture.people.student.personId,
-        points,
-        question,
-        response: [],
-        sitting: made.sittingId,
-        tenantId: fixture.tenants.nf,
-        verdict: points > 0 ? "correct" : "incorrect",
-      })
-    ).pipe(Effect.asVoid, Effect.orDie)
-  );
-
 describe("insight", () => {
-  it.effect("shows a student's own standing and keeps the class view from them", () =>
-    Effect.gen(function* () {
-      const fixture = yield* keyedFixture;
-      const term = yield* period(fixture, fixture.units.smp);
-      const forum = yield* forumClass(fixture, term.id, "X-1");
-      expect(yield* fixture.as("student").query(mine, { slug: nf })).toEqual(
-        []
-      );
-      expect(
-        yield* fixture
-          .as("student")
-          .query(ofClass, { classId: forum.classId, slug: nf })
-          .pipe(Effect.flip)
-      ).toMatchObject({ _tag: "AccessDenied" });
-    })
+  it.effect(
+    "shows a student's own standing and keeps the class view from them",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-1");
+        expect(yield* fixture.as("student").query(mine, { slug: nf })).toEqual(
+          []
+        );
+        expect(
+          yield* fixture
+            .as("student")
+            .query(ofClass, { classId: forum.classId, slug: nf })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "AccessDenied" });
+      })
   );
 
   it.effect(
@@ -110,9 +49,8 @@ describe("insight", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* keyedFixture;
-        const term = yield* period(fixture, fixture.units.smp);
-        const forum = yield* forumClass(fixture, term.id, "X-1");
-        const made = yield* sat(fixture);
+        const forum = yield* openClass(fixture);
+        const made = yield* sat(fixture, forum.classId);
         const first = Arr.getUnsafe(made.questions, 0);
         const teacher = fixture.as("teacher");
         const tag = (competency: string | null) =>
@@ -135,12 +73,12 @@ describe("insight", () => {
         );
         yield* scored(fixture, made, first, 1);
         yield* fixture.internal.mutation(run, {
-          cursor: null,
+          after: null,
           sittingId: made.sittingId,
         });
         yield* scored(fixture, made, first, 0);
         yield* fixture.internal.mutation(run, {
-          cursor: null,
+          after: null,
           sittingId: made.sittingId,
         });
         const own = yield* fixture.as("student").query(mine, { slug: nf });
@@ -150,16 +88,20 @@ describe("insight", () => {
         yield* tag(null);
         yield* scored(fixture, made, first, 1);
         yield* fixture.internal.mutation(run, {
-          cursor: null,
+          after: null,
           sittingId: made.sittingId,
         });
-        expect(yield* fixture.as("student").query(mine, { slug: nf })).toMatchObject(
-          [{ competency: "Gerak lurus" }, { competency: "Ujian Fisika" }]
-        );
+        expect(
+          yield* fixture.as("student").query(mine, { slug: nf })
+        ).toMatchObject([
+          { competency: "Gerak lurus" },
+          { competency: "Ujian Fisika" },
+        ]);
         const seen = yield* teacher.query(ofClass, {
           classId: forum.classId,
           slug: nf,
         });
+        expect(seen.forecasts).toBe(true);
         expect(seen.kktp).toBe(75);
         expect(seen.students[0]?.skills[0]?.chance).toBeGreaterThan(0);
 
@@ -170,6 +112,48 @@ describe("insight", () => {
         ).toSatisfy((tags: readonly { competency: string | null }[]) =>
           Arr.every(tags, (found) => found.competency === null)
         );
+      })
+  );
+
+  it.effect(
+    "shows a student only their newest period, once a new one starts",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const forum = yield* openClass(fixture);
+        const made = yield* sat(fixture, forum.classId);
+        yield* scored(fixture, made, Arr.getUnsafe(made.questions, 0), 1);
+        yield* fixture.internal.mutation(run, {
+          after: null,
+          sittingId: made.sittingId,
+        });
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const reader = yield* DatabaseReader;
+            const writer = yield* DatabaseWriter;
+            const old = yield* reader
+              .table("tenantPeriods")
+              .get(forum.periodId);
+            const { _creationTime, _id, ...fields } = old;
+            const earlier = yield* writer
+              .table("tenantPeriods")
+              .insert({ ...fields, name: "Genap", status: "archived" });
+            yield* writer.table("insightMastery").insert({
+              competency: "Lama",
+              earned: 1,
+              observations: 1,
+              periodId: earlier,
+              personId: fixture.people.student.personId,
+              possible: 1,
+              rating: 1,
+              tenantId: fixture.tenants.nf,
+              updatedAt: TENANCY_NOW - 1000,
+            });
+          }).pipe(Effect.orDie)
+        );
+        expect(
+          yield* fixture.as("student").query(mine, { slug: nf })
+        ).toMatchObject([{ competency: "Ujian Fisika" }]);
       })
   );
 
@@ -192,6 +176,15 @@ describe("insight", () => {
         expect(
           yield* teacher.mutation(narratives.withdraw, names).pipe(Effect.flip)
         ).toMatchObject({ _tag: "NarrativeMissing" });
+        expect(
+          yield* teacher
+            .mutation(narratives.write, {
+              ...names,
+              personId: fixture.people.teacher.personId,
+              text: "Bukan muridnya.",
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "AccessDenied" });
         yield* teacher.mutation(narratives.write, { ...names, text: "Rajin." });
         yield* teacher.mutation(narratives.write, {
           ...names,

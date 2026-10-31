@@ -7422,6 +7422,14 @@ export declare const api: {
     };
   };
   insight: {
+    drafts: {
+      ask: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; personId: Id<"tenantPeople">; slug: string },
+        null
+      >;
+    };
     narratives: {
       share: FunctionReference<
         "mutation",
@@ -7447,6 +7455,33 @@ export declare const api: {
         null
       >;
     };
+    practice: {
+      share: FunctionReference<
+        "mutation",
+        "public",
+        { countryKey: string; examKey: string; slug: string; trackKey: string },
+        null
+      >;
+      stop: FunctionReference<
+        "mutation",
+        "public",
+        { countryKey: string; examKey: string; slug: string; trackKey: string },
+        null
+      >;
+      topics: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          countryKey: string;
+          examKey: string;
+          mean: number;
+          sets: number;
+          shared: boolean;
+          trackKey: string;
+        }>
+      >;
+    };
     reads: {
       mine: FunctionReference<
         "query",
@@ -7465,13 +7500,22 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string },
         {
+          forecasts: boolean;
           kktp: number;
           students: Array<{
+            draft: { text: string | null } | null;
             id: Id<"tenantPeople">;
             name: string;
             narrative: { shared: boolean; text: string } | null;
+            practice: Array<{
+              countryKey: string;
+              examKey: string;
+              mean: number;
+              sets: number;
+              trackKey: string;
+            }>;
             skills: Array<{
-              chance: number;
+              chance: number | null;
               competency: string;
               earned: number;
               observations: number;
@@ -16507,11 +16551,62 @@ export declare const internal: {
     };
   };
   insight: {
+    calibration: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          count: number;
+          cursor: string | null;
+          errors: number;
+          reached: number;
+        },
+        null
+      >;
+    };
+    drafts: {
+      finish: FunctionReference<
+        "mutation",
+        "internal",
+        { draftId: Id<"insightDrafts">; text: string | null },
+        null
+      >;
+      source: FunctionReference<
+        "query",
+        "internal",
+        { draftId: Id<"insightDrafts"> },
+        {
+          kktp: number;
+          locale: "en" | "id" | "de";
+          skills: Array<{
+            competency: string;
+            earned: number;
+            observations: number;
+            possible: number;
+            rating: number;
+          }>;
+        }
+      >;
+      write: FunctionReference<
+        "action",
+        "internal",
+        { draftId: Id<"insightDrafts"> },
+        null
+      >;
+    };
     observe: {
       run: FunctionReference<
         "mutation",
         "internal",
-        { cursor: string | null; sittingId: Id<"examSittings"> },
+        { after: Id<"tenantPeople"> | null; sittingId: Id<"examSittings"> },
+        null
+      >;
+    };
+    retention: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { periodId: Id<"tenantPeriods"> },
         null
       >;
     };

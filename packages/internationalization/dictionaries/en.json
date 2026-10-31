@@ -2848,6 +2848,10 @@
       "title": "An action is closed to API clients.",
       "description": "Remove it from the client, then create the client again."
     },
+    "school-refusal-draft-refused": {
+      "title": "Nina cannot draft this now.",
+      "description": "Turn Nina on for the school, or wait until the school's credits renew."
+    },
     "school-refusal-promotion-state": {
       "title": "This period cannot open yet.",
       "description": "Apply the promotion into this period first."
@@ -3607,6 +3611,7 @@
     "student": "Student",
     "chance": "Chance of KKTP {kktp}",
     "chance-note": "This chance does not change a grade, and only teachers see it. It comes from the points above and is an initial estimate.",
+    "chance-held": "The forecast missed last month's test, so it stays hidden until it passes.",
     "empty": "Nothing to show yet",
     "empty-description": "Each released exam shows here.",
     "narrative-title": "Narrative for {student}",
@@ -3614,6 +3619,16 @@
     "narrative-save": "Save",
     "narrative-share": "Share with guardians",
     "narrative-withdraw": "Take back",
+    "narrative-ask": "Ask Nina",
+    "narrative-drafting": "Nina is writing a draft.",
+    "narrative-draft": "Nina's draft, from the numbers alone. Make it your own before you save it.",
+    "narrative-use": "Use this draft",
+    "practice": "Shared practice",
+    "practice-sets": "Sets",
+    "practice-mean": "Mean score",
+    "practice-shared": "Shared",
+    "practice-share": "Share {topic} with your school",
+    "practice-note": "Only the topics you switch on reach your teachers, and you can switch one off at any time.",
     "tags": "Competencies",
     "tags-description": "Name the competency of each question. A question with none counts for its exam.",
     "exam": "Exam",

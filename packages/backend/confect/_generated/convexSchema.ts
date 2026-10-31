@@ -85,8 +85,12 @@ import graduations from "./tables/graduations";
 import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
+import insightCalibrations from "./tables/insightCalibrations";
+import insightDrafts from "./tables/insightDrafts";
 import insightMastery from "./tables/insightMastery";
 import insightNarratives from "./tables/insightNarratives";
+import insightScores from "./tables/insightScores";
+import insightShares from "./tables/insightShares";
 import insightTags from "./tables/insightTags";
 import integrationClients from "./tables/integrationClients";
 import integrationDeliveries from "./tables/integrationDeliveries";
@@ -243,8 +247,12 @@ export default $defineSchema({
   guardianCodes: $Table.tableDefinition(guardianCodes),
   guardianConsents: $Table.tableDefinition(guardianConsents),
   guardianLinks: $Table.tableDefinition(guardianLinks),
+  insightCalibrations: $Table.tableDefinition(insightCalibrations),
+  insightDrafts: $Table.tableDefinition(insightDrafts),
   insightMastery: $Table.tableDefinition(insightMastery),
   insightNarratives: $Table.tableDefinition(insightNarratives),
+  insightScores: $Table.tableDefinition(insightScores),
+  insightShares: $Table.tableDefinition(insightShares),
   insightTags: $Table.tableDefinition(insightTags),
   integrationClients: $Table.tableDefinition(integrationClients),
   integrationDeliveries: $Table.tableDefinition(integrationDeliveries),

@@ -84,8 +84,12 @@ import graduations from "./tables/graduations";
 import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
+import insightCalibrations from "./tables/insightCalibrations";
+import insightDrafts from "./tables/insightDrafts";
 import insightMastery from "./tables/insightMastery";
 import insightNarratives from "./tables/insightNarratives";
+import insightScores from "./tables/insightScores";
+import insightShares from "./tables/insightShares";
 import insightTags from "./tables/insightTags";
 import integrationClients from "./tables/integrationClients";
 import integrationDeliveries from "./tables/integrationDeliveries";
@@ -242,8 +246,12 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly guardianCodes: typeof guardianCodes;
   readonly guardianConsents: typeof guardianConsents;
   readonly guardianLinks: typeof guardianLinks;
+  readonly insightCalibrations: typeof insightCalibrations;
+  readonly insightDrafts: typeof insightDrafts;
   readonly insightMastery: typeof insightMastery;
   readonly insightNarratives: typeof insightNarratives;
+  readonly insightScores: typeof insightScores;
+  readonly insightShares: typeof insightShares;
   readonly insightTags: typeof insightTags;
   readonly integrationClients: typeof integrationClients;
   readonly integrationDeliveries: typeof integrationDeliveries;
@@ -399,8 +407,12 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   guardianCodes,
   guardianConsents,
   guardianLinks,
+  insightCalibrations,
+  insightDrafts,
   insightMastery,
   insightNarratives,
+  insightScores,
+  insightShares,
   insightTags,
   integrationClients,
   integrationDeliveries,

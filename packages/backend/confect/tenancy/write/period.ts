@@ -1,8 +1,11 @@
 import type { TenantPeriodsDoc } from "@repo/backend/confect/_generated/docs";
+import insightInternal from "@repo/backend/confect/_generated/refs/insight.server";
 import {
   DatabaseReader,
   DatabaseWriter,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { INSIGHT_RETENTION } from "@repo/backend/confect/insight/retention";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { periodAuthority } from "@repo/backend/confect/tenancy/authority";
 import {
@@ -28,8 +31,9 @@ const setStatus = Effect.fn("tenancy.write.period.setStatus")(function* (
 });
 
 /**
- * Archives an active period, which then stays readable and refuses writes, and
- * journals the archive. Only an active period can be archived.
+ * Archives an active period, which then stays readable and refuses writes, journals
+ * the archive, and schedules the deletion of its Insight. Only an active period can
+ * be archived.
  */
 export const archivePeriod = Effect.fn("tenancy.write.period.archive")(
   function* (actor: typeof TenantActor.Type, period: TenantPeriodsDoc) {
@@ -38,6 +42,11 @@ export const archivePeriod = Effect.fn("tenancy.write.period.archive")(
     }
     const archived = yield* setStatus(period, "archived");
     yield* periodAuthority.record(actor, period, { type: "period.archived" });
+    yield* (yield* Scheduler).runAfter(
+      INSIGHT_RETENTION,
+      insightInternal.retention.run,
+      { periodId: period._id }
+    );
     return archived;
   }
 );

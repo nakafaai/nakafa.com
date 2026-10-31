@@ -143,9 +143,13 @@ import guardians_seed from "../guardians/seed.spec";
 import identity_cards from "../identity/cards.spec";
 import identity_logins from "../identity/logins.spec";
 import identity_seed from "../identity/seed.spec";
+import insight_calibration from "../insight/calibration.spec";
+import insight_drafts from "../insight/drafts.spec";
 import insight_narratives from "../insight/narratives.spec";
 import insight_observe from "../insight/observe.spec";
+import insight_practice from "../insight/practice.spec";
 import insight_reads from "../insight/reads.spec";
+import insight_retention from "../insight/retention.spec";
 import insight_tags from "../insight/tags.spec";
 import integrations_clients from "../integrations/clients.spec";
 import integrations_devices from "../integrations/devices.spec";
@@ -270,7 +274,7 @@ const spec: Spec.Spec<{
   readonly exams: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "exams", never, GroupSpec.NamedAt<typeof exams_assets, "assets"> | GroupSpec.NamedAt<typeof exams_exams, "exams"> | GroupSpec.NamedAt<typeof exams_imports, "imports"> | GroupSpec.NamedAt<typeof exams_joins, "joins"> | GroupSpec.NamedAt<typeof exams_presence, "presence"> | GroupSpec.NamedAt<typeof exams_questions, "questions"> | GroupSpec.NamedAt<typeof exams_reads, "reads"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "results", never, GroupSpec.NamedAt<typeof exams_results_results, "results">>, "results"> | GroupSpec.NamedAt<typeof exams_rooms, "rooms"> | GroupSpec.NamedAt<typeof exams_screens, "screens"> | GroupSpec.NamedAt<typeof exams_seed, "seed"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof exams_sittings, GroupSpec.NamedAt<typeof exams_sittings_timers, "timers">>, "sittings">>, "exams">;
   readonly guardians: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "guardians", never, GroupSpec.NamedAt<typeof guardians_codes, "codes"> | GroupSpec.NamedAt<typeof guardians_family, "family"> | GroupSpec.NamedAt<typeof guardians_links, "links"> | GroupSpec.NamedAt<typeof guardians_seed, "seed">>, "guardians">;
   readonly identity: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "identity", never, GroupSpec.NamedAt<typeof identity_cards, "cards"> | GroupSpec.NamedAt<typeof identity_logins, "logins"> | GroupSpec.NamedAt<typeof identity_seed, "seed">>, "identity">;
-  readonly insight: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "insight", never, GroupSpec.NamedAt<typeof insight_narratives, "narratives"> | GroupSpec.NamedAt<typeof insight_observe, "observe"> | GroupSpec.NamedAt<typeof insight_reads, "reads"> | GroupSpec.NamedAt<typeof insight_tags, "tags">>, "insight">;
+  readonly insight: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "insight", never, GroupSpec.NamedAt<typeof insight_calibration, "calibration"> | GroupSpec.NamedAt<typeof insight_drafts, "drafts"> | GroupSpec.NamedAt<typeof insight_narratives, "narratives"> | GroupSpec.NamedAt<typeof insight_observe, "observe"> | GroupSpec.NamedAt<typeof insight_practice, "practice"> | GroupSpec.NamedAt<typeof insight_reads, "reads"> | GroupSpec.NamedAt<typeof insight_retention, "retention"> | GroupSpec.NamedAt<typeof insight_tags, "tags">>, "insight">;
   readonly integrations: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "integrations", never, GroupSpec.NamedAt<typeof integrations_clients, "clients"> | GroupSpec.NamedAt<typeof integrations_devices, "devices"> | GroupSpec.NamedAt<typeof integrations_hooks, "hooks"> | GroupSpec.NamedAt<typeof integrations_reads, "reads"> | GroupSpec.NamedAt<typeof integrations_tokens, "tokens"> | GroupSpec.NamedAt<typeof integrations_webhooks, "webhooks"> | GroupSpec.NamedAt<typeof integrations_writes, "writes">>, "integrations">;
   readonly journal: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "journal", never, GroupSpec.NamedAt<typeof journal_audit, "audit">>, "journal">;
   readonly learningPreferences: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "learningPreferences", never, GroupSpec.NamedAt<typeof learningPreferences_mutations, "mutations"> | GroupSpec.NamedAt<typeof learningPreferences_queries, "queries">>, "learningPreferences">;
@@ -509,9 +513,13 @@ const spec: Spec.Spec<{
     ["seed"]: identity_seed,
   }),
   ["insight"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["calibration"]: insight_calibration,
+    ["drafts"]: insight_drafts,
     ["narratives"]: insight_narratives,
     ["observe"]: insight_observe,
+    ["practice"]: insight_practice,
     ["reads"]: insight_reads,
+    ["retention"]: insight_retention,
     ["tags"]: insight_tags,
   }),
   ["integrations"]: GroupSpec.addGroupsAt(GroupSpec.make(), {

@@ -85,8 +85,12 @@ export type GraduationsDoc = Document.Document<typeof schemaDefinition, "graduat
 export type GuardianCodesDoc = Document.Document<typeof schemaDefinition, "guardianCodes">;
 export type GuardianConsentsDoc = Document.Document<typeof schemaDefinition, "guardianConsents">;
 export type GuardianLinksDoc = Document.Document<typeof schemaDefinition, "guardianLinks">;
+export type InsightCalibrationsDoc = Document.Document<typeof schemaDefinition, "insightCalibrations">;
+export type InsightDraftsDoc = Document.Document<typeof schemaDefinition, "insightDrafts">;
 export type InsightMasteryDoc = Document.Document<typeof schemaDefinition, "insightMastery">;
 export type InsightNarrativesDoc = Document.Document<typeof schemaDefinition, "insightNarratives">;
+export type InsightScoresDoc = Document.Document<typeof schemaDefinition, "insightScores">;
+export type InsightSharesDoc = Document.Document<typeof schemaDefinition, "insightShares">;
 export type InsightTagsDoc = Document.Document<typeof schemaDefinition, "insightTags">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
 export type IntegrationDeliveriesDoc = Document.Document<typeof schemaDefinition, "integrationDeliveries">;
@@ -243,8 +247,12 @@ export interface Docs {
   guardianCodes: GuardianCodesDoc;
   guardianConsents: GuardianConsentsDoc;
   guardianLinks: GuardianLinksDoc;
+  insightCalibrations: InsightCalibrationsDoc;
+  insightDrafts: InsightDraftsDoc;
   insightMastery: InsightMasteryDoc;
   insightNarratives: InsightNarrativesDoc;
+  insightScores: InsightScoresDoc;
+  insightShares: InsightSharesDoc;
   insightTags: InsightTagsDoc;
   integrationClients: IntegrationClientsDoc;
   integrationDeliveries: IntegrationDeliveriesDoc;

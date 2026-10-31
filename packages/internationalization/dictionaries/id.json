@@ -2848,6 +2848,10 @@
       "title": "Aksi ini tertutup untuk klien API.",
       "description": "Hapus aksi itu dari klien, lalu buat klien lagi."
     },
+    "school-refusal-draft-refused": {
+      "title": "Nina tidak bisa membuat draf sekarang.",
+      "description": "Aktifkan Nina untuk sekolah, atau tunggu kredit sekolah diperbarui."
+    },
     "school-refusal-promotion-state": {
       "title": "Periode ini belum bisa dibuka.",
       "description": "Terapkan dulu kenaikan kelas ke periode ini."
@@ -3607,6 +3611,7 @@
     "student": "Siswa",
     "chance": "Peluang KKTP {kktp}",
     "chance-note": "Peluang ini tidak mengubah nilai dan hanya tampil untuk guru. Angkanya berasal dari poin di atas dan masih estimasi awal.",
+    "chance-held": "Prakiraan tidak lolos uji bulan lalu, jadi disembunyikan sampai lolos.",
     "empty": "Belum ada yang ditampilkan",
     "empty-description": "Setiap ujian yang dirilis tampil di sini.",
     "narrative-title": "Narasi untuk {student}",
@@ -3614,6 +3619,16 @@
     "narrative-save": "Simpan",
     "narrative-share": "Bagikan ke orang tua",
     "narrative-withdraw": "Tarik kembali",
+    "narrative-ask": "Minta Nina",
+    "narrative-drafting": "Nina sedang menulis draf.",
+    "narrative-draft": "Draf Nina, hanya dari angka. Sesuaikan dulu sebelum disimpan.",
+    "narrative-use": "Pakai draf ini",
+    "practice": "Latihan yang dibagikan",
+    "practice-sets": "Set",
+    "practice-mean": "Skor rata-rata",
+    "practice-shared": "Dibagikan",
+    "practice-share": "Bagikan {topic} ke sekolah",
+    "practice-note": "Hanya topik yang kamu aktifkan yang sampai ke gurumu, dan kamu bisa mematikannya kapan saja.",
     "tags": "Kompetensi",
     "tags-description": "Sebutkan kompetensi tiap soal. Soal tanpa kompetensi dihitung untuk ujiannya.",
     "exam": "Ujian",

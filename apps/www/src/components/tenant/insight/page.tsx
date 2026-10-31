@@ -25,13 +25,14 @@ import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import { OwnPractice } from "@/components/tenant/insight/practice";
 import { percentOf } from "@/components/tenant/insight/rows";
 import { ClassInsightTable } from "@/components/tenant/insight/table";
 import { QuestionTags } from "@/components/tenant/insight/tags";
 
 /**
  * Insight (ADR 0035): a student reads their own standing, and a teacher picks a class and reads each student's
- * standing with the chance of reaching the KKTP. It stays off until the school records its impact assessment.
+ * standing with the chance of reaching the KKTP.
  */
 export function SchoolInsight() {
   const t = useTranslations("SchoolInsight");
@@ -43,7 +44,14 @@ export function SchoolInsight() {
         {Option.contains(role, "student") ? null : <QuestionTags />}
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-4 py-6">
-        {Option.contains(role, "student") ? <OwnInsight /> : <TeacherInsight />}
+        {Option.contains(role, "student") ? (
+          <>
+            <OwnInsight />
+            <OwnPractice />
+          </>
+        ) : (
+          <TeacherInsight />
+        )}
       </LayoutContent>
     </>
   );

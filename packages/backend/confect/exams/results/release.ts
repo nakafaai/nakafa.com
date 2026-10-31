@@ -38,7 +38,7 @@ export const release = Effect.fn("exams.results.release")(function* () {
   yield* (yield* Scheduler).runAfter(
     Duration.zero,
     insightInternal.observe.run,
-    { cursor: null, sittingId: sitting._id }
+    { after: null, sittingId: sitting._id }
   );
   return null;
 });

@@ -6,8 +6,12 @@ import { Class } from "@repo/backend/confect/classroom/access";
 import { classAccess } from "@repo/backend/confect/classroom/authority";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { chanceOf } from "@repo/backend/confect/insight/mastery";
+import { sharedPracticeOf } from "@repo/backend/confect/insight/practice";
 import spec from "@repo/backend/confect/insight/reads.spec";
-import { narrativeField } from "@repo/backend/confect/insight/schema";
+import {
+  draftField,
+  narrativeField,
+} from "@repo/backend/confect/insight/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -21,21 +25,41 @@ const STUDENT_PAGE = 100;
 /** The competencies one student shows: more than one class's exams name. */
 const SKILL_PAGE = 50;
 
-/** A student's standing in every competency on record. */
+/** What a reader sees of one standing. */
+const skillOf = Struct.pick([
+  "competency",
+  "earned",
+  "observations",
+  "possible",
+  "rating",
+]);
+
+/** A student's standing in every competency of one period. */
 const skillsOf = Effect.fn("insight.reads.skills")(function* (
-  personId: GenericId.GenericId<"tenantPeople">
+  personId: GenericId.GenericId<"tenantPeople">,
+  periodId: GenericId.GenericId<"tenantPeriods">
 ) {
   const rows = yield* (yield* DatabaseReader)
     .table("insightMastery")
-    .index("by_personId_and_competency", (query) =>
-      query.eq("personId", personId)
+    .index("by_personId_and_periodId_and_competency", (query) =>
+      query.eq("personId", personId).eq("periodId", periodId)
     )
     .take(SKILL_PAGE)
     .pipe(Effect.orDie);
-  return Arr.map(
-    rows,
-    Struct.pick(["competency", "earned", "observations", "possible", "rating"])
-  );
+  return Arr.map(rows, skillOf);
+});
+
+/** Whether the forecast may be shown: the newest month's test passed, or no month has tested it yet. */
+const forecastsOn = Effect.fn("insight.reads.forecasts")(function* () {
+  const newest = yield* (yield* DatabaseReader)
+    .table("insightCalibrations")
+    .index("by_month", "desc")
+    .first()
+    .pipe(Effect.orDie);
+  return Option.match(newest, {
+    onNone: () => true,
+    onSome: (test) => test.passed,
+  });
 });
 
 /** A class's students, each with their standing, their chance of the KKTP, and the teacher's narrative. */
@@ -47,6 +71,7 @@ const ofClass = FunctionImpl.make(
     const row = yield* Class;
     const reader = yield* DatabaseReader;
     const scheme = yield* schemeForEntry(row.tenantId);
+    const forecasts = yield* forecastsOn();
     const keys = yield* schoolKeys(row.tenantId);
     const members = yield* reader
       .table("tenantCohortMembers")
@@ -68,8 +93,27 @@ const ofClass = FunctionImpl.make(
           )
           .first()
           .pipe(Effect.orDie);
-        const skills = yield* skillsOf(personId);
+        const draft = yield* reader
+          .table("insightDrafts")
+          .index("by_classId_and_personId", (query) =>
+            query.eq("classId", row._id).eq("personId", personId)
+          )
+          .first()
+          .pipe(Effect.orDie);
+        const skills = yield* skillsOf(personId, row.periodId);
         return {
+          draft: Option.isSome(draft)
+            ? {
+                text:
+                  draft.value.sealedText === undefined
+                    ? null
+                    : yield* openText(
+                        keys,
+                        draftField(draft.value),
+                        draft.value.sealedText
+                      ).pipe(Effect.orDie),
+              }
+            : null,
           id: personId,
           name: person.name,
           narrative: Option.isSome(narrative)
@@ -82,25 +126,48 @@ const ofClass = FunctionImpl.make(
                 ).pipe(Effect.orDie),
               }
             : null,
+          practice: yield* sharedPracticeOf(person),
           skills: Arr.map(skills, (skill) => ({
             ...skill,
-            chance: chanceOf(skill.earned, skill.possible, scheme.kktp),
+            chance: forecasts
+              ? chanceOf(skill.earned, skill.possible, scheme.kktp)
+              : null,
           })),
         };
       })
     );
-    return { kktp: scheme.kktp, students };
+    return { forecasts, kktp: scheme.kktp, students };
   })
 );
 
-/** The viewer's own standing in every competency, without a chance. */
+/** The viewer's own standing in every competency of their newest period, without a chance. */
 const mine = FunctionImpl.make(
   databaseSchema,
   spec,
   "mine",
   Effect.fn("insight.reads.mine")(function* () {
     const { person } = yield* Member;
-    return yield* skillsOf(person._id);
+    const rows = yield* (yield* DatabaseReader)
+      .table("insightMastery")
+      .index("by_personId_and_periodId_and_competency", (query) =>
+        query.eq("personId", person._id)
+      )
+      .take(SKILL_PAGE)
+      .pipe(Effect.orDie);
+    const newest = Arr.reduce(
+      rows,
+      Option.none<(typeof rows)[number]>(),
+      (kept, row) =>
+        Option.isSome(kept) && kept.value.updatedAt >= row.updatedAt
+          ? kept
+          : Option.some(row)
+    );
+    return Arr.map(
+      Arr.filter(rows, (row) =>
+        Option.exists(newest, (kept) => kept.periodId === row.periodId)
+      ),
+      skillOf
+    );
   })
 );
 

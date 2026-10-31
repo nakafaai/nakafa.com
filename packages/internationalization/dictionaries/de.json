@@ -2848,6 +2848,10 @@
       "title": "Aktion für API-Clients gesperrt.",
       "description": "Entferne sie vom Client und lege ihn dann neu an."
     },
+    "school-refusal-draft-refused": {
+      "title": "Nina kann das gerade nicht entwerfen.",
+      "description": "Schalte Nina für die Schule ein, oder warte, bis die Credits der Schule erneuert werden."
+    },
     "school-refusal-promotion-state": {
       "title": "Diese Periode öffnet noch nicht.",
       "description": "Wende zuerst die Versetzung in diese Periode an."
@@ -3607,6 +3611,7 @@
     "student": "Lernende",
     "chance": "Chance auf KKTP {kktp}",
     "chance-note": "Diese Chance ändert keine Note und ist nur für Lehrkräfte sichtbar. Sie stammt aus den Punkten oben und ist eine erste Schätzung.",
+    "chance-held": "Die Prognose hat den Test des letzten Monats nicht bestanden und bleibt verborgen, bis sie ihn besteht.",
     "empty": "Noch nichts zu zeigen",
     "empty-description": "Jede freigegebene Prüfung erscheint hier.",
     "narrative-title": "Bericht zu {student}",
@@ -3614,6 +3619,16 @@
     "narrative-save": "Speichern",
     "narrative-share": "Mit Erziehungsberechtigten teilen",
     "narrative-withdraw": "Zurücknehmen",
+    "narrative-ask": "Nina fragen",
+    "narrative-drafting": "Nina schreibt einen Entwurf.",
+    "narrative-draft": "Ninas Entwurf, nur aus den Zahlen. Passe ihn an, bevor du speicherst.",
+    "narrative-use": "Diesen Entwurf nutzen",
+    "practice": "Geteilte Übung",
+    "practice-sets": "Sätze",
+    "practice-mean": "Mittlere Punktzahl",
+    "practice-shared": "Geteilt",
+    "practice-share": "{topic} mit deiner Schule teilen",
+    "practice-note": "Nur die Themen, die du einschaltest, erreichen deine Lehrkräfte, und du kannst sie jederzeit ausschalten.",
     "tags": "Kompetenzen",
     "tags-description": "Nenne die Kompetenz jeder Frage. Eine Frage ohne Kompetenz zählt für ihre Prüfung.",
     "exam": "Prüfung",

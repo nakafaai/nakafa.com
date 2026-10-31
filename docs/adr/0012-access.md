@@ -235,7 +235,7 @@ are:
 | Verified parent | A guardian and a student, once the parent relation is verified and consent is granted (ADR 0034) | The student's tasks, released grades, approved report cards, and announcements, and the Insight narratives that the student shared and a teacher approved | Planned |
 | Session proctor | A proctor and one exam sitting | Every proctor action of that sitting (ADR 0013): the token and the participant dashboard, lock and unlock, add minutes, change the token, allow a second device, close the sitting, and accept or reject a late record of an attempt in it | Planned |
 | Exam author | A teacher and their exam | Changing and grading that exam, every proctor action of its sittings, and accepting or rejecting the late records of its attempts | Planned |
-| Shared practice | A student and a practice the student shared | School Insight, per topic, revocable by the student | Planned |
+| Shared practice | A student and a practice the student shared | School Insight, per topic, revocable by the student | Built, ADR 0035 |
 | Visitor | An operator Person and its approved visit | Ending that visit (`visit.end`) | Live |
 
 ### Operators inside tenants

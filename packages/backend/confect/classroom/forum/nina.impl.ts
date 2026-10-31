@@ -23,11 +23,7 @@ import {
 import spec from "@repo/backend/confect/classroom/forum/nina.spec";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { principalOf } from "@repo/backend/confect/classroom/roster";
-import {
-  movePool,
-  poolHoldOf,
-  schoolPoolOf,
-} from "@repo/backend/confect/credits/pool";
+import { movePool, schoolHoldOf } from "@repo/backend/confect/credits/pool";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
@@ -115,19 +111,7 @@ const holdOf = Effect.fn("classroom.forum.nina.hold")(function* (
     .table("tenantPeople")
     .get(question.authorId)
     .pipe(Effect.orDie);
-  if (asker.account.state !== "claimed") {
-    return Option.none();
-  }
-  const userId = asker.account.userId;
-  const now = yield* Clock.currentTimeMillis;
-  const pool = yield* schoolPoolOf(userId, now);
-  if (Option.isNone(pool) || pool.value.tenantId !== klass.tenantId) {
-    return Option.none();
-  }
-  const hold = yield* poolHoldOf(pool.value, userId, now);
-  return hold.credits < REPLY_CREDITS
-    ? Option.none()
-    : Option.some({ draw: hold.draw, userId });
+  return yield* schoolHoldOf(asker, klass.tenantId, REPLY_CREDITS);
 });
 
 /** The messages before a question in its channel or discussion, oldest first, without what a teacher hid. */
