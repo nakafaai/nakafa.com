@@ -95,7 +95,7 @@ describe("billing/receipts", () => {
       lines: [
         {
           amount: 20_218,
-          description: "1 student",
+          description: "school.seat.semester",
           quantity: 1,
           unitAmount: 20_218,
         },
@@ -107,7 +107,7 @@ describe("billing/receipts", () => {
     expect(schoolInvoice(invoice, "SMA Harapan", "en")).toMatchObject({
       buyer: { email: null, name: "SMA Harapan" },
       dueOn: "November 2, 2026",
-      lines: [{ description: "1 student" }],
+      lines: [{ description: "Nakafa School, one semester" }],
       number: "NKF-2026-000001",
       paidWith: null,
       status: "open",
@@ -118,6 +118,16 @@ describe("billing/receipts", () => {
     expect(
       schoolInvoice({ ...invoice, status: "draft" }, "SMA Harapan", "id").status
     ).toBe("open");
+    expect(
+      schoolInvoice(
+        {
+          ...invoice,
+          lines: [{ ...invoice.lines[0], description: "Licence, 2026" }],
+        },
+        "SMA Harapan",
+        "id"
+      ).lines
+    ).toMatchObject([{ description: "Licence, 2026" }]);
   });
 
   it("downloads the learner's invoice as a PDF, and refuses another's", async () => {

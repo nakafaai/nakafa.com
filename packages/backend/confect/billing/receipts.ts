@@ -1,8 +1,9 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
+import { TermOffer } from "@repo/backend/confect/billing/term";
 import type { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** What each kind of payment bought, in the language of the invoice. */
 const PAYMENT_ITEMS = {
@@ -25,6 +26,28 @@ const PAYMENT_ITEMS = {
     pass: "Pass Nakafa Pro",
   },
 } as const;
+
+/** What each term of School buys, in the language of the invoice. */
+const SCHOOL_ITEMS = {
+  de: {
+    "school.seat.semester": "Nakafa School, ein Semester",
+    "school.seat.year": "Nakafa School, ein Schuljahr",
+  },
+  en: {
+    "school.seat.semester": "Nakafa School, one semester",
+    "school.seat.year": "Nakafa School, one school year",
+  },
+  id: {
+    "school.seat.semester": "Nakafa School, satu semester",
+    "school.seat.year": "Nakafa School, satu tahun ajaran",
+  },
+} as const;
+
+/** An invoice line's text: the words of a School term, or the text an operator wrote. */
+const lineDescription = (description: string, locale: ActiveAppLocaleCode) =>
+  Schema.is(TermOffer)(description)
+    ? SCHOOL_ITEMS[locale][description]
+    : description;
 
 /** The digits each currency keeps after the point in its minor unit. */
 const MINOR_DIGITS = {
@@ -102,7 +125,7 @@ export function schoolInvoice(
     issuedOn: date.format(invoice._creationTime),
     lines: Arr.map(invoice.lines, (line) => ({
       amount: writtenAmount(line.amount, invoice.currency, locale),
-      description: line.description,
+      description: lineDescription(line.description, locale),
     })),
     locale,
     number: invoice.number,
