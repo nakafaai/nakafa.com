@@ -5,7 +5,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { cva } from "class-variance-authority";
 import { Schema } from "effect";
