@@ -20,8 +20,14 @@ const TRANSLATOR = /useTranslations\(\s*"([A-Za-z]+)"\s*\)/g;
 /** A string literal that may name a message. */
 const LITERAL = /"([a-z][a-z0-9-]*)"/g;
 
-/** A simple placeholder of a message, which a sample name fills. */
-const PLACEHOLDER = /\{[A-Za-z]+\}/g;
+/** A simple placeholder of a message, by its name. */
+const PLACEHOLDER = /\{([A-Za-z]+)\}/g;
+
+/**
+ * What fills a placeholder: a count takes 200, three digits, as wide as the largest limit a School field
+ * states, and any other placeholder a sample name.
+ */
+const sampleOf = (name: string) => (name === "count" ? "200" : "Siswa Uji");
 
 /** A dictionary: namespaces of messages, where a message may also be a nested group. */
 const Dictionary = Schema.fromJsonString(
@@ -91,7 +97,9 @@ const readFieldMessages = Effect.gen(function* () {
           if (typeof text !== "string") {
             return [];
           }
-          const filled = text.replace(PLACEHOLDER, "Siswa Uji");
+          const filled = text.replace(PLACEHOLDER, (_, name: string) =>
+            sampleOf(name)
+          );
           // A plural or select message holds no single line to measure.
           return filled.includes("{")
             ? []
