@@ -13,8 +13,10 @@ import {
   labelEmpty,
   paperAnswers,
   partsEmpty,
+  promptEmpty,
   questionGap,
 } from "@repo/backend/confect/exams/parts";
+import { EMPTY_PROMPT_TEXT } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option } from "effect";
 
 /** The label of a new part, which holds one empty paragraph until the teacher writes it. */
@@ -211,5 +213,24 @@ describe("exams/parts questionGap", () => {
     expect(
       questionGap({ answers: essayAnswers(), key: null, template: "essay" })
     ).toEqual(Option.none());
+  });
+});
+
+describe("exams/parts promptEmpty", () => {
+  it("reads a prompt of blank paragraphs as empty, and any words or a block as written", () => {
+    expect(promptEmpty(EMPTY_PROMPT_TEXT)).toBe(true);
+    expect(
+      promptEmpty(
+        '{"content":[{"content":[{"text":"  ","type":"text"}],"type":"paragraph"}],"type":"doc"}'
+      )
+    ).toBe(true);
+    expect(
+      promptEmpty(
+        '{"content":[{"content":[{"text":"Soal","type":"text"}],"type":"paragraph"}],"type":"doc"}'
+      )
+    ).toBe(false);
+    expect(promptEmpty('{"content":[{"type":"rule"}],"type":"doc"}')).toBe(
+      false
+    );
   });
 });
