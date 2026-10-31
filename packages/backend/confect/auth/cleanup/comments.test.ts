@@ -25,12 +25,14 @@ it("keeps every reply other learners wrote when an account goes, and rebuilds th
       slug: "material/algebra",
     };
     const top = await ctx.db.insert("comments", {
+      likeCount: 0,
       ...row,
       replyCount: 4,
       text: "Owner's question",
       userId: owner,
     });
     const answer = await ctx.db.insert("comments", {
+      likeCount: 0,
       ...row,
       parentId: top,
       replyToUserId: owner,
@@ -39,6 +41,7 @@ it("keeps every reply other learners wrote when an account goes, and rebuilds th
       userId: retained,
     });
     const thanks = await ctx.db.insert("comments", {
+      likeCount: 0,
       ...row,
       parentId: answer,
       replyToUserId: retained,
@@ -47,6 +50,7 @@ it("keeps every reply other learners wrote when an account goes, and rebuilds th
       userId: retained,
     });
     const follow = await ctx.db.insert("comments", {
+      likeCount: 0,
       ...row,
       parentId: answer,
       replyToUserId: retained,
@@ -55,6 +59,7 @@ it("keeps every reply other learners wrote when an account goes, and rebuilds th
       userId: owner,
     });
     const reply = await ctx.db.insert("comments", {
+      likeCount: 0,
       ...row,
       parentId: follow,
       replyToUserId: owner,
@@ -64,6 +69,7 @@ it("keeps every reply other learners wrote when an account goes, and rebuilds th
     });
     // A parent that is already gone leaves its reply at the top of its own thread.
     const gone = await ctx.db.insert("comments", {
+      likeCount: 0,
       ...row,
       parentId: answer,
       replyToUserId: retained,
@@ -72,6 +78,7 @@ it("keeps every reply other learners wrote when an account goes, and rebuilds th
       userId: retained,
     });
     const orphan = await ctx.db.insert("comments", {
+      likeCount: 0,
       ...row,
       parentId: gone,
       replyToUserId: retained,
@@ -82,6 +89,7 @@ it("keeps every reply other learners wrote when an account goes, and rebuilds th
     await ctx.db.delete(gone);
     // A member of the thread with no parent is the top of its own thread too.
     const stray = await ctx.db.insert("comments", {
+      likeCount: 0,
       ...row,
       text: "Stray",
       threadId: top,

@@ -4,7 +4,7 @@ import commentsTable from "@repo/backend/confect/_generated/tables/comments";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { Schema, Struct } from "effect";
+import { Schema } from "effect";
 
 const publicCommentUserValidator = Schema.Struct({
   _id: userDataValidator.fields._id,
@@ -14,13 +14,9 @@ const publicCommentUserValidator = Schema.Struct({
   picture: userDataValidator.fields.picture,
 });
 
-/**
- * One comment as a list shows it: its stored fields, its count of likes (zero before
- * the count was kept), and whether the viewer liked it.
- */
+/** One comment as a list shows it: its stored fields, and whether the viewer liked it. */
 const commentRowValidator = Schema.Struct({
-  ...Struct.omit(commentsTable.Doc.fields, ["likeCount"]),
-  likeCount: Schema.Finite,
+  ...commentsTable.Doc.fields,
   liked: Schema.Boolean,
 });
 const commentWithUserValidator = Schema.Struct({

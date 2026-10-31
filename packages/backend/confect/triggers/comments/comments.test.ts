@@ -43,6 +43,7 @@ describe("triggers/comments/comments", () => {
           plan: "free",
         });
         await ctx.db.insert("comments", {
+          likeCount: 0,
           slug,
           userId,
           text: `Reply ${index}`,
@@ -152,6 +153,7 @@ describe("triggers/comments/comments", () => {
     await t.mutation(async (ctx) => {
       for (let index = 0; index < members; index += 1) {
         await ctx.db.insert("comments", {
+          likeCount: 0,
           parentId: rootId,
           replyCount: 0,
           slug,
