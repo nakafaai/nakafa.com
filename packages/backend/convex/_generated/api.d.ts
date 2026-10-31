@@ -340,7 +340,9 @@ export declare const api: {
       >;
     };
     xendit: {
-      cancel: { cancelPlan: FunctionReference<"mutation", "public", {}, null> };
+      cancel: {
+        cancelPlan: FunctionReference<"mutation", "public", {}, null>;
+      };
     };
   };
   chats: {
@@ -8170,6 +8172,7 @@ export declare const api: {
           page: Array<{
             actor:
               | { id: Id<"tenantPeople">; kind: "person"; name: string }
+              | { kind: "client" }
               | { kind: "operator" }
               | { kind: "system" };
             at: number;
@@ -12913,6 +12916,12 @@ export declare const api: {
         }
       >;
       updateBio: FunctionReference<"mutation", "public", { bio: string }, null>;
+      updateUsername: FunctionReference<
+        "mutation",
+        "public",
+        { username: string },
+        null
+      >;
       updateUserName: FunctionReference<
         "mutation",
         "public",
@@ -12923,12 +12932,6 @@ export declare const api: {
         "mutation",
         "public",
         { role: "teacher" | "student" | "parent" },
-        null
-      >;
-      updateUsername: FunctionReference<
-        "mutation",
-        "public",
-        { username: string },
         null
       >;
     };
@@ -15872,7 +15875,9 @@ export declare const internal: {
             }
         >;
       };
-      state: { ready: FunctionReference<"query", "internal", {}, boolean> };
+      state: {
+        ready: FunctionReference<"query", "internal", {}, boolean>;
+      };
     };
   };
   credits: {
@@ -16406,6 +16411,27 @@ export declare const internal: {
       >;
     };
     reads: {
+      changes: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+        },
+        | {
+            data: Array<{
+              change: Record<string, boolean | number | null | string>;
+              id: string;
+              occurredAt: string;
+              subject: { id: string; kind: string };
+              type: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
       cohorts: FunctionReference<
         "query",
         "internal",
@@ -16422,6 +16448,29 @@ export declare const internal: {
               name: string;
               periodId: string;
               status: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      grades: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          period: string;
+        },
+        | {
+            data: Array<{
+              classId: string;
+              id: string;
+              periodId: string;
+              personId: string;
+              releasedAt: number;
+              value: number;
             }>;
             next: string | null;
             outcome: "page";
@@ -16503,6 +16552,31 @@ export declare const internal: {
         { clientId: string; resource?: string; secret: string },
         | { expiresIn: number; outcome: "issued"; token: string }
         | { error: "invalid_client" | "invalid_target"; outcome: "refused" }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
+    writes: {
+      importRoster: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          digest: string;
+          key: string;
+          period: string;
+          rows: Array<{
+            cohortName?: string;
+            name: string;
+            nisn: string;
+            underAgeLimit: boolean;
+          }>;
+        },
+        | {
+            outcome: "applied";
+            summary: { added: number; changed: number; skipped: number };
+          }
+        | { outcome: "forbidden" }
+        | { outcome: "conflict" }
       >;
       sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
@@ -17913,7 +17987,9 @@ export declare const internal: {
     };
   };
   vault: {
-    keys: { rewrap: FunctionReference<"mutation", "internal", {}, number> };
+    keys: {
+      rewrap: FunctionReference<"mutation", "internal", {}, number>;
+    };
   };
 };
 
