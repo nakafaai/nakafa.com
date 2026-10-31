@@ -272,18 +272,17 @@ export const authorizeOwnerRole = Effect.fn("access.grant.ownerRole")(
  * unit admin gives roles in their own unit only, and a unit named in the
  * arguments must belong to the member's tenant.
  */
-export const authorizeAssign = Effect.fn("access.grants.authorizeAssign")(function* (
-  scope: GrantScope,
-  role: BuiltinRole
-) {
-  const { tenant } = yield* Member;
-  yield* GrantScope.match(scope, {
-    tenant: () => tenantAuthority.check("grant.manage", tenant),
-    unit: ({ unitId }) =>
-      Effect.asVoid(unitAuthority.authorize("grant.manage", unitId)),
-  });
-  yield* authorizeOwnerRole(role);
-});
+export const authorizeAssign = Effect.fn("access.grants.authorizeAssign")(
+  function* (scope: GrantScope, role: BuiltinRole) {
+    const { tenant } = yield* Member;
+    yield* GrantScope.match(scope, {
+      tenant: () => tenantAuthority.check("grant.manage", tenant),
+      unit: ({ unitId }) =>
+        Effect.asVoid(unitAuthority.authorize("grant.manage", unitId)),
+    });
+    yield* authorizeOwnerRole(role);
+  }
+);
 
 /**
  * Ends one active grant the way the access lane's revoke path does: the grant's

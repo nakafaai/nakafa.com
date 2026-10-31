@@ -131,6 +131,7 @@ function SchoolCohortPage({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const { reach } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const cohort = useQuery(
     tenancy.cohorts.get,
@@ -143,7 +144,6 @@ function SchoolCohortPage({
     throw cohort.error;
   }
   const detail = QueryResult.isSuccess(cohort) ? cohort.value : undefined;
-  const { reach } = useTenant();
   const section = getSchoolSettingsSection(
     slug,
     "/school/$slug/settings/cohorts",

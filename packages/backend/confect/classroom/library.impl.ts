@@ -21,15 +21,12 @@ import {
 } from "@repo/backend/confect/classroom/errors";
 import type { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { classItem, edit } from "@repo/backend/confect/classroom/library/edit";
 import {
   fileTypeOf,
   HEAD_BYTES,
   LIBRARY_BYTE_LIMIT,
 } from "@repo/backend/confect/classroom/library/file";
-import {
-  classItem,
-  edit,
-} from "@repo/backend/confect/classroom/library/edit";
 import { libraryField } from "@repo/backend/confect/classroom/library/item";
 import { libraryViews } from "@repo/backend/confect/classroom/library/views";
 import spec from "@repo/backend/confect/classroom/library.spec";

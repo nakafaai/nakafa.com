@@ -107,11 +107,7 @@ describe("renameDiscussionUpdate", () => {
     ]);
     renameDiscussionUpdate(localStore, { ...args, title: "Judul baru" });
     expect(setQuery.mock.calls).toEqual([
-      [
-        classroom.forum.threads.get,
-        args,
-        Option.some({ discussion: renamed }),
-      ],
+      [classroom.forum.threads.get, args, Option.some({ discussion: renamed })],
       [
         classroom.forum.messages.page,
         page,

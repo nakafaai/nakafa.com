@@ -52,9 +52,9 @@ import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
+import { readdressInviteChange } from "@/components/tenant/settings/edits";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
-import { readdressInviteChange } from "@/components/tenant/settings/edits";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { saveSchool } from "@/components/tenant/settings/save";

@@ -268,7 +268,7 @@ const STAGE_POPUP = '[data-slot="drawer-popup"]';
  * while the page scales back up. It also marks the root, because Firefox does not restyle the page for a
  * `:has()` whose match arrives in a portal, and a change on the root itself makes it read the selector again.
  */
-function holdDrawerStage(node: HTMLDivElement) {
+function holdDrawerStage() {
   const root = document.documentElement;
   root.style.setProperty(
     "--drawer-stage-scroll",
