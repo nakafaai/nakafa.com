@@ -122,7 +122,7 @@ export const SchemeVersionsContext = createContext<{
 const changeVersions = (
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   slug: string,
-  change: (page: readonly SchemeVersion[]) => readonly SchemeVersion[]
+  change: (page: readonly SchemeVersion[]) => SchemeVersion[]
 ) => {
   for (const query of localStore.getAllQueries(records.schemes.list)) {
     if (Option.isSome(query.value) && query.args.slug === slug) {

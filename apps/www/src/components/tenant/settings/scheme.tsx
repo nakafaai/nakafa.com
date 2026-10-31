@@ -104,20 +104,23 @@ export function SchemeVersionDialog({
     setOpen(false);
     const now = DateTime.toEpochMillis(Effect.runSync(DateTime.now));
     startTransition(() =>
-      saveSchool(
-        () =>
-          Option.match(editing, {
-            onNone: () =>
+      Option.match(editing, {
+        onNone: () =>
+          saveSchool(
+            () =>
               store({
                 ...checked.value,
                 effectiveFrom: nextEffectiveFrom(now, newest),
                 slug,
               }),
-            onSome: (version) =>
-              amend({ ...checked.value, schemeId: version.id, slug }),
-          }),
-        SOURCE
-      )
+            SOURCE
+          ),
+        onSome: (version) =>
+          saveSchool(
+            () => amend({ ...checked.value, schemeId: version.id, slug }),
+            SOURCE
+          ),
+      })
     );
   };
 
