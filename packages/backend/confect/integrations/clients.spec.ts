@@ -63,6 +63,22 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicMutation({
+      name: "update",
+      args: () => ({
+        actions: ClientActions,
+        clientId: Id("integrationClients"),
+        name: IntegrationName,
+        slug: TenantSlug,
+      }),
+      returns: () => ClientView,
+      error: () => Schema.Union([AccessDenied, ActionClosed]),
+    }).middleware(IntegrationAccess, {
+      action: "integration.manage",
+      arg: "clientId",
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
       name: "rotate",
       args: () => ({ clientId: Id("integrationClients"), slug: TenantSlug }),
       returns: () => IssuedClient,

@@ -6,6 +6,7 @@ import { Integration } from "@repo/backend/confect/integrations/access";
 import { integrationAccess } from "@repo/backend/confect/integrations/authority";
 import {
   authorizeScope,
+  changeClient,
   register,
   requireOpenActions,
   revokeClient,
@@ -73,6 +74,27 @@ const create = FunctionImpl.make(
   })
 );
 
+/**
+ * Changes an active client's name and action list, each action still one the catalog opens to
+ * the Integration role. Its scope and its secret stay. The Integration middleware refuses a
+ * revoked client.
+ */
+const update = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "update",
+  Effect.fn("integrations.clients.update")(function* ({ actions, name }) {
+    const { person } = yield* Member;
+    yield* requireOpenActions(actions);
+    return view(
+      yield* changeClient(personActor(person), yield* Integration, {
+        actions,
+        name,
+      })
+    );
+  })
+);
+
 /** Draws a new secret for an active client. The Integration middleware refuses a revoked one. */
 const rotate = FunctionImpl.make(
   databaseSchema,
@@ -104,12 +126,13 @@ const revoke = FunctionImpl.make(
 );
 
 /**
- * Implements the clients group of `clients.spec.ts`: list, create, rotate, and
- * revoke.
+ * Implements the clients group of `clients.spec.ts`: list, create, update, rotate,
+ * and revoke.
  */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(create),
+  Layer.provide(update),
   Layer.provide(rotate),
   Layer.provide(revoke),
   Layer.provide(session),

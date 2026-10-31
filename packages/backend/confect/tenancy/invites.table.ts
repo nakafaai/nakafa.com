@@ -9,10 +9,9 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { activeGrants } from "@repo/backend/confect/access/policy";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { purgeInvite } from "@repo/backend/confect/notifications/purge";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
-import { replaceInviteState } from "@repo/backend/confect/tenancy/invite";
+import { endInvite } from "@repo/backend/confect/tenancy/invite";
 import spec from "@repo/backend/confect/tenancy/invites.spec";
 import { Array as Arr, Clock, Effect, Struct } from "effect";
 
@@ -121,15 +120,7 @@ export const revoke = FunctionImpl.make(
       stored.personId
     );
     if (stored.state.status === "pending") {
-      yield* replaceInviteState(stored, {
-        at: yield* Clock.currentTimeMillis,
-        status: "revoked",
-      });
-      yield* purgeInvite(stored.personId, stored._id);
-      yield* personAuthority.record(personActor(actor), person, {
-        invite: stored._id,
-        type: "invite.revoked",
-      });
+      yield* endInvite(personActor(actor), stored, person);
     }
     return null;
   })

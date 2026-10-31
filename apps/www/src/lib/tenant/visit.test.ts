@@ -2,11 +2,16 @@
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Effect, Layer, Option, Schema } from "effect";
+import { Effect, Exit, Fiber, Layer, Option, Schema } from "effect";
 import { Base64Url } from "effect/encoding";
 import { FetchHttpClient } from "effect/http";
+import { TestClock } from "effect/testing";
 import { SchoolReadFailed, SchoolReads } from "@/lib/tenant/read";
-import { readBrowserVisit, reusesVisitFrame } from "@/lib/tenant/visit";
+import {
+  readBrowserVisit,
+  retryVisitRead,
+  reusesVisitFrame,
+} from "@/lib/tenant/visit";
 
 /** One fetch double for the whole file: the browser's request to the token route. */
 const fetcher = vi.fn<typeof fetch>();
@@ -237,5 +242,39 @@ describe("readBrowserSchoolFrame", () => {
         expect(failure).toBeInstanceOf(SchoolReadFailed);
         expect(frame.read).not.toHaveBeenCalled();
       })
+  );
+});
+
+describe("retryVisitRead", () => {
+  /** A read that fails its first `failures` tries, and counts them. */
+  const failing = (failures: number) => {
+    let tries = 0;
+    const read = Effect.suspend(() => {
+      tries += 1;
+      return tries > failures
+        ? Effect.succeed("frame")
+        : Effect.fail(new SchoolReadFailed({ cause: "network" }));
+    });
+    return { read, tried: () => tries };
+  };
+
+  it.effect("answers from the try after a lost request", () =>
+    Effect.gen(function* () {
+      const { read, tried } = failing(2);
+      const fiber = yield* Effect.forkChild(retryVisitRead(read));
+      yield* TestClock.adjust("2 seconds");
+      expect(yield* Fiber.join(fiber)).toBe("frame");
+      expect(tried()).toBe(3);
+    })
+  );
+
+  it.effect("fails once the network has failed every try", () =>
+    Effect.gen(function* () {
+      const { read, tried } = failing(9);
+      const fiber = yield* Effect.forkChild(retryVisitRead(read));
+      yield* TestClock.adjust("2 seconds");
+      expect(Exit.isFailure(yield* Fiber.await(fiber))).toBe(true);
+      expect(tried()).toBe(3);
+    })
   );
 });

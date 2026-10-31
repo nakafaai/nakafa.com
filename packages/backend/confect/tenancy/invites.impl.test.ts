@@ -268,7 +268,8 @@ describe("tenancy/invites resend and expiry", () => {
             reader.table("tenantInvites").get(first.id)
           )
         );
-        expect(stored.state).toMatchObject({ status: "expired" });
+        // The new invite takes the expired one's place in the list, and the journal keeps that it expired.
+        expect(stored.state).toMatchObject({ status: "revoked" });
         expect(second.id).not.toBe(first.id);
         expect(yield* fixture.run(journal)).toMatchObject([
           {
@@ -437,6 +438,22 @@ describe("tenancy/invites owner, unit admin, and tenants", () => {
         expect(Arr.map(listed.page, (row) => row.id)).not.toContain(
           foreign.inviteId
         );
+      })
+  );
+
+  it.effect(
+    "takes an expired invite out of the list when the Person is invited anew",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const first = yield* inviteInvited(fixture);
+        yield* fixture.internal.mutation(expire, { inviteId: first.id });
+        vi.setSystemTime(NOW + TERM);
+        const second = yield* inviteInvited(fixture);
+        const listed = yield* fixture
+          .as("admin")
+          .query(list, { ...firstPage, slug: nf });
+        expect(Arr.map(listed.page, (row) => row.id)).toEqual([second.id]);
       })
   );
 });

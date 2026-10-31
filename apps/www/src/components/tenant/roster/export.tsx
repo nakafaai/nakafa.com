@@ -1,8 +1,15 @@
 import { useAction } from "@confect/react";
-import { Download01Icon } from "@hugeicons/core-free-icons";
+import { Download01Icon, UserListIcon } from "@hugeicons/core-free-icons";
 import roster from "@repo/backend/confect/_generated/refs/roster";
 import type { RosterLine } from "@repo/backend/confect/roster/schema";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -10,7 +17,13 @@ import { Array as Arr, Effect, Option } from "effect";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
+import { saveLedger } from "@/components/tenant/graduation/save";
 import { EXPORT_HEADER } from "@/components/tenant/roster/dapodik";
+import {
+  type GradeCohort,
+  GradeDownloadContext,
+  RosterGradesExport,
+} from "@/components/tenant/roster/grades";
 import { activePeriodOf } from "@/components/tenant/roster/period";
 import { useRosterUnit } from "@/components/tenant/roster/unit";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -46,11 +59,13 @@ const saveStudents = (lines: readonly (typeof RosterLine.Type)[]) =>
   );
 
 /**
- * Export: the chosen unit's students of its active period, written back into a file to compare with
- * Dapodik. The button stands enabled from the first paint; the press reads the period itself, which a
- * unit without an active period refuses, and the button shows its work only after the press.
+ * Export: one menu of what the school takes back to Dapodik, so the header keeps its two buttons. The
+ * first item writes the chosen unit's students of its active period into a file to compare with
+ * Dapodik, which a unit without an active period refuses, and the second lists the class groups whose
+ * report grades it saves. The button stands enabled from the first paint and shows its work only
+ * while a file is saved.
  */
-export function RosterStudentsExport() {
+export function RosterExport() {
   const t = useTranslations("SchoolRoster");
   const { slug } = useTenant();
   const read = useRosterUnit();
@@ -61,7 +76,7 @@ export function RosterStudentsExport() {
     (found) => found.unit
   );
 
-  const download = () =>
+  const saveStudentsOfUnit = () =>
     startExporting(() =>
       saveSchool(
         () =>
@@ -82,20 +97,36 @@ export function RosterStudentsExport() {
         }
       )
     );
+  const saveGrades = (cohort: GradeCohort) =>
+    startExporting(() =>
+      Effect.runPromise(saveLedger(slug, { id: cohort.id, name: cohort.name }))
+    );
 
   return (
-    <Button
-      disabled={isExporting}
-      onClick={download}
-      type="button"
-      variant="outline"
-    >
-      {isExporting ? (
-        <Spinner isLoading />
-      ) : (
-        <HugeIcons icon={Download01Icon} />
-      )}
-      <span className="max-sm:sr-only">{t("export")}</span>
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button disabled={isExporting} type="button" variant="outline">
+            {isExporting ? (
+              <Spinner isLoading />
+            ) : (
+              <HugeIcons icon={Download01Icon} />
+            )}
+            <span className="max-sm:sr-only">{t("export")}</span>
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={saveStudentsOfUnit}>
+            <HugeIcons icon={UserListIcon} />
+            {t("export-students")}
+          </DropdownMenuItem>
+          <GradeDownloadContext value={saveGrades}>
+            <RosterGradesExport />
+          </GradeDownloadContext>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

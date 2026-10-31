@@ -83,9 +83,9 @@ const countryPage = {
 const examPage = { exam: { examKey: "snbt" }, publicPath: EXAM };
 const trackPage = {
   country: { countryKey: "id" },
-  exam: { examKey: "snbt" },
+  exam: { examKey: "snbt", title: "SNBT" },
   publicPath: TRACK,
-  track: { title: "2027", trackKey: "2027" },
+  track: { title: "Year 2027", trackKey: "2027" },
 };
 const hub = {
   countries: [{ publicPath: COUNTRY, title: "Indonesia" }],
@@ -114,6 +114,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   catalog.readServerTranslator.mockImplementation(() =>
     Promise.resolve((key: string) => key)
+  );
+  catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
+  catalog.readTryoutSetList.mockReturnValue(
+    Effect.succeed({ isDone: true, page: [] })
   );
   catalog.getOgUrl.mockReturnValue("og-url");
   catalog.getAppSocialArtwork.mockReturnValue("og-app");
@@ -372,6 +376,19 @@ const readTrack = () =>
   });
 
 describe("readTryoutTrackRoute", () => {
+  it.effect("keeps the description a track was published with", () =>
+    Effect.gen(function* () {
+      const track = { ...trackPage.track, description: "Written for it." };
+      catalog.readTryoutTrackPage.mockReturnValueOnce(
+        Effect.succeed({ ...trackPage, track })
+      );
+
+      expect(yield* readTrack()).toMatchObject({
+        head: { description: "Written for it." },
+      });
+    })
+  );
+
   it.effect(
     "answers not found when the track, its country or its head is missing",
     () =>
@@ -391,15 +408,14 @@ describe("readTryoutTrackRoute", () => {
     "builds the track page with its exam, its selector and its set list",
     () =>
       Effect.gen(function* () {
-        catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
-        catalog.readTryoutSetList.mockReturnValue(
-          Effect.succeed({ isDone: true, page: [] })
-        );
-
         const route = yield* readTrack();
 
         expect(route).toMatchObject({
           examPath: EXAM,
+          head: {
+            description: "track-metadata-description",
+            title: "SNBT Year 2027",
+          },
           kind: "found",
           list: { result: { isDone: true, page: [] } },
           page: trackPage,

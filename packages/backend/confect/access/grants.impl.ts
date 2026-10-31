@@ -8,44 +8,19 @@ import {
 } from "@repo/backend/confect/access/authority";
 import {
   assignRole,
-  authorizeOwnerRole,
+  authorizeAssign,
   leavesOwner,
   revokeGrant,
   signedInOwners,
 } from "@repo/backend/confect/access/grant";
+import { change } from "@repo/backend/confect/access/grants.change";
 import spec from "@repo/backend/confect/access/grants.spec";
-import {
-  type BuiltinRole,
-  GrantScope,
-} from "@repo/backend/confect/access/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Person } from "@repo/backend/confect/tenancy/access";
-import {
-  personAccess,
-  tenantAuthority,
-  unitAuthority,
-} from "@repo/backend/confect/tenancy/authority";
+import { personAccess } from "@repo/backend/confect/tenancy/authority";
 import { Effect, Layer, Number as Num, Struct } from "effect";
-
-/**
- * Giving a role needs `grant.manage` on the scope the new grant covers, so a
- * unit admin gives roles in their own unit only, and a unit named in the
- * arguments must belong to the member's tenant.
- */
-const authorizeAssign = Effect.fn("access.grants.authorizeAssign")(function* (
-  scope: GrantScope,
-  role: BuiltinRole
-) {
-  const { tenant } = yield* Member;
-  yield* GrantScope.match(scope, {
-    tenant: () => tenantAuthority.check("grant.manage", tenant),
-    unit: ({ unitId }) =>
-      Effect.asVoid(unitAuthority.authorize("grant.manage", unitId)),
-  });
-  yield* authorizeOwnerRole(role);
-});
 
 /** The largest page one request reads. */
 const PAGE_LIMIT = 100;
@@ -141,6 +116,7 @@ const revoke = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(assign),
+  Layer.provide(change),
   Layer.provide(revoke),
   Layer.provide(session),
   Layer.provide(member),

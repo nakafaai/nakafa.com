@@ -62,8 +62,9 @@ function useCreateDialog() {
 
 /**
  * The dialog that adds a school to the organisation: its name, its level, its time zone, and its
- * page language. The first choices are those of the school the organisation holds first. The
- * units are read live, and the dialog draws once they have answered.
+ * page language. The first choices are those of the school the organisation holds first, which the
+ * live read of the units brings, so the press opens the dialog at once on any network and only Add
+ * school waits for that read.
  */
 export function SchoolUnitCreateDialog({
   open,
@@ -77,17 +78,13 @@ export function SchoolUnitCreateDialog({
   // The units are read once the session settles, so the dialog never asks signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const units = useQuery(tenancy.units.list, isSettled ? { slug } : "skip");
-  if (!QueryResult.isSuccess(units)) {
-    return null;
-  }
-  const first = Arr.head(units.value);
-  if (Option.isNone(first)) {
-    return null;
-  }
+  const first = QueryResult.isSuccess(units)
+    ? Arr.head(units.value)
+    : Option.none();
 
   return (
     <CreateDialogContext value={{ open, setOpen }}>
-      <SchoolUnitCreateForm slug={slug} unit={first.value} />
+      <SchoolUnitCreateForm slug={slug} unit={first} />
     </CreateDialogContext>
   );
 }
@@ -98,7 +95,7 @@ function SchoolUnitCreateForm({
   unit,
 }: {
   slug: TenantSlug;
-  unit: Unit;
+  unit: Option.Option<Unit>;
 }) {
   const { open, setOpen } = useCreateDialog();
   const t = useTranslations("SchoolSettings");
@@ -116,14 +113,20 @@ function SchoolUnitCreateForm({
   const [languageChoice, setLanguageChoice] = useState<
     typeof AppLocaleCodeSchema.Type | null
   >(null);
-  const timeZone = zoneChoice ?? unit.timeZone;
-  const contentLanguage = languageChoice ?? unit.contentLanguage;
+  const timeZone =
+    zoneChoice ?? Option.getOrNull(Option.map(unit, (it) => it.timeZone));
+  const contentLanguage =
+    languageChoice ??
+    Option.getOrNull(Option.map(unit, (it) => it.contentLanguage));
   const trimmed = name.trim();
-  const valid = Schema.is(UnitName)(trimmed);
+  const ready =
+    Schema.is(UnitName)(trimmed) &&
+    timeZone !== null &&
+    contentLanguage !== null;
 
   /** Adds the school and closes the dialog; the school shows at once, and a refusal takes it off. */
   const submit = () => {
-    if (!valid) {
+    if (!(ready && timeZone !== null && contentLanguage !== null)) {
       return;
     }
     sent.current = true;
@@ -158,7 +161,7 @@ function SchoolUnitCreateForm({
           >
             {common("cancel")}
           </Button>
-          <Button disabled={!valid} onClick={submit} type="button">
+          <Button disabled={!ready} onClick={submit} type="button">
             {t("unit-add-submit")}
           </Button>
         </>

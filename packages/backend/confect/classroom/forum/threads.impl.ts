@@ -6,7 +6,10 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
-import { classAccess } from "@repo/backend/confect/classroom/authority";
+import {
+  classAccess,
+  subjectTeacherOf,
+} from "@repo/backend/confect/classroom/authority";
 import { DiscussionsClosed } from "@repo/backend/confect/classroom/forum/errors";
 import {
   classChannel,
@@ -167,6 +170,38 @@ const open = FunctionImpl.make(
   })
 );
 
+/**
+ * Renames a discussion: its title is sealed anew, and the opening message and every reader show
+ * it at once. Whoever opened the discussion may rename it, and so may a subject teacher of the
+ * class. Anyone else who writes in the class meets it as a missing object.
+ */
+const rename = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "rename",
+  Effect.fn("classroom.forum.threads.rename")(function* ({ number, title }) {
+    const principal = yield* Member;
+    const row = yield* Class;
+    const thread = yield* classThread(number, "forum.post");
+    const allowed =
+      thread.authorId === principal.person._id ||
+      (yield* subjectTeacherOf(row, principal));
+    if (!allowed) {
+      return yield* missing("forum.post");
+    }
+    const sealedTitle = yield* sealText(
+      yield* schoolKeys(row.tenantId),
+      titleField(thread),
+      title
+    ).pipe(Effect.orDie);
+    yield* (yield* DatabaseWriter)
+      .table("classroomThreads")
+      .patch(thread._id, { sealedTitle })
+      .pipe(Effect.orDie);
+    return null;
+  })
+);
+
 /** One discussion of the class by its number. */
 const get = FunctionImpl.make(
   databaseSchema,
@@ -281,6 +316,7 @@ const reply = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(open),
+  Layer.provide(rename),
   Layer.provide(get),
   Layer.provide(replies),
   Layer.provide(reply),

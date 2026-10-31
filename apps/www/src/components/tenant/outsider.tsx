@@ -153,7 +153,8 @@ function OutsiderRoomWay({
           {t("join-room-description", { account, school })}
         </p>
       </div>
-      <Suspense fallback={null}>
+      {/* The form's own height is held while its code loads, so the page above it never moves. */}
+      <Suspense fallback={<div className="min-h-29 w-full max-w-sm" />}>
         <OutsiderRoom />
       </Suspense>
       <Button onClick={() => onLeave("switch")} variant="ghost">

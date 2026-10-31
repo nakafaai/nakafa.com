@@ -25,6 +25,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { columnAlign } from "@/components/shared/table/align";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import {
   TableSearch,
@@ -110,9 +111,15 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("task-student")}</TableHead>
-              <TableHead>{t("task-work")}</TableHead>
-              <TableHead className="w-32">{t("task-points")}</TableHead>
+              <TableHead className={columnAlign({ align: "start" })}>
+                {t("task-student")}
+              </TableHead>
+              <TableHead className={columnAlign({ align: "start" })}>
+                {t("task-work")}
+              </TableHead>
+              <TableHead className={columnAlign({ className: "w-32" })}>
+                {t("task-points")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -196,10 +203,18 @@ function WorkRow({ points, work }: { points: number; work: TaskWork }) {
 
   return (
     <TableRow>
-      <TableCell className="align-top font-medium" dir="auto">
+      <TableCell
+        className={columnAlign({
+          align: "start",
+          className: "align-top font-medium",
+        })}
+        dir="auto"
+      >
         {work.person.name}
       </TableCell>
-      <TableCell className="align-top">
+      <TableCell
+        className={columnAlign({ align: "start", className: "align-top" })}
+      >
         <p className="wrap-anywhere whitespace-pre-wrap" dir="auto">
           {work.text}
         </p>
@@ -209,7 +224,7 @@ function WorkRow({ points, work }: { points: number; work: TaskWork }) {
           </p>
         ) : null}
       </TableCell>
-      <TableCell className="align-top">
+      <TableCell className={columnAlign({ className: "align-top" })}>
         <NumberField
           defaultValue={work.score ?? undefined}
           key={work.score}

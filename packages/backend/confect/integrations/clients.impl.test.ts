@@ -16,7 +16,8 @@ import { sha256Hex } from "@repo/utilities/digest";
 import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
-const { create, list, revoke, rotate } = refs.public.integrations.clients;
+const { create, list, revoke, rotate, update } =
+  refs.public.integrations.clients;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
@@ -384,5 +385,79 @@ describe("integrations/clients rotate and revoke", () => {
       expect(refused).toMatchObject(denied("role"));
       expect(row.status).toBe("active");
     })
+  );
+});
+
+describe("integrations/clients update", () => {
+  it.effect(
+    "changes a client's name and actions, keeps its scope and secret, and journals it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* fixture.as("admin").mutation(create, {
+          actions: ["person.view"],
+          name: "Sinkron Harapan",
+          scope: { kind: "tenant" },
+          slug: nf,
+        });
+        const before = yield* fixture.run(stored(made.id));
+        const changed = yield* fixture.as("admin").mutation(update, {
+          actions: ["person.view", "period.view"],
+          clientId: made.id,
+          name: "Sinkron Dapodik",
+          slug: nf,
+        });
+        const after = yield* fixture.run(stored(made.id));
+        expect(changed).toMatchObject({
+          actions: ["person.view", "period.view"],
+          id: made.id,
+          name: "Sinkron Dapodik",
+          scope: { kind: "tenant" },
+          status: "active",
+        });
+        expect(after.secretHash).toBe(before.secretHash);
+        expect(yield* fixture.run(journal)).toMatchObject([
+          { change: { type: "integration.created" } },
+          {
+            change: { client: made.id, type: "integration.changed" },
+            subject: { id: made.id, kind: "integration" },
+          },
+        ]);
+      })
+  );
+
+  it.effect(
+    "refuses an action closed to integrations, a revoked client, and a teacher",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* fixture.as("admin").mutation(create, {
+          actions: ["person.view"],
+          name: "Sinkron Harapan",
+          scope: { kind: "tenant" },
+          slug: nf,
+        });
+        const args = { clientId: made.id, name: "Baru", slug: nf };
+        const closed = yield* fixture
+          .as("admin")
+          .mutation(update, { ...args, actions: ["tenant.manage"] })
+          .pipe(Effect.flip);
+        const teacher = yield* fixture
+          .as("teacher")
+          .mutation(update, { ...args, actions: ["person.view"] })
+          .pipe(Effect.flip);
+        yield* fixture
+          .as("admin")
+          .mutation(revoke, { clientId: made.id, slug: nf });
+        const revoked = yield* fixture
+          .as("admin")
+          .mutation(update, { ...args, actions: ["person.view"] })
+          .pipe(Effect.flip);
+        expect([closed, teacher, revoked]).toMatchObject([
+          { _tag: "ActionClosed" },
+          denied("role"),
+          denied("condition"),
+        ]);
+      })
   );
 });

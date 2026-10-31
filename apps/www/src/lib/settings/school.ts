@@ -1,6 +1,6 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option, Schema, String as Str } from "effect";
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
@@ -23,6 +23,30 @@ const SchoolSettingsLabelKeySchema = Schema.Literals([
   "policies",
   "audit",
 ]);
+
+/**
+ * The action that opens each section. A section that only reads opens with the read its page needs,
+ * so a role that reads the school's plans, people or records reaches them, and the page keeps its
+ * buttons from whoever may not use them. Every other section opens to whoever manages the school.
+ */
+const SECTION_ACTIONS: Readonly<
+  Partial<Record<typeof SchoolSettingsLabelKeySchema.Type, string>>
+> = {
+  audit: "audit.view",
+  classes: "class.list",
+  cohorts: "cohort.view",
+  grading: "scheme.view",
+  guardians: "guardian.list",
+  members: "person.view",
+  periods: "period.view",
+  roster: "roster.view",
+};
+
+/** Whether a viewer who holds the actions in `reach` opens the section. */
+const opensSection = (
+  reach: readonly string[],
+  labelKey: typeof SchoolSettingsLabelKeySchema.Type
+) => Arr.contains(reach, SECTION_ACTIONS[labelKey] ?? "tenant.manage");
 
 /**
  * One addressable section of the school settings surface. Its message key is
@@ -228,21 +252,74 @@ export function schoolSettingsGroups(slug: TenantSlug) {
   }));
 }
 
-/** One group of the school settings, as `schoolSettingsGroups` returns it. */
-export type SchoolSettingsGroup = ReturnType<
-  typeof schoolSettingsGroups
->[number];
+/** The groups of the sections a viewer who holds the actions in `reach` opens, in sidebar order, none of them empty. */
+export function openSettingsGroups(slug: TenantSlug, reach: readonly string[]) {
+  return Arr.filter(
+    Arr.map(schoolSettingsGroups(slug), (group) => ({
+      ...group,
+      sections: Arr.filter(group.sections, (section) =>
+        opensSection(reach, section.labelKey)
+      ),
+    })),
+    (group) => group.sections.length > 0
+  );
+}
+
+/** The first section a viewer opens, where the settings begin for them, or none for a viewer who opens no section. */
+export function firstSettingsTarget(
+  slug: TenantSlug,
+  reach: readonly string[]
+) {
+  return Option.map(
+    Arr.head(
+      Arr.flatMap(openSettingsGroups(slug, reach), (group) => group.sections)
+    ),
+    (section) => section.target
+  );
+}
+
+/** The address of the settings' root, with or without its closing slash. */
+const SETTINGS_ROOT = /\/settings\/?$/u;
+
+/**
+ * Whether a viewer who holds the actions in `reach` opens the settings address, by the section
+ * that owns it: a section's own page and the pages below it, such as one cohort. The root belongs to
+ * the viewer's first section, so it needs any section at all.
+ */
+export function opensSettingsPath(
+  slug: TenantSlug,
+  reach: readonly string[],
+  pathname: string
+) {
+  const sections = Arr.flatMap(
+    openSettingsGroups(slug, reach),
+    (group) => group.sections
+  );
+  return SETTINGS_ROOT.test(pathname)
+    ? Arr.isReadonlyArrayNonEmpty(sections)
+    : Arr.some(sections, (section) =>
+        Str.includes(`/settings/${section.labelKey}`)(pathname)
+      );
+}
+
+/** One group of the school settings, as `openSettingsGroups` returns it. */
+export type SchoolSettingsGroup = ReturnType<typeof openSettingsGroups>[number];
 
 /**
  * Every section in sidebar order, each with the group that holds it. A group
- * links to its first section, which is where its breadcrumb leads.
+ * links to its first section the viewer opens, which is where its breadcrumb leads.
  */
-export function schoolSettingsSections(slug: TenantSlug) {
+export function schoolSettingsSections(
+  slug: TenantSlug,
+  reach: readonly string[]
+) {
+  const opened = openSettingsGroups(slug, reach);
   return Arr.flatMap(schoolSettingsGroups(slug), (group) => {
-    const parent = {
-      key: group.key,
-      target: Arr.headNonEmpty(group.sections).target,
-    };
+    const first = Arr.findFirst(opened, (open) => open.key === group.key).pipe(
+      Option.flatMap((open) => Arr.head(open.sections)),
+      Option.getOrElse(() => Arr.headNonEmpty(group.sections))
+    );
+    const parent = { key: group.key, target: first.target };
 
     return Arr.map(group.sections, (section) => ({
       ...section,
@@ -256,8 +333,12 @@ export function schoolSettingsSections(slug: TenantSlug) {
  * route path. The settings root and every path this table does not declare
  * belong to the first section, so the breadcrumb is never blank.
  */
-export function getSchoolSettingsSection(slug: TenantSlug, leafPath: string) {
-  const sections = schoolSettingsSections(slug);
+export function getSchoolSettingsSection(
+  slug: TenantSlug,
+  leafPath: string,
+  reach: readonly string[]
+) {
+  const sections = schoolSettingsSections(slug, reach);
   return Option.getOrElse(
     Arr.findFirst(sections, (section) => section.target.to === leafPath),
     () => Arr.headNonEmpty(sections)

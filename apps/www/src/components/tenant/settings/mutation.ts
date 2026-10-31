@@ -43,7 +43,7 @@ type UnitChange = <Item extends Unit | Viewer["units"][number]>(
 ) => Item;
 
 /** Patch the viewer of one school in the store, when the store holds it. */
-function patchViewer(
+export function patchViewer(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   slug: TenantSlug,
   patch: (viewer: Viewer) => Viewer
@@ -118,7 +118,7 @@ export function changeInviteLists(
 }
 
 /** Changes the page of every loaded list of integration clients of one school. */
-function changeClientLists(
+export function changeClientLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   slug: TenantSlug,
   change: (page: readonly Client[]) => Client[]
@@ -138,7 +138,7 @@ function changeClientLists(
 }
 
 /** Changes the page of every loaded list of the grants of one school that the matches accept. */
-function changeGrantPages(
+export function changeGrantPages(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   slug: TenantSlug,
   matches: (args: Ref.Args<typeof access.grants.list>) => boolean,

@@ -3,7 +3,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
 import { readSchoolAddress, schoolEntryOf } from "@/lib/tenant/entry";
 
-const HARAPAN = Schema.decodeUnknownSync(TenantSlug)("harapan");
+const HARAPAN = Schema.decodeSync(TenantSlug)("harapan");
 
 describe("tenant/entry", () => {
   it("reads a bare address, a host and a whole link as one school", () => {
