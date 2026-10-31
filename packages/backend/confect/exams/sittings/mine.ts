@@ -5,7 +5,6 @@ import type {
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { covers } from "@repo/backend/confect/access/decision";
-import { HOME_RESULT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
 import { attemptOf } from "@repo/backend/confect/exams/sittings/attempt";
 import type { SittingState } from "@repo/backend/confect/exams/sittings/schema";
@@ -23,7 +22,10 @@ import {
 } from "effect";
 
 /** The most units a tenant holds (ADR 0011), so the units a student may reach are bounded. */
-export const TENANT_UNIT_LIMIT = 24;
+const TENANT_UNIT_LIMIT = 24;
+
+/** The most closed sittings that a student's exams list with their results, newest first. */
+export const STUDENT_RESULT_LIMIT = 5;
 
 /**
  * The most sittings of one state that one unit or one cohort lists. A unit can run more rooms
@@ -180,7 +182,7 @@ const scoreOf = Effect.fn("exams.sittings.mine.score")(function* (
  * The sittings of a student who may take part in them, each with the student's own attempt, its state,
  * and whether its results are released. The live sittings come from the units and cohorts that the
  * student may reach, and each one reads its own attempt, so no window hides it. The closed sittings come
- * from the student's closing and submitted attempts, and the newest `HOME_RESULT_LIMIT` of them are listed,
+ * from the student's closing and submitted attempts, and the newest `STUDENT_RESULT_LIMIT` of them are listed,
  * so only those are scored. Every read is bounded, and no sitting holds a token or a token hash.
  */
 export const mine = Effect.fn("exams.sittings.mine")(function* () {
@@ -194,7 +196,7 @@ export const mine = Effect.fn("exams.sittings.mine")(function* () {
   const closing = yield* closedAttempts(member.person._id);
   const closed = Arr.take(
     Arr.sort(yield* closedSittings(closing), byNewestOpening),
-    HOME_RESULT_LIMIT
+    STUDENT_RESULT_LIMIT
   );
   const rows = [...live, ...closed];
   const held = HashMap.fromIterable(

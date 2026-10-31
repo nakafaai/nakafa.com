@@ -246,3 +246,29 @@ test.describe("Nina evidence hierarchy on a phone", () => {
     })
   );
 });
+
+/** Longer than a row's colour transition, so a hover has finished drawing. */
+const HOVER_SETTLE_MILLISECONDS = 400;
+
+test.describe("Nina activity rows under a pointer", () => {
+  test.use({ viewport: { height: 2600, width: 1440 } });
+
+  test(
+    "keeps the colour of a row with nothing to open",
+    onChat(ROWS, { locale: "en" }, async (page) => {
+      const closed = page.locator(`${ACTIVITY}[data-disabled]`);
+
+      await expect(closed.first()).toBeVisible();
+      for (const row of await closed.all()) {
+        const resting = await row.evaluate(
+          (element) => getComputedStyle(element).color
+        );
+        await row.hover();
+        await page.waitForTimeout(HOVER_SETTLE_MILLISECONDS);
+        expect(
+          await row.evaluate((element) => getComputedStyle(element).color)
+        ).toBe(resting);
+      }
+    })
+  );
+});

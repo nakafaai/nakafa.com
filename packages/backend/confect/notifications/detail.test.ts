@@ -4,7 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { detailOf } from "@repo/backend/confect/notifications/detail";
+import { partsOf } from "@repo/backend/confect/notifications/detail";
 import {
   forumClass,
   keyedFixture,
@@ -82,7 +82,10 @@ describe("notifications/detail", () => {
                 0
               );
             const detail = (changeType: string) =>
-              detailOf(ofType(changeType), student, tenant);
+              Effect.map(
+                partsOf(ofType(changeType), student, tenant),
+                (parts) => parts.detail
+              );
             const task = ofType("assignment.published");
             const mention = ofType("forum.mentioned");
             if (

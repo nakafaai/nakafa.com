@@ -29,6 +29,7 @@ import {
 } from "@repo/backend/confect/exams/sittings/token";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
+import { scheduleSittingNotices } from "@repo/backend/confect/notifications/sittings";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { authorizeScope } from "@repo/backend/confect/tenancy/authority";
 import { readTenantKeys } from "@repo/backend/confect/vault/keys";
@@ -147,10 +148,15 @@ export const createSitting = Effect.fn("exams.sittings.create")(
     const sealed = yield* sealToken(keys, id, token).pipe(Effect.orDie);
     const openJob = yield* scheduleOpen(id, args.opensAt);
     const closeJob = yield* scheduleClose(id, args.closesAt);
+    const noticeJobs = yield* scheduleSittingNotices({
+      _id: id,
+      opensAt: args.opensAt,
+      unitId: args.place.unitId,
+    });
     yield* (yield* DatabaseWriter)
       .table("examSittings")
       .patch(id, {
-        jobs: [openJob, closeJob],
+        jobs: [openJob, closeJob, ...noticeJobs],
         tokenHash: hash,
         tokenSealed: sealed,
       })

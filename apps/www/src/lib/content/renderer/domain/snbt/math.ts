@@ -1,4 +1,3 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { Graph as Set2Question6Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-2/question-6";
 import { Graph as Set2Question19Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-2/question-19";
 import { Graph as Set3Question18Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-3/question-18";
@@ -16,12 +15,13 @@ import { Graph as Set7Question18Graph } from "@repo/design-system/components/con
 import { Graph as Set7Question19Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-7/question-19";
 import { snbtMathComponentNames } from "@repo/design-system/lib/markdown/names";
 import { NumberLine } from "@/lib/content/renderer/client/snbt/math/number";
+import { LineEquationServer } from "@/lib/content/renderer/line.server";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 export const domainRenderers = [
   {
     name: snbtMathComponentNames.lineEquation,
-    component: LineEquation,
+    component: LineEquationServer,
   },
   {
     name: snbtMathComponentNames.numberLine,

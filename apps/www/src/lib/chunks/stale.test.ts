@@ -42,8 +42,8 @@ describe("stale chunks", () => {
     Effect.gen(function* () {
       const { reload, storage } = tab();
 
-      expect(yield* reloadForStaleChunk(CHROMIUM, storage, reload)).toBe(true);
-      expect(yield* reloadForStaleChunk(CHROMIUM, storage, reload)).toBe(false);
+      expect(yield* reloadForStaleChunk("/en", storage, reload)).toBe(true);
+      expect(yield* reloadForStaleChunk("/en", storage, reload)).toBe(false);
       expect(reload).toHaveBeenCalledTimes(1);
     })
   );
@@ -58,7 +58,7 @@ describe("stale chunks", () => {
         },
       };
 
-      expect(yield* reloadForStaleChunk(CHROMIUM, storage, reload)).toBe(false);
+      expect(yield* reloadForStaleChunk("/en", storage, reload)).toBe(false);
       expect(reload).not.toHaveBeenCalled();
     })
   );
@@ -73,8 +73,23 @@ describe("stale chunks", () => {
         setItem: vi.fn(),
       };
 
-      expect(yield* reloadForStaleChunk(CHROMIUM, storage, reload)).toBe(false);
+      expect(yield* reloadForStaleChunk("/en", storage, reload)).toBe(false);
       expect(reload).not.toHaveBeenCalled();
     })
+  );
+
+  it.effect(
+    "reloads an address once, whichever of its chunks is missing next, and another address once too",
+    () =>
+      Effect.gen(function* () {
+        const { reload, storage } = tab();
+
+        expect(yield* reloadForStaleChunk("/en", storage, reload)).toBe(true);
+        expect(yield* reloadForStaleChunk("/en", storage, reload)).toBe(false);
+        expect(yield* reloadForStaleChunk("/en/auth", storage, reload)).toBe(
+          true
+        );
+        expect(reload).toHaveBeenCalledTimes(2);
+      })
   );
 });
