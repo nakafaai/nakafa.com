@@ -6893,6 +6893,20 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      readdress: FunctionReference<
+        "mutation",
+        "public",
+        { email: string; linkId: Id<"guardianLinks">; slug: string },
+        {
+          email: string;
+          expiresAt: number;
+          guardian: { id: Id<"tenantPeople">; name: string };
+          id: Id<"guardianLinks">;
+          mismatches: number;
+          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+          student: { id: Id<"tenantPeople">; name: string };
+        }
+      >;
       revoke: FunctionReference<
         "mutation",
         "public",
@@ -7098,6 +7112,7 @@ export declare const api: {
             | "result.view"
             | "guardian.child"
             | "guardian.confirm"
+            | "guardian.readdress"
             | "guardian.revoke"
             | "guardian.verify"
             | "guardian.view"
@@ -7218,6 +7233,7 @@ export declare const api: {
               | "result.view"
               | "guardian.child"
               | "guardian.confirm"
+              | "guardian.readdress"
               | "guardian.revoke"
               | "guardian.verify"
               | "guardian.view"
@@ -7416,6 +7432,11 @@ export declare const api: {
                 }
               | { student: Id<"tenantPeople">; type: "guardian.withdrawn" }
               | { student: Id<"tenantPeople">; type: "guardian.revoked" }
+              | {
+                  guardian: Id<"tenantPeople">;
+                  student: Id<"tenantPeople">;
+                  type: "guardian.readdressed";
+                }
               | {
                   client: Id<"integrationClients">;
                   scope:
