@@ -214,7 +214,7 @@ function MessageActions({
 }) {
   const t = useTranslations("Classroom");
   const scope = useChannelScope();
-  const { classSlug } = useClassScope();
+  const { classSlug, opens } = useClassScope();
   const common = useTranslations("Common");
   const navigate = useNavigate();
   const [hiding, setHiding] = useState(false);
@@ -247,7 +247,7 @@ function MessageActions({
 
   // A message of a thread takes no thread of its own, and one that stands opens from its link.
   const threads =
-    scope.opens && scope.discussion === undefined && discussion === null;
+    opens && scope.discussion === undefined && discussion === null;
   const editable = message.mine && message.poll === null;
 
   if (!(scope.canPost || scope.canManage)) {

@@ -147,6 +147,7 @@ function ClassPage({
         can: resolved.value.can,
         classId: resolved.value.id,
         classSlug,
+        opens: resolved.value.opens,
         slug,
       }}
     >
@@ -275,7 +276,6 @@ function ClassBody({
             channelId={view.channelId}
             everyone={everyone}
             jump={view.jump}
-            opens={klass.opens}
           />
         </ForumFrame>
       </>
@@ -294,7 +294,6 @@ function ClassBody({
                 canPost={canPost}
                 everyone={everyone}
                 jump={view.jump}
-                opens={klass.opens}
                 thread={thread}
               />
             ),

@@ -37,7 +37,6 @@ export function ForumChannel({
   channelId,
   everyone,
   jump,
-  opens,
 }: {
   canManage: boolean;
   canPost: boolean;
@@ -45,8 +44,6 @@ export function ForumChannel({
   /** Whether the viewer, a subject teacher, may mention everyone. */
   everyone: boolean;
   jump: Option.Option<Id<"classroomMessages">>;
-  /** Whether the viewer may start a thread. */
-  opens: boolean;
 }) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
@@ -61,7 +58,6 @@ export function ForumChannel({
         discussion: undefined,
         everyone,
         jump,
-        opens,
         slug,
       }}
     >
