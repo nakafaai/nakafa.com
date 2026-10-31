@@ -3,13 +3,13 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import type { PlayerCellModel } from "@/components/player/model";
 import { PlayerGrid } from "@/components/player/navigator/grid";
 import { usePlayer } from "@/components/player/provider";
 import { readReview } from "@/components/player/review";
-import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 
 /**
  * The one primary action: a button that opens the review before it finishes

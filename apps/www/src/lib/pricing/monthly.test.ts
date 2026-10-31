@@ -30,9 +30,7 @@ describe("monthly pro price of a country", () => {
     expect(getProMonthlyPricingFor("IDR").price.amount).toBe(79_000);
     expect(getProMonthlyPricingFor("EUR").currency).toBe("EUR");
     expect(getProMonthlyPricingFor("USD").currency).toBe("USD");
-    expect(getProMonthlyPricingFor("USD").format(8.99)).toMatch(
-      DOLLAR_SIGN
-    );
+    expect(getProMonthlyPricingFor("USD").format(8.99)).toMatch(DOLLAR_SIGN);
   });
 
   it("writes rupiah alike for an engine that puts no space after the symbol, as Safari does", () => {

@@ -1,5 +1,9 @@
 import { useMediaQuery } from "@mantine/hooks";
 import {
+  Drawer,
+  DrawerContent,
+} from "@repo/design-system/components/ui/drawer";
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -9,7 +13,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
-import { Drawer, DrawerContent } from "@repo/design-system/components/ui/drawer";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { cva } from "class-variance-authority";
 import { Option, Schema } from "effect";

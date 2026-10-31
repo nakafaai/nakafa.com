@@ -47,7 +47,7 @@ function getPriceFormat(price: MonthlyPrice) {
 }
 
 /** The symbol in letters that opens a price, and any space after it. */
-const LETTER_SYMBOL = /^(\p{L}+)\s*/u;
+const LETTER_SYMBOL = /^(?<symbol>\p{L}+)\s*/u;
 
 /**
  * Writes one amount the same in every browser. Each engine ships its own locale
@@ -57,14 +57,17 @@ const LETTER_SYMBOL = /^(\p{L}+)\s*/u;
  * no-break space (Rp 79.000).
  */
 function writeAmount(formatter: Intl.NumberFormat, amount: number) {
-  return formatter.format(amount).replace(LETTER_SYMBOL, "$1\u00a0");
+  return formatter.format(amount).replace(LETTER_SYMBOL, "$<symbol>\u00a0");
 }
 
 /** The currency symbol of a price, as its locale writes it. */
 function symbolOf(formatter: Intl.NumberFormat) {
   return Arr.join(
     Arr.map(
-      Arr.filter(formatter.formatToParts(0), (part) => part.type === "currency"),
+      Arr.filter(
+        formatter.formatToParts(0),
+        (part) => part.type === "currency"
+      ),
       (part) => part.value
     ),
     ""

@@ -123,7 +123,9 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() =>
     expect(drawer).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );
-  yield* Effect.promise(() => expect(drawer.locator(DRAWER_HANDLE)).toBeVisible());
+  yield* Effect.promise(() =>
+    expect(drawer.locator(DRAWER_HANDLE)).toBeVisible()
+  );
   yield* Effect.promise(() =>
     expect(drawer.locator(DRAWER_TITLE)).toHaveText("Tafsir")
   );

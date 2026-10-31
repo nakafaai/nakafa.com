@@ -2,10 +2,9 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { LOCALES } from "@repo/internationalization/src/locale";
@@ -81,13 +80,13 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
   }
   return (
     <ConvexIsland
-      keepsPress
       fallback={
         <TryoutStartSignInButton
           label={startLabelOf(props.attempt)}
           request={props.request}
         />
       }
+      keepsPress
     >
       <TryoutStartAction {...props} />
     </ConvexIsland>

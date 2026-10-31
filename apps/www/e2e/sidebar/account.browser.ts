@@ -222,9 +222,7 @@ async function openAccountMenu(page: Page, phone: boolean) {
     ? page.locator('[data-mobile="true"] [data-account="member"]')
     : memberFooter(page);
   const button = footer
-    .locator(
-      '[data-sidebar="menu-button"]:not([data-kept-account] *)'
-    )
+    .locator('[data-sidebar="menu-button"]:not([data-kept-account] *)')
     .last();
   await expect(button).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await button.click();

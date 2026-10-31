@@ -35,9 +35,9 @@ test("a press on the phone's sidebar toggle before React takes the page over ope
             await route.continue();
           }
           await page.unroute(SCRIPTS);
-          await expect(page.getByRole("dialog", { name: "Sidebar" })).toBeVisible(
-            { timeout: readinessTimeoutMilliseconds }
-          );
+          await expect(
+            page.getByRole("dialog", { name: "Sidebar" })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
         });
       })
     )

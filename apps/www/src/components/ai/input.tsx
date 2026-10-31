@@ -23,6 +23,7 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from "@repo/design-system/components/ui/input-group";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
 import {
@@ -45,7 +46,6 @@ import { useTranslations } from "use-intl";
 import { NinaAttach } from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
 import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
-import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 
 /**
  * The file tray and the attach button load with their upload code, which
