@@ -22,6 +22,36 @@ test.describe("Nina sheet at 1440px", () => {
     ).toBeVisible();
   });
 
+  test("takes a press only on its button, so the page beside it stays pressable", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.promise(async () => {
+          await page.goto(LESSON_PATH);
+          const ask = page.getByRole("button", {
+            exact: true,
+            name: "Ask Nina",
+          });
+          await expect(ask).toBeVisible();
+          // A point of the entry's strip beside its button, at the button's height.
+          const stripTakesIt = await ask.evaluate((button) => {
+            const strip = button.closest("aside");
+            const box = button.getBoundingClientRect();
+            const point = document.elementFromPoint(
+              (strip?.getBoundingClientRect().left ?? 0) + 8,
+              box.top + box.height / 2
+            );
+            return strip?.contains(point) ?? true;
+          });
+
+          expect(stripTakesIt).toBe(false);
+        })
+      )
+    );
+  });
+
   test("opens on a press made before React takes the page over", async ({
     page,
   }) => {

@@ -31,6 +31,19 @@ const COMMENT_END = "-->";
  */
 export const PRERENDER_HEADER = "x-nakafa-prerender";
 
+/**
+ * The headers of the build's prerender: its mark, and a user agent that names it
+ * a crawler. Start answers a crawler once every boundary of its page has drawn,
+ * so a static page holds each part where it belongs, a chart inside its article
+ * included. Without the agent the prerender reads the page as it streams, and a
+ * boundary that finishes after the shell lands at the page's end, for the
+ * browser's script to move.
+ */
+export const PRERENDER_HEADERS = {
+  [PRERENDER_HEADER]: "1",
+  "user-agent": "NakafaPrerender/1.0",
+};
+
 /** The folder of the static answers, which the browser reads in place of a server call. */
 const STATIC_DATA_FOLDER = "/_data";
 

@@ -10,7 +10,7 @@ export default {
 ["list"]: RegisteredConvexFunction.register({ ...definitions["list"], handler: forward(definitions["list"].handler) }),
 ["get"]: RegisteredConvexFunction.register({ ...definitions["get"], handler: forward(definitions["get"].handler) }),
 ["publish"]: RegisteredConvexFunction.register({ ...definitions["publish"], handler: forward(definitions["publish"].handler) }),
-["reschedule"]: RegisteredConvexFunction.register({ ...definitions["reschedule"], handler: forward(definitions["reschedule"].handler) }),
+["edit"]: RegisteredConvexFunction.register({ ...definitions["edit"], handler: forward(definitions["edit"].handler) }),
 ["submit"]: RegisteredConvexFunction.register({ ...definitions["submit"], handler: forward(definitions["submit"].handler) }),
 ["submissions"]: RegisteredConvexFunction.register({ ...definitions["submissions"], handler: forward(definitions["submissions"].handler) }),
 ["score"]: RegisteredConvexFunction.register({ ...definitions["score"], handler: forward(definitions["score"].handler) }),

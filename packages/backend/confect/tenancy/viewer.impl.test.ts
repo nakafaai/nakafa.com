@@ -90,6 +90,7 @@ describe("tenancy/viewer", () => {
           "person.manage",
           "person.view",
           "scheme.manage",
+          "scheme.view",
           "tenant.manage",
           "tenant.view",
           "visit.approve",
@@ -151,6 +152,7 @@ describe("tenancy/viewer", () => {
         "integration.view",
         "invite.view",
         "person.view",
+        "scheme.view",
         "tenant.view",
       ]);
     })

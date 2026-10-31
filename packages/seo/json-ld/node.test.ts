@@ -15,6 +15,7 @@ describe("makeEducationalOrganizationNode", () => {
     const node = makeEducationalOrganizationNode({
       alternateName: "Nakafa",
       description: "Free learning for every student",
+      knowsAbout: ["Matematika", "Fisika"],
     });
 
     expect(node).toMatchObject({
@@ -27,9 +28,7 @@ describe("makeEducationalOrganizationNode", () => {
       founder: FOUNDER,
       image: COMPANY_IDENTITY.logoUrl,
     });
-    expect(node).toMatchObject({
-      knowsAbout: expect.arrayContaining(["Mathematics"]),
-    });
+    expect(node).toMatchObject({ knowsAbout: ["Matematika", "Fisika"] });
   });
 });
 
@@ -172,7 +171,7 @@ describe("makeWebsiteNode", () => {
         "@type": "SearchAction",
         target: {
           "@type": "EntryPoint",
-          urlTemplate: `${COMPANY_IDENTITY.url}/search?q={search_term_string}`,
+          urlTemplate: `${COMPANY_IDENTITY.url}/en/search?q={search_term_string}`,
         },
         "query-input": "required name=search_term_string",
       },

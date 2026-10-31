@@ -1,17 +1,24 @@
 import { expect, test } from "@playwright/test";
 import { editorDocument } from "@repo/design-system/components/editor/frame";
+import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
+import { linkVariants } from "@repo/design-system/lib/prose";
 
 /** WCAG 2.2 AA for text of a normal size. */
 const AA = 4.5;
 
 /**
  * Runs in the page. It draws a highlight that holds a link and inline code in a text with the editor's own
- * classes (`editorDocument`, as the editor and the saved words draw a text), then measures the link's colour
+ * classes (`editorDocument`, as the editor and the saved words draw a text), the highlight and the link with the
+ * lesson's (`emphasisVariants`, `linkVariants`, which the editor gives their elements), then measures the link's colour
  * against the highlight's fill, whether the link keeps its underline, the highlight's own text against its fill,
  * and the code against its own chip. Colours are read through a canvas, so any CSS colour counts as the sRGB pixel
  * the screen draws.
  */
-function measureEditorMark(classes: string) {
+function measureEditorMark(classes: {
+  readonly link: string;
+  readonly mark: string;
+  readonly text: string;
+}) {
   const canvas = document.createElement("canvas");
   canvas.width = 1;
   canvas.height = 1;
@@ -50,10 +57,12 @@ function measureEditorMark(classes: string) {
   };
 
   const text = document.createElement("div");
-  text.className = classes;
+  text.className = classes.text;
   const paragraph = document.createElement("p");
   const mark = document.createElement("mark");
+  mark.className = classes.mark;
   const link = document.createElement("a");
+  link.className = classes.link;
   link.href = "#mark";
   link.textContent = "a link";
   const code = document.createElement("code");
@@ -84,7 +93,11 @@ for (const scheme of ["light", "dark"] as const) {
     await page.goto("/en");
     await expect(page.locator("main")).toBeVisible();
 
-    const measured = await page.evaluate(measureEditorMark, editorDocument());
+    const measured = await page.evaluate(measureEditorMark, {
+      link: linkVariants(),
+      mark: emphasisVariants(),
+      text: editorDocument(),
+    });
     expect(measured.underline, `${scheme} link keeps its underline`).toBe(true);
     expect(
       measured.link,

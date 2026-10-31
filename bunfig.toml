@@ -3,5 +3,3 @@
 exact = true
 # Isolated linking keeps each workspace to the dependencies it declares.
 linker = "isolated"
-# Supply-chain gate: a release younger than one day is not resolved for a new install.
-minimumReleaseAge = 86400

@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Page, type WebSocketRoute } from "@playwright/test";
 import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
@@ -7,6 +7,7 @@ import {
   MutableHashMap,
   MutableHashSet,
   MutableList,
+  MutableRef,
   Option,
   Result,
   String as Str,
@@ -16,6 +17,7 @@ import {
   changeAnswersIn,
   decodeGiven,
   decodeSent,
+  encodeAuthError,
   encodeRefusal,
   failQueriesIn,
   type GivenSchema,
@@ -117,6 +119,8 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
   // What the server answered to each query the page runs, as JSON text.
   const answers = MutableList.make<{ text: string; udfPath: string }>();
   const delayed = MutableList.make<() => void>();
+  /** The page's end of its latest connection, which `expireSession` speaks to as the server. */
+  const opened = MutableRef.make(Option.none<WebSocketRoute>());
   /** Gives the page a frame now, or after `release` while the answers are held back. */
   const deliver = (give: () => void) => {
     if (changes.held) {
@@ -136,6 +140,7 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
   });
   yield* Effect.promise(() =>
     page.routeWebSocket(CONVEX_SOCKET, (socket) => {
+      MutableRef.set(opened, Option.some(socket));
       const server = socket.connectToServer();
       const address = new URL(socket.url());
       address.protocol = address.protocol === "wss:" ? "https:" : "http:";
@@ -354,6 +359,24 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
      */
     rewrite(udfPath: string, change: (value: unknown) => unknown) {
       changes.rewriting = Option.some({ change, path: udfPath });
+    },
+    /**
+     * Tells the page, as the server, that its credentials no longer hold, as Convex does once a token
+     * expires. The page asks for a fresh token and signs in again; a token it is refused leaves its
+     * session loading until the reader comes back to the page.
+     */
+    expireSession() {
+      Option.map(MutableRef.get(opened), (socket) =>
+        socket.send(
+          encodeAuthError({
+            authUpdateAttempted: true,
+            // Any version from the current one on is the page's, and no page reaches this one.
+            baseVersion: Number.MAX_SAFE_INTEGER - 1,
+            error: "The session's token expired.",
+            type: "AuthError",
+          })
+        )
+      );
     },
     /** Keeps what the server answers from the page until `release`. */
     hold() {

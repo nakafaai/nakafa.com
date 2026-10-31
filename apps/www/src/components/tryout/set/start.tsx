@@ -72,7 +72,7 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
     <ConvexIsland
       fallback={
         <TryoutStartSignInButton
-          finished={Boolean(props.attempt)}
+          label={startLabelOf(props.attempt)}
           request={props.request}
         />
       }
@@ -82,12 +82,24 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
   );
 }
 
+/**
+ * The label of a set's start action for its attempt: continue a running one, restart a finished one, and
+ * start one otherwise. The button the page shows before its client and the live action read it alike, so the
+ * label never changes when the client arrives.
+ */
+function startLabelOf(attempt: StartTryoutButtonProps["attempt"]) {
+  if (attempt?.status === "in-progress") {
+    return "continue-cta";
+  }
+  return attempt ? "restart-cta" : "start-cta";
+}
+
 /** A visitor's start button: it sends the visitor to sign in with the page as the return address. */
 function TryoutStartSignInButton({
-  finished,
+  label,
   request,
 }: {
-  readonly finished: boolean;
+  readonly label: ReturnType<typeof startLabelOf>;
   readonly request: StartTryoutRequest;
 }) {
   const navigate = useNavigate();
@@ -106,7 +118,7 @@ function TryoutStartSignInButton({
   return (
     <Button onClick={onStart}>
       <HugeIcons icon={Rocket01Icon} />
-      {t(finished ? "restart-cta" : "start-cta")}
+      {t(label)}
     </Button>
   );
 }
@@ -159,9 +171,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const dialogKind = QueryResult.isSuccess(access)
     ? access.value.kind
     : "free-attempt";
-  const buttonLabel = activeAttempt
-    ? t("continue-cta")
-    : t(finishedAttempt ? "restart-cta" : "start-cta");
+  const buttonLabel = t(startLabelOf(attempt));
   const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
   /** Opens the correct decision or continues an already-active runtime. */

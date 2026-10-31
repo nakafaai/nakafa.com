@@ -8,6 +8,18 @@ export const SOCIAL_IMAGE_SIZE = {
   height: 630,
 };
 export const SOCIAL_SITE_NAME = "Nakafa";
+
+/**
+ * The Open Graph locale of each app locale, in the language_TERRITORY form that
+ * the protocol names. The head carries only the page's own locale: TanStack keeps
+ * one meta tag per property, so the repeated `og:locale:alternate` tags cannot be
+ * written, and the page's hreflang links already name its other languages.
+ */
+export const OPEN_GRAPH_LOCALES = {
+  de: "de_DE",
+  en: "en_US",
+  id: "id_ID",
+} as const satisfies Record<Locale, string>;
 export const SOCIAL_TWITTER_ACCOUNT = "@nabilfatih_";
 
 /** The Open Graph types that a page declares. */

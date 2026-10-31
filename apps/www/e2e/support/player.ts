@@ -263,17 +263,3 @@ export const expectView = Effect.fn("NakafaE2E.expectPlayerView")(function* (
       .toBeGreaterThan(1)
   );
 });
-
-/**
- * Counts the questions the server sent in the document itself, before any
- * script ran: the player resolves its view on the server, so the list sends
- * several and one at a time sends one.
- */
-export const countSentQuestions = Effect.fn("NakafaE2E.countSentQuestions")(
-  function* (response: { text: () => Promise<string> } | null) {
-    const html = yield* Effect.promise(
-      () => response?.text() ?? Promise.resolve("")
-    );
-    return html.split('data-player-key="').length - 1;
-  }
-);

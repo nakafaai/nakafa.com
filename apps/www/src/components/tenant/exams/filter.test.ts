@@ -6,6 +6,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
   cancelRoomChange,
+  rescheduleRoomChange,
   roomGroupKey,
   roomGroups,
   roomsArgs,
@@ -29,7 +30,7 @@ const room = (
   group: typeof RoomRow.Type.group = { kind: "unit", unitId },
   groupName = "SMP Nakafa"
 ): typeof RoomRow.Type => ({
-  canCancel: false,
+  canChange: false,
   closesAt: 1_800_000_000_000,
   group,
   groupName,
@@ -68,14 +69,24 @@ describe("the rooms table's group filter", () => {
 });
 
 describe("exams/rooms client", () => {
-  it("asks for every room of the exam when the filter names every state, with no state argument", () => {
-    const args = roomsArgs(input, "all");
+  it("asks for every room of the exam when the filter names every state and nothing is searched, with neither argument", () => {
+    const args = roomsArgs(input, "all", "");
     expect(args).toEqual(input);
     expect(args).not.toHaveProperty("state");
+    expect(args).not.toHaveProperty("search");
   });
 
   it("asks for the rooms of one state when the filter names it", () => {
-    expect(roomsArgs(input, "open")).toEqual({ ...input, state: "open" });
+    expect(roomsArgs(input, "open", "")).toEqual({ ...input, state: "open" });
+  });
+
+  it("asks for the rooms whose names match the header's search, in a state or in any", () => {
+    expect(roomsArgs(input, "all", "Lab")).toEqual({ ...input, search: "Lab" });
+    expect(roomsArgs(input, "open", "Lab")).toEqual({
+      ...input,
+      search: "Lab",
+      state: "open",
+    });
   });
 
   it("takes a cancelled room off every loaded page of the school's rooms at once", () => {
@@ -106,5 +117,46 @@ describe("exams/rooms client", () => {
       local.store.getQuery(exams.rooms.list, other)
     );
     expect(untouched.page).toHaveLength(2);
+  });
+
+  it("shows a moved room at its new times and name on every loaded page of the school's rooms at once", () => {
+    const pages = {
+      continueCursor: "next",
+      isDone: false,
+      page: [room("room-a", "Lab 1"), room("room-b", "Lab 2")],
+    };
+    const args = { ...input, paginationOpts: { cursor: null, numItems: 20 } };
+    const other = { ...args, slug: Schema.decodeSync(TenantSlug)("other") };
+    const local = createLocalStore();
+    local.seed(exams.rooms.list, args, pages);
+    local.seed(exams.rooms.list, other, pages);
+    local.seed(
+      exams.rooms.list,
+      { ...args, slug: Schema.decodeSync(TenantSlug)("lain") },
+      undefined
+    );
+    rescheduleRoomChange(local.store, {
+      closesAt: 1_800_090_000_000,
+      opensAt: 1_800_086_400_000,
+      room: "Aula",
+      sittingId: Schema.decodeUnknownSync(Id("examSittings"))("room-a"),
+      slug: input.slug,
+    });
+    const shown = Option.getOrThrow(
+      local.store.getQuery(exams.rooms.list, args)
+    );
+    expect(
+      Arr.map(shown.page, (item) => [item.room, item.opensAt, item.closesAt])
+    ).toEqual([
+      ["Aula", 1_800_086_400_000, 1_800_090_000_000],
+      ["Lab 2", 1_799_996_400_000, 1_800_000_000_000],
+    ]);
+    const untouched = Option.getOrThrow(
+      local.store.getQuery(exams.rooms.list, other)
+    );
+    expect(Arr.map(untouched.page, (item) => item.room)).toEqual([
+      "Lab 1",
+      "Lab 2",
+    ]);
   });
 });
