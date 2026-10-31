@@ -2,9 +2,8 @@ import { createRequire } from "node:module";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import {
+  isMathFont,
   loadMathFonts,
-  MATH_FONT_FILES,
-  type MathFont,
   MathFontLoadError,
   readMathFonts,
 } from "@repo/design-system/lib/markdown/fonts";
@@ -22,10 +21,6 @@ const WHITESPACE = /\s+/;
 /** Renders one formula the way the math components do. */
 function render(math: string, displayMode = false) {
   return katex.renderToString(math, { displayMode, throwOnError: false });
-}
-
-function isMathFont(face: string): face is MathFont {
-  return Object.hasOwn(MATH_FONT_FILES, face);
 }
 
 /** The face a KaTeX font rule selects, when it is one loaded early. */
@@ -127,6 +122,30 @@ describe("math fonts", () => {
       ]);
     })
   );
+
+  it.effect("loads the faces it is given, each by its own shorthand", () =>
+    Effect.gen(function* () {
+      const load = vi.fn().mockResolvedValue([]);
+
+      yield* loadMathFonts({ load }, [
+        "Main-Bold",
+        "AMS-Regular",
+        "Size4-Regular",
+      ]);
+
+      expect(load.mock.calls).toEqual([
+        ["bold 1em KaTeX_Main"],
+        ["1em KaTeX_AMS"],
+        ["1em KaTeX_Size4"],
+      ]);
+    })
+  );
+
+  it("names only the faces it can load early", () => {
+    expect(isMathFont("Math-Italic")).toBe(true);
+    expect(isMathFont("Script-Regular")).toBe(false);
+    expect(isMathFont(3)).toBe(false);
+  });
 
   it.effect("maps a failed font load into the typed error channel", () =>
     Effect.gen(function* () {

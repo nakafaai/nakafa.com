@@ -11,7 +11,7 @@ import { Schema } from "effect";
 
 /**
  * The guardian's email code (ADR 0009, ADR 0034). A visitor of the school host asks
- * for a code at `/orang-tua`, and the sign-in endpoint of that host redeems it. No
+ * for a code at `/parents`, and the sign-in endpoint of that host redeems it. No
  * other host and no session reach the redeem, which is internal.
  */
 export default GroupSpec.make()

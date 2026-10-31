@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type {
   ContentTreeChild,
   ContentTreeElement,
@@ -11,6 +12,7 @@ import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic
 import { Array as Arr, Effect, Schema } from "effect";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { TAKES_LOCALE } from "@/lib/content/renderer/locale";
 import { renderContentTree } from "@/lib/content/renderer/tree";
 
 const contentKey = ContentKeySchema.make("test:tree");
@@ -48,8 +50,16 @@ function Values(props: typeof ValuesProps.Type) {
   );
 }
 
+/** Test component that draws the locale the tree gave it. */
+const Localized = Object.assign(
+  (props: { readonly locale?: string; readonly label: string }) =>
+    createElement("span", null, `${props.label}@${props.locale ?? "none"}`),
+  { [TAKES_LOCALE]: true }
+);
+
 const components = {
   ...semanticMdxComponents,
+  Localized,
   Probe,
   Values,
 };
@@ -70,7 +80,13 @@ function root(children: readonly ContentTreeChild[]): ContentTreeElement {
 
 /** Renders one tree through the component map used by every artifact. */
 function renderTree(tree: ContentTreeElement) {
-  return renderContentTree(components, contentKey, "site", tree);
+  return renderContentTree(
+    components,
+    contentKey,
+    "site",
+    tree,
+    ArtifactLocaleSchema.make("de")
+  );
 }
 
 describe("content tree rendering", () => {
@@ -168,6 +184,22 @@ describe("content tree rendering", () => {
           _tag: "RendererImplementationMissing",
           componentName: "NestedMissing",
         });
+      })
+  );
+  it.effect(
+    "gives the artifact's locale to a component marked to take it, and to no other",
+    () =>
+      Effect.gen(function* () {
+        const element = yield* renderTree(
+          root([
+            node("Localized", [], { label: "marked" }),
+            node("Probe", [], { icon: null, label: "unmarked" }),
+          ])
+        );
+
+        expect(renderToStaticMarkup(element)).toBe(
+          "<span>marked@de</span><span>unmarked</span>"
+        );
       })
   );
 });

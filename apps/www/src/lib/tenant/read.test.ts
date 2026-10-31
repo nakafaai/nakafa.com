@@ -146,7 +146,7 @@ describe("readSchoolFrame", () => {
   );
 
   it.effect(
-    "shows a member the shell with the viewer, its greeting and its home access",
+    "shows a member the shell with the viewer and its exam access",
     () =>
       Effect.gen(function* () {
         const read = yield* readSchoolFrame({

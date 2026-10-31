@@ -48,6 +48,7 @@ import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import { PlayerTimer } from "@/components/player/timer";
+import { PlayerViewSwitch } from "@/components/player/view";
 
 /**
  * The student's running attempt in the shared player: the school's header with the exam's name, the time
@@ -97,6 +98,7 @@ export function StudentPlayer({
               clockOffset={clockOffset}
               deadline={attempt.deadline}
             />
+            <PlayerViewSwitch />
             <StudentFinish
               attempt={attempt}
               deviceId={deviceId}

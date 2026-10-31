@@ -17,6 +17,9 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** The address of the Exams page, where a member lands. */
+const EXAMS_ADDRESS = /\/exams$/u;
+
 /** The phone and the desktop widths that the mixed text is drawn at. */
 const VIEWPORTS = [
   { name: "390", height: 844, width: 390 },
@@ -80,7 +83,7 @@ function fitsTheViewport(page: Page) {
 
 /**
  * One school with an exam whose second question mixes three languages, read in the editor and in the
- * student's sitting at one viewport, plus the school's home, which shows no Arabic.
+ * student's sitting at one viewport, plus the school's root, which opens the owner's exams and shows no Arabic.
  */
 async function expectMixedQuestionAt(
   browser: Browser,
@@ -157,11 +160,12 @@ async function expectMixedQuestionAt(
     path: testInfo.outputPath(`multilingual-student-${viewport.name}.png`),
   });
 
-  // A page that shows no Arabic loads no Amiri Quran face: the school's home has only Latin text.
+  // A page that shows no Arabic loads no Amiri Quran face: the school's root opens the owner's exam list, whose
+  // titles are Latin.
   const home = await ownerContext.newPage();
   await home.setViewportSize(viewport);
   await home.goto(address("/"));
-  // The home's greeting heads it at every width, while a phone keeps the sidebar in a closed sheet.
+  await home.waitForURL(EXAMS_ADDRESS);
   await expect(home.getByRole("heading", { level: 1 })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });

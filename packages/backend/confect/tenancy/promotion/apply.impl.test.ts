@@ -18,7 +18,7 @@ import {
   toEightA,
   undoOnce,
 } from "@repo/backend/test/promotion";
-import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
+import { actedAt, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Option } from "effect";
 
 const { create } = promotion.draft;
@@ -45,11 +45,14 @@ describe("tenancy/promotion run lease", () => {
           actorId: fixture.people.admin.personId,
           promotionId,
         });
+        vi.setSystemTime(actedAt(0, NOW));
         yield* fixture.internal.mutation(runPromotion, {
           actorId: fixture.people.admin.personId,
           promotionId,
         });
-        vi.setSystemTime(NOW + Duration.toMillis(PROMOTION_RUN_LEASE));
+        vi.setSystemTime(
+          actedAt(0, NOW) + Duration.toMillis(PROMOTION_RUN_LEASE)
+        );
         yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
         const finished = yield* drain(fixture, promotionId);
         expect(finished.progress).toMatchObject({
@@ -105,11 +108,14 @@ describe("tenancy/promotion run lease", () => {
           actorId: fixture.people.admin.personId,
           promotionId,
         });
+        vi.setSystemTime(actedAt(0, NOW));
         yield* fixture.internal.mutation(runPromotion, {
           actorId: fixture.people.admin.personId,
           promotionId,
         });
-        vi.setSystemTime(NOW + Duration.toMillis(PROMOTION_RUN_LEASE));
+        vi.setSystemTime(
+          actedAt(0, NOW) + Duration.toMillis(PROMOTION_RUN_LEASE)
+        );
         const backedOut = yield* undoOnce(fixture, promotionId);
         expect(backedOut.progress).toMatchObject({
           failure: null,
