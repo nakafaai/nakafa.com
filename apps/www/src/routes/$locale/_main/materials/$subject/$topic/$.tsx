@@ -14,7 +14,7 @@ import { createTranslator } from "use-intl/core";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { DeferredComments } from "@/components/comments/deferred";
-import { ContentDates } from "@/components/content/dates";
+import { ContentByline } from "@/components/content/byline";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
@@ -148,6 +148,7 @@ const readMaterial = createServerFn({ method: "GET" })
               contentKey: route.contentKey,
               href: toMaterialHref(route),
               publicPath: route.publicPath,
+              topicTitle: route.topicTitle,
             },
             sourceUrl: published.sourceRevision
               ? getAksaraUrl({
@@ -234,7 +235,8 @@ export const Route = createFileRoute(
         indexable: true,
         jsonLd: [makeArticleJsonLd(article), makeLearningResourceNode(article)],
         locale,
-        parts: [headMetadata.title],
+        // Many lessons share a short name, such as Numbers: the topic tells them apart.
+        parts: [headMetadata.title, route.topicTitle],
         type: "article",
       })
     );
@@ -291,13 +293,15 @@ function MaterialPage() {
                 <AiMenuItem contextTitle={metadata.title} />
               </OpenContent>
             </ContentHeader>
-            <ContentTitle title={metadata.title} />
-            <ContentDates
-              {...(metadata.dateModified === undefined
-                ? {}
-                : { dateModified: metadata.dateModified })}
-              datePublished={metadata.datePublished}
-            />
+            <ContentTitle title={metadata.title}>
+              <ContentByline
+                authors={metadata.authors}
+                {...(metadata.dateModified === undefined
+                  ? {}
+                  : { dateModified: metadata.dateModified })}
+                datePublished={metadata.datePublished}
+              />
+            </ContentTitle>
             <LayoutContent>
               {headings.length === 0 ? <ComingSoon /> : page.body}
             </LayoutContent>

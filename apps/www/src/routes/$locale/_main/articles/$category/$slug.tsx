@@ -10,7 +10,7 @@ import { createTranslator } from "use-intl/core";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { DeferredComments } from "@/components/comments/deferred";
-import { ContentDates } from "@/components/content/dates";
+import { ContentByline } from "@/components/content/byline";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
@@ -272,13 +272,15 @@ function ArticlePage() {
             <ContentTitle
               description={metadata.description}
               title={metadata.title}
-            />
-            <ContentDates
-              {...(metadata.dateModified === undefined
-                ? {}
-                : { dateModified: metadata.dateModified })}
-              datePublished={metadata.datePublished}
-            />
+            >
+              <ContentByline
+                authors={metadata.authors}
+                {...(metadata.dateModified === undefined
+                  ? {}
+                  : { dateModified: metadata.dateModified })}
+                datePublished={metadata.datePublished}
+              />
+            </ContentTitle>
             <LayoutContent>
               {headings.length === 0 ? <ComingSoon /> : article.body}
             </LayoutContent>
