@@ -47,7 +47,7 @@ interface EditorGroup {
 /** A group of the bar that the row has no room for in full: its name, and how many of its controls still show. */
 const WrappedGroup = Schema.Struct({
   name: Schema.String,
-  shown: Schema.Number,
+  shown: Schema.Finite,
 });
 
 /**
