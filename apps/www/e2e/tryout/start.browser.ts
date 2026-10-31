@@ -57,7 +57,7 @@ const StartFrame = Schema.Struct({
 
 /** Every frame since the page loaded, and the moment the learner confirmed the start. */
 const StartFrames = Schema.Struct({
-  confirmedAt: Schema.NullOr(Schema.Finite),
+  confirmedAt: Schema.mutableKey(Schema.NullOr(Schema.Finite)),
   frames: Schema.mutable(Schema.Array(StartFrame)),
 });
 
