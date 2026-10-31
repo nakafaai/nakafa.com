@@ -1,78 +1,29 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
-import { api } from "@repo/backend/convex/_generated/api";
-import {
-  activateTryoutStartSource,
-  TRYOUT_START_COUNTRY,
-  TRYOUT_START_EXAM,
-  TRYOUT_START_NOW,
-  TRYOUT_START_SECTION,
-  TRYOUT_START_SET,
-  TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout/source";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
+import { Effect } from "effect";
 
 describe("tryouts/queries/attempt", () => {
-  it("locks only one exact authenticated in-progress attempt", async () => {
-    vi.setSystemTime(TRYOUT_START_NOW);
-
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: TRYOUT_START_NOW,
-        suffix: "set-lock",
-      });
-      await activateTryoutStartSource(ctx, "visible", "raw");
-      return user;
-    });
-
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-    const started = await authed.mutation(
-      api.tryouts.mutations.attempts.startAttempt,
-      {
-        countryKey: TRYOUT_START_COUNTRY,
-        destinationSectionKey: TRYOUT_START_SECTION,
-        examKey: TRYOUT_START_EXAM,
-        locale: "id",
-        setKey: TRYOUT_START_SET,
-        trackKey: TRYOUT_START_TRACK,
-      }
-    );
-
-    await expect(
-      t.query(api.tryouts.queries.attempt.isLockedByAttemptId, {
-        attemptId: started.attemptId,
-      })
-    ).resolves.toBe(false);
-    await expect(
-      authed.query(api.tryouts.queries.attempt.isLockedByAttemptId, {
-        attemptId: "not-an-id",
-      })
-    ).resolves.toBe(false);
-
-    await expect(
-      authed.query(api.tryouts.queries.attempt.isLockedByAttemptId, {
-        attemptId: started.attemptId,
-      })
-    ).resolves.toBe(true);
-
-    await t.mutation((ctx) =>
-      ctx.db.patch(started.attemptId, {
-        completedAt: TRYOUT_START_NOW + 1,
-        endReason: "submitted",
-        status: "completed",
-      })
-    );
-
-    await expect(
-      authed.query(api.tryouts.queries.attempt.isLockedByAttemptId, {
-        attemptId: started.attemptId,
-      })
-    ).resolves.toBe(false);
-  });
+  it.effect("locks only one exact authenticated in-progress attempt", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld();
+      const { attemptId } = yield* world.start();
+      const isLocked = tryouts.queries.attempt.isLockedByAttemptId;
+      expect(yield* world.visitor.query(isLocked, { attemptId })).toBe(false);
+      expect(
+        yield* world.learner.query(isLocked, { attemptId: "not-an-id" })
+      ).toBe(false);
+      expect(yield* world.learner.query(isLocked, { attemptId })).toBe(true);
+      yield* Effect.promise(() =>
+        world.t.mutation((ctx) =>
+          ctx.db.patch("tryoutAttempts", attemptId, {
+            completedAt: TRYOUT_NOW + 1,
+            endReason: "submitted",
+            status: "completed",
+          })
+        )
+      );
+      expect(yield* world.learner.query(isLocked, { attemptId })).toBe(false);
+    })
+  );
 });

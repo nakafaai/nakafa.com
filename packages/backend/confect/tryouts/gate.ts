@@ -11,31 +11,29 @@ import {
   type Version,
 } from "@repo/backend/confect/assessment/gate/rules";
 import { Answerable } from "@repo/backend/confect/assessment/gate/store";
-import { evaluate } from "@repo/backend/confect/response/evaluation";
-import {
-  type Evaluated,
-  ResponseSpec,
-} from "@repo/backend/confect/response/model";
 import type { SectionTarget } from "@repo/backend/confect/tryouts/mutations/sections.spec";
 import {
   toTryoutFailure,
   toTryoutStale,
 } from "@repo/backend/confect/tryouts/refusal";
-import { writeAnswer } from "@repo/backend/confect/tryouts/response/answer";
+import {
+  type GradedAnswer,
+  gradeAnswer,
+  writeAnswer,
+} from "@repo/backend/confect/tryouts/response/answer";
 import {
   indexTryoutResponses,
-  requireTryoutResponseSectionSnapshot,
-  validateTryoutResponsePlacements,
+  requireTryoutResponseSection,
 } from "@repo/backend/confect/tryouts/response/integrity";
 import {
   type SaveTryoutResponseArgs,
   type TryoutFlagArgs,
   toTryoutResponseError,
-  toTryoutSelectionError,
 } from "@repo/backend/confect/tryouts/response/spec";
 import { readVersion } from "@repo/backend/confect/tryouts/response/version";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
+import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
 import { loadSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect, flow, Option, Schema } from "effect";
@@ -49,13 +47,13 @@ type Live = typeof Live.Type;
 
 /**
  * The rows an admitted try-out answer works on, beside what the gate checks:
- * its frozen response, and the version of the question's latest write.
+ * its frozen placement, which grades the answer, its stored answer, and the
+ * version of the question's latest write.
  */
 const Answering = Schema.Struct({
   ...Live.fields,
   ...Answerable.fields,
   placement: tryoutAttemptPlacements.Doc,
-  response: ResponseSpec,
   stored: Schema.Option(tryoutResponses.Doc),
 });
 type Answering = typeof Answering.Type;
@@ -119,24 +117,20 @@ const loadResponses = Effect.fn("tryouts.gate.loadResponses")(function* (
 });
 
 /**
- * Checks a running section against its attempt's frozen snapshot, and the
- * placement against both. It reads nothing, so it runs before the deadline.
+ * Checks a running section against its attempt's frozen section. The section was found by the
+ * placement's own attempt and section key, so the placement belongs to it. It reads nothing, so it
+ * runs before the deadline.
  */
 const verifySection = Effect.fn("tryouts.gate.verifySection")(function* (
   attempt: Live["attempt"],
-  section: Live["section"],
-  placement: Answering["placement"]
+  section: Live["section"]
 ) {
-  const snapshot = yield* requireTryoutResponseSectionSnapshot(
-    attempt,
-    section
-  );
-  yield* validateTryoutResponsePlacements(attempt._id, snapshot, [placement]);
+  yield* requireTryoutResponseSection(attempt, section);
 });
 
 /**
  * Reads the question's stored answer and checks it against its links and
- * frozen evaluation. It runs only after the deadline passed unrefused, as the
+ * frozen grade. It runs only after the deadline passed unrefused, as the
  * answer write of the try-out runtime always did, so an answer that arrives
  * too late is refused for its time before the stored rows are read.
  */
@@ -155,7 +149,6 @@ const loadAnswering = Effect.fn("tryouts.gate.loadAnswering")(function* (
   return {
     attempt,
     placement,
-    response: placement.responseSpec,
     section,
     stored,
     version: readVersion(placement, stored),
@@ -200,7 +193,7 @@ const loadPlacement = Effect.fn("tryouts.gate.loadPlacement")(function* <
         Option.map((section) => ({
           deadline: section.expiresAt,
           live: live(loaded, section, placed),
-          verify: verifySection(loaded, section, placed),
+          verify: verifySection(loaded, section),
         }))
       )
     ),
@@ -244,7 +237,7 @@ const finishSection = Effect.fn("tryouts.gate.finishSection")(function* (
 const gate = make({
   answer: (
     live: Answering,
-    answer: Option.Option<Evaluated>,
+    answer: Option.Option<GradedAnswer>,
     now: number,
     version: Version
   ) =>
@@ -275,10 +268,8 @@ const loadFlagging = (
  * Each fails only with errors its function already declares; unexpected
  * storage failures are masked with their cause kept.
  *
- * This file is the try-out store of the gate, not a second guard sequence.
- * Owner: ADR 0013 and ADR 0031. Exit: the engine cutover, which replaces the
- * try-out runtime and its tables with the assessment engine and deletes this
- * file with the rest of `confect/tryouts`.
+ * This file is the try-out store of the gate, not a second guard sequence
+ * (ADR 0013, ADR 0031).
  */
 export const tryoutGate = {
   /** Saves, replaces, or clears (`null`) one answer of the caller's running section. */
@@ -290,8 +281,10 @@ export const tryoutGate = {
         placement: args.placementId,
         value: (live) =>
           Effect.transposeOption(
-            Option.map(Option.fromNullOr(args.selection), (selection) =>
-              Effect.fromResult(evaluate(live.response, selection))
+            Option.map(Option.fromNullOr(args.response), (response) =>
+              Effect.flatMap(readPlacedQuestion(live.placement), (question) =>
+                Effect.fromResult(gradeAnswer(question, response))
+              )
             )
           ),
         version: args.version,
@@ -299,7 +292,6 @@ export const tryoutGate = {
     },
     Effect.catchTags({
       AttemptRefused: flow(toTryoutFailure.answer, Effect.fail),
-      ResponseRejected: flow(toTryoutSelectionError, Effect.fail),
       Stale: flow(toTryoutStale, Effect.fail),
     }),
     Effect.catchDefect(flow(toTryoutResponseError, Effect.fail))

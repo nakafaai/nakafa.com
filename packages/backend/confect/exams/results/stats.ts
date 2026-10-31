@@ -1,13 +1,13 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import {
+  chosenOptions,
+  isAnswered,
+} from "@repo/backend/confect/assessment/response";
 import { letterScript } from "@repo/backend/confect/exams/letters";
 import type {
   examResultValidator,
   Verdict,
 } from "@repo/backend/confect/exams/results/schema";
-import {
-  chosenOptions,
-  isAnswered,
-} from "@repo/backend/confect/exams/sittings/response";
 import { Array as Arr, Match } from "effect";
 
 /** The option IDs of a question's choices, in the order the choices list them. */

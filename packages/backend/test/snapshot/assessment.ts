@@ -26,6 +26,9 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { Array as Arr, Effect, Stream } from "effect";
 
+/** The options of the shared assessment fixture: its sets, scoring, entry, and routes. */
+type FixtureOptions = Parameters<typeof makeAssessmentFixture>[0];
+
 /**
  * Builds the fixture snapshot as ingress receives it: every row of the shared
  * assessment fixture hashed and in canonical order, and the self-authenticating
@@ -33,8 +36,8 @@ import { Array as Arr, Effect, Stream } from "effect";
  */
 export const makeAssessmentTestSnapshot = Effect.fn(
   "test.snapshot.assessmentSnapshot"
-)(function* () {
-  const { rows } = yield* makeAssessmentFixture();
+)(function* (options?: FixtureOptions) {
+  const { rows } = yield* makeAssessmentFixture(options);
   const records = yield* Effect.forEach(
     Arr.sort(rows, AssessmentRowOrder),
     (row) => Effect.map(hashAssessmentRow(row), (rowHash) => ({ row, rowHash }))
@@ -61,27 +64,18 @@ export const makeAssessmentTestSnapshot = Effect.fn(
 });
 
 /**
- * Activates the fixture snapshot in one Convex integration test: one
- * completed release that replaces the assessment snapshot, its verified
- * manifest, and every row stored as the ingress mutation stores it. Returns
- * the snapshot identity and its rows.
+ * Stores the fixture snapshot as the ingress mutation stores it: its verified
+ * manifest and every row with its indexed facts. Returns the snapshot
+ * identity and the stored snapshot rows.
  */
-export async function activateAssessmentTestSnapshot(ctx: MutationCtx) {
+async function storeAssessmentTestSnapshot(
+  ctx: MutationCtx,
+  options?: FixtureOptions
+) {
   const { manifest, rows } = await Effect.runPromise(
-    makeAssessmentTestSnapshot()
+    makeAssessmentTestSnapshot(options)
   );
   const snapshotId = manifest.manifest.snapshotId;
-  await insertTestRelease(ctx, {
-    snapshots: {
-      ...inheritContentSnapshots(null),
-      assessment: replaceContentSnapshot({
-        baseSnapshotId: null,
-        resultSnapshotId: snapshotId,
-        rowCount: rows.length,
-        rowDigest: manifest.manifest.rowDigest,
-      }),
-    },
-  });
   await ctx.db.insert("contentSnapshots", {
     createdAt: 1,
     family: "assessment",
@@ -101,6 +95,31 @@ export async function activateAssessmentTestSnapshot(ctx: MutationCtx) {
       })
     )
   );
+  return { manifest, rows, snapshotId };
+}
+
+/**
+ * Activates the fixture snapshot in one Convex integration test: one
+ * completed release that replaces the assessment snapshot, its verified
+ * manifest, and every row stored as the ingress mutation stores it. Returns
+ * the snapshot identity and its rows.
+ */
+export async function activateAssessmentTestSnapshot(
+  ctx: MutationCtx,
+  options?: FixtureOptions
+) {
+  const stored = await storeAssessmentTestSnapshot(ctx, options);
+  await insertTestRelease(ctx, {
+    snapshots: {
+      ...inheritContentSnapshots(null),
+      assessment: replaceContentSnapshot({
+        baseSnapshotId: null,
+        resultSnapshotId: stored.snapshotId,
+        rowCount: stored.rows.length,
+        rowDigest: stored.manifest.manifest.rowDigest,
+      }),
+    },
+  });
   const [release, state] = await Promise.all([
     ctx.db.query("contentReleases").unique(),
     ctx.db.query("contentState").unique(),
@@ -118,5 +137,31 @@ export async function activateAssessmentTestSnapshot(ctx: MutationCtx) {
     candidateReleaseId: undefined,
     candidateSequence: undefined,
   });
-  return { rows, snapshotId };
+  return stored;
+}
+
+/**
+ * Moves the active release of an activated fixture onto another fixture
+ * snapshot, as a later release that replaces the assessment snapshot does.
+ * The earlier snapshot's rows stay stored, as retention keeps them while an
+ * attempt names them. Returns the new snapshot identity and its rows.
+ */
+export async function replaceAssessmentTestSnapshot(
+  ctx: MutationCtx,
+  options?: FixtureOptions
+) {
+  const release = await ctx.db.query("contentReleases").unique();
+  assert.ok(release, "Expected one activated assessment release.");
+  const stored = await storeAssessmentTestSnapshot(ctx, options);
+  await ctx.db.patch("contentReleases", release._id, {
+    snapshotTransitions: {
+      ...release.snapshotTransitions,
+      assessment: {
+        baseSnapshotId: release.snapshotTransitions.assessment.resultSnapshotId,
+        mode: "replace",
+        resultSnapshotId: stored.snapshotId,
+      },
+    },
+  });
+  return stored;
 }

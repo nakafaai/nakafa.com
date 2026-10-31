@@ -58,45 +58,48 @@ describe("contentRelease/assessment/active", () => {
     );
   });
 
-  it.each(["missing", "unverified", "foreign", "renamed"] as const)(
+  it.effect.each(["missing", "unverified", "foreign", "renamed"] as const)(
     "refuses an active release whose assessment manifest is %s",
-    async (corruption) => {
-      const { manifest } = await Effect.runPromise(
-        makeAssessmentTestSnapshot()
-      );
-      const quran = await Effect.runPromise(makeQuranSnapshot());
-      const t = convexTest(schema, convexModules);
-      await t.mutation(activateAssessmentTestSnapshot);
-      await t.mutation(async (ctx) => {
-        const stored = await ctx.db.query("contentSnapshots").unique();
-        assert.ok(stored, "Expected one assessment manifest.");
-        if (corruption === "missing") {
-          await ctx.db.delete("contentSnapshots", stored._id);
-          return;
-        }
-        if (corruption === "unverified") {
-          await ctx.db.patch("contentSnapshots", stored._id, {
-            verifiedAt: undefined,
-          });
-          return;
-        }
-        await ctx.db.patch("contentSnapshots", stored._id, {
-          snapshotJson: encodeSnapshotJson(
-            corruption === "foreign"
-              ? quran
-              : {
-                  ...manifest,
-                  manifest: {
-                    ...manifest.manifest,
-                    snapshotId: quran.manifest.snapshotId,
-                  },
-                }
-          ),
-        });
-      });
-      await expect(readActive(t)).rejects.toMatchObject({
-        code: "CONTENT_RELEASE_INTEGRITY",
-      });
-    }
+    (corruption) =>
+      Effect.gen(function* () {
+        const { manifest } = yield* makeAssessmentTestSnapshot();
+        const quran = yield* makeQuranSnapshot();
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() => t.mutation(activateAssessmentTestSnapshot));
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const stored = await ctx.db.query("contentSnapshots").unique();
+            assert.ok(stored, "Expected one assessment manifest.");
+            if (corruption === "missing") {
+              await ctx.db.delete("contentSnapshots", stored._id);
+              return;
+            }
+            if (corruption === "unverified") {
+              await ctx.db.patch("contentSnapshots", stored._id, {
+                verifiedAt: undefined,
+              });
+              return;
+            }
+            await ctx.db.patch("contentSnapshots", stored._id, {
+              snapshotJson: encodeSnapshotJson(
+                corruption === "foreign"
+                  ? quran
+                  : {
+                      ...manifest,
+                      manifest: {
+                        ...manifest.manifest,
+                        snapshotId: quran.manifest.snapshotId,
+                      },
+                    }
+              ),
+            });
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(readActive(t)).rejects.toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          })
+        );
+      })
   );
 });

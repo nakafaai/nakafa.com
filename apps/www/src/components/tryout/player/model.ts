@@ -1,75 +1,52 @@
-import type { Selection } from "@repo/backend/confect/response/model";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { Array as Arr, HashMap, Option } from "effect";
-import { pickOption } from "@/components/player/keyboard";
+import { pickedOption } from "@/components/exams/sitting/response";
 import type { PlayerQuestionModel } from "@/components/player/model";
+import type { TryoutBody } from "@/components/tryout/content/body";
+import { isAnsweredQuestion } from "@/components/tryout/runtime/response/state";
 import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
 
 /**
  * Projects the questions of a running section into what the player marks in
- * its navigator, flags, and picks from the keyboard. Each question answers
- * through the same save that its response fields use, and flags through the
- * flag save, which turns its flag the other way.
+ * its navigator, flags, and picks from the keyboard. A question counts as
+ * answered as the server counts it. A number key picks the option at that
+ * place of a choice that takes one option, read from the question's body, and
+ * answers through the same save that its response fields use; it flags through
+ * the flag save, which turns its flag the other way.
  */
 export function projectTryoutQuestions(input: {
   answer: (
     question: TryoutRuntimeQuestion,
-    selection: Selection | null
+    response: ExamResponse | null
   ) => void;
+  bodies: readonly TryoutBody[];
   flag: (question: TryoutRuntimeQuestion, flagged: boolean) => void;
   questions: readonly TryoutRuntimeQuestion[];
 }): readonly PlayerQuestionModel[] {
+  const interactions = HashMap.fromIterable(
+    Arr.map(
+      input.bodies,
+      (body) => [body.placementId, body.interaction] as const
+    )
+  );
   return Arr.map(input.questions, (question) => ({
-    answered: question.response?.isComplete ?? false,
+    answered: isAnsweredQuestion(question),
     flag: () => input.flag(question, !question.flagged),
     flagged: question.flagged,
     key: question.placementId,
     pick: (index) =>
-      Option.match(pickOption(question.responseSpec, index), {
-        onNone: () => false,
-        onSome: (selection) => {
-          input.answer(question, selection);
-          return true;
-        },
-      }),
+      Option.match(
+        Option.flatMap(
+          HashMap.get(interactions, question.placementId),
+          (interaction) => pickedOption([interaction], index)
+        ),
+        {
+          onNone: () => false,
+          onSome: (optionId) => {
+            input.answer(question, [optionId]);
+            return true;
+          },
+        }
+      ),
   }));
-}
-
-/** Builds the stable content identity captured when the attempt was created. */
-function getContentKey(identity: {
-  contentHash: string;
-  sourcePath: string;
-  sourceRevision: string;
-}) {
-  return `${identity.sourcePath}:${identity.contentHash}:${identity.sourceRevision}`;
-}
-
-/**
- * Pairs each running question with the signed body frozen for it at attempt
- * start, in the order of the questions. It finds none when any question has no
- * body, which a stale prefetch of the content can cause, because a section
- * that shows some of its questions is wrong.
- */
-export function joinTryoutBodies<Body>(input: {
-  bodies: readonly {
-    content: Body;
-    contentHash: string;
-    sourcePath: string;
-    sourceRevision: string;
-  }[];
-  questions: readonly TryoutRuntimeQuestion[];
-}) {
-  const bodies = HashMap.fromIterable(
-    Arr.map(input.bodies, (body) => [getContentKey(body), body.content])
-  );
-  const joined = Arr.getSomes(
-    Arr.map(input.questions, (question) =>
-      Option.map(HashMap.get(bodies, getContentKey(question)), (body) => ({
-        body,
-        question,
-      }))
-    )
-  );
-  return joined.length === input.questions.length
-    ? Option.some(joined)
-    : Option.none();
 }

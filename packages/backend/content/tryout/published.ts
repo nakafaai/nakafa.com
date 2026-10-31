@@ -1,132 +1,152 @@
 import type {
-  TryoutCountry,
-  TryoutExam,
-  TryoutSection,
-  TryoutSet,
-  TryoutTrack,
-} from "@nakafa/aksara-contracts/tryout/catalog";
+  CatalogCountrySchema,
+  CatalogExamSchema,
+  CatalogSectionSchema,
+  CatalogSetSchema,
+  CatalogTrackSchema,
+} from "@nakafa/aksara-contracts/assessment/catalog";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
+import type { PublishedCatalog } from "@repo/backend/content/tryout/catalog";
 import {
-  findPublishedSet,
+  readSetFacts,
+  type SetFacts,
+} from "@repo/backend/content/tryout/facts";
+import {
   indexPublishedCatalog,
-  type PublishedCatalog,
-  type PublishedCatalogIndex,
-  readPublishedSetParents,
-  readPublishedSetSections,
   readPublishedTrackParents,
   sortCatalogRows,
 } from "@repo/backend/content/tryout/hierarchy";
-import { Array as Arr, Effect, Option } from "effect";
+import type { TryoutSetSelection } from "@repo/backend/content/tryout/selection";
+import { Array as Arr, Effect, HashMap, Option } from "effect";
 
-/** Projects one signed country into the existing public catalog contract. */
-function toPublicCountry(country: TryoutCountry) {
+type CatalogCountry = typeof CatalogCountrySchema.Type;
+type CatalogExam = typeof CatalogExamSchema.Type;
+type CatalogSection = typeof CatalogSectionSchema.Type;
+type CatalogSet = typeof CatalogSetSchema.Type;
+type CatalogTrack = typeof CatalogTrackSchema.Type;
+type FactsBySet = HashMap.HashMap<string, SetFacts>;
+
+/** The description of a catalog row, when it has one, as a public model spreads it. */
+const descriptionOf = (row: { readonly description?: string }) =>
+  row.description === undefined ? {} : { description: row.description };
+
+/** Reads the facts of one set from the facts read for its page. */
+const factsFor = Effect.fn("tryouts.catalog.factsFor")(function* (
+  facts: FactsBySet,
+  set: CatalogSet
+) {
+  return yield* Effect.fromOption(
+    HashMap.get(facts, tryoutSetIdentityOf(set))
+  ).pipe(
+    // The page read the facts of every set it projects.
+    Effect.orDie
+  );
+});
+
+/** Projects one country into the public catalog contract. */
+function toPublicCountry(country: CatalogCountry) {
   return {
     countryCode: country.countryCode,
     countryKey: country.countryKey,
-    ...(country.description === undefined
-      ? {}
-      : {
-          description: country.description,
-        }),
+    ...descriptionOf(country),
     publicPath: country.publicPath,
     title: country.title,
   };
 }
 
-/** Projects one signed exam into the existing public catalog contract. */
-function toPublicExam(exam: TryoutExam) {
+/** Projects one exam into the public catalog contract. */
+function toPublicExam(exam: CatalogExam) {
   return {
-    ...(exam.description === undefined
-      ? {}
-      : {
-          description: exam.description,
-        }),
+    ...descriptionOf(exam),
     examKey: exam.examKey,
     publicPath: exam.publicPath,
-    scoringStrategy: exam.scoringStrategy,
     title: exam.title,
   };
 }
 
-/** Projects one signed track into the existing public catalog contract. */
-function toPublicTrack(track: TryoutTrack) {
+/**
+ * Projects one section into the public catalog contract, with its question count and time limit from
+ * its set's facts. A catalog section that names no section of its set's profile is a broken snapshot.
+ */
+export const toPublicPublishedSection = Effect.fn(
+  "tryouts.catalog.toPublicPublishedSection"
+)(function* (section: CatalogSection, facts: SetFacts) {
+  const own = Arr.findFirst(
+    facts.sections,
+    ({ sectionKey }) => sectionKey === section.sectionKey
+  );
+  if (Option.isNone(own)) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Try-out section ${section.sectionKey} names no section of its profile.`
+    );
+  }
   return {
-    ...(track.description === undefined
+    ...descriptionOf(section),
+    ...(section.publicPath === undefined
       ? {}
-      : {
-          description: track.description,
-        }),
+      : { publicPath: section.publicPath }),
+    questionCount: own.value.questionCount,
+    sectionKey: section.sectionKey,
+    timeLimitSeconds: own.value.timeLimitSeconds,
+    title: section.title,
+    visibility: section.visibility,
+  };
+});
+
+/** Projects one set into the public catalog contract, with its counts and score kind from its facts. */
+export function toPublicPublishedSet(
+  set: CatalogSet,
+  facts: SetFacts,
+  sections: readonly CatalogSection[]
+) {
+  return {
+    countryKey: set.countryKey,
+    ...descriptionOf(set),
+    examKey: set.examKey,
+    publicPath: set.publicPath,
+    questionCount: facts.questionCount,
+    scoringStrategy: facts.scoringStrategy,
+    sectionCount: facts.sections.length,
+    setKey: set.setKey,
+    title: set.title,
+    trackKey: set.trackKey,
+    visibleSectionCount: Arr.countBy(
+      sections,
+      ({ visibility }) => visibility === "visible"
+    ),
+  };
+}
+
+/** Projects one track into the public catalog contract. */
+function toPublicTrack(track: CatalogTrack) {
+  return {
+    ...descriptionOf(track),
     publicPath: track.publicPath,
-    readyQuestionCount: track.questionCount,
-    readyVisibleSectionCount: track.visibleSectionCount,
     title: track.title,
     trackKey: track.trackKey,
     trackKind: track.trackKind,
   };
 }
 
-/** Projects one signed set into the existing public catalog contract. */
-export function toPublicPublishedSet(set: TryoutSet) {
-  return {
-    countryKey: set.countryKey,
-    ...(set.description === undefined
-      ? {}
-      : {
-          description: set.description,
-        }),
-    examKey: set.examKey,
-    publicPath: set.publicPath,
-    readyQuestionCount: set.questionCount,
-    readyVisibleSectionCount: set.visibleSectionCount,
-    scoringStrategy: set.scoringStrategy,
-    sectionCount: set.sectionCount,
-    setKey: set.setKey,
-    title: set.title,
-    totalQuestionCount: set.questionCount,
-    trackKey: set.trackKey,
-    visibleSectionCount: set.visibleSectionCount,
-  };
-}
-
-/** Projects one signed section into the existing public catalog contract. */
-export function toPublicPublishedSection(section: TryoutSection) {
-  return {
-    ...(section.description === undefined
-      ? {}
-      : {
-          description: section.description,
-        }),
-    ...(section.publicPath === undefined
-      ? {}
-      : {
-          publicPath: section.publicPath,
-        }),
-    questionCount: section.questionCount,
-    sectionKey: section.sectionKey,
-    timeLimitSeconds: section.timeLimitSeconds,
-    title: section.title,
-    visibility: section.visibility,
-  };
-}
-
-/** Reads the localized country-first hub from one verified signed catalog. */
+/** Reads the localized country-first hub of one catalog, with each country's exam count. */
 export const readPublishedHubPage = Effect.fn(
   "tryouts.catalog.readPublishedHubPage"
 )(function* (catalog: PublishedCatalog) {
   const index = yield* indexPublishedCatalog(catalog);
-  const countries = Arr.map(sortCatalogRows(index.countries), (country) => ({
-    ...toPublicCountry(country),
-    examCount: Arr.filter(
-      index.exams,
-      (exam) => exam.countryKey === country.countryKey
-    ).length,
-  }));
   return {
-    countries,
+    countries: Arr.map(sortCatalogRows(index.countries), (country) => ({
+      ...toPublicCountry(country),
+      examCount: Arr.countBy(
+        index.exams,
+        (exam) => exam.countryKey === country.countryKey
+      ),
+    })),
   };
 });
 
-/** Reads one country page from one verified signed catalog. */
+/** Reads one country page of one catalog, none when no country holds the path. */
 export const readPublishedCountryPage = Effect.fn(
   "tryouts.catalog.readPublishedCountryPage"
 )(function* (catalog: PublishedCatalog, publicPath: string) {
@@ -138,19 +158,21 @@ export const readPublishedCountryPage = Effect.fn(
   if (Option.isNone(country)) {
     return null;
   }
-  const exams = sortCatalogRows(
-    Arr.filter(
-      index.exams,
-      (row) => row.countryKey === country.value.countryKey
-    )
-  );
   return {
     country: toPublicCountry(country.value),
-    exams: Arr.map(exams, toPublicExam),
+    exams: Arr.map(
+      sortCatalogRows(
+        Arr.filter(
+          index.exams,
+          (row) => row.countryKey === country.value.countryKey
+        )
+      ),
+      toPublicExam
+    ),
   };
 });
 
-/** Reads one exam page from one verified signed catalog. */
+/** Reads one exam page of one catalog with its tracks, none when no exam holds the path. */
 export const readPublishedExamPage = Effect.fn(
   "tryouts.catalog.readPublishedExamPage"
 )(function* (catalog: PublishedCatalog, publicPath: string) {
@@ -169,7 +191,7 @@ export const readPublishedExamPage = Effect.fn(
   if (Option.isNone(country)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      "Signed try-out exam lost its country."
+      "A try-out exam lost its country."
     );
   }
   const tracks = sortCatalogRows(
@@ -187,7 +209,7 @@ export const readPublishedExamPage = Effect.fn(
   };
 });
 
-/** Reads one track shell from one verified signed catalog. */
+/** Reads one track shell of one catalog, none when no track holds the path. */
 export const readPublishedTrackPage = Effect.fn(
   "tryouts.catalog.readPublishedTrackPage"
 )(function* (catalog: PublishedCatalog, publicPath: string) {
@@ -207,87 +229,72 @@ export const readPublishedTrackPage = Effect.fn(
   };
 });
 
-/** Reads one set page from a verified set-local catalog index. */
-export const readPublishedSetPageFromIndex = Effect.fn(
-  "tryouts.catalog.readPublishedSetPageFromIndex"
-)(function* (index: PublishedCatalogIndex, publicPath: string) {
-  const set = Arr.findFirst(index.sets, (row) => row.publicPath === publicPath);
-  if (Option.isNone(set)) {
-    return null;
-  }
-  const parents = yield* readPublishedSetParents(index, set.value);
-  const sections = yield* readPublishedSetSections(index, set.value);
-  const visibleSections = Arr.filter(
-    sections,
-    (section) => section.visibility === "visible"
-  );
-  const entrySection = yield* readPublishedEntrySection(
-    set.value,
-    sections,
-    visibleSections
-  );
-  // Verified positive section counts guarantee the authored visible or internal entry.
-  const entry = yield* Effect.fromNullishOr(entrySection).pipe(Effect.orDie);
-  return {
-    exam: toPublicExam(parents.exam),
-    entrySection: toPublicPublishedSection(entry),
-    set: toPublicPublishedSet(set.value),
-    sections: Arr.map(visibleSections, toPublicPublishedSection),
-    track: toPublicTrack(parents.track),
-  };
-});
-
-/** Reads one section page from a verified set-local catalog index. */
-export const readPublishedSectionPageFromIndex = Effect.fn(
-  "tryouts.catalog.readPublishedSectionPageFromIndex"
-)(function* (index: PublishedCatalogIndex, publicPath: string) {
-  const section = Arr.findFirst(
-    index.sections,
-    (row) => row.publicPath === publicPath && row.visibility === "visible"
-  );
-  if (Option.isNone(section)) {
-    return null;
-  }
-  const set = findPublishedSet(index, section.value);
-  if (Option.isNone(set)) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Signed try-out section lost its set."
-    );
-  }
-  const parents = yield* readPublishedSetParents(index, set.value);
-  yield* readPublishedSetSections(index, set.value);
-  return {
-    exam: toPublicExam(parents.exam),
-    section: toPublicPublishedSection(section.value),
-    set: toPublicPublishedSet(set.value),
-    track: toPublicTrack(parents.track),
-  };
-});
-
-/** Selects and validates the authored internal entry or first visible section. */
+/**
+ * Selects a set's entry: the internal entry section it names, or its first visible section. A set
+ * without that section is a broken snapshot.
+ */
 export const readPublishedEntrySection = Effect.fn(
   "tryouts.catalog.readPublishedEntry"
-)(function* (
-  set: TryoutSet,
-  sections: readonly TryoutSection[],
-  visibleSections: readonly TryoutSection[]
-) {
-  if (!set.internalEntrySectionKey) {
-    return Option.getOrNull(Arr.head(visibleSections));
-  }
-  const entrySection = Arr.findFirst(
-    sections,
-    (section) => section.sectionKey === set.internalEntrySectionKey
+)(function* (set: CatalogSet, sections: readonly CatalogSection[]) {
+  const entry = Arr.findFirst(sections, ({ sectionKey, visibility }) =>
+    set.internalEntrySectionKey === undefined
+      ? visibility === "visible"
+      : sectionKey === set.internalEntrySectionKey &&
+        visibility === "internal-entry"
   );
-  if (
-    Option.isNone(entrySection) ||
-    entrySection.value.visibility !== "internal-entry"
-  ) {
+  if (Option.isNone(entry)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      "Signed try-out set lost its internal entry section."
+      "A try-out set has no section to enter."
     );
   }
-  return entrySection.value;
+  return entry.value;
+});
+
+/** Reads the set page of a set-local selection, none when the selected route is a section's. */
+export const readPublishedSetPage = Effect.fn(
+  "tryouts.catalog.readPublishedSetPage"
+)(function* (selection: TryoutSetSelection) {
+  if (selection.row.kind !== "set") {
+    return null;
+  }
+  const { sections, set } = selection;
+  const facts = yield* factsFor(
+    yield* readSetFacts(selection.snapshotId, [set]),
+    set
+  );
+  const entry = yield* readPublishedEntrySection(set, sections);
+  return {
+    entrySection: yield* toPublicPublishedSection(entry, facts),
+    exam: toPublicExam(selection.exam),
+    sections: yield* Effect.forEach(
+      Arr.filter(sections, ({ visibility }) => visibility === "visible"),
+      (section) => toPublicPublishedSection(section, facts)
+    ),
+    set: toPublicPublishedSet(set, facts, sections),
+    track: toPublicTrack(selection.track),
+  };
+});
+
+/**
+ * Reads the section page of a set-local selection, none when the selected route is the set's. Only a
+ * visible section has a route of its own.
+ */
+export const readPublishedSectionPage = Effect.fn(
+  "tryouts.catalog.readPublishedSectionPage"
+)(function* (selection: TryoutSetSelection) {
+  const { row, sections, set } = selection;
+  if (row.kind !== "section") {
+    return null;
+  }
+  const facts = yield* factsFor(
+    yield* readSetFacts(selection.snapshotId, [set]),
+    set
+  );
+  return {
+    exam: toPublicExam(selection.exam),
+    section: yield* toPublicPublishedSection(row, facts),
+    set: toPublicPublishedSet(set, facts, sections),
+    track: toPublicTrack(selection.track),
+  };
 });

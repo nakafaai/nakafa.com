@@ -1,6 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
 import { Effect } from "effect";
 
@@ -51,21 +50,13 @@ export const readTryoutSectionContentAccess = Effect.fn(
       questions: lifecycle.questions,
     };
   }
-  const database = yield* DatabaseReader;
-  const user = yield* database
+  const user = yield* (yield* DatabaseReader)
     .table("users")
     .get(attempt.userId)
     .pipe(
-      Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-      Effect.mapError(toTryoutRuntimeError)
+      // Every caller read the attempt through its owner, and owner cleanup deletes the attempt.
+      Effect.orDie
     );
-  if (!user) {
-    return {
-      answers: false,
-      preview: false,
-      questions: false,
-    };
-  }
   const pro = user.plan === "pro";
   return {
     answers: pro,

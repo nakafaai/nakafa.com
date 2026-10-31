@@ -12,7 +12,7 @@ export const setSortValidator = Schema.Struct({
   field: Schema.Literals([
     "order",
     "publishedScore",
-    "readyQuestionCount",
+    "questionCount",
     "durationSeconds",
     "title",
   ]),

@@ -1,7 +1,9 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { getIncludedAttemptAccess } from "@repo/backend/confect/tryouts/access/impl";
 import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/confect/tryouts/access/source";
+import { loadActiveAssessment } from "@repo/backend/confect/tryouts/active";
 import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { expireAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
@@ -41,13 +43,13 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
     if (resumed) {
       return yield* resolveStartResult(resumed, input.args);
     }
-    const source = yield* loadTryoutStartSource(input.args);
+    const source = yield* loadTryoutStartSource(
+      yield* loadActiveAssessment(),
+      input.args
+    );
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
-      yield* requireInternalEntrySection(
-        Arr.map(source.snapshot.sections, ({ section }) => section.row),
-        entrySectionKey
-      );
+      yield* requireInternalEntrySection(source.sections, entrySectionKey);
     }
     const [scaleVersion, access] = yield* Effect.all(
       [selectAttemptScale(source, input.now), requireAttemptAccess(input)],
@@ -65,10 +67,14 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
       userId: input.userId,
     });
     return yield* resolveStartResult(attempt, input.args);
-  }
+  },
+  // A snapshot that cannot be frozen is a broken release, which ingress should have refused.
+  Effect.catchTag("TryoutFreezeError", ({ message }) =>
+    releaseFail("CONTENT_RELEASE_INTEGRITY", message)
+  )
 );
 
-/** Binds post-start navigation to the exact immutable attempt snapshot. */
+/** Binds post-start navigation to the routes the attempt froze. */
 const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
   function* (attempt: TryoutAttempt, args: StartAttemptArgs) {
     if (!args.destinationSectionKey) {
@@ -76,7 +82,8 @@ const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
       if (!publicPath) {
         return yield* new TryoutRuntimeError({
           code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-          message: "Try-out set route is missing from the attempt snapshot.",
+          message:
+            "Try-out set route is missing from the attempt's frozen routes.",
         });
       }
       return {
@@ -88,14 +95,15 @@ const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
     }
     const destination = Option.getOrUndefined(
       Arr.findFirst(
-        attempt.sectionSnapshots,
+        attempt.sections,
         (section) => section.sectionKey === args.destinationSectionKey
       )
     );
     if (!destination?.publicPath) {
       return yield* new TryoutRuntimeError({
         code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-        message: "Try-out destination is missing from the attempt snapshot.",
+        message:
+          "Try-out destination is missing from the attempt's frozen sections.",
       });
     }
     const publicPath = yield* readAttemptDestination(
@@ -135,7 +143,7 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
     if (entrySectionKey) {
       const currentEntrySection = Option.getOrUndefined(
         Arr.findFirst(
-          attempt.sectionSnapshots,
+          attempt.sections,
           (section) => section.sectionKey === entrySectionKey
         )
       );
@@ -143,7 +151,7 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
         currentEntrySection ??
         Option.getOrUndefined(
           Arr.findFirst(
-            attempt.sectionSnapshots,
+            attempt.sections,
             (section) =>
               section.publicPath === undefined &&
               !Arr.contains(attempt.completedSectionKeys, section.sectionKey)

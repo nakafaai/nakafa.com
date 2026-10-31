@@ -23,19 +23,13 @@ import { programLayer } from "@repo/backend/content/program/confect";
 import { readProgramContext } from "@repo/backend/content/program/context";
 import { quranLayer } from "@repo/backend/content/quran/confect";
 import { readContentReference } from "@repo/backend/content/reference/read";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { readMaterialContextHint } from "@repo/contents/route/material/context";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { cleanSlug, toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 
-const referenceLayer = Layer.mergeAll(
-  articleLayer,
-  materialLayer,
-  quranLayer,
-  tryoutLayer
-);
+const referenceLayer = Layer.mergeAll(articleLayer, materialLayer, quranLayer);
 
 /**
  * Freeze authenticated page and learner facts in the admission transaction.

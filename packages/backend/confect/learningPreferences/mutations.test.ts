@@ -24,7 +24,7 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
-import { activateTryoutStartSource } from "@repo/backend/test/tryout/source";
+import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const NOW = 1_798_752_000_000;
@@ -80,9 +80,7 @@ const seedTryoutPreferenceUser = Effect.fn(
               now: NOW,
             })
           );
-          yield* Effect.promise(() =>
-            activateTryoutStartSource(ctx, "visible")
-          );
+          yield* Effect.promise(() => activateAssessmentTestSnapshot(ctx));
           return user;
         }).pipe(
           Effect.provide(
@@ -197,8 +195,8 @@ describe("learningPreferences", () => {
           country: {
             countryCode: "ID",
             key: "indonesia",
-            publicPath: "try-out/indonesia",
-            title: "Indonesia",
+            publicPath: "try-out/indonesia-id",
+            title: "Try-out",
           },
           preferredTryoutCountryKey: "indonesia",
         });

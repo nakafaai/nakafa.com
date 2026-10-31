@@ -1,137 +1,118 @@
+import type { CatalogRow } from "@nakafa/aksara-contracts/assessment/catalog";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { loadActiveAssessment } from "@repo/backend/confect/tryouts/active";
 import {
-  type AppLocaleCode,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
-import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/catalog";
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
-import {
-  readTryoutCatalogRowByIdentity,
-  readTryoutCatalogRowByPath,
-} from "@repo/backend/content/tryout/row";
-import {
+  type CatalogNodeKeys,
+  readCatalogNode,
+  readCatalogRow,
+} from "@repo/backend/confect/tryouts/catalog/rows";
+import type {
   tryoutLocalizedPathArgsValidator,
   tryoutMetadataArgsValidator,
 } from "@repo/backend/content/tryout/spec";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, type Schema } from "effect";
 
-const TryoutMetadataInputSchema = Schema.Struct(tryoutMetadataArgsValidator);
-type TryoutMetadataInput = typeof TryoutMetadataInputSchema.Type;
-const TryoutLocalizedPathInputSchema = Schema.Struct(
-  tryoutLocalizedPathArgsValidator
+type TryoutMetadataInput = Schema.Struct.Type<
+  typeof tryoutMetadataArgsValidator
+>;
+type TryoutLocalizedPathInput = Schema.Struct.Type<
+  typeof tryoutLocalizedPathArgsValidator
+>;
+
+/** The keys of a catalog row's node, which name the same node in another app locale. */
+function keysOf(row: CatalogRow, appLocale: AppLocaleCode): CatalogNodeKeys {
+  return {
+    appLocale,
+    countryKey: row.countryKey,
+    kind: row.kind,
+    ...("examKey" in row ? { examKey: row.examKey } : {}),
+    ...("trackKey" in row ? { trackKey: row.trackKey } : {}),
+    ...("setKey" in row ? { setKey: row.setKey } : {}),
+    ...("sectionKey" in row ? { sectionKey: row.sectionKey } : {}),
+  };
+}
+
+/** Reads the public path of a row's node in another app locale, none when that locale has no route for it. */
+const readAlternate = Effect.fn("tryouts.catalog.readMetadataAlternate")(
+  function* (
+    snapshotId: string,
+    current: CatalogRow,
+    appLocale: AppLocaleCode
+  ) {
+    const alternate = yield* readCatalogNode(
+      snapshotId,
+      keysOf(current, appLocale)
+    );
+    return Option.flatMap(alternate, (row) =>
+      Option.map(Option.fromUndefinedOr(row.publicPath), (publicPath) => ({
+        appLocale,
+        publicPath,
+      }))
+    );
+  }
 );
-type TryoutLocalizedPathInput = typeof TryoutLocalizedPathInputSchema.Type;
 
-/** Reads one route and its localized counterparts from signed ownership. */
+/**
+ * Reads one public route of the active release with its localized counterparts, none when no row of
+ * the asked kind holds the path.
+ */
 export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
   function* (input: TryoutMetadataInput) {
-    const owner = yield* loadTryoutOwner();
-    const { snapshot, snapshotId } = owner;
-    const current = yield* readCurrentRoute({
-      appLocale: input.appLocale,
-      publicPath: input.publicPath,
+    const { activeAppLocales, snapshotId } = yield* loadActiveAssessment();
+    const current = yield* readCatalogRow(
       snapshotId,
-    });
-    if (!current) {
-      return {
-        route: null,
-      };
-    }
-    if (current.kind !== input.kind || !current.publicPath) {
-      return {
-        route: null,
-      };
-    }
-    const currentPublicPath = current.publicPath;
-    const activeAppLocales = snapshot.manifest.activeAppLocales;
-    const alternateRows = yield* Effect.forEach(activeAppLocales, (locale) =>
-      readAlternate({
-        appLocale: locale,
-        current,
-        snapshotId,
-      })
+      input.appLocale,
+      input.publicPath
     );
-    const alternates = Arr.flatMap(alternateRows, (alternate) =>
-      alternate ? [alternate] : []
+    if (
+      Option.isNone(current) ||
+      current.value.kind !== input.kind ||
+      current.value.publicPath === undefined
+    ) {
+      return { route: null };
+    }
+    const row = current.value;
+    const alternates = Arr.getSomes(
+      yield* Effect.forEach(activeAppLocales, (locale) =>
+        readAlternate(snapshotId, row, locale)
+      )
     );
     return {
       route: {
         alternates,
-        ...(current.description === undefined
+        ...(row.description === undefined
           ? {}
-          : {
-              description: current.description,
-            }),
-        publicPath: currentPublicPath,
+          : { description: row.description }),
+        publicPath: input.publicPath,
         socialImageIdentity:
-          current.kind === "exam"
-            ? {
-                countryKey: current.countryKey,
-                examKey: current.examKey,
-              }
+          row.kind === "exam"
+            ? { countryKey: row.countryKey, examKey: row.examKey }
             : null,
-        title: current.title,
+        title: row.title,
       },
     };
   }
 );
 
-/** Resolves one exact signed route to its target-locale public path. */
+/** Resolves one public route of the active release to its public path in another app locale. */
 export const readTryoutLocalizedPath = Effect.fn(
   "tryouts.catalog.readLocalizedPath"
 )(function* (input: TryoutLocalizedPathInput) {
-  const owner = yield* loadTryoutOwner();
-  const current = yield* readCurrentRoute({
-    appLocale: input.currentAppLocale,
-    publicPath: input.publicPath,
-    snapshotId: owner.snapshotId,
-  });
-  if (!current) {
+  const { snapshotId } = yield* loadActiveAssessment();
+  const current = yield* readCatalogRow(
+    snapshotId,
+    input.currentAppLocale,
+    input.publicPath
+  );
+  if (Option.isNone(current)) {
     return null;
   }
-  const alternate = yield* readAlternate({
-    appLocale: input.targetAppLocale,
-    current,
-    snapshotId: owner.snapshotId,
-  });
-  if (!alternate) {
-    return null;
-  }
-  return alternate.publicPath;
+  const alternate = yield* readAlternate(
+    snapshotId,
+    current.value,
+    input.targetAppLocale
+  );
+  return Option.getOrNull(
+    Option.map(alternate, ({ publicPath }) => publicPath)
+  );
 });
-
-/** Reads and verifies one exact current route from the active signed catalog. */
-const readCurrentRoute = Effect.fn("tryouts.catalog.readCurrentRoute")(
-  function* (input: {
-    readonly appLocale: AppLocaleCode;
-    readonly publicPath: string;
-    readonly snapshotId: string;
-  }) {
-    return yield* readTryoutCatalogRowByPath(input.snapshotId, input);
-  }
-);
-
-/** Reads one exact localized counterpart without loading another catalog. */
-const readAlternate = Effect.fn("tryouts.catalog.readMetadataAlternate")(
-  function* (input: {
-    readonly appLocale: AppLocaleCode;
-    readonly current: TryoutCatalogRow;
-    readonly snapshotId: string;
-  }) {
-    const identity = tryoutCatalogIdentity({
-      ...input.current,
-      appLocale: AppLocaleSchema.make(input.appLocale),
-    });
-    const alternate = yield* readTryoutCatalogRowByIdentity(
-      input.snapshotId,
-      identity
-    );
-    if (!alternate?.publicPath) {
-      return null;
-    }
-    return {
-      appLocale: input.appLocale,
-      publicPath: alternate.publicPath,
-    };
-  }
-);

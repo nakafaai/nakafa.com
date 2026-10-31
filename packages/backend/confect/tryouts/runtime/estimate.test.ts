@@ -1,63 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
-import { convexModules } from "@repo/backend/confect/test.setup";
 import { estimateIrtScore } from "@repo/backend/confect/tryouts/runtime/estimate";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import schema from "@repo/backend/convex/schema";
-import { convexTest } from "convex-test";
 import { Array as Arr, Effect } from "effect";
 
-type IrtScaleItem = Doc<"irtScaleItems">;
-
-async function loadIrtItem() {
-  const t = convexTest(schema, convexModules);
-  return await t.mutation(async (ctx) => {
-    const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
-      model: "2pl",
-      publishedAt: 1,
-      questionCount: 1,
-      setIdentity: "estimate-test-set",
-      status: "provisional",
-      tryoutSnapshotId: "estimate-test-snapshot",
-    });
-    const calibrationRunId = await ctx.db.insert("irtCalibrationRuns", {
-      attemptCount: 0,
-      completedAt: 1,
-      iterationCount: 0,
-      maxParameterDelta: 0,
-      model: "2pl",
-      questionCount: 1,
-      responseCount: 0,
-      scaleVersionId,
-      sectionIdentity: "estimate-test-section",
-      startedAt: 1,
-      status: "completed",
-      updatedAt: 1,
-    });
-    const itemId = await ctx.db.insert("irtScaleItems", {
-      calibrationRunId,
-      calibrationStatus: "provisional",
-      correctRate: 0,
-      difficulty: 0,
-      discrimination: 1,
-      placementIdentity: "estimate-test-placement",
-      placementRowHash: "estimate-test-row",
-      responseCount: 0,
-      scaleVersionId,
-    });
-    const item = await ctx.db.get(itemId);
-    if (!item) {
-      throw new Error("Expected one IRT estimator item fixture.");
-    }
-    return item;
-  });
-}
+/** The parameters of one calibrated item at the scale's centre. */
+const item = { difficulty: 0, discrimination: 1 };
+type IrtItem = typeof item;
 
 describe("tryouts/runtime/estimate", () => {
-  it.live(
+  it.effect(
     "returns the scale midpoint for balanced equal-difficulty answers",
     () =>
       Effect.gen(function* () {
-        const item = yield* Effect.promise(() => loadIrtItem());
         const result = yield* estimateIrtScore([
           { isCorrect: true, item },
           { isCorrect: false, item },
@@ -71,14 +24,13 @@ describe("tryouts/runtime/estimate", () => {
       })
   );
 
-  it.live.each([
+  it.effect.each([
     { isCorrect: true, theta: 4, publishedScore: 900 },
     { isCorrect: false, theta: -4, publishedScore: 100 },
   ])(
     "bounds an all-$isCorrect response vector",
     ({ isCorrect, theta, publishedScore }) =>
       Effect.gen(function* () {
-        const item = yield* Effect.promise(() => loadIrtItem());
         const result = yield* estimateIrtScore([{ isCorrect, item }]);
 
         expect(result.theta).toBe(theta);
@@ -91,15 +43,14 @@ describe("tryouts/runtime/estimate", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "preserves the difficulty shift of a balanced calibrated response vector",
     () =>
       Effect.gen(function* () {
-        const stored = yield* Effect.promise(() => loadIrtItem());
-        const item = { ...stored, difficulty: 1.5 };
+        const shifted = { ...item, difficulty: 1.5 };
         const result = yield* estimateIrtScore([
-          { isCorrect: true, item },
-          { isCorrect: false, item },
+          { isCorrect: true, item: shifted },
+          { isCorrect: false, item: shifted },
         ]);
 
         expect(result.theta).toBeCloseTo(1.5, 3);
@@ -120,7 +71,7 @@ describe("tryouts/runtime/estimate", () => {
       })
   );
 
-  it.live.each([
+  it.effect.each([
     {
       kind: "underflowing discrimination",
       difficulty: 0,
@@ -131,12 +82,11 @@ describe("tryouts/runtime/estimate", () => {
     "rejects $kind without publishing a score",
     ({ difficulty, discrimination }) =>
       Effect.gen(function* () {
-        const stored = yield* Effect.promise(() => loadIrtItem());
         const error = yield* Effect.flip(
           estimateIrtScore([
             {
               isCorrect: true,
-              item: { ...stored, difficulty, discrimination },
+              item: { ...item, difficulty, discrimination },
             },
           ])
         );
@@ -148,11 +98,10 @@ describe("tryouts/runtime/estimate", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "rejects Fisher information overflow at the final bounded estimate",
     () =>
       Effect.gen(function* () {
-        const item = yield* Effect.promise(() => loadIrtItem());
         const answers = Arr.map(
           [
             { discrimination: 12.6, difficulty: 4.7, isCorrect: true },
@@ -191,37 +140,37 @@ describe("tryouts/runtime/estimate", () => {
       })
   );
 
-  it.live.each([
+  it.effect.each([
     {
       kind: "non-positive discrimination",
-      update: (item: IrtScaleItem) => ({ ...item, discrimination: 0 }),
+      update: (item: IrtItem) => ({ ...item, discrimination: 0 }),
     },
     {
       kind: "non-finite discrimination",
-      update: (item: IrtScaleItem) => ({
+      update: (item: IrtItem) => ({
         ...item,
         discrimination: Number.NaN,
       }),
     },
     {
       kind: "non-finite difficulty",
-      update: (item: IrtScaleItem) => ({
+      update: (item: IrtItem) => ({
         ...item,
         difficulty: Number.POSITIVE_INFINITY,
       }),
     },
     {
       kind: "overflowing finite discrimination",
-      update: (item: IrtScaleItem) => ({
+      update: (item: IrtItem) => ({
         ...item,
         discrimination: Number.MAX_VALUE,
       }),
     },
   ])("rejects $kind", ({ update }) =>
     Effect.gen(function* () {
-      const item = update(yield* Effect.promise(() => loadIrtItem()));
+      const changed = update(item);
       const error = yield* Effect.flip(
-        estimateIrtScore([{ isCorrect: true, item }])
+        estimateIrtScore([{ isCorrect: true, item: changed }])
       );
 
       expect(error).toMatchObject({
