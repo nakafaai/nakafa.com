@@ -15,6 +15,7 @@ import {
 import { SchoolOffer, TermOffer } from "@repo/backend/confect/billing/term";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema, Struct } from "effect";
 
