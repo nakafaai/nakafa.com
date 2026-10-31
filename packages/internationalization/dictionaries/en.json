@@ -3050,6 +3050,7 @@
     "pro-cta": "Get Pro",
     "offer-title": "Choose how to pay",
     "offer-description": "The monthly plan renews by itself, and a pass is paid once.",
+    "offer-pass-description": "A pass is paid once and starts when your current one ends.",
     "offer-monthly": "Monthly",
     "offer-monthly-method": "Renews monthly by card.",
     "offer-pass": "{months, number}-month pass",

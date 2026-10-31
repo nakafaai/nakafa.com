@@ -3050,6 +3050,7 @@
     "pro-cta": "Ambil Pro",
     "offer-title": "Pilih cara bayar",
     "offer-description": "Paket bulanan diperpanjang otomatis, dan pass dibayar sekali.",
+    "offer-pass-description": "Pass dibayar sekali dan mulai saat pass yang berjalan berakhir.",
     "offer-monthly": "Bulanan",
     "offer-monthly-method": "Ditagih tiap bulan ke kartu.",
     "offer-pass": "Pass {months} bulan",

@@ -3050,6 +3050,7 @@
     "pro-cta": "Pro holen",
     "offer-title": "Zahlungsart wählen",
     "offer-description": "Das Monatsabo verlängert sich selbst, ein Pass wird einmal bezahlt.",
+    "offer-pass-description": "Ein Pass wird einmal bezahlt und beginnt, wenn der aktuelle endet.",
     "offer-monthly": "Monatlich",
     "offer-monthly-method": "Verlängert sich per Karte.",
     "offer-pass": "{months, plural, one {Pass für # Monat} other {Pass für # Monate}}",

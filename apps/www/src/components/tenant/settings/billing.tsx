@@ -328,7 +328,7 @@ function SchoolTermOption({
       <span className="grid flex-1 gap-1">
         <span className="flex items-baseline justify-between gap-3 text-sm font-medium">
           <span>{t(OFFER_LABELS[rail][quote.offer])}</span>
-          <span className="tabular-nums">
+          <span className="whitespace-nowrap tabular-nums">
             {formatMinorAmount(quote.total, currency)}
           </span>
         </span>
