@@ -11,6 +11,7 @@ import {
   confirmFinish,
   finishSection,
   runFirstSection,
+  waitForRunningSection,
 } from "@/e2e/support/player";
 import { CARD } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -82,7 +83,6 @@ const finishSectionRow = Effect.fn("NakafaE2E.finishTryoutSectionRow")(
   function* (page: Page, href: string, last: boolean) {
     const path = pathOf(page, href);
     const start = page.getByRole("button", { exact: true, name: "Start" });
-    const finish = page.getByRole("button", { exact: true, name: "Finish" });
 
     yield* activate(visibleLink(page, href, "main"), false);
     yield* arriveLocked(page, (pathname) => pathname === path);
@@ -90,9 +90,7 @@ const finishSectionRow = Effect.fn("NakafaE2E.finishTryoutSectionRow")(
       expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
     );
     yield* activate(start, false);
-    yield* Effect.promise(() =>
-      expect(finish).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-    );
+    yield* waitForRunningSection(page);
     if (!last) {
       yield* finishSection(page, false);
       return;

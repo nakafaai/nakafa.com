@@ -967,7 +967,7 @@
       "staff": "Reads the school's plans, people, and promotions.",
       "student": "Learns in the school and answers its own exams.",
       "guardian": "Follows the student it is linked to and records consent for them.",
-      "proctor": "Runs the school's exam rooms: their token, locks, extra time and closing.",
+      "proctor": "Watches the school's exam sessions.",
       "auditor": "Reads the school's records and audit trail without changing them.",
       "integration": "Reads the school's data through the actions its client holds."
     },
@@ -1906,6 +1906,7 @@
     "incorrect": "Incorrect",
     "reset": "Reset",
     "explanation": "Explanation",
+    "number-count": "Number {count}",
     "prompt": "Question",
     "reading": "Reading"
   },
@@ -1915,7 +1916,6 @@
     "controls": "Question controls",
     "previous-question": "Previous question",
     "next-question": "Next question",
-    "question": "Question {number}",
     "mode": "View",
     "mode-list": "List",
     "mode-single": "One question",
