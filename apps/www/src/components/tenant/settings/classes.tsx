@@ -306,7 +306,6 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
     classColumns.display({
       cell: (info) =>
@@ -316,7 +315,7 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
           <SchoolClassMenu row={info.row.original} slug={slug} />
         ),
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

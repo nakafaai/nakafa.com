@@ -2355,27 +2355,27 @@
       "description": "Pilih nama lain untuk rombel ini."
     },
     "school-refusal-class-subject-taken": {
-      "title": "Rombel ini sudah punya ruang kelas aktif untuk mata pelajaran ini.",
-      "description": "Pakai ruang kelas itu, atau arsipkan dulu."
+      "title": "Ruang kelas pelajaran ini sudah ada.",
+      "description": "Pakai ruang kelas aktif rombel ini, atau arsipkan dulu."
     },
     "school-refusal-class-limit": {
-      "title": "Rombel ini sudah memuat ruang kelas sebanyak mungkin.",
+      "title": "Ruang kelas rombel ini sudah penuh.",
       "description": "Pulihkan ruang kelas yang diarsipkan, jangan tambah yang baru."
     },
     "school-refusal-class-address-empty": {
-      "title": "Nama ruang kelas ini tidak punya huruf atau angka.",
+      "title": "Nama ini tanpa huruf atau angka.",
       "description": "Pakai mata pelajaran yang berisi huruf atau angka."
     },
     "school-refusal-class-ambiguous": {
-      "title": "Alamat ruang kelas ini sudah dipakai.",
+      "title": "Alamat ini sudah dipakai.",
       "description": "Ganti nama ruang kelasnya, lalu coba lagi."
     },
     "school-refusal-class-subject-required": {
-      "title": "Ruang kelas di unit ini perlu nama mata pelajaran.",
+      "title": "Mata pelajaran wajib diisi.",
       "description": "Tulis mata pelajarannya, lalu tambah lagi."
     },
     "school-refusal-class-subject-not-allowed": {
-      "title": "Rombel SD punya satu ruang kelas tanpa mata pelajaran.",
+      "title": "Ruang kelas SD tanpa mata pelajaran.",
       "description": "Tambahkan tanpa mata pelajaran."
     },
     "school-period-archived": {
