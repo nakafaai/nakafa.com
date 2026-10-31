@@ -23,50 +23,36 @@ export const isBundleFile = (name: string) => Arr.contains(BUNDLE_FILES, name);
 /** One line of a CSV file, by its header's names in lower case. */
 type Line = Rec.ReadonlyRecord<string, string>;
 
+/** One record of CSV text: a quoted field holds commas, line breaks, and doubled quotes. */
+const CSV_RECORD = /(?:[^"\r\n]|"(?:[^"]|"")*")+/gu;
+
+/** One field of a record and the comma that closes it. */
+const CSV_FIELD = /(?:"(?:[^"]|"")*"|[^",]*),/gu;
+
+/** What surrounds the text of a matched field: its outer quotes and its comma. */
+const FIELD_EDGES = /^"|"?,$/gu;
+
+/** A doubled quote inside a quoted field. */
+const DOUBLED_QUOTE = /""/gu;
+
+/** The matched text of each match of a pattern. */
+const matchesOf = (text: string, pattern: RegExp) =>
+  Arr.map(Arr.fromIterable(Str.matchAll(pattern)(text)), (match) => match[0]);
+
 /**
- * Splits CSV text into its fields (RFC 4180): a quoted field holds commas, line breaks, and
- * doubled quotes. Effect has no CSV codec, and the import reads three files of known shape.
+ * Splits CSV text into its fields (RFC 4180). Effect has no CSV codec, and the import reads
+ * three files of known shape. Each field ends at a comma, so a record gets one for its last.
  */
-export function parseCsv(text: string) {
-  const lines: string[][] = [];
-  let line: string[] = [];
-  let field = "";
-  let quoted = false;
-  const closeField = () => {
-    line.push(field);
-    field = "";
-  };
-  const closeLine = () => {
-    closeField();
-    lines.push(line);
-    line = [];
-  };
-  for (let index = 0; index < text.length; index += 1) {
-    const character = text[index];
-    if (quoted) {
-      if (character === '"' && text[index + 1] === '"') {
-        field += '"';
-        index += 1;
-      } else if (character === '"') {
-        quoted = false;
-      } else {
-        field += character;
-      }
-    } else if (character === '"') {
-      quoted = true;
-    } else if (character === ",") {
-      closeField();
-    } else if (character === "\n") {
-      closeLine();
-    } else if (character !== "\r") {
-      field += character;
-    }
-  }
-  if (field !== "" || !Arr.isArrayEmpty(line)) {
-    closeLine();
-  }
-  return lines;
-}
+export const parseCsv = (text: string) =>
+  Arr.map(matchesOf(text, CSV_RECORD), (record) =>
+    Arr.map(matchesOf(`${record},`, CSV_FIELD), (field) =>
+      pipe(
+        field,
+        Str.replace(FIELD_EDGES, ""),
+        Str.replaceAll(DOUBLED_QUOTE, '"')
+      )
+    )
+  );
 
 /** The byte order mark a spreadsheet writes at the start of a CSV file. */
 const BOM = /^﻿/u;
