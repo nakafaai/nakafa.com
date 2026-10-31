@@ -2,6 +2,7 @@ import { MarkdownBlock } from "@repo/design-system/components/markdown/content";
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react/mdx";
 import type { ReactMarkdownComponents } from "@repo/design-system/components/markdown/react/node";
 import { rehypeLearnerText } from "@repo/design-system/lib/markdown/learner";
+import { linkVariants } from "@repo/design-system/lib/prose";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
@@ -17,7 +18,7 @@ function LearnerLink({ children, href, title, ...props }: AnchorProps) {
 
   return (
     <a
-      className="text-primary underline underline-offset-4"
+      className={linkVariants()}
       data-nakafa="anchor"
       href={href}
       title={title ?? href}

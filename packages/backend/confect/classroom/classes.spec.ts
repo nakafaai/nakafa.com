@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Kind } from "@repo/backend/confect/access/kind";
+import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import {
   ClassAddress,
@@ -103,6 +104,20 @@ export default GroupSpec.make()
       returns: () => ClassView,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "class.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "restore",
+      args: () => ({ classId: Id("classes"), slug: TenantSlug }),
+      returns: () => ClassView,
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          ClassAmbiguous,
+          ClassNameTaken,
+          ClassSubjectTaken,
+        ]),
+    }).middleware(TenantAccess, { action: "tenant.manage" })
   )
   .addFunction(
     FunctionSpec.publicQuery({

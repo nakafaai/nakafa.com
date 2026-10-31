@@ -71,6 +71,12 @@ const tenantSchemes = Kind.extend(tenant, {
       relations: [],
       roles: ["admin"],
     },
+    "scheme.view": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin"],
+    },
   },
   changes: [
     Schema.Struct({

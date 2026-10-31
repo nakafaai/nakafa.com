@@ -7,15 +7,13 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
-import {
-  classAccess,
-  classAuthority,
-} from "@repo/backend/confect/classroom/authority";
+import { classAccess } from "@repo/backend/confect/classroom/authority";
 import {
   ScoreOutOfRange,
   TaskClosed,
 } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { editTask } from "@repo/backend/confect/classroom/tasks/edit";
 import {
   standingOf,
   submissionField,
@@ -30,7 +28,6 @@ import spec from "@repo/backend/confect/classroom/tasks.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { namedPeople } from "@repo/backend/confect/tenancy/named";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
@@ -86,25 +83,15 @@ const publish = FunctionImpl.make(
   })
 );
 
-/** Moves the deadline of a task, and records `assignment.deadlineChanged`. */
-const reschedule = FunctionImpl.make(
+/** Edits a task of the class for the teacher (`editTask`), and answers it as the teacher now reads it. */
+const edit = FunctionImpl.make(
   databaseSchema,
   spec,
-  "reschedule",
-  Effect.fn("classroom.tasks.reschedule")(function* ({ deadline, task }) {
-    const { person } = yield* Member;
-    const row = yield* Class;
-    const found = yield* classTask(task, "task.manage");
-    const moved = Struct.assign(found, { deadline });
-    yield* (yield* DatabaseWriter)
-      .table("classroomTasks")
-      .replace(found._id, Struct.omit(moved, ["_creationTime", "_id"]))
-      .pipe(Effect.orDie);
-    yield* classAuthority.record(personActor(person), row, {
-      task: found._id,
-      type: "assignment.deadlineChanged",
-    });
-    return yield* taskView(moved);
+  "edit",
+  Effect.fn("classroom.tasks.edit.function")(function* (args) {
+    return yield* taskView(
+      yield* editTask(Struct.omit(args, ["classId", "slug"]))
+    );
   })
 );
 
@@ -281,7 +268,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(get),
   Layer.provide(publish),
-  Layer.provide(reschedule),
+  Layer.provide(edit),
   Layer.provide(submit),
   Layer.provide(submissions),
   Layer.provide(score),

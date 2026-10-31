@@ -32,6 +32,7 @@ import {
 } from "@/components/state/localized";
 import { ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/analytics/consent/bootstrap";
 import { signedInHintScript } from "@/lib/auth/hint";
+import { PLACEMENT_PREPAINT_SCRIPT } from "@/lib/content/material/prepaint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
 import { KEPT_ACCOUNT_SCRIPT } from "@/lib/identity/prepaint";
@@ -100,7 +101,13 @@ export const Route = createRootRoute({
       },
       { href: "/logo.svg", rel: "icon", type: "image/svg+xml" },
       { href: "/favicon.ico", rel: "shortcut icon" },
-      { href: "/logo.svg", rel: "apple-touch-icon" },
+      // iOS draws a home-screen icon from a PNG only, at 180 by 180, and fills
+      // transparency with black, so the icon is the opaque logo at that size.
+      {
+        href: "/apple-touch-icon.png",
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+      },
     ],
   }),
   shellComponent: RootDocument,
@@ -142,6 +149,10 @@ function RootDocument({ children }: { children: ReactNode }) {
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: THEME_PREPAINT_SCRIPT }}
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{ __html: PLACEMENT_PREPAINT_SCRIPT }}
         />
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.

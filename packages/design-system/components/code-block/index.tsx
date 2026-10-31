@@ -1,10 +1,10 @@
+import { codeFrameVariants } from "@repo/design-system/components/code-block/variants";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import {
   CodeBlockContext,
   type CodeBlockData,
   useCodeBlockContextValue,
 } from "@repo/design-system/lib/code-block/context";
-import { cn } from "cn";
 import type { HTMLAttributes } from "react";
 
 /** Controlled or uncontrolled source selection for a composed code block. */
@@ -35,13 +35,7 @@ export function CodeBlock({
 
   return (
     <CodeBlockContext value={contextValue}>
-      <div
-        className={cn(
-          "grid size-full grid-cols-1 overflow-hidden rounded-xl border shadow-sm",
-          className
-        )}
-        {...props}
-      />
+      <div className={codeFrameVariants({ className })} {...props} />
     </CodeBlockContext>
   );
 }

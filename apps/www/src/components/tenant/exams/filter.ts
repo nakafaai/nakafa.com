@@ -18,20 +18,24 @@ export const RoomStateFilter = Schema.Literals([
 ]);
 
 /**
- * The arguments of one page of an exam's rooms, with the state the table filters by. Every state
- * leaves the state out of the arguments, so the server reads every room of the exam.
+ * The arguments of one page of an exam's rooms, with the state the table filters by and the search
+ * of its header. Every state leaves the state out of the arguments, and an empty search leaves the
+ * search out, so the server reads every room of the exam.
  */
 export function roomsArgs(
   input: {
     readonly examId: GenericId.GenericId<"exams">;
     readonly slug: TenantSlug;
   },
-  filter: typeof RoomStateFilter.Type
+  filter: typeof RoomStateFilter.Type,
+  search: string
 ) {
-  if (filter === "all") {
-    return { examId: input.examId, slug: input.slug };
-  }
-  return { examId: input.examId, slug: input.slug, state: filter };
+  return {
+    examId: input.examId,
+    slug: input.slug,
+    ...(filter === "all" ? {} : { state: filter }),
+    ...(search === "" ? {} : { search }),
+  };
 }
 
 /**
@@ -84,6 +88,29 @@ export const cancelRoomChange: OptimisticUpdate<
           page: Arr.filter(
             query.value.value.page,
             (room) => room.id !== sittingId
+          ),
+        })
+      );
+    }
+  }
+};
+
+/**
+ * Shows a moved room at its new times and name on every loaded page of the exam rooms of the school, at once. Its
+ * place in the order comes with the server's answer, and a refused move is undone by Confect.
+ */
+export const rescheduleRoomChange: OptimisticUpdate<
+  typeof exams.sittings.reschedule
+> = (localStore, { closesAt, opensAt, room, sittingId, slug }) => {
+  for (const query of localStore.getAllQueries(exams.rooms.list)) {
+    if (Option.isSome(query.value) && query.args.slug === slug) {
+      localStore.setQuery(
+        exams.rooms.list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: Arr.map(query.value.value.page, (row) =>
+            row.id === sittingId ? { ...row, closesAt, opensAt, room } : row
           ),
         })
       );

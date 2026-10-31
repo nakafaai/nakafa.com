@@ -540,6 +540,20 @@ export declare const api: {
           subject?: string;
         }
       >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
     };
     forum: {
       channels: {
@@ -1101,6 +1115,36 @@ export declare const api: {
       >;
     };
     tasks: {
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          deadline: number;
+          latePolicy: "accept" | "close";
+          points: number;
+          slug: string;
+          task: string;
+          text: string;
+          title: string;
+        },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            text: string;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
       get: FunctionReference<
         "query",
         "public",
@@ -1173,32 +1217,6 @@ export declare const api: {
           slug: string;
           text: string;
           title: string;
-        },
-        {
-          deadline: number;
-          handedIn: number;
-          id: Id<"classroomTasks">;
-          latePolicy: "accept" | "close";
-          mine: {
-            late: boolean;
-            score: number | null;
-            text: string;
-            updatedAt: number;
-          } | null;
-          points: number;
-          slug: string;
-          text: string;
-          title: string;
-        }
-      >;
-      reschedule: FunctionReference<
-        "mutation",
-        "public",
-        {
-          classId: Id<"classes">;
-          deadline: number;
-          slug: string;
-          task: string;
         },
         {
           deadline: number;
@@ -5984,7 +6002,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-            canCancel: boolean;
+            canChange: boolean;
             closesAt: number;
             group:
               | { kind: "unit"; unitId: Id<"tenantUnits"> }
@@ -6665,6 +6683,18 @@ export declare const api: {
         },
         { prompt: string }
       >;
+      reschedule: FunctionReference<
+        "mutation",
+        "public",
+        {
+          closesAt: number;
+          opensAt: number;
+          room: string;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
       signal: FunctionReference<
         "mutation",
         "public",
@@ -6805,6 +6835,7 @@ export declare const api: {
           className: string;
           id: Id<"classGrades">;
           kktp: "reached" | "notReached";
+          period: string;
           value: number;
         }>
       >;
@@ -7080,6 +7111,7 @@ export declare const api: {
             | "grade.enter"
             | "grade.list"
             | "scheme.manage"
+            | "scheme.view"
             | "report.list"
             | "report.write"
             | "report.open"
@@ -7199,6 +7231,7 @@ export declare const api: {
               | "grade.enter"
               | "grade.list"
               | "scheme.manage"
+              | "scheme.view"
               | "report.list"
               | "report.write"
               | "report.open"
@@ -7295,6 +7328,7 @@ export declare const api: {
               | { type: "class.created" }
               | { type: "class.renamed" }
               | { type: "class.archived" }
+              | { type: "class.restored" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
               | { message: Id<"classroomMessages">; type: "message.hidden" }
@@ -7304,6 +7338,7 @@ export declare const api: {
                   task: Id<"classroomTasks">;
                   type: "assignment.deadlineChanged";
                 }
+              | { task: Id<"classroomTasks">; type: "assignment.edited" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { grade: number; type: "cohort.grade.set" }
@@ -7535,6 +7570,7 @@ export declare const api: {
               | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
               | { type: "sitting.cancel" }
+              | { type: "sitting.reschedule" }
               | { person: Id<"tenantPeople">; type: "sitting.join" }
               | {
                   contract: {
@@ -8767,6 +8803,19 @@ export declare const api: {
           value: number;
         }>
       >;
+      own: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          band?: string;
+          className: string;
+          id: Id<"classGrades">;
+          kktp: "reached" | "notReached";
+          period: string;
+          value: number;
+        }>
+      >;
       release: FunctionReference<
         "mutation",
         "public",
@@ -8873,6 +8922,19 @@ export declare const api: {
           }>;
         }
       >;
+      own: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          approvedAt: number;
+          cohort: string;
+          file: string;
+          hash: string;
+          id: Id<"reportCards">;
+          period: string;
+        }>
+      >;
       reopen: FunctionReference<
         "mutation",
         "public",
@@ -8937,6 +8999,33 @@ export declare const api: {
       >;
     };
     schemes: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            bands: Array<{ label: string; minimum: number }>;
+            effectiveFrom: number;
+            id: Id<"gradingSchemes">;
+            kktp: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
       store: FunctionReference<
         "mutation",
         "public",

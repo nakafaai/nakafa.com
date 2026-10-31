@@ -4,6 +4,17 @@ import { useLocale } from "use-intl";
 import { useViewerQuery } from "@/components/tenant/context";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 
+/** The time zone of the school's clock: its first active unit's, or none until the school is read. */
+export function useSchoolTimeZone() {
+  const viewer = useViewerQuery();
+  return QueryResult.isSuccess(viewer)
+    ? Option.map(
+        Arr.findFirst(viewer.value.units, (unit) => unit.status === "active"),
+        (unit) => unit.timeZone
+      )
+    : Option.none<string>();
+}
+
 /**
  * Renders one moment as the school's clock shows it: the date and time in the time
  * zone of the school's first active unit, in the reader's language. It renders
@@ -11,16 +22,11 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
  */
 export function SchoolDateTime({ at }: { at: number }) {
   const locale = useLocale();
-  const viewer = useViewerQuery();
-  const timeZone = QueryResult.isSuccess(viewer)
-    ? Option.getOrUndefined(
-        Arr.findFirst(viewer.value.units, (unit) => unit.status === "active")
-      )?.timeZone
-    : undefined;
+  const timeZone = useSchoolTimeZone();
 
-  if (timeZone === undefined) {
+  if (Option.isNone(timeZone)) {
     return null;
   }
 
-  return <>{schoolDateTimeText({ at, locale, timeZone })}</>;
+  return <>{schoolDateTimeText({ at, locale, timeZone: timeZone.value })}</>;
 }
