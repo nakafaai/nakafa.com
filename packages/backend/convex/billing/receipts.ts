@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/bi
 
 export const download = registeredFunctions.download;
 export const read = registeredFunctions.read;
+export const school = registeredFunctions.school;

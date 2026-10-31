@@ -8,5 +8,6 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 
 export default {
 ["download"]: RegisteredConvexFunction.register({ ...definitions["download"], handler: forward(definitions["download"].handler) }),
+["school"]: RegisteredConvexFunction.register({ ...definitions["school"], handler: forward(definitions["school"].handler) }),
 ["read"]: RegisteredConvexFunction.register({ ...definitions["read"], handler: forward(definitions["read"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../billing/receipts.spec")["default"]>;
