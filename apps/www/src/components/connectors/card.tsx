@@ -5,11 +5,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Option } from "effect";
@@ -52,14 +47,15 @@ export function ConnectorCard({
   );
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <CardSection
+      description={t(`${connector}-description`)}
+      title={
+        <span className="flex items-center gap-2">
           <HugeIcons aria-hidden="true" icon={CONNECTOR_ICONS[connector]} />
           {t(connector)}
-        </CardTitle>
-        <CardDescription>{t(`${connector}-description`)}</CardDescription>
-      </CardHeader>
+        </span>
+      }
+    >
       <CardSectionFooter
         hint={Option.match(connection, {
           onNone: () => t("not-connected"),

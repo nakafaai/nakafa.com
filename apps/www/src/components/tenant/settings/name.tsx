@@ -3,12 +3,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { SchoolName } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import {
   Field,
   FieldDescription,
@@ -63,11 +58,7 @@ export function SchoolNameCard({
   const invalid = changed && !valid;
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("name-title")}</CardTitle>
-        <CardDescription>{t("name-description")}</CardDescription>
-      </CardHeader>
+    <CardSection description={t("name-description")} title={t("name-title")}>
       <CardContent>
         <Field>
           <FieldLabel htmlFor={inputId}>{t("name-label")}</FieldLabel>

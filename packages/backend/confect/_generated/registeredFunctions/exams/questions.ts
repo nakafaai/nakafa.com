@@ -12,6 +12,7 @@ export default {
 ["remove"]: RegisteredConvexFunction.register({ ...definitions["remove"], handler: forward(definitions["remove"].handler) }),
 ["move"]: RegisteredConvexFunction.register({ ...definitions["move"], handler: forward(definitions["move"].handler) }),
 ["points"]: RegisteredConvexFunction.register({ ...definitions["points"], handler: forward(definitions["points"].handler) }),
+["media"]: RegisteredConvexFunction.register({ ...definitions["media"], handler: forward(definitions["media"].handler) }),
 ["reading"]: RegisteredConvexFunction.register({ ...definitions["reading"], handler: forward(definitions["reading"].handler) }),
 ["scoring"]: RegisteredConvexFunction.register({ ...definitions["scoring"], handler: forward(definitions["scoring"].handler) }),
 ["answer"]: RegisteredConvexFunction.register({ ...definitions["answer"], handler: forward(definitions["answer"].handler) }),

@@ -111,6 +111,7 @@
     "status-withdrawn": "Widerrufen",
     "status-mismatch": "Angaben stimmen nicht",
     "link-verify": "Von Hand bestätigen",
+    "link-rename": "Elternteil umbenennen",
     "link-readdress": "E-Mail ändern",
     "link-readdress-description": "Die Eltern fordern mit der neuen E-Mail einen Code an.",
     "link-readdress-save": "E-Mail speichern",
@@ -476,6 +477,21 @@
     "template-label": "Fragetyp: {type}",
     "template-truefalse": "Richtig oder falsch",
     "template-cause": "Ursache und Wirkung",
+    "media": "Audio und Video",
+    "media-add-audio": "Audio hinzufügen",
+    "media-add-video": "Video hinzufügen",
+    "media-audio-hint": "Ein Clip, den die Lernenden in der Frage abspielen.",
+    "media-video-hint": "Ein Video, das die Lernenden in der Frage ansehen.",
+    "media-file": "Audiodatei",
+    "media-save": "Hinzufügen",
+    "media-drop": "Audiodatei hier ablegen oder auswählen.",
+    "media-alt-placeholder": "Ein Gespräch auf dem Markt",
+    "media-file-limit": "MP3, M4A, OGG oder WAV, höchstens 3 MB.",
+    "media-link": "YouTube-Link",
+    "media-link-hint": "Der Link eines öffentlichen oder nicht gelisteten Videos.",
+    "media-alt": "Inhalt",
+    "media-alt-hint": "Für Lernende, die es nicht hören oder sehen können.",
+    "media-remove": "{name} entfernen",
     "reading": "Gemeinsamer Text",
     "reading-none": "Kein Text",
     "reading-new": "Eigener Text",
@@ -579,7 +595,12 @@
     "cell-hint": "Gib jeder Aussage eine Spalte.",
     "room-move": "Neu planen",
     "room-move-description": "Schüler und Token bleiben, und die Hinweise gehen erneut hinaus.",
-    "room-move-save": "Speichern"
+    "room-move-save": "Speichern",
+    "results-question-description": "Wie die Klasse diese Frage beantwortet hat.",
+    "student-finished-description": "Deine Punkte erscheinen hier nach der Freigabe.",
+    "student-results-description": "Deine Punkte und Antworten.",
+    "student-closed-description": "Sie nimmt keine Antworten mehr an.",
+    "student-locked-description": "Er nimmt gerade keine Antworten an."
   },
   "SchoolSettings": {
     "student-add-name-placeholder": "Ayu Lestari",
@@ -1203,7 +1224,8 @@
     "locale-description": "Wo diese Schule liegt und in welcher Währung ihr Tarif läuft.",
     "locale-country": "Land",
     "locale-currency": "Währung",
-    "locale-footer": "Jede Änderung wird im Prüfprotokoll festgehalten."
+    "locale-footer": "Jede Änderung wird im Prüfprotokoll festgehalten.",
+    "homeroom-description": "Eine Lehrkraft leitet jede Klasse."
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -2324,7 +2346,10 @@
     "payment-credits": "Nina-Credits",
     "payment-cycle": "Pro-Abo",
     "payment-invoice": "Rechnung",
-    "payment-pass": "Pro-Pass"
+    "payment-pass": "Pro-Pass",
+    "role-description": "Wie du Nakafa nutzt.",
+    "curriculum-description": "Der Lehrplan, nach dem du lernst.",
+    "username-about": "Deine Adresse bei Nakafa."
   },
   "Editor": {
     "arabic": "Arabische Tastatur",
@@ -2413,7 +2438,9 @@
     "placeholder": "Schreib, was Nina sich merken soll",
     "title": "Titel",
     "untitled": "Ohne Titel",
-    "count": "{count, number} / {limit, number}"
+    "count": "{count, number} / {limit, number}",
+    "saved-title": "Gespeicherte Erinnerungen",
+    "saved-description": "Suche, ändere oder lösche, was Nina behält."
   },
   "Toast": {
     "chat-deleted": {

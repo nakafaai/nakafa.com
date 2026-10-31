@@ -28,7 +28,7 @@ export function MemoryToolbar() {
   const openNew = useMemoryPage((state) => state.openNew);
 
   return (
-    <CardHeader className="pb-(--card-spacing)">
+    <CardHeader className="py-(--card-spacing)">
       <div className="flex items-center gap-2">
         <SearchField
           id={MEMORY_SEARCH_ID}

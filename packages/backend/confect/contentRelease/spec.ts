@@ -140,14 +140,6 @@ export const releasePageArgs = {
   paginationOpts: PaginationOptionsSchema,
 };
 
-/** Arguments shared by the paginated API page query of each content family. */
-export const releaseApiPageArgs = {
-  cursor: Schema.Union([Schema.String, Schema.Null]),
-  limit: Schema.Finite,
-  appLocale: appLocaleValidator,
-  prefix: Schema.String,
-};
-
 /** Release-bound page envelope around one paginated result of the given item. */
 export function releasePageValidator<
   Item extends Schema.Codec<unknown, unknown>,

@@ -38,6 +38,7 @@ const question = (id: string): Question => ({
   explanation: promptId(`explanation-${id}`),
   id: questionId(id),
   key: null,
+  media: [],
   points: 1,
   reading: null,
   scoring: { kind: "allOrNothing" },

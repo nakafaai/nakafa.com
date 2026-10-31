@@ -70,3 +70,24 @@ export const readingUpdate: OptimisticUpdate<typeof exams.questions.reading> = (
   changeExam(localStore, examQuery(args), (view) =>
     readQuestionWith(view, args.questionId, args.source)
   );
+
+/** The exam with one question's media changed. The server keeps what it is given. */
+export const mediaQuestion = (
+  view: ExamView,
+  questionId: QuestionId,
+  media: Question["media"]
+): ExamView => ({
+  ...view,
+  questions: Arr.map(view.questions, (question) =>
+    question.id === questionId ? { ...question, media } : question
+  ),
+});
+
+/** Shows the media of a question in the store while the server saves it. */
+export const mediaUpdate: OptimisticUpdate<typeof exams.questions.media> = (
+  localStore,
+  args
+) =>
+  changeExam(localStore, examQuery(args), (view) =>
+    mediaQuestion(view, args.questionId, args.media)
+  );

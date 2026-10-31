@@ -1,10 +1,5 @@
 import { ANALYTICS_CONSENT_ROOT_ATTRIBUTE } from "@repo/analytics/consent";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -83,12 +78,10 @@ export function AnalyticsConsentControls({
         >
           <CardSection
             className="max-h-[calc(100dvh-2rem)] shadow-lg"
+            description={t("prompt-description")}
             size="sm"
+            title={t("title")}
           >
-            <CardHeader>
-              <CardTitle>{t("title")}</CardTitle>
-              <CardDescription>{t("prompt-description")}</CardDescription>
-            </CardHeader>
             <div className="min-h-0 flex-1 overflow-y-auto">
               <CardContent>
                 <ConsentDetails error={consent.error} />

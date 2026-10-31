@@ -4,11 +4,6 @@ import { Delete02Icon, Login01Icon } from "@hugeicons/core-free-icons";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { FieldError } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -129,11 +124,11 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   }
   return (
     <>
-      <CardSection variant="destructive">
-        <CardHeader>
-          <CardTitle>{t("delete-account")}</CardTitle>
-          <CardDescription>{t("delete-account-description")}</CardDescription>
-        </CardHeader>
+      <CardSection
+        description={t("delete-account-description")}
+        title={t("delete-account")}
+        variant="destructive"
+      >
         <CardSectionFooter hint={t("delete-account-footer")}>
           <CardSectionActions>
             <Button

@@ -1,4 +1,5 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { Array as Arr, Effect } from "effect";
 
 /**
  * The owner's rule (31 Oct): in a group means really joined, in one frame, or else a clear gap. Reads every header
@@ -122,3 +123,119 @@ export function readControlProblems(page: Page) {
       .flatMap(headerProblems);
   });
 }
+
+/** The four radii of every part of every group on the page, group by group, in reading order. */
+function readPartRadii(page: Page) {
+  return page.evaluate(() => {
+    const seen = (node: Element) => {
+      const box = node.getBoundingClientRect();
+      return box.width > 1 && box.height > 1;
+    };
+    return Array.from(document.querySelectorAll('[data-slot="button-group"]'))
+      .filter(seen)
+      .map((group) =>
+        Array.from(group.children)
+          .filter(seen)
+          .map((part) => {
+            const shown = part.hasAttribute("data-slot")
+              ? part
+              : (Array.from(part.children).find(seen) ?? part);
+            const style = getComputedStyle(shown);
+            return [
+              style.borderTopLeftRadius,
+              style.borderTopRightRadius,
+              style.borderBottomRightRadius,
+              style.borderBottomLeftRadius,
+            ].join(" ");
+          })
+      );
+  });
+}
+
+/** The controls that a press reaches inside a group, its disabled ones left out. */
+const GROUP_CONTROLS =
+  '[data-slot="button-group"] :is(button, a[data-slot="button"]):not([disabled], [inert]):visible';
+
+/**
+ * The owner's rule (31 Oct): a control never changes shape on any state. Takes one control of a group through hover,
+ * focus and press, and through its open menu or popover where it has one, and holds every part of every group to the
+ * shape it had at rest. A press moves off the control before it lets go, so it never activates the control.
+ */
+const expectControlKeepsShape = Effect.fn("NakafaE2E.expectControlKeepsShape")(
+  function* (page: Page, label: string, index: number, rest: unknown) {
+    const control = page.locator(GROUP_CONTROLS).nth(index);
+    const held = (state: string) =>
+      Effect.promise(async () => {
+        expect(
+          await readPartRadii(page),
+          `${label}: control ${index + 1} changed a part's shape on ${state}`
+        ).toEqual(rest);
+      });
+
+    yield* Effect.promise(() => control.scrollIntoViewIfNeeded());
+    yield* Effect.promise(() => control.hover());
+    yield* held("hover");
+    yield* Effect.promise(() => control.focus());
+    yield* held("focus");
+    const box = yield* Effect.promise(() => control.boundingBox());
+    if (box !== null) {
+      yield* Effect.promise(async () => {
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+      });
+      yield* held("press");
+      yield* Effect.promise(async () => {
+        await page.mouse.move(0, 0);
+        await page.mouse.up();
+      });
+    }
+    const opens = yield* Effect.promise(() =>
+      control.getAttribute("aria-haspopup")
+    );
+    if (opens === null) {
+      return;
+    }
+    yield* Effect.promise(async () => {
+      await control.click();
+      await expect(control).toHaveAttribute("aria-expanded", "true");
+    });
+    yield* held("open");
+    yield* Effect.promise(async () => {
+      await page.keyboard.press("Escape");
+      await expect(control).not.toHaveAttribute("aria-expanded", "true");
+    });
+    yield* held("close");
+  }
+);
+
+/** Takes every group's controls through every state, in the light theme and the dark one. */
+export const expectGroupsKeepShape = Effect.fn(
+  "NakafaE2E.expectGroupsKeepShape"
+)(function* (page: Page, label: string) {
+  yield* Effect.forEach(
+    ["light", "dark"] as const,
+    (colorScheme) =>
+      Effect.gen(function* () {
+        yield* Effect.promise(() => page.emulateMedia({ colorScheme }));
+        const rest = yield* Effect.promise(() => readPartRadii(page));
+        const count = yield* Effect.promise(() =>
+          page.locator(GROUP_CONTROLS).count()
+        );
+        yield* Effect.forEach(
+          Arr.range(0, count - 1),
+          (index) =>
+            count === 0
+              ? Effect.void
+              : expectControlKeepsShape(
+                  page,
+                  `${label} in ${colorScheme}`,
+                  index,
+                  rest
+                ),
+          { discard: true }
+        );
+      }),
+    { discard: true }
+  );
+  yield* Effect.promise(() => page.emulateMedia({ colorScheme: "light" }));
+});

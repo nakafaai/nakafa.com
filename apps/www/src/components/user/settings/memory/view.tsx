@@ -1,3 +1,4 @@
+import { useTranslations } from "use-intl";
 import { CardSection } from "@/components/shared/card/section";
 import { MemoryControl } from "@/components/user/settings/memory/control";
 import { MemoryEditor } from "@/components/user/settings/memory/editor";
@@ -21,10 +22,16 @@ export function UserSettingsMemory({
   now: number;
   paused: boolean;
 }) {
+  const t = useTranslations("Memory");
+
   return (
     <MemoryProvider first={first} now={now} paused={paused}>
       <MemoryControl />
-      <CardSection className="gap-0 pb-0">
+      <CardSection
+        className="gap-0 pb-0"
+        description={t("saved-description")}
+        title={t("saved-title")}
+      >
         <MemoryToolbar />
         <MemoryRows />
       </CardSection>

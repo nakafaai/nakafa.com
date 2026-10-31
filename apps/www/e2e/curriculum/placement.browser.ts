@@ -7,6 +7,7 @@ const MATERIAL_PATH =
 const MATERIAL_CONTEXT =
   "merdeka~class-11-mathematics-function-composition-inverse-function";
 const CURRICULUM_PATH = "/en/curriculum/merdeka/class-11/mathematics";
+const CLASS_ADDRESS = /\/curriculum\/merdeka\/class-11$/u;
 
 /** The two widths the breadcrumb row is proven at: a phone and a desktop. */
 const VIEWPORTS = [
@@ -72,7 +73,7 @@ async function settle(page: Page) {
   await expect(
     page
       .getByRole("navigation", { name: "Breadcrumb", exact: true })
-      .locator('a[href*="/curriculum/merdeka/class-11/mathematics"]')
+      .locator('a[href*="/curriculum/merdeka/class-11/mathematics#"]')
   ).toBeVisible({ timeout: 20_000 });
   await page.waitForTimeout(750);
   return Schema.decodeUnknownSync(PaintRecord)(
@@ -158,6 +159,55 @@ for (const viewport of VIEWPORTS) {
     await context.close();
   });
 }
+
+test("the path of a lesson under a curriculum hint links the curriculum and the class on a desktop", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 1440 });
+  await page.goto(`${MATERIAL_PATH}?ctx=${MATERIAL_CONTEXT}`);
+  await settle(page);
+  const path = page.getByRole("navigation", {
+    name: "Breadcrumb",
+    exact: true,
+  });
+  await expect(path.getByRole("button", { name: "More" })).toBeHidden();
+  await expect(
+    path.locator('a[href$="/curriculum/merdeka"]').first()
+  ).toBeVisible();
+  const classLink = path.locator('a[href$="/curriculum/merdeka/class-11"]');
+  await expect(classLink).toBeVisible();
+  await classLink.click();
+  await expect(page).toHaveURL(CLASS_ADDRESS);
+});
+
+test("the path of a lesson under a curriculum hint folds behind one menu on a phone", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 844, width: 390 });
+  await page.goto(`${MATERIAL_PATH}?ctx=${MATERIAL_CONTEXT}`);
+  await settle(page);
+  await page
+    .getByRole("navigation", { name: "Breadcrumb", exact: true })
+    .getByRole("button", { name: "More" })
+    .click();
+  await expect(
+    page.getByRole("menuitem").filter({ hasText: "Class 11" })
+  ).toBeVisible();
+  await expect(page.getByRole("menuitem")).toHaveCount(4);
+});
+
+test("the path of a lesson without a hint stays Home and the lesson", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 1440 });
+  await page.goto(MATERIAL_PATH);
+  const path = page.getByRole("navigation", {
+    name: "Breadcrumb",
+    exact: true,
+  });
+  await expect(path.getByRole("link")).toHaveCount(2);
+  await expect(path.locator('a[href*="/curriculum/"]')).toHaveCount(0);
+});
 
 test("the breadcrumb of a lesson whose match the router already holds paints once under the hint of its curriculum card", async ({
   browser,

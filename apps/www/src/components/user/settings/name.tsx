@@ -1,9 +1,4 @@
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -89,11 +84,7 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-name-form">
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("name")}</CardTitle>
-          <CardDescription>{t("name-description")}</CardDescription>
-        </CardHeader>
+      <CardSection description={t("name-description")} title={t("name")}>
         <CardContent>
           <form.Field name="name">
             {(field) => {

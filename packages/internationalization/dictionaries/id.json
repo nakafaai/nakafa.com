@@ -111,6 +111,7 @@
     "status-withdrawn": "Ditarik",
     "status-mismatch": "Data tidak cocok",
     "link-verify": "Verifikasi manual",
+    "link-rename": "Ganti nama orang tua",
     "link-readdress": "Ubah email",
     "link-readdress-description": "Orang tua meminta kode dengan email baru.",
     "link-readdress-save": "Simpan email",
@@ -476,6 +477,21 @@
     "template-label": "Jenis soal: {type}",
     "template-truefalse": "Benar-salah",
     "template-cause": "Sebab-akibat",
+    "media": "Audio dan video",
+    "media-add-audio": "Tambah audio",
+    "media-add-video": "Tambah video",
+    "media-audio-hint": "Klip yang diputar siswa di dalam soal.",
+    "media-video-hint": "Video yang ditonton siswa di dalam soal.",
+    "media-file": "Berkas audio",
+    "media-save": "Tambah",
+    "media-drop": "Letakkan berkas audio di sini, atau pilih satu.",
+    "media-alt-placeholder": "Percakapan di pasar",
+    "media-file-limit": "MP3, M4A, OGG atau WAV, paling besar 3 MB.",
+    "media-link": "Tautan YouTube",
+    "media-link-hint": "Tautan video publik atau tidak terdaftar.",
+    "media-alt": "Isi",
+    "media-alt-hint": "Dibaca siswa yang tidak dapat mendengar atau melihatnya.",
+    "media-remove": "Hapus {name}",
     "reading": "Bacaan bersama",
     "reading-none": "Tanpa bacaan",
     "reading-new": "Bacaan sendiri",
@@ -579,7 +595,12 @@
     "cell-hint": "Beri setiap pernyataan satu kolom.",
     "room-move": "Jadwalkan ulang",
     "room-move-description": "Siswa dan tokennya tetap, dan pengingatnya dikirim lagi.",
-    "room-move-save": "Simpan"
+    "room-move-save": "Simpan",
+    "results-question-description": "Cara kelas menjawab soal ini.",
+    "student-finished-description": "Skormu tampil di sini setelah dirilis.",
+    "student-results-description": "Skor dan jawabanmu.",
+    "student-closed-description": "Ujian ini tidak menerima jawaban lagi.",
+    "student-locked-description": "Percobaan ini belum menerima jawaban."
   },
   "SchoolSettings": {
     "student-add-name-placeholder": "Ayu Lestari",
@@ -1203,7 +1224,8 @@
     "locale-description": "Lokasi sekolah ini dan mata uang paketnya.",
     "locale-country": "Negara",
     "locale-currency": "Mata uang",
-    "locale-footer": "Setiap perubahan tercatat di jejak audit."
+    "locale-footer": "Setiap perubahan tercatat di jejak audit.",
+    "homeroom-description": "Satu guru memimpin setiap rombel."
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -2324,7 +2346,10 @@
     "payment-credits": "Kredit Nina",
     "payment-cycle": "Langganan Pro",
     "payment-invoice": "Tagihan",
-    "payment-pass": "Pass Pro"
+    "payment-pass": "Pass Pro",
+    "role-description": "Caramu memakai Nakafa.",
+    "curriculum-description": "Kurikulum yang kamu pelajari.",
+    "username-about": "Alamatmu di Nakafa."
   },
   "Editor": {
     "arabic": "Papan ketik Arab",
@@ -2413,7 +2438,9 @@
     "placeholder": "Tulis yang perlu Nina ingat",
     "title": "Judul",
     "untitled": "Tanpa judul",
-    "count": "{count, number} / {limit, number}"
+    "count": "{count, number} / {limit, number}",
+    "saved-title": "Memori tersimpan",
+    "saved-description": "Cari, ubah, atau hapus yang Nina simpan."
   },
   "Toast": {
     "chat-deleted": {
