@@ -6,8 +6,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { runSittingCall } from "@/components/exams/sitting/actions";
-import { useChooseAnswer, useFinish } from "@/components/exams/sitting/answer";
+import { useChooseAnswer } from "@/components/exams/sitting/answer";
 import {
   type AttemptValue,
   isActive,
@@ -20,8 +19,10 @@ import {
   isRetiredDevice,
   sittingFailureMessage,
 } from "@/components/exams/sitting/entry";
-import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
-import { useResendKeptAnswers } from "@/components/exams/sitting/kept";
+import {
+  useFinishAttempt,
+  useResendKeptAnswers,
+} from "@/components/exams/sitting/kept";
 import { PaperLockProvider } from "@/components/exams/sitting/lock";
 import { SittingLook } from "@/components/exams/sitting/look";
 import { useFlagQuestion } from "@/components/exams/sitting/mark";
@@ -203,21 +204,20 @@ function StudentFinish({
 }) {
   const t = useTranslations("Exams");
   const tTryouts = useTranslations("Tryouts");
-  const finish = useFinish();
+  const finish = useFinishAttempt({
+    attemptId: attempt.id,
+    deviceId,
+    paper,
+    sittingId,
+    slug,
+  });
 
   return (
     <PlayerFinish
       description={t("finish-description")}
       label={tTryouts("complete-part-cta")}
       locked={!takesAnswers(attempt.state)}
-      onFinish={() =>
-        runSittingCall(
-          () => finish({ deviceId, sittingId, slug }),
-          () => {
-            forgetKeptAttempt(sittingId, attempt.id);
-          }
-        )
-      }
+      onFinish={finish}
       pending={false}
       questions={paper === null ? [] : projectSittingCells(paper)}
       title={t("finish-title")}

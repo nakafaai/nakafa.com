@@ -8,9 +8,12 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option } from "effect";
 import { useEffect, useRef, useState } from "react";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
-import { useSendAnswer } from "@/components/exams/sitting/answer";
+import {
+  useSendAnswer,
+  useSendFinish,
+} from "@/components/exams/sitting/answer";
 import { isStaleAnswer } from "@/components/exams/sitting/entry";
-import { keptAttempt } from "@/components/exams/sitting/keep";
+import { keptAttempt, keptFinish } from "@/components/exams/sitting/keep";
 import type {
   PaperQuestion,
   PaperValue,
@@ -23,7 +26,9 @@ import { reportClientException } from "@/lib/analytics/client";
  * answers that were sent and never confirmed, because the page closed first, are the ones that the browser
  * still holds. The paper's questions come from the server, so each kept answer goes to its own question. The
  * failures of the pass show one toast, not one toast for each kept answer that the server refuses. A stale
- * answer shows none: the server took it before the page closed, and only its confirmation was lost.
+ * answer shows none: the server took it before the page closed, and only its confirmation was lost. A Finish
+ * that the page closed on goes last, once the server holds the answers. A failed pass drops that Finish instead:
+ * the toast tells the student, who is back on the paper and finishes by hand.
  */
 export function useResendKeptAnswers({
   attemptId,
@@ -42,6 +47,7 @@ export function useResendKeptAnswers({
   readonly slug: TenantSlug;
 }) {
   const send = useSendAnswer();
+  const finish = useSendFinish();
   const resumed = useRef(false);
 
   useEffect(() => {
@@ -75,13 +81,23 @@ export function useResendKeptAnswers({
               )
             )
           ),
-          Effect.flatMap((failures) =>
-            sittingCallFailures(
-              Arr.filter(
-                Arr.getSomes(failures),
-                (failure) => !isStaleAnswer(failure)
-              )
+          Effect.map((failures) =>
+            Arr.filter(
+              Arr.getSomes(failures),
+              (failure) => !isStaleAnswer(failure)
             )
+          ),
+          Effect.tap(sittingCallFailures),
+          Effect.flatMap((failures) =>
+            Effect.gen(function* () {
+              const kept = keptFinish(sittingId, attemptId);
+              const held = yield* kept.held();
+              if (held && Arr.isReadonlyArrayEmpty(failures)) {
+                yield* finish({ attemptId, deviceId, sittingId, slug });
+              } else if (held) {
+                yield* kept.drop();
+              }
+            }).pipe(Effect.provide(keptStorage))
           ),
           Effect.catchTag("KeyValueStoreError", (error) =>
             reportClientException(error, {
@@ -90,7 +106,62 @@ export function useResendKeptAnswers({
           )
         )
     );
-  }, [attemptId, deviceId, locked, paper, send, sittingId, slug]);
+  }, [attemptId, deviceId, finish, locked, paper, send, sittingId, slug]);
+}
+
+/**
+ * Finishes the attempt behind the answers that the browser still holds, which a failed send left here. A confirmed
+ * Finish forgets what the browser keeps, so each kept answer goes first, on the same tick: Convex runs a client's
+ * mutations in the order they were called, and the screen still shows the finish at once, offline too.
+ */
+export function useFinishAttempt({
+  attemptId,
+  deviceId,
+  paper,
+  sittingId,
+  slug,
+}: {
+  readonly attemptId: GenericId.GenericId<"examAttempts">;
+  readonly deviceId: string;
+  /** The paper on the screen, or none while it is not, which leaves no question to send an answer to. */
+  readonly paper: PaperValue | null;
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+  readonly slug: TenantSlug;
+}) {
+  const send = useSendAnswer();
+  const finish = useSendFinish();
+
+  return () => {
+    const kept = Effect.runSync(
+      keptAttempt(sittingId, attemptId)
+        .answersFor(Arr.map(paper?.questions ?? [], (question) => question.id))
+        .pipe(
+          Effect.provide(keptStorage),
+          Effect.catchTag("KeyValueStoreError", (error) =>
+            reportClientException(error, {
+              source: "components/exams/sitting/finish",
+            }).pipe(Effect.as([]))
+          )
+        )
+    );
+    Arr.forEach(kept, ({ answer, questionId }) => {
+      Effect.runPromise(
+        send(
+          {
+            attemptId,
+            deviceId,
+            questionId,
+            response: answer.response,
+            sittingId,
+            slug,
+            version: answer.version,
+          },
+          answer.answeredAt
+        )
+      );
+    });
+    Effect.runPromise(finish({ attemptId, deviceId, sittingId, slug }));
+  };
 }
 
 /**
