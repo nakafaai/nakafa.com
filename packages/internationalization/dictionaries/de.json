@@ -1520,7 +1520,15 @@
     "finish": "Schule eröffnen",
     "required-error": "Wähle eine Antwort.",
     "school-limit-line": "Für weitere Schulen brauchst du zuerst ein Gespräch mit dem Gründer.",
-    "address-check-failed": "Diese Adresse konnte nicht geprüft werden, also gib sie noch einmal ein."
+    "address-check-failed": "Diese Adresse konnte nicht geprüft werden, also gib sie noch einmal ein.",
+    "entry-title": "Zu deiner Schule",
+    "entry-student": "Gib die Adresse deiner Schule ein oder scanne den QR-Code deiner Lehrkraft.",
+    "entry-parent": "Gib die Adresse der Schule deines Kindes ein.",
+    "entry-field": "Schuladresse",
+    "entry-hint": "Sie steht im Link der Schule, zum Beispiel harapan.nakafa.com.",
+    "entry-invalid": "Gib eine Schuladresse wie harapan.nakafa.com ein.",
+    "entry-submit": "Weiter",
+    "entry-open": "Schule eröffnen"
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
@@ -1695,7 +1703,8 @@
     "input": "Eingabe",
     "output": "Ausgabe",
     "bacteria": "Bakterien",
-    "time": "Zeit"
+    "time": "Zeit",
+    "school": "Schule"
   },
   "LearningPrograms": {
     "metadata-title": "Mit Nakafa lernen",
