@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   isConvexTokenCookieName,
+  isSessionCookieName,
   readConvexTokenCookie,
   readSessionCookie,
 } from "@/lib/auth/cookie.server";
@@ -57,5 +58,16 @@ describe("the Convex token cookie", () => {
       false
     );
     expect(isConvexTokenCookieName("convex_jwt")).toBe(false);
+  });
+
+  it("names the site's session cookie, with or without the secure prefix", () => {
+    vi.stubEnv("SITE_URL", "https://staging.nakafa.com");
+
+    expect(isSessionCookieName("__Secure-nakafa-dev.session_token")).toBe(true);
+    expect(isSessionCookieName("nakafa-dev.session_token")).toBe(true);
+    expect(isSessionCookieName("__Secure-better-auth.session_token")).toBe(
+      false
+    );
+    expect(isSessionCookieName("nakafa-dev.convex_jwt")).toBe(false);
   });
 });

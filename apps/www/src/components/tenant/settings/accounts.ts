@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
+import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
@@ -192,4 +193,20 @@ export const renamePersonChange: OptimisticUpdate<
     ...login,
     person: { ...login.person, name },
   }));
+  for (const query of localStore.getAllQueries(guardians.links.list)) {
+    if (Option.isSome(query.value) && query.args.slug === slug) {
+      localStore.setQuery(
+        guardians.links.list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: Arr.map(query.value.value.page, (link) =>
+            link.guardian.id === personId
+              ? { ...link, guardian: { ...link.guardian, name } }
+              : link
+          ),
+        })
+      );
+    }
+  }
 };

@@ -32,12 +32,12 @@ const REAL_USER_AGENT_BRANDS = [
  * address of one host, and lands it as a sign-in does. The attributes are those
  * of the session cookie that Better Auth sets: HttpOnly, and SameSite Lax.
  *
- * A sign-in ends on a page the Worker renders, and the Worker's answer sets the
- * signed-in hint that tells a static page to start its live session (`src/start.ts`).
- * Every public page is static since ADR 0038, so a browser that only held the
- * session cookie would stay a visitor there. One session read through the
- * context's own request client gets the Worker's answer, and the cookies it sets
- * stay with the browser.
+ * The answer that signs a browser in sets the signed-in hint that tells a static
+ * page to start its live session (`withSessionHint`). This cookie reached the
+ * browser without that answer, and every public page is static since ADR 0038, so
+ * a browser that only held it would stay a visitor there. One session read through
+ * the context's own request client gets the Worker's answer, and the cookies it
+ * sets stay with the browser.
  */
 export const addSessionCookie = Effect.fn("NakafaE2E.addSessionCookie")(
   function* (

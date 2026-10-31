@@ -2128,22 +2128,6 @@ export declare const api: {
   };
   contentRelease: {
     article: {
-      apiPage: FunctionReference<
-        "query",
-        "public",
-        {
-          appLocale: "en" | "id" | "de";
-          cursor: string | null;
-          limit: number;
-          prefix: string;
-        },
-        {
-          activeReleaseId: string;
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{ appLocale: "en" | "id" | "de"; publicPath: string }>;
-        }
-      >;
       bucket: FunctionReference<
         "query",
         "public",
@@ -2362,22 +2346,6 @@ export declare const api: {
       >;
     };
     material: {
-      apiPage: FunctionReference<
-        "query",
-        "public",
-        {
-          appLocale: "en" | "id" | "de";
-          cursor: string | null;
-          limit: number;
-          prefix: string;
-        },
-        {
-          activeReleaseId: string;
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{ appLocale: "en" | "id" | "de"; publicPath: string }>;
-        }
-      >;
       bucket: FunctionReference<
         "query",
         "public",
@@ -2608,38 +2576,6 @@ export declare const api: {
           mappingJson: string | null;
           parentJson: string | null;
           resolvedCanonicalPath: string | null;
-        }
-      >;
-      page: FunctionReference<
-        "query",
-        "public",
-        {
-          appLocale: "en" | "id" | "de";
-          expectedManifestHash: string | null;
-          expectedReleaseId: string | null;
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-        },
-        {
-          activeManifestHash: string | null;
-          activeReleaseId: string | null;
-          managed: boolean;
-          result: {
-            continueCursor: string;
-            isDone: boolean;
-            page: Array<string>;
-            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-            splitCursor?: string | null;
-          };
-          snapshotId: string | null;
-          sourceRevision: string | null;
-          stale: boolean;
         }
       >;
       path: FunctionReference<
@@ -7664,17 +7600,6 @@ export declare const api: {
         },
         null
       >;
-      attempt: FunctionReference<
-        "query",
-        "public",
-        { sittingId: Id<"examSittings">; slug: string },
-        {
-          deadline: number;
-          id: Id<"examAttempts">;
-          startedAt: number;
-          state: "inProgress" | "locked" | "closing" | "submitted";
-        } | null
-      >;
       cancel: FunctionReference<
         "mutation",
         "public",
@@ -10503,20 +10428,6 @@ export declare const api: {
           state: "draft" | "released";
           value: number;
         }
-      >;
-      mine: FunctionReference<
-        "query",
-        "public",
-        { classId: Id<"classes">; slug: string },
-        Array<{
-          band?: string;
-          classId: Id<"classes">;
-          id: Id<"classGrades">;
-          kktp: "reached" | "notReached";
-          personId: Id<"tenantPeople">;
-          state: "draft" | "released";
-          value: number;
-        }>
       >;
       own: FunctionReference<
         "query",

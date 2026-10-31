@@ -111,6 +111,7 @@
     "status-withdrawn": "Withdrawn",
     "status-mismatch": "Details do not match",
     "link-verify": "Verify by hand",
+    "link-rename": "Rename parent",
     "link-readdress": "Change email",
     "link-readdress-description": "The parent asks for a code with the new email.",
     "link-readdress-save": "Save email",
