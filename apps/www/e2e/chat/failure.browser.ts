@@ -6,6 +6,7 @@ import { Effect } from "effect";
 import { onThePage, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { CONVERSATION } from "@/e2e/support/query";
+import { abortChunkHolding } from "@/e2e/support/route";
 import { sidebarRows } from "@/e2e/support/rows";
 import { ACCESS_TITLE, UNAVAILABLE_COPY } from "@/e2e/support/share";
 import {
@@ -29,8 +30,7 @@ const FAILED_COPY = en.Ai["chat-failed-description"];
 const RETRY = en.Ai.retry;
 /** The Google sign-in button a signed-out visitor is offered. */
 const GOOGLE_SIGN_IN = /google/i;
-/** The application's code chunks, and the request the new chat page's weather widget makes. */
-const CHUNK = /\/assets\/.+\.js$/;
+/** The request that the new chat page's weather widget makes, which marks the widget's code. */
 const WEATHER_REQUEST = "/api/weather";
 
 /** The failure card of a chat surface, which is the `Empty` part the card is built from. */
@@ -150,18 +150,11 @@ test.describe("A chat that cannot be read, at 1440px", () => {
     baseURL,
     page,
   }) => {
-    // The weather widget's code is the one the new chat page loads after it
-    // renders. Without it, the page's content fails to render.
-    await page.route(CHUNK, async (route) => {
-      const response = await route.fetch();
-      if ((await response.body()).includes(WEATHER_REQUEST)) {
-        await route.abort();
-        return;
-      }
-      await route.fulfill({ response });
-    });
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
+        // The weather widget's code is the one the new chat page loads after it
+        // renders. Without it, the page's content fails to render.
+        yield* abortChunkHolding(page, WEATHER_REQUEST);
         const { learner } = yield* openChatPage(page, origin);
         const started = yield* learner.startChat(PROMPT);
         yield* learner.titleNewest([TITLE]);

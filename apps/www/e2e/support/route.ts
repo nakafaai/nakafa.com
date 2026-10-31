@@ -5,7 +5,7 @@ import {
   type Route,
 } from "@playwright/test";
 import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
-import { Deferred, Effect, MutableList } from "effect";
+import { Deferred, Effect, MutableList, Semaphore } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -45,6 +45,15 @@ export const waitForServedRoute = Effect.fn("NakafaE2E.waitForServedRoute")(
 export const APP_CHUNK_PATH = /\/assets\/.*\.js(?:\?.*)?$/;
 
 /**
+ * The most chunks that the routes of one page fetch from the server at once: the
+ * six connections a browser opens to one HTTP/1.1 host. `route.fetch` sends each
+ * request from Node, which opens a connection for every request in flight, so
+ * the few hundred chunks of a page would reach the preview server at once, and a
+ * server that a suite keeps busy resets some of them.
+ */
+const CHUNK_FETCHES = 6;
+
+/**
  * Routes every chunk the page asks for. A chunk whose code holds `marker` goes
  * to `onMatch` with its response, and every other chunk is fulfilled as the
  * server sent it. The chunk's text is read from the response, so the route
@@ -55,20 +64,26 @@ function routeChunkHolding(
   marker: string,
   onMatch: (route: Route, response: APIResponse) => Effect.Effect<void>
 ) {
-  return Effect.promise(() =>
-    page.route(APP_CHUNK_PATH, (route) =>
-      Effect.runPromise(
-        Effect.gen(function* () {
-          const response = yield* Effect.promise(() => route.fetch());
-          const body = yield* Effect.promise(() => response.text());
-          if (body.includes(marker)) {
-            return yield* onMatch(route, response);
-          }
-          return yield* Effect.promise(() => route.fulfill({ response }));
-        })
+  return Effect.gen(function* () {
+    const fetches = yield* Semaphore.make(CHUNK_FETCHES);
+    const services = yield* Effect.context<never>();
+    yield* Effect.promise(() =>
+      page.route(APP_CHUNK_PATH, (route) =>
+        Effect.runPromiseWith(services)(
+          Effect.gen(function* () {
+            const response = yield* Effect.promise(() => route.fetch()).pipe(
+              Semaphore.withPermit(fetches)
+            );
+            const body = yield* Effect.promise(() => response.text());
+            if (body.includes(marker)) {
+              return yield* onMatch(route, response);
+            }
+            return yield* Effect.promise(() => route.fulfill({ response }));
+          })
+        )
       )
-    )
-  );
+    );
+  });
 }
 
 /**
