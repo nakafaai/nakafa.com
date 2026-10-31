@@ -11,6 +11,7 @@ import { LOCALES } from "@repo/internationalization/src/locale";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Option, Schema } from "effect";
+import { useEffect, useEffectEvent } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
@@ -131,8 +132,10 @@ function TryoutStartSignInButton({
 }
 
 /**
- * Starts or resumes a free try-out from the current page. The confirmation closes with the press, and a
- * start that opens a section has its page draw the player at once (`TryoutStartProvider`), so the wait
+ * Starts or resumes a free try-out from the current page. The button rests on its own icon while the page
+ * reads what the start needs, and a press in that moment turns the icon into the loader and is answered
+ * once the read arrives, so no press is lost on a slow network. The confirmation closes with the press, and
+ * a start that opens a section has its page draw the player at once (`TryoutStartProvider`), so the wait
  * for the server shows as the player opening; a start that fails returns the page and says so.
  */
 function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
@@ -158,6 +161,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const t = useTranslations("Tryouts");
   const now = useTryoutClock(false);
   const [dialogOpen, dialog] = useDisclosure(false);
+  const [pressed, press] = useDisclosure(false);
   const activeAttempt = attempt?.status === "in-progress";
   const finishedAttempt = Boolean(attempt && !activeAttempt);
   const directEntry = Boolean(request.entrySectionKey);
@@ -181,18 +185,23 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     isAuthenticated && !activeAttempt && !QueryResult.isSuccess(access);
   const attemptLoading = isAuthenticated && attempt === undefined;
   const resolvingAccess = isLoading || accessLoading || attemptLoading;
-  const busy = phase !== "idle" || resolvingAccess;
+  const started = phase !== "idle";
   const dialogKind = QueryResult.isSuccess(access)
     ? access.value.kind
     : "free-attempt";
   const buttonLabel = t(startLabelOf(attempt));
   const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
-  /** Opens the correct decision or continues an already-active runtime. */
+  /** Opens the correct decision or continues an already-active runtime, once the page knows which. */
   function onStart() {
-    if (busy) {
+    if (started) {
       return;
     }
+    if (resolvingAccess) {
+      press.open();
+      return;
+    }
+    press.close();
     if (!isAuthenticated) {
       navigate({
         params: { locale: request.locale },
@@ -235,7 +244,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
    * its player, and any other start holds its button.
    */
   function onPrimary() {
-    if (busy) {
+    if (started) {
       return;
     }
     dialog.close();
@@ -282,10 +291,17 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       )
     );
   }
+  const answerPress = useEffectEvent(onStart);
+  useEffect(() => {
+    if (pressed && !resolvingAccess) {
+      answerPress();
+    }
+  }, [pressed, resolvingAccess]);
+
   return (
     <>
-      <Button inert={busy} onClick={onStart}>
-        <Spinner icon={Rocket01Icon} isLoading={busy} />
+      <Button inert={started} onClick={onStart}>
+        <Spinner icon={Rocket01Icon} isLoading={started || pressed} />
         {buttonLabel}
       </Button>
       <TryoutStartDialog

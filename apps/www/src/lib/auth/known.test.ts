@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import type { reportClientException } from "@/lib/analytics/client";
-import { KEPT_SCHOOL_KEY, KNOWN_ACCOUNT_KEY } from "@/lib/auth/keys";
+import {
+  KEPT_SCHOOL_KEY,
+  KNOWN_ACCOUNT_KEY,
+  KNOWN_SCHOOLS_KEY,
+} from "@/lib/auth/keys";
 import {
   expectSession,
   loadKnownSession,
@@ -69,10 +73,12 @@ describe("the session the browser last had", () => {
       Effect.gen(function* () {
         yield* saveKnownSession(signedIn);
         window.localStorage.setItem(KNOWN_ACCOUNT_KEY, "row");
+        window.localStorage.setItem(KNOWN_SCHOOLS_KEY, "schools");
         window.localStorage.setItem(KEPT_SCHOOL_KEY, "frame");
         yield* saveKnownSession(signedOut);
         expect(yield* loadKnownSession()).toBeNull();
         expect(window.localStorage.getItem(KNOWN_ACCOUNT_KEY)).toBeNull();
+        expect(window.localStorage.getItem(KNOWN_SCHOOLS_KEY)).toBeNull();
         expect(window.localStorage.getItem(KEPT_SCHOOL_KEY)).toBeNull();
       })
   );

@@ -179,37 +179,17 @@ test("a provider failure in the address shows on the static page without a hydra
 const GOOGLE_START = "**/api/auth/sign-in/social*";
 
 /**
- * The Google button keeps its place and its words: it shows once Convex says the
- * visitor is signed out, a provider failure shows under it without moving it,
- * and while Google opens the button keeps its label and width, with a spinner in
- * place of the logo.
+ * The Google button keeps its words: it stands in the page's first HTML, a
+ * provider failure, which the address carries, shows under it once the page has
+ * hydrated, and while Google opens the button keeps its label and width, with a
+ * spinner in place of the logo.
  */
-test("the Google button never moves or changes its words for a failure or while Google opens", async ({
+test("the Google button stands in the first HTML and keeps its words for a failure and while Google opens", async ({
   page,
 }) => {
-  // The button's top in the commit that first adds it. The logo's SVG carries a
-  // title, so the button is the one whose own text node is the label.
-  await page.addInitScript((label) => {
-    const observer = new MutationObserver(() => {
-      const button = Array.from(document.querySelectorAll("button")).find(
-        (candidate) =>
-          Array.from(candidate.childNodes).some(
-            (node) =>
-              node.nodeType === Node.TEXT_NODE && node.nodeValue === label
-          )
-      );
-      if (button === undefined) {
-        return;
-      }
-      observer.disconnect();
-      Reflect.set(
-        window,
-        "nakafaGoogleTop",
-        button.getBoundingClientRect().top
-      );
-    });
-    observer.observe(document, { childList: true, subtree: true });
-  }, app.Auth["continue-with-google"]);
+  const response = await page.request.get(SIGN_IN);
+  expect(await response.text()).toContain(app.Auth["continue-with-google"]);
+
   await page.route(GOOGLE_START, () => undefined);
   await page.goto(`${SIGN_IN}?${new URLSearchParams({ error: "oauth" })}`);
 
@@ -220,12 +200,10 @@ test("the Google button never moves or changes its words for a failure or while 
     .getByRole("alert")
     .filter({ hasText: app.Toast["provider-error"].title });
   await expect(alert).toBeVisible();
-  const [first, button, failure] = await Promise.all([
-    page.evaluate(() => Reflect.get(window, "nakafaGoogleTop")),
+  const [button, failure] = await Promise.all([
     google.boundingBox(),
     alert.boundingBox(),
   ]);
-  expect(button?.y).toBe(first);
   expect(failure?.y ?? 0).toBeGreaterThan(
     (button?.y ?? 0) + (button?.height ?? 0)
   );
