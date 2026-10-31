@@ -97,7 +97,12 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
       enableSorting: false,
       filterFn: "oneOf",
       header: () => (
-        <ColumnFilter column="kind" options={kinds} title={t("payment-for")} />
+        <ColumnFilter
+          align="start"
+          column="kind"
+          options={kinds}
+          title={t("payment-for")}
+        />
       ),
       id: "kind",
     }),
@@ -125,17 +130,19 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
       filterFn: "oneOf",
       header: () => (
         <ColumnFilter
+          align="end"
           column="amount"
           options={amounts}
           title={t("payment-amount")}
         />
       ),
       id: "amount",
+      meta: { align: "end" },
     }),
   ]);
 
   return (
-    <div className="bg-card flex min-h-0 flex-1 flex-col border-y">
+    <div className="bg-card flex min-h-0 flex-1 flex-col">
       <DataTable
         columns={columns}
         data={payments}

@@ -34,10 +34,13 @@ interface ColumnOption {
  * its filters in the columns they filter and never in its header.
  */
 export function ColumnFilter({
+  align = "center",
   column,
   options,
   title,
 }: {
+  /** Where the head's button stands: the table's first column at the start, its last column of figures at the end. */
+  align?: ComponentProps<typeof TableHeadButton>["align"];
   /** The ID of the column whose values the filter keeps. */
   column: string;
   options: readonly ColumnOption[];
@@ -57,6 +60,7 @@ export function ColumnFilter({
         render={
           <TableHeadButton
             active={filtered}
+            align={align}
             aria-label={t("filter-by", { column: title })}
             icon={FilterIcon}
           >

@@ -13,8 +13,8 @@ import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
  * route do not carry. They join the shell's messages, so no screen loses one.
  */
 const APP_NAMESPACES = [
-  "DataTable",
   "Connectors",
+  "DataTable",
   "Editor",
   "Memory",
   "Subject",
