@@ -43,6 +43,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { SchoolDeviceDialog } from "@/components/tenant/settings/device";
@@ -107,9 +108,10 @@ export function SchoolClientsSettings() {
         actions={
           <>
             <TableSearch placeholder={t("clients-search")} />
-            <Button onClick={() => setIsCreating(true)} type="button">
-              {t("client-add")}
-            </Button>
+            <SchoolHeaderAdd
+              label={t("client-add")}
+              onClick={() => setIsCreating(true)}
+            />
           </>
         }
       >

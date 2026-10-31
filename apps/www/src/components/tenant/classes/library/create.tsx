@@ -45,6 +45,7 @@ import {
 import { useLibraryUploads } from "@/components/tenant/classes/library/scope";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 
 /** The extension at the end of a file name, which a title leaves out. */
 const EXTENSION = /\.[^.]*$/u;
@@ -271,7 +272,7 @@ export function AddToLibrary() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>{t("library-add")}</Button>
+      <SchoolHeaderAdd label={t("library-add")} onClick={() => setOpen(true)} />
       <ResponsiveDialog
         description={t("library-add-description")}
         footer={
