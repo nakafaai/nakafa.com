@@ -87,10 +87,11 @@ export const codeVariants = cva(
 /**
  * A table's frame: rounded and bordered, scrolling sideways when the table is wider, its words in the small
  * size, its table as wide as the frame (`*:w-full`), and its body on the muted surface. The lesson draws the
- * frame as the table's container, the exam editor as its table's wrapper, so both select the body alike.
+ * frame as the table's container, the exam editor as its table's wrapper, so both select the body alike, and a
+ * table laid out as a grid, such as a true or false question, marks its body as the table's body slot.
  */
 export const tableFrameVariants = cva(
-  "relative my-4 grid w-full grid-cols-1 overflow-x-auto rounded-xl border text-sm *:w-full first:mt-0 last:mb-0 [&_tbody]:bg-muted/40"
+  "relative my-4 grid w-full grid-cols-1 overflow-x-auto rounded-xl border text-sm *:w-full first:mt-0 last:mb-0 [&_:is(tbody,[data-slot=table-body])]:bg-muted/40"
 );
 
 /** A row of a table, with a rule under every row but the last. */
