@@ -115,6 +115,10 @@ beforeEach(() => {
   catalog.readServerTranslator.mockImplementation(() =>
     Promise.resolve((key: string) => key)
   );
+  catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
+  catalog.readTryoutSetList.mockReturnValue(
+    Effect.succeed({ isDone: true, page: [] })
+  );
   catalog.getOgUrl.mockReturnValue("og-url");
   catalog.getAppSocialArtwork.mockReturnValue("og-app");
   catalog.buildTryoutCountryOptions.mockReturnValue([]);
@@ -372,6 +376,19 @@ const readTrack = () =>
   });
 
 describe("readTryoutTrackRoute", () => {
+  it.effect("keeps the description a track was published with", () =>
+    Effect.gen(function* () {
+      const track = { ...trackPage.track, description: "Written for it." };
+      catalog.readTryoutTrackPage.mockReturnValueOnce(
+        Effect.succeed({ ...trackPage, track })
+      );
+
+      expect(yield* readTrack()).toMatchObject({
+        head: { description: "Written for it." },
+      });
+    })
+  );
+
   it.effect(
     "answers not found when the track, its country or its head is missing",
     () =>
@@ -391,11 +408,6 @@ describe("readTryoutTrackRoute", () => {
     "builds the track page with its exam, its selector and its set list",
     () =>
       Effect.gen(function* () {
-        catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
-        catalog.readTryoutSetList.mockReturnValue(
-          Effect.succeed({ isDone: true, page: [] })
-        );
-
         const route = yield* readTrack();
 
         expect(route).toMatchObject({
@@ -417,27 +429,6 @@ describe("readTryoutTrackRoute", () => {
           })
         );
       })
-  );
-});
-
-describe("the description of a track", () => {
-  it.effect("keeps the description a track was published with", () =>
-    Effect.gen(function* () {
-      catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
-      catalog.readTryoutSetList.mockReturnValue(
-        Effect.succeed({ isDone: true, page: [] })
-      );
-      catalog.readTryoutTrackPage.mockReturnValueOnce(
-        Effect.succeed({
-          ...trackPage,
-          track: { ...trackPage.track, description: "Written for this year." },
-        })
-      );
-
-      expect(yield* readTrack()).toMatchObject({
-        head: { description: "Written for this year." },
-      });
-    })
   );
 });
 
