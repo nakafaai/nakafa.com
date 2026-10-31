@@ -14,7 +14,8 @@ const ClassScope = Schema.Struct({
 
 /** The class that the class page provides to its tabs, its lists, and its links, with the class actions the viewer holds on it. */
 export const ClassScopeContext = createContext<
-  (typeof ClassScope.Type & Pick<typeof ClassResolved.Type, "can">) | null
+  | (typeof ClassScope.Type & Pick<typeof ClassResolved.Type, "can" | "opens">)
+  | null
 >(null);
 
 /** Reads the class of the class page around the caller. */
