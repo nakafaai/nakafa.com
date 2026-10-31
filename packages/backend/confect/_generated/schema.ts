@@ -82,8 +82,10 @@ import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
 import integrationClients from "./tables/integrationClients";
+import integrationDeliveries from "./tables/integrationDeliveries";
 import integrationDevices from "./tables/integrationDevices";
 import integrationTokens from "./tables/integrationTokens";
+import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
@@ -229,8 +231,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly guardianConsents: typeof guardianConsents;
   readonly guardianLinks: typeof guardianLinks;
   readonly integrationClients: typeof integrationClients;
+  readonly integrationDeliveries: typeof integrationDeliveries;
   readonly integrationDevices: typeof integrationDevices;
   readonly integrationTokens: typeof integrationTokens;
+  readonly integrationWebhooks: typeof integrationWebhooks;
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
@@ -375,8 +379,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   guardianConsents,
   guardianLinks,
   integrationClients,
+  integrationDeliveries,
   integrationDevices,
   integrationTokens,
+  integrationWebhooks,
   irtCalibrationRuns,
   irtScaleItems,
   irtScaleVersions,

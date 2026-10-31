@@ -83,8 +83,10 @@ import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
 import integrationClients from "./tables/integrationClients";
+import integrationDeliveries from "./tables/integrationDeliveries";
 import integrationDevices from "./tables/integrationDevices";
 import integrationTokens from "./tables/integrationTokens";
+import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
@@ -230,8 +232,10 @@ export default $defineSchema({
   guardianConsents: $Table.tableDefinition(guardianConsents),
   guardianLinks: $Table.tableDefinition(guardianLinks),
   integrationClients: $Table.tableDefinition(integrationClients),
+  integrationDeliveries: $Table.tableDefinition(integrationDeliveries),
   integrationDevices: $Table.tableDefinition(integrationDevices),
   integrationTokens: $Table.tableDefinition(integrationTokens),
+  integrationWebhooks: $Table.tableDefinition(integrationWebhooks),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),
