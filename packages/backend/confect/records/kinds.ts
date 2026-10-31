@@ -1,7 +1,12 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { classKind } from "@repo/backend/confect/classroom/kinds";
-import { cohort, tenant, unit } from "@repo/backend/confect/tenancy/kinds";
+import {
+  cohort,
+  period,
+  tenant,
+  unit,
+} from "@repo/backend/confect/tenancy/kinds";
 import { Schema } from "effect";
 
 /**
@@ -67,6 +72,12 @@ const tenantSchemes = Kind.extend(tenant, {
   actions: {
     "scheme.manage": {
       access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin"],
+    },
+    "scheme.view": {
+      access: "read",
       grantedBy: "roles",
       relations: [],
       roles: ["admin"],
@@ -141,8 +152,9 @@ const cohortReports = Kind.extend(cohort, {
 });
 
 /**
- * The report pages open to the school's teachers, principals, and Admins of a unit, so the
- * sidebar offers them. Which class groups a viewer reports on is decided per cohort.
+ * The report pages open to the school's teachers, principals, and Admins of a unit, and the
+ * graduation pages to its principals, Admins, and Staff, so the sidebar offers them. Which
+ * class groups a viewer opens is decided per cohort.
  */
 const unitReports = Kind.extend(unit, {
   actions: {
@@ -152,13 +164,81 @@ const unitReports = Kind.extend(unit, {
       relations: [],
       roles: ["admin", "principal", "teacher"],
     },
+    "graduation.open": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin", "principal", "staff"],
+    },
   },
   changes: [],
   published: [],
 });
 
-/** The records module's kinds for the access catalog: the grade and the report card, and their extensions on the class, the cohort, the unit, and the school. */
+/**
+ * A graduating class group's page opens to the principal, the Admin, and Staff (Staf TU), who
+ * keep the Dapodik and e-Ijazah data; the principal issues its SKL (ADR 0033, S6). An SKL is
+ * read through its class group's page, so its lock is journaled on the class group, with the
+ * letter's ID and hash (ADR 0016). The same people export a class group's locked report data
+ * for Dapodik.
+ */
+const cohortGraduation = Kind.extend(cohort, {
+  actions: {
+    "graduation.issue": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["principal"],
+    },
+    "graduation.view": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin", "principal", "staff"],
+    },
+    "report.export": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin", "principal", "staff"],
+    },
+  },
+  changes: [
+    Schema.Struct({
+      hash: Schema.String,
+      letter: Id("graduationLetters"),
+      type: Schema.Literal("letter.locked"),
+    }),
+  ],
+  published: [],
+});
+
+/**
+ * The principal records the head's decision on graduation for a unit's period, which every
+ * graduating class group of the unit shares. The record is journaled with no text (ADR 0016).
+ */
+const periodGraduation = Kind.extend(period, {
+  actions: {
+    "graduation.decide": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["principal"],
+    },
+  },
+  changes: [Schema.Struct({ type: Schema.Literal("graduation.decided") })],
+  published: [],
+});
+
+/** The records module's kinds for the access catalog: the grade and the report card, and their extensions on the class, the cohort, the period, the unit, and the school. */
 export const records = {
-  extensions: [classGrades, tenantSchemes, cohortReports, unitReports],
+  extensions: [
+    classGrades,
+    tenantSchemes,
+    cohortReports,
+    cohortGraduation,
+    periodGraduation,
+    unitReports,
+  ],
   kinds: [gradeKind, reportKind],
 };

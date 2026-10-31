@@ -26,7 +26,7 @@ function SearchScreen() {
           <HomeHeader name={Option.fromUndefinedOr(name)} />
           <div className="flex flex-col gap-2">
             <BackButton
-              className="w-fit p-0 text-muted-foreground"
+              className="text-muted-foreground w-fit p-0"
               variant="link"
             />
             <div className="grid gap-6">

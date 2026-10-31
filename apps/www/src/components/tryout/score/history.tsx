@@ -34,10 +34,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { rowLineVariants } from "@repo/design-system/lib/row";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -86,8 +87,8 @@ function TryoutAttemptHistoryItem({ value }: TryoutAttemptHistoryItemProps) {
       value={value.attempt}
     >
       <div className="flex min-w-0 flex-1 flex-col">
-        <span>{value.attempt.label}</span>
-        <span className="truncate text-muted-foreground text-xs">
+        <span className={rowLineVariants()}>{value.attempt.label}</span>
+        <span className={rowLineVariants({ line: "fact" })}>
           {value.attempt.subtitle}
         </span>
       </div>
@@ -182,7 +183,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
           open
         >
           <AutocompleteInput
-            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
+            className="focus-visible:border-border h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-0"
             clearLabel={tCommon("clear-search")}
             placeholder={tTryouts("attempt-menu-search-placeholder")}
             showClear
@@ -254,7 +255,10 @@ export function TryoutAttemptResults({
     isAuthenticated ? value.identity : "skip",
     { initialNumItems: 25 }
   );
-  const attempts = Arr.filter(history.results, hasScore);
+  const attempts = useKeptAttempts(
+    Arr.filter(history.results, hasScore),
+    PaginatedQueryResult.isLoadingFirstPage(history)
+  );
 
   return (
     <Card>
@@ -301,6 +305,37 @@ export function TryoutAttemptResults({
       </CardFooter>
     </Card>
   );
+}
+
+/**
+ * The scored attempts the picker lists: the history's, or the last ones it listed while the history waits for
+ * its first page, as during an auth reload that pauses the read. The picker never empties and leaves the
+ * score card's header in the meantime. A history's rows never change once scored, so their attempts say
+ * whether a new answer differs from the kept one.
+ */
+function useKeptAttempts(
+  attempts: readonly ScoredHistoryRow[],
+  waiting: boolean
+) {
+  const [kept, setKept] = useState(attempts);
+  if (waiting) {
+    return kept;
+  }
+  if (!sameAttempts(attempts, kept)) {
+    setKept(attempts);
+  }
+  return attempts;
+}
+
+/** Whether two lists name the same attempts in the same order. */
+function sameAttempts(
+  left: readonly ScoredHistoryRow[],
+  right: readonly ScoredHistoryRow[]
+) {
+  return Arr.makeEquivalence(
+    (one: ScoredHistoryRow, other: ScoredHistoryRow) =>
+      one.attemptId === other.attemptId
+  )(left, right);
 }
 
 /** Narrows one attempt-history row to a persisted score result. */

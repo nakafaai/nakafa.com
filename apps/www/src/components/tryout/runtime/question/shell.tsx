@@ -77,7 +77,7 @@ export function TryoutReviewQuestionExplanation({
     <CollapsiblePanel>
       <section aria-labelledby={explanationId} className="space-y-6 pb-8">
         <Separator />
-        <h3 className="scroll-mt-44 font-medium text-lg" id={explanationId}>
+        <h3 className="scroll-mt-44 text-lg font-medium" id={explanationId}>
           {tTryouts("explanation")}
         </h3>
         {children}
@@ -100,11 +100,11 @@ export function TryoutQuestionHeader({
   return (
     <div className="@container flex items-center gap-4">
       <a
-        className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
+        className="flex w-full flex-1 shrink-0 scroll-mt-44 ring-0 outline-none"
         href={`#${ids.anchor}`}
         id={ids.anchor}
       >
-        <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
+        <div className="border-primary bg-secondary text-secondary-foreground flex size-9 items-center justify-center rounded-full border">
           <span className="font-mono text-xs tracking-tighter">
             {questionOrder}
           </span>

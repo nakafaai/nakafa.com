@@ -2,6 +2,8 @@ import {
   markRenderer,
   markTokenizer,
 } from "@repo/design-system/components/editor/marks";
+import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
+import { linkVariants } from "@repo/design-system/lib/prose";
 import {
   type EditorOptions,
   Extension,
@@ -147,7 +149,12 @@ export function richOptions({
         dropcursor: false,
         gapcursor: false,
         heading: { levels: [1, 2, 3] },
-        link: { autolink: true, defaultProtocol: "https", openOnClick: false },
+        link: {
+          autolink: true,
+          defaultProtocol: "https",
+          HTMLAttributes: { class: linkVariants() },
+          openOnClick: false,
+        },
         orderedList: false,
         underline: false,
       }),
@@ -159,7 +166,7 @@ export function richOptions({
       Highlight.extend({
         markdownTokenizer: markTokenizer("highlight"),
         renderMarkdown: markRenderer("highlight"),
-      }),
+      }).configure({ HTMLAttributes: { class: emphasisVariants() } }),
       TaskList,
       TaskItem.extend({ addNodeView: () => taskView }).configure({
         nested: true,

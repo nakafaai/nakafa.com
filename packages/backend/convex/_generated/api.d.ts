@@ -540,6 +540,20 @@ export declare const api: {
           subject?: string;
         }
       >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
     };
     forum: {
       channels: {
@@ -1101,6 +1115,36 @@ export declare const api: {
       >;
     };
     tasks: {
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          deadline: number;
+          latePolicy: "accept" | "close";
+          points: number;
+          slug: string;
+          task: string;
+          text: string;
+          title: string;
+        },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            text: string;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
       get: FunctionReference<
         "query",
         "public",
@@ -1173,32 +1217,6 @@ export declare const api: {
           slug: string;
           text: string;
           title: string;
-        },
-        {
-          deadline: number;
-          handedIn: number;
-          id: Id<"classroomTasks">;
-          latePolicy: "accept" | "close";
-          mine: {
-            late: boolean;
-            score: number | null;
-            text: string;
-            updatedAt: number;
-          } | null;
-          points: number;
-          slug: string;
-          text: string;
-          title: string;
-        }
-      >;
-      reschedule: FunctionReference<
-        "mutation",
-        "public",
-        {
-          classId: Id<"classes">;
-          deadline: number;
-          slug: string;
-          task: string;
         },
         {
           deadline: number;
@@ -5977,6 +5995,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
           state?: "scheduled" | "open" | "closed";
         },
@@ -5984,7 +6003,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-            canCancel: boolean;
+            canChange: boolean;
             closesAt: number;
             group:
               | { kind: "unit"; unitId: Id<"tenantUnits"> }
@@ -6464,7 +6483,6 @@ export declare const api: {
         { deviceId: string; sittingId: Id<"examSittings">; slug: string },
         {
           questions: Array<{
-            flagged: boolean;
             id: Id<"examQuestions">;
             interactions: Array<
               | {
@@ -6644,13 +6662,6 @@ export declare const api: {
                 }
             >;
             number: number;
-            response:
-              | Array<string>
-              | { text: string }
-              | { pairs: Array<{ source: string; target: string }> }
-              | { cells: Array<{ column: string; statement: string }> }
-              | null;
-            version: number | null;
           }>;
         }
       >;
@@ -6664,6 +6675,35 @@ export declare const api: {
           slug: string;
         },
         { prompt: string }
+      >;
+      reschedule: FunctionReference<
+        "mutation",
+        "public",
+        {
+          closesAt: number;
+          opensAt: number;
+          room: string;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
+      saved: FunctionReference<
+        "query",
+        "public",
+        { deviceId: string; sittingId: Id<"examSittings">; slug: string },
+        {
+          answers: Array<{
+            question: Id<"examQuestions">;
+            response:
+              | Array<string>
+              | { text: string }
+              | { pairs: Array<{ source: string; target: string }> }
+              | { cells: Array<{ column: string; statement: string }> };
+            version: number;
+          }>;
+          flagged: Array<string>;
+        }
       >;
       signal: FunctionReference<
         "mutation",
@@ -6805,6 +6845,7 @@ export declare const api: {
           className: string;
           id: Id<"classGrades">;
           kktp: "reached" | "notReached";
+          period: string;
           value: number;
         }>
       >;
@@ -6850,6 +6891,20 @@ export declare const api: {
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
+        }
+      >;
+      readdress: FunctionReference<
+        "mutation",
+        "public",
+        { email: string; linkId: Id<"guardianLinks">; slug: string },
+        {
+          email: string;
+          expiresAt: number;
+          guardian: { id: Id<"tenantPeople">; name: string };
+          id: Id<"guardianLinks">;
+          mismatches: number;
+          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+          student: { id: Id<"tenantPeople">; name: string };
         }
       >;
       revoke: FunctionReference<
@@ -7057,6 +7112,7 @@ export declare const api: {
             | "result.view"
             | "guardian.child"
             | "guardian.confirm"
+            | "guardian.readdress"
             | "guardian.revoke"
             | "guardian.verify"
             | "guardian.view"
@@ -7080,9 +7136,15 @@ export declare const api: {
             | "grade.enter"
             | "grade.list"
             | "scheme.manage"
+            | "scheme.view"
             | "report.list"
             | "report.write"
+            | "graduation.issue"
+            | "graduation.view"
+            | "report.export"
+            | "graduation.decide"
             | "report.open"
+            | "graduation.open"
             | "visit.approve"
             | "document.edit"
             | "document.edit"
@@ -7176,6 +7238,7 @@ export declare const api: {
               | "result.view"
               | "guardian.child"
               | "guardian.confirm"
+              | "guardian.readdress"
               | "guardian.revoke"
               | "guardian.verify"
               | "guardian.view"
@@ -7199,9 +7262,15 @@ export declare const api: {
               | "grade.enter"
               | "grade.list"
               | "scheme.manage"
+              | "scheme.view"
               | "report.list"
               | "report.write"
+              | "graduation.issue"
+              | "graduation.view"
+              | "report.export"
+              | "graduation.decide"
               | "report.open"
+              | "graduation.open"
               | "visit.approve"
               | "document.edit"
               | "document.edit"
@@ -7295,6 +7364,7 @@ export declare const api: {
               | { type: "class.created" }
               | { type: "class.renamed" }
               | { type: "class.archived" }
+              | { type: "class.restored" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
               | { message: Id<"classroomMessages">; type: "message.hidden" }
@@ -7304,6 +7374,7 @@ export declare const api: {
                   task: Id<"classroomTasks">;
                   type: "assignment.deadlineChanged";
                 }
+              | { task: Id<"classroomTasks">; type: "assignment.edited" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { grade: number; type: "cohort.grade.set" }
@@ -7318,6 +7389,11 @@ export declare const api: {
                   assignment: "homeroom";
                   person: Id<"tenantPeople">;
                   type: "assignment.removed";
+                }
+              | {
+                  hash: string;
+                  letter: Id<"graduationLetters">;
+                  type: "letter.locked";
                 }
               | {
                   connection: Id<"connectorConnections">;
@@ -7372,6 +7448,11 @@ export declare const api: {
               | { student: Id<"tenantPeople">; type: "guardian.withdrawn" }
               | { student: Id<"tenantPeople">; type: "guardian.revoked" }
               | {
+                  guardian: Id<"tenantPeople">;
+                  student: Id<"tenantPeople">;
+                  type: "guardian.readdressed";
+                }
+              | {
                   client: Id<"integrationClients">;
                   scope:
                     | { kind: "tenant" }
@@ -7396,6 +7477,7 @@ export declare const api: {
               | { type: "period.restored" }
               | { type: "period.rename" }
               | { type: "period.rescheduled" }
+              | { type: "graduation.decided" }
               | {
                   added: number;
                   changed: number;
@@ -7535,6 +7617,7 @@ export declare const api: {
               | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
               | { type: "sitting.cancel" }
+              | { type: "sitting.reschedule" }
               | { person: Id<"tenantPeople">; type: "sitting.join" }
               | {
                   contract: {
@@ -8725,12 +8808,47 @@ export declare const api: {
         { hash: string },
         | {
             approvedAt: number;
-            kind: "report";
+            kind: "report" | "letter";
             outcome: "locked";
             period: string;
             school: string;
           }
         | { outcome: "unknown" }
+      >;
+    };
+    exports: {
+      ledger: FunctionReference<
+        "query",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            name: string;
+            nisn: string | null;
+            subjects: Array<{
+              band?: string;
+              className: string;
+              kktp: "reached" | "notReached";
+              subject?: string;
+              value: number;
+            }> | null;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
       >;
     };
     grades: {
@@ -8764,6 +8882,19 @@ export declare const api: {
           kktp: "reached" | "notReached";
           personId: Id<"tenantPeople">;
           state: "draft" | "released";
+          value: number;
+        }>
+      >;
+      own: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          band?: string;
+          className: string;
+          id: Id<"classGrades">;
+          kktp: "reached" | "notReached";
+          period: string;
           value: number;
         }>
       >;
@@ -8822,6 +8953,152 @@ export declare const api: {
         }
       >;
     };
+    graduations: {
+      cohorts: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          id: Id<"tenantCohorts">;
+          name: string;
+          period: string;
+          unit: string;
+        }>
+      >;
+      decide: FunctionReference<
+        "mutation",
+        "public",
+        {
+          date: string;
+          decision: string;
+          head: string;
+          nip?: string;
+          periodId: Id<"tenantPeriods">;
+          place: string;
+          slug: string;
+        },
+        {
+          date: string;
+          decision: string;
+          head: string;
+          issued: number;
+          nip?: string;
+          place: string;
+        }
+      >;
+      get: FunctionReference<
+        "query",
+        "public",
+        { cohortId: Id<"tenantCohorts">; slug: string },
+        {
+          can: Array<"graduation.decide" | "graduation.issue">;
+          cohort: {
+            id: Id<"tenantCohorts">;
+            name: string;
+            period: string;
+            periodId: Id<"tenantPeriods">;
+          };
+          decision: {
+            date: string;
+            decision: string;
+            head: string;
+            issued: number;
+            nip?: string;
+            place: string;
+          } | null;
+          suggested: string;
+          unit: { name: string; npsn: string | null };
+        }
+      >;
+      issue: FunctionReference<
+        "mutation",
+        "public",
+        { cohortId: Id<"tenantCohorts">; cursor: string | null; slug: string },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          issued: number;
+          skipped: number;
+        }
+      >;
+      readiness: FunctionReference<
+        "query",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            hasNisn: boolean;
+            letter: {
+              file: string | null;
+              hash: string;
+              id: Id<"graduationLetters">;
+              number: string;
+              state: "issued" | "locked";
+            } | null;
+            missing: Array<"npsn" | "decision" | "nisn" | "report">;
+            nisn: string | null;
+            student: { id: Id<"tenantPeople">; name: string };
+            transcript: {
+              average: number;
+              subjects: Array<{ subject: string; value: number }>;
+            } | null;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      sheet: FunctionReference<
+        "query",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            hasNisn: boolean;
+            letter: {
+              file: string | null;
+              hash: string;
+              id: Id<"graduationLetters">;
+              number: string;
+              state: "issued" | "locked";
+            } | null;
+            missing: Array<"npsn" | "decision" | "nisn" | "report">;
+            student: { id: Id<"tenantPeople">; name: string };
+            transcript: {
+              average: number;
+              subjects: Array<{ subject: string; value: number }>;
+            } | null;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
     reports: {
       approve: FunctionReference<
         "mutation",
@@ -8869,9 +9146,23 @@ export declare const api: {
             band?: string;
             className: string;
             kktp: "reached" | "notReached";
+            subject?: string;
             value: number;
           }>;
         }
+      >;
+      own: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          approvedAt: number;
+          cohort: string;
+          file: string;
+          hash: string;
+          id: Id<"reportCards">;
+          period: string;
+        }>
       >;
       reopen: FunctionReference<
         "mutation",
@@ -8937,6 +9228,33 @@ export declare const api: {
       >;
     };
     schemes: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            bands: Array<{ label: string; minimum: number }>;
+            effectiveFrom: number;
+            id: Id<"gradingSchemes">;
+            kktp: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
       store: FunctionReference<
         "mutation",
         "public",
@@ -15001,6 +15319,59 @@ export declare const internal: {
       >;
     };
     seed: {
+      answers: FunctionReference<
+        "query",
+        "internal",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            attempt: Id<"examAttempts">;
+            question: Id<"examQuestions">;
+            response:
+              | Array<string>
+              | { text: string }
+              | { pairs: Array<{ source: string; target: string }> }
+              | { cells: Array<{ column: string; statement: string }> };
+            version: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      load: FunctionReference<
+        "mutation",
+        "internal",
+        { questions: number; rooms: number; slug: string },
+        {
+          examId: Id<"exams">;
+          sittings: Array<{
+            id: Id<"examSittings">;
+            room: string;
+            token: string;
+          }>;
+        }
+      >;
+      seats: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          kind: "student" | "proctor";
+          seats: Array<{ key: string; name: string; token: string }>;
+          slug: string;
+        },
+        null
+      >;
       sitting: FunctionReference<
         "mutation",
         "internal",
@@ -15008,6 +15379,7 @@ export declare const internal: {
           crowd?: number;
           email: string;
           essay?: boolean;
+          prose?: boolean;
           slug: string;
           upcoming?: boolean;
         },
@@ -16288,6 +16660,44 @@ export declare const internal: {
     };
   };
   records: {
+    letters: {
+      draw: FunctionReference<
+        "action",
+        "internal",
+        { letterId: Id<"graduationLetters"> },
+        null
+      >;
+      lock: FunctionReference<
+        "mutation",
+        "internal",
+        { letterId: Id<"graduationLetters">; storageId: Id<"_storage"> },
+        null
+      >;
+      printable: FunctionReference<
+        "query",
+        "internal",
+        { letterId: Id<"graduationLetters"> },
+        {
+          average: number;
+          cohort: string;
+          date: string;
+          decision: string;
+          hash: string;
+          head: string;
+          locale: "en" | "id" | "de";
+          nip?: string;
+          nisn: string;
+          npsn: string;
+          number: string;
+          period: string;
+          place: string;
+          school: string;
+          student: string;
+          subjects: Array<{ subject: string; value: number }>;
+          verifyUrl: string;
+        }
+      >;
+    };
     prints: {
       draw: FunctionReference<
         "action",
@@ -16318,10 +16728,19 @@ export declare const internal: {
             band?: string;
             className: string;
             kktp: "reached" | "notReached";
+            subject?: string;
             value: number;
           }>;
           verifyUrl: string;
         }
+      >;
+    };
+    seed: {
+      graduation: FunctionReference<
+        "mutation",
+        "internal",
+        { email: string; slug: string },
+        { cohort: string; cohortId: Id<"tenantCohorts"> }
       >;
     };
   };

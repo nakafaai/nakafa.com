@@ -3,8 +3,8 @@ import { Array as Arr } from "effect";
 // Normalization rules - easy to extend
 const NORMALIZATION_RULES = [
   // Full-width brackets to regular brackets with space
-  { from: /\u3010/g, to: " [" }, // 【 -> [
-  { from: /\u3011/g, to: "]" }, // 】 -> ]
+  { from: /\u3010/gu, to: " [" }, // 【 -> [
+  { from: /\u3011/gu, to: "]" }, // 】 -> ]
 
   // Add more normalization rules here as needed:
   // { from: /pattern/g, to: "replacement" },

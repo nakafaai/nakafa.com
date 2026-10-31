@@ -7,9 +7,9 @@ import {
 } from "@repo/backend/confect/identity/secret";
 import { Array as Arr, ConfigProvider, Effect } from "effect";
 
-const CODE_PATTERN = /^[0-9A-HJKMNP-TV-Z]{10}$/;
-const HEX_DIGEST_PATTERN = /^[0-9a-f]{64}$/;
-const SIX_DIGITS = /^\d{6}$/;
+const CODE_PATTERN = /^[0-9A-HJKMNP-TV-Z]{10}$/u;
+const HEX_DIGEST_PATTERN = /^[0-9a-f]{64}$/u;
+const SIX_DIGITS = /^\d{6}$/u;
 
 describe("identity/secret", () => {
   it.effect("draws a ten character code made of the alphabet", () =>

@@ -2,26 +2,26 @@ import { cva } from "class-variance-authority";
 
 /** Shared interaction, semantic, and size variants for every Nakafa button. */
 export const buttonVariants = cva(
-  "pressable inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm outline-none transition-[scale,color,background-color,border-color,box-shadow,opacity] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "pressable focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm whitespace-nowrap transition-[scale,color,background-color,border-color,box-shadow,opacity] outline-none select-none focus-visible:ring-3 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default:
           "bg-primary text-primary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--primary)_99%,var(--background))] hover:shadow-md",
         "default-outline":
-          "border border-primary bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--primary)_8%,var(--background))] hover:shadow-md",
+          "border-primary text-foreground border bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklch,var(--primary)_8%,var(--background))] hover:shadow-md",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_99%,var(--background))] hover:shadow-md focus-visible:ring-destructive/20",
+          "bg-destructive text-destructive-foreground focus-visible:ring-destructive/20 shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_99%,var(--background))] hover:shadow-md",
         "destructive-outline":
-          "border border-destructive bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] hover:shadow-md",
+          "border-destructive text-foreground border bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] hover:shadow-md",
         "success-outline":
-          "border border-success bg-[color-mix(in_oklch,var(--success)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--success)_8%,var(--background))] hover:shadow-md",
+          "border-success text-foreground border bg-[color-mix(in_oklch,var(--success)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklch,var(--success)_8%,var(--background))] hover:shadow-md",
         outline:
-          "border border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted",
+          "border-border bg-background hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted border shadow-xs",
         secondary:
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] hover:shadow-md",
         "secondary-outline":
-          "border border-muted-foreground bg-[color-mix(in_oklch,var(--secondary)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] hover:shadow-md",
+          "border-muted-foreground text-foreground border bg-[color-mix(in_oklch,var(--secondary)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] hover:shadow-md",
         // On a band that stays dark in every theme, such as the school band:
         // Nina's light face color with her ink, so it reads in every theme.
         inverse:

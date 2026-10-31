@@ -14,7 +14,7 @@ export type ContentSearchRankDocument = Pick<
 >;
 const searchTokenPattern = /[\p{L}\p{N}]+/gu;
 const numericTokenPattern = /^\p{N}+$/u;
-const routeSeparatorPattern = /[/_-]+/g;
+const routeSeparatorPattern = /[/_-]+/gu;
 
 /**
  * Matches the documented full-text semantics for a bounded in-memory row set.

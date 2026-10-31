@@ -11,11 +11,10 @@ import {
   readMarkdownNodeText,
 } from "@repo/design-system/components/markdown/react/node";
 import { readMermaidMetadata } from "@repo/design-system/lib/markdown/mermaid";
-import { codeVariants } from "@repo/design-system/lib/prose";
-import { cn } from "cn";
+import { blockGapVariants, codeVariants } from "@repo/design-system/lib/prose";
 import { Array as Arr, Option } from "effect";
 
-const LANGUAGE_REGEX = /language-([^\s]+)/;
+const LANGUAGE_REGEX = /language-(?<language>[^\s]+)/u;
 
 export const reactCodeComponents: ReactMarkdownComponents = {
   code: ({ node, children, className, ...props }) => {
@@ -49,7 +48,7 @@ export const reactCodeComponents: ReactMarkdownComponents = {
     if (language === "math") {
       return (
         <BlockMath
-          className={cn("my-4 shadow-none", className)}
+          className={blockGapVariants({ className })}
           data-nakafa="math-block"
           math={code}
         />
@@ -62,7 +61,7 @@ export const reactCodeComponents: ReactMarkdownComponents = {
       return (
         <MermaidMdx
           chart={code}
-          className={cn("shadow-none", className)}
+          className={className}
           description={metadata.description}
           title={metadata.title}
         />

@@ -6,8 +6,8 @@ export const USERNAME_MIN_LENGTH = 3;
 /** The most characters a username holds. */
 export const USERNAME_MAX_LENGTH = 20;
 
-const ALLOWED_CHARACTERS = /^[a-z0-9_]*$/;
-const STARTS_WITH_LETTER = /^[a-z]/;
+const ALLOWED_CHARACTERS = /^[a-z0-9_]*$/u;
+const STARTS_WITH_LETTER = /^[a-z]/u;
 
 /**
  * Why the text of a username cannot be one. Each reason is a sentence of the

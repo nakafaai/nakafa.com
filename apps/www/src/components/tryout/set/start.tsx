@@ -11,7 +11,6 @@ import { LOCALES } from "@repo/internationalization/src/locale";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Option, Schema } from "effect";
-import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
@@ -24,6 +23,10 @@ import {
   TryoutPageAddressSchema,
 } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import {
+  useSetTryoutStartPhase,
+  useTryoutStartPhase,
+} from "@/components/tryout/runtime/start";
 import { START_ERROR, START_PART_ERROR } from "@/components/tryout/set/copy";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
@@ -41,7 +44,9 @@ const StartTryoutRequestSchema = Schema.Struct({
   authRedirect: TryoutPageAddressSchema,
   countryKey: Schema.String,
   destination: TryoutPageAddressSchema,
-  destinationSectionKey: Schema.String,
+  /** The section whose page the start lands on; none lands on the set. */
+  destinationSectionKey: Schema.optionalKey(Schema.String),
+  /** The section the start opens, whose player shows with the press; none opens no section. */
   entrySectionKey: Schema.optionalKey(Schema.String),
   examKey: Schema.String,
   locale: Schema.Literals(LOCALES),
@@ -57,14 +62,16 @@ interface StartTryoutButtonProps {
 }
 
 /**
- * Composes the active attempt link or the transactional start action. A visitor
+ * Composes the active attempt link or the transactional start action. A running
+ * attempt whose start lands on a section's page continues there through a link,
+ * and one whose page is the set starts its entry section from here. A visitor
  * has no client, so the start action mounts once the page holds one, and until
  * then the visitor's button sends the visitor to sign in.
  */
 export function StartTryoutButton(props: StartTryoutButtonProps) {
   if (
     props.attempt?.status === "in-progress" &&
-    !props.request.entrySectionKey
+    props.request.destinationSectionKey !== undefined
   ) {
     return <ResumeTryoutLink request={props.request} />;
   }
@@ -72,7 +79,7 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
     <ConvexIsland
       fallback={
         <TryoutStartSignInButton
-          finished={Boolean(props.attempt)}
+          label={startLabelOf(props.attempt)}
           request={props.request}
         />
       }
@@ -82,12 +89,24 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
   );
 }
 
+/**
+ * The label of a set's start action for its attempt: continue a running one, restart a finished one, and
+ * start one otherwise. The button the page shows before its client and the live action read it alike, so the
+ * label never changes when the client arrives.
+ */
+function startLabelOf(attempt: StartTryoutButtonProps["attempt"]) {
+  if (attempt?.status === "in-progress") {
+    return "continue-cta";
+  }
+  return attempt ? "restart-cta" : "start-cta";
+}
+
 /** A visitor's start button: it sends the visitor to sign in with the page as the return address. */
 function TryoutStartSignInButton({
-  finished,
+  label,
   request,
 }: {
-  readonly finished: boolean;
+  readonly label: ReturnType<typeof startLabelOf>;
   readonly request: StartTryoutRequest;
 }) {
   const navigate = useNavigate();
@@ -106,22 +125,30 @@ function TryoutStartSignInButton({
   return (
     <Button onClick={onStart}>
       <HugeIcons icon={Rocket01Icon} />
-      {t(finished ? "restart-cta" : "start-cta")}
+      {t(label)}
     </Button>
   );
 }
 
-/** Starts or resumes a free try-out from the current page. */
+/**
+ * Starts or resumes a free try-out from the current page. The confirmation closes with the press, and a
+ * start that opens a section has its page draw the player at once (`TryoutStartProvider`), so the wait
+ * for the server shows as the player opening; a start that fails returns the page and says so.
+ */
 function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const navigate = useNavigate();
-  /** Navigates to one try-out page. A page that names no route leaves the page on screen. */
+  const phase = useTryoutStartPhase();
+  const setPhase = useSetTryoutStartPhase();
+  /** Navigates to one try-out page. A page that names no route leaves the page on screen, and its start idle. */
   function navigateTo(
     address: TryoutPageAddress,
     options: { readonly replace?: boolean } = {}
   ) {
-    Option.map(getTryoutPageTarget(address), (target) =>
-      navigate({ ...target, replace: options.replace ?? false })
-    );
+    Option.match(getTryoutPageTarget(address), {
+      onNone: () => setPhase("idle"),
+      onSome: (target) =>
+        navigate({ ...target, replace: options.replace ?? false }),
+    });
   }
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
@@ -130,7 +157,6 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const convex = useConvex();
   const t = useTranslations("Tryouts");
   const now = useTryoutClock(false);
-  const [isPending, startTransition] = useTransition();
   const [dialogOpen, dialog] = useDisclosure(false);
   const activeAttempt = attempt?.status === "in-progress";
   const finishedAttempt = Boolean(attempt && !activeAttempt);
@@ -155,13 +181,11 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     isAuthenticated && !activeAttempt && !QueryResult.isSuccess(access);
   const attemptLoading = isAuthenticated && attempt === undefined;
   const resolvingAccess = isLoading || accessLoading || attemptLoading;
-  const busy = isPending || resolvingAccess;
+  const busy = phase !== "idle" || resolvingAccess;
   const dialogKind = QueryResult.isSuccess(access)
     ? access.value.kind
     : "free-attempt";
-  const buttonLabel = activeAttempt
-    ? t("continue-cta")
-    : t(finishedAttempt ? "restart-cta" : "start-cta");
+  const buttonLabel = t(startLabelOf(attempt));
   const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
   /** Opens the correct decision or continues an already-active runtime. */
@@ -179,23 +203,25 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     }
     if (attempt?.status === "in-progress" && request.entrySectionKey) {
       const sectionKey = attempt.resumeSectionKey ?? request.entrySectionKey;
-      startTransition(() =>
-        Effect.runPromise(
-          requireConvexOnline(convex).pipe(
-            Effect.andThen(
-              startEntrySectionProgram({
-                attemptId: attempt.attemptId,
-                failureMessage: START_PART_ERROR,
-                mutation: startSection,
-                sectionKey,
-              })
-            ),
-            Effect.catchTag("ConvexOfflineError", () =>
-              Effect.sync(() => {
-                toast.error(START_PART_ERROR, { position: "bottom-center" });
-              })
-            )
-          )
+      setPhase("opening");
+      Effect.runPromise(
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(
+            startEntrySectionProgram({
+              attemptId: attempt.attemptId,
+              failureMessage: START_PART_ERROR,
+              mutation: startSection,
+              sectionKey,
+            })
+          ),
+          Effect.catchTag("ConvexOfflineError", () =>
+            Effect.sync(() => {
+              toast.error(START_PART_ERROR, { position: "bottom-center" });
+            })
+          ),
+          // Convex shows a mutation's result to the page's queries before it answers, so the section
+          // runs on the page by now, or it failed and the page returns.
+          Effect.ensuring(Effect.sync(() => setPhase("idle")))
         )
       );
       return;
@@ -203,24 +229,26 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     dialog.open();
   }
 
-  /** Starts the attempt transactionally after confirmation. */
+  /**
+   * Starts the attempt transactionally after confirmation. The confirmation closes at once, and the page
+   * moves to the attempt's address once the server answers; until then a start that opens a section shows
+   * its player, and any other start holds its button.
+   */
   function onPrimary() {
     if (busy) {
       return;
     }
+    dialog.close();
+    setPhase(directEntry ? "opening" : "starting");
     const program = startAttemptProgram({
       args: {
         countryKey: request.countryKey,
-        ...(directEntry
+        ...(request.destinationSectionKey === undefined
           ? {}
-          : {
-              destinationSectionKey: request.destinationSectionKey,
-            }),
+          : { destinationSectionKey: request.destinationSectionKey }),
         ...(request.entrySectionKey === undefined
           ? {}
-          : {
-              entrySectionKey: request.entrySectionKey,
-            }),
+          : { entrySectionKey: request.entrySectionKey }),
         examKey: request.examKey,
         locale: request.locale,
         setKey: request.setKey,
@@ -228,9 +256,9 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       },
       failureMessage: START_ERROR,
       mutation: startAttempt,
+      onFailure: Effect.sync(() => setPhase("idle")),
       onSuccess: (result) =>
         Effect.sync(() => {
-          dialog.close();
           const destination = {
             attemptId: result.attemptId,
             publicPath: result.navigation.publicPath,
@@ -242,15 +270,14 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
           navigateTo(destination);
         }),
     });
-    startTransition(() =>
-      Effect.runPromise(
-        requireConvexOnline(convex).pipe(
-          Effect.andThen(program),
-          Effect.catchTag("ConvexOfflineError", () =>
-            Effect.sync(() => {
-              toast.error(START_ERROR, { position: "bottom-center" });
-            })
-          )
+    Effect.runPromise(
+      requireConvexOnline(convex).pipe(
+        Effect.andThen(program),
+        Effect.catchTag("ConvexOfflineError", () =>
+          Effect.sync(() => {
+            toast.error(START_ERROR, { position: "bottom-center" });
+            setPhase("idle");
+          })
         )
       )
     );
@@ -262,7 +289,6 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
         {buttonLabel}
       </Button>
       <TryoutStartDialog
-        busy={isPending}
         directEntry={directEntry}
         finishedAttempt={finishedAttempt}
         kind={dialogKind}

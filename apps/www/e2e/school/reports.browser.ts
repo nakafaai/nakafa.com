@@ -12,10 +12,10 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** A web address, as an opened PDF has. */
-const WEB_ADDRESS = /^https?:\/\//;
+const WEB_ADDRESS = /^https?:\/\//u;
 
 /** The hash at the end of a check page's address. */
-const CHECK_HASH = /\/verify\/([0-9a-f]{64})$/;
+const CHECK_HASH = /\/verify\/(?<hash>[0-9a-f]{64})$/u;
 
 /** Opens the row menu of one student on a report list and chooses one item. */
 async function chooseFromRow(page: Page, student: string, item: string) {
@@ -26,7 +26,7 @@ async function chooseFromRow(page: Page, student: string, item: string) {
   await page.getByRole("menuitem", { name: item }).click();
 }
 
-test("a homeroom teacher writes and hands in a report card, the Owner approves it, and its check page answers", async ({
+test("a homeroom teacher writes and hands in a report card, the Owner approves it, its student opens it, and its check page answers", async ({
   browser,
   baseURL,
 }) => {
@@ -43,7 +43,6 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
       slug: school.slug,
     })
   );
-  await learnerContext.close();
   await Effect.runPromise(grantStudent(school.slug, learnerAddress));
   const teacher = await browser.newContext();
   await Effect.runPromise(
@@ -147,6 +146,24 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   );
   expect(code).toHaveLength(64);
 
+  // The student opens their own report cards from the sidebar: the locked card, with the same PDF and check page.
+  const own = await learnerContext.newPage();
+  await own.goto(address("/"));
+  const ownLink = own.getByRole("link", { name: "My report cards" });
+  await waitUntilTakenOver(ownLink);
+  await ownLink.click();
+  await expect(own).toHaveURL(address("/cards"));
+  const ownRow = own.getByRole("row").filter({ hasText: "X-1" });
+  await expect(ownRow).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(ownRow.getByRole("link", { name: "Open PDF" })).toHaveAttribute(
+    "href",
+    WEB_ADDRESS
+  );
+  await expect(
+    ownRow.getByRole("link", { name: "Open check page" })
+  ).toHaveAttribute("href", check ?? "");
+  await learnerContext.close();
+
   // The check page answers the school and the period on the main site, and nothing for another code.
   const visitor = await browser.newContext();
   const checkPage = await visitor.newPage();
@@ -157,9 +174,7 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   await checkPage.goto(
     hostAddress(baseURL, "localhost", `/en/verify/${"0".repeat(64)}`)
   );
-  await expect(
-    checkPage.getByText("No report card has this code.")
-  ).toBeVisible();
+  await expect(checkPage.getByText("No document has this code.")).toBeVisible();
   await visitor.close();
   await owner.close();
   await teacher.close();

@@ -7,6 +7,7 @@ import { Option, Schema } from "effect";
 import {
   type ChildItem,
   type LinkItem,
+  readdressLinkChange,
   revokeLinkChange,
   startLinkChange,
   verifyLinkChange,
@@ -24,6 +25,7 @@ import {
 } from "@/test/settings";
 
 const IBU = Schema.decodeSync(Email)("ibu@example.com");
+const AYAH = Schema.decodeSync(Email)("ayah@example.com");
 const studentId = Schema.decodeUnknownSync(Id("tenantPeople"))("student-1");
 const linkId = Schema.decodeUnknownSync(Id("guardianLinks"))("link-1");
 
@@ -141,6 +143,37 @@ describe("components/tenant/guardian/change", () => {
         })
       ).page
     ).toEqual([other]);
+  });
+
+  it("shows a pending link at its corrected address at once, its failed checks counting again, on every loaded page of the school", () => {
+    const local = createLocalStore();
+    const other = {
+      ...link("pending"),
+      id: Schema.decodeUnknownSync(Id("guardianLinks"))("link-2"),
+    };
+    local.seed(
+      guardians.links.list,
+      { paginationOpts: paging, slug },
+      pageOf([{ ...link("pending"), mismatches: 2 }, other])
+    );
+    local.seed(
+      guardians.links.list,
+      { paginationOpts: paging, slug: otherSlug },
+      pageOf([link("pending")])
+    );
+    readdressLinkChange(local.store, { email: AYAH, linkId, slug });
+    expect(firstPageOf(local)).toEqual([
+      { ...link("pending"), email: AYAH },
+      other,
+    ]);
+    expect(
+      Option.getOrThrow(
+        local.store.getQuery(guardians.links.list, {
+          paginationOpts: paging,
+          slug: otherSlug,
+        })
+      ).page
+    ).toEqual([link("pending")]);
   });
 
   it("shows a child as withdrawn at once, and writes nothing before the children load", () => {

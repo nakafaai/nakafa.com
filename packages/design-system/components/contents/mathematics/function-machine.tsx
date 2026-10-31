@@ -83,7 +83,7 @@ export function FunctionMachine({ title, description, inputLabel }: Props) {
             icon={ArrowDown02Icon}
           />
 
-          <div className="flex items-center justify-center rounded-md bg-accent p-8 text-accent-foreground shadow-xs">
+          <div className="bg-accent text-accent-foreground flex items-center justify-center rounded-md p-8 shadow-xs">
             <InlineMath math="f(x) = 2x + 1" />
           </div>
 

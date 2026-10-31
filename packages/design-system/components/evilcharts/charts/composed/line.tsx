@@ -68,7 +68,7 @@ export function Line({
   const isLoading = useComposedChart((chart) => chart.isLoading);
   const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
   const selectDataKey = useComposedChart((chart) => chart.selectDataKey);
-  const id = useId().replace(/:/g, ""); // unique id scopes this line's style defs
+  const id = useId().replace(/:/gu, ""); // unique id scopes this line's style defs
   // Devices set to "reduce motion" skip the intro reveal entirely
   const shouldReduceMotion = useReducedMotion();
 

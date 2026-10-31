@@ -5,7 +5,7 @@ import {
   FilterIcon,
   Menu01Icon,
 } from "@hugeicons/core-free-icons";
-import { setFilterValidator } from "@repo/backend/confect/tryouts/sets/spec";
+import { setFilterValidator } from "@repo/backend/confect/tryouts/sets/query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,7 +57,7 @@ const headings = {
 /** Fixed columns keep the same geometry while the server changes row order. */
 export function TryoutTableHeader() {
   return (
-    <TableHeader className="sticky top-0 z-10 bg-background">
+    <TableHeader className="bg-background sticky top-0 z-10">
       <TableRow>
         <TryoutSortHeading field="title" />
         <TryoutStatusHeading />

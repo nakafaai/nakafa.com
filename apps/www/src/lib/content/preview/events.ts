@@ -27,7 +27,7 @@ const MAX_EVENT_BYTES = 4096;
 const EVENT_BOUNDARY = "\n\n";
 const EVENT_HEARTBEAT = ": keep-alive";
 const EVENT_PREFIX = "event: update\ndata: ";
-const EVENT_CONTENT_TYPE = /^text\/event-stream(?:\s*;\s*charset=utf-8)?$/i;
+const EVENT_CONTENT_TYPE = /^text\/event-stream(?:\s*;\s*charset=utf-8)?$/iu;
 const encoder = new TextEncoder();
 const PreviewEventJsonSchema = Schema.fromJsonString(PreviewEventSchema);
 /** Strictly validates and re-encodes one provider event for the browser. */

@@ -30,9 +30,9 @@ const RangePreferenceSchema = Schema.Struct({
 
 type RangePreference = typeof RangePreferenceSchema.Type;
 
-const QUALITY_PATTERN = /^(?:0(?:\.\d{0,3})?|1(?:\.0{0,3})?)$/;
-const TOKEN_PATTERN = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
-const OPTIONAL_WHITESPACE_PATTERN = /^[\t ]+|[\t ]+$/g;
+const QUALITY_PATTERN = /^(?:0(?:\.\d{0,3})?|1(?:\.0{0,3})?)$/u;
+const TOKEN_PATTERN = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/u;
+const OPTIONAL_WHITESPACE_PATTERN = /^[\t ]+|[\t ]+$/gu;
 
 /** Runtime contract for one concrete server-offered HTTP media type. */
 export const HttpMediaTypeSchema = Schema.String.pipe(

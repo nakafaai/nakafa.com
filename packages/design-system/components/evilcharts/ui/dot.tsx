@@ -56,7 +56,7 @@ const ChartDot = memo(function ChartDot({
   type = "default",
   maskId,
 }: ChartDotProps) {
-  const dotId = useId().replace(/:/g, "");
+  const dotId = useId().replace(/:/gu, "");
   const gradientUrl = `url(#${getChartSeriesId(chartId, "colors", dataKey)})`;
   const maskUrl = maskId ? `url(#${maskId})` : undefined;
   const dot = useMemo(

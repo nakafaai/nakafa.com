@@ -7,6 +7,7 @@ import { toPublicPath } from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Record as Rec, Result, Schema } from "effect";
 import {
+  OPEN_GRAPH_LOCALES,
   SOCIAL_IMAGE_SIZE,
   SOCIAL_SITE_NAME,
   SOCIAL_TWITTER_ACCOUNT,
@@ -34,7 +35,7 @@ const GOOGLEBOT_PRIVATE = "noindex,nofollow,noimageindex";
  * One alternate link of a head: a locale's address with its `hreflang`, or a
  * representation of the page with its `type`, such as its Markdown version.
  */
-const HeadAlternate = Schema.Struct({
+export const HeadAlternate = Schema.Struct({
   hreflang: Schema.optionalKey(Schema.String),
   href: Schema.String,
 });
@@ -116,7 +117,7 @@ export function createSeoHead(facts: PageFacts): SeoHead {
       "og:image:alt": image.alt,
       "og:image:height": image.height,
       "og:image:width": image.width,
-      "og:locale": facts.locale,
+      "og:locale": OPEN_GRAPH_LOCALES[facts.locale],
       "og:site_name": SOCIAL_SITE_NAME,
       "og:title": title,
       "og:type": facts.type,

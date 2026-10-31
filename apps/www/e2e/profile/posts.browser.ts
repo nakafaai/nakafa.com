@@ -289,7 +289,7 @@ for (const viewport of VIEWPORTS) {
           yield* Effect.promise(async () => {
             await page.getByRole("tab", { name: app.Common.comments }).click();
             await expect(page).toHaveURL(
-              new RegExp(`/en/@${learner.username}/comments$`),
+              new RegExp(`/en/@${learner.username}/comments$`, "u"),
               { timeout: readinessTimeoutMilliseconds }
             );
             // The page is the Comments tab, not a not-found page.
@@ -298,7 +298,7 @@ for (const viewport of VIEWPORTS) {
             ).toHaveAttribute("aria-selected", "true");
             await page.getByRole("tab", { name: app.Common.posts }).click();
             await expect(page).toHaveURL(
-              new RegExp(`/en/@${learner.username}$`),
+              new RegExp(`/en/@${learner.username}$`, "u"),
               { timeout: readinessTimeoutMilliseconds }
             );
           });

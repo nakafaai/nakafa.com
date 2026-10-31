@@ -180,6 +180,28 @@ describe("tryouts/mutations/attempts", () => {
   );
 
   it.effect(
+    "starts a new attempt in the visible section it was started from, and lands there",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const started = yield* world.learner.mutation(
+          tryouts.mutations.attempts.startAttempt,
+          {
+            ...startArgs(),
+            destinationSectionKey: "section-b",
+            entrySectionKey: "section-b",
+          }
+        );
+        expect(started.navigation).toEqual({
+          publicPath: "try-out/indonesia/snbt/2027/set-1-id/section-b",
+        });
+        expect(
+          (yield* readStart(world, started.attemptId)).sections
+        ).toMatchObject([{ sectionKey: "section-b", status: "in-progress" }]);
+      })
+  );
+
+  it.effect(
     "resumes a visible attempt without starting a section for an entry key",
     () =>
       Effect.gen(function* () {
@@ -408,7 +430,12 @@ describe("tryouts/mutations/attempts", () => {
           code: "CONTENT_RELEASE_MISSING",
         });
         expect(
-          yield* world.start({ entry: true }).pipe(Effect.flip)
+          yield* world.learner
+            .mutation(tryouts.mutations.attempts.startAttempt, {
+              ...startArgs(),
+              entrySectionKey: "section-z",
+            })
+            .pipe(Effect.flip)
         ).toMatchObject({ code: "TRYOUT_ENTRY_SECTION_NOT_FOUND" });
       })
   );

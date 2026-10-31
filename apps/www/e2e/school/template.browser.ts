@@ -6,16 +6,16 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The address of an exam's try as a student on the school host. */
-const TRY_PATH = /\/exams\/[^/]+\/try$/;
+const TRY_PATH = /\/exams\/[^/]+\/try$/u;
 
 /** The end of an editor's address, which the try's address replaces. */
 const EDIT_SUFFIX = /\/edit$/u;
 
 /** The page of the first question, whose name starts with its number. */
-const FIRST_QUESTION = /^Question 1\b/;
+const FIRST_QUESTION = /^Question 1\b/u;
 
 /** The four options of the question, each with its letter and its text. B and D are correct. */
 const OPTIONS = [
@@ -422,24 +422,28 @@ test("a teacher turns a question into a true or false table, marks the key in th
     await field.press("Tab");
   }
 
-  // The key is marked in the table itself, True or False in each statement's row, and saves once all three are
-  // marked. The side panel holds no second copy of it.
+  // The key is marked in the teacher's layer, True or False for each statement, and saves once all three are
+  // marked. The student's paper carries no mark of it: its circles stay empty and take no press.
+  const layer = page.getByRole("complementary", { name: "For teachers" });
   for (const [statement, column] of [
     ["1", "True"],
     ["2", "False"],
     ["3", "True"],
   ] as const) {
-    await page
-      .getByRole("radiogroup", {
+    await layer
+      .getByRole("group", {
         name: `Column for statement ${statement} of question 1`,
       })
-      .getByRole("radio", { exact: true, name: column })
+      .getByRole("button", { exact: true, name: column })
       .click();
   }
   await expect(
-    page
-      .getByRole("complementary", { name: "For teachers" })
-      .getByRole("radiogroup")
+    layer
+      .getByRole("group", { name: "Column for statement 2 of question 1" })
+      .getByRole("button", { exact: true, name: "False" })
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("region", { name: FIRST_QUESTION }).getByRole("radiogroup")
   ).toHaveCount(0);
   await expect(
     page.getByRole("region", { name: FIRST_QUESTION })

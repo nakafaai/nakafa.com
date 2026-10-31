@@ -190,12 +190,12 @@ function SearchEmpty({
   const t = useTranslations("Utils");
 
   return (
-    <CommandEmpty className="not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-1 not-empty:p-7.5 text-center text-muted-foreground text-sm">
+    <CommandEmpty className="text-muted-foreground text-center text-sm not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-1 not-empty:p-7.5">
       {!!error && (
         <>
           <HugeIcons className="size-4" icon={InformationCircleIcon} />
           <div className="mt-1">{t("search-error")}</div>
-          <div className="wrap-break-word mt-2 max-w-xs text-xs">{error}</div>
+          <div className="mt-2 max-w-xs text-xs wrap-break-word">{error}</div>
         </>
       )}
       {!error && isLoading && (
@@ -259,7 +259,10 @@ function SearchList({ groups }: SearchListProps) {
   );
 }
 
-/** Renders one navigation or content result inside the command list. */
+/**
+ * Renders one navigation or content result inside the command list. A content result's excerpt under its name is
+ * the name's 14px text in the muted colour, as the fact under every list row's name is (`lib/row.ts`).
+ */
 function SearchListItem({
   isPending,
   item,
@@ -282,7 +285,7 @@ function SearchListItem({
           <span className="line-clamp-1">{item.label}</span>
         </div>
         <SearchExcerpt
-          className="line-clamp-3 text-muted-foreground text-xs group-data-highlighted:text-accent-foreground group-data-highlighted:[&_mark]:text-accent-foreground"
+          className="text-muted-foreground group-data-highlighted:text-accent-foreground group-data-highlighted:[&_mark]:text-accent-foreground line-clamp-3 text-sm"
           excerpt={item.excerpt}
           query={item.query}
         />

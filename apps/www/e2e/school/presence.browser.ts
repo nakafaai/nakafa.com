@@ -13,10 +13,10 @@ import {
 import { isTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The address of the school's exams, where the editor's back link goes. */
-const EXAMS_PATH = /\/exams$/;
+const EXAMS_PATH = /\/exams$/u;
 
 /** The header of the editor, which holds the exam's title. */
 function editorHeader(page: Page) {

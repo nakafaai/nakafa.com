@@ -20,10 +20,10 @@ export function Memory() {
     <MarketingSection id="memory">
       <div className="mx-auto grid w-full max-w-3xl justify-items-center gap-10 text-center">
         <div className="grid justify-items-center gap-3">
-          <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+          <h2 className="text-3xl tracking-tight text-balance sm:text-4xl">
             {t("memory-title")}
           </h2>
-          <p className="max-w-xl text-pretty text-base text-muted-foreground">
+          <p className="text-muted-foreground max-w-xl text-base text-pretty">
             {t("memory-lead")}
           </p>
         </div>

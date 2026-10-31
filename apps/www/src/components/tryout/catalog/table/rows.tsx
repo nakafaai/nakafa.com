@@ -26,7 +26,7 @@ export function TryoutTableRows({
     return (
       <TableRow>
         <TableCell
-          className="h-24 text-center text-muted-foreground"
+          className="text-muted-foreground h-24 text-center"
           colSpan={5}
         >
           {emptyLabel}
@@ -115,7 +115,7 @@ function TryoutSetName({
         className={cn(
           "flex size-5 shrink-0 items-center justify-center rounded-full border",
           row.attemptStatus === "completed"
-            ? "border-transparent bg-secondary text-secondary-foreground"
+            ? "bg-secondary text-secondary-foreground border-transparent"
             : "border-muted-foreground/40"
         )}
       >

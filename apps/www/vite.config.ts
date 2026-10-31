@@ -27,7 +27,7 @@ import {
   renderHeadersFile,
 } from "#www/src/lib/security/headers";
 import { renderRobotsTxt } from "#www/src/lib/seo/robots";
-import { PRERENDER_HEADER } from "#www/src/lib/static/calls";
+import { PRERENDER_HEADERS } from "#www/src/lib/static/calls";
 import { STATIC_HEADER_RULES } from "#www/src/lib/static/headers";
 import { PrerenderedPagesJson } from "#www/src/lib/static/prerender";
 import { workerEnvironment, workerSettings } from "#www/worker";
@@ -324,10 +324,10 @@ const workerIsNoBrowser: Plugin = {
 };
 
 /** The font files that the font-src policy must load from this origin, never inline. */
-const FONT_FILE_PATTERN = /\.woff2?$/;
+const FONT_FILE_PATTERN = /\.woff2?$/u;
 
 /** The Node built-in specifiers, which have no browser build. */
-const NODE_BUILTIN_SPECIFIER = /^node:/;
+const NODE_BUILTIN_SPECIFIER = /^node:/u;
 
 /**
  * Alchemy's Cloudflare plugin runs the Worker in workerd under `vite dev`,
@@ -464,12 +464,14 @@ export default defineConfig(async ({ command, isPreview }) => {
           failOnError: true,
           // The Worker records each page's server function calls, which
           // writeStaticAnswers turns into static files.
-          headers: { [PRERENDER_HEADER]: "1" },
+          headers: PRERENDER_HEADERS,
         },
       }),
       // No deployment pin route: a client that asks for a
       // chunk the deploy replaced reloads the document once.
-      rsc(),
+      // One chunk per client module, so a page preloads only the references it
+      // renders, not every reference that shares a server chunk with them.
+      rsc({ clientChunks: ({ normalizedId }) => normalizedId }),
       tailwindcss(),
       react(),
       babel({ presets: [reactCompilerPreset()] }),

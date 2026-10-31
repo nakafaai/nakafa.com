@@ -1,15 +1,17 @@
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { monospace } from "@repo/design-system/lib/monospace";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
   createFileRoute,
   type ErrorComponentProps,
   notFound,
   Outlet,
+  useRouter,
 } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import type { ReactElement } from "react";
+import { type ReactElement, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AppProviders } from "@/components/providers/app";
 import { ActionLink } from "@/components/state/action";
@@ -19,11 +21,15 @@ import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { loadEntryForm } from "@/components/tenant/forms";
+import { canOpenGraduation } from "@/components/tenant/graduation/access";
 import { TenantMissing } from "@/components/tenant/missing";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { canOpenReports } from "@/components/tenant/reports/access";
 import { TenantShell } from "@/components/tenant/shell";
+import { reportClientException } from "@/lib/analytics/client";
+import { hasSignedInHint } from "@/lib/auth/hint";
+import { loadKnownSession } from "@/lib/auth/known";
 import { type AuthLegalLinks, authLegalLinks } from "@/lib/auth/legal";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
@@ -35,9 +41,16 @@ import {
   type SchoolRead,
 } from "@/lib/tenant/frame";
 import { schoolHead } from "@/lib/tenant/head";
-import { SchoolReadsLive } from "@/lib/tenant/read";
+import {
+  dropKeptFrame,
+  isSameFrame,
+  keptFrameFor,
+  loadKeptFrameText,
+  saveKeptFrame,
+} from "@/lib/tenant/kept";
+import { SchoolReadFailed, SchoolReadsLive } from "@/lib/tenant/read";
 import { readSchoolLocale } from "@/lib/tenant/root";
-import { readBrowserSchoolFrame, reusesVisitFrame } from "@/lib/tenant/visit";
+import { readBrowserVisit, reusesVisitFrame } from "@/lib/tenant/visit";
 
 /**
  * The search params of the school entry. `sign-in=username` opens the username form
@@ -61,8 +74,14 @@ function readSlug(slug: string): TenantSlug {
 type VisitFrame = Record<"legal", AuthLegalLinks | null> &
   Record<"school", SchoolRead>;
 
-/** The frame that one school visit has read so far. */
-type SchoolVisit = Partial<Record<"frame", VisitFrame>>;
+/**
+ * The memo of one school visit: the frame it drew, the live read that checks a kept frame it drew at once, and the
+ * live frame that replaces the kept one where they differ.
+ */
+type SchoolVisit = Partial<
+  Record<"confirmed" | "frame", VisitFrame | undefined> &
+    Record<"live", Promise<VisitFrame> | undefined>
+>;
 
 /**
  * What the layout gives every page of the school: the visit's frame, which a refused
@@ -75,23 +94,90 @@ type SchoolContext = Record<"legal", AuthLegalLinks | null> &
   Record<"slug", TenantSlug>;
 
 /**
- * Reads the frame of a school in the browser. A visitor's entry page names the
- * privacy and terms pages, so only a visitor reads the locale's legal pages, from
- * the static answer that the build writes for every locale.
+ * Reads the frame of a school in the browser, and keeps it for the host's next visit with the session it was read
+ * for; a refused school forgets the kept frame. A visitor's entry page names the privacy and terms pages from the
+ * static answer that the build writes for every locale, which a read with no session takes beside the school's own
+ * reads.
  */
-async function readVisitFrame(slug: TenantSlug): Promise<VisitFrame> {
-  const locale = readSchoolLocale();
-  const school = await Effect.runPromise(
-    readBrowserSchoolFrame(slug, locale).pipe(Effect.provide(SchoolReadsLive))
+function readVisitFrame(
+  slug: TenantSlug,
+  locale: Locale,
+  signedIn: boolean
+): Promise<VisitFrame> {
+  const legal = Effect.tryPromise({
+    catch: (cause) => new SchoolReadFailed({ cause }),
+    try: () => readStaticData(readMarketingShellFn, { locale }),
+  }).pipe(
+    Effect.map((shell) =>
+      Option.getOrNull(authLegalLinks(locale, shell.pageNavigation))
+    )
   );
-  if (school._tag !== "Visitor") {
-    return { legal: null, school };
+  return Effect.runPromise(
+    readBrowserVisit({ legal, locale, signedIn, slug }).pipe(
+      Effect.tap(({ legal: links, school, sessionId }) =>
+        school._tag === "Refused"
+          ? dropKeptFrame()
+          : saveKeptFrame({ legal: links, school, sessionId })
+      ),
+      Effect.map(({ legal: links, school }) => ({ legal: links, school })),
+      Effect.provide(SchoolReadsLive)
+    )
+  );
+}
+
+/**
+ * Enters a school visit. The frame the host kept for the browser's session, in the page's locale, draws at once, and
+ * the live read checks it (`useLiveVisit`); a visit with no such frame waits for the live read. The sign-in hint
+ * says, before any read, whether the browser holds a session.
+ */
+function enterVisit(slug: TenantSlug, visit: SchoolVisit) {
+  const locale = readSchoolLocale();
+  const signedIn = hasSignedInHint(document.cookie);
+  const live = readVisitFrame(slug, locale, signedIn);
+  const kept = Effect.runSync(
+    Effect.all([loadKeptFrameText(), loadKnownSession()]).pipe(
+      Effect.map(([text, known]) =>
+        keptFrameFor(text, { known, locale, signedIn })
+      )
+    )
+  );
+  if (Option.isNone(kept)) {
+    return live;
   }
-  const shell = await readStaticData(readMarketingShellFn, { locale });
-  return {
-    legal: Option.getOrNull(authLegalLinks(locale, shell.pageNavigation)),
-    school,
-  };
+  visit.live = live;
+  return Promise.resolve({
+    legal: kept.value.legal,
+    school: kept.value.school,
+  });
+}
+
+/** Takes the live read that checks the visit's kept frame, once, so one layout checks it. */
+function takeLiveRead(visit: SchoolVisit) {
+  const live = visit.live;
+  visit.live = undefined;
+  return live;
+}
+
+/** Hands the gate's next run the live frame that replaces the kept one. */
+function confirmFrame(visit: SchoolVisit, next: VisitFrame) {
+  visit.confirmed = next;
+}
+
+/** The frame a navigation into the school commits: the live one that replaced a kept frame, the visit's, or a new visit's. */
+function frameOfNavigation(
+  visit: SchoolVisit,
+  slug: TenantSlug,
+  reuses: boolean
+): Promise<VisitFrame> {
+  if (visit.confirmed !== undefined) {
+    const confirmed = visit.confirmed;
+    visit.confirmed = undefined;
+    return Promise.resolve(confirmed);
+  }
+  if (reuses && visit.frame !== undefined) {
+    return Promise.resolve(visit.frame);
+  }
+  return enterVisit(slug, visit);
 }
 
 /**
@@ -131,32 +217,34 @@ export const Route = createFileRoute("/school/$slug")({
   }): Promise<SchoolContext> => {
     // The router loads a route's code only after its beforeLoad, so the layout's
     // code starts here, beside the frame read, and the page draws once the frame answers.
+    // The entry's form, which only a visitor's or an outsider's page shows, starts beside
+    // them too, since its address already names it.
     const code = Route.options.component?.preload?.();
+    const entry = loadEntryForm({
+      guardian: Arr.some(
+        matches,
+        (match) => match.routeId === "/school/$slug/parents"
+      ),
+      signIn: search["sign-in"],
+    });
     const { visit } = context;
     const invalid = Arr.some(
       matches,
       (match) => match.routeId === routeId && match.invalid
     );
-    const frame =
-      reusesVisitFrame({ cause, invalid }) && visit.frame !== undefined
-        ? visit.frame
-        : await readVisitFrame(params.slug);
+    const frame = await frameOfNavigation(
+      visit,
+      params.slug,
+      reusesVisitFrame({ cause, invalid })
+    );
     visit.frame = frame;
     if (frame.school._tag === "Refused") {
       throw notFound();
     }
     // A visitor's entry paints with its form, and so does the username form that an outsider's card
-    // way opens while its account signs out; an outsider never sees the parent's form.
+    // way opens while its account signs out.
     if (frame.school._tag === "Visitor" || frame.school._tag === "Outsider") {
-      await loadEntryForm({
-        guardian:
-          frame.school._tag === "Visitor" &&
-          Arr.some(
-            matches,
-            (match) => match.routeId === "/school/$slug/parents"
-          ),
-        signIn: search["sign-in"],
-      });
+      await entry;
     }
     await code;
     return { legal: frame.legal, school: frame.school, slug: params.slug };
@@ -170,8 +258,49 @@ export const Route = createFileRoute("/school/$slug")({
   notFoundComponent: SchoolRefused,
 });
 
+/**
+ * Replaces a kept frame that the visit drew at once with the live read, where they differ: the gate runs again with
+ * the live frame, as a refresh does, so a name, a role or a membership that changed since the last visit shows at
+ * once, and a frame that still holds keeps every node it drew. A live read that fails is reported, and the visit keeps
+ * the kept frame while its pages read their own rows.
+ */
+function useLiveVisit() {
+  const { legal, school, visit } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    const live = takeLiveRead(visit);
+    if (live === undefined) {
+      return;
+    }
+    live.then(
+      (next) => {
+        if (
+          next.school._tag !== "Refused" &&
+          isSameFrame(
+            { legal: next.legal, school: next.school },
+            { legal, school }
+          )
+        ) {
+          return;
+        }
+        confirmFrame(visit, next);
+        router.invalidate();
+      },
+      (cause) =>
+        Effect.runFork(
+          reportClientException(cause, {
+            operation: "revalidate",
+            source: "tenant.keptFrame",
+          })
+        )
+    );
+  }, [legal, router, school, visit]);
+}
+
 function SchoolLayout(): ReactElement {
   const { school } = Route.useRouteContext();
+  useLiveVisit();
   if (school._tag === "Visitor") {
     return <TenantEntry title={school.title} />;
   }
@@ -187,6 +316,7 @@ function SchoolLayout(): ReactElement {
         account={viewer.account}
         canManage={canManageSchool(viewer.can)}
         canOpenExams={canOpenExams(viewer)}
+        canOpenGraduation={canOpenGraduation(viewer)}
         canOpenReports={canOpenReports(viewer)}
         home={school.home}
         personName={viewer.person.name}

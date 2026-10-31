@@ -15,7 +15,7 @@ import { finish } from "@repo/backend/confect/exams/sittings/finish";
 import { flag } from "@repo/backend/confect/exams/sittings/flag";
 import { images } from "@repo/backend/confect/exams/sittings/images";
 import { mine } from "@repo/backend/confect/exams/sittings/mine";
-import { paper } from "@repo/backend/confect/exams/sittings/paper";
+import { paper, saved } from "@repo/backend/confect/exams/sittings/paper";
 import {
   addMinutes,
   allowDevice,
@@ -25,6 +25,7 @@ import {
   unlock,
 } from "@repo/backend/confect/exams/sittings/proctor";
 import { prompt } from "@repo/backend/confect/exams/sittings/prompt";
+import { rescheduleRoom } from "@repo/backend/confect/exams/sittings/reschedule";
 import { signal } from "@repo/backend/confect/exams/sittings/signal";
 import { signals } from "@repo/backend/confect/exams/sittings/signals";
 import { studentSitting } from "@repo/backend/confect/exams/sittings/student";
@@ -76,6 +77,15 @@ const cancelFunction = FunctionImpl.make(
   "cancel",
   Effect.fn("exams.sittings.cancel.function")(function* () {
     return yield* cancelRoom();
+  })
+);
+
+const rescheduleFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "reschedule",
+  Effect.fn("exams.sittings.reschedule.function")(function* (args) {
+    return yield* rescheduleRoom(args);
   })
 );
 
@@ -187,6 +197,15 @@ const paperFunction = FunctionImpl.make(
   })
 );
 
+const savedFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "saved",
+  Effect.fn("exams.sittings.saved.function")(function* (args) {
+    return yield* saved(args);
+  })
+);
+
 const promptFunction = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -233,7 +252,7 @@ const finishFunction = FunctionImpl.make(
 );
 
 /**
- * Implements the sittings group of `sittings.spec.ts`: entry, signals, reads, a room's cancel,
+ * Implements the sittings group of `sittings.spec.ts`: entry, signals, reads, a room's cancel and new time,
  * the six proctor actions, and the student's paper, answers, and finish.
  */
 export default GroupImpl.make(databaseSchema, spec).pipe(
@@ -243,6 +262,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(dashboardFunction),
   Layer.provide(lastAnswerFunction),
   Layer.provide(cancelFunction),
+  Layer.provide(rescheduleFunction),
   Layer.provide(expectedFunction),
   // The six proctor actions in one step, so the group stays within one pipe.
   Layer.provide(
@@ -258,7 +278,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(attemptFunction),
   Layer.provide(studentFunction),
   Layer.provide(signalsFunction),
-  Layer.provide(paperFunction),
+  // The paper and what the student saved on it in one step, so the group stays within one pipe.
+  Layer.provide(Layer.mergeAll(paperFunction, savedFunction)),
   Layer.provide(promptFunction),
   Layer.provide(imagesFunction),
   Layer.provide(answerFunction),

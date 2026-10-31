@@ -99,7 +99,7 @@
     "link-add-description": "Die Eltern fordern den Anmeldecode selbst auf der Elternseite der Schule an.",
     "links-empty": "Noch keine Eltern verknüpft.",
     "links-empty-description": "Verknüpfe die E-Mail der Eltern mit einem Kind, damit sie sich anmelden können.",
-    "links-search": "Schüler oder Eltern-E-Mails suchen",
+    "links-search": "Schüler, E-Mail suchen",
     "student": "Schüler",
     "guardian-name": "Name der Eltern",
     "guardian-name-placeholder": "Vollständiger Name des Elternteils",
@@ -111,6 +111,9 @@
     "status-withdrawn": "Widerrufen",
     "status-mismatch": "Angaben stimmen nicht",
     "link-verify": "Von Hand bestätigen",
+    "link-readdress": "E-Mail ändern",
+    "link-readdress-description": "Die Verknüpfung behält ihre Frist. Die Eltern fordern mit der neuen E-Mail einen Code an.",
+    "link-readdress-save": "E-Mail speichern",
     "link-revoke": "Verknüpfung beenden",
     "link-revoke-title": "Diese Verknüpfung beenden?",
     "link-revoke-description": "Die Eltern sehen die Daten des Kindes nicht mehr.",
@@ -125,6 +128,11 @@
   "SchoolRoster": {
     "import": "Importieren",
     "export": "Exportieren",
+    "export-grades": "Noten exportieren",
+    "export-grades-label": "Zeugnisnoten einer Klasse",
+    "export-grades-loading": "Klassen werden geladen",
+    "export-grades-no-period": "Noch kein aktiver Zeitraum.",
+    "export-grades-empty": "Keine Klasse in diesem Zeitraum.",
     "file-label": "Schülerliste aus Dapodik",
     "empty": "Importiere die Schüler aus Dapodik.",
     "empty-description": "Wähle die Schülerliste, die Dapodik exportiert hat. Die Datei bleibt auf diesem Gerät.",
@@ -258,6 +266,7 @@
     "title": "Prüfungen",
     "empty": "Es gibt noch keine Prüfungen.",
     "exams-search": "Prüfung suchen",
+    "rooms-search": "Raum suchen",
     "mine-exam": "Prüfung",
     "mine-opens": "Öffnet",
     "mine-status": "Status",
@@ -486,7 +495,10 @@
     "column-of": "Frage {number}, Spalte {name}",
     "column-placeholder": "Spalte",
     "cell-of": "Spalte für Aussage {name} von Frage {number}",
-    "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat."
+    "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat.",
+    "room-move": "Neu planen",
+    "room-move-description": "Schüler und Token bleiben. Die Hinweise gehen zur neuen Zeit erneut hinaus.",
+    "room-move-save": "Speichern"
   },
   "SchoolSettings": {
     "student-add-name-placeholder": "Ayu Lestari",
@@ -648,6 +660,7 @@
     "cohort-edit-description": "Die Klasse behält ihre Schüler, Lehrkräfte und Noten.",
     "cohort-edit-save": "Speichern",
     "cohort-archive": "Archivieren",
+    "cohort-add-no-period": "Öffne zuerst eine Periode: Eine Klasse gehört zur aktiven Periode der Einheit.",
     "cohort-add-footer": "Eine neue Klasse ist sofort aktiv.",
     "cohorts-empty": "Noch keine Klasse.",
     "cohorts-search": "Klasse suchen",
@@ -655,15 +668,57 @@
     "cohorts-no-period": "Öffne zuerst eine Periode, dann erscheinen hier ihre Klassen.",
     "cohorts-unavailable": "Die Klassen dieser Einheit können nicht angezeigt werden.",
     "cohorts-unavailable-description": "Wähle eine andere Einheit, um ihre Klassen zu sehen.",
+    "classes": "Lerngruppen",
+    "classes-description": "Die Lerngruppen jeder Periode, in denen eine Klasse ein Fach lernt.",
+    "classes-empty": "Noch keine Lerngruppe.",
+    "classes-search": "Lerngruppe suchen",
+    "classes-no-period": "Öffne zuerst eine Periode, dann erscheinen hier ihre Lerngruppen.",
+    "classes-unavailable": "Die Lerngruppen dieser Einheit können nicht angezeigt werden.",
+    "classes-unavailable-description": "Wähle eine andere Einheit, um ihre Lerngruppen zu sehen.",
+    "class-create": "Lerngruppe hinzufügen",
+    "class-add-no-period": "Öffne zuerst eine Periode: Eine Lerngruppe gehört zu einer Klasse der aktiven Periode.",
+    "class-add-footer": "Eine neue Lerngruppe ist sofort aktiv und heißt nach ihrem Fach und ihrer Klasse.",
+    "class-add-homeroom": "Eine Grundschulklasse lernt in einer Lerngruppe, die nach der Klasse heißt.",
+    "class-cohort": "Klasse",
+    "class-cohort-placeholder": "Klasse wählen",
+    "class-cohort-none": "Lege zuerst eine Klasse an",
+    "class-subject": "Fach",
+    "class-subject-placeholder": "Physik",
+    "class-name": "Name",
+    "class-name-placeholder": "Physik 7A",
+    "class-status": "Status",
+    "class-active": "Aktiv",
+    "class-archived": "Archiviert",
+    "class-rename": "Umbenennen",
+    "class-rename-description": "Die Lerngruppe behält ihre Schüler, Lehrkräfte und Aufgaben.",
+    "class-rename-save": "Speichern",
+    "class-archive": "Archivieren",
+    "class-restore": "Wiederherstellen",
+    "class-teachers": "Lehrkräfte",
+    "class-teachers-description": "Die Lehrkräfte, die das Fach dieser Lerngruppe unterrichten. Jede hat die Rolle Lehrkraft in dieser Einheit.",
+    "class-teacher": "Lehrkraft",
+    "class-teacher-add": "Lehrkraft hinzufügen",
+    "class-teacher-remove": "Entfernen",
+    "class-teacher-remove-label": "{name} entfernen",
+    "class-teachers-empty": "Noch keine Lehrkraft.",
     "cohort-unavailable": "Diese Klasse kann hier nicht geöffnet werden.",
     "cohort-unavailable-description": "Wähle eine Klasse aus der Liste, denn diese gibt es nicht mehr oder sie gehört zu einer anderen Schule.",
     "placement-add": "Schüler hinzufügen",
+    "placement-add-archived": "Diese Klasse ist archiviert. Stelle sie wieder her, um Schüler hinzuzufügen.",
     "placement-add-footer": "Eine Schülerin oder ein Schüler gehört pro Periode zu einer Klasse.",
     "placement-student": "Schüler",
     "placement-move": "Verschieben",
     "placement-move-footer": "Die Schülerin oder der Schüler wechselt in die gewählte Klasse.",
     "placement-move-to": "Wechseln zu",
     "placement-move-save": "Verschieben",
+    "roster-entry": "NISN und Alter",
+    "roster-entry-description": "NISN und Altersangabe bestimmen, ob die Person die Zustimmung der Eltern braucht.",
+    "roster-entry-save": "Speichern",
+    "roster-nisn": "NISN",
+    "roster-nisn-stored": "Gespeichert; neue eingeben, um sie zu ersetzen",
+    "roster-nisn-none": "10 Ziffern",
+    "roster-under-age": "Unter der Altersgrenze",
+    "roster-under-age-description": "Wer unter der Grenze ist, braucht eine bestätigte Erziehungsperson.",
     "cohort-members-search": "Schüler suchen",
     "cohort-members-description": "Hier erscheinen die Schülerinnen und Schüler dieser Klasse.",
     "cohort-members-empty": "Noch keine Schülerin und kein Schüler.",
@@ -719,7 +774,8 @@
         "created": "Klassenlehrer zugewiesen",
         "removed": "Klassenlehrer entfernt",
         "published": "Aufgabe veröffentlicht",
-        "deadlineChanged": "Abgabefrist geändert"
+        "deadlineChanged": "Abgabefrist geändert",
+        "edited": "Aufgabe bearbeitet"
       },
       "billing": {
         "invoice": {
@@ -738,7 +794,8 @@
         "renamed": "Lerngruppe umbenannt",
         "archived": "Lerngruppe archiviert",
         "teacherAssigned": "Lehrkraft der Lerngruppe zugewiesen",
-        "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt"
+        "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt",
+        "restored": "Lerngruppe wiederhergestellt"
       },
       "grade": {
         "released": "Note freigegeben"
@@ -751,6 +808,12 @@
       },
       "report": {
         "locked": "Zeugnis gesperrt"
+      },
+      "graduation": {
+        "decided": "Abschlussbeschluss erfasst"
+      },
+      "letter": {
+        "locked": "SKL ausgestellt"
       },
       "cohort": {
         "created": "Klasse angelegt",
@@ -824,7 +887,8 @@
         "finish": "Prüfungsversuch abgegeben",
         "close": "Prüfungstermin geschlossen",
         "cancel": "Prüfungsraum abgesagt",
-        "join": "Schüler über den Raumcode beigetreten"
+        "join": "Schüler über den Raumcode beigetreten",
+        "reschedule": "Prüfungsraum auf eine neue Zeit verlegt"
       },
       "exam": {
         "results": {
@@ -882,7 +946,8 @@
         "started": "Eltern verknüpft",
         "linked": "Elternverknüpfung bestätigt",
         "withdrawn": "Einwilligung der Eltern widerrufen",
-        "revoked": "Elternverknüpfung beendet"
+        "revoked": "Elternverknüpfung beendet",
+        "readdressed": "Adresse der Elternverknüpfung korrigiert"
       },
       "roster": {
         "set": "Schülerdaten aktualisiert",
@@ -917,7 +982,7 @@
     "login-person": "Person",
     "login-issued": "Ausgestellt",
     "logins-empty": "Noch keine Anmeldekarte ausgegeben.",
-    "logins-search": "Anmeldung oder Schüler suchen",
+    "logins-search": "Login, Schüler suchen",
     "members-empty": "Noch niemand ist der Schule beigetreten.",
     "members-empty-description": "Lade auf der Einladungsseite Lehrkräfte oder Administratoren ein, oder lege einen Schüler an.",
     "members-search": "Name suchen",
@@ -1008,7 +1073,7 @@
     "student-add-submit": "Schüler hinzufügen",
     "invites-empty": "Keine Einladung wartet.",
     "invites-search": "Name oder E-Mail suchen",
-    "units-search": "Schule oder NPSN suchen",
+    "units-search": "Schule, NPSN suchen",
     "cohort-restore": "Wiederherstellen",
     "period-restore": "Wiederherstellen",
     "no-unit-title": "Noch keine aktive Einheit",
@@ -1022,7 +1087,28 @@
     "device-description": "Gib den Code der Nakafa CLI ein, damit sie die Schule als {name} liest.",
     "device-code": "Gerätecode",
     "device-authorize": "Verbinden",
-    "device-deny": "Gerät ablehnen"
+    "device-deny": "Gerät ablehnen",
+    "grading": "Bewertung",
+    "grading-description": "Die Versionen des Bewertungsschemas der Schule. Jede Note behält die Version, unter der sie eingetragen wurde.",
+    "grading-empty": "Noch keine Version gespeichert.",
+    "grading-empty-description": "Noten nutzen das eingebaute Schema: KKTP {kktp}, ohne Stufen.",
+    "grading-search": "Stufe suchen",
+    "grading-new": "Neue Version",
+    "grading-new-description": "Sie bewertet jede Note, die ab jetzt eingetragen wird. Frühere Noten behalten ihre Version.",
+    "grading-effective": "Gilt ab",
+    "grading-kktp": "KKTP",
+    "grading-bands": "Stufen",
+    "grading-bands-none": "Ohne Stufen",
+    "grading-band": "{label} ab {minimum}",
+    "grading-band-label": "Stufe",
+    "grading-band-label-placeholder": "B",
+    "grading-band-minimum": "Ab",
+    "grading-band-add": "Stufe hinzufügen",
+    "grading-band-remove": "Stufe entfernen",
+    "grading-save": "Version speichern",
+    "grading-status": "Status",
+    "grading-current": "Gültig",
+    "grading-earlier": "Früher"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1155,7 +1241,11 @@
     "task-work-no-match-description": "Kein Schüler mit passendem Namen hat etwas abgegeben.",
     "task-new": "Neue Aufgabe",
     "task-new-description": "Alle in der Klasse erhalten sie in ihren Benachrichtigungen.",
-    "task-publish": "Veröffentlichen"
+    "task-publish": "Veröffentlichen",
+    "task-edit": "Aufgabe bearbeiten",
+    "task-edit-description": "Ihre Adresse bleibt, also öffnet jeder Link sie weiter.",
+    "task-edit-save": "Speichern",
+    "task-points-fixed": "Die Punkte stehen fest, sobald Arbeit abgegeben ist."
   },
   "SchoolGrades": {
     "student": "Schüler",
@@ -1175,7 +1265,15 @@
     "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
     "detail": "Note der Schülerin oder des Schülers",
     "detail-empty": "Wähle eine Person aus der Liste, um ihre Note zu sehen.",
-    "kktp": "KKTP"
+    "kktp": "KKTP",
+    "own-title": "Meine Noten",
+    "own-search": "Klasse suchen",
+    "own-class": "Klasse",
+    "own-period": "Periode",
+    "own-band": "Stufe",
+    "own-band-none": "Ohne Stufe",
+    "own-empty": "Noch keine Note freigegeben.",
+    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
   },
   "SchoolReports": {
     "title": "Zeugnisse",
@@ -1214,7 +1312,64 @@
     "grade": "Note",
     "result": "Ergebnis",
     "kktp-reached": "KKTP erreicht",
-    "kktp-notReached": "KKTP nicht erreicht"
+    "kktp-notReached": "KKTP nicht erreicht",
+    "own-title": "Meine Zeugnisse",
+    "own-search": "Klasse suchen",
+    "own-empty": "Noch kein Zeugnis abgeschlossen.",
+    "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt."
+  },
+  "SchoolGraduation": {
+    "title": "Abschluss",
+    "cohort": "Klasse",
+    "unit": "Einheit",
+    "period": "Zeitraum",
+    "search-cohorts": "Klassen suchen",
+    "cohorts-empty": "Noch keine Klasse schließt ab.",
+    "cohorts-empty-description": "Die Klassen der letzten Stufe jeder Einheit erscheinen hier, sobald ihr Zeitraum aktiv ist.",
+    "search-students": "Schüler suchen",
+    "students-empty": "Noch kein Schüler in dieser Klasse.",
+    "students-empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
+    "student": "Schüler",
+    "nisn": "NISN",
+    "nisn-yes": "Erfasst",
+    "nisn-no": "Fehlt",
+    "average": "Durchschnitt",
+    "average-none": "Keine Noten",
+    "letter": "SKL",
+    "letter-none": "Nicht ausgestellt",
+    "letter-issued": "Wird erstellt",
+    "letter-locked": "Ausgestellt",
+    "letter-number": "SKL-Nummer",
+    "ready": "Bereitschaft",
+    "ready-ready": "Bereit",
+    "ready-npsn": "NPSN der Einheit fehlt",
+    "ready-decision": "Noch kein Beschluss",
+    "ready-nisn": "NISN fehlt",
+    "ready-report": "Kein gesperrtes Zeugnis",
+    "detail": "Abschluss des Schülers",
+    "detail-empty": "Wähle einen Schüler, um seine Notenübersicht zu sehen.",
+    "transcript-empty": "Noch kein gesperrtes Zeugnis, daher noch keine Notenübersicht.",
+    "subject": "Fach",
+    "value": "Wert",
+    "open-letter": "SKL öffnen",
+    "open-check": "Prüfseite öffnen",
+    "decide": "Abschlussbeschluss",
+    "decide-description": "Der Beschluss der Schulleitung für {period}, der für alle Abschlussklassen der Einheit gilt.",
+    "decision": "Beschlussnummer",
+    "decision-placeholder": "421.3/045/SMP.1/2027",
+    "date": "Abschlussdatum",
+    "date-placeholder": "Datum wählen",
+    "date-description": "Der erste Montag im Juni für SD und SMP oder im Mai für SMA und SMK, bei einem Feiertag verschoben.",
+    "place": "Ausstellungsort",
+    "place-placeholder": "Bandung",
+    "head": "Schulleitung",
+    "head-placeholder": "Name mit Titeln",
+    "nip": "NIP",
+    "nip-placeholder": "18 Ziffern",
+    "nip-description": "Leer lassen, wenn die Schulleitung nicht verbeamtet ist.",
+    "save-decision": "Beschluss speichern",
+    "issue": "SKL ausstellen",
+    "export-readiness": "Für e-Ijazah exportieren"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -1338,6 +1493,7 @@
     "short-description": "Kostenlose Lerninhalte von der Grundschule bis zur Universität.",
     "very-short-description": "Kostenlose Lernmaterialien.",
     "keywords": "kostenlose Lerninhalte, Mathematik lernen, Physik lernen, Chemie lernen, Biologie lernen, Informatik lernen, KI lernen, Data Science lernen, Übungsaufgaben, ausführliche Lösungen, Prüfungsvorbereitung, Online-Probetest, Schulmaterialien, Hochschulmaterialien, offene Bildung, Nakafa",
+    "knows-about": "Mathematik, Physik, Chemie, Biologie, Informatik, Künstliche Intelligenz, Data Science, Prüfungsvorbereitung, Schulbildung, Hochschulbildung",
     "classification": "Bildung"
   },
   "Common": {
@@ -1684,11 +1840,11 @@
     "start-dialog-description": "Dein Probetest bleibt bis zu 3 Tage aktiv, und nach dem Start kannst du wählen, welchen Abschnitt du zuerst bearbeiten möchtest.",
     "free-dialog-title": "Probetest kostenlos starten",
     "free-dialog-description": "Du kannst alle Probetests kostenlos bearbeiten und beliebig oft wiederholen, jeder Versuch bleibt bis zu 3 Tage aktiv, du erhältst dein Ergebnis kostenlos, und die Lösungswege sind mit Nakafa Pro zugänglich.",
-    "free-entry-dialog-description": "Du kannst alle Probetests kostenlos bearbeiten und wiederholen, dein Ergebnis ist enthalten, der Timer dieses Aufgabensatzes startet, sobald du beginnst, und die Lösungswege sind mit Nakafa Pro zugänglich.",
+    "free-entry-dialog-description": "Du kannst alle Probetests kostenlos bearbeiten und wiederholen, dein Ergebnis ist enthalten, der Timer startet, sobald du beginnst, und die Lösungswege sind mit Nakafa Pro zugänglich.",
     "restart-dialog-title": "Diesen Probetest von vorn beginnen?",
     "restart-dialog-description": "Du beginnst von vorn, und dein vorheriges Ergebnis bleibt gespeichert.",
-    "restart-entry-dialog-description": "Du beginnst von vorn, der Timer dieses Aufgabensatzes startet sofort, und dein vorheriges Ergebnis bleibt gespeichert.",
-    "start-entry-dialog-description": "Der Timer dieses Aufgabensatzes startet, sobald du beginnst.",
+    "restart-entry-dialog-description": "Du beginnst von vorn, der Timer startet sofort, und dein vorheriges Ergebnis bleibt gespeichert.",
+    "start-entry-dialog-description": "Der Timer startet, sobald du beginnst.",
     "paywall-title": "{count, plural, one {Lösung zu dieser Aufgabe ansehen} other {Lösungen zu allen # Aufgaben ansehen}}",
     "paywall-description": "Verstehe die Schritte und Gründe hinter jeder Antwort und frag Nina, wenn etwas unklar bleibt.",
     "paywall-compare": "Tarife prüfen",
@@ -1723,7 +1879,7 @@
     "status-in-progress": "In Bearbeitung",
     "status-completed": "Abgeschlossen",
     "status-expired": "Zeit abgelaufen",
-    "finished-title": "Tryout beendet",
+    "finished-title": "Probetest beendet",
     "finished-description": "Du hast diesen Versuch beendet, und sein Ergebnis ist gespeichert.",
     "finished-expired-description": "Die Zeit ist abgelaufen, daher endete dieser Versuch mit deinen bisherigen Antworten.",
     "remaining-time-label": "Verbleibende Zeit für dieses Set",
@@ -2102,7 +2258,7 @@
     },
     "school-refusal-not-teacher": {
       "title": "Keine aktive Lehrkraft der Schule.",
-      "description": "Nur aktive Lehrkräfte dieser Schule können Klassenlehrkraft sein."
+      "description": "Wähle eine aktive Lehrkraft dieser Schule."
     },
     "school-refusal-teacher-has-homeroom": {
       "title": "Leitet schon eine andere Klasse.",
@@ -2301,6 +2457,41 @@
     },
     "school-cohort-archived": {
       "title": "Klasse archiviert."
+    },
+    "school-class-archived": {
+      "title": "Lerngruppe archiviert."
+    },
+    "school-refusal-class-name-taken": {
+      "title": "Diesen Namen gibt es schon.",
+      "description": "Wähle für diese Klasse einen anderen Namen."
+    },
+    "school-refusal-class-subject-taken": {
+      "title": "Das Fach hat schon eine Lerngruppe.",
+      "description": "Nutze diese Lerngruppe oder archiviere sie zuerst."
+    },
+    "school-refusal-class-limit": {
+      "title": "Mehr Lerngruppen passen nicht.",
+      "description": "Stelle eine archivierte Lerngruppe wieder her."
+    },
+    "school-refusal-class-address-empty": {
+      "title": "Im Namen fehlen Buchstaben.",
+      "description": "Nimm ein Fach mit Buchstaben oder Ziffern."
+    },
+    "school-refusal-class-ambiguous": {
+      "title": "Diese Adresse ist schon vergeben.",
+      "description": "Benenne die Lerngruppe um und versuche es noch einmal."
+    },
+    "school-refusal-class-subject-required": {
+      "title": "Diese Lerngruppe braucht ein Fach.",
+      "description": "Gib das Fach ein und lege sie noch einmal an."
+    },
+    "school-refusal-class-subject-not-allowed": {
+      "title": "Grundschulgruppen haben kein Fach.",
+      "description": "Lege sie ohne Fach an."
+    },
+    "school-refusal-person-class-limit": {
+      "title": "Diese Lehrkraft ist ausgelastet.",
+      "description": "Entferne sie zuerst aus einer anderen Lerngruppe."
     },
     "school-period-archived": {
       "title": "Zeitraum archiviert."
@@ -2571,6 +2762,49 @@
     },
     "school-own-role-ended": {
       "title": "Deine Rolle ist beendet."
+    },
+    "school-letters-issued": {
+      "title": "Die SKL sind ausgestellt.",
+      "description": "Jedes PDF ist bereit, sobald seine Zeile Ausgestellt zeigt."
+    },
+    "school-letters-none": {
+      "title": "Keine SKL wurde ausgestellt.",
+      "description": "Die Spalte Bereitschaft zeigt, was jedem Schüler noch fehlt."
+    },
+    "school-graduation-export-failed": {
+      "title": "Die Datei wurde nicht gespeichert."
+    },
+    "school-refusal-graduation-date": {
+      "title": "Dieses Datum gibt es nicht.",
+      "description": "Wähle einen echten Tag für den Abschluss."
+    },
+    "school-refusal-graduation-issued": {
+      "title": "Der Beschluss ist schon in Gebrauch.",
+      "description": "Mit ihm sind SKL ausgestellt, daher bleibt er, wie er ist."
+    },
+    "school-refusal-graduation-not-final": {
+      "title": "Diese Klasse schließt nicht ab.",
+      "description": "Nur die letzte Stufe einer Einheit schließt ab."
+    },
+    "school-refusal-graduation-undecided": {
+      "title": "Noch kein Abschlussbeschluss.",
+      "description": "Erfasse den Beschluss, bevor du SKL ausstellst."
+    },
+    "school-refusal-room-opened": {
+      "title": "Dieser Raum ist schon geöffnet.",
+      "description": "Ein geöffneter Raum behält Zeit und Namen."
+    },
+    "school-refusal-schedule-invalid": {
+      "title": "Diese Zeit geht nicht.",
+      "description": "Wähle einen Beginn, der noch nicht vorbei ist, und ein Ende danach."
+    },
+    "school-refusal-scheme-not-later": {
+      "title": "Es gibt schon eine neuere Version.",
+      "description": "Lade die Seite neu, um sie zu sehen, und speichere dann deine."
+    },
+    "school-roster-no-period": {
+      "title": "Noch kein aktiver Zeitraum.",
+      "description": "Öffne zuerst einen Zeitraum für diese Einheit."
     }
   },
   "Ai": {
@@ -3073,14 +3307,18 @@
     "course-name": "{name} {section}"
   },
   "ReportCheck": {
-    "locked": "Dieses Zeugnis ist erfasst.",
-    "locked-description": "Sein Code gehört zu einem Zeugnis, das die Schule gesperrt hat.",
-    "unknown": "Kein Zeugnis hat diesen Code.",
+    "locked-report": "Dieses Zeugnis ist erfasst.",
+    "locked-report-description": "Sein Code gehört zu einem Zeugnis, das die Schule gesperrt hat.",
+    "locked-letter": "Diese Abschlussbescheinigung ist erfasst.",
+    "locked-letter-description": "Ihr Code gehört zu einer SKL, die die Schule ausgestellt hat.",
+    "unknown": "Kein Dokument hat diesen Code.",
     "unknown-description": "Prüfe die Adresse oder frag die Schule, die es ausgestellt hat.",
     "school": "Schule",
     "kind": "Dokument",
     "kind-report": "Zeugnis",
+    "kind-letter": "Abschlussbescheinigung (SKL)",
     "period": "Zeitraum",
-    "approved": "Genehmigt am"
+    "approved": "Genehmigt am",
+    "issued": "Ausgestellt am"
   }
 }

@@ -32,7 +32,7 @@ function NumberFieldGroup({
   return (
     <NumberFieldPrimitive.Group
       className={cn(
-        "flex h-9 w-full min-w-0 items-stretch overflow-hidden rounded-md border border-input shadow-xs outline-none transition-[color,box-shadow] has-aria-invalid:border-destructive has-focus-visible:border-ring has-aria-invalid:ring-destructive/20 has-focus-visible:ring-3 has-focus-visible:ring-ring/50 data-disabled:opacity-50",
+        "border-input has-aria-invalid:border-destructive has-focus-visible:border-ring has-aria-invalid:ring-destructive/20 has-focus-visible:ring-ring/50 flex h-9 w-full min-w-0 items-stretch overflow-hidden rounded-md border shadow-xs transition-[color,box-shadow] outline-none has-focus-visible:ring-3 data-disabled:opacity-50",
         className
       )}
       data-slot="number-field-group"
@@ -52,7 +52,7 @@ function NumberFieldInput({
     <NumberFieldPrimitive.Input
       aria-roledescription={t("number-field")}
       className={cn(
-        "w-full min-w-0 flex-1 bg-transparent px-2 text-center text-base tabular-nums outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed md:text-sm",
+        "selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground w-full min-w-0 flex-1 bg-transparent px-2 text-center text-base tabular-nums outline-none disabled:cursor-not-allowed md:text-sm",
         className
       )}
       data-slot="number-field-input"
@@ -63,7 +63,7 @@ function NumberFieldInput({
 
 /** A stepper button of a number field, divided from the input on the side that faces it. */
 const numberFieldStepVariants = cva(
-  "flex w-9 shrink-0 items-center justify-center border-input text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50",
+  "border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground flex w-9 shrink-0 items-center justify-center transition-colors disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       side: {

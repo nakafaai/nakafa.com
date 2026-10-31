@@ -55,14 +55,12 @@ function getHighlighter() {
   return highlighter;
 }
 
-const PRE_TAG_PATTERN = /<pre(\s|>)/;
 const PRE_BACKGROUND_STYLE_PATTERN =
-  /(<pre[^>]*?)\s+style="[^"]*background[^"]*"([^>]*>)/g;
+  /(?<open><pre[^>]*?)\s+style="[^"]*background[^"]*"(?<rest>[^>]*>)/gu;
 
 const CodeHighlightInputSchema = Schema.Struct({
   code: Schema.String,
   language: Schema.optional(Schema.String),
-  preClassName: Schema.optional(Schema.String),
   transparentBackground: Schema.optionalKey(Schema.Boolean),
 });
 
@@ -98,20 +96,16 @@ export class CodeHighlightError extends Schema.TaggedError<CodeHighlightError>()
   }
 ) {}
 
-function formatHighlightedHtml(
-  html: string,
-  preClassName: string | undefined,
-  transparentBackground: boolean
-) {
-  const withPreClass = preClassName
-    ? html.replace(PRE_TAG_PATTERN, `<pre class="${preClassName}"$1`)
-    : html;
-
+/**
+ * Drops Shiki's inline background from the `<pre>` on request, so the code takes its surface's. The
+ * `<pre>` keeps Shiki's own classes, which the dark theme's colours select (`codeBodyVariants`).
+ */
+function formatHighlightedHtml(html: string, transparentBackground: boolean) {
   if (!transparentBackground) {
-    return withPreClass;
+    return html;
   }
 
-  return withPreClass.replace(PRE_BACKGROUND_STYLE_PATTERN, "$1$2");
+  return html.replace(PRE_BACKGROUND_STYLE_PATTERN, "$1$2");
 }
 
 /** Maps any Shiki failure of one language's highlight to the one typed error of a code block. */
@@ -151,7 +145,6 @@ export const highlightCode = Effect.fn("designSystem.codeBlock.highlight")(
   function* ({
     code,
     language = "typescript",
-    preClassName,
     themes,
     transparentBackground = false,
   }: CodeHighlightOptions) {
@@ -193,7 +186,7 @@ export const highlightCode = Effect.fn("designSystem.codeBlock.highlight")(
     });
 
     return preserveShikiLineBreaks(
-      formatHighlightedHtml(html, preClassName, transparentBackground)
+      formatHighlightedHtml(html, transparentBackground)
     );
   }
 );

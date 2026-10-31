@@ -77,6 +77,8 @@ export type ExamSignalsDoc = Document.Document<typeof schemaDefinition, "examSig
 export type ExamSittingsDoc = Document.Document<typeof schemaDefinition, "examSittings">;
 export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
 export type GradingSchemesDoc = Document.Document<typeof schemaDefinition, "gradingSchemes">;
+export type GraduationLettersDoc = Document.Document<typeof schemaDefinition, "graduationLetters">;
+export type GraduationsDoc = Document.Document<typeof schemaDefinition, "graduations">;
 export type GuardianCodesDoc = Document.Document<typeof schemaDefinition, "guardianCodes">;
 export type GuardianConsentsDoc = Document.Document<typeof schemaDefinition, "guardianConsents">;
 export type GuardianLinksDoc = Document.Document<typeof schemaDefinition, "guardianLinks">;
@@ -222,6 +224,8 @@ export interface Docs {
   examSittings: ExamSittingsDoc;
   exams: ExamsDoc;
   gradingSchemes: GradingSchemesDoc;
+  graduationLetters: GraduationLettersDoc;
+  graduations: GraduationsDoc;
   guardianCodes: GuardianCodesDoc;
   guardianConsents: GuardianConsentsDoc;
   guardianLinks: GuardianLinksDoc;

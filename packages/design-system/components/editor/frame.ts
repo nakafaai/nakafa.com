@@ -51,7 +51,7 @@ export const editorScroll = cva("text-sm/relaxed");
  * it the hint as `data-placeholder`, and these classes draw that hint in muted text.
  */
 export const editorPlaceholder = cva(
-  "[&_.is-editor-empty]:before:pointer-events-none [&_.is-editor-empty]:before:float-left [&_.is-editor-empty]:before:h-0 [&_.is-editor-empty]:before:text-muted-foreground [&_.is-editor-empty]:before:content-[attr(data-placeholder)]"
+  "[&_.is-editor-empty]:before:text-muted-foreground [&_.is-editor-empty]:before:pointer-events-none [&_.is-editor-empty]:before:float-left [&_.is-editor-empty]:before:h-0 [&_.is-editor-empty]:before:content-[attr(data-placeholder)]"
 );
 
 /**
@@ -62,13 +62,11 @@ export const editorPlaceholder = cva(
  * its first line shares a line box with the letter that names it. An exam's
  * document (`article`) takes the published article's headings, lists, quotations,
  * inline code, tables and room between blocks from `articleProse`, so only a plain
- * text, such as a memory, draws them here. Everything inside a highlight reads in
- * the highlight's own text colour, a link too, which keeps its underline as its
- * cue, so it reads on the amber fill in light and dark; inline code keeps its own
- * muted pair, as the lesson's does.
+ * text, such as a memory, draws them here. A link and a highlight take the lesson's
+ * own classes on their elements (`linkVariants`, `emphasisVariants`), in every text.
  */
 export const editorDocument = cva(
-  "wrap-break-word relative min-h-full outline-none [font-feature-settings:'liga'_0] [font-variant-ligatures:none] [white-space:break-spaces] [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_hr]:my-3 [&_mark]:rounded-sm [&_mark]:bg-amber-200 [&_mark]:px-0.5 [&_mark]:text-amber-950 [&_mark_a]:text-inherit [&_mark_span[data-link]]:text-inherit [&_pre]:whitespace-pre-wrap [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-3 [&_span[data-link]]:text-primary [&_span[data-link]]:underline [&_span[data-link]]:underline-offset-4",
+  "[&_pre]:bg-muted relative min-h-full [font-feature-settings:'liga'_0] wrap-break-word [white-space:break-spaces] outline-none [font-variant-ligatures:none] [&_hr]:my-3 [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:whitespace-pre-wrap",
   {
     compoundVariants: [{ class: "[&>*+*]:mt-2", size: "page", text: "plain" }],
     variants: {
@@ -79,7 +77,7 @@ export const editorDocument = cva(
       text: {
         article: "",
         plain:
-          "[&_blockquote]:border-s-2 [&_blockquote]:ps-3 [&_blockquote]:text-muted-foreground [&_code]:rounded-sm [&_code]:bg-muted [&_code]:px-1 [&_code]:font-mono [&_code]:text-muted-foreground [&_h1]:font-semibold [&_h1]:text-xl [&_h2]:font-semibold [&_h2]:text-lg [&_h3]:font-semibold [&_h3]:text-base [&_li>p]:m-0 [&_ol]:list-decimal [&_ol]:ps-5 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:p-2 [&_th]:border [&_th]:p-2 [&_th]:text-start [&_th]:font-semibold [&_ul:not([data-type=taskList])]:list-disc [&_ul:not([data-type=taskList])]:ps-5",
+          "[&_blockquote]:text-muted-foreground [&_code]:bg-muted [&_code]:text-muted-foreground [&_blockquote]:border-s-2 [&_blockquote]:ps-3 [&_code]:rounded-sm [&_code]:px-1 [&_code]:font-mono [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_li>p]:m-0 [&_ol]:list-decimal [&_ol]:ps-5 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:p-2 [&_th]:border [&_th]:p-2 [&_th]:text-start [&_th]:font-semibold [&_ul:not([data-type=taskList])]:list-disc [&_ul:not([data-type=taskList])]:ps-5",
       },
     },
     defaultVariants: {

@@ -47,12 +47,12 @@ function ErrorFallback({
   return (
     <div className="flex h-full w-full flex-col items-center justify-center p-4 text-center">
       <div className="space-y-4 text-center">
-        <h1 className="font-bold font-mono text-2xl text-primary">5XX</h1>
+        <h1 className="text-primary font-mono text-2xl font-bold">5XX</h1>
 
         <div className="space-y-2">
           <h2 className="font-medium tracking-tight">{t("title")}</h2>
 
-          <p className="mx-auto max-w-md text-muted-foreground text-sm">
+          <p className="text-muted-foreground mx-auto max-w-md text-sm">
             {errorMessage}
           </p>
         </div>
@@ -191,7 +191,7 @@ function ThreeCanvasComponent({
         >
           <Canvas
             className={cn(
-              "size-full overflow-hidden rounded-[inherit] [&>div]:rounded-[inherit] [&_canvas]:size-full [&_canvas]:rounded-[inherit]",
+              "size-full overflow-hidden rounded-[inherit] [&_canvas]:size-full [&_canvas]:rounded-[inherit] [&>div]:rounded-[inherit]",
               className
             )}
             dpr={[1, 2]}

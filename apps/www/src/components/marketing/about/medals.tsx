@@ -34,7 +34,7 @@ type RibbonTone = NonNullable<VariantProps<typeof ribbonFill>["tone"]>;
  * script runs.
  */
 const medalSwing = cva(
-  "transform-fill grid origin-top justify-items-center will-change-transform motion-safe:animate-thing-sway"
+  "motion-safe:animate-thing-sway grid origin-top justify-items-center will-change-transform transform-fill"
 );
 
 /** The fill of each ribbon, in turn. */
@@ -98,7 +98,7 @@ function Medal({
           />
         </span>
       </span>
-      <span className="max-w-28 text-balance text-center text-sm leading-5">
+      <span className="max-w-28 text-center text-sm leading-5 text-balance">
         {school.name}
       </span>
     </li>
@@ -118,7 +118,7 @@ export function Medals() {
   return (
     <MarketingSection id="medals">
       <div className="mx-auto grid w-full max-w-4xl gap-12">
-        <h2 className="text-balance text-center text-3xl tracking-tight sm:text-4xl">
+        <h2 className="text-center text-3xl tracking-tight text-balance sm:text-4xl">
           {t("medals-title")}
         </h2>
         <ul
@@ -138,11 +138,11 @@ export function Medals() {
           <li className="grid content-start justify-items-center gap-3 border-t pt-10">
             <span
               aria-hidden="true"
-              className="grid size-16 place-items-center rounded-full border border-dashed text-muted-foreground"
+              className="text-muted-foreground grid size-16 place-items-center rounded-full border border-dashed"
             >
               <HugeIcons className="size-5" icon={FavouriteIcon} />
             </span>
-            <span className="text-center text-muted-foreground text-sm leading-5">
+            <span className="text-muted-foreground text-center text-sm leading-5">
               {t("medals-hook")}
             </span>
           </li>

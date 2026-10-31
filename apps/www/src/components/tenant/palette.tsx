@@ -1,7 +1,9 @@
 import { QueryResult } from "@confect/react";
 import {
   Certificate01Icon,
+  ChartBarLineIcon,
   Home01Icon,
+  MortarboardIcon,
   TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import {
@@ -22,7 +24,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import type { Mascot } from "@repo/mascot/code";
 import { useNavigate } from "@tanstack/react-router";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { type ComponentProps, Fragment, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { CommandKeys } from "@/components/search/keys";
@@ -108,7 +110,7 @@ function TenantPaletteCommand({ onOpened }: { onOpened: () => void }) {
         placeholder={t("search-placeholder")}
       />
       <CommandPanel>
-        <CommandEmpty className="text-center text-muted-foreground text-sm">
+        <CommandEmpty className="text-muted-foreground text-center text-sm">
           {t("search-empty")}
         </CommandEmpty>
         <CommandList>
@@ -160,7 +162,7 @@ function TenantPaletteRow({
         {item.label}
       </span>
       {item.place === undefined ? null : (
-        <span className="ms-auto shrink-0 text-muted-foreground text-xs">
+        <span className="text-muted-foreground ms-auto shrink-0 text-xs">
           {item.place}
         </span>
       )}
@@ -174,10 +176,19 @@ function TenantPaletteRow({
  * viewer who may manage the school.
  */
 function usePaletteGroups(): readonly PaletteGroup[] {
-  const { canManage, canOpenExams, canOpenReports, slug } = useTenant();
+  const {
+    canManage,
+    canOpenExams,
+    canOpenGraduation,
+    canOpenReports,
+    role,
+    slug,
+  } = useTenant();
   const classes = useMyClasses();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
+  const tGrades = useTranslations("SchoolGrades");
+  const tGraduation = useTranslations("SchoolGraduation");
   const tReports = useTranslations("SchoolReports");
   const tSettings = useTranslations("SchoolSettings");
 
@@ -189,6 +200,32 @@ function usePaletteGroups(): readonly PaletteGroup[] {
       place: undefined,
       target: { from: LOCALE_ROUTE, params: { slug }, to: "/school/$slug" },
     },
+    ...(Option.contains(role, "student")
+      ? [
+          {
+            icon: { hugeicon: ChartBarLineIcon },
+            key: "grades",
+            label: tGrades("own-title"),
+            place: undefined,
+            target: {
+              from: LOCALE_ROUTE,
+              params: { slug },
+              to: "/school/$slug/grades",
+            },
+          } satisfies PaletteItem,
+          {
+            icon: { hugeicon: Certificate01Icon },
+            key: "cards",
+            label: tReports("own-title"),
+            place: undefined,
+            target: {
+              from: LOCALE_ROUTE,
+              params: { slug },
+              to: "/school/$slug/cards",
+            },
+          } satisfies PaletteItem,
+        ]
+      : []),
     ...(canOpenExams
       ? [
           {
@@ -215,6 +252,21 @@ function usePaletteGroups(): readonly PaletteGroup[] {
               from: LOCALE_ROUTE,
               params: { slug },
               to: "/school/$slug/reports",
+            },
+          } satisfies PaletteItem,
+        ]
+      : []),
+    ...(canOpenGraduation
+      ? [
+          {
+            icon: { hugeicon: MortarboardIcon },
+            key: "graduation",
+            label: tGraduation("title"),
+            place: undefined,
+            target: {
+              from: LOCALE_ROUTE,
+              params: { slug },
+              to: "/school/$slug/graduation",
             },
           } satisfies PaletteItem,
         ]

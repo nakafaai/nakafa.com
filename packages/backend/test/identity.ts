@@ -11,7 +11,7 @@ import { Array as Arr, Effect, Option } from "effect";
 /** The moment the card tests start from. Fake timers hold the clock here. */
 export const CARD_NOW = Date.UTC(2026, 9, 14, 9, 0, 0);
 /** A printed code: two groups of five characters of the Crockford alphabet. */
-export const CODE_PATTERN = /^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/;
+export const CODE_PATTERN = /^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/u;
 /** A device the sign-in page keeps, as a UUID. */
 export const DEVICE = "0f8fad5b-d9cb-4691-a165-8c45a5d2a1e1";
 export const PASSWORD = "correct horse battery";

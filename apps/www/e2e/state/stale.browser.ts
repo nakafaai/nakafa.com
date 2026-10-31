@@ -71,7 +71,7 @@ test("reloads once for a chunk of an earlier deploy instead of showing an error"
       page.evaluate((mark) => Reflect.get(window, mark), FIRST_DOCUMENT)
     )
     .not.toBe(true);
-  await expect(page).toHaveURL(new RegExp(`${SIGN_IN}$`));
+  await expect(page).toHaveURL(new RegExp(`${SIGN_IN}$`, "u"));
   await expect(page.getByRole("heading", { name: TITLE })).toBeVisible();
   expect(
     await page.evaluate((mark) => sessionStorage.getItem(mark), BROKE)

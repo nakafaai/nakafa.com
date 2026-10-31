@@ -6,7 +6,7 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { Context, Effect, Layer, Option, Result, Schema } from "effect";
 import { homeAccess } from "@/components/tenant/home/access";
 import { httpLayer } from "@/lib/convex/http";
-import { readSchoolSignInTitle } from "@/lib/tenant/copy";
+import { loadSchoolSignInTitle } from "@/lib/tenant/copy";
 import {
   readAccountName,
   type SchoolProfile,
@@ -150,25 +150,33 @@ export const readSchoolFrame = Effect.fn("www.tenant.readSchoolFrame")(
   }
 );
 
-/** The frame of a visitor with no session: the entry surface of a school that has a profile. */
+/**
+ * The frame of a visitor with no session: the entry surface of a school that has a profile. The sign-in line's
+ * messages load beside the profile, so the visitor waits for one read.
+ */
 const readVisitorFrame = Effect.fn("www.tenant.read.visitorFrame")(function* (
   slug: TenantSlug,
   locale: Locale
 ) {
   const reads = yield* SchoolReads;
-  const profile = yield* reads.profile(slug);
+  const [profile, titleOf] = yield* Effect.all(
+    [
+      reads.profile(slug),
+      Effect.tryPromise({
+        catch: (cause) => new SchoolReadFailed({ cause }),
+        try: () => loadSchoolSignInTitle(locale),
+      }),
+    ],
+    { concurrency: "unbounded" }
+  );
   if (Option.isNone(profile)) {
     return REFUSED;
   }
-  const title = yield* Effect.tryPromise({
-    catch: (cause) => new SchoolReadFailed({ cause }),
-    try: () => readSchoolSignInTitle(locale, profile.value.name),
-  });
   const visitor: SchoolRead = {
     _tag: "Visitor",
     locale,
     profile: profile.value,
-    title,
+    title: titleOf(profile.value.name),
   };
   return visitor;
 });

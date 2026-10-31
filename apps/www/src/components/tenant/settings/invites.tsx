@@ -33,6 +33,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
+import { daysColumn } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
@@ -55,7 +56,10 @@ import { cardOffered } from "@/components/tenant/settings/offer";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { isDraft } from "@/components/tenant/settings/state";
-import { SchoolDateTime } from "@/components/tenant/settings/time";
+import {
+  SchoolDateTime,
+  useSchoolTimeZone,
+} from "@/components/tenant/settings/time";
 
 const SOURCE = "components/tenant/settings/invites";
 
@@ -128,6 +132,7 @@ function SchoolInvitesBody() {
 function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
+  const timeZone = useSchoolTimeZone();
 
   if (Arr.isReadonlyArrayEmpty(invites)) {
     return (
@@ -143,7 +148,9 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     // The name with the address after it, so the header's search finds an invitee by either; the cell shows the name.
     inviteColumns.accessor((invite) => `${invite.name} ${invite.email}`, {
       cell: (info) => (
-        <span className="font-medium">{info.row.original.name}</span>
+        <span className="font-medium" dir="auto">
+          {info.row.original.name}
+        </span>
       ),
       filterFn: "includesString",
       header: t("invite-name"),
@@ -195,6 +202,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
       header: t("invite-expires"),
       id: "expires",
       sortFn: "basic",
+      ...daysColumn(timeZone),
     }),
     inviteColumns.display({
       cell: (info) => <SchoolInviteMenu invite={info.row.original} />,

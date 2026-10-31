@@ -10,11 +10,9 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { isComposingKey } from "@repo/utilities/composition";
-import { cn } from "cn";
 import { Function as Fn, Option } from "effect";
 import { type ComponentProps, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
-import { contentWidthVariants } from "@/components/shared/content/width";
 import { useTenant } from "@/components/tenant/context";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { ExamMenu, ExamMenuFrame } from "@/components/tenant/exams/menu";
@@ -105,18 +103,13 @@ export function ExamHeaderFrame() {
 }
 
 /**
- * The bar of the editor's header and its row. The bar and its border run the page's full width, and the row keeps
- * the page width of the editor's panes, so on a wide screen the row lines up with them.
+ * The bar of the editor's header and its row. Both run the screen's full width, as the editor's panes do, so on a
+ * wide screen the row lines up with the canvas under it.
  */
 function ExamHeaderRow({ children }: { children: ReactNode }) {
   return (
     <header className="h-14 shrink-0 border-b" data-slot="page-header">
-      <div
-        className={cn(
-          contentWidthVariants({ width: "page" }),
-          "flex h-full w-full items-center gap-2 px-2"
-        )}
-      >
+      <div className="flex h-full w-full items-center gap-2 px-2">
         {children}
       </div>
     </header>
@@ -157,7 +150,7 @@ function ExamTitleField(
     <Input
       {...props}
       aria-label={t("title-label")}
-      className="min-w-0 flex-1 truncate border-0 font-semibold text-lg shadow-none md:text-lg"
+      className="min-w-0 flex-1 truncate border-0 text-lg font-semibold shadow-none md:text-lg"
       dir="auto"
     />
   );
@@ -175,12 +168,7 @@ export function ExamLockedNote() {
   if (gone) {
     return (
       <div className="border-b">
-        <p
-          className={cn(
-            contentWidthVariants({ width: "page" }),
-            "px-4 py-2 text-muted-foreground text-sm"
-          )}
-        >
+        <p className="text-muted-foreground px-4 py-2 text-sm">
           <ExamGone />
         </p>
       </div>
@@ -193,12 +181,7 @@ export function ExamLockedNote() {
 
   return (
     <div className="border-b">
-      <p
-        className={cn(
-          contentWidthVariants({ width: "page" }),
-          "px-4 py-2 text-muted-foreground text-sm"
-        )}
-      >
+      <p className="text-muted-foreground px-4 py-2 text-sm">
         {t("archived-note")}
       </p>
     </div>

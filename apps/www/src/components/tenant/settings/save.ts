@@ -34,9 +34,29 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-report-closed.description",
     title: "school-refusal-report-closed.title",
   },
+  RosterPeriodMissing: {
+    description: "school-roster-no-period.description",
+    title: "school-roster-no-period.title",
+  },
   ReportNotPlaced: {
     description: "school-refusal-report-not-placed.description",
     title: "school-refusal-report-not-placed.title",
+  },
+  GraduationDateInvalid: {
+    description: "school-refusal-graduation-date.description",
+    title: "school-refusal-graduation-date.title",
+  },
+  GraduationIssued: {
+    description: "school-refusal-graduation-issued.description",
+    title: "school-refusal-graduation-issued.title",
+  },
+  GraduationNotFinal: {
+    description: "school-refusal-graduation-not-final.description",
+    title: "school-refusal-graduation-not-final.title",
+  },
+  GraduationUndecided: {
+    description: "school-refusal-graduation-undecided.description",
+    title: "school-refusal-graduation-undecided.title",
   },
   DeviceUnknown: {
     description: "school-refusal-device-unknown.description",
@@ -65,6 +85,46 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
   CardRoleRefused: {
     description: "school-refusal-card-role.description",
     title: "school-refusal-card-role.title",
+  },
+  RoomOpened: {
+    description: "school-refusal-room-opened.description",
+    title: "school-refusal-room-opened.title",
+  },
+  ScheduleInvalid: {
+    description: "school-refusal-schedule-invalid.description",
+    title: "school-refusal-schedule-invalid.title",
+  },
+  ClassAddressEmpty: {
+    description: "school-refusal-class-address-empty.description",
+    title: "school-refusal-class-address-empty.title",
+  },
+  ClassAmbiguous: {
+    description: "school-refusal-class-ambiguous.description",
+    title: "school-refusal-class-ambiguous.title",
+  },
+  ClassLimit: {
+    description: "school-refusal-class-limit.description",
+    title: "school-refusal-class-limit.title",
+  },
+  ClassNameTaken: {
+    description: "school-refusal-class-name-taken.description",
+    title: "school-refusal-class-name-taken.title",
+  },
+  ClassSubjectNotAllowed: {
+    description: "school-refusal-class-subject-not-allowed.description",
+    title: "school-refusal-class-subject-not-allowed.title",
+  },
+  ClassSubjectRequired: {
+    description: "school-refusal-class-subject-required.description",
+    title: "school-refusal-class-subject-required.title",
+  },
+  ClassSubjectTaken: {
+    description: "school-refusal-class-subject-taken.description",
+    title: "school-refusal-class-subject-taken.title",
+  },
+  SchemeNotLater: {
+    description: "school-refusal-scheme-not-later.description",
+    title: "school-refusal-scheme-not-later.title",
   },
   CohortHasHomeroom: {
     description: "school-refusal-cohort-has-homeroom.description",
@@ -125,6 +185,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
   NpsnTaken: {
     description: "school-refusal-npsn-taken.description",
     title: "school-refusal-npsn-taken.title",
+  },
+  PersonClassLimit: {
+    description: "school-refusal-person-class-limit.description",
+    title: "school-refusal-person-class-limit.title",
   },
   PeriodActive: {
     description: "school-refusal-period-active.description",

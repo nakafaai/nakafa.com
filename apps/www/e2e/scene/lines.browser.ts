@@ -20,7 +20,7 @@ import { isKnownSceneDiagnostic, revealLineScene } from "@/e2e/support/scene";
 import { lineSceneCards, SCENE_ACTIONS } from "@/e2e/support/selector";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
-const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;
+const SCENE_DIAGNOSTIC = /THREE\.|WebGL/u;
 
 /** Observes unexplained three.js and WebGL notices for the page program. */
 const withObservedSceneDiagnostics = Effect.fn(

@@ -1,7 +1,3 @@
-declare global {
-  var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
-}
-
 process.env.VITE_SITE_URL ??= "https://nakafa.com";
 /** Browser-safe Convex origins that `@/env.public` validates when a module loads. */
 process.env.VITE_CONVEX_URL ??= "https://example.convex.cloud";
@@ -17,4 +13,4 @@ process.env.SITE_URL ??= "https://nakafa.com";
 vi.mock("cloudflare:workers", () => ({ waitUntil: () => undefined }));
 
 /** Mark the Vitest jsdom environment as React act-aware. */
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);

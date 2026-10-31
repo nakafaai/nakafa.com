@@ -26,11 +26,13 @@ vi.mock("convex/browser", () => ({
       this.address = address;
     }
     query(reference: unknown, args: unknown) {
-      return convex.query(reference, args);
+      return this.calls.query(reference, args);
     }
     setAuth(token: string) {
-      convex.setAuth(token);
+      this.calls.setAuth(token);
     }
+    /** The recorder that every call of this client reaches. */
+    readonly calls = convex;
   },
 }));
 

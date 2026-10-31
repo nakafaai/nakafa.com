@@ -58,7 +58,7 @@ const drawUserCode = Effect.fn("integrations.device.userCode")(function* () {
 }, Effect.provide(SecureRandom.layerWebCrypto));
 
 /** Everything in a typed user code that is not a letter. */
-const NOT_LETTERS = /[^a-z]/gi;
+const NOT_LETTERS = /[^a-z]/giu;
 
 /** A typed user code as it is stored: its letters, without the dash or spaces, in capitals. */
 const userCodeOf = (typed: string) =>

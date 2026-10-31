@@ -128,6 +128,14 @@ for (const viewport of WIDTHS) {
       const bar = page.locator('[data-slot="page-scrollbar"]');
       const thumb = bar.locator("div").first();
 
+      // A pointer takes the thumb anywhere on its 10px band, which draws a quiet 4px line at the edge.
+      expect(
+        await thumb.evaluate((element) => ({
+          band: element.getBoundingClientRect().width,
+          line: getComputedStyle(element, "::before").width,
+        }))
+      ).toEqual({ band: 10, line: "4px" });
+
       // The thumb drags the page down.
       await page.evaluate(() => window.scrollTo(0, 0));
       const box = await thumb.boundingBox();

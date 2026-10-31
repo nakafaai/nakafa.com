@@ -13,12 +13,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { elementById } from "@repo/design-system/lib/element";
 import { cva } from "class-variance-authority";
-import { cn } from "cn";
 import { Array as Arr, Data, Effect, Option } from "effect";
 import { type RefObject, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
-import { contentWidthVariants } from "@/components/shared/content/width";
 import { PageCounter } from "@/components/tenant/exams/counter";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { ExamPanelButton } from "@/components/tenant/exams/panel";
@@ -79,7 +78,7 @@ interface ExamFooterProps {
 
 /**
  * The footer of the editor, a full-width bar under the canvas, as a design tool keeps its navigation
- * there, its row at the page width of the editor's panes: on a phone, the action that opens the teacher's
+ * there, its row as wide as the editor's panes, the screen's width: on a phone, the action that opens the teacher's
  * panel at its start; then at its end the zoom (on
  * a wide screen only, since a phone pinches) as a slider and a percentage menu, a toggle for a strip of the
  * pages, the position of the page in view that jumps to a page, the grid of every page in place of the
@@ -123,7 +122,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
    */
   const goTo = (question: Question) => {
     const root = canvas.current;
-    const page = document.getElementById(`question-${question.id}`);
+    const page = elementById(`question-${question.id}`);
     if (root !== null && page !== null) {
       root.scrollTo({
         behavior: reduce ? "auto" : "smooth",
@@ -169,12 +168,12 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   };
 
   return (
-    <footer className="flex shrink-0 flex-col border-t bg-background">
+    <footer className="bg-background flex shrink-0 flex-col border-t">
       {pagesOpen && !grid ? (
         <div className="border-b">
           <ScrollArea
             aria-label={t("pages")}
-            className={cn(contentWidthVariants({ width: "page" }), "w-full")}
+            className="w-full"
             render={<nav />}
           >
             <div className="flex w-max gap-3 p-3">
@@ -192,12 +191,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
         </div>
       ) : null}
       {/* On the narrowest phones the controls wrap under the teacher layer's button rather than widen the page. */}
-      <div
-        className={cn(
-          contentWidthVariants({ width: "page" }),
-          "flex min-h-12 w-full flex-wrap items-center gap-2 px-3 py-1.5"
-        )}
-      >
+      <div className="flex min-h-12 w-full flex-wrap items-center gap-2 px-3 py-1.5">
         {grid ? null : <ExamPanelButton />}
         <div className="ms-auto flex items-center gap-1">
           {grid ? null : (
@@ -279,7 +273,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
 
 /** The frame of a page thumbnail in the strip, one width at every screen width. */
 const pageThumb = cva(
-  "relative block aspect-4/3 w-32 shrink-0 overflow-hidden rounded-lg border bg-muted/40 outline-none hover:border-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=true]:border-primary aria-[current=true]:ring-2 aria-[current=true]:ring-primary"
+  "bg-muted/40 hover:border-foreground/20 focus-visible:ring-ring/50 aria-[current=true]:border-primary aria-[current=true]:ring-primary relative block aspect-4/3 w-32 shrink-0 overflow-hidden rounded-lg border outline-none focus-visible:ring-3 aria-[current=true]:ring-2"
 );
 
 /** One page as a thumbnail of the strip, which a click goes to. It names its page for assistive technology. */

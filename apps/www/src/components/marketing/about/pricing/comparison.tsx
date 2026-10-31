@@ -28,10 +28,10 @@ function Comparison({
   return (
     <div className="grid content-start justify-items-center gap-2 text-center">
       <span className="flex h-12 items-center justify-center">{picture}</span>
-      <p className="mt-2 text-balance font-medium text-xl tabular-nums tracking-tight">
+      <p className="mt-2 text-xl font-medium tracking-tight text-balance tabular-nums">
         {title}
       </p>
-      <p className="max-w-72 text-pretty text-base text-muted-foreground">
+      <p className="text-muted-foreground max-w-72 text-base text-pretty">
         {note}
       </p>
     </div>
@@ -48,7 +48,7 @@ function PriceCoin({ symbol }: { symbol: string }) {
   return (
     <span
       aria-hidden="true"
-      className="inline-flex size-11 items-center justify-center rounded-full bg-pop-yellow font-bold text-base text-nina-ink"
+      className="bg-pop-yellow text-nina-ink inline-flex size-11 items-center justify-center rounded-full text-base font-bold"
     >
       {symbol}
     </span>
@@ -69,7 +69,7 @@ function CurrencyComparison({ currency }: { currency: PricingCurrency }) {
 
   return (
     <>
-      <h2 className="text-balance text-center text-3xl tracking-tight sm:text-4xl">
+      <h2 className="text-center text-3xl tracking-tight text-balance sm:text-4xl">
         {t("comparison-title", { price: formatter.format(price.amount) })}
       </h2>
       <div className="mx-auto grid w-full max-w-5xl gap-10 md:grid-cols-3">

@@ -1,5 +1,9 @@
 import { TerminalIcon } from "@hugeicons/core-free-icons";
 import {
+  codeHeaderVariants,
+  codeLabelVariants,
+} from "@repo/design-system/components/code-block/variants";
+import {
   type ProgrammingIcon,
   SimpleIcon,
 } from "@repo/design-system/components/icons/simple";
@@ -28,15 +32,7 @@ type CodeBlockHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 /** Renders the toolbar surface above a code block. */
 export function CodeBlockHeader({ className, ...props }: CodeBlockHeaderProps) {
-  return (
-    <div
-      className={cn(
-        "flex flex-row items-center border-b bg-muted/80 p-1",
-        className
-      )}
-      {...props}
-    />
-  );
+  return <div className={codeHeaderVariants({ className })} {...props} />;
 }
 
 /** Render-prop contract for projecting every source into the filename region. */
@@ -80,7 +76,8 @@ export function CodeBlockFilename({
   const defaultIcon = Option.getOrUndefined(
     Arr.findFirst(Rec.toEntries(filenameIconMap), ([pattern]) => {
       const regex = new RegExp(
-        `^${pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")}$`
+        `^${pattern.replace(/\\/gu, "\\\\").replace(/\./gu, "\\.").replace(/\*/gu, ".*")}$`,
+        "u"
       );
       return regex.test(children?.toString() ?? "");
     })
@@ -92,10 +89,7 @@ export function CodeBlockFilename({
   }
 
   return (
-    <div
-      className="flex min-w-0 items-center gap-2 px-4 py-1.5 text-muted-foreground text-sm"
-      {...props}
-    >
+    <div className={codeLabelVariants({ className })} {...props}>
       {iconValue ? (
         <SimpleIcon className="size-4 shrink-0" icon={iconValue} />
       ) : (
@@ -150,7 +144,7 @@ export function CodeBlockSelectTrigger({
     <SelectTrigger
       aria-label={t("language")}
       className={cn(
-        "w-fit border-none text-muted-foreground text-sm shadow-none",
+        "text-muted-foreground w-fit border-none text-sm shadow-none",
         className
       )}
       size="sm"

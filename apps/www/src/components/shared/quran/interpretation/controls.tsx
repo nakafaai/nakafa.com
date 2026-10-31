@@ -206,8 +206,8 @@ export function QuranInterpretationControls({
         setOpen={set}
         title={label}
       >
-        <div className="rounded-md border bg-accent p-4">
-          <p className="text-pretty text-accent-foreground leading-relaxed">
+        <div className="bg-accent rounded-md border p-4">
+          <p className="text-accent-foreground leading-relaxed text-pretty">
             {selectedInterpretation}
           </p>
         </div>

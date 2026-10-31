@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/confect/nina/sealed";
 import { storedBytes } from "@repo/backend/confect/nina/sealed/bytes";
 import type { LearnerKeys } from "@repo/backend/confect/vault/keys";
+import type { FunctionReturnType } from "convex/server";
 import { parse } from "convex-helpers/validators";
 import { Array as Arr, Effect, Order, Schema, Struct } from "effect";
 
@@ -33,6 +34,14 @@ export class TurnSealError extends Schema.TaggedError<TurnSealError>()(
  * the page size sets how many queries it takes, and never which rows it seals.
  */
 const TURN_PAGE = 10;
+
+/**
+ * One page of a turn's rows. Its type is named because the cursor of the next page
+ * comes from this one, which TypeScript cannot infer around the loop.
+ */
+type TurnPage = FunctionReturnType<
+  typeof components.nina.messages.listMessagesByThreadId
+>;
 
 /**
  * The status a row keeps when the seal writes it. A pending row reaches the seal only
@@ -63,10 +72,11 @@ export const readTurnRows = Effect.fn("nina.sealed.turn.rows")(function* (
   let cursor: string | null = null;
   let reached = false;
   while (!reached) {
-    const page = yield* Effect.promise(() =>
+    const from = cursor;
+    const page: TurnPage = yield* Effect.promise(() =>
       ctx.runQuery(components.nina.messages.listMessagesByThreadId, {
         order: "desc",
-        paginationOpts: { cursor, numItems: TURN_PAGE },
+        paginationOpts: { cursor: from, numItems: TURN_PAGE },
         threadId: turn.threadId,
         upToAndIncludingMessageId: turn.promptMessageId,
       })

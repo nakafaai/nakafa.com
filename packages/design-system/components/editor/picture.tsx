@@ -10,6 +10,10 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  blockGapVariants,
+  pictureVariants,
+} from "@repo/design-system/lib/prose";
 import { ImageType } from "@repo/editor/upload";
 import type { Editor } from "@tiptap/core";
 import { FileHandler } from "@tiptap/extension-file-handler";
@@ -18,6 +22,7 @@ import {
   type ReactNodeViewProps,
   ReactNodeViewRenderer,
 } from "@tiptap/react";
+import { cn } from "cn";
 import { Option, Schema } from "effect";
 import {
   createContext,
@@ -214,7 +219,7 @@ function PictureNode({
 
   return (
     <NodeViewWrapper
-      className="group relative my-2 block max-w-full"
+      className={cn(blockGapVariants(), "group relative block max-w-full")}
       contentEditable={false}
       data-picture=""
       style={{ aspectRatio: `${width} / ${height}`, maxWidth: `${width}px` }}
@@ -222,20 +227,20 @@ function PictureNode({
       {src === undefined ? (
         <div
           aria-label={alt}
-          className="size-full rounded-md bg-muted"
+          className={cn(pictureVariants(), "size-full")}
           role="img"
         />
       ) : (
         <img
           alt={alt}
-          className="size-full rounded-md object-contain"
+          className={cn(pictureVariants(), "size-full object-contain")}
           height={height}
           src={src}
           width={width}
         />
       )}
       {editor.isEditable ? (
-        <div className="absolute end-2 top-2 flex gap-1 rounded-md bg-background/90 p-0.5 shadow-sm">
+        <div className="bg-background/90 absolute end-2 top-2 flex gap-1 rounded-md p-0.5 shadow-sm">
           <ToolHint label={labels.edit}>
             <Button
               aria-label={labels.edit}

@@ -8,7 +8,7 @@ const callFields = {
 };
 
 /** The realtime connection of the page to the backend. */
-export const CONVEX_SOCKET = /\/api\/[^/]+\/sync/;
+export const CONVEX_SOCKET = /\/api\/[^/]+\/sync/u;
 
 /** A change the page sends, which the server answers with the same `requestId`. */
 const MutationSchema = Schema.Struct({
@@ -111,6 +111,21 @@ export const decodeGiven = Schema.decodeOption(
 );
 export const encodeRefusal = Schema.encodeSync(
   Schema.fromJsonString(RefusalSchema)
+);
+
+/**
+ * The server's word that it no longer holds the connection's credentials, as Convex sends it once a token
+ * expires: the page asks for a fresh token and signs in again. The page acts on a refusal of its current
+ * auth version (`baseVersion`) or a newer one.
+ */
+const AuthErrorSchema = Schema.Struct({
+  authUpdateAttempted: Schema.Boolean,
+  baseVersion: Schema.Finite,
+  error: Schema.String,
+  type: Schema.Literal("AuthError"),
+});
+export const encodeAuthError = Schema.encodeSync(
+  Schema.fromJsonString(AuthErrorSchema)
 );
 /** A change the page sends, which the server answers with a `MutationResponse`. */
 export const isMutation = Schema.is(MutationSchema);

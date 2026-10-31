@@ -15,13 +15,13 @@ const ESSAY_ROWS = 6;
  * with its content from the top. The chosen page is outlined, as a design tool outlines the page in hand.
  */
 const questionPaper = cva(
-  "grid aspect-4/3 w-full min-w-0 content-start gap-6 rounded-xl bg-background p-6 shadow-sm md:p-10",
+  "bg-background grid aspect-4/3 w-full min-w-0 content-start gap-6 rounded-xl p-6 shadow-sm md:p-10",
   {
     defaultVariants: { selected: false },
     variants: {
       selected: {
-        false: "ring-1 ring-foreground/10",
-        true: "ring-2 ring-primary",
+        false: "ring-foreground/10 ring-1",
+        true: "ring-primary ring-2",
       },
     },
   }
@@ -74,12 +74,12 @@ export function PaperOption({
     <div
       className={cn(
         choiceFrame(getTryoutSelectableChoiceVariant({ checked: false })),
-        "flex cursor-text select-text items-start gap-3"
+        "flex cursor-text items-start gap-3 select-text"
       )}
     >
       <span
         aria-hidden
-        className="grid size-6 shrink-0 place-items-center rounded-md bg-muted font-medium text-sm"
+        className="bg-muted grid size-6 shrink-0 place-items-center rounded-md text-sm font-medium"
       >
         {letter}
       </span>
@@ -148,7 +148,11 @@ export function PaperTable({
   );
 }
 
-/** The header row of a paper's table: an empty cell over the numbers, the statements' heading, then each column's header. */
+/**
+ * The header row of a paper's table: an empty cell over the numbers, the statements' heading, then each column's
+ * header. Its cells share their first baseline, so each column's words stand on the line of the statements' heading
+ * whatever padding and line height each cell has.
+ */
 export function PaperTableHead({
   children,
   heading,
@@ -157,7 +161,7 @@ export function PaperTableHead({
   heading: string;
 }) {
   return (
-    <div className="col-span-full grid grid-cols-subgrid bg-muted/50 font-medium text-sm">
+    <div className="bg-muted/50 col-span-full grid grid-cols-subgrid items-baseline text-sm font-medium">
       <div aria-hidden="true" className="py-3 pl-4" />
       <div className="px-3 py-3">{heading}</div>
       {children}
@@ -194,11 +198,17 @@ export function PaperTableStatement({ children }: { children: ReactNode }) {
   return <div className="min-w-0 border-t px-3 py-2">{children}</div>;
 }
 
-/** The cell of a row under one column, which holds the row's mark for that choice. */
-export function PaperTableMark({ children }: { children: ReactNode }) {
+/**
+ * The cell of a row under one column: the empty circle the student marks for that choice. The teacher's paper
+ * draws it unmarked, since the key is marked in the teacher's layer.
+ */
+export function PaperTableMark() {
   return (
     <div className="flex min-h-12 items-center justify-center border-t px-2 py-3">
-      {children}
+      <span
+        aria-hidden
+        className="border-input bg-background size-4 rounded-full border shadow-xs"
+      />
     </div>
   );
 }

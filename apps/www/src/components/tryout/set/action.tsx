@@ -39,8 +39,11 @@ export function TryoutSetAction({ value }: TryoutSetActionProps) {
     authRedirect: { publicPath: value.currentPath },
     countryKey: value.set.countryKey,
     destination: value.destination.address,
-    destinationSectionKey: value.destination.sectionKey,
-    ...(entrySectionKey === undefined ? {} : { entrySectionKey }),
+    // An internal entry has no page of its own, so its start stays on the set; any other start lands on
+    // the destination section and opens nothing, so the learner chooses which section to run first.
+    ...(entrySectionKey === undefined
+      ? { destinationSectionKey: value.destination.sectionKey }
+      : { entrySectionKey }),
     examKey: value.set.examKey,
     locale: value.locale,
     setKey: value.set.setKey,

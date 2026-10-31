@@ -48,10 +48,7 @@ import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
 import { useExam } from "@/components/tenant/exams/provider";
-import { sittingTimes } from "@/components/tenant/exams/time";
-
-/** The lengths of a sitting in minutes, which the dialog offers. */
-const LENGTHS: readonly number[] = [30, 45, 60, 90, 120];
+import { SITTING_LENGTHS, sittingTimes } from "@/components/tenant/exams/time";
 
 /** The length that a dialog opens with, in minutes. */
 const DEFAULT_MINUTES = 60;
@@ -106,7 +103,7 @@ export function ScheduleSitting({
     label: unit.name,
     value: unit.id,
   }));
-  const lengthItems = Arr.map(LENGTHS, (length) => ({
+  const lengthItems = Arr.map(SITTING_LENGTHS, (length) => ({
     label: t("length-minutes", { count: length }),
     value: `${length}`,
   }));
@@ -331,7 +328,7 @@ export function ScheduleSitting({
             items={lengthItems}
             onValueChange={(value) => {
               const next = Arr.findFirst(
-                LENGTHS,
+                SITTING_LENGTHS,
                 (length) => `${length}` === value
               );
               if (Option.isSome(next)) {
@@ -375,7 +372,7 @@ function ScheduleNotices({
   return Option.match(missing, {
     onNone: () => null,
     onSome: (entry) => (
-      <p className="me-auto text-destructive text-sm">
+      <p className="text-destructive me-auto text-sm">
         {t(keyNotice(entry.template), { number: entry.number })}
       </p>
     ),
