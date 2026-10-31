@@ -18,7 +18,6 @@ import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { loadEntryForm } from "@/components/tenant/forms";
 import { TenantMissing } from "@/components/tenant/missing";
-import { SchoolPending } from "@/components/tenant/pending";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { reportClientException } from "@/lib/analytics/client";
 import { hasSignedInHint } from "@/lib/auth/hint";
@@ -274,9 +273,6 @@ export const Route = createFileRoute("/school/$slug")({
     const school = match.context.school;
     return school === undefined ? {} : schoolHead(school.profile.name);
   },
-  pendingComponent: SchoolPending,
-  pendingMinMs: 0,
-  pendingMs: Number.POSITIVE_INFINITY,
   component: SchoolLayout,
   errorComponent: SchoolError,
   notFoundComponent: SchoolRefused,
