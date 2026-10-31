@@ -10772,6 +10772,23 @@ export declare const api: {
       >;
     };
     schemes: {
+      amend: FunctionReference<
+        "mutation",
+        "public",
+        {
+          bands: Array<{ label: string; minimum: number }>;
+          kktp: number;
+          schemeId: Id<"gradingSchemes">;
+          slug: string;
+        },
+        {
+          bands: Array<{ label: string; minimum: number }>;
+          effectiveFrom: number;
+          id: Id<"gradingSchemes">;
+          kktp: number;
+          used: boolean;
+        }
+      >;
       list: FunctionReference<
         "query",
         "public",
@@ -10794,10 +10811,17 @@ export declare const api: {
             effectiveFrom: number;
             id: Id<"gradingSchemes">;
             kktp: number;
+            used: boolean;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { schemeId: Id<"gradingSchemes">; slug: string },
+        null
       >;
       store: FunctionReference<
         "mutation",
@@ -10813,6 +10837,7 @@ export declare const api: {
           effectiveFrom: number;
           id: Id<"gradingSchemes">;
           kktp: number;
+          used: boolean;
         }
       >;
     };

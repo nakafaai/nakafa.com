@@ -909,7 +909,9 @@
         "hidden": "Message hidden"
       },
       "scheme": {
-        "stored": "Grading scheme version added"
+        "stored": "Grading scheme version added",
+        "amended": "Grading scheme version corrected",
+        "removed": "Grading scheme version removed"
       },
       "report": {
         "locked": "Report card locked"
@@ -1203,6 +1205,11 @@
     "grading-search": "Find a band",
     "grading-new": "New version",
     "grading-new-description": "It judges every grade from now on.",
+    "grading-edit": "Edit",
+    "grading-edit-description": "This version has judged no grade yet, so a correction changes nothing that stands.",
+    "grading-remove": "Delete",
+    "grading-remove-title": "Delete this version?",
+    "grading-remove-description": "The version before it is in force again.",
     "grading-effective": "In force from",
     "grading-kktp": "KKTP",
     "grading-bands": "Bands",
@@ -3068,6 +3075,10 @@
     "school-refusal-scheme-not-later": {
       "title": "A newer version is already stored.",
       "description": "Reload the page to see it, then save yours."
+    },
+    "school-refusal-scheme-used": {
+      "title": "This version stays as it is.",
+      "description": "It has judged grades. Add a new version instead."
     },
     "school-roster-no-period": {
       "title": "No active period yet.",
