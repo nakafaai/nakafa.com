@@ -2,17 +2,13 @@ import type { GenericId } from "@confect/core";
 import {
   PaginatedQueryResult,
   QueryResult,
-  useMutation,
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
 import {
   Calendar03Icon,
-  Cancel01Icon,
-  ChartBarLineIcon,
   CheckmarkCircle02Icon,
   Clock01Icon,
-  DashboardSquare01Icon,
   PlayIcon,
   SchoolIcon,
   UserGroupIcon,
@@ -20,8 +16,6 @@ import {
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -33,14 +27,12 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Schema } from "effect";
-import { startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ColumnChoice } from "@/components/shared/table/column";
-import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -52,23 +44,20 @@ import {
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
-  cancelRoomChange,
   RoomStateFilter,
   roomGroups,
   roomsArgs,
   roomsOfGroup,
 } from "@/components/tenant/exams/filter";
+import { RoomMenu } from "@/components/tenant/exams/move";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { useKeptRows, useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
-
-const SOURCE = "components/tenant/exams/rooms";
 
 /** One room of the exam as the list holds it. */
 type Room = typeof RoomRow.Type;
@@ -365,8 +354,8 @@ function RoomsMore({ loadMore }: { loadMore: (() => void) | null }) {
 
 /**
  * One room of the table: its name, which opens its proctor dashboard, its group, its opening and
- * closing in the time zone of its unit, its state, and the menu that cancels a room that has not
- * opened yet.
+ * closing in the time zone of its unit, its state, and the menu that opens it, shows its results, and
+ * moves or cancels a room that has not opened yet.
  */
 function RoomItem({
   examId,
@@ -420,65 +409,5 @@ function RoomItem({
         <RoomMenu examId={examId} room={room} slug={slug} />
       </TableCell>
     </TableRow>
-  );
-}
-
-/**
- * The row menu of a room: Open, its proctor's dashboard, Results, and Cancel, which cancels it behind a confirmation.
- * A room that has opened, or closed, or that another Person scheduled, keeps Cancel disabled.
- */
-function RoomMenu({
-  examId,
-  room,
-  slug,
-}: {
-  examId: GenericId.GenericId<"exams">;
-  room: Room;
-  slug: TenantSlug;
-}) {
-  const t = useTranslations("Exams");
-  const common = useTranslations("Common");
-  const params = { exam: examId, sitting: room.id, slug };
-  const cancel = useMutation(exams.sittings.cancel).withOptimisticUpdate(
-    cancelRoomChange
-  );
-
-  return (
-    <ConfirmRowMenu
-      action={t("room-cancel")}
-      confirm={t("room-cancel-confirm")}
-      description={t("room-cancel-description")}
-      disabled={!room.canCancel}
-      icon={Cancel01Icon}
-      onConfirm={() =>
-        startTransition(() =>
-          saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
-        )
-      }
-      title={t("room-cancel-title")}
-    >
-      <DropdownMenuItem
-        render={
-          <Link
-            params={params}
-            to="/school/$slug/exams/$exam/sittings/$sitting"
-          >
-            <HugeIcons icon={DashboardSquare01Icon} />
-            {common("open")}
-          </Link>
-        }
-      />
-      <DropdownMenuItem
-        render={
-          <Link
-            params={params}
-            to="/school/$slug/exams/$exam/sittings/$sitting/results"
-          >
-            <HugeIcons icon={ChartBarLineIcon} />
-            {t("results-title")}
-          </Link>
-        }
-      />
-    </ConfirmRowMenu>
   );
 }

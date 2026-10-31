@@ -487,7 +487,10 @@
     "column-of": "Question {number}, column {name}",
     "column-placeholder": "Column",
     "cell-of": "Column for statement {name} of question {number}",
-    "cell-hint": "Each statement takes one column, and the key saves once every statement has one."
+    "cell-hint": "Each statement takes one column, and the key saves once every statement has one.",
+    "room-move": "Reschedule",
+    "room-move-description": "Its students and its token stay. Its notices go out again for the new time.",
+    "room-move-save": "Save"
   },
   "SchoolSettings": {
     "student-add-name-placeholder": "Ayu Lestari",
@@ -656,6 +659,38 @@
     "cohorts-no-period": "Open a period first, and its cohorts appear here.",
     "cohorts-unavailable": "The cohorts of this unit cannot be shown.",
     "cohorts-unavailable-description": "Choose another unit to see its cohorts.",
+    "classes": "Classrooms",
+    "classes-description": "The classrooms of each period, where a cohort learns one subject.",
+    "classes-empty": "No classroom yet.",
+    "classes-search": "Find a classroom",
+    "classes-no-period": "Open a period first, and its classrooms appear here.",
+    "classes-unavailable": "The classrooms of this unit cannot be shown.",
+    "classes-unavailable-description": "Choose another unit to see its classrooms.",
+    "class-create": "Add classroom",
+    "class-add-footer": "A new classroom starts active, named for its subject and its cohort.",
+    "class-add-homeroom": "An SD cohort learns in one classroom, named for the cohort.",
+    "class-cohort": "Cohort",
+    "class-cohort-placeholder": "Choose a cohort",
+    "class-cohort-none": "Add a cohort first",
+    "class-subject": "Subject",
+    "class-subject-placeholder": "Physics",
+    "class-name": "Name",
+    "class-name-placeholder": "Physics 7A",
+    "class-status": "Status",
+    "class-active": "Active",
+    "class-archived": "Archived",
+    "class-rename": "Rename",
+    "class-rename-description": "The classroom keeps its students, teachers and tasks.",
+    "class-rename-save": "Save",
+    "class-archive": "Archive",
+    "class-restore": "Restore",
+    "class-teachers": "Teachers",
+    "class-teachers-description": "The teachers who teach this classroom's subject. Each one holds the Teacher role in this unit.",
+    "class-teacher": "Teacher",
+    "class-teacher-add": "Add teacher",
+    "class-teacher-remove": "Remove",
+    "class-teacher-remove-label": "Remove {name}",
+    "class-teachers-empty": "No teacher yet.",
     "cohort-unavailable": "This cohort cannot be opened here.",
     "cohort-unavailable-description": "Choose a cohort from the list, because this one is gone or belongs to another school.",
     "placement-add": "Add student",
@@ -665,6 +700,14 @@
     "placement-move-footer": "The student leaves this cohort for the one you choose.",
     "placement-move-to": "Move to",
     "placement-move-save": "Move",
+    "roster-entry": "NISN and age",
+    "roster-entry-description": "The NISN and the age flag decide whether the student needs a guardian's consent.",
+    "roster-entry-save": "Save",
+    "roster-nisn": "NISN",
+    "roster-nisn-stored": "Stored; type a new one to replace it",
+    "roster-nisn-none": "10 digits",
+    "roster-under-age": "Under the age limit",
+    "roster-under-age-description": "A student under the limit needs a verified guardian.",
     "cohort-members-search": "Find a student",
     "cohort-members-description": "The students placed in this cohort appear here.",
     "cohort-members-empty": "No student yet.",
@@ -720,7 +763,8 @@
         "created": "Homeroom teacher assigned",
         "removed": "Homeroom teacher removed",
         "published": "Task published",
-        "deadlineChanged": "Task deadline changed"
+        "deadlineChanged": "Task deadline changed",
+        "edited": "Task edited"
       },
       "billing": {
         "invoice": {
@@ -739,7 +783,8 @@
         "renamed": "Classroom renamed",
         "archived": "Classroom archived",
         "teacherAssigned": "Teacher assigned to classroom",
-        "teacherRemoved": "Teacher removed from classroom"
+        "teacherRemoved": "Teacher removed from classroom",
+        "restored": "Classroom restored"
       },
       "grade": {
         "released": "Grade released"
@@ -825,7 +870,8 @@
         "finish": "Exam attempt finished",
         "close": "Exam sitting closed",
         "cancel": "Exam room cancelled",
-        "join": "Student joined by the room's code"
+        "join": "Student joined by the room's code",
+        "reschedule": "Exam room moved to a new time"
       },
       "exam": {
         "results": {
@@ -1023,7 +1069,28 @@
     "device-description": "Type the code the Nakafa CLI shows to let it read the school as {name}.",
     "device-code": "Device code",
     "device-authorize": "Connect",
-    "device-deny": "Deny device"
+    "device-deny": "Deny device",
+    "grading": "Grading",
+    "grading-description": "The versions of the school's grading scheme. Each grade keeps the version it was entered under.",
+    "grading-empty": "No version stored yet.",
+    "grading-empty-description": "Grades use the built-in scheme: KKTP {kktp}, no bands.",
+    "grading-search": "Find a band",
+    "grading-new": "New version",
+    "grading-new-description": "It judges every grade entered from now on. Grades entered before keep their version.",
+    "grading-effective": "In force from",
+    "grading-kktp": "KKTP",
+    "grading-bands": "Bands",
+    "grading-bands-none": "No bands",
+    "grading-band": "{label} from {minimum}",
+    "grading-band-label": "Band",
+    "grading-band-label-placeholder": "B",
+    "grading-band-minimum": "From",
+    "grading-band-add": "Add band",
+    "grading-band-remove": "Remove band",
+    "grading-save": "Save version",
+    "grading-status": "Status",
+    "grading-current": "In force",
+    "grading-earlier": "Earlier"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1156,7 +1223,11 @@
     "task-work-no-match-description": "No student whose name matches has handed work in.",
     "task-new": "New task",
     "task-new-description": "Everyone in the class gets it in their notifications.",
-    "task-publish": "Publish"
+    "task-publish": "Publish",
+    "task-edit": "Edit task",
+    "task-edit-description": "Its address stays, so every link to it still opens it.",
+    "task-edit-save": "Save",
+    "task-points-fixed": "Points are fixed once work is handed in."
   },
   "SchoolGrades": {
     "student": "Student",
@@ -1176,7 +1247,15 @@
     "empty-description": "Students appear here once they are placed in the class group.",
     "detail": "Student's grade",
     "detail-empty": "Choose a student to see their grade.",
-    "kktp": "KKTP"
+    "kktp": "KKTP",
+    "own-title": "My grades",
+    "own-search": "Find a class",
+    "own-class": "Class",
+    "own-period": "Period",
+    "own-band": "Band",
+    "own-band-none": "No band",
+    "own-empty": "No grade is released yet.",
+    "own-empty-description": "Each grade shows here once its teacher releases it."
   },
   "SchoolReports": {
     "title": "Report cards",
@@ -1215,7 +1294,11 @@
     "grade": "Grade",
     "result": "Result",
     "kktp-reached": "Meets KKTP",
-    "kktp-notReached": "Below KKTP"
+    "kktp-notReached": "Below KKTP",
+    "own-title": "My report cards",
+    "own-search": "Find a class group",
+    "own-empty": "No report card is locked yet.",
+    "own-empty-description": "Your report card shows here once the principal approves it."
   },
   "SchoolStart": {
     "metadata-title": "Open your school",
@@ -1339,6 +1422,7 @@
     "short-description": "Free lessons for K-12 through university.",
     "very-short-description": "Free learning materials.",
     "keywords": "free lessons, math lessons, physics lessons, chemistry lessons, biology lessons, computer science lessons, AI lessons, data science lessons, practice questions, worked solutions, exam prep, online try out, K-12 materials, university materials, open education, Nakafa",
+    "knows-about": "Mathematics, Physics, Chemistry, Biology, Computer Science, Artificial Intelligence, Data Science, Exam Preparation, K-12 Education, Higher Education",
     "classification": "Education"
   },
   "Common": {
@@ -2103,7 +2187,7 @@
     },
     "school-refusal-not-teacher": {
       "title": "Not an active teacher.",
-      "description": "Only an active teacher of this school can lead a cohort."
+      "description": "Choose an active teacher of this school."
     },
     "school-refusal-teacher-has-homeroom": {
       "title": "Already leads another cohort.",
@@ -2302,6 +2386,41 @@
     },
     "school-cohort-archived": {
       "title": "Class archived."
+    },
+    "school-class-archived": {
+      "title": "Classroom archived."
+    },
+    "school-refusal-class-name-taken": {
+      "title": "This classroom name is already used.",
+      "description": "Choose another name for this cohort."
+    },
+    "school-refusal-class-subject-taken": {
+      "title": "This subject has a classroom.",
+      "description": "Use the cohort's active classroom, or archive it first."
+    },
+    "school-refusal-class-limit": {
+      "title": "This cohort has all its classrooms.",
+      "description": "Restore an archived classroom instead of adding a new one."
+    },
+    "school-refusal-class-address-empty": {
+      "title": "The name has no letter or digit.",
+      "description": "Use a subject with letters or digits."
+    },
+    "school-refusal-class-ambiguous": {
+      "title": "This address is already taken.",
+      "description": "Rename the classroom, then try again."
+    },
+    "school-refusal-class-subject-required": {
+      "title": "A classroom here needs a subject.",
+      "description": "Write the subject, then add it again."
+    },
+    "school-refusal-class-subject-not-allowed": {
+      "title": "SD classrooms have no subject.",
+      "description": "Add it without a subject."
+    },
+    "school-refusal-person-class-limit": {
+      "title": "This teacher's classrooms are full.",
+      "description": "Remove them from another classroom first."
     },
     "school-period-archived": {
       "title": "Period archived."
@@ -2572,6 +2691,18 @@
     },
     "school-own-role-ended": {
       "title": "Your role has ended."
+    },
+    "school-refusal-room-opened": {
+      "title": "This room has opened.",
+      "description": "An opened room keeps its time and its name."
+    },
+    "school-refusal-schedule-invalid": {
+      "title": "This time cannot be used.",
+      "description": "Choose a start that has not passed, and an end after it."
+    },
+    "school-refusal-scheme-not-later": {
+      "title": "A newer version is already stored.",
+      "description": "Reload the page to see it, then save yours."
     }
   },
   "Ai": {
