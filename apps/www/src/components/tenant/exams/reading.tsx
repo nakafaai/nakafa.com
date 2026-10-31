@@ -17,10 +17,10 @@ import { useId } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
-  type Question,
   readingUpdate,
   sharedReadings,
-} from "@/components/tenant/exams/optimistic";
+} from "@/components/tenant/exams/attached";
+import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
 
 /** The reading a new choice of the field asks for, by its value. */
