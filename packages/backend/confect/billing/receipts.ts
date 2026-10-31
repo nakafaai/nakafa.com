@@ -2,6 +2,7 @@ import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import type { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
+import { Array as Arr } from "effect";
 
 /** What each kind of payment bought, in the language of the invoice. */
 const PAYMENT_ITEMS = {
@@ -30,7 +31,7 @@ const MINOR_DIGITS = {
   EUR: 2,
   IDR: 0,
   USD: 2,
-} as const satisfies Record<typeof BillingCurrency.Type, number>;
+} as const satisfies Record<BillingCurrency, number>;
 
 /** The zone an invoice's date reads in, the one the settings show dates in. */
 const INVOICE_TIME_ZONE = "Asia/Jakarta";
@@ -38,7 +39,7 @@ const INVOICE_TIME_ZONE = "Asia/Jakarta";
 /** An amount in its minor unit, written as the invoice's language writes that currency. */
 const writtenAmount = (
   amount: number,
-  currency: typeof BillingCurrency.Type,
+  currency: BillingCurrency,
   locale: ActiveAppLocaleCode
 ) =>
   new Intl.NumberFormat(locale, {
@@ -73,5 +74,40 @@ export function paymentInvoice(
     paidWith: "Xendit",
     status: "paid",
     total,
+  };
+}
+
+/** The invoice a school pays, as its PDF reads it: billed to the school, with its own number and due date. */
+export function schoolInvoice(
+  invoice: Pick<
+    Docs["billingInvoices"],
+    | "_creationTime"
+    | "currency"
+    | "dueAt"
+    | "lines"
+    | "number"
+    | "status"
+    | "total"
+  >,
+  school: string,
+  locale: ActiveAppLocaleCode
+): typeof InvoiceInput.Type {
+  const date = new Intl.DateTimeFormat(locale, {
+    dateStyle: "long",
+    timeZone: INVOICE_TIME_ZONE,
+  });
+  return {
+    buyer: { email: null, name: school },
+    dueOn: invoice.status === "open" ? date.format(invoice.dueAt) : null,
+    issuedOn: date.format(invoice._creationTime),
+    lines: Arr.map(invoice.lines, (line) => ({
+      amount: writtenAmount(line.amount, invoice.currency, locale),
+      description: line.description,
+    })),
+    locale,
+    number: invoice.number,
+    paidWith: invoice.status === "paid" ? "Xendit" : null,
+    status: invoice.status === "draft" ? "open" : invoice.status,
+    total: writtenAmount(invoice.total, invoice.currency, locale),
   };
 }

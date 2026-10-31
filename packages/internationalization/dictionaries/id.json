@@ -592,6 +592,7 @@
     "invoice-paid": "Lunas",
     "invoice-void": "Batal",
     "invoice-pay": "Bayar",
+    "invoice-download": "Unduh invoice",
     "invoice-transfer": "Bayar lewat transfer",
     "manage-group": "Pengelolaan",
     "back-to-school": "Kembali ke {school}",

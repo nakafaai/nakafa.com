@@ -2,7 +2,6 @@ import type { Ref } from "@confect/core";
 import { QueryResult, useAction, useQuery } from "@confect/react";
 import {
   Coins01Icon,
-  Download04Icon,
   Invoice01Icon,
   LinkSquare02Icon,
   Money01Icon,
@@ -10,19 +9,11 @@ import {
   Ticket01Icon,
 } from "@hugeicons/core-free-icons";
 import billingRefs from "@repo/backend/confect/_generated/refs/billing";
-import { Button } from "@repo/design-system/components/ui/button";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Effect, Option, Record as Rec } from "effect";
-import { type ComponentProps, useTransition } from "react";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { InvoiceDownload, RowAction } from "@/components/billing/invoice";
 import { HeadAlignContext } from "@/components/shared/table/align";
 import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
@@ -30,9 +21,7 @@ import { daysColumn } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
-import { reportClientException } from "@/lib/analytics/client";
 import { useBillingNavigation } from "@/lib/billing/checkout";
-import { invoiceBlob } from "@/lib/billing/invoice";
 import {
   BILLING_TIME_ZONE,
   formatBillingDay,
@@ -53,12 +42,6 @@ const PAYMENT_KINDS = {
   invoice: { icon: Invoice01Icon, label: "payment-invoice" },
   pass: { icon: Ticket01Icon, label: "payment-pass" },
 } as const;
-
-/** What a learner reads when an invoice cannot be drawn. */
-const INVOICE_FAILURE_COPY: ToastCopy = {
-  description: "invoice-error.description",
-  title: "invoice-error.title",
-};
 
 /**
  * The learner's receipts, read once the sheet opens so the plan card reads none.
@@ -84,91 +67,19 @@ export function Receipts() {
   );
 }
 
-/** Hands the learner one drawn invoice as a file. */
-const saveInvoice = (blob: Blob, name: string) =>
-  Effect.sync(() => {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = name;
-    link.click();
-    URL.revokeObjectURL(url);
-  });
-
-/** One row's action: an icon button that names itself in a tooltip and shows its work. */
-function RowAction({
-  icon,
-  isPending,
-  label,
-  onClick,
-}: {
-  icon: ComponentProps<typeof Spinner>["icon"];
-  isPending: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label={label}
-            disabled={isPending}
-            onClick={onClick}
-            size="icon-sm"
-            type="button"
-            variant="ghost"
-          >
-            <Spinner icon={icon} isLoading={isPending} />
-          </Button>
-        }
-      />
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
-  );
-}
-
 /** Draws the invoice of a payment Nakafa sold, and saves it. */
 function InvoiceAction({ payment }: { payment: Receipt }) {
   const t = useTranslations("Auth");
   const locale = useLocale();
   const download = useAction(billingRefs.receipts.download);
-  const [isPending, startTransition] = useTransition();
 
-  const handleDownload = () => {
-    if (!isActiveLocale(locale)) {
-      return;
-    }
-    startTransition(() =>
-      Effect.runPromise(
-        Effect.tryPromise(() =>
-          download({ locale, paymentId: payment.id })
-        ).pipe(
-          Effect.flatMap(Effect.fromResult),
-          Effect.flatMap((file) =>
-            invoiceBlob(file.base64).pipe(
-              Effect.flatMap((blob) => saveInvoice(blob, file.name))
-            )
-          ),
-          Effect.tapError((cause) =>
-            reportClientException(cause, { source: "settings-invoice" })
-          ),
-          Effect.catchCause(() =>
-            Effect.sync(() => {
-              toast.error(INVOICE_FAILURE_COPY, { position: "bottom-center" });
-            })
-          )
-        )
-      )
-    );
-  };
-
+  if (!isActiveLocale(locale)) {
+    return null;
+  }
   return (
-    <RowAction
-      icon={Download04Icon}
-      isPending={isPending}
+    <InvoiceDownload
       label={t("payment-download")}
-      onClick={handleDownload}
+      request={() => download({ locale, paymentId: payment.id })}
     />
   );
 }

@@ -592,6 +592,7 @@
     "invoice-paid": "Paid",
     "invoice-void": "Void",
     "invoice-pay": "Pay",
+    "invoice-download": "Download invoice",
     "invoice-transfer": "Pay by transfer",
     "manage-group": "Management",
     "back-to-school": "Back to {school}",

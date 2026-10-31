@@ -592,6 +592,7 @@
     "invoice-paid": "Bezahlt",
     "invoice-void": "Storniert",
     "invoice-pay": "Bezahlen",
+    "invoice-download": "Rechnung laden",
     "invoice-transfer": "Per Überweisung zahlen",
     "manage-group": "Verwaltung",
     "back-to-school": "Zurück zu {school}",

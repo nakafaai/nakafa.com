@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { schoolInvoice } from "@repo/backend/confect/billing/receipts";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -84,6 +85,39 @@ describe("billing/receipts", () => {
       polar: null,
       refunded: null,
     });
+  });
+
+  it("writes a school's invoice with its number, its lines, and a due date while it is open", () => {
+    const invoice = {
+      _creationTime: NOW,
+      currency: "IDR",
+      dueAt: NOW + 86_400_000,
+      lines: [
+        {
+          amount: 20_218,
+          description: "1 student",
+          quantity: 1,
+          unitAmount: 20_218,
+        },
+      ],
+      number: "NKF-2026-000001",
+      status: "open",
+      total: 20_218,
+    } as const;
+    expect(schoolInvoice(invoice, "SMA Harapan", "en")).toMatchObject({
+      buyer: { email: null, name: "SMA Harapan" },
+      dueOn: "November 2, 2026",
+      lines: [{ description: "1 student" }],
+      number: "NKF-2026-000001",
+      paidWith: null,
+      status: "open",
+    });
+    expect(
+      schoolInvoice({ ...invoice, status: "paid" }, "SMA Harapan", "id")
+    ).toMatchObject({ dueOn: null, paidWith: "Xendit", status: "paid" });
+    expect(
+      schoolInvoice({ ...invoice, status: "draft" }, "SMA Harapan", "id").status
+    ).toBe("open");
   });
 
   it("downloads the learner's invoice as a PDF, and refuses another's", async () => {

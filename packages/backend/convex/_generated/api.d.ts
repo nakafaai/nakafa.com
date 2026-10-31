@@ -198,8 +198,30 @@ export declare const api: {
         { locale: "en" | "id" | "de"; paymentId: Id<"billingPayments"> },
         { base64: string; name: string }
       >;
+      school: FunctionReference<
+        "action",
+        "public",
+        { locale: "en" | "id" | "de"; number: string; slug: string },
+        { base64: string; name: string }
+      >;
     };
     school: {
+      invoice: FunctionReference<
+        "query",
+        "public",
+        { locale: "en" | "id" | "de"; number: string; slug: string },
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        } | null
+      >;
         checkout: FunctionReference<
           "action",
           "public",
