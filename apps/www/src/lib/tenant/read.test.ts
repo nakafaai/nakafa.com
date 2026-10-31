@@ -11,7 +11,7 @@ import {
 } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Layer, Option, Result, Schema } from "effect";
-import { readSchoolSignInTitle } from "@/lib/tenant/copy";
+import { loadSchoolSignInTitle } from "@/lib/tenant/copy";
 import { outsiderOf, type SchoolViewer } from "@/lib/tenant/frame";
 import {
   readSchoolFrame,
@@ -44,7 +44,7 @@ vi.mock("@/lib/tenant/copy", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/tenant/copy")>();
   return {
     ...actual,
-    readSchoolSignInTitle: vi.fn(actual.readSchoolSignInTitle),
+    loadSchoolSignInTitle: vi.fn(actual.loadSchoolSignInTitle),
   };
 });
 
@@ -270,7 +270,7 @@ describe("readSchoolFrame with a signed-in account that the school does not refu
 
   it.effect("fails the whole answer when the visitor's title cannot load", () =>
     Effect.gen(function* () {
-      vi.mocked(readSchoolSignInTitle).mockRejectedValueOnce(
+      vi.mocked(loadSchoolSignInTitle).mockRejectedValueOnce(
         new Error("messages")
       );
       const failure = yield* readSchoolFrame({
