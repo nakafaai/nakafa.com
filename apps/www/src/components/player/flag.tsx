@@ -20,7 +20,8 @@ const flagButton = cva(
  * line is not always the one the learner reads. The button keeps one name and
  * one width, and says whether the question is flagged through its pressed
  * state. The question's flag changes at once, so a press never waits for the
- * server.
+ * server. In the list it keeps its place, hidden and inert, so the footer's
+ * zones keep their widths and nothing moves when the view changes.
  */
 export function PlayerFlag({
   locked,
@@ -39,22 +40,20 @@ export function PlayerFlag({
   const flagged = Option.exists(question, (candidate) => candidate.flagged);
   const single = usePlayer((state) => state.mode === "single");
 
-  if (!single) {
-    return null;
-  }
-
   return (
     <Button
+      aria-hidden={!single}
       aria-keyshortcuts="F"
       aria-pressed={flagged}
-      className={flagButton()}
+      className={flagButton({ className: single ? undefined : "invisible" })}
       disabled={locked || Option.isNone(question)}
+      inert={!single}
       onClick={() => Option.map(question, (candidate) => candidate.flag())}
       type="button"
       variant="outline"
     >
       <HugeIcons icon={Flag02Icon} />
-      <span className="max-sm:sr-only">{t("flag")}</span>
+      {t("flag")}
     </Button>
   );
 }
@@ -91,11 +90,11 @@ export function PlayerQuestionFlag({
       className={flagButton({ className: "absolute end-0 top-0" })}
       disabled={locked}
       onClick={onFlag}
-      size="icon"
       type="button"
       variant="outline"
     >
       <HugeIcons icon={Flag02Icon} />
+      {t("flag")}
     </Button>
   );
 }

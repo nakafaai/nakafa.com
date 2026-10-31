@@ -69,7 +69,7 @@ export function useRouteFailure(error: unknown, source: string) {
       return;
     }
     const reloaded = Effect.runSync(
-      reloadForStaleChunk(error, window.sessionStorage, () =>
+      reloadForStaleChunk(window.location.pathname, window.sessionStorage, () =>
         window.location.reload()
       )
     );

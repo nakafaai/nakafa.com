@@ -39,6 +39,7 @@ vi.mock("@/lib/routing/rendered", async () => {
   const routerPath = (url: URL) => routeRewrite.input({ url }).pathname;
   return {
     isBareRoutePath: (url: URL) => isBarePath(routerPath(url), templates),
+    isBrowserRoutePath: (url: URL) => routerPath(url) === "/en/home",
     isRenderedRoutePath: (url: URL) =>
       !release.hasStaticRelease || isRenderedPath(routerPath(url), templates),
   };
@@ -308,6 +309,17 @@ describe("decisions before the router", () => {
         expect(assets.fetch).not.toHaveBeenCalled();
         expect(handle).toHaveBeenCalledTimes(1);
       })
+  );
+
+  it.effect("answers a browser-only page with the shell, before any read", () =>
+    Effect.gen(function* () {
+      assets.fetch.mockResolvedValue(new Response("shell"));
+      const { handle, response } = yield* served("/en/home");
+      expect(response.status).toBe(200);
+      expect(yield* Effect.promise(() => response.text())).toBe("shell");
+      expect(handle).not.toHaveBeenCalled();
+      expect(retired.read).not.toHaveBeenCalled();
+    })
   );
 
   it.effect("renders a locale path that a Worker route template names", () =>

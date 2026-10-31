@@ -4,15 +4,17 @@ import { Array as Arr, DateTime, Effect, Schema } from "effect";
 
 /**
  * The message namespaces that the school pages render: the school's own words, the
- * exam and classroom words of its pages, the sign-in and not-found words of its
- * entry and error states, and the shared words of the shell. The browser picks only
- * these from its locale's dictionary.
+ * exam, classroom and connector words of its pages, the sign-in and not-found words
+ * of its entry and error states, and the shared words of the shell. The browser picks
+ * only these from its locale's dictionary, so `root.test.ts` holds this list to every
+ * namespace and key that a module a school route reaches renders.
  */
 const SCHOOL_NAMESPACES = [
   "AnalyticsConsent",
   "Auth",
   "Classroom",
   "Common",
+  "Connectors",
   "DataTable",
   "Editor",
   "Error",
