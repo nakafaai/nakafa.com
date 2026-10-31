@@ -127,7 +127,7 @@ function QuestionnaireChoice({
       {...props}
     >
       <QuestionnairePrimitive.ChoiceInput
-        className="absolute inset-0 z-10 size-full cursor-pointer opacity-0"
+        className="absolute inset-0 z-10 size-full opacity-0"
         data-slot="questionnaire-choice-input"
       />
       <span

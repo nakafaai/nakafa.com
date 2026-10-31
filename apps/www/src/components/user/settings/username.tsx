@@ -13,7 +13,6 @@ import {
 } from "@repo/design-system/components/ui/card";
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -71,6 +70,16 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
   });
   const stored = Option.getOrUndefined(Result.getSuccess(readUsername(typed)));
   const invalid = reply.message !== undefined && !reply.canSave;
+  // The line keeps the last answer while the next name is checked, so it never blanks between keys; the
+  // account's own name has nothing to answer, and clears it.
+  const [lastAnswer, setLastAnswer] = useState(reply.message);
+  if (reply.message !== undefined && reply.message !== lastAnswer) {
+    setLastAnswer(reply.message);
+  }
+  const answer =
+    stored !== undefined && stored === current
+      ? undefined
+      : (reply.message ?? lastAnswer);
 
   const save = (username: string) =>
     Effect.runPromise(
@@ -138,12 +147,17 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
                 value={typed}
               />
             </InputGroup>
-            {reply.message !== undefined && reply.canSave && (
-              <FieldDescription>{t(reply.message)}</FieldDescription>
-            )}
-            {reply.message !== undefined && !reply.canSave && (
-              <FieldError>{t(reply.message)}</FieldError>
-            )}
+            {/* One line always answers the typed name, so the card never grows while the name is checked:
+                a free name reads muted, a refused one in the error colour. */}
+            <FieldError
+              className={
+                answer === "username-available"
+                  ? "text-muted-foreground"
+                  : undefined
+              }
+            >
+              {answer === undefined ? null : t(answer)}
+            </FieldError>
           </Field>
         </CardContent>
         <CardSectionFooter hint={t("username-footer")}>

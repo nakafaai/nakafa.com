@@ -170,6 +170,9 @@ describe("A Nina turn that cannot be settled", () => {
   it("ends a turn the learner had stopped as cancelled, at the time of the stop", async () => {
     const f = await fixture();
     await f.t.mutation(claim, { turnId: f.turnId });
+    // The fixture and the claim commit first, so the stop has its own moment.
+    const stoppedAt = NOW + 1000;
+    vi.setSystemTime(stoppedAt);
     await f.owner.mutation(cancel, { chatId: f.chatId });
     vi.mocked(readThread).mockReturnValue(Effect.fail(new SealedReadError()));
     vi.setSystemTime(NOW + DEADLINE + GRACE);
@@ -178,7 +181,7 @@ describe("A Nina turn that cannot be settled", () => {
     const state = await f.inspect();
     expect(state.turns[0]).toMatchObject({
       phase: "settled",
-      state: { status: "cancelled", finishedAt: NOW },
+      state: { status: "cancelled", finishedAt: stoppedAt },
     });
     expect(state.user?.credits).toBe(10);
     expect(state.chats[0]?.activeTurnId).toBeUndefined();

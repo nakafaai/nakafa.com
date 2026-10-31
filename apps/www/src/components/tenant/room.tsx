@@ -3,7 +3,11 @@ import { Login03Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { JoinOutcome } from "@repo/backend/confect/exams/sittings/contract";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -201,12 +205,10 @@ function RoomJoinForm() {
           translate="no"
           value={token}
         />
+        <FieldError>
+          {refusal === null ? null : t(refusals[refusal], { school: name })}
+        </FieldError>
       </Field>
-      {refusal === null ? null : (
-        <p className="text-destructive text-sm" role="alert">
-          {t(refusals[refusal], { school: name })}
-        </p>
-      )}
       <Button
         aria-busy={joining || undefined}
         className="w-full"

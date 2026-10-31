@@ -1,18 +1,25 @@
 import type {
   ExamQuestionsDoc,
   ExamResultsDoc,
+  ExamSittingsDoc,
+  TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { questionView } from "@repo/backend/confect/exams/question";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
-import { questionResults } from "@repo/backend/confect/exams/results/rows";
+import {
+  personResult,
+  questionResults,
+} from "@repo/backend/confect/exams/results/rows";
+import type { Verdict } from "@repo/backend/confect/exams/results/schema";
 import {
   optionIdsOf,
   tallyAnswers,
 } from "@repo/backend/confect/exams/results/stats";
 import { QuestionNotInExam } from "@repo/backend/confect/exams/sittings/errors";
+import { namedPeople } from "@repo/backend/confect/tenancy/named";
 import type { PaginationOptions } from "convex/server";
-import { Array as Arr, Effect, Number as Num, Struct } from "effect";
+import { Array as Arr, Effect, Number as Num, Option, Struct } from "effect";
 
 /** The most answers that one page of a question's list holds. A larger request is clamped to it. */
 const ANSWER_PAGE_SIZE = 100;
@@ -25,47 +32,111 @@ const ANSWER_PAGE_SIZE = 100;
 const STATS_LIMIT = 3000;
 
 /** One scored answer of a question, with the name of the student who gave it. */
-const answerRow = Effect.fn("exams.results.questions.answer")(function* (
+const answerRow = (row: ExamResultsDoc, person: TenantPeopleDoc) => ({
+  attemptId: row.attempt,
+  name: person.name,
+  points: row.points,
+  response: row.response,
+  verdict: row.verdict,
+});
+
+/** The answer of a row that the list read by its index, with the student's name read beside it. */
+const resultRow = Effect.fn("exams.results.questions.answer")(function* (
   row: ExamResultsDoc
 ) {
   const person = yield* (yield* DatabaseReader)
     .table("tenantPeople")
     .get(row.person)
     .pipe(Effect.orDie);
-  return {
-    attemptId: row.attempt,
-    name: person.name,
-    points: row.points,
-    response: row.response,
-    verdict: row.verdict,
-  };
+  return answerRow(row, person);
 });
 
 /**
- * One page of a question's answers across the sitting, one for each student who was scored on it. A
- * page asks for at most `ANSWER_PAGE_SIZE` answers, and a larger request is clamped to that size.
+ * The answer of one person whose name a search matched: the person's scored answer to the question, or
+ * none when the person was not scored on it, or was scored with another verdict than the `verdict` the
+ * list keeps.
+ */
+const personAnswer = Effect.fn("exams.results.questions.person")(function* (
+  sittingId: ExamSittingsDoc["_id"],
+  questionId: ExamQuestionsDoc["_id"],
+  person: TenantPeopleDoc,
+  verdict: Verdict | undefined
+) {
+  return Option.map(
+    Option.filter(
+      yield* personResult(sittingId, person._id, questionId),
+      (row) => verdict === undefined || row.verdict === verdict
+    ),
+    (row) => answerRow(row, person)
+  );
+});
+
+/**
+ * One page of a question's scored rows across the sitting, in their verdicts' order: every row, or only
+ * the rows of one verdict.
+ */
+const resultPage = Effect.fn("exams.results.questions.rows")(function* (
+  sittingId: ExamSittingsDoc["_id"],
+  questionId: ExamQuestionsDoc["_id"],
+  paginationOpts: PaginationOptions,
+  verdict: Verdict | undefined
+) {
+  return yield* (yield* DatabaseReader)
+    .table("examResults")
+    .index("by_sittingId_and_questionId_and_verdict", (query) => {
+      const ofQuestion = query
+        .eq("sitting", sittingId)
+        .eq("question", questionId);
+      return verdict === undefined
+        ? ofQuestion
+        : ofQuestion.eq("verdict", verdict);
+    })
+    .paginate(paginationOpts)
+    .pipe(Effect.orDie);
+});
+
+/**
+ * One page of a question's answers across the sitting, one for each student who was scored on it, in
+ * their verdicts' order. A page asks for at most `ANSWER_PAGE_SIZE` answers, and a larger request is
+ * clamped to that size. A `verdict` reads only the answers of that verdict. A `search` reads the
+ * school's people whose names match it, best match first (`namedPeople`), and keeps those who were
+ * scored on the question, so a page of a search can hold fewer answers than it read.
  */
 export const byQuestion = Effect.fn("exams.results.questions.page")(
   function* (args: {
     paginationOpts: PaginationOptions;
     questionId: ExamQuestionsDoc["_id"];
+    search?: string;
+    verdict?: Verdict;
   }) {
     const sitting = yield* ResultSitting;
-    const page = yield* (yield* DatabaseReader)
-      .table("examResults")
-      .index("by_sittingId_and_questionId", (query) =>
-        query.eq("sitting", sitting._id).eq("question", args.questionId)
-      )
-      .paginate(
-        Struct.assign(args.paginationOpts, {
-          numItems: Num.clamp(args.paginationOpts.numItems, {
-            maximum: ANSWER_PAGE_SIZE,
-            minimum: 1,
-          }),
-        })
-      )
-      .pipe(Effect.orDie);
-    const rows = yield* Effect.forEach(page.page, answerRow, {
+    const paginationOpts = Struct.assign(args.paginationOpts, {
+      numItems: Num.clamp(args.paginationOpts.numItems, {
+        maximum: ANSWER_PAGE_SIZE,
+        minimum: 1,
+      }),
+    });
+    if (args.search !== undefined) {
+      const people = yield* namedPeople(
+        sitting.tenantId,
+        args.search,
+        paginationOpts
+      );
+      const rows = yield* Effect.forEach(
+        people.page,
+        (person) =>
+          personAnswer(sitting._id, args.questionId, person, args.verdict),
+        { concurrency: "unbounded" }
+      );
+      return Struct.assign(people, { page: Arr.getSomes(rows) });
+    }
+    const page = yield* resultPage(
+      sitting._id,
+      args.questionId,
+      paginationOpts,
+      args.verdict
+    );
+    const rows = yield* Effect.forEach(page.page, resultRow, {
       concurrency: "unbounded",
     });
     return Struct.assign(page, { page: rows });
