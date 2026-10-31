@@ -1,0 +1,13 @@
+{
+  "extends": "@repo/typescript-config/react-library.json",
+  "compilerOptions": {
+    "paths": {
+      "@repo/*": ["../*"],
+      "@repo/pdf/*": ["./*"]
+    },
+    "resolveJsonModule": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["./**/*.ts", "./**/*.tsx", "./*.mts"],
+  "exclude": ["node_modules"]
+}

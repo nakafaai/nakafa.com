@@ -14,6 +14,17 @@
   },
   "overrides": [
     {
+      // `tw` is the Tailwind prop of takumi-pdf, whose documents render to a PDF and never reach the DOM.
+      "includes": ["packages/pdf/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUnknownAttribute": "off"
+          }
+        }
+      }
+    },
+    {
       // Proven false positives, one file each. The first six call Playwright's
       // `Locator.innerText()`, a method of the test runner, not a DOM node. The
       // other ten read the rendered text of the page, as a learner sees it, where

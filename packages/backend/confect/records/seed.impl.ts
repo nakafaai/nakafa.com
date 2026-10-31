@@ -189,7 +189,7 @@ const graduation = FunctionImpl.make(
       })
       .pipe(Effect.orDie);
     yield* (yield* Scheduler)
-      .runAfter(Duration.zero, recordsInternal.prints.draw, { reportId })
+      .runAfter(Duration.zero, recordsInternal.draw.report, { reportId })
       .pipe(Effect.orDie);
     return { cohort: name, cohortId };
   })
