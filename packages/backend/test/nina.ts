@@ -253,7 +253,9 @@ async function queueTurn(
  * Earlier turns, each with its settled turn row, precede the reserved prompt:
  * `history` is a count of complete turns, or a list that names each one's kind.
  * `inspect` reads back what the turn left in storage: its user, turn, chat,
- * credit ledger, and messages.
+ * credit ledger, and messages. It is seeded in one mutation: convex-test runs
+ * each mutation after the commits before it, as Convex does, so under a frozen
+ * clock the first write of a test keeps its moment.
  */
 export async function createNinaTest({
   history = 0,
@@ -267,10 +269,8 @@ export async function createNinaTest({
   needsFetch?: boolean;
 } = {}) {
   const t = createConvexTestWithBetterAuth();
-  const identity = await t.mutation((ctx) =>
-    seedAuthenticatedUser(ctx, { now, credits: 10 })
-  );
-  const saved = await t.mutation(async (ctx) => {
+  const { identity, ...saved } = await t.mutation(async (ctx) => {
+    const identity = await seedAuthenticatedUser(ctx, { now, credits: 10 });
     const threadId = await createThread(ctx, components.nina, {
       userId: identity.userId,
     });
@@ -299,7 +299,7 @@ export async function createNinaTest({
       threadId,
       userId: identity.userId,
     });
-    return { ...turn, threadId, chatId };
+    return { ...turn, threadId, chatId, identity };
   });
   const owner = t.withIdentity({
     subject: identity.authUserId,
@@ -318,6 +318,12 @@ export async function createNinaTest({
     }));
   return { ...saved, t, owner, identity, inspect };
 }
+
+/**
+ * Fires the jobs that are due and none that wait: a job scheduled at once is due
+ * a millisecond past a frozen clock once convex-test pins a commit after it.
+ */
+export const fireDueJobs = () => vi.advanceTimersByTime(1);
 
 /**
  * Queues one more turn in the chat of a fixture, once the earlier one has

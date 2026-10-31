@@ -1,4 +1,4 @@
-import { Number as Num, Schema } from "effect";
+import { Number as Num, Option, Schema } from "effect";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 
 /** The filters of the dashboard, in the order the filter row shows them. */
@@ -44,6 +44,32 @@ export function lastActivityOf(
   return answeredAt === null
     ? attempt.lastActiveAt
     : Num.max(attempt.lastActiveAt, answeredAt);
+}
+
+/** The seconds of one minute, which a long time away is told in. */
+export const SECONDS_IN_MINUTE = 60;
+
+/**
+ * The moment a seat's student went away, while the seat shows the student away: the time of the exit or the
+ * disconnect that no return followed. None for a student who is here, locked, or finished.
+ */
+export function awaySince(attempt: DashboardAttempt): Option.Option<number> {
+  if (seatFrame(attempt) !== "away" || attempt.latestSignal === null) {
+    return Option.none();
+  }
+  return Option.some(attempt.latestSignal.at);
+}
+
+/**
+ * The time from `since` to `now` in whole minutes and seconds, never below zero, so a device clock a little behind
+ * the server's shows no negative time.
+ */
+export function awayTime(since: number, now: number) {
+  const total = Num.max(0, Math.floor((now - since) / 1000));
+  return {
+    minutes: Math.floor(total / SECONDS_IN_MINUTE),
+    seconds: total % SECONDS_IN_MINUTE,
+  };
 }
 
 /** Whether the student's latest signal is a disconnect, which draws the seat's frame dashed. */

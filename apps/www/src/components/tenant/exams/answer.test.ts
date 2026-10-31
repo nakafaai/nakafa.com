@@ -11,13 +11,11 @@ import {
   entryOf,
   holdsLabel,
   keyWithoutOption,
-  labelText,
   markedKey,
   markedOptions,
   type OptionLabel,
   optionEditOf,
   optionLabelOf,
-  optionLetter,
   toggledKey,
   withOptionAdded,
   withOptionLabel,
@@ -61,13 +59,6 @@ const choice: Interaction = {
 
 /** A text entry, which is not a choice, so an answer edit leaves it as it is. */
 const entry: Interaction = { id: "entry", kind: "textEntry", label: "Entry" };
-
-describe("optionLetter", () => {
-  it("names the options from A in order", () => {
-    expect(optionLetter(0)).toBe("A");
-    expect(optionLetter(3)).toBe("D");
-  });
-});
 
 describe("optionLabelOf and emptyLabel", () => {
   it("reads a label the contract accepts as the document it is", () => {
@@ -459,34 +450,5 @@ describe("entryOf, acceptedKey and acceptedOf", () => {
     expect(acceptedKey([entry], ["  ", ""])).toBeNull();
     expect(acceptedOf(null)).toEqual([]);
     expect(acceptedOf(markedKey([choice], "option-1"))).toEqual([]);
-  });
-});
-
-describe("labelText", () => {
-  it("reads the text of a label's paragraphs, and nothing of an empty one", () => {
-    expect(labelText(textOf("Benar"))).toBe("Benar");
-    expect(
-      labelText({
-        content: [
-          { content: [{ text: "Salah", type: "text" }], type: "paragraph" },
-          { content: [{ text: "sekali", type: "text" }], type: "paragraph" },
-        ],
-        type: "doc",
-      })
-    ).toBe("Salah sekali");
-    expect(labelText(emptyLabel())).toBe("");
-    // A line break and a formula block hold no text of a label.
-    expect(
-      labelText({
-        content: [
-          {
-            content: [{ text: "Benar", type: "text" }, { type: "hardBreak" }],
-            type: "paragraph",
-          },
-          { attrs: { latex: "x^2" }, type: "mathBlock" },
-        ],
-        type: "doc",
-      })
-    ).toBe("Benar");
   });
 });

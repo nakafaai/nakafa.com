@@ -6,7 +6,6 @@ import type { Option } from "effect";
 import { createContext, use } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { HomeAccess } from "@/components/tenant/home/access";
-import type { Greeting } from "@/components/tenant/home/greeting";
 import { liveTenant } from "@/components/tenant/live";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import type { SchoolViewer } from "@/lib/tenant/frame";
@@ -14,9 +13,9 @@ import type { SchoolViewer } from "@/lib/tenant/frame";
 /**
  * The school the shell shows, its address, its name and its mark, the viewer's
  * first role in it, or none when the viewer holds no grant, what the viewer may
- * open: the school's settings and its exams, the viewer's exam access that the
- * home and the exam list draw from, and the greeting of the home. A type only: the
- * browser bundle never evaluates the schemas it is derived from.
+ * open: the school's settings and its exams, and the viewer's exam access that the
+ * exam list and the school's landing draw from. A type only: the browser bundle never
+ * evaluates the schemas it is derived from.
  */
 export type TenantValue = Pick<
   typeof TenantProfile.Type,
@@ -25,14 +24,13 @@ export type TenantValue = Pick<
   Record<"logo", string | undefined> &
   Record<"role", Option.Option<BuiltinRole>> &
   Record<"canManage" | "canOpenExams" | "canOpenReports", boolean> &
-  Record<"greeting", Greeting> &
   Record<"home", HomeAccess>;
 
 /**
  * The school of the shell. Its value is fixed for one render of the school
- * layout. The layout's gate computes the viewer's access and greeting before the
- * page commits, so a card, a row or the greeting that depends on them draws with
- * the first frame and never inserts after it. A school's name and logo change in
+ * layout. The layout's gate computes the viewer's access before the page commits, so
+ * a card or a row that depends on it draws with the first frame and never inserts
+ * after it. A school's name and logo change in
  * its settings, so `useTenant` reads them from the viewer's live query.
  */
 export const TenantContext = createContext<TenantValue | null>(null);
