@@ -1,12 +1,13 @@
 import { useMutation } from "@confect/react";
 import {
   Archive02Icon,
+  Edit02Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
   UserStar01Icon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { ClassName } from "@repo/backend/confect/classroom/class";
+import { ClassName, ClassSubject } from "@repo/backend/confect/classroom/class";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -27,8 +28,10 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { LineDialog } from "@/components/tenant/line";
 import {
   archiveClassChange,
+  changeClassSubject,
   renameClassChange,
   restoreClassChange,
   type SchoolClass,
@@ -94,8 +97,13 @@ export function SchoolClassMenu({
   const rename = useMutation(classroom.classes.rename).withOptimisticUpdate(
     renameClassChange
   );
+  const changeSubject = useMutation(
+    classroom.classes.changeSubject
+  ).withOptimisticUpdate(changeClassSubject);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTeaching, setIsTeaching] = useState(false);
+  const [subjecting, setSubjecting] = useState(0);
+  const [isSubjecting, setIsSubjecting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [name, setName] = useState(row.name);
   const next = name.trim();
@@ -130,6 +138,17 @@ export function SchoolClassMenu({
             <HugeIcons icon={PencilEdit02Icon} />
             {t("class-rename")}
           </DropdownMenuItem>
+          {row.subject === undefined ? null : (
+            <DropdownMenuItem
+              onClick={() => {
+                setSubjecting((count) => count + 1);
+                setIsSubjecting(true);
+              }}
+            >
+              <HugeIcons icon={Edit02Icon} />
+              {t("class-subject-change")}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={() =>
               startTransition(() =>
@@ -161,6 +180,27 @@ export function SchoolClassMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      {subjecting === 0 ? null : (
+        <LineDialog
+          description={t("class-subject-change-description")}
+          initial={row.subject ?? ""}
+          isValid={Schema.is(ClassSubject)}
+          key={subjecting}
+          label={t("class-subject")}
+          onSave={(subject) =>
+            startTransition(() =>
+              saveSchool(
+                () => changeSubject({ classId: row.id, slug, subject }),
+                SOURCE
+              )
+            )
+          }
+          open={isSubjecting}
+          placeholder={t("class-subject-placeholder")}
+          setOpen={setIsSubjecting}
+          title={t("class-subject-change")}
+        />
+      )}
       <ClassTeachersDialog
         classId={row.id}
         isRead={isMenuOpen || isTeaching}
