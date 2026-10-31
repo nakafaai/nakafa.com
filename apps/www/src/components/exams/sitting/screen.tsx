@@ -75,11 +75,7 @@ export function StudentScreen({
         <h3 className="font-medium" id={titleId}>
           {t("question", { number: screen.number })}
         </h3>
-        <SittingDocument
-          document={prompt}
-          key={screen.prompt}
-          label={t("prompt-label")}
-        />
+        <SittingDocument document={prompt} />
         {Option.isSome(choice) ? (
           <SittingChoice
             choice={choice.value}

@@ -5,9 +5,18 @@ import {
   failureGroupCopyOf,
   isFinalRefusal,
   isRetiredDevice,
+  isStaleAnswer,
   refusalCopyOf,
   sittingFailureMessage,
 } from "@/components/exams/sitting/entry";
+
+describe("isStaleAnswer", () => {
+  it("names only the answer that the server already holds or has replaced", () => {
+    expect(isStaleAnswer({ _tag: "StaleAnswer" })).toBe(true);
+    expect(isStaleAnswer({ _tag: "AttemptClosed" })).toBe(false);
+    expect(isStaleAnswer(new Error("lost"))).toBe(false);
+  });
+});
 
 describe("sittingFailureMessage", () => {
   it("names the sentence of each way an entry ends without a seat", () => {

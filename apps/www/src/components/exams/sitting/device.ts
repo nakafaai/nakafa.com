@@ -3,7 +3,9 @@ import { DeviceId } from "@repo/backend/confect/exams/sittings/schema";
 import { Effect, Option, Schema } from "effect";
 
 /** The browser storage methods this module calls, so a caller can supply another store. */
-type SittingDeviceStorage = Readonly<Pick<Storage, "getItem" | "setItem">>;
+type SittingDeviceStorage = Readonly<
+  Pick<Storage, "getItem" | "removeItem" | "setItem">
+>;
 
 /** Raised when the browser refuses to read or keep the device of a sitting. */
 export class SittingDeviceStorageFailed extends Schema.TaggedError<SittingDeviceStorageFailed>()(
@@ -95,6 +97,20 @@ export const rememberSittingDevice = Effect.fn("exams.sitting.device.remember")(
     const target = yield* storageOf(storage);
     yield* Effect.try({
       try: () => target.setItem(sittingDeviceKey(sittingId), deviceId),
+      catch: () => new SittingDeviceStorageFailed(),
+    });
+  }
+);
+
+/**
+ * Forgets the device of a sitting whose attempt is finished, so a later visit opens how it ended and not
+ * the paper's frame. A browser that refuses keeps the device, and that visit only shows the frame first.
+ */
+export const forgetSittingDevice = Effect.fn("exams.sitting.device.forget")(
+  function* (sittingId: string, storage?: SittingDeviceStorage) {
+    const target = yield* storageOf(storage);
+    yield* Effect.try({
+      try: () => target.removeItem(sittingDeviceKey(sittingId)),
       catch: () => new SittingDeviceStorageFailed(),
     });
   }

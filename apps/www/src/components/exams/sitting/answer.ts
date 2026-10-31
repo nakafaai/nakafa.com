@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { NETWORK_RETRY_SCHEDULE } from "@repo/backend/client/network";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
@@ -46,8 +47,10 @@ type SentAnswer = typeof SentAnswer.Type;
 
 /**
  * Sends one answer, and settles the answer that the browser keeps for it once the server answers
- * (`settleSent`). The send resolves to the failure that the caller tells the student about, or to none when
- * the server took the answer, so each caller shows its failures with one toast.
+ * (`settleSent`). A refusal is the server's answer, so it stays; a call that failed names no refusal, so the
+ * same version goes again, because a server that failed for a moment must not lose a typed answer. The send
+ * resolves to the failure that the caller tells the student about, or to none when the server took the
+ * answer, so each caller shows its failures with one toast.
  */
 export function useSendAnswer() {
   const answer = useAnswer();
@@ -63,7 +66,10 @@ export function useSendAnswer() {
           slug: input.slug,
           version: input.version,
         })
-      ).pipe(Effect.flatMap(Effect.fromResult)),
+      ).pipe(
+        Effect.retry(NETWORK_RETRY_SCHEDULE),
+        Effect.flatMap(Effect.fromResult)
+      ),
       confirmKept(input, answeredAt),
       isFinalRefusal
     );

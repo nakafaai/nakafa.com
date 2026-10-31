@@ -257,6 +257,13 @@ const storeFinish = Effect.fn("exams.sittings.gate.finish.store")(function* (
 });
 
 /**
+ * How long after the deadline a student's answer still counts (ADR 0013): the answer given in the last
+ * seconds, which a slow network holds in flight or through one reconnect. It is shorter than the 75 seconds
+ * before a closing attempt is submitted, so every answer it admits is in the attempt's score.
+ */
+export const WRITE_ALLOWANCE_MS = 15_000;
+
+/**
  * The sitting's write gate: every answer, flag, finish, and signal of a student passes
  * through its one guard sequence (ADR 0013). The store's failures are the sitting's
  * own refusals, and the gate's own refusals are mapped to the sitting's errors at the
@@ -275,4 +282,5 @@ export const sittingGate = make<
   finish: (live, _reason, now) => storeFinish(live, now),
   placement: placementOf,
   section: sectionOf,
+  writeAllowance: WRITE_ALLOWANCE_MS,
 });

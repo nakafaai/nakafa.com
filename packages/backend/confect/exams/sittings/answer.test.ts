@@ -12,6 +12,7 @@ import {
   newChoiceAnswers,
   shortAnswers,
 } from "@repo/backend/confect/exams/question";
+import { WRITE_ALLOWANCE_MS } from "@repo/backend/confect/exams/sittings/gate";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import {
@@ -337,20 +338,22 @@ describe("exams/sittings answer", () => {
       })
   );
 
-  it.effect("refuses an answer once the deadline has passed", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const { question, sittingId } = yield* enteredSitting(fixture);
-      vi.setSystemTime(CLOSES);
-      const failure = yield* answerAs(fixture, {
-        deviceId: deviceOf(1),
-        questionId: question,
-        response: ["option-1"],
-        sittingId,
-        version: 1,
-      }).pipe(Effect.flip);
-      expect(failure).toMatchObject({ _tag: "AttemptClosed" });
-    })
+  it.effect(
+    "refuses an answer once the deadline and its allowance passed",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { question, sittingId } = yield* enteredSitting(fixture);
+        vi.setSystemTime(CLOSES + WRITE_ALLOWANCE_MS);
+        const failure = yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: question,
+          response: ["option-1"],
+          sittingId,
+          version: 1,
+        }).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "AttemptClosed" });
+      })
   );
 
   it.effect(
