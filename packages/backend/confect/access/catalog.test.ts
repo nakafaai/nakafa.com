@@ -177,6 +177,7 @@ describe("access/catalog", () => {
           "period.rescheduled",
           "cohort.created",
           "cohort.renamed",
+          "cohort.grade.set",
           "cohort.archived",
           "cohort.restored",
           "assignment.created",

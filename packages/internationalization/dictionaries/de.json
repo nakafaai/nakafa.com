@@ -647,9 +647,8 @@
     "cohort-status": "Status",
     "cohort-active": "Aktiv",
     "cohort-archived": "Archiviert",
-    "cohort-rename": "Umbenennen",
-    "cohort-rename-description": "Die Klasse behält ihre Schüler, Lehrkräfte und Noten.",
-    "cohort-rename-save": "Speichern",
+    "cohort-edit-description": "Die Klasse behält ihre Schüler, Lehrkräfte und Noten.",
+    "cohort-edit-save": "Speichern",
     "cohort-archive": "Archivieren",
     "cohort-add-footer": "Eine neue Klasse ist sofort aktiv.",
     "cohorts-empty": "Noch keine Klasse.",
@@ -759,7 +758,10 @@
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
         "archived": "Klasse archiviert",
-        "restored": "Klasse wiederhergestellt"
+        "restored": "Klasse wiederhergestellt",
+        "grade": {
+          "set": "Klassenstufe geändert"
+        }
       },
       "connection": {
         "connected": "Verbindung hinzugefügt",

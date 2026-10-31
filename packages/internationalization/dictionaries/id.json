@@ -647,9 +647,8 @@
     "cohort-status": "Status",
     "cohort-active": "Aktif",
     "cohort-archived": "Diarsipkan",
-    "cohort-rename": "Ganti nama",
-    "cohort-rename-description": "Siswa, guru, dan nilai di kelas ini tetap sama.",
-    "cohort-rename-save": "Simpan",
+    "cohort-edit-description": "Siswa, guru, dan nilai di kelas ini tetap sama.",
+    "cohort-edit-save": "Simpan",
     "cohort-archive": "Arsipkan",
     "cohort-add-footer": "Rombel baru langsung aktif.",
     "cohorts-empty": "Belum ada rombel.",
@@ -759,7 +758,10 @@
         "created": "Rombel ditambahkan",
         "renamed": "Rombel diganti nama",
         "archived": "Rombel diarsipkan",
-        "restored": "Rombel dipulihkan"
+        "restored": "Rombel dipulihkan",
+        "grade": {
+          "set": "Tingkat rombel diubah"
+        }
       },
       "connection": {
         "connected": "Koneksi ditambahkan",

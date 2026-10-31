@@ -7336,6 +7336,7 @@ export declare const api: {
                 }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
+              | { grade: number; type: "cohort.grade.set" }
               | { type: "cohort.archived" }
               | { type: "cohort.restored" }
               | {
@@ -9105,6 +9106,22 @@ export declare const api: {
           status: "active" | "archived";
         }
       >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          grade: number;
+          name: string;
+          slug: string;
+        },
+        {
+          grade: number;
+          id: Id<"tenantCohorts">;
+          name: string;
+          status: "active" | "archived";
+        }
+      >;
       get: FunctionReference<
         "query",
         "public",
@@ -9150,17 +9167,6 @@ export declare const api: {
           page: Array<{ id: Id<"tenantPeople">; name: string }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
-        }
-      >;
-      rename: FunctionReference<
-        "mutation",
-        "public",
-        { cohortId: Id<"tenantCohorts">; name: string; slug: string },
-        {
-          grade: number;
-          id: Id<"tenantCohorts">;
-          name: string;
-          status: "active" | "archived";
         }
       >;
       restore: FunctionReference<
