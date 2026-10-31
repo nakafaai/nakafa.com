@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
@@ -239,6 +240,8 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
 
   const student = await studentContext.newPage();
+  // The page's changes are followed, so the reload below waits until the server took the flag.
+  const changes = await Effect.runPromise(trackChanges(student, []));
   await student.goto(address(`/sittings/${sitting.sittingId}`));
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
@@ -269,6 +272,7 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     exact: true,
     name: "Flag question 2",
   });
+  const sentBefore = changes.sent;
   await flag.click();
   await expect(flag).toHaveAttribute("aria-pressed", "true");
   await expect(
@@ -286,7 +290,10 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
   ).toBeVisible();
 
   // A reload brings back the flag from the server's shared flags table, so the flag survives a closed tab. The
-  // answer is not checked here: the server may hold it already, so the check would pass either way.
+  // answer is not checked here: the server may hold it already, so the check would pass either way. The page
+  // shows the flag before the server has it, and a reload drops a change still on its way, so the reload waits
+  // until the server answered every change.
+  await saved(changes, sentBefore);
   await student.reload();
   await expect(
     navigator.getByRole("button", {
