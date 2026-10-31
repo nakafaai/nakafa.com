@@ -18,14 +18,25 @@ const QUIET_FAILURES = 4;
 /** How long a paper stands before its failures stop counting as a row, in milliseconds. */
 const STEADY_MILLISECONDS = 60_000;
 
-/** The paper's frame while the paper is not on screen: full screen, under its bar, with the paper to come. */
-export function PaperFrame({ children }: { readonly children: ReactNode }) {
+/**
+ * The paper's frame around every screen of a sitting that holds no paper: its entry, its waiting, its outcome,
+ * and the moment before the paper arrives, so the whole sitting stands in one full screen under one bar, as a
+ * try-out does, and the frame never changes on the way into the paper or out of it.
+ */
+export function PaperFrame({
+  children,
+  title,
+}: {
+  /** The screen under the bar, where the paper's questions stand; none while the paper is on its way. */
+  readonly children?: ReactNode;
+  readonly title: string;
+}) {
   const mode = useSittingMode();
 
   return (
     <PlayerProvider keys={[]} mode={mode}>
-      {children}
-      <PlayerMain navigator={null}>{null}</PlayerMain>
+      <PaperBar back={<PaperBack />} title={title} />
+      <PlayerMain navigator={null}>{children}</PlayerMain>
     </PlayerProvider>
   );
 }
@@ -86,8 +97,7 @@ function PaperReturn({
   }
 
   return (
-    <PaperFrame>
-      <PaperBar back={<PaperBack />} title={t("sitting")} />
+    <PaperFrame title={t("sitting")}>
       {quiet ? null : <SittingRetry error={error} />}
     </PaperFrame>
   );

@@ -3,8 +3,8 @@ import { CardHeader, CardTitle } from "@repo/design-system/components/ui/card";
 import { useTranslations } from "use-intl";
 import { StudentResults } from "@/components/exams/results/student";
 import type { AttemptValue } from "@/components/exams/sitting/attempt";
-import { SittingBar } from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
+import { PaperFrame } from "@/components/exams/sitting/recovery";
 import {
   CardSection,
   CardSectionFooter,
@@ -33,9 +33,8 @@ export function StudentOutcome({
   const t = useTranslations("Exams");
 
   return (
-    <>
-      <SittingBar examTitle={sitting.examTitle} />
-      <SittingBody align="top">
+    <PaperFrame title={sitting.examTitle}>
+      <SittingBody>
         {attempt.state === "submitted" ? (
           <StudentResults sittingId={sitting.id} />
         ) : null}
@@ -48,6 +47,6 @@ export function StudentOutcome({
           </CardSection>
         ) : null}
       </SittingBody>
-    </>
+    </PaperFrame>
   );
 }
