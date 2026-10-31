@@ -6,7 +6,7 @@ const ReportLine = Schema.Struct({
   band: Schema.optionalKey(Schema.String),
   className: Schema.String,
   kktp: Schema.Literals(["reached", "notReached"]),
-  value: Schema.Number,
+  value: Schema.Finite,
 });
 
 /** Everything one report card PDF shows, already in the language of its unit. */

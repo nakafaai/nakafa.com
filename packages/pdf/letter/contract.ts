@@ -2,7 +2,7 @@ import { Schema } from "effect";
 
 /** Everything one SKL PDF shows, in Indonesian (ADR 0033, S6). */
 export const LetterInput = Schema.Struct({
-  average: Schema.Number,
+  average: Schema.Finite,
   cohort: Schema.String,
   date: Schema.String,
   decision: Schema.String,
@@ -17,7 +17,7 @@ export const LetterInput = Schema.Struct({
   school: Schema.String,
   student: Schema.String,
   subjects: Schema.Array(
-    Schema.Struct({ subject: Schema.String, value: Schema.Number })
+    Schema.Struct({ subject: Schema.String, value: Schema.Finite })
   ),
   verifyUrl: Schema.String,
 });
