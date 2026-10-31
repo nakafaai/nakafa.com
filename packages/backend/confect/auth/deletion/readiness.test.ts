@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ConvexConfigProvider, RegisteredFunction } from "@confect/server";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE } from "@repo/backend/confect/auth/deletion/constants";
@@ -31,6 +31,9 @@ import {
 
 const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
+/** What the claim's failure or its defect leaves in the logged cause. */
+const CLAIM_CAUSE_PATTERN =
+  /Unable to complete account cleanup\.|private adapter detail/;
 /** The rejection that a deletion gets while its preparation is temporarily unavailable. */
 const deletionUnavailable = {
   body: {
@@ -130,9 +133,7 @@ describe("auth/deletion/readiness", () => {
         // The answer stays sanitized, and the server log keeps the reason.
         expect(MutableRef.get(logged)).toMatchObject([
           {
-            cause: expect.stringMatching(
-              /Unable to complete account cleanup\.|private adapter detail/
-            ),
+            cause: expect.stringMatching(CLAIM_CAUSE_PATTERN),
             level: "ERROR",
             message: "Account deletion was refused at the deletion claim.",
           },
@@ -156,12 +157,14 @@ describe("auth/deletion/readiness", () => {
             test.action((ctx) =>
               ensureAccountDeletionReady("posthog-user", ATTEMPT_ID).pipe(
                 Effect.provide(
-                  Layer.provideMerge(
-                    RegisteredFunction.actionLayer(databaseSchema, ctx),
-                    ConvexConfigProvider.layer
+                  Layer.merge(
+                    Layer.provideMerge(
+                      RegisteredFunction.actionLayer(databaseSchema, ctx),
+                      ConvexConfigProvider.layer
+                    ),
+                    layer
                   )
                 ),
-                Effect.provide(layer),
                 Effect.runPromise
               )
             )
@@ -173,7 +176,8 @@ describe("auth/deletion/readiness", () => {
               "PostHog person erasure credentials are not configured."
             ),
             level: "ERROR",
-            message: "Account deletion was refused at the PostHog erasure check.",
+            message:
+              "Account deletion was refused at the PostHog erasure check.",
           },
         ]);
       }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
