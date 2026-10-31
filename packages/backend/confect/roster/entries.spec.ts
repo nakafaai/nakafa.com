@@ -6,7 +6,6 @@ import Session from "@repo/backend/confect/middleware/session.spec";
 import { Nisn, RosterView } from "@repo/backend/confect/roster/schema";
 import { PersonAccess } from "@repo/backend/confect/tenancy/access";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Schema } from "effect";
 
 /**
  * The roster row of one student: its NISN and its under-age flag. The school's
@@ -19,10 +18,9 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "set",
       args: () => ({
-        nisn: Schema.optionalKey(Nisn),
+        nisn: Nisn,
         personId: Id("tenantPeople"),
         slug: TenantSlug,
-        underAgeLimit: Schema.Boolean,
       }),
       returns: () => RosterView,
       error: () => AccessDenied,

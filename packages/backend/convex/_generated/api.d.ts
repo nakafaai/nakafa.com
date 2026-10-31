@@ -10171,26 +10171,13 @@ export declare const api: {
         "query",
         "public",
         { personId: Id<"tenantPeople">; slug: string },
-        {
-          hasNisn: boolean;
-          personId: Id<"tenantPeople">;
-          underAgeLimit?: boolean;
-        }
+        { hasNisn: boolean; personId: Id<"tenantPeople"> }
       >;
       set: FunctionReference<
         "mutation",
         "public",
-        {
-          nisn?: string;
-          personId: Id<"tenantPeople">;
-          slug: string;
-          underAgeLimit: boolean;
-        },
-        {
-          hasNisn: boolean;
-          personId: Id<"tenantPeople">;
-          underAgeLimit?: boolean;
-        }
+        { nisn: string; personId: Id<"tenantPeople">; slug: string },
+        { hasNisn: boolean; personId: Id<"tenantPeople"> }
       >;
     };
     exports: {
@@ -10207,12 +10194,7 @@ export declare const api: {
         "public",
         {
           periodId: Id<"tenantPeriods">;
-          rows: Array<{
-            cohortName?: string;
-            name: string;
-            nisn: string;
-            underAgeLimit: boolean;
-          }>;
+          rows: Array<{ cohortName?: string; name: string; nisn: string }>;
           slug: string;
         },
         { added: number; changed: number; skipped: number }
