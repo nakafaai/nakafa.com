@@ -143,7 +143,7 @@ function SittingResultsContent({
               <PanesList>
                 <TablePageBody>
                   {canRelease || releasedAt !== null ? null : (
-                    <p className="border-b px-4 py-3 text-muted-foreground text-sm">
+                    <p className="text-muted-foreground border-b px-4 py-3 text-sm">
                       {t("release-wait")}
                     </p>
                   )}
@@ -246,7 +246,7 @@ function ResultsRefusal() {
   return (
     <>
       <ExamsCrumbHeader />
-      <p className="p-4 text-muted-foreground text-sm md:p-6">
+      <p className="text-muted-foreground p-4 text-sm md:p-6">
         {t("results-unavailable")}
       </p>
     </>

@@ -21,7 +21,7 @@ const SCENES = {
 function Beside({ name }: Pick<ComponentProps<typeof Thing>, "name">) {
   return (
     <Thing
-      className="mb-4 @min-[18.5rem]:block hidden"
+      className="mb-4 hidden @min-[18.5rem]:block"
       name={name}
       size={THING_SIZE}
     />

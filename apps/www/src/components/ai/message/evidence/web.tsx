@@ -96,11 +96,11 @@ function WebSearchPartSites({
 
   return (
     <p
-      className="flex min-w-0 flex-wrap gap-x-2 text-muted-foreground text-xs"
+      className="text-muted-foreground flex min-w-0 flex-wrap gap-x-2 text-xs"
       data-slot="web-search-sites"
     >
       {Arr.map(Arr.dedupe(sites), (site) => (
-        <span className="min-w-0 max-w-full truncate" key={site}>
+        <span className="max-w-full min-w-0 truncate" key={site}>
           {site}
         </span>
       ))}
@@ -113,7 +113,7 @@ WebSearchPartSites.displayName = "WebSearchPartSites";
 function WebSearchQueryText({ query }: { query: string }) {
   return (
     <p
-      className="wrap-anywhere line-clamp-2 py-0.5 text-muted-foreground text-sm"
+      className="text-muted-foreground line-clamp-2 py-0.5 text-sm wrap-anywhere"
       dir="auto"
     >{`"${query}"`}</p>
   );

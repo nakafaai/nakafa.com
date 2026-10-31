@@ -89,7 +89,7 @@ export function StudentScreen({
           />
         ) : null}
         {Option.isSome(written) ? (
-          <p className="whitespace-pre-wrap rounded-md border p-3 text-sm">
+          <p className="rounded-md border p-3 text-sm whitespace-pre-wrap">
             {typedText(response) === ""
               ? t("student-no-answer")
               : typedText(response)}

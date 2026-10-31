@@ -31,7 +31,7 @@ const Locales = Schema.Literals(["de", "en", "id"]);
 const MessageNamespaceSchema = Schema.Record(Schema.String, Schema.Unknown);
 
 /** A placeholder of a message, such as `{size, number}`, with its name in the first group. */
-const PLACEHOLDER = /\{(\w+)(?:,[^}]*)?\}/gu;
+const PLACEHOLDER = /\{(?<name>\w+)(?:,[^}]*)?\}/gu;
 
 /** The names of the placeholders in one message, such as `size` in `{size, number}`. */
 function placeholdersIn(text: string) {

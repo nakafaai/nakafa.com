@@ -10,7 +10,7 @@ export const guardianEmailOf = (typed: string) =>
   Schema.decodeOption(Email)(Str.toLowerCase(Str.trim(typed)));
 
 /** The shape of a guardian's sign-in code: six digits. */
-const CODE_PATTERN = /^\d{6}$/;
+const CODE_PATTERN = /^\d{6}$/u;
 
 /** The six digits of a typed code, with spaces dropped. None means the text is not a code. */
 export const guardianCodeOf = (typed: string) =>

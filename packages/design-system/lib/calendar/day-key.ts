@@ -1,7 +1,7 @@
 import { DateTime, Option } from "effect";
 
 /** A civil day written as its key: the year, the month and the day, zero padded. */
-const DAY_KEY = /^(\d{4})-(\d{2})-(\d{2})$/u;
+const DAY_KEY = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/u;
 
 /**
  * Serializes a local calendar day without locale-dependent formatting.

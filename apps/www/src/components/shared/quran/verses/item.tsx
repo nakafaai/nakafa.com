@@ -43,11 +43,11 @@ export function QuranVerseHeading({
   return (
     <div className="flex items-center gap-4">
       <a
-        className="quran-verse-anchor flex w-full flex-1 shrink-0 outline-none ring-0"
+        className="quran-verse-anchor flex w-full flex-1 shrink-0 ring-0 outline-none"
         href={`#${id}`}
         id={id}
       >
-        <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
+        <div className="border-primary bg-secondary text-secondary-foreground flex size-9 items-center justify-center rounded-full border">
           <span className="font-mono text-xs tracking-tighter">{number}</span>
           <h2 className="sr-only">{label}</h2>
         </div>

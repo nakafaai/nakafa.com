@@ -10,14 +10,19 @@ import {
   getColorsCount,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { Array as Arr } from "effect";
-import { type ComponentProps, lazy } from "react";
-
-type RechartsModule = typeof import("recharts");
+import type { ComponentProps } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+} from "recharts";
 
 /** Recharts interpolation supported by the miniature brush preview. */
-type EvilBrushCurveType = NonNullable<
-  ComponentProps<RechartsModule["Area"]>["type"]
->;
+type EvilBrushCurveType = NonNullable<ComponentProps<typeof Area>["type"]>;
 
 /** The props that EvilBrush hands to its preview. */
 interface EvilBrushPreviewProps {
@@ -35,29 +40,18 @@ type EvilBrushLook = {
   >;
 } & Pick<ChartBrushOptions, "barRadius">;
 
-/** Builds the preview after every Recharts primitive loads as one module. */
-function renderEvilBrushPreview(
-  {
-    data,
-    keys,
-    chartConfig,
-    variant,
-    curveType,
-    chartId,
-    stacked,
-    strokeVariant = "solid",
-    barRadius,
-  }: EvilBrushPreviewProps & EvilBrushLook,
-  {
-    Area,
-    AreaChart,
-    Bar,
-    BarChart,
-    Line,
-    LineChart,
-    ResponsiveContainer,
-  }: RechartsModule
-) {
+/** Builds the preview of the complete dataset in the chart's brush look. */
+function renderEvilBrushPreview({
+  data,
+  keys,
+  chartConfig,
+  variant,
+  curveType,
+  chartId,
+  stacked,
+  strokeVariant = "solid",
+  barRadius,
+}: EvilBrushPreviewProps & EvilBrushLook) {
   const dashArray =
     strokeVariant === "dashed" || strokeVariant === "animated-dashed"
       ? "4 4"
@@ -177,25 +171,26 @@ function renderEvilBrushPreview(
   );
 }
 
-/** Renders the complete dataset behind the brush selection controls, styled by the chart's brush options. */
-const EvilBrushPreview = lazy(() =>
-  import("recharts").then((recharts) => {
-    const EvilBrushPreviewWithLook = (props: EvilBrushPreviewProps) => {
-      const {
-        barRadius,
-        curveType = "monotone",
-        stacked = false,
-        variant = "area",
-      } = useChart((chart) => chart.brush);
+/**
+ * Renders the complete dataset behind the brush selection controls, styled by
+ * the chart's brush options. The brush loads this module on demand, so
+ * Recharts stays out of the first JavaScript of a page that shows a chart.
+ */
+function EvilBrushPreview(props: EvilBrushPreviewProps) {
+  const {
+    barRadius,
+    curveType = "monotone",
+    stacked = false,
+    variant = "area",
+  } = useChart((chart) => chart.brush);
 
-      return renderEvilBrushPreview(
-        { ...props, barRadius, curveType, stacked, variant },
-        recharts
-      );
-    };
-
-    return { default: EvilBrushPreviewWithLook };
-  })
-);
+  return renderEvilBrushPreview({
+    ...props,
+    barRadius,
+    curveType,
+    stacked,
+    variant,
+  });
+}
 
 export { type EvilBrushCurveType, EvilBrushPreview };

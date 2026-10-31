@@ -424,12 +424,9 @@ describe("MathService", () => {
     "uses a status message when the CAS error body cannot be read",
     () =>
       Effect.gen(function* () {
-        class BrokenTextResponse extends Response {
-          override text() {
-            return Promise.reject(new Error("broken body"));
-          }
-        }
-        fetcher.mockResolvedValue(new BrokenTextResponse("", { status: 500 }));
+        const broken = new Response("", { status: 500 });
+        vi.spyOn(broken, "text").mockRejectedValue(new Error("broken body"));
+        fetcher.mockResolvedValue(broken);
         const exit = yield* Effect.exit(
           MathService.use((service) =>
             service.compute({

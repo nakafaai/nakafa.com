@@ -22,7 +22,7 @@ export function Pricing() {
         id="pricing"
       >
         <h2
-          className="mx-auto max-w-3xl text-balance text-center text-3xl tracking-tight sm:text-4xl"
+          className="mx-auto max-w-3xl text-center text-3xl tracking-tight text-balance sm:text-4xl"
           id="pricing-heading"
         >
           {t("prices-title")}

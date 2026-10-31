@@ -29,7 +29,7 @@ import { Array as Arr, Duration, Effect, Predicate, Schema } from "effect";
 
 const { send } = refs.public.guardians.codes;
 const DEVICE = "6f2b0f3e-3a39-4f25-9a51-6a7f6f1d2c11";
-const SIX_DIGITS = /\b(\d{6})\b/;
+const SIX_DIGITS = /\b(?<code>\d{6})\b/u;
 const AYAH = Schema.decodeSync(Email)("ayah@example.com");
 
 /** The answer to a request made at `at`: a code that expires one term later. */

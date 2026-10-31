@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { Effect, MutableList } from "effect";
+import { Array as Arr, Effect, MutableList, Option } from "effect";
 import { LAST_SERVER, NEWEST } from "@/e2e/support/list";
 import { MEMORY_PATH, memoryRow } from "@/e2e/support/memory";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -50,6 +50,17 @@ export const isTakenOver = (element: Locator) =>
   element.evaluate((node) =>
     Object.keys(node).some((key) => key.startsWith("__reactFiber"))
   );
+
+/**
+ * Whether React has taken over the element a locator finds right now. It does
+ * not wait for the element, as `isTakenOver` does: a page that no longer draws
+ * it, such as one an error boundary replaced, answers false at once.
+ */
+export const isTakenOverNow = async (target: Locator) =>
+  await Option.match(Arr.head(await target.elementHandles()), {
+    onNone: () => false,
+    onSome: (element) => element.evaluate(hasReactFiber),
+  });
 
 /**
  * Waits until React has taken over a control that the server drew. Until then the control has no

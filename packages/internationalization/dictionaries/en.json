@@ -99,7 +99,7 @@
     "link-add-description": "The parent asks for a sign-in code on the school's parent page.",
     "links-empty": "No parent is linked yet.",
     "links-empty-description": "Link a parent's email to a student so they can sign in.",
-    "links-search": "Search students or parent emails",
+    "links-search": "Find a student or email",
     "student": "Student",
     "guardian-name": "Parent's name",
     "guardian-name-placeholder": "The parent's full name",
@@ -111,6 +111,9 @@
     "status-withdrawn": "Withdrawn",
     "status-mismatch": "Details do not match",
     "link-verify": "Verify by hand",
+    "link-readdress": "Change email",
+    "link-readdress-description": "The link keeps its term. The parent asks for a code with the new email.",
+    "link-readdress-save": "Save email",
     "link-revoke": "End link",
     "link-revoke-title": "End this link?",
     "link-revoke-description": "The parent can no longer see the child's records.",
@@ -125,6 +128,11 @@
   "SchoolRoster": {
     "import": "Import",
     "export": "Export",
+    "export-grades": "Export grades",
+    "export-grades-label": "Report grades of a class group",
+    "export-grades-loading": "Loading class groups",
+    "export-grades-no-period": "No active period yet.",
+    "export-grades-empty": "No class group in this period.",
     "file-label": "Dapodik student list",
     "empty": "Import the students from Dapodik.",
     "empty-description": "Choose the student list exported from Dapodik. The file stays on this device.",
@@ -801,6 +809,12 @@
       "report": {
         "locked": "Report card locked"
       },
+      "graduation": {
+        "decided": "Graduation decision recorded"
+      },
+      "letter": {
+        "locked": "SKL issued"
+      },
       "cohort": {
         "created": "Cohort added",
         "renamed": "Cohort renamed",
@@ -932,7 +946,8 @@
         "started": "Parent linked",
         "linked": "Parent link verified",
         "withdrawn": "Parent consent withdrawn",
-        "revoked": "Parent link ended"
+        "revoked": "Parent link ended",
+        "readdressed": "Parent link address corrected"
       },
       "roster": {
         "set": "Student record updated",
@@ -952,7 +967,7 @@
       "staff": "Reads the school's plans, people, and promotions.",
       "student": "Learns in the school and answers its own exams.",
       "guardian": "Follows the student it is linked to and records consent for them.",
-      "proctor": "Watches the school's exam sessions.",
+      "proctor": "Runs the school's exam rooms: their token, locks, extra time and closing.",
       "auditor": "Reads the school's records and audit trail without changing them.",
       "integration": "Reads the school's data through the actions its client holds."
     },
@@ -1303,6 +1318,59 @@
     "own-empty": "No report card is locked yet.",
     "own-empty-description": "Your report card shows here once the principal approves it."
   },
+  "SchoolGraduation": {
+    "title": "Graduation",
+    "cohort": "Class group",
+    "unit": "Unit",
+    "period": "Period",
+    "search-cohorts": "Search class groups",
+    "cohorts-empty": "No class group graduates yet.",
+    "cohorts-empty-description": "The class groups of each unit's last grade appear here once their period is active.",
+    "search-students": "Search students",
+    "students-empty": "No student in this class group yet.",
+    "students-empty-description": "Students appear here once they are placed in the class group.",
+    "student": "Student",
+    "nisn": "NISN",
+    "nisn-yes": "On file",
+    "nisn-no": "Missing",
+    "average": "Average",
+    "average-none": "No grades",
+    "letter": "SKL",
+    "letter-none": "Not issued",
+    "letter-issued": "Drawing",
+    "letter-locked": "Issued",
+    "letter-number": "SKL number",
+    "ready": "Readiness",
+    "ready-ready": "Ready",
+    "ready-npsn": "Unit NPSN missing",
+    "ready-decision": "No decision yet",
+    "ready-nisn": "NISN missing",
+    "ready-report": "No locked report card",
+    "detail": "Student's graduation",
+    "detail-empty": "Choose a student to see their transcript data.",
+    "transcript-empty": "No locked report card yet, so there is no transcript data.",
+    "subject": "Subject",
+    "value": "Value",
+    "open-letter": "Open SKL",
+    "open-check": "Open check page",
+    "decide": "Graduation decision",
+    "decide-description": "The head's decision for {period}, which covers every graduating class group of the unit.",
+    "decision": "Decision number",
+    "decision-placeholder": "421.3/045/SMP.1/2027",
+    "date": "Graduation date",
+    "date-placeholder": "Choose the date",
+    "date-description": "The first Monday of June for SD and SMP or of May for SMA and SMK, moved past a holiday.",
+    "place": "Place of issue",
+    "place-placeholder": "Bandung",
+    "head": "Head of school",
+    "head-placeholder": "Name with degrees",
+    "nip": "NIP",
+    "nip-placeholder": "18 digits",
+    "nip-description": "Leave it empty for a head who is not a civil servant.",
+    "save-decision": "Save decision",
+    "issue": "Issue letters",
+    "export-readiness": "Export for e-Ijazah"
+  },
   "SchoolStart": {
     "metadata-title": "Open your school",
     "metadata-description": "Answer five questions and your Nakafa School is ready to use.",
@@ -1570,7 +1638,7 @@
     "chat": "Chat",
     "no-chats": "No chats yet.",
     "try-out": "Try out",
-    "try-out-short": "Tryout",
+    "try-out-short": "Try out",
     "search-country-placeholder": "Search country...",
     "no-country-found": "No country found.",
     "emoji-picker-placeholder": "Select an emoji...",
@@ -1754,29 +1822,29 @@
     "verses": "Verses"
   },
   "Tryouts": {
-    "title": "What tryout do you want today?",
-    "metadata-description": "Choose a country, exam, and tryout set from Nakafa.",
+    "title": "What try out do you want today?",
+    "metadata-description": "Choose a country, exam, and try out set from Nakafa.",
     "country-selector-label": "Country",
     "exam-selector-label": "Exam",
     "open-country-cta": "View exams",
     "open-exam-cta": "View options",
     "open-set-cta": "View sets",
-    "list-empty": "There are no tryouts showing right now.",
+    "list-empty": "There are no try outs showing right now.",
     "start-cta": "Start",
     "restart-cta": "Restart",
     "free-cta": "Start free",
     "continue-cta": "Continue",
     "action-loading": "Loading",
     "cancel-cta": "Cancel",
-    "start-dialog-title": "Start this tryout?",
-    "start-dialog-description": "Your tryout stays active for up to 3 days, and once you start, you can choose which section to do first.",
-    "free-dialog-title": "Start a free tryout",
-    "free-dialog-description": "Take and retake any tryout for free, with each attempt active for up to 3 days and your score included, but detailed solutions require Nakafa Pro.",
-    "free-entry-dialog-description": "Take and retake any tryout for free, with scores included, and the timer starts as soon as you begin, but detailed solutions require Nakafa Pro.",
-    "restart-dialog-title": "Start this tryout from the beginning?",
+    "start-dialog-title": "Start this try out?",
+    "start-dialog-description": "Your try out stays active for up to 3 days, and once you start, you can choose which section to do first.",
+    "free-dialog-title": "Start a free try out",
+    "free-dialog-description": "Take and retake any try out for free, with each attempt active for up to 3 days and your score included, but detailed solutions require Nakafa Pro.",
+    "free-entry-dialog-description": "Take and retake any try out for free, with scores included, and the timer starts as soon as you begin, but detailed solutions require Nakafa Pro.",
+    "restart-dialog-title": "Start this try out from the beginning?",
     "restart-dialog-description": "You will start over, and your previous result stays saved.",
-    "restart-entry-dialog-description": "You will start over, this set's timer starts immediately, and your previous result stays saved.",
-    "start-entry-dialog-description": "This set's timer starts as soon as you begin.",
+    "restart-entry-dialog-description": "You will start over, the timer starts immediately, and your previous result stays saved.",
+    "start-entry-dialog-description": "The timer starts as soon as you begin.",
     "paywall-title": "{count, plural, one {See the solution to this question} other {See the solutions to all # questions}}",
     "paywall-description": "Learn the steps and reasoning behind every answer, and ask Nina whenever something is unclear.",
     "paywall-compare": "Compare plans",
@@ -1811,7 +1879,7 @@
     "status-in-progress": "In progress",
     "status-completed": "Completed",
     "status-expired": "Time expired",
-    "finished-title": "Try-out finished",
+    "finished-title": "Try out finished",
     "finished-description": "You finished this attempt, and its score is saved.",
     "finished-expired-description": "Time ran out, so this attempt ended with the answers you gave.",
     "remaining-time-label": "Time left to finish this set",
@@ -1838,7 +1906,6 @@
     "incorrect": "Incorrect",
     "reset": "Reset",
     "explanation": "Explanation",
-    "number-count": "Number {count}",
     "prompt": "Question",
     "reading": "Reading"
   },
@@ -1848,6 +1915,7 @@
     "controls": "Question controls",
     "previous-question": "Previous question",
     "next-question": "Next question",
+    "question": "Question {number}",
     "mode": "View",
     "mode-list": "List",
     "mode-single": "One question",
@@ -1923,7 +1991,7 @@
     "logout": "Logout",
     "login": "Login",
     "login-cta-title": "Continue learning",
-    "login-cta-description": "Log in to save progress in materials and tryouts.",
+    "login-cta-description": "Log in to save progress in materials and try outs.",
     "login-cta-action": "Log in",
     "pricing-cta": "See plans and pricing",
     "account": "Account",
@@ -2253,10 +2321,10 @@
       "description": "Please try again."
     },
     "tryout-preference-error": {
-      "title": "Tryout preference not saved yet."
+      "title": "Try out preference not saved yet."
     },
     "tryout-start-error": {
-      "title": "We could not start the tryout yet.",
+      "title": "We could not start the try out yet.",
       "description": "Please try again."
     },
     "tryout-start-part-error": {
@@ -2695,6 +2763,33 @@
     "school-own-role-ended": {
       "title": "Your role has ended."
     },
+    "school-letters-issued": {
+      "title": "The letters are issued.",
+      "description": "Each PDF is ready once its row shows Issued."
+    },
+    "school-letters-none": {
+      "title": "No letter was issued.",
+      "description": "The Readiness column shows what each student still needs."
+    },
+    "school-graduation-export-failed": {
+      "title": "The file was not saved."
+    },
+    "school-refusal-graduation-date": {
+      "title": "This date is not on the calendar.",
+      "description": "Choose a real day for the graduation."
+    },
+    "school-refusal-graduation-issued": {
+      "title": "The decision is already in use.",
+      "description": "Letters are issued with it, so it stays as it is."
+    },
+    "school-refusal-graduation-not-final": {
+      "title": "This class group does not graduate.",
+      "description": "Only the last grade of a unit graduates."
+    },
+    "school-refusal-graduation-undecided": {
+      "title": "No graduation decision yet.",
+      "description": "Record the decision before you issue letters."
+    },
     "school-refusal-room-opened": {
       "title": "This room has opened.",
       "description": "An opened room keeps its time and its name."
@@ -2706,6 +2801,10 @@
     "school-refusal-scheme-not-later": {
       "title": "A newer version is already stored.",
       "description": "Reload the page to see it, then save yours."
+    },
+    "school-roster-no-period": {
+      "title": "No active period yet.",
+      "description": "Open a period for this unit first."
     }
   },
   "Ai": {
@@ -2734,7 +2833,7 @@
     "nakafa-search-results": "Content found",
     "nakafa-search-articles": "Articles found",
     "nakafa-search-subject": "Materials found",
-    "nakafa-search-tryout": "Try-outs found",
+    "nakafa-search-tryout": "Try outs found",
     "nakafa-search-quran": "Verses found",
     "nakafa-search-empty": "No matching content found.",
     "nakafa-content": "Material",
@@ -2962,7 +3061,7 @@
   },
   "PricingPage": {
     "metadata-title": "Nakafa Pricing: Free and Pro",
-    "metadata-description": "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online Tryouts.",
+    "metadata-description": "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online try outs.",
     "breadcrumb": "Pricing",
     "checkout-line": "Current price and checkout: {url}",
     "comparison-title": "What {price} comes to",
@@ -3087,13 +3186,13 @@
     "faq-subjects-question": "Which subjects and grades are covered?",
     "faq-subjects-answer": "From primary school to university: Mathematics, Physics, Chemistry, Biology, Computer Science and more.",
     "faq-account-question": "Can I learn without an account?",
-    "faq-account-answer": "Yes, public lessons need no account, and signing in saves your progress and opens Nina and try-outs.",
+    "faq-account-answer": "Yes, public lessons need no account, and signing in saves your progress and opens Nina and try outs.",
     "faq-phone-question": "Does it work on a phone?",
     "faq-phone-answer": "Yes, Nakafa runs in the browser on a phone, a tablet or a computer, with nothing to install.",
     "faq-credits-question": "What are AI credits?",
     "faq-credits-answer": "Nina uses {cost} AI credits for each answer to your question.",
     "faq-empty-question": "What happens when my credits run out?",
-    "faq-empty-answer": "Nina returns when your credits renew, and lessons, exercises and try-outs keep working.",
+    "faq-empty-answer": "Nina returns when your credits renew, and lessons, exercises and try outs keep working.",
     "faq-accuracy-question": "How does Nakafa keep its content accurate?",
     "faq-accuracy-answer": "Qualified contributors write every lesson, and because the source is public, anyone can suggest a fix.",
     "faq-languages-question": "Which languages is Nakafa in?",
@@ -3208,14 +3307,18 @@
     "course-name": "{name} {section}"
   },
   "ReportCheck": {
-    "locked": "This report card is on record.",
-    "locked-description": "Its code belongs to a report card that the school locked.",
-    "unknown": "No report card has this code.",
+    "locked-report": "This report card is on record.",
+    "locked-report-description": "Its code belongs to a report card that the school locked.",
+    "locked-letter": "This graduation letter is on record.",
+    "locked-letter-description": "Its code belongs to an SKL that the school issued.",
+    "unknown": "No document has this code.",
     "unknown-description": "Check the address, or ask the school that issued it.",
     "school": "School",
     "kind": "Document",
     "kind-report": "Report card",
+    "kind-letter": "Graduation letter (SKL)",
     "period": "Period",
-    "approved": "Approved on"
+    "approved": "Approved on",
+    "issued": "Issued on"
   }
 }

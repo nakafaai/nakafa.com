@@ -30,7 +30,7 @@ const ProcessIdText = Schema.String.check(
  * UUID, so two claims of one process never share a name, and no other file of
  * the runtime directory matches.
  */
-const CLAIM_NAME = /^using\.([^.]*)\.[^.]+$/u;
+const CLAIM_NAME = /^using\.(?<name>[^.]*)\.[^.]+$/u;
 
 const LEASE_IN_USE =
   "The local build runtime is in use; existing state is preserved.";

@@ -196,7 +196,7 @@ function ReasoningSummary() {
  * that would open nothing.
  */
 const reasoningTriggerVariants = cva(
-  "flex w-fit max-w-full items-center gap-2 text-start text-muted-foreground text-sm transition-colors",
+  "text-muted-foreground flex w-fit max-w-full items-center gap-2 text-start text-sm transition-colors",
   {
     variants: {
       opens: {
@@ -241,7 +241,7 @@ export const ReasoningContent = memo(
   ({ className, ...props }: ReasoningContentProps) => (
     <CollapsibleContent
       className={cn(
-        "ms-2 border-s ps-4 text-muted-foreground text-sm outline-none",
+        "text-muted-foreground ms-2 border-s ps-4 text-sm outline-none",
         className
       )}
       {...props}

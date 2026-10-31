@@ -97,7 +97,7 @@ export function AuthGoogle({ returnPath, variant }: Props) {
       <ClientOnly fallback={null}>
         {hasProviderError ? (
           <div
-            className="max-w-sm text-center text-destructive text-sm"
+            className="text-destructive max-w-sm text-center text-sm"
             role="alert"
           >
             <p className="font-medium">{tToast("provider-error.title")}</p>

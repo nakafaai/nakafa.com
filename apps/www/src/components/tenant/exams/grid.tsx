@@ -33,11 +33,11 @@ const isTileKey = Schema.is(TileKey);
 
 /** The frame of one tile, which shows the question chosen on the canvas and the tile a drag would drop on. */
 const tileFrame = cva(
-  "relative block aspect-4/3 w-full overflow-hidden rounded-lg border bg-background outline-none hover:border-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50",
+  "bg-background hover:border-foreground/20 focus-visible:ring-ring/50 relative block aspect-4/3 w-full overflow-hidden rounded-lg border outline-none focus-visible:ring-3",
   {
     defaultVariants: { current: false, target: false },
     variants: {
-      current: { false: "", true: "border-primary ring-2 ring-primary" },
+      current: { false: "", true: "border-primary ring-primary ring-2" },
       target: { false: "", true: "border-primary" },
     },
   }
@@ -231,12 +231,12 @@ export function ExamGrid() {
     // actions sticks to the viewport's top.
     <ScrollArea
       aria-label={t("grid")}
-      className="min-w-0 flex-1 bg-muted/40"
+      className="bg-muted/40 min-w-0 flex-1"
       ref={area}
       render={<section />}
     >
       {editable ? (
-        <div className="sticky top-0 z-10 flex min-h-12 flex-wrap items-center gap-2 border-b bg-background px-4 py-2">
+        <div className="bg-background sticky top-0 z-10 flex min-h-12 flex-wrap items-center gap-2 border-b px-4 py-2">
           <Checkbox
             aria-label={t("select-all")}
             checked={

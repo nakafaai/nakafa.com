@@ -18,7 +18,7 @@ const TARGET_LENGTH_BUFFER = 0.9;
  */
 const WEIGHT_SMOOTHING = 0.5;
 
-const PARAGRAPH_SPLIT_REGEX = /\n\s*\n/;
+const PARAGRAPH_SPLIT_REGEX = /\n\s*\n/u;
 
 const TRUNCATION_THRESHOLDS = {
   sentence: 0.7,

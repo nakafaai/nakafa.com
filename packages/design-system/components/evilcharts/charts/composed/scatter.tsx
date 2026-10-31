@@ -40,7 +40,7 @@ export function Scatter({ dataKey, children, ...scatterProps }: ScatterProps) {
   const config = useComposedChart((chart) => chart.config);
   const isLoading = useComposedChart((chart) => chart.isLoading);
   const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
-  const id = useId().replace(/:/g, "");
+  const id = useId().replace(/:/gu, "");
 
   if (isLoading) {
     return null;

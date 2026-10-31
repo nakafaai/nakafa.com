@@ -32,7 +32,7 @@ export function NavUser() {
         </SidebarMenu>
       </SidebarFooter>
       <SidebarFooter
-        className="not-has-[li]:hidden border-t"
+        className="border-t not-has-[li]:hidden"
         data-account="member"
       >
         <SidebarMenu>

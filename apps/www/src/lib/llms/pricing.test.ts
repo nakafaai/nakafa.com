@@ -35,8 +35,8 @@ describe("pricing Markdown", () => {
         expect(text).toContain("# ");
         expect(text).toContain(AGENT_MARKDOWN_DIRECTIVE);
         expect(text).toContain(`URL: ${BASE_URL}/${locale}/pricing`);
-        expect(text.match(/^### /gm)).toHaveLength(10);
-        expect(text.match(/^## /gm)).toHaveLength(4);
+        expect(text.match(/^### /gmu)).toHaveLength(10);
+        expect(text.match(/^## /gmu)).toHaveLength(4);
         expect(text).not.toContain("<mark>");
         expect(text).not.toContain("undefined");
       })

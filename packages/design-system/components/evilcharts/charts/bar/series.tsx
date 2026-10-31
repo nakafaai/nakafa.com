@@ -65,7 +65,7 @@ export function Bar({
   const selectedDataKey = useBarChart((chart) => chart.selectedDataKey);
   const selectDataKey = useBarChart((chart) => chart.selectDataKey);
   const isMouseInChart = useBarChart((chart) => chart.isMouseInChart);
-  const id = useId().replace(/:/g, ""); // unique id scopes this bar's style defs
+  const id = useId().replace(/:/gu, ""); // unique id scopes this bar's style defs
   // Devices set to "reduce motion" skip the grow-in animation entirely
   const shouldReduceMotion = useReducedMotion();
 

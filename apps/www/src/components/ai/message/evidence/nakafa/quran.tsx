@@ -38,7 +38,7 @@ export function QuranPart({ message }: Props) {
         target="_blank"
       >
         <span className="flex min-w-0 flex-wrap items-center">
-          <span className="min-w-0 max-w-full truncate">{name}</span>
+          <span className="max-w-full min-w-0 truncate">{name}</span>
           <span className="shrink-0">
             : {from === to ? from : `${from}-${to}`}
           </span>

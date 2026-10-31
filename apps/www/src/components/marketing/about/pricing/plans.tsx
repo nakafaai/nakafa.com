@@ -112,7 +112,7 @@ export function PricingCards({
         data-pricing-plan="free"
       >
         <CardHeader>
-          <PlanHeading className="font-medium text-xl tracking-tight">
+          <PlanHeading className="text-xl font-medium tracking-tight">
             {t("free-title")}
           </PlanHeading>
           <p className="text-muted-foreground">{t("free-description")}</p>
@@ -146,11 +146,11 @@ export function PricingCards({
           />
         </span>
         <Card
-          className="relative ring-2 ring-primary md:row-span-4 md:grid md:grid-rows-subgrid"
+          className="ring-primary relative ring-2 md:row-span-4 md:grid md:grid-rows-subgrid"
           data-pricing-plan="pro"
         >
           <CardHeader>
-            <PlanHeading className="font-medium text-xl tracking-tight">
+            <PlanHeading className="text-xl font-medium tracking-tight">
               {t("pro-title")}
             </PlanHeading>
             <p className="text-muted-foreground">{t("pro-description")}</p>

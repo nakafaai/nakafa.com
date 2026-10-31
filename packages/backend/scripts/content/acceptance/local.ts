@@ -43,12 +43,12 @@ const portInRange = Schema.makeFilter(
   (value: string) => Number(value.slice(value.lastIndexOf(":") + 1)) <= 65_535
 );
 const LoopbackUrl = Schema.String.check(
-  Schema.isPattern(/^http:\/\/127\.0\.0\.1:[1-9][0-9]*$/),
+  Schema.isPattern(/^http:\/\/127\.0\.0\.1:[1-9][0-9]*$/u),
   portInRange
 );
 /** The origin of the served app, as `acceptanceOrigin` names it. */
 const AppOrigin = Schema.String.check(
-  Schema.isPattern(/^http:\/\/localhost:[1-9][0-9]*$/),
+  Schema.isPattern(/^http:\/\/localhost:[1-9][0-9]*$/u),
   portInRange
 );
 const RuntimeManifest = Schema.Struct({

@@ -9,10 +9,10 @@ import {
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The trigger that names a question's type. */
-const QUESTION_TYPE = /^Question type: /;
+const QUESTION_TYPE = /^Question type: /u;
 
 /** The markup of the icon a control draws, so two controls compare by what they show. */
 const iconOf = (control: Locator) =>

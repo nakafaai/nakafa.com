@@ -5,9 +5,9 @@ import { Array as Arr, Match, Number as Num, Option, Schema } from "effect";
 
 /** How many straight pieces stand in for a curve. */
 const PIECES = 12;
-const COMMAND = /([MLHVCQZ])([^MLHVCQZ]*)/gu;
+const COMMAND = /(?<command>[MLHVCQZ])(?<values>[^MLHVCQZ]*)/gu;
 const NUMBER = /-?\d+(?:\.\d+)?/gu;
-const CALL = /(translate|rotate|scale)\(([^)]*)\)/gu;
+const CALL = /(?<name>translate|rotate|scale)\((?<values>[^)]*)\)/gu;
 
 const PlaceSchema = Schema.Tuple([Schema.Finite, Schema.Finite]);
 

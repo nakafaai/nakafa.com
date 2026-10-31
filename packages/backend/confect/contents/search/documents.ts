@@ -7,10 +7,11 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, pipe, Schema } from "effect";
 
-const WHITESPACE_PATTERN = /\s+/g;
-const FENCE_START_PATTERN = /^\s*(?:```|~~~)/;
-const MARKDOWN_HEADING_PATTERN = /^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/;
-const MARKDOWN_LINK_PATTERN = /(^|[^!])\[([^\]]+)\]\([^)]+\)/g;
+const WHITESPACE_PATTERN = /\s+/gu;
+const FENCE_START_PATTERN = /^\s*(?:```|~~~)/u;
+const MARKDOWN_HEADING_PATTERN = /^\s{0,3}#{1,6}\s+(?<title>.+?)\s*#*\s*$/u;
+const MARKDOWN_LINK_PATTERN =
+  /(?<before>^|[^!])\[(?<label>[^\]]+)\]\([^)]+\)/gu;
 
 /** Convex validator for source rows used to build search documents. */
 const contentSearchSourceValidator = Schema.Struct({

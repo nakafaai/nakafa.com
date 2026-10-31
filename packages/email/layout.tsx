@@ -54,7 +54,7 @@ export function Layout({
           <title>{copy.subject}</title>
         </Head>
         <Body
-          className="m-0 bg-background p-0 font-sans text-foreground antialiased"
+          className="bg-background text-foreground m-0 p-0 font-sans antialiased"
           dir="ltr"
           lang={locale}
         >
@@ -79,18 +79,18 @@ export function Layout({
             <Section className="mt-6 text-center">
               <Heading
                 as="h1"
-                className="m-0 font-semibold text-2xl text-foreground leading-8 tracking-tight"
+                className="text-foreground m-0 text-2xl leading-8 font-semibold tracking-tight"
               >
                 {copy.subject}
               </Heading>
-              <Text className="m-0 mt-3 text-base text-foreground leading-6">
+              <Text className="text-foreground m-0 mt-3 text-base leading-6">
                 {copy.body}
               </Text>
             </Section>
 
             <Section className="mt-6 text-center">
               <Button
-                className="box-border inline-block whitespace-nowrap rounded-md bg-primary px-8 py-3 text-center font-medium text-primary-foreground text-sm no-underline outline-none"
+                className="bg-primary text-primary-foreground box-border inline-block rounded-md px-8 py-3 text-center text-sm font-medium whitespace-nowrap no-underline outline-none"
                 href={ctaUrl}
                 rel="noopener noreferrer"
                 target="_blank"
@@ -99,21 +99,21 @@ export function Layout({
               </Button>
             </Section>
 
-            <Hr className="my-8 w-full border-0 border-border border-t border-solid" />
+            <Hr className="border-border my-8 w-full border-0 border-t border-solid" />
 
             <Section className="text-center">
-              <Text className="m-0 text-muted-foreground text-xs leading-5">
+              <Text className="text-muted-foreground m-0 text-xs leading-5">
                 {copy.footerReason}
               </Text>
-              <Text className="m-0 mt-3 text-muted-foreground text-xs leading-5">
+              <Text className="text-muted-foreground m-0 mt-3 text-xs leading-5">
                 {COMPANY_IDENTITY.legalName}
               </Text>
-              <Text className="m-0 mt-1 text-muted-foreground text-xs leading-5">
+              <Text className="text-muted-foreground m-0 mt-1 text-xs leading-5">
                 {COMPANY_REGISTERED_ADDRESS}
               </Text>
-              <Text className="m-0 mt-3 text-muted-foreground text-xs leading-5">
+              <Text className="text-muted-foreground m-0 mt-3 text-xs leading-5">
                 <Link
-                  className="mr-4 text-muted-foreground underline"
+                  className="text-muted-foreground mr-4 underline"
                   href={privacyPolicyUrl}
                   rel="noopener noreferrer"
                   target="_blank"

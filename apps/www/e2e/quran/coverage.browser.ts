@@ -19,8 +19,8 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-const quranIndexUrlPattern = /\/id\/quran$/;
-const quranSurahUrlPattern = /\/id\/quran\/2$/;
+const quranIndexUrlPattern = /\/id\/quran$/u;
+const quranSurahUrlPattern = /\/id\/quran\/2$/u;
 const quranTranslationNoteHrefPattern = /^#.+-translation-note-\d+$/u;
 const rawTranslationNotePattern = /\[\d+\]/u;
 

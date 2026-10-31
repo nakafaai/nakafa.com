@@ -76,7 +76,7 @@ const signGoogleAccessTokenAssertion = Effect.fn(
           credentials.private_key
             .replace("-----BEGIN PRIVATE KEY-----", "")
             .replace("-----END PRIVATE KEY-----", "")
-            .replaceAll(/\s/g, ""),
+            .replaceAll(/\s/gu, ""),
           "base64"
         ),
         {

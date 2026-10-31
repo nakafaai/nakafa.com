@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /** Renders the production summary card used by try-out section pages. */
 export function TryoutPartSummary({ children }: { children: ReactNode }) {
   return (
-    <section className="space-y-4 rounded-xl border bg-card p-5 shadow-sm [--number-flow-mask-height:0.125em]">
+    <section className="bg-card space-y-4 rounded-xl border p-5 shadow-sm [--number-flow-mask-height:0.125em]">
       {children}
     </section>
   );
@@ -33,7 +33,7 @@ export function TryoutPartStat({
 }) {
   return (
     <div className="flex flex-col gap-1 text-left">
-      <span className="text-muted-foreground text-xs uppercase tracking-wide">
+      <span className="text-muted-foreground text-xs tracking-wide uppercase">
         {label}
       </span>
       {children}

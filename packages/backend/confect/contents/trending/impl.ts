@@ -45,6 +45,7 @@ const loadRankedPopularityCounterIds = Effect.fn(
   let cursor: string | undefined;
   let pagesRead = 0;
   while (pagesRead < trendingRankingMaxPages) {
+    const from = cursor;
     const result = yield* Effect.tryPromise({
       try: () =>
         learningPopularityRankings.paginate(ctx, {
@@ -56,9 +57,9 @@ const loadRankedPopularityCounterIds = Effect.fn(
           ],
           order: "asc",
           pageSize: trendingSubjectsLimit,
-          ...(cursor
+          ...(from
             ? {
-                cursor,
+                cursor: from,
               }
             : {}),
         }),

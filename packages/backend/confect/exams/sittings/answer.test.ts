@@ -28,7 +28,7 @@ import {
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { answer, paper } = refs.public.exams.sittings;
+const { answer, paper, saved } = refs.public.exams.sittings;
 
 /** A question of the exam that a test sitting holds. */
 type QuestionId = GenericId.GenericId<"examQuestions">;
@@ -128,10 +128,12 @@ describe("exams/sittings answer", () => {
           sittingId,
           version: 2,
         });
-        const { questions } = yield* fixture
+        const { answers } = yield* fixture
           .as("student")
-          .query(paper, { deviceId: deviceOf(1), sittingId, slug: nf });
-        expect(questions[0].response).toEqual(["option-3"]);
+          .query(saved, { deviceId: deviceOf(1), sittingId, slug: nf });
+        expect(answers).toEqual([
+          { question, response: ["option-3"], version: 2 },
+        ]);
         const rows = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
             reader
@@ -265,10 +267,10 @@ describe("exams/sittings answer", () => {
           sittingId,
           version: 2,
         });
-        const { questions } = yield* fixture
+        const { answers } = yield* fixture
           .as("student")
-          .query(paper, { deviceId: deviceOf(1), sittingId, slug: nf });
-        expect(questions[0].response).toEqual({ text: "" });
+          .query(saved, { deviceId: deviceOf(1), sittingId, slug: nf });
+        expect(answers[0]?.response).toEqual({ text: "" });
         const options = yield* answerAs(fixture, {
           deviceId: deviceOf(1),
           questionId: question,
@@ -374,13 +376,12 @@ describe("exams/sittings answer", () => {
           }).pipe(Effect.flip);
           expect(stale).toMatchObject({ _tag: "StaleAnswer" });
         }
-        const { questions } = yield* fixture
+        const { answers } = yield* fixture
           .as("student")
-          .query(paper, { deviceId: deviceOf(1), sittingId, slug: nf });
-        expect(questions[0]).toMatchObject({
-          response: ["option-2"],
-          version: 3,
-        });
+          .query(saved, { deviceId: deviceOf(1), sittingId, slug: nf });
+        expect(answers).toEqual([
+          { question, response: ["option-2"], version: 3 },
+        ]);
       })
   );
 

@@ -122,7 +122,7 @@ export function MessageStream({
               // The client key stays the same from the send to the server's answer, so the row
               // and anything open in it outlive the placeholder ID.
               <MessageScrollerItem
-                className="rounded-xl transition-colors data-[jumped=true]:bg-muted/60"
+                className="data-[jumped=true]:bg-muted/60 rounded-xl transition-colors"
                 data-jumped={
                   Option.contains(jump, message.id) ? "true" : undefined
                 }
