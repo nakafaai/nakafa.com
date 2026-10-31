@@ -4,6 +4,11 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import {
+  answersFit,
+  keyMissing,
+  questionView,
+} from "@repo/backend/confect/exams/question";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { nf } from "@repo/backend/test/editor";
 import { archiveUnit, examRows } from "@repo/backend/test/exams";
@@ -202,6 +207,59 @@ describe("exams seed sitting", () => {
         ]) {
           expect(stored.content).toContain(name);
         }
+      })
+  );
+
+  it.effect(
+    "adds a question of every other template with a key that fits it, then the essay, when the seed asks for templates",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const user = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("users")
+              .get(fixture.users.student.userId)
+              .pipe(Effect.orDie)
+          )
+        );
+        const made = yield* fixture.internal.mutation(seed, {
+          email: addressOf(user.email),
+          slug: nf,
+          templates: true,
+        });
+        const views = yield* fixture.run(
+          Effect.gen(function* () {
+            const reader = yield* DatabaseReader;
+            const exam = yield* reader
+              .table("exams")
+              .get(made.examId)
+              .pipe(Effect.orDie);
+            return yield* Effect.forEach(exam.questions, (id) =>
+              reader
+                .table("examQuestions")
+                .get(id)
+                .pipe(Effect.orDie, Effect.flatMap(questionView))
+            );
+          })
+        );
+        expect(Arr.map(views, (view) => view.template)).toEqual([
+          "choice",
+          "choice",
+          "choices",
+          "truefalse",
+          "cause",
+          "short",
+          "match",
+          "table",
+          "essay",
+        ]);
+        // Every question takes its template's answers, and every one but the essay holds a key that fits.
+        expect(
+          Arr.filter(views, (view) => !answersFit(view.template, view.answers))
+        ).toEqual([]);
+        expect(Arr.filter(views, (view) => keyMissing(view))).toEqual([]);
       })
   );
 
