@@ -1517,6 +1517,44 @@
     "school-limit-line": "Für weitere Schulen brauchst du zuerst ein Gespräch mit dem Gründer.",
     "address-check-failed": "Diese Adresse konnte nicht geprüft werden, also gib sie noch einmal ein."
   },
+  "Operators": {
+    "title": "Schulen",
+    "search": "Schulen suchen",
+    "open": "Schule eröffnen",
+    "open-description": "Eröffne eine Schule nach ihrem unterschriebenen Vertrag. Ihre Inhaberin oder ihr Inhaber erhält die Einladung.",
+    "empty": "Noch keine Schule",
+    "refused": "Für Nakafa-Mitarbeitende",
+    "refused-description": "Diese Seite eröffnet Schulen nach Vertrag. Alle anderen eröffnen ihre Schule unter /school/new.",
+    "name": "Schule",
+    "name-placeholder": "SMA Harapan Bangsa",
+    "address": "Adresse",
+    "address-placeholder": "harapan",
+    "kind-label": "Art",
+    "kind": {
+      "school": "Schule",
+      "foundation": "Stiftung"
+    },
+    "country": "Land",
+    "level": "Stufe",
+    "owner": "Name der Inhaberin oder des Inhabers",
+    "owner-placeholder": "Ayu Lestari",
+    "email": "E-Mail der Inhaberin oder des Inhabers",
+    "email-placeholder": "ayu@harapan.sch.id",
+    "plan-label": "Lizenz",
+    "plan": {
+      "tenant": "Ganze Organisation",
+      "unit": "Eine Schule"
+    },
+    "dpa": "AVV-Version",
+    "license": "Version der Inhaltslizenz",
+    "version-placeholder": "2026-10",
+    "units": "Einheiten",
+    "status-label": "Status",
+    "status": {
+      "active": "Aktiv",
+      "suspended": "Gesperrt"
+    }
+  },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
     "description": "Lerne auf Nakafa Mathematik, Naturwissenschaften, Informatik, KI und bereite dich auf Prüfungen vor. Kostenlose Lerninhalte von der Grundschule bis zur Universität mit Übungsaufgaben und Erklärungen.",
@@ -2264,6 +2302,14 @@
     "school-refusal-graduated": {
       "title": "Bereits abgeschlossen.",
       "description": "Diese Person kann nicht erneut in eine Klasse."
+    },
+    "school-refusal-not-operator": {
+      "title": "Das können nur Nakafa-Mitarbeitende.",
+      "description": "Melde dich mit einem Operator-Konto an."
+    },
+    "school-refusal-provision": {
+      "title": "Diese Schule lässt sich so nicht eröffnen.",
+      "description": "Prüfe die Adresse und die Einheiten der Schule."
     },
     "school-refusal-unit-limit": {
       "title": "Kein Platz für eine weitere Schule.",

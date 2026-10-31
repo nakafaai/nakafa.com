@@ -1517,6 +1517,44 @@
     "school-limit-line": "Founding more schools needs a conversation first.",
     "address-check-failed": "We could not check this address, so type it again to retry."
   },
+  "Operators": {
+    "title": "Schools",
+    "search": "Search schools",
+    "open": "Open school",
+    "open-description": "Open a school under its signed contract. Its Owner gets the invite.",
+    "empty": "No school yet",
+    "refused": "For Nakafa staff",
+    "refused-description": "This page opens schools under a contract. Anyone can open their own at /school/new.",
+    "name": "School",
+    "name-placeholder": "SMA Harapan Bangsa",
+    "address": "Address",
+    "address-placeholder": "harapan",
+    "kind-label": "Type",
+    "kind": {
+      "school": "School",
+      "foundation": "Foundation"
+    },
+    "country": "Country",
+    "level": "Level",
+    "owner": "Owner's name",
+    "owner-placeholder": "Ayu Lestari",
+    "email": "Owner's email",
+    "email-placeholder": "ayu@harapan.sch.id",
+    "plan-label": "Licence",
+    "plan": {
+      "tenant": "Whole organisation",
+      "unit": "One school"
+    },
+    "dpa": "DPA version",
+    "license": "Content licence version",
+    "version-placeholder": "2026-10",
+    "units": "Units",
+    "status-label": "Status",
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    }
+  },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
     "description": "Study math, science, computer science, AI, and exam prep on Nakafa. Free lessons from K-12 to university with practice questions and explanations.",
@@ -2264,6 +2302,14 @@
     "school-refusal-graduated": {
       "title": "Already graduated from this school.",
       "description": "A graduated student cannot be placed in a cohort again."
+    },
+    "school-refusal-not-operator": {
+      "title": "Only Nakafa staff can do this.",
+      "description": "Sign in with an operator account."
+    },
+    "school-refusal-provision": {
+      "title": "This school can't open with these details.",
+      "description": "Check the address and the school's units."
     },
     "school-refusal-unit-limit": {
       "title": "No room for another school.",
