@@ -164,16 +164,19 @@ const quadraticScene = (
   };
 };
 
-/** The scene of a draft's graph, or none while a number is missing. */
+/** The scene of a draft's graph, or none while a number is missing or its range runs backwards. */
 const sceneOf = (draft: FigureDraft) =>
   Option.map(
-    Option.all({
-      a: numberOf(draft.a),
-      b: numberOf(draft.b),
-      c: numberOf(draft.c),
-      from: numberOf(draft.from),
-      to: numberOf(draft.to),
-    }),
+    Option.filter(
+      Option.all({
+        a: numberOf(draft.a),
+        b: numberOf(draft.b),
+        c: numberOf(draft.c),
+        from: numberOf(draft.from),
+        to: numberOf(draft.to),
+      }),
+      ({ from, to }) => from < to
+    ),
     ({ a, b, c, from, to }) =>
       draft.curve === "line"
         ? lineScene(a, b, from, to)

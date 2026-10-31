@@ -10,7 +10,8 @@ const DATA = (name: string) => `data-${name}`;
 /** A text attribute of a figure, which the DOM keeps as a `data-` attribute of the same name. */
 const textAttribute = (name: string) => ({
   default: "",
-  parseHTML: (element: HTMLElement) => element.getAttribute(DATA(name)) ?? "",
+  parseHTML: (element: Pick<HTMLElement, "getAttribute">) =>
+    element.getAttribute(DATA(name)) ?? "",
   renderHTML: (attributes: Record<string, unknown>) => ({
     [DATA(name)]: attributes[name],
   }),
@@ -19,7 +20,7 @@ const textAttribute = (name: string) => ({
 /** A JSON attribute of a figure, which takes `fallback` from markup that holds none. */
 const jsonAttribute = (name: string, fallback: typeof Schema.Json.Type) => ({
   default: fallback,
-  parseHTML: (element: HTMLElement) =>
+  parseHTML: (element: Pick<HTMLElement, "getAttribute">) =>
     Option.getOrElse(
       Schema.decodeUnknownOption(JsonText)(element.getAttribute(DATA(name))),
       () => fallback
@@ -29,6 +30,14 @@ const jsonAttribute = (name: string, fallback: typeof Schema.Json.Type) => ({
   }),
 });
 
+/** The attributes of a figure, as the contract stores them. */
+export const FIGURE_ATTRIBUTES = {
+  alt: textAttribute("alt"),
+  caption: jsonAttribute("caption", null),
+  component: textAttribute("component"),
+  props: jsonAttribute("props", {}),
+};
+
 /**
  * A figure of a document, written as the contract's `figure` block: the component that draws it, that
  * component's props, its text alternative, and its caption (ADR 0031). Only the markup this editor writes is
@@ -37,12 +46,7 @@ const jsonAttribute = (name: string, fallback: typeof Schema.Json.Type) => ({
 const FigureBlock = Node.create<{ view: NodeViewRenderer | null }>({
   name: "figure",
   addAttributes() {
-    return {
-      alt: textAttribute("alt"),
-      caption: jsonAttribute("caption", null),
-      component: textAttribute("component"),
-      props: jsonAttribute("props", {}),
-    };
+    return FIGURE_ATTRIBUTES;
   },
   addNodeView() {
     return this.options.view;
