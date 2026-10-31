@@ -90,13 +90,9 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
   const setSearch = useTableFilters((state) => state.setSearch);
 
   return (
-    // One child of a button group, whichever of the two the width shows: the group shapes this frame's corners, and
-    // both draw them, so neither a hidden box nor a hidden button leaves a square corner.
-    <div
-      className="flex rounded-md [[data-slot=button-group]>[data-slot]~&]:-ms-px"
-      data-slot="table-search"
-    >
-      <InputGroup className="hidden w-56 rounded-[inherit] lg:flex xl:w-64">
+    // One part of a button group, whichever form the width shows, so a hidden form never shapes the other.
+    <div className="flex">
+      <InputGroup className="hidden w-56 lg:flex xl:w-64">
         <InputGroupAddon>
           <HugeIcons icon={Search01Icon} />
         </InputGroupAddon>
@@ -112,7 +108,7 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
           render={
             <Button
               aria-label={placeholder}
-              className="rounded-[inherit] lg:hidden"
+              className="lg:hidden"
               size="icon"
               type="button"
               variant={search === "" ? "outline" : "secondary"}

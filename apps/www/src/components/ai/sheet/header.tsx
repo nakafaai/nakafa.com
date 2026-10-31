@@ -8,7 +8,6 @@ import {
   StarsIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,43 +61,39 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
           <span>Nina</span>
         </SheetTitle>
 
-        <div className="flex items-center gap-1">
-          <ButtonGroup aria-label={t("Ai.chat-actions")}>
-            <HistorySlot />
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    className={
-                      activeChatId ? undefined : "hidden sm:inline-flex"
-                    }
-                    size="icon-sm"
-                    variant="ghost"
-                  >
-                    <HugeIcons icon={MoreHorizontalIcon} />
-                    <span className="sr-only">{t("Common.more-actions")}</span>
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="end" className="w-48">
-                <Activity mode={activeChatId ? "visible" : "hidden"}>
-                  <DropdownMenuItem onClick={() => setActiveChatId(null)}>
-                    <HugeIcons icon={Add01Icon} />
-                    {t("Ai.new-chat")}
-                  </DropdownMenuItem>
-                </Activity>
-                <DropdownMenuItem
-                  className="hidden sm:flex"
-                  onClick={onResizeToggle}
+        <div className="flex items-center gap-2">
+          <HistorySlot />
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  className={activeChatId ? undefined : "hidden sm:inline-flex"}
+                  size="icon-sm"
+                  variant="ghost"
                 >
-                  <HugeIcons
-                    icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
-                  />
-                  {t(expanded ? "Ai.narrower" : "Ai.wider")}
+                  <HugeIcons icon={MoreHorizontalIcon} />
+                  <span className="sr-only">{t("Common.more-actions")}</span>
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-48">
+              <Activity mode={activeChatId ? "visible" : "hidden"}>
+                <DropdownMenuItem onClick={() => setActiveChatId(null)}>
+                  <HugeIcons icon={Add01Icon} />
+                  {t("Ai.new-chat")}
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </ButtonGroup>
+              </Activity>
+              <DropdownMenuItem
+                className="hidden sm:flex"
+                onClick={onResizeToggle}
+              >
+                <HugeIcons
+                  icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
+                />
+                {t(expanded ? "Ai.narrower" : "Ai.wider")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button onClick={() => setOpen(false)} size="icon-sm" variant="ghost">
             <HugeIcons icon={Cancel01Icon} />
             <span className="sr-only">{t("Common.close")}</span>
