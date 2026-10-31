@@ -10,11 +10,16 @@ import {
   classAccess,
   subjectTeacherOf,
 } from "@repo/backend/confect/classroom/authority";
-import { DiscussionsClosed } from "@repo/backend/confect/classroom/forum/errors";
+import { takeUploads } from "@repo/backend/confect/classroom/forum/attach";
+import {
+  DiscussionsClosed,
+  MessageEmpty,
+} from "@repo/backend/confect/classroom/forum/errors";
 import {
   classChannel,
   classThread,
   missing,
+  nextThreadNumber,
 } from "@repo/backend/confect/classroom/forum/lookup";
 import { moveMark } from "@repo/backend/confect/classroom/forum/mark";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
@@ -23,6 +28,7 @@ import {
   noticeMentions,
 } from "@repo/backend/confect/classroom/forum/notice";
 import { opensDiscussions } from "@repo/backend/confect/classroom/forum/policy";
+import { start } from "@repo/backend/confect/classroom/forum/start";
 import { titleField } from "@repo/backend/confect/classroom/forum/thread";
 import spec from "@repo/backend/confect/classroom/forum/threads.spec";
 import {
@@ -35,7 +41,7 @@ import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { sealText } from "@repo/backend/confect/vault/text";
-import { Clock, Effect, Layer, Option, Struct } from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /**
  * A discussion as its own page shows it: its channel, its summary, and the
@@ -58,6 +64,36 @@ const threadView = Effect.fn("classroom.forum.threads.view")(function* (
     opening: yield* messageView(opening),
   };
 });
+
+/**
+ * One page of a class's discussions, the newest first, each read for the viewer.
+ * The read is indexed by class and bounded by the page size.
+ */
+const list = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "list",
+  Effect.fn("classroom.forum.threads.list")(function* ({ paginationOpts }) {
+    const row = yield* Class;
+    const found = yield* (yield* DatabaseReader)
+      .table("classroomThreads")
+      .index(
+        "by_classId_and_number",
+        (query) => query.eq("classId", row._id),
+        "desc"
+      )
+      .paginate(paginationOpts)
+      .pipe(Effect.orDie);
+    return Struct.assign(found, {
+      page: yield* Effect.forEach(found.page, (thread) =>
+        Effect.map(discussionView(thread), (discussion) => ({
+          channelId: thread.channelId,
+          discussion,
+        }))
+      ),
+    });
+  })
+);
 
 /**
  * Opens a discussion in a channel: its title and its first message, both sealed
@@ -107,15 +143,6 @@ const open = FunctionImpl.make(
       return yield* new DiscussionsClosed();
     }
     const checked = yield* checkMentions(row, mentions);
-    const last = yield* reader
-      .table("classroomThreads")
-      .index(
-        "by_classId_and_number",
-        (query) => query.eq("classId", row._id),
-        "desc"
-      )
-      .first()
-      .pipe(Effect.orDie);
     const keys = yield* schoolKeys(row.tenantId);
     const fields = { channelId: channel._id, classId: row._id, clientKey };
     const createdAt = yield* Clock.currentTimeMillis;
@@ -126,10 +153,7 @@ const open = FunctionImpl.make(
         ...fields,
         authorId: principal.person._id,
         createdAt,
-        number: Option.match(last, {
-          onNone: () => 1,
-          onSome: (found) => found.number + 1,
-        }),
+        number: yield* nextThreadNumber(),
         replies: 0,
         sealedTitle: yield* sealText(keys, titleField(fields), title).pipe(
           Effect.orDie
@@ -246,6 +270,7 @@ const reply = FunctionImpl.make(
   spec,
   "reply",
   Effect.fn("classroom.forum.threads.reply")(function* ({
+    attachments,
     clientKey,
     mentions,
     number,
@@ -271,8 +296,12 @@ const reply = FunctionImpl.make(
       }
       return yield* messageView(sent.value);
     }
+    if (text === "" && Arr.isReadonlyArrayEmpty(attachments)) {
+      return yield* new MessageEmpty();
+    }
     const checked = yield* checkMentions(row, mentions);
     const fields = { channelId: thread.channelId, classId: row._id, clientKey };
+    const files = yield* takeUploads(attachments);
     const createdAt = yield* Clock.currentTimeMillis;
     const writer = yield* DatabaseWriter;
     const messageId = yield* writer
@@ -289,6 +318,7 @@ const reply = FunctionImpl.make(
         ).pipe(Effect.orDie),
         tenantId: row.tenantId,
         threadId: thread._id,
+        ...(Arr.isReadonlyArrayEmpty(files) ? {} : { attachments: files }),
       })
       .pipe(Effect.orDie);
     yield* noticeMentions(messageId, row, createdAt, checked);
@@ -315,6 +345,8 @@ const reply = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(list),
+  Layer.provide(start),
   Layer.provide(open),
   Layer.provide(rename),
   Layer.provide(get),
