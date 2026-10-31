@@ -346,6 +346,21 @@ const workerIsNoBrowser: Plugin = {
     id === WORKER_ESM_ENV_BROWSER ? "export default false;" : undefined,
 };
 
+/**
+ * The scripts of the browser build, which `SMALL_CHUNK_BYTES` merges. A stylesheet
+ * stays with the chunk that imports it.
+ */
+const SCRIPT_MODULE_PATTERN = /\.[cm]?[jt]sx?(?:\?|$)/u;
+
+/**
+ * A group of modules that the same routes read and that is smaller than this joins
+ * the nearest group. Automatic splitting wrote 393 files for the home page, 275 of
+ * them under two kilobytes decoded, and each cost a request and lost the compression
+ * it would share with its neighbours. A route never gains a module it does not
+ * read beyond these small ones.
+ */
+const SMALL_CHUNK_BYTES = 16_384;
+
 /** The font files that the font-src policy must load from this origin, never inline. */
 const FONT_FILE_PATTERN = /\.woff2?$/u;
 
@@ -420,6 +435,24 @@ export default defineConfig(async ({ command, isPreview }) => {
         FONT_FILE_PATTERN.test(filePath) ? false : undefined,
     },
     environments: {
+      client: {
+        build: {
+          rolldownOptions: {
+            output: {
+              codeSplitting: {
+                groups: [
+                  {
+                    entriesAware: true,
+                    entriesAwareMergeThreshold: SMALL_CHUNK_BYTES,
+                    name: "shared",
+                    test: SCRIPT_MODULE_PATTERN,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
       // Workers Logs maps stack traces without the embedded sources, and the
       // upload refuses more than 60 MiB of maps: the sources were 47 of 65 MiB.
       [workerSettings.viteEnvironments.entry]: {
