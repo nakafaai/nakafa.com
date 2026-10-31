@@ -8,6 +8,7 @@ import {
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
+import { rowLineVariants } from "@repo/design-system/lib/row";
 import { getRouteApi } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
@@ -302,8 +303,8 @@ function SeatLink({
     >
       <PersonAvatar className="size-6" mascot={attempt.mascot ?? undefined} />
       <span className="grid min-w-0 gap-0.5">
-        <span className="truncate">{attempt.name}</span>
-        <span className="truncate text-muted-foreground text-xs">
+        <span className={rowLineVariants()}>{attempt.name}</span>
+        <span className={rowLineVariants({ line: "fact" })}>
           {Option.match(awaySince(attempt), {
             onNone: () =>
               t("seat-last-activity", {
