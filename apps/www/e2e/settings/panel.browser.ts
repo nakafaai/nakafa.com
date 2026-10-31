@@ -16,7 +16,7 @@ import {
 
 const WORDS = "Studies after dinner";
 /** The name of the search field on the German page. */
-const SEARCH_LABEL = "Erinnerung suchen";
+const SEARCH_LABEL = "Durchsuchen";
 /** The search field, a text box that the browser draws no clear control for. */
 const SEARCH = `input[type="text"][role="searchbox"][aria-label="${SEARCH_LABEL}"]`;
 /** The design system's clear button of the search field, in German. */
