@@ -43,7 +43,7 @@ const act = <A, E>(action: Effect.Effect<A, E>) =>
 const placeholderDraft = (
   question: Pick<
     Question,
-    "answers" | "key" | "points" | "scoring" | "template"
+    "answers" | "key" | "points" | "reading" | "scoring" | "template"
   >
 ) =>
   Effect.all({
@@ -111,6 +111,7 @@ export function useQuestionActions() {
         answers: newChoiceAnswers(),
         key: null,
         points: NEW_QUESTION_POINTS,
+        reading: null,
         scoring: ALL_OR_NOTHING,
         template: NEW_QUESTION_TEMPLATE,
       }).pipe(

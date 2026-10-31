@@ -114,7 +114,12 @@ export function ExamTryQuestion({
       />
       <PlayerQuestionHeader number={number} />
       <PlayerQuestionPrompt>
-        <ExamTryPrompt documentId={question.prompt} />
+        <div className="grid gap-6">
+          {question.reading === null ? null : (
+            <ExamTryPrompt documentId={question.reading} />
+          )}
+          <ExamTryPrompt documentId={question.prompt} />
+        </div>
       </PlayerQuestionPrompt>
       <PlayerQuestionAnswer>
         {Option.isSome(choice) ? (

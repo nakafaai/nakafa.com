@@ -51,6 +51,11 @@ export function QuestionPaper({
   return <div className={questionPaper({ selected })}>{children}</div>;
 }
 
+/** A question's text on its paper: its reading, when it has one, over its prompt, as the student reads them. */
+export function PaperPrompt({ children }: { children: ReactNode }) {
+  return <div className="grid gap-6">{children}</div>;
+}
+
 /** The room of the action that adds an option, which a page keeps while its editors are not mounted. */
 export function OptionAddRoom() {
   return <span aria-hidden className="h-8" />;

@@ -127,6 +127,26 @@ export function usePageDocument({
     : Option.orElse(served, () => live);
 }
 
+/** A question's shared reading drawn without an editor, over its prompt. */
+export function ReadingSketch({
+  documentId,
+  read,
+}: {
+  readonly documentId: Id<"editorDocuments">;
+  /** Whether the server's document may be read now. */
+  readonly read: boolean;
+}) {
+  const doc = usePageDocument({
+    documentId,
+    editing: false,
+    open: false,
+    read,
+    saved: true,
+  });
+
+  return <PreviewProse article doc={doc} size="paper" />;
+}
+
 /** The document a text draws while its document is not known: one empty paragraph, as an editor holds one. */
 const EMPTY_TEXT = Node.fromJSON(assessmentSchema, {
   content: [{ type: "paragraph" }],

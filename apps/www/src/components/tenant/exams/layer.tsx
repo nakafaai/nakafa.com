@@ -56,6 +56,7 @@ import {
 import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
+import { ReadingField } from "@/components/tenant/exams/reading";
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import { ScoringField } from "@/components/tenant/exams/scoring";
 import { tableOf } from "@/components/tenant/exams/table";
@@ -285,6 +286,7 @@ export function TeacherLayer({
         points={question.points}
         questionId={question.id}
       />
+      <ReadingField editable={editable} question={question} />
       {takesScoring(shown.template) ? (
         <ScoringField
           editable={editable}
