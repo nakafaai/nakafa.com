@@ -18,13 +18,18 @@ const MarkMoment = Schema.Struct({
 function watchMark(attribute: string) {
   const moment = { bodyExisted: false, marked: false };
   Object.assign(window, { nakafaMark: moment });
+  // The document, not its root: an init script can run before the root exists.
   new MutationObserver((records, observer) => {
-    if (records.some((record) => record.attributeName === attribute)) {
+    if (records.some((record) => record.target === document.documentElement)) {
       moment.marked = true;
       moment.bodyExisted = document.body !== null;
       observer.disconnect();
     }
-  }).observe(document.documentElement, { attributes: true });
+  }).observe(document, {
+    attributeFilter: [attribute],
+    attributes: true,
+    subtree: true,
+  });
 }
 
 /**

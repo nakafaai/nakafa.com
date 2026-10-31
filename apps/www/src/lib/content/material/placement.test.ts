@@ -4,7 +4,9 @@ import { Effect, Option } from "effect";
 import { toMaterialNavigationPage } from "@/lib/content/material/navigation";
 import {
   createPlacementStore,
-  startMaterialPlacement,
+  keepPlacement,
+  readLessonPlacement,
+  readLessonPlacementOnce,
 } from "@/lib/content/material/placement";
 import {
   previewNextProjection,
@@ -61,12 +63,11 @@ describe("lesson placement in the browser", () => {
 
   it.effect("keeps the placement that the reader's hint verifies", () =>
     Effect.gen(function* () {
-      const store = createPlacementStore();
       mocks.read.mockReturnValue(Effect.succeed(placement));
 
-      yield* startMaterialPlacement(store, { ctx: HINT, locale: "en", page });
-
-      expect(store.getState().placement).toStrictEqual(Option.some(placement));
+      expect(
+        yield* readLessonPlacement({ ctx: HINT, locale: "en", page })
+      ).toStrictEqual(placement);
       expect(mocks.read).toHaveBeenCalledExactlyOnceWith(
         "en",
         page.route,
@@ -77,52 +78,43 @@ describe("lesson placement in the browser", () => {
 
   it.effect("keeps no placement when the release verifies none", () =>
     Effect.gen(function* () {
-      const store = createPlacementStore();
       mocks.read.mockReturnValue(Effect.succeed(null));
 
-      yield* startMaterialPlacement(store, { ctx: HINT, locale: "en", page });
-
-      expect(store.getState().placement).toStrictEqual(Option.none());
+      expect(
+        yield* readLessonPlacement({ ctx: HINT, locale: "en", page })
+      ).toBeNull();
     })
   );
 
   for (const ctx of [undefined, "", "merdeka", "merdeka~node~extra", "~node"]) {
-    it.effect(
-      `asks nothing and drops an earlier placement for the hint ${String(ctx)}`,
-      () =>
-        Effect.gen(function* () {
-          const store = createPlacementStore();
-          store.setState({ placement: Option.some(placement) });
-
-          yield* startMaterialPlacement(store, { ctx, locale: "en", page });
-
-          expect(store.getState().placement).toStrictEqual(Option.none());
-          expect(mocks.read).not.toHaveBeenCalled();
-        })
+    it.effect(`asks nothing and reads none for the hint ${String(ctx)}`, () =>
+      Effect.gen(function* () {
+        expect(
+          yield* readLessonPlacement({ ctx, locale: "en", page })
+        ).toBeNull();
+        expect(mocks.read).not.toHaveBeenCalled();
+      })
     );
   }
 
   it.effect("asks nothing for a locale that the site does not serve", () =>
     Effect.gen(function* () {
-      const store = createPlacementStore();
-
-      yield* startMaterialPlacement(store, { ctx: HINT, locale: "xx", page });
-
-      expect(store.getState().placement).toStrictEqual(Option.none());
+      expect(
+        yield* readLessonPlacement({ ctx: HINT, locale: "xx", page })
+      ).toBeNull();
       expect(mocks.read).not.toHaveBeenCalled();
     })
   );
 
   it.effect("reports a failed read and keeps the lesson's own links", () =>
     Effect.gen(function* () {
-      const store = createPlacementStore();
       const cause = new Error("offline");
       mocks.read.mockReturnValue(Effect.fail(cause));
       mocks.report.mockReturnValue(Effect.void);
 
-      yield* startMaterialPlacement(store, { ctx: HINT, locale: "en", page });
-
-      expect(store.getState().placement).toStrictEqual(Option.none());
+      expect(
+        yield* readLessonPlacement({ ctx: HINT, locale: "en", page })
+      ).toBeNull();
       expect(mocks.report).toHaveBeenCalledExactlyOnceWith(
         expect.objectContaining({ _tag: "PlacementReadFailed", cause }),
         { source: "material-placement" }
@@ -132,20 +124,55 @@ describe("lesson placement in the browser", () => {
 
   it.effect("reports a read that fails to load and asks nothing", () =>
     Effect.gen(function* () {
-      const store = createPlacementStore();
       vi.doMock("@/lib/content/material/context", () => {
         throw new Error("chunk failed to load");
       });
       mocks.report.mockReturnValue(Effect.void);
 
-      yield* startMaterialPlacement(store, { ctx: HINT, locale: "en", page });
-
-      expect(store.getState().placement).toStrictEqual(Option.none());
+      expect(
+        yield* readLessonPlacement({ ctx: HINT, locale: "en", page })
+      ).toBeNull();
       expect(mocks.read).not.toHaveBeenCalled();
       expect(mocks.report).toHaveBeenCalledExactlyOnceWith(
         expect.objectContaining({ _tag: "PlacementReadFailed" }),
         { source: "material-placement" }
       );
     })
+  );
+
+  it("starts from the placement that the loader read, and keeps a later one", () => {
+    expect(createPlacementStore(placement).getState().placement).toStrictEqual(
+      Option.some(placement)
+    );
+    const store = createPlacementStore();
+    expect(store.getState().placement).toStrictEqual(Option.none());
+
+    keepPlacement(store, placement);
+    expect(store.getState().placement).toStrictEqual(Option.some(placement));
+
+    keepPlacement(store, null);
+    expect(store.getState().placement).toStrictEqual(Option.none());
+  });
+
+  it.effect(
+    "reads one lesson and hint once a page session, and another hint again",
+    () =>
+      Effect.gen(function* () {
+        mocks.read.mockReturnValue(Effect.succeed(placement));
+        const once = { ctx: `${HINT}-once`, locale: "en", page };
+
+        expect(yield* readLessonPlacementOnce(once)).toStrictEqual(placement);
+        expect(yield* readLessonPlacementOnce(once)).toStrictEqual(placement);
+        expect(mocks.read).toHaveBeenCalledOnce();
+
+        mocks.read.mockReturnValue(Effect.succeed(null));
+        expect(
+          yield* readLessonPlacementOnce({ ...once, ctx: `${HINT}-other` })
+        ).toBeNull();
+        expect(
+          yield* readLessonPlacementOnce({ ...once, ctx: undefined })
+        ).toBeNull();
+        expect(mocks.read).toHaveBeenCalledTimes(2);
+      })
   );
 });

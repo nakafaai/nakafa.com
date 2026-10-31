@@ -33,8 +33,15 @@ import { SETTINGS_PANEL_ID } from "@/components/user/settings/panel";
  * the smallest panel: 65rem.
  */
 const WIDE = "(min-width: 65rem)";
-/** How wide the panel starts and how far a drag of its edge takes it. */
-const PANEL_WIDTH = { initialWidth: 496, maxWidth: 768, minWidth: 384 };
+/**
+ * How wide the panel starts and how far a drag of its edge takes it. It starts wide enough for the editor's
+ * toolbar to hold every control in its one row: history, style, the marks, the lists, the blocks and the Arabic
+ * keypad take 666px with their separators (measured 31 Oct, e2e/settings/toolbar.browser.ts), and the bar's padding
+ * and the panel's border 17px more. At 688px the row held them with 5px to spare, so the panel starts at 45rem,
+ * which keeps a control's room in hand. Where the window leaves less room beside the list, the panel takes what is
+ * left, and the controls that do not fit wait behind the toolbar's last control.
+ */
+const PANEL_WIDTH = { initialWidth: 720, maxWidth: 768, minWidth: 384 };
 /**
  * The room the list keeps beside the panel, in rem: a card of 20rem between the
  * 1.5rem of padding the settings page puts around it. The panel never takes

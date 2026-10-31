@@ -147,13 +147,14 @@ const MARKS = {
 type DocumentMark = keyof typeof MARKS;
 
 /**
- * The views that draw the formula and image nodes, which the caller gives. A node with no
- * view is drawn as plain DOM, so an editor that shows none still holds the document.
+ * The views of an editor that draws no node of the document with a view and no mark with a
+ * class: each node is plain DOM and each mark its bare element, so an editor that draws
+ * nothing, such as the server's, still holds the document.
  */
-/** The views of an editor that draws no node of the document with a view. */
 const NO_DOCUMENT_VIEWS = {
   ...NO_MATH_VIEWS,
   image: null,
+  marks: {},
 };
 
 /**
@@ -164,13 +165,15 @@ const NO_DOCUMENT_VIEWS = {
  * document's own, and so is its link, so each holds only the attributes the contract names.
  * A table is the contract's table, of rows and cells that hold blocks, with the spans of
  * a cell and no other attribute. The formulas are the contract's inline and block math,
- * drawn by the given views, and the image is drawn by its view (`NO_DOCUMENT_VIEWS` draws every
- * one as plain DOM).
+ * drawn by the given views, the image is drawn by its view, and each mark's element takes its
+ * class (`NO_DOCUMENT_VIEWS` draws every one as plain DOM).
  */
 export function documentExtensions(
   rules: DocumentRules,
   views: MathViews & {
     readonly image: NodeViewRenderer | null;
+    /** The class of each mark's element, which the caller that draws the document gives. */
+    readonly marks: Partial<Record<DocumentMark, string>>;
   } = NO_DOCUMENT_VIEWS
 ): AnyExtension[] {
   return [
@@ -193,7 +196,9 @@ export function documentExtensions(
     ...mathExtensions(views),
     ...imageExtensions(views.image),
     ...Arr.map(rules.marks, (mark, index) =>
-      MARKS[mark](TOP_PRIORITY - index, rules.isLinkAllowed)
+      MARKS[mark](TOP_PRIORITY - index, rules.isLinkAllowed).configure({
+        HTMLAttributes: { class: views.marks[mark] },
+      })
     ),
   ];
 }

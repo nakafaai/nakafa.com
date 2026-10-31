@@ -1,5 +1,7 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { Effect } from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /**
  * Longer than one turn of the lesson window, which opens the next lesson every
@@ -27,6 +29,36 @@ export function lessonPanel(page: Page) {
 export function lessonWindow(page: Page) {
   return lessonSection(page).locator('[data-slot="lesson-window"]');
 }
+
+/**
+ * Brings the lesson window to the screen, ready for a press. The lesson section
+ * is drawn only as the reader nears it (`content-auto-section`), so a scroll to
+ * the window measured before the section drew lands short of it once the section
+ * takes its own height. The section comes into reach first, the window is
+ * scrolled to once it has drawn, and the window's buttons are React's before a
+ * press, so a press opens its lesson.
+ */
+export const showLessonWindow = Effect.fn("NakafaE2E.showLessonWindow")(
+  function* (page: Page) {
+    yield* Effect.promise(async () => {
+      await lessonSection(page).scrollIntoViewIfNeeded();
+      await expect
+        .poll(() =>
+          lessonWindow(page).evaluate((root) =>
+            root.checkVisibility({ contentVisibilityAuto: true })
+          )
+        )
+        .toBe(true);
+      await lessonWindow(page).scrollIntoViewIfNeeded();
+      await waitUntilTakenOver(
+        lessonSection(page)
+          .locator('[data-slot="button-group"]')
+          .getByRole("button")
+          .first()
+      );
+    });
+  }
+);
 
 /** The visual of a lesson, found by the name of its view. */
 export function lessonVisual(page: Page, name: string) {

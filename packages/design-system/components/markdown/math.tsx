@@ -1,9 +1,9 @@
+import { DrawnInlineMath } from "@repo/design-system/components/markdown/drawn";
 import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
 import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
 import {
   MATH_ERROR_COLOR,
   mathBlockVariants,
-  mathInlineVariants,
   mathScrollVariants,
 } from "@repo/design-system/lib/prose";
 import { cn } from "cn";
@@ -56,11 +56,7 @@ function KatexMarkup({
   return (
     <>
       <MathFontPreload fonts={fonts} />
-      <span
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
-        dangerouslySetInnerHTML={{ __html: html }}
-        data-testid="katex"
-      />
+      <DrawnInlineMath html={html} />
     </>
   );
 }
@@ -118,11 +114,7 @@ export function BlockMath({
   );
 }
 
-/** Renders one inline KaTeX expression (`mathInlineVariants`). */
+/** Renders one inline KaTeX expression, drawn through `DrawnInlineMath`. */
 export function InlineMath(props: MathComponentProps) {
-  return (
-    <span className={mathInlineVariants()} data-markdown-ignore="">
-      <KatexMarkup displayMode={false} {...props} />
-    </span>
-  );
+  return <KatexMarkup displayMode={false} {...props} />;
 }

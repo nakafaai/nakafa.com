@@ -9,6 +9,7 @@ import {
   ReportNotPlaced,
 } from "@repo/backend/confect/records/errors";
 import {
+  OwnReport,
   ReportCohort,
   ReportDetail,
   ReportLine,
@@ -23,7 +24,8 @@ import { Schema } from "effect";
  * The report cards of a cohort (ADR 0033, S4). The homeroom teacher writes each placed
  * student's note and hands the report in, or takes it back while the principal has not
  * approved it; the principal approves it, which draws its PDF and locks it. The cohort's
- * list and each report open to the homeroom teacher, the principal, and the Admin.
+ * list and each report open to the homeroom teacher, the principal, and the Admin, and a
+ * student reads their own locked report cards through `own`.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -33,6 +35,14 @@ export default GroupSpec.make()
       name: "cohorts",
       args: () => ({ slug: TenantSlug }),
       returns: () => Schema.Array(ReportCohort),
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "own",
+      args: () => ({ slug: TenantSlug }),
+      returns: () => Schema.Array(OwnReport),
+      error: () => Schema.Never,
     })
   )
   .addFunction(

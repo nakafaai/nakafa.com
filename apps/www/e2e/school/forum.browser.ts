@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   hostAddress,
@@ -28,6 +29,7 @@ for (const viewport of [
       signInClassTeacher(context, school.slug, address("/"))
     );
     const page = await context.newPage();
+    const changes = await Effect.runPromise(trackChanges(page, []));
     await page.goto(address("/classes/fisika-x-1/forum"));
 
     // The forum lists its channels, and the general channel opens its messages.
@@ -44,6 +46,7 @@ for (const viewport of [
 
     // A sent message shows at once, at the end of the channel, and the field empties.
     const field = page.getByRole("textbox", { name: "Write a message" });
+    const sentBefore = changes.sent;
     await field.fill("Tugas bab 3 dikumpulkan hari Jumat.");
     await field.press("Enter");
     await expect(
@@ -55,7 +58,9 @@ for (const viewport of [
     await expect(page.getByRole("menuitem", { name: "Edit" })).toBeVisible();
     await page.keyboard.press("Escape");
 
-    // The server holds it, so the channel opened again shows it.
+    // The server holds it once it answered the send, so the channel opened again shows it: a reload
+    // drops a message still on its way.
+    await saved(changes, sentBefore);
     await page.reload();
     const message = page.getByText("Tugas bab 3 dikumpulkan hari Jumat.");
     await expect(message).toBeVisible({

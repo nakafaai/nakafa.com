@@ -199,9 +199,10 @@ test.describe("The words of a diagram", () => {
             // A diagram the model gave no title or description takes the words of the page.
             await expect.soft(card).toContainText(language.title);
             await controls.first().click();
+            // A phone opens the diagram as a drawer, so the open dialog's own description is read.
             await expect
-              .soft(page.locator('[data-slot="dialog-description"]'))
-              .toHaveText(language.description);
+              .soft(page.getByRole("dialog"))
+              .toHaveAccessibleDescription(language.description);
             await page.keyboard.press("Escape");
 
             // A diagram that cannot be drawn says so in the same words.
@@ -227,8 +228,8 @@ test.describe("The words of a diagram", () => {
             await expect.soft(titledCard).toContainText(DIAGRAM_TITLE);
             await titledCard.getByRole("button").first().click();
             await expect
-              .soft(page.locator('[data-slot="dialog-description"]'))
-              .toHaveText(DIAGRAM_DESCRIPTION);
+              .soft(page.getByRole("dialog"))
+              .toHaveAccessibleDescription(DIAGRAM_DESCRIPTION);
           });
         })
       );
