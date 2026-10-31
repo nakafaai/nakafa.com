@@ -426,7 +426,7 @@
     "student-opens-at": "This sitting opens {time}.",
     "student-scheduled-footer": "The token field opens with the sitting.",
     "student-back-home": "Back to home",
-    "seat-last-activity": "Last activity {time}.",
+    "seat-last-activity": "Active {time}.",
     "seat-away-seconds": "Away for {seconds} s.",
     "seat-away-minutes": "Away for {minutes} min {seconds} s.",
     "title-needed": "The exam needs a title before you can create it.",

@@ -426,7 +426,7 @@
     "student-opens-at": "Diese Sitzung beginnt {time}.",
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
     "student-back-home": "Zur Startseite",
-    "seat-last-activity": "Letzte Aktivität {time}.",
+    "seat-last-activity": "Aktiv {time}.",
     "seat-away-seconds": "Seit {seconds} s weg.",
     "seat-away-minutes": "Seit {minutes} min {seconds} s weg.",
     "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
