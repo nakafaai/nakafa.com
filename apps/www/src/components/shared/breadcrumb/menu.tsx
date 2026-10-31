@@ -1,6 +1,6 @@
 "use client";
 
-import { File02Icon, Folder02Icon } from "@hugeicons/core-free-icons";
+import { Folder02Icon } from "@hugeicons/core-free-icons";
 import {
   BreadcrumbEllipsis,
   BreadcrumbItem,
@@ -69,9 +69,9 @@ export function BreadcrumbMenu({
 }
 
 /**
- * Renders one linked or inert collapsed breadcrumb menu item, which closes its menu when chosen. Each
- * item carries its icon, as every menu item does: a linked ancestor is a folder of the path, and a
- * segment without a link is the page itself.
+ * Renders one collapsed breadcrumb menu item, which closes its menu when chosen and carries its icon, as
+ * every menu item does. A segment without a link is the page itself, which names itself beside the menu,
+ * so the menu holds no row that cannot be pressed.
  */
 function BreadcrumbMenuItem({
   item,
@@ -83,16 +83,7 @@ function BreadcrumbMenuItem({
   const label = item.menuLabel ?? item.label;
 
   if (item.target === undefined) {
-    return (
-      <DropdownMenuItem
-        render={
-          <span>
-            <HugeIcons icon={File02Icon} />
-            {label}
-          </span>
-        }
-      />
-    );
+    return null;
   }
 
   return (
