@@ -76,10 +76,13 @@ export const codeVariants = cva(
 /**
  * A table's frame: rounded and bordered, scrolling sideways when the table is wider, its words in the small
  * size, its table as wide as the frame (`*:w-full`), and its body on the muted surface. The lesson draws the
- * frame as the table's container, the exam editor as its table's wrapper, so both select the body alike.
+ * frame as the table's container, the exam editor as its table's wrapper, so both select the body alike. The
+ * frame is as tall as its table (`h-auto`): the scroll area under a lesson's table fills its parent by default,
+ * and in Nina's answer, whose blocks have a definite height, a frame that filled the answer ran past its last row
+ * and under the answer's actions.
  */
 export const tableFrameVariants = cva(
-  "relative my-4 grid w-full grid-cols-1 overflow-x-auto rounded-xl border text-sm *:w-full first:mt-0 last:mb-0 [&_tbody]:bg-muted/40"
+  "relative my-4 grid h-auto w-full grid-cols-1 overflow-x-auto rounded-xl border text-sm *:w-full first:mt-0 last:mb-0 [&_tbody]:bg-muted/40"
 );
 
 /** A row of a table, with a rule under every row but the last. */
