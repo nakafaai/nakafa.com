@@ -7,7 +7,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The entry address that holds the school username form alone. */
-const USERNAME_ADDRESS = /masuk=username/;
+const USERNAME_ADDRESS = /sign-in=username/;
 
 test("a wrong card code is refused with one message that does not say whether the username exists", async ({
   page,
@@ -45,7 +45,7 @@ test("a sign-in without the username or password answers at once and asks the se
     }
   });
   await page.goto(
-    hostAddress(baseURL, `${school.slug}.localhost`, "/?masuk=username")
+    hostAddress(baseURL, `${school.slug}.localhost`, "/?sign-in=username")
   );
   await waitUntilTakenOver(page.getByRole("button", { name: "Sign in" }));
 

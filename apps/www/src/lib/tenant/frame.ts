@@ -4,7 +4,6 @@ import { ViewerView } from "@repo/backend/confect/tenancy/viewer.spec";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Schema } from "effect";
 import { HomeAccessSchema } from "@/components/tenant/home/access";
-import { GreetingSchema } from "@/components/tenant/home/greeting";
 
 /** The public profile of a school, as its profile query returns it. */
 export type SchoolProfile = typeof TenantProfile.Type;
@@ -30,11 +29,10 @@ const OutsiderFrame = Schema.TaggedStruct("Outsider", {
 });
 
 /**
- * What the school layout shows a member: the shell, its greeting, and what the viewer may do with
+ * What the school layout shows a member: the shell, and what the viewer may do with
  * exams. The shell's context carries it to every page of the school.
  */
 const MemberFrame = Schema.TaggedStruct("Member", {
-  greeting: GreetingSchema,
   home: HomeAccessSchema,
   locale: LocaleSchema,
   profile: TenantProfile,

@@ -530,13 +530,14 @@
   content-visibility: visible;
 }
 
+/*
+ * A code block's lines never wrap, so it stands in at its exact height: its
+ * header (45px), its padding (2rem) and its border (2px), and 1.25rem for each
+ * of the `--code-lines` lines of the source it opens on.
+ */
 @utility content-auto-code {
-  contain-intrinsic-size: auto none auto 48rem;
-  content-visibility: auto;
-}
-
-@utility content-auto-exercise {
-  contain-intrinsic-size: auto none auto 60rem;
+  contain-intrinsic-size: auto none auto
+    calc(var(--code-lines) * 1.25rem + 4.9375rem);
   content-visibility: auto;
 }
 

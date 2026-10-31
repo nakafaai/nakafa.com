@@ -4,7 +4,12 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
-import { MoreHorizontalIcon, Refresh01Icon } from "@hugeicons/core-free-icons";
+import {
+  AtIcon,
+  MoreHorizontalIcon,
+  PencilEdit02Icon,
+  Refresh01Icon,
+} from "@hugeicons/core-free-icons";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -48,6 +53,8 @@ import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
+import { LoginRenameDialog } from "@/components/tenant/settings/login";
+import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
@@ -158,13 +165,20 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
   }
 
   const columns = loginColumns.columns([
-    loginColumns.accessor((login) => login.loginName, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-      filterFn: "includesString",
-      header: t("login-name"),
-      id: "login",
-      sortFn: "text",
-    }),
+    // The login name with the student's name after it, so the header's search finds a login by either; the cell
+    // shows the login name.
+    loginColumns.accessor(
+      (login) => `${login.loginName} ${login.person.name}`,
+      {
+        cell: (info) => (
+          <span className="font-medium">{info.row.original.loginName}</span>
+        ),
+        filterFn: "includesString",
+        header: t("login-name"),
+        id: "login",
+        sortFn: "text",
+      }
+    ),
     loginColumns.accessor((login) => login.person.name, {
       header: t("login-person"),
       id: "person",
@@ -187,15 +201,16 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
     <DataTable
       columns={columns}
       data={logins}
-      rowId={(login) => login.loginName}
+      rowId={(login) => login.person.id}
       search="login"
     />
   );
 }
 
 /**
- * A login's row menu, which reissues the card of its person. The menu waits while the
- * reissue runs, and the new card opens in the card dialog.
+ * A login's row menu: Rename, which renames its person, Change login name, which changes the name the person signs in
+ * with, and Reissue card, which reissues the person's card. The menu waits while the reissue runs, and the new card
+ * opens in the card dialog.
  */
 function SchoolLoginMenu({ login }: { login: LoginItem }) {
   const { slug } = useTenant();
@@ -206,6 +221,10 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
     reissueCardChange
   );
   const [isPending, startTransition] = useTransition();
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renaming, setRenaming] = useState(0);
+  const [isChangingLogin, setIsChangingLogin] = useState(false);
+  const [changingLogin, setChangingLogin] = useState(0);
 
   return (
     <div className="flex justify-end">
@@ -224,6 +243,24 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
         />
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuItem
+            onClick={() => {
+              setRenaming((count) => count + 1);
+              setIsRenaming(true);
+            }}
+          >
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("person-rename")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              setChangingLogin((count) => count + 1);
+              setIsChangingLogin(true);
+            }}
+          >
+            <HugeIcons icon={AtIcon} />
+            {t("login-rename")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onClick={() =>
               startTransition(() =>
                 saveSchool(
@@ -239,6 +276,18 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <PersonRenameDialog
+        key={renaming}
+        open={isRenaming}
+        person={login.person}
+        setOpen={setIsRenaming}
+      />
+      <LoginRenameDialog
+        key={changingLogin}
+        login={login}
+        open={isChangingLogin}
+        setOpen={setIsChangingLogin}
+      />
     </div>
   );
 }

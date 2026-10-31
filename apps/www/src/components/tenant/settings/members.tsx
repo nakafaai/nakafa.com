@@ -8,6 +8,7 @@ import {
   IdCardIcon,
   MailSend01Icon,
   MoreHorizontalIcon,
+  PencilEdit02Icon,
   UserAdd01Icon,
   UserCircleIcon,
   UserRemove01Icon,
@@ -50,6 +51,7 @@ import { roleLooks } from "@/components/tenant/roles";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
+import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 
@@ -227,7 +229,7 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
 }
 
 /**
- * The row menu of a member: Give a role, which gives the member a role of the whole school, and Remove for a member
+ * The row menu of a member: Rename, Give a role, which gives the member a role of the whole school, and Remove for a member
  * whom the viewer may remove, one who joined, one whose card waits, and one whose invite ended or card expired. Remove
  * asks first, and the account of a member who joined loses the school at once. An invited member is handled on the
  * invitations page, and the list answers which rows the viewer may remove.
@@ -240,6 +242,8 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
     removeMemberChange
   );
   const [isGiving, setIsGiving] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renaming, setRenaming] = useState(0);
   const [isRemoving, setIsRemoving] = useState(false);
   const removable = member.removable && member.status !== "invited";
 
@@ -266,6 +270,15 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
         />
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuGroup>
+            <DropdownMenuItem
+              onClick={() => {
+                setRenaming((count) => count + 1);
+                setIsRenaming(true);
+              }}
+            >
+              <HugeIcons icon={PencilEdit02Icon} />
+              {t("person-rename")}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setIsGiving(true)}>
               <HugeIcons icon={UserStar01Icon} />
               {t("roles-assign-dialog")}
@@ -282,6 +295,12 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+      <PersonRenameDialog
+        key={renaming}
+        open={isRenaming}
+        person={member}
+        setOpen={setIsRenaming}
+      />
       <SchoolGrantDialog
         open={isGiving}
         person={{ id: member.id, name: member.name }}

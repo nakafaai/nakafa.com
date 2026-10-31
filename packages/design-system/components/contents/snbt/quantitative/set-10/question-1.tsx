@@ -1,4 +1,5 @@
 import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
@@ -114,6 +115,7 @@ export function Graph({ title, description, mode = "question" }: GraphProps) {
       cameraPosition={[0, 0.5, 24]}
       cameraTarget={[0, 0.5, 0]}
       data={data}
+      facts={<LineReadouts />}
       header={<VisualCardHeader description={description} title={title} />}
     />
   );
