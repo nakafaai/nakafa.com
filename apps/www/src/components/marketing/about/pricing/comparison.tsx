@@ -5,7 +5,6 @@ import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { CurrencyBranch } from "@/components/marketing/about/pricing/currency";
 import {
-  currencySymbol,
   drinkKey,
 } from "@/components/marketing/about/pricing/display";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
@@ -62,7 +61,7 @@ function PriceCoin({ symbol }: { symbol: string }) {
  */
 function CurrencyComparison({ currency }: { currency: PricingCurrency }) {
   const t = useTranslations("PricingPage");
-  const { formatter, price } = getProMonthlyPricingFor(currency);
+  const { format, price, symbol } = getProMonthlyPricingFor(currency);
   const sums = pricingSums(price);
   const perDayNote =
     price.currency === "IDR" ? t("per-day-note-idr") : t("per-day-note-other");
@@ -70,7 +69,7 @@ function CurrencyComparison({ currency }: { currency: PricingCurrency }) {
   return (
     <>
       <h2 className="text-center text-3xl tracking-tight text-balance sm:text-4xl">
-        {t("comparison-title", { price: formatter.format(price.amount) })}
+        {t("comparison-title", { price: format(price.amount) })}
       </h2>
       <div className="mx-auto grid w-full max-w-5xl gap-10 md:grid-cols-3">
         <Comparison
@@ -89,9 +88,9 @@ function CurrencyComparison({ currency }: { currency: PricingCurrency }) {
         />
         <Comparison
           note={perDayNote}
-          picture={<PriceCoin symbol={currencySymbol(formatter)} />}
+          picture={<PriceCoin symbol={symbol} />}
           title={t("per-day-title", {
-            price: formatter.format(sums.pricePerDay),
+            price: format(sums.pricePerDay),
           })}
         />
         <Comparison

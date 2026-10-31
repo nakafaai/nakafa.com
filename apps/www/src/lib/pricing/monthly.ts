@@ -3,7 +3,7 @@ import {
   proMonthlyPrices,
   proYearlyPrices,
 } from "@repo/backend/confect/billing/catalog";
-import { HashSet, Schema } from "effect";
+import { Array as Arr, HashSet, Schema } from "effect";
 
 /** The currencies that the monthly pro price is shown in, as the Polar catalog names them. */
 export const PricingCurrencySchema = Schema.Literals(["EUR", "IDR", "USD"]);
@@ -46,15 +46,43 @@ function getPriceFormat(price: MonthlyPrice) {
   } satisfies Intl.NumberFormatOptions;
 }
 
+/** The symbol in letters that opens a price, and any space after it. */
+const LETTER_SYMBOL = /^(\p{L}+)\s*/u;
+
+/**
+ * Writes one amount the same in every browser. Each engine ships its own locale
+ * data: Node and Chrome put a no-break space after the rupiah's symbol and Safari
+ * puts none, so a page prerendered by one and hydrated by the other fails hydration
+ * and React renders it again from nothing. A symbol in letters always takes the
+ * no-break space (Rp 79.000).
+ */
+function writeAmount(formatter: Intl.NumberFormat, amount: number) {
+  return formatter.format(amount).replace(LETTER_SYMBOL, "$1\u00a0");
+}
+
+/** The currency symbol of a price, as its locale writes it. */
+function symbolOf(formatter: Intl.NumberFormat) {
+  return Arr.join(
+    Arr.map(
+      Arr.filter(formatter.formatToParts(0), (part) => part.type === "currency"),
+      (part) => part.value
+    ),
+    ""
+  );
+}
+
 /** The price of one currency with its formatting, as the pages read it. */
 function makePricing<Currency extends PricingCurrency>(
   currency: Currency,
   price: MonthlyPrice
 ) {
+  const formatter = new Intl.NumberFormat(price.locale, getPriceFormat(price));
+
   return {
     currency,
-    formatter: new Intl.NumberFormat(price.locale, getPriceFormat(price)),
+    format: (amount: number) => writeAmount(formatter, amount),
     price,
+    symbol: symbolOf(formatter),
   };
 }
 
