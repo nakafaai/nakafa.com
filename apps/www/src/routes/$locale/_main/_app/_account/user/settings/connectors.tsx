@@ -25,9 +25,10 @@ export const Route = createFileRoute(
 
 function ConnectorsPage() {
   const { connect } = Route.useSearch();
+  const { first, offered } = Route.useLoaderData();
   return (
     <ConnectOutcomeContext value={connect}>
-      <UserSettingsConnectors />
+      <UserSettingsConnectors first={first} initialOffered={offered} />
     </ConnectOutcomeContext>
   );
 }

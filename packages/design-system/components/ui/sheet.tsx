@@ -4,6 +4,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Activity, createContext, use } from "react";
+import { useTranslations } from "use-intl";
 
 const SheetContext = createContext<SheetPrimitive.Root.Props["modal"]>(true);
 
@@ -81,6 +82,7 @@ function SheetPopup({
   showCloseButton?: boolean;
 } & VariantProps<typeof sheetPopupVariants>) {
   const modal = use(SheetContext);
+  const t = useTranslations("Common");
 
   return (
     <SheetPortal keepMounted={keepMounted}>
@@ -96,7 +98,7 @@ function SheetPopup({
         {!!showCloseButton && (
           <SheetPrimitive.Close className="pressable focus-visible:ring-ring focus-visible:ring-offset-background absolute inset-e-2 top-2 inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-transparent opacity-80 transition-[scale,color,background-color,box-shadow,opacity] outline-none hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:transition-none pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
             <HugeIcons icon={Cancel01Icon} />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t("close")}</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Popup>
@@ -108,7 +110,10 @@ function SheetPopup({
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-1.5 border-b p-4", className)}
+      className={cn(
+        "flex flex-col gap-1.5 border-b p-4 last:border-b-0 has-[+[data-slot=sheet-footer]]:border-b-0",
+        className
+      )}
       data-slot="sheet-header"
       {...props}
     />
@@ -119,7 +124,10 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("mt-auto flex flex-col gap-2 border-t p-4", className)}
+      className={cn(
+        "bg-muted/70 mt-auto flex flex-col gap-2 border-t p-4",
+        className
+      )}
       data-slot="sheet-footer"
       {...props}
     />

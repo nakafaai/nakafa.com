@@ -64,6 +64,7 @@ import {
 import { tableOf } from "@/components/tenant/exams/table";
 import { QuestionType } from "@/components/tenant/exams/type";
 import { usePageWindow } from "@/components/tenant/exams/window";
+import type { Unstored } from "@/components/tenant/exams/writer";
 
 /**
  * The prompt loads when a page mounts its editors, never with the page. Until it loads, the page
@@ -253,7 +254,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
         <Suspense
           fallback={
             <QuestionPaper selected={chosen}>
-              <PreviewProse article doc={prompt} size="page" />
+              <PreviewProse article doc={prompt} size="paper" />
               <PaperSketch question={question} withControls />
             </QuestionPaper>
           }
@@ -267,7 +268,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
         </Suspense>
       ) : (
         <QuestionPaper selected={chosen}>
-          <PreviewProse article doc={prompt} size="page" />
+          <PreviewProse article doc={prompt} size="paper" />
           <PaperSketch question={question} withControls />
         </QuestionPaper>
       )}
@@ -369,6 +370,7 @@ function LivePaper({
         <ExamDocument
           label={t("question-text", { number })}
           placeholder={t("prompt-placeholder")}
+          size="paper"
         />
       </ExamText>
       {match === null ? null : (
@@ -420,7 +422,7 @@ function LivePaper({
                       }))
                   : null
               }
-              onSave={(label: OptionLabel, unstored: () => void) =>
+              onSave={(label: OptionLabel, unstored: Unstored) =>
                 saveAnswers(
                   (draft) => ({
                     ...draft,

@@ -6,9 +6,9 @@ import { SHELL_PATH } from "#www/src/lib/routing/shell";
 import { prepareShell } from "#www/src/lib/static/scripts";
 
 /*
- * What the browser's bundle holds: which modules share a file, and which files a
- * school host starts from its first bytes. A slow phone pays for each request as
- * much as for each byte, so this is where a page's first load is shaped.
+ * What the browser's bundle holds, and which files a school host starts from its
+ * first bytes. A slow phone pays for each request as much as for each byte, so
+ * this is where a page's first load is shaped.
  */
 
 /** The font files that the font-src policy must load from this origin, never inline. */
@@ -18,38 +18,6 @@ const FONT_FILE_PATTERN = /\.woff2?$/u;
 export const browserAssets = {
   assetsInlineLimit: (filePath: string) =>
     FONT_FILE_PATTERN.test(filePath) ? false : undefined,
-};
-
-/** The scripts of the browser build. A stylesheet stays with the chunk that imports it. */
-const SCRIPT_MODULE_PATTERN = /\.[cm]?[jt]sx?(?:\?|$)/u;
-
-/**
- * A group of modules that the same routes read and that is smaller than this joins
- * the nearest group. Automatic splitting wrote 330 files for a school's sign-in, 305
- * of them under five kilobytes, and each cost a request and lost the compression it
- * would share with its neighbours. A route never gains a module it does not read
- * beyond these small ones.
- */
-const SMALL_CHUNK_BYTES = 16_384;
-
-/** The browser environment's output, which merges the small groups of modules. */
-export const browserEnvironment = {
-  build: {
-    rolldownOptions: {
-      output: {
-        codeSplitting: {
-          groups: [
-            {
-              entriesAware: true,
-              entriesAwareMergeThreshold: SMALL_CHUNK_BYTES,
-              name: "shared",
-              test: SCRIPT_MODULE_PATTERN,
-            },
-          ],
-        },
-      },
-    },
-  },
 };
 
 /** The school layout's code, which every school page reads. */

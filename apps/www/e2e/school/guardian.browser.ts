@@ -110,9 +110,7 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   );
   // The hint stays, and the refusal takes the line under it that the field kept from the start.
   await expect(
-    field.getByText(
-      "Enter your child's NISN to confirm this link, and check it or contact the school if it does not match."
-    )
+    field.getByText("Enter your child's NISN to confirm this link.")
   ).toBeVisible();
   expect((await field.boundingBox())?.height).toBe(typed?.height);
   // The refusal is one line, the one the field kept for it, so it never pushes the field taller.

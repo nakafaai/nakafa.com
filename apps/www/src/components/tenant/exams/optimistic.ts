@@ -5,6 +5,11 @@ import type {
 } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { insertIndex, placeAt } from "@repo/backend/confect/exams/order";
+import {
+  type ScoringKind,
+  scoringPoints,
+  scoringRule,
+} from "@repo/backend/confect/exams/scoring";
 import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Array as Arr, Option } from "effect";
 
@@ -215,6 +220,36 @@ export const pointsUpdate: OptimisticUpdate<typeof exams.questions.points> = (
 ) =>
   changeExam(localStore, examQuery(args), (view) =>
     pointedQuestion(view, args.questionId, args.points)
+  );
+
+/** The exam with one question under another rule, its points raised as the server raises them (`scoringPoints`). */
+export const scoredQuestion = (
+  view: ExamView,
+  questionId: QuestionId,
+  kind: ScoringKind
+): ExamView => {
+  const scoring = scoringRule(kind);
+  return {
+    ...view,
+    questions: Arr.map(view.questions, (question) =>
+      question.id === questionId
+        ? {
+            ...question,
+            points: scoringPoints(question.points, scoring),
+            scoring,
+          }
+        : question
+    ),
+  };
+};
+
+/** Shows the rule of a question in the store while the server saves it. */
+export const scoringUpdate: OptimisticUpdate<typeof exams.questions.scoring> = (
+  localStore,
+  args
+) =>
+  changeExam(localStore, examQuery(args), (view) =>
+    scoredQuestion(view, args.questionId, args.scoring)
   );
 
 /** The exam with a question added at its end, as the server adds a new question. */

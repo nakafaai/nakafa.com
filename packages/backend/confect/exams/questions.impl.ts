@@ -7,7 +7,10 @@ import { answerQuestion } from "@repo/backend/confect/exams/questions/answer";
 import { copyQuestion } from "@repo/backend/confect/exams/questions/copy";
 import { moveQuestion } from "@repo/backend/confect/exams/questions/move";
 import { addQuestion } from "@repo/backend/confect/exams/questions/place";
-import { setPoints } from "@repo/backend/confect/exams/questions/points";
+import {
+  setPoints,
+  setScoring,
+} from "@repo/backend/confect/exams/questions/points";
 import {
   questionOf,
   readQuestion,
@@ -86,6 +89,20 @@ const points = FunctionImpl.make(
   })
 );
 
+/** Sets the rule that scores a question of the exam, and returns the question. */
+const scoring = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "scoring",
+  Effect.fn("exams.questions.scoring")(function* ({ questionId, scoring }) {
+    const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
+    const question = yield* questionOf(exam, questionId);
+    yield* setScoring(question, scoring);
+    return yield* readQuestion(questionId);
+  })
+);
+
 /** Saves the answers and the key of a question at the revision the editor saw, and returns the question. */
 const answer = FunctionImpl.make(
   databaseSchema,
@@ -124,7 +141,7 @@ const template = FunctionImpl.make(
   })
 );
 
-/** Implements the questions group of `questions.spec.ts`: add, copy, remove, move, answer, points, and template. */
+/** Implements the questions group of `questions.spec.ts`: add, copy, remove, move, answer, points, scoring, and template. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(add),
   Layer.provide(copy),
@@ -132,6 +149,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(move),
   Layer.provide(answer),
   Layer.provide(points),
+  Layer.provide(scoring),
   Layer.provide(template),
   Layer.provide(session),
   Layer.provide(member),

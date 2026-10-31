@@ -1,5 +1,6 @@
 import { useMutation } from "@confect/react";
 import {
+  BubbleChatIcon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
   TextFontIcon,
@@ -27,6 +28,7 @@ import {
 } from "@repo/design-system/components/ui/message";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Array as Arr,
   Clock,
@@ -46,25 +48,34 @@ import {
   DiscussionReplies,
   DiscussionTitle,
 } from "@/components/tenant/classes/forum/discussion";
+import { MessageMedia } from "@/components/tenant/classes/forum/media";
 import { mentionSegments } from "@/components/tenant/classes/forum/mentions";
 import {
   editUpdate,
   type ForumMessage,
   hideUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
+import { MessagePoll } from "@/components/tenant/classes/forum/poll";
 import { renameDiscussionUpdate } from "@/components/tenant/classes/forum/rename";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
+import {
+  MessageReactions,
+  ReactButton,
+} from "@/components/tenant/classes/forum/tallies";
+import { useClassScope } from "@/components/tenant/classes/scope";
 import { LineDialog } from "@/components/tenant/line";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { schoolClassDiscussionTarget } from "@/lib/routing/school/target";
 
 const SOURCE = "components/tenant/classes/forum/message";
 
 /**
  * One message of a channel or of a discussion, as a chat shows it. The viewer's own messages stand
  * at the end of the row, and another member's show the author's name above the first message of a
- * run by the same author (`opens`). The time sits inside the bubble, and the message's menu beside
- * it. A message that opens a discussion shows the discussion's title above it and its replies under
- * it in the channel. The viewer's own message turns into its edit field in place.
+ * run by the same author (`opens`). Its photos and documents stand above its text, and its poll in
+ * the text's place. The time sits inside the bubble, its emoji under it, and the message's actions
+ * beside it. A message that opens a discussion shows the discussion's title above it and its replies
+ * under it in the channel. The viewer's own message turns into its edit field in place.
  */
 export function ForumMessageRow({
   message,
@@ -87,6 +98,7 @@ export function ForumMessageRow({
         {discussion === null ? null : (
           <DiscussionTitle discussion={discussion} message={message} />
         )}
+        <MessageMedia message={message} />
         {editing && message.text !== null ? (
           <MessageEditor
             message={message}
@@ -99,7 +111,14 @@ export function ForumMessageRow({
             className="group/row flex w-full min-w-0 items-center gap-1 data-[mine=true]:flex-row-reverse"
             data-mine={message.mine}
           >
-            <MessageBubble message={message} />
+            {message.poll === null ? null : (
+              <MessagePoll message={message} poll={message.poll} />
+            )}
+            {message.text === "" ? (
+              <MessageTime message={message} />
+            ) : (
+              <MessageBubble message={message} />
+            )}
             {message.text === null ? null : (
               <MessageActions
                 message={message}
@@ -108,6 +127,7 @@ export function ForumMessageRow({
             )}
           </div>
         )}
+        <MessageReactions message={message} />
         {discussion === null ? null : (
           <DiscussionReplies discussion={discussion} message={message} />
         )}
@@ -194,8 +214,11 @@ function MessageActions({
 }) {
   const t = useTranslations("Classroom");
   const scope = useChannelScope();
+  const { classSlug, opens } = useClassScope();
   const common = useTranslations("Common");
+  const navigate = useNavigate();
   const [hiding, setHiding] = useState(false);
+  const start = useMutation(classroom.forum.threads.start);
   const rename = useMutation(
     classroom.forum.threads.rename
   ).withOptimisticUpdate(renameDiscussionUpdate);
@@ -203,51 +226,90 @@ function MessageActions({
   const [isRenaming, setIsRenaming] = useState(false);
   const { discussion } = message;
 
-  if (!(message.mine || scope.canManage)) {
+  /** Starts a thread from this message and opens it beside its chat. */
+  const startThread = () =>
+    runForumCall(
+      Effect.flatMap(
+        forumCall(() =>
+          start({
+            classId: scope.classId,
+            messageId: message.id,
+            slug: scope.slug,
+          })
+        ),
+        ({ number }) =>
+          Effect.promise(() =>
+            navigate(schoolClassDiscussionTarget(scope.slug, classSlug, number))
+          )
+      ),
+      toastForumFailure
+    );
+
+  // A message of a thread takes no thread of its own, and one that stands opens from its link.
+  const threads =
+    opens && scope.discussion === undefined && discussion === null;
+  const editable = message.mine && message.poll === null;
+
+  if (!(scope.canPost || scope.canManage)) {
     return null;
   }
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            // With a mouse the menu shows on the message's hover or focus; a touch screen always shows it.
-            <Button
-              aria-label={common("more-actions")}
-              className="shrink-0 pointer-fine:opacity-0 pointer-fine:group-focus-within/row:opacity-100 pointer-fine:group-hover/row:opacity-100 pointer-fine:data-popup-open:opacity-100"
-              size="icon-xs"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-40">
-          {message.mine ? (
-            <DropdownMenuItem onClick={onEdit}>
-              <HugeIcons icon={PencilEdit02Icon} />
-              {t("message-edit")}
-            </DropdownMenuItem>
-          ) : null}
-          {scope.canManage ? (
-            <DropdownMenuItem onClick={() => setHiding(true)}>
-              <HugeIcons icon={ViewOffSlashIcon} />
-              {t("message-hide")}
-            </DropdownMenuItem>
-          ) : null}
-          {discussion === null ? null : (
-            <DropdownMenuItem
-              onClick={() => {
-                setRenaming((count) => count + 1);
-                setIsRenaming(true);
-              }}
-            >
-              <HugeIcons icon={TextFontIcon} />
-              {t("discussion-rename")}
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {scope.canPost ? <ReactButton message={message} /> : null}
+      {threads ? (
+        <Button
+          aria-label={t("reply-thread")}
+          className="shrink-0 pointer-fine:opacity-0 pointer-fine:group-focus-within/row:opacity-100 pointer-fine:group-hover/row:opacity-100"
+          onClick={startThread}
+          size="icon-xs"
+          title={t("reply-thread")}
+          variant="ghost"
+        >
+          <HugeIcons icon={BubbleChatIcon} />
+        </Button>
+      ) : null}
+      {editable || scope.canManage || discussion !== null ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              // With a mouse the menu shows on the message's hover or focus; a touch screen always shows it.
+              <Button
+                aria-label={common("more-actions")}
+                className="shrink-0 pointer-fine:opacity-0 pointer-fine:group-focus-within/row:opacity-100 pointer-fine:group-hover/row:opacity-100 pointer-fine:data-popup-open:opacity-100"
+                size="icon-xs"
+                variant="ghost"
+              >
+                <HugeIcons icon={MoreHorizontalIcon} />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" className="w-40">
+            {editable ? (
+              <DropdownMenuItem onClick={onEdit}>
+                <HugeIcons icon={PencilEdit02Icon} />
+                {t("message-edit")}
+              </DropdownMenuItem>
+            ) : null}
+            {scope.canManage ? (
+              <DropdownMenuItem onClick={() => setHiding(true)}>
+                <HugeIcons icon={ViewOffSlashIcon} />
+                {t("message-hide")}
+              </DropdownMenuItem>
+            ) : null}
+            {discussion === null ? null : (
+              <DropdownMenuItem
+                onClick={() => {
+                  setRenaming((count) => count + 1);
+                  setIsRenaming(true);
+                }}
+              >
+                <HugeIcons icon={TextFontIcon} />
+                {t("discussion-rename")}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
       <HideMessage message={message} open={hiding} setOpen={setHiding} />
       {discussion === null || renaming === 0 ? null : (
         <LineDialog

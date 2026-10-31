@@ -89,7 +89,8 @@ describe("createSEOTitle", () => {
     });
 
     it("keeps a first part whole, alone, when it leaves no room for the site name", () => {
-      const analytical = "Vector Addition and Subtraction with Analytical Method";
+      const analytical =
+        "Vector Addition and Subtraction with Analytical Method";
       const graphical = "Vector Addition and Subtraction with Graphical Method";
 
       expect(createSEOTitle([analytical, "Vector"])).toBe(analytical);

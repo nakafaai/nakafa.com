@@ -12,6 +12,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Node } from "@tiptap/pm/model";
 import { Effect, Option } from "effect";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   holdsLabel,
   type OptionEdit,
@@ -21,6 +22,7 @@ import {
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
 import { refusePaste } from "@/components/tenant/exams/picture";
 import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
+import type { Unstored } from "@/components/tenant/exams/writer";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { makeQuietSaver } from "@/lib/save/quiet";
 
@@ -58,7 +60,7 @@ interface OptionRowProps {
   /**
    * Saves the label the option's editor holds, after its quiet period. Calls `unstored` when the server does not store it.
    */
-  readonly onSave: (label: OptionLabel, unstored: () => void) => void;
+  readonly onSave: (label: OptionLabel, unstored: Unstored) => void;
   /** The name of the remove control for assistive technology. */
   readonly removeName: string;
 }
@@ -69,8 +71,9 @@ interface OptionRowProps {
  * not here. Removing is shown when the option may go, on hover or focus, and always on a touch
  * screen. The text saves after its quiet period once the teacher types in it. A change that edits no
  * text, such as the editor taking its lock, saves nothing. Removing the option drops the pending save
- * of its text. A label the server does not store, because its save was refused or dropped, goes back
- * into the editor, unless the teacher has typed on since. An option the server has not saved yet is locked.
+ * of its text. A label the server refused goes back into the editor, unless the teacher has typed on since. A
+ * save the server never answered keeps the teacher's words in the editor, with a retry under them, since the
+ * server may still take them. An option the server has not saved yet is locked.
  */
 export function OptionRow({
   children,
@@ -80,7 +83,11 @@ export function OptionRow({
   onSave,
   removeName,
 }: OptionRowProps) {
+  const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const editor = useRef<DocumentEditorInstance | null>(null);
+  // Whether the words in the editor went unanswered, which shows the retry until the server holds them.
+  const [unsaved, setUnsaved] = useState(false);
   // The label the server held at the last render, which the editor holds too while the teacher has typed nothing
   // on top of it since.
   const previous = useRef(label);
@@ -89,8 +96,8 @@ export function OptionRow({
   const save = useCallbackRef(onSave);
   // The editor remounts with the label the server holds when a label the server did not store goes back into it.
   const [editorRound, setEditorRound] = useState(0);
-  // A label the server did not store goes back into the editor, unless the teacher has typed on since: the editor
-  // then holds other text, which the next quiet save sends.
+  // A label the server refused goes back into the editor, unless the teacher has typed on since: the editor then
+  // holds other text, which the next quiet save sends.
   const restoreUnstored = useCallbackRef((label: OptionLabel) => {
     if (
       editor.current !== null &&
@@ -98,6 +105,16 @@ export function OptionRow({
     ) {
       setEditorRound((round) => round + 1);
     }
+  });
+  // Sends one label, and keeps the words when the server never answered, or takes the label back when it refused.
+  const saveLabel = useCallbackRef((next: OptionLabel) => {
+    save(next, (reason) => {
+      if (reason === "unanswered") {
+        setUnsaved(true);
+        return;
+      }
+      restoreUnstored(next);
+    });
   });
   // The quiet save takes the edit the teacher made last: a label to save, or a refusal to report.
   const [saver] = useState(() =>
@@ -112,12 +129,24 @@ export function OptionRow({
               });
               return;
             }
-            save(edit.label, () => restoreUnstored(edit.label));
+            saveLabel(edit.label);
           }),
         OPTION_SAVE_QUIET
       )
     )
   );
+
+  /** Saves the words the editor holds again, after a save the server never answered. */
+  const retry = () => {
+    const edit = optionEditOf({
+      docChanged: true,
+      json: editor.current?.getJSON(),
+    });
+    if (Option.isSome(edit)) {
+      setUnsaved(false);
+      Effect.runFork(saver.touch(edit.value).pipe(Effect.andThen(saver.flush)));
+    }
+  };
 
   // Removing the option drops the quiet save of its label first. The removal makes that save stale,
   // since it would send the answers of a revision the server has already moved past.
@@ -137,7 +166,11 @@ export function OptionRow({
       return;
     }
     const held = current.getJSON();
-    if (holdsLabel(held, label) || !holdsLabel(held, before)) {
+    if (holdsLabel(held, label)) {
+      setUnsaved(false);
+      return;
+    }
+    if (!holdsLabel(held, before)) {
       return;
     }
     current.commands.setContent(
@@ -219,6 +252,17 @@ export function OptionRow({
           <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
         </Button>
       )}
+      {unsaved ? (
+        <div
+          className="flex items-center justify-between gap-2 pt-1"
+          role="alert"
+        >
+          <p className="text-destructive text-xs">{t("option-unsaved")}</p>
+          <Button onClick={retry} size="sm" type="button" variant="outline">
+            {tCommon("retry")}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

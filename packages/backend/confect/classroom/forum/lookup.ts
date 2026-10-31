@@ -64,3 +64,23 @@ export const classThread = Effect.fn("classroom.forum.lookup.thread")(
     return thread.value;
   }
 );
+
+/** The number the next discussion of the allowed class takes. */
+export const nextThreadNumber = Effect.fn("classroom.forum.lookup.nextNumber")(
+  function* () {
+    const row = yield* Class;
+    const last = yield* (yield* DatabaseReader)
+      .table("classroomThreads")
+      .index(
+        "by_classId_and_number",
+        (query) => query.eq("classId", row._id),
+        "desc"
+      )
+      .first()
+      .pipe(Effect.orDie);
+    return Option.match(last, {
+      onNone: () => 1,
+      onSome: (found) => found.number + 1,
+    });
+  }
+);
