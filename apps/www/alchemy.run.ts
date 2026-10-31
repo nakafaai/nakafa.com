@@ -6,6 +6,7 @@ import { deployNakafaBots } from "#www/deploy/bots";
 import { deployCas } from "#www/deploy/cas";
 import { deployNakafaDns, deployNakafaIdZone } from "#www/deploy/dns";
 import { edgeWorkerBindings } from "#www/deploy/edge";
+import { deployNakafaRedirects } from "#www/deploy/redirect";
 import { readActiveContentRelease } from "#www/deploy/release";
 import {
   productionHostExposure,
@@ -56,6 +57,7 @@ export default Stack(
     if (isProduction) {
       const zone = yield* deployNakafaDns().pipe(RemovalPolicy.retain());
       yield* deployNakafaBots(zone).pipe(RemovalPolicy.retain());
+      yield* deployNakafaRedirects(zone).pipe(RemovalPolicy.retain());
       yield* deployNakafaIdZone().pipe(RemovalPolicy.retain());
     }
 
