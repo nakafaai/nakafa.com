@@ -944,6 +944,9 @@
         }
       },
       "tenant": {
+        "setup": {
+          "finished": "Penyiapan selesai"
+        },
         "provisioned": "Sekolah dibuka",
         "founded": "Sekolah didirikan",
         "locale": {

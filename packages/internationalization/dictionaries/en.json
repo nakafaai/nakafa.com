@@ -944,6 +944,9 @@
         }
       },
       "tenant": {
+        "setup": {
+          "finished": "Setup finished"
+        },
         "provisioned": "School opened",
         "founded": "School founded",
         "locale": {
