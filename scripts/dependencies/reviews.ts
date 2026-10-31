@@ -66,7 +66,7 @@ export const REGISTRY_REVIEWS = [
   [
     "ai@latest",
     "7.0.158",
-    "AI SDK packages move as one reviewed cohort. 7.0.157 is the newest release past the one-day release age: @convex-dev/agent 0.7.9 carries the TS2590 fixes for 7.0.141 and later (convex/agent#414 and #424). 7.0.158 was published on 2026-10-30 at 15:38 UTC and becomes eligible a day later; its notes repair partial JSON and extend the experimental sandbox session, which Nakafa does not use.",
+    "AI SDK packages move as one reviewed cohort. 7.0.157 is the adopted release: @convex-dev/agent 0.7.9 carries the TS2590 fixes for 7.0.141 and later (convex/agent#414 and #424). 7.0.158, published on 2026-10-30 at 15:38 UTC, repairs partial JSON and extends the experimental sandbox session, which Nakafa does not use, and moves with the next package upgrade.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",

@@ -137,9 +137,8 @@ const TIPTAP_PACKAGES = Arr.dedupe(
  * affect, when the web app moved. `prosemirror-transform` 1.12.4 is the one copy that the
  * ProseMirror packages of `@tiptap/pm` and the backend's step folding share: Bun
  * kept the packages' nested 1.12.2 copies when the backend moved to 1.12.4, and a
- * step made by one copy fails `instanceof` checks against the other. `convex-helpers` 0.1.131, the latest release that the
- * release-age gate admits on 30 October 2026, keeps one copy for every Convex
- * component: @convex-dev/aggregate 0.3.4 pins
+ * step made by one copy fails `instanceof` checks against the other. `convex-helpers`
+ * 0.1.131 keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
  * 0.1.128 exactly, the Agent and Workflow peers need ^0.1.127, and the Workpool peer
  * needs ^0.1.94, so one copy satisfies every range. `lodash` 4.18.1 replaces the
  * 4.17.21 that chevrotain 10.5.0 pins exactly, which GHSA-f23m-r3pf-42rh,
@@ -281,11 +280,9 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
 
 export const SCRIPT_DEPENDENCY_HOLDS = [
   {
-    // bunx installs React Doctor into a throwaway directory, so it takes the
-    // one-day release age from its own flag: a 4-minute-old electron-to-chromium
-    // tarball was still propagating through npm and returned 404, which failed
-    // Doctor. The flag keeps that install on settled releases.
-    approved: "bunx --minimum-release-age 86400 react-doctor@0.9.18",
+    // bunx installs React Doctor into a throwaway directory outside the lockfile,
+    // so the script pins its exact release.
+    approved: "bunx react-doctor@0.9.18",
     manifestPath: "apps/www/package.json",
     script: "doctor",
   },
