@@ -1509,13 +1509,9 @@
     "plan-founder": "School plan, with the founder's help.",
     "founder-line": "The founder can help a large school set up.",
     "founder-link": "Talk to the founder",
-<<<<<<< HEAD
     "link-copy": "Copy link",
     "link-copied": "Link copied",
-    "consent": "Opening a school accepts the <terms>Terms</terms> and the <privacy>Privacy Policy</privacy>.",
-=======
     "consent": "Opening a school accepts the <terms>Terms</terms>, the <privacy>Privacy Policy</privacy> and version {version} of the <dpa>Data Processing Agreement</dpa>.",
->>>>>>> 77007e68fa (Accept the data processing agreement when a school opens, and record its version)
     "finish": "Open school",
     "required-error": "Choose an answer.",
     "school-limit-line": "Founding more schools needs a conversation first.",
