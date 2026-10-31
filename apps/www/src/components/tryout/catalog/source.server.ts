@@ -148,32 +148,6 @@ export const readTryoutSetPage = Effect.fn("www.tryout.catalog.readSetPage")(
   }
 );
 
-/** Fetches one authenticated set bootstrap without subscribing. */
-export const readTryoutSetAttemptPage = Effect.fn(
-  "www.tryout.catalog.readSetAttemptPage"
-)(function* (
-  token: string,
-  request: Ref.Args<typeof tryouts.queries.attemptPage.getSet>["request"]
-) {
-  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(tryouts.queries.attemptPage.getSet, {
-      request,
-    })
-  ).pipe(
-    Effect.provide(
-      httpLayer({
-        auth: token,
-      })
-    ),
-    Effect.mapError(
-      (cause) =>
-        new TryoutCatalogReadError({
-          cause,
-        })
-    )
-  );
-});
-
 /** Reads one public section page. The content store answers for the release. */
 export const readTryoutSectionPage = Effect.fn(
   "www.tryout.catalog.readSectionPage"
@@ -182,35 +156,4 @@ export const readTryoutSectionPage = Effect.fn(
     appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });
-});
-
-/**
- * Reads one authenticated section page with the signed bodies of its running
- * content, in one Convex read. A running attempt on another page answers none, and
- * an attempt read that is not retained answers none too.
- */
-export const readTryoutSectionAttemptPage = Effect.fn(
-  "www.tryout.catalog.readSectionAttemptPage"
-)(function* (
-  token: string,
-  request: Ref.Args<typeof tryouts.queries.attemptPage.getSection>["request"]
-) {
-  const page = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(tryouts.queries.attemptPage.getSection, {
-      request,
-    })
-  ).pipe(
-    Effect.provide(
-      httpLayer({
-        auth: token,
-      })
-    ),
-    Effect.mapError(
-      (cause) =>
-        new TryoutCatalogReadError({
-          cause,
-        })
-    )
-  );
-  return page;
 });

@@ -1,4 +1,5 @@
 import { Array as Arr, Option, Schema } from "effect";
+import { PLAYER_MODE_PARAM } from "@/components/player/mode";
 import type { TryoutSectionRoute } from "@/components/tryout/section/model";
 import type { LinkTarget } from "@/lib/routing/link";
 import { TRYOUT_TARGET } from "@/lib/routing/target";
@@ -173,9 +174,17 @@ export function getTryoutPageTarget({
     : getTryoutAttemptTarget(publicPath, attemptId);
 }
 
-/** Builds a route capability that binds navigation to one owned attempt. */
-export function getTryoutAttemptHref(publicPath: string, attemptId: string) {
+/**
+ * Builds a route capability that binds navigation to one owned attempt, with the player view the
+ * address keeps when it names one.
+ */
+export function getTryoutAttemptHref(
+  publicPath: string,
+  attemptId: string,
+  view: Option.Option<string> = Option.none()
+) {
   const searchParams = new URLSearchParams({ [ATTEMPT_ID_PARAM]: attemptId });
+  Option.map(view, (mode) => searchParams.set(PLAYER_MODE_PARAM, mode));
   return `${getTryoutPublicPathHref(publicPath)}?${searchParams.toString()}`;
 }
 
