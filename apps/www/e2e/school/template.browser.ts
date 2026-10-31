@@ -243,9 +243,7 @@ test("a teacher turns a question into a short answer with accepted answers, and 
   await expect(
     page.getByRole("textbox", { name: "Question 1, option A" })
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("textbox", { name: "Answer line" })
-  ).toBeVisible();
+  await expect(page.getByPlaceholder("Type your answer")).toBeVisible();
 
   // The layer lists the accepted answers, which the teacher adds one by one.
   const panel = page.getByRole("complementary", { name: "For teachers" });

@@ -17,7 +17,7 @@ interface CreatedState {
 }
 
 /**
- * Creates the store of one visit to a school's exam pages. A create holds the exam that the server answered
+ * Creates the store of one visit to a school. A create holds the exam that the server answered
  * with, so the editor it opens draws the exam whole on its first frame, and a fresh read takes over as soon
  * as it answers. The editor lets the exam go when it closes, and a release of another exam leaves it held.
  */
@@ -29,7 +29,7 @@ export const createCreatedExams = () =>
       set((state) => (state.held?.id === id ? { held: null } : state)),
   }));
 
-/** The store of the exams created in this visit to the exam pages, which their layout gives every page. */
+/** The store of the exams created in this visit to a school, which the school's frame gives every page. */
 export const CreatedExamsContext = createContext<StoreApi<CreatedState> | null>(
   null
 );

@@ -31,7 +31,7 @@ const isNumericEntry = (answer: Interaction): answer is NumericEntry =>
   answer.kind === "numericEntry";
 
 /** The first numeric entry of a question's answers, or none when the answers hold no numeric entry. */
-export const numberEntryOf = (
+const numberEntryOf = (
   answers: readonly Interaction[]
 ): Option.Option<NumericEntry> => Arr.findFirst(answers, isNumericEntry);
 

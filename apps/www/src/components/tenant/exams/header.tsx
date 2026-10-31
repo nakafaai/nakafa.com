@@ -191,7 +191,7 @@ function ExamTitleField(
     <Input
       {...props}
       aria-label={t("title-label")}
-      className="min-w-0 flex-1 truncate border-0 px-1 text-lg font-semibold shadow-none md:text-lg"
+      className="ms-1 min-w-0 flex-1 truncate border-0 px-1 text-lg font-semibold shadow-none md:text-lg"
       dir="auto"
     />
   );
