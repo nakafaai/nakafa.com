@@ -1785,7 +1785,7 @@
           "description": "Support your child."
         }
       },
-      "region-title": "Where do you study?",
+      "region-title": "Which country are you in?",
       "region-description": "This sets your language and curriculum.",
       "region": {
         "indonesia": {
@@ -1901,7 +1901,6 @@
   },
   "Holy": {
     "holy": "Holy",
-    "interpretation-description": "What this verse means, explained by its tafsir.",
     "quran": "Quran",
     "quran-description": "Read the Quran with verse-by-verse translation.",
     "verse": "Verse",

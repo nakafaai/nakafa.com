@@ -1785,7 +1785,7 @@
           "description": "Dein Kind begleiten."
         }
       },
-      "region-title": "Wo lernst du?",
+      "region-title": "In welchem Land bist du?",
       "region-description": "Das legt Sprache und Lehrplan fest.",
       "region": {
         "indonesia": {
@@ -1901,7 +1901,6 @@
   },
   "Holy": {
     "holy": "Heilige Schriften",
-    "interpretation-description": "Was dieser Vers bedeutet, erklärt durch seinen Tafsir.",
     "quran": "Koran",
     "quran-description": "Lies den Koran mit einer Übersetzung Vers für Vers.",
     "verse": "Vers",
@@ -2101,7 +2100,7 @@
     "chat-description": "Nutze die KI-Lernassistenz für Hausaufgaben, verständliche Erklärungen und Lerngespräche.",
     "subscriptions": "Abonnements",
     "subscriptions-description": "Verwalte Nakafa Pro, {credits, number} monatliche KI-Credits und dein Zahlungsportal.",
-    "plan-free-footer": "Du nutzt Free.",
+    "plan-free-footer": "Du nutzt den kostenlosen Tarif.",
     "plan-pro-description": "Dein Nakafa Pro ist aktiv.",
     "plan-pro-ending-description": "Dein Nakafa Pro endet mit dem Ende dieses Zeitraums.",
     "plan-pro-past-due-description": "Deine letzte Zahlung ist nicht eingegangen.",
