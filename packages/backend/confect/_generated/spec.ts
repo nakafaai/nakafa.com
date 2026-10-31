@@ -195,6 +195,7 @@ import posts_mutations from "../posts/mutations.spec";
 import posts_queries from "../posts/queries.spec";
 import privacy_recovery from "../privacy/recovery.spec";
 import records_checks from "../records/checks.spec";
+import records_draw from "../records/draw.spec";
 import records_exports from "../records/exports.spec";
 import records_grades from "../records/grades.spec";
 import records_graduations from "../records/graduations.spec";
@@ -279,7 +280,7 @@ const spec: Spec.Spec<{
   readonly operators: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "operators", never, GroupSpec.NamedAt<typeof operators_expiry, "expiry"> | GroupSpec.NamedAt<typeof operators_staff, "staff"> | GroupSpec.NamedAt<typeof operators_tenants, "tenants"> | GroupSpec.NamedAt<typeof operators_visits, "visits">>, "operators">;
   readonly posts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "posts", never, GroupSpec.NamedAt<typeof posts_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof posts_mutations, "mutations"> | GroupSpec.NamedAt<typeof posts_queries, "queries">>, "posts">;
   readonly privacy: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "privacy", never, GroupSpec.NamedAt<typeof privacy_recovery, "recovery">>, "privacy">;
-  readonly records: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "records", never, GroupSpec.NamedAt<typeof records_checks, "checks"> | GroupSpec.NamedAt<typeof records_exports, "exports"> | GroupSpec.NamedAt<typeof records_grades, "grades"> | GroupSpec.NamedAt<typeof records_graduations, "graduations"> | GroupSpec.NamedAt<typeof records_letters, "letters"> | GroupSpec.NamedAt<typeof records_prints, "prints"> | GroupSpec.NamedAt<typeof records_reports, "reports"> | GroupSpec.NamedAt<typeof records_schemes, "schemes"> | GroupSpec.NamedAt<typeof records_seed, "seed">>, "records">;
+  readonly records: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "records", never, GroupSpec.NamedAt<typeof records_checks, "checks"> | GroupSpec.NamedAt<typeof records_draw, "draw"> | GroupSpec.NamedAt<typeof records_exports, "exports"> | GroupSpec.NamedAt<typeof records_grades, "grades"> | GroupSpec.NamedAt<typeof records_graduations, "graduations"> | GroupSpec.NamedAt<typeof records_letters, "letters"> | GroupSpec.NamedAt<typeof records_prints, "prints"> | GroupSpec.NamedAt<typeof records_reports, "reports"> | GroupSpec.NamedAt<typeof records_schemes, "schemes"> | GroupSpec.NamedAt<typeof records_seed, "seed">>, "records">;
   readonly roster: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "roster", never, GroupSpec.NamedAt<typeof roster_entries, "entries"> | GroupSpec.NamedAt<typeof roster_exports, "exports"> | GroupSpec.NamedAt<typeof roster_imports, "imports">>, "roster">;
   readonly routes: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "routes", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "agent", never, GroupSpec.NamedAt<typeof routes_agent_quota, "quota">>, "agent">>, "routes">;
   readonly storage: GroupSpec.NamedAt<typeof storage, "storage">;
@@ -581,6 +582,7 @@ const spec: Spec.Spec<{
   }),
   ["records"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["checks"]: records_checks,
+    ["draw"]: records_draw,
     ["exports"]: records_exports,
     ["grades"]: records_grades,
     ["graduations"]: records_graduations,

@@ -45,7 +45,7 @@ describe("guardians/seed", () => {
             personId: fixture.people.student.personId,
             slug: nf,
           })
-        ).toMatchObject({ hasNisn: true, underAgeLimit: true });
+        ).toMatchObject({ hasNisn: true });
         expect(yield* redeem(fixture, seeded.code)).toMatchObject({
           outcome: "signedIn",
         });

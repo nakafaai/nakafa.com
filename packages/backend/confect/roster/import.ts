@@ -186,7 +186,7 @@ export const applySourcedRow = Effect.fn("roster.import.sourced")(function* (
 
 /**
  * Applies one row of a Dapodik import into a period (ADR 0015). A NISN the roster holds
- * names the student: the import sets the under-age flag again and places the student. A new
+ * names the student: the import places the student. A new
  * NISN adds a student: a Person with the row's name, a student grant in the period's unit,
  * the roster row with the NISN sealed and blinded, and the placement. A student who is no
  * longer active is skipped, so an import never reopens a removed Person. The school's keys
@@ -204,10 +204,7 @@ export const applyRow = Effect.fn("roster.import.row")(function* (
     const skipped: RowOutcome = "skipped";
     return skipped;
   }
-  yield* writeRosterEntry(keys, person.value, {
-    nisn: Option.some(row.nisn),
-    underAgeLimit: row.underAgeLimit,
-  });
+  yield* writeRosterEntry(keys, person.value, row.nisn);
   yield* personAuthority.record(actor, person.value, { type: "roster.set" });
   if (row.cohortName !== undefined) {
     yield* placeNamed(actor, person.value, period, row.cohortName);

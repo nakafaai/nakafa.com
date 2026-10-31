@@ -2,7 +2,11 @@ import type { GenericId } from "@confect/core";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
 import { Array as Arr, Effect } from "effect";
 import { forgetSittingDevice } from "@/components/exams/sitting/device";
-import { keptAttempt, submittedKeysOf } from "@/components/exams/sitting/keep";
+import {
+  keptAttempt,
+  keptFinish,
+  submittedKeysOf,
+} from "@/components/exams/sitting/keep";
 import { keptStorage } from "@/components/player/storage";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -15,6 +19,7 @@ export function forgetKeptAttempt(
     keptAttempt(sittingId, attemptId)
       .forget()
       .pipe(
+        Effect.andThen(keptFinish(sittingId, attemptId).drop()),
         Effect.provide(keptStorage),
         Effect.catchTag("KeyValueStoreError", (error) =>
           reportClientException(error, {

@@ -40,12 +40,13 @@ export type Grade = typeof Grade.Type;
 
 /**
  * The parts of a keyed response: how many parts the key defines, how many of them the response gets
- * right, and how many values the response holds that no part of the key holds.
+ * right, how many values the response holds that no part of the key holds, and how many parts are wrong.
  */
 const Parts = Schema.Struct({
   correct: NonNegativeInt,
   extra: NonNegativeInt,
   total: NonNegativeInt,
+  wrong: NonNegativeInt,
 });
 type Parts = typeof Parts.Type;
 
@@ -54,7 +55,9 @@ type Parts = typeof Parts.Type;
  * contract's rules count them: the correct options of a choice, the statements of a table, and the
  * pairs of a match. A response gets a part right when it holds it, and every other value it holds, an
  * option outside the key, a statement marked with another column, a pair outside the key, or a part it
- * names again, is extra. Any other key is one part.
+ * names again, is extra. Any other key is one part. Each option of a choice is judged alone, so a missed
+ * option and an added one are two wrong parts. A statement or a pair holds one answer, so another answer
+ * in its place is one wrong part, and only the answers past that count on top.
  */
 const countParts = (key: InteractionKey, response: ExamResponse): Parts =>
   Match.value(key).pipe(
@@ -67,6 +70,7 @@ const countParts = (key: InteractionKey, response: ExamResponse): Parts =>
         correct: right,
         extra: chosen.length - right,
         total: correct.length,
+        wrong: correct.length - right + chosen.length - right,
       };
     }),
     Match.when({ kind: "matrix" }, ({ answers }) => {
@@ -82,6 +86,7 @@ const countParts = (key: InteractionKey, response: ExamResponse): Parts =>
         correct: right,
         extra: marked.length - right,
         total: answers.length,
+        wrong: Math.max(answers.length, marked.length) - right,
       };
     }),
     Match.when({ kind: "match" }, ({ pairs }) => {
@@ -97,16 +102,17 @@ const countParts = (key: InteractionKey, response: ExamResponse): Parts =>
         correct: right,
         extra: made.length - right,
         total: pairs.length,
+        wrong: Math.max(pairs.length, made.length) - right,
       };
     }),
-    Match.orElse(() => ({ correct: 0, extra: 0, total: 1 }))
+    Match.orElse(() => ({ correct: 0, extra: 0, total: 1, wrong: 1 }))
   );
 
 /**
  * Scores counted parts by a rule. All or nothing is 1 for every part right and nothing extra. Per part
  * earns its points for each part right, loses its penalty for each extra value, and stays between the
- * floor and the ceiling. Wrong parts takes the points of the first band that holds the parts the
- * response misses plus the values it adds. A rubric is a person's to score.
+ * floor and the ceiling. Wrong parts takes the points of the first band that holds the response's wrong
+ * parts. A rubric is a person's to score.
  */
 const scoreParts = (rule: ScoringRule, parts: Parts): Grade => {
   const ceiling = scoreCeiling(rule, parts.total);
@@ -131,10 +137,7 @@ const scoreParts = (rule: ScoringRule, parts: Parts): Grade => {
       }),
       rubric: (): Grade => ({ ceiling, status: "pending" }),
       wrongParts: (bands): Grade => ({
-        category: pointsForWrongParts(
-          bands,
-          parts.total - parts.correct + parts.extra
-        ),
+        category: pointsForWrongParts(bands, parts.wrong),
         ceiling,
         status: "scored",
       }),

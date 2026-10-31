@@ -317,17 +317,14 @@ test("an admin places a student in a cohort, moves the student to another, and s
     1
   );
 
-  // The admin sets the student's NISN and under-age flag by hand; the roster keeps both, and never shows the NISN.
+  // The admin sets the student's NISN by hand; the roster keeps it, and the dialog never shows it back.
   await page.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "NISN and age" }).click();
+  await page.getByRole("menuitem", { name: "NISN" }).click();
   const entryDialog = page.getByRole("dialog");
   const nisnField = entryDialog.getByRole("textbox", { name: "NISN" });
   await expect(nisnField).toBeEnabled();
   await expect(nisnField).toHaveAttribute("placeholder", "10 digits");
   await nisnField.fill("0012345678");
-  await entryDialog
-    .getByRole("switch", { name: "Under the age limit" })
-    .click();
   const enteredBefore = changes.sent;
   await entryDialog.getByRole("button", { name: "Save" }).click();
   await expect(entryDialog).toBeHidden();
@@ -336,15 +333,12 @@ test("an admin places a student in a cohort, moves the student to another, and s
   const reopened = page.getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(reopened);
   await reopened.click();
-  await page.getByRole("menuitem", { name: "NISN and age" }).click();
+  await page.getByRole("menuitem", { name: "NISN" }).click();
   const kept = page.getByRole("dialog");
   await expect(kept.getByRole("textbox", { name: "NISN" })).toHaveAttribute(
     "placeholder",
     "Stored; type a new one to replace it"
   );
   await expect(kept.getByRole("textbox", { name: "NISN" })).toHaveValue("");
-  await expect(
-    kept.getByRole("switch", { name: "Under the age limit" })
-  ).toBeChecked();
   await context.close();
 });

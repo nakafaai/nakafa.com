@@ -68,7 +68,7 @@ describe("guardians/family children and confirm", () => {
             student: { id: fixture.people.student.personId, name: "Student" },
           },
         ]);
-        yield* setRoster(fixture, { nisn: NISN, underAgeLimit: true });
+        yield* setRoster(fixture, NISN);
         expect(
           (yield* guardian.query(children, { slug: nf }))[0]?.staffCheck
         ).toBe(false);
@@ -107,7 +107,7 @@ describe("guardians/family children and confirm", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const { guardian, link } = yield* linked(fixture);
-        yield* setRoster(fixture, { nisn: NISN, underAgeLimit: true });
+        yield* setRoster(fixture, NISN);
         for (const nisn of ["9999999999", "not a nisn", "1111111111"]) {
           expect(
             yield* guardian.mutation(confirm, {
@@ -148,7 +148,7 @@ describe("guardians/family children and confirm", () => {
             slug: nf,
           })
         ).toBe("refused");
-        yield* setRoster(fixture, { nisn: NISN, underAgeLimit: true });
+        yield* setRoster(fixture, NISN);
         vi.setSystemTime(link.expiresAt);
         expect(
           yield* guardian.mutation(confirm, {

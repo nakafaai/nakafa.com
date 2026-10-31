@@ -55,15 +55,6 @@ export const rosterEntryOf = Effect.fn("roster.entry.of")(function* (
     );
 });
 
-/**
- * Whether a student counts as under the age limit. A student without a roster row
- * or without the flag counts as under it, so the consent gate errs toward consent
- * (ADR 0034).
- */
-export const countsUnderAge = (
-  entry: Option.Option<Pick<RosterEntriesDoc, "underAgeLimit">>
-) => Option.getOrUndefined(entry)?.underAgeLimit !== false;
-
 /** The blind of a NISN under the school key, which a stored row is compared by. */
 export const blindNisn = Effect.fn("roster.entry.blind")(function* (
   keys: TenantKeys,
@@ -107,55 +98,34 @@ export const writeSourcedId = Effect.fn("roster.entry.sourced")(function* (
   }).pipe(Effect.orDie);
 });
 
-/** The view of a roster row that staff read: whether a NISN is on file, and the age flag. */
+/** The view of a roster row that staff read: whether a NISN is on file. */
 export const rosterViewOf = (
   personId: GenericId.GenericId<"tenantPeople">,
   entry: Option.Option<RosterEntriesDoc>
-): typeof RosterView.Type => {
-  const row = Option.getOrUndefined(entry);
-  return {
-    hasNisn: row?.nisn !== undefined,
-    personId,
-    ...(row?.underAgeLimit === undefined
-      ? {}
-      : { underAgeLimit: row.underAgeLimit }),
-  };
-};
+): typeof RosterView.Type => ({
+  hasNisn: Option.exists(entry, (row) => row.nisn !== undefined),
+  personId,
+});
 
-/**
- * Writes the roster row of one student: the NISN, sealed and blinded under the
- * school key, when one is given, and the age flag. A NISN that is not given keeps
- * the one on file, so setting the flag alone never drops it.
- */
+/** Writes the roster row of one student: the NISN, sealed and blinded under the school key. */
 export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
   keys: TenantKeys,
   person: TenantPeopleDoc,
-  facts: {
-    readonly nisn: Option.Option<typeof Nisn.Type>;
-    readonly underAgeLimit: boolean;
-  }
+  nisn: typeof Nisn.Type
 ) {
   const existing = yield* rosterEntryOf(person._id);
-  const nisn = yield* Option.match(facts.nisn, {
-    onNone: () => Effect.succeed(Option.getOrUndefined(existing)?.nisn),
-    onSome: (value) =>
-      Effect.gen(function* () {
-        const sealed = yield* sealText(
-          keys,
-          { ...NISN_BLIND, row: [person._id] },
-          value
-        );
-        const blind = yield* blindText(keys, NISN_BLIND, value);
-        return { blind, sealed };
-      }).pipe(Effect.orDie),
-  });
+  const sealed = yield* sealText(
+    keys,
+    { ...NISN_BLIND, row: [person._id] },
+    nisn
+  ).pipe(Effect.orDie);
+  const blind = yield* blindText(keys, NISN_BLIND, nisn).pipe(Effect.orDie);
   const sourcedId = Option.getOrUndefined(existing)?.sourcedId;
   const row: typeof rosterEntryValidator.Type = {
-    ...(nisn === undefined ? {} : { nisn }),
+    nisn: { blind, sealed },
     personId: person._id,
     ...(sourcedId === undefined ? {} : { sourcedId }),
     tenantId: person.tenantId,
-    underAgeLimit: facts.underAgeLimit,
   };
   const writer = yield* DatabaseWriter;
   yield* Option.match(existing, {
@@ -170,8 +140,8 @@ export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
 });
 
 /**
- * The NISN a roster row holds, opened under the school key for the school's own export.
- * A sealed NISN that does not open is a defect in the school's data (ADR 0030).
+ * The NISN a roster row holds, if it holds one, opened under the school key for the school's
+ * own export. A sealed NISN that does not open is a defect in the school's data (ADR 0030).
  */
 export const openNisn = Effect.fn("roster.entry.open")(function* (
   keys: TenantKeys,
