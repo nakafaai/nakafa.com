@@ -153,25 +153,70 @@ describe("billing/xendit/session", () => {
     ]);
   });
 
-  it("records a paid top-up with the session as its payment, and grants no Pro for it", async () => {
+  it("records a paid top-up as credits once and grants its pack, and no Pro for it", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const { checkoutId, userId } = await seedCheckout(ctx, "pro.topup");
+      await ctx.db.insert("billingGrants", {
+        product: "pro",
+        source: { kind: "contract", contractId: "contract-topup" },
+        userId,
+        validFrom: 0,
+        validTo: Date.UTC(2100, 0, 1),
+      });
+      const delivery = sessionDelivery("payment_session.completed", "py_1");
+      const outcome = await runInMutation(ctx, processXenditEvent(delivery));
+      const redelivered = await runInMutation(
+        ctx,
+        processXenditEvent(delivery)
+      );
+      return {
+        checkout: (await ctx.db.get(checkoutId))?.status,
+        grants: await ctx.db.query("billingGrants").collect(),
+        lots: await ctx.db.query("creditLots").collect(),
+        outcome,
+        payments: await ctx.db.query("billingPayments").collect(),
+        redelivered,
+      };
+    });
+    expect(result.outcome).toBe("applied");
+    expect(result.redelivered).toBe("unknownSession");
+    expect(result.checkout).toBe("completed");
+    expect(result.payments).toMatchObject([
+      {
+        amount: 59_000,
+        currency: "IDR",
+        kind: "credits",
+        providerPaymentId: "py_1",
+        rail: "xendit",
+        status: "succeeded",
+      },
+    ]);
+    expect(result.lots).toHaveLength(1);
+    expect(result.grants).toHaveLength(1);
+  });
+
+  it("keeps a paid top-up on record for an operator when Pro ended before it was paid", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       await seedCheckout(ctx, "pro.topup");
       const outcome = await runInMutation(
         ctx,
-        processXenditEvent(sessionDelivery("payment_session.completed", null))
+        processXenditEvent(sessionDelivery("payment_session.completed", "py_1"))
       );
       return {
-        grants: await ctx.db.query("billingGrants").collect(),
+        lots: await ctx.db.query("creditLots").collect(),
         outcome,
         payments: await ctx.db.query("billingPayments").collect(),
+        scheduled: await ctx.db.system.query("_scheduled_functions").collect(),
       };
     });
     expect(result.outcome).toBe("applied");
-    expect(result.payments).toMatchObject([
-      { amount: 59_000, providerPaymentId: "ps_1" },
-    ]);
-    expect(result.grants).toEqual([]);
+    expect(result.payments).toMatchObject([{ kind: "credits" }]);
+    expect(result.lots).toHaveLength(0);
+    expect(
+      result.scheduled.filter((job) => job.name.includes("refundWithoutPro"))
+    ).toHaveLength(0);
   });
 
   it("starts the monthly plan when its first month is paid: the subscription runs until its first renewal, the payment is its first cycle, Pro is granted, and its plan opens on the saved channel", async () => {

@@ -99,6 +99,12 @@ export const ProCheckoutOffer = BillingOfferKey.pick([
   "pro.pass.12",
 ]);
 
+/** What a learner pays through Xendit: a Pro offer, or a pack of Nina credits. */
+export const XenditCheckoutOffer = BillingOfferKey.pick([
+  ...ProCheckoutOffer.literals,
+  "pro.topup",
+]);
+
 /**
  * A Pro checkout request: the offer, and the currency of the price the learner was
  * shown. The page shows rupiah exactly when the visitor is in Indonesia, so rupiah
@@ -108,6 +114,12 @@ export const ProCheckoutOffer = BillingOfferKey.pick([
 export const proCheckoutRequestInputValidator = Schema.Struct({
   ...checkoutRequestInputValidator.fields,
   offer: ProCheckoutOffer,
+  currency: BillingCurrency,
+});
+
+/** A top-up checkout request: the currency of the price the learner was shown picks the rail, as a Pro checkout's does. */
+export const topupCheckoutRequestInputValidator = Schema.Struct({
+  ...checkoutRequestInputValidator.fields,
   currency: BillingCurrency,
 });
 

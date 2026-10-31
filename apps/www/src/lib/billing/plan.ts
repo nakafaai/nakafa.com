@@ -107,6 +107,14 @@ export function formatBillingDate(moment: number, locale: string) {
   }).format(moment);
 }
 
+/** A calendar day in the short words of one locale, for a table's narrow column, read as `formatBillingDate` reads it. */
+export function formatBillingDay(moment: number, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeZone: BILLING_TIME_ZONE,
+  }).format(moment);
+}
+
 /** A count of credits in the digits of one locale. */
 export function formatCount(count: number, locale: string) {
   return new Intl.NumberFormat(locale).format(count);

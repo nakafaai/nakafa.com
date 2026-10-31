@@ -21,8 +21,14 @@ const polarGateway = vi.hoisted(() => ({
 }));
 vi.mock("@repo/backend/confect/billing/polar/live", () => ({ polarGateway }));
 
+const xenditCheckout = vi.hoisted(() => ({
+  createXenditCheckout: vi.fn(),
+}));
+vi.mock("@repo/backend/confect/billing/xendit/checkout", () => xenditCheckout);
+
 const route = api.billing.sessions;
 const request = {
+  currency: "EUR",
   locale: "de",
   successUrl: "http://localhost:3000/de/settings/billing",
 } as const;
@@ -113,6 +119,34 @@ describe("billing/pack", () => {
           successUrl: request.successUrl,
         });
       })
+  );
+
+  it.effect(
+    "sends a rupiah top-up pack to Xendit, so a buyer without a card can pay",
+    () =>
+      Effect.gen(function* () {
+        const { authed, user } = yield* setup("pro");
+        vi.stubEnv("BILLING_INDONESIA_RAIL", "passes");
+        vi.stubEnv("XENDIT_API_KEY", "test-secret");
+        xenditCheckout.createXenditCheckout.mockReturnValue(
+          Effect.succeed({ url: "https://checkout.xendit.co/topup" })
+        );
+        const checkout = yield* Effect.promise(() =>
+          authed.action(route.generateTopupCheckoutLink, {
+            ...request,
+            currency: "IDR",
+          })
+        );
+        expect(checkout).toEqual({ url: "https://checkout.xendit.co/topup" });
+        expect(xenditCheckout.createXenditCheckout).toHaveBeenCalledWith({
+          amount: 59_000,
+          appUserId: user.userId,
+          locale: "de",
+          offer: "pro.topup",
+          successUrl: request.successUrl,
+        });
+        expect(polarGateway.createCheckoutSession).not.toHaveBeenCalled();
+      }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
   );
 
   it.effect(
