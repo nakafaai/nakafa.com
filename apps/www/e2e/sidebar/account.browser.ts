@@ -160,9 +160,11 @@ const verifyFirstFrame = Effect.fn("NakafaE2E.verifyFirstFrame")(function* (
     await expect.poll(() => held.length).toBeGreaterThan(0);
     await expect(memberFooter(page)).toBeVisible();
     expect(await heightOf(page, '[data-account="member"]')).toBe(live.height);
+    // The plan's two words sit under a `.truncate` too, so the name is the
+    // span that is not a plan part.
     const keptName = await page
       .locator(
-        '[data-kept-account] [data-sidebar="menu-button"] .truncate > span'
+        '[data-kept-account] [data-sidebar="menu-button"] .truncate > span:not([data-kept-plan-part])'
       )
       .evaluate((name) => getComputedStyle(name, "::before").content);
     expect(live.text).toContain(readCssString(keptName));
