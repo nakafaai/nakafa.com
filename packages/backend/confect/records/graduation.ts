@@ -4,7 +4,7 @@ import { isSingleLine } from "@repo/utilities/line";
 import { DateTime, Match, Schema } from "effect";
 
 /** A head of school's NIP: the 18 digits of a civil servant's number (Kepmendikdasmen 177/2026, Lampiran I E.3). */
-export const Nip = Schema.String.check(Schema.isPattern(/^\d{18}$/));
+export const Nip = Schema.String.check(Schema.isPattern(/^\d{18}$/u));
 
 /** One line of text a school writes on its letters, from one character to `limit`. */
 const lineOf = (limit: number) =>
@@ -26,7 +26,7 @@ export const HeadName = lineOf(120);
 
 /** A calendar date written `YYYY-MM-DD`. The unit's clock decides whether it is a real day. */
 export const CivilDate = Schema.String.check(
-  Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/)
+  Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/u)
 );
 
 /**

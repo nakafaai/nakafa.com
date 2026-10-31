@@ -35,7 +35,7 @@ type SheetRow = readonly (typeof Cell.Type)[];
 const SHEET_NAME_LIMIT = 31;
 
 /** Characters a spreadsheet refuses in a sheet's name. */
-const SHEET_NAME_REFUSED = /[[\]:*?/\\]/g;
+const SHEET_NAME_REFUSED = /[[\]:*?/\\]/gu;
 
 /** A transcript value as a number cell that shows two decimals (Kepmendikdasmen 177/2026, Lampiran II B.6). */
 const twoDecimals = (value: number) => ({ format: "0.00", value });
@@ -248,4 +248,4 @@ export const fileStem = (name: string) =>
   name
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/^-|-$/gu, "");

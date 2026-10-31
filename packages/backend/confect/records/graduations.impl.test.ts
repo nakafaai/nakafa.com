@@ -32,7 +32,7 @@ const checks = refs.public.records.checks;
 const letters = refs.internal.records.letters;
 
 /** A web address, as a stored file's has. */
-const WEB_ADDRESS = /^https?:\/\//;
+const WEB_ADDRESS = /^https?:\/\//u;
 
 /** The decision on graduation the principal records in the tests. */
 const DECISION = {

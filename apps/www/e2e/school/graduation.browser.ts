@@ -12,10 +12,10 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** A web address, as an opened PDF has. */
-const WEB_ADDRESS = /^https?:\/\//;
+const WEB_ADDRESS = /^https?:\/\//u;
 
 /** The hash at the end of a check page's address. */
-const CHECK_HASH = /\/verify\/([0-9a-f]{64})$/;
+const CHECK_HASH = /\/verify\/(?<hash>[0-9a-f]{64})$/u;
 
 test("the Owner records the graduation decision, issues the SKL, opens its check page, and saves the e-Ijazah and Dapodik files", async ({
   browser,
@@ -101,7 +101,7 @@ test("the Owner records the graduation decision, issues the SKL, opens its check
     .getAttribute("href");
   const code = Option.getOrElse(
     Option.flatMap(Str.match(CHECK_HASH)(check ?? ""), (found) =>
-      Option.fromNullishOr(found[1])
+      Option.fromNullishOr(found.groups?.hash)
     ),
     () => ""
   );
