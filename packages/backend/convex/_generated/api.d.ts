@@ -447,6 +447,20 @@ export declare const api: {
           subject?: string;
         }
       >;
+      changeSubject: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; subject: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
       create: FunctionReference<
         "mutation",
         "public",
