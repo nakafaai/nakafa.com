@@ -10,7 +10,9 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PortalContainer } from "@repo/design-system/lib/portal";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import type * as React from "react";
 import { use } from "react";
 
@@ -32,16 +34,53 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
  * an item drawn with an icon, such as a flag, keeps the icon inline before its label: Base UI copies the item's
  * nodes into the value, the label often as bare text, which a row of flex items could not end in an ellipsis.
  */
-function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
+const selectValueVariants = cva(
+  "min-w-0 flex-1 truncate text-left [&>svg]:me-2 [&>svg]:inline-block [&>svg]:align-[-0.1875em]"
+);
+
+function SelectValue({
+  className,
+  labels,
+  ...props
+}: SelectPrimitive.Value.Props & {
+  /**
+   * Every label the select can show, given where its value changes on its own, as a playing lab's time does: the
+   * value keeps the widest label's width, so the trigger never grows and nothing beside it moves. Each label is
+   * drawn as generated content of an empty, hidden cell, so the trigger's text and name stay its value alone.
+   */
+  labels?: readonly string[];
+}) {
+  if (labels === undefined) {
+    return (
+      <SelectPrimitive.Value
+        className={selectValueVariants({ className })}
+        data-slot="select-value"
+        {...props}
+      />
+    );
+  }
+
   return (
-    <SelectPrimitive.Value
-      className={cn(
-        "min-w-0 flex-1 truncate text-left [&>svg]:me-2 [&>svg]:inline-block [&>svg]:align-[-0.1875em]",
-        className
-      )}
-      data-slot="select-value"
-      {...props}
-    />
+    <span className="grid min-w-0 flex-1" data-slot="select-value-frame">
+      {Arr.map(labels, (label) => (
+        <span
+          aria-hidden="true"
+          className={selectValueVariants({
+            className:
+              "invisible col-start-1 row-start-1 before:content-[attr(data-label)]",
+          })}
+          data-label={label}
+          key={label}
+        />
+      ))}
+      <SelectPrimitive.Value
+        className={selectValueVariants({
+          className: cn("col-start-1 row-start-1", className),
+        })}
+        data-slot="select-value"
+        {...props}
+      />
+    </span>
   );
 }
 
