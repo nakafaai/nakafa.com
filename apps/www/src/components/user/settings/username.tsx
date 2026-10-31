@@ -44,15 +44,11 @@ import { usernameReply } from "@/lib/profile/username";
 const CHECK_DELAY_MILLISECONDS = 300;
 
 /**
- * Renders the username card: the address of the account, a field that is
- * checked while it is typed, and the reason in words when the name cannot be
- * taken.
+ * The answer to the typed name, checked with the backend a moment after the last keystroke. The line keeps the
+ * last answer while the next name is checked, so it never blanks between keys; the account's own name has nothing
+ * to answer, and clears it.
  */
-export function UserSettingsUsername({ user }: { user: CurrentUser }) {
-  const t = useTranslations("Auth");
-  const updateUsername = useUpdateUsernameMutation();
-  const current = user.appUser.username;
-  const [typed, setTyped] = useState(current ?? "");
+function useUsernameAnswer(typed: string, current: string | undefined) {
   const [asked] = useDebouncedValue(typed, CHECK_DELAY_MILLISECONDS);
   // The check needs the session, which Convex learns a moment after the page draws.
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
@@ -75,9 +71,6 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
     typed,
   });
   const stored = Option.getOrUndefined(Result.getSuccess(readUsername(typed)));
-  const invalid = reply.message !== undefined && !reply.canSave;
-  // The line keeps the last answer while the next name is checked, so it never blanks between keys; the
-  // account's own name has nothing to answer, and clears it.
   const [lastAnswer, setLastAnswer] = useState(reply.message);
   if (reply.message !== undefined && reply.message !== lastAnswer) {
     setLastAnswer(reply.message);
@@ -86,9 +79,20 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
     stored !== undefined && stored === current
       ? undefined
       : (reply.message ?? lastAnswer);
-  const available = answer === "username-available";
 
-  const save = (username: string) =>
+  return {
+    answer,
+    canSave: reply.canSave,
+    invalid: reply.message !== undefined && !reply.canSave,
+    stored,
+  };
+}
+
+/** Saves a username, and says so in a toast when the save fails. */
+function useUsernameSave() {
+  const updateUsername = useUpdateUsernameMutation();
+
+  return (username: string) =>
     Effect.runPromise(
       Effect.tryPromise(() => updateUsername({ username })).pipe(
         Effect.flatMap(Effect.fromResult),
@@ -110,13 +114,30 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
         })
       )
     );
+}
+
+/**
+ * Renders the username card: the address of the account, a field that is
+ * checked while it is typed, and the reason in words when the name cannot be
+ * taken.
+ */
+export function UserSettingsUsername({ user }: { user: CurrentUser }) {
+  const t = useTranslations("Auth");
+  const current = user.appUser.username;
+  const [typed, setTyped] = useState(current ?? "");
+  const { answer, canSave, invalid, stored } = useUsernameAnswer(
+    typed,
+    current
+  );
+  const save = useUsernameSave();
+  const available = answer === "username-available";
 
   return (
     <form
       id="user-settings-username-form"
       onSubmit={(event) => {
         event.preventDefault();
-        if (reply.canSave && stored !== undefined) {
+        if (canSave && stored !== undefined) {
           save(stored);
         }
       }}
@@ -165,7 +186,7 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
           </Field>
         </CardContent>
         <CardSectionFooter hint={t("username-footer")}>
-          <SettingsSave disabled={!reply.canSave} />
+          <SettingsSave disabled={!canSave} />
         </CardSectionFooter>
       </CardSection>
     </form>
