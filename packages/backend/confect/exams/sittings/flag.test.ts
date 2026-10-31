@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
-const { flag, paper } = refs.public.exams.sittings;
+const { flag, paper, saved } = refs.public.exams.sittings;
 
 /** A question of the exam that a test sitting holds. */
 type QuestionId = GenericId.GenericId<"examQuestions">;
@@ -68,7 +68,7 @@ describe("exams/sittings flag", () => {
   });
 
   it.effect(
-    "flags a question once, shows the flag on the paper, and unflags it",
+    "flags a question once, shows the flag in what the student saved, and unflags it",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -88,8 +88,8 @@ describe("exams/sittings flag", () => {
         expect(yield* flagRows(fixture)).toHaveLength(1);
         const flagged = yield* fixture
           .as("student")
-          .query(paper, { deviceId: deviceOf(1), sittingId, slug: nf });
-        expect(flagged.questions[0]).toMatchObject({ flagged: true });
+          .query(saved, { deviceId: deviceOf(1), sittingId, slug: nf });
+        expect(flagged.flagged).toEqual([question]);
         yield* flagAs(fixture, {
           deviceId: deviceOf(1),
           flagged: false,

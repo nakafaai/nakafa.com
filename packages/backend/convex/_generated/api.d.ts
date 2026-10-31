@@ -6483,7 +6483,6 @@ export declare const api: {
         { deviceId: string; sittingId: Id<"examSittings">; slug: string },
         {
           questions: Array<{
-            flagged: boolean;
             id: Id<"examQuestions">;
             interactions: Array<
               | {
@@ -6663,13 +6662,6 @@ export declare const api: {
                 }
             >;
             number: number;
-            response:
-              | Array<string>
-              | { text: string }
-              | { pairs: Array<{ source: string; target: string }> }
-              | { cells: Array<{ column: string; statement: string }> }
-              | null;
-            version: number | null;
           }>;
         }
       >;
@@ -6695,6 +6687,23 @@ export declare const api: {
           slug: string;
         },
         null
+      >;
+      saved: FunctionReference<
+        "query",
+        "public",
+        { deviceId: string; sittingId: Id<"examSittings">; slug: string },
+        {
+          answers: Array<{
+            question: Id<"examQuestions">;
+            response:
+              | Array<string>
+              | { text: string }
+              | { pairs: Array<{ source: string; target: string }> }
+              | { cells: Array<{ column: string; statement: string }> };
+            version: number;
+          }>;
+          flagged: Array<string>;
+        }
       >;
       signal: FunctionReference<
         "mutation",

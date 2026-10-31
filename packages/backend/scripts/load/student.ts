@@ -1,6 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { PaperView } from "@repo/backend/confect/exams/sittings/contract";
+import type { SavedView } from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Step, StudentScript } from "@repo/backend/scripts/load/plan";
 import { Recorder, timed } from "@repo/backend/scripts/load/recorder";
@@ -58,25 +58,25 @@ const sleepUntil = Effect.fn("load.student.sleep")(function* (at: number) {
   yield* Effect.sleep(Duration.millis(Math.max(0, at - now)));
 });
 
-/** Keeps the newest version of each question that the paper says the server saved. */
-const keepSaved = (versions: Versions) => (paper: typeof PaperView.Type) => {
-  for (const question of paper.questions) {
+/** Keeps the newest version of each question that the server says the student saved. */
+const keepSaved = (versions: Versions) => (saved: typeof SavedView.Type) => {
+  for (const answer of saved.answers) {
     const seen = Option.getOrElse(
-      MutableHashMap.get(versions, question.id),
+      MutableHashMap.get(versions, answer.question),
       () => 0
     );
     MutableHashMap.set(
       versions,
-      question.id,
-      Math.max(seen, question.version ?? 0)
+      answer.question,
+      Math.max(seen, answer.version)
     );
   }
 };
 
 /**
  * Opens one tab of the player as a student's browser does: the connection, the student's view of
- * the sitting, the entry with the room's token from this device, and the paper, which stays live
- * for the tab's scope so every saved answer comes back through it.
+ * the sitting, the entry with the room's token from this device, the paper, and what the student
+ * saved, which stays live for the tab's scope so every saved answer comes back through it.
  */
 const openTab = Effect.fn("load.student.tab")(function* (
   input: StudentInput,
@@ -103,9 +103,16 @@ const openTab = Effect.fn("load.student.tab")(function* (
     wire,
     sittings.paper,
     { deviceId, sittingId, slug },
-    keepSaved(versions)
+    () => undefined
   );
   const paper = yield* timed("query:paper", Deferred.await(sheet));
+  const state = yield* watch(
+    wire,
+    sittings.saved,
+    { deviceId, sittingId, slug },
+    keepSaved(versions)
+  );
+  yield* timed("query:saved", Deferred.await(state));
   return {
     attempt: entered.attempt,
     deviceId,
@@ -150,10 +157,11 @@ const choose = Effect.fn("load.student.choose")(function* (
   question: Id<"examQuestions">
 ) {
   const option = yield* Random.nextIntBetween(1, OPTIONS);
-  // The paper numbers every question as it arrives, before the student answers any.
-  const seen = yield* Effect.fromOption(
-    MutableHashMap.get(versions, question)
-  ).pipe(Effect.orDie);
+  // A question with nothing saved yet takes the first version.
+  const seen = Option.getOrElse(
+    MutableHashMap.get(versions, question),
+    () => 0
+  );
   const version = seen + 1;
   MutableHashMap.set(versions, question, version);
   return { question, response: [`option-${option}`], version };

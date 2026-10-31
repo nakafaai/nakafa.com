@@ -67,8 +67,8 @@ const sittingView = {
 /**
  * A Convex deployment in memory that answers the sitting's functions as the real one does for
  * one student: entry admits attempt `a1` (or refuses with `refuse`), an answer is saved when its
- * version is newer and refused as stale otherwise (or always, with `stale`), and the paper is sent
- * again after every save.
+ * version is newer and refused as stale otherwise (or always, with `stale`), and what the student
+ * saved is sent again after every save, while the paper never changes.
  */
 export const fakeServer = (
   options: { readonly refuse?: boolean; readonly stale?: boolean } = {}
@@ -81,23 +81,20 @@ export const fakeServer = (
   >();
   const paper = () =>
     Ref.encodeReturnsSync(sittings.paper, {
-      questions: Arr.map(QUESTIONS, (id, index) => {
-        const answer = MutableHashMap.get(saved, id);
-        return {
-          flagged: false,
-          id,
-          interactions: newChoiceAnswers(),
-          number: index + 1,
-          response: Option.match(answer, {
-            onNone: () => null,
-            onSome: (value) => value.response,
-          }),
-          version: Option.match(answer, {
-            onNone: () => null,
-            onSome: (value) => value.version,
-          }),
-        };
-      }),
+      questions: Arr.map(QUESTIONS, (id, index) => ({
+        id,
+        interactions: newChoiceAnswers(),
+        number: index + 1,
+      })),
+    });
+  const savedView = () =>
+    Ref.encodeReturnsSync(sittings.saved, {
+      answers: Arr.map(Arr.fromIterable(saved), ([question, value]) => ({
+        question: idOf("examQuestions", question),
+        response: value.response,
+        version: value.version,
+      })),
+      flagged: [],
     });
   const values: Record<string, () => unknown> = {
     "exams/sittings:dashboard": () =>
@@ -124,6 +121,7 @@ export const fakeServer = (
     "exams/sittings:lastAnswer": () => null,
     "exams/sittings:paper": paper,
     "exams/sittings:prompt": () => ({ prompt: "{}" }),
+    "exams/sittings:saved": savedView,
     "exams/sittings:student": () =>
       Ref.encodeReturnsSync(sittings.student, {
         attempt: null,
@@ -155,7 +153,7 @@ export const fakeServer = (
       ),
       version,
     });
-    push("exams/sittings:paper");
+    push("exams/sittings:saved");
     return Promise.resolve(null);
   };
   const enter = () =>

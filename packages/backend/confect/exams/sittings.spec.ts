@@ -17,6 +17,7 @@ import {
   HeldAttempt,
   PaperView,
   PromptView,
+  SavedView,
   SignalView,
   StudentSittingRow,
   StudentSittingView,
@@ -271,6 +272,18 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => PaperView,
+      error: () => Schema.Union([...SITTING_REFUSALS]),
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "saved",
+      args: () => ({
+        deviceId: DeviceId,
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => SavedView,
       error: () => Schema.Union([...SITTING_REFUSALS]),
     })
   )
