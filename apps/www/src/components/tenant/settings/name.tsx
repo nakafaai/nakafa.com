@@ -46,7 +46,7 @@ export function SchoolNameCard({
 }) {
   const t = useTranslations("SchoolSettings");
   const inputId = useId();
-  const invalidId = useId();
+  const ruleId = useId();
   const rename = useMutation(tenancy.settings.setName).withOptimisticUpdate(
     setNameChange
   );
@@ -72,7 +72,7 @@ export function SchoolNameCard({
         <Field>
           <FieldLabel htmlFor={inputId}>{t("name-label")}</FieldLabel>
           <Input
-            aria-describedby={invalid ? invalidId : undefined}
+            aria-describedby={ruleId}
             aria-invalid={invalid}
             autoComplete="organization"
             className="max-w-sm"
@@ -82,11 +82,7 @@ export function SchoolNameCard({
             placeholder={t("name-placeholder")}
             value={draft}
           />
-          {invalid ? (
-            <FieldDescription id={invalidId}>
-              {t("name-invalid")}
-            </FieldDescription>
-          ) : null}
+          <FieldDescription id={ruleId}>{t("name-invalid")}</FieldDescription>
         </Field>
       </CardContent>
       <CardSectionFooter hint={t("name-footer")}>

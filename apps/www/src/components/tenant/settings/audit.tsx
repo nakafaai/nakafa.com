@@ -7,26 +7,34 @@ import {
 } from "@confect/react";
 import {
   Download01Icon,
-  UserAccountIcon,
-  UserCheck01Icon,
-  UserCircleIcon,
-  UserEdit01Icon,
-  UserIcon,
-  UserLove01Icon,
-  UserSettings01Icon,
-  UserShield01Icon,
-  UserSquareIcon,
-  UserStar01Icon,
+  InformationCircleIcon,
+  MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@repo/design-system/components/ui/sheet";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Effect } from "effect";
-import { useTransition } from "react";
+import { Array as Arr, Effect, Option } from "effect";
+import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -42,22 +50,9 @@ import {
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { PERSON_ICONS } from "@/components/tenant/settings/choices";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
-
-/** The icons of the people in the Who column's filter, one of a person for each. */
-const PERSON_ICONS = [
-  UserIcon,
-  UserCircleIcon,
-  UserSquareIcon,
-  UserStar01Icon,
-  UserAccountIcon,
-  UserCheck01Icon,
-  UserEdit01Icon,
-  UserLove01Icon,
-  UserSettings01Icon,
-  UserShield01Icon,
-] as const;
 
 /** How many entries one page of the journal loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -175,6 +170,11 @@ function SchoolAuditBody() {
       id: "change",
       sortFn: "text",
     }),
+    entryColumns.display({
+      cell: (info) => <AuditEntryMenu entry={info.row.original} />,
+      id: "actions",
+      meta: { align: "menu" },
+    }),
   ]);
   return (
     <>
@@ -222,6 +222,84 @@ function useEntryWords() {
     },
     change: (entry: EntryItem) => t(`audit-label.${entry.change.type}`),
   };
+}
+
+/**
+ * The row menu of one change of the trail: Details, which opens the change in a sheet. The sheet says when it
+ * happened, who made it, what it was, and the name of what it changed when the trail recorded one. The trail holds
+ * no policy value and no secret, so the sheet shows none.
+ */
+function AuditEntryMenu({ entry }: { entry: EntryItem }) {
+  const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
+  const words = useEntryWords();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => setOpen(true)}>
+              <HugeIcons icon={InformationCircleIcon} />
+              {t("audit-details")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Sheet onOpenChange={setOpen} open={open}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{words.change(entry)}</SheetTitle>
+            <SheetDescription>
+              {t("audit-details-description")}
+            </SheetDescription>
+          </SheetHeader>
+          <dl className="grid min-h-0 flex-1 grid-cols-[auto_1fr] content-start gap-x-6 gap-y-3 overflow-y-auto p-4 text-sm">
+            <dt className="text-muted-foreground">{t("audit-when")}</dt>
+            <dd className="tabular-nums">
+              <SchoolDateTime at={entry.at} />
+            </dd>
+            <dt className="text-muted-foreground">{t("audit-who")}</dt>
+            <dd dir="auto">{words.actor(entry)}</dd>
+            <dt className="text-muted-foreground">{t("audit-change")}</dt>
+            <dd>{words.change(entry)}</dd>
+            {Option.match(entry.subjectName, {
+              onNone: () => null,
+              onSome: (name) => (
+                <>
+                  <dt className="text-muted-foreground">
+                    {t("audit-subject")}
+                  </dt>
+                  <dd dir="auto">{name}</dd>
+                </>
+              ),
+            })}
+          </dl>
+          <SheetFooter>
+            <SheetClose
+              render={
+                <Button type="button" variant="outline">
+                  {common("close")}
+                </Button>
+              }
+            />
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
 }
 
 /** Hands the viewer a text as a file of the given name. */

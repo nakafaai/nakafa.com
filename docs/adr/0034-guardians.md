@@ -55,7 +55,7 @@ it by user and by analytics category, so the guardian ledger is a new table
 1. The school's Admin or Staff (Staf TU) starts a link: the student, and the
    guardian's email address. The link is a row with the same 14-day expiry as an
    invite (GLOSSARY, Invite). Nothing is sent to a guardian who has no link.
-2. The guardian signs in on the school host at `/orang-tua` with the six-digit
+2. The guardian signs in on the school host at `/parents` with the six-digit
    code sent to that address. The code lives five minutes. Three wrong tries void
    it, and the same request limit as the sign-in applies.
 3. The guardian enters the student's NISN, and the server compares it with the
@@ -165,7 +165,7 @@ withdrawal is done (blueprint, Orang tua, requests).
 - The flag on the tenant person row. That row is shared by every role of a school,
   and the flag is a roster fact (ADR 0011).
 - A guardian code accepted on nakafa.com. ADR 0009 accepts a parent's code only on
-  the school host, at `/orang-tua`, so a code typed anywhere else finds nothing.
+  the school host, at `/parents`, so a code typed anywhere else finds nothing.
 
 ## What Stays Open
 
@@ -180,12 +180,12 @@ withdrawal is done (blueprint, Orang tua, requests).
 | --- | --- |
 | The decision in this ADR | Recorded by S0 |
 | `verifiedParent` relation and the link rows | Built, S7: `guardianLinks` and the `guardianLink` kind (`confect/guardians`). Admin and Staff start, list, check by hand, and revoke links (`guardians/links`). An address reuses its guardian Person, and one address holds one live link to a student. |
-| `guardianCodes` and the email code at `/orang-tua` | Built, S8: `guardians/codes:send` mails the code from the mutation that draws it, through `confect/emails`, and answers the same for every address. The HMAC uses `LOGIN_CARD_SECRET` under the purpose label `nakafa/identity/guardian-code/v1`, bound to the school and the address (`identity/secret.ts`). The school host's Better Auth endpoint `/school/guardian/sign-in` (`auth/guardian.ts`) redeems the code through `guardians/codes:redeem`, binds the guardian Person with the claim method `code`, and makes the session. A sweep deletes expired codes hourly. |
+| `guardianCodes` and the email code at `/parents` | Built, S8: `guardians/codes:send` mails the code from the mutation that draws it, through `confect/emails`, and answers the same for every address. The HMAC uses `LOGIN_CARD_SECRET` under the purpose label `nakafa/identity/guardian-code/v1`, bound to the school and the address (`identity/secret.ts`). The school host's Better Auth endpoint `/school/guardian/sign-in` (`auth/guardian.ts`) redeems the code through `guardians/codes:redeem`, binds the guardian Person with the claim method `code`, and makes the session. A sweep deletes expired codes hourly. |
 | `guardianConsents` and the NISN second check | Built, S8: the guardian's check compares the blind of the typed NISN with the roster's (`guardians/family:confirm`). Three mismatches leave only the staff check. Withdrawal writes the `withdrawn` row with the method of its grant and ends the link in one transaction. |
 | The under-age flag on the school roster | Built: `rosterEntries` holds `underAgeLimit` and the NISN, sealed and blinded under the school key (`confect/roster`). Admin and Staff set it with `roster/entries:set`. The Dapodik import sets it again when it lands (ADR 0015). |
 | The under-18 gate (`ConsentRequired`) | Built, S8: `requireConsent` in `guardians/gate.ts`. Wiring it into the class forum belongs to the classroom lane, and Nina's school threads and active grading call it when they land. |
 | Guardian notices and the rename of the notification relation | Planned, S9 |
-| Parent home, shared narratives, and requests | Partly built, S10: the parent home at `/orang-tua` lists each linked child, runs the NISN check, shows the released grades of a verified link, and withdraws consent. Shared narratives wait for Insight (ADR 0035), and report copy and correction requests are a later slice. |
+| Parent home, shared narratives, and requests | Partly built, S10: the parent home at `/parents` lists each linked child, runs the NISN check, shows the released grades of a verified link, and withdraws consent. Shared narratives wait for Insight (ADR 0035), and report copy and correction requests are a later slice. |
 
 What waits outside the code: counsel's review of the consent wording and the policy
 version (K20), so `CONSENT_POLICY_VERSION` stays `id-profile-pending-1` and parent

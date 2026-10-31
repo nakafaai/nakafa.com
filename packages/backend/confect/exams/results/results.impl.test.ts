@@ -206,9 +206,11 @@ describe("exams/results", () => {
             id: questionId,
             number: 1,
             optionIds: ["option-1", "option-2", "option-3", "option-4"],
+            optionScript: "latin",
             points: 1,
             sourceIds: [],
             targetIds: [],
+            targetScript: "latin",
           },
         ]);
         expect(
@@ -240,6 +242,35 @@ describe("exams/results", () => {
         expect(answers.page).toMatchObject([
           { response: ["option-1"], verdict: "correct" },
         ]);
+        const answersOf = (args: {
+          search?: string;
+          verdict?: "correct" | "incorrect";
+        }) =>
+          teacher.query(results.byQuestion, {
+            paginationOpts: { cursor: null, numItems: 10 },
+            questionId,
+            sittingId: made.id,
+            slug: nf,
+            ...args,
+          });
+        expect((yield* answersOf({ verdict: "correct" })).page).toMatchObject([
+          { name: "Student" },
+        ]);
+        expect((yield* answersOf({ verdict: "incorrect" })).page).toStrictEqual(
+          []
+        );
+        expect((yield* answersOf({ search: "Student" })).page).toMatchObject([
+          { name: "Student", response: ["option-1"] },
+        ]);
+        expect(
+          (yield* answersOf({ search: "Stud", verdict: "correct" })).page
+        ).toMatchObject([{ name: "Student", verdict: "correct" }]);
+        expect(
+          (yield* answersOf({ search: "Student", verdict: "incorrect" })).page
+        ).toStrictEqual([]);
+        expect((yield* answersOf({ search: "Teacher" })).page).toStrictEqual(
+          []
+        );
         const stats = yield* teacher.query(results.questionStats, {
           questionId,
           sittingId: made.id,
@@ -326,10 +357,12 @@ describe("exams/results", () => {
               id: questionId,
               number: 1,
               optionIds: ["option-1", "option-2", "option-3", "option-4"],
+              optionScript: "latin",
               points: 1,
               response: ["option-2"],
               sourceIds: [],
               targetIds: [],
+              targetScript: "latin",
               verdict: "incorrect",
             },
           ],
