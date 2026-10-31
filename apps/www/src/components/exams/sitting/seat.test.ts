@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Option, Schema } from "effect";
+import { HashMap, Option, Schema } from "effect";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 import {
   awaySince,
@@ -9,6 +9,7 @@ import {
   lastActivityOf,
   matchesFilter,
   seatFrame,
+  seenOffline,
 } from "@/components/exams/sitting/seat";
 
 const attemptId = Schema.decodeUnknownSync(Id("examAttempts"));
@@ -135,6 +136,42 @@ describe("awaySince", () => {
     expect(awaySince(attempt("inProgress", { away: true }))).toStrictEqual(
       Option.none()
     );
+  });
+});
+
+describe("seenOffline", () => {
+  const offline = HashMap.make([attemptId("attempt-a"), 500]);
+
+  it("reads a running attempt that went silent as disconnected since then", () => {
+    const seen = seenOffline(attempt("inProgress"), offline);
+
+    expect(seen.away).toBe(true);
+    expect(seen.latestSignal).toEqual({ at: 500, kind: "disconnect" });
+    expect(isDisconnected(seen)).toBe(true);
+    expect(matchesFilter("needsAttention", seen)).toBe(true);
+  });
+
+  it("leaves an attempt that presence still hears", () => {
+    const heard = attempt("inProgress");
+
+    expect(seenOffline(heard, HashMap.empty())).toBe(heard);
+  });
+
+  it("keeps a student who left the exam away, since the exit says more", () => {
+    const left = attempt("inProgress", {
+      away: true,
+      latestSignal: { at: 400, kind: "exit" },
+    });
+
+    expect(seenOffline(left, offline)).toBe(left);
+  });
+
+  it("keeps a locked or finished seat as it stands", () => {
+    const locked = attempt("locked");
+    const submitted = attempt("submitted");
+
+    expect(seenOffline(locked, offline)).toBe(locked);
+    expect(seenOffline(submitted, offline)).toBe(submitted);
   });
 });
 

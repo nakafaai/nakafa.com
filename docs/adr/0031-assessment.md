@@ -153,6 +153,10 @@ evidence and not a formal proof. The engine version is pinned, because issue
   complex multiple choice scores 2, 1, or 0 per the 2020 design document, which
   is not verified. A penalty also comes from the exam profile.
 - An exam that is scored raw, such as a school exam with essays, stays raw.
+- A question of a school exam stores its own rule when its answer has parts (a
+  complex choice, a match, a table): all or nothing unless the teacher chooses
+  per part or the AKM bands. A rule shares the question's points, rounded down to
+  whole points, so only a whole answer earns them all.
 - Outcomes are score categories 0 to k, so partial credit enters IRT through
   GPCM.
 - The older rule, that multiple choice is all or nothing and partial credit is

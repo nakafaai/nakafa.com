@@ -128,6 +128,7 @@ export const copyQuestion = Effect.fn("exams.question.copy")(function* (
     points: original.points,
     prompt,
     rubric,
+    ...(original.scoring === undefined ? {} : { scoring: original.scoring }),
     template: original.template,
   });
 });
