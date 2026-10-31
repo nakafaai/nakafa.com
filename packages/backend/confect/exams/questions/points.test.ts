@@ -51,7 +51,7 @@ describe("exams/questions points", () => {
         const refused = yield* teacher
           .mutation(scoring, { ...ids, scoring: "wrongParts" })
           .pipe(Effect.flip);
-        expect(String(refused)).toContain("SCORING_DOES_NOT_FIT");
+        expect(String(refused)).toContain("ScoringDoesNotFit");
 
         const table = yield* teacher.mutation(template, {
           ...ids,
