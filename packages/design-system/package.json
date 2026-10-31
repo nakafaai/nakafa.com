@@ -54,7 +54,7 @@
     "marked": "18.1.2",
     "marked-tiptap": "npm:marked@^17.0.1",
     "mathlive": "0.111.1",
-    "mermaid": "11.17.2",
+    "mermaid": "12.2.0",
     "motion": "catalog:",
     "postcss": "8.5.32",
     "prosemirror-collab": "1.3.1",

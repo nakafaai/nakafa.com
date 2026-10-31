@@ -8,7 +8,7 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import { TENANCY_NOW } from "@repo/backend/test/tenancy";
+import { actedAt, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const reads = refs.public.classroom.forum.reads;
@@ -51,6 +51,7 @@ describe("classroom/forum reads", () => {
             slug: nf,
           })
         ).toEqual({ at: null });
+        vi.setSystemTime(actedAt());
         const sent = yield* fixture.as("teacher").mutation(send, {
           ...forum,
           clientKey: "teacher-message",
@@ -65,30 +66,30 @@ describe("classroom/forum reads", () => {
           place,
           slug: nf,
         });
-        expect(marked).toEqual({ at: TENANCY_NOW });
+        expect(marked).toEqual({ at: actedAt() });
         expect(yield* unread()).toEqual([false]);
         const back = yield* student.mutation(reads.mark, {
-          at: TENANCY_NOW - 5000,
+          at: actedAt() - 5000,
           classId: forum.classId,
           place,
           slug: nf,
         });
-        expect(back).toEqual({ at: TENANCY_NOW });
-        vi.setSystemTime(TENANCY_NOW + 1000);
+        expect(back).toEqual({ at: actedAt() });
+        vi.setSystemTime(actedAt(1));
         const ahead = yield* student.mutation(reads.mark, {
-          at: TENANCY_NOW + 60_000,
+          at: actedAt(60),
           classId: forum.classId,
           place,
           slug: nf,
         });
-        expect(ahead).toEqual({ at: TENANCY_NOW + 1000 });
+        expect(ahead).toEqual({ at: actedAt(1) });
         expect(
           yield* fixture.as("teacher").query(reads.get, {
             classId: forum.classId,
             place,
             slug: nf,
           })
-        ).toEqual({ at: TENANCY_NOW });
+        ).toEqual({ at: actedAt() });
       })
   );
 
@@ -99,6 +100,7 @@ describe("classroom/forum reads", () => {
         const fixture = yield* keyedFixture;
         const term = yield* period(fixture, fixture.units.smp);
         const forum = yield* forumClass(fixture, term.id, "X-2");
+        vi.setSystemTime(actedAt());
         yield* fixture.as("teacher").mutation(open, {
           ...forum,
           clientKey: "read-discussion",
@@ -107,7 +109,7 @@ describe("classroom/forum reads", () => {
           text: "Pembuka",
           title: "Diskusi",
         });
-        vi.setSystemTime(TENANCY_NOW + 4000);
+        vi.setSystemTime(actedAt(4));
         yield* fixture.as("student").mutation(reply, {
           classId: forum.classId,
           clientKey: "read-reply",
@@ -124,15 +126,15 @@ describe("classroom/forum reads", () => {
             place: discussion,
             slug: nf,
           })
-        ).toEqual({ at: TENANCY_NOW });
+        ).toEqual({ at: actedAt() });
         const admin = fixture.as("admin");
         const marked = yield* admin.mutation(reads.mark, {
-          at: TENANCY_NOW + 4000,
+          at: actedAt(4),
           classId: forum.classId,
           place: discussion,
           slug: nf,
         });
-        expect(marked).toEqual({ at: TENANCY_NOW + 4000 });
+        expect(marked).toEqual({ at: actedAt(4) });
         expect(
           yield* admin.query(reads.get, {
             classId: forum.classId,

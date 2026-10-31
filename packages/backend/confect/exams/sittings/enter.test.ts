@@ -22,6 +22,7 @@ import {
   seedPlacement,
 } from "@repo/backend/test/sittings";
 import {
+  actedAt,
   suspend,
   TENANCY_NOW,
   tenancyFixture,
@@ -216,17 +217,19 @@ describe("exams/sittings entry", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const made = yield* openedSitting(fixture, "PTS");
+        vi.setSystemTime(actedAt(0, OPENS));
         const first = yield* entryOf(fixture, {
           deviceId: deviceOf(1),
           sittingId: made.id,
           token: made.token,
         });
+        vi.setSystemTime(actedAt(1, OPENS));
         const again = yield* entryOf(fixture, {
           deviceId: deviceOf(1),
           sittingId: made.id,
           token: made.token,
         });
-        expect(again).toEqual(first);
+        expect(again).toEqual({ ...first, serverNow: actedAt(1, OPENS) });
         const second = yield* entryOf(fixture, {
           deviceId: deviceOf(2),
           sittingId: made.id,
@@ -242,6 +245,7 @@ describe("exams/sittings entry", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const made = yield* openedSitting(fixture, "PTS");
+        vi.setSystemTime(actedAt(0, OPENS));
         const entered = yield* enterOk(fixture, {
           deviceId: deviceOf(1),
           sittingId: made.id,
@@ -250,12 +254,13 @@ describe("exams/sittings entry", () => {
         yield* fixture
           .as("teacher")
           .mutation(changeToken, { sittingId: made.id, slug: nf });
+        vi.setSystemTime(actedAt(1, OPENS));
         const again = yield* enterOk(fixture, {
           deviceId: deviceOf(1),
           sittingId: made.id,
           token: made.token,
         });
-        expect(again).toEqual(entered);
+        expect(again).toEqual({ ...entered, serverNow: actedAt(1, OPENS) });
         const other = yield* entryOf(fixture, {
           deviceId: deviceOf(2),
           sittingId: made.id,

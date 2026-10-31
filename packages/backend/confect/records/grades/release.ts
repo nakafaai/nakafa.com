@@ -2,6 +2,7 @@ import { FunctionImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
+import { noticeGradeReleased } from "@repo/backend/confect/notifications/grades";
 import { Grade } from "@repo/backend/confect/records/access";
 import { gradeAuthority } from "@repo/backend/confect/records/authority";
 import {
@@ -14,9 +15,10 @@ import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { Clock, Effect, Struct } from "effect";
 
 /**
- * Releases a draft grade, which makes it visible to its student. The release and
- * its `grade.released` entry are written in one transaction. A grade that is
- * already released answers as it stands and journals nothing.
+ * Releases a draft grade, which makes it visible to its student. The release, its
+ * `grade.released` entry, and its notice to the student and the student's guardians
+ * are written in one transaction. A grade that is already released answers as it
+ * stands, and journals and notifies nothing.
  */
 export const release = FunctionImpl.make(
   databaseSchema,
@@ -47,6 +49,7 @@ export const release = FunctionImpl.make(
       state,
       type: "grade.released",
     });
+    yield* noticeGradeReleased(released);
     return gradeView(released, scheme);
   })
 );

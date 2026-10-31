@@ -31,7 +31,8 @@ export const renderVerifiedArtifact = Effect.fn(
     components,
     payload.contentKey,
     payload.rendererDomain,
-    payload.contentTree
+    payload.contentTree,
+    payload.artifactLocale
   );
 
   return {

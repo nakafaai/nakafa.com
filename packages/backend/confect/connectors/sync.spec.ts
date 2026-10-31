@@ -21,7 +21,8 @@ const SyncTarget = Schema.Struct({
  * refreshes the access token, reads the source, and stores the copy, which sets
  * the next sync sooner when the source changed and later when it did not. A
  * source that stops accepting the token moves the connection to `reconnect`.
- * Every function is internal.
+ * The last connection of a Google account that its owner ends revokes the grant
+ * at Google, then destroys its token (`revoke.ts`). Every function is internal.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -68,6 +69,27 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalMutation({
       name: "reconnect",
+      args: () => ({ connectionId: Id("connectorConnections") }),
+      returns: () => Schema.Null,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "revocable",
+      args: () => ({ connectionId: Id("connectorConnections") }),
+      returns: () => Schema.NullOr(Schema.String),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalAction({
+      name: "revoke",
+      args: () => ({ connectionId: Id("connectorConnections") }),
+      returns: () => Schema.Null,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "destroy",
       args: () => ({ connectionId: Id("connectorConnections") }),
       returns: () => Schema.Null,
     })
