@@ -30,6 +30,7 @@ import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
 import classroomPosts from "./tables/classroomPosts";
 import classroomReads from "./tables/classroomReads";
+import classroomScheduled from "./tables/classroomScheduled";
 import classroomSubmissions from "./tables/classroomSubmissions";
 import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
@@ -181,6 +182,7 @@ export default $defineSchema({
   classroomMessages: $Table.tableDefinition(classroomMessages),
   classroomPosts: $Table.tableDefinition(classroomPosts),
   classroomReads: $Table.tableDefinition(classroomReads),
+  classroomScheduled: $Table.tableDefinition(classroomScheduled),
   classroomSubmissions: $Table.tableDefinition(classroomSubmissions),
   classroomTallies: $Table.tableDefinition(classroomTallies),
   classroomTasks: $Table.tableDefinition(classroomTasks),

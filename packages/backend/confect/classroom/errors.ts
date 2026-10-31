@@ -49,6 +49,21 @@ export class PinLimit extends Schema.TaggedError<PinLimit>()(
   refusal("PIN_LIMIT", "This class keeps the most pinned announcements it can.")
 ) {}
 
+/** Scheduling an announcement in a class that holds the most it can waiting. */
+export class ScheduledLimit extends Schema.TaggedError<ScheduledLimit>()(
+  "ScheduledLimit",
+  refusal(
+    "SCHEDULED_LIMIT",
+    "This class holds the most scheduled announcements it can."
+  )
+) {}
+
+/** Scheduling an announcement for a time that has passed. */
+export class ScheduledPast extends Schema.TaggedError<ScheduledPast>()(
+  "ScheduledPast",
+  refusal("SCHEDULED_PAST", "An announcement needs a time in the future.")
+) {}
+
 /** Teaching a class to a Person who already teaches the most classes of its period. */
 export class PersonClassLimit extends Schema.TaggedError<PersonClassLimit>()(
   "PersonClassLimit",

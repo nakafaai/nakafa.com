@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { chooseDay } from "@/e2e/support/date";
 import {
   createSchool,
   hostAddress,
@@ -11,6 +12,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The time line of an edited announcement. */
 const EDITED = /, edited$/u;
+
+/** A late evening time in the list, in the 12 or the 24 hour clock of the browser. */
+const LATE_EVENING = /^(?:11:45\sPM|23:45)$/u;
 
 for (const viewport of [
   { height: 844, width: 390 },
@@ -100,3 +104,56 @@ for (const viewport of [
     await context.close();
   });
 }
+
+test("a subject teacher keeps an announcement for later, which the class's posts do not show, moves it, and cancels it", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(
+    signInClassTeacher(context, school.slug, address("/"))
+  );
+  const page = await context.newPage();
+  await page.goto(address("/classes/fisika-x-1"));
+  await expect(page.getByText("No announcement yet")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  const create = page.getByRole("button", { name: "New announcement" });
+  await waitUntilTakenOver(create);
+  await create.click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Announcement" }).fill("Ulangan.");
+  await dialog.getByRole("checkbox", { name: "Post later" }).click();
+  const send = dialog.getByRole("button", { name: "Schedule" });
+  await expect(send).toBeDisabled();
+  await chooseDay(page, dialog.getByLabel("Goes out at"), "2027-10-30");
+  await dialog.getByRole("combobox", { name: "Time" }).click();
+  await page.getByRole("option", { name: LATE_EVENING }).click();
+  await send.click();
+  await expect(dialog).toBeHidden();
+
+  // It waits above the posts, and the class has none yet.
+  const waiting = page.getByRole("list", { name: "Scheduled" });
+  await expect(waiting).toContainText("Ulangan.");
+  await expect(page.getByText("No announcement yet")).toBeVisible();
+
+  const more = waiting.getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(more);
+  await more.click();
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  await dialog
+    .getByRole("textbox", { name: "Announcement" })
+    .fill("Ulangan lusa.");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(waiting).toContainText("Ulangan lusa.");
+
+  await more.click();
+  await page.getByRole("menuitem", { name: "Cancel post" }).click();
+  await expect(waiting).toHaveCount(0);
+  await context.close();
+});
