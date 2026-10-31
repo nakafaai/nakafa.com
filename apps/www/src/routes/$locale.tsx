@@ -82,6 +82,9 @@ export const Route = createFileRoute("/$locale")({
   component: LocaleRoot,
   errorComponent: LocaleError,
   notFoundComponent: LocaleNotFound,
+  // The router draws this boundary only while the split error component's chunk
+  // is unloaded, and dropping it remounts every page below, so it stays.
+  wrapInSuspense: true,
 });
 
 /**
