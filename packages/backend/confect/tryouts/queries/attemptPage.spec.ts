@@ -4,19 +4,13 @@ import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
-  sectionWithBodiesResultValidator,
   tryoutSectionAttemptPageRequestValidator,
   tryoutSectionAttemptPageResultValidator,
   tryoutSetAttemptPageRequestValidator,
   tryoutSetAttemptPageResultValidator,
 } from "@repo/backend/confect/tryouts/attemptPage/spec";
-import {
-  TryoutResponseIntegrityError,
-  TryoutResponseSelectionError,
-} from "@repo/backend/confect/tryouts/response/spec";
+import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
-import { TryoutHistoryError } from "@repo/backend/confect/tryouts/runtime/history/spec";
-import { TryoutSelectorReadErrorWire } from "@repo/backend/confect/tryouts/runtime/ownership";
 import { TryoutScoreReadError } from "@repo/backend/confect/tryouts/score";
 import { Schema } from "effect";
 
@@ -36,8 +30,6 @@ export default GroupSpec.make()
           TryoutRuntimeErrorWire,
           TryoutScoreReadError,
           TryoutResponseIntegrityError,
-          TryoutResponseSelectionError,
-          TryoutSelectorReadErrorWire,
           ReleaseError,
         ]),
     }).middleware(Session)
@@ -57,29 +49,6 @@ export default GroupSpec.make()
           ReleaseError,
           TryoutScoreReadError,
           TryoutResponseIntegrityError,
-          TryoutResponseSelectionError,
-          TryoutSelectorReadErrorWire,
-        ]),
-    }).middleware(Session)
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "getSectionWithBodies",
-      args: () => ({
-        request: tryoutSectionAttemptPageRequestValidator,
-      }),
-      returns: () => sectionWithBodiesResultValidator,
-      error: () =>
-        Schema.Union([
-          TryoutAttemptStateError,
-          AuthFailure,
-          TryoutRuntimeErrorWire,
-          ReleaseError,
-          TryoutScoreReadError,
-          TryoutResponseIntegrityError,
-          TryoutResponseSelectionError,
-          TryoutSelectorReadErrorWire,
-          TryoutHistoryError,
         ]),
     }).middleware(Session)
   );

@@ -72,12 +72,6 @@ function nextCleanupPart(
   if (family === "quran" && part === "quran") {
     return "quran-search";
   }
-  if (family === "tryout" && part === "catalog") {
-    return "placement";
-  }
-  if (family === "tryout" && part === "placement") {
-    return "runtime";
-  }
   return undefined;
 }
 
@@ -133,15 +127,12 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
           `Snapshot ${snapshot.family}/${snapshot.snapshotId} lost its cleanup page.`
         );
       }
-      const nextIndex =
-        "index" in last.value.row ? last.value.row.index : undefined;
-      if (children.part !== "runtime" && nextIndex === undefined) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Snapshot ${snapshot.family}/${snapshot.snapshotId} lost its cleanup position.`
-        );
-      }
-      yield* persistCleanup(snapshot, cutoff, nextIndex, children.part);
+      yield* persistCleanup(
+        snapshot,
+        cutoff,
+        last.value.row.index,
+        children.part
+      );
       return {
         cursor: null,
         deleted: children.children.length,

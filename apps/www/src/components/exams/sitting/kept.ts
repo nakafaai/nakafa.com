@@ -3,7 +3,7 @@ import {
   type ExamResponse,
   NO_RESPONSE,
   typedText,
-} from "@repo/backend/confect/exams/sittings/response";
+} from "@repo/backend/confect/assessment/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option } from "effect";
 import { useEffect, useRef, useState } from "react";

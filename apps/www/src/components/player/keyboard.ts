@@ -1,7 +1,3 @@
-import type {
-  RenderableSpec,
-  Selection,
-} from "@repo/backend/confect/response/model";
 import { Array as Arr, Option, Schema } from "effect";
 import type { PlayerOverlay } from "@/components/player/store";
 
@@ -127,18 +123,4 @@ export function readPlayerKey(
     Arr.findFirstIndex(PICK_KEYS, (key) => key === event.key),
     (index) => ({ index, kind: "pick" })
   );
-}
-
-/** The selection that the option at `index` stands for, when the question is single choice. */
-export function pickOption(
-  responseSpec: RenderableSpec,
-  index: number
-): Option.Option<Selection> {
-  if (responseSpec.kind !== "single-choice") {
-    return Option.none();
-  }
-  return Option.map(Arr.get(responseSpec.options, index), (option) => ({
-    kind: "single-choice",
-    optionKey: option.optionKey,
-  }));
 }

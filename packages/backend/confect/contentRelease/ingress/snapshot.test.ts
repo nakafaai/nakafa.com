@@ -12,11 +12,7 @@ import {
   makeQuranSnapshot,
   makeQuranSnapshotRow,
 } from "@repo/backend/test/quran/snapshot";
-import {
-  makeTryoutCatalogRow,
-  makeTryoutPlacementRow,
-  makeTryoutSnapshotManifest,
-} from "@repo/backend/test/tryout/snapshot";
+import { makeAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
 import { Effect } from "effect";
 
 const otherSnapshotId = Sha256HashSchema.make(`sha256:${"9".repeat(64)}`);
@@ -28,13 +24,13 @@ describe("contentRelease/ingress/snapshot", () => {
       Effect.gen(function* () {
         const program = yield* makeProgramSnapshotData();
         const quran = yield* makeQuranSnapshot();
-        const tryout = yield* makeTryoutSnapshotManifest();
+        const assessment = yield* makeAssessmentTestSnapshot();
 
         expect(
           yield* Effect.all([
             verifySnapshotManifest(program.snapshot),
             verifySnapshotManifest(quran),
-            verifySnapshotManifest(tryout),
+            verifySnapshotManifest(assessment.manifest),
           ])
         ).toEqual([undefined, undefined, undefined]);
       })
@@ -45,18 +41,17 @@ describe("contentRelease/ingress/snapshot", () => {
       const program = yield* makeProgramSnapshotData();
       const quran = yield* makeQuranSnapshot();
       const quranRow = yield* makeQuranSnapshotRow(quran.manifest.snapshotId);
-      const tryout = yield* makeTryoutSnapshotManifest();
-      const catalog = yield* makeTryoutCatalogRow();
-      const placement = yield* makeTryoutPlacementRow();
+      const assessment = yield* makeAssessmentTestSnapshot();
 
       expect(
         yield* Effect.all([
           verifySnapshotBatch("program", program.snapshotId, program.rows),
           verifySnapshotBatch("quran", quran.manifest.snapshotId, [quranRow]),
-          verifySnapshotBatch("tryout", tryout.manifest.snapshotId, [
-            catalog,
-            placement,
-          ]),
+          verifySnapshotBatch(
+            "assessment",
+            assessment.manifest.manifest.snapshotId,
+            assessment.rows
+          ),
         ])
       ).toEqual([undefined, undefined, undefined]);
     })
@@ -89,21 +84,40 @@ describe("contentRelease/ingress/snapshot", () => {
     })
   );
 
-  it.live("rejects a tampered try-out row hash before storage", () =>
-    Effect.gen(function* () {
-      const row = yield* makeTryoutCatalogRow();
-      const tampered: ContentSnapshotRow = {
-        ...row,
-        record: {
-          ...row.record,
-          rowHash: otherSnapshotId,
-        },
-      };
+  it.live(
+    "rejects a tampered assessment manifest or row hash before storage",
+    () =>
+      Effect.gen(function* () {
+        const { manifest, rows } = yield* makeAssessmentTestSnapshot();
+        const [row] = rows;
+        if (!row) {
+          return yield* Effect.die(
+            new Error("Expected one technical assessment row.")
+          );
+        }
+        const tampered: ContentSnapshotRow = {
+          ...row,
+          record: {
+            ...row.record,
+            rowHash: otherSnapshotId,
+          },
+        };
 
-      const failure = yield* verifySnapshotBatch("tryout", otherSnapshotId, [
-        tampered,
-      ]).pipe(Effect.flip);
-      expect(failure.message).toContain("invalid content identity");
-    })
+        const rowFailure = yield* verifySnapshotBatch(
+          "assessment",
+          otherSnapshotId,
+          [tampered]
+        ).pipe(Effect.flip);
+        const manifestFailure = yield* verifySnapshotManifest({
+          ...manifest,
+          manifest: { ...manifest.manifest, snapshotId: otherSnapshotId },
+        }).pipe(Effect.flip);
+        expect(rowFailure.message).toBe(
+          "Assessment snapshot row has an invalid content identity."
+        );
+        expect(manifestFailure.message).toBe(
+          "Assessment snapshot manifest has an invalid content identity."
+        );
+      })
   );
 });

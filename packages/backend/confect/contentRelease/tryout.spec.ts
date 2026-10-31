@@ -3,13 +3,6 @@ import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 
-const tryoutCatalogValidator = Schema.Struct({
-  activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
-  activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
-  rowJson: Schema.mutable(Schema.Array(Schema.String)),
-  snapshotId: Schema.String,
-  sourceRevision: Schema.Union([Schema.String, Schema.Null]),
-});
 const tryoutSitemapCountValidator = Schema.Struct({
   pageCount: Schema.Finite,
   routeCount: Schema.Finite,
@@ -30,18 +23,8 @@ const tryoutTaxonomyValidator = Schema.Struct({
   routeCount: Schema.Finite,
 });
 
-/** Returns the verified active try-out hierarchy for one locale. */
+/** Reads the sitemap and the taxonomy of the active try-out catalog in one locale. */
 export default GroupSpec.make()
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "catalog",
-      args: () => ({
-        appLocale: appLocaleValidator,
-      }),
-      returns: () => tryoutCatalogValidator,
-      error: () => ReleaseError,
-    })
-  )
   .addFunction(
     FunctionSpec.publicQuery({
       name: "sitemapCount",

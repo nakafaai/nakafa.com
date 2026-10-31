@@ -3,39 +3,21 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import {
-  hasSnapshotArtifactReference,
-  isSnapshotReferenced,
-} from "@repo/backend/confect/contentRelease/snapshot/retention";
-import { tryoutPlacementFacts } from "@repo/backend/confect/contentRelease/tryout/facts";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
+import { isSnapshotReferenced } from "@repo/backend/confect/contentRelease/snapshot/retention";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import { api } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import {
   compactionIdentity,
   insertCompletedRelease,
 } from "@repo/backend/test/content/compact";
-import { TEST_ARTIFACT_HASH } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import {
   insertTestState,
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
-import { makeTryoutPlacementRow } from "@repo/backend/test/tryout/snapshot";
-import {
-  activateTryoutStartSource,
-  TRYOUT_START_COUNTRY,
-  TRYOUT_START_EXAM,
-  TRYOUT_START_NOW,
-  TRYOUT_START_SET,
-  TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout/source";
+import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect, Schema } from "effect";
@@ -53,7 +35,7 @@ async function storedRelease(ctx: MutationCtx, releaseId: string) {
 /** Runs the snapshot reference proof for one family in its own mutation. */
 function referenced(
   t: TestConvex<typeof schema>,
-  family: "program" | "tryout",
+  family: "assessment" | "program",
   snapshotId: string
 ) {
   return t.mutation((ctx) =>
@@ -285,128 +267,30 @@ describe("contentRelease/snapshot/retention", () => {
       })
   );
   it.effect(
-    "finds question and answer artifacts retained by try-out placements",
+    "protects an assessment snapshot while an attempt names it, never for a scale alone",
     () =>
       Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        const placement = (yield* makeTryoutPlacementRow()).record;
-        yield* Effect.promise(async () => {
-          const t = convexTest(schema, convexModules);
-          const answerHash = `sha256:${"3".repeat(64)}`;
-          await t.mutation((ctx) =>
-            ctx.db.insert("tryoutPlacements", {
-              ...tryoutPlacementFacts(placement),
-              answerArtifactHash: answerHash,
-              index: 0,
-              questionArtifactHash: TEST_ARTIFACT_HASH,
-              rowHash: placement.rowHash,
-              rowJson: "{}",
-              snapshotId: `sha256:${"5".repeat(64)}`,
-            })
-          );
-          await expect(
-            t.mutation((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                hasSnapshotArtifactReference(TEST_ARTIFACT_HASH).pipe(
-                  Effect.provide(
-                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                  )
-                )
-              )
-            )
-          ).resolves.toBe(true);
-          await expect(
-            t.mutation((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                hasSnapshotArtifactReference(answerHash).pipe(
-                  Effect.provide(
-                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                  )
-                )
-              )
-            )
-          ).resolves.toBe(true);
-          await expect(
-            t.mutation((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                hasSnapshotArtifactReference(`sha256:${"6".repeat(64)}`).pipe(
-                  Effect.provide(
-                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                  )
-                )
-              )
-            )
-          ).resolves.toBe(false);
-        });
-      })
-  );
-  it.effect(
-    "protects try-out snapshots referenced by attempts and IRT scales",
-    () =>
-      Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        yield* Effect.promise(async () => {
-          const t = createConvexTestWithBetterAuth();
-          const seeded = await t.mutation(async (ctx) => {
-            const identity = await seedAuthenticatedUser(ctx, {
-              now: TRYOUT_START_NOW,
-              suffix: "snapshot-retention",
-            });
-            const fixture = await activateTryoutStartSource(
-              ctx,
-              "visible",
-              "irt"
-            );
-            return {
-              fixture,
-              identity,
-            };
-          });
-          const authed = t.withIdentity({
-            sessionId: seeded.identity.sessionId,
-            subject: seeded.identity.authUserId,
-          });
-          await authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-            countryKey: TRYOUT_START_COUNTRY,
-            examKey: TRYOUT_START_EXAM,
-            locale: "id",
-            setKey: TRYOUT_START_SET,
-            trackKey: TRYOUT_START_TRACK,
-          });
-          await expect(
-            t.mutation((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                isSnapshotReferenced("tryout", seeded.fixture.snapshotId).pipe(
-                  Effect.provide(
-                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                  )
-                )
-              )
-            )
-          ).resolves.toBe(true);
-          const scaleSnapshotId = `sha256:${"7".repeat(64)}`;
-          await t.mutation((ctx) =>
+        const world = yield* tryoutWorld({ scoring: { kind: "irt" } });
+        yield* world.start();
+        expect(
+          yield* world.run(isSnapshotReferenced("assessment", world.snapshotId))
+        ).toBe(true);
+        const scaleSnapshotId = `sha256:${"7".repeat(64)}`;
+        yield* Effect.promise(() =>
+          world.t.mutation((ctx) =>
             ctx.db.insert("irtScaleVersions", {
+              assessmentSnapshotId: scaleSnapshotId,
               model: "2pl",
-              publishedAt: TRYOUT_START_NOW,
+              publishedAt: TRYOUT_NOW,
               questionCount: 1,
-              setIdentity: seeded.fixture.setIdentity,
+              setIdentity: "indonesia/snbt/2027/set-1",
               status: "provisional",
-              tryoutSnapshotId: scaleSnapshotId,
             })
-          );
-          await expect(
-            t.mutation((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                isSnapshotReferenced("tryout", scaleSnapshotId).pipe(
-                  Effect.provide(
-                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                  )
-                )
-              )
-            )
-          ).resolves.toBe(true);
-        });
+          )
+        );
+        expect(
+          yield* world.run(isSnapshotReferenced("assessment", scaleSnapshotId))
+        ).toBe(false);
       })
   );
   it("does not protect a bootstrap's base snapshot, even when its base release is gone", async () => {
@@ -421,8 +305,8 @@ describe("contentRelease/snapshot/retention", () => {
         bootstrap: true,
         snapshotTransitions: {
           ...row.snapshotTransitions,
-          tryout: {
-            ...row.snapshotTransitions.tryout,
+          assessment: {
+            ...row.snapshotTransitions.assessment,
             baseSnapshotId: replacedSnapshotId,
             resultSnapshotId,
           },
@@ -430,10 +314,12 @@ describe("contentRelease/snapshot/retention", () => {
       });
       await insertTestState(ctx, { active: bootstrap, nextSequence: 3 });
     });
-    await expect(referenced(t, "tryout", replacedSnapshotId)).resolves.toBe(
+    await expect(referenced(t, "assessment", replacedSnapshotId)).resolves.toBe(
       false
     );
-    await expect(referenced(t, "tryout", resultSnapshotId)).resolves.toBe(true);
+    await expect(referenced(t, "assessment", resultSnapshotId)).resolves.toBe(
+      true
+    );
   });
   it("does not protect a snapshot selected only by a completed release below the bootstrap floor", async () => {
     const t = convexTest(schema, convexModules);
@@ -475,11 +361,16 @@ describe("contentRelease/snapshot/retention", () => {
       await ctx.db.patch("contentReleases", row._id, {
         snapshotTransitions: {
           ...row.snapshotTransitions,
-          tryout: { ...row.snapshotTransitions.tryout, baseSnapshotId },
+          assessment: {
+            ...row.snapshotTransitions.assessment,
+            baseSnapshotId,
+          },
         },
       });
       await insertTestState(ctx, { active, nextSequence: 3 });
     });
-    await expect(referenced(t, "tryout", baseSnapshotId)).resolves.toBe(true);
+    await expect(referenced(t, "assessment", baseSnapshotId)).resolves.toBe(
+      true
+    );
   });
 });

@@ -40,7 +40,7 @@
     "@convex-dev/workpool": "0.4.15",
     "@effect/platform-browser": "catalog:",
     "@effect/platform-node": "catalog:",
-    "@nakafa/aksara-contracts": "1.0.0",
+    "@nakafa/aksara-contracts": "2.0.0",
     "@polar-sh/sdk": "^1.0.2",
     "@posthog/convex": "2.1.8",
     "@react-email/render": "catalog:",

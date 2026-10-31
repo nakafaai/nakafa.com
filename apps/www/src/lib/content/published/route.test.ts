@@ -3,7 +3,7 @@
 import { HttpClient } from "@confect/js";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { RoutedContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -23,7 +23,7 @@ const input = {
   publicPath: previewProjection.publicPath,
 } satisfies Parameters<typeof readActiveContentRoute>[0];
 const routedJson = Schema.encodeSync(
-  Schema.fromJsonString(RoutedContentProjectionSchema)
+  Schema.fromJsonString(ContentProjectionSchema)
 );
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();

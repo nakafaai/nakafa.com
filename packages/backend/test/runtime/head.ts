@@ -294,10 +294,6 @@ export async function insertRuntimeHead(
   const projection = Schema.decodeSync(ContentProjectionJsonSchema)(
     projectionJson
   );
-  assert.ok(
-    projection.kind !== "question-body",
-    "A public runtime head cannot route a question body."
-  );
   const resolved = {
     ...options,
     appLocale: options?.appLocale ?? projection.appLocale,

@@ -1,4 +1,4 @@
-import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { pickedOption } from "@/components/exams/sitting/response";
 import type { PlayerQuestionModel } from "@/components/player/model";

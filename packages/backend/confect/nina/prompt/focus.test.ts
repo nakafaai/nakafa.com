@@ -1,323 +1,204 @@
 import { describe, expect, it } from "@effect/vitest";
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
-import type { NinaFocusSource } from "@repo/backend/confect/nina/contract/focus";
+import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
+import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
+  formatFocusAnswer,
   formatFocusPrompt,
   formatFocusTaskPrompt,
 } from "@repo/backend/confect/nina/prompt/focus";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Schema } from "effect";
 
-const choice = {
-  questionOrder: 3,
-  questionLocale: "id",
-  questionMdx: "Berapakah $$2 + 2$$?",
-  explanationMdx: "### Langkah\n\nJumlahkan kedua bilangan.",
-  responseSpec: {
-    kind: "single-choice",
-    options: [
-      { isCorrect: false, label: "Lima", optionKey: "b", order: 2 },
-      { isCorrect: true, label: "Empat", optionKey: "a", order: 1 },
-      { isCorrect: false, label: "Tiga", optionKey: "c", order: 3 },
-    ],
-  },
-  selection: { kind: "single-choice", optionKey: "b" },
-  outcome: { status: "incorrect" },
-} satisfies NinaFocusSource;
-
-const indonesian = DeliveryLanguageSchema.make("id");
-const label = (id: string) => ({ de: `${id} (de)`, en: `${id} (en)`, id });
-const rubric = {
-  ...choice,
-  responseSpec: {
-    criteria: [
-      {
-        criterionKey: "criterion-1",
-        label: label("Langkah lengkap"),
-        levels: [
-          {
-            label: label("Tidak ada"),
-            levelKey: "level-1",
-            order: 1,
-            points: 0,
-          },
-          { label: label("Lengkap"), levelKey: "level-2", order: 2, points: 2 },
-        ],
-        order: 1,
-      },
-      {
-        criterionKey: "criterion-2",
-        finalAnswer: {
-          acceptedAnswers: ["4", "empat"],
-          collapseWhitespace: true,
-          ignoreCase: true,
-          kind: "text",
-        },
-        label: label("Hasil akhir"),
-        levels: [
-          { label: label("Salah"), levelKey: "level-1", order: 1, points: 0 },
-          { label: label("Benar"), levelKey: "level-2", order: 2, points: 1 },
-        ],
-        order: 2,
-      },
-    ],
-    kind: "rubric",
-    language: indonesian,
-  },
-  selection: {
-    finalAnswers: [{ criterionKey: "criterion-2", text: "4" }],
-    kind: "rubric",
-    text: "Dua ditambah dua.",
-  },
-  outcome: { status: "pending" },
-} satisfies NinaFocusSource;
-
-describe("formatFocusPrompt", () => {
-  it.effect(
-    "states the question, every choice in order and the learner's wrong pick",
-    () =>
-      Effect.gen(function* () {
-        const prompt = yield* formatFocusPrompt(choice);
-
-        expect(prompt).toContain(
-          "The learner opened Nina from question 3 of their finished try-out review."
-        );
-        expect(prompt).toContain("- question language: id");
-        expect(prompt).toContain("- learner result: answered incorrectly");
-        expect(prompt).toContain(
-          "## Answer Choices\n\n- Empat (correct answer)\n- Lima (learner's choice)\n- Tiga"
-        );
-        expect(prompt).toContain("Jumlahkan kedua bilangan.");
-        expect(prompt.indexOf("## Question")).toBeLessThan(
-          prompt.indexOf("## Official Explanation")
-        );
-      })
-  );
-
-  it.effect(
-    "marks a correct multiple-choice answer on every chosen option",
-    () =>
-      Effect.gen(function* () {
-        const prompt = yield* formatFocusPrompt({
-          ...choice,
-          responseSpec: {
-            kind: "multiple-choice",
-            options: [
-              { isCorrect: true, label: "Genap", optionKey: "a", order: 1 },
-              { isCorrect: true, label: "Positif", optionKey: "b", order: 2 },
-            ],
-          },
-          selection: { kind: "multiple-choice", optionKeys: ["a", "b"] },
-          outcome: { status: "correct" },
-        });
-
-        expect(prompt).toContain("- learner result: answered correctly");
-        expect(prompt).toContain(
-          "- Genap (correct answer, learner's choice)\n- Positif (correct answer, learner's choice)"
-        );
-      })
-  );
-
-  it.effect(
-    "lists category statements with the correct and the learner's category",
-    () =>
-      Effect.gen(function* () {
-        const prompt = yield* formatFocusPrompt({
-          ...choice,
-          responseSpec: {
-            kind: "category",
-            categories: [
-              { categoryKey: "true", label: "Benar", order: 1 },
-              { categoryKey: "false", label: "Salah", order: 2 },
-            ],
-            statements: [
-              {
-                correctCategoryKey: "false",
-                label: "Dua kali dua adalah lima.",
-                order: 2,
-                statementKey: "two",
-              },
-              {
-                correctCategoryKey: "true",
-                label: "Dua ditambah dua adalah empat.",
-                order: 1,
-                statementKey: "one",
-              },
-            ],
-          },
-          selection: {
-            kind: "category",
-            assignments: [{ categoryKey: "true", statementKey: "one" }],
-          },
-        });
-
-        expect(prompt).toContain(
-          Arr.join(
-            [
-              "- Dua ditambah dua adalah empat.",
-              "  - correct category: Benar",
-              "  - learner's category: Benar",
-              "- Dua kali dua adalah lima.",
-              "  - correct category: Salah",
-              "  - learner's category: no answer",
-            ],
-            "\n"
-          )
-        );
-      })
-  );
-
-  it.effect("lists an unanswered category question without learner picks", () =>
-    Effect.gen(function* () {
-      const prompt = yield* formatFocusPrompt({
-        ...choice,
-        responseSpec: {
-          kind: "category",
-          categories: [{ categoryKey: "true", label: "Benar", order: 1 }],
-          statements: [
-            {
-              correctCategoryKey: "true",
-              label: "Dua ditambah dua adalah empat.",
-              order: 1,
-              statementKey: "one",
-            },
-          ],
-        },
-        selection: null,
-        outcome: null,
-      });
-
-      expect(prompt).toContain("- learner result: not answered");
-      expect(prompt).toContain(
-        Arr.join(
-          [
-            "- Dua ditambah dua adalah empat.",
-            "  - correct category: Benar",
-            "  - learner's category: no answer",
-          ],
-          "\n"
-        )
-      );
-    })
-  );
-
-  it.effect("reports an unanswered question without inventing a pick", () =>
-    Effect.gen(function* () {
-      const prompt = yield* formatFocusPrompt({
-        ...choice,
-        selection: null,
-        outcome: null,
-      });
-
-      expect(prompt).toContain("- learner result: not answered");
-      expect(prompt).not.toContain("learner's choice");
-    })
-  );
-
-  it.effect("states a short-answer key beside the learner's typed answer", () =>
-    Effect.gen(function* () {
-      const numeric = yield* formatFocusPrompt({
-        ...choice,
-        responseSpec: {
-          key: {
-            acceptsFractions: false,
-            kind: "number",
-            tolerance: { kind: "absolute", value: "0.1" },
-            value: "4",
-          },
-          kind: "short-answer",
-          language: indonesian,
-        },
-        selection: { kind: "short-answer", number: "4.5", text: "4,5" },
-        outcome: { status: "incorrect" },
-      });
-      const blank = yield* formatFocusPrompt({
-        ...choice,
-        responseSpec: {
-          key: {
-            acceptsFractions: false,
-            kind: "number",
-            value: "4",
-          },
-          kind: "short-answer",
-          language: indonesian,
-        },
-        selection: null,
-        outcome: null,
-      });
-
-      expect(numeric).toContain(
-        "## Answer Key\n\n- correct number: 4 (absolute tolerance 0.1)\n- learner's answer: 4,5"
-      );
-      expect(blank).toContain(
-        "- correct number: 4\n- learner's answer: no answer"
-      );
-    })
-  );
-
-  it.effect(
-    "lists rubric criteria, final-answer keys, and the written answer",
-    () =>
-      Effect.gen(function* () {
-        const prompt = yield* formatFocusPrompt(rubric);
-
-        expect(prompt).toContain(
-          "- learner result: answered, awaiting grading"
-        );
-        expect(prompt).toContain(
-          Arr.join(
-            [
-              "## Rubric",
-              "",
-              "- Langkah lengkap",
-              "  - 0 points: Tidak ada",
-              "  - 2 points: Lengkap",
-              "- Hasil akhir",
-              "  - 0 points: Salah",
-              "  - 1 points: Benar",
-              "  - accepted answers: 4; empat",
-              "  - learner's final answer: 4",
-              "",
-              "## Learner's Written Answer",
-              "",
-              "Dua ditambah dua.",
-            ],
-            "\n"
-          )
-        );
-      })
-  );
-
-  it.effect("reports partial credit and an unanswered rubric", () =>
-    Effect.gen(function* () {
-      const partial = yield* formatFocusPrompt({
-        ...rubric,
-        selection: { finalAnswers: [], kind: "rubric", text: " " },
-        outcome: { points: 1, status: "partial" },
-      });
-      const unanswered = yield* formatFocusPrompt({
-        ...rubric,
-        selection: null,
-        outcome: null,
-      });
-
-      expect(partial).toContain(
-        "- learner result: partially correct, earning 1 points"
-      );
-      expect(partial).toContain("  - learner's final answer: no answer");
-      expect(partial).toContain("no written answer");
-      expect(unanswered).toContain("no written answer");
-    })
-  );
+/** One paragraph label, as a part of an interaction carries it. */
+const label = (text: string) => ({
+  content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
+  type: "doc",
 });
 
-describe("formatFocusTaskPrompt", () => {
-  it("keeps the official explanation authoritative and quotes the exam wording", () => {
-    const prompt = formatFocusTaskPrompt();
+/** A placed question from its contract-shaped interaction and key, graded all or nothing. */
+const question = (interaction: unknown, key: unknown) => ({
+  interaction: Schema.decodeUnknownSync(InteractionSchema)(interaction),
+  key: Schema.decodeUnknownSync(InteractionKeySchema)(key),
+  rule: { kind: "allOrNothing" as const },
+});
 
-    expect(prompt).toContain("source of truth");
-    expect(prompt).toContain(
-      "Quote question text and choices exactly as written."
+const choice = question(
+  {
+    id: "choice",
+    kind: "choice",
+    label: "Jawaban",
+    maxChoices: 2,
+    minChoices: 0,
+    options: [
+      { id: "four", label: label("Empat") },
+      { id: "five", label: label("Lima") },
+      { id: "even", label: label("Genap") },
+    ],
+    shuffle: false,
+  },
+  { correct: ["four", "even"], interaction: "choice", kind: "choice" }
+);
+
+const matrix = question(
+  {
+    columns: [
+      { id: "true", label: label("Benar") },
+      { id: "false", label: label("Salah") },
+    ],
+    id: "matrix",
+    kind: "matrix",
+    label: "Pernyataan",
+    shuffle: false,
+    statements: [
+      { id: "one", label: label("Satu") },
+      { id: "two", label: label("Dua") },
+    ],
+  },
+  {
+    answers: [
+      { column: "true", statement: "one" },
+      { column: "false", statement: "two" },
+    ],
+    interaction: "matrix",
+    kind: "matrix",
+  }
+);
+
+const match = question(
+  {
+    id: "match",
+    kind: "match",
+    label: "Pasangkan",
+    shuffle: false,
+    sources: [{ id: "city", label: label("Jakarta"), maxMatches: 1 }],
+    targets: [
+      { id: "country", label: label("Indonesia"), maxMatches: 1 },
+      { id: "other", label: label("Jerman"), maxMatches: 1 },
+    ],
+  },
+  {
+    interaction: "match",
+    kind: "match",
+    pairs: [{ source: "city", target: "country" }],
+  }
+);
+
+const typed = question(
+  { id: "typed", kind: "textEntry", label: "Ibu kota" },
+  {
+    accepted: {
+      acceptedAnswers: ["Jakarta", "DKI Jakarta"],
+      collapseWhitespace: true,
+      ignoreCase: true,
+      kind: "text",
+    },
+    interaction: "typed",
+    kind: "textEntry",
+  }
+);
+
+const essay = question(
+  { id: "essay", kind: "extendedText", label: "Jelaskan" },
+  {
+    criteria: [
+      {
+        criterion: "steps",
+        levels: [{ descriptor: "Lengkap", level: "complete" }],
+      },
+    ],
+    interaction: "essay",
+    kind: "extendedText",
+  }
+);
+
+describe("nina/prompt/focus", () => {
+  it.each([
+    [["five"], "- Lima (learner's choice)"],
+    [["four"], "- Empat (correct answer, learner's choice)"],
+    [null, "- Empat (correct answer)"],
+  ] as const)(
+    "marks each choice with the key and the learner's pick (%j)",
+    (response, line) => {
+      const answer = formatFocusAnswer(choice, response);
+      expect(answer).toContain("## Answer Choices");
+      expect(answer).toContain(line);
+      expect(answer).toContain("- Genap (correct answer)");
+    }
+  );
+
+  it("lists a table's statements with the correct and the learner's column, or none", () => {
+    expect(
+      formatFocusAnswer(matrix, {
+        cells: [{ column: "false", statement: "one" }],
+      })
+    ).toBe(
+      Arr.join(
+        [
+          "## Statements",
+          "",
+          "- Satu",
+          "  - correct column: Benar",
+          "  - learner's column: Salah",
+          "- Dua",
+          "  - correct column: Salah",
+          "  - learner's column: no answer",
+        ],
+        "\n"
+      )
     );
-    expect(prompt).toContain("not by letters or positions");
+  });
+
+  it("lists a match's pairs, a text entry's accepted answers, and a written answer alone", () => {
+    expect(
+      formatFocusAnswer(match, { pairs: [{ source: "city", target: "other" }] })
+    ).toContain("  - correct pair: Indonesia\n  - learner's pair: Jerman");
+    expect(formatFocusAnswer(typed, { text: " jakarta " })).toBe(
+      Arr.join(
+        [
+          "## Answer Key",
+          "",
+          "- accepted answers: Jakarta; DKI Jakarta",
+          "- learner's answer: jakarta",
+        ],
+        "\n"
+      )
+    );
+    expect(formatFocusAnswer(typed, null)).toContain(
+      "- learner's answer: no answer"
+    );
+    const written: ExamResponse = { text: "Karena dua tambah dua." };
+    expect(formatFocusAnswer(essay, written)).toBe(
+      "## Learner's Answer\n\nKarena dua tambah dua."
+    );
+    expect(formatFocusAnswer(essay, null)).toBe(
+      "## Learner's Answer\n\nno written answer"
+    );
+  });
+
+  it("puts the question, the answer section and the official explanation in order, or notes it is missing", () => {
+    const source = {
+      answer: "## Answer Choices\n\n- Empat (correct answer)",
+      explanation: " Jumlahkan kedua bilangan. ",
+      question: " Berapakah 2 + 2? ",
+      questionLanguage: "id",
+      questionOrder: 3,
+      result: "answered incorrectly" as const,
+    };
+    const prompt = formatFocusPrompt(source);
+    expect(prompt).toContain("question 3 of their finished try-out review");
+    expect(prompt).toContain("- question language: id");
+    expect(prompt).toContain("- learner result: answered incorrectly");
+    expect(prompt.indexOf("Berapakah 2 + 2?")).toBeLessThan(
+      prompt.indexOf("## Answer Choices")
+    );
+    expect(prompt).toContain(
+      "## Official Explanation\n\nJumlahkan kedua bilangan."
+    );
+    expect(formatFocusPrompt({ ...source, explanation: "" })).toContain(
+      "No official explanation in this language."
+    );
+    expect(formatFocusTaskPrompt()).toContain(
+      "Treat the official explanation and the marked correct answer as the source of truth."
+    );
   });
 });

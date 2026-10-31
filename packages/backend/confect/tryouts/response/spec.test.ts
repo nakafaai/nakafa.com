@@ -1,9 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { ResponseRejected } from "@repo/backend/confect/response/model";
 import {
   TryoutResponseErrorWire,
   toTryoutResponseError,
-  toTryoutSelectionError,
 } from "@repo/backend/confect/tryouts/response/spec";
 import { Schema } from "effect";
 
@@ -26,21 +24,6 @@ describe("tryouts/response/spec", () => {
       _tag: "TryoutResponseError",
       code: "TRYOUT_RESPONSE_FAILED",
       message: "Unable to save try-out response.",
-    });
-  });
-
-  it("keeps the deployed selection codes for every rejected selection", () => {
-    expect(
-      toTryoutSelectionError(new ResponseRejected({ reason: "kind" }))
-    ).toMatchObject({
-      _tag: "TryoutResponseSelectionError",
-      code: "TRYOUT_RESPONSE_KIND_MISMATCH",
-    });
-    expect(
-      toTryoutSelectionError(new ResponseRejected({ reason: "selection" }))
-    ).toMatchObject({
-      _tag: "TryoutResponseSelectionError",
-      code: "TRYOUT_RESPONSE_SELECTION_INVALID",
     });
   });
 });

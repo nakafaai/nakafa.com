@@ -5,7 +5,6 @@ import {
   type RollbackArticleStateSchema,
   type RollbackMaterialStateSchema,
   type RollbackPageStateSchema,
-  type RollbackQuestionStateSchema,
   RollbackSnapshotEntrySchema,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
@@ -28,8 +27,7 @@ import { Clock, Effect } from "effect";
 type PresentRollbackState =
   | typeof RollbackArticleStateSchema.Type
   | typeof RollbackMaterialStateSchema.Type
-  | typeof RollbackPageStateSchema.Type
-  | typeof RollbackQuestionStateSchema.Type;
+  | typeof RollbackPageStateSchema.Type;
 
 /** Binds one discriminated content head to its exact rollback state. */
 function presentRollback(head: ContentHead): PresentRollbackState {
@@ -45,15 +43,9 @@ function presentRollback(head: ContentHead): PresentRollbackState {
       state: "material",
     };
   }
-  if (head.family === "page") {
-    return {
-      head,
-      state: "page",
-    };
-  }
   return {
     head,
-    state: "question",
+    state: "page",
   };
 }
 

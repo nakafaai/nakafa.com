@@ -14,11 +14,7 @@ import {
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import {
-  activateTryoutSnapshot,
-  makeTryoutCatalogRow,
-  makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout/snapshot";
+import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
 import { Effect } from "effect";
 
 describe("contentRelease/reference/read", () => {
@@ -177,48 +173,45 @@ describe("contentRelease/reference/read", () => {
       );
     })
   );
-  it.effect("resolves one active signed try-out identity", () =>
-    Effect.gen(function* () {
-      const target = yield* Confect.pipe(Effect.provide(confectLayer));
-      yield* target.run(
-        Effect.gen(function* () {
-          const targetCtx = yield* MutationCtx;
-          const tryout = (yield* makeTryoutCatalogRow("en")).record.row;
-          yield* activateTryoutSnapshot(targetCtx, {
-            catalog: [tryout, (yield* makeTryoutCatalogRow("id")).record.row],
-            placements: [
-              (yield* makeTryoutPlacementRow("en")).record.row,
-              (yield* makeTryoutPlacementRow("id")).record.row,
-            ],
-          });
-          for (const input of [
-            {
-              contentId: tryout.graph.assetId,
-              kind: "content" as const,
-            },
-            {
-              kind: "route" as const,
-              appLocale: "en" as const,
-              publicPath: "try-out/indonesia",
-            },
-          ]) {
-            expect(
-              yield* (yield* QueryRunner).runQuery(
-                refs.public.contentRelease.reference.read,
-                {
-                  input,
-                }
-              )
-            ).toMatchObject({
-              content_id: tryout.graph.assetId,
-              route: "try-out/indonesia",
-              section: "tryout",
-              title: tryout.title,
-            });
-          }
-        })
-      );
-    })
+  it.effect(
+    "resolves one active try-out route by its route and graph asset",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const targetCtx = yield* MutationCtx;
+            yield* Effect.promise(() =>
+              activateAssessmentTestSnapshot(targetCtx)
+            );
+            for (const input of [
+              {
+                contentId: "asset:en:tryout:country",
+                kind: "content" as const,
+              },
+              {
+                kind: "route" as const,
+                appLocale: "en" as const,
+                publicPath: "try-out/indonesia-en",
+              },
+            ]) {
+              expect(
+                yield* (yield* QueryRunner).runQuery(
+                  refs.public.contentRelease.reference.read,
+                  {
+                    input,
+                  }
+                )
+              ).toMatchObject({
+                content_id: "asset:en:tryout:country",
+                route: "try-out/indonesia-en",
+                section: "tryout",
+                title: "Try-out",
+              });
+            }
+          })
+        );
+      })
   );
   it.effect(
     "rejects a Quran asset index that drifted from its signed row",

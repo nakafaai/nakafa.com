@@ -2,6 +2,7 @@ import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
+import { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { LetterScript } from "@repo/backend/confect/exams/letters";
 import { QuestionPoints } from "@repo/backend/confect/exams/question";
 import {
@@ -9,7 +10,6 @@ import {
   Verdict,
 } from "@repo/backend/confect/exams/results/schema";
 import { SittingView } from "@repo/backend/confect/exams/sittings/contract";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";

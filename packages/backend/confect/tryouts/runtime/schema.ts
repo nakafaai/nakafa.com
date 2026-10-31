@@ -1,16 +1,15 @@
-import { TryoutMarksSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { Schema } from "effect";
-export const tryoutSectionSnapshotValidator = Schema.Struct({
-  /** Signed marks that score this section of a penalized set. */
-  marks: Schema.optionalKey(TryoutMarksSchema),
+
+/**
+ * One section of an attempt, frozen when it starts: its key and order and its public path from the
+ * catalog, its question count from the paper's places, and its time limit from the profile's template.
+ */
+export const tryoutSectionValidator = Schema.Struct({
   publicPath: Schema.optionalKey(Schema.String),
   questionCount: Schema.Finite,
-  questionSourcePath: Schema.String,
-  sectionIdentity: Schema.String,
   sectionKey: tryoutRouteKeyValidator,
   sectionOrder: Schema.Finite,
-  sectionRowHash: Schema.String,
-  sourceRevision: Schema.String,
   timeLimitSeconds: Schema.Finite,
 });
+export type TryoutSection = typeof tryoutSectionValidator.Type;

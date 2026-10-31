@@ -217,58 +217,53 @@ describe("contentRelease/models", () => {
       phase: "ready",
     });
   });
-  it.each(["page", "question"] as const)(
-    "claims unchanged model buffers immediately for %s releases",
-    async (family) => {
-      const t = convexTest(schema, convexModules);
-      await t.mutation((ctx) => seedScopedPair(ctx, [family]));
-      await expect(t.mutation(prepare, activationArgs)).resolves.toEqual({
-        kind: "prepared",
-      });
-      const prepared = await t.run(async (ctx) => ({
-        build: await ctx.db.query("contentModelBuilds").unique(),
-        jobs: await ctx.db.system.query("_scheduled_functions").collect(),
-        state: await ctx.db.query("contentState").unique(),
-      }));
-      expect(prepared.jobs).toEqual([]);
-      expect(prepared.build).toMatchObject({
-        phase: "ready",
-        slots: {
-          articleBaseSlot: "blue",
-          articleTargetSlot: "blue",
-          materialBaseSlot: "blue",
-          materialTargetSlot: "blue",
-          searchBaseSlot: "blue",
-          searchTargetSlot: "blue",
-        },
-      });
-      expect(prepared.state?.activeReleaseId).toBeUndefined();
-      await expect(t.mutation(activate, activationArgs)).resolves.toEqual({
-        kind: "activated",
-        receipt: expectedReceipt(CANDIDATE),
-      });
-      const active = await t.run((ctx) =>
-        ctx.db.query("contentState").unique()
-      );
-      expect(active).toMatchObject({
-        activeReleaseId: CANDIDATE.releaseId,
-        articleReleaseId: CANDIDATE.releaseId,
-        articleSlot: "blue",
-        materialReleaseId: CANDIDATE.releaseId,
-        materialSlot: "blue",
-        searchReleaseId: CANDIDATE.releaseId,
-        searchSlot: "blue",
-      });
-      await expect(
-        t.query(internal.contentRelease.models.status, {
-          releaseId: CANDIDATE.releaseId,
-        })
-      ).resolves.toEqual({
-        phase: "completed",
+  it("claims unchanged model buffers immediately for page releases", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => seedScopedPair(ctx, ["page"]));
+    await expect(t.mutation(prepare, activationArgs)).resolves.toEqual({
+      kind: "prepared",
+    });
+    const prepared = await t.run(async (ctx) => ({
+      build: await ctx.db.query("contentModelBuilds").unique(),
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+    expect(prepared.jobs).toEqual([]);
+    expect(prepared.build).toMatchObject({
+      phase: "ready",
+      slots: {
+        articleBaseSlot: "blue",
+        articleTargetSlot: "blue",
+        materialBaseSlot: "blue",
+        materialTargetSlot: "blue",
+        searchBaseSlot: "blue",
+        searchTargetSlot: "blue",
+      },
+    });
+    expect(prepared.state?.activeReleaseId).toBeUndefined();
+    await expect(t.mutation(activate, activationArgs)).resolves.toEqual({
+      kind: "activated",
+      receipt: expectedReceipt(CANDIDATE),
+    });
+    const active = await t.run((ctx) => ctx.db.query("contentState").unique());
+    expect(active).toMatchObject({
+      activeReleaseId: CANDIDATE.releaseId,
+      articleReleaseId: CANDIDATE.releaseId,
+      articleSlot: "blue",
+      materialReleaseId: CANDIDATE.releaseId,
+      materialSlot: "blue",
+      searchReleaseId: CANDIDATE.releaseId,
+      searchSlot: "blue",
+    });
+    await expect(
+      t.query(internal.contentRelease.models.status, {
         releaseId: CANDIDATE.releaseId,
-      });
-    }
-  );
+      })
+    ).resolves.toEqual({
+      phase: "completed",
+      releaseId: CANDIDATE.releaseId,
+    });
+  });
   it("clears multiple pages of abandoned search rows before switching article-owned buffers", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {

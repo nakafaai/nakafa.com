@@ -19,10 +19,9 @@ import {
   makeQuranSnapshotRow,
 } from "@repo/backend/test/quran/snapshot";
 import {
-  activateTryoutSnapshot,
-  makeTryoutCatalogRow,
-  makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout/snapshot";
+  activateAssessmentTestSnapshot,
+  makeAssessmentTestSnapshot,
+} from "@repo/backend/test/snapshot/assessment";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Match, Struct } from "effect";
 
@@ -150,27 +149,21 @@ describe("contentRelease/snapshot/read", () => {
         });
       })
   );
-  it.live.each(["quran", "tryout"] as const)(
+  it.live.each(["quran", "assessment"] as const)(
     "replays exact %s snapshot bytes and rejects lost rows or manifests",
     (family) =>
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
         const quran = makeQuranSearch("en", 1, "Technical search text");
-        const runtimeServices = yield* Effect.context<never>();
-        const catalog = yield* makeTryoutCatalogRow();
-        const placement = yield* makeTryoutPlacementRow();
         const snapshotId = yield* Effect.promise(() =>
-          t.mutation((ctx) =>
+          t.mutation(async (ctx) =>
             family === "quran"
               ? activateQuranSnapshot(ctx, [quran])
-              : Effect.runPromiseWith(runtimeServices)(
-                  activateTryoutSnapshot(ctx, {
-                    catalog: [catalog.record.row],
-                    placements: [placement.record.row],
-                  })
-                )
+              : (await activateAssessmentTestSnapshot(ctx)).snapshotId
           )
         );
+        // The fixture's rows are rebuilt here, outside Convex, so their JSON
+        // keeps the key order the stored text was written with.
         const rowJson =
           family === "quran"
             ? [
@@ -178,7 +171,10 @@ describe("contentRelease/snapshot/read", () => {
                   yield* makeQuranSnapshotRow(snapshotId, quran)
                 ),
               ]
-            : Arr.map([catalog, placement], canonicalizeContentSnapshotRow);
+            : Arr.map(
+                (yield* makeAssessmentTestSnapshot()).rows,
+                canonicalizeContentSnapshotRow
+              );
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
             ctx.db.insert("snapshotBatches", {
@@ -219,9 +215,9 @@ describe("contentRelease/snapshot/read", () => {
               assert(row);
               await ctx.db.delete("quranRows", row._id);
             } else {
-              const row = await ctx.db.query("tryoutPlacements").first();
+              const row = await ctx.db.query("assessmentRows").first();
               assert(row);
-              await ctx.db.delete("tryoutPlacements", row._id);
+              await ctx.db.delete("assessmentRows", row._id);
             }
           })
         );

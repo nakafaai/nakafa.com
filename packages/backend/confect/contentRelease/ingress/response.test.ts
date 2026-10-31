@@ -20,11 +20,10 @@ describe("content publication response encoding", () => {
             active: null,
             candidate: null,
             recovery: null,
-            tryoutRuntimeBundle: null,
           },
         })
       ).toEqual({
-        body: '{"ok":true,"operation":"current","value":{"active":null,"candidate":null,"recovery":null,"tryoutRuntimeBundle":null}}',
+        body: '{"ok":true,"operation":"current","value":{"active":null,"candidate":null,"recovery":null}}',
         status: 200,
       });
       expect(
