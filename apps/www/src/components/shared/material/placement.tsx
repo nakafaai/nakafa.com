@@ -1,18 +1,31 @@
 import { Effect, Fiber, Option } from "effect";
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { useStore } from "zustand";
 import { BreadcrumbHeaderSegment } from "@/components/shared/breadcrumb/header";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { SidebarRightHeader } from "@/components/shared/outline/panel";
 import {
   type MaterialNavigationPage,
+  type MaterialPlacement,
   readMaterialNavigation,
 } from "@/lib/content/material/navigation";
 import {
   createPlacementStore,
+  keepPlacement,
   type PlacementStore,
-  startMaterialPlacement,
+  readLessonPlacementOnce,
 } from "@/lib/content/material/placement";
+import {
+  holdPlacementPaint,
+  settlePlacementPaint,
+} from "@/lib/content/material/prepaint";
 import { publicPathTarget } from "@/lib/routing/target";
 
 /** One lesson page's navigation model and the store of its verified placement. */
@@ -23,32 +36,64 @@ const PlacementContext = createContext<{
 
 /**
  * Holds the curriculum placement that the `ctx` hint of the reader's address
- * names. The server renders the lesson without one, and so does the render that
- * hydrates it. Once the page has hydrated the browser verifies the hint, and the
- * breadcrumb, the lesson's own link and its pagination follow it. The context
- * value never changes, so the streamed lesson keeps its HTML.
+ * names. The lesson's loader reads it in the browser before a client navigation
+ * commits, so the first render is the final one. The router keys a lesson's
+ * match by its path alone, because the static page must hydrate under any hint,
+ * so the loader's placement counts only when it was read for this address's
+ * hint. Otherwise, as after a hard load or when the router reuses a lesson's
+ * match, the path stays hidden in its row from before the first paint (the
+ * root's prepaint script on a hard load, this provider's layout effect after a
+ * navigation) and shows once the placement of this hint is read. The loader
+ * and the provider share one read per lesson and hint. The context value never
+ * changes, so the streamed lesson keeps its HTML.
  */
 export function MaterialPlacementProvider({
   children,
-  ctx,
+  hint,
   locale,
   page,
+  placement,
+  placementHint,
 }: {
   children: ReactNode;
-  ctx: string | undefined;
+  /** The `ctx` hint of the reader's address. */
+  hint: string | undefined;
   locale: string;
   page: MaterialNavigationPage;
+  placement: MaterialPlacement | null;
+  /** The hint that the loader read the placement for, `""` for none, or null when it ran on the server. */
+  placementHint: string | null;
 }) {
-  const [value] = useState(() => ({ page, store: createPlacementStore() }));
+  const known = placementHint === (hint ?? "");
+  const [value] = useState(() => ({
+    page,
+    store: createPlacementStore(known ? placement : null),
+  }));
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (known) {
+      keepPlacement(value.store, placement);
+      settlePlacementPaint();
+      return;
+    }
+    if (hint !== undefined) {
+      holdPlacementPaint();
+    }
     const reading = Effect.runFork(
-      startMaterialPlacement(value.store, { ctx, locale, page: value.page })
+      readLessonPlacementOnce({ ctx: hint, locale, page: value.page }).pipe(
+        Effect.tap((read) =>
+          Effect.sync(() => keepPlacement(value.store, read))
+        ),
+        Effect.ensuring(Effect.sync(settlePlacementPaint))
+      )
     );
     return () => {
       Effect.runFork(Fiber.interrupt(reading));
     };
-  }, [ctx, locale, value]);
+  }, [hint, known, locale, placement, value]);
+
+  // A lesson left before its placement arrived never keeps the next page's path hidden.
+  useEffect(() => settlePlacementPaint, []);
 
   return <PlacementContext value={value}>{children}</PlacementContext>;
 }

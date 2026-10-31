@@ -44,6 +44,7 @@ import {
   toMaterialHref,
   toMaterialNavigationPage,
 } from "@/lib/content/material/navigation";
+import { readLessonPlacementOnce } from "@/lib/content/material/placement";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraUrl } from "@/lib/content/repository";
@@ -162,7 +163,12 @@ export const Route = createFileRoute(
   "/$locale/_main/materials/$subject/$topic/$"
 )({
   validateSearch: Schema.toStandardSchemaV1(MaterialSearch),
-  loader: async ({ params }) => {
+  // In the browser the loader reads the placement that the address's `ctx` hint
+  // names before a client navigation commits, and names the hint it read for, so
+  // the provider can tell whether it belongs to the address (the match is keyed
+  // by the lesson's path alone). The prerender reads none: the static page cannot
+  // see the query.
+  loader: async ({ location, params }) => {
     const lesson = Arr.filter(
       (params._splat ?? "").split("/"),
       (segment) => segment !== ""
@@ -173,14 +179,31 @@ export const Route = createFileRoute(
       subject: params.subject,
       topic: params.topic,
     });
-    return Match.value(read).pipe(
+    const page = Match.value(read).pipe(
       Match.tagsExhaustive({
-        Found: ({ page }) => page,
+        Found: ({ page: found }) => found,
         NotFound: () => {
           throw notFound();
         },
       })
     );
+    const ctx = Option.getOrUndefined(
+      Option.flatMapNullishOr(
+        Schema.decodeOption(MaterialSearch)(location.search),
+        (search) => search.ctx
+      )
+    );
+    if (import.meta.env.SSR) {
+      return { ...page, placement: null, placementHint: null };
+    }
+    const placement = await Effect.runPromise(
+      readLessonPlacementOnce({
+        ctx,
+        locale: params.locale,
+        page: page.navigation,
+      })
+    );
+    return { ...page, placement, placementHint: ctx ?? "" };
   },
   head: ({ loaderData }) => {
     if (loaderData === undefined) {
@@ -225,9 +248,12 @@ function MaterialPage() {
   const { metadata, headings, labels, route } = page;
   return (
     <MaterialPlacementProvider
-      ctx={ctx}
+      hint={ctx}
+      key={`${route.publicPath}?${ctx ?? ""}`}
       locale={page.locale}
       page={page.navigation}
+      placement={page.placement}
+      placementHint={page.placementHint}
     >
       <LayoutMaterial>
         <ContentViewTracker
@@ -241,13 +267,17 @@ function MaterialPage() {
           <LayoutMaterialContent>
             <ContentHeader
               breadcrumb={
-                <BreadcrumbHeaderPath
-                  home={HOME_TARGET}
-                  homeLabel={labels.home}
-                  items={[]}
-                >
-                  <MaterialBreadcrumb title={metadata.title} />
-                </BreadcrumbHeaderPath>
+                // Hidden in its row while the root's prepaint script marks the
+                // placement pending, so the path shows only in its final form.
+                <div className="contents [html[data-placement=pending]_&]:invisible">
+                  <BreadcrumbHeaderPath
+                    home={HOME_TARGET}
+                    homeLabel={labels.home}
+                    items={[]}
+                  >
+                    <MaterialBreadcrumb title={metadata.title} />
+                  </BreadcrumbHeaderPath>
+                </div>
               }
             >
               <OpenContent

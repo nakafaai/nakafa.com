@@ -32,6 +32,7 @@ import {
 } from "@/components/state/localized";
 import { ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/analytics/consent/bootstrap";
 import { signedInHintScript } from "@/lib/auth/hint";
+import { PLACEMENT_PREPAINT_SCRIPT } from "@/lib/content/material/prepaint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
 import { KEPT_ACCOUNT_SCRIPT } from "@/lib/identity/prepaint";
@@ -148,6 +149,10 @@ function RootDocument({ children }: { children: ReactNode }) {
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: THEME_PREPAINT_SCRIPT }}
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{ __html: PLACEMENT_PREPAINT_SCRIPT }}
         />
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
