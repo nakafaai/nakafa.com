@@ -43,6 +43,9 @@ export const Route = createFileRoute("/$locale/_main/_app")({
   headers: () => ({ "Cache-Control": "private, no-store" }),
   component: AppLayout,
   errorComponent: AppError,
+  // The router draws this boundary only while the split error component's chunk
+  // is unloaded, and dropping it remounts every page below, so it stays.
+  wrapInSuspense: true,
 });
 
 /** Renders the signed-in screens with their own messages joined to the shell's. */

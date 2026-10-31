@@ -48,6 +48,9 @@ export const Route = createFileRoute("/$locale/_entry")({
     }),
   component: EntryLayout,
   errorComponent: EntryError,
+  // The router draws this boundary only while the split error component's chunk
+  // is unloaded, and dropping it remounts every page below, so it stays.
+  wrapInSuspense: true,
 });
 
 /** Renders the entry frame around the entry page. */
