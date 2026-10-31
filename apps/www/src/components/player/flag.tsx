@@ -17,11 +17,15 @@ const flagButton = cva(
  * Flags the current question to come back to it, or takes its flag off, when
  * the player shows one question at a time. The list flags each question on the
  * question itself (`PlayerQuestionFlag`), because the question at its reading
- * line is not always the one the learner reads, so the list shows no flag here
- * and the footer's centre holds the navigator opener alone, centred between
- * previous and next. The button keeps one name and one width, and says whether
- * the question is flagged through its pressed state. The question's flag
- * changes at once, so a press never waits for the server.
+ * line is not always the one the learner reads, so the list shows no flag here.
+ * The flag stands beside the footer's centre, out of the row's flow: before the
+ * navigator opener below the large breakpoint, and on the centre itself from
+ * it, where no opener shows. So the centre's width never depends on the view,
+ * the opener stays on the screen's middle, and nothing moves when the view
+ * changes. The button keeps one name and one width, its name for a screen
+ * reader alone on a phone, and says whether the question is flagged through its
+ * pressed state. The question's flag changes at once, so a press never waits
+ * for the server.
  */
 export function PlayerFlag({
   locked,
@@ -48,14 +52,17 @@ export function PlayerFlag({
     <Button
       aria-keyshortcuts="F"
       aria-pressed={flagged}
-      className={flagButton()}
+      className={flagButton({
+        className:
+          "absolute end-full top-1/2 me-2 -translate-y-1/2 lg:start-1/2 lg:end-auto lg:me-0 lg:-translate-x-1/2 lg:rtl:translate-x-1/2",
+      })}
       disabled={locked || Option.isNone(question)}
       onClick={() => Option.map(question, (candidate) => candidate.flag())}
       type="button"
       variant="outline"
     >
       <HugeIcons icon={Flag02Icon} />
-      {t("flag")}
+      <span className="max-sm:sr-only">{t("flag")}</span>
     </Button>
   );
 }
