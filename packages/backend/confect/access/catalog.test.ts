@@ -10,6 +10,7 @@ import {
 } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { Rule } from "@repo/backend/confect/access/schema";
+import { WebhookChange } from "@repo/backend/confect/integrations/hook";
 import { JournalEntry } from "@repo/backend/confect/journal/schema";
 import { person } from "@repo/backend/confect/tenancy/kinds";
 import { Array as Arr, Option, Order, pipe, Record, Schema } from "effect";
@@ -95,7 +96,7 @@ describe("access/catalog", () => {
     expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
   });
 
-  it("opens exactly the roster reads of a school to the integration role", () => {
+  it("opens exactly the reads a school's clients need to the integration role", () => {
     const opened = Arr.flatMap(entries, (entry) =>
       Arr.filter(Record.keys<string, Rule>(entry.actions), (action) =>
         opensTo(action, "integration")
@@ -103,8 +104,11 @@ describe("access/catalog", () => {
     );
     expect(Arr.sort(Arr.dedupe(opened), Order.String)).toEqual([
       "cohort.view",
+      "grade.export",
+      "guardian.view",
       "period.view",
       "person.view",
+      "unit.view",
     ]);
   });
 
@@ -298,6 +302,15 @@ describe("access/catalog", () => {
       );
     });
     expect(undeclared).toEqual([]);
+  });
+
+  it("lists every published change as a webhook change", () => {
+    expect(
+      Arr.sort(
+        Arr.flatMap(entries, (entry): readonly string[] => entry.published),
+        Order.String
+      )
+    ).toEqual(WebhookChange.literals);
   });
 
   it("joins tenant actions from the tenant kind and every extension of it", () => {

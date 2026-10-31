@@ -22,6 +22,23 @@ export class ActionClosed extends Schema.TaggedError<ActionClosed>()(
   }
 ) {}
 
+const webhookLimit = Schema.Literal("WEBHOOK_LIMIT");
+
+/** A client that already holds as many active webhooks as one client may. */
+export class WebhookLimit extends Schema.TaggedError<WebhookLimit>()(
+  "WebhookLimit",
+  {
+    code: webhookLimit.pipe(
+      Schema.withConstructorDefault(Effect.succeed(webhookLimit.literal))
+    ),
+    message: Schema.String.pipe(
+      Schema.withConstructorDefault(
+        Effect.succeed("This client holds as many webhooks as it may.")
+      )
+    ),
+  }
+) {}
+
 const deviceUnknown = Schema.Literal("DEVICE_UNKNOWN");
 
 /** A user code that names no pending device of the school: mistyped, expired, or already decided. */

@@ -34,6 +34,8 @@ const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
 const GUARDIAN_CODE_SWEEP_INTERVAL_HOURS = 1;
 const INBOX_SWEEP_INTERVAL_MINUTES = 1;
 const INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS = 1;
+const WEBHOOK_DELIVERY_PRUNE_INTERVAL_HOURS = 1;
+const WEBHOOK_SWEEP_INTERVAL_MINUTES = 1;
 const INVITE_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
@@ -43,6 +45,22 @@ const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
  * never starts.
  */
 export default CronJobs.make()
+  .add(
+    CronJob.make(
+      "sweep school webhooks",
+      Duration.minutes(WEBHOOK_SWEEP_INTERVAL_MINUTES),
+      internal.integrations.hooks.sweep,
+      { cursor: null }
+    )
+  )
+  .add(
+    CronJob.make(
+      "delete old webhook deliveries",
+      Duration.hours(WEBHOOK_DELIVERY_PRUNE_INTERVAL_HOURS),
+      internal.integrations.hooks.prune,
+      {}
+    )
+  )
   .add(
     CronJob.make(
       "sync due connectors",

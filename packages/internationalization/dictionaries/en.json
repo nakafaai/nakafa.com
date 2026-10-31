@@ -527,6 +527,59 @@
     "room-move-save": "Save"
   },
   "SchoolSettings": {
+    "webhooks": "Webhooks",
+    "webhooks-search": "Find a webhook",
+    "webhooks-empty": "No webhook sends changes yet.",
+    "webhook-add": "Create webhook",
+    "webhook-add-description": "A webhook tells another system when something changes in this school.",
+    "webhook-create": "Create",
+    "webhook-edit": "Edit",
+    "webhook-edit-description": "Change where it posts and what it sends.",
+    "webhook-url": "Receiver address",
+    "webhook-url-placeholder": "https://system.school.org/nakafa",
+    "webhook-url-description": "A public https address that accepts a POST.",
+    "webhook-url-error": "Use a public https address.",
+    "webhook-client": "Client",
+    "webhook-client-placeholder": "Choose a client",
+    "webhook-changes": "Changes",
+    "webhook-change": {
+      "grade": {
+        "released": "Grade released"
+      },
+      "grant": {
+        "created": "Role given",
+        "ended": "Role ended"
+      },
+      "guardian": {
+        "linked": "Parent linked",
+        "withdrawn": "Parent withdrew"
+      },
+      "unit": {
+        "created": "Unit created"
+      }
+    },
+    "webhook-revoke-title": "Revoke this webhook?",
+    "webhook-revoke-description": "It stops sending changes at once.",
+    "webhook-secret-title": "Signing secret",
+    "webhook-secret-description": "Copy it now, because it will not be shown again. Your system checks each request with it.",
+    "webhook-deliveries": "Deliveries",
+    "webhook-deliveries-empty": "No change has been sent yet.",
+    "delivery-status": {
+      "delivered": "Delivered",
+      "dropped": "Not sent",
+      "due": "Waiting",
+      "failed": "Failed"
+    },
+    "delivery-reason": {
+      "access": "The client no longer reads this.",
+      "address": "The address is not public.",
+      "deadline": "It took too long.",
+      "network": "It could not be reached.",
+      "revoked": "The webhook has ended.",
+      "status": "It refused the change."
+    },
+    "delivery-attempt": "Attempt {attempt}",
+    "delivery-resend": "Send again",
     "student-add-name-placeholder": "Ayu Lestari",
     "invite-name-placeholder": "Budi Santoso",
     "invite-email-placeholder": "budi@example.com",
@@ -1051,6 +1104,15 @@
     "client-actions": "Actions",
     "client-actions-footer": "A client keeps at least one action.",
     "client-action": {
+      "grade": {
+        "export": "Read released grades"
+      },
+      "guardian": {
+        "view": "View guardian links"
+      },
+      "unit": {
+        "view": "View units"
+      },
       "cohort": {
         "view": "View classes"
       },
@@ -2341,6 +2403,10 @@
     "school-refusal-provision": {
       "title": "This school can't open with these details.",
       "description": "Check the address and the school's units."
+    },
+    "school-refusal-webhook-limit": {
+      "title": "A client holds ten webhooks at most.",
+      "description": "Revoke one it no longer needs."
     },
     "school-refusal-unit-limit": {
       "title": "No room for another school.",

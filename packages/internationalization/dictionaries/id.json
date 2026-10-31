@@ -527,6 +527,59 @@
     "room-move-save": "Simpan"
   },
   "SchoolSettings": {
+    "webhooks": "Webhook",
+    "webhooks-search": "Cari webhook",
+    "webhooks-empty": "Belum ada webhook yang mengirim perubahan.",
+    "webhook-add": "Buat webhook",
+    "webhook-add-description": "Webhook memberi tahu sistem lain saat ada perubahan di sekolah ini.",
+    "webhook-create": "Buat",
+    "webhook-edit": "Ubah",
+    "webhook-edit-description": "Ubah alamat tujuan dan apa yang dikirim.",
+    "webhook-url": "Alamat penerima",
+    "webhook-url-placeholder": "https://sistem.sekolah.sch.id/nakafa",
+    "webhook-url-description": "Alamat https publik yang menerima POST.",
+    "webhook-url-error": "Pakai alamat https publik.",
+    "webhook-client": "Klien",
+    "webhook-client-placeholder": "Pilih klien",
+    "webhook-changes": "Perubahan",
+    "webhook-change": {
+      "grade": {
+        "released": "Nilai dirilis"
+      },
+      "grant": {
+        "created": "Peran diberikan",
+        "ended": "Peran berakhir"
+      },
+      "guardian": {
+        "linked": "Orang tua tertaut",
+        "withdrawn": "Orang tua menarik diri"
+      },
+      "unit": {
+        "created": "Unit dibuat"
+      }
+    },
+    "webhook-revoke-title": "Cabut webhook ini?",
+    "webhook-revoke-description": "Pengiriman perubahan langsung berhenti.",
+    "webhook-secret-title": "Rahasia tanda tangan",
+    "webhook-secret-description": "Salin sekarang, karena tidak akan ditampilkan lagi. Sistemmu memeriksa setiap permintaan dengannya.",
+    "webhook-deliveries": "Pengiriman",
+    "webhook-deliveries-empty": "Belum ada perubahan yang dikirim.",
+    "delivery-status": {
+      "delivered": "Terkirim",
+      "dropped": "Tidak dikirim",
+      "due": "Menunggu",
+      "failed": "Gagal"
+    },
+    "delivery-reason": {
+      "access": "Klien tidak lagi membaca ini.",
+      "address": "Alamatnya tidak publik.",
+      "deadline": "Terlalu lama.",
+      "network": "Tidak bisa dihubungi.",
+      "revoked": "Webhook sudah berakhir.",
+      "status": "Penerima menolak."
+    },
+    "delivery-attempt": "Percobaan {attempt}",
+    "delivery-resend": "Kirim lagi",
     "student-add-name-placeholder": "Ayu Lestari",
     "invite-name-placeholder": "Budi Santoso",
     "invite-email-placeholder": "budi@example.com",
@@ -1051,6 +1104,15 @@
     "client-actions": "Aksi",
     "client-actions-footer": "Klien selalu memiliki paling sedikit satu aksi.",
     "client-action": {
+      "grade": {
+        "export": "Baca nilai yang dirilis"
+      },
+      "guardian": {
+        "view": "Lihat tautan orang tua"
+      },
+      "unit": {
+        "view": "Lihat unit"
+      },
       "cohort": {
         "view": "Lihat kelas"
       },
@@ -2341,6 +2403,10 @@
     "school-refusal-provision": {
       "title": "Sekolah ini tidak bisa dibuka dengan data tersebut.",
       "description": "Periksa alamat dan unit sekolahnya."
+    },
+    "school-refusal-webhook-limit": {
+      "title": "Satu klien memegang paling banyak sepuluh webhook.",
+      "description": "Cabut yang tidak lagi dipakai."
     },
     "school-refusal-unit-limit": {
       "title": "Batas sekolah sudah penuh.",

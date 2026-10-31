@@ -45,7 +45,7 @@ export const guardianLinkKind = Kind.make("guardianLink", "guardianLinks", {
       access: "read",
       grantedBy: "roles",
       relations: ["guardian"],
-      roles: ["admin", "staff", "principal"],
+      roles: ["admin", "staff", "principal", "integration"],
     },
     "guardian.withdraw": {
       access: "transition",

@@ -527,6 +527,59 @@
     "room-move-save": "Speichern"
   },
   "SchoolSettings": {
+    "webhooks": "Webhooks",
+    "webhooks-search": "Webhook suchen",
+    "webhooks-empty": "Noch kein Webhook sendet Änderungen.",
+    "webhook-add": "Webhook erstellen",
+    "webhook-add-description": "Ein Webhook meldet einem anderen System, wenn sich in dieser Schule etwas ändert.",
+    "webhook-create": "Erstellen",
+    "webhook-edit": "Bearbeiten",
+    "webhook-edit-description": "Ändere, wohin er sendet und was er sendet.",
+    "webhook-url": "Empfängeradresse",
+    "webhook-url-placeholder": "https://system.schule.de/nakafa",
+    "webhook-url-description": "Eine öffentliche https-Adresse, die POST annimmt.",
+    "webhook-url-error": "Nutze eine öffentliche https-Adresse.",
+    "webhook-client": "Client",
+    "webhook-client-placeholder": "Client wählen",
+    "webhook-changes": "Änderungen",
+    "webhook-change": {
+      "grade": {
+        "released": "Note freigegeben"
+      },
+      "grant": {
+        "created": "Rolle vergeben",
+        "ended": "Rolle beendet"
+      },
+      "guardian": {
+        "linked": "Eltern verknüpft",
+        "withdrawn": "Eltern zurückgezogen"
+      },
+      "unit": {
+        "created": "Einheit erstellt"
+      }
+    },
+    "webhook-revoke-title": "Diesen Webhook widerrufen?",
+    "webhook-revoke-description": "Er sendet sofort keine Änderungen mehr.",
+    "webhook-secret-title": "Signaturgeheimnis",
+    "webhook-secret-description": "Kopiere es jetzt, denn es wird nicht noch einmal angezeigt. Dein System prüft damit jede Anfrage.",
+    "webhook-deliveries": "Zustellungen",
+    "webhook-deliveries-empty": "Noch keine Änderung gesendet.",
+    "delivery-status": {
+      "delivered": "Zugestellt",
+      "dropped": "Nicht gesendet",
+      "due": "Wartet",
+      "failed": "Fehlgeschlagen"
+    },
+    "delivery-reason": {
+      "access": "Der Client liest das nicht mehr.",
+      "address": "Die Adresse ist nicht öffentlich.",
+      "deadline": "Es hat zu lange gedauert.",
+      "network": "Nicht erreichbar.",
+      "revoked": "Der Webhook ist beendet.",
+      "status": "Der Empfänger hat abgelehnt."
+    },
+    "delivery-attempt": "Versuch {attempt}",
+    "delivery-resend": "Erneut senden",
     "student-add-name-placeholder": "Ayu Lestari",
     "invite-name-placeholder": "Budi Santoso",
     "invite-email-placeholder": "budi@example.com",
@@ -1051,6 +1104,15 @@
     "client-actions": "Aktionen",
     "client-actions-footer": "Ein Client behält mindestens eine Aktion.",
     "client-action": {
+      "grade": {
+        "export": "Freigegebene Noten lesen"
+      },
+      "guardian": {
+        "view": "Verknüpfungen mit Eltern ansehen"
+      },
+      "unit": {
+        "view": "Einheiten ansehen"
+      },
       "cohort": {
         "view": "Klassen ansehen"
       },
@@ -2341,6 +2403,10 @@
     "school-refusal-provision": {
       "title": "Diese Schule lässt sich so nicht eröffnen.",
       "description": "Prüfe die Adresse und die Einheiten der Schule."
+    },
+    "school-refusal-webhook-limit": {
+      "title": "Ein Client hält höchstens zehn Webhooks.",
+      "description": "Widerrufe einen, den er nicht mehr braucht."
     },
     "school-refusal-unit-limit": {
       "title": "Kein Platz für eine weitere Schule.",

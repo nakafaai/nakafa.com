@@ -34,6 +34,9 @@ import {
  * A refused change is undone by Confect when the server answers.
  */
 
+/** One webhook as the school's list holds it. */
+type Webhook = Ref.Returns<typeof integrations.webhooks.list>["page"][number];
+
 /** The school as the settings pages read it: the viewer query of the tenant. */
 type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
 
@@ -300,6 +303,84 @@ export const revokeClientChange: OptimisticUpdate<
   changeClientLists(localStore, slug, (page) =>
     revokeClient(page, clientId, revokedAt)
   );
+};
+
+/** Changes the page of every loaded list of webhooks of one school. */
+function changeWebhookLists(
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
+  slug: TenantSlug,
+  change: (page: readonly Webhook[]) => Webhook[]
+) {
+  for (const query of localStore.getAllQueries(integrations.webhooks.list)) {
+    if (Option.isSome(query.value) && query.args.slug === slug) {
+      localStore.setQuery(
+        integrations.webhooks.list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: change(query.value.value.page),
+        })
+      );
+    }
+  }
+}
+
+/** Shows a webhook's new receiver and changes at once. */
+export const changeWebhookChange: OptimisticUpdate<
+  typeof integrations.webhooks.change
+> = (localStore, { changes, slug, url, webhookId }) => {
+  changeWebhookLists(localStore, slug, (page) =>
+    Arr.map(page, (webhook) =>
+      webhook.id === webhookId
+        ? Struct.assign(webhook, { changes, url })
+        : webhook
+    )
+  );
+};
+
+/** Shows a webhook revoked at once. */
+export const revokeWebhookChange: OptimisticUpdate<
+  typeof integrations.webhooks.revoke
+> = (localStore, { slug, webhookId }) => {
+  changeWebhookLists(localStore, slug, (page) =>
+    Arr.map(page, (webhook) =>
+      webhook.id === webhookId
+        ? Struct.assign(webhook, { status: "revoked" as const })
+        : webhook
+    )
+  );
+};
+
+/** Lists one more attempt of a change at the top of its webhook's log, waiting. */
+export const resendDeliveryChange: OptimisticUpdate<
+  typeof integrations.webhooks.resend
+> = (localStore, { deliveryId, webhookId }) => {
+  for (const query of localStore.getAllQueries(
+    integrations.webhooks.deliveries
+  )) {
+    if (
+      Option.isSome(query.value) &&
+      query.args.webhookId === webhookId &&
+      isFirstPage(query.args)
+    ) {
+      const { page } = query.value.value;
+      const resent = Arr.findFirst(page, (item) => item.id === deliveryId);
+      if (Option.isSome(resent)) {
+        const due: (typeof page)[number] = Struct.assign(resent.value, {
+          attempt: resent.value.attempt + 1,
+          id: Schema.decodeUnknownSync(Id("integrationDeliveries"))(
+            draftText()
+          ),
+          state: { status: "due" as const },
+        });
+        localStore.setQuery(
+          integrations.webhooks.deliveries,
+          query.args,
+          Option.some({ ...query.value.value, page: [due, ...page] })
+        );
+      }
+    }
+  }
 };
 
 /** Lists a new grant at once, at the top of the school's grants, when its Person is loaded. */
