@@ -1,7 +1,10 @@
 "use client";
 
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
-
+import {
+  scrollThumbVariants,
+  scrollTrackVariants,
+} from "@repo/design-system/lib/scrollbar";
 import { cn } from "cn";
 import type { Ref, UIEventHandler } from "react";
 
@@ -9,9 +12,12 @@ import type { Ref, UIEventHandler } from "react";
  * A scroller whose bars never take room: the viewport hides the native bar, and a thin overlay bar shows on
  * hover and while scrolling. The root is a column and the viewport fills it, so a root that a parent only caps,
  * such as a bottom sheet with a largest height, still scrolls. The viewport is the element that scrolls, so a caller that reads or writes its
- * scroll, observes it, or listens to it reaches it through `viewportRef` and `onViewportScroll`.
+ * scroll, observes it, or listens to it reaches it through `viewportRef` and `onViewportScroll`. A scroller of rows
+ * that only ever scrolls down, such as a sidebar, sets `axis` to `"vertical"`: it draws no bar across and never moves
+ * sideways.
  */
 function ScrollArea({
+  axis = "both",
   className,
   children,
   onViewportScroll,
@@ -20,6 +26,8 @@ function ScrollArea({
   viewportRef,
   ...props
 }: ScrollAreaPrimitive.Root.Props & {
+  /** The directions the viewport scrolls in. */
+  axis?: "both" | "vertical";
   /** Runs as the viewport scrolls. */
   onViewportScroll?: UIEventHandler<HTMLDivElement> | undefined;
   /**
@@ -46,6 +54,7 @@ function ScrollArea({
             "mask-b-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-end)))] mask-r-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-end)))] [--fade-size:1.5rem]",
           scrollFade === true &&
             "mask-t-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-start)))] mask-l-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-start)))]",
+          axis === "vertical" && "overflow-x-hidden!",
           viewportClassName
         )}
         data-slot="scroll-area-viewport"
@@ -55,8 +64,12 @@ function ScrollArea({
         {children}
       </ScrollAreaPrimitive.Viewport>
       <ScrollBar />
-      <ScrollBar orientation="horizontal" />
-      <ScrollAreaPrimitive.Corner />
+      {axis === "both" ? (
+        <>
+          <ScrollBar orientation="horizontal" />
+          <ScrollAreaPrimitive.Corner />
+        </>
+      ) : null}
     </ScrollAreaPrimitive.Root>
   );
 }
@@ -68,17 +81,14 @@ function ScrollBar({
 }: ScrollAreaPrimitive.Scrollbar.Props) {
   return (
     <ScrollAreaPrimitive.Scrollbar
-      className={cn(
-        "m-1 flex touch-none select-none opacity-0 transition-opacity delay-300 data-[orientation=horizontal]:h-1.5 data-[orientation=vertical]:w-1.5 data-[orientation=horizontal]:flex-col data-hovering:opacity-100 data-scrolling:opacity-100 data-hovering:delay-0 data-scrolling:delay-0 data-hovering:duration-100 data-scrolling:duration-100",
-        className
-      )}
+      className={cn(scrollTrackVariants({ orientation }), className)}
       data-orientation={orientation}
       data-slot="scroll-area-scrollbar"
       orientation={orientation}
       {...props}
     >
       <ScrollAreaPrimitive.Thumb
-        className="relative flex-1 rounded-full bg-muted-foreground"
+        className={scrollThumbVariants({ orientation })}
         data-slot="scroll-area-thumb"
       />
     </ScrollAreaPrimitive.Scrollbar>

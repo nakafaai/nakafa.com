@@ -99,7 +99,7 @@
     "link-add-description": "The parent asks for a sign-in code on the school's parent page.",
     "links-empty": "No parent is linked yet.",
     "links-empty-description": "Link a parent's email to a student so they can sign in.",
-    "links-search": "Search students or parent emails",
+    "links-search": "Find a student or email",
     "student": "Student",
     "guardian-name": "Parent's name",
     "guardian-name-placeholder": "The parent's full name",

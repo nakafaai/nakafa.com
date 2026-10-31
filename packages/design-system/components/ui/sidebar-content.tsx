@@ -66,12 +66,14 @@ export function SidebarSeparator({
 
 /**
  * Renders the scrollable content region between sidebar header and footer. Its bar overlays the rows and takes
- * no room, so a sidebar keeps its width on every system. A sidebar folded to its icons does not scroll; the
- * viewport scrolls by an inline style, so the fold overrides it.
+ * no room, so a sidebar keeps its width on every system. It scrolls down only: no bar runs across it, and nothing
+ * moves it sideways. A sidebar folded to its icons does not scroll; the viewport scrolls by an inline style, so the
+ * fold overrides it.
  */
 export function SidebarContent({ className, ...props }: ComponentProps<"div">) {
   return (
     <ScrollArea
+      axis="vertical"
       className="flex-1"
       data-sidebar="content"
       data-slot="sidebar-content"
@@ -94,7 +96,10 @@ export function SidebarGroup({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
-/** Labels a SidebarGroup while preserving readable text in every theme. */
+/**
+ * Labels a SidebarGroup while preserving readable text in every theme. A label keeps one line inside its group, so a
+ * long one, or one the rail folds away under its icons, never reaches past the sidebar's edge.
+ */
 export function SidebarGroupLabel({
   className,
   render,
@@ -105,7 +110,7 @@ export function SidebarGroupLabel({
     render,
     props: {
       className: cn(
-        "flex h-8 shrink-0 items-center rounded-md px-2 font-medium text-sidebar-foreground text-xs outline-hidden ring-sidebar-ring transition-[margin,opacity] duration-surface focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "flex h-8 min-w-0 shrink-0 items-center overflow-hidden whitespace-nowrap rounded-md px-2 font-medium text-sidebar-foreground text-xs outline-hidden ring-sidebar-ring transition-[margin,opacity] duration-surface focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
         className
       ),
