@@ -1,16 +1,13 @@
 import type { Option } from "effect";
 import { useTranslations } from "use-intl";
-import {
-  type InboxFirstPage,
-  useInbox,
-} from "@/components/notifications/inbox";
+import type { InboxFirstPage } from "@/components/notifications/inbox";
 import { MarkAllRead } from "@/components/notifications/read";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { HOME_TARGET } from "@/lib/routing/target";
 
 /**
  * The sticky breadcrumb header of the inbox, as every account page has it, with the
- * inbox's one action, marking every row read, at its end while the inbox has rows.
+ * inbox's one action, marking every row read, at its end.
  */
 export function NotificationsHeader({
   first,
@@ -18,13 +15,12 @@ export function NotificationsHeader({
   first: Option.Option<InboxFirstPage>;
 }) {
   const t = useTranslations("Notifications");
-  const { rows } = useInbox(first, undefined);
   const tCommon = useTranslations("Common");
 
   return (
     <BreadcrumbHeader
       value={{
-        action: rows.length > 0 ? <MarkAllRead slug={undefined} /> : undefined,
+        action: <MarkAllRead first={first} slug={undefined} />,
         home: HOME_TARGET,
         homeLabel: tCommon("home"),
         items: [{ label: t("title") }],

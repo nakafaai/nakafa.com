@@ -19,6 +19,8 @@ import { useTranslations } from "use-intl";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsList } from "@/components/notifications/list";
 import { MarkAllRead } from "@/components/notifications/read";
+import { InboxTabs } from "@/components/notifications/tabs";
+import type { InboxTopic } from "@/components/notifications/topic";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -29,7 +31,13 @@ import { useAgeClock } from "@/components/user/ages";
  * rows by default, or every school's when the header's filter says so. The rows read the live
  * inbox once the session settles, so the page commits at once and reads nothing on the server.
  */
-export function SchoolNotifications({ all }: { all: boolean }) {
+export function SchoolNotifications({
+  all,
+  topic,
+}: {
+  all: boolean;
+  topic: typeof InboxTopic.Type;
+}) {
   const t = useTranslations("Notifications");
   const { slug } = useTenant();
   const scope = all ? undefined : slug;
@@ -39,12 +47,13 @@ export function SchoolNotifications({ all }: { all: boolean }) {
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {/* Mark all read stands before the filter from the first paint, ready and final. */}
-        <MarkAllRead slug={scope} />
+        <MarkAllRead first={Option.none()} slug={scope} />
         <InboxFilter all={all} />
       </SchoolHeader>
+      <InboxTabs topic={topic} width="page" />
       <LayoutContent className="flex w-full flex-col py-6">
         <NotificationsClockContext value={clock}>
-          <NotificationsList first={Option.none()} slug={scope} />
+          <NotificationsList first={Option.none()} slug={scope} topic={topic} />
         </NotificationsClockContext>
       </LayoutContent>
     </>
