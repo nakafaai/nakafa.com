@@ -48,7 +48,7 @@ const placedOf = (
   item: typeof FormItem.Type,
   question: typeof FormQuestion.Type,
   number: number
-): typeof PlacedQuestion.Type => {
+): PlacedQuestion => {
   const choice = Option.filter(
     Option.fromUndefinedOr(question.choiceQuestion),
     (found) => Arr.contains(ONE_CHOICE, found.type)
