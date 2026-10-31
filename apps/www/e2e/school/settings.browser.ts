@@ -100,6 +100,53 @@ test("an admin opens the profile and the periods of a school", async ({
   await context.close();
 });
 
+test("an admin edits a period's name and dates in the dialog that added it, filled in, and the edit stays after a reload", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/settings/periods"));
+  const addPeriod = page
+    .locator("header")
+    .getByRole("button", { name: "Add period" });
+  await waitUntilTakenOver(addPeriod);
+  await addPeriod.click();
+  const addDialog = page.getByRole("dialog");
+  await addDialog.getByLabel("Name").fill("Semester 1");
+  await chooseDay(page, addDialog.getByLabel("First day"), "2027-07-01");
+  await chooseDay(page, addDialog.getByLabel("Last day"), "2027-12-20");
+  await addDialog.getByRole("button", { name: "Add period" }).click();
+  await expect(page.getByRole("row", { name: "Semester 1" })).toBeVisible();
+
+  // Edit opens the same fields, filled in with the period as it is, and saves only once something changes.
+  await page
+    .getByRole("row", { name: "Semester 1" })
+    .getByRole("button", { name: "More actions" })
+    .click();
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  const editDialog = page.getByRole("dialog");
+  await expect(editDialog.getByLabel("Name")).toHaveValue("Semester 1");
+  await expect(editDialog.getByRole("button", { name: "Save" })).toBeDisabled();
+  await editDialog.getByLabel("Name").fill("Semester Ganjil");
+  await chooseDay(page, editDialog.getByLabel("Last day"), "2027-12-31");
+  await editDialog.getByRole("button", { name: "Save" }).click();
+  const edited = page.getByRole("row", { name: "Semester Ganjil" });
+  await expect(edited).toContainText("31");
+
+  await page.reload();
+  await expect(
+    page.getByRole("row", { name: "Semester Ganjil" })
+  ).toContainText("31");
+  await expect(page.getByRole("row", { name: "Semester 1" })).toHaveCount(0);
+  await context.close();
+});
+
 test("an admin opens a period, then creates and renames a cohort of it", async ({
   browser,
   baseURL,
@@ -276,16 +323,21 @@ test("an admin reads the role guide and finds the owner's grant on Roles", async
   ).toBeVisible();
 
   // The page is header and body: the header row holds the search box before the page's
-  // actions, and the table fills the body from edge to edge.
+  // actions, and the table's body keeps that row's page width and gutter. The header's bar
+  // may run the window's width; its row and the body share one page width.
   const search = header.getByRole("textbox", { name: "Find a person" });
   await expect(search).toBeVisible();
-  const table = page.locator('[data-slot="table-container"]');
-  const [headerBox, tableBox] = await Promise.all([
-    header.boundingBox(),
-    table.boundingBox(),
+  const row = header.locator(":scope > div");
+  const body = page.locator('[data-slot="table-page-body"]');
+  const [rowBox, bodyBox] = await Promise.all([
+    row.boundingBox(),
+    body.boundingBox(),
   ]);
+  expect(Math.abs((rowBox?.x ?? 0) - (bodyBox?.x ?? -2))).toBeLessThanOrEqual(
+    1
+  );
   expect(
-    Math.abs((headerBox?.width ?? 0) - (tableBox?.width ?? 0))
+    Math.abs((rowBox?.width ?? 0) - (bodyBox?.width ?? -2))
   ).toBeLessThanOrEqual(1);
   await expect(
     ownerGrant.getByRole("button", { name: "More actions" })

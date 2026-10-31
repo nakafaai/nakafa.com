@@ -37,7 +37,7 @@ export function MathPart({ children, icon, message }: Props) {
     >
       <CollapsibleTrigger
         className={cn(
-          "group/math flex w-fit max-w-full cursor-pointer items-start gap-2 rounded-sm text-start text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+          "group/math flex w-fit max-w-full items-start gap-2 rounded-sm text-start text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
           message.status === "error"
             ? "text-destructive"
             : "text-muted-foreground hover:text-foreground"

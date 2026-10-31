@@ -36,7 +36,7 @@ export function TryoutSelectableRadioOption({
     >
       <Radio
         aria-labelledby={`${id}-label`}
-        className="mt-1 shrink-0 cursor-pointer"
+        className="mt-1 shrink-0"
         disabled={disabled}
         value={value}
       />
@@ -70,7 +70,7 @@ export function TryoutSelectableMultipleChoice({
       <Checkbox
         aria-labelledby={`${id}-label`}
         checked={checked}
-        className="mt-1 shrink-0 cursor-pointer"
+        className="mt-1 shrink-0"
         disabled={disabled}
         onCheckedChange={onCheckedChange}
       />
@@ -100,7 +100,7 @@ export function TryoutReviewedChoice({
       <Checkbox
         aria-labelledby={`${id}-label`}
         checked={checked}
-        className="mt-1 shrink-0 cursor-pointer"
+        className="mt-1 shrink-0"
         disabled
       />
       <TryoutChoiceLabel id={id}>{label}</TryoutChoiceLabel>

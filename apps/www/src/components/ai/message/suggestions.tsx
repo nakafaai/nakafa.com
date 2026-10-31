@@ -34,7 +34,7 @@ function SuggestionsPartButton({ suggestion }: { suggestion: string }) {
 
   return (
     <button
-      className="flex w-full cursor-pointer items-center justify-between gap-6 border-t py-2 text-start transition-colors ease-out hover:text-primary"
+      className="flex w-full items-center justify-between gap-6 border-t py-2 text-start transition-colors ease-out hover:text-primary"
       disabled={busy}
       onClick={() => send({ text: suggestion })}
       type="button"
