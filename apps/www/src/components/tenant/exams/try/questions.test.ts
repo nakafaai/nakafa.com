@@ -26,6 +26,7 @@ const question = (id: string, answers: Question["answers"]): Question => ({
   explanation: documentId(`explanation-${id}`),
   id: questionId(id),
   key: null,
+  media: [],
   points: 1,
   reading: null,
   scoring: { kind: "allOrNothing" },

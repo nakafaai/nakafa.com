@@ -25,6 +25,7 @@ import { SittingField } from "@/components/exams/sitting/field";
 import { useKeptText } from "@/components/exams/sitting/kept";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
 import { useFlagQuestion } from "@/components/exams/sitting/mark";
+import { PaperMedia } from "@/components/exams/sitting/media";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import type {
   PaperQuestion,
@@ -232,6 +233,9 @@ export const SittingQuestion = memo(function SittingQuestion({
       <SittingPictures value={addresses}>
         <PlayerQuestionPrompt>
           <div className="grid gap-6">
+            {QueryResult.isSuccess(prompt) ? (
+              <PaperMedia items={prompt.value.media} />
+            ) : null}
             {readingDocument === null ? null : (
               <SittingDocument document={readingDocument} />
             )}

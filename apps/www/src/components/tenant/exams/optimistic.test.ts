@@ -16,6 +16,8 @@ import {
   insertDraftExam,
   insertedAfter,
   type ListedExam,
+  mediaQuestion,
+  mediaUpdate,
   movedQuestion,
   moveUpdate,
   placeholderQuestion,
@@ -56,6 +58,7 @@ const question = (id: string, revision = 0): Question => ({
   explanation: promptId(`explanation-${id}`),
   id: questionId(id),
   key: null,
+  media: [],
   points: 1,
   reading: null,
   scoring: { kind: "allOrNothing" },
@@ -259,6 +262,7 @@ describe("placeholderQuestion", () => {
       explanation: promptId("draft-explanation"),
       id: questionId("draft"),
       key: null,
+      media: [],
       points: 3,
       prompt: promptId("draft-prompt"),
       reading: null,
@@ -429,6 +433,35 @@ describe("pointedQuestion", () => {
 
     expect(pointed.questions[0]).toEqual(first);
     expect(pointed.questions[1]).toEqual({ ...second, points: 5 });
+  });
+});
+
+describe("question media", () => {
+  const video = { alt: "Video", kind: "video", video: "dQw4w9WgXcQ" } as const;
+
+  it("sets the media of one question and keeps the others", () => {
+    const changed = mediaQuestion(viewOf([first, second]), second.id, [video]);
+
+    expect(changed.questions[0]).toEqual(first);
+    expect(changed.questions[1]).toEqual({ ...second, media: [video] });
+  });
+
+  it("shows the media of a question in the store while the server saves it", () => {
+    const view = viewOf([first, second]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+
+    mediaUpdate(localStore, {
+      examId,
+      media: [video],
+      questionId: first.id,
+      slug,
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some(mediaQuestion(view, first.id, [video]))
+    );
   });
 });
 

@@ -24,6 +24,13 @@ import {
 import spec from "@repo/backend/confect/exams/assets.spec";
 import { examAccess } from "@repo/backend/confect/exams/authority";
 import { imageTypeOf } from "@repo/backend/confect/exams/image";
+import {
+  AUDIO_BYTE_LIMIT,
+  AudioSizeRefused,
+  AudioTypeRefused,
+  audioTypeOf,
+} from "@repo/backend/confect/exams/media";
+import { playableMedia } from "@repo/backend/confect/exams/questions/media";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
@@ -144,6 +151,105 @@ const register = FunctionImpl.make(
 );
 
 /**
+ * Registers an uploaded file as an audio clip of the exam, as `register` does an image: the teacher's right first,
+ * then the file's size, before its bytes are read, then the leading bytes name its kind. A file that does not pass
+ * is deleted, and the refusal names why.
+ */
+const registerAudio = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "registerAudio",
+  Effect.fn("exams.assets.registerAudio")(
+    function* ({ examId, slug, storageId }) {
+      const { appUser } = yield* requireAuth();
+      const { runQuery } = yield* QueryRunner;
+      yield* runQuery(examsPublic.assets.canAdd, { examId, slug }).pipe(
+        Effect.catchTag("NotMember", () =>
+          Effect.fail(new AccessDenied({ action: "exam.edit", reason: "role" }))
+        )
+      );
+      const { size } = yield* runQuery(examsInternal.assets.stored, {
+        storageId,
+      }).pipe(Effect.orDie);
+      if (size > AUDIO_BYTE_LIMIT) {
+        yield* refuse(storageId);
+        return yield* new AudioSizeRefused();
+      }
+      const blob = yield* (yield* StorageActionWriter)
+        .get(storageId)
+        .pipe(Effect.orDie);
+      const head = new Uint8Array(
+        yield* Effect.promise(() => blob.slice(0, HEAD_BYTES).arrayBuffer())
+      );
+      return yield* Option.match(audioTypeOf(head), {
+        onNone: () =>
+          refuse(storageId).pipe(
+            Effect.andThen(Effect.fail(new AudioTypeRefused()))
+          ),
+        onSome: (contentType) =>
+          Effect.flatMap(MutationRunner, ({ runMutation }) =>
+            runMutation(examsInternal.assets.commitAudio, {
+              byteSize: size,
+              contentType,
+              examId,
+              storageId,
+              userId: appUser._id,
+            })
+          ),
+      });
+    },
+    Effect.catchTag("SchemaError", Effect.die)
+  )
+);
+
+/** Stores the row of a registered clip, in the school that holds its exam. */
+const commitAudio = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "commitAudio",
+  Effect.fn("exams.assets.commitAudio")(function* (args) {
+    const exam = yield* (yield* DatabaseReader)
+      .table("exams")
+      .get(args.examId)
+      .pipe(Effect.orDie);
+    const createdAt = yield* Clock.currentTimeMillis;
+    const id = yield* (yield* DatabaseWriter)
+      .table("examAudio")
+      .insert({
+        byteSize: args.byteSize,
+        contentType: args.contentType,
+        createdAt,
+        createdBy: args.userId,
+        examId: args.examId,
+        storageId: args.storageId,
+        tenantId: exam.tenantId,
+      })
+      .pipe(Effect.orDie);
+    return { id };
+  })
+);
+
+/** The media of one question of the exam as a paper plays it, for the teacher's editor and try. */
+const media = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "media",
+  Effect.fn("exams.assets.media")(function* ({ examId, questionId }) {
+    const question = yield* (yield* DatabaseReader)
+      .table("examQuestions")
+      .get(questionId)
+      .pipe(Effect.orDie);
+    if (question.examId !== examId) {
+      return yield* new AccessDenied({
+        action: "exam.view",
+        reason: "resource",
+      });
+    }
+    return yield* playableMedia(question.media ?? []);
+  })
+);
+
+/**
  * Stores the row of a registered image, in the exam's school. The exam's tenant is read from
  * the exam, so the image belongs to the school that holds its exam.
  */
@@ -201,7 +307,7 @@ const urls = FunctionImpl.make(
 );
 
 /**
- * Deletes the images of a deleted exam a page at a time: each file, then its row. A call that
+ * Deletes the images and the audio clips of a deleted exam a page at a time: each file, then its row. A call that
  * fills a page starts the next one, so no call deletes more than `MAX_ASSET_READS` images.
  */
 const sweep = FunctionImpl.make(
@@ -227,7 +333,23 @@ const sweep = FunctionImpl.make(
           ),
       { discard: true }
     );
-    if (assets.length < MAX_ASSET_READS) {
+    const clips = yield* (yield* DatabaseReader)
+      .table("examAudio")
+      .index("by_examId", (query) => query.eq("examId", examId))
+      .take(MAX_ASSET_READS)
+      .pipe(Effect.orDie);
+    yield* Effect.forEach(
+      clips,
+      (clip) =>
+        storage
+          .delete(clip.storageId)
+          .pipe(
+            Effect.andThen(writer.table("examAudio").delete(clip._id)),
+            Effect.orDie
+          ),
+      { discard: true }
+    );
+    if (assets.length < MAX_ASSET_READS && clips.length < MAX_ASSET_READS) {
       return { done: true };
     }
     yield* (yield* Scheduler).runAfter(
@@ -243,7 +365,10 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(uploadUrl),
   Layer.provide(canAdd),
   Layer.provide(register),
+  Layer.provide(registerAudio),
   Layer.provide(commit),
+  Layer.provide(commitAudio),
+  Layer.provide(media),
   Layer.provide(discard),
   Layer.provide(sweep),
   Layer.provide(stored),

@@ -11,6 +11,7 @@ import { DefaultRuleSchema } from "@nakafa/aksara-contracts/assessment/scoring";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { keyFits } from "@repo/backend/confect/assessment/key";
+import { QuestionMedia } from "@repo/backend/confect/exams/media";
 import {
   ALL_OR_NOTHING,
   takesScoring,
@@ -84,6 +85,7 @@ export const questionValidator = Schema.Struct({
   examId: Id("exams"),
   explanation: Id("editorDocuments"),
   key: Schema.NullOr(Schema.String),
+  media: Schema.optionalKey(Schema.Array(QuestionMedia)),
   points: QuestionPoints,
   prompt: Id("editorDocuments"),
   reading: Schema.optionalKey(Id("editorDocuments")),
@@ -236,6 +238,7 @@ export const QuestionView = Schema.Struct({
   explanation: Id("editorDocuments"),
   id: Id("examQuestions"),
   key: Schema.NullOr(Schema.NonEmptyArray(InteractionKeySchema)),
+  media: Schema.Array(QuestionMedia),
   points: QuestionPoints,
   prompt: Id("editorDocuments"),
   reading: Schema.NullOr(Id("editorDocuments")),
@@ -309,6 +312,7 @@ export const questionView = Effect.fn("exams.question.view")(function* (
     explanation: row.explanation,
     id: row._id,
     key: yield* decodeKey(row.key),
+    media: row.media ?? [],
     points: row.points,
     prompt: row.prompt,
     reading: row.reading ?? null,

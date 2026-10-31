@@ -24,6 +24,7 @@ import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
 import { TableSheet } from "@/components/tenant/exams/matrix";
+import { ExamPaperMedia } from "@/components/tenant/exams/media";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
@@ -239,6 +240,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
           fallback={
             <QuestionPaper selected={chosen}>
               <PaperPrompt>
+                <ExamPaperMedia question={question} />
                 {question.reading === null ? null : (
                   <ReadingSketch documentId={question.reading} read={read} />
                 )}
@@ -258,6 +260,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
       ) : (
         <QuestionPaper selected={chosen}>
           <PaperPrompt>
+            <ExamPaperMedia question={question} />
             {question.reading === null ? null : (
               <ReadingSketch documentId={question.reading} read={read} />
             )}
@@ -312,6 +315,7 @@ function LivePaper({
   return (
     <QuestionPaper selected={chosen}>
       <PaperPrompt>
+        <ExamPaperMedia question={question} />
         {question.reading === null ? null : (
           <ExamText
             documentId={question.reading}

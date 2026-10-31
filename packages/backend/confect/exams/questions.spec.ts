@@ -15,6 +15,7 @@ import {
   RevisionStale,
   ScoringDoesNotFit,
 } from "@repo/backend/confect/exams/errors";
+import { MEDIA_MAX, QuestionMedia } from "@repo/backend/confect/exams/media";
 import {
   QuestionPoints,
   QuestionTemplate,
@@ -105,6 +106,19 @@ export default GroupSpec.make()
       args: () => ({
         examId: Id("exams"),
         points: QuestionPoints,
+        questionId: Id("examQuestions"),
+        slug: TenantSlug,
+      }),
+      returns: () => QuestionView,
+      error: () => Schema.Union([AccessDenied, ExamFrozen]),
+    }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "media",
+      args: () => ({
+        examId: Id("exams"),
+        media: Schema.Array(QuestionMedia).check(Schema.isMaxLength(MEDIA_MAX)),
         questionId: Id("examQuestions"),
         slug: TenantSlug,
       }),
