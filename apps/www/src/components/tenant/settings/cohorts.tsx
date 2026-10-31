@@ -3,6 +3,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -20,6 +21,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { chosenGrade } from "@/components/tenant/settings/choices";
@@ -182,8 +184,10 @@ function CohortsActions({ slug }: { slug: TenantSlug }) {
 
   return (
     <>
-      <CohortsUnitChoice />
-      <TableSearch placeholder={t("cohorts-search")} />
+      <ButtonGroup>
+        <CohortsUnitChoice />
+        <TableSearch placeholder={t("cohorts-search")} />
+      </ButtonGroup>
       <SchoolCohortAdd active={active} slug={slug} />
     </>
   );
@@ -303,9 +307,10 @@ function SchoolCohortAdd({
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} type="button">
-        {t("cohort-create")}
-      </Button>
+      <SchoolHeaderAdd
+        label={t("cohort-create")}
+        onClick={() => setIsOpen(true)}
+      />
       <ResponsiveDialog
         description={
           hasNoPeriod ? t("cohort-add-no-period") : t("cohort-add-footer")

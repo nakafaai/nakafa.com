@@ -1,9 +1,12 @@
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
 } from "@repo/design-system/components/ui/breadcrumb";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
 import { SidebarContext } from "@repo/design-system/lib/sidebar/context";
@@ -11,6 +14,7 @@ import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
+import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
@@ -87,6 +91,34 @@ export function SchoolHeader({
 }
 
 /**
+ * The action of a school page's header that adds a record, under its name. A header too narrow for the name beside
+ * the page's path keeps a plus, so the page's name stays readable, and the name stays for assistive technology.
+ */
+export function SchoolHeaderAdd({
+  label,
+  onClick,
+}: {
+  /** The action's name, such as Add period. */
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      className="@xs/header:has-[>svg]:px-4"
+      onClick={onClick}
+      type="button"
+    >
+      <HugeIcons
+        aria-hidden="true"
+        className="@xs/header:hidden"
+        icon={Add01Icon}
+      />
+      <span className="@max-xs/header:sr-only">{label}</span>
+    </Button>
+  );
+}
+
+/**
  * The path of a school page after its home, with the page itself last, as the current page without a
  * target. On the school's home the path is home alone, as the current page.
  */
@@ -104,7 +136,15 @@ function SchoolPath({
       <Breadcrumb aria-label={tCommon("breadcrumb")} className="min-w-0">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbPage>{tCommon("home")}</BreadcrumbPage>
+            <BreadcrumbLink
+              aria-current="page"
+              className="text-foreground"
+              render={
+                <BreadcrumbAnchor target={schoolHomeTarget(slug)}>
+                  {tCommon("home")}
+                </BreadcrumbAnchor>
+              }
+            />
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
