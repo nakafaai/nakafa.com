@@ -45,7 +45,8 @@ function SelectValue({
 }: SelectPrimitive.Value.Props & {
   /**
    * Every label the select can show, given where its value changes on its own, as a playing lab's time does: the
-   * value keeps the widest label's width, so the trigger never grows and nothing beside it moves.
+   * value keeps the widest label's width, so the trigger never grows and nothing beside it moves. Each label is
+   * drawn as generated content of an empty, hidden cell, so the trigger's text and name stay its value alone.
    */
   labels?: readonly string[];
 }) {
@@ -65,12 +66,12 @@ function SelectValue({
         <span
           aria-hidden="true"
           className={selectValueVariants({
-            className: "invisible col-start-1 row-start-1",
+            className:
+              "invisible col-start-1 row-start-1 before:content-[attr(data-label)]",
           })}
+          data-label={label}
           key={label}
-        >
-          {label}
-        </span>
+        />
       ))}
       <SelectPrimitive.Value
         className={selectValueVariants({
