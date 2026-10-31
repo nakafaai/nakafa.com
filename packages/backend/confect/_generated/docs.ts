@@ -85,6 +85,7 @@ export type GuardianLinksDoc = Document.Document<typeof schemaDefinition, "guard
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
 export type IntegrationDeliveriesDoc = Document.Document<typeof schemaDefinition, "integrationDeliveries">;
 export type IntegrationDevicesDoc = Document.Document<typeof schemaDefinition, "integrationDevices">;
+export type IntegrationRequestsDoc = Document.Document<typeof schemaDefinition, "integrationRequests">;
 export type IntegrationTokensDoc = Document.Document<typeof schemaDefinition, "integrationTokens">;
 export type IntegrationWebhooksDoc = Document.Document<typeof schemaDefinition, "integrationWebhooks">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
@@ -234,6 +235,7 @@ export interface Docs {
   integrationClients: IntegrationClientsDoc;
   integrationDeliveries: IntegrationDeliveriesDoc;
   integrationDevices: IntegrationDevicesDoc;
+  integrationRequests: IntegrationRequestsDoc;
   integrationTokens: IntegrationTokensDoc;
   integrationWebhooks: IntegrationWebhooksDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
