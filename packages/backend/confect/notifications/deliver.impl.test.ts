@@ -69,6 +69,8 @@ const mentioned = Effect.gen(function* () {
   const forum = yield* forumClass(fixture, term.id, "X-1");
   yield* fixture.as("student").mutation(push.subscribe, yield* browserKeys);
   yield* fixture.as("teacher").mutation(send, {
+    attachments: [],
+    poll: null,
     ...forum,
     clientKey: "pushed-mention",
     mentions: [{ _tag: "person", id: fixture.people.student.personId }],
@@ -175,6 +177,8 @@ describe("notifications/deliver", () => {
         const sentAt = actedAt(0, Date.UTC(2026, 9, 1, 15, 0, 0));
         vi.setSystemTime(sentAt);
         yield* fixture.as("teacher").mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "zoneless-mention",
           mentions: [{ _tag: "person", id: fixture.people.student.personId }],
@@ -234,6 +238,8 @@ describe("notifications/deliver", () => {
           yield* fixture.internal.query(deliver.notice, { notificationId })
         ).toBeNull();
         yield* fixture.as("teacher").mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "unclaimed-mention",
           mentions: [{ _tag: "person", id: fixture.people.student.personId }],

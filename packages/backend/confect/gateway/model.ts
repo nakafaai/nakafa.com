@@ -179,12 +179,11 @@ export const decisionModelId = "typesafe/jev-1.13";
 export const providerId = "convexGateway.chat";
 
 /**
- * The embedding models that the model test compares, as the Convex AI gateway
- * names them: the current multilingual models of Google, OpenAI, and Qwen out
- * of the many that the gateway lists. A model joins the shortlist with one
- * line, and the test then measures it like the others.
+ * The embedding models a build may run, as the Convex AI gateway names them: the
+ * current multilingual models of Google, OpenAI, and Qwen out of the many that
+ * the gateway lists.
  */
-export const embeddingModels = [
+const embeddingModels = [
   "google/gemini-embedding-001",
   "google/gemini-embedding-2",
   "openai/text-embedding-3-large",
@@ -200,8 +199,7 @@ export type EmbeddingModelId = typeof EmbeddingModelId.Type;
  * on the gateway. Decided on 12 October 2026 from three things. Google's own
  * benchmark puts it first (MTEB Multilingual 69.9, against 68.4 for
  * `gemini-embedding-001`). It takes 8,192 input tokens, against 2,048. And the
- * older model shuts down on 14 May 2028. The model test in `scripts/knowledge`
- * (150 questions in three languages) found the right section in the top five
+ * older model shuts down on 14 May 2028. A model test (150 questions in three languages) found the right section in the top five
  * for 142 questions, against 146 for the older model, a difference inside the
  * noise of 50 questions a language, at 433 ms a question against 257 ms.
  * Changing this constant changes every stored vector, so the next section build

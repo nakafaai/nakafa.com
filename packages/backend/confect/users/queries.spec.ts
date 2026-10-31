@@ -22,15 +22,6 @@ const publicProfileValidator = Schema.Struct({
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalQuery({
-      name: "getUserById",
-      args: () => ({
-        userId: IdSchema("users"),
-      }),
-      returns: () => Schema.NullOr(usersTable.Doc),
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalQuery({
       name: "getUserByAuthId",
       args: () => ({
         authId: Schema.String,

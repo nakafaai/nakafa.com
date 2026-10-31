@@ -18,16 +18,22 @@ const author = {
   name: "Bu Rina",
 };
 const args = {
+  attachments: [],
   channelId,
   classId,
   clientKey: "0b5c9d1e-4f3a-4c2b-9a8d-7e6f5a4b3c2d",
   mentions: [],
+  poll: null,
   slug,
   text: "Tugas dikumpulkan Jumat.",
 };
 
+/** What a message without files shows beyond its text. */
+const shown = { attachments: [], mentions: [] };
+
 /** The message the server answers with, under the ID it gave. */
 const stored: ForumMessage = {
+  attachments: [],
   author,
   clientKey: args.clientKey,
   createdAt: 1000,
@@ -36,6 +42,7 @@ const stored: ForumMessage = {
   id: Schema.decodeUnknownSync(Id("classroomMessages"))("message-1"),
   mentions: [],
   mine: true,
+  poll: null,
   text: args.text,
 };
 
@@ -49,7 +56,7 @@ describe("sendMessage", () => {
             Promise.resolve(Result.succeed({ ...stored, text: sent.text }))
         );
 
-        const answer = yield* sendMessage(send, author, args, []);
+        const answer = yield* sendMessage(send, author, args, shown);
 
         expect(answer).toEqual(stored);
         expect(send).toHaveBeenCalledWith(expect.any(Function), args);
@@ -92,7 +99,7 @@ describe("sendMessage", () => {
     Effect.gen(function* () {
       const send = () => Promise.resolve(Result.fail("refused"));
 
-      const exit = yield* Effect.exit(sendMessage(send, author, args, []));
+      const exit = yield* Effect.exit(sendMessage(send, author, args, shown));
 
       expect(Exit.isFailure(exit)).toBe(true);
     })
@@ -128,6 +135,7 @@ describe("sendReply and openDiscussion", () => {
           Promise.resolve(Result.succeed(stored))
         );
         const replyArgs = {
+          attachments: [],
           classId,
           clientKey: args.clientKey,
           mentions: [],
@@ -135,7 +143,9 @@ describe("sendReply and openDiscussion", () => {
           slug,
           text: args.text,
         };
-        expect(yield* sendReply(reply, author, replyArgs, [])).toEqual(stored);
+        expect(yield* sendReply(reply, author, replyArgs, shown)).toEqual(
+          stored
+        );
         const replied = applyUpdate(
           reply.mock.calls[0]?.[0],
           classroom.forum.threads.replies,
