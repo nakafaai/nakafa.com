@@ -261,6 +261,7 @@ describe("placeholderQuestion", () => {
       key: null,
       points: 3,
       prompt: promptId("draft-prompt"),
+      reading: null,
       rubric: promptId("draft-rubric"),
       scoring: { kind: "allOrNothing" },
       template: "choice",

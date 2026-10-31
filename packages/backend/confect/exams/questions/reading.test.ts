@@ -1,14 +1,19 @@
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { documentRows, nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
-import { tenancyFixture } from "@repo/backend/test/tenancy";
+import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { open } = refs.public.exams.exams;
 const { add, copy, reading, remove } = refs.public.exams.questions;
 
 describe("exams/questions reading", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(TENANCY_NOW);
+  });
+
   it.effect(
     "gives a question a new reading, shares it with another, keeps it while one holds it, and copies it",
     () =>

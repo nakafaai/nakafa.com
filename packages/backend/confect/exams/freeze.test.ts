@@ -364,10 +364,11 @@ describe("exams/freeze", () => {
       yield* finishSitting(fixture, examId);
       const refused = yield* fixture.run(
         requireDocumentUnfrozen(held.reading ?? question.prompt).pipe(
-          Effect.flip
+          Effect.flip,
+          Effect.map((error) => error._tag)
         )
       );
-      expect(refused).toMatchObject({ _tag: "ExamFrozen" });
+      expect(refused).toBe("ExamFrozen");
     })
   );
 });
