@@ -70,6 +70,20 @@ export class SchoolApiBearer extends HttpApiMiddleware.Service<
   security: { bearer: HttpApiSecurity.bearer },
 }) {}
 
+/** A request whose rows do not read as students. */
+export class SchoolApiInvalid extends Schema.TaggedError<SchoolApiInvalid>()(
+  "SchoolApiInvalid",
+  { message: Schema.String },
+  { httpApiStatus: 400 }
+) {}
+
+/** A repeat of an `Idempotency-Key` with another request. */
+export class SchoolApiConflict extends Schema.TaggedError<SchoolApiConflict>()(
+  "SchoolApiConflict",
+  { message: Schema.String },
+  { httpApiStatus: 422 }
+) {}
+
 /** The refusals every roster read may answer: a closed read, a refused token, and a client past its limit. */
 const ROSTER_ERRORS = [
   SchoolApiForbidden,
@@ -213,6 +227,27 @@ export const ApiChange = Schema.Struct({
   type: Schema.String,
 });
 
+/** One student of a roster import, as a school's own system sends it. */
+export const ApiRosterRow = Schema.Struct({
+  cohortName: Schema.optionalKey(Schema.String),
+  name: Schema.String,
+  nisn: Schema.String,
+  underAgeLimit: Schema.Boolean,
+});
+
+/** One import request: the period it fills and at most one hundred students. */
+export const ApiRosterImport = Schema.Struct({
+  period: Schema.String,
+  rows: Schema.Array(ApiRosterRow).check(Schema.isMaxLength(PAGE_LIMIT)),
+});
+
+/** What one import did. */
+export const ApiImportSummary = Schema.Struct({
+  added: Schema.Finite,
+  changed: Schema.Finite,
+  skipped: Schema.Finite,
+});
+
 /** What an export holds. */
 export const ExportDataset = Schema.Literals([
   "grades",
@@ -285,6 +320,21 @@ class RecordsGroup extends HttpApiGroup.make("records")
   )
   .middleware(SchoolApiBearer) {}
 
+/**
+ * The Dapodik bridge: a school's own system sends the students of one period, and they join
+ * the roster as a file import does. Every POST carries an `Idempotency-Key` (ADR 0029).
+ */
+class ImportsGroup extends HttpApiGroup.make("imports")
+  .add(
+    HttpApiEndpoint.post("roster", "/roster/import", {
+      error: [...ROSTER_ERRORS, SchoolApiConflict, SchoolApiInvalid],
+      headers: { "idempotency-key": Schema.String },
+      payload: ApiRosterImport,
+      success: ApiImportSummary,
+    })
+  )
+  .middleware(SchoolApiBearer) {}
+
 /** The query of an export: the period of the two that belong to one. */
 const ExportQuery = { period: Schema.optional(Schema.String) };
 
@@ -318,6 +368,7 @@ export class SchoolApi extends HttpApi.make("nakafa-school")
   .add(OAuthGroup)
   .add(RosterGroup)
   .add(RecordsGroup)
+  .add(ImportsGroup)
   .add(ExportsGroup)
   .prefix(SCHOOL_API_PATH)
   .annotateMerge(

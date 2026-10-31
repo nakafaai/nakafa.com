@@ -7,8 +7,9 @@ import {
 } from "@repo/backend/confect/integrations/api";
 import { createClient, type Fixture, issue } from "@repo/backend/test/api";
 import { cohort, nf, period } from "@repo/backend/test/classroom";
+import { asStaffSchool } from "@repo/backend/test/guardians";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { encodePrettyJsonText } from "@repo/utilities/json";
+import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 import { OpenApi } from "effect/http-api";
 
@@ -403,6 +404,83 @@ describe("school API over HTTP", () => {
           grant_type: "urn:ietf:params:oauth:grant-type:device_code",
         });
         expect(yield* json(expired)).toMatchObject({ error: "expired_token" });
+      })
+  );
+});
+
+describe("school API roster import over HTTP", () => {
+  /** Posts one import with an `Idempotency-Key`, or none. */
+  const post = (fixture: Fixture, token: string, body: object, key?: string) =>
+    Effect.promise(() =>
+      fixture.fetch(`${SCHOOL_API_PATH}/roster/import`, {
+        body: encodeJsonText(body),
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+          ...(key === undefined ? {} : { "idempotency-key": key }),
+        },
+        method: "POST",
+      })
+    );
+
+  /** One student of an import. */
+  const STUDENT = {
+    name: "Raka Pratama",
+    nisn: "0012345678",
+    underAgeLimit: true,
+  };
+
+  it.effect(
+    "imports the rows, repeats the answer, and refuses another request under the key",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* asStaffSchool(fixture);
+        const term = yield* period(fixture, fixture.units.smp);
+        const token = yield* tokenOf(fixture, ["period.view", "roster.import"]);
+        const body = { period: term.id, rows: [STUDENT] };
+
+        const first = yield* post(fixture, token, body, "k1");
+        expect(first.status).toBe(200);
+        expect(yield* json(first)).toEqual({
+          added: 1,
+          changed: 0,
+          skipped: 0,
+        });
+
+        const repeat = yield* post(fixture, token, body, "k1");
+        expect(yield* json(repeat)).toEqual({
+          added: 1,
+          changed: 0,
+          skipped: 0,
+        });
+
+        const other = yield* post(fixture, token, { ...body, rows: [] }, "k1");
+        expect(other.status).toBe(422);
+      })
+  );
+
+  it.effect(
+    "refuses a request without a key, a row that is no student, and a closed import",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* asStaffSchool(fixture);
+        const term = yield* period(fixture, fixture.units.smp);
+        const token = yield* tokenOf(fixture, ["period.view", "roster.import"]);
+        const closed = yield* tokenOf(fixture, ["period.view"]);
+        const body = { period: term.id, rows: [STUDENT] };
+
+        expect((yield* post(fixture, token, body)).status).toBe(400);
+        expect(
+          (yield* post(
+            fixture,
+            token,
+            { ...body, rows: [{ ...STUDENT, nisn: "1" }] },
+            "k2"
+          )).status
+        ).toBe(400);
+        expect((yield* post(fixture, closed, body, "k3")).status).toBe(403);
       })
   );
 });

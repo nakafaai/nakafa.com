@@ -846,8 +846,11 @@
     "audit-empty": "Belum ada perubahan.",
     "audit-search": "Cari perubahan",
     "audit-export": "Ekspor",
-    "audit-operator": "Staf Nakafa",
-    "audit-system": "Sistem",
+    "audit-actor": {
+      "client": "Integrasi",
+      "operator": "Staf Nakafa",
+      "system": "Sistem"
+    },
     "audit-label": {
       "assignment": {
         "created": "Wali kelas ditetapkan",
@@ -1110,6 +1113,9 @@
     "client-actions": "Aksi",
     "client-actions-footer": "Klien selalu memiliki paling sedikit satu aksi.",
     "client-action": {
+      "roster": {
+        "import": "Impor siswa"
+      },
       "grade": {
         "export": "Baca nilai yang dirilis"
       },

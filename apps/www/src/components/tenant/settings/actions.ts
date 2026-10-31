@@ -10,6 +10,7 @@ export const IntegrationAction = Schema.Literals([
   "guardian.view",
   "period.view",
   "person.view",
+  "roster.import",
   "unit.view",
 ]);
 

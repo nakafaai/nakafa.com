@@ -9,19 +9,16 @@ import {
   rosterEntryOf,
   schoolKeys,
 } from "@repo/backend/confect/roster/entry";
-import { applyRow } from "@repo/backend/confect/roster/import";
+import { applyRow, importSummary } from "@repo/backend/confect/roster/import";
 import spec from "@repo/backend/confect/roster/imports.spec";
-import type {
-  ImportSummary,
-  RosterLine,
-} from "@repo/backend/confect/roster/schema";
+import type { RosterLine } from "@repo/backend/confect/roster/schema";
 import { Period } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
   periodAccess,
   periodAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
+import { Effect, Layer, Option, Struct } from "effect";
 
 /**
  * Applies one batch of rows in one transaction: a batch that fails writes nothing, and a
@@ -39,13 +36,7 @@ const apply = FunctionImpl.make(
     const outcomes = yield* Effect.forEach(rows, (row) =>
       applyRow(personActor(actor), period, keys, row)
     );
-    const count = (outcome: string) =>
-      Arr.length(Arr.filter(outcomes, (found) => found === outcome));
-    const summary: typeof ImportSummary.Type = {
-      added: count("added"),
-      changed: count("changed"),
-      skipped: count("skipped"),
-    };
+    const summary = importSummary(outcomes);
     yield* periodAuthority.record(personActor(actor), period, {
       ...summary,
       source: "dapodik",

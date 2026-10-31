@@ -33,6 +33,11 @@ export const TenantActor = Schema.Union([
   Schema.Struct({ id: Id("tenantPeople"), kind: Schema.Literal("person") }),
   /** Nakafa staff acting outside a visit, such as to open or suspend a school. */
   Schema.Struct({ id: Id("operators"), kind: Schema.Literal("operator") }),
+  /** An integration client writing through the school API (ADR 0029). */
+  Schema.Struct({
+    id: Id("integrationClients"),
+    kind: Schema.Literal("client"),
+  }),
   /** Scheduled or cascading work. */
   Schema.Struct({ kind: Schema.Literal("system") }),
 ]).pipe(Schema.toTaggedUnion("kind"));

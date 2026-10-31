@@ -47,6 +47,14 @@ const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 export default CronJobs.make()
   .add(
     CronJob.make(
+      "delete old school API requests",
+      Duration.hours(INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS),
+      integrationsInternal.writes.sweep,
+      {}
+    )
+  )
+  .add(
+    CronJob.make(
       "sweep school webhooks",
       Duration.minutes(WEBHOOK_SWEEP_INTERVAL_MINUTES),
       integrationsInternal.hooks.sweep,
