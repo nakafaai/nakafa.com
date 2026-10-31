@@ -89,7 +89,7 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/reads
-          key: reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-${{ hashFiles('bun.lock', 'packages/backend/client/content/**', 'packages/backend/client/quran/**', 'packages/backend/content/**', 'packages/backend/confect/contentRelease/**', 'packages/backend/confect/tryouts/queries/**') }}
+          key: reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-${{ hashFiles('bun.lock', 'packages/backend/client/content/**', 'packages/backend/client/quran/**', 'packages/backend/content/**', 'packages/backend/confect/contentRelease/**', 'packages/backend/confect/tryouts/queries/**', '!**/*.test.ts') }}
 
       - name: Serve the reads to the build
         working-directory: apps/www
