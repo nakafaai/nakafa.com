@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { untilPageSettled } from "@repo/design-system/lib/settle";
+import {
+  untilPageRead,
+  untilPageSettled,
+} from "@repo/design-system/lib/settle";
 import { Effect, Fiber } from "effect";
+import { TestClock } from "effect/testing";
 
 /** Gives the window an idle callback that the test controls, and returns the stubs. */
 function stubIdleCallback() {
@@ -84,5 +88,54 @@ describe("waiting for the page to settle", () => {
 
       yield* untilPageSettled;
     })
+  );
+
+  it.effect(
+    "waits for a gesture on a settled page, and later pages start at once",
+    () =>
+      Effect.gen(function* () {
+        stubReadyState("complete");
+        const removed = vi.spyOn(window, "removeEventListener");
+
+        const waiting = yield* Effect.forkChild(untilPageRead);
+        yield* Effect.yieldNow;
+        yield* Effect.yieldNow;
+        expect(waiting.pollUnsafe()).toBeUndefined();
+
+        window.dispatchEvent(new Event("pointermove"));
+        yield* Fiber.join(waiting);
+        expect(removed).toHaveBeenCalledWith(
+          "pointermove",
+          expect.any(Function),
+          {
+            capture: true,
+          }
+        );
+        removed.mockRestore();
+
+        yield* untilPageRead;
+      })
+  );
+
+  it.effect(
+    "starts by itself six seconds after a page that nobody touches",
+    () =>
+      Effect.gen(function* () {
+        stubReadyState("complete");
+        // A fresh module, as a new document: the test above saw this page's reader.
+        vi.resetModules();
+        const { untilPageRead: untilFreshPageRead } = yield* Effect.promise(
+          () => import("@repo/design-system/lib/settle")
+        );
+
+        const waiting = yield* Effect.forkChild(untilFreshPageRead);
+        yield* Effect.yieldNow;
+        yield* Effect.yieldNow;
+        yield* TestClock.adjust("5 seconds");
+        expect(waiting.pollUnsafe()).toBeUndefined();
+
+        yield* TestClock.adjust("1 second");
+        yield* Fiber.join(waiting);
+      })
   );
 });

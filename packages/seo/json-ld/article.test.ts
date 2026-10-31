@@ -4,6 +4,7 @@ import {
   type ArticleJsonLdInput,
   ArticleJsonLdSchema,
   makeArticleJsonLd,
+  makeLearningResourceNode,
 } from "@repo/seo/json-ld/article";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Schema } from "effect";
@@ -47,6 +48,9 @@ describe("article JSON-LD", () => {
           "https://nakafa.com/id/og/materi/matematika/transformasi-fungsi/rotasi/image.png",
         description: lesson.description,
         inLanguage: "id",
+        isAccessibleForFree: true,
+        license:
+          "https://github.com/nakafaai/aksara/blob/main/CONTENT_LICENSE.md",
         datePublished: "2025-05-26",
         dateModified: "2026-09-23",
         author: [
@@ -57,7 +61,7 @@ describe("article JSON-LD", () => {
           },
         ],
         publisher: {
-          "@type": "Organization",
+          "@type": "EducationalOrganization",
           "@id": "https://nakafa.com/#organization",
           name: "Nakafa",
           url: "https://nakafa.com",
@@ -255,5 +259,35 @@ describe("article JSON-LD", () => {
     expect(() =>
       readPublishedJsonLd(corrupt(makeArticleJsonLd(lesson)))
     ).toThrow(message);
+  });
+});
+
+describe("makeLearningResourceNode", () => {
+  it("names the lesson, its authors, its dates and its license at the article's address", () => {
+    expect(makeLearningResourceNode(lesson)).toMatchObject({
+      "@type": "LearningResource",
+      author: [{ "@type": "Person", name: "Nabil Akbarazzima Fatih" }],
+      dateModified: "2026-09-23",
+      datePublished: "2025-05-26",
+      description: lesson.description,
+      inLanguage: "id",
+      isAccessibleForFree: true,
+      learningResourceType: "lesson",
+      license:
+        "https://github.com/nakafaai/aksara/blob/main/CONTENT_LICENSE.md",
+      name: "Rotasi",
+      provider: { "@id": "https://nakafa.com/#organization" },
+    });
+  });
+
+  it("leaves out what the lesson does not state", () => {
+    const { description: _description, ...undescribed } = lesson;
+    const node = makeLearningResourceNode({
+      ...undescribed,
+      dates: { datePublished: "2025-05-26" },
+    });
+
+    expect(node).not.toHaveProperty("description");
+    expect(node).not.toHaveProperty("dateModified");
   });
 });

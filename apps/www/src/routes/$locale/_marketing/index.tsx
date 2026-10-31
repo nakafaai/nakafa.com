@@ -6,27 +6,16 @@ import {
 } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense } from "react";
 import { createTranslator } from "use-intl/core";
-import { Closing } from "@/components/marketing/about/closing";
-import { Community } from "@/components/marketing/about/community";
-import { Curricula } from "@/components/marketing/about/curricula";
-import { CurriculumList } from "@/components/marketing/about/curricula/list";
-import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
-import { Faq } from "@/components/marketing/about/faq/landing";
 import { Hero } from "@/components/marketing/about/hero";
-import { Lesson } from "@/components/marketing/about/lesson";
-import { Letter } from "@/components/marketing/about/letter";
-import { Medals } from "@/components/marketing/about/medals";
-import { Memory } from "@/components/marketing/about/memory";
-import { NinaSection } from "@/components/marketing/about/nina/section";
-import { Pricing } from "@/components/marketing/about/pricing/landing";
-import { Privacy } from "@/components/marketing/about/privacy";
-import { Schools } from "@/components/marketing/about/schools";
+import {
+  homeSections,
+  openHomeSections,
+} from "@/components/marketing/about/later";
 import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
 import { HomeToys } from "@/components/marketing/about/toys/intent";
-import { Tryout } from "@/components/marketing/about/tryout";
 import { PageField } from "@/components/marketing/shared/field";
+import { LaterSection } from "@/components/marketing/shared/later";
 import {
   getSubjectMenuHref,
   subjectMenu,
@@ -49,7 +38,8 @@ import { readStaticData } from "@/lib/static/data";
  */
 export const Route = createFileRoute("/$locale/_marketing/")({
   loader: async ({ params }) => {
-    const [curricula, featuredTryout, messages] = await Promise.all([
+    const [, curricula, featuredTryout, messages] = await Promise.all([
+      openHomeSections(),
       readStaticData(readHomeCurriculaFn, { locale: params.locale }),
       readStaticData(readHomeTryout, { locale: params.locale }),
       readStaticData(readRouteMessages, {
@@ -161,70 +151,52 @@ export const Route = createFileRoute("/$locale/_marketing/")({
 /** The marketing home: the sections of the landing page. */
 function HomePage() {
   const { locale } = Route.useParams();
-  const { curricula, faqs, featuredTryout } = Route.useLoaderData();
+  const { featuredTryout } = Route.useLoaderData();
 
   return (
     <>
       <PageField />
       <div className="relative grid grid-cols-1">
         <Hero />
-        <LaterSection>
-          <Lesson locale={locale} />
+        <LaterSection code={homeSections.lesson}>
+          {(Lesson) => <Lesson locale={locale} />}
         </LaterSection>
-        <LaterSection>
-          <Tryout value={featuredTryout} />
+        <LaterSection code={homeSections.tryout}>
+          {(Tryout) => <Tryout value={featuredTryout} />}
         </LaterSection>
-        <LaterSection>
-          <NinaSection />
+        <LaterSection code={homeSections.nina}>
+          {(NinaSection) => <NinaSection />}
         </LaterSection>
-        <LaterSection>
-          <Memory />
+        <LaterSection code={homeSections.memory}>
+          {(Memory) => <Memory />}
         </LaterSection>
-        <LaterSection>
-          <Privacy />
+        <LaterSection code={homeSections.privacy}>
+          {(Privacy) => <Privacy />}
         </LaterSection>
-        <LaterSection>
-          <Curricula>
-            <CurriculumList curricula={curricula} />
-          </Curricula>
+        <LaterSection code={homeSections.curricula}>
+          {(Curricula) => <Curricula />}
         </LaterSection>
-        <LaterSection>
-          <Letter />
+        <LaterSection code={homeSections.letter}>
+          {(Letter) => <Letter />}
         </LaterSection>
-        <LaterSection>
-          <Medals />
+        <LaterSection code={homeSections.medals}>
+          {(Medals) => <Medals />}
         </LaterSection>
-        <LaterSection>
-          <Pricing />
+        <LaterSection code={homeSections.pricing}>
+          {(Pricing) => <Pricing />}
         </LaterSection>
-        <LaterSection>
-          <Schools herd={CLASS_HERD} />
+        <LaterSection code={homeSections.schools}>
+          {(Schools) => <Schools herd={CLASS_HERD} />}
         </LaterSection>
-        <LaterSection>
-          <Faq>
-            <FaqAccordion faqs={faqs} openFirst />
-          </Faq>
+        <LaterSection code={homeSections.faq}>{(Faq) => <Faq />}</LaterSection>
+        <LaterSection code={homeSections.community}>
+          {(Community) => <Community />}
         </LaterSection>
-        <LaterSection>
-          <Community />
-        </LaterSection>
-        <LaterSection>
-          <Closing />
+        <LaterSection code={homeSections.closing}>
+          {(Closing) => <Closing />}
         </LaterSection>
         <HomeToys />
       </div>
     </>
   );
-}
-
-/**
- * One section after the hero, in a hydration boundary of its own. The static
- * page draws every section from its HTML at once. React hydrates the hero with
- * the page, then each later section on its own at the lowest priority, in small
- * slices, so no long task holds the main thread while the page comes alive. A
- * press on a section that has not hydrated yet hydrates it first. Nothing in a
- * section suspends, so a client navigation renders it at once.
- */
-function LaterSection({ children }: { children: ReactNode }) {
-  return <Suspense fallback={null}>{children}</Suspense>;
 }

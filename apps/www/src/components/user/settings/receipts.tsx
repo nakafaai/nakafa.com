@@ -14,6 +14,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { HeadAlignContext } from "@/components/shared/table/align";
 import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import { daysColumn } from "@/components/shared/table/days";
@@ -97,12 +98,13 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
       enableSorting: false,
       filterFn: "oneOf",
       header: () => (
-        <ColumnFilter
-          align="start"
-          column="kind"
-          options={kinds}
-          title={t("payment-for")}
-        />
+        <HeadAlignContext value="start">
+          <ColumnFilter
+            column="kind"
+            options={kinds}
+            title={t("payment-for")}
+          />
+        </HeadAlignContext>
       ),
       id: "kind",
     }),
@@ -129,12 +131,13 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
       enableSorting: false,
       filterFn: "oneOf",
       header: () => (
-        <ColumnFilter
-          align="end"
-          column="amount"
-          options={amounts}
-          title={t("payment-amount")}
-        />
+        <HeadAlignContext value="end">
+          <ColumnFilter
+            column="amount"
+            options={amounts}
+            title={t("payment-amount")}
+          />
+        </HeadAlignContext>
       ),
       id: "amount",
       meta: { align: "end" },

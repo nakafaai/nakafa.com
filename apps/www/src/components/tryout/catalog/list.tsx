@@ -71,7 +71,7 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
 
           <div className="-mt-1 flex flex-1 flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-2">
-              <h3>{row.title}</h3>
+              <h2>{row.title}</h2>
               <TryoutRowStatus status={row.status} />
             </div>
             <TryoutRowMeta meta={row.meta} />

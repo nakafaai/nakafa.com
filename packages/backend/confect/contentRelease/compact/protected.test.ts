@@ -10,9 +10,7 @@ import {
 import { insertTestState } from "@repo/backend/test/content/state";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
-import { DateTime, Schema } from "effect";
-
-const NOW = DateTime.toEpochMillis(DateTime.nowUnsafe());
+import { Schema } from "effect";
 
 describe("contentRelease/compact/protected", () => {
   it("protects a first active release with no predecessor", async () => {

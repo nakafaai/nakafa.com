@@ -1,12 +1,16 @@
 import type { PublicationDates } from "@nakafa/aksara-contracts/date";
-import { DateTime } from "effect";
+import { Array as Arr, DateTime } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 
-/** Provides truthful publication semantics without changing visual layout. */
-export function ContentDates({
+/**
+ * Says who wrote a lesson or an article and when, under its title, so a reader
+ * and a search engine read the same names and dates as the structured data.
+ */
+export function ContentByline({
+  authors,
   dateModified,
   datePublished,
-}: PublicationDates) {
+}: PublicationDates & { authors: readonly { readonly name: string }[] }) {
   const formatter = useFormatter();
   const tCommon = useTranslations("Common");
   const formatDate = (date: string) =>
@@ -19,8 +23,12 @@ export function ContentDates({
     );
 
   return (
-    <p className="sr-only">
-      {tCommon("published")}:{" "}
+    <p className="text-muted-foreground text-sm text-pretty">
+      {Arr.join(
+        Arr.map(authors, ({ name }) => name),
+        ", "
+      )}
+      . {tCommon("published")}:{" "}
       <time dateTime={datePublished}>{formatDate(datePublished)}</time>.
       {dateModified ? (
         <>

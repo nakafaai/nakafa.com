@@ -1,8 +1,12 @@
-/** Gives lessons and articles one left-aligned reading title and optional summary. */
+import type { ReactNode } from "react";
+
+/** Gives lessons and articles one left-aligned reading title, an optional summary, and what stands under them. */
 export function ContentTitle({
+  children,
   title,
   description,
 }: {
+  children?: ReactNode;
   title: string;
   description?: string | undefined;
 }) {
@@ -17,6 +21,7 @@ export function ContentTitle({
             {description}
           </p>
         )}
+        {children}
       </div>
     </header>
   );

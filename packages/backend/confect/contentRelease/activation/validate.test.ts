@@ -1,9 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
-import {
-  inheritContentSnapshots,
-  replaceContentSnapshot,
-} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import {
   validateActivationRenderer,
@@ -29,26 +25,12 @@ import {
   makeActivationPair,
 } from "@repo/backend/test/content/activation";
 import { TEST_PROOF_RENDERER } from "@repo/backend/test/content/proof";
-import {
-  TEST_DIGEST,
-  testRendererJson,
-} from "@repo/backend/test/content/release";
+import { testRendererJson } from "@repo/backend/test/content/release";
 import {
   insertTestState,
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { Effect } from "effect";
-
-/** A snapshot-only candidate that rebuilds the program snapshot and upserts no heads. */
-const REPLACED_PROGRAM_SNAPSHOTS = {
-  ...inheritContentSnapshots(null),
-  program: replaceContentSnapshot({
-    baseSnapshotId: null,
-    resultSnapshotId: TEST_DIGEST,
-    rowCount: 1,
-    rowDigest: TEST_DIGEST,
-  }),
-};
 
 /** Seeds a completed candidate as the active release with its retained inverse in the slot, under the given generation. */
 async function seedActiveWithRecovery(

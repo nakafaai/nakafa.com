@@ -1,6 +1,6 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { AfterPageSettled } from "@repo/design-system/components/ui/settled";
+import { AfterPageRead } from "@repo/design-system/components/ui/settled";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { lazy, Suspense } from "react";
 
@@ -12,9 +12,9 @@ const PricingToys = lazy(() =>
 );
 
 /**
- * The toys of the pricing page, mounted once the page has loaded and settled
- * on a page wide enough to place them, so they come on screen without a scroll
- * and their animations never compete with the page's own loading. The toys
+ * The toys of the pricing page, mounted once the page has its reader on a page
+ * wide enough to place them, so their animations never compete with the page's
+ * own loading. The toys
  * wait for their code inside their own boundary: without it the page's boundary
  * would hide the whole page while the code loads. A layer that fails to load
  * leaves the page as it is.
@@ -27,7 +27,7 @@ export function DeferredPricingToys() {
   }
 
   return (
-    <AfterPageSettled>
+    <AfterPageRead>
       <ErrorBoundary fallback={null}>
         <Suspense fallback={null}>
           <Suspense fallback={null}>
@@ -35,6 +35,6 @@ export function DeferredPricingToys() {
           </Suspense>
         </Suspense>
       </ErrorBoundary>
-    </AfterPageSettled>
+    </AfterPageRead>
   );
 }

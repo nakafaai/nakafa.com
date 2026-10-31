@@ -1,5 +1,6 @@
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { cn } from "cn";
 import { type ComponentProps, createContext, use } from "react";
 
@@ -97,29 +98,20 @@ function DrawerSwipeHandle({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
-/** The popups of the open drawers. */
-const STAGE_POPUP = '[data-slot="drawer-popup"]';
-
 /**
- * Readies the page behind a drawer that opens (`DrawerStage`). It records where the page was scrolled, so
- * the page scales back from the top of the visible screen: the scroll lock then moves the scroll from the
- * root to the body, so the larger of the two is the page's, and the value stays after the drawer closes,
- * while the page scales back up. It also marks the root, because Firefox does not restyle the page for a
- * `:has()` whose match arrives in a portal, and a change on the root itself makes it read the selector again.
+ * Records where the page was scrolled as a drawer opens, so the page behind it scales back from the top of
+ * the visible screen (`DrawerStage`). The scroll lock then moves the scroll from the root to the body, so the
+ * larger of the two is the page's. The value stays after the drawer closes, while the page scales back up.
  */
-function holdDrawerStage() {
+function recordStageScroll(node: HTMLDivElement | null) {
+  if (node === null) {
+    return;
+  }
   const root = document.documentElement;
   root.style.setProperty(
     "--drawer-stage-scroll",
     `${Math.max(root.scrollTop, document.body.scrollTop)}px`
   );
-  root.toggleAttribute("data-drawer-stage", true);
-  return () => {
-    // A nested drawer's end leaves the drawer under it open, which still holds the stage.
-    if (document.querySelectorAll(STAGE_POPUP).length <= 1) {
-      root.removeAttribute("data-drawer-stage");
-    }
-  };
 }
 
 /**
@@ -176,8 +168,11 @@ function DrawerContent({
           data-slot="drawer-popup"
           data-snap-points={hasSnapPoints ? "" : undefined}
           data-swipe-axis={swipeAxis}
+          render={(popupProps, state) => (
+            <StagedPopup {...popupProps} open={state.open} />
+          )}
           {...props}
-          ref={holdDrawerStage}
+          ref={recordStageScroll}
         >
           {showSwipeHandle ? <DrawerSwipeHandle /> : null}
           <DrawerPrimitive.Content

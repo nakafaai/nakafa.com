@@ -39,6 +39,10 @@ export const roomEntryOf = Effect.fn("exams.sitting.join.entry")(function* (
   return code;
 });
 
+/** What a sitting's page enters with by itself: the room entry of its own address, read once as the page opens. */
+export const pageRoomEntry = (sittingId: string) =>
+  Effect.runSync(roomEntryOf(sittingId, window.location.hash));
+
 /**
  * Whether a sitting's page enters by itself: the sitting has opened, and the student holds no attempt
  * yet or one that is still active, so a finished attempt shows how it ended instead.
