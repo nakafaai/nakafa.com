@@ -183,14 +183,14 @@ describe("the Convex CLI of the dev deployment", () => {
 
         const error = yield* runConvex("Missing function", [
           "list",
-          "contents/sections/compare:rank",
+          "contents/sections/rows:save",
         ]).pipe(Effect.provideService(ConvexCli, cli), Effect.flip);
 
         const prefix = "Missing function failed: ";
         expect(error._tag).toBe("DevelopmentCliError");
         expect(
           error.message.startsWith(
-            `${prefix}✖ Failed to run function "contents/sections/compare:rank": Error: Could not find function Available functions: • module/0:handler`
+            `${prefix}✖ Failed to run function "contents/sections/rows:save": Error: Could not find function Available functions: • module/0:handler`
           )
         ).toBe(true);
         expect(error.message).not.toContain("module/399:handler");

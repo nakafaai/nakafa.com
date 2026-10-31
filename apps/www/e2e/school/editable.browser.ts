@@ -150,12 +150,12 @@ for (const viewport of [
     const page = await context.newPage();
 
     await page.goto(address("/classes/fisika-x-1/forum"));
-    const addChannel = page.getByRole("button", { name: "Add channel" });
+    const addChannel = page.getByRole("button", { name: "Add chat" });
     await waitUntilTakenOver(addChannel);
     await addChannel.click();
     await page
       .getByRole("dialog")
-      .getByRole("textbox", { name: "Channel name" })
+      .getByRole("textbox", { name: "Chat name" })
       .fill("Tugs");
     await page.getByRole("dialog").getByRole("button", { name: "Add" }).click();
     const channel = page.getByRole("link", { exact: true, name: "Tugs" });
@@ -165,9 +165,9 @@ for (const viewport of [
       .filter({ has: channel })
       .getByRole("button", { name: "More actions" })
       .click();
-    await page.getByRole("menuitem", { name: "Rename channel" }).click();
-    const rename = page.getByRole("dialog", { name: "Rename channel" });
-    await rename.getByRole("textbox", { name: "Channel name" }).fill("Tugas");
+    await page.getByRole("menuitem", { name: "Rename chat" }).click();
+    const rename = page.getByRole("dialog", { name: "Rename chat" });
+    await rename.getByRole("textbox", { name: "Chat name" }).fill("Tugas");
     await rename.getByRole("button", { name: "Save" }).click();
     const renamed = page.getByRole("link", { exact: true, name: "Tugas" });
     await expect(renamed).toBeVisible();
@@ -179,7 +179,7 @@ for (const viewport of [
       .getByRole("button", { name: "More actions" })
       .click();
     await expect(
-      page.getByRole("menuitem", { name: "Rename channel" })
+      page.getByRole("menuitem", { name: "Rename chat" })
     ).toHaveCount(0);
     await page.keyboard.press("Escape");
 
