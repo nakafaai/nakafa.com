@@ -55,7 +55,7 @@
     "submit": "Anmelden",
     "username-action": "Mit Benutzername anmelden",
     "username-label": "Schul-Benutzername",
-    "outsider-check-again": "Erneut nach meiner Einladung sehen"
+    "outsider-check-again": "Erneut prüfen"
   },
   "SchoolGuardians": {
     "sign-in-action": "Als Elternteil anmelden",
@@ -1744,7 +1744,7 @@
     "year": "Jahr",
     "breadcrumb": "Navigationspfad",
     "sidebar": "Seitenleiste",
-    "toggle-sidebar": "Seitenleiste ein- oder ausblenden",
+    "toggle-sidebar": "Seitenleiste umschalten",
     "notifications": "Benachrichtigungen",
     "close-notification": "Benachrichtigung schließen",
     "clear-search": "Suche löschen",
@@ -2219,7 +2219,7 @@
     "login-cta-title": "Weiterlernen",
     "login-cta-description": "Melde dich an, um deinen Fortschritt in Lerninhalten und Probetests zu speichern.",
     "login-cta-action": "Anmelden",
-    "pricing-cta": "Pakete und Preise ansehen",
+    "pricing-cta": "Pakete ansehen",
     "account": "Konto",
     "learning": "Lernen",
     "learning-description": "Wähle deine Rolle und deinen Lehrplan, die dein Lernerlebnis prägen.",
