@@ -18,6 +18,7 @@ import { useRouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
+import { loadEntryForm } from "@/components/tenant/forms";
 import { TenantMissing } from "@/components/tenant/missing";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -39,12 +40,12 @@ import { readSchoolLocale } from "@/lib/tenant/root";
 import { readBrowserSchoolFrame, reusesVisitFrame } from "@/lib/tenant/visit";
 
 /**
- * The search params of the school entry. `masuk=username` opens the username form
+ * The search params of the school entry. `sign-in=username` opens the username form
  * of the entry surface. A value that does not decode reads as none, so a stale
  * link still opens the page.
  */
 const SchoolSearch = Schema.Struct({
-  masuk: Schema.optional(Schema.Literal("username")),
+  "sign-in": Schema.optional(Schema.Literal("username")),
 }).pipe(Schema.catchDecoding(() => Effect.succeedSome({})));
 
 /** The school address of the path, or the not-found page when no school has it. */
@@ -126,6 +127,7 @@ export const Route = createFileRoute("/school/$slug")({
     matches,
     params,
     routeId,
+    search,
   }): Promise<SchoolContext> => {
     const { visit } = context;
     const invalid = Arr.some(
@@ -139,6 +141,19 @@ export const Route = createFileRoute("/school/$slug")({
     visit.frame = frame;
     if (frame.school._tag === "Refused") {
       throw notFound();
+    }
+    // A visitor's entry paints with its form, and so does the username form that an outsider's card
+    // way opens while its account signs out; an outsider never sees the parent's form.
+    if (frame.school._tag === "Visitor" || frame.school._tag === "Outsider") {
+      await loadEntryForm({
+        guardian:
+          frame.school._tag === "Visitor" &&
+          Arr.some(
+            matches,
+            (match) => match.routeId === "/school/$slug/parents"
+          ),
+        signIn: search["sign-in"],
+      });
     }
     return { legal: frame.legal, school: frame.school, slug: params.slug };
   },
@@ -169,7 +184,6 @@ function SchoolLayout(): ReactElement {
         canManage={canManageSchool(viewer.can)}
         canOpenExams={canOpenExams(viewer)}
         canOpenReports={canOpenReports(viewer)}
-        greeting={school.greeting}
         home={school.home}
         personName={viewer.person.name}
         profile={school.profile}

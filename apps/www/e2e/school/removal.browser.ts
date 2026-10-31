@@ -268,6 +268,9 @@ test("a room cancelled while its dashboard and a student's page are open says so
   baseURL,
   browser,
 }) => {
+  // Two people's pages and four acceptance commands share this test's time: alone it takes about 45 s, and on a
+  // loaded machine the setup took most of the default two minutes, so the click on the room ran out of time.
+  test.setTimeout(240_000);
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);

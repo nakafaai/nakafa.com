@@ -4,12 +4,14 @@ import { questionView } from "@repo/backend/confect/exams/question";
 import {
   optionIdsOf,
   pairIdsOf,
+  scriptsOf,
 } from "@repo/backend/confect/exams/results/stats";
 import { Effect } from "effect";
 
 /**
  * One question of the exam, numbered from one, with the option IDs of its choice in order, the statements
- * and answers of its match in order, and the points that a correct answer to it earns.
+ * and answers of its match in order, the scripts that name its options and answers, and the points that a
+ * correct answer to it earns.
  */
 export const questionSummary = Effect.fn("exams.results.summary.question")(
   function* (questionId: ExamQuestionsDoc["_id"], number: number) {
@@ -23,6 +25,7 @@ export const questionSummary = Effect.fn("exams.results.summary.question")(
       number,
       optionIds: optionIdsOf(view.answers),
       ...pairIdsOf(view.answers),
+      ...scriptsOf(view.answers),
       points: view.points,
     };
   }

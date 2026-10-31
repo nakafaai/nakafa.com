@@ -3,9 +3,7 @@ import katex from "katex";
 // The mhchem extension registers the chemistry commands `\ce` and `\pu` on KaTeX. It loads with this
 // module, so the server and the browser draw chemistry in the first HTML, with no wait for a chunk.
 import "katex/contrib/mhchem";
-
-/** The colour of a formula that cannot be drawn: the destructive token of the theme. */
-const ERROR_COLOR = "var(--destructive)";
+import { MATH_ERROR_COLOR } from "@repo/design-system/lib/prose";
 
 /** A formula that KaTeX does not parse, with the reason KaTeX gives. */
 export class FormulaInvalid extends Schema.TaggedError<FormulaInvalid>()(
@@ -15,12 +13,12 @@ export class FormulaInvalid extends Schema.TaggedError<FormulaInvalid>()(
 
 /**
  * The markup of a formula, drawn by KaTeX. A formula that does not parse is drawn as KaTeX's
- * error, in the destructive colour, so a broken formula never breaks the page around it.
+ * error, in the lesson's error colour, so a broken formula never breaks the page around it.
  */
 export function drawFormula(latex: string, displayMode: boolean): string {
   return katex.renderToString(latex, {
     displayMode,
-    errorColor: ERROR_COLOR,
+    errorColor: MATH_ERROR_COLOR,
     throwOnError: false,
     trust: false,
   });

@@ -84,9 +84,14 @@ finds the right data.
   `apps/www/src/lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
   the proxy (`apps/www/src/lib/routing/public/profile.ts`). The gate reads one query,
   `tenancy.profile.refusal` (`packages/backend/confect/tenancy/profile.impl.ts`),
-  which decides the school's existence and the caller's view of it together: a
-  school that no one has the address of is refused for every caller, and a signed-in
-  member whom the school does not admit (`tenant.view` denied) is refused. A visitor,
+  which decides the school's existence for a visitor: a school that no one has the
+  address of is refused. Since 30 Oct 2026 a request that carries a session reads
+  nothing in the Worker: it gets the school shell at once, and the layout's own gate,
+  which reads the viewer in the browser (ADR 0038 D6), draws the not-found page for a
+  school that does not exist or does not admit the viewer (`tenant.view` denied), with
+  a 200 status. That gate already refused in the page, so the Worker's session and
+  refusal reads only delayed a signed-in page's first byte, by about 0.9 s. A crawler
+  carries no session, so a school that does not exist still answers it 404. A visitor,
   and a signed-in non-member of an existing school, reach the layout, which renders
   the outsider page (`apps/www/src/components/tenant/outsider.tsx`) with a 200 status. The refused page answers
   with the app's not-found page and a 404 status at the visitor's own address, in
@@ -105,18 +110,14 @@ finds the right data.
   locale, so the request goes on unchanged for a refused visitor and an admitted
   one. A 404 for a refused visitor alone would tell the two apart, so the refusal
   does not apply to such a path.
-- A school page request costs two or three Convex query calls. The proxy makes one:
-  `tenancy.profile.refusal`, which reads one school row by its slug and, for a
-  signed-in caller, the caller's Person and grants, so a non-member costs the same
-  one call as a member. The layout reads its profile and, for a signed-in viewer,
-  its viewer once per request (`apps/www/src/lib/tenant/read.ts`), because it still renders the
-  name and the role. A signed-in viewer also
-  reads the session token twice, once in the proxy and once in the layout, because
-  React's `cache` does not span the two. Each read of the layout, token or query,
+- A visitor's school page request costs one Convex query call in the proxy:
+  `tenancy.profile.refusal`, which reads one school row by its slug, with no session.
+  A signed-in request costs none there. The layout reads its frame in the browser
+  (`apps/www/src/lib/tenant/read.ts`), because it renders the school's name and the
+  viewer's role. Each read of the layout, token or query,
   is retried within the shared network budget, so one read answers or fails
   within 31.5 seconds (`packages/backend/client/network.ts`). The proxy's gate
-  makes one attempt per query, and the whole gate, its session read included,
-  waits at most one deadline: `NETWORK_ATTEMPT_DEADLINE`, 10 seconds, the bound
+  makes one attempt per query, and the whole gate waits at most one deadline: `NETWORK_ATTEMPT_DEADLINE`, 10 seconds, the bound
   that every attempt of a network read already has (`packages/backend/client/network.ts`,
   used by `apps/www/src/lib/routing/school/refusal.ts`). A gate that misses the deadline or
   fails goes on to the page, with its full cause logged. So a school that does not
@@ -157,7 +158,7 @@ Every address below is planned, except the root of a school host, which is live.
 | `harapan.nakafa.com/connectors`, `/connectors/classroom` | Connectors. A teacher sees only their own connections. |
 | `harapan.nakafa.com/perangkat` | Where a person types the code that the CLI shows (device authorization). |
 | `harapan.nakafa.com/kartu` | Where a student enters the code of a login card (ADR 0009). It works on the school host only. |
-| `harapan.nakafa.com/orang-tua` | Where a parent asks for a sign-in code by email and enters it (ADR 0009). It works on the school host only. |
+| `harapan.nakafa.com/parents` | Where a parent asks for a sign-in code by email and enters it (ADR 0009). It works on the school host only. |
 | `harapan.nakafa.com/api/v1`, `harapan.nakafa.com/mcp` | The school REST API and the school MCP server. They use OAuth 2.0 client credentials. |
 | `harapan.nakafa.com/settings` | Organisation settings, periods, class groups, billing, and the AI quota. |
 | `harapan.nakafa.com/chat` | Nina in the school. A school thread does not read personal memory (K3). |
@@ -224,7 +225,7 @@ its own change, before any school code that depends on it lands.
   text of a message, or an exam token. The one code an email carries is the
   parent's six-digit sign-in code (ADR 0009). It expires after five minutes,
   rests as a keyed hash, and is useless without the code entry page of the school
-  host (`/orang-tua`). Push carries only a notification id and a general title.
+  host (`/parents`). Push carries only a notification id and a general title.
 
 ### Moving a school between cells
 

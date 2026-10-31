@@ -8,6 +8,7 @@ import {
   IdCardIcon,
   MailSend01Icon,
   MoreHorizontalIcon,
+  PencilEdit02Icon,
   UserAdd01Icon,
   UserCircleIcon,
   UserRemove01Icon,
@@ -46,9 +47,11 @@ import {
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
+import { roleLooks } from "@/components/tenant/roles";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
+import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 
@@ -139,6 +142,7 @@ function SchoolMembersBody() {
 /** The members in a data table, or the table's empty state when the school has none. */
 function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
   const t = useTranslations("SchoolSettings");
+  const tSchool = useTranslations("School");
 
   if (Arr.isReadonlyArrayEmpty(members)) {
     return (
@@ -180,24 +184,37 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
-    memberColumns.display({
+    memberColumns.accessor((member) => member.roles, {
       cell: (info) => (
         <div className="inline-flex items-center gap-1 whitespace-nowrap">
-          {Arr.map(info.row.original.roles, (role) => (
+          {Arr.map(info.getValue(), (role) => (
             <RoleBadge key={role} role={role} />
           ))}
         </div>
       ),
-      header: t("member-roles"),
+      enableSorting: false,
+      filterFn: "anyOf",
+      header: () => (
+        <ColumnFilter
+          column="roles"
+          options={Arr.map(
+            Arr.dedupe(Arr.flatMap(members, (member) => member.roles)),
+            (role) => ({
+              icon: roleLooks[role].icon,
+              label: tSchool(`role.${role}`),
+              value: role,
+            })
+          )}
+          title={t("member-roles")}
+        />
+      ),
       id: "roles",
-      meta: { align: "center" },
     }),
     memberColumns.display({
       cell: (info) => <SchoolMemberMenu member={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 
@@ -212,7 +229,7 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
 }
 
 /**
- * The row menu of a member: Give a role, which gives the member a role of the whole school, and Remove for a member
+ * The row menu of a member: Rename, Give a role, which gives the member a role of the whole school, and Remove for a member
  * whom the viewer may remove, one who joined, one whose card waits, and one whose invite ended or card expired. Remove
  * asks first, and the account of a member who joined loses the school at once. An invited member is handled on the
  * invitations page, and the list answers which rows the viewer may remove.
@@ -225,6 +242,8 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
     removeMemberChange
   );
   const [isGiving, setIsGiving] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renaming, setRenaming] = useState(0);
   const [isRemoving, setIsRemoving] = useState(false);
   const removable = member.removable && member.status !== "invited";
 
@@ -251,6 +270,15 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
         />
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuGroup>
+            <DropdownMenuItem
+              onClick={() => {
+                setRenaming((count) => count + 1);
+                setIsRenaming(true);
+              }}
+            >
+              <HugeIcons icon={PencilEdit02Icon} />
+              {t("person-rename")}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setIsGiving(true)}>
               <HugeIcons icon={UserStar01Icon} />
               {t("roles-assign-dialog")}
@@ -267,6 +295,12 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+      <PersonRenameDialog
+        key={renaming}
+        open={isRenaming}
+        person={member}
+        setOpen={setIsRenaming}
+      />
       <SchoolGrantDialog
         open={isGiving}
         person={{ id: member.id, name: member.name }}

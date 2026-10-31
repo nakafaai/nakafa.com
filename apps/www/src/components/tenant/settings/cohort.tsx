@@ -115,7 +115,11 @@ function CohortUnavailable() {
   );
 }
 
-/** One cohort's page once the cohort is read. */
+/**
+ * One cohort's page, drawn from the first paint: the path, the search, Add student and the homeroom card's frame are
+ * there at once, and the cohort's name, its homeroom teacher and its students fill in when the cohort is read. Add
+ * student waits disabled until then, and stays disabled for an archived cohort.
+ */
 function SchoolCohortPage({
   cohortId,
   slug,
@@ -135,11 +139,7 @@ function SchoolCohortPage({
     }
     throw cohort.error;
   }
-  if (!QueryResult.isSuccess(cohort)) {
-    return null;
-  }
-  const detail = cohort.value;
-  const isArchived = detail.status === "archived";
+  const detail = QueryResult.isSuccess(cohort) ? cohort.value : undefined;
   const section = getSchoolSettingsSection(
     slug,
     "/school/$slug/settings/cohorts"
@@ -157,14 +157,16 @@ function SchoolCohortPage({
             label: t(section.labelKey),
             target: section.target,
           },
-          { label: detail.name },
+          ...(detail === undefined ? [] : [{ label: detail.name }]),
         ]}
-        title={detail.name}
+        {...(detail === undefined ? {} : { title: detail.name })}
       >
         <TableSearch placeholder={t("cohort-members-search")} />
-        {isArchived ? null : (
-          <SchoolPlacementAdd cohortId={cohortId} slug={slug} />
-        )}
+        <SchoolPlacementAdd
+          cohortId={cohortId}
+          disabled={detail === undefined || detail.status === "archived"}
+          slug={slug}
+        />
       </SchoolHeader>
       <div
         className={cn(
@@ -175,14 +177,16 @@ function SchoolCohortPage({
         <SchoolHomeroomCard cohort={detail} slug={slug} />
       </div>
       <TablePageBody width="column">
-        <ReadBoundary>
-          <SchoolCohortMembers
-            cohortId={cohortId}
-            isArchived={isArchived}
-            periodId={detail.periodId}
-            slug={slug}
-          />
-        </ReadBoundary>
+        {detail === undefined ? null : (
+          <ReadBoundary>
+            <SchoolCohortMembers
+              cohortId={cohortId}
+              isArchived={detail.status === "archived"}
+              periodId={detail.periodId}
+              slug={slug}
+            />
+          </ReadBoundary>
+        )}
       </TablePageBody>
     </TableFiltersProvider>
   );

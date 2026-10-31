@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { detailOf } from "@repo/backend/confect/notifications/detail";
+import { partsOf } from "@repo/backend/confect/notifications/detail";
 import { NotificationNotFound } from "@repo/backend/confect/notifications/errors";
 import {
   decodeFeedCursor,
@@ -75,16 +75,16 @@ const read = FunctionImpl.make(
       .get(row.tenantId)
       .pipe(Effect.orDie);
     const profile = yield* tenantProfile(tenant);
-    const detail = yield* detailOf(row, person, tenant);
+    const parts = yield* partsOf(row, person, tenant);
     if (row.readAt !== undefined) {
-      return notificationView(row, profile, detail);
+      return notificationView(row, profile, parts);
     }
     const readAt = yield* Clock.currentTimeMillis;
     yield* (yield* DatabaseWriter)
       .table("notifications")
       .patch(row._id, { readAt })
       .pipe(Effect.orDie);
-    return notificationView({ ...row, readAt }, profile, detail);
+    return notificationView({ ...row, readAt }, profile, parts);
   })
 );
 

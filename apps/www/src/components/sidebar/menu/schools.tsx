@@ -30,7 +30,6 @@ function SidebarSchoolMenuItem({
 }) {
   return (
     <DropdownMenuItem
-      className="cursor-pointer"
       render={(props) => (
         <a {...props} href={schoolOrigin(tenant.slug).href}>
           <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
@@ -54,7 +53,6 @@ function SidebarStartSchoolMenuItem() {
 
   return (
     <DropdownMenuItem
-      className="cursor-pointer"
       render={(props) => (
         <a {...props} href={new URL(`/${locale}/school/new`, SITE_ORIGIN).href}>
           <HugeIcons icon={PlusSignIcon} />

@@ -12,6 +12,12 @@ const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 const clear = Ref.getFunctionReference(refs.public.nina.memory.clear);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
+/**
+ * When an act whose time a test reads runs: a second after the setup, which
+ * commits at `NOW`, because Convex runs each mutation after the commits before
+ * it.
+ */
+const ACTED_AT = NOW + 1000;
 const LESSON = "lesson:material:lesson:mathematics:material-section:limits";
 const PATH = "path:materials/mathematics";
 const CHEMISTRY = "lesson:material:lesson:chemistry";
@@ -122,6 +128,7 @@ describe("memory capture write", () => {
       text: "Kelas 11.",
       topics: [CHEMISTRY],
     });
+    vi.setSystemTime(ACTED_AT);
     expect(await f.run([candidate({ known: 1 })], { topics: [LESSON] })).toBe(
       1
     );
@@ -129,7 +136,7 @@ describe("memory capture write", () => {
       expect.objectContaining({
         _id: id,
         author: "nina",
-        confirmedAt: NOW,
+        confirmedAt: ACTED_AT,
         kind: "level",
         topics: [CHEMISTRY, LESSON],
       }),
@@ -155,6 +162,7 @@ describe("memory capture write", () => {
       kind: "level",
       text: "Kelas 12 IPA.",
     });
+    vi.setSystemTime(ACTED_AT);
     expect(
       await f.run([candidate({ known: 1, text: "kelas   12,  ipa" })])
     ).toBe(1);
@@ -163,14 +171,14 @@ describe("memory capture write", () => {
       expect.objectContaining({
         _id: id,
         author: "nina",
-        confirmedAt: NOW,
+        confirmedAt: ACTED_AT,
         kind: "level",
       }),
     ]);
     expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
     // Its words and topics stay, and its keys still move to the new time.
     expect(Arr.map(await f.keys(), (key) => key.confirmedAt)).toEqual(
-      Arr.makeBy(3, () => NOW)
+      Arr.makeBy(3, () => ACTED_AT)
     );
   });
 
@@ -189,6 +197,7 @@ describe("memory capture write", () => {
         topics: [CHEMISTRY],
       });
       const [before] = await f.stored();
+      vi.setSystemTime(ACTED_AT);
       expect(
         await f.run([candidate({ known: 1, text })], { topics: [LESSON] })
       ).toBe(1);
@@ -197,7 +206,7 @@ describe("memory capture write", () => {
       expect(after).toMatchObject({
         _id: id,
         author: "learner",
-        confirmedAt: NOW,
+        confirmedAt: ACTED_AT,
         kind: "level",
         topics: [CHEMISTRY, LESSON],
       });
@@ -229,6 +238,7 @@ describe("memory capture write", () => {
     const f = await createCaptureTest();
     await f.seed({ author: "learner", text: "Kelas 12 IPA" });
     await f.seed({ author: "learner", text: "Mau ikut SNBT 2027" });
+    vi.setSystemTime(ACTED_AT);
     expect(
       await f.run([
         candidate({ known: 1 }),
@@ -244,12 +254,12 @@ describe("memory capture write", () => {
     expect(await f.stored()).toEqual([
       expect.objectContaining({
         author: "learner",
-        confirmedAt: NOW,
+        confirmedAt: ACTED_AT,
         kind: "level",
       }),
       expect.objectContaining({
         author: "learner",
-        confirmedAt: NOW,
+        confirmedAt: ACTED_AT,
         kind: "goal",
       }),
     ]);
@@ -346,6 +356,7 @@ describe("memory capture write topics", () => {
       topics: [PATH],
     });
     const again = candidate({ known: 1 });
+    vi.setSystemTime(ACTED_AT);
     expect(await f.run([again], { topics: [LESSON, PATH] })).toBe(1);
     expect(await f.stored()).toEqual([
       expect.objectContaining({ _id: id, topics: [PATH, LESSON] }),

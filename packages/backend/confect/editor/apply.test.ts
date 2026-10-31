@@ -8,7 +8,7 @@ import { nodeDepth } from "@repo/utilities/depth";
 import { Effect } from "effect";
 
 /** The document of one paragraph of `Soal`, read with the assessment schema. */
-const soal = assessmentModel.nodeFromJSON(paragraphOf("Soal"));
+const soal = assessmentModel().nodeFromJSON(paragraphOf("Soal"));
 
 /** A replace step that inserts `text` at `position`, inside the paragraph of `Soal`. */
 const insertAt = (position: number, text: string): Step => ({
@@ -24,7 +24,7 @@ describe("editor/apply", () => {
     () =>
       Effect.gen(function* () {
         const applied = yield* applyStoredStep(
-          assessmentModel,
+          assessmentModel(),
           soal,
           insertAt(5, "!")
         );
@@ -38,7 +38,7 @@ describe("editor/apply", () => {
     () =>
       Effect.gen(function* () {
         // A text node without its text is one the schema cannot read.
-        const failure = yield* applyStoredStep(assessmentModel, soal, {
+        const failure = yield* applyStoredStep(assessmentModel(), soal, {
           from: 1,
           slice: { content: [{ type: "text" }] },
           stepType: "replace",
@@ -53,7 +53,7 @@ describe("editor/apply", () => {
     () =>
       Effect.gen(function* () {
         // The document is 6 positions long, and no node starts at its end, so the step fails.
-        const failure = yield* applyStoredStep(assessmentModel, soal, {
+        const failure = yield* applyStoredStep(assessmentModel(), soal, {
           mark: { type: "bold" },
           pos: 6,
           stepType: "addNodeMark",
@@ -67,7 +67,7 @@ describe("editor/apply", () => {
     () =>
       Effect.gen(function* () {
         const failure = yield* applyStoredStep(
-          assessmentModel,
+          assessmentModel(),
           soal,
           insertAt(999, "x")
         ).pipe(Effect.flip);
@@ -78,7 +78,7 @@ describe("editor/apply", () => {
   it.effect("applies a step that nests the document to the depth bound", () =>
     Effect.gen(function* () {
       const applied = yield* applyStoredStep(
-        assessmentModel,
+        assessmentModel(),
         soal,
         blockquotesAtStart(14)
       );
@@ -91,7 +91,7 @@ describe("editor/apply", () => {
     () =>
       Effect.gen(function* () {
         const failure = yield* applyStoredStep(
-          assessmentModel,
+          assessmentModel(),
           soal,
           blockquotesAtStart(15)
         ).pipe(Effect.flip);
