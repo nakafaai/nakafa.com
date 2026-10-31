@@ -340,9 +340,7 @@ export declare const api: {
       >;
     };
     xendit: {
-      cancel: {
-        cancelPlan: FunctionReference<"mutation", "public", {}, null>;
-      };
+      cancel: { cancelPlan: FunctionReference<"mutation", "public", {}, null> };
     };
   };
   chats: {
@@ -7220,6 +7218,17 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      mine: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          email: string;
+          guardianName: string;
+          id: Id<"guardianLinks">;
+          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+        }>
+      >;
       readdress: FunctionReference<
         "mutation",
         "public",
@@ -8010,6 +8019,10 @@ export declare const api: {
                     | { kind: "tenant" }
                     | { kind: "unit"; unitId: Id<"tenantUnits"> };
                   type: "integration.created";
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.changed";
                 }
               | {
                   client: Id<"integrationClients">;
@@ -12628,12 +12641,6 @@ export declare const api: {
         }
       >;
       updateBio: FunctionReference<"mutation", "public", { bio: string }, null>;
-      updateUsername: FunctionReference<
-        "mutation",
-        "public",
-        { username: string },
-        null
-      >;
       updateUserName: FunctionReference<
         "mutation",
         "public",
@@ -12644,6 +12651,12 @@ export declare const api: {
         "mutation",
         "public",
         { role: "teacher" | "student" | "parent" },
+        null
+      >;
+      updateUsername: FunctionReference<
+        "mutation",
+        "public",
+        { username: string },
         null
       >;
     };
@@ -15587,9 +15600,7 @@ export declare const internal: {
             }
         >;
       };
-      state: {
-        ready: FunctionReference<"query", "internal", {}, boolean>;
-      };
+      state: { ready: FunctionReference<"query", "internal", {}, boolean> };
     };
   };
   credits: {
@@ -17576,9 +17587,7 @@ export declare const internal: {
     };
   };
   vault: {
-    keys: {
-      rewrap: FunctionReference<"mutation", "internal", {}, number>;
-    };
+    keys: { rewrap: FunctionReference<"mutation", "internal", {}, number> };
   };
 };
 
