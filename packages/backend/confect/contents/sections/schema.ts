@@ -254,22 +254,3 @@ export const finishInputValidator = Schema.Struct({
 export const finishResultValidator = Schema.Struct({
   recorded: Schema.Boolean,
 });
-
-/** Which stored sections to read back: those of one language, after a cursor. */
-export const pageInputValidator = Schema.Struct({
-  appLocale: localeValidator,
-  cursor: Schema.NullOr(Schema.String),
-});
-
-/** A page of stored sections with what the model test needs of each, and the cursor of the next page. */
-export const pageResultValidator = Schema.Struct({
-  next: Schema.NullOr(Schema.String),
-  sections: Schema.Array(
-    Schema.Struct({
-      contentKey: Schema.String,
-      headingPath: Schema.Array(Schema.String),
-      ordinal: Schema.Finite,
-      text: Schema.String,
-    })
-  ),
-});

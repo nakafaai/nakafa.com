@@ -11,8 +11,7 @@ import { Array as Arr, Duration, Effect } from "effect";
 /**
  * How long the CLI may take for one call of the measuring action. The CLI waits
  * for the answer in one request, and Node's `fetch` gives up on a request that
- * gets no answer after five minutes (measured for the model test of knowledge
- * search, `scripts/knowledge/main.ts`), so no call can be given longer. A call
+ * gets no answer after five minutes, so no call can be given longer. A call
  * stays well inside that. It holds at most `MEASURE_TEXT_LIMIT` texts, which
  * the action asks the gateway about one request each, four at a time
  * (`REQUESTS_IN_FLIGHT` of `confect/nina/judgment/measure.ts`), and every
