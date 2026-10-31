@@ -30,11 +30,7 @@ import {
   useEnterSitting,
 } from "@/components/exams/sitting/admit";
 import { isActive, takesAnswers } from "@/components/exams/sitting/attempt";
-import {
-  PaperBack,
-  PaperBar,
-  SittingBar,
-} from "@/components/exams/sitting/bar";
+import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
 import { useReaderLoaded } from "@/components/exams/sitting/document";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
@@ -94,25 +90,27 @@ export function StudentSitting({
 
   if (QueryResult.isFailure(view)) {
     return (
-      <>
-        <SittingBar
-          examTitle={Option.match(kept, {
-            onNone: () => t("sitting"),
-            onSome: (last) => last.sitting.examTitle,
-          })}
-        />
+      <PaperFrame
+        bar={
+          <PaperBar
+            back={<PaperBack />}
+            title={Option.match(kept, {
+              onNone: () => t("sitting"),
+              onSome: (last) => last.sitting.examTitle,
+            })}
+          />
+        }
+      >
         <StudentFailure error={view.error} />
-      </>
+      </PaperFrame>
     );
   }
   // A paused read, as while Convex confirms the session again, keeps its last answer, so a running paper stays.
   if (Option.isNone(kept)) {
-    return joining ? (
-      <PaperFrame>
-        <PaperBar back={<PaperBack />} title={t("sitting")} />
-      </PaperFrame>
-    ) : (
-      <SittingBar examTitle={t("sitting")} />
+    return (
+      <PaperFrame
+        bar={<PaperBar back={<PaperBack />} title={t("sitting")} />}
+      />
     );
   }
   const { attempt, sitting } = kept.value;
@@ -128,9 +126,9 @@ export function StudentSitting({
   }
   if (joining && enterable) {
     return (
-      <PaperFrame>
-        <PaperBar back={<PaperBack />} title={sitting.examTitle} />
-      </PaperFrame>
+      <PaperFrame
+        bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+      />
     );
   }
   if (attempt !== null && !takesAnswers(attempt.state)) {
@@ -141,8 +139,9 @@ export function StudentSitting({
   }
 
   return (
-    <>
-      <SittingBar examTitle={sitting.examTitle} />
+    <PaperFrame
+      bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+    >
       <SittingBody>
         <form onSubmit={entry.submit}>
           <CardSection>
@@ -184,7 +183,7 @@ export function StudentSitting({
           </CardSection>
         </form>
       </SittingBody>
-    </>
+    </PaperFrame>
   );
 }
 
@@ -271,8 +270,9 @@ function StudentScheduled({
   const locale = useLocale();
 
   return (
-    <>
-      <SittingBar examTitle={sitting.examTitle} />
+    <PaperFrame
+      bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+    >
       <SittingBody>
         <CardSection>
           <CardHeader>
@@ -296,7 +296,7 @@ function StudentScheduled({
           <CardSectionFooter hint={t("student-scheduled-footer")} />
         </CardSection>
       </SittingBody>
-    </>
+    </PaperFrame>
   );
 }
 

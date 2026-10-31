@@ -23,7 +23,7 @@ import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
  * prompt would run over the options below it.
  */
 const questionPaper = cva(
-  "bg-background flex aspect-4/3 w-full min-w-0 flex-col gap-6 rounded-xl p-6 shadow-sm md:p-10",
+  "bg-background flex aspect-4/3 w-full min-w-0 flex-col gap-8 rounded-xl p-6 shadow-sm md:p-10",
   {
     defaultVariants: { selected: false },
     variants: {

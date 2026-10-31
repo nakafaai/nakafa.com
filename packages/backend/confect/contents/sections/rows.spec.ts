@@ -6,8 +6,6 @@ import {
   knownInputValidator,
   lessonsInputValidator,
   lessonsResultValidator,
-  pageInputValidator,
-  pageResultValidator,
   pruneInputValidator,
   pruneResultValidator,
   storeInputValidator,
@@ -22,8 +20,7 @@ import { Schema } from "effect";
  * The reads return the source of the documents whose sections the index lacks
  * or holds at another version; the writes keep the index equal to the active
  * release, one document at a time, or a bounded number of whole documents in
- * the clean up, and the last one records that the index is complete. One more
- * read gives back the stored sections of a language for the model test.
+ * the clean up, and the last one records that the index is complete.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -69,12 +66,5 @@ export default GroupSpec.make()
       name: "finish",
       args: () => finishInputValidator.fields,
       returns: () => finishResultValidator,
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalQuery({
-      name: "page",
-      args: () => pageInputValidator.fields,
-      returns: () => pageResultValidator,
     })
   );

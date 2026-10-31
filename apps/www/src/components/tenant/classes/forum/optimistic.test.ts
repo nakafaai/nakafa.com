@@ -23,6 +23,7 @@ const topic = channelOf("topic");
 
 /** A message of the channel, written by the viewer. */
 const message = (id: string, text: string): ForumMessage => ({
+  attachments: [],
   author: { id: personId, name: "Bu Rina" },
   clientKey: `key-${id}-0000`,
   createdAt: 1,
@@ -31,6 +32,7 @@ const message = (id: string, text: string): ForumMessage => ({
   mentions: [],
   id: messageOf(id),
   mine: true,
+  poll: null,
   text,
 });
 
@@ -74,10 +76,12 @@ describe("sendUpdate", () => {
     ]);
 
     sendUpdate(sent)(localStore, {
+      attachments: [],
       channelId: general,
       classId,
       clientKey: "client-key-1",
       mentions: [],
+      poll: null,
       slug,
       text: sent.text ?? "",
     });
@@ -272,6 +276,7 @@ describe("replyUpdate", () => {
     ]);
 
     replyUpdate(sent)(localStore, {
+      attachments: [],
       classId,
       clientKey: "client-key-3",
       mentions: [],

@@ -88,10 +88,9 @@ const list = FunctionImpl.make(
             .pipe(Effect.orDie),
           rosterEntryOf(placement.personId),
         ]);
-        const nisn = yield* Option.match(entry, {
-          onNone: () => Effect.succeedNone,
-          onSome: (found) => openNisn(keys, found),
-        });
+        const nisn = yield* Effect.transposeOption(
+          Option.map(entry, (found) => openNisn(keys, found))
+        );
         const line: typeof RosterLine.Type = {
           cohortName: cohort.name,
           name: person.name,

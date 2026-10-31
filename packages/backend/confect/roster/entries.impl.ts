@@ -16,23 +16,17 @@ import {
   personAccess,
   personAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer } from "effect";
 
-/**
- * Sets a student's NISN and under-age flag. A call without a NISN keeps the one on
- * file. The change is journaled as `roster.set` with no value (ADR 0016).
- */
+/** Sets a student's NISN. The change is journaled as `roster.set` with no value (ADR 0016). */
 const set = FunctionImpl.make(
   databaseSchema,
   spec,
   "set",
-  Effect.fn("roster.entries.set")(function* ({ nisn, underAgeLimit }) {
+  Effect.fn("roster.entries.set")(function* ({ nisn }) {
     const { person: actor } = yield* Member;
     const person = yield* Person;
-    yield* writeRosterEntry(yield* schoolKeys(person.tenantId), person, {
-      nisn: Option.fromUndefinedOr(nisn),
-      underAgeLimit,
-    });
+    yield* writeRosterEntry(yield* schoolKeys(person.tenantId), person, nisn);
     yield* personAuthority.record(personActor(actor), person, {
       type: "roster.set",
     });

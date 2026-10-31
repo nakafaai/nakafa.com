@@ -9,6 +9,7 @@ import {
   QUESTION_POINTS_MAX,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
+import { takesScoring } from "@repo/backend/confect/exams/scoring";
 import {
   REASON_ID,
   takesScoring,

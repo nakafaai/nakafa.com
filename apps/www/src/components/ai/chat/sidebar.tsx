@@ -37,6 +37,7 @@ import { Array as Arr, Option } from "effect";
 import { type ComponentProps, createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
+import { readChatTitle } from "@/components/ai/chat/title";
 import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
@@ -226,6 +227,7 @@ function SidebarChatRows({
           ))}
         {Arr.map(chats, (chat) => {
           const isPrivate = chat.visibility === "private";
+          const title = readChatTitle(chat.title, t("new-chat"));
           return (
             <SidebarMenuItem key={chat._id}>
               <SidebarMenuButton
@@ -234,13 +236,13 @@ function SidebarChatRows({
                   <Link
                     activeOptions={EXACT_ACTIVE_OPTIONS}
                     params={{ id: chat._id, locale }}
-                    title={chat.title}
+                    title={title}
                     to="/$locale/chat/$id"
                   />
                 }
               >
                 <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />
-                <span className="truncate">{chat.title}</span>
+                <span className="truncate">{title}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           );

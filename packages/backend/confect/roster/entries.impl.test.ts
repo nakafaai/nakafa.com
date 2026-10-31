@@ -30,14 +30,10 @@ describe("roster/entries", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* asStaffSchool(fixture);
-        const view = yield* setRoster(fixture, {
-          nisn: NISN,
-          underAgeLimit: true,
-        });
+        const view = yield* setRoster(fixture, NISN);
         expect(view).toEqual({
           hasNisn: true,
           personId: fixture.people.student.personId,
-          underAgeLimit: true,
         });
         const row = yield* fixture.run(storedRow);
         const nisn = Option.getOrUndefined(row)?.nisn;
@@ -58,21 +54,7 @@ describe("roster/entries", () => {
       })
   );
 
-  it.effect("keeps the NISN on file when only the flag changes", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      yield* asStaffSchool(fixture);
-      yield* setRoster(fixture, { nisn: NISN, underAgeLimit: true });
-      const view = yield* setRoster(fixture, { underAgeLimit: false });
-      expect(view).toEqual({
-        hasNisn: true,
-        personId: fixture.people.student.personId,
-        underAgeLimit: false,
-      });
-    })
-  );
-
-  it.effect("reads a student without a row as having no NISN and no flag", () =>
+  it.effect("reads a student without a row as having no NISN", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       yield* asStaffSchool(fixture);
@@ -93,9 +75,9 @@ describe("roster/entries", () => {
         expect(
           yield* Effect.flip(
             fixture.as(account).mutation(set, {
+              nisn: NISN,
               personId: fixture.people.student.personId,
               slug: nf,
-              underAgeLimit: false,
             })
           )
         ).toMatchObject(denied("role"));
@@ -111,9 +93,9 @@ describe("roster/entries", () => {
       expect(
         yield* Effect.flip(
           fixture.as("otherOwner").mutation(set, {
+            nisn: NISN,
             personId: fixture.people.student.personId,
             slug: slugOf("other"),
-            underAgeLimit: false,
           })
         )
       ).toMatchObject(denied("resource"));

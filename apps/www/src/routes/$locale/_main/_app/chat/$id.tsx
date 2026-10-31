@@ -1,3 +1,4 @@
+import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
@@ -11,7 +12,11 @@ export const Route = createFileRoute("/$locale/_main/_app/chat/$id")({
   loader: ({ params }) =>
     chatScreenFn({ data: { id: params.id, locale: params.locale } }),
   head: ({ loaderData }) => ({
-    meta: loaderData?.title ? [{ title: loaderData.title }] : [],
+    // A chat Nina has not named yet keeps the title of the new chat page.
+    meta:
+      loaderData?.title && loaderData.title !== DEFAULT_TITLE
+        ? [{ title: loaderData.title }]
+        : [],
   }),
   component: ChatRoute,
 });

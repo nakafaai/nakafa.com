@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/confect/roster/entry";
 import type { Nisn } from "@repo/backend/confect/roster/schema";
 import type { Email } from "@repo/backend/confect/tenancy/schema";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /**
  * Seeds what a parent's sign-in needs in the acceptance runtime, for an address that the
@@ -33,10 +33,7 @@ export const seedGuardianCode = Effect.fn("guardians.seed.code")(
       (link) =>
         readLinkedPerson(link.studentPersonId).pipe(
           Effect.flatMap((student) =>
-            writeRosterEntry(keys, student, {
-              nisn: Option.some(args.nisn),
-              underAgeLimit: true,
-            })
+            writeRosterEntry(keys, student, args.nisn)
           )
         ),
       { discard: true }

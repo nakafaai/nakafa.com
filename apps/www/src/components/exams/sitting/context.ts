@@ -1,9 +1,10 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DashboardView } from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, HashMap, Schema } from "effect";
 import { createContext, use } from "react";
 import { type StoreApi, useStore } from "zustand";
+import type { DashboardAttempt } from "@/components/exams/sitting/change";
 import type { SittingStore } from "@/components/exams/sitting/store";
 
 /**
@@ -19,6 +20,11 @@ export type SittingData = typeof SittingData.Type;
 
 /** The dashboard's data, which the page computes during render. */
 export const SittingDataContext = createContext<SittingData | null>(null);
+
+/** The students who went silent, each with when, which the room's presence answers apart from its page. */
+export const SittingOfflineContext = createContext(
+  HashMap.empty<DashboardAttempt["id"], number>()
+);
 
 /** The dashboard's own state, which its actions write. */
 export const SittingStoreContext = createContext<StoreApi<SittingStore> | null>(

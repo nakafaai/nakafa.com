@@ -41,7 +41,10 @@ const act = <A, E>(action: Effect.Effect<A, E>) =>
  * and the documents it shows at once.
  */
 const placeholderDraft = (
-  question: Pick<Question, "answers" | "key" | "points" | "scoring" | "template">
+  question: Pick<
+    Question,
+    "answers" | "key" | "points" | "scoring" | "template"
+  >
 ) =>
   Effect.all({
     explanation: placeholderDocumentId,
