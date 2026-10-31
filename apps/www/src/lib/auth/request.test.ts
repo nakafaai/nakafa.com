@@ -395,6 +395,23 @@ describe("authFetch", () => {
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
+  it("names the refresh as JSON, since the server refuses a POST that does not", async () => {
+    vi.stubGlobal("navigator", {});
+    fetcher.mockResolvedValueOnce(new Response("refreshed"));
+
+    await authFetch(AUTH_URL, {
+      headers: { Accept: "application/json" },
+      method: "POST",
+    });
+
+    const sent = fetcher.mock.calls[0]?.[1];
+    expect(sent?.body).toBe("{}");
+    expect(new Headers(sent?.headers).get("Content-Type")).toBe(
+      "application/json"
+    );
+    expect(new Headers(sent?.headers).get("Accept")).toBe("application/json");
+  });
+
   it("sends a session refresh at once from a browser without Web Locks", async () => {
     vi.stubGlobal("navigator", {});
     fetcher.mockResolvedValueOnce(new Response("refreshed"));
