@@ -1,9 +1,12 @@
+import { getRouteApi } from "@tanstack/react-router";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
 import { Faq } from "@/components/marketing/about/faq/landing";
-import type { MarketingFaqItem } from "@/lib/marketing/faq";
+
+const homeRoute = getRouteApi("/$locale/_marketing/");
 
 /** The questions part of the home page, the first one open. */
-export function HomeFaq({ faqs }: { faqs: readonly MarketingFaqItem[] }) {
+export function HomeFaq() {
+  const { faqs } = homeRoute.useLoaderData();
   return (
     <Faq>
       <FaqAccordion faqs={faqs} openFirst />

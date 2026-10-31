@@ -85,10 +85,11 @@ function splitPagePath(page: string) {
 }
 
 /** A page with a Markdown twin, and the title that llms.txt names it by. */
-interface MarkdownTwin {
-  readonly page: string;
-  readonly title: string;
-}
+const MarkdownTwinSchema = Schema.Struct({
+  page: Schema.String,
+  title: Schema.String,
+});
+type MarkdownTwin = typeof MarkdownTwinSchema.Type;
 
 /** The media type that a page's Markdown twin is linked with, which only the build writes. */
 const MARKDOWN_TYPE = 'type="text/markdown"';

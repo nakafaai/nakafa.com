@@ -1,5 +1,5 @@
 import { untilPageSettled } from "@repo/design-system/lib/settle";
-import { Deferred, Effect, Exit, Fiber, Option } from "effect";
+import { Array as Arr, Deferred, Effect, Exit, Fiber, Option } from "effect";
 import {
   type ComponentType,
   type ReactNode,
@@ -19,7 +19,7 @@ const NEAR_SCREEN = "50%";
  * page commits. The component is kept here once it has loaded, so a later render
  * reads it at once and never suspends.
  */
-export interface LaterCode<Props extends object> {
+interface LaterCode<Props extends object> {
   component: Option.Option<ComponentType<Props>>;
   readonly load: () => Promise<ComponentType<Props>>;
   loading: Option.Option<Promise<ComponentType<Props>>>;
@@ -122,7 +122,7 @@ export function LaterSection<Props extends object>({
       Effect.callback<void>((resume) => {
         const watcher = new IntersectionObserver(
           (entries) => {
-            if (entries.some((entry) => entry.isIntersecting)) {
+            if (Arr.some(entries, ({ isIntersecting }) => isIntersecting)) {
               resume(Effect.void);
             }
           },

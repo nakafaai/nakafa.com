@@ -4,6 +4,7 @@ import {
   untilPageSettled,
 } from "@repo/design-system/lib/settle";
 import { Effect, Fiber } from "effect";
+import { TestClock } from "effect/testing";
 
 /** Gives the window an idle callback that the test controls, and returns the stubs. */
 function stubIdleCallback() {
@@ -113,6 +114,28 @@ describe("waiting for the page to settle", () => {
         removed.mockRestore();
 
         yield* untilPageRead;
+      })
+  );
+
+  it.effect(
+    "starts by itself six seconds after a page that nobody touches",
+    () =>
+      Effect.gen(function* () {
+        stubReadyState("complete");
+        // A fresh module, as a new document: the test above saw this page's reader.
+        vi.resetModules();
+        const { untilPageRead: untilFreshPageRead } = yield* Effect.promise(
+          () => import("@repo/design-system/lib/settle")
+        );
+
+        const waiting = yield* Effect.forkChild(untilFreshPageRead);
+        yield* Effect.yieldNow;
+        yield* Effect.yieldNow;
+        yield* TestClock.adjust("5 seconds");
+        expect(waiting.pollUnsafe()).toBeUndefined();
+
+        yield* TestClock.adjust("1 second");
+        yield* Fiber.join(waiting);
       })
   );
 });

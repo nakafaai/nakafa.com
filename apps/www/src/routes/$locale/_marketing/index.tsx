@@ -151,7 +151,7 @@ export const Route = createFileRoute("/$locale/_marketing/")({
 /** The marketing home: the sections of the landing page. */
 function HomePage() {
   const { locale } = Route.useParams();
-  const { curricula, faqs, featuredTryout } = Route.useLoaderData();
+  const { featuredTryout } = Route.useLoaderData();
 
   return (
     <>
@@ -174,7 +174,7 @@ function HomePage() {
           {(Privacy) => <Privacy />}
         </LaterSection>
         <LaterSection code={homeSections.curricula}>
-          {(Curricula) => <Curricula curricula={curricula} />}
+          {(Curricula) => <Curricula />}
         </LaterSection>
         <LaterSection code={homeSections.letter}>
           {(Letter) => <Letter />}
@@ -188,9 +188,7 @@ function HomePage() {
         <LaterSection code={homeSections.schools}>
           {(Schools) => <Schools herd={CLASS_HERD} />}
         </LaterSection>
-        <LaterSection code={homeSections.faq}>
-          {(Faq) => <Faq faqs={faqs} />}
-        </LaterSection>
+        <LaterSection code={homeSections.faq}>{(Faq) => <Faq />}</LaterSection>
         <LaterSection code={homeSections.community}>
           {(Community) => <Community />}
         </LaterSection>

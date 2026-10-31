@@ -5,10 +5,11 @@ import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
-import { createContext, use, useLayoutEffect } from "react";
+import { createContext, use } from "react";
 
 type DrawerPosition = "bottom" | "left" | "right" | "top";
 
@@ -272,34 +273,6 @@ function recordStageScroll(node: HTMLDivElement | null) {
     "--drawer-stage-scroll",
     `${Math.max(root.scrollTop, document.body.scrollTop)}px`
   );
-}
-
-/** How many drawers are open on the page, since a drawer can open over another. */
-let openDrawers = 0;
-
-/**
- * The popup's element. While it is open it names on the root that a drawer is open, and the global styles
- * scale the page back from that name (`DrawerStage`). A rule on the root that looked for the open popup with
- * `:has()` would answer for every descendant, so each node that the page inserts would restyle the document.
- */
-function StagedPopup({
-  open,
-  ...props
-}: React.ComponentProps<"div"> & { open: boolean }) {
-  useLayoutEffect(() => {
-    if (!open) {
-      return;
-    }
-    const root = document.documentElement;
-    openDrawers += 1;
-    root.toggleAttribute("data-drawer-open", true);
-    return () => {
-      openDrawers -= 1;
-      root.toggleAttribute("data-drawer-open", openDrawers > 0);
-    };
-  }, [open]);
-
-  return <div {...props} />;
 }
 
 /** Renders drawer popup chrome, backdrop, viewport, and optional affordances. */

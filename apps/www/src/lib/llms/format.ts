@@ -1,7 +1,7 @@
 import { CONTENT_LICENSE_NAME, CONTENT_LICENSE_URL } from "@repo/seo/license";
 import { LLMS_TEXT_PATH } from "@repo/site/discovery";
 import { cleanSlug } from "@repo/utilities/slug";
-import { Array as Arr, Option, pipe, String as Str } from "effect";
+import { Array as Arr, Option, pipe, Schema, String as Str } from "effect";
 import {
   BASE_URL,
   ENGLISH_LANGUAGE_NAMES,
@@ -28,11 +28,12 @@ export function getLlmsMarkdownPath({
 }
 
 /** The authors and dates of a page, which a citation of it names. */
-interface MarkdownCitation {
-  readonly authors: readonly string[];
-  readonly dateModified?: string | undefined;
-  readonly datePublished: string;
-}
+const MarkdownCitationSchema = Schema.Struct({
+  authors: Schema.Array(Schema.String),
+  dateModified: Schema.optional(Schema.String),
+  datePublished: Schema.String,
+});
+export type MarkdownCitation = typeof MarkdownCitationSchema.Type;
 
 /** The lines that tell an answer service whose page it read and how to cite it. */
 function citationLines(citation: MarkdownCitation, title: string, url: string) {
