@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import {
   CLOSES_AT,
@@ -57,8 +60,10 @@ describe("exams seed answers", () => {
         });
         const questions = yield* fixture.run(
           Effect.gen(function* () {
+            const exam = yield* (yield* DatabaseReader)
+              .table("exams")
+              .get(made.examId);
             const writer = yield* DatabaseWriter;
-            const exam = yield* writer.table("exams").get(made.examId);
             yield* Effect.forEach(
               exam.questions,
               (question, index) =>
