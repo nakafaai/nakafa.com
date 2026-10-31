@@ -1,11 +1,14 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { PaginationOptions } from "@confect/core/PaginationOptions";
+import { PaginationResult } from "@confect/core/PaginationResult";
 import { Id } from "@repo/backend/confect/_generated/id";
+import examAnswers from "@repo/backend/confect/_generated/tables/examAnswers";
 import { SeedRefused } from "@repo/backend/confect/acceptance/seed";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
 import { Seat, SeatKind } from "@repo/backend/confect/exams/seed/contract";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 /**
  * The most extra students a seed seats in its sitting: more than one dashboard page of 100,
@@ -90,6 +93,19 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => Schema.Null,
+      error: () => SeedRefused,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "answers",
+      args: () => ({ paginationOpts: PaginationOptions }),
+      returns: () =>
+        PaginationResult(
+          examAnswers.Fields.mapFields(
+            Struct.pick(["attempt", "question", "response", "version"])
+          )
+        ),
       error: () => SeedRefused,
     })
   );

@@ -1,3 +1,4 @@
+import { ANSWER_PAGE_MAX } from "@repo/backend/confect/exams/seed/answers";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
 import { audit, StoredAnswer } from "@repo/backend/scripts/load/ledger";
@@ -14,6 +15,7 @@ import { seedRun } from "@repo/backend/scripts/load/seed";
 import { spreadByName } from "@repo/backend/scripts/load/stats";
 import { runStudent } from "@repo/backend/scripts/load/student";
 import type { Wire } from "@repo/backend/scripts/load/wire";
+import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
   Clock,
@@ -23,8 +25,10 @@ import {
   Fiber,
   FileSystem,
   HashSet,
+  Option,
   Schema,
   type Scope,
+  Stream,
 } from "effect";
 
 /** How long before the first entry the run starts, so every fiber is ready when it does. */
@@ -39,8 +43,44 @@ const LOG_SETTLE = Duration.seconds(5);
  */
 const LAG_PROBE = Duration.seconds(1);
 
-/** The most answer rows the audit reads: every answer of the largest run the plan allows, and more. */
-const STORED_LIMIT = "1000000";
+/** One page of stored answers, as the acceptance seed's `answers` query prints it. */
+const StoredPage = Schema.fromJsonString(
+  Schema.Struct({
+    continueCursor: Schema.String,
+    isDone: Schema.Boolean,
+    page: Schema.Array(StoredAnswer),
+  })
+);
+
+const encodeArguments = Schema.encodeEffect(JsonTextSchema);
+
+/**
+ * Every stored answer, read page by page through the acceptance seed: a 3,000-student run
+ * stores more answers than one query may scan, so one read cannot hold them all.
+ */
+const storedAnswers = <E, R>(run: RunConvex<E, R>) =>
+  Stream.paginate(Option.none<string>(), (cursor) =>
+    encodeArguments({
+      paginationOpts: {
+        cursor: Option.getOrNull(cursor),
+        numItems: ANSWER_PAGE_MAX,
+      },
+    }).pipe(
+      Effect.flatMap((args) =>
+        run("Stored answers", ["run", "exams/seed:answers", args])
+      ),
+      Effect.flatMap(Schema.decodeEffect(StoredPage)),
+      Effect.map(
+        (page) =>
+          [
+            page.page,
+            page.isDone
+              ? Option.none()
+              : Option.some(Option.some(page.continueCursor)),
+          ] as const
+      )
+    )
+  ).pipe(Stream.runCollect);
 
 /**
  * What a run needs from the acceptance runtime: the Convex CLI that reaches it; `school`, which
@@ -136,20 +176,7 @@ export const runLoad = Effect.fn("load.run")(function* <E, R>(
   const attempts = HashSet.fromIterable(
     Arr.map(acknowledged, (answer) => answer.attempt)
   );
-  const stored = yield* input
-    .run("Stored answers", [
-      "data",
-      "examAnswers",
-      "--format",
-      "jsonArray",
-      "--limit",
-      STORED_LIMIT,
-    ])
-    .pipe(
-      Effect.flatMap(
-        Schema.decodeEffect(Schema.fromJsonString(Schema.Array(StoredAnswer)))
-      )
-    );
+  const stored = yield* storedAnswers(input.run);
   const checked = audit(
     acknowledged,
     Arr.filter(stored, (row) => HashSet.has(attempts, row.attempt))

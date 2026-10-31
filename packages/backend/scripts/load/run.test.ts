@@ -61,24 +61,31 @@ describe("load run", () => {
                   sittings: [{ id: "s1", room: "Ruang 01", token: "AAAAAA" }],
                 });
               }
-              if (args[0] === "data") {
-                return encodeJson([
-                  ...Arr.map(
-                    Arr.fromIterable(fake.saved),
-                    ([question, saved]) => ({
-                      attempt: "a1",
-                      question,
-                      response: saved.response,
-                      version: saved.version,
-                    })
-                  ),
-                  {
-                    attempt: "other",
-                    question: "q1",
-                    response: [],
-                    version: 1,
-                  },
-                ]);
+              if (args[1] === "exams/seed:answers") {
+                // The answers come in two pages: this run's, then another run's after the cursor.
+                const first = args[2]?.includes('"cursor":null') ?? false;
+                return encodeJson({
+                  continueCursor: "after-a1",
+                  isDone: !first,
+                  page: first
+                    ? Arr.map(
+                        Arr.fromIterable(fake.saved),
+                        ([question, saved]) => ({
+                          attempt: "a1",
+                          question,
+                          response: saved.response,
+                          version: saved.version,
+                        })
+                      )
+                    : [
+                        {
+                          attempt: "other",
+                          question: "q1",
+                          response: [],
+                          version: 1,
+                        },
+                      ],
+                });
               }
               return "";
             }),
