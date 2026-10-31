@@ -124,7 +124,7 @@ export function useChatAdmission({
       setPrompt(null);
       setText((typed) =>
         restoreRefusedText({
-          refused: query,
+          refused: draft.text,
           sentBy: submittedBy,
           signedInAs: session.getState().userId,
           typed,
