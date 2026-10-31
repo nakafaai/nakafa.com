@@ -13,9 +13,9 @@ import {
   FeatureTitle,
 } from "@/components/marketing/shared/feature";
 import type { readFeaturedTryout } from "@/components/tryout/catalog/source.server";
-import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
+import { TryoutQuestionBody } from "@/components/tryout/runtime/question/body";
 
-/** The featured question and its response, as the catalog reads them. */
+/** The featured question's body, as the catalog decodes it: its prompt, its interaction, and its key. */
 type FeaturedTryout = Effect.Success<ReturnType<typeof readFeaturedTryout>>;
 
 /**
@@ -36,11 +36,13 @@ export function Tryout({ value }: { value: FeaturedTryout }) {
           <FeatureLead>{t("tryout-lead")}</FeatureLead>
         </FeatureText>
         <FeatureCard>
-          <section>{value.question}</section>
+          <section>
+            <TryoutQuestionBody body={value} />
+          </section>
           <TryoutDemoQuestion
+            answer={value.key}
             id={responseId}
-            labels={renderTryoutResponseLabels(responseId, value.response)}
-            responseSpec={value.response}
+            interaction={value.interaction}
           />
         </FeatureCard>
       </FeatureRow>

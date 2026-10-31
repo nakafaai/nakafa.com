@@ -1,18 +1,13 @@
-import { TryoutScoringSchema } from "@nakafa/aksara-contracts/tryout/spec";
-import { Schema } from "effect";
+import { ScoringStrategySchema } from "@nakafa/aksara-contracts/assessment/scoring";
+import { Array as Arr, Schema } from "effect";
 export const tryoutScoreStatusValidator = Schema.Literals([
   "provisional",
   "official",
 ]);
-/**
- * Strategy stored on an attempt or score: the signed set's strategy, or
- * `weighted` on attempts started before signed try-outs, scored like `raw`.
- */
-export const tryoutScoringStrategyValidator = Schema.Literals([
-  ...TryoutScoringSchema.literals,
-  "weighted",
-]);
-export type TryoutScoringStrategy = typeof tryoutScoringStrategyValidator.Type;
+/** The kind of scoring an attempt follows: the kind of its exam profile's strategy. */
+export const tryoutScoringStrategyValidator = Schema.Literals(
+  Arr.map(ScoringStrategySchema.members, ({ fields }) => fields.kind.literal)
+);
 const tryoutScoreValueValidators = {
   publishedScore: Schema.Finite,
   rawScore: Schema.Finite,

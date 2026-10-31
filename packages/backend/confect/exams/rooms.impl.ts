@@ -12,6 +12,7 @@ import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
+import type { PaginationOptions } from "convex/server";
 import { Array as Arr, Effect, Layer, Number as Num, Struct } from "effect";
 
 /** The most rooms that one page of an exam's list holds. A larger request is clamped to it. */
@@ -23,7 +24,7 @@ const ROOM_PAGE_LIMIT = 50;
  */
 const roomOf = Effect.fn("exams.rooms.room")(function* (
   row: ExamSittingsDoc,
-  canCancel: boolean
+  canChange: boolean
 ) {
   const reader = yield* DatabaseReader;
   const unit = yield* reader
@@ -31,29 +32,51 @@ const roomOf = Effect.fn("exams.rooms.room")(function* (
     .get(row.unitId)
     .pipe(Effect.orDie);
   if (row.cohortId === null) {
-    return roomRow(row, unit.name, unit.timeZone, canCancel);
+    return roomRow(row, unit.name, unit.timeZone, canChange);
   }
   const cohort = yield* reader
     .table("tenantCohorts")
     .get(row.cohortId)
     .pipe(Effect.orDie);
-  return roomRow(row, cohort.name, unit.timeZone, canCancel);
+  return roomRow(row, cohort.name, unit.timeZone, canChange);
+});
+
+/**
+ * One page of the exam's rooms that a search reads: the rooms whose names match it, best match
+ * first, in one state or in any. Each word of the search matches a word of the name whole, and its
+ * last word matches as a prefix, so a search reads as it is typed.
+ */
+const searchedRooms = Effect.fn("exams.rooms.searched")(function* (
+  examId: ExamSittingsDoc["examId"],
+  search: string,
+  state: ExamSittingsDoc["state"] | undefined,
+  options: PaginationOptions
+) {
+  return yield* (yield* DatabaseReader)
+    .table("examSittings")
+    .search("search_room", (index) => {
+      const room = index.search("room", search).eq("examId", examId);
+      return state === undefined ? room : room.eq("state", state);
+    })
+    .paginate(options)
+    .pipe(Effect.orDie);
 });
 
 /**
  * One page of the rooms of the exam, in the order the opening times give them, from the
  * earliest. The index reads the exam's rooms in that order, and an optional state narrows
- * the page in the same read. Each room is kept only if the caller's sitting view allows it,
+ * the page in the same read. A search reads the rooms whose names match it instead, best match
+ * first (`searchedRooms`). Each room is kept only if the caller's sitting view allows it,
  * so a Principal or a Deputy sees the rooms of the school and a Teacher sees the rooms of their
- * units. A room the caller may cancel is one that is scheduled, that the caller may proctor, and
- * that the caller scheduled or may cancel as an Admin, which is the check `cancel` makes. A page
- * asks for at most `ROOM_PAGE_LIMIT` rooms, and a larger request is clamped.
+ * units. A room the caller may change is one that is scheduled, that the caller may proctor, and
+ * that the caller scheduled or may change as an Admin, which is the check `cancel` and `reschedule`
+ * make. A page asks for at most `ROOM_PAGE_LIMIT` rooms, and a larger request is clamped.
  */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("exams.rooms.list")(function* ({ paginationOpts, state }) {
+  Effect.fn("exams.rooms.list")(function* ({ paginationOpts, search, state }) {
     const exam = yield* Exam;
     const member = yield* Member;
     const isAdmin = Arr.contains(
@@ -69,13 +92,16 @@ const list = FunctionImpl.make(
         minimum: 1,
       }),
     });
-    const page = yield* (
-      state === undefined
-        ? rooms.paginate(options)
-        : rooms.paginate(options, (filter) =>
-            filter.eq(filter.field("state"), state)
-          )
-    ).pipe(Effect.orDie);
+    const page =
+      search === undefined
+        ? yield* (
+            state === undefined
+              ? rooms.paginate(options)
+              : rooms.paginate(options, (filter) =>
+                  filter.eq(filter.field("state"), state)
+                )
+          ).pipe(Effect.orDie)
+        : yield* searchedRooms(exam._id, search, state, options);
     const allowed = yield* Effect.forEach(page.page, (row) =>
       sittingAuthority
         .allowed({ ...row, exam })

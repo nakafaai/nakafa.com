@@ -11,7 +11,7 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-test("a subject teacher enters a student's grade as a draft in the gradebook, then releases it", async ({
+test("a subject teacher enters a student's grade as a draft in the gradebook, then releases it, and the student sees it only once released", async ({
   browser,
   baseURL,
 }) => {
@@ -28,7 +28,6 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
       slug: school.slug,
     })
   );
-  await learnerContext.close();
   await Effect.runPromise(grantStudent(school.slug, learnerAddress));
   const teacher = await browser.newContext();
   await Effect.runPromise(
@@ -82,6 +81,17 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
   });
   await expect(row.getByRole("textbox")).toHaveValue("82");
 
+  // The student's own grades hold no draft: the page says no grade is released yet.
+  const own = await learnerContext.newPage();
+  await own.goto(address("/"));
+  const ownLink = own.getByRole("link", { name: "My grades" });
+  await waitUntilTakenOver(ownLink);
+  await ownLink.click();
+  await expect(own).toHaveURL(address("/grades"));
+  await expect(own.getByText("No grade is released yet.")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+
   // A value the scheme refuses goes back to the saved one.
   await row.getByRole("textbox").fill("140");
   await row.getByRole("textbox").press("Enter");
@@ -92,6 +102,13 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
   await page.getByRole("menuitem", { name: "Release" }).click();
   await expect(row).toContainText("Released");
   await expect(row.getByRole("textbox")).toBeDisabled();
+  // The student's page shows the released grade live, with its period and its KKTP status.
+  const ownRow = own.getByRole("row").filter({ hasText: "Fisika X-1" });
+  await expect(ownRow).toContainText("82");
+  await expect(ownRow).toContainText("Meets KKTP");
+  await expect(
+    own.locator("header").getByRole("textbox", { name: "Find a class" })
+  ).toBeVisible();
   await page.reload();
   await expect(row).toContainText("Released", {
     timeout: readinessTimeoutMilliseconds,
@@ -108,4 +125,5 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
   await expect(detail.getByRole("textbox")).toHaveValue("82");
   await expect(detail.getByText("KKTP", { exact: true })).toBeVisible();
   await teacher.close();
+  await learnerContext.close();
 });

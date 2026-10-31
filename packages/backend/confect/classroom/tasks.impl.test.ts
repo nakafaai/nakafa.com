@@ -233,13 +233,6 @@ describe("classroom/tasks", () => {
           score: 45,
           text: "Ringkasan kedua.",
         });
-        const moved = yield* teacher.mutation(tasks.reschedule, {
-          classId: forum.classId,
-          deadline: TENANCY_NOW + 5 * DAY,
-          slug: nf,
-          task: "tertutup",
-        });
-        expect(moved.deadline).toBe(TENANCY_NOW + 5 * DAY);
       })
   );
 

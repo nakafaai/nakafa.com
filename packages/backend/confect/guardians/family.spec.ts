@@ -3,12 +3,12 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { GuardianLinkAccess } from "@repo/backend/confect/guardians/access";
 import {
-  ChildGrade,
   ChildView,
   ConfirmOutcome,
 } from "@repo/backend/confect/guardians/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { ReleasedGrade } from "@repo/backend/confect/records/grade";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
@@ -57,7 +57,7 @@ export default GroupSpec.make()
     FunctionSpec.publicQuery({
       name: "grades",
       args: () => ({ linkId: Id("guardianLinks"), slug: TenantSlug }),
-      returns: () => Schema.Array(ChildGrade),
+      returns: () => Schema.Array(ReleasedGrade),
       error: () => AccessDenied,
     }).middleware(GuardianLinkAccess, {
       action: "guardian.child",

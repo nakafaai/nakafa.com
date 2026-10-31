@@ -18,14 +18,11 @@ import {
   decodeReleaseJson,
   decodeSnapshotJson,
 } from "@repo/backend/confect/contentRelease/parse";
+import { stageAssessmentRow } from "@repo/backend/confect/contentRelease/snapshot/assessment";
 import { loadSnapshot } from "@repo/backend/confect/contentRelease/snapshot/manifest";
 import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
 import { stageQuranRow } from "@repo/backend/confect/contentRelease/snapshot/quran";
 import { decodeSnapshotBatch } from "@repo/backend/confect/contentRelease/snapshot/request";
-import {
-  stageTryoutCatalog,
-  stageTryoutPlacement,
-} from "@repo/backend/confect/contentRelease/snapshot/tryout";
 import { encodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/wire";
 import { Array as Arr, Clock, Effect } from "effect";
 
@@ -42,9 +39,7 @@ function stageRow(
   if (row.family === "quran") {
     return stageQuranRow(snapshotId, index, row.record, rowJson);
   }
-  return row.rowKind === "catalog"
-    ? stageTryoutCatalog(snapshotId, index, row.record, rowJson)
-    : stageTryoutPlacement(snapshotId, index, row.record, rowJson);
+  return stageAssessmentRow(snapshotId, index, row.record, rowJson);
 }
 
 /** Rejects ambiguous ledger identity before accepting a retry or continuation. */

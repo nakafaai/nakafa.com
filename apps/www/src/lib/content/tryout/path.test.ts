@@ -2,8 +2,8 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { createTestPublication } from "@repo/backend/test/content/publication";
-import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
+import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Layer } from "effect";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 
@@ -32,35 +32,35 @@ describe("published try-out localized paths", () => {
     runtimeQueryMock.mockReset();
   });
   it.effect.each(APP_LOCALE_CODES)(
-    "resolves the signed set and section identity into %s",
+    "resolves the set and section identity into %s",
     (targetAppLocale) =>
       Effect.gen(function* () {
-        const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestPublication(fixture.source);
-        runtimeQueryMock.mockImplementation(context.query);
-        for (const publicPath of [
-          "try-out/indonesia/tka/matematika-wajib/set-1",
-          "try-out/indonesia/tka/matematika-wajib/set-1/matematika-wajib",
-        ]) {
+        const world = yield* tryoutWorld();
+        runtimeQueryMock.mockImplementation(world.visitor.query);
+        const set = fixtureSetPath("set-1", "en");
+        const target = fixtureSetPath("set-1", targetAppLocale);
+        for (const [publicPath, localized] of [
+          [set, target],
+          [`${set}/section-a`, `${target}/section-a`],
+        ] as const) {
           expect(
             yield* readPublishedTryoutLocalizedPath({
               currentAppLocale: "en",
               publicPath,
               targetAppLocale,
             })
-          ).toBe(publicPath);
+          ).toBe(localized);
         }
       })
   );
-  it.effect("returns no localized route for an absent signed identity", () =>
+  it.effect("returns no localized route for an absent identity", () =>
     Effect.gen(function* () {
-      const fixture = yield* makeTryoutRuntimeSource();
-      const context = yield* createTestPublication(fixture.source);
-      runtimeQueryMock.mockImplementation(context.query);
+      const world = yield* tryoutWorld();
+      runtimeQueryMock.mockImplementation(world.visitor.query);
       expect(
         yield* readPublishedTryoutLocalizedPath({
           currentAppLocale: "id",
-          publicPath: "try-out/indonesia/tka/matematika-wajib/missing-set",
+          publicPath: "try-out/indonesia/snbt/2027/missing-set",
           targetAppLocale: "de",
         })
       ).toBeNull();

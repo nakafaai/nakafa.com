@@ -1,8 +1,8 @@
 import type { OptimisticLocalStore } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import type { PaperView } from "@repo/backend/confect/exams/sittings/contract";
-import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 

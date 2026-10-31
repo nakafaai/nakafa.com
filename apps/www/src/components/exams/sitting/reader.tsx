@@ -9,7 +9,10 @@ import {
   PICTURE_VIEW,
   PicturesProvider,
 } from "@repo/design-system/components/editor/picture";
-import { articleProse } from "@repo/design-system/components/editor/prose";
+import {
+  ARTICLE_MARKS,
+  articleProse,
+} from "@repo/design-system/components/editor/prose";
 import { documentExtensions } from "@repo/editor/document";
 import { Node } from "@tiptap/pm/model";
 import { use } from "react";
@@ -25,6 +28,7 @@ const READER_EXTENSIONS = [
   ...documentExtensions(ASSESSMENT_RULES, {
     ...FORMULA_VIEWS,
     image: PICTURE_VIEW,
+    marks: ARTICLE_MARKS,
   }),
   blockDirections,
 ];

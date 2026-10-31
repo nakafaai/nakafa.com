@@ -1,7 +1,7 @@
 import {
   ExamResponse,
   isAnswered,
-} from "@repo/backend/confect/exams/sittings/response";
+} from "@repo/backend/confect/assessment/response";
 import { Record as Rec, Schema } from "effect";
 import { createStore } from "zustand";
 

@@ -157,7 +157,7 @@ export function PaperTableHead({
   heading: string;
 }) {
   return (
-    <div className="col-span-full grid grid-cols-subgrid bg-muted/50 font-medium text-sm">
+    <div className="col-span-full grid grid-cols-subgrid items-center bg-muted/50 font-medium text-sm">
       <div aria-hidden="true" className="py-3 pl-4" />
       <div className="px-3 py-3">{heading}</div>
       {children}
@@ -194,11 +194,17 @@ export function PaperTableStatement({ children }: { children: ReactNode }) {
   return <div className="min-w-0 border-t px-3 py-2">{children}</div>;
 }
 
-/** The cell of a row under one column, which holds the row's mark for that choice. */
-export function PaperTableMark({ children }: { children: ReactNode }) {
+/**
+ * The cell of a row under one column: the empty circle the student marks for that choice. The teacher's paper
+ * draws it unmarked, since the key is marked in the teacher's layer.
+ */
+export function PaperTableMark() {
   return (
     <div className="flex min-h-12 items-center justify-center border-t px-2 py-3">
-      {children}
+      <span
+        aria-hidden
+        className="size-4 rounded-full border border-input bg-background shadow-xs"
+      />
     </div>
   );
 }

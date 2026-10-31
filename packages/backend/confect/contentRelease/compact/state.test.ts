@@ -123,7 +123,7 @@ describe("contentRelease/compact/state", () => {
       code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
-  it("keeps the recent release boundary when a frozen runtime names an older release", async () => {
+  it("keeps the recent release boundary", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await seedCompactionHistory(ctx);
@@ -134,17 +134,6 @@ describe("contentRelease/compact/state", () => {
       assert.ok(recent);
       await ctx.db.patch("contentReleases", recent._id, {
         createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
-      });
-      await ctx.db.insert("tryoutRuntimeBundles", {
-        bundleHash: "technical",
-        bundleJson: "{}",
-        createdAt: 0,
-        rendererJson: "{}",
-        rendererManifestHash: "technical",
-        snapshotId: "technical",
-        sourceGitSha: "technical",
-        sourceManifestHash: compactionIdentity(1).manifestHash,
-        sourceReleaseId: compactionIdentity(1).releaseId,
       });
     });
     expect(await compact(t)).toMatchObject({

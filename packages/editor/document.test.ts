@@ -6,6 +6,7 @@ import {
   documentExtensions,
   documentSchema,
 } from "@repo/editor/document";
+import { NO_MATH_VIEWS } from "@repo/editor/math";
 import { Editor } from "@tiptap/core";
 import { Array as Arr, Record as Rec } from "effect";
 
@@ -108,6 +109,30 @@ describe("documentExtensions", () => {
   it("holds no horizontal rule, because a document of its kind holds none", () => {
     const editor = openEditor([]);
     expect(Rec.keys(editor.schema.nodes)).not.toContain("horizontalRule");
+  });
+
+  it("gives each mark's element the class its views give, and a mark with none its bare element", () => {
+    const editor = new Editor({
+      content:
+        '<p><strong>a</strong><em>b</em><a href="https://nakafa.com">c</a></p>',
+      element: document.createElement("div"),
+      extensions: documentExtensions(
+        { ...RULES, marks: ["bold", "italic", "link"] },
+        {
+          ...NO_MATH_VIEWS,
+          image: null,
+          marks: { bold: "marked", link: "linked" },
+        }
+      ),
+    });
+    const root = editor.view.dom;
+
+    expect(root.querySelector("strong")?.className).toBe("marked");
+    expect(root.querySelector("em")?.hasAttribute("class")).toBe(false);
+    // A link keeps the attributes its extension gives it beside the class.
+    expect(root.querySelector("a")?.className).toBe("linked");
+    expect(root.querySelector("a")?.getAttribute("target")).toBe("_blank");
+    editor.destroy();
   });
 
   it("refuses a link to an address its rules refuse, and takes one they allow", () => {

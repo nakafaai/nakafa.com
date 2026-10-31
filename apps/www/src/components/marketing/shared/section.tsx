@@ -5,11 +5,13 @@ import type { ReactNode } from "react";
  * One part of a marketing page. Each part is at least as tall as the screen
  * under the header and holds its content in the middle of that height, so a
  * reader sees one thing at a time, and the next part starts below the screen.
- * An anchor link lands the part right under the header. A dark part keeps its
- * band of color from edge to edge, with its content inset like any other.
+ * A part below the first screen is drawn only once the reader nears it
+ * (`content-auto-section`). An anchor link lands the part right under the
+ * header. A dark part keeps its band of color from edge to edge, with its
+ * content inset like any other.
  */
 const sectionVariants = cva(
-  "grid min-h-[calc(100svh-4rem)] scroll-mt-16 content-center px-6 py-20 lg:px-10 lg:py-32",
+  "content-auto-section grid min-h-[calc(100svh-4rem)] scroll-mt-16 content-center px-6 py-20 lg:px-10 lg:py-32",
   {
     variants: {
       tone: {

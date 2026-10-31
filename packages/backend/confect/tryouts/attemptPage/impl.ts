@@ -1,5 +1,4 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { MAX_PROTECTED_RUNTIME_SELECTORS } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
@@ -15,6 +14,7 @@ import {
   readActiveTryoutRestartTarget,
   readTryoutDestinationPaths,
 } from "@repo/backend/confect/tryouts/catalog/destination";
+import type { TryoutSetIdentity } from "@repo/backend/confect/tryouts/route";
 import {
   readAttemptDestination,
   readAttemptSectionForPath,
@@ -23,7 +23,6 @@ import {
   readAttemptSectionPage,
   readAttemptSetPage,
 } from "@repo/backend/confect/tryouts/runtime/attempt/page";
-import { readTryoutHistory } from "@repo/backend/confect/tryouts/runtime/history/read";
 import {
   readAttemptSetIdentity,
   readLatestProgressAttempt,
@@ -31,8 +30,7 @@ import {
 } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { loadSectionAttemptState } from "@repo/backend/confect/tryouts/runtime/section/state";
 import { loadSetAttemptState } from "@repo/backend/confect/tryouts/runtime/set/state";
-import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import { Array as Arr, Effect, Option } from "effect";
+import { Effect } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type RedirectPageResult = typeof redirectResultValidator.Type;
@@ -48,70 +46,41 @@ export const readSetAttemptPage = Effect.fn(
   if (!auth) {
     return null;
   }
-  if (request.kind === "current") {
-    const attempt = yield* readLatestProgressAttempt(request, auth.appUser._id);
-    if (!attempt) {
-      return null;
-    }
-    if (attempt.status === "in-progress") {
-      const publicPath = yield* readAttemptDestination(attempt, request.locale);
-      if (!publicPath) {
-        return null;
-      }
-      const result: RedirectPageResult = {
-        attemptId: attempt._id,
-        kind: "redirect",
-        publicPath,
-      };
-      return result;
-    }
-    return yield* loadCurrentSetPage(attempt, request.locale);
-  }
-  const attempt = yield* readRetainedAttempt(
-    request.attemptId,
-    auth.appUser._id
-  );
+  const attempt =
+    request.kind === "current"
+      ? yield* readLatestProgressAttempt(request, auth.appUser._id)
+      : yield* readRetainedAttempt(request.attemptId, auth.appUser._id);
   if (!attempt) {
     return null;
   }
-  const destination = yield* readAttemptDestination(attempt, request.locale);
-  if (
-    request.publicPath !== attempt.setPublicPath &&
-    request.publicPath !== destination
-  ) {
+  const setPath = yield* readAttemptDestination(attempt, request.locale);
+  if (!setPath) {
     return null;
   }
-  const identity = readAttemptSetIdentity(attempt);
-  if (!destination) {
-    return null;
-  }
-  const { loaded, page, restartTarget } = yield* Effect.all(
-    {
-      loaded: loadSetAttemptState(attempt, request.locale),
-      page: readAttemptSetPage(
-        {
-          locale: request.locale,
-          publicPath: request.publicPath,
-        },
-        attempt,
-        identity
-      ),
-      restartTarget: readActiveTryoutRestartTarget({
-        ...identity,
-        locale: request.locale,
-      }),
-    },
-    {
-      concurrency: "unbounded",
+  if (request.kind === "retained") {
+    if (
+      request.publicPath !== attempt.setPublicPath &&
+      request.publicPath !== setPath
+    ) {
+      return null;
     }
-  );
-  const result: RetainedSetPageResult = {
-    attemptId: attempt._id,
-    content: loaded.content,
-    initialState: loaded.state,
-    kind: "retained",
-    page,
-    restartTarget,
+    const result: RetainedSetPageResult = {
+      ...(yield* loadSetPage(attempt, request.locale, setPath)),
+      kind: "retained",
+    };
+    return result;
+  }
+  if (attempt.status === "in-progress") {
+    const result: RedirectPageResult = {
+      attemptId: attempt._id,
+      kind: "redirect",
+      publicPath: setPath,
+    };
+    return result;
+  }
+  const result: CurrentSetPageResult = {
+    ...(yield* loadSetPage(attempt, request.locale, setPath)),
+    kind: "current",
   };
   return result;
 });
@@ -127,15 +96,6 @@ export const readSectionAttemptPage = Effect.fn(
   if (request.kind === "current") {
     const attempt = yield* readLatestProgressAttempt(request, auth.appUser._id);
     if (attempt?.status !== "in-progress") {
-      return null;
-    }
-    const snapshot = Option.getOrUndefined(
-      Arr.findFirst(
-        attempt.sectionSnapshots,
-        (section) => section.sectionKey === request.sectionKey
-      )
-    );
-    if (!snapshot?.publicPath) {
       return null;
     }
     const publicPath = yield* readAttemptDestination(
@@ -160,43 +120,41 @@ export const readSectionAttemptPage = Effect.fn(
   if (!attempt) {
     return null;
   }
-  const identity = readAttemptSetIdentity(attempt);
-  const snapshot = yield* readAttemptSectionForPath(
+  const frozen = yield* readAttemptSectionForPath(
     attempt,
     request.locale,
     request.publicPath
   );
-  if (!snapshot) {
+  if (!frozen) {
     return null;
   }
-  if (
-    !(yield* readAttemptDestination(
-      attempt,
-      request.locale,
-      snapshot.sectionKey
-    ))
-  ) {
+  const sectionPath = yield* readAttemptDestination(
+    attempt,
+    request.locale,
+    frozen.sectionKey
+  );
+  if (!sectionPath) {
     return null;
   }
   const { destinations, loaded, page } = yield* Effect.all(
     {
       destinations: readTryoutDestinationPaths({
-        ...identity,
+        ...readAttemptSetIdentity(attempt),
         locale: request.locale,
-        sectionKey: snapshot.sectionKey,
+        sectionKey: frozen.sectionKey,
       }),
       loaded: loadSectionAttemptState(
         attempt,
-        snapshot.sectionKey,
+        frozen.sectionKey,
         request.locale
       ),
-      page: readAttemptSectionPage(request, attempt),
+      page: readAttemptSectionPage(attempt, request.locale, sectionPath),
     },
     {
       concurrency: "unbounded",
     }
   );
-  // This same attempt object already supplied the exact section snapshot above.
+  // This same attempt object already supplied the exact frozen section above.
   const current = yield* Effect.fromNullishOr(loaded).pipe(Effect.orDie);
   const result: RetainedSectionPageResult = {
     activeSectionPublicPath: destinations.activeSectionPublicPath,
@@ -210,38 +168,31 @@ export const readSectionAttemptPage = Effect.fn(
   return result;
 });
 
-/** Loads the frozen display rows and mutable terminal state in parallel. */
-const loadCurrentSetPage = Effect.fn("tryouts.attemptPage.loadCurrentSetPage")(
-  function* (attempt: TryoutAttempt, locale: AppLocaleCode) {
-    const identity: TryoutSetIdentity = readAttemptSetIdentity(attempt);
-    const { loaded, page, restartTarget } = yield* Effect.all(
-      {
-        loaded: loadSetAttemptState(attempt, locale),
-        page: readAttemptSetPage(
-          {
-            locale,
-            publicPath: attempt.setPublicPath,
-          },
-          attempt,
-          identity
-        ),
-        restartTarget: readActiveTryoutRestartTarget({ ...identity, locale }),
-      },
-      {
-        concurrency: "unbounded",
-      }
-    );
-    const result: CurrentSetPageResult = {
-      attemptId: attempt._id,
-      content: loaded.content,
-      initialState: loaded.state,
-      kind: "current",
-      page,
-      restartTarget,
-    };
-    return result;
-  }
-);
+/** Loads an attempt's set page at its set route, its state, and where its set restarts now, in parallel. */
+const loadSetPage = Effect.fn("tryouts.attemptPage.loadSetPage")(function* (
+  attempt: TryoutAttempt,
+  locale: AppLocaleCode,
+  setPath: string
+) {
+  const identity: TryoutSetIdentity = readAttemptSetIdentity(attempt);
+  const { loaded, page, restartTarget } = yield* Effect.all(
+    {
+      loaded: loadSetAttemptState(attempt, locale),
+      page: readAttemptSetPage(attempt, locale, setPath),
+      restartTarget: readActiveTryoutRestartTarget({ ...identity, locale }),
+    },
+    {
+      concurrency: "unbounded",
+    }
+  );
+  return {
+    attemptId: attempt._id,
+    content: loaded.content,
+    initialState: loaded.state,
+    page,
+    restartTarget,
+  };
+});
 
 /** Normalizes one untrusted ID before applying exact ownership checks. */
 const readRetainedAttempt = Effect.fn(
@@ -254,61 +205,3 @@ const readRetainedAttempt = Effect.fn(
   }
   return yield* readOwnedAttemptById(normalized, userId);
 });
-
-/**
- * Reads a section page and the signed bodies of its content in one call. A
- * current request resolves the learner's running attempt through the section:
- * its redirect names the retained page, which the same call reads. A running
- * attempt on another page, or none, answers null, as the two reads of the web
- * do. Bodies come only for a running attempt with signed content.
- */
-export const readSectionWithBodies = Effect.fn(
-  "tryouts.attemptPage.readSectionWithBodies"
-)(function* (request: TryoutSectionAttemptPageRequest) {
-  const page =
-    request.kind === "current"
-      ? yield* readRedirectedSection(request)
-      : yield* readSectionAttemptPage(request);
-  if (page?.kind !== "retained") {
-    return null;
-  }
-  return { attempt: page, bodies: yield* readRunningBodies(page) };
-});
-
-/** Reads the retained page that a current request's redirect names, if any. */
-const readRedirectedSection = Effect.fn(
-  "tryouts.attemptPage.readRedirectedSection"
-)(function* (request: TryoutSectionAttemptPageRequest) {
-  const current = yield* readSectionAttemptPage(request);
-  if (current?.kind !== "redirect") {
-    return null;
-  }
-  return yield* readSectionAttemptPage({
-    attemptId: current.attemptId,
-    kind: "retained",
-    locale: request.locale,
-    publicPath: current.publicPath,
-  });
-});
-
-/**
- * Reads the signed bodies of a running attempt in the batches that the web
- * plans from the same selectors, so each body answers the batch it renders.
- * A finished attempt, or content that is not signed, has none.
- */
-const readRunningBodies = Effect.fn("tryouts.attemptPage.readRunningBodies")(
-  function* (attempt: RetainedSectionPageResult) {
-    const { attemptId, content, initialState } = attempt;
-    if (
-      content.kind !== "signed" ||
-      initialState.attempt.status !== "in-progress"
-    ) {
-      return [];
-    }
-    const selectors = [...content.questions, ...content.answers];
-    return yield* Effect.forEach(
-      Arr.chunksOf(selectors, MAX_PROTECTED_RUNTIME_SELECTORS),
-      (batch) => readTryoutHistory({ attemptId, selectors: batch })
-    );
-  }
-);

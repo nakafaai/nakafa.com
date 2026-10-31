@@ -9,7 +9,11 @@ import {
   GradeNotPlaced,
   GradeReleased,
 } from "@repo/backend/confect/records/errors";
-import { GradeLine, GradeView } from "@repo/backend/confect/records/grade";
+import {
+  GradeLine,
+  GradeView,
+  ReleasedGrade,
+} from "@repo/backend/confect/records/grade";
 import {
   GradeValue,
   GradingScheme,
@@ -21,7 +25,8 @@ import { Schema } from "effect";
  * The final grades of a class. A subject teacher of the class reads its gradebook,
  * each placed student with their grade, enters a draft for a student placed in its
  * cohort, and releases it; `scheme` is the scheme the next entry is judged by. A
- * student reads only their own released grade, through `mine`.
+ * student reads only their own released grades: one class's through `mine`, and
+ * every class's of every period through `own`.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -70,4 +75,12 @@ export default GroupSpec.make()
       returns: () => Schema.Array(GradeView),
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "class.view", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "own",
+      args: () => ({ slug: TenantSlug }),
+      returns: () => Schema.Array(ReleasedGrade),
+      error: () => Schema.Never,
+    })
   );
