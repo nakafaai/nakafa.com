@@ -9,7 +9,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -74,24 +76,27 @@ export function FigureMenu() {
         </DropdownMenuTrigger>
       </ToolHint>
       <DropdownMenuContent align="start">
-        {Arr.map(FigureKind.literals, (kind) => (
-          <DropdownMenuItem
-            disabled={active === null}
-            key={kind}
-            onClick={() => {
-              if (active !== null) {
-                openFigure({
-                  draft: emptyDraft(kind),
-                  editor: active,
-                  position: null,
-                });
-              }
-            }}
-          >
-            <HugeIcons aria-hidden="true" icon={FIGURE_ICON[kind]} />
-            {t(FIGURE_NAME[kind])}
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("figure")}</DropdownMenuLabel>
+          {Arr.map(FigureKind.literals, (kind) => (
+            <DropdownMenuItem
+              disabled={active === null}
+              key={kind}
+              onClick={() => {
+                if (active !== null) {
+                  openFigure({
+                    draft: emptyDraft(kind),
+                    editor: active,
+                    position: null,
+                  });
+                }
+              }}
+            >
+              <HugeIcons aria-hidden="true" icon={FIGURE_ICON[kind]} />
+              {t(FIGURE_NAME[kind])}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

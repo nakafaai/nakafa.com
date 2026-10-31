@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "sort": "Sortieren",
     "filter-by": "Nach {column} filtern",
     "sort-ascending": "Aufsteigend",
     "sort-descending": "Absteigend",
@@ -474,6 +475,7 @@
     "presence-more": "{names} bearbeiten gerade",
     "template-choice": "Einfachauswahl",
     "template-choices": "Mehrfachauswahl",
+    "template-title": "Fragetyp",
     "template-label": "Fragetyp: {type}",
     "template-truefalse": "Richtig oder falsch",
     "template-cause": "Ursache und Wirkung",

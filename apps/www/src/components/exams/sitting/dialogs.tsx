@@ -105,7 +105,7 @@ function ReasonSelect({
         value={value}
       >
         <SelectTrigger className="w-full" id={id}>
-          <SelectValue placeholder={t("reason")} />
+          <SelectValue placeholder={t("pair-choose")} />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>

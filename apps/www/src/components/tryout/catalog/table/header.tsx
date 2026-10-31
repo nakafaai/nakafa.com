@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -73,6 +74,7 @@ export function TryoutTableHeader() {
 function TryoutSortHeading({ field }: { field: keyof typeof headings }) {
   const { onSort, sort } = useTryoutSetTable();
   const t = useTranslations("Tryouts");
+  const tTable = useTranslations("DataTable");
   const copy = headings[field];
   const direction = sort.field === field ? sort.direction : undefined;
   const indicator = {
@@ -112,6 +114,7 @@ function TryoutSortHeading({ field }: { field: keyof typeof headings }) {
               }}
               value={direction ?? ""}
             >
+              <DropdownMenuLabel>{tTable("sort")}</DropdownMenuLabel>
               <DropdownMenuRadioItem className="whitespace-normal" value="asc">
                 <HugeIcons icon={ArrowUp02Icon} />
                 {t(copy.asc)}
