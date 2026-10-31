@@ -6,31 +6,24 @@ import { readTryoutSetHandler } from "@/components/tryout/route/attempt.server";
 import { readTryoutSectionHandler } from "@/components/tryout/route/section.server";
 
 const mocks = vi.hoisted(() => ({
-  readRequestToken: vi.fn(),
   readTryoutMetadata: vi.fn(),
   readTryoutSectionPage: vi.fn(),
   readTryoutSetPage: vi.fn(),
-  setResponseHeader: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-start/server", () => ({
   getRequest: () => new Request("https://nakafa.com/en/try-out"),
-  setResponseHeader: mocks.setResponseHeader,
 }));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutMetadata: mocks.readTryoutMetadata,
   readTryoutSectionPage: mocks.readTryoutSectionPage,
   readTryoutSetPage: mocks.readTryoutSetPage,
 }));
-vi.mock("@/components/tryout/route/token.server", () => ({
-  readRequestToken: mocks.readRequestToken,
-}));
 
 const address = {
   country: "id",
   exam: "snbt",
   locale: "en",
-  search: {},
   track: "2027",
 } as const;
 
@@ -38,13 +31,12 @@ const NOT_FOUND = { kind: "notFound" };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
   // The set's page and its head are read together, so a missing page still reads the head.
   mocks.readTryoutMetadata.mockReturnValue(Effect.succeed({ route: null }));
 });
 
 describe("try-out attempt server functions", () => {
-  it("answers one set page for its learner at the set's address", async () => {
+  it("answers one set page at the set's address", async () => {
     mocks.readTryoutSetPage.mockReturnValueOnce(Effect.void);
 
     await expect(
@@ -56,7 +48,7 @@ describe("try-out attempt server functions", () => {
     );
   });
 
-  it("answers one section page for its learner at the section's address", async () => {
+  it("answers one section page at the section's address", async () => {
     mocks.readTryoutSectionPage.mockReturnValueOnce(Effect.void);
 
     await expect(

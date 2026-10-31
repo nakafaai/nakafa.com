@@ -140,12 +140,13 @@ function useWide() {
 }
 
 /**
- * The group's width, height, and where its second pane steps aside. It fills the page up to the
- * app's widest content, `max-w-7xl`, and no further. A list's panes run from under its
+ * The group's width, height, and where its second pane steps aside. A page's panes fill it up to the
+ * app's widest content, `max-w-7xl`, and no further; the exam editor's fill the screen's width, since its
+ * canvas is the surface its papers lie on, edge to edge. A list's panes run from under its
  * header to the bottom of the screen, and a page whose header is taller than the school header's
  * 4rem sets `--panes-offset` to its height; the exam editor's panes fill the room its shell leaves.
  */
-const panesVariants = cva("mx-auto min-h-0 w-full max-w-7xl", {
+const panesVariants = cva("min-h-0 w-full", {
   variants: {
     fill: {
       parent: "flex-1",
@@ -154,6 +155,10 @@ const panesVariants = cva("mx-auto min-h-0 w-full max-w-7xl", {
     wideFrom: {
       lg: "max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!",
       md: "max-md:[&>[data-separator]]:hidden! max-md:[&>[data-separator]~[data-panel]]:hidden!",
+    },
+    width: {
+      full: "",
+      page: "mx-auto max-w-7xl",
     },
   },
 });
@@ -167,15 +172,17 @@ const panesVariants = cva("mx-auto min-h-0 w-full max-w-7xl", {
 export function Panes({
   children,
   fill = "screen",
+  width = "page",
 }: {
   children: ReactNode;
   fill?: "parent" | "screen";
+  width?: "full" | "page";
 }) {
   const wideFrom = use(PanesWidthContext);
 
   return (
     <ResizablePanelGroup
-      className={panesVariants({ fill, wideFrom })}
+      className={panesVariants({ fill, wideFrom, width })}
       orientation="horizontal"
     >
       {children}

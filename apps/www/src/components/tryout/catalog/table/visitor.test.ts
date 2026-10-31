@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/page";
+import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/query";
 import { Effect, Option } from "effect";
 import { selectionKey } from "@/components/tryout/catalog/table/keys";
 import type {

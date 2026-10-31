@@ -15,10 +15,12 @@ import {
   listItemVariants,
   listVariants,
   quoteVariants,
+  scriptVariants,
   tableCellVariants,
   tableFrameVariants,
   tableHeadCellVariants,
   tableRowVariants,
+  tableVariants,
 } from "@repo/design-system/lib/prose";
 import type {
   BlockquoteProps,
@@ -172,12 +174,17 @@ export function MdxCode(props: CodeProps) {
   return <code className={codeVariants()} {...props} />;
 }
 
-/** Renders an MDX table and removes compiler-only whitespace nodes. */
+/**
+ * Renders an MDX table and removes compiler-only whitespace nodes. A table is
+ * always laid out, never skipped with `content-visibility`: no fixed estimate
+ * fits every table, and a table in the first screen painted at its estimate
+ * first, then at its own height, which moved the lesson under it.
+ */
 export function MdxTable({ children, className, ...props }: TableProps) {
   return (
     <Table
-      className={cn("has-[tbody]:[&_thead]:border-b", className)}
-      containerClassName={cn("content-auto-table", tableFrameVariants())}
+      className={tableVariants({ className })}
+      containerClassName={tableFrameVariants()}
       {...props}
     >
       {filterWhitespaceNodes(children)}
@@ -261,7 +268,7 @@ export function MdxPre({ node, children }: MdxPreProps) {
 /** Renders superscript MDX text at the shared annotation size. */
 export function MdxSuperscript({ children, className, ...props }: SupProps) {
   return (
-    <sup className={cn("text-sm", className)} {...props}>
+    <sup className={scriptVariants({ className })} {...props}>
       {children}
     </sup>
   );
@@ -270,7 +277,7 @@ export function MdxSuperscript({ children, className, ...props }: SupProps) {
 /** Renders subscript MDX text at the shared annotation size. */
 export function MdxSubscript({ children, className, ...props }: SubProps) {
   return (
-    <sub className={cn("text-sm", className)} {...props}>
+    <sub className={scriptVariants({ className })} {...props}>
       {children}
     </sub>
   );
