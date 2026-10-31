@@ -3,6 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import {
   SCHOOL_API_PATH,
   SchoolApi,
+  XLSX_TYPE,
 } from "@repo/backend/confect/integrations/api";
 import { createClient, type Fixture, issue } from "@repo/backend/test/api";
 import { cohort, nf, period } from "@repo/backend/test/classroom";
@@ -73,6 +74,101 @@ const read = (fixture: Fixture, path: string, token?: string) =>
       headers: token === undefined ? {} : { authorization: `Bearer ${token}` },
     })
   );
+
+/** A token of a client that holds `actions`, as the token endpoint answers it. */
+const tokenOf = Effect.fn("test.routes.token")(function* (
+  fixture: Fixture,
+  actions: Parameters<typeof createClient>[1]
+) {
+  const client = yield* createClient(fixture, actions);
+  const answer = yield* postToken(fixture, {
+    client_id: client.id,
+    client_secret: client.secret,
+    grant_type: "client_credentials",
+  });
+  const issued = yield* json(answer).pipe(
+    Effect.flatMap(Schema.decodeUnknownEffect(IssuedToken))
+  );
+  return issued.access_token;
+});
+
+describe("school API exports over HTTP", () => {
+  it.effect("serves a read as CSV and as XLSX to its bearer", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const token = yield* tokenOf(fixture, ["person.view"]);
+
+      const csv = yield* read(fixture, "/exports/csv/people", token);
+      expect(csv.status).toBe(200);
+      expect(csv.headers.get("content-type")).toContain("text/csv");
+      const text = yield* Effect.promise(() => csv.text());
+      expect(text.startsWith("id,name,status,account")).toBe(true);
+
+      const xlsx = yield* read(fixture, "/exports/xlsx/people", token);
+      expect(xlsx.status).toBe(200);
+      expect(xlsx.headers.get("content-type")).toBe(XLSX_TYPE);
+    })
+  );
+
+  it.effect(
+    "refuses a period's export without its period, and a closed read",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const token = yield* tokenOf(fixture, ["cohort.view"]);
+
+        expect(
+          (yield* read(fixture, "/exports/csv/placements", token)).status
+        ).toBe(403);
+        expect(
+          (yield* read(fixture, "/exports/csv/people", token)).status
+        ).toBe(403);
+      })
+  );
+
+  it.effect("exports the placements and the grades of a period", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const term = yield* period(fixture, fixture.units.smp);
+      const token = yield* tokenOf(fixture, [
+        "cohort.view",
+        "grade.export",
+        "period.view",
+      ]);
+
+      const placements = yield* read(
+        fixture,
+        `/exports/csv/placements?period=${term.id}`,
+        token
+      );
+      const grades = yield* read(
+        fixture,
+        `/exports/csv/grades?period=${term.id}`,
+        token
+      );
+      expect(placements.status).toBe(200);
+      expect(grades.status).toBe(200);
+      expect(yield* Effect.promise(() => grades.text())).toBe(
+        "periodId,classId,personId,value,releasedAt"
+      );
+    })
+  );
+});
+
+describe("school API records over HTTP", () => {
+  it.effect("serves the grades of a period and the changes of the school", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const term = yield* period(fixture, fixture.units.smp);
+      const token = yield* tokenOf(fixture, ["grade.export", "period.view"]);
+
+      expect(
+        (yield* read(fixture, `/grades?period=${term.id}`, token)).status
+      ).toBe(200);
+      expect((yield* read(fixture, "/changes", token)).status).toBe(200);
+    })
+  );
+});
 
 describe("school API over HTTP", () => {
   it.effect(

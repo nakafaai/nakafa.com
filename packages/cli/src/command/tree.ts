@@ -211,6 +211,25 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
   const logout = Command.make("logout", {}, () =>
     dispatch({ kind: "school-logout" })
   ).pipe(Command.withDescription("Remove the stored school sign-in"));
+  const changes = Command.make("changes", { cursor }, (options) =>
+    dispatch({
+      kind: "school-read",
+      read: {
+        cursor: Option.getOrUndefined(options.cursor),
+        read: "changes",
+      },
+    })
+  ).pipe(Command.withDescription("List the published changes of the school"));
+  const grades = Command.make("grades", { cursor, period }, (options) =>
+    dispatch({
+      kind: "school-read",
+      read: {
+        cursor: Option.getOrUndefined(options.cursor),
+        period: options.period,
+        read: "grades",
+      },
+    })
+  ).pipe(Command.withDescription("List the released grades of one period"));
   const periods = Command.make("periods", {}, () =>
     dispatch({ kind: "school-read", read: { read: "periods" } })
   ).pipe(Command.withDescription("List the periods of the school"));
@@ -255,7 +274,7 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
       })
   ).pipe(Command.withDescription("List the people of the school"));
   const school = Command.make(COMMAND_NAME.school).pipe(
-    Command.withDescription("Read a school's roster as its integration client"),
+    Command.withDescription("Read a school as its integration client"),
     Command.withSubcommands([
       login,
       logout,
@@ -263,6 +282,8 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
       cohorts,
       people,
       placements,
+      grades,
+      changes,
     ])
   );
 

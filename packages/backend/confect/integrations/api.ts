@@ -191,6 +191,39 @@ export const ApiPlacement = Schema.Struct({
   personId: Schema.String,
 });
 
+/** One released grade of a period. A draft never leaves the school. */
+export const ApiGrade = Schema.Struct({
+  classId: Schema.String,
+  id: Schema.String,
+  periodId: Schema.String,
+  personId: Schema.String,
+  releasedAt: Schema.Finite,
+  value: Schema.Finite,
+});
+
+/**
+ * One published change of the school's journal, the same event a webhook posts: its IDs,
+ * enums and reason codes, never a name, an email or free text (ADR 0016).
+ */
+export const ApiChange = Schema.Struct({
+  change: Schema.Json,
+  id: Schema.String,
+  occurredAt: Schema.String,
+  subject: Schema.Struct({ id: Schema.String, kind: Schema.String }),
+  type: Schema.String,
+});
+
+/** What an export holds. */
+export const ExportDataset = Schema.Literals([
+  "grades",
+  "people",
+  "placements",
+]);
+
+/** The media type of an XLSX file. */
+export const XLSX_TYPE =
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
 /** The token endpoint and the device authorization endpoint, which take the client's own credentials and no bearer token. */
 class OAuthGroup extends HttpApiGroup.make("oauth").add(
   HttpApiEndpoint.post("token", "/token", {
@@ -236,10 +269,56 @@ class RosterGroup extends HttpApiGroup.make("roster")
   )
   .middleware(SchoolApiBearer) {}
 
-/** The school API: the token endpoint and the roster reads, under the Convex path of the school API. */
+/** The reads of a school's record: its released grades, and its journal of published changes. */
+class RecordsGroup extends HttpApiGroup.make("records")
+  .add(
+    HttpApiEndpoint.get("grades", "/grades", {
+      error: ROSTER_ERRORS,
+      query: { ...PageQuery, period: Schema.String },
+      success: pageOf(ApiGrade),
+    }),
+    HttpApiEndpoint.get("changes", "/changes", {
+      error: ROSTER_ERRORS,
+      query: PageQuery,
+      success: pageOf(ApiChange),
+    })
+  )
+  .middleware(SchoolApiBearer) {}
+
+/** The query of an export: the period of the two that belong to one. */
+const ExportQuery = { period: Schema.optional(Schema.String) };
+
+/**
+ * The exports a client's action list opens, as CSV or XLSX files made by the same reads, so an
+ * export holds exactly what its caller may read (ADR 0029).
+ */
+class ExportsGroup extends HttpApiGroup.make("exports")
+  .add(
+    HttpApiEndpoint.get("csv", "/exports/csv/:dataset", {
+      error: ROSTER_ERRORS,
+      params: { dataset: ExportDataset },
+      query: ExportQuery,
+      success: Schema.String.pipe(
+        HttpApiSchema.asText({ contentType: "text/csv" })
+      ),
+    }),
+    HttpApiEndpoint.get("xlsx", "/exports/xlsx/:dataset", {
+      error: ROSTER_ERRORS,
+      params: { dataset: ExportDataset },
+      query: ExportQuery,
+      success: Schema.Uint8Array.pipe(
+        HttpApiSchema.asUint8Array({ contentType: XLSX_TYPE })
+      ),
+    })
+  )
+  .middleware(SchoolApiBearer) {}
+
+/** The school API: the token endpoint, the reads and the exports, under the Convex path of the school API. */
 export class SchoolApi extends HttpApi.make("nakafa-school")
   .add(OAuthGroup)
   .add(RosterGroup)
+  .add(RecordsGroup)
+  .add(ExportsGroup)
   .prefix(SCHOOL_API_PATH)
   .annotateMerge(
     OpenApi.annotations({

@@ -6,6 +6,7 @@ import {
 import {
   CLI_CLIENT_ID,
   DEVICE_GRANT,
+  type ExportDataset,
   OAuthClientError,
   OAuthError,
   PAGE_LIMIT,
@@ -18,6 +19,11 @@ import {
   SchoolApiUnauthorized,
   type TokenResponse,
 } from "@repo/backend/confect/integrations/api";
+import {
+  encodeCsv,
+  encodeXlsx,
+  readExport,
+} from "@repo/backend/confect/integrations/exports";
 import { pageOr } from "@repo/backend/confect/integrations/reads";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Layer, Option, Redacted, Schema, String as Str } from "effect";
@@ -272,6 +278,66 @@ const rosterHandlers = HttpApiBuilder.group(
   })
 );
 
+/** The reads of the school's record, each one internal query for the verified client. */
+const recordsHandlers = HttpApiBuilder.group(
+  SchoolApi,
+  "records",
+  Effect.fn(function* (handlers) {
+    return handlers
+      .handle("grades", ({ query }) =>
+        Effect.gen(function* () {
+          const { runQuery } = yield* QueryRunner;
+          const answer = yield* runQuery(
+            refs.internal.integrations.reads.grades,
+            {
+              clientId: yield* callerId,
+              ...pageArgs(query),
+              period: query.period,
+            }
+          ).pipe(Effect.orDie);
+          return yield* pageOr(answer, forbidden);
+        })
+      )
+      .handle("changes", ({ query }) =>
+        Effect.gen(function* () {
+          const { runQuery } = yield* QueryRunner;
+          const answer = yield* runQuery(
+            refs.internal.integrations.reads.changes,
+            { clientId: yield* callerId, ...pageArgs(query) }
+          ).pipe(Effect.orDie);
+          return yield* pageOr(answer, forbidden);
+        })
+      );
+  })
+);
+
+/** The sheet of one export for the request's client, or the refusal of a read it may not make. */
+const exportSheet = (request: {
+  readonly params: { readonly dataset: typeof ExportDataset.Type };
+  readonly query: { readonly period?: string | undefined };
+}) =>
+  Effect.gen(function* () {
+    const sheet = yield* readExport(
+      yield* callerId,
+      request.params.dataset,
+      request.query.period
+    );
+    return yield* Effect.fromOption(sheet).pipe(Effect.mapError(forbidden));
+  });
+
+/** The exports, each one sheet in the file format its path names. */
+const exportsHandlers = HttpApiBuilder.group(
+  SchoolApi,
+  "exports",
+  Effect.fn(function* (handlers) {
+    return handlers
+      .handle("csv", (request) => Effect.map(exportSheet(request), encodeCsv))
+      .handle("xlsx", (request) =>
+        Effect.flatMap(exportSheet(request), encodeXlsx)
+      );
+  })
+);
+
 /** The bearer security: the token of the request, which each read checks with `callerId`. */
 const bearer = Layer.succeed(
   SchoolApiBearer,
@@ -289,4 +355,12 @@ const bearer = Layer.succeed(
  */
 export const schoolApiRoutes = HttpApiBuilder.layer(SchoolApi, {
   openapiPath: `${SCHOOL_API_PATH}/openapi.json`,
-}).pipe(Layer.provide([oauthHandlers, rosterHandlers]), Layer.provide(bearer));
+}).pipe(
+  Layer.provide([
+    exportsHandlers,
+    oauthHandlers,
+    recordsHandlers,
+    rosterHandlers,
+  ]),
+  Layer.provide(bearer)
+);

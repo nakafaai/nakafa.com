@@ -12,7 +12,9 @@ import {
 import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
+  ApiChange,
   ApiCohort,
+  ApiGrade,
   ApiPeriod,
   ApiPerson,
   ApiPlacement,
@@ -40,7 +42,7 @@ const SERVER_IDENTITY: McpSchema.Implementation = {
 };
 
 const SERVER_INSTRUCTIONS =
-  "Read the roster of one Nakafa school: its periods, class groups, people, and placements. Every tool is read-only and answers only what the school's Admin opened to this integration client.";
+  "Read one Nakafa school: its periods, class groups, people, placements, released grades, and published changes. Every tool is read-only and answers only what the school's Admin opened to this integration client.";
 
 /** One page of a tool's rows and the cursor of the next page, or null on the last page. */
 const pageOf = <S extends Schema.Top>(item: S) =>
@@ -76,6 +78,9 @@ const PeoplePage = Schema.Struct({
     description: "The status of the people to list.",
   }),
 });
+
+/** The input of the changes read. */
+const ChangesPage = Schema.Struct({ cursor: Cursor });
 
 /** The input of a read that takes nothing. */
 const NoInput = Schema.Struct({});
@@ -205,6 +210,63 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
         name: "school_list_people",
         output: ApiPerson.pipe(pageOf, mcpToolOutputSchema),
         title: "List people",
+      }),
+    });
+    yield* server.addTool({
+      annotations: Context.empty(),
+      handle: (input: unknown) =>
+        run(
+          Effect.gen(function* () {
+            const { cursor, period } = yield* decodeAgentInput(
+              PeriodPage,
+              input,
+              "Send the period's id, and the cursor of the next page if any."
+            );
+            const { runQuery } = yield* QueryRunner;
+            const answer = yield* runQuery(reads.grades, {
+              clientId,
+              cursor,
+              numItems: PAGE_LIMIT,
+              period,
+            }).pipe(Effect.orDie);
+            return yield* pageOr(answer, () => forbidden);
+          })
+        ),
+      tool: yield* readOnlyTool({
+        description:
+          "List the released grades of one period, a page at a time. A draft is never listed.",
+        input: PeriodPage,
+        name: "school_list_grades",
+        output: ApiGrade.pipe(pageOf, mcpToolOutputSchema),
+        title: "List released grades",
+      }),
+    });
+    yield* server.addTool({
+      annotations: Context.empty(),
+      handle: (input: unknown) =>
+        run(
+          Effect.gen(function* () {
+            const { cursor } = yield* decodeAgentInput(
+              ChangesPage,
+              input,
+              "Send the cursor of the next page if any."
+            );
+            const { runQuery } = yield* QueryRunner;
+            const answer = yield* runQuery(reads.changes, {
+              clientId,
+              cursor,
+              numItems: PAGE_LIMIT,
+            }).pipe(Effect.orDie);
+            return yield* pageOr(answer, () => forbidden);
+          })
+        ),
+      tool: yield* readOnlyTool({
+        description:
+          "List the published changes of the school, oldest first, a page at a time. A page may hold few rows, so follow next until it is null.",
+        input: ChangesPage,
+        name: "school_list_changes",
+        output: ApiChange.pipe(pageOf, mcpToolOutputSchema),
+        title: "List changes",
       }),
     });
     yield* server.addTool({

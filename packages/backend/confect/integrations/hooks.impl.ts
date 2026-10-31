@@ -1,8 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type {
-  IntegrationDeliveriesDoc,
-  JournalEntriesDoc,
-} from "@repo/backend/confect/_generated/docs";
+import type { IntegrationDeliveriesDoc } from "@repo/backend/confect/_generated/docs";
 import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -15,8 +12,9 @@ import {
 import { attemptOf } from "@repo/backend/confect/integrations/attempt";
 import {
   DELIVERY_RETENTION,
+  eventOf,
+  isPublished,
   retryDelay,
-  WebhookChange,
 } from "@repo/backend/confect/integrations/hook";
 import spec from "@repo/backend/confect/integrations/hooks.spec";
 import { clientRead } from "@repo/backend/confect/integrations/reads";
@@ -37,7 +35,6 @@ import {
   Effect,
   Layer,
   Option,
-  Schema,
 } from "effect";
 
 /** Journal entries one run reads, as the inbox consumer's run does (ADR 0016). */
@@ -60,19 +57,6 @@ const PRUNE_PAGE = 500;
 
 /** How far apart the attempts of one run start, so a burst does not reach a receiver at once. */
 const STAGGER = Duration.millis(200);
-
-/** Whether a journal entry is a change the catalog publishes. */
-const isPublished = Schema.is(WebhookChange);
-
-/** The event a webhook posts: the published change and its subject, which hold IDs and enums only. */
-const eventBody = (entry: JournalEntriesDoc) =>
-  encodeJsonText({
-    change: entry.change,
-    id: entry._id,
-    occurredAt: DateTime.formatIso(DateTime.makeUnsafe(entry._creationTime)),
-    subject: entry.subject,
-    type: entry.change.type,
-  });
 
 /** Whether the journal holds an entry after the cursor that the cursor has not handled. */
 const hasUnread = Effect.fn("integrations.hooks.unread")(function* (
@@ -271,7 +255,7 @@ const prepare = FunctionImpl.make(
     }
     return {
       attempt: delivery.attempt,
-      body: eventBody(entry),
+      body: encodeJsonText(eventOf(entry)),
       event: entry._id,
       outcome: "send" as const,
       secret: yield* openSecret(webhook, webhook.secret),
