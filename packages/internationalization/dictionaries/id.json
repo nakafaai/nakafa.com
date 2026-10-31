@@ -763,8 +763,7 @@
         "created": "Wali kelas ditetapkan",
         "removed": "Wali kelas dilepas",
         "published": "Tugas diterbitkan",
-        "deadlineChanged": "Tenggat tugas diubah",
-        "edited": "Tugas diubah"
+        "deadlineChanged": "Tenggat tugas diubah"
       },
       "billing": {
         "invoice": {
@@ -1223,11 +1222,7 @@
     "task-work-no-match-description": "Belum ada siswa dengan nama yang cocok yang mengumpulkan tugas.",
     "task-new": "Tugas baru",
     "task-new-description": "Semua anggota kelas menerimanya di notifikasi.",
-    "task-publish": "Terbitkan",
-    "task-edit": "Ubah tugas",
-    "task-edit-description": "Alamatnya tetap, jadi setiap tautannya tetap membuka tugas ini.",
-    "task-edit-save": "Simpan",
-    "task-points-fixed": "Poin tetap setelah ada tugas yang dikumpulkan."
+    "task-publish": "Terbitkan"
   },
   "SchoolGrades": {
     "student": "Siswa",
@@ -1247,15 +1242,7 @@
     "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya.",
     "detail": "Nilai siswa",
     "detail-empty": "Pilih siswa untuk melihat nilainya.",
-    "kktp": "KKTP",
-    "own-title": "Nilai saya",
-    "own-search": "Cari kelas",
-    "own-class": "Kelas",
-    "own-period": "Periode",
-    "own-band": "Predikat",
-    "own-band-none": "Tanpa predikat",
-    "own-empty": "Belum ada nilai yang dirilis.",
-    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya."
+    "kktp": "KKTP"
   },
   "SchoolReports": {
     "title": "Rapor",
@@ -1294,11 +1281,7 @@
     "grade": "Nilai",
     "result": "Hasil",
     "kktp-reached": "Mencapai KKTP",
-    "kktp-notReached": "Belum mencapai KKTP",
-    "own-title": "Rapor saya",
-    "own-search": "Cari rombel",
-    "own-empty": "Belum ada rapor yang dikunci.",
-    "own-empty-description": "Rapor muncul di sini setelah kepala sekolah menyetujuinya."
+    "kktp-notReached": "Belum mencapai KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",
@@ -1422,7 +1405,6 @@
     "short-description": "Materi belajar gratis untuk SD sampai universitas.",
     "very-short-description": "Materi belajar gratis.",
     "keywords": "materi belajar gratis, belajar matematika, belajar fisika, belajar kimia, belajar biologi, belajar komputer, belajar AI, belajar data science, latihan soal, pembahasan soal, persiapan ujian, try out online, materi SD, materi SMP, materi SMA, materi universitas, pendidikan terbuka, Nakafa",
-    "knows-about": "Matematika, Fisika, Kimia, Biologi, Ilmu Komputer, Kecerdasan Artifisial, Sains Data, Persiapan Ujian, Pendidikan Dasar dan Menengah, Pendidikan Tinggi",
     "classification": "Pendidikan"
   },
   "Common": {

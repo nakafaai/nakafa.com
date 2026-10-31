@@ -763,8 +763,7 @@
         "created": "Klassenlehrer zugewiesen",
         "removed": "Klassenlehrer entfernt",
         "published": "Aufgabe veröffentlicht",
-        "deadlineChanged": "Abgabefrist geändert",
-        "edited": "Aufgabe bearbeitet"
+        "deadlineChanged": "Abgabefrist geändert"
       },
       "billing": {
         "invoice": {
@@ -1223,11 +1222,7 @@
     "task-work-no-match-description": "Kein Schüler mit passendem Namen hat etwas abgegeben.",
     "task-new": "Neue Aufgabe",
     "task-new-description": "Alle in der Klasse erhalten sie in ihren Benachrichtigungen.",
-    "task-publish": "Veröffentlichen",
-    "task-edit": "Aufgabe bearbeiten",
-    "task-edit-description": "Ihre Adresse bleibt, also öffnet jeder Link sie weiter.",
-    "task-edit-save": "Speichern",
-    "task-points-fixed": "Die Punkte stehen fest, sobald Arbeit abgegeben ist."
+    "task-publish": "Veröffentlichen"
   },
   "SchoolGrades": {
     "student": "Schüler",
@@ -1247,15 +1242,7 @@
     "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
     "detail": "Note der Schülerin oder des Schülers",
     "detail-empty": "Wähle eine Person aus der Liste, um ihre Note zu sehen.",
-    "kktp": "KKTP",
-    "own-title": "Meine Noten",
-    "own-search": "Klasse suchen",
-    "own-class": "Klasse",
-    "own-period": "Periode",
-    "own-band": "Stufe",
-    "own-band-none": "Ohne Stufe",
-    "own-empty": "Noch keine Note freigegeben.",
-    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
+    "kktp": "KKTP"
   },
   "SchoolReports": {
     "title": "Zeugnisse",
@@ -1294,11 +1281,7 @@
     "grade": "Note",
     "result": "Ergebnis",
     "kktp-reached": "KKTP erreicht",
-    "kktp-notReached": "KKTP nicht erreicht",
-    "own-title": "Meine Zeugnisse",
-    "own-search": "Klasse suchen",
-    "own-empty": "Noch kein Zeugnis abgeschlossen.",
-    "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt."
+    "kktp-notReached": "KKTP nicht erreicht"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -1422,7 +1405,6 @@
     "short-description": "Kostenlose Lerninhalte von der Grundschule bis zur Universität.",
     "very-short-description": "Kostenlose Lernmaterialien.",
     "keywords": "kostenlose Lerninhalte, Mathematik lernen, Physik lernen, Chemie lernen, Biologie lernen, Informatik lernen, KI lernen, Data Science lernen, Übungsaufgaben, ausführliche Lösungen, Prüfungsvorbereitung, Online-Probetest, Schulmaterialien, Hochschulmaterialien, offene Bildung, Nakafa",
-    "knows-about": "Mathematik, Physik, Chemie, Biologie, Informatik, Künstliche Intelligenz, Data Science, Prüfungsvorbereitung, Schulbildung, Hochschulbildung",
     "classification": "Bildung"
   },
   "Common": {
