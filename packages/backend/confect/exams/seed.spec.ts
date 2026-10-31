@@ -34,6 +34,8 @@ export default GroupSpec.make().addFunction(
       email: Email,
       /** Whether the seeded exam also holds an essay, which the student writes and the teacher grades. */
       essay: Schema.optionalKey(Schema.Boolean),
+      /** Whether the seeded exam ends with the prose question, whose prompt holds every block and mark once. */
+      prose: Schema.optionalKey(Schema.Boolean),
       slug: TenantSlug,
       /** Whether the seed also schedules a room for the next day, which a browser test reads as an upcoming room. */
       upcoming: Schema.optionalKey(Schema.Boolean),
