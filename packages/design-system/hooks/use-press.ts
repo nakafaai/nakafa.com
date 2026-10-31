@@ -1,10 +1,15 @@
 import { useEffect, useEffectEvent, useRef } from "react";
-import { PRESS_ATTRIBUTE, PRESSED_ATTRIBUTE } from "@/lib/press/prepaint";
+
+/** Marks a control drawn on the server whose press must not be lost before React takes the page over. */
+export const PRESS_ATTRIBUTE = "data-press";
+
+/** Set by the app's pre-paint script on such a control when it is pressed, until React replays the press. */
+export const PRESSED_ATTRIBUTE = "data-pressed";
 
 /**
  * The props of a control drawn on the server that answers its own presses, whose
- * press must not be lost before React takes the page over (`EARLY_PRESS_SCRIPT`).
- * Spread them on the control. `data-press` lets the pre-paint script mark the
+ * press must not be lost before React takes the page over, as the app's
+ * pre-paint script keeps it. Spread them on the control. `data-press` lets that script mark the
  * pressed control, and when React mounts it, a marked control loses its mark and
  * runs `onPress`. After that `onClick` clears the mark that the script sets on
  * every press. The mark is an attribute React did not render, so the control

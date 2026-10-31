@@ -82,7 +82,8 @@ function exitHref(
  * Runs the complete resumable questionnaire inside the shared entry shell. The live status waits
  * for the session, and a status that says the account must leave sends it away with a client
  * navigation, never a redirect thrown in render, which the router would show as a broken page.
- * The regions, one line each, stand in two columns, so every question fits a laptop's screen.
+ * Every question stands at the height of the tallest, the regions, so Nina and the row of actions hold
+ * still from one question to the next.
  */
 export function OnboardingQuestionnaire({
   initialProfile,
@@ -230,7 +231,7 @@ export function OnboardingQuestionnaire({
 
   return (
     <Questionnaire
-      className="w-full max-w-md"
+      className="w-full max-w-md [&_[data-slot=questionnaire-item]]:min-h-88"
       item={activeItem}
       items={onboardingItems}
       onItemChange={handleItemChange}

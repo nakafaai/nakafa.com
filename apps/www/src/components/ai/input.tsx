@@ -45,7 +45,7 @@ import { useTranslations } from "use-intl";
 import { NinaAttach } from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
 import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
-import { useEarlyPress } from "@/lib/press/replay";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 
 /**
  * The file tray and the attach button load with their upload code, which

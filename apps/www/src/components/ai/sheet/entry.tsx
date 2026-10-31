@@ -6,7 +6,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
-import { useEarlyPress } from "@/lib/press/replay";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 
 const FIRST_INTERACTION = ["keydown", "pointerdown", "scroll"] as const;
 

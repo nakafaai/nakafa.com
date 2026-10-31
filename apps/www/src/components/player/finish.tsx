@@ -9,7 +9,7 @@ import type { PlayerCellModel } from "@/components/player/model";
 import { PlayerGrid } from "@/components/player/navigator/grid";
 import { usePlayer } from "@/components/player/provider";
 import { readReview } from "@/components/player/review";
-import { useEarlyPress } from "@/lib/press/replay";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 
 /**
  * The one primary action: a button that opens the review before it finishes
