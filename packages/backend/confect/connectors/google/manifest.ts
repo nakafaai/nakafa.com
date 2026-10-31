@@ -7,8 +7,9 @@ export const CALLBACK_PATH = "/api/connectors/callback";
 const SCOPE_ROOT = "https://www.googleapis.com/auth/";
 
 /**
- * The Google connectors that the connect flow serves (ADR 0015). Forms waits for
- * its Picker test and Gmail for its security assessment, so neither is here.
+ * The Google connectors that the connect flow serves (ADR 0015). Forms reads a picked
+ * form through the Drive connection, because `drive.file` covers it, so it has no
+ * connection of its own, and Gmail waits for its security assessment.
  */
 export const GoogleConnector = Schema.Literals([
   "drive",

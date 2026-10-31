@@ -117,7 +117,8 @@ export const pickFromDrive = Effect.fn("classroom.library.pickDrive")(
       Result.Result<Ref.Returns<typeof connectors.drive.pickerToken>, E>
     >,
     locale: string,
-    hide: () => void
+    hide: () => void,
+    accept?: string
   ) {
     const keys = yield* forumCall(requestKeys);
     if (keys === null) {
@@ -127,6 +128,6 @@ export const pickFromDrive = Effect.fn("classroom.library.pickDrive")(
     const { pickDriveFile } = yield* Effect.tryPromise(
       () => import("@/components/tenant/classes/library/drive")
     );
-    return yield* pickDriveFile(keys, locale);
+    return yield* pickDriveFile(keys, locale, accept);
   }
 );

@@ -485,6 +485,7 @@
     "import-title": "Import questions",
     "import-dialog-description": "Nina adds the questions of a Word or PDF file to this exam.",
     "import-submit": "Import",
+    "import-forms": "From Google Forms",
     "import-hint": "Word or PDF, up to 20 MB.",
     "import-drop": "Drop a Word or PDF file here, or choose one.",
     "import-remove": "Remove file",
@@ -3080,6 +3081,10 @@
     "import-mathtype": {
       "title": "Some equations are pictures.",
       "description": "Type them again in the editor."
+    },
+    "import-no-drive": {
+      "title": "Connect Google Drive first",
+      "description": "Forms are read through your Google Drive. Connect it in your account settings."
     },
     "import-empty": {
       "title": "Nina found no question.",

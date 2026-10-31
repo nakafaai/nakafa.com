@@ -485,6 +485,7 @@
     "import-title": "Impor soal",
     "import-dialog-description": "Nina menaruh soal dari berkas Word atau PDF ke ujian ini.",
     "import-submit": "Impor",
+    "import-forms": "Dari Google Forms",
     "import-hint": "Word atau PDF, paling besar 20 MB.",
     "import-drop": "Letakkan berkas Word atau PDF di sini, atau pilih satu.",
     "import-remove": "Hapus berkas",
@@ -3080,6 +3081,10 @@
     "import-mathtype": {
       "title": "Ada persamaan berupa gambar.",
       "description": "Ketik ulang persamaan itu di editor."
+    },
+    "import-no-drive": {
+      "title": "Hubungkan Google Drive dulu",
+      "description": "Formulir dibaca lewat Google Drive-mu. Hubungkan di pengaturan akun."
     },
     "import-empty": {
       "title": "Nina tidak menemukan soal.",

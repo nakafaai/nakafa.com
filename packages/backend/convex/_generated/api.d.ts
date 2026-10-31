@@ -2019,6 +2019,21 @@ export declare const api: {
         { accessToken: string; apiKey: string; appId: string } | null
       >;
     };
+    forms: {
+      questions: FunctionReference<
+        "action",
+        "public",
+        { formId: string },
+        Array<{
+          answer: number | null;
+          explanation: string;
+          figures: Array<{ alt: string; asset: Id<"examAssets"> }>;
+          number: number | null;
+          options: Array<string>;
+          prompt: string;
+        }> | null
+      >;
+    };
     google: {
       finish: FunctionReference<
         "action",
