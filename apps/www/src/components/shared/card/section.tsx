@@ -1,4 +1,10 @@
-import { Card, CardFooter } from "@repo/design-system/components/ui/card";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
@@ -61,21 +67,37 @@ const cardSectionActionsVariants = cva(
 );
 
 /**
- * A titled card that frames one self-contained section. Compose the design
- * system's card header, title, description, and content inside it, then end
- * with `CardSectionFooter`, its sentence and its actions.
+ * A titled card that frames one self-contained section. It draws its own header, so every
+ * section says what it is: the title and the one concise description are required, and the
+ * compiler refuses a section without them. Compose the content inside it, then end with
+ * `CardSectionFooter`, its sentence and its actions.
  */
 export function CardSection({
+  children,
   className,
+  description,
+  title,
   variant = "default",
   ...props
-}: ComponentProps<typeof Card> & VariantProps<typeof cardSectionVariants>) {
+}: Omit<ComponentProps<typeof Card>, "title"> &
+  VariantProps<typeof cardSectionVariants> & {
+    /** What the section is for, in one concise sentence of commas and periods. */
+    description: string;
+    /** The section's name. */
+    title: ReactNode;
+  }) {
   return (
     <Card
       className={cn(cardSectionVariants({ variant }), className)}
       data-variant={variant}
       {...props}
-    />
+    >
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      {children}
+    </Card>
   );
 }
 
