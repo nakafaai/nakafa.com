@@ -5,7 +5,10 @@ import { Kind } from "@repo/backend/confect/access/kind";
 import type { RuleRole } from "@repo/backend/confect/access/schema";
 import { AssignmentKind } from "@repo/backend/confect/tenancy/assignment";
 import { CohortGrade } from "@repo/backend/confect/tenancy/cohort";
-import { Contract } from "@repo/backend/confect/tenancy/contract";
+import {
+  Contract,
+  DocumentVersion,
+} from "@repo/backend/confect/tenancy/contract";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PolicyKey } from "@repo/backend/confect/tenancy/policy";
 import {
@@ -81,6 +84,10 @@ export const tenant = Kind.make("tenant", "tenants", {
     Schema.Struct({
       size: SchoolSize,
       type: Schema.Literal("tenant.founded"),
+    }),
+    Schema.Struct({
+      dpaVersion: DocumentVersion,
+      type: Schema.Literal("tenant.dpa.accepted"),
     }),
     Schema.Struct({
       country: CountryCodeSchema,

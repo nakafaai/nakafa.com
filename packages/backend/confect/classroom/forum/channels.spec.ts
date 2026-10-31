@@ -20,18 +20,21 @@ import { Schema } from "effect";
  * The channels of a class. Whoever may read the class reads its channels, the
  * general channel first, and an archived class keeps them readable. A subject
  * teacher of the class or an Admin adds a topic channel to an active class, and
- * renames a topic channel of it.
+ * renames, archives, brings back, or removes a topic channel of it. An archived
+ * channel stays readable and takes nothing new. `sweep` is internal: it deletes
+ * what a removed channel held.
  */
 export default GroupSpec.make()
-  .middleware(Session)
-  .middleware(RequireMember)
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "list",
       args: () => ({ classId: Id("classes"), slug: TenantSlug }),
       item: () => ChannelView,
       error: () => AccessDenied,
-    }).middleware(ClassAccess, { action: "forum.read", arg: "classId" })
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(ClassAccess, { action: "forum.read", arg: "classId" })
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -43,7 +46,10 @@ export default GroupSpec.make()
       }),
       returns: () => ChannelView,
       error: () => Schema.Union([AccessDenied, ChannelLimit, ChannelNameTaken]),
-    }).middleware(ClassAccess, { action: "forum.manage", arg: "classId" })
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(ClassAccess, { action: "forum.manage", arg: "classId" })
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -56,5 +62,46 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Null,
       error: () => Schema.Union([AccessDenied, ChannelFixed, ChannelNameTaken]),
-    }).middleware(ClassAccess, { action: "forum.manage", arg: "classId" })
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(ClassAccess, { action: "forum.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "archive",
+      args: () => ({
+        archived: Schema.Boolean,
+        channelId: Id("classroomChannels"),
+        classId: Id("classes"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, ChannelFixed]),
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(ClassAccess, { action: "forum.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "remove",
+      args: () => ({
+        channelId: Id("classroomChannels"),
+        classId: Id("classes"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, ChannelFixed]),
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(ClassAccess, { action: "forum.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "sweep",
+      args: () => ({ channelId: Id("classroomChannels") }),
+      returns: () => Schema.Null,
+    })
   );

@@ -1,6 +1,7 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { Search01Icon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
@@ -32,8 +33,8 @@ import { ThreadRows } from "@/components/tenant/classes/forum/threads";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 
-/** What the list of chats shows: every chat, the unread ones, or the class's threads. */
-const ChatFilter = Schema.Literals(["all", "unread", "threads"]);
+/** What the list of chats shows: every open chat, the unread ones, the class's threads, or the archived chats. */
+const ChatFilter = Schema.Literals(["all", "unread", "threads", "archived"]);
 
 /** The key the list's filter keeps its choice under, in the filters of its table page. */
 const CHAT_FILTER = "chat";
@@ -41,7 +42,8 @@ const CHAT_FILTER = "chat";
 /**
  * The list of a class's chats, as a chat app keeps it beside the open chat: a search over the names
  * and Add chat for whoever manages the forum, the filters, and the chats in position order, the
- * general chat first. A chat that the server is still saving shows its name without a link. The next
+ * general chat first. An archived chat leaves the list for the Archived filter, which shows once a
+ * chat is archived. A chat that the server is still saving shows its name without a link. The next
  * page loads when the end of the list comes into view, so the list has no button. A class with no
  * chat shows the empty state without a search, a failed read shows its own sentence and a retry,
  * never the empty state, and a viewer who lost the school's access is sent to the refused page.
@@ -54,11 +56,22 @@ export function ChatRail() {
   );
 }
 
+/** The chats a filter keeps: the archived ones, or the open ones, every one or the unread ones. */
+const chatsOf = (
+  channels: readonly (typeof ChannelView.Type)[],
+  filter: typeof ChatFilter.Type
+) =>
+  Arr.filter(channels, (channel) =>
+    filter === "archived"
+      ? channel.archived
+      : !channel.archived && (filter !== "unread" || channel.unread)
+  );
+
 /** The list inside its filters. */
 function ChatList() {
   const t = useTranslations("Classroom");
   const { can, classId, slug } = useClassScope();
-  const filter = useChatFilter();
+  const chosen = useChatFilter();
   const [drafts] = useState(createChannelDrafts);
   const pagination = usePaginatedQuery(
     classroom.forum.channels.list,
@@ -75,6 +88,9 @@ function ChatList() {
   const loadingFirst = pagination._tag === "LoadingFirstPage";
   const failed = PaginatedQueryResult.isFailure(pagination);
   const listed = failed ? [] : pagination.results;
+  const anyArchived = Arr.some(listed, (channel) => channel.archived);
+  // Bringing back the last archived chat takes the filter away, so the list falls back to every chat.
+  const filter = chosen === "archived" && !anyArchived ? "all" : chosen;
   const empty =
     !(loadingFirst || failed) &&
     Arr.isReadonlyArrayEmpty(listed) &&
@@ -96,20 +112,16 @@ function ChatList() {
         />
       ) : (
         <>
-          <ChatFilters />
+          <ChatFilters anyArchived={anyArchived} filter={filter} />
           <ScrollArea className="min-h-0 flex-1">
             {filter === "threads" ? (
               <ThreadRows />
             ) : (
               <ChannelRows
-                channels={
-                  filter === "unread"
-                    ? Arr.filter(listed, (channel) => channel.unread)
-                    : listed
-                }
+                channels={chatsOf(listed, filter)}
                 failed={failed}
                 loadingFirst={loadingFirst}
-                saving={filter === "unread" ? [] : saving}
+                saving={filter === "all" ? saving : []}
               />
             )}
             {filter !== "threads" &&
@@ -159,10 +171,16 @@ function useChatFilter() {
 }
 
 /** The filters of the list, as WhatsApp sets them above its chats. Choosing the current one keeps it. */
-function ChatFilters() {
+function ChatFilters({
+  anyArchived,
+  filter,
+}: {
+  /** Whether the class holds an archived chat, so the filter that shows it has something to show. */
+  anyArchived: boolean;
+  filter: typeof ChatFilter.Type;
+}) {
   const t = useTranslations("Classroom");
   const choose = useTableFilters((state) => state.choose);
-  const filter = useChatFilter();
 
   return (
     <div className="shrink-0 px-2 pb-2">
@@ -179,11 +197,17 @@ function ChatFilters() {
         value={filter}
         variant="outline"
       >
-        {Arr.map(ChatFilter.literals, (value) => (
-          <ToggleGroupItem key={value} value={value}>
-            {t(`chat-filter-${value}`)}
-          </ToggleGroupItem>
-        ))}
+        {Arr.map(
+          Arr.filter(
+            ChatFilter.literals,
+            (value) => anyArchived || value !== "archived"
+          ),
+          (value) => (
+            <ToggleGroupItem key={value} value={value}>
+              {t(`chat-filter-${value}`)}
+            </ToggleGroupItem>
+          )
+        )}
       </ToggleGroup>
     </div>
   );

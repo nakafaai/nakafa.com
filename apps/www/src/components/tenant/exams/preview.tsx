@@ -20,8 +20,9 @@ import { drawDocument } from "@repo/design-system/components/editor/prose";
 import { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
-import { useCallback, useDeferredValue, useMemo } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
+import { DrawnFigures, figurePlaces } from "@/components/assessment/drawn";
 import { ChoiceGroup } from "@/components/exams/sitting/reason";
 import {
   type Choice,
@@ -127,6 +128,26 @@ export function usePageDocument({
     : Option.orElse(served, () => live);
 }
 
+/** A question's shared reading drawn without an editor, over its prompt. */
+export function ReadingSketch({
+  documentId,
+  read,
+}: {
+  readonly documentId: Id<"editorDocuments">;
+  /** Whether the server's document may be read now. */
+  readonly read: boolean;
+}) {
+  const doc = usePageDocument({
+    documentId,
+    editing: false,
+    open: false,
+    read,
+    saved: true,
+  });
+
+  return <PreviewProse article doc={doc} size="paper" />;
+}
+
 /** The document a text draws while its document is not known: one empty paragraph, as an editor holds one. */
 const EMPTY_TEXT = Node.fromJSON(assessmentSchema, {
   content: [{ type: "paragraph" }],
@@ -150,11 +171,13 @@ export function PreviewProse({
   size: "line" | "page" | "paper";
 }) {
   const shown = useDeferredValue(Option.getOrElse(doc, () => EMPTY_TEXT));
+  const [figures, setFigures] = useState<readonly HTMLElement[]>([]);
   // The text is drawn again only when it changes, not on every redraw of the page.
   const draw = useCallback(
     (element: HTMLDivElement | null) => {
       if (element !== null) {
         drawDocument(element, shown, article);
+        setFigures(figurePlaces(element));
       }
     },
     [article, shown]
@@ -169,6 +192,7 @@ export function PreviewProse({
         )}
         ref={draw}
       />
+      <DrawnFigures doc={shown} places={figures} />
     </div>
   );
 }

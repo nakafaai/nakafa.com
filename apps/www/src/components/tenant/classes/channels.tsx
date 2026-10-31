@@ -1,24 +1,5 @@
-import { useMutation } from "@confect/react";
-import {
-  CheckmarkCircle02Icon,
-  HashtagIcon,
-  MoreHorizontalIcon,
-  PencilEdit02Icon,
-  ViewIcon,
-} from "@hugeicons/core-free-icons";
-import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import {
-  ChannelName,
-  type ChannelView,
-} from "@repo/backend/confect/classroom/forum/channel";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { HashtagIcon } from "@hugeicons/core-free-icons";
+import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
 import {
   Empty,
   EmptyHeader,
@@ -34,35 +15,18 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
-import {
-  Array as Arr,
-  Clock,
-  DateTime,
-  Effect,
-  Function as Fn,
-  Schema,
-} from "effect";
-import { startTransition, useState } from "react";
+import { Array as Arr, DateTime } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { EmptyNina } from "@/components/state/empty";
-import {
-  forumCall,
-  runForumCall,
-} from "@/components/tenant/classes/forum/call";
-import { markUpdate } from "@/components/tenant/classes/forum/optimistic";
-import { renameChannelUpdate } from "@/components/tenant/classes/forum/rename";
+import { ChannelMenu } from "@/components/tenant/classes/forum/menu";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useClassScope } from "@/components/tenant/classes/scope";
-import { LineDialog } from "@/components/tenant/line";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolClassChannelTarget } from "@/lib/routing/school/target";
-
-const SOURCE = "components/tenant/classes/channels";
 
 /** How many channels the list asks for each time its end comes into view. */
 export const CHANNEL_PAGE_SIZE = 20;
@@ -253,110 +217,5 @@ function SavingChannelItem({ name }: { name: string }) {
         </ItemTitle>
       </ItemContent>
     </Item>
-  );
-}
-
-/**
- * A channel's menu: Open, its messages, Mark as read, which clears its unread dot at once and marks
- * every message until now as read, and Rename for whoever manages the forum, on a topic channel,
- * since the page translates the general one. A channel with nothing unread keeps Mark as read
- * disabled.
- */
-function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
-  const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
-  const { can, classId, classSlug, slug } = useClassScope();
-  const mark = useMutation(classroom.forum.reads.mark);
-  const rename = useMutation(
-    classroom.forum.channels.rename
-  ).withOptimisticUpdate(renameChannelUpdate);
-  const [renaming, setRenaming] = useState(0);
-  const [isRenaming, setIsRenaming] = useState(false);
-
-  return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            // With a mouse the menu shows on the row's hover or focus; a touch screen always shows it.
-            <Button
-              aria-label={common("more-actions")}
-              className="pointer-fine:opacity-0 pointer-fine:group-focus-within/chat:opacity-100 pointer-fine:group-hover/chat:opacity-100 pointer-fine:data-popup-open:opacity-100"
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              render={
-                <TargetLink
-                  target={schoolClassChannelTarget(slug, classSlug, channel.id)}
-                >
-                  <HugeIcons icon={ViewIcon} />
-                  {common("open")}
-                </TargetLink>
-              }
-            />
-            <DropdownMenuItem
-              disabled={!channel.unread}
-              onClick={() =>
-                runForumCall(
-                  Effect.flatMap(Clock.currentTimeMillis, (at) =>
-                    forumCall(() =>
-                      mark.withOptimisticUpdate(markUpdate)({
-                        at,
-                        classId,
-                        place: { _tag: "channel", channelId: channel.id },
-                        slug,
-                      })
-                    )
-                  ),
-                  Fn.constVoid
-                )
-              }
-            >
-              <HugeIcons icon={CheckmarkCircle02Icon} />
-              {t("channel-mark-read")}
-            </DropdownMenuItem>
-            {channel.kind === "topic" && Arr.contains(can, "forum.manage") ? (
-              <DropdownMenuItem
-                onClick={() => {
-                  setRenaming((count) => count + 1);
-                  setIsRenaming(true);
-                }}
-              >
-                <HugeIcons icon={PencilEdit02Icon} />
-                {t("channel-rename")}
-              </DropdownMenuItem>
-            ) : null}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {renaming === 0 ? null : (
-        <LineDialog
-          description={t("channel-rename-description")}
-          initial={channel.name}
-          isValid={Schema.is(ChannelName)}
-          key={renaming}
-          label={t("channel-name")}
-          onSave={(name) =>
-            startTransition(() =>
-              saveSchool(
-                () => rename({ channelId: channel.id, classId, name, slug }),
-                SOURCE
-              )
-            )
-          }
-          open={isRenaming}
-          placeholder={t("channel-name-placeholder")}
-          setOpen={setIsRenaming}
-          title={t("channel-rename")}
-        />
-      )}
-    </>
   );
 }
