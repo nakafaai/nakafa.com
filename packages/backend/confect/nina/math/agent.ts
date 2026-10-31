@@ -22,7 +22,10 @@ import {
   mathSeries,
   mathStatistics,
 } from "@repo/backend/confect/nina/math/descriptions";
-import { makeMathGenerationError } from "@repo/backend/confect/nina/math/error";
+import {
+  makeMathGenerationError,
+  mathRunFailure,
+} from "@repo/backend/confect/nina/math/error";
 import { mathPrompt } from "@repo/backend/confect/nina/math/prompt";
 import { repairMathToolCall } from "@repo/backend/confect/nina/math/repair";
 import {
@@ -249,7 +252,12 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           },
         }
       ),
-    catch: makeMathGenerationError,
-  });
+    catch: mathRunFailure,
+  }).pipe(
+    // A run the step limit ended with a tool still called wrote no answer, and says so to Nina as partial.
+    Effect.catchTag("MathStepLimitError", () =>
+      Effect.succeed({ finishReason: "tool-calls" as const, text: "" })
+    )
+  );
   return specialistResult(result.text, result.finishReason);
 });

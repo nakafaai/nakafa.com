@@ -1,4 +1,5 @@
 import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import {
   getArcPoints,
   getMidpoint,
@@ -125,6 +126,7 @@ export function Graph({ title, description }: GraphProps) {
       cameraPosition={[3.9, 2.6, 12]}
       cameraTarget={[3.9, 2.6, 0]}
       data={graphData}
+      facts={<LineReadouts />}
       header={<VisualCardHeader description={description} title={title} />}
       showZAxis={false}
     />

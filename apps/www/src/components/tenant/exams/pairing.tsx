@@ -1,6 +1,10 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import {
+  letterScript,
+  optionLetter,
+} from "@repo/backend/confect/exams/letters";
+import {
   FieldDescription,
   FieldTitle,
 } from "@repo/design-system/components/ui/field";
@@ -15,7 +19,6 @@ import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { pairedWith } from "@/components/exams/sitting/response";
-import { optionLetter } from "@/components/tenant/exams/answer";
 import { keyPairs } from "@/components/tenant/exams/match";
 
 /** The props of the key of one matching question. */
@@ -59,8 +62,10 @@ export function MatchKey({
       Arr.some(match.sources, (part) => part.id === item.source) &&
       Arr.some(match.targets, (part) => part.id === item.target)
   );
+  // The answers are named in the script of their labels: أ, ب, ج for answers written in Arabic.
+  const script = letterScript(Arr.map(match.targets, (part) => part.label));
   const items = Arr.map(match.targets, (target, index) => ({
-    label: optionLetter(index),
+    label: optionLetter(index, script),
     value: target.id,
   }));
 

@@ -87,7 +87,10 @@ const keepsLongContentInTheColumn = async (page: Page) => {
     '[data-nakafa="list-item"]'
   );
   const wide = await (await drawnRow(page, TABLE.answer)).evaluate((row) => {
-    const box = row.querySelector('[data-slot="table-container"]');
+    // The table scrolls in its container's viewport, under an overlay bar.
+    const box = row.querySelector(
+      '[data-slot="table-container"] > [data-slot="scroll-area-viewport"]'
+    );
     return {
       scrolls: (box?.scrollWidth ?? 0) > (box?.clientWidth ?? 0),
       wider: (box?.scrollWidth ?? 0) > row.clientWidth,

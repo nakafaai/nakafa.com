@@ -1,7 +1,7 @@
 import { useHotkeys } from "@mantine/hooks";
 import { lazy, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
-import { SidebarSearchButton } from "@/components/sidebar/search/trigger";
+import { SidebarSearchButton } from "@/components/sidebar/search/button";
 
 /** The palette's code, which the first intent on the search loads. */
 const TenantPalette = lazy(() =>
