@@ -178,6 +178,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     title: "school-logo-refused.title",
   },
   NotMember: ACCESS_COPY,
+  NotOperator: {
+    description: "school-refusal-not-operator.description",
+    title: "school-refusal-not-operator.title",
+  },
   NpsnInvalid: {
     description: "school-refusal-npsn-invalid.description",
     title: "school-refusal-npsn-invalid.title",
@@ -237,6 +241,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
   SchoolSeatsPaid: {
     description: "school-refusal-seats-paid.description",
     title: "school-refusal-seats-paid.title",
+  },
+  ProvisionRejected: {
+    description: "school-refusal-provision.description",
+    title: "school-refusal-provision.title",
   },
   PromotionState: {
     description: "school-refusal-promotion-state.description",
