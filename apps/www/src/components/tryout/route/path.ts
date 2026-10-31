@@ -198,13 +198,14 @@ export function getTryoutPageHref({
     : getTryoutAttemptHref(publicPath, attemptId);
 }
 
-/** Preserves an exact attempt capability through localized authentication. */
+/** Preserves an exact attempt capability, and the view the address names, through localized authentication. */
 export function getTryoutAttemptAuthHref(
   locale: string,
   publicPath: string,
-  attemptId: string
+  attemptId: string,
+  view: Option.Option<string> = Option.none()
 ) {
-  const redirectHref = `/${locale}${getTryoutAttemptHref(publicPath, attemptId)}`;
+  const redirectHref = `/${locale}${getTryoutAttemptHref(publicPath, attemptId, view)}`;
   return `/${locale}/auth?redirect=${encodeURIComponent(redirectHref)}`;
 }
 

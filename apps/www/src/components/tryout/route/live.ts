@@ -10,6 +10,7 @@ import {
   PLAYER_MODE_PARAM,
   readBrowserPlayerMode,
 } from "@/components/player/mode";
+import { useLiveSession } from "@/components/providers/live";
 import { readAddressIntent } from "@/components/tryout/route/intent";
 import {
   decodeAttemptBodies,
@@ -25,6 +26,7 @@ import {
 import type { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import type { TryoutSectionPage } from "@/components/tryout/section/model";
 import type { SetPage } from "@/components/tryout/set/model";
+import { hasSignedInHint } from "@/lib/auth/hint";
 
 /**
  * Where a learner's read of a try-out page stands. A visitor, with no session and no attempt in the
@@ -49,9 +51,21 @@ function attemptOf(search: TryoutAttemptSearch) {
   );
 }
 
+/** The player view a URL names, if it names a valid one. */
+function viewOfAddress(search: TryoutAttemptSearch) {
+  return Option.getOrUndefined(
+    Option.flatMap(readAddressIntent(search), ({ view }) =>
+      view.kind === "valid" ? Option.some(view.mode) : Option.none()
+    )
+  );
+}
+
 /**
- * Sends a URL that names an attempt without a session to sign-in, which returns to it. It reads the
- * session store and no Convex query, so a visitor's page, which holds no Convex client, runs it too.
+ * Sends a URL that names an attempt without a session to sign-in, which returns to it with the view it
+ * names. It reads the session store and no Convex query, so a visitor's page, which holds no Convex
+ * client, runs it too. The page starts its live session in an effect of its own, which runs after this
+ * one, and the store reads signed out until then; so where the signed-in hint says a session may exist,
+ * the session counts only once the browser has looked (a client, or a failed load).
  */
 export function useAttemptSignIn(input: {
   readonly publicPath: string;
@@ -61,17 +75,27 @@ export function useAttemptSignIn(input: {
   const navigate = useNavigate();
   const isLoading = useConvexAuth((state) => state.isLoading);
   const isAuthenticated = useConvexAuth((state) => state.isAuthenticated);
+  const looked = useLiveSession(
+    (state) => Option.isSome(state.client) || state.hasError
+  );
   const attemptId = attemptOf(input.search);
+  const view = viewOfAddress(input.search);
   const signIn = attemptId !== undefined && !isLoading && !isAuthenticated;
 
   useEffect(() => {
-    if (signIn && attemptId !== undefined) {
+    const known = looked || !hasSignedInHint(document.cookie);
+    if (signIn && known && attemptId !== undefined) {
       navigate({
-        href: getTryoutAttemptAuthHref(locale, input.publicPath, attemptId),
+        href: getTryoutAttemptAuthHref(
+          locale,
+          input.publicPath,
+          attemptId,
+          Option.fromNullishOr(view)
+        ),
         replace: true,
       });
     }
-  }, [attemptId, input.publicPath, locale, navigate, signIn]);
+  }, [attemptId, input.publicPath, locale, looked, navigate, signIn, view]);
 }
 
 /**

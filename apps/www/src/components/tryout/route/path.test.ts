@@ -43,6 +43,16 @@ describe("tryout route paths", () => {
     ).toBe(
       "/id/auth?redirect=%2Fid%2Ftry-out%2Fid%2Fset-1%2Fsection%3FattemptId%3Dattempt%252Fid"
     );
+    expect(
+      getTryoutAttemptAuthHref(
+        "id",
+        "try-out/id/set-1/section",
+        "attempt/id",
+        Option.some("single")
+      )
+    ).toBe(
+      "/id/auth?redirect=%2Fid%2Ftry-out%2Fid%2Fset-1%2Fsection%3FattemptId%3Dattempt%252Fid%26view%3Dsingle"
+    );
   });
 
   it("classifies server attempt capabilities without accepting ambiguity", () => {
