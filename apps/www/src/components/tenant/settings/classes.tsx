@@ -28,6 +28,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
@@ -131,11 +132,13 @@ function ClassesActions() {
         />
       ) : null}
       <TableSearch placeholder={t("classes-search")} />
-      <SchoolClassAdd
-        active={active}
-        sd={chosen !== null && chosen.unit.level === "sd"}
-        slug={slug}
-      />
+      <WithAction action="class.create">
+        <SchoolClassAdd
+          active={active}
+          sd={chosen !== null && chosen.unit.level === "sd"}
+          slug={slug}
+        />
+      </WithAction>
     </>
   );
 }
@@ -308,12 +311,15 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
       id: "status",
     }),
     classColumns.display({
-      cell: (info) =>
-        info.row.original.status === "archived" ? (
-          <SchoolClassRestore row={info.row.original} slug={slug} />
-        ) : (
-          <SchoolClassMenu row={info.row.original} slug={slug} />
-        ),
+      cell: (info) => (
+        <WithAction action="class.create">
+          {info.row.original.status === "archived" ? (
+            <SchoolClassRestore row={info.row.original} slug={slug} />
+          ) : (
+            <SchoolClassMenu row={info.row.original} slug={slug} />
+          )}
+        </WithAction>
+      ),
       id: "actions",
       meta: { align: "menu" },
     }),

@@ -128,7 +128,7 @@
   "SchoolRoster": {
     "import": "Impor",
     "export": "Ekspor",
-    "export-grades": "Ekspor nilai",
+    "export-grades": "Nilai rapor",
     "export-grades-label": "Nilai rapor satu rombel",
     "export-grades-loading": "Memuat rombel",
     "export-grades-no-period": "Belum ada periode aktif.",
@@ -155,7 +155,8 @@
     "status-birth": "Tanggal lahir tidak terbaca",
     "status-cohort": "Nama rombel terlalu panjang",
     "cancel": "Batal",
-    "apply": "Impor siswa"
+    "apply": "Impor siswa",
+    "export-students": "Daftar siswa"
   },
   "Exams": {
     "minutes-placeholder": "10",
@@ -1108,7 +1109,18 @@
     "grading-save": "Simpan versi",
     "grading-status": "Status",
     "grading-current": "Berlaku",
-    "grading-earlier": "Sebelumnya"
+    "grading-earlier": "Sebelumnya",
+    "grant-change": "Ganti peran",
+    "grant-change-description": "Peran baru menggantikan peran ini untuk {name}.",
+    "invite-readdress": "Ganti email",
+    "invite-readdress-description": "Undangan lama berakhir, lalu undangan baru dikirim ke email ini.",
+    "client-edit": "Ubah klien",
+    "client-edit-description": "Cakupan dan rahasianya tetap sama.",
+    "locale-title": "Negara dan mata uang",
+    "locale-description": "Lokasi sekolah ini dan mata uang paketnya.",
+    "locale-country": "Negara",
+    "locale-currency": "Mata uang",
+    "locale-footer": "Setiap perubahan tercatat di jejak audit."
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -1222,8 +1234,8 @@
     "task-points": "Poin",
     "task-points-for": "Poin untuk {name}",
     "task-late": "Kerja terlambat",
-    "task-late-accept": "Diterima dan ditandai terlambat",
-    "task-late-close": "Tidak diterima setelah tenggat",
+    "task-late-accept": "Ditandai terlambat",
+    "task-late-close": "Ditolak",
     "task-status": "Status",
     "task-handed-in-count": "{count} sudah mengumpulkan",
     "task-not-handed-in": "Belum dikumpulkan",
@@ -1245,7 +1257,13 @@
     "task-edit": "Ubah tugas",
     "task-edit-description": "Alamatnya tetap, jadi setiap tautannya tetap membuka tugas ini.",
     "task-edit-save": "Simpan",
-    "task-points-fixed": "Poin tetap setelah ada tugas yang dikumpulkan."
+    "task-points-fixed": "Poin tetap setelah ada tugas yang dikumpulkan.",
+    "channel-rename": "Ganti nama kanal",
+    "channel-rename-description": "Semua anggota kelas melihat nama baru.",
+    "discussion-rename": "Ganti judul diskusi",
+    "discussion-rename-description": "Semua anggota kelas melihat judul baru.",
+    "library-edit": "Ubah",
+    "library-edit-description": "Kelas langsung melihat perubahannya."
   },
   "SchoolGrades": {
     "student": "Siswa",
@@ -2805,6 +2823,14 @@
     "school-roster-no-period": {
       "title": "Belum ada periode aktif.",
       "description": "Buka periode untuk satuan ini dulu."
+    },
+    "school-refusal-channel-name-taken": {
+      "title": "Nama kanal ini sudah dipakai.",
+      "description": "Pilih nama lain untuk kelas ini."
+    },
+    "school-refusal-channel-fixed": {
+      "title": "Kanal umum tetap memakai namanya.",
+      "description": "Ganti nama kanal topik saja."
     }
   },
   "Ai": {

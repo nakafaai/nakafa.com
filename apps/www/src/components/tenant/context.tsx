@@ -13,8 +13,9 @@ import type { SchoolViewer } from "@/lib/tenant/frame";
 /**
  * The school the shell shows, its address, its name and its mark, the viewer's
  * first role in it, or none when the viewer holds no grant, what the viewer may
- * open: the school's settings and its exams, and the viewer's exam access that the
- * exam list and the school's landing draw from. A type only: the browser bundle never
+ * open: the school's settings and its exams, the viewer's exam access that the
+ * exam list and the school's landing draw from, and every action the viewer holds in
+ * the school, which the settings sections read. A type only: the browser bundle never
  * evaluates the schemas it is derived from.
  */
 export type TenantValue = Pick<
@@ -27,7 +28,8 @@ export type TenantValue = Pick<
     "canManage" | "canOpenExams" | "canOpenGraduation" | "canOpenReports",
     boolean
   > &
-  Record<"home", HomeAccess>;
+  Record<"home", HomeAccess> &
+  Record<"reach", readonly string[]>;
 
 /**
  * The school of the shell. Its value is fixed for one render of the school

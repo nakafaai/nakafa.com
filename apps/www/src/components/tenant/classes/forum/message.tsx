@@ -2,6 +2,7 @@ import { useMutation } from "@confect/react";
 import {
   MoreHorizontalIcon,
   PencilEdit02Icon,
+  TextFontIcon,
   ViewOffSlashIcon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
@@ -50,6 +51,7 @@ import {
   type ForumMessage,
   hideUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
+import { DiscussionRenameDialog } from "@/components/tenant/classes/forum/rename";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 
 /**
@@ -173,7 +175,11 @@ function MessageTime({ message }: { message: ForumMessage }) {
   );
 }
 
-/** The menu of a message: Edit on the viewer's own message, Hide for whoever manages the forum. */
+/**
+ * The menu of a message: Edit on the viewer's own message, Hide for whoever manages the forum, and
+ * Rename on the message that opens a discussion, for whoever opened it or a teacher who writes in
+ * the class, as the server allows.
+ */
 function MessageActions({
   message,
   onEdit,
@@ -185,6 +191,9 @@ function MessageActions({
   const scope = useChannelScope();
   const common = useTranslations("Common");
   const [hiding, setHiding] = useState(false);
+  const [renaming, setRenaming] = useState(0);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const { discussion } = message;
 
   if (!(message.mine || scope.canManage)) {
     return null;
@@ -218,9 +227,29 @@ function MessageActions({
               {t("message-hide")}
             </DropdownMenuItem>
           ) : null}
+          {discussion === null ? null : (
+            <DropdownMenuItem
+              onClick={() => {
+                setRenaming((count) => count + 1);
+                setIsRenaming(true);
+              }}
+            >
+              <HugeIcons icon={TextFontIcon} />
+              {t("discussion-rename")}
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <HideMessage message={message} open={hiding} setOpen={setHiding} />
+      {discussion === null || renaming === 0 ? null : (
+        <DiscussionRenameDialog
+          key={renaming}
+          number={discussion.number}
+          open={isRenaming}
+          setOpen={setIsRenaming}
+          title={discussion.title}
+        />
+      )}
     </>
   );
 }

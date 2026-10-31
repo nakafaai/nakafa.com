@@ -6,6 +6,7 @@ import {
   grantAccess,
   tenantAccess,
 } from "@repo/backend/confect/access/authority";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import {
   assignRole,
   authorizeOwnerRole,
@@ -113,6 +114,35 @@ const assign = FunctionImpl.make(
 );
 
 /**
+ * Changes the role of an active grant in one step, over the same scope: the old role ends and the
+ * new one starts in one transaction, so a refusal leaves the person's grant as it was, and no moment
+ * leaves the person without a role. Each half passes the rules of its own path. A grant that has
+ * ended is refused as a missing object.
+ */
+const change = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "change",
+  Effect.fn("access.grants.change")(function* ({ role }) {
+    const grant = yield* Grant;
+    if (grant.status !== "active") {
+      return yield* new AccessDenied({
+        action: "grant.manage",
+        reason: "resource",
+      });
+    }
+    yield* authorizeAssign(grant.scope, role);
+    const actor = { id: (yield* Member).person._id, kind: "person" } as const;
+    const holder = yield* (yield* DatabaseReader)
+      .table("tenantPeople")
+      .get(grant.personId)
+      .pipe(Effect.orDie);
+    yield* revokeGrant(actor, grant, holder);
+    return yield* assignRole(actor, holder, role, grant.scope);
+  })
+);
+
+/**
  * Ending a grant is decided on the grant (`grant.revoke`), so it works in an
  * archived unit too. Ending an already ended grant is a no-op, so a retried
  * request succeeds.
@@ -141,6 +171,7 @@ const revoke = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(assign),
+  Layer.provide(change),
   Layer.provide(revoke),
   Layer.provide(session),
   Layer.provide(member),

@@ -230,6 +230,41 @@ export const markUpdate: OptimisticUpdate<typeof classroom.forum.reads.mark> = (
   }
 };
 
+/** Shows a channel's new name at once, in every page of the channel list that holds it. */
+export const renameChannelUpdate: OptimisticUpdate<
+  typeof classroom.forum.channels.rename
+> = (localStore, args) => {
+  for (const query of localStore.getAllQueries(channels.list)) {
+    if (
+      Option.isSome(query.value) &&
+      Arr.some(query.value.value.page, (channel) => channel.id === args.channelId)
+    ) {
+      localStore.setQuery(
+        channels.list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: Arr.map(query.value.value.page, (channel) =>
+            channel.id === args.channelId
+              ? { ...channel, name: args.name }
+              : channel
+          ),
+        })
+      );
+    }
+  }
+};
+
+/** Shows a discussion's new title at once, on its page and on the message that opens it. */
+export const renameDiscussionUpdate: OptimisticUpdate<
+  typeof classroom.forum.threads.rename
+> = (localStore, args) => {
+  changeDiscussion(localStore, args.number, (discussion) => ({
+    ...discussion,
+    title: args.title,
+  }));
+};
+
 /** Shows the author's new text of a message at once, edited at `at`. */
 export const editUpdate =
   (at: number): OptimisticUpdate<typeof classroom.forum.messages.edit> =>

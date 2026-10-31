@@ -118,7 +118,7 @@ function CohortReportsHeader() {
   const args = useCohortArgs();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const cohort = useQuery(tenancy.cohorts.get, isSettled ? args : "skip");
-  const title = QueryResult.isSuccess(cohort) ? cohort.value.name : "";
+  const title = QueryResult.isSuccess(cohort) ? cohort.value.name : undefined;
 
   return (
     <SchoolHeader
@@ -131,9 +131,9 @@ function CohortReportsHeader() {
             to: "/school/$slug/reports",
           },
         },
-        { label: title },
+        { label: title ?? "" },
       ]}
-      title={title}
+      {...(title === undefined ? {} : { title })}
     >
       <TableSearch placeholder={t("search-students")} />
     </SchoolHeader>

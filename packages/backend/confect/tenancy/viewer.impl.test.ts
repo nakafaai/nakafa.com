@@ -260,4 +260,23 @@ describe("tenancy/viewer", () => {
         expect(hidden.account).toEqual({ mascot: MASCOT, name: "User owner" });
       })
   );
+
+  it.effect(
+    "tells the app the actions the member's roles open, an Owner's as an Admin's",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const read = (role: "admin" | "owner" | "student") =>
+          fixture.as(role).query(viewer, { slug: nf });
+        const [owner, admin, student] = yield* Effect.all([
+          read("owner"),
+          read("admin"),
+          read("student"),
+        ]);
+        expect(owner.reach).toEqual(admin.reach);
+        expect(admin.reach).toContain("person.view");
+        expect(admin.reach).toContain("roster.view");
+        expect(student.reach).not.toContain("person.view");
+      })
+  );
 });

@@ -229,6 +229,16 @@ export const addUnitChange: OptimisticUpdate<typeof tenancy.units.create> = (
   patchUnitList(localStore, slug, (units) => Arr.append(units, draft));
 };
 
+/** Shows the school's new country and currency at once. */
+export const setLocaleChange: OptimisticUpdate<
+  typeof tenancy.settings.setLocale
+> = (localStore, { country, currency, slug }) => {
+  patchViewer(localStore, slug, (viewer) => ({
+    ...viewer,
+    tenant: { ...viewer.tenant, country, currency },
+  }));
+};
+
 /** Shows the new time zone and page language of a unit at once. */
 export const setUnitLocaleChange: OptimisticUpdate<
   typeof tenancy.units.setLocale
@@ -292,6 +302,32 @@ export const revokeInviteChange: OptimisticUpdate<
   );
 };
 
+/** Shows an invite's corrected address at once. */
+export const readdressInviteChange: OptimisticUpdate<
+  typeof tenancy.invites.readdress
+> = (localStore, { email, inviteId, slug }) => {
+  changeInviteLists(
+    localStore,
+    slug,
+    () => true,
+    (page) =>
+      Arr.map(page, (invite) =>
+        invite.id === inviteId ? { ...invite, email } : invite
+      )
+  );
+};
+
+/** Shows a client's new name and actions at once. */
+export const updateClientChange: OptimisticUpdate<
+  typeof integrations.clients.update
+> = (localStore, { actions, clientId, name, slug }) => {
+  changeClientLists(localStore, slug, (page) =>
+    Arr.map(page, (client) =>
+      client.id === clientId ? { ...client, actions, name } : client
+    )
+  );
+};
+
 /** Shows a client as revoked at once. */
 export const revokeClientChange: OptimisticUpdate<
   typeof integrations.clients.revoke
@@ -319,6 +355,23 @@ export const assignGrantChange: OptimisticUpdate<
   };
   changeGrantPages(localStore, slug, isFirstPage, (page) =>
     Arr.prepend(page, draft)
+  );
+};
+
+/** Shows a grant's new role at once, in every loaded list of the school's grants. */
+export const changeGrantRoleChange: OptimisticUpdate<
+  typeof access.grants.change
+> = (localStore, { grantId, role, slug }) => {
+  changeGrantPages(
+    localStore,
+    slug,
+    () => true,
+    (page) =>
+      Arr.map(page, (grant) =>
+        grant.id === grantId
+          ? { ...grant, role: { key: role, kind: "builtin" } }
+          : grant
+      )
   );
 };
 

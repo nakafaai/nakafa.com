@@ -53,6 +53,26 @@ export const addLinkUpdate =
     );
   };
 
+/** Shows an item's new title, and a link's new address, at once. */
+export const editItemUpdate: OptimisticUpdate<typeof classroom.library.edit> = (
+  localStore,
+  args
+) => {
+  changePages(localStore, args.classId, (page) =>
+    Option.some(
+      Arr.map(page, (item) =>
+        item.id === args.itemId
+          ? {
+              ...item,
+              address: args.address ?? item.address,
+              title: args.title,
+            }
+          : item
+      )
+    )
+  );
+};
+
 /** Takes a removed item out of the library at once. */
 export const removeItemUpdate: OptimisticUpdate<
   typeof classroom.library.remove

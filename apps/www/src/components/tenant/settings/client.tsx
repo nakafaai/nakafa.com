@@ -23,14 +23,16 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
-import { useId, useState, useTransition } from "react";
+import { startTransition, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   IntegrationAction,
   toggleAction,
 } from "@/components/tenant/settings/actions";
+import { updateClientChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
+import type { Client } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/client";
 
@@ -169,32 +171,137 @@ export function SchoolClientCreateDialog({
             </SelectContent>
           </Select>
         </Field>
-        <FieldSet>
-          <FieldLegend variant="label">{t("client-actions")}</FieldLegend>
-          <FieldGroup data-slot="checkbox-group">
-            {Arr.map(IntegrationAction.literals, (action) => {
-              const checked = Arr.contains(actions, action);
-              return (
-                <Field key={action} orientation="horizontal">
-                  <Checkbox
-                    checked={checked}
-                    disabled={checked && actions.length === 1}
-                    id={`${id}-action-${action}`}
-                    onCheckedChange={(next) =>
-                      setActions((current) =>
-                        toggleAction(current, action, next)
-                      )
-                    }
-                  />
-                  <FieldLabel htmlFor={`${id}-action-${action}`}>
-                    {t(`client-action.${action}`)}
-                  </FieldLabel>
-                </Field>
-              );
-            })}
-          </FieldGroup>
-          <FieldDescription>{t("client-actions-footer")}</FieldDescription>
-        </FieldSet>
+        <ClientActionsField actions={actions} setActions={setActions} />
+      </FieldGroup>
+    </ResponsiveDialog>
+  );
+}
+
+/** The actions a client holds, all checkable; a client always keeps one, so the last stays checked. */
+function ClientActionsField({
+  actions,
+  setActions,
+}: {
+  actions: readonly IntegrationAction[];
+  setActions: (
+    change: (current: readonly IntegrationAction[]) => readonly IntegrationAction[]
+  ) => void;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const id = useId();
+
+  return (
+    <FieldSet>
+      <FieldLegend variant="label">{t("client-actions")}</FieldLegend>
+      <FieldGroup data-slot="checkbox-group">
+        {Arr.map(IntegrationAction.literals, (action) => {
+          const checked = Arr.contains(actions, action);
+          return (
+            <Field key={action} orientation="horizontal">
+              <Checkbox
+                checked={checked}
+                disabled={checked && actions.length === 1}
+                id={`${id}-action-${action}`}
+                onCheckedChange={(next) =>
+                  setActions((current) => toggleAction(current, action, next))
+                }
+              />
+              <FieldLabel htmlFor={`${id}-action-${action}`}>
+                {t(`client-action.${action}`)}
+              </FieldLabel>
+            </Field>
+          );
+        })}
+      </FieldGroup>
+      <FieldDescription>{t("client-actions-footer")}</FieldDescription>
+    </FieldSet>
+  );
+}
+
+/**
+ * The dialog that changes a client's name and the actions it holds. Its scope and its secret stay,
+ * so what connects with it keeps working. The row shows the change at once, and a refusal takes it
+ * back.
+ */
+export function SchoolClientEditDialog({
+  client,
+  open,
+  setOpen,
+}: {
+  client: Client;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
+  const { slug } = useTenant();
+  const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
+  const id = useId();
+  const update = useMutation(integrations.clients.update).withOptimisticUpdate(
+    updateClientChange
+  );
+  const [name, setName] = useState(client.name);
+  const [actions, setActions] = useState<readonly IntegrationAction[]>(() =>
+    Arr.filter(client.actions, Schema.is(IntegrationAction))
+  );
+  const clientName = Schema.decodeOption(IntegrationName)(name.trim());
+
+  const save = () => {
+    const held = [...actions];
+    if (Option.isNone(clientName) || !Arr.isArrayNonEmpty(held)) {
+      return;
+    }
+    setOpen(false);
+    startTransition(() =>
+      saveSchool(
+        () =>
+          update({
+            actions: held,
+            clientId: client.id,
+            name: clientName.value,
+            slug,
+          }),
+        SOURCE
+      )
+    );
+  };
+
+  return (
+    <ResponsiveDialog
+      description={t("client-edit-description")}
+      footer={
+        <>
+          <Button
+            onClick={() => setOpen(false)}
+            type="button"
+            variant="outline"
+          >
+            {common("cancel")}
+          </Button>
+          <Button
+            disabled={Option.isNone(clientName)}
+            onClick={save}
+            type="button"
+          >
+            {t("save")}
+          </Button>
+        </>
+      }
+      open={open}
+      setOpen={setOpen}
+      title={t("client-edit")}
+    >
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor={`${id}-name`}>{t("client-name")}</FieldLabel>
+          <Input
+            dir="auto"
+            id={`${id}-name`}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={t("client-name-placeholder")}
+            value={name}
+          />
+        </Field>
+        <ClientActionsField actions={actions} setActions={setActions} />
       </FieldGroup>
     </ResponsiveDialog>
   );

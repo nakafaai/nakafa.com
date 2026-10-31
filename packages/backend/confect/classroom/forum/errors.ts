@@ -13,6 +13,12 @@ export class ChannelNameTaken extends Schema.TaggedError<ChannelNameTaken>()(
   refusal("CHANNEL_NAME_TAKEN", "Another channel of this class has this name.")
 ) {}
 
+/** A rename of a class's general channel, whose name the page translates for each reader. */
+export class ChannelFixed extends Schema.TaggedError<ChannelFixed>()(
+  "ChannelFixed",
+  refusal("CHANNEL_FIXED", "The general channel keeps its name.")
+) {}
+
 /** An edit of a message that a teacher hid: the message has no text left to change. */
 export class MessageHidden extends Schema.TaggedError<MessageHidden>()(
   "MessageHidden",

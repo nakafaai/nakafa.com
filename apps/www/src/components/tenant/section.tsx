@@ -2,12 +2,13 @@ import type { Ref } from "@confect/core";
 import { QueryResult } from "@confect/react";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { useRouter } from "@tanstack/react-router";
-import { Array as Arr } from "effect";
+import { Option } from "effect";
 import { type ReactNode, useEffect } from "react";
 import { useViewerQuery } from "@/components/tenant/context";
 import { canOpenExams, canOpenRooms } from "@/components/tenant/exams/access";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { firstSettingsTarget } from "@/lib/settings/school";
 
 /** The viewer's view of the school, as the school layout reads it. */
 type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
@@ -20,7 +21,8 @@ const SECTION_GRANTS: Readonly<
   Record<TenantSectionName, (viewer: Viewer) => boolean>
 > = {
   exams: (viewer) => canOpenExams(viewer) || canOpenRooms(viewer),
-  settings: (viewer) => Arr.contains(viewer.can, "tenant.manage"),
+  settings: (viewer) =>
+    Option.isSome(firstSettingsTarget(viewer.tenant.slug, viewer.reach)),
 };
 
 /**

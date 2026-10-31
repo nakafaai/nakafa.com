@@ -44,6 +44,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
@@ -101,7 +102,9 @@ export function SchoolMembersSettings() {
         actions={
           <>
             <TableSearch placeholder={t("members-search")} />
-            <SchoolInviteAction />
+            <WithAction action="person.manage">
+              <SchoolInviteAction />
+            </WithAction>
           </>
         }
       >
@@ -216,7 +219,11 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
       id: "roles",
     }),
     memberColumns.display({
-      cell: (info) => <SchoolMemberMenu member={info.row.original} />,
+      cell: (info) => (
+        <WithAction action="person.manage">
+          <SchoolMemberMenu member={info.row.original} />
+        </WithAction>
+      ),
       id: "actions",
       meta: { align: "menu" },
     }),

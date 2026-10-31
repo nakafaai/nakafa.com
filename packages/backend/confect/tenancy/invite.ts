@@ -13,6 +13,7 @@ import {
 import { startInviteEmail } from "@repo/backend/confect/emails/invite/workflow";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { noteInvite } from "@repo/backend/confect/notifications/inbox";
+import { purgeInvite } from "@repo/backend/confect/notifications/purge";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { claimAfterInvite } from "@repo/backend/confect/tenancy/claims";
@@ -110,6 +111,43 @@ export const expireDueInvites = Effect.fn("tenancy.invite.expireDue")(
     );
   }
 );
+
+/**
+ * Takes the expired invites of one Person out of the school's list, as the new invite that replaces
+ * them is written, so the list shows one row for one Person. The journal keeps what they were.
+ */
+export const retireExpiredInvites = Effect.fn("tenancy.invite.retire")(
+  function* (personId: GenericId.GenericId<"tenantPeople">) {
+    const at = yield* Clock.currentTimeMillis;
+    const expired = yield* (yield* DatabaseReader)
+      .table("tenantInvites")
+      .index("by_personId_and_state_status", (query) =>
+        query.eq("personId", personId).eq("state.status", "expired")
+      )
+      .take(ADDRESS_INVITE_LIMIT)
+      .pipe(Effect.orDie);
+    yield* Effect.forEach(expired, (invite) =>
+      replaceInviteState(invite, { at, status: "revoked" })
+    );
+  }
+);
+
+/** Ends a pending invite as revoked: its inbox notice goes with it, and the journal records it. */
+export const endInvite = Effect.fn("tenancy.invite.end")(function* (
+  actor: typeof TenantActor.Type,
+  invite: TenantInvitesDoc,
+  person: TenantPeopleDoc
+) {
+  yield* replaceInviteState(invite, {
+    at: yield* Clock.currentTimeMillis,
+    status: "revoked",
+  });
+  yield* purgeInvite(invite.personId, invite._id);
+  yield* personAuthority.record(actor, person, {
+    invite: invite._id,
+    type: "invite.revoked",
+  });
+});
 
 /**
  * Writes the pending invite of one unclaimed Person, then starts what it implies

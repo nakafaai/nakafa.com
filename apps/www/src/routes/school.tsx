@@ -6,6 +6,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { Effect } from "effect";
 import type { ReactElement } from "react";
 import { IntlProvider, useTranslations } from "use-intl";
+import { SchoolPending } from "@/components/tenant/pending";
 import { readSchoolRoot } from "@/lib/tenant/root";
 
 /**
@@ -25,13 +26,18 @@ const SCHOOL_HEADERS = {
  * root document with these headers, and the browser negotiates the locale once here,
  * so the school layout and its boundaries below read the same messages. The router
  * runs every beforeLoad before any loader, so the read starts in beforeLoad, beside
- * the school layout's frame read, and the loader answers it.
+ * the school layout's frame read, and the loader answers it. The pending frame is what
+ * the first HTML paints; it stands for the first load alone, so a navigation inside a
+ * school never swaps the page for it.
  */
 export const Route = createFileRoute("/school")({
   ssr: false,
   beforeLoad: () => ({ root: Effect.runPromise(readSchoolRoot()) }),
   loader: ({ context }) => context.root,
   headers: () => SCHOOL_HEADERS,
+  pendingComponent: SchoolPending,
+  pendingMinMs: 0,
+  pendingMs: Number.POSITIVE_INFINITY,
   component: SchoolRoot,
 });
 

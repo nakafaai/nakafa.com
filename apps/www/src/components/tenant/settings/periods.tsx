@@ -31,6 +31,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
@@ -126,7 +127,9 @@ function SchoolPeriodsContent() {
               />
             ) : null}
             <TableSearch placeholder={t("periods-search")} />
-            <SchoolPeriodAdd unitId={unit.id} />
+            <WithAction action="period.manage">
+              <SchoolPeriodAdd unitId={unit.id} />
+            </WithAction>
           </>
         )
       }
@@ -219,12 +222,15 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
       id: "status",
     }),
     periodColumns.display({
-      cell: (info) =>
-        info.row.original.status === "archived" ? (
-          <SchoolPeriodRestore period={info.row.original} slug={slug} />
-        ) : (
-          <SchoolPeriodMenu period={info.row.original} slug={slug} />
-        ),
+      cell: (info) => (
+        <WithAction action="period.manage">
+          {info.row.original.status === "archived" ? (
+            <SchoolPeriodRestore period={info.row.original} slug={slug} />
+          ) : (
+            <SchoolPeriodMenu period={info.row.original} slug={slug} />
+          )}
+        </WithAction>
+      ),
       id: "actions",
       meta: { align: "menu" },
     }),

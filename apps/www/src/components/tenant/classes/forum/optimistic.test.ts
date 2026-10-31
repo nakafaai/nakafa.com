@@ -9,6 +9,8 @@ import {
   hideUpdate,
   markUpdate,
   openUpdate,
+  renameChannelUpdate,
+  renameDiscussionUpdate,
   replyUpdate,
   sendUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
@@ -417,5 +419,83 @@ describe("markUpdate", () => {
         }),
       ],
     ]);
+  });
+});
+
+describe("renameChannelUpdate", () => {
+  it("shows the new name in the pages that list the channel, and leaves the others alone", () => {
+    const channel = (id: typeof general, name: string) => ({
+      id,
+      kind: "topic" as const,
+      name,
+      unread: false,
+    });
+    const { localStore, setQuery } = storeOf([
+      {
+        args: { classId, slug },
+        value: Option.some({
+          isDone: true,
+          page: [channel(general, "Umum"), channel(topic, "Tugas")],
+        }),
+      },
+      {
+        args: { classId, slug },
+        value: Option.some({ isDone: true, page: [channel(general, "Umum")] }),
+      },
+      { args: { classId, slug }, value: Option.none() },
+    ]);
+    renameChannelUpdate(localStore, {
+      channelId: topic,
+      classId,
+      name: "Tugas rumah",
+      slug,
+    });
+    expect(setQuery.mock.calls).toEqual([
+      [
+        classroom.forum.channels.list,
+        { classId, slug },
+        Option.some({
+          isDone: true,
+          page: [channel(general, "Umum"), channel(topic, "Tugas rumah")],
+        }),
+      ],
+    ]);
+  });
+});
+
+describe("renameDiscussionUpdate", () => {
+  it("shows the new title on the discussion's page and on its opening message", () => {
+    const own = opening("own", 1);
+    const { localStore, setQuery } = storeByRef([
+      [
+        classroom.forum.threads.get,
+        [
+          {
+            args: { classId, number: 1, slug },
+            value: Option.some(thread(1)),
+          },
+        ],
+      ],
+      [
+        classroom.forum.messages.page,
+        [
+          {
+            args: pageArgs(general, null),
+            value: Option.some({ isDone: true, page: [own] }),
+          },
+        ],
+      ],
+    ]);
+    renameDiscussionUpdate(localStore, {
+      classId,
+      number: 1,
+      slug,
+      title: "Judul baru",
+    });
+    const [[, , page], [, , channel]] = setQuery.mock.calls;
+    expect(Option.getOrThrow(page).discussion.title).toBe("Judul baru");
+    expect(Option.getOrThrow(channel).page[0].discussion.title).toBe(
+      "Judul baru"
+    );
   });
 });

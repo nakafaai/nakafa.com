@@ -13,7 +13,8 @@ import { slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
 
-const { get, open, replies, reply } = refs.public.classroom.forum.threads;
+const { get, open, rename, replies, reply } =
+  refs.public.classroom.forum.threads;
 const { page, send } = refs.public.classroom.forum.messages;
 const { setPolicy } = refs.public.tenancy.settings;
 
@@ -349,5 +350,82 @@ describe("classroom/forum threads", () => {
           denied("resource"),
         ]);
       })
+  );
+
+  it.effect(
+    "lets the opener and a subject teacher rename a discussion, sealed anew, and refuses another student",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-7");
+        const classArgs = { classId: forum.classId, number: 1, slug: nf };
+        yield* fixture.as("admin").mutation(setPolicy, {
+          policy: { key: "studentThreads", value: true },
+          slug: nf,
+        });
+        yield* fixture.as("student").mutation(open, {
+          ...forum,
+          clientKey: "student-discussion",
+          mentions: [],
+          slug: nf,
+          text: "Bagaimana caranya?",
+          title: "Judul salah ketik",
+        });
+        expect(
+          yield* fixture
+            .as("student")
+            .mutation(rename, { ...classArgs, title: "Judul benar" })
+        ).toBeNull();
+        const opened = yield* fixture.as("student").query(get, classArgs);
+        expect(opened.discussion.title).toBe("Judul benar");
+        yield* fixture
+          .as("teacher")
+          .mutation(rename, { ...classArgs, title: "Judul dari guru" });
+        const stored = yield* fixture.run(
+          Effect.gen(function* () {
+            return yield* (yield* DatabaseReader)
+              .table("classroomThreads")
+              .index("by_classId_and_number", (query) =>
+                query.eq("classId", forum.classId).eq("number", 1)
+              )
+              .first();
+          })
+        );
+        expect(encodeJsonText(stored)).not.toContain("Judul");
+        const channel = yield* fixture.as("teacher").query(page, {
+          ...firstPage,
+          channelId: forum.channelId,
+          classId: forum.classId,
+          slug: nf,
+        });
+        expect(channel.page[0]?.discussion?.title).toBe("Judul dari guru");
+      })
+  );
+
+  it.effect("meets a member who neither opened it nor teaches as a missing object", () =>
+    Effect.gen(function* () {
+      const fixture = yield* keyedFixture;
+      const term = yield* period(fixture, fixture.units.smp);
+      const forum = yield* forumClass(fixture, term.id, "X-8");
+      yield* fixture.as("teacher").mutation(open, {
+        ...forum,
+        clientKey: "teacher-discussion",
+        mentions: [],
+        slug: nf,
+        text: "Diskusikan.",
+        title: "Diskusi guru",
+      });
+      const refused = yield* fixture
+        .as("student")
+        .mutation(rename, {
+          classId: forum.classId,
+          number: 1,
+          slug: nf,
+          title: "Diambil alih",
+        })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject(denied("resource"));
+    })
   );
 });

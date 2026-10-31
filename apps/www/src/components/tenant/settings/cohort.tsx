@@ -12,6 +12,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -49,10 +50,11 @@ export function SchoolCohortSettings({
 /** The header of a cohort page whose read failed: the path to the cohorts, and the failure in the body. */
 function CohortFailure({ children }: { children: ReactNode }) {
   const t = useTranslations("SchoolSettings");
-  const { slug } = useTenant();
+  const { reach, slug } = useTenant();
   const section = getSchoolSettingsSection(
     slug,
-    "/school/$slug/settings/cohorts"
+    "/school/$slug/settings/cohorts",
+    reach
   );
 
   return (
@@ -78,10 +80,11 @@ function CohortFailure({ children }: { children: ReactNode }) {
  */
 function CohortUnavailable() {
   const t = useTranslations("SchoolSettings");
-  const { slug } = useTenant();
+  const { reach, slug } = useTenant();
   const section = getSchoolSettingsSection(
     slug,
-    "/school/$slug/settings/cohorts"
+    "/school/$slug/settings/cohorts",
+    reach
   );
 
   return (
@@ -140,9 +143,11 @@ function SchoolCohortPage({
     throw cohort.error;
   }
   const detail = QueryResult.isSuccess(cohort) ? cohort.value : undefined;
+  const { reach } = useTenant();
   const section = getSchoolSettingsSection(
     slug,
-    "/school/$slug/settings/cohorts"
+    "/school/$slug/settings/cohorts",
+    reach
   );
 
   return (
@@ -162,11 +167,13 @@ function SchoolCohortPage({
         {...(detail === undefined ? {} : { title: detail.name })}
       >
         <TableSearch placeholder={t("cohort-members-search")} />
-        <SchoolPlacementAdd
-          cohortId={cohortId}
-          slug={slug}
-          status={detail === undefined ? undefined : detail.status}
-        />
+        <WithAction action="cohort.manage">
+          <SchoolPlacementAdd
+            cohortId={cohortId}
+            slug={slug}
+            status={detail === undefined ? undefined : detail.status}
+          />
+        </WithAction>
       </SchoolHeader>
       <div
         className={cn(
@@ -174,7 +181,9 @@ function SchoolCohortPage({
           "w-full px-4 pt-4"
         )}
       >
-        <SchoolHomeroomCard cohort={detail} slug={slug} />
+        <WithAction action="cohort.manage">
+          <SchoolHomeroomCard cohort={detail} slug={slug} />
+        </WithAction>
       </div>
       <TablePageBody width="column">
         {detail === undefined ? null : (

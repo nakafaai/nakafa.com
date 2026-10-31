@@ -12,20 +12,20 @@ import { settingsSectionIcons } from "@/components/tenant/settings/icons";
 import { TargetLink, useLeafRoutePath } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 import {
+  openSettingsGroups,
   type SchoolSettingsGroup,
-  schoolSettingsGroups,
 } from "@/lib/settings/school";
 
 /**
  * Renders the school settings as the sidebar body for settings routes, replacing the
  * school's own navigation without replacing the shell: a first row back to the school
  * page the viewer came from (or the school's home), then one labelled group for each
- * group of settings (School, People, Integrations, Security) that lists its sections, as
- * the learner's own settings do. A school host has no locale in its paths, so the links
+ * group of settings (School, People, Integrations, Security) that lists the sections the
+ * viewer opens, as the learner's own settings do. A school host has no locale in its paths, so the links
  * are school links, as in the school's own navigation.
  */
 export function SchoolSettingsNav() {
-  const { name, slug } = useTenant();
+  const { name, reach, slug } = useTenant();
   const t = useTranslations("SchoolSettings");
 
   return (
@@ -34,7 +34,7 @@ export function SchoolSettingsNav() {
         home={{ from: LOCALE_ROUTE, params: { slug }, to: "/school/$slug" }}
         label={t("back-to-school", { school: name })}
       />
-      {Arr.map(schoolSettingsGroups(slug), (group) => (
+      {Arr.map(openSettingsGroups(slug, reach), (group) => (
         <SchoolSettingsNavGroup group={group} key={group.key} />
       ))}
     </>

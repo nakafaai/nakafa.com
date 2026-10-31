@@ -36,6 +36,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import {
   GuardianLinkActions,
@@ -84,10 +85,12 @@ export function GuardianLinksSettings() {
           actions={
             <>
               <TableSearch placeholder={t("links-search")} />
-              <Button onClick={() => setIsStarting(true)} type="button">
-                <HugeIcons icon={Link01Icon} />
-                {t("link-add")}
-              </Button>
+              <WithAction action="guardian.link">
+                <Button onClick={() => setIsStarting(true)} type="button">
+                  <HugeIcons icon={Link01Icon} />
+                  {t("link-add")}
+                </Button>
+              </WithAction>
             </>
           }
         >
@@ -209,7 +212,11 @@ function GuardianLinkTable() {
       id: "status",
     }),
     linkColumns.display({
-      cell: (info) => <GuardianLinkMenu link={info.row.original} />,
+      cell: (info) => (
+        <WithAction action="guardian.link">
+          <GuardianLinkMenu link={info.row.original} />
+        </WithAction>
+      ),
       id: "actions",
       meta: { align: "menu" },
     }),

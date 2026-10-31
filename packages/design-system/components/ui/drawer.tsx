@@ -258,20 +258,29 @@ function DrawerViewport({
   );
 }
 
+/** The popups of the open drawers. */
+const STAGE_POPUP = '[data-slot="drawer-popup"]';
+
 /**
- * Records where the page was scrolled as a drawer opens, so the page behind it scales back from the top of
- * the visible screen (`DrawerStage`). The scroll lock then moves the scroll from the root to the body, so the
- * larger of the two is the page's. The value stays after the drawer closes, while the page scales back up.
+ * Readies the page behind a drawer that opens (`DrawerStage`). It records where the page was scrolled, so
+ * the page scales back from the top of the visible screen: the scroll lock then moves the scroll from the
+ * root to the body, so the larger of the two is the page's, and the value stays after the drawer closes,
+ * while the page scales back up. It also marks the root, because Firefox does not restyle the page for a
+ * `:has()` whose match arrives in a portal, and a change on the root itself makes it read the selector again.
  */
-function recordStageScroll(node: HTMLDivElement | null) {
-  if (node === null) {
-    return;
-  }
+function holdDrawerStage(node: HTMLDivElement) {
   const root = document.documentElement;
   root.style.setProperty(
     "--drawer-stage-scroll",
     `${Math.max(root.scrollTop, document.body.scrollTop)}px`
   );
+  root.toggleAttribute("data-drawer-stage", true);
+  return () => {
+    // A nested drawer's end leaves the drawer under it open, which still holds the stage.
+    if (document.querySelectorAll(STAGE_POPUP).length <= 1) {
+      root.removeAttribute("data-drawer-stage");
+    }
+  };
 }
 
 /** Renders drawer popup chrome, backdrop, viewport, and optional affordances. */
@@ -299,7 +308,7 @@ function DrawerPopup({
           className={cn(drawerPopupVariants({ position, variant }), className)}
           data-slot="drawer-popup"
           {...props}
-          ref={recordStageScroll}
+          ref={holdDrawerStage}
         >
           {children}
           {!!showCloseButton && (

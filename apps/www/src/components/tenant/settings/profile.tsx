@@ -25,6 +25,7 @@ import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { logoRefusalOf } from "@/components/tenant/logo";
 import { SchoolMark } from "@/components/tenant/mark";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { SchoolLocaleCard } from "@/components/tenant/settings/locale";
 import { removeLogoChange } from "@/components/tenant/settings/mutation";
 import { SchoolNameCard } from "@/components/tenant/settings/name";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -152,6 +153,11 @@ function SchoolProfileCard({
   return (
     <>
       <SchoolNameCard name={tenant.name} slug={slug} />
+      <SchoolLocaleCard
+        country={tenant.country}
+        currency={tenant.currency}
+        slug={slug}
+      />
       <CardSection>
         <CardHeader>
           <CardTitle>{t("logo-title")}</CardTitle>

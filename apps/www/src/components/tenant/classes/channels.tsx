@@ -7,6 +7,7 @@ import {
   CheckmarkCircle02Icon,
   HashtagIcon,
   MoreHorizontalIcon,
+  PencilEdit02Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
@@ -55,6 +56,7 @@ import {
   runForumCall,
 } from "@/components/tenant/classes/forum/call";
 import { markUpdate } from "@/components/tenant/classes/forum/optimistic";
+import { ChannelRenameDialog } from "@/components/tenant/classes/forum/rename";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -264,16 +266,21 @@ function SavingChannelItem({ name }: { name: string }) {
 }
 
 /**
- * A channel's menu: Open, its messages, and Mark as read, which clears its unread dot at once and
- * marks every message until now as read. A channel with nothing unread keeps Mark as read disabled.
+ * A channel's menu: Open, its messages, Mark as read, which clears its unread dot at once and marks
+ * every message until now as read, and Rename for whoever manages the forum, on a topic channel,
+ * since the page translates the general one. A channel with nothing unread keeps Mark as read
+ * disabled.
  */
 function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
   const t = useTranslations("Classroom");
   const common = useTranslations("Common");
-  const { classId, classSlug, slug } = useClassScope();
+  const { can, classId, classSlug, slug } = useClassScope();
   const mark = useMutation(classroom.forum.reads.mark);
+  const [renaming, setRenaming] = useState(0);
+  const [isRenaming, setIsRenaming] = useState(false);
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
@@ -319,8 +326,28 @@ function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
             <HugeIcons icon={CheckmarkCircle02Icon} />
             {t("channel-mark-read")}
           </DropdownMenuItem>
+          {channel.kind === "topic" && Arr.contains(can, "forum.manage") ? (
+            <DropdownMenuItem
+              onClick={() => {
+                setRenaming((count) => count + 1);
+                setIsRenaming(true);
+              }}
+            >
+              <HugeIcons icon={PencilEdit02Icon} />
+              {t("channel-rename")}
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
+    {renaming === 0 ? null : (
+      <ChannelRenameDialog
+        channel={channel}
+        key={renaming}
+        open={isRenaming}
+        setOpen={setIsRenaming}
+      />
+    )}
+    </>
   );
 }

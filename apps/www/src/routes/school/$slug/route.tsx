@@ -24,6 +24,7 @@ import { loadEntryForm } from "@/components/tenant/forms";
 import { canOpenGraduation } from "@/components/tenant/graduation/access";
 import { TenantMissing } from "@/components/tenant/missing";
 import { TenantOutsider } from "@/components/tenant/outsider";
+import { SchoolPending } from "@/components/tenant/pending";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { canOpenReports } from "@/components/tenant/reports/access";
 import { TenantShell } from "@/components/tenant/shell";
@@ -50,7 +51,11 @@ import {
 } from "@/lib/tenant/kept";
 import { SchoolReadFailed, SchoolReadsLive } from "@/lib/tenant/read";
 import { readSchoolLocale } from "@/lib/tenant/root";
-import { readBrowserVisit, reusesVisitFrame } from "@/lib/tenant/visit";
+import {
+  readBrowserVisit,
+  retryVisitRead,
+  reusesVisitFrame,
+} from "@/lib/tenant/visit";
 
 /**
  * The search params of the school entry. `sign-in=username` opens the username form
@@ -114,6 +119,7 @@ function readVisitFrame(
   );
   return Effect.runPromise(
     readBrowserVisit({ legal, locale, signedIn, slug }).pipe(
+      retryVisitRead,
       Effect.tap(({ legal: links, school, sessionId }) =>
         school._tag === "Refused"
           ? dropKeptFrame()
@@ -253,6 +259,9 @@ export const Route = createFileRoute("/school/$slug")({
     const school = match.context.school;
     return school === undefined ? {} : schoolHead(school.profile.name);
   },
+  pendingComponent: SchoolPending,
+  pendingMinMs: 0,
+  pendingMs: Number.POSITIVE_INFINITY,
   component: SchoolLayout,
   errorComponent: SchoolError,
   notFoundComponent: SchoolRefused,
@@ -321,6 +330,7 @@ function SchoolLayout(): ReactElement {
         home={school.home}
         personName={viewer.person.name}
         profile={school.profile}
+        reach={viewer.reach}
         role={roleOf(viewer.grants)}
         viewer={viewer}
       >

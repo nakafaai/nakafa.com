@@ -332,6 +332,58 @@ const commit = FunctionImpl.make(
   })
 );
 
+/** The item a call names, when it belongs to the allowed class; any other is refused as a missing object. */
+const classItem = Effect.fn("classroom.library.item")(function* (
+  itemId: GenericId.GenericId<"classroomLibrary">
+) {
+  const row = yield* Class;
+  const item = yield* (yield* DatabaseReader)
+    .table("classroomLibrary")
+    .get(itemId)
+    .pipe(Effect.option);
+  if (Option.isNone(item) || item.value.classId !== row._id) {
+    return yield* new AccessDenied({
+      action: "library.manage",
+      reason: "resource",
+    });
+  }
+  return item.value;
+});
+
+/**
+ * Changes an item's title, and a link's address with it, sealed anew under the row that names
+ * them. A file keeps its bytes and takes no address, so `address` holds a value for a link only.
+ */
+const edit = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "edit",
+  Effect.fn("classroom.library.edit")(function* ({ address, itemId, title }) {
+    const row = yield* Class;
+    const item = yield* classItem(itemId);
+    const keys = yield* schoolKeys(row.tenantId);
+    const sealedTitle = yield* sealText(
+      keys,
+      libraryField(item, "sealedTitle"),
+      title
+    ).pipe(Effect.orDie);
+    const writer = (yield* DatabaseWriter).table("classroomLibrary");
+    if (item.kind === "file" || address === null) {
+      yield* writer.patch(itemId, { sealedTitle }).pipe(Effect.orDie);
+      return null;
+    }
+    const sealedAddress = yield* sealText(
+      keys,
+      libraryField(item, "sealedAddress"),
+      address
+    ).pipe(Effect.orDie);
+    yield* writer
+      .patch(itemId, { sealedAddress, sealedTitle })
+      .pipe(Effect.orDie);
+    return null;
+  })
+);
+
 /**
  * Removes an item of the allowed class, and deletes its file, which revokes the
  * file's address (ADR 0028). An item of another class is refused as a missing
@@ -342,19 +394,9 @@ const remove = FunctionImpl.make(
   spec,
   "remove",
   Effect.fn("classroom.library.remove")(function* ({ itemId }) {
-    const row = yield* Class;
-    const item = yield* (yield* DatabaseReader)
-      .table("classroomLibrary")
-      .get(itemId)
-      .pipe(Effect.option);
-    if (Option.isNone(item) || item.value.classId !== row._id) {
-      return yield* new AccessDenied({
-        action: "library.manage",
-        reason: "resource",
-      });
-    }
+    const item = yield* classItem(itemId);
     const storage = yield* StorageWriter;
-    yield* Match.value(item.value).pipe(
+    yield* Match.value(item).pipe(
       Match.discriminatorsExhaustive("kind")({
         file: (file) => storage.delete(file.storageId).pipe(Effect.orDie),
         link: () => Effect.void,
@@ -376,6 +418,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(register),
   Layer.provide(importDrive),
   Layer.provide(commit),
+  Layer.provide(edit),
   Layer.provide(remove),
   Layer.provide(session),
   Layer.provide(member),

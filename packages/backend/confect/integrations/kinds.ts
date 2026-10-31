@@ -32,6 +32,10 @@ export const integration = Kind.make("integration", "integrationClients", {
     }),
     Schema.Struct({
       client: Id("integrationClients"),
+      type: Schema.Literal("integration.changed"),
+    }),
+    Schema.Struct({
+      client: Id("integrationClients"),
       type: Schema.Literal("integration.rotated"),
     }),
     Schema.Struct({
