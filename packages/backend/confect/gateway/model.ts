@@ -179,12 +179,11 @@ export const decisionModelId = "typesafe/jev-1.13";
 export const providerId = "convexGateway.chat";
 
 /**
- * The embedding models that the model test compares, as the Convex AI gateway
- * names them: the current multilingual models of Google, OpenAI, and Qwen out
- * of the many that the gateway lists. A model joins the shortlist with one
- * line, and the test then measures it like the others.
+ * The embedding models a build may run, as the Convex AI gateway names them: the
+ * current multilingual models of Google, OpenAI, and Qwen out of the many that
+ * the gateway lists.
  */
-export const embeddingModels = [
+const embeddingModels = [
   "google/gemini-embedding-001",
   "google/gemini-embedding-2",
   "openai/text-embedding-3-large",
