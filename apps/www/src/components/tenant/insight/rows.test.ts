@@ -3,7 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
 import { percentOf, skillRowsOf } from "@/components/tenant/insight/rows";
 
-const student = Schema.decodeSync(Id("tenantPeople"))("person-1");
+const student = Schema.decodeUnknownSync(Id("tenantPeople"))("person-1");
 
 describe("percentOf", () => {
   it("rounds a share to a whole percent", () => {
