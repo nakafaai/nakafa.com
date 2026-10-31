@@ -462,7 +462,7 @@ function LivePaper({
             }
             size="sm"
             type="button"
-            variant="ghost"
+            variant="outline"
           >
             <HugeIcons aria-hidden="true" icon={ListPlusIcon} />
             {t("option-add")}

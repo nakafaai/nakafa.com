@@ -13,9 +13,11 @@ const ESSAY_ROWS = 6;
 /**
  * The frame of a paper: a page in the shape of the thumbnails, which a longer question makes taller,
  * with its content from the top. The chosen page is outlined, as a design tool outlines the page in hand.
+ * A flex column, since Safari keeps a grid's rows at the height the aspect ratio gave them, so a growing
+ * prompt would run over the options below it.
  */
 const questionPaper = cva(
-  "bg-background grid aspect-4/3 w-full min-w-0 content-start gap-6 rounded-xl p-6 shadow-sm md:p-10",
+  "bg-background flex aspect-4/3 w-full min-w-0 flex-col gap-6 rounded-xl p-6 shadow-sm md:p-10",
   {
     defaultVariants: { selected: false },
     variants: {
@@ -187,7 +189,7 @@ export function PaperTableHeader({
 /** The number at the start of a statement's row. */
 export function PaperTableNumber({ number }: { number: number }) {
   return (
-    <span className="flex items-start border-t py-3 pl-4 font-medium tabular-nums">
+    <span className="flex items-start border-t py-3.5 pl-4 font-medium tabular-nums">
       {number}.
     </span>
   );
