@@ -33,6 +33,7 @@ import {
   PaperParts,
   PaperPartText,
 } from "@/components/tenant/exams/sheet";
+import type { Unstored } from "@/components/tenant/exams/writer";
 
 /** One part of a match or a table: its ID and its rich text. */
 type Part = Pick<
@@ -84,7 +85,7 @@ interface PartColumnProps {
   readonly onLabel: (
     partId: string,
     label: OptionLabel,
-    unstored: () => void
+    unstored: Unstored
   ) => void;
   /** Removes a part, or none while the column holds the fewest it may. */
   readonly onRemove: ((partId: string) => void) | null;
@@ -138,7 +139,7 @@ function PartColumn({
                 )}
                 locked={frozen}
                 onRemove={onRemove === null ? null : () => onRemove(part.id)}
-                onSave={(label: OptionLabel, unstored: () => void) =>
+                onSave={(label: OptionLabel, unstored: Unstored) =>
                   onLabel(part.id, label, unstored)
                 }
                 removeName={t(words.remove, { name, number })}
