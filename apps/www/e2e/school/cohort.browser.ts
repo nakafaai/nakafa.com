@@ -323,7 +323,7 @@ test("an admin places a student in a cohort, moves the student to another, and s
   const entryDialog = page.getByRole("dialog");
   const nisnField = entryDialog.getByRole("textbox", { name: "NISN" });
   await expect(nisnField).toBeEnabled();
-  await expect(nisnField).toHaveAttribute("placeholder", "10 digits");
+  await expect(nisnField).toHaveAttribute("placeholder", "Optional, 10 digits");
   await nisnField.fill("0012345678");
   await entryDialog
     .getByRole("switch", { name: "Under the age limit" })
