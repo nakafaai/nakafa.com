@@ -395,6 +395,7 @@
     "page-empty-choice": "Empty option",
     "page-empty-match": "Empty statement or answer",
     "page-empty-table": "Empty statement or column",
+    "offline-note": "Your changes save once you are back online.",
     "add-below": "Add question below",
     "add-below-of": "Add question below question {number}",
     "question-text": "Question {number} text",
@@ -2165,7 +2166,7 @@
     "image-add": "Add image",
     "image-add-description": "The image shows in the question once it is added.",
     "image-alt": "Alt text",
-    "image-alt-hint": "What a student who cannot see the image needs to know",
+    "image-alt-hint": "Describe the image for a student",
     "image-cancel": "Cancel",
     "image-delete": "Delete image",
     "image-edit": "Edit alt text",
@@ -2209,6 +2210,10 @@
     "image-refused-type": {
       "title": "The image was not added.",
       "description": "Choose a PNG, JPEG, WebP, or GIF image."
+    },
+    "paste-refused": {
+      "title": "The text was not added.",
+      "description": "It is too long for one question."
     },
     "school-logo-size": {
       "title": "The logo was not saved.",

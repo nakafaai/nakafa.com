@@ -21,6 +21,13 @@ export const refuseFile = (refusal: ImageRefusal) => {
   });
 };
 
+/** Tells the teacher why a paste left the text as it was: it is more than one text of an exam holds. */
+export const refusePaste = () =>
+  toast.error({
+    description: "paste-refused.description",
+    title: "paste-refused.title",
+  });
+
 /**
  * Queues a file the teacher chose or dropped for an editor, so its alt-text dialog opens next. A file
  * the editor cannot take is refused at once, with the reason, and nothing is queued.

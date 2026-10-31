@@ -395,6 +395,7 @@
     "page-empty-choice": "Leere Option",
     "page-empty-match": "Leere Aussage oder Antwort",
     "page-empty-table": "Leere Aussage oder Spalte",
+    "offline-note": "Deine Änderungen werden gespeichert, sobald du wieder online bist.",
     "add-below": "Frage darunter hinzufügen",
     "add-below-of": "Frage unter Frage {number} hinzufügen",
     "question-text": "Text von Frage {number}",
@@ -2165,7 +2166,7 @@
     "image-add": "Bild hinzufügen",
     "image-add-description": "Das Bild erscheint in der Frage, sobald es hinzugefügt ist.",
     "image-alt": "Alternativtext",
-    "image-alt-hint": "Was ein Schüler wissen muss, der das Bild nicht sehen kann",
+    "image-alt-hint": "Beschreibe das Bild für Schüler",
     "image-cancel": "Abbrechen",
     "image-delete": "Bild löschen",
     "image-edit": "Alternativtext ändern",
@@ -2209,6 +2210,10 @@
     "image-refused-type": {
       "title": "Das Bild wurde nicht hinzugefügt.",
       "description": "Wähle ein PNG-, JPEG-, WebP- oder GIF-Bild."
+    },
+    "paste-refused": {
+      "title": "Der Text wurde nicht eingefügt.",
+      "description": "Er ist zu lang für eine Frage."
     },
     "school-logo-size": {
       "title": "Das Logo wurde nicht gespeichert.",

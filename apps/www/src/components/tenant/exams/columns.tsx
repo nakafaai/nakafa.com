@@ -149,7 +149,7 @@ function PartColumn({
       })}
       {add === null || frozen ? null : (
         <div className={chosen ? undefined : "invisible"}>
-          <Button onClick={add.run} size="sm" type="button" variant="ghost">
+          <Button onClick={add.run} size="sm" type="button" variant="outline">
             <HugeIcons aria-hidden="true" icon={add.icon} />
             {add.label}
           </Button>

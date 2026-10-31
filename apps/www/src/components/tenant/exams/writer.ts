@@ -1,7 +1,16 @@
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
 import { QuestionTemplate } from "@repo/backend/confect/exams/question";
-import { Data, Effect, Option, Ref, Schema, Semaphore } from "effect";
+import {
+  Data,
+  Effect,
+  Option,
+  Predicate,
+  Ref,
+  Schedule,
+  Schema,
+  Semaphore,
+} from "effect";
 
 /** What one save writes: the answers, the key, and the template of a question. */
 const QuestionWriteSchema = Schema.Struct({
@@ -25,6 +34,15 @@ const QuestionDraftSchema = Schema.Struct({
 /** A draft of one question, as `QuestionDraftSchema` describes it. */
 export type QuestionDraft = typeof QuestionDraftSchema.Type;
 
+/**
+ * How a save that another editor overtook tries again: the render holds that editor's save a moment after the
+ * server refused this one, so each try reads it anew, for a little over a second before the save fails.
+ */
+const OVERTAKEN_SCHEDULE = Schedule.spaced("150 millis");
+
+/** How many times a save that another editor overtook tries again. */
+const OVERTAKEN_RETRIES = 8;
+
 /** A save that never reached the server, because a save queued before it was refused first. */
 export class SaveDropped extends Data.TaggedError("SaveDropped") {}
 
@@ -47,8 +65,9 @@ const startingDraft = (
  * The saves of one question, in order, so that each save is built on the newest draft the writer knows.
  * Each save reads `rendered` when it starts, applies its edit to `startingDraft`, and sends the revision of
  * that draft. A save that the server answers becomes the answered draft, so two saves started together both
- * land, one after the other. A save built on a stale render is refused with nothing written. A save that
- * fails clears the answered draft, and every save queued before the failure is dropped unsent. The render can
+ * land, one after the other. A save another editor overtook is refused with nothing written, so it tries again
+ * on the render once that holds the other editor's save, and two teachers writing in one question both land. A
+ * save that fails clears the answered draft, and every save queued before the failure is dropped unsent. The render can
  * still show the failed save's optimistic answers until React renders the rollback, so a save built on that
  * render could land the very change the server refused. A save queued after the failure starts from the render,
  * which may still lag the rollback for a moment, since the drop covers only the saves queued before the failure.
@@ -76,20 +95,24 @@ export const makeQuestionWriter = <E>(
           if ((yield* Ref.get(refusals)) !== queuedAt) {
             return yield* new SaveDropped();
           }
-          const base = startingDraft(yield* Ref.get(answered), yield* rendered);
-          const next = edit(base);
-          const saved = yield* send(
-            { ...next, revision: base.revision },
-            base
-          ).pipe(
-            Effect.tapError(() =>
-              Effect.andThen(
-                Ref.set(answered, Option.none()),
-                Ref.update(refusals, (count) => count + 1)
-              )
-            )
+          yield* Effect.gen(function* () {
+            const base = startingDraft(
+              yield* Ref.get(answered),
+              yield* rendered
+            );
+            const saved = yield* send(
+              { ...edit(base), revision: base.revision },
+              base
+            ).pipe(Effect.tapError(() => Ref.set(answered, Option.none())));
+            yield* Ref.set(answered, Option.some(saved));
+          }).pipe(
+            Effect.retry({
+              schedule: OVERTAKEN_SCHEDULE,
+              times: OVERTAKEN_RETRIES,
+              while: (error) => Predicate.isTagged(error, "RevisionStale"),
+            }),
+            Effect.tapError(() => Ref.update(refusals, (count) => count + 1))
           );
-          yield* Ref.set(answered, Option.some(saved));
         })
       );
     });
