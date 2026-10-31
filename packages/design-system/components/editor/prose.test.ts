@@ -55,6 +55,7 @@ function openEditor(paragraphs: boolean) {
           isLinkAllowed: () => true,
           marks: ["bold", "code", "link", "subscript", "superscript"],
         },
+        figure: null,
         { ...NO_MATH_VIEWS, image: null, marks: ARTICLE_MARKS }
       ),
       articleProse.configure({ paragraphs }),
