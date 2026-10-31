@@ -122,7 +122,7 @@ export default GroupSpec.make()
         source: ReadingSource,
       }),
       returns: () => QuestionView,
-      error: () => Schema.Union([AccessDenied, ExamFrozen]),
+      error: () => Schema.Union([AccessDenied, DocumentTooLarge, ExamFrozen]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(

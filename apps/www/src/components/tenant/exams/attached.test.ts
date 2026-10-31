@@ -54,13 +54,13 @@ const storeHolding = (current: Option.Option<ExamView>) => {
 };
 
 describe("shared readings", () => {
-  const reading = Schema.decodeSync(Id("editorDocuments"))("reading-1");
+  const reading = promptId("reading-1");
   const held = { ...first, reading };
 
   it("offers each other question's reading once, by the first question that holds it", () => {
     const third = {
       ...second,
-      id: Schema.decodeSync(Id("examQuestions"))("q3"),
+      id: questionId("q3"),
       reading,
     };
 
@@ -83,11 +83,7 @@ describe("shared readings", () => {
     });
     expect(readQuestionWith(view, first.id, "new")).toBe(view);
     expect(
-      readQuestionWith(
-        view,
-        first.id,
-        Schema.decodeSync(Id("examQuestions"))("gone")
-      ).questions[0]
+      readQuestionWith(view, first.id, questionId("gone")).questions[0]
     ).toEqual({ ...held, reading: null });
   });
 

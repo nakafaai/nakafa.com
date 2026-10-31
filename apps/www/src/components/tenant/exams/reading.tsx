@@ -1,5 +1,6 @@
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import type { ReadingSource } from "@repo/backend/confect/exams/question";
 import {
   Field,
   FieldDescription,
@@ -72,7 +73,7 @@ export function ReadingField({
       <Select
         items={items}
         onValueChange={(value) => {
-          const source =
+          const source: Option.Option<typeof ReadingSource.Type> =
             value === NO_READING || value === NEW_READING
               ? Option.some(value)
               : Option.map(
