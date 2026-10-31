@@ -31,6 +31,7 @@ import { PaperMedia } from "@/components/exams/sitting/media";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { mediaUpdate } from "@/components/tenant/exams/attached";
 import { sendStorageFile } from "@/components/tenant/exams/image";
+import { ImportFileField } from "@/components/tenant/exams/import/field";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
 
@@ -104,7 +105,7 @@ function MediaDialog({
               setOpen(false);
             }}
           >
-            {common("save")}
+            {t("media-save")}
           </Button>
         </>
       }
@@ -119,17 +120,14 @@ function MediaDialog({
     >
       <FieldGroup>
         {kind === "audio" ? (
-          <Field>
-            <FieldLabel htmlFor={`${id}-file`}>{t("media-file")}</FieldLabel>
-            <Input
-              accept={AUDIO_FILES}
-              aria-invalid={tooLarge}
-              id={`${id}-file`}
-              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-              type="file"
-            />
-            <FieldDescription>{t("media-file-limit")}</FieldDescription>
-          </Field>
+          <ImportFileField
+            accept={AUDIO_FILES}
+            description={t("media-file-limit")}
+            drop={t("media-drop")}
+            file={file}
+            label={t("media-file")}
+            onFile={setFile}
+          />
         ) : (
           <Field>
             <FieldLabel htmlFor={`${id}-link`}>{t("media-link")}</FieldLabel>
@@ -138,6 +136,7 @@ function MediaDialog({
               id={`${id}-link`}
               inputMode="url"
               onChange={(event) => setLink(event.target.value)}
+              placeholder="https://youtu.be/"
               value={link}
             />
             <FieldDescription>{t("media-link-hint")}</FieldDescription>
@@ -149,6 +148,7 @@ function MediaDialog({
             dir="auto"
             id={`${id}-alt`}
             onChange={(event) => setAlt(event.target.value)}
+            placeholder={t("media-alt-placeholder")}
             value={alt}
           />
           <FieldDescription>{t("media-alt-hint")}</FieldDescription>

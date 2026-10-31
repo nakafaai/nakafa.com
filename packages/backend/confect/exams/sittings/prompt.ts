@@ -50,7 +50,7 @@ export const prompt = Effect.fn("exams.sittings.prompt")(function* (args: {
     );
   const { media, reading } = live.question;
   return {
-    media: yield* playableMedia(media ?? []),
+    media: yield* playableMedia(media),
     prompt: yield* currentPrompt(live.question.prompt),
     reading: reading === undefined ? null : yield* currentPrompt(reading),
   };

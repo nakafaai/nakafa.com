@@ -8,7 +8,14 @@ import {
   StorageReader,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import type { QuestionMedia } from "@repo/backend/confect/exams/media";
+import type {
+  PlayableMedia,
+  QuestionMedia,
+} from "@repo/backend/confect/exams/media";
+import {
+  encodeMedia,
+  questionMedia,
+} from "@repo/backend/confect/exams/question";
 import { Array as Arr, Clock, Effect, Option } from "effect";
 
 /** Refuses a clip of another exam as a missing object, so no question plays another school's file. */
@@ -40,8 +47,35 @@ export const setMedia = Effect.fn("exams.question.media")(function* (
   const at = yield* Clock.currentTimeMillis;
   yield* (yield* DatabaseWriter)
     .table("examQuestions")
-    .patch(question._id, { media, updatedAt: at })
+    .patch(question._id, {
+      media: yield* encodeMedia(media),
+      updatedAt: at,
+    })
     .pipe(Effect.orDie);
+});
+
+/** One piece of media as a paper plays it, or none when a clip's file is gone. */
+const playable = Effect.fn("exams.question.media.one")(function* (
+  item: QuestionMedia
+) {
+  if (item.kind === "video") {
+    return Option.some<typeof PlayableMedia.Type>(item);
+  }
+  const clip = yield* (yield* DatabaseReader)
+    .table("examAudio")
+    .get(item.asset)
+    .pipe(Effect.option);
+  if (Option.isNone(clip)) {
+    return Option.none();
+  }
+  const url = yield* (yield* StorageReader)
+    .getUrl(clip.value.storageId)
+    .pipe(Effect.option);
+  return Option.map(url, ({ href }): typeof PlayableMedia.Type => ({
+    alt: item.alt,
+    kind: "audio",
+    url: href,
+  }));
 });
 
 /**
@@ -49,27 +83,8 @@ export const setMedia = Effect.fn("exams.question.media")(function* (
  * so the paper shows what still plays.
  */
 export const playableMedia = Effect.fn("exams.question.media.playable")(
-  function* (media: readonly QuestionMedia[]) {
-    const reader = yield* DatabaseReader;
-    const storage = yield* StorageReader;
-    const items = yield* Effect.forEach(media, (item) =>
-      item.kind === "video"
-        ? Effect.succeed(Option.some(item))
-        : reader
-            .table("examAudio")
-            .get(item.asset)
-            .pipe(
-              Effect.flatMap((clip) => storage.getUrl(clip.storageId)),
-              Effect.map(({ href }) =>
-                Option.some({
-                  alt: item.alt,
-                  kind: "audio" as const,
-                  url: href,
-                })
-              ),
-              Effect.orElseSucceed(() => Option.none())
-            )
-    );
-    return Arr.getSomes(items);
+  function* (text: ExamQuestionsDoc["media"]) {
+    const media = yield* questionMedia(text);
+    return Arr.getSomes(yield* Effect.forEach(media, playable));
   }
 );

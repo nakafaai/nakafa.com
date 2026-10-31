@@ -73,7 +73,7 @@ export const QuestionPoints = Schema.Int.check(
  * interactions, and `key` is the JSON text of its answer key, or null while no
  * option is marked correct, because the contract refuses a key with no correct
  * option. `revision` counts the answer and key edits, so a stale edit is refused.
- * `points` is the weight of the question, and `scoring` the JSON text of the rule that shares
+ * `media` is the JSON text of what the question plays, absent until a teacher adds one. `points` is the weight of the question, and `scoring` the JSON text of the rule that shares
  * it among the parts of an answer, absent until the teacher chooses one. `prompt`, `rubric`, and
  * `explanation` are documents of their own: the question's text, the teacher's scoring
  * guide, and the explanation a learner reads after the result. Each of them is written by
@@ -85,7 +85,7 @@ export const questionValidator = Schema.Struct({
   examId: Id("exams"),
   explanation: Id("editorDocuments"),
   key: Schema.NullOr(Schema.String),
-  media: Schema.optionalKey(Schema.Array(QuestionMedia)),
+  media: Schema.optionalKey(Schema.String),
   points: QuestionPoints,
   prompt: Id("editorDocuments"),
   reading: Schema.optionalKey(Id("editorDocuments")),
@@ -276,6 +276,25 @@ const decodeKey = Effect.fn("exams.question.key")(function* (
   return yield* Schema.decodeEffect(KeyText)(text).pipe(Effect.orDie);
 });
 
+/** The media of a question as JSON text. */
+const MediaText = Schema.fromJsonString(Schema.Array(QuestionMedia));
+
+/** The JSON text a question's media is stored as. */
+export const encodeMedia = Effect.fn("exams.question.encodeMedia")(function* (
+  media: readonly QuestionMedia[]
+) {
+  return yield* Schema.encodeEffect(MediaText)(media).pipe(Effect.orDie);
+});
+
+/** The media a stored question holds, none until a teacher adds one. A stored text it refuses is a defect. */
+export const questionMedia = Effect.fn("exams.question.media")(function* (
+  text: ExamQuestionsDoc["media"]
+) {
+  return text === undefined
+    ? []
+    : yield* Schema.decodeEffect(MediaText)(text).pipe(Effect.orDie);
+});
+
 /** The rule of a question as JSON text, decoded with the contract's rule schema. */
 const ScoringText = Schema.fromJsonString(DefaultRuleSchema);
 
@@ -312,7 +331,7 @@ export const questionView = Effect.fn("exams.question.view")(function* (
     explanation: row.explanation,
     id: row._id,
     key: yield* decodeKey(row.key),
-    media: row.media ?? [],
+    media: yield* questionMedia(row.media),
     points: row.points,
     prompt: row.prompt,
     reading: row.reading ?? null,

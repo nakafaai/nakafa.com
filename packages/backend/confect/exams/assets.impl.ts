@@ -245,7 +245,7 @@ const media = FunctionImpl.make(
         reason: "resource",
       });
     }
-    return yield* playableMedia(question.media ?? []);
+    return yield* playableMedia(question.media);
   })
 );
 
