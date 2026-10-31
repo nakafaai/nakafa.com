@@ -1,3 +1,4 @@
+import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
@@ -8,6 +9,16 @@ import {
   returnFocusAfterClose,
 } from "@/components/ai/chat/rename";
 import { reportClientException } from "@/lib/analytics/client";
+
+/**
+ * A chat's title as the learner reads it. Every chat starts under one stored
+ * title, which stands for the learner's own "new chat" until Nina names the chat,
+ * as a chat with no title does.
+ */
+export const readChatTitle = (title: string | undefined, newChat: string) =>
+  title === undefined || title === "" || title === DEFAULT_TITLE
+    ? newChat
+    : title;
 
 /**
  * The rename of a chat's title in its header: the box that replaces the title
