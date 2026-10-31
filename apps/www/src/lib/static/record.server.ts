@@ -6,6 +6,7 @@ import { Array as Arr, Effect, Option, Result, Schema } from "effect";
 import { Base64Url } from "effect/encoding";
 import {
   appendStaticCalls,
+  isPrerender,
   PRERENDER_HEADER,
   StaticCall,
 } from "@/lib/static/calls";
@@ -19,11 +20,6 @@ const CALL_HEADER = "x-nakafa-static-call";
 
 /** One recorded call as the JSON text that its header value encodes. */
 const StaticCallJson = Schema.fromJsonString(StaticCall);
-
-/** Reports whether a request is the build's prerender of a page. */
-function isPrerender(header: string | null | undefined): boolean {
-  return header === "1";
-}
 
 /**
  * Records one server function call of a page that the build prerenders, so the
