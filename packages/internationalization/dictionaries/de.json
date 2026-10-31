@@ -2140,7 +2140,7 @@
     },
     "school-refusal-not-teacher": {
       "title": "Keine aktive Lehrkraft der Schule.",
-      "description": "Nur aktive Lehrkräfte dieser Schule können Klassenlehrkraft sein oder eine Lerngruppe unterrichten."
+      "description": "Wähle eine aktive Lehrkraft dieser Schule."
     },
     "school-refusal-teacher-has-homeroom": {
       "title": "Leitet schon eine andere Klasse.",
@@ -2372,7 +2372,7 @@
       "description": "Lege sie ohne Fach an."
     },
     "school-refusal-person-class-limit": {
-      "title": "Diese Lehrkraft unterrichtet schon so viele Lerngruppen, wie eine Periode erlaubt.",
+      "title": "Diese Lehrkraft ist ausgelastet.",
       "description": "Entferne sie zuerst aus einer anderen Lerngruppe."
     },
     "school-period-archived": {

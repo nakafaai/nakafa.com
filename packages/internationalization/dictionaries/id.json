@@ -2140,7 +2140,7 @@
     },
     "school-refusal-not-teacher": {
       "title": "Bukan guru aktif sekolah ini.",
-      "description": "Hanya guru aktif sekolah ini yang bisa menjadi wali kelas atau mengajar di ruang kelas."
+      "description": "Pilih guru aktif sekolah ini."
     },
     "school-refusal-teacher-has-homeroom": {
       "title": "Sudah menjadi wali kelas lain.",
@@ -2372,7 +2372,7 @@
       "description": "Tambahkan tanpa mata pelajaran."
     },
     "school-refusal-person-class-limit": {
-      "title": "Guru ini sudah mengajar ruang kelas sebanyak batas satu periode.",
+      "title": "Ruang kelas guru ini sudah penuh.",
       "description": "Lepas dari ruang kelas lain dulu."
     },
     "school-period-archived": {

@@ -2140,7 +2140,7 @@
     },
     "school-refusal-not-teacher": {
       "title": "Not an active teacher.",
-      "description": "Only an active teacher of this school can lead a cohort or teach a classroom."
+      "description": "Choose an active teacher of this school."
     },
     "school-refusal-teacher-has-homeroom": {
       "title": "Already leads another cohort.",
@@ -2372,7 +2372,7 @@
       "description": "Add it without a subject."
     },
     "school-refusal-person-class-limit": {
-      "title": "This teacher teaches the most classrooms a period allows.",
+      "title": "This teacher's classrooms are full.",
       "description": "Remove them from another classroom first."
     },
     "school-period-archived": {
