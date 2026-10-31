@@ -50,6 +50,8 @@ describe("notifications/detail", () => {
           title: "Latihan",
         });
         yield* teacher.mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "detail-mention",
           mentions: [{ _tag: "person", id: fixture.people.student.personId }],
