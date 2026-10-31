@@ -506,8 +506,6 @@
     "results-points": "Points",
     "grade-of": "Points of {name}",
     "template-match": "Matching",
-    "match-statements": "Statements",
-    "match-answers": "Answers",
     "statement-of": "Question {number}, statement {name}",
     "answer-of": "Question {number}, answer {name}",
     "statement-placeholder": "Statement",

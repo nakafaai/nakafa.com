@@ -1,3 +1,4 @@
+import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   InputGroup,
@@ -5,6 +6,12 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@repo/design-system/components/ui/input-group";
+import { Radio } from "@repo/design-system/components/ui/radio-group";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
@@ -64,38 +71,90 @@ export function PaperOptions({ children }: { children: ReactNode }) {
 }
 
 /**
- * One option of the paper: its letter, then its rich text, framed as the player frames an option. The
- * frame is the player's own choice frame in the unselected variant, and only the teacher's letter is
- * added to it. The letter is as tall as one line of the frame's text, so the first line of the text
- * and the letter share a line box, and a longer text grows the frame below them. The text is edited
- * here, so the frame takes the text cursor and lets the text be selected, where the button surface
- * would block both.
+ * One option of the paper, as the player draws it: the student's own control, unmarked and out of reach, a
+ * radio for one answer and a check box for several, then its rich text, in the player's choice frame. Only the
+ * cursor differs, since the text is edited here. The key is marked by letter in the teacher's layer, and the
+ * letters run in the paper's reading order.
  */
 export function PaperOption({
   children,
-  letter,
+  multiple,
 }: {
   children: ReactNode;
-  letter: string;
+  /** Whether the question takes several answers, so the student meets check boxes. */
+  multiple: boolean;
 }) {
   return (
     <div
       className={cn(
+        "flex items-center gap-2 text-sm leading-none font-medium",
         choiceFrame(getTryoutSelectableChoiceVariant({ checked: false })),
-        "flex cursor-text items-start gap-3 select-text"
+        "cursor-text select-text"
       )}
     >
-      <span
-        aria-hidden
-        className="bg-muted grid size-6 shrink-0 place-items-center rounded-md text-sm font-medium"
-      >
-        {letter}
+      <span className="contents" inert>
+        {multiple ? (
+          <Checkbox className="mt-1 shrink-0" />
+        ) : (
+          <Radio className="mt-1 shrink-0" value="" />
+        )}
       </span>
-      {/* A touch screen shows the remove control at all times, so the text stops short of it. */}
-      <div className="min-w-0 flex-1 pointer-coarse:group-has-[[data-remove]]/option:pe-8">
-        {children}
-      </div>
+      <PaperPartText>{children}</PaperPartText>
     </div>
+  );
+}
+
+/** The text of an option or a statement. A touch screen shows the remove control at all times, so the text stops short of it. */
+export function PaperPartText({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-w-0 flex-1 pointer-coarse:group-has-[[data-remove]]/option:pe-8">
+      {children}
+    </div>
+  );
+}
+
+/** The two columns of a matching, as the student's paper sets them. */
+export function PaperPairs({ children }: { children: ReactNode }) {
+  return <div className="grid min-w-0 gap-6 md:grid-cols-2">{children}</div>;
+}
+
+/** The parts of one column of a matching, as the student's paper lists them. */
+export function PaperParts({ children }: { children: ReactNode }) {
+  return <ol className="grid content-start gap-3">{children}</ol>;
+}
+
+/**
+ * One statement or answer of a matching, as the student's paper sets it: its number or letter, its text, and
+ * under a statement the select the student pairs it with, out of reach, since the key is marked in the teacher's layer.
+ */
+export function PaperPart({
+  children,
+  name,
+  pairs,
+}: {
+  children: ReactNode;
+  name: string;
+  /** Whether the part is a statement, which the student pairs with an answer. */
+  pairs: boolean;
+}) {
+  const t = useTranslations("Exams");
+
+  return (
+    <li className="grid gap-2">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="font-medium tabular-nums">{name}.</span>
+        <div className="min-w-0 flex-1">{children}</div>
+      </div>
+      {pairs ? (
+        <div inert>
+          <Select>
+            <SelectTrigger aria-hidden className="w-32">
+              <SelectValue placeholder={t("pair-choose")} />
+            </SelectTrigger>
+          </Select>
+        </div>
+      ) : null}
+    </li>
   );
 }
 
@@ -145,100 +204,5 @@ export function PaperNumber({ unit }: { unit: string | undefined }) {
         </InputGroupAddon>
       )}
     </InputGroup>
-  );
-}
-
-/**
- * A true or false table on a paper, as the student's player draws it: one bordered grid, a numbers column, the
- * statements, then a column for each choice. The live editor and the drawing without editors both build on it, so a
- * page keeps its size when its editors mount. A choice column is at least 6rem wide, and on a narrow paper the choice
- * columns together start at half the table, so the statements heading keeps its room.
- */
-export function PaperTable({
-  children,
-  columns,
-}: {
-  children: ReactNode;
-  /** How many choices the table has, each a column of its own. */
-  columns: number;
-}) {
-  return (
-    <div
-      className="grid min-w-0 overflow-hidden rounded-xl border"
-      style={{
-        gridTemplateColumns: `auto minmax(0, 1fr) repeat(${columns}, minmax(min(6rem, calc(50% / ${columns})), auto))`,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-/**
- * The header row of a paper's table: an empty cell over the numbers, the statements' heading, then each column's
- * header. Its cells share their first baseline, so each column's words stand on the line of the statements' heading
- * whatever padding and line height each cell has.
- */
-export function PaperTableHead({
-  children,
-  heading,
-}: {
-  children: ReactNode;
-  heading: string;
-}) {
-  return (
-    <div className="bg-muted/50 col-span-full grid grid-cols-subgrid items-baseline text-sm font-medium">
-      <div aria-hidden="true" className="py-3 pl-4" />
-      <div className="px-3 py-3">{heading}</div>
-      {children}
-    </div>
-  );
-}
-
-/** The header of one choice's column, which names the marks under it. */
-export function PaperTableHeader({
-  children,
-  id,
-}: {
-  children: ReactNode;
-  id?: string;
-}) {
-  return (
-    <div className="px-2 py-2 text-center" id={id}>
-      {children}
-    </div>
-  );
-}
-
-/** The number at the start of a statement's row. */
-export function PaperTableNumber({ number }: { number: number }) {
-  return (
-    <span className="flex items-start border-t py-3.5 pl-4 font-medium tabular-nums">
-      {number}.
-    </span>
-  );
-}
-
-/** The statement of a row. */
-export function PaperTableStatement({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-w-0 border-t px-3 py-2 pointer-coarse:has-[[data-remove]]:pe-10">
-      {children}
-    </div>
-  );
-}
-
-/**
- * The cell of a row under one column: the empty circle the student marks for that choice. The teacher's paper
- * draws it unmarked, since the key is marked in the teacher's layer.
- */
-export function PaperTableMark() {
-  return (
-    <div className="flex min-h-12 items-center justify-center border-t px-2 py-3">
-      <span
-        aria-hidden
-        className="border-input bg-background size-4 rounded-full border shadow-xs"
-      />
-    </div>
   );
 }

@@ -506,8 +506,6 @@
     "results-points": "Punkte",
     "grade-of": "Punkte von {name}",
     "template-match": "Zuordnung",
-    "match-statements": "Aussagen",
-    "match-answers": "Antworten",
     "statement-of": "Frage {number}, Aussage {name}",
     "answer-of": "Frage {number}, Antwort {name}",
     "statement-placeholder": "Aussage",

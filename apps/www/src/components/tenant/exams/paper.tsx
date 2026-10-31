@@ -61,6 +61,7 @@ import {
   PaperNumber,
   PaperOption,
   PaperOptions,
+  PaperPairs,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
 import { tableOf } from "@/components/tenant/exams/table";
@@ -374,7 +375,7 @@ function LivePaper({
         />
       </ExamText>
       {match === null ? null : (
-        <div className="grid min-w-0 gap-6 md:grid-cols-2">
+        <PaperPairs>
           <MatchColumn
             chosen={chosen}
             editing={editing}
@@ -393,7 +394,7 @@ function LivePaper({
             question={question}
             side="targets"
           />
-        </div>
+        </PaperPairs>
       )}
       {table === null ? null : (
         <TableSheet
@@ -436,7 +437,7 @@ function LivePaper({
                 number,
               })}
             >
-              <PaperOption letter={optionLetter(index, script)}>
+              <PaperOption multiple={choice.maxChoices !== 1}>
                 <ExamDocument
                   label={t("option-of", {
                     letter: optionLetter(index, script),

@@ -41,9 +41,9 @@ import { schoolExamEditTarget } from "@/lib/routing/school/target";
  * One exam as its students will meet it, for its teacher to try: the sitting's own player, full screen
  * with the player's header, the navigator and its legend, the flag and the keys, and the same questions
  * in the same order with the same controls. The answers and the flags stay in this page's store and are
- * never sent, so a try leaves no attempt and no score behind. The header holds the way back, the view
- * and its one action, which both return to the editor. Its links are plain ones, because a school host
- * has no locale in its paths.
+ * never sent, so a try leaves no attempt and no score behind, as the footer says once for the whole paper.
+ * The header holds the way back, the view and its one action, which both return to the editor. Its links
+ * are plain ones, because a school host has no locale in its paths.
  */
 export function ExamTryPaper({
   examId,
@@ -103,9 +103,6 @@ export function ExamTryPaper({
               </PlayerSidebar>
             }
           >
-            <p className="text-muted-foreground text-sm">
-              {gone ? <ExamGone /> : t("try-note")}
-            </p>
             <TryReveal documentId={exam.questions[0]?.prompt}>
               <PlayerQuestions>
                 {Arr.map(exam.questions, (question, index) => (
@@ -118,8 +115,8 @@ export function ExamTryPaper({
               </PlayerQuestions>
             </TryReveal>
           </PlayerMain>
-          <PlayerFooter>
-            <PlayerFlag locked={false} questions={models} />
+          <PlayerFooter note={gone ? <ExamGone /> : t("try-note")}>
+            <PlayerFlag beforeNote locked={false} questions={models} />
             <PlayerOpener />
           </PlayerFooter>
           <PlayerSheet>
