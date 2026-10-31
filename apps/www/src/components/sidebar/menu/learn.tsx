@@ -45,7 +45,7 @@ export function LearnMoreSubmenu({ children }: { children: ReactNode }) {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="cursor-pointer">
+      <DropdownMenuSubTrigger>
         <HugeIcons icon={InformationCircleIcon} />
         <span className="truncate">{t("learn-more")}</span>
       </DropdownMenuSubTrigger>
@@ -106,7 +106,6 @@ export function NakafaAboutMenuItem() {
 
   return (
     <DropdownMenuItem
-      className="cursor-pointer"
       onClick={() => navigate({ params: { locale }, to: "/$locale" })}
     >
       <HugeIcons icon={FavouriteIcon} />
@@ -125,7 +124,6 @@ export function SiteAboutMenuItem() {
 
   return (
     <DropdownMenuItem
-      className="cursor-pointer"
       render={
         <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
           <HugeIcons icon={FavouriteIcon} />
@@ -142,7 +140,6 @@ export function CommunityMenuItem() {
 
   return (
     <DropdownMenuItem
-      className="cursor-pointer"
       render={(props) => (
         <a
           {...props}
@@ -180,14 +177,12 @@ export function LegalMenuItems() {
   return (
     <>
       <DropdownMenuItem
-        className="cursor-pointer"
         onClick={() => openPage(pageNavigation.termsOfServicePath)}
       >
         <HugeIcons icon={FileValidationIcon} />
         {tLegal("terms-of-service")}
       </DropdownMenuItem>
       <DropdownMenuItem
-        className="cursor-pointer"
         onClick={() => openPage(pageNavigation.privacyPolicyPath)}
       >
         <HugeIcons icon={LockIcon} />

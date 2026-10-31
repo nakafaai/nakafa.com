@@ -16,7 +16,10 @@ import {
   TaskClosed,
 } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
-import { submissionField } from "@repo/backend/confect/classroom/tasks/task";
+import {
+  standingOf,
+  submissionField,
+} from "@repo/backend/confect/classroom/tasks/task";
 import {
   classTask,
   ownSubmission,
@@ -28,23 +31,31 @@ import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
+import { namedPeople } from "@repo/backend/confect/tenancy/named";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
-/** One page of the class's tasks by deadline, the soonest first. */
+/**
+ * One page of the class's tasks by deadline, the soonest first. A `standing` keeps the tasks where the reader's own
+ * work stands so (`standingOf`), so a page can hold fewer tasks than it read.
+ */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("classroom.tasks.list")(function* ({ paginationOpts }) {
+  Effect.fn("classroom.tasks.list")(function* ({ paginationOpts, standing }) {
     const row = yield* Class;
     const found = yield* (yield* DatabaseReader)
       .table("classroomTasks")
       .index("by_classId_and_deadline", (query) => query.eq("classId", row._id))
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
+    const views = yield* Effect.forEach(found.page, taskView);
     return Struct.assign(found, {
-      page: yield* Effect.forEach(found.page, taskView),
+      page:
+        standing === undefined
+          ? views
+          : Arr.filter(views, (view) => standingOf(view.mine) === standing),
     });
   })
 );
@@ -187,18 +198,44 @@ const submissionViews = Effect.fn("classroom.tasks.submissionViews")(function* (
   );
 });
 
-/** One page of the work handed in for a task, as its teacher reads it. */
+/**
+ * One page of the work handed in for a task, as its teacher reads it. A `search` reads the school's people whose
+ * names match it, best match first (`namedPeople`), and keeps those who handed work in, so a page of a search can
+ * hold less work than it read.
+ */
 const submissions = FunctionImpl.make(
   databaseSchema,
   spec,
   "submissions",
   Effect.fn("classroom.tasks.submissions")(function* ({
     paginationOpts,
+    search,
     task,
   }) {
     const found = yield* classTask(task, "task.manage");
-    const page = yield* (yield* DatabaseReader)
-      .table("classroomSubmissions")
+    const table = (yield* DatabaseReader).table("classroomSubmissions");
+    if (search !== undefined) {
+      const people = yield* namedPeople(
+        (yield* Class).tenantId,
+        search,
+        paginationOpts
+      );
+      const work = yield* Effect.forEach(
+        people.page,
+        (person) =>
+          table
+            .index("by_taskId_and_personId", (query) =>
+              query.eq("taskId", found._id).eq("personId", person._id)
+            )
+            .first()
+            .pipe(Effect.orDie),
+        { concurrency: "unbounded" }
+      );
+      return Struct.assign(people, {
+        page: yield* submissionViews(Arr.getSomes(work)),
+      });
+    }
+    const page = yield* table
       .index("by_taskId_and_personId", (query) => query.eq("taskId", found._id))
       .paginate(paginationOpts)
       .pipe(Effect.orDie);

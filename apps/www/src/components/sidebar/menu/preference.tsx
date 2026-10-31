@@ -63,7 +63,6 @@ function LanguageMenuItems() {
     <>
       {Arr.map(languages, (language) => (
         <DropdownMenuItem
-          className="cursor-pointer"
           disabled={isPending}
           key={language.value}
           onClick={() => handleChangeLocale(language.value)}
@@ -121,7 +120,7 @@ export function SidebarLanguageSubmenu() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="cursor-pointer">
+      <DropdownMenuSubTrigger>
         <LanguageMenuTriggerContent label={t("language")} />
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent
@@ -143,7 +142,7 @@ export function SidebarThemeSubmenu() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="cursor-pointer">
+      <DropdownMenuSubTrigger>
         <HugeIcons icon={PaintBoardIcon} />
         <span className="truncate">{t("theme")}</span>
       </DropdownMenuSubTrigger>

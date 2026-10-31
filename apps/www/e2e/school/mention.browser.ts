@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect, Option } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   hostAddress,
@@ -27,6 +28,7 @@ for (const viewport of [
     // A classmate placed in the class, whom the teacher may mention.
     const forum = await Effect.runPromise(seedForum(school.slug, 1, 1));
     const page = await context.newPage();
+    const changes = await Effect.runPromise(trackChanges(page, []));
     await page.goto(
       address(`/classes/fisika-x-1/forum?channel=${forum.channelId}`)
     );
@@ -74,13 +76,16 @@ for (const viewport of [
     await expect(list).toBeHidden();
     await expect(field).toHaveValue("Halo @Raka Pratama dan @ev");
 
-    // The sent message shows the picked name as a mention.
+    // The sent message shows the picked name as a mention, and the server keeps it once it answered:
+    // a reload drops a change still on its way.
     await field.fill("Halo @");
     await field.press("ArrowDown");
     await field.press("Tab");
+    const sentBefore = changes.sent;
     await field.press("Enter");
     const sent = page.locator("bdi", { hasText: "@Raka Pratama" });
     await expect(sent).toBeVisible();
+    await saved(changes, sentBefore);
     await page.reload();
     await expect(page.locator("bdi", { hasText: "@Raka Pratama" })).toBeVisible(
       { timeout: readinessTimeoutMilliseconds }

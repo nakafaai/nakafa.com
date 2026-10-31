@@ -434,8 +434,10 @@ describe("public agent API routes", () => {
     });
     expect(Number(limited.headers.get("retry-after"))).toBeGreaterThan(0);
 
-    // Two reads per second restore one token after half a second.
-    vi.setSystemTime(now + 500);
+    // Two reads per second restore one token after half a second. The burst's
+    // last reads ran a millisecond past the frozen clock, since convex-test runs
+    // each mutation after the commits before it, so half a second is read from there.
+    vi.setSystemTime(now + 501);
     expect((await fetchApi(test, "/search")).status).toBe(200);
     await expectProblem(await fetchApi(test, "/search"), {
       code: "RATE_LIMITED",

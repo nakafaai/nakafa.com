@@ -13,6 +13,15 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The student's NISN that the seed writes on the roster. */
 const NISN = "0012345678";
 
+/** How many lines an element's text takes on screen. */
+function lineCount(element: Element) {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  return new Set(
+    Array.from(range.getClientRects(), (rect) => Math.round(rect.top))
+  ).size;
+}
+
 test("an admin links a parent, who signs in with the email code, opens the child beside the list, checks the NISN, reads the child, and withdraws consent", async ({
   browser,
   baseURL,
@@ -45,7 +54,7 @@ test("an admin links a parent, who signs in with the email code, opens the child
 
   const parent = await browser.newContext();
   const home = await parent.newPage();
-  await home.goto(address("/orang-tua"));
+  await home.goto(address("/parents"));
   const send = home.getByRole("button", { name: "Send code" });
   await waitUntilTakenOver(send);
   await home.getByLabel("Parent email").fill(email);
@@ -55,10 +64,14 @@ test("an admin links a parent, who signs in with the email code, opens the child
     seedGuardianCode(school.slug, email, NISN)
   );
   await home.getByLabel("Sign-in code").fill("000000");
-  await home.getByRole("button", { name: "Sign in" }).click();
+  const signIn = home.getByRole("button", { name: "Sign in" });
+  const pressed = await signIn.boundingBox();
+  await signIn.click();
   await expect(home.locator("form").getByRole("alert")).toHaveText(
     "The code is wrong or has expired."
   );
+  // Each message takes the line kept for it, so the form never moves the button it answers.
+  expect((await signIn.boundingBox())?.y).toBe(pressed?.y);
   await home.getByLabel("Sign-in code").fill(seeded.code);
   await home.getByRole("button", { name: "Sign in" }).click();
 
@@ -71,10 +84,21 @@ test("an admin links a parent, who signs in with the email code, opens the child
   await expect(child.getByRole("heading", { name: "Siswa Uji" })).toBeVisible();
   await waitUntilTakenOver(child.getByLabel("Child's NISN"));
   await child.getByLabel("Child's NISN").fill("9999999999");
+  const field = child.locator('[data-slot="field"]');
+  const typed = await field.boundingBox();
   await child.getByRole("button", { name: "Check" }).click();
   await expect(child.getByRole("alert")).toHaveText(
-    "The details do not match, check them or contact the school."
+    "These details don't match."
   );
+  // The hint stays, and the refusal takes the line under it that the field kept from the start.
+  await expect(
+    field.getByText(
+      "Enter your child's NISN to confirm this link, and check it or contact the school if it does not match."
+    )
+  ).toBeVisible();
+  expect((await field.boundingBox())?.height).toBe(typed?.height);
+  // The refusal is one line, the one the field kept for it, so it never pushes the field taller.
+  expect(await child.getByRole("alert").evaluate(lineCount)).toBe(1);
   await child.getByLabel("Child's NISN").fill(NISN);
   await child.getByRole("button", { name: "Check" }).click();
   await expect(child).toHaveAttribute("data-child", "verified");

@@ -6,6 +6,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -114,7 +115,7 @@ function GuardianSignInForm() {
         return;
       }
       // The session changed, so the school loads again with the session this sign-in set.
-      window.location.assign("/orang-tua");
+      window.location.assign("/parents");
     });
   }
 
@@ -166,11 +167,7 @@ function GuardianSignInForm() {
           </Field>
         )}
       </FieldGroup>
-      {message === undefined ? null : (
-        <p className="text-destructive text-sm" role="alert">
-          {message}
-        </p>
-      )}
+      <FieldError>{message}</FieldError>
       <div className="flex w-full flex-col gap-3">
         <Button
           aria-busy={isPending || undefined}
