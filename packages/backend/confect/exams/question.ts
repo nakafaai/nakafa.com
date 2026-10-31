@@ -10,6 +10,7 @@ import { DefaultRuleSchema } from "@nakafa/aksara-contracts/assessment/scoring";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { keyFits } from "@repo/backend/confect/assessment/key";
+import { QuestionMedia } from "@repo/backend/confect/exams/media";
 import {
   ALL_OR_NOTHING,
   takesScoring,
@@ -64,19 +65,22 @@ export const QuestionPoints = Schema.Int.check(
  * interactions, and `key` is the JSON text of its answer key, or null while no
  * option is marked correct, because the contract refuses a key with no correct
  * option. `revision` counts the answer and key edits, so a stale edit is refused.
- * `points` is the weight of the question, and `scoring` the JSON text of the rule that shares
+ * `media` is the JSON text of what the question plays, absent until a teacher adds one. `points` is the weight of the question, and `scoring` the JSON text of the rule that shares
  * it among the parts of an answer, absent until the teacher chooses one. `prompt`, `rubric`, and
  * `explanation` are documents of their own: the question's text, the teacher's scoring
  * guide, and the explanation a learner reads after the result. Each of them is written by
- * the collaborative editor, and each one is frozen with its exam.
+ * the collaborative editor, and each one is frozen with its exam. `reading` is the shared reading
+ * the question is asked of, a document several questions may hold, absent until a teacher gives one.
  */
 export const questionValidator = Schema.Struct({
   answers: Schema.String,
   examId: Id("exams"),
   explanation: Id("editorDocuments"),
   key: Schema.NullOr(Schema.String),
+  media: Schema.optionalKey(Schema.String),
   points: QuestionPoints,
   prompt: Id("editorDocuments"),
+  reading: Schema.optionalKey(Id("editorDocuments")),
   revision: Schema.Natural,
   rubric: Id("editorDocuments"),
   scoring: Schema.optionalKey(Schema.String),
@@ -84,6 +88,15 @@ export const questionValidator = Schema.Struct({
   tenantId: Id("tenants"),
   updatedAt: Schema.Finite,
 });
+
+/**
+ * The reading a question takes: a new one the teacher writes, none, or the reading of another question of its
+ * exam, so several questions are asked of one text.
+ */
+export const ReadingSource = Schema.Union([
+  Schema.Literals(["new", "none"]),
+  Id("examQuestions"),
+]);
 
 /** The fewest options a choice holds: a choice of one option asks nothing. */
 export const CHOICE_OPTIONS_MIN = 2;
@@ -208,7 +221,7 @@ const KeyText = Schema.fromJsonString(
 
 /**
  * One question as the wire shows it: its ID, its template, its points and the rule that
- * scores them, its prompt, rubric and explanation documents, its interactions, its key (null
+ * scores them, its prompt, reading, rubric and explanation documents, its interactions, its key (null
  * until one option is marked), and its revision. Only the teacher's editor reads this view; a learner's paper reads the
  * interactions alone, so the key, the rubric, and the explanation never reach it.
  */
@@ -217,8 +230,10 @@ export const QuestionView = Schema.Struct({
   explanation: Id("editorDocuments"),
   id: Id("examQuestions"),
   key: Schema.NullOr(Schema.NonEmptyArray(InteractionKeySchema)),
+  media: Schema.Array(QuestionMedia),
   points: QuestionPoints,
   prompt: Id("editorDocuments"),
+  reading: Schema.NullOr(Id("editorDocuments")),
   revision: Schema.Natural,
   rubric: Id("editorDocuments"),
   scoring: DefaultRuleSchema,
@@ -251,6 +266,25 @@ const decodeKey = Effect.fn("exams.question.key")(function* (
     return null;
   }
   return yield* Schema.decodeEffect(KeyText)(text).pipe(Effect.orDie);
+});
+
+/** The media of a question as JSON text. */
+const MediaText = Schema.fromJsonString(Schema.Array(QuestionMedia));
+
+/** The JSON text a question's media is stored as. */
+export const encodeMedia = Effect.fn("exams.question.encodeMedia")(function* (
+  media: readonly QuestionMedia[]
+) {
+  return yield* Schema.encodeEffect(MediaText)(media).pipe(Effect.orDie);
+});
+
+/** The media a stored question holds, none until a teacher adds one. A stored text it refuses is a defect. */
+export const questionMedia = Effect.fn("exams.question.media")(function* (
+  text: ExamQuestionsDoc["media"]
+) {
+  return text === undefined
+    ? []
+    : yield* Schema.decodeEffect(MediaText)(text).pipe(Effect.orDie);
 });
 
 /** The rule of a question as JSON text, decoded with the contract's rule schema. */
@@ -289,8 +323,10 @@ export const questionView = Effect.fn("exams.question.view")(function* (
     explanation: row.explanation,
     id: row._id,
     key: yield* decodeKey(row.key),
+    media: yield* questionMedia(row.media),
     points: row.points,
     prompt: row.prompt,
+    reading: row.reading ?? null,
     revision: row.revision,
     rubric: row.rubric,
     scoring: yield* decodeScoring(row),

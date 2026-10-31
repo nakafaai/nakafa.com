@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Option, Schema } from "effect";
+import type { LinkItem } from "@/components/tenant/guardian/change";
 import {
   addMemberChange,
   addStudentChange,
@@ -36,6 +38,20 @@ function member(id: string, name: string): Member {
     status: "joined",
   };
 }
+
+/** One guardian link whose parent is the given Person. */
+const parentLink = (guardianId: Member["id"], name: string): LinkItem => ({
+  email: address,
+  expiresAt: 1_800_000_000_000,
+  guardian: { id: guardianId, name },
+  id: Schema.decodeUnknownSync(Id("guardianLinks"))(`link-${guardianId}`),
+  mismatches: 0,
+  status: "pending",
+  student: {
+    id: Schema.decodeUnknownSync(Id("tenantPeople"))("student-1"),
+    name: "Raka",
+  },
+});
 
 describe("components/tenant/settings/accounts", () => {
   it("shows an added member as invited, with its invite, at the top of the first loaded pages", () => {
@@ -244,6 +260,11 @@ describe("components/tenant/settings/accounts", () => {
       { paginationOpts: paging, slug },
       pageOf([guru, siswa])
     );
+    local.seed(
+      guardians.links.list,
+      { paginationOpts: paging, slug },
+      pageOf([parentLink(lama.id, "Lama"), parentLink(guru.person.id, "Guru")])
+    );
     renamePersonChange(local.store, {
       name: "Lama Sekali",
       personId: lama.id,
@@ -254,6 +275,17 @@ describe("components/tenant/settings/accounts", () => {
       personId: guru.person.id,
       slug,
     });
+    expect(
+      Arr.map(
+        Option.getOrThrow(
+          local.store.getQuery(guardians.links.list, {
+            paginationOpts: paging,
+            slug,
+          })
+        ).page,
+        (link) => link.guardian.name
+      )
+    ).toEqual(["Lama Sekali", "Guru Baru"]);
     const members = Option.getOrThrow(
       local.store.getQuery(tenancy.roster.members, {
         paginationOpts: paging,

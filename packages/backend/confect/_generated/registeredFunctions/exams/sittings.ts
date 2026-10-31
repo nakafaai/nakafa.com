@@ -21,7 +21,6 @@ export default {
 ["close"]: RegisteredConvexFunction.register({ ...definitions["close"], handler: forward(definitions["close"].handler) }),
 ["cancel"]: RegisteredConvexFunction.register({ ...definitions["cancel"], handler: forward(definitions["cancel"].handler) }),
 ["reschedule"]: RegisteredConvexFunction.register({ ...definitions["reschedule"], handler: forward(definitions["reschedule"].handler) }),
-["attempt"]: RegisteredConvexFunction.register({ ...definitions["attempt"], handler: forward(definitions["attempt"].handler) }),
 ["student"]: RegisteredConvexFunction.register({ ...definitions["student"], handler: forward(definitions["student"].handler) }),
 ["signals"]: RegisteredConvexFunction.register({ ...definitions["signals"], handler: forward(definitions["signals"].handler) }),
 ["paper"]: RegisteredConvexFunction.register({ ...definitions["paper"], handler: forward(definitions["paper"].handler) }),

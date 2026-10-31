@@ -46,6 +46,7 @@ const placement = {
   context,
   hash: "functions",
   label: "Functions",
+  trail: [],
   parent: {
     publicPath: PublicPathSchema.make(
       "curriculum/merdeka/class-11/mathematics"

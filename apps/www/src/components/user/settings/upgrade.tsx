@@ -1,12 +1,7 @@
 import { Diamond02Icon, type Tick01Icon } from "@hugeicons/core-free-icons";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr } from "effect";
@@ -61,11 +56,10 @@ export function UpgradePlanCard() {
   };
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{tPricing("pro-title")}</CardTitle>
-        <CardDescription>{tPricing("pro-description")}</CardDescription>
-      </CardHeader>
+    <CardSection
+      description={tPricing("pro-description")}
+      title={tPricing("pro-title")}
+    >
       <CardContent className="grid gap-6">
         <div className="grid gap-1">
           <div className="flex flex-wrap items-baseline gap-x-2">

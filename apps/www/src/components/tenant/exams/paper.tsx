@@ -24,11 +24,13 @@ import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
 import { TableSheet } from "@/components/tenant/exams/matrix";
+import { ExamPaperMedia } from "@/components/tenant/exams/media";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   PaperSketch,
   PreviewProse,
+  ReadingSketch,
   usePageDocument,
 } from "@/components/tenant/exams/preview";
 import {
@@ -42,6 +44,7 @@ import { activeQuestion } from "@/components/tenant/exams/selection";
 import {
   PaperField,
   PaperPairs,
+  PaperPrompt,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
 import { tableOf } from "@/components/tenant/exams/table";
@@ -236,7 +239,13 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
         <Suspense
           fallback={
             <QuestionPaper selected={chosen}>
-              <PreviewProse article doc={prompt} size="paper" />
+              <PaperPrompt>
+                <ExamPaperMedia question={question} />
+                {question.reading === null ? null : (
+                  <ReadingSketch documentId={question.reading} read={read} />
+                )}
+                <PreviewProse article doc={prompt} size="paper" />
+              </PaperPrompt>
               <PaperSketch question={question} withControls />
             </QuestionPaper>
           }
@@ -245,7 +254,13 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
         </Suspense>
       ) : (
         <QuestionPaper selected={chosen}>
-          <PreviewProse article doc={prompt} size="paper" />
+          <PaperPrompt>
+            <ExamPaperMedia question={question} />
+            {question.reading === null ? null : (
+              <ReadingSketch documentId={question.reading} read={read} />
+            )}
+            <PreviewProse article doc={prompt} size="paper" />
+          </PaperPrompt>
           <PaperSketch question={question} withControls />
         </QuestionPaper>
       )}
@@ -298,31 +313,46 @@ function LivePaper({
 
   return (
     <QuestionPaper selected={chosen}>
-      <ExamText
-        documentId={question.prompt}
-        key={`${question.prompt}-${frozen}`}
-        onOpen={(editor: DocumentEditorInstance) => {
-          const { write, writing } = selection.getState();
-          if (writing !== question.id) {
-            return;
-          }
-          write(null);
-          // A teacher who went on to write somewhere else meanwhile keeps the caret there.
-          if (
-            document.activeElement?.closest(
-              "[contenteditable='true'], input, textarea"
-            ) === null
-          ) {
-            editor.commands.focus("end");
-          }
-        }}
-      >
-        <ExamDocument
-          label={t("question-text", { number })}
-          placeholder={t("prompt-placeholder")}
-          size="paper"
-        />
-      </ExamText>
+      <PaperPrompt>
+        <ExamPaperMedia question={question} />
+        {question.reading === null ? null : (
+          <ExamText
+            documentId={question.reading}
+            key={`${question.reading}-${frozen}`}
+          >
+            <ExamDocument
+              label={t("reading-text", { number })}
+              placeholder={t("reading-placeholder")}
+              size="paper"
+            />
+          </ExamText>
+        )}
+        <ExamText
+          documentId={question.prompt}
+          key={`${question.prompt}-${frozen}`}
+          onOpen={(editor: DocumentEditorInstance) => {
+            const { write, writing } = selection.getState();
+            if (writing !== question.id) {
+              return;
+            }
+            write(null);
+            // A teacher who went on to write somewhere else meanwhile keeps the caret there.
+            if (
+              document.activeElement?.closest(
+                "[contenteditable='true'], input, textarea"
+              ) === null
+            ) {
+              editor.commands.focus("end");
+            }
+          }}
+        >
+          <ExamDocument
+            label={t("question-text", { number })}
+            placeholder={t("prompt-placeholder")}
+            size="paper"
+          />
+        </ExamText>
+      </PaperPrompt>
       {match === null ? null : (
         <PaperPairs>
           <MatchColumn

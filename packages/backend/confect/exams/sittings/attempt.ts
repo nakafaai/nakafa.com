@@ -6,7 +6,6 @@ import type {
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { NotInSitting } from "@repo/backend/confect/exams/sittings/errors";
-import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Effect, Option } from "effect";
 
 /**
@@ -76,11 +75,3 @@ export const heldView = (held: Option.Option<ExamAttemptsDoc>) =>
       state: attempt.state,
     }),
   });
-
-/** The caller's own attempt in a sitting, as the student's screen reads it, or `null` when there is none. */
-export const heldAttempt = Effect.fn("exams.sittings.attempt.held")(function* (
-  sittingId: ExamSittingsDoc["_id"]
-) {
-  const member = yield* Member;
-  return heldView(yield* attemptOf(sittingId, member.person._id));
-});
