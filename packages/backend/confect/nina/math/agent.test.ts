@@ -329,7 +329,8 @@ describe("math Agent execution", () => {
       }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, casConfig))
     );
     expect(model.doGenerateCalls).toHaveLength(MATH_STEPS);
-    expect(compute).toHaveBeenCalledTimes(MATH_STEPS);
+    // The AI SDK refuses the tool call of the last step, which allows none, so it never runs.
+    expect(compute).toHaveBeenCalledTimes(MATH_STEPS - 1);
     // No answer was written, so Nina is told the run was cut, not handed an
     // empty result as a whole one.
     expect(result).toEqual({

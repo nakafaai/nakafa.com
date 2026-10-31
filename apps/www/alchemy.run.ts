@@ -6,9 +6,12 @@ import { deployNakafaBots } from "#www/deploy/bots";
 import { deployCas } from "#www/deploy/cas";
 import { deployNakafaDns, deployNakafaIdZone } from "#www/deploy/dns";
 import { edgeWorkerBindings } from "#www/deploy/edge";
+import { deployNakafaRedirects } from "#www/deploy/redirect";
 import { readActiveContentRelease } from "#www/deploy/release";
 import {
   productionHostExposure,
+  RELAY_LIMITS,
+  WEB_LIMITS,
   WORKER_OBSERVABILITY,
   WORKER_PLACEMENT,
   webExposure,
@@ -56,6 +59,7 @@ export default Stack(
     if (isProduction) {
       const zone = yield* deployNakafaDns().pipe(RemovalPolicy.retain());
       yield* deployNakafaBots(zone).pipe(RemovalPolicy.retain());
+      yield* deployNakafaRedirects(zone).pipe(RemovalPolicy.retain());
       yield* deployNakafaIdZone().pipe(RemovalPolicy.retain());
     }
 
@@ -74,6 +78,7 @@ export default Stack(
         NAKAFA_DEPLOY_STAGE: stage,
       },
       viteEnvironments: workerSettings.viteEnvironments,
+      limits: WEB_LIMITS,
       observability: WORKER_OBSERVABILITY,
       placement: WORKER_PLACEMENT,
       ...webExposure(stage),
@@ -86,6 +91,7 @@ export default Stack(
         assets: "../api/public",
         compatibility: { date: workerSettings.compatibilityDate },
         env: edgeWorkerBindings("NAKAFA_API_EDGE_SECRET"),
+        limits: RELAY_LIMITS,
         observability: WORKER_OBSERVABILITY,
         placement: WORKER_PLACEMENT,
         ...productionHostExposure("api.nakafa.com"),
@@ -96,6 +102,7 @@ export default Stack(
         assets: "../mcp/public",
         compatibility: { date: workerSettings.compatibilityDate },
         env: edgeWorkerBindings("NAKAFA_MCP_EDGE_SECRET"),
+        limits: RELAY_LIMITS,
         observability: WORKER_OBSERVABILITY,
         placement: WORKER_PLACEMENT,
         ...productionHostExposure("mcp.nakafa.com"),

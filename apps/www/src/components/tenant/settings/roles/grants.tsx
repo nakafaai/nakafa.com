@@ -20,7 +20,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { startTransition, useState } from "react";
@@ -133,9 +133,9 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
  * A grant's row menu: Give a role, which opens the grant dialog for the grant's person, and Revoke, which revokes
  * the grant behind a confirmation. A grant that keeps the school's last Owner cannot be revoked, so its Revoke is
  * disabled. A draft grant, still on its way to the server, has an inert menu. Revoking the viewer's own grant may end the
- * role that opens the settings, so the page first leaves for the school's home and the
- * revoke follows there with one sentence: the settings page never turns into a refusal
- * under the viewer.
+ * role that opens the settings, so the page first leaves for the notifications, which every member keeps, and the
+ * revoke follows there with one sentence: the settings page never turns into a refusal under the viewer. Once the role
+ * has ended, the school's root, read afresh, lands the viewer on the main page of the role they keep.
  */
 function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
   const { slug } = useTenant();
@@ -146,6 +146,7 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
   );
   const viewer = useViewerQuery();
   const navigate = useNavigate();
+  const router = useRouter();
   const [isRevoking, setIsRevoking] = useState(false);
   const [isGiving, setIsGiving] = useState(false);
   const own =
@@ -205,19 +206,31 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
                     await navigate({
                       params: { slug },
                       replace: true,
-                      to: "/school/$slug",
+                      to: "/school/$slug/notifications",
                     });
                   }
+                  // The saved revoke marks the role as ended, so the page lands on what the viewer keeps.
+                  let ended = false;
                   await saveSchool(
                     () => revoke({ grantId: grant.id, slug }),
                     SOURCE,
                     own
-                      ? () =>
+                      ? () => {
+                          ended = true;
                           toast.success({
                             title: "school-own-role-ended.title",
-                          })
+                          });
+                        }
                       : undefined
                   );
+                  if (ended) {
+                    await router.invalidate();
+                    await navigate({
+                      params: { slug },
+                      replace: true,
+                      to: "/school/$slug",
+                    });
+                  }
                 });
               }}
               type="button"

@@ -231,11 +231,14 @@ const verifyDeletedElsewhere = Effect.fn("NakafaE2E.verifyDeletedElsewhere")(
       await editorOf(page).press("Escape");
       await expect(editorOf(page)).toHaveCount(0);
       await saved(changes, before);
+      // The new memory keeps the title the learner kept, so the list names its
+      // row by the title, and the row opens on every word they wrote.
       await reloadUntil(page, () =>
-        expect(memoryRow(page, `${WORDS}${WRITTEN_ON}`)).toBeVisible({
-          timeout: 3000,
-        })
+        expect(memoryRow(page, TITLE)).toBeVisible({ timeout: 3000 })
       );
+      await expect(memoryRow(page, TITLE)).toHaveCount(1);
+      await memoryRow(page, TITLE).getByText(TITLE).click();
+      await opened(page, `${WORDS}${WRITTEN_ON}`);
     });
   }
 );

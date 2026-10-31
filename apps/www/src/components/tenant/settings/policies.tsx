@@ -38,6 +38,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Array as Arr, Option, Order, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
 import {
   CardSection,
   CardSectionActions,
@@ -152,6 +153,8 @@ function SchoolSwitchPolicy({
   const setPolicy = useMutation(
     tenancy.settings.setPolicy
   ).withOptimisticUpdate(setPolicyChange);
+  // A change sent before Convex holds the session is refused, so the control waits for it.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const id = useId();
 
   return (
@@ -162,6 +165,7 @@ function SchoolSwitchPolicy({
       </FieldContent>
       <Switch
         checked={checked}
+        disabled={!isSettled}
         id={id}
         onCheckedChange={(value) => {
           startTransition(() =>
@@ -179,7 +183,7 @@ function SchoolSwitchPolicy({
 /**
  * Renders the Nina credits one student may use from the school's pool a day as a
  * row of the students' card, chosen from a few steps of one answer's cap, and
- * saves each choice at once. A cap set elsewhere stays among the choices.
+ * saves each choice at once, once Convex holds the session. A cap set elsewhere stays among the choices.
  */
 function SchoolNinaCreditsPolicy({ current }: { current: number }) {
   const { slug } = useTenant();
@@ -187,6 +191,7 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
   const setPolicy = useMutation(
     tenancy.settings.setPolicy
   ).withOptimisticUpdate(setPolicyChange);
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const id = useId();
   const items = Arr.map(
     Arr.sort(Arr.dedupe([...NINA_DAILY_CREDIT_CHOICES, current]), Order.Number),
@@ -226,7 +231,7 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
         }}
         value={String(current)}
       >
-        <SelectTrigger className="w-40" id={id}>
+        <SelectTrigger className="w-40" disabled={!isSettled} id={id}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -255,6 +260,7 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
   const setPolicy = useMutation(
     tenancy.settings.setPolicy
   ).withOptimisticUpdate(setPolicyChange);
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const [draft, setDraft] = useState(() =>
     Arr.join(policies.emailDomains, "\n")
   );
@@ -295,7 +301,7 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
       <CardSectionFooter hint={t("policy-domains-footer")}>
         <CardSectionActions>
           <Button
-            disabled={!isChanged || problem !== null}
+            disabled={!(isSettled && isChanged) || problem !== null}
             onClick={() => {
               const value = parsedDomains(domains);
               if (Option.isSome(value)) {

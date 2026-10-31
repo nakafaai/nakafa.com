@@ -2,7 +2,9 @@ import { DurableObject, Worker } from "@alchemy.run/cloudflare";
 import { RemovalPolicy } from "alchemy";
 import { Config, Effect, Schema } from "effect";
 import {
+  CAS_ENGINE_LIMITS,
   casFrontExposure,
+  RELAY_LIMITS,
   WORKER_OBSERVABILITY,
   WORKER_PLACEMENT,
   workerName,
@@ -18,8 +20,9 @@ const CAS_ENGINE_COMPATIBILITY_DATE = "2026-09-07";
 
 /**
  * The CAS math service. A Python engine runs each calculation in a Durable Object,
- * and a TypeScript front answers cas.nakafa.com and forwards to the engine. Both
- * Workers run on the Free plan. The front binds the engine's class by script name.
+ * and a TypeScript front answers cas.nakafa.com and forwards to the engine. Each
+ * Worker carries its CPU cap from `stage.ts`. The front binds the engine's class
+ * by script name.
  *
  * The engine has no route and no workers.dev URL, so only the front is public.
  */
@@ -38,6 +41,7 @@ export const deployCas = Effect.fn("deploy.cas")(function* (
     main: "../cas/entry.py",
     compatibility: { date: CAS_ENGINE_COMPATIBILITY_DATE },
     env: { CAS_SOLVER: DurableObject("CasSolver") },
+    limits: CAS_ENGINE_LIMITS,
     observability: WORKER_OBSERVABILITY,
     placement: WORKER_PLACEMENT,
     workersDev: false,
@@ -53,6 +57,7 @@ export const deployCas = Effect.fn("deploy.cas")(function* (
       }),
       MATH_CAS_API_KEY: apiKey,
     },
+    limits: RELAY_LIMITS,
     observability: WORKER_OBSERVABILITY,
     placement: WORKER_PLACEMENT,
     ...casFrontExposure(stage),
