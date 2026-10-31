@@ -128,7 +128,6 @@ function OwnGradeTable() {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
       header: t("value"),
       id: "value",
-      meta: { align: "end" },
       sortFn: "basic",
     }),
     gradeColumns.accessor((grade) => grade.band ?? NO_BAND, {
@@ -171,7 +170,6 @@ function OwnGradeTable() {
         />
       ),
       id: "kktp",
-      meta: { align: "center" },
     }),
   ]);
 
