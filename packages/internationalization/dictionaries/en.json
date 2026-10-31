@@ -1119,7 +1119,7 @@
     "grading": "Grading",
     "grading-description": "Each grade keeps the version it was entered under.",
     "grading-empty": "No version stored yet.",
-    "grading-empty-description": "Grades use the built-in scheme, KKTP {kktp}, no bands.",
+    "grading-empty-description": "Grades use the built-in scheme with KKTP {kktp} and no bands.",
     "grading-search": "Find a band",
     "grading-new": "New version",
     "grading-new-description": "It judges every grade from now on.",

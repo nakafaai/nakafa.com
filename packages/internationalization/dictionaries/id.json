@@ -1119,7 +1119,7 @@
     "grading": "Penilaian",
     "grading-description": "Setiap nilai tetap memakai versi saat ia dimasukkan.",
     "grading-empty": "Belum ada versi tersimpan.",
-    "grading-empty-description": "Nilai memakai skema bawaan, KKTP {kktp}, tanpa predikat.",
+    "grading-empty-description": "Nilai memakai skema bawaan dengan KKTP {kktp}, tanpa predikat.",
     "grading-search": "Cari predikat",
     "grading-new": "Versi baru",
     "grading-new-description": "Versi ini menilai setiap nilai mulai sekarang.",

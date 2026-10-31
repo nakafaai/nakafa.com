@@ -187,11 +187,12 @@ function DrawerContent({
   );
 }
 
+/** The title and its description, ruled off from what follows, as a dialog's and a sheet's header are. */
 function DrawerHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex shrink-0 flex-col gap-0.5 border-b p-4 group-data-[swipe-axis=y]/drawer-popup:text-center has-[+[data-slot=drawer-footer]]:border-b-0 md:gap-1.5 md:text-left",
+        "flex shrink-0 flex-col gap-0.5 border-b p-4 group-data-[swipe-axis=y]/drawer-popup:text-center last:border-b-0 has-[+[data-slot=drawer-footer]]:border-b-0 md:gap-1.5 md:text-left",
         className
       )}
       data-slot="drawer-header"
@@ -219,8 +220,9 @@ function DrawerPanel({ className, ...props }: ComponentProps<"div">) {
 }
 
 /**
- * The actions, stacked. A caller writes the way out first and the main action last, as a dialog's row reads,
- * so the column turns them over and the main action stands on top, as in shadcn's own.
+ * The actions, stacked on the tinted, ruled band a dialog's footer stands on. A caller writes the way out first
+ * and the main action last, as a dialog's row reads, so the column turns them over and the main action stands on
+ * top, as in shadcn's own.
  */
 function DrawerFooter({ className, ...props }: ComponentProps<"div">) {
   return (

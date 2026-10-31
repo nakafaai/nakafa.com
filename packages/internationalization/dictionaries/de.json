@@ -1001,7 +1001,7 @@
       "integration": "Liest die Daten der Schule über die Aktionen seines Clients."
     },
     "roles-overview": "Was jede Rolle darf",
-    "roles-overview-description": "Nur die Rolle Inhaber vergibt die Rollen Inhaber und Admin.",
+    "roles-overview-description": "Nur Inhaber vergeben die Rollen Inhaber und Admin.",
     "roles-overview-footer": "Eine Person kann mehrere Rollen haben.",
     "secret-copy": "Kopieren",
     "unit-npsn": "NPSN",
@@ -1119,7 +1119,7 @@
     "grading": "Bewertung",
     "grading-description": "Jede Note behält die Version, unter der sie eingetragen wurde.",
     "grading-empty": "Noch keine Version gespeichert.",
-    "grading-empty-description": "Noten nutzen das eingebaute Schema, KKTP {kktp}, ohne Stufen.",
+    "grading-empty-description": "Noten nutzen das eingebaute Schema mit KKTP {kktp} und ohne Stufen.",
     "grading-search": "Stufe suchen",
     "grading-new": "Neue Version",
     "grading-new-description": "Sie bewertet jede Note ab jetzt.",
