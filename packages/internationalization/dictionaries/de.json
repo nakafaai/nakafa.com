@@ -343,7 +343,7 @@
     "student-locked-title": "Dieser Versuch ist gesperrt.",
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
-    "student-answer": "Deine Antwort: {answer}",
+    "student-answer": "Deine Antwort: <typed>{answer}</typed>",
     "student-answers": "Deine Antworten",
     "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
     "schedule": "Planen",
@@ -477,9 +477,7 @@
     "template-short": "Kurzantwort",
     "template-numeric": "Zahlenantwort",
     "short-placeholder": "Antwort eingeben",
-    "short-line": "Antwortzeile",
     "number-placeholder": "Zahl eingeben",
-    "number-line": "Zahlenfeld",
     "number-key": "Richtige Zahl",
     "number-value-placeholder": "0,75",
     "number-tolerance-placeholder": "0,01",
@@ -502,13 +500,10 @@
     "accepted-hint": "Groß- und Kleinschreibung und zusätzliche Leerzeichen zählen nicht, und jede andere Antwort wartet auf deine Bewertung.",
     "template-essay": "Aufsatz",
     "essay-placeholder": "Antwort schreiben",
-    "essay-area": "Antwortfeld",
     "verdict-partial": "Teilweise richtig",
     "results-points": "Punkte",
     "grade-of": "Punkte von {name}",
     "template-match": "Zuordnung",
-    "match-statements": "Aussagen",
-    "match-answers": "Antworten",
     "statement-of": "Frage {number}, Aussage {name}",
     "answer-of": "Frage {number}, Antwort {name}",
     "statement-placeholder": "Aussage",
@@ -1575,7 +1570,53 @@
     "finish": "Schule eröffnen",
     "required-error": "Wähle eine Antwort.",
     "school-limit-line": "Für weitere Schulen brauchst du zuerst ein Gespräch mit dem Gründer.",
-    "address-check-failed": "Diese Adresse konnte nicht geprüft werden, also gib sie noch einmal ein."
+    "address-check-failed": "Diese Adresse konnte nicht geprüft werden, also gib sie noch einmal ein.",
+    "entry-title": "Zu deiner Schule",
+    "entry-student": "Gib die Adresse deiner Schule ein oder scanne den QR-Code deiner Lehrkraft.",
+    "entry-parent": "Gib die Adresse der Schule deines Kindes ein.",
+    "entry-field": "Schuladresse",
+    "entry-hint": "Sie steht im Link der Schule, zum Beispiel harapan.nakafa.com.",
+    "entry-invalid": "Gib eine Schuladresse wie harapan.nakafa.com ein.",
+    "entry-submit": "Weiter",
+    "entry-open": "Schule eröffnen"
+  },
+  "Operators": {
+    "title": "Schulen",
+    "search": "Schulen suchen",
+    "open": "Schule eröffnen",
+    "open-description": "Eröffne eine Schule nach ihrem unterschriebenen Vertrag. Ihre Inhaberin oder ihr Inhaber erhält die Einladung.",
+    "empty": "Noch keine Schule",
+    "refused": "Für Nakafa-Mitarbeitende",
+    "refused-description": "Diese Seite eröffnet Schulen nach Vertrag. Alle anderen eröffnen ihre Schule unter /school/new.",
+    "name": "Schule",
+    "name-placeholder": "SMA Harapan Bangsa",
+    "address": "Adresse",
+    "address-placeholder": "harapan",
+    "kind-label": "Art",
+    "kind": {
+      "school": "Schule",
+      "foundation": "Stiftung"
+    },
+    "country": "Land",
+    "level": "Stufe",
+    "owner": "Name der Inhaberin oder des Inhabers",
+    "owner-placeholder": "Ayu Lestari",
+    "email": "E-Mail der Inhaberin oder des Inhabers",
+    "email-placeholder": "ayu@harapan.sch.id",
+    "plan-label": "Lizenz",
+    "plan": {
+      "tenant": "Ganze Organisation",
+      "unit": "Eine Schule"
+    },
+    "dpa": "AVV-Version",
+    "license": "Version der Inhaltslizenz",
+    "version-placeholder": "2026-10",
+    "units": "Einheiten",
+    "status-label": "Status",
+    "status": {
+      "active": "Aktiv",
+      "suspended": "Gesperrt"
+    }
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
@@ -1750,7 +1791,8 @@
     "input": "Eingabe",
     "output": "Ausgabe",
     "bacteria": "Bakterien",
-    "time": "Zeit"
+    "time": "Zeit",
+    "school": "Schule"
   },
   "LearningPrograms": {
     "metadata-title": "Mit Nakafa lernen",
@@ -2324,6 +2366,14 @@
     "school-refusal-graduated": {
       "title": "Bereits abgeschlossen.",
       "description": "Diese Person kann nicht erneut in eine Klasse."
+    },
+    "school-refusal-not-operator": {
+      "title": "Das können nur Nakafa-Mitarbeitende.",
+      "description": "Melde dich mit einem Operator-Konto an."
+    },
+    "school-refusal-provision": {
+      "title": "Diese Schule lässt sich so nicht eröffnen.",
+      "description": "Prüfe die Adresse und die Einheiten der Schule."
     },
     "school-refusal-unit-limit": {
       "title": "Kein Platz für eine weitere Schule.",

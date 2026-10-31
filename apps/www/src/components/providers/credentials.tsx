@@ -9,7 +9,7 @@ import { ConvexAuthContext } from "@/lib/auth/convex";
 /**
  * Hands the page's one Convex client its Better Auth credentials. It mounts once
  * the store holds a client, and it lives in this module, which a visitor's page
- * never loads.
+ * never loads. `LiveRelease` clears them, after the page's readers.
  */
 export function LiveCredentials({ client }: { client: ConvexReactClient }) {
   const store = use(ConvexAuthContext);
@@ -19,6 +19,14 @@ export function LiveCredentials({ client }: { client: ConvexReactClient }) {
   return (
     <ConvexProvider client={client}>
       <ConvexSessionCredentials store={store} />
+    </ConvexProvider>
+  );
+}
+
+/** Clears the page client's credentials when the page goes. It mounts after the page's readers. */
+export function LiveRelease({ client }: { client: ConvexReactClient }) {
+  return (
+    <ConvexProvider client={client}>
       <ConvexSessionRelease />
     </ConvexProvider>
   );

@@ -25,12 +25,15 @@ const flagButton = cva(
  * changes. The button keeps one name and one width, its name for a screen
  * reader alone on a phone, and says whether the question is flagged through its
  * pressed state. The question's flag changes at once, so a press never waits
- * for the server.
+ * for the server. A footer whose centre holds a note keeps the flag before it at every width.
  */
 export function PlayerFlag({
+  beforeNote = false,
   locked,
   questions,
 }: {
+  /** Whether the footer's centre holds a note, so the flag stands before it. */
+  beforeNote?: boolean;
   /** Flags are read-only because time ran out. */
   locked: boolean;
   questions: readonly PlayerQuestionModel[];
@@ -53,8 +56,9 @@ export function PlayerFlag({
       aria-keyshortcuts="F"
       aria-pressed={flagged}
       className={flagButton({
-        className:
-          "absolute end-full top-1/2 me-2 -translate-y-1/2 lg:start-1/2 lg:end-auto lg:me-0 lg:-translate-x-1/2 lg:rtl:translate-x-1/2",
+        className: beforeNote
+          ? "absolute end-full top-1/2 me-2 -translate-y-1/2"
+          : "absolute end-full top-1/2 me-2 -translate-y-1/2 lg:start-1/2 lg:end-auto lg:me-0 lg:-translate-x-1/2 lg:rtl:translate-x-1/2",
       })}
       disabled={locked || Option.isNone(question)}
       onClick={() => Option.map(question, (candidate) => candidate.flag())}

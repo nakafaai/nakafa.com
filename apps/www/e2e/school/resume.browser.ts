@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { type Browser, expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { trackChanges } from "@/e2e/support/changes";
 import {
@@ -91,14 +91,16 @@ test("a student who reloads a running paper meets the paper and never the token 
   await studentContext.close();
 });
 
-test("a server failure of a paper's read keeps the student in the paper's frame, and the paper comes back by itself", async ({
-  baseURL,
-  browser,
-}) => {
+/** A student of a new school at the entry of an open sitting, the token typed, with the page's traffic in hand. */
+async function studentAtEntry(
+  baseURL: string | undefined,
+  browser: Browser,
+  name: string
+) {
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
-  const learner = `recover-${school.slug}@acceptance.example.test`;
+  const learner = `${name}-${school.slug}@acceptance.example.test`;
   const studentContext = await browser.newContext();
   await Effect.runPromise(
     inviteLearner({
@@ -123,6 +125,47 @@ test("a server failure of a paper's read keeps the student in the paper's frame,
   await student
     .getByPlaceholder("Enter the token from your proctor")
     .fill(sitting.token);
+  return { changes, student, studentContext };
+}
+
+test("an entry that the server failed goes again by itself, so the student reaches the paper with one press", async ({
+  baseURL,
+  browser,
+}) => {
+  const { changes, student, studentContext } = await studentAtEntry(
+    baseURL,
+    browser,
+    "retry"
+  );
+
+  // The first call never reaches the server, and the page is told the server could not take it.
+  changes.failNext("exams/sittings:enter");
+  await student.getByRole("button", { name: "Enter sitting" }).click();
+  await expect(
+    student
+      .getByRole("article", { name: "Question 1" })
+      .getByRole("radio")
+      .first()
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  // Both calls carry one device, so the retry cannot open a second attempt.
+  const [first, second, ...others] = changes.argumentsOf(
+    "exams/sittings:enter"
+  );
+  expect(second).toEqual(first);
+  expect(others).toHaveLength(0);
+  await studentContext.close();
+});
+
+test("a server failure of a paper's read keeps the student in the paper's frame, and the paper comes back by itself", async ({
+  baseURL,
+  browser,
+}) => {
+  const { changes, student, studentContext } = await studentAtEntry(
+    baseURL,
+    browser,
+    "recover"
+  );
   await student.getByRole("button", { name: "Enter sitting" }).click();
   const option = student
     .getByRole("article", { name: "Question 1" })

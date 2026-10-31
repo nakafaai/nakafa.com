@@ -1,5 +1,6 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { useInViewport } from "@mantine/hooks";
+import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
 import {
@@ -21,13 +22,8 @@ import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { useCallback, useDeferredValue, useMemo } from "react";
 import { useTranslations } from "use-intl";
-import {
-  choiceOf,
-  entryOf,
-  type OptionLabel,
-} from "@/components/tenant/exams/answer";
+import { choiceOf, type OptionLabel } from "@/components/tenant/exams/answer";
 import { matchOf } from "@/components/tenant/exams/match";
-import { numberEntryOf } from "@/components/tenant/exams/number";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
@@ -37,19 +33,17 @@ import {
 } from "@/components/tenant/exams/provider";
 import {
   OptionAddRoom,
-  PaperLine,
-  PaperNumber,
+  PaperField,
   PaperOption,
   PaperOptions,
-  PaperTable,
-  PaperTableHead,
-  PaperTableHeader,
-  PaperTableMark,
-  PaperTableNumber,
-  PaperTableStatement,
+  PaperPairSelect,
+  PaperPairs,
+  PaperPart,
+  PaperParts,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
 import { tableOf } from "@/components/tenant/exams/table";
+import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 import { useLastValue } from "@/lib/data/kept";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { foldedDocument } from "@/lib/editor/fold";
@@ -189,14 +183,14 @@ export function OptionSketch({ label }: { label: OptionLabel }) {
  */
 function PartSketch({
   adds,
-  heading,
   letterOf,
+  pairs,
   parts,
   withControls,
 }: {
   adds: boolean;
-  heading: string;
   letterOf: (index: number) => string;
+  pairs: boolean;
   parts: readonly { readonly id: string; readonly label: OptionLabel }[];
   withControls: boolean;
 }) {
@@ -204,12 +198,17 @@ function PartSketch({
 
   return (
     <div className="grid content-start gap-2">
-      <p className="text-muted-foreground text-sm font-medium">{heading}</p>
-      {Arr.map(parts, (part, index) => (
-        <PaperOption key={part.id} letter={letterOf(index)}>
-          <OptionSketch label={part.label} />
-        </PaperOption>
-      ))}
+      <PaperParts>
+        {Arr.map(parts, (part, index) => (
+          <PaperPart
+            below={pairs ? <PaperPairSelect /> : null}
+            key={part.id}
+            name={letterOf(index)}
+          >
+            <OptionSketch label={part.label} />
+          </PaperPart>
+        ))}
+      </PaperParts>
       {withControls && adds && !locked && parts.length < CHOICE_OPTIONS_MAX ? (
         <OptionAddRoom />
       ) : null}
@@ -222,38 +221,27 @@ function PartSketch({
  * column's header, then each numbered statement with an empty mark under every column.
  */
 function TableSketch({
-  columns,
-  statements,
+  table,
 }: {
-  columns: readonly { readonly id: string; readonly label: OptionLabel }[];
-  statements: readonly { readonly id: string; readonly label: OptionLabel }[];
+  table: Extract<Interaction, { kind: "matrix" }>;
 }) {
-  const t = useTranslations("Tryouts");
+  const t = useTranslations("Exams");
 
   return (
-    <PaperTable columns={columns.length}>
-      <PaperTableHead heading={t("statement")}>
-        {Arr.map(columns, (column) => (
-          <PaperTableHeader key={column.id}>
-            <OptionSketch label={column.label} />
-          </PaperTableHeader>
-        ))}
-      </PaperTableHead>
-      {Arr.map(statements, (statement, index) => (
-        <div
-          className="col-span-full grid grid-cols-subgrid"
-          key={statement.id}
-        >
-          <PaperTableNumber number={index + 1} />
-          <PaperTableStatement>
-            <OptionSketch label={statement.label} />
-          </PaperTableStatement>
-          {Arr.map(columns, (column) => (
-            <PaperTableMark key={column.id} />
-          ))}
-        </div>
-      ))}
-    </PaperTable>
+    <TryoutChoiceTable
+      columns={Arr.map(table.columns, (column) => ({
+        id: column.id,
+        label: <OptionSketch label={column.label} />,
+      }))}
+      disabled
+      label={table.label}
+      statementLabel={t("statement-placeholder")}
+      statements={Arr.map(table.statements, (statement) => ({
+        id: statement.id,
+        label: <OptionSketch label={statement.label} />,
+        marked: undefined,
+      }))}
+    />
   );
 }
 
@@ -274,16 +262,8 @@ export function PaperSketch({
   question: Question;
   withControls?: boolean;
 }) {
-  const t = useTranslations("Exams");
   const locked = useExamLocked();
   const choice = choiceOf(question.answers);
-  // The options are named in the script of their labels: أ, ب, ج for a set written in Arabic.
-  const script = letterScript(
-    Option.match(choice, {
-      onNone: () => [],
-      onSome: (current) => Arr.map(current.options, (option) => option.label),
-    })
-  );
   // A template that fixes its options takes no added option, so its page keeps no room for the action.
   const addsOption =
     withControls &&
@@ -298,8 +278,11 @@ export function PaperSketch({
     <>
       {Option.isSome(choice) ? (
         <PaperOptions>
-          {Arr.map(choice.value.options, (option, index) => (
-            <PaperOption key={option.id} letter={optionLetter(index, script)}>
+          {Arr.map(choice.value.options, (option) => (
+            <PaperOption
+              key={option.id}
+              multiple={choice.value.maxChoices !== 1}
+            >
               <OptionSketch label={option.label} />
             </PaperOption>
           ))}
@@ -308,41 +291,34 @@ export function PaperSketch({
       {Option.match(matchOf(question.answers), {
         onNone: () => null,
         onSome: (match) => (
-          <div className="grid min-w-0 gap-6 md:grid-cols-2">
+          <PaperPairs>
             <PartSketch
               adds
-              heading={t("match-statements")}
               letterOf={statementNumber}
+              pairs
               parts={match.sources}
               withControls={withControls}
             />
             <PartSketch
               adds
-              heading={t("match-answers")}
               letterOf={(index) =>
                 optionLetter(
                   index,
                   letterScript(Arr.map(match.targets, (part) => part.label))
                 )
               }
+              pairs={false}
               parts={match.targets}
               withControls={withControls}
             />
-          </div>
+          </PaperPairs>
         ),
       })}
       {Option.match(tableOf(question.answers), {
         onNone: () => null,
-        onSome: (table) => (
-          <TableSketch columns={table.columns} statements={table.statements} />
-        ),
+        onSome: (table) => <TableSketch table={table} />,
       })}
-      {Option.isSome(entryOf(question.answers)) ? <PaperLine /> : null}
-      {Option.match(numberEntryOf(question.answers), {
-        onNone: () => null,
-        onSome: (entry) => <PaperNumber unit={entry.unit} />,
-      })}
-      {question.template === "essay" ? <PaperLine essay /> : null}
+      <PaperField answers={question.answers} />
       {addsOption ? <OptionAddRoom /> : null}
     </>
   );

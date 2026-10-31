@@ -344,9 +344,10 @@ internal, so only the deployment's key runs them. A revoked operator is refused
 at once in every tenant: the member middleware refuses an operator Person whose
 operator row is not active, and every operator command refuses the account.
 
-Operators open tenants with `operators/tenants:open`, which runs the same Effect
-as the internal `tenancy/provision:open` and journals each write under the
-operator actor (ADR 0016), which a school sees as Nakafa staff. The journal
+Operators open tenants with `operators/tenants:open` from the console at
+`/operators` in the main app, which runs the same Effect as the internal
+`tenancy/provision:open` and journals each write under the operator actor (ADR
+0016), which a school sees as Nakafa staff. The journal
 retention that the data processing agreement states is not stored yet. The
 operator also suspends and reactivates a tenant, both idempotently. A suspended
 tenant stays readable and refuses every write except the transitions that ADR
