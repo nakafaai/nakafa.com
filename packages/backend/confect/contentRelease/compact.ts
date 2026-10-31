@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import {
   DatabaseWriter,
   MutationRunner,
@@ -133,7 +133,7 @@ export const runProgram = Effect.fn("contentRelease.runCompaction")(
     };
     for (let index = 0; index < RUN_PAGE_LIMIT; index += 1) {
       const receipt = yield* runMutation(
-        refs.internal.contentRelease.compact.page,
+        contentReleaseInternal.compact.page,
         {}
       ).pipe(Effect.catchTag("SchemaError", Effect.die));
       deleted += receipt.deleted;

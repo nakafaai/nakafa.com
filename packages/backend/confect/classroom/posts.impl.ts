@@ -1,7 +1,7 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { ClassroomPostsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -156,7 +156,7 @@ const publish = FunctionImpl.make(
     });
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.notifications.fanout.run,
+      notificationsInternal.fanout.run,
       { cursor: null, phase: "students", source: { _tag: "post", postId } }
     );
     return yield* postView(

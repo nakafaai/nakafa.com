@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import recordsInternal from "@repo/backend/confect/_generated/refs/records.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -92,14 +92,14 @@ const draw = FunctionImpl.make(
   "draw",
   Effect.fn("records.prints.draw")(function* ({ reportId }) {
     const copy = yield* (yield* QueryRunner)
-      .runQuery(refs.internal.records.prints.printable, { reportId })
+      .runQuery(recordsInternal.prints.printable, { reportId })
       .pipe(Effect.orDie);
     const bytes = yield* drawReportPdf(copy);
     const storageId = yield* (yield* StorageActionWriter).store(
       new Blob([bytes], { type: PDF_TYPE })
     );
     yield* (yield* MutationRunner)
-      .runMutation(refs.internal.records.prints.lock, { reportId, storageId })
+      .runMutation(recordsInternal.prints.lock, { reportId, storageId })
       .pipe(Effect.orDie);
     return null;
   })

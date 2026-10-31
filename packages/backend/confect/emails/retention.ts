@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import {
   MutationCtx as MutationCtxService,
   Scheduler,
@@ -19,8 +19,7 @@ export const scheduleRetainedEmailCleanup = Effect.fn(
   yield* scheduler
     .runAfter(
       Duration.millis(0),
-      refs.internal.emails.welcome.reconciliation
-        .reconcileWelcomeIntentLifecycle,
+      emailsInternal.welcome.reconciliation.reconcileWelcomeIntentLifecycle,
       {
         cursor: null,
         phase: "scheduled",

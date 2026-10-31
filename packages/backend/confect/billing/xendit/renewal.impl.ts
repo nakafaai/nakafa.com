@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   MutationRunner,
@@ -59,7 +59,7 @@ const open = FunctionImpl.make(
   }) {
     const { runQuery } = yield* QueryRunner;
     const { runMutation } = yield* MutationRunner;
-    const renewal = yield* runQuery(refs.internal.billing.xendit.renewal.read, {
+    const renewal = yield* runQuery(billingInternal.xendit.renewal.read, {
       subscriptionId,
     }).pipe(Effect.catchTag("SchemaError", Effect.die));
     if (renewal === null) {
@@ -92,7 +92,7 @@ const open = FunctionImpl.make(
           })
       )
     );
-    return yield* runMutation(refs.internal.billing.xendit.renewal.record, {
+    return yield* runMutation(billingInternal.xendit.renewal.record, {
       planId: plan.id,
       subscriptionId,
     }).pipe(Effect.catchTag("SchemaError", Effect.die));

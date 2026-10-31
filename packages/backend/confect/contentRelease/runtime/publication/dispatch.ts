@@ -5,7 +5,7 @@ import {
   PublicContentRuntimeRequestSchema,
   PublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   encodeRuntimeResult,
@@ -44,7 +44,7 @@ const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
   function* (request: PublicContentRuntimeRequest) {
     const { runQuery } = yield* QueryRunner;
     const row = yield* runQuery(
-      refs.internal.contentRelease.runtime.publication.internal.read,
+      contentReleaseInternal.runtime.publication.internal.read,
       {
         appLocale: request.appLocale,
         publicPath: request.publicPath,

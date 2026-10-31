@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import {
   DatabaseWriter,
   Scheduler,
@@ -156,7 +156,7 @@ export const savePortrait = Effect.fn("nina.portrait.keep")(function* (args: {
   if (args.more) {
     yield* (yield* Scheduler).runAfter(
       PORTRAIT_DELAY,
-      refs.internal.nina.portrait.build.run,
+      ninaInternal.portrait.build.run,
       { userId }
     );
   }

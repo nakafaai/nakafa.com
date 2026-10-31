@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { denied } from "@repo/backend/confect/nina/policy/capability";
 import {
@@ -67,7 +67,7 @@ export const runCalendar = Effect.fn("nina.calendar.tool")(function* ({
 }) {
   const now = yield* Clock.currentTimeMillis;
   const events = yield* (yield* QueryRunner)
-    .runQuery(refs.internal.connectors.events.upcoming, {
+    .runQuery(connectorsInternal.events.upcoming, {
       from: now,
       until: now + Duration.toMillis(Duration.days(days)),
       userId,

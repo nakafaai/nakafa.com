@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import {
   MutationRunner,
   QueryRunner,
@@ -90,7 +90,7 @@ const syncDocument = Effect.fn("contents.sections.syncDocument")(function* (
   const drafts = yield* Effect.forEach(sections, withHash);
   // One check for the document, which asks about the hash of each of its
   // sections and sends no text.
-  const known = yield* runQuery(refs.internal.contents.sections.rows.stored, {
+  const known = yield* runQuery(contentsInternal.sections.rows.stored, {
     appLocale: source.appLocale,
     contentKey: source.contentKey,
     hashes: Arr.map(drafts, ({ hash }) => hash),
@@ -117,7 +117,7 @@ const syncDocument = Effect.fn("contents.sections.syncDocument")(function* (
       )
     )
   );
-  const stored = yield* runMutation(refs.internal.contents.sections.rows.save, {
+  const stored = yield* runMutation(contentsInternal.sections.rows.save, {
     model: embeddingModelId,
     releaseId,
     sections: Arr.map(drafts, (draft) =>

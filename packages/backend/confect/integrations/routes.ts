@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import {
   MutationRunner,
   QueryRunner,
@@ -73,7 +73,7 @@ const tokenAnswer = (answer: {
 const clientCredentials = Effect.fn("integrations.routes.clientCredentials")(
   function* (clientId: string, secret: string, resource: string | undefined) {
     const { runMutation } = yield* MutationRunner;
-    const answer = yield* runMutation(refs.internal.integrations.tokens.issue, {
+    const answer = yield* runMutation(integrationsInternal.tokens.issue, {
       clientId,
       resource,
       secret,
@@ -96,7 +96,7 @@ const deviceToken = Effect.fn("integrations.routes.deviceToken")(function* (
   deviceCode: string
 ) {
   const { runMutation } = yield* MutationRunner;
-  const answer = yield* runMutation(refs.internal.integrations.devices.poll, {
+  const answer = yield* runMutation(integrationsInternal.devices.poll, {
     deviceCode,
   }).pipe(Effect.orDie);
   if (answer.outcome !== "issued") {
@@ -155,7 +155,7 @@ const oauthHandlers = HttpApiBuilder.group(
           }
           const { runMutation } = yield* MutationRunner;
           const answer = yield* runMutation(
-            refs.internal.integrations.devices.start,
+            integrationsInternal.devices.start,
             { slug: slug.value }
           ).pipe(Effect.orDie);
           if (answer.outcome === "unknown") {
@@ -200,7 +200,7 @@ const forbidden = () =>
 const callerId = Effect.gen(function* () {
   const { token } = yield* SchoolApiToken;
   const { runMutation } = yield* MutationRunner;
-  const check = yield* runMutation(refs.internal.integrations.tokens.check, {
+  const check = yield* runMutation(integrationsInternal.tokens.check, {
     resource: "api",
     token,
   }).pipe(Effect.orDie);
@@ -227,38 +227,31 @@ const rosterHandlers = HttpApiBuilder.group(
       .handle("periods", () =>
         Effect.gen(function* () {
           const { runQuery } = yield* QueryRunner;
-          const answer = yield* runQuery(
-            refs.internal.integrations.reads.periods,
-            { clientId: yield* callerId }
-          ).pipe(Effect.orDie);
+          const answer = yield* runQuery(integrationsInternal.reads.periods, {
+            clientId: yield* callerId,
+          }).pipe(Effect.orDie);
           return yield* pageOr(answer, forbidden);
         })
       )
       .handle("cohorts", ({ query }) =>
         Effect.gen(function* () {
           const { runQuery } = yield* QueryRunner;
-          const answer = yield* runQuery(
-            refs.internal.integrations.reads.cohorts,
-            {
-              clientId: yield* callerId,
-              ...pageArgs(query),
-              period: query.period,
-            }
-          ).pipe(Effect.orDie);
+          const answer = yield* runQuery(integrationsInternal.reads.cohorts, {
+            clientId: yield* callerId,
+            ...pageArgs(query),
+            period: query.period,
+          }).pipe(Effect.orDie);
           return yield* pageOr(answer, forbidden);
         })
       )
       .handle("people", ({ query }) =>
         Effect.gen(function* () {
           const { runQuery } = yield* QueryRunner;
-          const answer = yield* runQuery(
-            refs.internal.integrations.reads.people,
-            {
-              clientId: yield* callerId,
-              ...pageArgs(query),
-              status: query.status ?? "active",
-            }
-          ).pipe(Effect.orDie);
+          const answer = yield* runQuery(integrationsInternal.reads.people, {
+            clientId: yield* callerId,
+            ...pageArgs(query),
+            status: query.status ?? "active",
+          }).pipe(Effect.orDie);
           return yield* pageOr(answer, forbidden);
         })
       )
@@ -266,7 +259,7 @@ const rosterHandlers = HttpApiBuilder.group(
         Effect.gen(function* () {
           const { runQuery } = yield* QueryRunner;
           const answer = yield* runQuery(
-            refs.internal.integrations.reads.placements,
+            integrationsInternal.reads.placements,
             {
               clientId: yield* callerId,
               ...pageArgs(query),

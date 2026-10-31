@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -113,7 +113,7 @@ export const startSectionAttempt = Effect.fn(
   yield* scheduler
     .runAfter(
       Duration.millis(Math.max(0, expiresAt - args.now)),
-      refs.internal.tryouts.mutations.expiry.section,
+      tryoutsInternal.mutations.expiry.section,
       {
         expiresAt,
         sectionAttemptId,

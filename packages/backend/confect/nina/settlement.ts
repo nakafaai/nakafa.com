@@ -1,5 +1,5 @@
 import type { Docs, NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -117,16 +117,14 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
   // The seal runs at once, as the sweep also seals a turn it finds unsealed (ADR
   // 0024). A failed seal leaves the turn plain until the next sweep, and never
   // blocks the refund or the chat, which are written above.
-  yield* (yield* Scheduler).runAfter(
-    Duration.zero,
-    refs.internal.nina.sealed.seal,
-    { turnId: turn._id }
-  );
+  yield* (yield* Scheduler).runAfter(Duration.zero, ninaInternal.sealed.seal, {
+    turnId: turn._id,
+  });
   if (status === "complete") {
     // Settlement schedules this once, including recovery after an interrupted action.
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.nina.response.present,
+      ninaInternal.response.present,
       { turnId: turn._id }
     );
   }
@@ -226,7 +224,7 @@ export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
     .pipe(Effect.orDie);
   yield* (yield* Scheduler).runAfter(
     STOP_GRACE,
-    refs.internal.nina.lifecycle.recover,
+    ninaInternal.lifecycle.recover,
     { turnId: turn._id }
   );
 });

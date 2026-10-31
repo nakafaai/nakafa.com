@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -59,7 +59,7 @@ export const cancelXenditPlan = Effect.fn("billing.xendit.cancel")(function* (
     if (planId !== null) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.billing.xendit.cancel.deactivate,
+        billingInternal.xendit.cancel.deactivate,
         { planId }
       );
     }

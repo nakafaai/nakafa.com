@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import {
   ActionCtx,
   MutationRunner,
@@ -116,7 +116,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
         })
       ),
       Effect.flatMap((output) =>
-        mutate(refs.internal.nina.presentation.save, {
+        mutate(ninaInternal.presentation.save, {
           turnId: turn._id,
           suggestions: output.suggestions,
         })
@@ -165,7 +165,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
         )
       ),
       Effect.flatMap((value) =>
-        mutate(refs.internal.nina.presentation.save, {
+        mutate(ninaInternal.presentation.save, {
           turnId: turn._id,
           title: value,
         })

@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import editorInternal from "@repo/backend/confect/_generated/refs/editor.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -72,17 +72,15 @@ const sweep = FunctionImpl.make(
     yield* Effect.forEach(
       Arr.dedupe(Arr.map(unfolded, (step) => step.documentId)),
       (documentId) =>
-        scheduler.runAfter(Duration.zero, refs.internal.editor.fold.fold, {
+        scheduler.runAfter(Duration.zero, editorInternal.fold.fold, {
           documentId,
         }),
       { discard: true }
     );
     if (!page.isDone) {
-      yield* scheduler.runAfter(
-        Duration.zero,
-        refs.internal.editor.prune.sweep,
-        { cursor: page.continueCursor }
-      );
+      yield* scheduler.runAfter(Duration.zero, editorInternal.prune.sweep, {
+        cursor: page.continueCursor,
+      });
     }
     return {
       deleted: prunable.length,

@@ -1,7 +1,7 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl } from "@confect/server";
 import type { ReportCardsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import recordsInternal from "@repo/backend/confect/_generated/refs/records.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -167,7 +167,7 @@ export const approve = FunctionImpl.make(
       updatedAt: now,
     });
     yield* (yield* Scheduler)
-      .runAfter(Duration.zero, refs.internal.records.prints.draw, {
+      .runAfter(Duration.zero, recordsInternal.prints.draw, {
         reportId: report._id,
       })
       .pipe(Effect.orDie);

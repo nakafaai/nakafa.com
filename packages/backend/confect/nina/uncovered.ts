@@ -3,7 +3,7 @@ import {
   type MessageDoc,
 } from "@convex-dev/agent";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { type Asking, newestAskings } from "@repo/backend/confect/nina/asking";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
@@ -189,7 +189,7 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
   ) {
     const rows =
       known ??
-      (yield* query(refs.internal.nina.summaries.uncovered, {
+      (yield* query(ninaInternal.summaries.uncovered, {
         before: upTo,
         chatId: turn.chatId,
         through,

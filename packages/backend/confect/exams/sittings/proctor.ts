@@ -1,5 +1,5 @@
 import type { ExamAttemptsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import {
   DatabaseWriter,
   Scheduler,
@@ -225,7 +225,7 @@ export const close = Effect.fn("exams.sittings.close")(function* () {
   yield* freezeExam(sitting.exam);
   yield* scheduler.runAfter(
     Duration.zero,
-    refs.internal.exams.sittings.timers.closeDue,
+    examsInternal.sittings.timers.closeDue,
     { atDeadline: "now", sittingId: sitting._id }
   );
   yield* sittingAuthority.record(personActor(member.person), sitting, {

@@ -1,5 +1,5 @@
 import { webhooks } from "@polar-sh/sdk/2026-10";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { PolarPayloadError } from "@repo/backend/confect/billing/polar/payload";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
@@ -123,7 +123,7 @@ export const polarRoutes = HttpRouter.add(
     const delivery = yield* readDeliveryHeaders(headers);
     const event = yield* verifyPolarWebhook(body, headers);
     const { runMutation } = yield* MutationRunner;
-    yield* runMutation(refs.internal.billing.events.record, {
+    yield* runMutation(billingInternal.events.record, {
       rail: "polar",
       key: delivery["webhook-id"],
       type: event.type,

@@ -1,5 +1,5 @@
 import { components } from "@repo/backend/confect/_generated/components";
-import refs from "@repo/backend/confect/_generated/refs";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import {
   DatabaseReader,
   MutationCtx,
@@ -74,7 +74,7 @@ const createAccountDeletionCommitOperations = Effect.fn(
     scheduleContinuation: scheduler
       .runAfter(
         Duration.zero,
-        refs.internal.auth.deletion.continueAccountDeletionCommit,
+        authInternal.deletion.continueAccountDeletionCommit,
         {
           authId,
           expectedPreparation,

@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { polarGateway } from "@repo/backend/confect/billing/polar/live";
 import { UNKNOWN_COUNTRY } from "@repo/backend/confect/billing/route";
@@ -22,7 +22,7 @@ export const resolvePolarCustomer = Effect.fn("billing.polar.resolveCustomer")(
     }
     const { runMutation } = yield* MutationRunner;
     const outcome = yield* runMutation(
-      refs.internal.billing.accounts.linkPolarCustomer,
+      billingInternal.accounts.linkPolarCustomer,
       {
         authId: customer.externalId,
         // Polar holds no billing address for this customer, so its country is unknown, as the checkout account's is.
