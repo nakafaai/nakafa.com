@@ -4,17 +4,13 @@ import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { RecoveryLookupSchema } from "@nakafa/aksara-contracts/release/current/evidence";
 import { ContentReleaseCurrentSchema } from "@nakafa/aksara-contracts/release/current/state";
 import { verifyContentReleaseBundle } from "@nakafa/aksara-contracts/release/verify";
-import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/verify";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/confect/contentRelease/error";
-import {
-  decodeTryoutRuntimeBundleJson,
-  parseStoredJson,
-} from "@repo/backend/confect/contentRelease/parse";
+import { parseStoredJson } from "@repo/backend/confect/contentRelease/parse";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
 import { Effect, Schema } from "effect";
 
@@ -70,31 +66,6 @@ export const matchManifest = Effect.fn("contentRelease.matchManifest")(
     }
   }
 );
-/** Authenticates the optional permanent bundle against the active renderer. */
-const decodeCurrentRuntimeBundle = Effect.fn(
-  "contentRelease.decodeCurrentRuntimeBundle"
-)(function* (
-  source: string | null,
-  active: Pick<
-    Parameters<typeof verifySignedTryoutRuntimeBundle>[0],
-    "rendererManifest"
-  > | null
-) {
-  if (source === null) {
-    return null;
-  }
-  if (active === null) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "A permanent try-out runtime bundle exists without an active release."
-    );
-  }
-  const bundle = yield* decodeTryoutRuntimeBundleJson(source);
-  return yield* verifySignedTryoutRuntimeBundle({
-    bundle,
-    rendererManifest: active.rendererManifest,
-  }).pipe(Effect.mapError(contractFailure));
-});
 /** Reads and authenticates active, candidate, and recovery release bundles. */
 export const readCurrentPublication = Effect.fn(
   "contentRelease.readCurrentPublication"
@@ -131,16 +102,11 @@ export const readCurrentPublication = Effect.fn(
         phase: stored.recovery.phase,
       }
     : null;
-  const tryoutRuntimeBundle = yield* decodeCurrentRuntimeBundle(
-    stored.tryoutRuntimeBundleJson,
-    active
-  );
   return yield* Schema.decodeUnknownEffect(ContentReleaseCurrentSchema)(
     {
       active,
       candidate,
       recovery,
-      tryoutRuntimeBundle,
     },
     {
       onExcessProperty: "error",

@@ -19,7 +19,6 @@ import {
   publicationReceipt,
   stagedEvidence,
 } from "@repo/backend/confect/contentRelease/receipt";
-import { loadReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/runtime";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Clock, Effect, Option, Schema } from "effect";
 
@@ -90,23 +89,8 @@ export const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
       );
     }
     const build = yield* requireReadyModelBuild(release, signed);
-    const [runtime, receipt] = yield* Effect.all([
-      loadReleaseTryoutRuntime(signed),
-      publicationReceipt(release, signed),
-    ]);
+    const receipt = yield* publicationReceipt(release, signed);
     const now = yield* Clock.currentTimeMillis;
-    if (Option.isSome(inverse)) {
-      const recoveryRuntime = yield* loadReleaseTryoutRuntime(
-        inverse.value.recoverySigned
-      );
-      yield* writer
-        .table("contentReleases")
-        .patch(inverse.value.recovery._id, {
-          tryoutRuntimeBundleHash: recoveryRuntime.result?.bundle.bundleHash,
-          updatedAt: now,
-        })
-        .pipe(Effect.orDie);
-    }
     yield* writer
       .table("contentReleases")
       .patch(release._id, {
@@ -115,7 +99,6 @@ export const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
           Effect.orDie
         ),
         status: "completed",
-        tryoutRuntimeBundleHash: runtime.result?.bundle.bundleHash,
         updatedAt: now,
       })
       .pipe(Effect.orDie);

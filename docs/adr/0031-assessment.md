@@ -270,6 +270,14 @@ has exactly one owner.
   `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`,
   `tryoutScores`, `tryoutPlacements`, `tryoutCatalog`, `tryoutRuntimeBundles`,
   and `tryoutSetProgress`) are removed in the cutover change.
+- The cutover reads Aksara contracts 2.0.0, whose release manifest selects an
+  `assessment` snapshot where 1.x selected a `tryout` one, so no stored 1.x
+  release can be read after the deploy. The cutover is therefore a genesis:
+  right before the deploy, and only after the owner approves it, an operator
+  clears the stored content release state and the retired try-out tables with
+  the Convex CLI, and Aksara then publishes a genesis 2.0 release with no base.
+  This is the one approved exception to the reset rule below, which otherwise
+  preserves signed snapshot state. No reset function ships.
 - Every sitting answer and every try-out answer takes its `version` as a required
   argument. A stored answer without a version is bad data and is deleted.
 - The Convex reset rule of ADR 0003 stays in force, because this ADR supersedes

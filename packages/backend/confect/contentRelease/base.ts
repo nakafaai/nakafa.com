@@ -18,12 +18,12 @@ function hasActiveSnapshotBase(
   active: ContentReleaseManifest
 ) {
   return (
+    manifest.snapshots.assessment.baseSnapshotId ===
+      active.snapshots.assessment.resultSnapshotId &&
     manifest.snapshots.program.baseSnapshotId ===
       active.snapshots.program.resultSnapshotId &&
     manifest.snapshots.quran.baseSnapshotId ===
-      active.snapshots.quran.resultSnapshotId &&
-    manifest.snapshots.tryout.baseSnapshotId ===
-      active.snapshots.tryout.resultSnapshotId
+      active.snapshots.quran.resultSnapshotId
   );
 }
 
@@ -35,9 +35,9 @@ export const validateExistingSnapshots = Effect.fn(
     ContentSnapshotKind,
     ContentSnapshotState,
   ])[] = [
+    ["assessment", manifest.snapshots.assessment],
     ["program", manifest.snapshots.program],
     ["quran", manifest.snapshots.quran],
-    ["tryout", manifest.snapshots.tryout],
   ];
   for (const [family, snapshot] of entries) {
     if (snapshot.mode === "replace" || snapshot.resultSnapshotId === null) {

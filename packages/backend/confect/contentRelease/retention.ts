@@ -3,7 +3,6 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { loadArtifactFacts } from "@repo/backend/confect/contentRelease/artifact/facts";
-import { hasSnapshotArtifactReference } from "@repo/backend/confect/contentRelease/snapshot/retention";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import { Array as Arr, Clock, Effect, Option } from "effect";
 
@@ -12,7 +11,7 @@ export const isArtifactReferenced = Effect.fn(
   "contentRelease.isArtifactReferenced"
 )(function* (artifactHash: string) {
   const database = yield* DatabaseReader;
-  const [head, item, snapshot] = yield* Effect.all([
+  const [head, item] = yield* Effect.all([
     database
       .table("contentHeads")
       .index("by_artifactHash_and_sequence", (query) =>
@@ -27,9 +26,8 @@ export const isArtifactReferenced = Effect.fn(
       )
       .first()
       .pipe(Effect.map(Option.getOrNull), Effect.orDie),
-    hasSnapshotArtifactReference(artifactHash),
   ]);
-  return head !== null || item !== null || snapshot;
+  return head !== null || item !== null;
 });
 
 /**

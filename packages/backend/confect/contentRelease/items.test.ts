@@ -5,10 +5,11 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import {
-  TEST_QUESTION_CONTENT_KEY,
-  TEST_QUESTION_PROJECTION_JSON,
-  TEST_QUESTION_SOURCE,
-} from "@repo/backend/test/content/question";
+  TEST_PAGE_KEY,
+  TEST_PAGE_PATH,
+  TEST_PAGE_PROJECTION_JSON,
+  TEST_PAGE_SOURCE,
+} from "@repo/backend/test/content/page";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
@@ -18,6 +19,7 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import {
   insertRuntimeBinding,
+  insertRuntimeHead,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime/head";
 import { convexTest, type TestConvex } from "convex-test";
@@ -288,22 +290,20 @@ describe("contentRelease/items", () => {
     });
   });
 
-  it("retains an unrouted question head as exact rollback evidence", async () => {
+  it("retains a routed page head as exact rollback evidence", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertTestRelease(ctx, { sequence: 2 });
-      await insertRuntimeVersion(
-        ctx,
-        "authenticated",
-        TEST_QUESTION_CONTENT_KEY,
-        {
-          headReleaseId: "release-base",
-          headSequence: 1,
-          projectionJson: TEST_QUESTION_PROJECTION_JSON,
-          rendererDomain: "snbt-quant",
-          sourcePath: TEST_QUESTION_SOURCE,
-        }
-      );
+      await insertRuntimeHead(ctx, "public", TEST_PAGE_KEY, {
+        bindingReleaseId: "release-base",
+        bindingSequence: 1,
+        headReleaseId: "release-base",
+        headSequence: 1,
+        projectionJson: TEST_PAGE_PROJECTION_JSON,
+        publicPath: TEST_PAGE_PATH,
+        rendererDomain: "site",
+        sourcePath: TEST_PAGE_SOURCE,
+      });
       const state = await ctx.db.query("contentState").unique();
       if (!state) {
         return expect.fail("Expected one staged publication state.");
@@ -312,11 +312,10 @@ describe("contentRelease/items", () => {
     });
     await stage(t, [
       testUpsertJson({
-        contentKey: TEST_QUESTION_CONTENT_KEY,
-        delivery: "authenticated",
-        family: "question",
-        rendererDomain: "snbt-quant",
-        sourcePath: TEST_QUESTION_SOURCE,
+        contentKey: TEST_PAGE_KEY,
+        family: "page",
+        rendererDomain: "site",
+        sourcePath: TEST_PAGE_SOURCE,
       }),
     ]);
     const item = await t.query((ctx) => ctx.db.query("contentItems").unique());
@@ -325,12 +324,12 @@ describe("contentRelease/items", () => {
       Schema.decodeUnknownSync(RollbackEntryJsonSchema)(item?.rollbackJson)
     ).toMatchObject({
       snapshot: {
-        state: "question",
+        state: "page",
         head: {
-          contentKey: TEST_QUESTION_CONTENT_KEY,
-          delivery: "authenticated",
-          family: "question",
-          sourcePath: TEST_QUESTION_SOURCE,
+          contentKey: TEST_PAGE_KEY,
+          family: "page",
+          publicPath: TEST_PAGE_PATH,
+          sourcePath: TEST_PAGE_SOURCE,
         },
       },
     });
