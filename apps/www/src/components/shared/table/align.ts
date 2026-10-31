@@ -25,7 +25,7 @@ export const columnAlign = cva("", {
     align: {
       center: "px-2 text-center tabular-nums sm:px-4",
       end: "ps-2 pe-4 text-end tabular-nums sm:ps-4",
-      menu: "bg-card in-[tr[data-pressable]:hover]:bg-accent in-[tr[data-state=selected]]:bg-accent sticky end-0 px-2 text-end sm:px-4",
+      menu: "bg-card in-[tr[data-pressable]:hover]:bg-accent in-[tr[data-state=selected]]:bg-accent before:bg-border sticky end-0 px-2 text-end before:absolute before:inset-y-0 before:start-0 before:w-px sm:px-4",
       start: "ps-4 pe-2 sm:pe-4",
     },
   },

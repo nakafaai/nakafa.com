@@ -90,8 +90,13 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
   const setSearch = useTableFilters((state) => state.setSearch);
 
   return (
-    <>
-      <InputGroup className="hidden w-56 lg:flex xl:w-64">
+    // One child of a button group, whichever of the two the width shows: the group shapes this frame's corners, and
+    // both draw them, so neither a hidden box nor a hidden button leaves a square corner.
+    <div
+      className="flex rounded-md [[data-slot=button-group]>[data-slot]~&]:-ms-px"
+      data-slot="table-search"
+    >
+      <InputGroup className="hidden w-56 rounded-[inherit] lg:flex xl:w-64">
         <InputGroupAddon>
           <HugeIcons icon={Search01Icon} />
         </InputGroupAddon>
@@ -107,8 +112,7 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
           render={
             <Button
               aria-label={placeholder}
-              // In a button group the box before it is hidden here, so this button starts the group.
-              className="in-data-[slot=button-group]:rounded-l-md! in-data-[slot=button-group]:border-l! lg:hidden"
+              className="rounded-[inherit] lg:hidden"
               size="icon"
               type="button"
               variant={search === "" ? "outline" : "secondary"}
@@ -132,6 +136,6 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
           </InputGroup>
         </PopoverContent>
       </Popover>
-    </>
+    </div>
   );
 }

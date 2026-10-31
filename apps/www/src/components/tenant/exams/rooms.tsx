@@ -9,6 +9,7 @@ import {
   Calendar03Icon,
   CheckmarkCircle02Icon,
   Clock01Icon,
+  PencilEdit02Icon,
   PlayIcon,
   SchoolIcon,
   UserGroupIcon,
@@ -16,6 +17,7 @@ import {
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -203,7 +205,8 @@ function ExamRoomsContent({
             params={{ exam: examId, slug }}
             to="/school/$slug/exams/$exam/edit"
           >
-            {t("edit-action")}
+            <HugeIcons icon={PencilEdit02Icon} />
+            <span className="@max-sm/header:sr-only">{t("edit-action")}</span>
           </Link>
         ) : null}
       </SchoolHeader>
