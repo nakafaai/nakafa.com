@@ -4,24 +4,13 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { publicTryoutSetValidator } from "@repo/backend/confect/tryouts/queries/catalogModel";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
+import {
+  setFilterValidator,
+  setSortValidator,
+} from "@repo/backend/confect/tryouts/sets/query";
 import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
 import { Schema } from "effect";
-export const setDirectionValidator = Schema.Literals(["asc", "desc"]);
-export const setSortValidator = Schema.Struct({
-  direction: setDirectionValidator,
-  field: Schema.Literals([
-    "order",
-    "publishedScore",
-    "questionCount",
-    "durationSeconds",
-    "title",
-  ]),
-});
-export const setFilterValidator = Schema.Literals([
-  "all",
-  "not-started",
-  ...tryoutStatusValidator.literals,
-]);
+
 const trackIdentityValidator = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,
   examKey: tryoutRouteKeyValidator,
