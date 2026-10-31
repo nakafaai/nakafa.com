@@ -71,8 +71,8 @@ export const QuestionPoints = Schema.Int.check(
  * interactions, and `key` is the JSON text of its answer key, or null while no
  * option is marked correct, because the contract refuses a key with no correct
  * option. `revision` counts the answer and key edits, so a stale edit is refused.
- * `points` is the weight of the question, and `scoring` the rule that shares it among the
- * parts of an answer, absent until the teacher chooses one. `prompt`, `rubric`, and
+ * `points` is the weight of the question, and `scoring` the JSON text of the rule that shares
+ * it among the parts of an answer, absent until the teacher chooses one. `prompt`, `rubric`, and
  * `explanation` are documents of their own: the question's text, the teacher's scoring
  * guide, and the explanation a learner reads after the result. Each of them is written by
  * the collaborative editor, and each one is frozen with its exam.
@@ -86,7 +86,7 @@ export const questionValidator = Schema.Struct({
   prompt: Id("editorDocuments"),
   revision: Schema.Natural,
   rubric: Id("editorDocuments"),
-  scoring: Schema.optionalKey(DefaultRuleSchema),
+  scoring: Schema.optionalKey(Schema.String),
   template: QuestionTemplate,
   tenantId: Id("tenants"),
   updatedAt: Schema.Finite,
@@ -323,6 +323,30 @@ const decodeKey = Effect.fn("exams.question.key")(function* (
   return yield* Schema.decodeEffect(KeyText)(text).pipe(Effect.orDie);
 });
 
+/** The rule of a question as JSON text, decoded with the contract's rule schema. */
+const ScoringText = Schema.fromJsonString(DefaultRuleSchema);
+
+/** The JSON text a question's rule is stored as. */
+export const encodeScoring = Effect.fn("exams.question.encodeScoring")(
+  function* (rule: typeof DefaultRuleSchema.Type) {
+    return yield* Schema.encodeEffect(ScoringText)(rule).pipe(Effect.orDie);
+  }
+);
+
+/**
+ * The rule a stored question scores by: the one its teacher chose while its template has parts to share its
+ * points among, and all or nothing otherwise, so a rule kept through a change of template never pays a wrong
+ * answer. A stored text that the contract refuses is a defect.
+ */
+const decodeScoring = Effect.fn("exams.question.scoring")(function* (
+  row: Pick<ExamQuestionsDoc, "scoring" | "template">
+) {
+  if (row.scoring === undefined || !takesScoring(row.template)) {
+    return ALL_OR_NOTHING;
+  }
+  return yield* Schema.decodeEffect(ScoringText)(row.scoring).pipe(Effect.orDie);
+});
+
 /** A stored question as its wire view, with its answers and key decoded. */
 export const questionView = Effect.fn("exams.question.view")(function* (
   row: ExamQuestionsDoc
@@ -337,9 +361,7 @@ export const questionView = Effect.fn("exams.question.view")(function* (
     prompt: row.prompt,
     revision: row.revision,
     rubric: row.rubric,
-    scoring: takesScoring(row.template)
-      ? (row.scoring ?? ALL_OR_NOTHING)
-      : ALL_OR_NOTHING,
+    scoring: yield* decodeScoring(row),
     template: row.template,
   } satisfies QuestionView;
 });

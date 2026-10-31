@@ -19,7 +19,7 @@ import { Array as Arr } from "effect";
 const single = newChoiceAnswers();
 
 /** The same choice taking up to two options, as a multiple-choice question. */
-const multiple = Arr.map(single, (interaction): Interaction =>
+const multiple: QuestionView["answers"] = Arr.map(single, (interaction): Interaction =>
   interaction.kind === "choice"
     ? { ...interaction, maxChoices: 2 }
     : interaction
@@ -32,12 +32,14 @@ const text: Interaction = { id: "text", kind: "textEntry", label: "Answer" };
 const keyOf = (
   correct: readonly [string, ...string[]],
   interaction = "choice"
-): InteractionKey[] => [{ correct, interaction, kind: "choice" }];
+): NonNullable<QuestionView["key"]> => [
+  { correct, interaction, kind: "choice" },
+];
 
 /** The key of the text entry `text`, accepting these texts in any case and spacing. */
 const accepting = (
   ...acceptedAnswers: [string, ...string[]]
-): InteractionKey[] => [
+): NonNullable<QuestionView["key"]> => [
   {
     accepted: {
       acceptedAnswers,
@@ -53,7 +55,7 @@ const accepting = (
 /** The verdict of a question of one point, by the rule of a question no teacher set. */
 const verdictOf = (
   answers: QuestionView["answers"],
-  key: readonly InteractionKey[] | null,
+  key: QuestionView["key"],
   response: ExamResponse
 ) =>
   scoreResponse(
@@ -181,7 +183,7 @@ describe("exams/results/score", () => {
 
   it("scores a match correct when it makes exactly the key's pairs, and incorrect when it misses or changes one", () => {
     const [match] = matchAnswers();
-    const key: InteractionKey[] = [
+    const key: NonNullable<QuestionView["key"]> = [
       {
         interaction: "match",
         kind: "match",
@@ -217,7 +219,7 @@ describe("exams/results/score", () => {
 
   it("scores a table correct when it marks every statement with the key's column, and incorrect otherwise", () => {
     const [table] = tableAnswers(["Benar", "Salah"]);
-    const key: InteractionKey[] = [
+    const key: NonNullable<QuestionView["key"]> = [
       {
         answers: [
           { column: "column-1", statement: "statement-1" },
