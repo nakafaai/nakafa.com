@@ -70,7 +70,9 @@ function LaterBody<Props extends object>({
   code: LaterCode<Props>;
 }) {
   return children(
-    Option.getOrElse(code.component, () => use(readLoading(code)))
+    Option.isSome(code.component)
+      ? code.component.value
+      : use(readLoading(code))
   );
 }
 
