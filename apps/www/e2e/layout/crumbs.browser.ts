@@ -4,10 +4,12 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 // A phone's width folds every ancestor of the path into the breadcrumb's More menu.
+// An article's path has Home, Articles and its category, so it folds; a lesson's
+// breadcrumb names only the lesson and never does.
 test.use({ viewport: { height: 844, width: 390 } });
 
 test("every folded breadcrumb item carries its icon", async ({ page }) => {
-  await page.goto(pinnedRoutes.material.en);
+  await page.goto(pinnedRoutes.article.en);
   const more = page
     .getByRole("navigation", { name: "breadcrumb" })
     .getByRole("button", { name: "More" });
