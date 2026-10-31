@@ -24,6 +24,13 @@ const LiveCredentials = lazy(() =>
   }))
 );
 
+/** The release of those credentials, from the same module. */
+const LiveRelease = lazy(() =>
+  import("@/components/providers/credentials").then((loaded) => ({
+    default: loaded.LiveRelease,
+  }))
+);
+
 /** Hands the page's client its credentials once the store holds one. */
 function PageCredentials() {
   const client = useLiveSession((state) => state.client);
@@ -33,6 +40,24 @@ function PageCredentials() {
   return (
     <Suspense fallback={null}>
       <LiveCredentials client={client.value} />
+    </Suspense>
+  );
+}
+
+/**
+ * Clears the page client's credentials when the route group goes. It renders
+ * after every reader of the page, so their queries are released first: a query
+ * still subscribed when the credentials go runs once more without them, and
+ * the server refuses it with SessionRequired.
+ */
+function PageRelease() {
+  const client = useLiveSession((state) => state.client);
+  if (Option.isNone(client)) {
+    return null;
+  }
+  return (
+    <Suspense fallback={null}>
+      <LiveRelease client={client.value} />
     </Suspense>
   );
 }
@@ -87,6 +112,7 @@ export function PageProviders({
               </AnalyticsUnavailableProvider>
             )}
           </PageNavigationProvider>
+          <PageRelease />
         </ConvexAuthContext>
       </AuthSessionContext>
     </LiveSessionContext>
