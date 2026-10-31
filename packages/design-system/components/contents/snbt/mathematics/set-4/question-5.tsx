@@ -1,4 +1,5 @@
 import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
@@ -198,6 +199,7 @@ export function Graph({ title, description }: GraphProps) {
           showPoints: false,
         },
       ]}
+      facts={<LineReadouts />}
       header={<VisualCardHeader description={description} title={title} />}
     />
   );

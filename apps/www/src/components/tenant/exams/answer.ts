@@ -13,9 +13,6 @@ type Choice = Extract<Interaction, { kind: "choice" }>;
 /** The label of one option: a rich document of its own, which the option's editor writes. */
 export type OptionLabel = Choice["options"][number]["label"];
 
-/** The character code of the letter A, which names the first option. */
-const LETTER_A = 65;
-
 /** The number that an option ID holds after `option-`, when it holds one. */
 const OPTION_NUMBER = /^option-(\d+)$/u;
 
@@ -28,10 +25,6 @@ const isChoiceKey = (
   answer: InteractionKey
 ): answer is Extract<InteractionKey, { kind: "choice" }> =>
   answer.kind === "choice";
-
-/** The letter that names an option by its place: A for the first option, B for the second, and so on. */
-export const optionLetter = (index: number): string =>
-  String.fromCharCode(LETTER_A + index);
 
 /**
  * The label of an option as its editor holds it: the JSON of its document, read through the
@@ -377,24 +370,3 @@ export const acceptedKey = (
     })
   );
 };
-
-/**
- * The plain text of a label: the text of its paragraphs in order, joined by spaces, as a control that shows
- * a short label as text reads it, such as the columns of a true or false table in the key.
- */
-export const labelText = (label: OptionLabel): string =>
-  Arr.join(
-    Arr.flatMap(label.content, (block) =>
-      block.type === "paragraph"
-        ? [
-            Arr.join(
-              Arr.flatMap(block.content ?? [], (node) =>
-                node.type === "text" ? [node.text] : []
-              ),
-              ""
-            ),
-          ]
-        : []
-    ),
-    " "
-  );

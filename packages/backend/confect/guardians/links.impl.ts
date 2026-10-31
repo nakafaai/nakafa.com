@@ -50,7 +50,7 @@ const PAGE_LIMIT = 100;
  * active student of the school, and an address holds one live link to a student.
  * The guardian Person of an address that already guards a child of the school is
  * reused, so a parent of two children is one Person. Nothing is sent: the guardian
- * asks for a code at `/orang-tua`, and only an address with a link gets one.
+ * asks for a code at `/parents`, and only an address with a link gets one.
  */
 const start = FunctionImpl.make(
   databaseSchema,

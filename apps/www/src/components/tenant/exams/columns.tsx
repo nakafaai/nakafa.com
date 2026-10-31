@@ -2,6 +2,10 @@ import { AddToListIcon, ListPlusIcon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import {
+  letterScript,
+  optionLetter,
+} from "@repo/backend/confect/exams/letters";
+import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
 } from "@repo/backend/confect/exams/question";
@@ -9,10 +13,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
-import {
-  type OptionLabel,
-  optionLetter,
-} from "@/components/tenant/exams/answer";
+import type { OptionLabel } from "@/components/tenant/exams/answer";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import {
   keyPairs,
@@ -108,6 +109,8 @@ function PartColumn({
 }: PartColumnProps) {
   const t = useTranslations("Exams");
   const words = PART_WORDS[kind];
+  // Answers are named in the script of their labels: أ, ب, ج for answers written in Arabic.
+  const script = letterScript(Arr.map(parts, (part) => part.label));
 
   return (
     <div className="grid content-start gap-2">
@@ -116,7 +119,9 @@ function PartColumn({
       </p>
       {Arr.map(parts, (part, index) => {
         const name =
-          kind === "statements" ? String(index + 1) : optionLetter(index);
+          kind === "statements"
+            ? String(index + 1)
+            : optionLetter(index, script);
         return (
           <OptionRow
             key={part.id}

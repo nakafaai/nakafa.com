@@ -1,4 +1,5 @@
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
+import { readSpellingLocale } from "@repo/internationalization/src/pathnames";
 import {
   decideRootRedirect,
   decideSlashRedirect,
@@ -114,13 +115,16 @@ export const readRemovedAddressNotFound = Effect.fn(
 const LOCALE_SHAPED_SEGMENT = /^[a-z]{2}$/iu;
 
 /**
- * The redirect of a bare page address, such as `/subjects/physics` or
- * `/@username/chat`: the same address opens in the negotiated locale, which is
- * English when the visitor's languages name none that Nakafa serves, with a 307
- * because the answer depends on the request. The server entry asks this only for
- * a bare address, after the moved addresses. A first segment shaped like a locale
- * code names a locale that Nakafa does not serve, and a last segment with a dot
- * names a file (`/wp-login.php`), so neither names a page and both stay missing.
+ * The redirect of a bare page address, such as `/materi/physics` or
+ * `/@username/chat`. A first segment that is one locale's public spelling, such
+ * as `materi`, names that locale, and the rest of the address is in its slugs,
+ * so the address opens there with a 308. Any other address opens in the
+ * negotiated locale, which is English when the visitor's languages name none that
+ * Nakafa serves, with a 307 because the answer depends on the request. The server
+ * entry asks this only for a bare address, after the moved addresses. A first
+ * segment shaped like a locale code names a locale that Nakafa does not serve,
+ * and a last segment with a dot names a file (`/wp-login.php`), so neither names a
+ * page and both stay missing.
  */
 export function readBareRedirect(request: Request): Option.Option<Response> {
   const url = new URL(request.url);
@@ -135,6 +139,17 @@ export function readBareRedirect(request: Request): Option.Option<Response> {
     ) && Option.exists(Arr.last(segments), (last) => !last.includes("."));
   if (!isPage) {
     return Option.none();
+  }
+  const spelled = Option.flatMap(Arr.head(segments), readSpellingLocale);
+  if (Option.isSome(spelled)) {
+    return Option.some(
+      new Response(null, {
+        headers: {
+          location: `/${spelled.value}${url.pathname}${url.search}`,
+        },
+        status: 308,
+      })
+    );
   }
   return Option.some(
     new Response(null, {

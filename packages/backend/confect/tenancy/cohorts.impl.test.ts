@@ -12,7 +12,7 @@ import {
 import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
-const { activePeriod, create, get, list, rename, archive } =
+const { activePeriod, create, edit, get, list, archive } =
   refs.public.tenancy.cohorts;
 const assignments = refs.public.tenancy.assignments;
 const periods = refs.public.tenancy.periods;
@@ -279,7 +279,7 @@ describe("tenancy/cohorts roles", () => {
           .query(list, { periodId: period.id, slug: nf });
         const refused = yield* fixture
           .as("principal")
-          .mutation(rename, { cohortId: made.id, name: "7B", slug: nf })
+          .mutation(edit, { cohortId: made.id, grade: 7, name: "7B", slug: nf })
           .pipe(Effect.flip);
         const byStudent = yield* fixture
           .as("student")
@@ -294,36 +294,7 @@ describe("tenancy/cohorts roles", () => {
   );
 });
 
-describe("tenancy/cohorts rename, archive, and restore", () => {
-  it.effect(
-    "renames a cohort, and keeps a case-only change to its own name",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const period = yield* sma(fixture);
-        const seventh = yield* cohort(fixture, period.id, "7A", 7);
-        yield* cohort(fixture, period.id, "7B", 7);
-        const caseOnly = yield* fixture
-          .as("admin")
-          .mutation(rename, { cohortId: seventh.id, name: "7a", slug: nf });
-        const same = yield* fixture
-          .as("admin")
-          .mutation(rename, { cohortId: seventh.id, name: "7a", slug: nf });
-        const taken = yield* fixture
-          .as("admin")
-          .mutation(rename, { cohortId: seventh.id, name: "7b", slug: nf })
-          .pipe(Effect.flip);
-        expect([caseOnly.name, same.name]).toEqual(["7a", "7a"]);
-        expect(taken).toMatchObject({ _tag: "CohortNameTaken" });
-        expect(yield* fixture.run(journal)).toMatchObject([
-          { change: { type: "period.created" } },
-          { change: { type: "cohort.created" } },
-          { change: { type: "cohort.created" } },
-          { change: { type: "cohort.renamed" }, subject: { id: seventh.id } },
-        ]);
-      })
-  );
-
+describe("tenancy/cohorts archive", () => {
   it.effect(
     "archives a cohort, which then refuses writes and stays readable",
     () =>
@@ -336,7 +307,7 @@ describe("tenancy/cohorts rename, archive, and restore", () => {
           .mutation(archive, { cohortId: made.id, slug: nf });
         const refused = yield* fixture
           .as("admin")
-          .mutation(rename, { cohortId: made.id, name: "7B", slug: nf })
+          .mutation(edit, { cohortId: made.id, grade: 7, name: "7B", slug: nf })
           .pipe(Effect.flip);
         const listed = yield* fixture
           .as("principal")
@@ -350,41 +321,6 @@ describe("tenancy/cohorts rename, archive, and restore", () => {
           { change: { type: "cohort.archived" }, subject: { id: made.id } },
         ]);
       })
-  );
-});
-
-describe("tenancy/cohorts archived school", () => {
-  it.effect("refuses a rename of a cohort in an archived school", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const cohortId = yield* fixture.run(
-        Effect.gen(function* () {
-          const writer = yield* DatabaseWriter;
-          const periodId = yield* writer.table("tenantPeriods").insert({
-            end: "2026-12-19",
-            name: "Smk",
-            start: "2026-07-13",
-            status: "active",
-            tenantId: fixture.tenants.nf,
-            unitId: fixture.units.smk,
-          });
-          return yield* writer.table("tenantCohorts").insert({
-            grade: 10,
-            name: "10A",
-            nameKey: "10a",
-            periodId,
-            status: "active",
-            tenantId: fixture.tenants.nf,
-            unitId: fixture.units.smk,
-          });
-        })
-      );
-      const refused = yield* fixture
-        .as("admin")
-        .mutation(rename, { cohortId, name: "10B", slug: nf })
-        .pipe(Effect.flip);
-      expect(refused).toMatchObject(denied("condition"));
-    })
   );
 });
 
@@ -415,7 +351,7 @@ describe("tenancy/cohorts cross-tenant", () => {
 
 describe("tenancy/cohorts of an archived period", () => {
   it.effect(
-    "refuses to rename or archive a cohort once its period is archived",
+    "refuses to edit or archive a cohort once its period is archived",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -431,7 +367,7 @@ describe("tenancy/cohorts of an archived period", () => {
         });
         const renamed = yield* fixture
           .as("admin")
-          .mutation(rename, { cohortId: made.id, name: "7B", slug: nf })
+          .mutation(edit, { cohortId: made.id, grade: 7, name: "7B", slug: nf })
           .pipe(Effect.flip);
         const archived = yield* fixture
           .as("admin")
