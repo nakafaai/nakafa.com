@@ -104,6 +104,12 @@ export const asTemplate = (
         );
   return {
     answers: converted,
-    key: !fixed && kept !== null && keyFits(converted, kept) ? kept : null,
+    key:
+      !fixed &&
+      kept !== null &&
+      Arr.isReadonlyArrayNonEmpty(kept) &&
+      keyFits(converted, kept)
+        ? kept
+        : null,
   };
 };

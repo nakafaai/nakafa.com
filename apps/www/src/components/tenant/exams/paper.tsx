@@ -250,12 +250,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
             </QuestionPaper>
           }
         >
-          <LivePaper
-            chosen={chosen}
-            editing={editing}
-            number={number}
-            question={question}
-          />
+          <LivePaper editing={editing} number={number} question={question} />
         </Suspense>
       ) : (
         <QuestionPaper selected={chosen}>
@@ -291,18 +286,22 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
  * page moves nothing.
  */
 function LivePaper({
-  chosen,
   editing,
   number,
   question,
 }: {
-  chosen: boolean;
   editing: QuestionEditing;
   number: number;
   question: Question;
 }) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
+  const chosen = useExamSelection((state) =>
+    Option.exists(
+      activeQuestion(exam.questions, state.selected),
+      (active) => active.question.id === question.id
+    )
+  );
   // The prompt's editor opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone,
   // so the words the teacher typed stay on screen.
   const frozen = isLocked(exam);

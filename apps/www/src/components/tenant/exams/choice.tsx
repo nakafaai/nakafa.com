@@ -30,6 +30,17 @@ import { useExamLocked } from "@/components/tenant/exams/provider";
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import { PaperOption, PaperOptions } from "@/components/tenant/exams/sheet";
 
+/** The name of a choice on its paper: its place in an answer and its reason, and none in a question of one choice. */
+export const choiceTitle = (
+  template: Question["template"],
+  choiceId: string
+) => {
+  if (template !== "reason") {
+    return null;
+  }
+  return choiceId === REASON_ID ? "reason-title" : "reason-answer";
+};
+
 /**
  * One choice of a question on its paper, as the student meets it: its options, each written in its row, and the
  * action that adds one. A reason stands under its name in the paper, as the student reads it. A template that
@@ -56,7 +67,9 @@ export function ChoiceSheet({
   const { displayed, saveAnswers } = editing;
   const reason = choice.id === REASON_ID;
   // The options are named in the script of their labels: أ, ب, ج for a set written in Arabic.
-  const script = letterScript(Arr.map(choice.options, (option) => option.label));
+  const script = letterScript(
+    Arr.map(choice.options, (option) => option.label)
+  );
   const fixed = Option.isSome(fixedOptions(displayed.template));
   const canAdd =
     choice.options.length < CHOICE_OPTIONS_MAX && !fixed && !locked;
@@ -66,7 +79,10 @@ export function ChoiceSheet({
   const savedLabel = (option: Choice["options"][number]): OptionLabel =>
     Option.match(
       Arr.findFirst(
-        Arr.flatMap(Arr.filter(question.answers, isChoice), (saved) => saved.options),
+        Arr.flatMap(
+          Arr.filter(question.answers, isChoice),
+          (saved) => saved.options
+        ),
         (item) => item.id === option.id
       ),
       {
@@ -77,7 +93,7 @@ export function ChoiceSheet({
 
   return (
     <>
-      <ChoiceGroup reason={reason}>
+      <ChoiceGroup title={choiceTitle(displayed.template, choice.id)}>
         <PaperOptions>
           {Arr.map(choice.options, (option, index) => {
             const letter = optionLetter(index, script);
