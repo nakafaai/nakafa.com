@@ -1,6 +1,7 @@
 import { CronJob, CronJobs } from "@confect/server";
 import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
+import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
 import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
@@ -109,6 +110,14 @@ export default CronJobs.make()
       "delete expired billing webhooks",
       Duration.hours(BILLING_EVENT_CLEANUP_INTERVAL_HOURS),
       billingInternal.events.cleanup,
+      {}
+    )
+  )
+  .add(
+    CronJob.make(
+      "delete unsent chat files",
+      Duration.hours(24),
+      classroomInternal.forum.files.sweep,
       {}
     )
   )

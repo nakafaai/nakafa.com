@@ -52,11 +52,7 @@ describe("contentRelease/quran", () => {
   it("registers the canonical semantic queries", async () => {
     const t = convexTest(schema, convexModules);
 
-    const [surah, prose, page, passage] = await Promise.all([
-      t.query(api.contentRelease.quran.surah, {
-        appLocale: "id",
-        surahNumber: 2,
-      }),
+    const [prose, page, passage] = await Promise.all([
       t.query(api.contentRelease.quran.prose, {
         appLocale: "id",
         surahNumber: 2,
@@ -72,7 +68,7 @@ describe("contentRelease/quran", () => {
       }),
     ]);
 
-    for (const result of [surah, prose, page, passage]) {
+    for (const result of [prose, page, passage]) {
       expect(result).toMatchObject({ managed: false, preBismillah: null });
     }
     await expect(
@@ -91,11 +87,7 @@ describe("contentRelease/quran", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => activateQuranSnapshot(ctx, expansionRows()));
 
-    const [surah, prose, page, passage] = await Promise.all([
-      t.query(api.contentRelease.quran.surah, {
-        appLocale: "id",
-        surahNumber: 2,
-      }),
+    const [prose, page, passage] = await Promise.all([
       t.query(api.contentRelease.quran.prose, {
         appLocale: "id",
         surahNumber: 2,
@@ -111,7 +103,7 @@ describe("contentRelease/quran", () => {
       }),
     ]);
 
-    for (const result of [surah, prose, page, passage]) {
+    for (const result of [prose, page, passage]) {
       expect(result.preBismillah).toEqual({
         arabic: bismillah,
         translation: {
@@ -129,7 +121,6 @@ describe("contentRelease/quran", () => {
         },
       });
     }
-    expect(surah.verses[0]?.arabic).toBe("الٓمٓ");
     expect(prose.verses[0]?.arabic).toBe("الٓمٓ");
     expect(page.verses[0]?.arabic).toBe("الٓمٓ");
   });
@@ -143,12 +134,6 @@ describe("contentRelease/quran", () => {
     await expect(
       t.query(api.contentRelease.quran.surahs, {})
     ).resolves.toMatchObject({ managed: false, rowJson: [] });
-    await expect(
-      t.query(api.contentRelease.quran.surah, {
-        appLocale: "en",
-        surahNumber: 1,
-      })
-    ).resolves.toMatchObject({ managed: false, surah: null, verses: [] });
     await expect(
       t.query(api.contentRelease.quran.prose, {
         appLocale: "id",
@@ -186,10 +171,6 @@ describe("contentRelease/quran", () => {
     const results = await Promise.all([
       t.query(api.contentRelease.quran.attribution, {}),
       t.query(api.contentRelease.quran.surahs, {}),
-      t.query(api.contentRelease.quran.surah, {
-        appLocale: "en",
-        surahNumber: 1,
-      }),
       t.query(api.contentRelease.quran.prose, {
         appLocale: "id",
         surahNumber: 1,

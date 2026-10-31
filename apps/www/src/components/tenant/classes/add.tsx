@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import {
@@ -14,6 +15,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -22,7 +24,6 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
-import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** A call that did not complete at all: the network failed, or the call was rejected before the server answered. */
@@ -123,7 +124,15 @@ export function AddChannel({
 
   return (
     <>
-      <SchoolHeaderAdd label={t("add-channel")} onClick={() => setOpen(true)} />
+      <Button
+        aria-label={t("add-channel")}
+        onClick={() => setOpen(true)}
+        size="icon"
+        title={t("add-channel")}
+        variant="outline"
+      >
+        <HugeIcons icon={Add01Icon} />
+      </Button>
       <ResponsiveDialog
         description={t("add-channel-description")}
         footer={
