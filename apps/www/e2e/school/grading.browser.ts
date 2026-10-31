@@ -70,7 +70,7 @@ test("a student writes an essay, the teacher grades it with part of its points, 
     .getByRole("dialog")
     .getByRole("button", { name: "Finish", exact: true })
     .click();
-  await expect(student.getByText("Your answers are in.")).toBeVisible();
+  await expect(student.getByText("You finished this exam.")).toBeVisible();
 
   // The teacher closes the sitting, reads the essay in the third question's answers, and gives it 3 of 4.
   const teacher = await teacherContext.newPage();

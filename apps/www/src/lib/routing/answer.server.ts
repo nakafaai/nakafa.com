@@ -5,6 +5,7 @@ import {
 import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { isRawProfileAddress } from "@/lib/profile/gate";
+import { readBrowserPage } from "@/lib/routing/browser.server";
 import { isLearnerPage, readVisitorAsset } from "@/lib/routing/learner.server";
 import { notFoundPageOf, withContentLanguage } from "@/lib/routing/not-found";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
@@ -26,6 +27,7 @@ import {
   UncaughtRequestError,
 } from "@/lib/routing/routed.server";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
+import { answerSchoolRefusal } from "@/lib/routing/school/refused.server";
 import {
   answerSchoolPage,
   readSchoolFile,
@@ -136,9 +138,10 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
  * its canonical address; a non-public spelling moves to its public address. A
  * school tree path answers not found, a file that a school host's address names
  * answers the static not-found page before any read, and a refused school page
- * answers not found with the static school shell. A visitor's try-out track, set or section
- * answers the page that the build wrote for every visitor, before any content
- * read. A removed address answers not found, and a migrated or moved
+ * answers the static not-found page made for a school host. A page whose route renders only
+ * in the browser, such as a learner's home or settings, answers the browser shell.
+ * A visitor's try-out track, set or section answers the page that the build wrote
+ * for every visitor, before any content read. A removed address answers not found, and a migrated or moved
  * address moves to its successor. A raw user address answers the static
  * not-found page, its Markdown spelling included. A page in
  * a locale that no Worker route renders answers the static not-found page before
@@ -182,11 +185,16 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
 
   const refused = yield* readSchoolRefusal(request);
   if (Option.isSome(refused)) {
-    return yield* answerSchoolPage(
+    return yield* answerSchoolRefusal(
       request,
-      404,
+      refused.value,
       answerRejection(request, refused.value, route)
     );
+  }
+
+  const browserPage = yield* readBrowserPage(request);
+  if (Option.isSome(browserPage)) {
+    return browserPage.value;
   }
 
   const visitorAsset = yield* readVisitorAsset(request);

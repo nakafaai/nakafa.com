@@ -1,7 +1,7 @@
 import { isHttpsUrl } from "@nakafa/aksara-contracts/text/syntax";
 import { MarkTypeSchema } from "@repo/backend/confect/editor/node";
 import { type DocumentRules, documentSchema } from "@repo/editor/document";
-import { Schema } from "effect";
+import { Function as Fn, Schema } from "effect";
 
 /**
  * The heading levels of an assessment document. The contract does not export them, so
@@ -21,8 +21,13 @@ export const ASSESSMENT_RULES: DocumentRules = {
   marks: MarkTypeSchema.literals,
 };
 
+/** The ProseMirror schema of a document's rules, built on their first use and kept for them. */
+const modelOf = Fn.memoize(documentSchema);
+
 /**
  * The ProseMirror schema of an assessment document, with which the server folds stored
- * steps. A step makes the same document here as in the editor (ADR 0028).
+ * steps. A step makes the same document here as in the editor (ADR 0028). It is built on
+ * first use, not at import: every Convex call evaluates the modules its function imports,
+ * so a schema built at import costs every function that reaches this module, folding or not.
  */
-export const assessmentModel = documentSchema(ASSESSMENT_RULES);
+export const assessmentModel = () => modelOf(ASSESSMENT_RULES);

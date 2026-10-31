@@ -138,8 +138,8 @@ function useExamsItems(canOpenExams: boolean): readonly BreadcrumbHeaderItem[] {
 }
 
 /**
- * The rooms page: its header with the path, Edit and the table from the first paint, and the exam's title in the path
- * once the exam's summary is in, so the header never changes shape when it arrives.
+ * The rooms page: its header with the path, Edit and the table from the first paint, and the exam's title in the path's
+ * last crumb once the exam's summary is in. The crumb stands empty until then, so the header keeps one shape.
  */
 function ExamRoomsContent({
   examId,
@@ -199,10 +199,9 @@ function ExamRoomsContent({
   return (
     <TableFiltersProvider>
       <SchoolHeader
-        items={Option.match(title, {
-          onNone: () => examsItems,
-          onSome: (label) => [...examsItems, { label }],
-        })}
+        // The title's crumb stands from the first paint, empty until the summary is in, so the exam list's crumb is
+        // a link and the phone's folded path stands from the start, and the header's controls never change.
+        items={[...examsItems, { label: Option.getOrElse(title, () => "") }]}
         {...Option.match(title, {
           onNone: () => ({}),
           onSome: (label) => ({ title: label }),

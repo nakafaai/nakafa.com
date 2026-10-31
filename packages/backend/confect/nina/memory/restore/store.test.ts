@@ -21,6 +21,12 @@ const expire = Ref.getFunctionReference(refs.internal.nina.memory.expire);
 const NOW = Date.UTC(2026, 9, 10, 12);
 /** The restore window is read from its one owner, the memory spec. */
 const UNDO = Duration.toMillis(MEMORY_UNDO);
+/**
+ * When an act whose time a test reads runs: a second after the setup, which
+ * commits at `NOW`, because Convex runs each mutation after the commits before
+ * it.
+ */
+const ACTED_AT = NOW + 1000;
 const LESSON = "lesson:material:lesson:mathematics:material-section:limits";
 /** What the page is told when there is nothing to put back for the learner. */
 const missing = { data: { _tag: "NinaMemoryRejected", reason: "missing" } };
@@ -89,19 +95,20 @@ describe("Nina memory restore", () => {
     const before = await rowOf(f, id);
     const keysBefore = await keysOf(f, id);
 
+    vi.setSystemTime(ACTED_AT);
     expect(await f.owner.mutation(remove, { id })).toBeNull();
     expect(await f.rowOf(id)).toBeNull();
     expect(await keysOf(f, id)).toEqual([]);
     // The record holds the fields as stored, its keys, and the window's end.
     expect(await f.restores()).toEqual([
       expect.objectContaining({
-        expiresAt: NOW + UNDO,
+        expiresAt: ACTED_AT + UNDO,
         memoryId: id,
         userId: f.identity.userId,
       }),
     ]);
 
-    vi.setSystemTime(NOW + 1000);
+    vi.setSystemTime(ACTED_AT + 1000);
     const restored = await f.owner.mutation(restore, { id });
 
     // Convex gives the memory a new id and a new creation time. Every other
@@ -224,12 +231,13 @@ describe("Nina memory restore", () => {
     const f = await createMemoryTest();
     const inside = await f.seed({ text: "Inside" });
     const outside = await f.seed({ text: "Outside" });
+    vi.setSystemTime(ACTED_AT);
     await f.owner.mutation(remove, { id: inside });
     await f.owner.mutation(remove, { id: outside });
 
-    vi.setSystemTime(NOW + UNDO - 1);
+    vi.setSystemTime(ACTED_AT + UNDO - 1);
     await f.owner.mutation(restore, { id: inside });
-    vi.setSystemTime(NOW + UNDO);
+    vi.setSystemTime(ACTED_AT + UNDO);
     await expect(
       f.owner.mutation(restore, { id: outside })
     ).rejects.toMatchObject(missing);
@@ -266,6 +274,7 @@ describe("Nina memory restore", () => {
     const f = await createMemoryTest();
     const used = await f.seed({ text: "Used" });
     const unused = await f.seed({ text: "Unused" });
+    vi.setSystemTime(ACTED_AT);
     await f.owner.mutation(remove, { id: used });
     await f.owner.mutation(remove, { id: unused });
     const records = await f.restores();
@@ -273,7 +282,7 @@ describe("Nina memory restore", () => {
     const jobs = await scheduled(f, "nina/memory:purge");
     expect(jobs).toHaveLength(2);
     for (const job of jobs) {
-      expect(job.scheduledTime).toBe(NOW + UNDO);
+      expect(job.scheduledTime).toBe(ACTED_AT + UNDO);
     }
     expect(Arr.map(jobs, ({ args }) => args)).toEqual(
       Arr.map(records, ({ _id }) => [{ id: _id }])
@@ -312,12 +321,13 @@ describe("Nina memory restore", () => {
     await f.owner.mutation(remove, { id: older });
     // The first Delete all finds nothing to take. A memory written after it is
     // confirmed a millisecond later, because the clock has not moved on.
+    vi.setSystemTime(ACTED_AT);
     await f.owner.mutation(clear, {});
     const id = await f.owner.mutation(add, { text: "Deleted before" });
     await f.owner.mutation(remove, { id });
     expect(await f.restores()).toEqual([
       expect.objectContaining({ confirmedAt: 3 }),
-      expect.objectContaining({ confirmedAt: NOW + 1 }),
+      expect.objectContaining({ confirmedAt: ACTED_AT + 1 }),
     ]);
 
     // No memory is left to tell this Delete all how far to reach, so the
@@ -340,12 +350,13 @@ describe("Nina memory restore", () => {
     });
     await other.owner.mutation(remove, { id: ahead });
 
+    vi.setSystemTime(ACTED_AT);
     await f.owner.mutation(clear, {});
     expect(
       await f.t.query((ctx) => ctx.db.query("learningPreferences").collect())
     ).toEqual([
       expect.objectContaining({
-        ninaMemoryClearedAt: NOW,
+        ninaMemoryClearedAt: ACTED_AT,
         userId: f.identity.userId,
       }),
     ]);
@@ -394,19 +405,21 @@ describe("Nina memory restore", () => {
       text: "Kelas 11.",
       through: 4,
     });
+    vi.setSystemTime(ACTED_AT);
     await f.owner.mutation(remove, { id });
     // A build went to the model after the deletion and read on from a later
     // moment, so it will never meet a memory confirmed at 2 again.
     await f.t.mutation(async (ctx) => {
       const row = await ctx.db.query("ninaMemoryPortraits").first();
       if (row) {
-        await ctx.db.patch(row._id, { builtAt: NOW, through: 9 });
+        await ctx.db.patch(row._id, { builtAt: ACTED_AT + 500, through: 9 });
       }
     });
 
+    vi.setSystemTime(ACTED_AT + 1000);
     await f.owner.mutation(restore, { id });
     const [row] = await f.rows();
-    expect(row).toMatchObject({ scheduledAt: NOW, through: 0 });
+    expect(row).toMatchObject({ scheduledAt: ACTED_AT + 1000, through: 0 });
     expect(row).not.toHaveProperty("builtAt");
     expect(row).not.toHaveProperty("text");
     expect(await f.scheduled()).toEqual([

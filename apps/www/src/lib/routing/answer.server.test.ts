@@ -39,6 +39,7 @@ vi.mock("@/lib/routing/rendered", async () => {
   const routerPath = (url: URL) => routeRewrite.input({ url }).pathname;
   return {
     isBareRoutePath: (url: URL) => isBarePath(routerPath(url), templates),
+    isBrowserRoutePath: (url: URL) => routerPath(url) === "/en/home",
     isRenderedRoutePath: (url: URL) =>
       !release.hasStaticRelease || isRenderedPath(routerPath(url), templates),
   };
@@ -175,24 +176,21 @@ describe("decisions before the router", () => {
       })
   );
 
-  it.effect("moves a trailing slash before the router", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served("/en/articles/belajar/");
+  it.effect(
+    "moves a trailing slash and a non-public spelling before the router",
+    () =>
+      Effect.gen(function* () {
+        for (const [address, location] of [
+          ["/en/articles/belajar/", "/en/articles/belajar"],
+          ["/en/curricula/x", "/en/curriculum/x"],
+        ] as const) {
+          const { handle, response } = yield* served(address);
 
-      expect(response.status).toBe(308);
-      expect(response.headers.get("location")).toBe("/en/articles/belajar");
-      expect(handle).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("moves a non-public spelling before the router", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served("/en/curricula/x");
-
-      expect(response.status).toBe(308);
-      expect(response.headers.get("location")).toBe("/en/curriculum/x");
-      expect(handle).not.toHaveBeenCalled();
-    })
+          expect(response.status).toBe(308);
+          expect(response.headers.get("location")).toBe(location);
+          expect(handle).not.toHaveBeenCalled();
+        }
+      })
   );
 
   it.effect("moves a migrated address before the router", () =>
@@ -310,6 +308,17 @@ describe("decisions before the router", () => {
       })
   );
 
+  it.effect("answers a browser-only page with the shell, before any read", () =>
+    Effect.gen(function* () {
+      assets.fetch.mockResolvedValue(new Response("shell"));
+      const { handle, response } = yield* served("/en/home");
+      expect(response.status).toBe(200);
+      expect(yield* Effect.promise(() => response.text())).toBe("shell");
+      expect(handle).not.toHaveBeenCalled();
+      expect(retired.read).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("renders a locale path that a Worker route template names", () =>
     Effect.gen(function* () {
       const { handle, response } = yield* served("/en/chat");
@@ -352,14 +361,14 @@ describe("decisions before the router", () => {
   );
 
   it.effect(
-    "answers a refused school page with the static shell before its migration, and a school file with the static page before any read",
+    "answers a refused school page with the static not-found page for a school host before its migration, and a school file with the static page before any read",
     () =>
       Effect.gen(function* () {
         refusal.read.mockReturnValue(Effect.succeedSome("id"));
         migration.read.mockReturnValue(
           Effect.succeed({ destination: "/en/@nabil/chat", status: 308 })
         );
-        assets.fetch.mockResolvedValue(new Response("<html>shell</html>"));
+        assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
         const handle = router();
 
         const response = yield* answerRequest(
@@ -370,8 +379,11 @@ describe("decisions before the router", () => {
         );
 
         expect(response.status).toBe(404);
+        expect(assets.fetch.mock.lastCall?.[0].url).toBe(
+          "https://harapan.nakafa.com/_notfound/school/id"
+        );
         expect(yield* Effect.promise(() => response.text())).toBe(
-          "<html>shell</html>"
+          "<h1>Not found</h1>"
         );
         expect(handle).not.toHaveBeenCalled();
         expect(migration.read).not.toHaveBeenCalled();

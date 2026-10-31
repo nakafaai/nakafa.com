@@ -335,6 +335,9 @@ describe("auth/client", () => {
         "Expected the Better Auth lifecycle to create an app user."
       );
     }
+    // The deletion has its own instant, a minute after the sign-in's commits.
+    const deletedAt = NOW + 60_000;
+    vi.setSystemTime(deletedAt);
     await test.mutation(async (ctx) => {
       const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
       await adapter.delete({
@@ -362,7 +365,7 @@ describe("auth/client", () => {
             authId: original.authId,
           },
         ],
-        scheduledTime: NOW,
+        scheduledTime: deletedAt,
       }),
       expect.objectContaining({
         args: [
@@ -370,7 +373,7 @@ describe("auth/client", () => {
             authId: original.authId,
           },
         ],
-        scheduledTime: NOW + ACCOUNT_DELETION_RECOVERY_DELAY_MS,
+        scheduledTime: deletedAt + ACCOUNT_DELETION_RECOVERY_DELAY_MS,
       }),
     ]);
   });
@@ -386,10 +389,12 @@ describe("auth/client", () => {
         "Expected the Better Auth lifecycle to create an app user."
       );
     }
-    expect(await scheduled(test, claimName)).toEqual([
+    const claims = await scheduled(test, claimName);
+    expect(claims).toEqual([
       expect.objectContaining({
         args: [{ cursor: null, userId: user._id }],
-        scheduledTime: NOW,
+        // Due at once: at the moment of the transaction that scheduled it.
+        scheduledTime: Math.floor(claims[0]?._creationTime ?? 0),
       }),
     ]);
     await test.mutation(claimRun, { cursor: null, userId: user._id });
