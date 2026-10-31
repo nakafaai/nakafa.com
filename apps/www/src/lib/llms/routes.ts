@@ -6,9 +6,12 @@ export const LLMS_MARKDOWN_MEDIA_TYPE = HttpMediaTypeSchema.make(
   "text/markdown; charset=utf-8"
 );
 
-/** The request fields that a Markdown answer depends on, which a shared cache keys by. */
+/**
+ * The request fields that a Markdown answer depends on, which a shared cache keys
+ * by. A Markdown route answers Markdown whatever the request accepts, so only the
+ * encoding varies.
+ */
 export const LLMS_REPRESENTATION_VARY_FIELDS = Object.freeze([
-  "Accept",
   "Accept-Encoding",
 ]);
 

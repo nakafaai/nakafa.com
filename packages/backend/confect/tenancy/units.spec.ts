@@ -62,6 +62,19 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicMutation({
+      name: "edit",
+      args: () => ({
+        level: UnitLevel,
+        name: UnitName,
+        slug: TenantSlug,
+        unitId: Id("tenantUnits"),
+      }),
+      returns: () => Schema.Struct({ level: UnitLevel, name: UnitName }),
+      error: () => AccessDenied,
+    }).middleware(TenantAccess, { action: "tenant.manage" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
       name: "setLocale",
       args: () => ({
         contentLanguage: AppLocaleCodeSchema,

@@ -1,6 +1,7 @@
 import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { awayFor } from "@repo/backend/confect/exams/sittings/away";
+import type { examSignalValidator } from "@repo/backend/confect/exams/sittings/schema";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { getRouteApi } from "@tanstack/react-router";
@@ -27,6 +28,12 @@ import {
   UnlockDialog,
 } from "@/components/exams/sitting/dialogs";
 import { StudentScreen } from "@/components/exams/sitting/screen";
+import {
+  awaySince,
+  awayTime,
+  SECONDS_IN_MINUTE,
+} from "@/components/exams/sitting/seat";
+import { useSittingClock } from "@/components/exams/sitting/timer";
 import { DataFailure } from "@/components/shared/failure";
 import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
 import { PanesDetail } from "@/components/shared/panes";
@@ -54,10 +61,22 @@ const stateLabels: Record<
   submitted: "state-submitted",
 };
 
-/** The copy key of each signal of a student's screen, as the panel names it. */
-/** The seconds of one minute, which a long time away is told in. */
-const SECONDS_IN_MINUTE = 60;
+/** One signal of a student's screen, as the proctor's panel reads it. */
+type ExamSignal = Pick<typeof examSignalValidator.Type, "at" | "kind">;
 
+/**
+ * The copy keys of how long a student was gone, by the signal that began it: away from the exam after an exit, and
+ * offline after a disconnect, told in seconds or in minutes and seconds.
+ */
+const GONE_KEYS = {
+  disconnect: {
+    minutes: "signal-offline-minutes",
+    seconds: "signal-offline-seconds",
+  },
+  exit: { minutes: "signal-away-minutes", seconds: "signal-away-seconds" },
+} as const;
+
+/** The copy key of each signal of a student's screen, as the panel names it. */
 const signalLabels: Record<
   NonNullable<DashboardAttempt["latestSignal"]>["kind"],
   | "signal-blur"
@@ -150,7 +169,15 @@ function StudentPanel({ attempt }: { readonly attempt: DashboardAttempt }) {
           <StudentScreen attemptId={attempt.id} key={`screen-${attempt.id}`} />
           <div className="grid gap-2">
             <p className="text-muted-foreground text-sm">{t("signals")}</p>
-            <SignalList attemptId={attempt.id} key={attempt.id} />
+            {/* The device sends a lost connection once it is back, so its time never shows while the student is offline. */}
+            <p className="text-muted-foreground text-xs">
+              {t("signals-offline-note")}
+            </p>
+            <SignalList
+              attemptId={attempt.id}
+              away={awaySince(attempt)}
+              key={attempt.id}
+            />
           </div>
         </div>
       </PaneBody>
@@ -258,8 +285,11 @@ function useFirstSignalPage(attemptId: DashboardAttempt["id"]) {
  */
 function SignalList({
   attemptId,
+  away,
 }: {
   readonly attemptId: DashboardAttempt["id"];
+  /** When the student went away, while the seat shows the student away, so that exit's line counts on. */
+  readonly away: Option.Option<number>;
 }) {
   const t = useTranslations("Exams");
   const { slug, value } = useSittingData();
@@ -292,24 +322,77 @@ function SignalList({
         />
       ) : null}
       {Arr.map(signals.results, (signal) => (
-        <p key={`${signal.at}-${signal.kind}`}>
-          {signal.kind === "exit"
-            ? Option.match(awayFor(signals.results, signal), {
-                onNone: () => t(signalLabels[signal.kind]),
-                onSome: (seconds) =>
-                  seconds < SECONDS_IN_MINUTE
-                    ? t("signal-away-seconds", { seconds })
-                    : t("signal-away-minutes", {
-                        minutes: Math.floor(seconds / SECONDS_IN_MINUTE),
-                        seconds: seconds % SECONDS_IN_MINUTE,
-                      }),
-              })
-            : t(signalLabels[signal.kind])}
-        </p>
+        <SignalLine
+          current={Option.contains(away, signal.at)}
+          key={`${signal.at}-${signal.kind}`}
+          signal={signal}
+          signals={signals.results}
+        />
       ))}
       {PaginatedQueryResult.isCanLoadMore(signals) ? (
         <Intersection onIntersect={() => signals.loadMore(SIGNAL_PAGE_SIZE)} />
       ) : null}
     </div>
   );
+}
+
+/**
+ * One signal of the student's screen, as the panel names it. An exit or a disconnect the student came back from says
+ * how long they were gone, and the current one, which they have not come back from, counts on.
+ */
+function SignalLine({
+  current,
+  signal,
+  signals,
+}: {
+  readonly current: boolean;
+  readonly signal: ExamSignal;
+  readonly signals: readonly ExamSignal[];
+}) {
+  const t = useTranslations("Exams");
+  const { kind } = signal;
+  if (kind !== "exit" && kind !== "disconnect") {
+    return <p>{t(signalLabels[kind])}</p>;
+  }
+  if (current) {
+    return (
+      <p>
+        <SignalAway kind={kind} since={signal.at} />
+      </p>
+    );
+  }
+  return (
+    <p>
+      {Option.match(awayFor(signals, signal), {
+        onNone: () => t(signalLabels[kind]),
+        onSome: (seconds) =>
+          t(
+            GONE_KEYS[kind][
+              seconds < SECONDS_IN_MINUTE ? "seconds" : "minutes"
+            ],
+            {
+              minutes: Math.floor(seconds / SECONDS_IN_MINUTE),
+              seconds: seconds % SECONDS_IN_MINUTE,
+            }
+          ),
+      })}
+    </p>
+  );
+}
+
+/** The exit or disconnect the student has not come back from, with the time gone counted each second. */
+function SignalAway({
+  kind,
+  since,
+}: {
+  readonly kind: keyof typeof GONE_KEYS;
+  readonly since: number;
+}) {
+  const t = useTranslations("Exams");
+  const { minutes, seconds } = awayTime(since, useSittingClock());
+
+  return t(GONE_KEYS[kind][minutes === 0 ? "seconds" : "minutes"], {
+    minutes,
+    seconds,
+  });
 }

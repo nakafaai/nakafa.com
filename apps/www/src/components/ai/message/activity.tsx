@@ -115,7 +115,7 @@ function ActivityTrigger() {
         "group/activity flex min-h-6 w-fit max-w-full items-start gap-2 rounded-sm py-0.5 text-start text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default",
         problem
           ? "text-destructive"
-          : "text-muted-foreground hover:text-foreground"
+          : "text-muted-foreground not-data-disabled:hover:text-foreground"
       )}
     >
       <Spinner

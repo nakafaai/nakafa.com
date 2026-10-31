@@ -9,16 +9,16 @@ describe("signInReturn", () => {
   });
 
   it("drops only the switch of the username form from the query", () => {
-    expect(signInReturn("/sittings/w17dbtag?masuk=username&tab=1")).toBe(
+    expect(signInReturn("/sittings/w17dbtag?sign-in=username&tab=1")).toBe(
       "/sittings/w17dbtag?tab=1"
     );
-    expect(signInReturn("/?masuk=username")).toBe("/");
+    expect(signInReturn("/?sign-in=username")).toBe("/");
   });
 
   it("reads the browser's full address as well as the router's", () => {
     expect(
       signInReturn(
-        "http://acc-1.localhost:3000/sittings/w17dbtag?masuk=username"
+        "http://acc-1.localhost:3000/sittings/w17dbtag?sign-in=username"
       )
     ).toBe("/sittings/w17dbtag");
   });

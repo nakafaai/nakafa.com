@@ -70,7 +70,8 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   }
   /** Runs the durable account-deletion flow from the browser event boundary. */
   function handleDelete() {
-    setError(null);
+    // A refusal stays on its line while the deletion is tried again: the next
+    // answer replaces it, and it is forgotten once the dialog has closed.
     startTransition(async () => {
       const result = await Effect.runPromise(
         requireConvexOnline(convex).pipe(
@@ -109,7 +110,6 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   }
   /** Signs out an expired session before returning to the localized auth page. */
   function handleReauthenticate() {
-    setError(null);
     startTransition(async () => {
       const result = await Effect.runPromise(
         Effect.result(signOutAccountBrowserIdentity())

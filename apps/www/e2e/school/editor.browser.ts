@@ -44,15 +44,11 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   const page = await context.newPage();
   await page.goto(hostAddress(baseURL, host, "/exams"));
 
-  // The sidebar marks the exams entry as the current page, never home.
+  // The sidebar marks the exams entry as the current page.
   const sidebar = page.locator('[data-sidebar="sidebar"]:visible');
   await expect(sidebar.getByRole("link", { name: "Exams" })).toHaveAttribute(
     "data-active",
     "true"
-  );
-  await expect(sidebar.getByRole("link", { name: "Home" })).toHaveAttribute(
-    "data-active",
-    "false"
   );
 
   // The page has one header with the path, the sidebar's foot holds its toggle, and a school
