@@ -8,12 +8,12 @@ import { cva } from "class-variance-authority";
 
 /** A paragraph, whose lines stop at about 75 characters. */
 export const paragraphVariants = cva(
-  "my-4 max-w-xl text-pretty tabular-nums leading-relaxed first:mt-0 last:mb-0"
+  "my-4 max-w-xl leading-relaxed text-pretty tabular-nums first:mt-0 last:mb-0"
 );
 
 /** A heading's box: its room above and below, and the size of its level. */
 export const headingVariants = cva(
-  "mt-10 mb-6 font-medium leading-tight tracking-tight first:mt-0 last:mb-0",
+  "mt-10 mb-6 leading-tight font-medium tracking-tight first:mt-0 last:mb-0",
   {
     variants: {
       tag: {
@@ -33,12 +33,12 @@ export const headingVariants = cva(
  * levels carry it, and deeper levels stay plain ink, so the level hierarchy reads at a glance.
  */
 export const headingTextVariants = cva(
-  "wrap-anywhere hyphens-auto text-pretty text-primary",
+  "text-primary text-pretty wrap-anywhere hyphens-auto",
   {
     variants: {
       tag: {
-        h1: "underline decoration-2 decoration-heading-rule underline-offset-4",
-        h2: "underline decoration-2 decoration-heading-rule underline-offset-4",
+        h1: "decoration-heading-rule underline decoration-2 underline-offset-4",
+        h2: "decoration-heading-rule underline decoration-2 underline-offset-4",
         h3: "",
         h4: "",
         h5: "",
@@ -65,7 +65,7 @@ export const listVariants = cva("my-4 space-y-4 last:mb-0", {
  * list and not its own.
  */
 export const listItemVariants = cva(
-  "ms-8 max-w-xl text-pretty ps-1 text-start leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
+  "ms-8 max-w-xl ps-1 text-start leading-relaxed text-pretty [&>*+*]:mt-4 [&>p:first-child]:inline"
 );
 
 /** A superscript or a subscript, at the annotation size. */
@@ -73,7 +73,7 @@ export const scriptVariants = cva("text-sm");
 
 /** A quotation, on the muted callout surface. */
 export const quoteVariants = cva(
-  "my-4 rounded-r-xl border-foreground border-l-2 bg-muted p-4 italic"
+  "border-foreground bg-muted my-4 rounded-r-xl border-l-2 p-4 italic"
 );
 
 /** A link in a text: in the link colour, underlined, at the weight of the words around it. */
@@ -81,7 +81,7 @@ export const linkVariants = cva("text-primary underline underline-offset-4");
 
 /** Code inside a line of text. */
 export const codeVariants = cva(
-  "inline whitespace-pre-wrap break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
+  "bg-muted text-muted-foreground inline rounded-sm border px-1 py-0.5 font-mono text-sm tracking-tight break-all whitespace-pre-wrap"
 );
 
 /**
@@ -94,7 +94,7 @@ export const codeVariants = cva(
  * and under the answer's actions.
  */
 export const tableFrameVariants = cva(
-  "relative my-4 grid h-auto w-full grid-cols-1 overflow-x-auto rounded-xl border text-sm *:w-full first:mt-0 last:mb-0 [&_:is(tbody,[data-slot=table-body])]:bg-muted/40"
+  "[&_:is(tbody,[data-slot=table-body])]:bg-muted/40 relative my-4 grid h-auto w-full grid-cols-1 overflow-x-auto rounded-xl border text-sm *:w-full first:mt-0 last:mb-0"
 );
 
 /** A row of a table, with a rule under every row but the last. */
@@ -108,12 +108,12 @@ export const tableVariants = cva("has-[tbody]:[&_thead]:border-b");
  * cell's direction, so an Arabic heading sits on the right.
  */
 export const tableHeadCellVariants = cva(
-  "h-10 whitespace-nowrap border-r bg-muted/80 px-4 text-start align-middle font-medium last:border-r-0"
+  "bg-muted/80 h-10 border-r px-4 text-start align-middle font-medium whitespace-nowrap last:border-r-0"
 );
 
 /** A data cell of a table, with a rule between it and the next column. */
 export const tableCellVariants = cva(
-  "wrap-anywhere border-r px-4 py-2 align-middle last:border-r-0"
+  "border-r px-4 py-2 align-middle wrap-anywhere last:border-r-0"
 );
 
 /**
@@ -123,11 +123,11 @@ export const tableCellVariants = cva(
 export const blockGapVariants = cva("my-4 first:mt-0 last:mb-0");
 
 /** A picture's surface, in a lesson, a response and a question alike: its corners, its border and the ground under it. */
-export const pictureVariants = cva("rounded-xl border bg-muted");
+export const pictureVariants = cva("bg-muted rounded-xl border");
 
 /** A formula on its own line: the card that holds it. */
 export const mathBlockVariants = cva(
-  "overflow-hidden rounded-xl border bg-card text-card-foreground"
+  "bg-card text-card-foreground overflow-hidden rounded-xl border"
 );
 
 /** The row of a formula card, which scrolls sideways when the formula is wider than the card. */
@@ -146,7 +146,7 @@ export const mathScrollVariants = cva("overflow-x-auto overflow-y-hidden px-4");
  * line height of the text around it.
  */
 export const mathInlineVariants = cva(
-  "[&_.katex-html>.katex-base]:inline-flex! [&_.katex-html>.katex-base>.katex-strut]:absolute [&_.katex-html>.katex-base]:-m-1 [&_.katex-html>.katex-base]:max-w-[calc(100%+0.5rem)] [&_.katex-html>.katex-base]:items-baseline [&_.katex-html>.katex-base]:overflow-x-auto [&_.katex-html>.katex-base]:overflow-y-hidden [&_.katex-html>.katex-base]:p-1"
+  "[&_.katex-html>.katex-base]:-m-1 [&_.katex-html>.katex-base]:inline-flex! [&_.katex-html>.katex-base]:max-w-[calc(100%+0.5rem)] [&_.katex-html>.katex-base]:items-baseline [&_.katex-html>.katex-base]:overflow-x-auto [&_.katex-html>.katex-base]:overflow-y-hidden [&_.katex-html>.katex-base]:p-1 [&_.katex-html>.katex-base>.katex-strut]:absolute"
 );
 
 /** The colour of a formula KaTeX cannot draw: muted, so a broken formula reads as a slip, not an alarm. */

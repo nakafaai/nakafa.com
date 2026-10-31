@@ -12,7 +12,7 @@ import { MarketingSection } from "@/components/marketing/shared/section";
  * with reduced motion. Each line of the promise carries its own stroke.
  */
 const promiseVariants = cva(
-  "bg-linear-to-r bg-size-[0%_100%] from-pop-yellow/45 to-pop-yellow/45 box-decoration-clone bg-no-repeat px-0.5 text-foreground transition-[background-size] delay-300 duration-700 ease-(--ease-in-out) group-data-seen/letter:bg-size-[100%_100%] motion-reduce:bg-size-[100%_100%] motion-reduce:transition-none"
+  "from-pop-yellow/45 to-pop-yellow/45 text-foreground bg-linear-to-r box-decoration-clone bg-size-[0%_100%] bg-no-repeat px-0.5 transition-[background-size] delay-300 duration-700 ease-(--ease-in-out) group-data-seen/letter:bg-size-[100%_100%] motion-reduce:bg-size-[100%_100%] motion-reduce:transition-none"
 );
 
 /**
@@ -28,7 +28,7 @@ export function Letter() {
       <div className="mx-auto w-full max-w-2xl">
         <LetterSheet>
           <Card className="py-8 lg:py-10">
-            <CardContent className="grid gap-5 text-pretty px-8 text-base lg:px-10">
+            <CardContent className="grid gap-5 px-8 text-base text-pretty lg:px-10">
               <p className="text-lg">{t("letter-hello")}</p>
               <p>{t("letter-student")}</p>
               <p>{t("letter-fair")}</p>

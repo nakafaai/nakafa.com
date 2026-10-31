@@ -1,6 +1,8 @@
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { ClassSubject } from "@repo/backend/confect/classroom/class";
 import { GradeValue } from "@repo/backend/confect/records/scheme";
+import { Nisn } from "@repo/backend/confect/roster/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
@@ -22,11 +24,15 @@ export const NOTE_LIMIT = 1000;
 /** The homeroom teacher's note on a report card. */
 export const ReportNote = Schema.String.check(Schema.isMaxLength(NOTE_LIMIT));
 
-/** One subject line of a report: the class, its released grade, and how the scheme judged it. */
+/**
+ * One subject line of a report: the class, its subject when it has one, its released grade,
+ * and how the scheme judged it. The transcript counts a line under its subject (ADR 0033, S6).
+ */
 export const ReportSubject = Schema.Struct({
   band: Schema.optionalKey(Schema.String),
   className: Schema.String,
   kktp: Schema.Literals(["reached", "notReached"]),
+  subject: Schema.optionalKey(ClassSubject),
   value: GradeValue,
 });
 
@@ -93,13 +99,14 @@ export const ReportDetail = Schema.Struct({
 });
 
 /**
- * The answer of the public check of a report's hash: the facts the QR may reveal, and
- * no student's name and no grade (ADR 0033). An unknown hash gets one answer.
+ * The answer of the public check of a hash: the facts the QR may reveal about a locked report
+ * card or SKL, and no student's name and no grade (ADR 0033). An unknown hash gets one answer.
+ * `approvedAt` is a report's approval and an SKL's issue.
  */
 export const VerifyAnswer = Schema.Union([
   Schema.Struct({
     approvedAt: Schema.Finite,
-    kind: Schema.Literal("report"),
+    kind: Schema.Literals(["report", "letter"]),
     outcome: Schema.Literal("locked"),
     period: Schema.String,
     school: Schema.String,
@@ -109,7 +116,7 @@ export const VerifyAnswer = Schema.Union([
 
 /** A report hash as the verification address carries it: 64 lowercase hex digits. */
 export const ReportHash = Schema.String.check(
-  Schema.isPattern(/^[0-9a-f]{64}$/)
+  Schema.isPattern(/^[0-9a-f]{64}$/u)
 );
 
 /**
@@ -153,4 +160,15 @@ export const ReportCohort = Schema.Struct({
   id: Id("tenantCohorts"),
   name: Schema.String,
   period: Schema.String,
+});
+
+/**
+ * One student of a class group in the Dapodik export of report data (ADR 0033, S6): the name,
+ * the NISN on file, and the subject lines of the student's locked report card in the class
+ * group, or none before it is locked.
+ */
+export const LedgerRow = Schema.Struct({
+  name: PersonName,
+  nisn: Schema.NullOr(Nisn),
+  subjects: Schema.NullOr(Schema.Array(ReportSubject)),
 });

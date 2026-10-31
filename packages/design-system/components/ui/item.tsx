@@ -36,18 +36,18 @@ export function ItemSeparator({
 }
 
 const itemVariants = cva(
-  "group/item flex w-full flex-wrap items-center rounded-md border text-sm outline-none transition-colors duration-100 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 [a]:transition-colors [a]:hover:bg-muted",
+  "group/item focus-visible:border-ring focus-visible:ring-ring/50 [a]:hover:bg-muted flex w-full flex-wrap items-center rounded-md border text-sm transition-colors duration-100 outline-none focus-visible:ring-3 [a]:transition-colors",
   {
     variants: {
       variant: {
         default: "border-transparent",
         outline: "border-border",
-        muted: "border-transparent bg-muted/50",
+        muted: "bg-muted/50 border-transparent",
       },
       size: {
         default: "gap-3.5 px-4 py-3.5",
         sm: "gap-2.5 px-3 py-2.5",
-        xs: "gap-2 in-data-[slot=dropdown-menu-content]:p-0 px-2.5 py-2",
+        xs: "gap-2 px-2.5 py-2 in-data-[slot=dropdown-menu-content]:p-0",
       },
     },
     defaultVariants: {
@@ -130,7 +130,7 @@ export function ItemTitle({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "line-clamp-1 flex w-fit items-center gap-2 font-medium text-sm leading-snug underline-offset-4",
+        "line-clamp-1 flex w-fit items-center gap-2 text-sm leading-snug font-medium underline-offset-4",
         className
       )}
       data-slot="item-title"
@@ -139,11 +139,15 @@ export function ItemTitle({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
+/**
+ * The line under an item's title, in the title's 14px text at every size: the muted colour carries the hierarchy,
+ * as the two lines of every list row do (`lib/row.ts`).
+ */
 export function ItemDescription({ className, ...props }: ComponentProps<"p">) {
   return (
     <p
       className={cn(
-        "line-clamp-2 text-left font-normal text-muted-foreground text-sm leading-normal group-data-[size=xs]/item:text-xs [&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4",
+        "text-muted-foreground [&>a:hover]:text-primary line-clamp-2 text-left text-sm leading-normal font-normal [&>a]:underline [&>a]:underline-offset-4",
         className
       )}
       data-slot="item-description"

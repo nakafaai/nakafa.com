@@ -22,7 +22,8 @@ import {
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Record } from "effect";
 
-const { allowDevice, answer, lock, paper } = refs.public.exams.sittings;
+const { allowDevice, answer, flag, lock, paper, saved } =
+  refs.public.exams.sittings;
 const open = refs.internal.exams.sittings.timers.open;
 
 /** The paper of one device in one sitting, read by the student. */
@@ -32,6 +33,13 @@ const paperOf = (
   deviceId: string
 ) => fixture.as("student").query(paper, { deviceId, sittingId, slug: nf });
 
+/** What one device saved on the paper of one sitting, read by the student. */
+const savedOf = (
+  fixture: SittingFixture,
+  sittingId: GenericId.GenericId<"examSittings">,
+  deviceId: string
+) => fixture.as("student").query(saved, { deviceId, sittingId, slug: nf });
+
 describe("exams/sittings paper", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -39,7 +47,7 @@ describe("exams/sittings paper", () => {
   });
 
   it.effect(
-    "gives the bound student each question with its interactions and no answer key, and no prompt",
+    "gives the bound student each question with its interactions, and no answer key, prompt, or saved answer",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -51,15 +59,14 @@ describe("exams/sittings paper", () => {
         });
         const { questions } = yield* paperOf(fixture, made.id, deviceOf(1));
         const [question] = questions;
-        expect(question).toMatchObject({ number: 1, response: null });
+        expect(question.number).toBe(1);
         expect(question.interactions).toHaveLength(1);
-        expect(Record.keys(question)).not.toContain("key");
-        expect(Record.keys(question)).not.toContain("prompt");
+        expect(Record.keys(question)).toEqual(["id", "interactions", "number"]);
       })
   );
 
   it.effect(
-    "gives the questions in the order of the exam, and shows the response the student saved",
+    "gives the questions in the order of the exam, keeps the paper as it was after an answer and a flag, and shows them in what the student saved",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -98,10 +105,20 @@ describe("exams/sittings paper", () => {
           slug: nf,
           version: 1,
         });
-        const after = yield* paperOf(fixture, made.id, deviceOf(1));
-        expect(
-          Arr.map(after.questions, (question) => question.response)
-        ).toEqual([null, ["option-2"]]);
+        yield* fixture.as("student").mutation(flag, {
+          deviceId: deviceOf(1),
+          flagged: true,
+          questionId: second.id,
+          sittingId: made.id,
+          slug: nf,
+        });
+        expect(yield* paperOf(fixture, made.id, deviceOf(1))).toEqual(before);
+        expect(yield* savedOf(fixture, made.id, deviceOf(1))).toEqual({
+          answers: [
+            { question: second.id, response: ["option-2"], version: 1 },
+          ],
+          flagged: [second.id],
+        });
       })
   );
 

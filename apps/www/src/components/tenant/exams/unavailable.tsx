@@ -38,7 +38,7 @@ export function ExamGone() {
     <>
       {t("gone-note")}{" "}
       <Link
-        className="font-medium text-foreground underline-offset-4 hover:underline"
+        className="text-foreground font-medium underline-offset-4 hover:underline"
         params={{ slug }}
         to="/school/$slug/exams"
       >

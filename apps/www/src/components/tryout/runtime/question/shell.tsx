@@ -78,7 +78,7 @@ export function TryoutReviewQuestionExplanation({
     <CollapsiblePanel>
       <section aria-labelledby={explanationId} className="space-y-6 pb-8">
         <Separator />
-        <h3 className="scroll-mt-44 font-medium text-lg" id={explanationId}>
+        <h3 className="scroll-mt-44 text-lg font-medium" id={explanationId}>
           {tTryouts("explanation")}
         </h3>
         {children}

@@ -85,12 +85,12 @@ export function ReferenceButton({ references, title }: Props) {
                         >
                           <div className="flex flex-col gap-1">
                             <h3
-                              className="line-clamp-2 font-medium text-sm capitalize leading-normal"
+                              className="line-clamp-2 text-sm leading-normal font-medium capitalize"
                               title={reference.title}
                             >
                               {reference.title.toLowerCase()}
                             </h3>
-                            <div className="flex min-w-0 items-center gap-2 text-muted-foreground text-sm">
+                            <div className="text-muted-foreground flex min-w-0 items-center gap-2 text-sm">
                               <HugeIcons
                                 className="size-4 shrink-0"
                                 icon={Globe02Icon}
@@ -149,7 +149,7 @@ export function ReferenceButton({ references, title }: Props) {
                                   className="mt-0.5 size-4 shrink-0"
                                   icon={Book03Icon}
                                 />
-                                <span className="wrap-anywhere min-w-0 text-sm">
+                                <span className="min-w-0 text-sm wrap-anywhere">
                                   {reference.details}
                                 </span>
                               </div>

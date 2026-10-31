@@ -61,7 +61,10 @@ export function BacterialPlayback({
   );
 }
 
-/** Renders the playback speed as one select, which names the speed it plays at. */
+/**
+ * Renders the playback speed as one select, which names the speed it plays at. It keeps the width of its widest
+ * speed, so a new speed moves nothing beside it.
+ */
 export function BacterialSpeeds({
   onSpeedChange,
   speed,
@@ -90,7 +93,7 @@ export function BacterialSpeeds({
           className="text-muted-foreground"
           icon={DashboardSpeed01Icon}
         />
-        <SelectValue />
+        <SelectValue labels={Arr.map(items, (item) => item.label)} />
       </SelectTrigger>
       <SelectContent>
         {Arr.map(items, (item) => (
@@ -139,6 +142,8 @@ function useBacterialTime() {
 /**
  * Renders the generation as one select, each option labelled with its time. The
  * select follows the growth as it advances on its own, and a choice jumps to it.
+ * It keeps the width of its longest time, so the growth never widens it and
+ * moves nothing beside it while no one touches the card.
  */
 export function BacterialGenerations({
   generation,
@@ -168,7 +173,7 @@ export function BacterialGenerations({
     >
       <SelectTrigger aria-label={t("time")} size="sm">
         <HugeIcons className="text-muted-foreground" icon={Time04Icon} />
-        <SelectValue />
+        <SelectValue labels={Arr.map(items, (item) => item.label)} />
       </SelectTrigger>
       <SelectContent>
         {Arr.map(items, (item) => (

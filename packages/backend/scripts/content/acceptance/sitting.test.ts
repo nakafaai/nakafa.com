@@ -341,7 +341,7 @@ describe("acceptance sitting", () => {
         ).toMatchObject({
           _tag: "AcceptanceRuntimeError",
           message:
-            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay]",
+            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay|prose]",
         });
         expect(mocks.read).not.toHaveBeenCalled();
         expect(mocks.command).not.toHaveBeenCalled();
@@ -365,7 +365,7 @@ describe("acceptance sitting", () => {
         ).toMatchObject({
           _tag: "AcceptanceRuntimeError",
           message:
-            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay]",
+            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay|prose]",
         });
         expect(mocks.read).not.toHaveBeenCalled();
         expect(mocks.command).not.toHaveBeenCalled();

@@ -4,6 +4,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Option } from "effect";
 import { type RefObject, useEffect } from "react";
 import { useTranslations } from "use-intl";
@@ -74,7 +75,7 @@ function useReveal(canvas: RefObject<HTMLElement | null>) {
     if (reveal === null || root === null) {
       return;
     }
-    const page = document.getElementById(`question-${reveal}`);
+    const page = elementById(`question-${reveal}`);
     if (page !== null) {
       root.scrollTo({
         top:
@@ -215,7 +216,7 @@ export function ExamCanvas({
     // reveal, the footer's moves and the pages' windowing read.
     <ScrollArea
       aria-label={t("pages-label")}
-      className="min-w-0 flex-1 bg-muted/40"
+      className="bg-muted/40 min-w-0 flex-1"
       onViewportScroll={syncPage}
       render={<section />}
       viewportClassName="relative"

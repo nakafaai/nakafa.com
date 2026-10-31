@@ -28,10 +28,10 @@ const Account = Schema.Struct({
 });
 
 /** A one letter name that took two random digits. */
-const SINGLE_LETTER_RANDOM = /^j[1-9][0-9]$/;
+const SINGLE_LETTER_RANDOM = /^j[1-9][0-9]$/u;
 
 /** A crowded name that took a random number of four digits or more. */
-const CROWDED_RANDOM = /^siti[1-9][0-9]{3,}$/;
+const CROWDED_RANDOM = /^siti[1-9][0-9]{3,}$/u;
 
 /**
  * A random source that draws the same fraction every time, so a second draw at

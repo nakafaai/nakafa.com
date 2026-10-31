@@ -94,10 +94,10 @@ function ProOfferOption({ offer }: { offer: ProOffer }) {
   const isPass = offer.interval === "pass";
 
   return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-data-checked:border-primary">
+    <label className="has-data-checked:border-primary flex cursor-pointer items-start gap-3 rounded-lg border p-4">
       <Radio className="mt-0.5" value={offer.offer} />
       <span className="grid flex-1 gap-1">
-        <span className="flex items-baseline justify-between gap-3 font-medium text-sm">
+        <span className="flex items-baseline justify-between gap-3 text-sm font-medium">
           <span>
             {isPass
               ? t("offer-pass", { months: offer.months })

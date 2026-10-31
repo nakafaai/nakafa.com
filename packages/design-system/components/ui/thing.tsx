@@ -18,14 +18,14 @@ const motionVariants = cva("", {
   variants: {
     motion: {
       dot: "motion-safe:animate-thing-dot",
-      draw: "[stroke-dasharray:1] motion-safe:animate-thing-draw motion-safe:[stroke-dashoffset:1]",
+      draw: "motion-safe:animate-thing-draw [stroke-dasharray:1] motion-safe:[stroke-dashoffset:1]",
       glide: "motion-safe:animate-thing-glide",
       glint: "motion-safe:animate-thing-glint",
       hop: "motion-safe:animate-thing-hop",
       open: "motion-safe:animate-thing-open",
-      sway: "transform-fill origin-top motion-safe:animate-thing-sway",
-      tick: "transform-view origin-[32px_36px] motion-safe:animate-thing-tick",
-      wave: "transform-fill origin-left motion-safe:animate-thing-wave",
+      sway: "motion-safe:animate-thing-sway origin-top transform-fill",
+      tick: "motion-safe:animate-thing-tick origin-[32px_36px] transform-view",
+      wave: "motion-safe:animate-thing-wave origin-left transform-fill",
       write: "motion-safe:animate-thing-write",
     },
   },
@@ -69,7 +69,7 @@ export function Thing({
     <Picture
       box={BOX}
       className={cn(
-        "overflow-visible text-foreground",
+        "text-foreground overflow-visible",
         size === undefined && "size-[var(--toy,56px)]",
         className
       )}

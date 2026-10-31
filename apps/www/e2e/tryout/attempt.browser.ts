@@ -5,7 +5,7 @@ import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate, activateAncestor, visibleLink } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { finishSection } from "@/e2e/support/player";
+import { finishSection, waitForRunningSection } from "@/e2e/support/player";
 import {
   expectStillShell,
   observeShell,
@@ -109,9 +109,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     [true],
     Effect.gen(function* () {
       yield* activate(start, hasTouch);
-      yield* Effect.promise(() =>
-        expect(finish).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-      );
+      yield* waitForRunningSection(page);
     })
   );
 

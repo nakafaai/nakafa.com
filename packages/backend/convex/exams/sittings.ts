@@ -19,6 +19,7 @@ export const mine = registeredFunctions.mine;
 export const paper = registeredFunctions.paper;
 export const prompt = registeredFunctions.prompt;
 export const reschedule = registeredFunctions.reschedule;
+export const saved = registeredFunctions.saved;
 export const signal = registeredFunctions.signal;
 export const signals = registeredFunctions.signals;
 export const student = registeredFunctions.student;

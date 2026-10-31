@@ -15,7 +15,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const PLACEHOLDER = app.Comments["add-comment-placeholder"];
 /** The line above a reply to a reply, in English. */
-const REPLYING_TO = /Replying to/;
+const REPLYING_TO = /Replying to/u;
 
 /** The row of one comment, found by its text. The row's container carries the comment's id. */
 function rowOf(page: Page, text: string) {

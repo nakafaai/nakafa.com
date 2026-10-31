@@ -114,7 +114,7 @@ const list = FunctionImpl.make(
       roomOf(
         row,
         row.state === "scheduled" &&
-          Arr.contains(actions, "sitting.proctor") &&
+          Arr.contains(actions, "sitting.schedule") &&
           (row.scheduledBy === member.person._id || isAdmin)
       )
     );

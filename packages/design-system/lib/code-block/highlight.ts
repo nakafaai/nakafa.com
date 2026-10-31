@@ -56,7 +56,7 @@ function getHighlighter() {
 }
 
 const PRE_BACKGROUND_STYLE_PATTERN =
-  /(<pre[^>]*?)\s+style="[^"]*background[^"]*"([^>]*>)/g;
+  /(?<open><pre[^>]*?)\s+style="[^"]*background[^"]*"(?<rest>[^>]*>)/gu;
 
 const CodeHighlightInputSchema = Schema.Struct({
   code: Schema.String,

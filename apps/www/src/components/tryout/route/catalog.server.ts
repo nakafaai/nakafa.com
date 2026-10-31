@@ -23,7 +23,9 @@ import { keepPersonalResponse } from "@/components/tryout/route/response.server"
 import type { TrackListRequestSchema } from "@/components/tryout/route/search";
 import { readRequestToken } from "@/components/tryout/route/token.server";
 import { getAppSocialArtwork } from "@/lib/og/app";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
+import { HeadAlternate, toHeadAlternates } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 import { serverHandler } from "@/lib/server/fn";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
@@ -31,8 +33,13 @@ import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 /** The catalog kinds whose published route carries its own title and social image. */
 type TryoutRouteKind = typeof tryoutMetadataArgsValidator.kind.Type;
 
-/** The head facts of one published try-out route, as its page builds them. */
+/**
+ * The head facts of one published try-out route, as its page builds them. A route's slug can differ
+ * from one locale to the next, as `general-reasoning` is `penalaran-umum` in Indonesian, so its
+ * language links are the addresses the catalog holds for the same node in each locale.
+ */
 const TryoutRouteHeadSchema = Schema.Struct({
+  alternates: Schema.Array(HeadAlternate),
   canonicalPath: LocalizedPath,
   description: Schema.String,
   image: Schema.String,
@@ -80,8 +87,15 @@ export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
     if (!source) {
       return Option.none<TryoutRouteHead>();
     }
+    const alternates = toHeadAlternates(
+      createResolvedRouteAlternates(
+        { appLocale, publicPath: source.publicPath },
+        source.alternates
+      )
+    );
     if (input.kind !== "exam") {
       return Option.some<TryoutRouteHead>({
+        alternates,
         canonicalPath: `/${input.locale}/${source.publicPath}`,
         description: source.description ?? tTryouts("metadata-description"),
         image: getOgUrl(input.locale, source.publicPath),
@@ -98,6 +112,7 @@ export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
       publicPath: source.publicPath,
     });
     return Option.some<TryoutRouteHead>({
+      alternates,
       canonicalPath: `/${input.locale}/${source.publicPath}`,
       description: source.description ?? tTryouts("metadata-description"),
       image: artwork.socialImageSrc,

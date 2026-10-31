@@ -20,17 +20,17 @@ import {
 import { observeShell } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
-const QURAN_HEADING_PATTERN = /Al-Baqara/i;
-const TRYOUT_TITLE_PATTERN = /Try out/i;
+const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/iu;
+const QURAN_HEADING_PATTERN = /Al-Baqara/iu;
+const TRYOUT_TITLE_PATTERN = /Try out/iu;
 /**
  * A curriculum's page or one of its grades, which the homepage links: it links
  * no subject page of a grade.
  */
-const CURRICULUM_HREF_PATTERN = /^\/en\/curriculum\/(?:[^/]+\/)*[^/.]+$/;
-const ARTICLE_CATEGORY_HREF_PATTERN = /^\/en\/articles\/[^/.]+$/;
-const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/;
-const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/;
+const CURRICULUM_HREF_PATTERN = /^\/en\/curriculum\/(?:[^/]+\/)*[^/.]+$/u;
+const ARTICLE_CATEGORY_HREF_PATTERN = /^\/en\/articles\/[^/.]+$/u;
+const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/u;
+const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/u;
 const LINK_POLL_MILLISECONDS = 100;
 // Navigation keeps its own budget, so it can change apart from readiness.
 const NAVIGATION_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;

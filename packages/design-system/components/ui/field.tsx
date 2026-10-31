@@ -1,5 +1,4 @@
 import { Label } from "@repo/design-system/components/ui/label";
-import { Separator } from "@repo/design-system/components/ui/separator";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 
@@ -42,7 +41,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "group/field-group @container/field-group flex w-full flex-col gap-6 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4",
+        "group/field-group @container/field-group flex w-full flex-col gap-6 data-[slot=checkbox-group]:gap-3 *:data-[slot=field]:has-[>[data-slot=field-error]:last-child]:-mb-3 *:data-[slot=field-group]:gap-4",
         className
       )}
       data-slot="field-group"
@@ -53,7 +52,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
 
 // The field is a fieldset, which keeps the browser's min-content floor; min-w-0 lets it narrow with its container.
 const fieldVariants = cva(
-  "group/field flex w-full min-w-0 gap-3 data-[invalid=true]:text-destructive",
+  "group/field data-[invalid=true]:text-destructive flex w-full min-w-0 gap-3",
   {
     variants: {
       orientation: {
@@ -64,7 +63,7 @@ const fieldVariants = cva(
           "has-[>[data-slot=field-content]]:items-start has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
         ],
         responsive: [
-          "@md/field-group:flex-row flex-col @md/field-group:items-center *:w-full @md/field-group:*:w-auto [&>.sr-only]:w-auto",
+          "flex-col *:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto [&>.sr-only]:w-auto",
           "@md/field-group:*:data-[slot=field-label]:flex-auto",
           "@md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
         ],
@@ -127,7 +126,7 @@ function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex w-fit items-center gap-2 font-medium text-sm leading-snug group-data-[disabled=true]/field:opacity-50",
+        "flex w-fit items-center gap-2 text-sm leading-snug font-medium group-data-[disabled=true]/field:opacity-50",
         className
       )}
       data-slot="field-label"
@@ -140,8 +139,8 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       className={cn(
-        "font-normal text-muted-foreground text-sm leading-normal group-has-data-[orientation=horizontal]/field:text-balance",
-        "nth-last-2:-mt-1 last:mt-0 [[data-variant=legend]+&]:-mt-1.5",
+        "text-muted-foreground text-sm leading-normal font-normal group-has-data-[orientation=horizontal]/field:text-balance",
+        "last:mt-0 nth-last-2:-mt-1 [[data-variant=legend]+&]:-mt-1.5",
         "[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4",
         className
       )}
@@ -151,45 +150,21 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
   );
 }
 
-function FieldSeparator({
-  children,
-  className,
-  ...props
-}: React.ComponentProps<"div"> & {
-  children?: React.ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "relative -my-2 h-5 text-sm group-data-[variant=outline]/field-group:-mb-2",
-        className
-      )}
-      data-content={!!children}
-      data-slot="field-separator"
-      {...props}
-    >
-      <Separator className="absolute inset-0 top-1/2" />
-      {!!children && (
-        <span
-          className="relative mx-auto block w-fit bg-background px-2 text-muted-foreground"
-          data-slot="field-separator-content"
-        >
-          {children}
-        </span>
-      )}
-    </div>
-  );
-}
-
 /**
  * The line under a field that holds its error. It is always there and one line tall, so a field keeps its
  * description and never grows or jumps when an error shows or goes: pass the message as children while there is
  * one, and nothing otherwise. It stays a live region the whole time, so a message that appears is announced.
+ * Under a description it is that note's next line, with no gap of its own, and in a `FieldGroup` a field that ends
+ * with it gives the next field half the group's gap: the line itself is the rest of that room while it is empty,
+ * and a message in it still keeps 12px from the next field. So every form keeps one rhythm, reserved line or not.
  */
 function FieldError({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("min-h-5 font-normal text-destructive text-sm", className)}
+      className={cn(
+        "text-destructive min-h-5 text-sm font-normal [[data-slot=field-description]+&]:-mt-3",
+        className
+      )}
       data-slot="field-error"
       role="alert"
       {...props}
@@ -205,7 +180,6 @@ export {
   FieldGroup,
   FieldLabel,
   FieldLegend,
-  FieldSeparator,
   FieldSet,
   FieldTitle,
 };

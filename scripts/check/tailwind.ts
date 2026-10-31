@@ -14,17 +14,17 @@ type Resolve = (value: string) => string | undefined;
 const TEST_MODULE_PATTERN = /\.test\.tsx?$/u;
 // A utility with a bracketed value, not followed by `:` (that is a variant).
 const CANDIDATE_PATTERN =
-  /(?<![\w[\]-])(-?)([a-z][a-z0-9-]*?)-\[([^\]\s"'`]+)\](?![\w:-])/gu;
-const LENGTH_PATTERN = /^(\d*\.?\d+)(px|rem)$/u;
-const PERCENT_PATTERN = /^(\d+)(?:\.(\d+))?%$/u;
-const PIXELS_PATTERN = /^(\d+)px$/u;
+  /(?<![\w[\]-])(?<sign>-?)(?<utility>[a-z][a-z0-9-]*?)-\[(?<value>[^\]\s"'`]+)\](?![\w:-])/gu;
+const LENGTH_PATTERN = /^(?<amount>\d*\.?\d+)(?<unit>px|rem)$/u;
+const PERCENT_PATTERN = /^(?<whole>\d+)(?:\.(?<decimals>\d+))?%$/u;
+const PIXELS_PATTERN = /^(?<pixels>\d+)px$/u;
 const INTEGER_PATTERN = /^\d+$/u;
 const DECIMAL_PATTERN = /^\d*\.?\d+$/u;
-const MILLISECONDS_PATTERN = /^(\d+)ms$/u;
-const SECONDS_PATTERN = /^(\d*\.?\d+)s$/u;
-const DEGREES_PATTERN = /^(\d+)deg$/u;
-const RATIO_PATTERN = /^(\d+)\/(\d+)$/u;
-const GRID_PATTERN = /^repeat\((\d+),_?minmax\(0,_?1fr\)\)$/u;
+const MILLISECONDS_PATTERN = /^(?<milliseconds>\d+)ms$/u;
+const SECONDS_PATTERN = /^(?<seconds>\d*\.?\d+)s$/u;
+const DEGREES_PATTERN = /^(?<degrees>\d+)deg$/u;
+const RATIO_PATTERN = /^(?<numerator>\d+)\/(?<denominator>\d+)$/u;
+const GRID_PATTERN = /^repeat\((?<columns>\d+),_?minmax\(0,_?1fr\)\)$/u;
 const BOUND_PREFIX_PATTERN = /^(?:min|max)-/u;
 
 const REM_PIXELS = 16;

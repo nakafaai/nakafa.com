@@ -21,6 +21,10 @@ import {
 } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
+  TryoutStartProvider,
+  useTryoutStartPhase,
+} from "@/components/tryout/runtime/start";
+import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
   isTryoutStateLive,
@@ -89,19 +93,21 @@ export function TryoutSetPageClient({
   return (
     <TryoutContentContext value={{ bodies: content }}>
       <TryoutSetPageContext value={{ page, pending, restartTarget, route }}>
-        {binding !== null && isTryoutStateLive(binding.initialState) ? (
-          <LiveTryoutSetPage binding={binding} key={binding.attemptId}>
-            {children}
-          </LiveTryoutSetPage>
-        ) : (
-          <ResolvedTryoutSetPage
-            binding={binding}
-            finish={null}
-            state={binding?.initialState ?? null}
-          >
-            {children}
-          </ResolvedTryoutSetPage>
-        )}
+        <TryoutStartProvider>
+          {binding !== null && isTryoutStateLive(binding.initialState) ? (
+            <LiveTryoutSetPage binding={binding} key={binding.attemptId}>
+              {children}
+            </LiveTryoutSetPage>
+          ) : (
+            <ResolvedTryoutSetPage
+              binding={binding}
+              finish={null}
+              state={binding?.initialState ?? null}
+            >
+              {children}
+            </ResolvedTryoutSetPage>
+          )}
+        </TryoutStartProvider>
       </TryoutSetPageContext>
     </TryoutContentContext>
   );
@@ -225,14 +231,7 @@ function ResolvedTryoutSetPage({
 
   return (
     <>
-      {binding?.initialState.attempt.status === "in-progress" ? (
-        <ShellLock
-          remember={getTryoutAttemptLock(
-            binding.attemptId,
-            binding.initialState.attempt.expiresAt
-          )}
-        />
-      ) : null}
+      <SetLock binding={binding} />
       {isInternalEntry && entrySection ? (
         <TryoutInternalSet
           value={{
@@ -250,6 +249,25 @@ function ResolvedTryoutSetPage({
       )}
     </>
   );
+}
+
+/**
+ * Locks the app shell while the attempt this page is bound to runs, or while the learner's press opens
+ * the set's entry section, so the page takes the whole screen from the press on.
+ */
+function SetLock({ binding }: Pick<TryoutSetPageClientProps, "binding">) {
+  const opening = useTryoutStartPhase() === "opening";
+  if (binding?.initialState.attempt.status === "in-progress") {
+    return (
+      <ShellLock
+        remember={getTryoutAttemptLock(
+          binding.attemptId,
+          binding.initialState.attempt.expiresAt
+        )}
+      />
+    );
+  }
+  return opening ? <ShellLock /> : null;
 }
 
 /** Renders one direct-entry runtime from its exact authenticated query. */

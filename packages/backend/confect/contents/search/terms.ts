@@ -2,7 +2,7 @@ import type { contentSearchInputValidator } from "@repo/backend/confect/contents
 import { cleanSlug } from "@repo/utilities/slug";
 
 type ContentSearchInput = typeof contentSearchInputValidator.Type;
-const routeSeparatorPattern = /[/_-]+/g;
+const routeSeparatorPattern = /[/_-]+/gu;
 
 /** Converts path-like queries into the token form Convex search expects. */
 export function getRouteSearchText(queryText: string) {

@@ -18,7 +18,7 @@ import { buildUnsupportedMarkdownRouteText } from "@/lib/llms/unsupported";
 function readIndexLinks(text: string) {
   return Arr.map(
     Arr.fromIterable(
-      text.matchAll(/https:\/\/nakafa\.com\/[^\s)`]*llms\.txt/g)
+      text.matchAll(/https:\/\/nakafa\.com\/[^\s)`]*llms\.txt/gu)
     ),
     ([link]) => new URL(link).pathname
   );

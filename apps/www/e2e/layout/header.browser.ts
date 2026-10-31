@@ -51,7 +51,7 @@ const publicRoutes = [
 ];
 
 /** The try-out page of an exam, which a phone reaches from a set page's folded path. */
-const EXAM_PAGE = /\/en\/try-out\/indonesia\/snbt$/;
+const EXAM_PAGE = /\/en\/try-out\/indonesia\/snbt$/u;
 
 /** The pages of a signed-in learner, each with its own header. */
 const learnerRoutes = ["/en/chat", "/en/user/settings", "/en/notifications"];

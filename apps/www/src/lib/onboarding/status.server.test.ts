@@ -1,3 +1,14 @@
+import { describe, expect, it } from "@effect/vitest";
+import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
+import { Duration, Effect, Fiber, Layer } from "effect";
+import { TestClock } from "effect/testing";
+import {
+  OnboardingAdmissionError,
+  OnboardingStatusReadError,
+  readOnboardingStatus,
+  recordOnboardingAdmission,
+} from "@/lib/onboarding/status.server";
+
 vi.mock("@/env.public", () => ({
   clientEnv: {
     VITE_CONVEX_URL: "https://test.convex.cloud",
@@ -10,16 +21,6 @@ const { fetchMutation, fetchQuery } = vi.hoisted(() => ({
 }));
 
 // @vitest-environment node
-import { describe, expect, it } from "@effect/vitest";
-import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
-import { Duration, Effect, Fiber, Layer } from "effect";
-import { TestClock } from "effect/testing";
-import {
-  OnboardingAdmissionError,
-  OnboardingStatusReadError,
-  readOnboardingStatus,
-  recordOnboardingAdmission,
-} from "@/lib/onboarding/status.server";
 
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();

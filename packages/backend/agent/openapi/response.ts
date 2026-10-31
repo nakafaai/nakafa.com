@@ -8,7 +8,7 @@ const OPENAPI_CACHE_CONTROL = "public, max-age=3600, s-maxage=3600";
 const OPENAPI_VARY = "Accept, Accept-Encoding";
 const ENTITY_TAG_CHARACTERS = /^[\x21\x23-\x7e\u0080-\u00ff]*$/u;
 const MAX_IF_NONE_MATCH_ELEMENTS = 32;
-const OPENAPI_OPAQUE_ENTITY_TAG = NAKAFA_OPENAPI_ETAG.replace(/^W\//, "");
+const OPENAPI_OPAQUE_ENTITY_TAG = NAKAFA_OPENAPI_ETAG.replace(/^W\//u, "");
 function skipOptionalWhitespace(value: string, start: number) {
   let index = start;
   while (value[index] === " " || value[index] === "\t") {

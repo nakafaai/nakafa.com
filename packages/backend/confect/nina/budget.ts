@@ -114,7 +114,7 @@ export const NINA_BUDGET = {
  * `undefined`.
  */
 const PIECE =
-  /([A-Za-zÀ-ÖØ-öø-ɏḀ-ỿ]+)|([㐀-䶿一-鿿豈-﫿\u{20000}-\u{2fa1f}])|(\p{L})|(\p{Nd})|([^\S\n]+)|(\n)|(_)|[\s\S]/gu;
+  /(?<latin>[A-Za-zÀ-ÖØ-öø-ɏḀ-ỿ]+)|(?<han>[㐀-䶿一-鿿豈-﫿\u{20000}-\u{2fa1f}])|(?<letter>\p{L})|(?<digit>\p{Nd})|(?<space>[^\S\n]+)|(?<newline>\n)|(?<underscore>_)|[\s\S]/gu;
 
 /** The tokens one matched piece costs, by the rule of the group that matched it. */
 function pieceTokens(

@@ -1,5 +1,5 @@
-const HTTP_URL_PATTERN = /^https?:\/\//i;
-const URL_PREFIX_PATTERN = /(https?:\/\/)?(www\.)?/i;
+const HTTP_URL_PATTERN = /^https?:\/\//iu;
+const URL_PREFIX_PATTERN = /(?:https?:\/\/)?(?:www\.)?/iu;
 
 /** Adds an HTTPS scheme when a user-authored link does not provide one. */
 export function formatUrl(link: string) {

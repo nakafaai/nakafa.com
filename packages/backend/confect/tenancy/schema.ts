@@ -14,7 +14,7 @@ export const Email = Schema.String.check(
   Schema.isMaxLength(254),
   Schema.isTrimmed(),
   Schema.isLowercased(),
-  Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+  Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/u)
 ).pipe(Schema.brand("@Nakafa/Email"));
 
 /**
@@ -66,7 +66,7 @@ export const UnitStatus = Schema.Literals(["active", "archived"]);
 /** Units one tenant may hold; every unit list reads at most this many. */
 export const UNIT_LIMIT = 24;
 /** The national school number (NPSN) of one unit. */
-export const Npsn = Schema.String.check(Schema.isPattern(/^\d{8}$/)).pipe(
+export const Npsn = Schema.String.check(Schema.isPattern(/^\d{8}$/u)).pipe(
   Schema.brand("@Nakafa/Npsn")
 );
 

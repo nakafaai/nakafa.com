@@ -111,9 +111,9 @@ export function SchoolClassesSettings({ slug }: { slug: TenantSlug }) {
 }
 
 /**
- * The page's actions, the same in every state from the first paint: the unit choice for a school with more than
- * one unit, the search, and Add classroom, which waits disabled until the period is known, so the header never
- * grows when the unit or the period answers.
+ * The page's actions, drawn final from the first paint and never changed by the unit's or the period's answer: the
+ * unit choice for a school with more than one unit, the search, and Add classroom, whose dialog waits for the period
+ * itself.
  */
 function ClassesActions() {
   const t = useTranslations("SchoolSettings");
@@ -132,7 +132,7 @@ function ClassesActions() {
       ) : null}
       <TableSearch placeholder={t("classes-search")} />
       <SchoolClassAdd
-        periodId={QueryResult.isSuccess(active) ? active.value : null}
+        active={active}
         sd={chosen !== null && chosen.unit.level === "sd"}
         slug={slug}
       />

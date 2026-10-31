@@ -1,4 +1,4 @@
-const SHIKI_LINE_BOUNDARY_PATTERN = /<\/span><span class="line/g;
+const SHIKI_LINE_BOUNDARY_PATTERN = /<\/span><span class="line/gu;
 
 /** Keeps Shiki line spans readable to crawlers that do not apply CSS. */
 export function preserveShikiLineBreaks(html: string) {

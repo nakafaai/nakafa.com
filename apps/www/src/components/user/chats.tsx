@@ -204,7 +204,7 @@ function ChatRow({ chat }: { chat: ChatView }) {
           </FeedAge>
           <HugeIcons
             aria-label={tAi(isPrivate ? "private" : "public")}
-            className="size-4 text-muted-foreground"
+            className="text-muted-foreground size-4"
             icon={isPrivate ? SquareLock01Icon : Globe02Icon}
             role="img"
           />
@@ -214,7 +214,7 @@ function ChatRow({ chat }: { chat: ChatView }) {
         </FeedHeader>
         <Link
           activeOptions={EXACT_ACTIVE_OPTIONS}
-          className="wrap-anywhere rounded-sm outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          className="focus-visible:ring-ring rounded-sm wrap-anywhere outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-inset"
           dir="auto"
           params={{ id: chat._id, locale }}
           to="/$locale/chat/$id"

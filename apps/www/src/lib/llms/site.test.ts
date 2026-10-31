@@ -32,7 +32,7 @@ describe("site llms entries", () => {
           [
             {
               description:
-                "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online Tryouts.",
+                "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online try outs.",
               route: "/pricing",
               title: "Pricing",
             },
