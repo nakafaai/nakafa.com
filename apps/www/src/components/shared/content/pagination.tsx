@@ -16,13 +16,8 @@ interface Props {
 
 /**
  * Links one neighbouring page, or keeps its column without a link when there
- * is none.
- *
- * A link with `prefetch` loads the page's own cached content as it nears the
- * viewport, not only the route's App Shell, which costs one server render per
- * link. Without it the link loads that content once the reader hovers,
- * focuses, or touches it.
- *
+ * is none. The link loads the page's content once the reader hovers, focuses or
+ * touches it, as every link does by the router's default.
  */
 function PaginationItem({
   context,
@@ -32,7 +27,6 @@ function PaginationItem({
   icon,
   className,
   iconPosition = "right",
-  prefetch = false,
 }: {
   context?: string | undefined;
   publicPath: string;
@@ -41,7 +35,6 @@ function PaginationItem({
   icon: IconSvgElement;
   className?: string;
   iconPosition?: "left" | "right";
-  prefetch?: boolean;
 }) {
   const itemClassName = cn(
     buttonVariants({ variant: "outline" }),
@@ -66,12 +59,7 @@ function PaginationItem({
       </div>
     ),
     onSome: (target) => (
-      <TargetLink
-        className={itemClassName}
-        preload={prefetch ? "render" : "intent"}
-        target={target}
-        title={title}
-      >
+      <TargetLink className={itemClassName} target={target} title={title}>
         <PaginationLabel
           icon={icon}
           iconPosition={iconPosition}
@@ -119,10 +107,13 @@ function PaginationLabel({
 }
 
 /**
- * Links the previous and next page. A reader who reaches the end of a page is
- * likely to continue, and a phone gives no hover to prefetch on, so the next
- * link preloads its page in view. Previous waits for intent, which spares a
- * reader who only moves forward the second server render.
+ * Links the previous and next page. Neither loads its page before the reader
+ * shows intent: a lesson's answer is small on the wire but about half a megabyte
+ * for a phone to read, so no page loads one the reader may never open.
+ *
+ * It follows the page's article, and shows only once the article has its body:
+ * after a client navigation the body of a server component arrives a moment
+ * after the page around it, and links drawn before it would be pushed down.
  */
 export function PaginationContent({ pagination, className }: Props) {
   const t = useTranslations("Common");
@@ -130,7 +121,7 @@ export function PaginationContent({ pagination, className }: Props) {
   return (
     <nav
       aria-label="Pagination navigation"
-      className={cn("mt-10 pt-10", className)}
+      className={cn("mt-10 pt-10 [article:empty~&]:hidden", className)}
     >
       <div className="mx-auto grid max-w-3xl gap-6 px-6 sm:grid-cols-2">
         <PaginationItem
@@ -149,7 +140,6 @@ export function PaginationContent({ pagination, className }: Props) {
           icon={ArrowRight02Icon}
           iconPosition="right"
           label={t("next")}
-          prefetch
           publicPath={pagination.next.publicPath}
           title={pagination.next.title}
         />

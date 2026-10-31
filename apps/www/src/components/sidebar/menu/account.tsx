@@ -1,4 +1,4 @@
-import { Logout01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons";
+import { Logout01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import {
   DropdownMenu,
@@ -13,13 +13,13 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   SidebarMenuButton,
-  SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import type { Mascot } from "@repo/mascot/code";
 import { type ReactNode, useLayoutEffect } from "react";
 import { useTranslations } from "use-intl";
+import { AccountButtonFace } from "@/components/sidebar/menu/face";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";
 
 /**
@@ -77,14 +77,13 @@ export function AccountMenu({
               onPointerEnter={warm}
               size="lg"
             >
-              <PersonAvatar mascot={account.mascot} photo={account.photo} />
-              <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                <span className="truncate">{name}</span>
-                {description === undefined ? null : (
-                  <SidebarMenuDescription>{description}</SidebarMenuDescription>
-                )}
-              </div>
-              <HugeIcons className="ml-auto" icon={MoreVerticalIcon} />
+              <AccountButtonFace
+                avatar={
+                  <PersonAvatar mascot={account.mascot} photo={account.photo} />
+                }
+                description={description}
+                name={name}
+              />
             </SidebarMenuButton>
           }
         />
@@ -120,7 +119,7 @@ export function AccountMenu({
             </>
           ) : null}
           <DropdownMenuGroup>
-            <DropdownMenuItem className="cursor-pointer" onClick={onSignOut}>
+            <DropdownMenuItem onClick={onSignOut}>
               <HugeIcons icon={Logout01Icon} />
               {t("logout")}
             </DropdownMenuItem>

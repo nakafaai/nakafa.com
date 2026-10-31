@@ -14,6 +14,7 @@ import {
   type SittingFixture,
 } from "@repo/backend/test/sittings";
 import {
+  actedAt,
   suspend,
   TENANCY_NOW,
   tenancyFixture,
@@ -64,9 +65,13 @@ describe("exams/sittings finish", () => {
           sittingId: made.id,
           token: made.token,
         });
+        vi.setSystemTime(actedAt(0, OPENS));
         yield* finishAs(fixture, made.id, deviceOf(1));
         const row = yield* attemptRow(fixture, entered.attempt);
-        expect(row).toMatchObject({ state: "submitted", submittedAt: OPENS });
+        expect(row).toMatchObject({
+          state: "submitted",
+          submittedAt: actedAt(0, OPENS),
+        });
         expect(yield* entriesOf(fixture, "sitting.finish")).toMatchObject([
           { actor: { kind: "person" }, change: { attempt: entered.attempt } },
         ]);

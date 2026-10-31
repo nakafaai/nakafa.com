@@ -31,23 +31,13 @@ const roomOf = Effect.fn("exams.rooms.room")(function* (
     .get(row.unitId)
     .pipe(Effect.orDie);
   if (row.cohortId === null) {
-    return roomRow(
-      row,
-      { kind: "unit", name: unit.name },
-      unit.timeZone,
-      canChange
-    );
+    return roomRow(row, unit.name, unit.timeZone, canChange);
   }
   const cohort = yield* reader
     .table("tenantCohorts")
     .get(row.cohortId)
     .pipe(Effect.orDie);
-  return roomRow(
-    row,
-    { kind: "cohort", name: cohort.name },
-    unit.timeZone,
-    canChange
-  );
+  return roomRow(row, cohort.name, unit.timeZone, canChange);
 });
 
 /**
@@ -56,9 +46,8 @@ const roomOf = Effect.fn("exams.rooms.room")(function* (
  * the page in the same read. Each room is kept only if the caller's sitting view allows it,
  * so a Principal or a Deputy sees the rooms of the school and a Teacher sees the rooms of their
  * units. A room the caller may change is one that is scheduled, that the caller may proctor, and
- * that the caller scheduled or may change as an Admin, which is the check `cancel` and
- * `reschedule` make. A page
- * asks for at most `ROOM_PAGE_LIMIT` rooms, and a larger request is clamped.
+ * that the caller scheduled or may change as an Admin, which is the check `cancel` and `reschedule`
+ * make. A page asks for at most `ROOM_PAGE_LIMIT` rooms, and a larger request is clamped.
  */
 const list = FunctionImpl.make(
   databaseSchema,

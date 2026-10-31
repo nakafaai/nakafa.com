@@ -27,33 +27,35 @@ export function isStaleChunkError(error: unknown): error is Error {
   );
 }
 
-/** The storage key that marks the reload for one missing chunk. */
-function markOf(error: Error) {
-  return `nakafa:stale-chunk:${error.message}`;
+/** The storage key that marks the reload of one address. */
+function markOf(address: string) {
+  return `nakafa:stale-chunk:${address}`;
 }
 
 /**
- * Reloads the page once for a chunk of an earlier deploy, so the page loads the
- * current deploy's chunks instead of showing an error. The tab's storage marks
- * the chunk first, so a chunk that is still missing after the reload shows the
- * error and never loops. A tab without storage never reloads. Answers whether
- * the page reloads.
+ * Reloads the page once at its address for a chunk of an earlier deploy, so the
+ * page loads the current deploy's chunks instead of showing an error. The tab's
+ * storage marks the address first, so a chunk that is still missing after the
+ * reload shows the error and never loops. The mark names the address, not the
+ * chunk: a press can ask for several chunks, and the one that fails first may
+ * differ after the reload, which would otherwise reload again for each of them.
+ * A tab without storage never reloads. Answers whether the page reloads.
  */
 export const reloadForStaleChunk = Effect.fn("www.chunks.reloadForStale")(
   function* (
-    error: Error,
+    address: string,
     storage: Pick<Storage, "getItem" | "setItem">,
     reload: () => void
   ) {
     const marked = yield* Effect.try({
-      try: () => storage.getItem(markOf(error)) !== null,
+      try: () => storage.getItem(markOf(address)) !== null,
       catch: (cause) => new ReloadMarkUnavailable({ cause }),
     });
     if (marked) {
       return false;
     }
     yield* Effect.try({
-      try: () => storage.setItem(markOf(error), "1"),
+      try: () => storage.setItem(markOf(address), "1"),
       catch: (cause) => new ReloadMarkUnavailable({ cause }),
     });
     yield* Effect.sync(reload);

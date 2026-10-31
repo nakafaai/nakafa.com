@@ -3,36 +3,58 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import {
+  BROWSER_ROUTE_TEMPLATES,
   isBareRoutePath,
+  isBrowserRoutePath,
   isRenderedRoutePath,
   RENDERED_ROUTE_TEMPLATES,
   ROUTE_TEMPLATES,
 } from "@/lib/routing/rendered";
 
-/** A stand-in for the router's routes, which name their full path once the router builds the tree. */
+/** A stand-in for the router's routes, which name their full path once the router builds the tree, and their render options. */
 const routes = vi.hoisted(() => ({
-  "/": { fullPath: "/" },
-  "/$locale": { fullPath: "/$locale" },
-  "/$locale/$": { fullPath: "/$locale/$" },
+  "/": { fullPath: "/", options: {} },
+  "/$locale": { fullPath: "/$locale", options: {} },
+  "/$locale/$": { fullPath: "/$locale/$", options: {} },
   "/$locale/articles/$category/$slug": {
     fullPath: "/$locale/articles/$category/$slug",
+    options: {},
   },
-  "/$locale/chat/": { fullPath: "/$locale/chat/" },
-  "/$locale/chat/$id": { fullPath: "/$locale/chat/$id" },
-  "/$locale/quran/$surah": { fullPath: "/$locale/quran/$surah" },
-  "/$locale/search": { fullPath: "/$locale/search" },
-  "/$locale/user/$username": { fullPath: "/$locale/user/$username" },
+  "/$locale/chat/": { fullPath: "/$locale/chat/", options: {} },
+  "/$locale/chat/$id": { fullPath: "/$locale/chat/$id", options: {} },
+  "/$locale/quran/$surah": { fullPath: "/$locale/quran/$surah", options: {} },
+  "/$locale/search": { fullPath: "/$locale/search", options: {} },
+  "/$locale/user/$username": {
+    fullPath: "/$locale/user/$username",
+    options: {},
+  },
   "/$locale/try-out/$country/$exam": {
     fullPath: "/$locale/try-out/$country/$exam",
+    options: {},
   },
   "/$locale/try-out/$country/$exam/$track": {
     fullPath: "/$locale/try-out/$country/$exam/$track",
+    options: {},
   },
   "/$locale/try-out/$country/$exam/$track/$set/": {
     fullPath: "/$locale/try-out/$country/$exam/$track/$set/",
+    options: {},
   },
-  "/school/$slug": { fullPath: "/school/$slug" },
-  "/school/$slug/exams": { fullPath: "/school/$slug/exams" },
+  "/$locale/_main/_app/_account": {
+    fullPath: "/$locale",
+    options: { ssr: false },
+  },
+  "/$locale/_main/_app/_account/home": {
+    fullPath: "/$locale/home",
+    options: {},
+  },
+  "/$locale/_main/_app/_account/user/settings/": {
+    fullPath: "/$locale/user/settings/",
+    options: {},
+  },
+  "/school": { fullPath: "/school", options: { ssr: false } },
+  "/school/$slug": { fullPath: "/school/$slug", options: {} },
+  "/school/$slug/exams": { fullPath: "/school/$slug/exams", options: {} },
 }));
 
 const release = vi.hoisted(() => ({ hasStaticRelease: true }));
@@ -116,5 +138,27 @@ describe("rendered route templates", () => {
     expect(isBareRoutePath(new URL("https://harapan.nakafa.com/exams"))).toBe(
       false
     );
+  });
+});
+
+describe("browser route templates", () => {
+  it("names the pages inside a main-site route that renders only in the browser", () => {
+    expect(BROWSER_ROUTE_TEMPLATES).toStrictEqual([
+      "/$locale/home",
+      "/$locale/user/settings",
+    ]);
+  });
+
+  it("matches a locale address of those pages and nothing else", () => {
+    for (const [address, browser] of [
+      ["https://nakafa.com/en/home", true],
+      ["https://nakafa.com/id/user/settings/", true],
+      ["https://nakafa.com/xx/home", false],
+      ["https://nakafa.com/en", false],
+      ["https://nakafa.com/en/search", false],
+      ["https://harapan.nakafa.com/exams", false],
+    ] as const) {
+      expect(isBrowserRoutePath(new URL(address))).toBe(browser);
+    }
   });
 });

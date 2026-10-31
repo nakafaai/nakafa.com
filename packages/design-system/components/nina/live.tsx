@@ -10,6 +10,7 @@ import { Frame } from "@repo/design-system/components/nina/frame";
 import { marked } from "@repo/design-system/components/nina/mark";
 import { paint, sameFigure } from "@repo/design-system/components/nina/paint";
 import { Picture } from "@repo/design-system/components/ui/picture";
+import { usePageSettled } from "@repo/design-system/components/ui/settled";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { scene } from "@repo/mascot/nina/figure";
 import {
@@ -134,8 +135,9 @@ function Calm() {
 
 /**
  * Her life. One clock moves all of the Ninas of a page, and only while they can
- * be seen. Her limbs follow the act through springs, her eyes follow the
- * pointer, she blinks, and a press is a small surprise.
+ * be seen, once the page has loaded and settled. Her limbs follow the act
+ * through springs, her eyes follow the pointer, she blinks, and a press is a
+ * small surprise.
  *
  * A frame does not make React draw her again. Her picture is drawn with React
  * once, and every frame after it writes the numbers that changed straight onto
@@ -159,6 +161,10 @@ function Alive() {
   const where = useRef<DOMRect>(undefined);
   const ducking = useRef<Animation>(undefined);
   const { inViewport, ref: watch } = useInViewport<HTMLSpanElement>();
+  // Her life starts once the page has loaded and settled, so her frames never
+  // compete with the page's own loading; until then she is her first picture.
+  const settled = usePageSettled();
+  const living = inViewport && settled;
   const pressed = useEventListener("click", () => {
     if (life.current === undefined) {
       return;
@@ -189,7 +195,7 @@ function Alive() {
   }, [home]);
 
   useEffect(() => {
-    if (!inViewport) {
+    if (!living) {
       return;
     }
     if (life.current === undefined) {
@@ -245,10 +251,10 @@ function Alive() {
       cancelFrame(measure);
       cancelFrame(advance);
     };
-  }, [inViewport]);
+  }, [living]);
 
   useEffect(() => {
-    if (!inViewport) {
+    if (!living) {
       return;
     }
     let timer = 0;
@@ -262,7 +268,7 @@ function Alive() {
     };
     timer = window.setTimeout(blink, 1800);
     return () => window.clearTimeout(timer);
-  }, [inViewport]);
+  }, [living]);
 
   useEffect(() => () => ducking.current?.cancel(), []);
 

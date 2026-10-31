@@ -67,7 +67,9 @@ function saveAccount<A, E>(write: () => Promise<Result.Result<A, E>>) {
 /**
  * Renders the profile picture card: the picture that shows for the account, a
  * choice of the animal or the Google photo when the account has a photo, and a
- * button that shuffles the animal. A change takes effect at once.
+ * button that shuffles the animal. A change takes effect at once. The footer
+ * keeps its sentence and its button whichever picture shows: Shuffle waits
+ * while the Google photo shows, since the animal is not on screen.
  */
 export function UserSettingsPicture({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
@@ -136,20 +138,18 @@ export function UserSettingsPicture({ user }: { user: CurrentUser }) {
           </Field>
         ) : null}
       </CardContent>
-      <CardSectionFooter
-        hint={
-          photo === undefined
-            ? t("picture-footer-animal")
-            : t("picture-footer-photo")
-        }
-      >
-        {photo === undefined ? (
-          <CardSectionActions>
-            <Button onClick={shuffle} size="sm" type="button" variant="outline">
-              {t("animal-shuffle")}
-            </Button>
-          </CardSectionActions>
-        ) : null}
+      <CardSectionFooter hint={t("picture-footer-animal")}>
+        <CardSectionActions>
+          <Button
+            disabled={photo !== undefined}
+            onClick={shuffle}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            {t("animal-shuffle")}
+          </Button>
+        </CardSectionActions>
       </CardSectionFooter>
     </CardSection>
   );

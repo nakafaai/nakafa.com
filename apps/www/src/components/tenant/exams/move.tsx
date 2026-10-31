@@ -1,8 +1,10 @@
+import type { GenericId } from "@confect/core";
 import { useMutation } from "@confect/react";
 import {
   Calendar03Icon,
   Cancel01Icon,
-  MoreHorizontalIcon,
+  ChartBarLineIcon,
+  DashboardSquare01Icon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
@@ -10,12 +12,7 @@ import { RoomName } from "@repo/backend/confect/exams/sittings/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DateTimePicker } from "@repo/design-system/components/ui/date";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
   FieldDescription,
@@ -35,6 +32,7 @@ import {
 import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import {
   cancelRoomChange,
   rescheduleRoomChange,
@@ -45,6 +43,7 @@ import {
   wallClockOf,
 } from "@/components/tenant/exams/time";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { Link } from "@/lib/routing/link";
 
 const SOURCE = "components/tenant/exams/move";
 
@@ -55,81 +54,77 @@ const MINUTE_MS = 60_000;
 type Room = typeof RoomRow.Type;
 
 /**
- * The row menu of a room that the viewer may change before it opens: Reschedule opens the room's times and name in
- * a dialog, and Cancel removes the room behind a confirmation. A room that has opened, or closed, or that another
- * Person scheduled, has no menu.
+ * The row menu of a room: Open, its proctor's dashboard, Results, Move, which opens the room's times and name in a
+ * dialog, and Cancel, which cancels it behind a confirmation. A room that has opened, or closed, or that another
+ * Person scheduled, keeps Move and Cancel disabled.
  */
-export function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
+export function RoomMenu({
+  examId,
+  room,
+  slug,
+}: {
+  examId: GenericId.GenericId<"exams">;
+  room: Room;
+  slug: TenantSlug;
+}) {
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
+  const params = { exam: examId, sitting: room.id, slug };
   const cancel = useMutation(exams.sittings.cancel).withOptimisticUpdate(
     cancelRoomChange
   );
   // Each opening of the move is a dialog of its own, so its fields start from the room as it is then.
   const [moves, setMoves] = useState(0);
-  const [isCancelling, setIsCancelling] = useState(false);
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
+    <>
+      <ConfirmRowMenu
+        action={t("room-cancel")}
+        confirm={t("room-cancel-confirm")}
+        description={t("room-cancel-description")}
+        disabled={!room.canChange}
+        icon={Cancel01Icon}
+        onConfirm={() =>
+          startTransition(() =>
+            saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
+          )
+        }
+        title={t("room-cancel-title")}
+      >
+        <DropdownMenuItem
           render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
+            <Link
+              params={params}
+              to="/school/$slug/exams/$exam/sittings/$sitting"
             >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
+              <HugeIcons icon={DashboardSquare01Icon} />
+              {common("open")}
+            </Link>
           }
         />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => setMoves((count) => count + 1)}>
-            <HugeIcons icon={Calendar03Icon} />
-            {t("room-move")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => setIsCancelling(true)}
-            variant="destructive"
-          >
-            <HugeIcons icon={Cancel01Icon} />
-            {t("room-cancel")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <DropdownMenuItem
+          render={
+            <Link
+              params={params}
+              to="/school/$slug/exams/$exam/sittings/$sitting/results"
+            >
+              <HugeIcons icon={ChartBarLineIcon} />
+              {t("results-title")}
+            </Link>
+          }
+        />
+        <DropdownMenuItem
+          disabled={!room.canChange}
+          onClick={() => setMoves((count) => count + 1)}
+        >
+          <HugeIcons icon={Calendar03Icon} />
+          {t("room-move")}
+        </DropdownMenuItem>
+      </ConfirmRowMenu>
       {moves === 0 ? null : (
         <RoomMoveDialog key={moves} room={room} slug={slug} />
       )}
-      <ResponsiveDialog
-        description={t("room-cancel-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsCancelling(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsCancelling(false);
-                startTransition(() =>
-                  saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("room-cancel-confirm")}
-            </Button>
-          </>
-        }
-        open={isCancelling}
-        setOpen={setIsCancelling}
-        title={t("room-cancel-title")}
-      />
-    </div>
+    </>
   );
 }
 

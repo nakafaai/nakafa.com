@@ -10,6 +10,8 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   PlayIcon,
+  SchoolIcon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
@@ -39,14 +41,19 @@ import {
   useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
-import { RoomStateFilter, roomsArgs } from "@/components/tenant/exams/filter";
+import {
+  RoomStateFilter,
+  roomGroups,
+  roomsArgs,
+  roomsOfGroup,
+} from "@/components/tenant/exams/filter";
 import { RoomMenu } from "@/components/tenant/exams/move";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
-import { useLastValue } from "@/lib/data/kept";
+import { useKeptRows, useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
 
@@ -117,7 +124,10 @@ function useExamsItems(canOpenExams: boolean): readonly BreadcrumbHeaderItem[] {
     : [];
 }
 
-/** The rooms page once the exam's summary is in: the header with the exam's title, and the table. */
+/**
+ * The rooms page: its header with the path, Edit and the table from the first paint, and the exam's title in the path's
+ * last crumb once the exam's summary is in. The crumb stands empty until then, so the header keeps one shape.
+ */
 function ExamRoomsContent({
   examId,
   slug,
@@ -169,15 +179,20 @@ function ExamRoomsContent({
       ),
     });
   }
-  if (!QueryResult.isSuccess(summary)) {
-    return null;
-  }
+  const title = QueryResult.isSuccess(summary)
+    ? Option.some(summary.value.title)
+    : Option.none();
 
   return (
     <TableFiltersProvider>
       <SchoolHeader
-        items={[...examsItems, { label: summary.value.title }]}
-        title={summary.value.title}
+        // The title's crumb stands from the first paint, empty until the summary is in, so the exam list's crumb is
+        // a link and the phone's folded path stands from the start, and the header's controls never change.
+        items={[...examsItems, { label: Option.getOrElse(title, () => "") }]}
+        {...Option.match(title, {
+          onNone: () => ({}),
+          onSome: (label) => ({ title: label }),
+        })}
       >
         {tenant.canOpenExams ? (
           <Link
@@ -218,11 +233,18 @@ function RoomsTable({
     chosenOne(chosen, "state", Schema.is(RoomStateFilter)),
     (): StateFilter => "all"
   );
+  const group = Option.getOrElse(
+    chosenOne(chosen, "group", Schema.is(Schema.String)),
+    () => "all"
+  );
   const pagination = usePaginatedQuery(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
     { initialNumItems: ROOM_PAGE_SIZE }
   );
+  // A new filter's first page loads behind the rooms the table already shows, so the table never blanks.
+  const loading = pagination._tag === "LoadingFirstPage";
+  const kept = useKeptRows(loading, pagination.results);
 
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -230,14 +252,15 @@ function RoomsTable({
   ) {
     throw pagination.error;
   }
-  if (pagination._tag === "LoadingFirstPage") {
+  if (Option.isNone(kept)) {
     return null;
   }
+  const rooms = kept.value;
   const failed = PaginatedQueryResult.isFailure(pagination);
   const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
     ? () => pagination.loadMore(ROOM_PAGE_SIZE)
     : null;
-  const empty = Arr.isReadonlyArrayEmpty(pagination.results);
+  const empty = Arr.isReadonlyArrayEmpty(rooms);
   if (empty && failed) {
     return <DataFailure onRetry={reloadPage} />;
   }
@@ -257,14 +280,34 @@ function RoomsTable({
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
+      <Table
+        aria-busy={loading}
+        containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap"
+      >
         <TableHeader>
           <TableRow>
-            <TableHead>{t("room")}</TableHead>
-            <TableHead>{t("rooms-group")}</TableHead>
-            <TableHead>{t("rooms-opens")}</TableHead>
-            <TableHead>{t("rooms-closes")}</TableHead>
-            <TableHead className="text-center">
+            <TableHead className="px-2 sm:px-4">{t("room")}</TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              <ColumnChoice
+                column="group"
+                options={[
+                  { icon: UserGroupIcon, label: t("group-all"), value: "all" },
+                  ...Arr.map(roomGroups(rooms), (option) => ({
+                    icon: option.kind === "cohort" ? UserGroupIcon : SchoolIcon,
+                    label: option.name,
+                    value: option.key,
+                  })),
+                ]}
+                title={t("rooms-group")}
+              />
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              {t("rooms-opens")}
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              {t("rooms-closes")}
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
               <ColumnChoice
                 column="state"
                 options={[
@@ -278,11 +321,11 @@ function RoomsTable({
                 title={t("rooms-state")}
               />
             </TableHead>
-            <TableHead />
+            <TableHead className="px-2 sm:px-4" />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Arr.map(pagination.results, (room) => (
+          {Arr.map(roomsOfGroup(rooms, group), (room) => (
             <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
           ))}
         </TableBody>
@@ -306,8 +349,8 @@ function RoomsMore({ loadMore }: { loadMore: (() => void) | null }) {
 
 /**
  * One room of the table: its name, which opens its proctor dashboard, its group, its opening and
- * closing in the time zone of its unit, its state, and the menu that moves or cancels a room that has not
- * opened yet.
+ * closing in the time zone of its unit, its state, and the menu that opens it, shows its results, and
+ * moves or cancels a room that has not opened yet.
  */
 function RoomItem({
   examId,
@@ -323,7 +366,7 @@ function RoomItem({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">
+      <TableCell className="px-2 font-medium sm:px-4">
         <Link
           className="underline-offset-4 hover:underline"
           dir="auto"
@@ -333,30 +376,32 @@ function RoomItem({
           {room.room}
         </Link>
       </TableCell>
-      <TableCell dir="auto">{room.group.name}</TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="px-2 text-center sm:px-4" dir="auto">
+        {room.groupName}
+      </TableCell>
+      <TableCell className="px-2 text-center text-muted-foreground tabular-nums sm:px-4">
         {schoolDateTimeText({
           at: room.opensAt,
           locale,
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="px-2 text-center text-muted-foreground tabular-nums sm:px-4">
         {schoolDateTimeText({
           at: room.closesAt,
           locale,
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell className="px-2 text-center sm:px-4">
         <TableStatus
           icon={ROOM_STATE_LOOKS[room.state].icon}
           label={t(`room-state-${room.state}`)}
           tone={ROOM_STATE_LOOKS[room.state].tone}
         />
       </TableCell>
-      <TableCell>
-        {room.canChange ? <RoomMenu room={room} slug={slug} /> : null}
+      <TableCell className="px-2 text-end sm:px-4">
+        <RoomMenu examId={examId} room={room} slug={slug} />
       </TableCell>
     </TableRow>
   );

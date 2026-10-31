@@ -189,9 +189,12 @@ describe("classroom/classes create", () => {
         const term = yield* period(fixture, fixture.units.smp);
         const x1 = yield* cohort(fixture, term.id, "X-1");
         yield* classOf(fixture, x1.id, "Fisika");
-        yield* fixture
-          .as("admin")
-          .mutation(cohorts.rename, { cohortId: x1.id, name: "X-2", slug: nf });
+        yield* fixture.as("admin").mutation(cohorts.edit, {
+          cohortId: x1.id,
+          grade: 10,
+          name: "X-2",
+          slug: nf,
+        });
         const again = yield* classOf(fixture, x1.id, "Fisika").pipe(
           Effect.flip
         );

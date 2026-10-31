@@ -121,7 +121,8 @@ describe("connectors/account", () => {
         yield* fixture.run(
           disconnect(
             { id: person, kind: "person" },
-            yield* fixture.run(stored(schoolConnection))
+            yield* fixture.run(stored(schoolConnection)),
+            "keep"
           )
         );
         expect(yield* fixture.run(countActiveGrants(blind))).toBe(1);
@@ -129,7 +130,8 @@ describe("connectors/account", () => {
         yield* fixture.run(
           disconnect(
             { id: teacher, kind: "user" },
-            yield* fixture.run(stored(learnerConnection))
+            yield* fixture.run(stored(learnerConnection)),
+            "keep"
           )
         );
         expect(yield* fixture.run(countActiveGrants(blind))).toBe(0);
