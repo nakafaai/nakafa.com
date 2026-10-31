@@ -168,8 +168,10 @@ verified on the probe, which has no School or www host and no zone rule:
   (Amended 30 Oct 2026: the www host and plain HTTP are declared in
   `apps/www/deploy/redirect.ts` with the path and query kept: www to the apex with
   301, and HTTP to HTTPS on every host of the zone with 308, which keeps a POST,
-  because the live site answered both with duplicate 200 pages. The root locale and
-  the trailing-slash 308 stay open.)
+  because the live site answered both with duplicate 200 pages. The trailing-slash
+  308 is declared there too, for a page address under a locale on the apex, which
+  the static assets answered with 307 before the Worker could answer 308. The root
+  locale stays open.)
 - **School and www hosts.** `*.nakafa.com/*` routes to the web Worker, and its
   static assets answer every host. A refused or unknown School host, and www, serve
   the public pages, and School hosts lose the `noindex` of the tenant gate, until
