@@ -7,6 +7,7 @@ import { Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ReadRecovery } from "@/components/exams/sitting/boundary";
 import { dashboardArgs } from "@/components/exams/sitting/change";
 import {
   type SittingData,
@@ -155,11 +156,23 @@ function SittingDashboardShell() {
   return <SchoolHeader items={examsItems} />;
 }
 
+/**
+ * Keeps a proctor on the room through a server failure of one of its reads: the page's header stays, and the seats
+ * come back by themselves, so a room in full flow is not left on an error page that waits for a press.
+ */
+export function DashboardRecovery({
+  children,
+}: {
+  readonly children: ReactNode;
+}) {
+  return <ReadRecovery frame={SittingDashboardRetry}>{children}</ReadRecovery>;
+}
+
 /** The page when the dashboard could not be read for a reason a reload may fix: the header, then why and the retry. */
 function SittingDashboardRetry({ children }: { readonly children: ReactNode }) {
   return (
     <>
-      <SchoolHeader items={[]} />
+      <SittingDashboardShell />
       <div className="grid justify-items-start gap-4 p-4 text-sm md:p-6">
         {children}
       </div>
