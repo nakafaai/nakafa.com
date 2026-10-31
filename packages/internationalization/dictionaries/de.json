@@ -1289,7 +1289,11 @@
     "grade": "Note",
     "result": "Ergebnis",
     "kktp-reached": "KKTP erreicht",
-    "kktp-notReached": "KKTP nicht erreicht"
+    "kktp-notReached": "KKTP nicht erreicht",
+    "own-title": "Meine Zeugnisse",
+    "own-search": "Klasse suchen",
+    "own-empty": "Noch kein Zeugnis abgeschlossen.",
+    "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt."
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",

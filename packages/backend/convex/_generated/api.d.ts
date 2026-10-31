@@ -8917,6 +8917,19 @@ export declare const api: {
           }>;
         }
       >;
+      own: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          approvedAt: number;
+          cohort: string;
+          file: string;
+          hash: string;
+          id: Id<"reportCards">;
+          period: string;
+        }>
+      >;
       reopen: FunctionReference<
         "mutation",
         "public",
