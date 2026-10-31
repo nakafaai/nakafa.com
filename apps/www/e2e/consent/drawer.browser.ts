@@ -53,6 +53,19 @@ const verifyCompactConsentDrawer = Effect.fn(
   yield* Effect.promise(() =>
     expect(drawer.locator('[data-slot="drawer-footer"]')).toBeVisible()
   );
+  // A drawer rules off its header and footer, as a dialog and a sheet do.
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-header"]')).toHaveCSS(
+      "border-bottom-width",
+      "1px"
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-footer"]')).toHaveCSS(
+      "border-top-width",
+      "1px"
+    )
+  );
 
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
