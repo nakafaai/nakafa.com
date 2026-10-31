@@ -338,6 +338,8 @@
     "release-action": "Ergebnisse freigeben",
     "released": "Freigegeben",
     "student-finished": "Du hast diese Prüfung beendet.",
+    "student-closed-title": "Diese Prüfung ist beendet.",
+    "student-locked-title": "Dieser Versuch ist gesperrt.",
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
     "student-answer": "Deine Antwort: {answer}",
