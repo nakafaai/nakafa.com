@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Nisn } from "@repo/backend/confect/roster/schema";
@@ -132,8 +133,16 @@ describe("integrations/writes enterGrade", () => {
         const refused = { outcome: "forbidden" };
 
         expect(yield* write({ clientId: without.id })).toEqual(refused);
-        expect(yield* write({ classId: "not-an-id" })).toEqual(refused);
-        expect(yield* write({ personId: "not-an-id" })).toEqual(refused);
+        expect(
+          yield* write({
+            classId: Schema.decodeUnknownSync(Id("classes"))("not-an-id"),
+          })
+        ).toEqual(refused);
+        expect(
+          yield* write({
+            personId: Schema.decodeUnknownSync(Id("tenantPeople"))("not-an-id"),
+          })
+        ).toEqual(refused);
       })
   );
 });
