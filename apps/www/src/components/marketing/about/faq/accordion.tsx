@@ -26,10 +26,10 @@ export function FaqAccordion({
     >
       {Arr.map(faqs, (faq) => (
         <AccordionItem key={faq.question} value={faq.question}>
-          <AccordionTrigger className="text-base transition-colors ease-out hover:text-primary hover:no-underline">
+          <AccordionTrigger className="hover:text-primary text-base transition-colors ease-out hover:no-underline">
             {faq.question}
           </AccordionTrigger>
-          <AccordionContent className="text-base text-muted-foreground">
+          <AccordionContent className="text-muted-foreground text-base">
             {faq.answer}
           </AccordionContent>
         </AccordionItem>

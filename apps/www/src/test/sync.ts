@@ -292,7 +292,7 @@ export const typeText = Effect.fn("test.sync.typeText")(function* (
 export const textOf = (doc: Node) => doc.textContent;
 
 /** The text of three letters typed by three editors, in any order. */
-export const THREE_LETTERS = /^[abc]{3}$/;
+export const THREE_LETTERS = /^[abc]{3}$/u;
 
 /** Starts one editor on the server's document. */
 export const openEditor = Effect.fn("test.sync.open")(function* (

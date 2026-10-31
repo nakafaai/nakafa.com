@@ -282,9 +282,10 @@ test("home page carries every part in Indonesian, English and German", async ({
  * MathML or inside a drawing hidden from assistive technology names nothing.
  */
 function readableName(radio: Element) {
-  const label = document.getElementById(
-    radio.getAttribute("aria-labelledby") ?? ""
-  );
+  const labelledBy = radio.getAttribute("aria-labelledby");
+  const label = labelledBy
+    ? document.querySelector(`#${CSS.escape(labelledBy)}`)
+    : null;
   const readable = (node: Node): string => {
     if (node.nodeType === Node.TEXT_NODE) {
       return node.textContent ?? "";
@@ -307,9 +308,10 @@ function readableName(radio: Element) {
  * drawing, so a screen reader hears the spoken words once and not the MathML too.
  */
 function reachableDrawings(radio: Element) {
-  const label = document.getElementById(
-    radio.getAttribute("aria-labelledby") ?? ""
-  );
+  const labelledBy = radio.getAttribute("aria-labelledby");
+  const label = labelledBy
+    ? document.querySelector(`#${CSS.escape(labelledBy)}`)
+    : null;
   if (label === null) {
     return -1;
   }
@@ -326,9 +328,10 @@ function reachableDrawings(radio: Element) {
  * MathML names the radio with, when that text is a plain number such as `10`; empty for any other label.
  */
 function plainNumberText(radio: Element) {
-  const label = document.getElementById(
-    radio.getAttribute("aria-labelledby") ?? ""
-  );
+  const labelledBy = radio.getAttribute("aria-labelledby");
+  const label = labelledBy
+    ? document.querySelector(`#${CSS.escape(labelledBy)}`)
+    : null;
   const text = Array.from(
     label?.querySelectorAll(".katex-mathml semantics") ?? [],
     (semantics) => semantics.firstElementChild?.textContent ?? ""

@@ -110,7 +110,7 @@ export function AiChatSidebar({
 
         <SidebarMenu>
           <SidebarMenuItem>
-            <InputGroup className="h-8 border-sidebar-border bg-background text-foreground shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-sidebar-ring has-[[data-slot=input-group-control]:focus-visible]:ring-sidebar-ring/50">
+            <InputGroup className="border-sidebar-border bg-background text-foreground has-[[data-slot=input-group-control]:focus-visible]:border-sidebar-ring has-[[data-slot=input-group-control]:focus-visible]:ring-sidebar-ring/50 h-8 shadow-none">
               <InputGroupInput
                 className="h-8"
                 maxLength={CHAT_SEARCH_LENGTH}

@@ -372,7 +372,7 @@ function ScheduleNotices({
   return Option.match(missing, {
     onNone: () => null,
     onSome: (entry) => (
-      <p className="me-auto text-destructive text-sm">
+      <p className="text-destructive me-auto text-sm">
         {t(keyNotice(entry.template), { number: entry.number })}
       </p>
     ),

@@ -2,16 +2,16 @@
 import { MODULE_PRELOAD } from "#www/src/lib/static/scripts";
 
 /** Every script element, with its attributes and its body. */
-const SCRIPT_ELEMENT = /<script\b[^>]*>([\s\S]*?)<\/script>/g;
+const SCRIPT_ELEMENT = /<script\b[^>]*>(?<body>[\s\S]*?)<\/script>/gu;
 
 /** The start of a streamed Suspense segment, which React writes hidden at the end of the body with its boundary's id. */
 const SEGMENT_PREFIX = '<div hidden id="S:';
 
 /** A streamed Suspense segment's opening tag. */
-const SEGMENT_OPENING = /<div hidden id="S:[^"]+">/;
+const SEGMENT_OPENING = /<div hidden id="S:[^"]+">/u;
 
 /** The next opening or closing `div` tag. */
-const DIV_TAG = /<div\b|<\/div>/;
+const DIV_TAG = /<div\b|<\/div>/u;
 
 const DIV_OPENING = "<div";
 

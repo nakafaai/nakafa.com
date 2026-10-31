@@ -4,16 +4,6 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { createTranslator } from "use-intl/core";
-
-/** Expected failure while the messages of one locale load for a surah page. */
-class QuranMessagesUnavailableError extends Schema.TaggedError<QuranMessagesUnavailableError>()(
-  "QuranMessagesUnavailableError",
-  {
-    cause: Schema.Unknown,
-    locale: Schema.String,
-  }
-) {}
-
 import {
   getQuranPagination,
   getQuranSurahName,
@@ -30,6 +20,15 @@ import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { resolveSEOMetadata } from "@/lib/seo/generator";
 import { serverHandler } from "@/lib/server/fn";
+
+/** Expected failure while the messages of one locale load for a surah page. */
+class QuranMessagesUnavailableError extends Schema.TaggedError<QuranMessagesUnavailableError>()(
+  "QuranMessagesUnavailableError",
+  {
+    cause: Schema.Unknown,
+    locale: Schema.String,
+  }
+) {}
 
 /**
  * Reads one surah with its verses, pagination and sources on the server. A

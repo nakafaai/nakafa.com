@@ -190,7 +190,7 @@ export function StartSizeQuestion() {
       </QuestionnaireChoices>
       <QuestionnaireError>{t("required-error")}</QuestionnaireError>
       {draft?.size !== undefined && Arr.contains(LARGE_SIZES, draft.size) ? (
-        <p className="text-pretty text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-sm text-pretty">
           {t("founder-line")}{" "}
           <StartLink href={`mailto:${COMPANY_IDENTITY.email}`}>
             {t("founder-link")}
@@ -198,7 +198,7 @@ export function StartSizeQuestion() {
         </p>
       ) : null}
       {legal === null ? null : (
-        <p className="text-pretty text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-xs text-pretty">
           {t.rich("consent", {
             privacy: (chunks) => (
               <StartLink href={legal.privacy}>{chunks}</StartLink>
@@ -217,7 +217,7 @@ export function StartSizeQuestion() {
 function StartLink({ children, href }: { children: ReactNode; href: string }) {
   return (
     <a
-      className="font-medium text-foreground underline-offset-4 hover:underline"
+      className="text-foreground font-medium underline-offset-4 hover:underline"
       href={href}
       rel="noopener noreferrer"
       target="_blank"

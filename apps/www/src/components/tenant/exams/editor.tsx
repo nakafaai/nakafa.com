@@ -76,7 +76,7 @@ export function ExamEditor({
  */
 function ExamEditorFrame() {
   return (
-    <main className="flex h-svh flex-col bg-background">
+    <main className="bg-background flex h-svh flex-col">
       <ExamHeaderFrame />
       <ExamToolbarFrame />
     </main>
@@ -99,7 +99,7 @@ function ExamWorkspace() {
 
   return (
     <PanesProvider wideFrom="lg">
-      <main className="flex h-svh flex-col bg-background">
+      <main className="bg-background flex h-svh flex-col">
         <ExamHeader />
         <ExamToolbar />
         <ExamLockedNote />

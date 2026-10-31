@@ -112,7 +112,7 @@ function CourseTable({
 
   if (empty) {
     return (
-      <p className="px-6 text-muted-foreground text-sm">{t("courses-none")}</p>
+      <p className="text-muted-foreground px-6 text-sm">{t("courses-none")}</p>
     );
   }
 
@@ -198,7 +198,7 @@ function CourseRow({
           ? course.name
           : t("course-name", { name: course.name, section: course.section })}
       </TableCell>
-      <TableCell className="hidden text-muted-foreground sm:table-cell">
+      <TableCell className="text-muted-foreground hidden sm:table-cell">
         {course.students}
       </TableCell>
       <TableCell>

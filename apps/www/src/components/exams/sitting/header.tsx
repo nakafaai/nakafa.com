@@ -126,7 +126,7 @@ function SittingProctorActions({
         variant="outline"
       >
         <HugeIcons icon={QrCodeIcon} />
-        <span className="font-mono tabular-nums tracking-widest" translate="no">
+        <span className="font-mono tracking-widest tabular-nums" translate="no">
           {token}
         </span>
       </Button>

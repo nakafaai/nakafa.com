@@ -18,20 +18,20 @@ export function ContentPart({ message }: Props) {
   return (
     <Step icon={nakafaIcons.content} label={t("nakafa-content")}>
       <a
-        className="group/content flex min-w-0 flex-col rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group/content focus-visible:ring-ring flex min-w-0 flex-col rounded-sm outline-none focus-visible:ring-2"
         href={url}
         rel="noopener noreferrer"
         target="_blank"
       >
         <span
-          className="wrap-anywhere line-clamp-2 py-0.5 text-sm group-hover/content:underline group-focus-visible/content:underline"
+          className="line-clamp-2 py-0.5 text-sm wrap-anywhere group-hover/content:underline group-focus-visible/content:underline"
           dir="auto"
         >
           {title}
         </span>
         {description ? (
           <span
-            className="wrap-anywhere line-clamp-2 py-0.5 text-muted-foreground text-xs"
+            className="text-muted-foreground line-clamp-2 py-0.5 text-xs wrap-anywhere"
             dir="auto"
           >
             {description}

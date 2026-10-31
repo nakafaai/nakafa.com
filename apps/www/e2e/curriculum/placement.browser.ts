@@ -147,7 +147,7 @@ for (const viewport of VIEWPORTS) {
     const link = page.locator('a[href*="/function-concept?ctx="]').first();
     await link.scrollIntoViewIfNeeded();
     await link.click();
-    await expect(page).toHaveURL(new RegExp(MATERIAL_PATH));
+    await expect(page).toHaveURL(new RegExp(MATERIAL_PATH, "u"));
     const { samples } = await settle(page);
     const texts = paintedTexts(samples);
     await testInfo.attach(`paint-client-${viewport.width}.json`, {
@@ -177,7 +177,7 @@ test("the breadcrumb of a lesson whose match the router already holds paints onc
     (href) => window.__TSR_ROUTER__?.navigate({ href }),
     CURRICULUM_PATH
   );
-  await expect(page).toHaveURL(new RegExp(`${CURRICULUM_PATH}$`));
+  await expect(page).toHaveURL(new RegExp(`${CURRICULUM_PATH}$`, "u"));
   // Only what the lesson paints after the press counts.
   await page.evaluate(() => {
     Reflect.get(window, "__placementPaint").samples.length = 0;
@@ -185,7 +185,7 @@ test("the breadcrumb of a lesson whose match the router already holds paints onc
   const link = page.locator('a[href*="/function-concept?ctx="]').first();
   await link.scrollIntoViewIfNeeded();
   await link.click();
-  await expect(page).toHaveURL(new RegExp(MATERIAL_PATH));
+  await expect(page).toHaveURL(new RegExp(MATERIAL_PATH, "u"));
   const { samples } = await settle(page);
   const texts = paintedTexts(samples);
   await testInfo.attach("paint-held-match.json", {

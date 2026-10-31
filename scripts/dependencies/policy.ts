@@ -130,13 +130,14 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
  */
 const CONFECT_COHORT_VERSION = "10.4.1";
 /** The Confect packages each manifest pins: the web app's client and the backend's server, CLI and tests. */
-const CONFECT_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
-  ["apps/www/package.json", ["@confect/js", "@confect/react"]],
+const CONFECT_DECLARATIONS: readonly (readonly [string, readonly string[]])[] =
   [
-    "packages/backend/package.json",
-    ["@confect/cli", "@confect/server", "@confect/test"],
-  ],
-];
+    ["apps/www/package.json", ["@confect/js", "@confect/react"]],
+    [
+      "packages/backend/package.json",
+      ["@confect/cli", "@confect/server", "@confect/test"],
+    ],
+  ];
 
 /** Holds every package of one exact cohort at its version, in each manifest that declares it. */
 function exactCohortHolds(
@@ -261,16 +262,10 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@nakafa/aksara-contracts",
   },
   {
-    approved: "2.5.15",
-    dependency: "@biomejs/biome",
-    minimumDeclarations: 1,
-  },
-  {
     approved: "24.19.2",
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  { approved: "8.0.2", dependency: "ultracite", minimumDeclarations: 1 },
   // The marked that @tiptap/markdown lexes with. The Memory page reads stored
   // Markdown with the same lexer, so a row says what the editor shows; it moves
   // with the editor's lexer, which plain.test.ts checks, never with the latest.

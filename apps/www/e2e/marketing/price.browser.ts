@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 const REGISTERED = "nakafaRegisteredProperties";
 
 /** A price's text holds digits. */
-const DIGIT = /\d/;
+const DIGIT = /\d/u;
 
 /** The prefix of the CSS properties that an animated number registers. */
 const NUMBER_FLOW = "--_number-flow";
@@ -51,6 +51,6 @@ test("the home draws its prices as text and loads no animated number", async ({
     REGISTERED
   );
   expect(registered).not.toContainEqual(
-    expect.stringMatching(new RegExp(`^${NUMBER_FLOW}`))
+    expect.stringMatching(new RegExp(`^${NUMBER_FLOW}`, "u"))
   );
 });

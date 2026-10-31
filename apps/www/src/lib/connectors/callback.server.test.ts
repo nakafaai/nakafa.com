@@ -13,11 +13,13 @@ const convex = vi.hoisted(() => ({
 
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: class {
+    /** The recorder that every call of this client reaches. */
+    readonly calls = convex;
     action(reference: unknown, args: unknown) {
-      return convex.action(reference, args);
+      return this.calls.action(reference, args);
     }
     setAuth(token: string) {
-      convex.setAuth(token);
+      this.calls.setAuth(token);
     }
   },
 }));

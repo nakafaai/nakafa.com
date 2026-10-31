@@ -241,7 +241,7 @@ export function PanesDetail({
       <ResizablePanel defaultSize="35%" id="detail" maxSize="55%" minSize="25%">
         <aside
           aria-label={label}
-          className="flex h-full flex-col bg-background"
+          className="bg-background flex h-full flex-col"
         >
           {beside ? (
             <PaneModeContext

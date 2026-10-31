@@ -19,7 +19,7 @@ beforeEach(() => {
 });
 
 /** A Retry-After value in whole seconds. */
-const SECONDS = /^\d+$/;
+const SECONDS = /^\d+$/u;
 
 /** The MCP server of the school `nf`, as a token request names it (RFC 8707). */
 const MCP_RESOURCE = "https://nf.nakafa.com/mcp";

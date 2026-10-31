@@ -60,7 +60,9 @@ const readsByLink = (
 ) =>
   Effect.promise(async () => {
     await reader.goto(linkOn(origin, link));
-    await expect(reader).toHaveURL(new RegExp(`/en/chat/${chatId}#share=`));
+    await expect(reader).toHaveURL(
+      new RegExp(`/en/chat/${chatId}#share=`, "u")
+    );
     await readsChat(reader, TITLE, PROMPT);
     await offersNoWriting(reader);
     await reader.evaluate(() => Reflect.set(window, "kept", true));

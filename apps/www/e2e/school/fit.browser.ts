@@ -5,10 +5,10 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The grid's card of the first question, whose name opens it and may add that it has no key yet. */
-const FIRST_CARD = /^Open question 1\b/;
+const FIRST_CARD = /^Open question 1\b/u;
 
 /** Whether the value an element shows fits inside it, uncut by an ellipsis. */
 function fitsWhole(element: Element) {

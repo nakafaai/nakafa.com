@@ -24,17 +24,18 @@ import { type Processor, unified } from "unified";
 const PROCESSOR = configureMdxProcessor(unified().use(remarkParse));
 const COMPONENT_PROP_LIMIT = 1200;
 const COMPONENT_CHILD_LIMIT = 2200;
-const OPEN_FRAGMENT_PATTERN = /^<>\s*/;
-const CLOSE_FRAGMENT_PATTERN = /\s*<\/>$/;
-const TRAILING_LINE_SPACES_PATTERN = /[ \t]+\n/g;
-const LEADING_LINE_SPACES_PATTERN = /\n[ \t]+/g;
-const REPEATED_SPACES_PATTERN = /[ \t]{2,}/g;
-const EXCESS_BLANK_LINES_PATTERN = /\n{3,}/g;
-const FENCED_MATH_BLOCK_PATTERN = /```math[\s\S]*?```/g;
+const OPEN_FRAGMENT_PATTERN = /^<>\s*/u;
+const CLOSE_FRAGMENT_PATTERN = /\s*<\/>$/u;
+const TRAILING_LINE_SPACES_PATTERN = /[ \t]+\n/gu;
+const LEADING_LINE_SPACES_PATTERN = /\n[ \t]+/gu;
+const REPEATED_SPACES_PATTERN = /[ \t]{2,}/gu;
+const EXCESS_BLANK_LINES_PATTERN = /\n{3,}/gu;
+const FENCED_MATH_BLOCK_PATTERN = /```math[\s\S]*?```/gu;
 const INLINE_MATH_COMPONENT_PATTERN =
-  /<InlineMath\s+math=(?:"[^"]*"|'[^']*'|\{[^}]*\})\s*\/?>/g;
-const INLINE_MATH_MARKDOWN_PATTERN = /\$\$[\s\S]*?\$\$/g;
-const JSX_SPACING_EXPRESSION_PATTERN = /\{\s*["'`]([^"'`}]*)["'`]\s*\}/g;
+  /<InlineMath\s+math=(?:"[^"]*"|'[^']*'|\{[^}]*\})\s*\/?>/gu;
+const INLINE_MATH_MARKDOWN_PATTERN = /\$\$[\s\S]*?\$\$/gu;
+const JSX_SPACING_EXPRESSION_PATTERN =
+  /\{\s*["'`](?<text>[^"'`}]*)["'`]\s*\}/gu;
 const MdxPositionSchema = Schema.Struct({
   start: Schema.Struct({
     offset: Schema.Finite,

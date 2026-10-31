@@ -187,7 +187,7 @@ export function EvilAreaChart<
   brushFormatLabel,
   onBrushChange,
 }: EvilAreaChartProps<TData, TConfig>) {
-  const chartId = useId().replace(/:/g, ""); // colon-free id keeps CSS/SVG selectors valid
+  const chartId = useId().replace(/:/gu, ""); // colon-free id keeps CSS/SVG selectors valid
   const [selectedDataKey, setSelectedDataKey] = useState<string | null>(
     defaultSelectedDataKey
   );

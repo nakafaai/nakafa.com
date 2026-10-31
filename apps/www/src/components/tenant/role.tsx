@@ -10,7 +10,7 @@ import { roleLooks } from "@/components/tenant/roles";
  * lead, teach, learn, care and run the school read apart at a glance in every theme.
  */
 const roleBadgeVariants = cva(
-  "gap-1.5 border-transparent text-foreground [&_svg]:size-3.5",
+  "text-foreground gap-1.5 border-transparent [&_svg]:size-3.5",
   {
     variants: {
       family: {

@@ -97,5 +97,5 @@ function getHighlightTokens(query: string) {
 
 /** Escapes a query token before building the highlight pattern. */
 function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }

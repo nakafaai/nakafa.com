@@ -23,8 +23,9 @@ class ResizeObserverStub {
     observers = Arr.append(observers, this);
   }
 
+  /** The stub watches nothing: the tests call the callback when the page changes. */
   observe() {
-    // The stub watches nothing: the tests call the callback when the page changes.
+    this.disconnected = false;
   }
 
   disconnect() {

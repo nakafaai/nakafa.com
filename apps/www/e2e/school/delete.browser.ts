@@ -4,10 +4,10 @@ import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The exams list on the school host, where a deleted draft lands. */
-const EXAMS_PATH = /\/exams$/;
+const EXAMS_PATH = /\/exams$/u;
 
 /** The title of the draft that the test deletes. */
 const TITLE = "Ulangan Hapus";

@@ -9,7 +9,7 @@ export function Comments() {
   return (
     <section className="space-y-6">
       <h2
-        className="flex scroll-mt-28 items-center gap-2 font-medium text-2xl leading-tight tracking-tight"
+        className="flex scroll-mt-28 items-center gap-2 text-2xl leading-tight font-medium tracking-tight"
         id="comments"
       >
         <HugeIcons className="size-5" icon={MessageMultiple01Icon} />

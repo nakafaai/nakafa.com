@@ -121,7 +121,7 @@ const FORBIDDEN_PROVENANCE = [
   "bundle.dsseEnvelope.payload",
   "is_exact_provenance()",
 ] as const;
-const SHELL_COMMENT = /(^|[ \t])#.*$/u;
+const SHELL_COMMENT = /(?<before>^|[ \t])#.*$/u;
 
 export class CliWorkflowPolicyError extends Schema.TaggedError<CliWorkflowPolicyError>()(
   "CliWorkflowPolicyError",

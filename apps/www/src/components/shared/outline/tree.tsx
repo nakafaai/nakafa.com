@@ -19,6 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { elementById } from "@repo/design-system/lib/element";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr } from "effect";
 import type { MouseEvent, ReactElement, ReactNode } from "react";
@@ -113,9 +114,7 @@ function jumpToHeading(event: MouseEvent<HTMLAnchorElement>) {
   } else {
     window.history.pushState(window.history.state, "", link.href);
   }
-  document
-    .getElementById(decodeURIComponent(link.hash.slice(1)))
-    ?.scrollIntoView();
+  elementById(decodeURIComponent(link.hash.slice(1)))?.scrollIntoView();
 }
 
 /**

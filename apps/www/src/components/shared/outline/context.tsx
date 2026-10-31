@@ -1,5 +1,6 @@
 import type { ParsedHeading } from "@repo/contents/toc";
 import { extractAllHeadingIds } from "@repo/contents/toc";
+import { elementById } from "@repo/design-system/lib/element";
 import {
   Array as Arr,
   Equal,
@@ -109,7 +110,7 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
 
   publish([]);
   for (const id of watch) {
-    const heading = document.getElementById(id);
+    const heading = elementById(id);
     if (heading) {
       observer.observe(heading);
     }

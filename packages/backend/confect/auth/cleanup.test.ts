@@ -19,8 +19,8 @@ import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect, Layer } from "effect";
 
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
-const deletedAuthIdPattern = /^deleted:/;
-const deletedEmailPattern = /^deleted-.+@account\.nakafa\.invalid$/;
+const deletedAuthIdPattern = /^deleted:/u;
+const deletedEmailPattern = /^deleted-.+@account\.nakafa\.invalid$/u;
 describe("auth/cleanup", () => {
   it.effect(
     "drains every committed local cleanup batch outside the workflow journal",

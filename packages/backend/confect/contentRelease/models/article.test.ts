@@ -25,15 +25,16 @@ async function reconcile(
     let cursor: string | undefined;
     let pages = 0;
     do {
+      const from = cursor;
       const result = await t.mutation(async (ctx) => ({
         page: await Effect.runPromise(
           reconcileArticleModel({
             ...build,
             phase,
-            ...(cursor === undefined
+            ...(from === undefined
               ? {}
               : {
-                  cursor,
+                  cursor: from,
                 }),
           }).pipe(
             Effect.provide(

@@ -22,7 +22,7 @@ import {
 } from "@/lib/ownership/route";
 
 /** The extension of a route file, which names no segment. */
-const ROUTE_FILE_EXTENSION = /\.tsx$/;
+const ROUTE_FILE_EXTENSION = /\.tsx$/u;
 
 /**
  * The first path segment of a route file below the locale, as the router names it: pathless layouts (`_main`),

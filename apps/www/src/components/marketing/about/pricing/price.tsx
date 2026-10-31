@@ -21,7 +21,7 @@ interface PricingPriceProps {
 /** Renders a price of one currency without the landing animation. */
 export function StaticPrice({ price }: PriceProps) {
   return (
-    <span className="font-semibold text-4xl tracking-tight">{price.text}</span>
+    <span className="text-4xl font-semibold tracking-tight">{price.text}</span>
   );
 }
 

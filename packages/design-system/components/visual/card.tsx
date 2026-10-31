@@ -93,7 +93,7 @@ function useVisualScene<T extends boolean | number>(
  * or scene in the card resizes.
  */
 const visualCardVariants = cva(
-  "group/visual @container/visual content-auto-card [overflow-anchor:none]",
+  "group/visual content-auto-card @container/visual [overflow-anchor:none]",
   {
     compoundVariants: [
       // The screen-filling surface that both full screen presentations share.
@@ -122,7 +122,7 @@ const visualCardVariants = cva(
  * every band keeps the card's inset, so every visual reads the same way.
  */
 const visualBandVariants = cva(
-  "border-t px-(--card-spacing) first:border-t-0 group-data-fullscreen/visual:shrink-0",
+  "border-t px-(--card-spacing) group-data-fullscreen/visual:shrink-0 first:border-t-0",
   {
     variants: {
       kind: {
@@ -306,7 +306,7 @@ function VisualCardFooter(props: Omit<ComponentProps<"div">, "className">) {
 function VisualCardTable(props: Omit<ComponentProps<"div">, "className">) {
   return (
     <div
-      className="border-t first:border-t-0 group-data-fullscreen/visual:shrink-0 [&_tr>*:first-child]:ps-(--card-spacing) [&_tr>*:last-child]:pe-(--card-spacing)"
+      className="border-t group-data-fullscreen/visual:shrink-0 first:border-t-0 [&_tr>*:first-child]:ps-(--card-spacing) [&_tr>*:last-child]:pe-(--card-spacing)"
       data-slot="visual-card-table"
       {...props}
     />

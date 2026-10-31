@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
-const SIGN_IN_PATH = /\/en\/auth/;
+const SIGN_IN_PATH = /\/en\/auth/u;
 
 /**
  * A visitor without the signed-in hint cookie loads the home page with no

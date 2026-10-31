@@ -64,7 +64,7 @@ const disabledCredentialPaths = [
   "/verify-password",
 ] as const;
 const resetPasswordCallbackPath = "/reset-password/";
-const trailingSlashPattern = /\/$/;
+const trailingSlashPattern = /\/$/u;
 
 const credentialSurfaceDisabled = {
   id: "credential-surface-disabled",

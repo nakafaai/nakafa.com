@@ -10,7 +10,7 @@ export const PRELOADED_FONT_SELECTOR = 'link[rel="preload"][as="font"]';
  * face ends at its style name.
  */
 const katexFile =
-  /\/KaTeX_([A-Za-z0-9]+-(?:BoldItalic|Bold|Italic|Regular))[-.][^/]+\.woff2$/;
+  /\/KaTeX_(?<face>[A-Za-z0-9]+-(?:BoldItalic|Bold|Italic|Regular))[-.][^/]+\.woff2$/u;
 
 const LoadedFontFaceSchema = Schema.Struct({
   family: Schema.String,

@@ -76,7 +76,8 @@ export function CodeBlockFilename({
   const defaultIcon = Option.getOrUndefined(
     Arr.findFirst(Rec.toEntries(filenameIconMap), ([pattern]) => {
       const regex = new RegExp(
-        `^${pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")}$`
+        `^${pattern.replace(/\\/gu, "\\\\").replace(/\./gu, "\\.").replace(/\*/gu, ".*")}$`,
+        "u"
       );
       return regex.test(children?.toString() ?? "");
     })
@@ -143,7 +144,7 @@ export function CodeBlockSelectTrigger({
     <SelectTrigger
       aria-label={t("language")}
       className={cn(
-        "w-fit border-none text-muted-foreground text-sm shadow-none",
+        "text-muted-foreground w-fit border-none text-sm shadow-none",
         className
       )}
       size="sm"

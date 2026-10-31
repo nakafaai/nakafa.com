@@ -72,7 +72,7 @@ export const classSlugOf = (name: string) =>
   name
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/^-|-$/gu, "");
 
 /**
  * A class's address in the school: the form `classSlugOf` gives a name, with a

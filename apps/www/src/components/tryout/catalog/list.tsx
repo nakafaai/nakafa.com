@@ -37,8 +37,8 @@ type TryoutListRow = TryoutListProps["rows"][number];
 export function TryoutList({ emptyLabel, rows }: TryoutListProps) {
   if (rows.length === 0) {
     return (
-      <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-        <div className="px-5 py-4 text-muted-foreground text-sm">
+      <section className="bg-card text-card-foreground overflow-hidden rounded-xl border shadow-sm">
+        <div className="text-muted-foreground px-5 py-4 text-sm">
           {emptyLabel}
         </div>
       </section>
@@ -46,7 +46,7 @@ export function TryoutList({ emptyLabel, rows }: TryoutListProps) {
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+    <section className="bg-card text-card-foreground overflow-hidden rounded-xl border shadow-sm">
       <div className="grid divide-y">
         {Arr.map(rows, (row) => (
           <TryoutRow key={row.key} row={row} />
@@ -60,7 +60,7 @@ export function TryoutList({ emptyLabel, rows }: TryoutListProps) {
 function TryoutRow({ row }: { row: TryoutListRow }) {
   return (
     <TryoutPageLink
-      className="group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+      className="group hover:bg-accent hover:text-accent-foreground flex items-center gap-3 p-4 transition-colors ease-out"
       {...row.address}
     >
       <div className="grid w-full gap-4">
@@ -125,7 +125,7 @@ function TryoutRowDescription({
   }
 
   return (
-    <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
+    <span className="text-muted-foreground group-hover:text-accent-foreground line-clamp-1 text-sm">
       {description}
     </span>
   );

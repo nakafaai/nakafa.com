@@ -20,7 +20,7 @@ export function AuthLegal({
 
   return (
     <div className="flex max-w-sm flex-col">
-      <p className="text-balance text-center text-muted-foreground text-sm">
+      <p className="text-muted-foreground text-center text-sm text-balance">
         {t.rich("legal-description", {
           "terms-of-service": (chunks) => (
             <LegalLink href={links.terms}>{chunks}</LegalLink>
@@ -42,7 +42,7 @@ export function AuthLegal({
 function LegalLink({ children, href }: { children: ReactNode; href: string }) {
   return (
     <a
-      className="font-medium text-foreground underline-offset-4 hover:underline"
+      className="text-foreground font-medium underline-offset-4 hover:underline"
       href={href}
       rel="noopener noreferrer"
       target="_blank"

@@ -41,7 +41,7 @@ function NewChatSurface({
   composer: ReactNode;
 }) {
   return (
-    <div className="relative flex size-full min-w-0 flex-col overflow-hidden text-chat">
+    <div className="text-chat relative flex size-full min-w-0 flex-col overflow-hidden">
       {children}
 
       <div className="grid shrink-0 px-2 pb-2">{composer}</div>

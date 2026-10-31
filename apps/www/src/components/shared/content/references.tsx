@@ -38,7 +38,7 @@ export function RefContent({ githubUrl, className }: Props) {
   return (
     <section aria-labelledby={heading} className={cn("space-y-4", className)}>
       <h2
-        className="scroll-mt-28 font-medium text-2xl leading-tight tracking-tight"
+        className="scroll-mt-28 text-2xl leading-tight font-medium tracking-tight"
         id={heading}
       >
         {t("references")}

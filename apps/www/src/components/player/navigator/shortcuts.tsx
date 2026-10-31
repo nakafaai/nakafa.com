@@ -8,7 +8,7 @@ export function PlayerShortcuts() {
   const t = useTranslations("Player");
 
   return (
-    <dl className="mt-auto grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-muted-foreground text-xs">
+    <dl className="text-muted-foreground mt-auto grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-xs">
       <PlayerShortcut keys={["←", "→"]}>{t("shortcut-step")}</PlayerShortcut>
       <PlayerShortcut keys={["1-5"]}>{t("shortcut-pick")}</PlayerShortcut>
       <PlayerShortcut keys={["F"]}>{t("shortcut-flag")}</PlayerShortcut>

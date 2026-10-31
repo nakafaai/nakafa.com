@@ -378,7 +378,7 @@ describe("CLI workflow policy", () => {
       assert.ok(
         Arr.contains(
           yield* validateCliWorkflow(
-            source.replace("needs: [build, publish]", "needs: publish")
+            source.replace("needs: [ build, publish ]", "needs: publish")
           ),
           "CLI verification must consume build and publication."
         )
