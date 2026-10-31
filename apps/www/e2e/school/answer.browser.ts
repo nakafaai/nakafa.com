@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   createSchool,
   hostAddress,
@@ -63,7 +63,7 @@ test("a student writes an Arabic answer from the sitting's Arabic keypad, and th
   for (const letter of WORD) {
     await keypad.getByRole("button", { exact: true, name: letter }).click();
   }
-  await expect(essay).toHaveValue(WORD.join(""));
+  await expect(essay).toHaveValue(Arr.join(WORD, ""));
   await expect(essay).toBeFocused();
   // The field follows the direction of the words written in it.
   await expect(essay).toHaveAttribute("dir", "auto");
