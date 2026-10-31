@@ -143,8 +143,8 @@
  * keeps the height it had once it was.
  */
 @utility content-auto-section {
-  content-visibility: auto;
   contain-intrinsic-size: auto none auto calc(100svh - 4rem);
+  content-visibility: auto;
 }
 
 /*

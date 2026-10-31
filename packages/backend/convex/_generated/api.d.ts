@@ -5995,6 +5995,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
           state?: "scheduled" | "open" | "closed";
         },
