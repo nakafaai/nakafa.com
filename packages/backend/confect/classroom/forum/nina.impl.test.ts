@@ -28,7 +28,8 @@ vi.mock("@repo/backend/confect/nina/nakafa/find", () => ({ findContent }));
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
-const { page, send } = refs.public.classroom.forum.messages;
+const { list } = refs.public.classroom.forum.channels;
+const { edit, page, send } = refs.public.classroom.forum.messages;
 const { open } = refs.public.classroom.forum.threads;
 const { finish, reply } = refs.internal.classroom.forum.nina;
 
@@ -93,8 +94,10 @@ const asked = Effect.fn("test.forum.nina.asked")(function* (fixture: Fixture) {
   const forum = yield* forumClass(fixture, term.id, "X-1");
   const message = yield* fixture.as("student").mutation(send, {
     ...forum,
+    attachments: [],
     clientKey: "nina-question",
     mentions: [{ _tag: "nina" }],
+    poll: null,
     slug: nf,
     text: "Kenapa percepatan bisa negatif?",
   });
@@ -138,8 +141,10 @@ describe("classroom/forum nina", () => {
           .as("student")
           .mutation(send, {
             ...forum,
+            attachments: [],
             clientKey: "nina-refused",
             mentions: [{ _tag: "nina" }],
+            poll: null,
             slug: nf,
             text: "Halo",
           })
@@ -177,6 +182,50 @@ describe("classroom/forum nina", () => {
       })
   );
 
+  it.effect(
+    "shows a reply as Nina's in the chat list, and lets nobody change it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        yield* withPool(fixture, 3);
+        const { forum, messageId } = yield* asked(fixture);
+        ninaAnswers({ text: "Karena arahnya berlawanan.", unsure: false });
+
+        yield* fixture.internal.action(reply, { messageId });
+
+        const student = fixture.as("student");
+        const chats = yield* student.query(list, {
+          ...firstPage,
+          classId: forum.classId,
+          slug: nf,
+        });
+        expect(Arr.head(chats.page)).toEqual(
+          Option.some(
+            expect.objectContaining({
+              last: expect.objectContaining({ author: "Nina", mine: false }),
+            })
+          )
+        );
+        const listed = yield* student.query(page, {
+          ...firstPage,
+          channelId: forum.channelId,
+          classId: forum.classId,
+          slug: nf,
+        });
+        const answer = Option.getOrThrow(Arr.head(listed.page));
+        expect(
+          yield* student
+            .mutation(edit, {
+              classId: forum.classId,
+              messageId: answer.id,
+              slug: nf,
+              text: "Jawabanku sendiri",
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "AccessDenied" });
+      })
+  );
+
   it.effect("keeps a reply in its discussion", () =>
     Effect.gen(function* () {
       const fixture = yield* keyedFixture;
@@ -196,6 +245,7 @@ describe("classroom/forum nina", () => {
         .as("student")
         .mutation(refs.public.classroom.forum.threads.reply, {
           classId: forum.classId,
+          attachments: [],
           clientKey: "nina-reply-asks",
           mentions: [{ _tag: "nina" }],
           number: discussion.discussion.number,
@@ -258,8 +308,10 @@ describe("classroom/forum nina", () => {
       vi.setSystemTime(TENANCY_NOW + 1000);
       const next = yield* fixture.as("student").mutation(send, {
         ...forum,
+        attachments: [],
         clientKey: "nina-follow-up",
         mentions: [{ _tag: "nina" }],
+        poll: null,
         slug: nf,
         text: "Contohnya?",
       });

@@ -1,8 +1,17 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import {
+  ATTACHMENT_LIMIT,
+  AttachmentView,
+  attachmentValidator,
+} from "@repo/backend/confect/classroom/forum/attachment";
+import {
   Mention,
   MentionView,
 } from "@repo/backend/confect/classroom/forum/mention";
+import {
+  PollView,
+  pollValidator,
+} from "@repo/backend/confect/classroom/forum/poll";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema } from "effect";
 
@@ -14,6 +23,17 @@ export const MessageText = Schema.String.check(
   Schema.isTrimmed(),
   Schema.isMinLength(1),
   Schema.isMaxLength(MESSAGE_MAX_LENGTH)
+);
+
+/** The text of a send, which may stay empty when the message carries a file or a poll. */
+export const MessageBody = Schema.String.check(
+  Schema.isTrimmed(),
+  Schema.isMaxLength(MESSAGE_MAX_LENGTH)
+);
+
+/** The uploads a send turns into the files of its message. */
+export const MessageUploads = Schema.Array(Id("classroomUploads")).check(
+  Schema.isMaxLength(ATTACHMENT_LIMIT)
 );
 
 /**
@@ -50,10 +70,13 @@ export const DiscussionView = Schema.Struct({
  * no text: a teacher's hide removes it for good. A message of the channel has no
  * `threadId`, and a reply carries the discussion it answers. A message that opens a
  * discussion stays in the channel and carries that discussion as `startsThreadId`.
- * A reply of Nina is an ordinary message marked `nina`, under the Person who asked.
- * `tenantId` is copied from the class for the tenant check of every read.
+ * A message may carry files and a poll, and then its text may be empty; a hide
+ * deletes them with the text. A reply of Nina is an ordinary message marked `nina`,
+ * under the Person who asked. `tenantId` is copied from the class for the tenant
+ * check of every read.
  */
 export const messageValidator = Schema.Struct({
+  attachments: Schema.optionalKey(Schema.Array(attachmentValidator)),
   authorId: Id("tenantPeople"),
   channelId: Id("classroomChannels"),
   classId: Id("classes"),
@@ -63,6 +86,7 @@ export const messageValidator = Schema.Struct({
   hiddenAt: Schema.optionalKey(Schema.Finite),
   mentions: Schema.optionalKey(Schema.Array(Mention)),
   nina: Schema.optionalKey(Schema.Literal(true)),
+  poll: Schema.optionalKey(pollValidator),
   sealedText: Schema.NullOr(Sealed),
   startsThreadId: Schema.optionalKey(Id("classroomThreads")),
   tenantId: Id("tenants"),
@@ -75,9 +99,10 @@ export const messageValidator = Schema.Struct({
  * wrote it. Its client key is the one the composer gave it, so the forum keeps
  * one row for the message from the moment it is sent to the server's answer. A
  * message that opens a discussion carries the discussion, and a message carries
- * the Persons it mentions by name.
+ * the Persons it mentions by name, its files and its poll.
  */
 export const MessageView = Schema.Struct({
+  attachments: Schema.Array(AttachmentView),
   author: Schema.Struct({
     id: Id("tenantPeople"),
     name: Schema.String,
@@ -90,6 +115,7 @@ export const MessageView = Schema.Struct({
   id: Id("classroomMessages"),
   mentions: Schema.Array(MentionView),
   mine: Schema.Boolean,
+  poll: Schema.NullOr(PollView),
   text: Schema.NullOr(Schema.String),
 });
 

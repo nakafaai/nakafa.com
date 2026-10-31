@@ -9,7 +9,15 @@ import {
   classAccess,
   classAuthority,
 } from "@repo/backend/confect/classroom/authority";
-import { MessageHidden } from "@repo/backend/confect/classroom/forum/errors";
+import {
+  dropCarried,
+  sealPoll,
+  takeUploads,
+} from "@repo/backend/confect/classroom/forum/attach";
+import {
+  MessageEmpty,
+  MessageHidden,
+} from "@repo/backend/confect/classroom/forum/errors";
 import {
   classChannel,
   classMessage,
@@ -32,7 +40,7 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { sealText } from "@repo/backend/confect/vault/text";
-import { Clock, Effect, Layer, Option, Struct } from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /**
  * One page of a channel's messages, newest first, so the forum loads older ones
@@ -73,9 +81,11 @@ const send = FunctionImpl.make(
   spec,
   "send",
   Effect.fn("classroom.forum.messages.send")(function* ({
+    attachments,
     channelId,
     clientKey,
     mentions,
+    poll,
     text,
   }) {
     const { person } = yield* Member;
@@ -95,13 +105,16 @@ const send = FunctionImpl.make(
       }
       return yield* messageView(sent.value);
     }
+    if (text === "" && Arr.isReadonlyArrayEmpty(attachments) && poll === null) {
+      return yield* new MessageEmpty();
+    }
     const checked = yield* checkMentions(row, mentions);
     const fields = { channelId: channel._id, classId: row._id, clientKey };
-    const sealedText = yield* sealText(
-      yield* schoolKeys(row.tenantId),
-      messageField(fields),
-      text
-    ).pipe(Effect.orDie);
+    const keys = yield* schoolKeys(row.tenantId);
+    const sealedText = yield* sealText(keys, messageField(fields), text).pipe(
+      Effect.orDie
+    );
+    const files = yield* takeUploads(attachments);
     const createdAt = yield* Clock.currentTimeMillis;
     const messageId = yield* (yield* DatabaseWriter)
       .table("classroomMessages")
@@ -112,6 +125,8 @@ const send = FunctionImpl.make(
         mentions: checked.stored,
         sealedText,
         tenantId: row.tenantId,
+        ...(Arr.isReadonlyArrayEmpty(files) ? {} : { attachments: files }),
+        ...(poll === null ? {} : { poll: yield* sealPoll(keys, fields, poll) }),
       })
       .pipe(Effect.orDie);
     yield* noticeMentions(messageId, row, createdAt, checked);
@@ -127,7 +142,10 @@ const send = FunctionImpl.make(
   })
 );
 
-/** Changes the text of the sender's own message. A message a teacher hid keeps no text to change. */
+/**
+ * Changes the text of the sender's own message. A reply of Nina is no one's to
+ * change, and a message a teacher hid keeps no text to change.
+ */
 const edit = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -136,7 +154,7 @@ const edit = FunctionImpl.make(
     const { person } = yield* Member;
     const row = yield* Class;
     const message = yield* classMessage(messageId, "forum.post");
-    if (message.authorId !== person._id) {
+    if (message.nina === true || message.authorId !== person._id) {
       return yield* missing("forum.post");
     }
     if (message.sealedText === null) {
@@ -159,8 +177,8 @@ const edit = FunctionImpl.make(
 );
 
 /**
- * Hides a message for good: its text is removed and its place in the channel
- * stays, and the journal records the hide without the text.
+ * Hides a message for good: its text, its files and its poll are removed and its
+ * place in the channel stays, and the journal records the hide without the text.
  */
 const hide = FunctionImpl.make(
   databaseSchema,
@@ -173,10 +191,14 @@ const hide = FunctionImpl.make(
     if (message.sealedText === null) {
       return yield* messageView(message);
     }
-    const hidden = Struct.assign(message, {
-      hiddenAt: yield* Clock.currentTimeMillis,
-      sealedText: null,
-    });
+    yield* dropCarried(message);
+    const hidden = Struct.assign(
+      Struct.omit(message, ["attachments", "poll"]),
+      {
+        hiddenAt: yield* Clock.currentTimeMillis,
+        sealedText: null,
+      }
+    );
     yield* (yield* DatabaseWriter)
       .table("classroomMessages")
       .replace(message._id, Struct.omit(hidden, ["_creationTime", "_id"]))

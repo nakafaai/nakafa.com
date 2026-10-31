@@ -3,8 +3,12 @@ import type {
   ClassroomMessagesDoc,
   ClassroomThreadsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  StorageReader,
+} from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
+import { attachmentField } from "@repo/backend/confect/classroom/forum/attachment";
 import { readMark } from "@repo/backend/confect/classroom/forum/mark";
 import {
   type MentionView,
@@ -12,6 +16,10 @@ import {
 } from "@repo/backend/confect/classroom/forum/mention";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import { NINA_NAME } from "@repo/backend/confect/classroom/forum/nina";
+import {
+  type PollView,
+  pollField,
+} from "@repo/backend/confect/classroom/forum/poll";
 import { titleField } from "@repo/backend/confect/classroom/forum/thread";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { readTenantKeys } from "@repo/backend/confect/vault/keys";
@@ -53,10 +61,76 @@ export const discussionView = Effect.fn("classroom.forum.views.discussion")(
   }
 );
 
+/** The keys a school's forum opens with. */
+type SchoolKeys = Effect.Success<ReturnType<typeof schoolKeys>>;
+
+/**
+ * The files of a message for the viewer: each name opened with the school key,
+ * and each address read for this read alone (ADR 0028). A file the storage no
+ * longer holds shows without an address.
+ */
+const attachmentViews = Effect.fn("classroom.forum.views.attachments")(
+  function* (message: ClassroomMessagesDoc, keys: SchoolKeys) {
+    const storage = yield* StorageReader;
+    const addressOf = (storageId: GenericId.GenericId<"_storage">) =>
+      storage.getUrl(storageId).pipe(
+        Effect.map((url) => url.href),
+        Effect.catchTag("BlobNotFoundError", () => Effect.succeed(null))
+      );
+    return yield* Effect.forEach(message.attachments ?? [], (file) =>
+      Effect.gen(function* () {
+        const name = yield* openText(
+          keys,
+          attachmentField({
+            classId: message.classId,
+            storageId: file.storageId,
+          }),
+          file.sealedName
+        );
+        return {
+          address: yield* addressOf(file.storageId),
+          byteSize: file.byteSize,
+          height: file.height ?? null,
+          kind: file.kind,
+          name,
+          thumbnail:
+            file.thumbnailId === undefined
+              ? null
+              : yield* addressOf(file.thumbnailId),
+          width: file.width ?? null,
+        };
+      })
+    );
+  }
+);
+
+/** The poll of a message for the viewer, its words opened with the school key. */
+const pollView = Effect.fn("classroom.forum.views.poll")(function* (
+  message: ClassroomMessagesDoc,
+  keys: SchoolKeys
+) {
+  const { poll } = message;
+  if (poll === undefined) {
+    return null;
+  }
+  const view: typeof PollView.Type = {
+    multiple: poll.multiple,
+    options: yield* Effect.forEach(poll.sealedOptions, (sealed, index) =>
+      openText(keys, pollField(message, `option:${index}`), sealed)
+    ),
+    question: yield* openText(
+      keys,
+      pollField(message, "question"),
+      poll.sealedQuestion
+    ),
+  };
+  return view;
+});
+
 /**
  * The views of some messages for the viewer: each text opened with the school
- * key, each author's name read once, a hidden message without its text, and a
- * message that opens a discussion with that discussion.
+ * key, each author's name read once, a hidden message without its text, a message
+ * that opens a discussion with that discussion, and each message's files and poll.
  */
 export const messageViews = Effect.fn("classroom.forum.views.messages")(
   function* (rows: readonly ClassroomMessagesDoc[]) {
@@ -118,6 +192,7 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
                   .get(message.startsThreadId)
               );
         return {
+          attachments: yield* attachmentViews(message, keys),
           author: {
             id: message.authorId,
             name: message.nina === true ? NINA_NAME : author.name,
@@ -130,6 +205,7 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
           id: message._id,
           mentions,
           mine: message.nina !== true && message.authorId === person._id,
+          poll: yield* pollView(message, keys),
           text,
         };
       }).pipe(Effect.orDie)
