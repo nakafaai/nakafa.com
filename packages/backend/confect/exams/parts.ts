@@ -97,8 +97,8 @@ export const paperAnswers = (
   );
 
 /** Why a question keeps its exam from being scheduled: a part that shows nothing, or a key it needs and lacks. */
-export const QuestionGap = Schema.Literals(["empty", "key"]);
-export type QuestionGap = typeof QuestionGap.Type;
+const QuestionGap = Schema.Literals(["empty", "key"]);
+type QuestionGap = typeof QuestionGap.Type;
 
 /**
  * Why the schedule refuses a question: a gap the page sees in the question itself (`questionGap`), or a prompt with
