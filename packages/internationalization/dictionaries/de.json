@@ -1309,6 +1309,7 @@
     "reaction-label": "{emoji}, {count}",
     "reply-thread": "Im Thread antworten",
     "media-open": "{name} öffnen",
+    "media-description": "Das Foto in voller Größe.",
     "media-download": "Herunterladen",
     "chat-media-image": "Foto",
     "chat-media-document": "Dokument",

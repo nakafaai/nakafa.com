@@ -135,6 +135,7 @@ describe("sendReply and openDiscussion", () => {
           Promise.resolve(Result.succeed(stored))
         );
         const replyArgs = {
+          attachments: [],
           classId,
           clientKey: args.clientKey,
           mentions: [],

@@ -84,7 +84,7 @@ const placeTallies = Effect.fn("classroom.forum.tallies.place")(function* (
             .first()
             .pipe(Effect.orDie);
           const first = yield* Option.match(opening, {
-            onNone: () => Effect.succeed(Option.none()),
+            onNone: () => Effect.succeedNone,
             onSome: (message) => tallyOf(message._id),
           });
           return Arr.appendAll(Option.toArray(first), replies);

@@ -105,6 +105,7 @@ function MessagePhoto({
         />
       </button>
       <ResponsiveDialog
+        description={t("media-description")}
         footer={
           photo.address === null ? null : (
             <Button

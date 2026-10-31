@@ -76,10 +76,12 @@ describe("sendUpdate", () => {
     ]);
 
     sendUpdate(sent)(localStore, {
+      attachments: [],
       channelId: general,
       classId,
       clientKey: "client-key-1",
       mentions: [],
+      poll: null,
       slug,
       text: sent.text ?? "",
     });
@@ -274,6 +276,7 @@ describe("replyUpdate", () => {
     ]);
 
     replyUpdate(sent)(localStore, {
+      attachments: [],
       classId,
       clientKey: "client-key-3",
       mentions: [],

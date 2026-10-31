@@ -126,7 +126,7 @@ export function MessageReactions({ message }: { message: ForumMessage }) {
           disabled={!canPost}
           key={reaction.emoji}
           onClick={() => press(reaction.emoji)}
-          size="xs"
+          size="sm"
           variant="outline"
         >
           <span>{reaction.emoji}</span>

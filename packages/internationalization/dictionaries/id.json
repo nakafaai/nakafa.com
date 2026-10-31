@@ -1309,6 +1309,7 @@
     "reaction-label": "{emoji}, {count}",
     "reply-thread": "Balas di thread",
     "media-open": "Buka {name}",
+    "media-description": "Foto dalam ukuran penuh.",
     "media-download": "Unduh",
     "chat-media-image": "Foto",
     "chat-media-document": "Dokumen",
