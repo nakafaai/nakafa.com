@@ -30,7 +30,8 @@ import {
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Exit } from "effect";
 
-const { children, confirm, grades, withdraw } = refs.public.guardians.family;
+const { children, confirm, grades, narratives, withdraw } =
+  refs.public.guardians.family;
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -267,6 +268,47 @@ describe("guardians/family withdraw", () => {
         expect(Exit.isFailure(exit)).toBe(true);
         expect(defectOf(exit)).toContain("no consent row");
       })
+  );
+});
+
+describe("guardians/family narratives", () => {
+  it.effect("shows a verified guardian only what a teacher shared", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const { guardian, link } = yield* linked(fixture);
+      const term = yield* period(fixture, fixture.units.smp);
+      const group = yield* cohort(fixture, term.id, "X-1");
+      const made = yield* classOf(fixture, group.id, "Fisika");
+      yield* teach(fixture, made.id, fixture.people.teacher.personId);
+      yield* fixture
+        .as("admin")
+        .mutation(refs.public.tenancy.placements.place, {
+          cohortId: group.id,
+          personId: fixture.people.student.personId,
+          slug: nf,
+        });
+      yield* fixture.as("admin").mutation(refs.public.insight.dpia.record, {
+        reviewer: "Bu Ratna",
+        slug: nf,
+        version: "2026-1",
+      });
+      const names = {
+        classId: made.id,
+        personId: fixture.people.student.personId,
+        slug: nf,
+      };
+      const teacher = fixture.as("teacher");
+      yield* teacher.mutation(refs.public.insight.narratives.write, {
+        ...names,
+        text: "Rajin.",
+      });
+      const read = guardian.query(narratives, { linkId: link.id, slug: nf });
+      expect(yield* read).toEqual([]);
+      yield* teacher.mutation(refs.public.insight.narratives.share, names);
+      expect(yield* read).toMatchObject([
+        { className: "Fisika X-1", text: "Rajin." },
+      ]);
+    })
   );
 });
 
