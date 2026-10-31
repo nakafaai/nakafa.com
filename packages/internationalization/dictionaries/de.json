@@ -395,6 +395,7 @@
     "page-empty-choice": "Leere Option",
     "page-empty-match": "Leere Aussage oder Antwort",
     "page-empty-table": "Leere Aussage oder Spalte",
+    "offline-note": "Deine Änderungen werden gespeichert, sobald du wieder online bist.",
     "add-below": "Frage darunter hinzufügen",
     "add-below-of": "Frage unter Frage {number} hinzufügen",
     "question-text": "Text von Frage {number}",

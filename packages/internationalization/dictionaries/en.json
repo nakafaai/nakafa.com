@@ -395,6 +395,7 @@
     "page-empty-choice": "Empty option",
     "page-empty-match": "Empty statement or answer",
     "page-empty-table": "Empty statement or column",
+    "offline-note": "Your changes save once you are back online.",
     "add-below": "Add question below",
     "add-below-of": "Add question below question {number}",
     "question-text": "Question {number} text",
