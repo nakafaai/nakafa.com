@@ -8,6 +8,7 @@ import {
 import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { createFramePace } from "@repo/design-system/lib/pace";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
@@ -36,12 +37,6 @@ const ALPHA_FADE_IN_SPEED = 0.02;
  * otherwise draw 2.25 times the pixels for little visible gain.
  */
 const MAX_CANVAS_PIXEL_RATIO = 2;
-/**
- * A phone draws every second frame, each one a step twice as long. The particles
- * cross the screen at the same speed for half the work, on the same thread as
- * the reader's scroll and press.
- */
-const PHONE_FRAME_STEP = 2;
 
 /**
  * One particle. The animation loop updates position and alpha in place, so
@@ -160,7 +155,9 @@ export function Particles({
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const animationFrameRef = useRef<number | null>(null);
-  const frameCount = useRef(0);
+  // A frame that the pace skips still counts, so the particles keep their speed.
+  const waitedFrames = useRef(0);
+  const pace = useStableMutableValue(createFramePace);
   const dpr =
     typeof window === "undefined"
       ? 1
@@ -317,12 +314,14 @@ export function Particles({
   }, [mousePositionRef]);
 
   const animate = useCallback(() => {
-    frameCount.current += 1;
-    if (isMobile && frameCount.current % PHONE_FRAME_STEP !== 0) {
+    waitedFrames.current += 1;
+    const startedAt = performance.now();
+    if (!pace.isDue(startedAt)) {
       animationFrameRef.current = window.requestAnimationFrame(animate);
       return;
     }
-    const step = isMobile ? PHONE_FRAME_STEP : 1;
+    const step = waitedFrames.current;
+    waitedFrames.current = 0;
     if (!isMobile) {
       onMouseMove();
     }
@@ -380,6 +379,7 @@ export function Particles({
       MutableList.toArray(queue)
     );
     animationFrameRef.current = window.requestAnimationFrame(animate);
+    pace.rest(startedAt, performance.now());
   }, [
     circleParams,
     clearContext,
@@ -388,6 +388,7 @@ export function Particles({
     staticity,
     isMobile,
     onMouseMove,
+    pace,
   ]);
 
   const startAnimation = useCallback(() => {

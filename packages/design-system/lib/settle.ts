@@ -49,17 +49,21 @@ const untilIdle = Effect.suspend(() =>
  */
 export const untilPageSettled = Effect.andThen(untilPageLoaded, untilIdle);
 
-/** Completes at the reader's first gesture anywhere on the page. */
+/** Completes at the reader's first gesture anywhere on the page, and stops listening. */
 const untilGesture = Effect.callback<void>((resume) => {
-  const gesture = () => resume(Effect.void);
-  Arr.forEach(READER_GESTURES, (name) => {
-    window.addEventListener(name, gesture, { capture: true, passive: true });
-  });
-  return Effect.sync(() => {
+  const stop = () => {
     Arr.forEach(READER_GESTURES, (name) => {
       window.removeEventListener(name, gesture, { capture: true });
     });
+  };
+  const gesture = () => {
+    stop();
+    resume(Effect.void);
+  };
+  Arr.forEach(READER_GESTURES, (name) => {
+    window.addEventListener(name, gesture, { capture: true, passive: true });
   });
+  return Effect.sync(stop);
 });
 
 /**
