@@ -12,10 +12,13 @@ import { reportClientException } from "@/lib/analytics/client";
 
 /**
  * A chat's title as the learner reads it. Every chat starts under one stored
- * title, which stands for the learner's own "new chat" until Nina names the chat.
+ * title, which stands for the learner's own "new chat" until Nina names the chat,
+ * as a chat with no title does.
  */
-export const readChatTitle = (title: string, newChat: string) =>
-  title === DEFAULT_TITLE ? newChat : title;
+export const readChatTitle = (title: string | undefined, newChat: string) =>
+  title === undefined || title === "" || title === DEFAULT_TITLE
+    ? newChat
+    : title;
 
 /**
  * The rename of a chat's title in its header: the box that replaces the title

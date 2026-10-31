@@ -310,6 +310,13 @@ describe("readChatTitle", () => {
     expect(readChatTitle(DEFAULT_TITLE, "Obrolan baru")).toBe("Obrolan baru");
   });
 
+  it.each([
+    ["no title", undefined],
+    ["an empty title", ""],
+  ])("reads a chat with %s as a new chat", (_name, title) => {
+    expect(readChatTitle(title, "Obrolan baru")).toBe("Obrolan baru");
+  });
+
   it("keeps a title the chat has earned", () => {
     expect(readChatTitle("Konsep fungsi", "Obrolan baru")).toBe(
       "Konsep fungsi"

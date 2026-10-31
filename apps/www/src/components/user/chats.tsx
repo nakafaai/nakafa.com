@@ -19,7 +19,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Array as Arr, Effect, Option, pipe, String as Str } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
@@ -189,14 +189,7 @@ function ChatRow({ chat }: { chat: ChatView }) {
   const now = useAgeNow(clock);
   const isPrivate = chat.visibility === "private";
   // A chat Nina has not named yet reads as a new chat, so its link has a name.
-  const title = pipe(
-    Option.fromUndefinedOr(chat.title),
-    Option.filter(Str.isNonEmpty),
-    Option.match({
-      onNone: () => tAi("new-chat"),
-      onSome: (title) => readChatTitle(title, tAi("new-chat")),
-    })
-  );
+  const title = readChatTitle(chat.title, tAi("new-chat"));
   return (
     <FeedRow>
       <FeedAvatar mascot={profile.mascot} photo={profile.image} />
