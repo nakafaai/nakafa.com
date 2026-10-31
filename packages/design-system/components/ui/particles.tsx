@@ -36,6 +36,12 @@ const ALPHA_FADE_IN_SPEED = 0.02;
  * otherwise draw 2.25 times the pixels for little visible gain.
  */
 const MAX_CANVAS_PIXEL_RATIO = 2;
+/**
+ * A phone draws every second frame, each one a step twice as long. The particles
+ * cross the screen at the same speed for half the work, on the same thread as
+ * the reader's scroll and press.
+ */
+const PHONE_FRAME_STEP = 2;
 
 /**
  * One particle. The animation loop updates position and alpha in place, so
@@ -154,6 +160,7 @@ export function Particles({
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const animationFrameRef = useRef<number | null>(null);
+  const frameCount = useRef(0);
   const dpr =
     typeof window === "undefined"
       ? 1
@@ -310,7 +317,15 @@ export function Particles({
   }, [mousePositionRef]);
 
   const animate = useCallback(() => {
-    onMouseMove();
+    frameCount.current += 1;
+    if (isMobile && frameCount.current % PHONE_FRAME_STEP !== 0) {
+      animationFrameRef.current = window.requestAnimationFrame(animate);
+      return;
+    }
+    const step = isMobile ? PHONE_FRAME_STEP : 1;
+    if (!isMobile) {
+      onMouseMove();
+    }
     clearContext();
     // The frame visits the circles in the order the in-place loop did: a circle
     // that leaves the canvas is replaced at the end, and the circle that slides
@@ -325,8 +340,8 @@ export function Particles({
         break;
       }
       updateAlpha(circle, canvasSize.current.w, canvasSize.current.h);
-      circle.x += circle.dx;
-      circle.y += circle.dy;
+      circle.x += circle.dx * step;
+      circle.y += circle.dy * step;
 
       // Only apply mouse-based movement on non-mobile devices
       if (isMobile) {

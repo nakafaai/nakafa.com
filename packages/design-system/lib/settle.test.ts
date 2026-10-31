@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { untilPageSettled } from "@repo/design-system/lib/settle";
-import { Effect, Fiber } from "effect";
+import { untilPageRead, untilPageSettled } from "@repo/design-system/lib/settle";
+import { Effect, Fiber, TestClock } from "effect";
 
 /** Gives the window an idle callback that the test controls, and returns the stubs. */
 function stubIdleCallback() {
@@ -83,6 +83,27 @@ describe("waiting for the page to settle", () => {
       stubReadyState("complete");
 
       yield* untilPageSettled;
+    })
+  );
+
+  it.effect("waits for a gesture on a settled page, and later pages start at once", () =>
+    Effect.gen(function* () {
+      stubReadyState("complete");
+      const removed = vi.spyOn(window, "removeEventListener");
+
+      const waiting = yield* Effect.forkChild(untilPageRead);
+      yield* Effect.yieldNow;
+      yield* Effect.yieldNow;
+      expect(waiting.pollUnsafe()).toBeUndefined();
+
+      window.dispatchEvent(new Event("pointermove"));
+      yield* Fiber.join(waiting);
+      expect(removed).toHaveBeenCalledWith("pointermove", expect.any(Function), {
+        capture: true,
+      });
+      removed.mockRestore();
+
+      yield* untilPageRead;
     })
   );
 });
