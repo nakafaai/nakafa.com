@@ -47,4 +47,44 @@ describe("lib/static/notfound", () => {
       )
     );
   });
+
+  it("moves each streamed segment into its boundary, nested elements and all, so the figure shows with no script", () => {
+    const streamed = Arr.join(
+      [
+        "<body><main>",
+        '<div data-slot="empty-icon"><!--$?--><template id="B:0"></template><!--/$--></div>',
+        "<h1>We can't find this page</h1>",
+        '<p><!--$?--><template id="B:1"></template>…<!--/$--></p></main>',
+        '<div hidden id="S:0"><div><div><svg></svg></div><svg></svg></div><svg></svg></div>',
+        '<script>$RC("B:0","S:0")</script>',
+        '<div hidden id="S:1">ready</div>',
+        '<div hidden id="S:9"><b>no boundary</b></div>',
+        '<script>$RC("B:1","S:1")</script>',
+        "</body>",
+      ],
+      ""
+    );
+
+    expect(staticNotFoundDocument(streamed, THEME)).toBe(
+      Arr.join(
+        [
+          "<body><main>",
+          '<div data-slot="empty-icon"><!--$--><div><div><svg></svg></div><svg></svg></div><svg></svg><!--/$--></div>',
+          "<h1>We can't find this page</h1>",
+          "<p><!--$-->ready<!--/$--></p></main>",
+          "</body>",
+        ],
+        ""
+      )
+    );
+  });
+
+  it("drops a segment that never closes, and keeps the page before it", () => {
+    expect(
+      staticNotFoundDocument(
+        '<main><h1>Missing</h1></main><div hidden id="S:2"><svg>',
+        THEME
+      )
+    ).toBe("<main><h1>Missing</h1></main>");
+  });
 });
