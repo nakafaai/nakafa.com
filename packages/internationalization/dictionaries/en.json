@@ -1903,7 +1903,7 @@
     "holy": "Holy",
     "interpretation-description": "What this verse means, explained by its tafsir.",
     "quran": "Quran",
-    "quran-description": "Read the Quran with verse-by-verse translation.",
+    "quran-description": "Read all 114 surahs of the Quran in Arabic with a verse-by-verse translation, free on Nakafa.",
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
@@ -2070,7 +2070,7 @@
   },
   "Contributor": {
     "title": "Contributor",
-    "description": "Meet the people who made Nakafa possible."
+    "description": "Meet the people who write, check and build Nakafa, the free place to learn from primary school to university."
   },
   "ComingSoon": {
     "title": "Coming Soon",

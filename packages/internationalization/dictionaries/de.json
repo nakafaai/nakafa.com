@@ -1903,7 +1903,7 @@
     "holy": "Heilige Schriften",
     "interpretation-description": "Was dieser Vers bedeutet, erklärt durch seinen Tafsir.",
     "quran": "Koran",
-    "quran-description": "Lies den Koran mit einer Übersetzung Vers für Vers.",
+    "quran-description": "Lies alle 114 Suren des Korans auf Arabisch mit einer Übersetzung Vers für Vers, kostenlos auf Nakafa.",
     "verse": "Vers",
     "verse-count": "Vers {count}",
     "interpretation": "Tafsir",
@@ -2070,7 +2070,7 @@
   },
   "Contributor": {
     "title": "Mitwirkende",
-    "description": "Lerne die Menschen kennen, die Nakafa möglich machen."
+    "description": "Lerne die Menschen kennen, die Nakafa schreiben, prüfen und bauen, den kostenlosen Lernort von der Grundschule bis zur Universität."
   },
   "ComingSoon": {
     "title": "Demnächst verfügbar",
