@@ -69,10 +69,17 @@ const PREVIEW_CLIENT = "preview";
  * editors load, the server's document is still read until the text's editor holds it, so the drawn
  * paper that stands in for the loading editor shows the text instead of an empty page.
  */
-export const usePageDocument = (page: PageRead) => usePageRead(page).doc;
+export const usePageDocument = (page: Parameters<typeof usePageRead>[0]) =>
+  usePageRead(page).doc;
 
-/** How a page reads one rich text of its question. */
-interface PageRead {
+/** `usePageDocument`, with whether the text has answered, so a page knows when its shape is final. */
+export function usePageRead({
+  documentId,
+  editing,
+  open,
+  read,
+  saved,
+}: {
   /** The document of the text: the prompt, the rubric, or the explanation of a question. */
   documentId: Id<"editorDocuments">;
   /** Whether the page's editors are mounted, which take the text over once each holds it. */
@@ -83,16 +90,7 @@ interface PageRead {
   read: boolean;
   /** Whether the server has saved the question. */
   saved: boolean;
-}
-
-/** `usePageDocument`, with whether the text has answered, so a page knows when its shape is final. */
-export function usePageRead({
-  documentId,
-  editing,
-  open,
-  read,
-  saved,
-}: PageRead): { answered: boolean; doc: Option.Option<Node> } {
+}) {
   const { slug } = useExam();
   // Each text follows its own document alone: the selector keeps the document's reference, so
   // typing in one text redraws that text alone.
