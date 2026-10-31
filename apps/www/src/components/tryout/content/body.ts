@@ -2,7 +2,15 @@ import {
   TryoutQuestionBodyText,
   type TryoutSectionContent,
 } from "@repo/backend/confect/tryouts/runtime/spec";
-import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Data,
+  Effect,
+  HashMap,
+  Option,
+  Result,
+  Schema,
+} from "effect";
 
 /**
  * Decodes the question bodies a page carries, in question order: each body's JSON text with its
@@ -31,10 +39,13 @@ export type TryoutBody = Effect.Success<
   ReturnType<typeof decodeTryoutBodies>
 >[number];
 
+/** A section's questions that the bodies beside them do not all cover. */
+class TryoutBodiesMissing extends Data.TaggedError("TryoutBodiesMissing") {}
+
 /**
- * Pairs each question of a section with its body, in question order, by its placement. It finds none
- * when any question has no body, which a stale page can cause, because a section that shows some of
- * its questions is wrong.
+ * Pairs each question of a section with its body, in question order, by its placement. The page read
+ * sends a body for every question of the runtime it sends, so a question without one is a broken read
+ * and fails as `TryoutBodiesMissing`: a section that shows some of its questions, or none, is wrong.
  */
 export function joinTryoutBodies<
   Question extends { readonly placementId: TryoutBody["placementId"] },
@@ -51,6 +62,6 @@ export function joinTryoutBodies<
     )
   );
   return joined.length === questions.length
-    ? Option.some(joined)
-    : Option.none();
+    ? Result.succeed(joined)
+    : Result.fail(new TryoutBodiesMissing());
 }

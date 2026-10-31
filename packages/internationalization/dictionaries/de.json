@@ -258,6 +258,7 @@
     "title": "Prüfungen",
     "empty": "Es gibt noch keine Prüfungen.",
     "exams-search": "Prüfung suchen",
+    "rooms-search": "Raum suchen",
     "mine-exam": "Prüfung",
     "mine-opens": "Öffnet",
     "mine-status": "Status",
@@ -486,7 +487,10 @@
     "column-of": "Frage {number}, Spalte {name}",
     "column-placeholder": "Spalte",
     "cell-of": "Spalte für Aussage {name} von Frage {number}",
-    "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat."
+    "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat.",
+    "room-move": "Neu planen",
+    "room-move-description": "Schüler und Token bleiben. Die Hinweise gehen zur neuen Zeit erneut hinaus.",
+    "room-move-save": "Speichern"
   },
   "SchoolSettings": {
     "student-add-name-placeholder": "Ayu Lestari",
@@ -655,6 +659,38 @@
     "cohorts-no-period": "Öffne zuerst eine Periode, dann erscheinen hier ihre Klassen.",
     "cohorts-unavailable": "Die Klassen dieser Einheit können nicht angezeigt werden.",
     "cohorts-unavailable-description": "Wähle eine andere Einheit, um ihre Klassen zu sehen.",
+    "classes": "Lerngruppen",
+    "classes-description": "Die Lerngruppen jeder Periode, in denen eine Klasse ein Fach lernt.",
+    "classes-empty": "Noch keine Lerngruppe.",
+    "classes-search": "Lerngruppe suchen",
+    "classes-no-period": "Öffne zuerst eine Periode, dann erscheinen hier ihre Lerngruppen.",
+    "classes-unavailable": "Die Lerngruppen dieser Einheit können nicht angezeigt werden.",
+    "classes-unavailable-description": "Wähle eine andere Einheit, um ihre Lerngruppen zu sehen.",
+    "class-create": "Lerngruppe hinzufügen",
+    "class-add-footer": "Eine neue Lerngruppe ist sofort aktiv und heißt nach ihrem Fach und ihrer Klasse.",
+    "class-add-homeroom": "Eine Grundschulklasse lernt in einer Lerngruppe, die nach der Klasse heißt.",
+    "class-cohort": "Klasse",
+    "class-cohort-placeholder": "Klasse wählen",
+    "class-cohort-none": "Lege zuerst eine Klasse an",
+    "class-subject": "Fach",
+    "class-subject-placeholder": "Physik",
+    "class-name": "Name",
+    "class-name-placeholder": "Physik 7A",
+    "class-status": "Status",
+    "class-active": "Aktiv",
+    "class-archived": "Archiviert",
+    "class-rename": "Umbenennen",
+    "class-rename-description": "Die Lerngruppe behält ihre Schüler, Lehrkräfte und Aufgaben.",
+    "class-rename-save": "Speichern",
+    "class-archive": "Archivieren",
+    "class-restore": "Wiederherstellen",
+    "class-teachers": "Lehrkräfte",
+    "class-teachers-description": "Die Lehrkräfte, die das Fach dieser Lerngruppe unterrichten. Jede hat die Rolle Lehrkraft in dieser Einheit.",
+    "class-teacher": "Lehrkraft",
+    "class-teacher-add": "Lehrkraft hinzufügen",
+    "class-teacher-remove": "Entfernen",
+    "class-teacher-remove-label": "{name} entfernen",
+    "class-teachers-empty": "Noch keine Lehrkraft.",
     "cohort-unavailable": "Diese Klasse kann hier nicht geöffnet werden.",
     "cohort-unavailable-description": "Wähle eine Klasse aus der Liste, denn diese gibt es nicht mehr oder sie gehört zu einer anderen Schule.",
     "placement-add": "Schüler hinzufügen",
@@ -664,6 +700,14 @@
     "placement-move-footer": "Die Schülerin oder der Schüler wechselt in die gewählte Klasse.",
     "placement-move-to": "Wechseln zu",
     "placement-move-save": "Verschieben",
+    "roster-entry": "NISN und Alter",
+    "roster-entry-description": "NISN und Altersangabe bestimmen, ob die Person die Zustimmung der Eltern braucht.",
+    "roster-entry-save": "Speichern",
+    "roster-nisn": "NISN",
+    "roster-nisn-stored": "Gespeichert; neue eingeben, um sie zu ersetzen",
+    "roster-nisn-none": "10 Ziffern",
+    "roster-under-age": "Unter der Altersgrenze",
+    "roster-under-age-description": "Wer unter der Grenze ist, braucht eine bestätigte Erziehungsperson.",
     "cohort-members-search": "Schüler suchen",
     "cohort-members-description": "Hier erscheinen die Schülerinnen und Schüler dieser Klasse.",
     "cohort-members-empty": "Noch keine Schülerin und kein Schüler.",
@@ -719,7 +763,8 @@
         "created": "Klassenlehrer zugewiesen",
         "removed": "Klassenlehrer entfernt",
         "published": "Aufgabe veröffentlicht",
-        "deadlineChanged": "Abgabefrist geändert"
+        "deadlineChanged": "Abgabefrist geändert",
+        "edited": "Aufgabe bearbeitet"
       },
       "billing": {
         "invoice": {
@@ -738,7 +783,8 @@
         "renamed": "Lerngruppe umbenannt",
         "archived": "Lerngruppe archiviert",
         "teacherAssigned": "Lehrkraft der Lerngruppe zugewiesen",
-        "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt"
+        "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt",
+        "restored": "Lerngruppe wiederhergestellt"
       },
       "grade": {
         "released": "Note freigegeben"
@@ -824,7 +870,8 @@
         "finish": "Prüfungsversuch abgegeben",
         "close": "Prüfungstermin geschlossen",
         "cancel": "Prüfungsraum abgesagt",
-        "join": "Schüler über den Raumcode beigetreten"
+        "join": "Schüler über den Raumcode beigetreten",
+        "reschedule": "Prüfungsraum auf eine neue Zeit verlegt"
       },
       "exam": {
         "results": {
@@ -1022,7 +1069,28 @@
     "device-description": "Gib den Code der Nakafa CLI ein, damit sie die Schule als {name} liest.",
     "device-code": "Gerätecode",
     "device-authorize": "Verbinden",
-    "device-deny": "Gerät ablehnen"
+    "device-deny": "Gerät ablehnen",
+    "grading": "Bewertung",
+    "grading-description": "Die Versionen des Bewertungsschemas der Schule. Jede Note behält die Version, unter der sie eingetragen wurde.",
+    "grading-empty": "Noch keine Version gespeichert.",
+    "grading-empty-description": "Noten nutzen das eingebaute Schema: KKTP {kktp}, ohne Stufen.",
+    "grading-search": "Stufe suchen",
+    "grading-new": "Neue Version",
+    "grading-new-description": "Sie bewertet jede Note, die ab jetzt eingetragen wird. Frühere Noten behalten ihre Version.",
+    "grading-effective": "Gilt ab",
+    "grading-kktp": "KKTP",
+    "grading-bands": "Stufen",
+    "grading-bands-none": "Ohne Stufen",
+    "grading-band": "{label} ab {minimum}",
+    "grading-band-label": "Stufe",
+    "grading-band-label-placeholder": "B",
+    "grading-band-minimum": "Ab",
+    "grading-band-add": "Stufe hinzufügen",
+    "grading-band-remove": "Stufe entfernen",
+    "grading-save": "Version speichern",
+    "grading-status": "Status",
+    "grading-current": "Gültig",
+    "grading-earlier": "Früher"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1155,7 +1223,11 @@
     "task-work-no-match-description": "Kein Schüler mit passendem Namen hat etwas abgegeben.",
     "task-new": "Neue Aufgabe",
     "task-new-description": "Alle in der Klasse erhalten sie in ihren Benachrichtigungen.",
-    "task-publish": "Veröffentlichen"
+    "task-publish": "Veröffentlichen",
+    "task-edit": "Aufgabe bearbeiten",
+    "task-edit-description": "Ihre Adresse bleibt, also öffnet jeder Link sie weiter.",
+    "task-edit-save": "Speichern",
+    "task-points-fixed": "Die Punkte stehen fest, sobald Arbeit abgegeben ist."
   },
   "SchoolGrades": {
     "student": "Schüler",
@@ -1175,7 +1247,15 @@
     "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
     "detail": "Note der Schülerin oder des Schülers",
     "detail-empty": "Wähle eine Person aus der Liste, um ihre Note zu sehen.",
-    "kktp": "KKTP"
+    "kktp": "KKTP",
+    "own-title": "Meine Noten",
+    "own-search": "Klasse suchen",
+    "own-class": "Klasse",
+    "own-period": "Periode",
+    "own-band": "Stufe",
+    "own-band-none": "Ohne Stufe",
+    "own-empty": "Noch keine Note freigegeben.",
+    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
   },
   "SchoolReports": {
     "title": "Zeugnisse",
@@ -1214,7 +1294,11 @@
     "grade": "Note",
     "result": "Ergebnis",
     "kktp-reached": "KKTP erreicht",
-    "kktp-notReached": "KKTP nicht erreicht"
+    "kktp-notReached": "KKTP nicht erreicht",
+    "own-title": "Meine Zeugnisse",
+    "own-search": "Klasse suchen",
+    "own-empty": "Noch kein Zeugnis abgeschlossen.",
+    "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt."
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -1338,6 +1422,7 @@
     "short-description": "Kostenlose Lerninhalte von der Grundschule bis zur Universität.",
     "very-short-description": "Kostenlose Lernmaterialien.",
     "keywords": "kostenlose Lerninhalte, Mathematik lernen, Physik lernen, Chemie lernen, Biologie lernen, Informatik lernen, KI lernen, Data Science lernen, Übungsaufgaben, ausführliche Lösungen, Prüfungsvorbereitung, Online-Probetest, Schulmaterialien, Hochschulmaterialien, offene Bildung, Nakafa",
+    "knows-about": "Mathematik, Physik, Chemie, Biologie, Informatik, Künstliche Intelligenz, Data Science, Prüfungsvorbereitung, Schulbildung, Hochschulbildung",
     "classification": "Bildung"
   },
   "Common": {
@@ -2102,7 +2187,7 @@
     },
     "school-refusal-not-teacher": {
       "title": "Keine aktive Lehrkraft der Schule.",
-      "description": "Nur aktive Lehrkräfte dieser Schule können Klassenlehrkraft sein."
+      "description": "Wähle eine aktive Lehrkraft dieser Schule."
     },
     "school-refusal-teacher-has-homeroom": {
       "title": "Leitet schon eine andere Klasse.",
@@ -2301,6 +2386,41 @@
     },
     "school-cohort-archived": {
       "title": "Klasse archiviert."
+    },
+    "school-class-archived": {
+      "title": "Lerngruppe archiviert."
+    },
+    "school-refusal-class-name-taken": {
+      "title": "Diesen Namen gibt es schon.",
+      "description": "Wähle für diese Klasse einen anderen Namen."
+    },
+    "school-refusal-class-subject-taken": {
+      "title": "Das Fach hat schon eine Lerngruppe.",
+      "description": "Nutze diese Lerngruppe oder archiviere sie zuerst."
+    },
+    "school-refusal-class-limit": {
+      "title": "Mehr Lerngruppen passen nicht.",
+      "description": "Stelle eine archivierte Lerngruppe wieder her."
+    },
+    "school-refusal-class-address-empty": {
+      "title": "Im Namen fehlen Buchstaben.",
+      "description": "Nimm ein Fach mit Buchstaben oder Ziffern."
+    },
+    "school-refusal-class-ambiguous": {
+      "title": "Diese Adresse ist schon vergeben.",
+      "description": "Benenne die Lerngruppe um und versuche es noch einmal."
+    },
+    "school-refusal-class-subject-required": {
+      "title": "Diese Lerngruppe braucht ein Fach.",
+      "description": "Gib das Fach ein und lege sie noch einmal an."
+    },
+    "school-refusal-class-subject-not-allowed": {
+      "title": "Grundschulgruppen haben kein Fach.",
+      "description": "Lege sie ohne Fach an."
+    },
+    "school-refusal-person-class-limit": {
+      "title": "Diese Lehrkraft ist ausgelastet.",
+      "description": "Entferne sie zuerst aus einer anderen Lerngruppe."
     },
     "school-period-archived": {
       "title": "Zeitraum archiviert."
@@ -2571,6 +2691,18 @@
     },
     "school-own-role-ended": {
       "title": "Deine Rolle ist beendet."
+    },
+    "school-refusal-room-opened": {
+      "title": "Dieser Raum ist schon geöffnet.",
+      "description": "Ein geöffneter Raum behält Zeit und Namen."
+    },
+    "school-refusal-schedule-invalid": {
+      "title": "Diese Zeit geht nicht.",
+      "description": "Wähle einen Beginn, der noch nicht vorbei ist, und ein Ende danach."
+    },
+    "school-refusal-scheme-not-later": {
+      "title": "Es gibt schon eine neuere Version.",
+      "description": "Lade die Seite neu, um sie zu sehen, und speichere dann deine."
     }
   },
   "Ai": {

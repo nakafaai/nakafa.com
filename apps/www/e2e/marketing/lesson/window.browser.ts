@@ -9,6 +9,7 @@ import {
   lessonVisual,
   lessonWindow,
   PROJECTILE_VIEW,
+  showLessonWindow,
   visibleShare,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -53,9 +54,7 @@ test("home lesson window opens the next lesson by itself while it is on screen",
               const selected = lesson
                 .locator('[data-slot="button-group"]')
                 .getByRole("button", { pressed: true });
-              yield* Effect.promise(() =>
-                lessonWindow(page).scrollIntoViewIfNeeded()
-              );
+              yield* showLessonWindow(page);
               // Nothing points at the window or holds the focus in it.
               yield* Effect.promise(() => page.mouse.move(0, 0));
               yield* Effect.promise(() =>
@@ -101,7 +100,7 @@ test("home lesson window stops turning once the reader picks a lesson", async ({
                   exact: true,
                   name: CELL_TAB,
                 });
-              yield* Effect.promise(() => lesson.scrollIntoViewIfNeeded());
+              yield* showLessonWindow(page);
               yield* Effect.promise(() => cell.click());
               // The pointer and the focus leave the window, so nothing holds it.
               yield* Effect.promise(() => page.mouse.move(0, 0));
@@ -175,9 +174,7 @@ test("home lesson window keeps the launch the reader picked when the reader retu
               const launch = lessonPanel(page)
                 .locator('[data-slot="toggle-group-item"]')
                 .nth(HIGH_ANGLE_TOGGLE_INDEX);
-              yield* Effect.promise(() =>
-                lessonWindow(page).scrollIntoViewIfNeeded()
-              );
+              yield* showLessonWindow(page);
               yield* Effect.promise(() =>
                 expect(
                   lessonPanel(page).locator("canvas").first()
@@ -303,9 +300,7 @@ test("home lesson window keeps a focused control on the page while the window is
               const lesson = lessonSection(page);
               const probe = page.locator(`[${FOCUS_PROBE}]`);
 
-              yield* Effect.promise(() =>
-                lessonWindow(page).scrollIntoViewIfNeeded()
-              );
+              yield* showLessonWindow(page);
               // The lab replaces the card, so the control is taken once the lab is mounted and stays mounted.
               yield* Effect.promise(() =>
                 expect(

@@ -20,7 +20,7 @@ import {
   Outlet,
   useParams,
 } from "@tanstack/react-router";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { IntlProvider, useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { AppNotFound } from "@/components/state/app";
@@ -69,6 +69,9 @@ export const Route = createFileRoute("/$locale")({
       organization: {
         alternateName: t("title"),
         description: t("description"),
+        knowsAbout: Arr.map(t("knows-about").split(","), (subject) =>
+          subject.trim()
+        ),
       },
     };
   },
@@ -139,8 +142,9 @@ function LocaleError({ error }: ErrorComponentProps) {
 function toLocaleHead({
   alternateName,
   description,
+  knowsAbout,
   locale,
-}: typeof WebsiteInput.Type) {
+}: typeof WebsiteInput.Type & { readonly knowsAbout: readonly string[] }) {
   return {
     meta: [
       { title: alternateName },
@@ -149,6 +153,7 @@ function toLocaleHead({
         "script:ld+json": makeEducationalOrganizationNode({
           alternateName,
           description,
+          knowsAbout,
         }),
       },
       {

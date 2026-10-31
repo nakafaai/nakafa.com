@@ -1,6 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Option } from "effect";
-import { nextQuarter, sittingTimes } from "@/components/tenant/exams/time";
+import {
+  lengthsWith,
+  movedTimes,
+  nextQuarter,
+  sittingTimes,
+  wallClockOf,
+} from "@/components/tenant/exams/time";
 
 const jakarta = DateTime.zoneMakeNamedUnsafe("Asia/Jakarta");
 const berlin = DateTime.zoneMakeNamedUnsafe("Europe/Berlin");
@@ -34,6 +40,26 @@ describe("nextQuarter", () => {
     expect(nextQuarter(instant("2026-03-29T00:50:00Z"), berlin)).toBe(
       "2026-03-29T03:00"
     );
+  });
+});
+
+describe("wallClockOf", () => {
+  it("reads a room's stored opening back on its unit's clock, as the time it was scheduled for", () => {
+    const local = wallClockOf(millis("2026-10-19T01:30:00Z"), jakarta);
+    expect(local).toBe("2026-10-19T08:30");
+    expect(sittingTimes(local, 60, jakarta)).toEqual(
+      Option.some({
+        closesAt: millis("2026-10-19T02:30:00Z"),
+        opensAt: millis("2026-10-19T01:30:00Z"),
+      })
+    );
+  });
+});
+
+describe("lengthsWith", () => {
+  it("offers the schedule's lengths, with a room's own length in its place when it is another", () => {
+    expect(lengthsWith(60)).toEqual([30, 45, 60, 90, 120]);
+    expect(lengthsWith(75)).toEqual([30, 45, 60, 75, 90, 120]);
   });
 });
 
@@ -74,6 +100,41 @@ describe("sittingTimes", () => {
 
   it("is none for a day that the calendar does not have", () => {
     expect(sittingTimes("2026-02-30T10:00", 60, jakarta)).toEqual(
+      Option.none()
+    );
+  });
+});
+
+describe("movedTimes", () => {
+  /** A room stored with seconds in its start, as a seed or an import may store it: 09:11:42.5 in Jakarta, for an hour. */
+  const room = {
+    closesAt: millis("2026-11-01T03:11:42.500Z"),
+    opensAt: millis("2026-11-01T02:11:42.500Z"),
+  };
+
+  it("keeps the room's own instants while its start and length show as they are", () => {
+    expect(movedTimes(room, "2026-11-01T09:11", 60, jakarta)).toEqual(
+      Option.some(room)
+    );
+  });
+
+  it("takes the start and the length the viewer chose once either one changes", () => {
+    expect(movedTimes(room, "2026-11-01T10:00", 60, jakarta)).toEqual(
+      Option.some({
+        closesAt: millis("2026-11-01T04:00:00Z"),
+        opensAt: millis("2026-11-01T03:00:00Z"),
+      })
+    );
+    expect(movedTimes(room, "2026-11-01T09:11", 90, jakarta)).toEqual(
+      Option.some({
+        closesAt: millis("2026-11-01T03:41:00Z"),
+        opensAt: millis("2026-11-01T02:11:00Z"),
+      })
+    );
+  });
+
+  it("is none when a changed start is not a time the calendar holds", () => {
+    expect(movedTimes(room, "2026-02-30T09:00", 60, jakarta)).toEqual(
       Option.none()
     );
   });

@@ -1,11 +1,10 @@
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Result } from "effect";
 import { use } from "react";
 import { PlayerQuestionFlag } from "@/components/player/flag";
 import { PlayerQuestion } from "@/components/player/question";
 import { PlayerQuestions } from "@/components/player/questions";
 import { joinTryoutBodies } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
-import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { useTryoutFlag } from "@/components/tryout/player/flag";
 import { TryoutQuestionBody } from "@/components/tryout/runtime/question/body";
 import { getTryoutQuestionIds } from "@/components/tryout/runtime/question/id";
@@ -31,18 +30,15 @@ export function TryoutArticles({
   if (value === null) {
     throw new Error("TryoutArticles must be used within TryoutContentContext");
   }
-  const { bodies } = value;
-  if (!bodies || bodies.length === 0) {
-    return <TryoutContentRefresh />;
-  }
-  const joined = joinTryoutBodies(bodies, runtime.questions);
-  if (Option.isNone(joined)) {
-    return null;
-  }
+  // The page read sends the bodies with the runtime, so a question without its body is a broken read
+  // for the route's error boundary, never a player without its questions.
+  const joined = Result.getOrThrow(
+    joinTryoutBodies(value.bodies ?? [], runtime.questions)
+  );
 
   return (
     <PlayerQuestions>
-      {Arr.map(joined.value, ({ body, question }) => {
+      {Arr.map(joined, ({ body, question }) => {
         const ids = getTryoutQuestionIds(question.questionOrder);
 
         return (

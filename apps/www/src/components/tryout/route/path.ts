@@ -1,4 +1,5 @@
 import { Array as Arr, Option, Schema } from "effect";
+import { PLAYER_MODE_PARAM } from "@/components/player/mode";
 import type { TryoutSectionRoute } from "@/components/tryout/section/model";
 import type { LinkTarget } from "@/lib/routing/link";
 import { TRYOUT_TARGET } from "@/lib/routing/target";
@@ -173,9 +174,17 @@ export function getTryoutPageTarget({
     : getTryoutAttemptTarget(publicPath, attemptId);
 }
 
-/** Builds a route capability that binds navigation to one owned attempt. */
-export function getTryoutAttemptHref(publicPath: string, attemptId: string) {
+/**
+ * Builds a route capability that binds navigation to one owned attempt, with the player view the
+ * address keeps when it names one.
+ */
+export function getTryoutAttemptHref(
+  publicPath: string,
+  attemptId: string,
+  view: Option.Option<string> = Option.none()
+) {
   const searchParams = new URLSearchParams({ [ATTEMPT_ID_PARAM]: attemptId });
+  Option.map(view, (mode) => searchParams.set(PLAYER_MODE_PARAM, mode));
   return `${getTryoutPublicPathHref(publicPath)}?${searchParams.toString()}`;
 }
 
@@ -189,13 +198,22 @@ export function getTryoutPageHref({
     : getTryoutAttemptHref(publicPath, attemptId);
 }
 
-/** Preserves an exact attempt capability through localized authentication. */
+/**
+ * The lock a running attempt's pages hold, as the shell remembers it for a reload: the attempt
+ * capability that names those pages, until the attempt ends.
+ */
+export function getTryoutAttemptLock(attemptId: string, until: number) {
+  return { name: ATTEMPT_ID_PARAM, until, value: attemptId };
+}
+
+/** Preserves an exact attempt capability, and the view the address names, through localized authentication. */
 export function getTryoutAttemptAuthHref(
   locale: string,
   publicPath: string,
-  attemptId: string
+  attemptId: string,
+  view: Option.Option<string> = Option.none()
 ) {
-  const redirectHref = `/${locale}${getTryoutAttemptHref(publicPath, attemptId)}`;
+  const redirectHref = `/${locale}${getTryoutAttemptHref(publicPath, attemptId, view)}`;
   return `/${locale}/auth?redirect=${encodeURIComponent(redirectHref)}`;
 }
 

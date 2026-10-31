@@ -38,7 +38,7 @@ import { rowLineVariants } from "@repo/design-system/lib/row";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -255,7 +255,10 @@ export function TryoutAttemptResults({
     isAuthenticated ? value.identity : "skip",
     { initialNumItems: 25 }
   );
-  const attempts = Arr.filter(history.results, hasScore);
+  const attempts = useKeptAttempts(
+    Arr.filter(history.results, hasScore),
+    PaginatedQueryResult.isLoadingFirstPage(history)
+  );
 
   return (
     <Card>
@@ -302,6 +305,37 @@ export function TryoutAttemptResults({
       </CardFooter>
     </Card>
   );
+}
+
+/**
+ * The scored attempts the picker lists: the history's, or the last ones it listed while the history waits for
+ * its first page, as during an auth reload that pauses the read. The picker never empties and leaves the
+ * score card's header in the meantime. A history's rows never change once scored, so their attempts say
+ * whether a new answer differs from the kept one.
+ */
+function useKeptAttempts(
+  attempts: readonly ScoredHistoryRow[],
+  waiting: boolean
+) {
+  const [kept, setKept] = useState(attempts);
+  if (waiting) {
+    return kept;
+  }
+  if (!sameAttempts(attempts, kept)) {
+    setKept(attempts);
+  }
+  return attempts;
+}
+
+/** Whether two lists name the same attempts in the same order. */
+function sameAttempts(
+  left: readonly ScoredHistoryRow[],
+  right: readonly ScoredHistoryRow[]
+) {
+  return Arr.makeEquivalence(
+    (one: ScoredHistoryRow, other: ScoredHistoryRow) =>
+      one.attemptId === other.attemptId
+  )(left, right);
 }
 
 /** Narrows one attempt-history row to a persisted score result. */

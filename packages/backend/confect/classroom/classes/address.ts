@@ -4,7 +4,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { placeClass } from "@repo/backend/confect/classroom/authority";
 import { CLASS_ADDRESS_LIMIT } from "@repo/backend/confect/classroom/class";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** The period and unit a new class is written into, and the school it belongs to. */
 type Place = Pick<ClassesDoc, "periodId" | "tenantId" | "unitId">;
@@ -91,3 +91,18 @@ export const freeAddress = Effect.fn("classroom.classes.freeAddress")(
     return addressAt(base, suffix);
   }
 );
+
+/**
+ * Whether a live class of another unit holds the address of an archived class, which an archive did not lock, so
+ * that restoring the class would give two live classes one address.
+ */
+export const addressTakenElsewhere = Effect.fn(
+  "classroom.classes.addressTakenElsewhere"
+)(function* (row: ClassesDoc) {
+  const holders = yield* holdersOf(row.tenantId, row.slug);
+  const blocking = yield* Effect.filter(
+    Arr.filter(holders, (holder) => holder._id !== row._id),
+    (holder) => blocks(holder, row.unitId)
+  );
+  return blocking.length > 0;
+});
