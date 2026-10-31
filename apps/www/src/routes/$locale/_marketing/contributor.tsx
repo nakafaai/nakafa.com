@@ -1,4 +1,5 @@
 import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
@@ -16,21 +17,16 @@ export const Route = createFileRoute("/$locale/_marketing/contributor")({
   loader: async ({ params }) => {
     const messages = await readStaticData(readRouteMessages, {
       locale: params.locale,
-      namespaces: ["Contributor", "Metadata"],
+      namespaces: ["Contributor"],
     });
     const t = createTranslator({
       locale: params.locale,
       messages,
       namespace: "Contributor",
     });
-    const metadata = createTranslator({
-      locale: params.locale,
-      messages,
-      namespace: "Metadata",
-    });
     return {
       description: t("description"),
-      title: `${t("title")} - ${metadata("title")}`,
+      title: `${t("title")} - ${COMPANY_IDENTITY.brandName}`,
     };
   },
   head: ({ loaderData, params }) =>
