@@ -3,6 +3,7 @@ import {
   TabsList,
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
+import { useSearch } from "@tanstack/react-router";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
@@ -19,14 +20,17 @@ const inboxTabsVariants = cva("mx-auto", {
   },
 });
 
-/** The inbox's second header row, its tabs alone. The address keeps the tab, so back and a reload return to it. */
-export function InboxTabs({
-  topic,
-  width,
-}: {
-  topic: typeof InboxTopic.Type;
-} & VariantProps<typeof inboxTabsVariants>) {
+/** The tab the address names, All without one, so back and a reload return to it. */
+export function useInboxTopic(): typeof InboxTopic.Type {
+  return (
+    useSearch({ strict: false, select: (search) => search.topic }) ?? "all"
+  );
+}
+
+/** The inbox's second header row, its tabs alone. */
+export function InboxTabs({ width }: VariantProps<typeof inboxTabsVariants>) {
   const t = useTranslations("Notifications");
+  const topic = useInboxTopic();
 
   return (
     <Tabs value={topic}>

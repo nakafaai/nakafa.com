@@ -8,7 +8,8 @@ import {
 } from "@/components/notifications/inbox";
 import { PushOffer } from "@/components/notifications/push";
 import { NotificationRow } from "@/components/notifications/row";
-import { type InboxTopic, inTopic } from "@/components/notifications/topic";
+import { useInboxTopic } from "@/components/notifications/tabs";
+import { inTopic } from "@/components/notifications/topic";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { FeedEmpty, FeedNotice } from "@/components/user/feed";
@@ -23,16 +24,14 @@ import { FeedEmpty, FeedNotice } from "@/components/user/feed";
 export function NotificationsList({
   first,
   slug,
-  topic,
 }: {
   first: Option.Option<InboxFirstPage>;
   /** The one school whose rows show; every school's without it. */
   slug: TenantSlug | undefined;
-  /** The tab whose rows show. */
-  topic: typeof InboxTopic.Type;
 }) {
   const t = useTranslations("Notifications");
   const { empty, failed, loadMore, ready, rows } = useInbox(first, slug);
+  const topic = useInboxTopic();
   const shown = Arr.filter(rows, (row) => inTopic(row.changeType, topic));
 
   return (

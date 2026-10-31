@@ -1,7 +1,5 @@
-import type { Option } from "effect";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import type { InboxFirstPage } from "@/components/notifications/inbox";
-import { MarkAllRead } from "@/components/notifications/read";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { HOME_TARGET } from "@/lib/routing/target";
 
@@ -10,9 +8,10 @@ import { HOME_TARGET } from "@/lib/routing/target";
  * inbox's one action, marking every row read, at its end.
  */
 export function NotificationsHeader({
-  first,
+  children,
 }: {
-  first: Option.Option<InboxFirstPage>;
+  /** The inbox's one action. */
+  children: ReactNode;
 }) {
   const t = useTranslations("Notifications");
   const tCommon = useTranslations("Common");
@@ -20,7 +19,7 @@ export function NotificationsHeader({
   return (
     <BreadcrumbHeader
       value={{
-        action: <MarkAllRead first={first} slug={undefined} />,
+        action: children,
         home: HOME_TARGET,
         homeLabel: tCommon("home"),
         items: [{ label: t("title") }],
