@@ -15,7 +15,7 @@ export const IntegrationName = UnitName.check(Schema.isMaxLength(80));
 export const IntegrationStatus = Schema.Literals(["active", "revoked"]);
 
 /** The lower-case hexadecimal SHA-256 digest of a client secret. */
-const SecretHash = Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/));
+const SecretHash = Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/u));
 
 /**
  * The actions one client may hold: a non-empty list of distinct actions. The
@@ -112,7 +112,7 @@ export const DEVICE_TOKEN_SECONDS = 30 * 24 * 60 * 60;
 
 /** A device's user code as a person types it: eight letters, shown as `XXXX-XXXX`. */
 export const UserCode = Schema.String.check(
-  Schema.isPattern(/^[BCDFGHJKLMNPQRSTVWXZ]{8}$/)
+  Schema.isPattern(/^[BCDFGHJKLMNPQRSTVWXZ]{8}$/u)
 );
 
 /**

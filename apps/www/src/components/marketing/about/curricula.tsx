@@ -16,7 +16,7 @@ export function Curricula({ children }: { readonly children: ReactNode }) {
   return (
     <MarketingSection id="curricula">
       <div className="mx-auto grid w-full max-w-5xl justify-items-center gap-12">
-        <h2 className="max-w-2xl text-balance text-center text-3xl tracking-tight sm:text-4xl">
+        <h2 className="max-w-2xl text-center text-3xl tracking-tight text-balance sm:text-4xl">
           {t("curricula-title")}
         </h2>
         <div className="grid items-center gap-16 md:grid-cols-[auto_minmax(0,1fr)]">

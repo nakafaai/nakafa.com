@@ -6,7 +6,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** A Word file in the smallest form Word opens: its content types and a main part with one question. */
 const wordFile = () =>

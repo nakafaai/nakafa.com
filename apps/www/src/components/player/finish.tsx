@@ -125,7 +125,7 @@ function PlayerReviewGroup({
 
   return (
     <section className="grid gap-3">
-      <h3 className="font-medium text-sm">{heading}</h3>
+      <h3 className="text-sm font-medium">{heading}</h3>
       <PlayerGrid questions={questions} />
     </section>
   );

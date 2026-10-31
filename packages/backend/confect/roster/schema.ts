@@ -5,7 +5,7 @@ import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema } from "effect";
 
 /** A student's national student number (NISN): ten digits. */
-export const Nisn = Schema.String.check(Schema.isPattern(/^\d{10}$/)).pipe(
+export const Nisn = Schema.String.check(Schema.isPattern(/^\d{10}$/u)).pipe(
   Schema.brand("@Nakafa/Nisn")
 );
 

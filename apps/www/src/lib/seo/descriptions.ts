@@ -30,7 +30,7 @@ import { Array as Arr } from "effect";
  * @param options.maxLength - Maximum length (default: 160)
  * @returns Optimized description string, clean without ellipsis
  */
-const SENTENCE_END_REGEX = /[.!?]$/;
+const SENTENCE_END_REGEX = /[.!?]$/u;
 
 export function createSEODescription(
   parts: (string | null | undefined)[],

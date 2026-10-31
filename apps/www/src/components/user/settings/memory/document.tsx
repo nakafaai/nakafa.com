@@ -126,7 +126,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <input
             aria-label={t("title")}
-            className="-mx-1.5 min-w-0 truncate rounded-sm bg-transparent px-1.5 py-0.5 font-semibold outline-none transition-colors ease-out placeholder:text-muted-foreground hover:bg-muted focus-visible:bg-muted"
+            className="placeholder:text-muted-foreground hover:bg-muted focus-visible:bg-muted -mx-1.5 min-w-0 truncate rounded-sm bg-transparent px-1.5 py-0.5 font-semibold transition-colors ease-out outline-none"
             dir="auto"
             maxLength={MEMORY_TITLE_LIMIT}
             onChange={(event) => write({ ...draft, title: event.target.value })}
@@ -215,7 +215,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
       </div>
       <footer className="flex items-center justify-between gap-2 border-t p-4">
         <p
-          className="text-muted-foreground text-sm tabular-nums data-full:text-destructive"
+          className="text-muted-foreground data-full:text-destructive text-sm tabular-nums"
           data-full={length >= MEMORY_TEXT_LIMIT ? "" : undefined}
         >
           {t("count", { count: length, limit: MEMORY_TEXT_LIMIT })}

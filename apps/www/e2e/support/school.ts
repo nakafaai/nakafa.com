@@ -3,6 +3,7 @@ import type { BrowserContext } from "@playwright/test";
 import {
   CardFixture,
   ForumFixture,
+  GraduationFixture,
   SchoolFixture,
   SessionCookie,
   SittingFixture,
@@ -186,6 +187,28 @@ export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
  * and returns the school login name that the student types and the card's plain code. The card is
  * not redeemed yet, so a browser test redeems it through the school's own form.
  */
+/**
+ * Seeds a graduation for the learner with the address (ADR 0033, S6): a class group of the last
+ * grade of the school's first active unit with the learner placed in it, a NISN on file, the
+ * unit's NPSN, and the learner's report card approved, whose PDF the runtime draws next. Each
+ * call seeds a new class group.
+ */
+export const seedGraduation = Effect.fn("NakafaE2E.seedGraduation")(
+  function* (slug: string, learnerAddress: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({
+      prefix: "nakafa-graduation-",
+    });
+    const output = `${directory}/graduation.json`;
+    yield* runAcceptanceCommand("graduation", slug, learnerAddress, output);
+    return yield* fs
+      .readFileString(output)
+      .pipe(Effect.flatMap(Schema.decodeEffect(GraduationFixture)));
+  },
+  Effect.scoped,
+  Effect.provide(nodeServicesLayer)
+);
+
 export const seedCard = Effect.fn("NakafaE2E.seedCard")(
   function* (slug: string) {
     const fs = yield* FileSystem.FileSystem;

@@ -6,8 +6,8 @@ const MARKDOWN_TIMEOUT = "5 seconds";
 const markdownHeaders = {
   accept: "text/markdown,text/plain;q=0.9,text/html;q=0.1",
 };
-const htmlDocumentPattern = /^\s*(?:<!doctype html|<html|<head|<body)\b/i;
-const markdownContentPattern = /(?:^|\n)#{1,6}\s+\S/;
+const htmlDocumentPattern = /^\s*(?:<!doctype html|<html|<head|<body)\b/iu;
+const markdownContentPattern = /(?:^|\n)#{1,6}\s+\S/u;
 const textContentTypes = ["markdown", "text/plain"];
 /**
  * The Fetch client with redirects returned as they are: a source URL is

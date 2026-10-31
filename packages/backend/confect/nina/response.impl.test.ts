@@ -90,7 +90,7 @@ describe("Nina response run", () => {
 
 /** A turn whose run fails before it answers. */
 const failing = () => createNinaTest({ prompt: "Explain a function limit." });
-const PRIVATE_DIAGNOSTIC = /private provider diagnostic/;
+const PRIVATE_DIAGNOSTIC = /private provider diagnostic/u;
 
 describe("The Nina response run when generation fails", () => {
   beforeEach(() => vi.useFakeTimers());

@@ -6,6 +6,7 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
+import { elementById } from "@repo/design-system/lib/element";
 import { cn } from "cn";
 import { Function as Fn } from "effect";
 import { useLayoutEffect, useState, useSyncExternalStore } from "react";
@@ -56,7 +57,7 @@ function subscribeToPanel() {
 }
 
 function readPanel() {
-  return document.getElementById(SETTINGS_PANEL_ID);
+  return elementById(SETTINGS_PANEL_ID);
 }
 
 function readNoPanel() {
@@ -65,7 +66,7 @@ function readNoPanel() {
 
 /** The row of the settings layout that holds the page and the place for a panel. */
 function readRow() {
-  return document.getElementById(SETTINGS_PANEL_ID)?.parentElement;
+  return elementById(SETTINGS_PANEL_ID)?.parentElement;
 }
 
 /** Tells when the row changes its width. */
@@ -202,7 +203,7 @@ function MemoryEditorPanel({
   return createPortal(
     <aside
       aria-label={memory ? t("edit") : t("new")}
-      className="sticky top-0 flex h-dvh w-(--memory-editor-width) max-w-[calc(100%-var(--memory-list-room))] shrink-0 flex-col border-s bg-background starting:opacity-0 transition-opacity ease-out"
+      className="bg-background sticky top-0 flex h-dvh w-(--memory-editor-width) max-w-[calc(100%-var(--memory-list-room))] shrink-0 flex-col border-s transition-opacity ease-out starting:opacity-0"
       ref={place}
       style={{
         "--memory-editor-width": `${width}px`,
@@ -217,7 +218,7 @@ function MemoryEditorPanel({
         aria-valuemin={resizerProps["aria-valuemin"]}
         aria-valuenow={resizerProps["aria-valuenow"]}
         className={cn(
-          "absolute inset-y-0 start-0 z-10 cursor-col-resize bg-transparent outline-none transition-colors hover:bg-ring focus-visible:bg-ring data-[orientation=vertical]:w-1",
+          "hover:bg-ring focus-visible:bg-ring absolute inset-y-0 start-0 z-10 cursor-col-resize bg-transparent transition-colors outline-none data-[orientation=vertical]:w-1",
           !!isResizing && "bg-ring"
         )}
         onKeyDown={resizerProps.onKeyDown}
@@ -273,14 +274,14 @@ function MemoryEditorSheet({
             return false;
           }
           if (opener === null) {
-            return document.getElementById(MEMORY_ADD_ID);
+            return elementById(MEMORY_ADD_ID);
           }
           // A deleted memory has no row, and its delete question has placed the
           // focus already, so the sheet leaves it where the question put it.
-          return document.getElementById(memoryRowId(opener)) ?? false;
+          return elementById(memoryRowId(opener)) ?? false;
         }}
         id={SHEET_ID}
-        initialFocus={() => document.getElementById(SHEET_ID)}
+        initialFocus={() => elementById(SHEET_ID)}
         ref={place}
         showCloseButton={false}
       >

@@ -29,7 +29,7 @@ const SHOWN_EDITORS = 3;
 
 /** The round focus ring of an avatar's trigger, which holds no style of its own. */
 const presenceTrigger = cva(
-  "rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+  "focus-visible:ring-ring/50 rounded-full outline-none focus-visible:ring-3"
 );
 
 /** A leave that did not reach the server. */
@@ -165,7 +165,7 @@ function EditorAvatar({ editor }: { editor: Editor }) {
         type="button"
       >
         <PersonAvatar
-          className="ring-2 ring-background"
+          className="ring-background ring-2"
           mascot={editor.mascot}
           photo={editor.image}
           size="sm"

@@ -12,7 +12,7 @@ const digitsVariants = cva(
   {
     variants: {
       size: {
-        metric: "font-light text-5xl",
+        metric: "text-5xl font-light",
         timer: "text-base",
       },
     },

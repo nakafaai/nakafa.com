@@ -388,7 +388,7 @@ function NoteField({
       <div
         className={cn(
           fieldBoxVariants(),
-          "block h-auto min-h-16 py-2 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
+          "focus-within:border-ring focus-within:ring-ring/50 block h-auto min-h-16 py-2 focus-within:ring-3"
         )}
       >
         {children}

@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 
 /** A message key drawn as text, which a page shows when its namespace is not loaded. */
-const RAW_KEY = /^Connectors\./;
+const RAW_KEY = /^Connectors\./u;
 
 test("the owner's Settings > Connections names the school's Google connector in words, never by its message key", async ({
   baseURL,

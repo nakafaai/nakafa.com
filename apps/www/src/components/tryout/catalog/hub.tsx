@@ -119,7 +119,7 @@ function TryoutHubCountries({
             {Predicate.isNumber(visual) ? (
               <CatalogCardTile seed={country.countryKey} shift={visual}>
                 <CountryFlagIcon
-                  className="h-6 w-9 rounded-xs ring-1 ring-border/60"
+                  className="ring-border/60 h-6 w-9 rounded-xs ring-1"
                   countryCode={country.countryCode}
                 />
               </CatalogCardTile>

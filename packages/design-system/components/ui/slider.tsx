@@ -50,18 +50,18 @@ function Slider<Value extends number | readonly number[]>({
     >
       <SliderPrimitive.Control
         className={cn(
-          "relative flex w-full cursor-pointer touch-none select-none items-center data-vertical:h-full data-vertical:min-h-44 data-vertical:w-auto data-disabled:cursor-not-allowed data-vertical:flex-col data-disabled:opacity-50"
+          "relative flex w-full cursor-pointer touch-none items-center select-none data-disabled:cursor-not-allowed data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-44 data-vertical:w-auto data-vertical:flex-col"
         )}
       >
         <SliderPrimitive.Track
           className={cn(
-            "relative grow cursor-pointer select-none overflow-hidden rounded-full border border-input bg-background data-horizontal:h-1.5 data-vertical:h-full data-horizontal:w-full data-vertical:w-1.5 data-disabled:cursor-not-allowed"
+            "border-input bg-background relative grow cursor-pointer overflow-hidden rounded-full border select-none data-disabled:cursor-not-allowed data-horizontal:h-1.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-1.5"
           )}
           data-slot="slider-track"
         >
           <SliderPrimitive.Indicator
             className={cn(
-              "select-none bg-primary data-horizontal:h-full data-vertical:w-full"
+              "bg-primary select-none data-horizontal:h-full data-vertical:w-full"
             )}
             data-slot="slider-range"
           />
@@ -69,7 +69,7 @@ function Slider<Value extends number | readonly number[]>({
         {Arr.map(thumbKeys, (thumbKey, thumbIndex) => (
           <SliderPrimitive.Thumb
             aria-label={ariaLabel}
-            className="block size-4 shrink-0 cursor-grab select-none rounded-full border border-primary bg-background shadow-sm ring-ring/50 transition-[color,box-shadow] hover:ring-4 focus-visible:outline-hidden focus-visible:ring-4 data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-dragging:cursor-grabbing data-disabled:opacity-50"
+            className="border-primary bg-background ring-ring/50 block size-4 shrink-0 cursor-grab rounded-full border shadow-sm transition-[color,box-shadow] select-none hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50 data-dragging:cursor-grabbing"
             data-slot="slider-thumb"
             index={thumbIndex}
             key={thumbKey}

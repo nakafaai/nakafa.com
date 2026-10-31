@@ -114,7 +114,7 @@ export function Heading({
         <HeadingText Tag={Tag}>{props.children}</HeadingText>
         <div className="shrink-0 rounded-sm border p-2 opacity-0 transition-opacity ease-out group-hover/heading:opacity-100">
           <HugeIcons
-            className="size-4 shrink-0 text-muted-foreground"
+            className="text-muted-foreground size-4 shrink-0"
             icon={Link05Icon}
           />
         </div>

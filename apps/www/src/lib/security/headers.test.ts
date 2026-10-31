@@ -16,7 +16,7 @@ const production = {
 };
 
 /** Matches the loopback image origin that a local Convex deployment adds to img-src. */
-const LOOPBACK_IMAGE_SOURCE = /img-src [^;]*http:\/\/127\.0\.0\.1:3210/;
+const LOOPBACK_IMAGE_SOURCE = /img-src [^;]*http:\/\/127\.0\.0\.1:3210/u;
 
 /** Reads one header of the list by its name. */
 function headerValue(headers: readonly WwwHeader[], key: string) {

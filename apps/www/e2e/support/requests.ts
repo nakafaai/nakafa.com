@@ -13,7 +13,7 @@ import {
 const TrackedRequestKindSchema = Schema.Literals(["data", "javascript"]);
 
 /** Matches the JavaScript chunks that the Vite build writes under `/assets/`. */
-export const APP_SCRIPT_PATTERN = /\/assets\/.+\.js$/;
+export const APP_SCRIPT_PATTERN = /\/assets\/.+\.js$/u;
 
 /**
  * The header that the TanStack client router sends with every server function

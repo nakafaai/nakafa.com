@@ -50,7 +50,7 @@ export function decodeOperationalExceptionProperties(properties: unknown) {
 
 const operationalExceptionMessage = "Operational exception";
 const operationalExceptionName = "OperationalError";
-const stackFramePattern = /^\s*at\s/;
+const stackFramePattern = /^\s*at\s/u;
 const requestUserAgentMaxLength = 512;
 
 /** The optional PostHog system property that classifies the traffic behind a capture. */

@@ -30,7 +30,7 @@ const PART_PREFIX = { sources: "source", targets: "target" } as const;
 export type MatchSide = keyof typeof PART_PREFIX;
 
 /** The number that a part ID holds after its side's prefix, when it holds one. */
-const PART_NUMBER = /^(?:source|target)-(\d+)$/u;
+const PART_NUMBER = /^(?:source|target)-(?<digits>\d+)$/u;
 
 /**
  * The ID of a new part on one side: the side's prefix and the number after the largest one its parts

@@ -6,8 +6,8 @@ import { Array as Arr, pipe, Result, Schema, String as Str } from "effect";
  */
 export const BIO_MAX_LENGTH = 160;
 
-const LINE_BREAK = /\r\n?/g;
-const BLANK_LINES = /\n{3,}/g;
+const LINE_BREAK = /\r\n?/gu;
+const BLANK_LINES = /\n{3,}/gu;
 
 /** Whether a text holds at most `BIO_MAX_LENGTH` code points. */
 const fitsBio = Schema.is(

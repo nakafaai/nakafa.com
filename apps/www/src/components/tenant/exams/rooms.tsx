@@ -160,7 +160,7 @@ function ExamRoomsContent({
         <>
           <SchoolHeader items={examsItems} />
           <TablePageBody>
-            <p className="p-4 text-muted-foreground text-sm md:p-6">
+            <p className="text-muted-foreground p-4 text-sm md:p-6">
               {t("rooms-unavailable")}
             </p>
           </TablePageBody>
@@ -173,7 +173,7 @@ function ExamRoomsContent({
             title={gone.title}
           />
           <TablePageBody>
-            <p className="p-4 text-muted-foreground text-sm md:p-6">
+            <p className="text-muted-foreground p-4 text-sm md:p-6">
               <ExamGone />
             </p>
           </TablePageBody>
@@ -384,14 +384,14 @@ function RoomItem({
       <TableCell className="px-2 text-center sm:px-4" dir="auto">
         {room.groupName}
       </TableCell>
-      <TableCell className="px-2 text-center text-muted-foreground tabular-nums sm:px-4">
+      <TableCell className="text-muted-foreground px-2 text-center tabular-nums sm:px-4">
         {schoolDateTimeText({
           at: room.opensAt,
           locale,
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell className="px-2 text-center text-muted-foreground tabular-nums sm:px-4">
+      <TableCell className="text-muted-foreground px-2 text-center tabular-nums sm:px-4">
         {schoolDateTimeText({
           at: room.closesAt,
           locale,

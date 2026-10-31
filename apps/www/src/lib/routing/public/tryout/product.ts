@@ -19,7 +19,7 @@ import {
 } from "@/lib/routing/public/tryout/route";
 import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
 
-const PRODUCT_YEAR_SET_PATTERN = /^(\d{4})-(set-\d+)$/;
+const PRODUCT_YEAR_SET_PATTERN = /^(?<year>\d{4})-(?<set>set-\d+)$/u;
 const RetiredSnbtProductSchema = Schema.Struct({
   appLocale: AppLocaleCodeSchema,
   part: Schema.optionalKey(Schema.String),

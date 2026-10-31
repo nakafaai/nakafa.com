@@ -39,7 +39,7 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
   const canLoadMore =
     data.hasMore && !data.busy && !data.error && !data.offline;
   return (
-    <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-3xl flex-1 flex-col px-6 py-4">
+    <div className="mx-auto flex min-h-0 w-full max-w-3xl min-w-0 flex-1 flex-col px-6 py-4">
       <div
         aria-busy={data.busy}
         className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md border"
@@ -77,7 +77,7 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
         </Table>
         <span
           aria-live="polite"
-          className="pointer-events-none absolute inset-x-4 bottom-3 text-muted-foreground text-xs empty:hidden"
+          className="text-muted-foreground pointer-events-none absolute inset-x-4 bottom-3 text-xs empty:hidden"
           role="status"
         >
           {status}

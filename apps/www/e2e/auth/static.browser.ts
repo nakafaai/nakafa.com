@@ -14,7 +14,7 @@ const SIGNED_IN_HINT = "nakafa-signed-in";
 /** Addresses that only the Worker answers: the auth API, the search screen and the chat. */
 const WORKER_PATHS = ["/api/auth/get-session", "/en/search", "/en/chat"];
 /** What React writes to the console when the server's HTML and the first render differ. */
-const HYDRATION_ERROR = /hydrat|#418|#423|did not match/i;
+const HYDRATION_ERROR = /hydrat|#418|#423|did not match/iu;
 
 /**
  * Waits until React has hydrated a link, so a press runs the router. A press
@@ -64,7 +64,7 @@ test("a visitor's press on Try Nakafa shows the sign-in page from static answers
   ).toBeVisible();
   const shownAt = await page.evaluate(() => performance.now());
 
-  await expect(page).toHaveURL(new RegExp(`${SIGN_IN}$`));
+  await expect(page).toHaveURL(new RegExp(`${SIGN_IN}$`, "u"));
   expect(
     await page.evaluate(() => Reflect.get(document, "nakafaDocumentMark"))
   ).toBe(true);

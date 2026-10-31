@@ -2,7 +2,7 @@ import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { HashSet, Schema } from "effect";
 
 /** One DNS label of lowercase letters and digits with single inner hyphens, so never `xn--`. */
-const label = /^[a-z0-9](?:[a-z0-9]|-(?!-))*[a-z0-9]$/;
+const label = /^[a-z0-9](?:[a-z0-9]|-(?!-))*[a-z0-9]$/u;
 
 /**
  * A stored tenant address, also the `slug.nakafa.com` label and the

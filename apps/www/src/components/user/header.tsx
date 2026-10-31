@@ -28,10 +28,10 @@ export function UserHeader({
     <section className="grid gap-4 pb-6">
       <header className="flex items-start justify-between gap-4">
         <div className="grid min-w-0 gap-1">
-          <h1 className="wrap-anywhere text-balance font-semibold text-2xl sm:text-3xl">
+          <h1 className="text-2xl font-semibold text-balance wrap-anywhere sm:text-3xl">
             {profile.name}
           </h1>
-          <p className="truncate text-base text-muted-foreground">
+          <p className="text-muted-foreground truncate text-base">
             @{profile.username}
           </p>
         </div>

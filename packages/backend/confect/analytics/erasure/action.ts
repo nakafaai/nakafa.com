@@ -8,8 +8,8 @@ import {
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Config, Effect, Redacted, Schema } from "effect";
 
-const postHogIngestionHostnameSuffix = /\.i\.posthog\.com$/;
-const postHogProjectIdPattern = /^[1-9]\d*$/;
+const postHogIngestionHostnameSuffix = /\.i\.posthog\.com$/u;
+const postHogProjectIdPattern = /^[1-9]\d*$/u;
 const PostHogBulkEraseResponseSchema = Schema.Struct({
   deletion_errors: Schema.optional(Schema.Array(Schema.Unknown)),
   events_queued_for_deletion: Schema.Boolean,

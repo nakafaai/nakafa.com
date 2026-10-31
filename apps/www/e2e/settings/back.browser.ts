@@ -9,8 +9,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { isTakenOver } from "@/e2e/support/window";
 
 /** The addresses of the account section and the Memory section of settings. */
-const SETTINGS_URL = /\/en\/user\/settings$/;
-const MEMORY_URL = /\/en\/user\/settings\/memory$/;
+const SETTINGS_URL = /\/en\/user\/settings$/u;
+const MEMORY_URL = /\/en\/user\/settings\/memory$/u;
 
 /** The first row of the settings sidebar, which leads out of settings. */
 const BACK = app.Auth["back-to-nakafa"];
@@ -49,12 +49,12 @@ test("the settings sidebar leads back to the page the learner came from, and Esc
           .click();
         await expect(page).toHaveURL(MEMORY_URL);
         await back.click();
-        await expect(page).toHaveURL(new RegExp(`${profile}$`));
+        await expect(page).toHaveURL(new RegExp(`${profile}$`, "u"));
 
         await edit.click();
         await expect(back).toBeVisible();
         await page.keyboard.press("Escape");
-        await expect(page).toHaveURL(new RegExp(`${profile}$`));
+        await expect(page).toHaveURL(new RegExp(`${profile}$`, "u"));
 
         // Settings opened first has no page before it, so its way back leads home.
         await page.goto(appRoutes.settings);
