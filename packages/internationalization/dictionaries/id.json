@@ -290,6 +290,7 @@
     "question": "Soal {number}",
     "option": "Pilihan {letter}",
     "option-of": "Soal {number}, pilihan {letter}",
+    "option-unsaved": "Belum tersimpan.",
     "option-add": "Tambah pilihan",
     "no-key": "Soal ini belum punya kunci jawaban.",
     "empty-part": "Soal ini punya pilihan atau pernyataan yang kosong.",

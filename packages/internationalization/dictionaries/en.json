@@ -290,6 +290,7 @@
     "question": "Question {number}",
     "option": "Option {letter}",
     "option-of": "Question {number}, option {letter}",
+    "option-unsaved": "Not saved yet.",
     "option-add": "Add option",
     "no-key": "This question has no answer key yet.",
     "empty-part": "This question has an empty option or statement.",
