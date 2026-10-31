@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
  * content inset like any other.
  */
 const sectionVariants = cva(
-  "content-auto-section grid min-h-[calc(100svh-4rem)] scroll-mt-16 content-center px-6 py-20 lg:px-10 lg:py-32",
+  "grid min-h-[calc(100svh-4rem)] scroll-mt-16 content-center px-6 py-20 content-auto-section lg:px-10 lg:py-32",
   {
     variants: {
       tone: {
