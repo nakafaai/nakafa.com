@@ -62,6 +62,7 @@ describe("access/kind declarations", () => {
       "grant.manage",
       "integration.manage",
       "report.open",
+      "graduation.open",
       "document.edit",
       "exam.edit",
       "exam.rooms",

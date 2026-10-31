@@ -1,3 +1,4 @@
+import { elementById } from "@repo/design-system/lib/element";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 
 /**
@@ -9,7 +10,7 @@ export function scrollToLessonSection() {
   const reduceMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   ).matches;
-  document.getElementById(LESSON_SECTION_ID)?.scrollIntoView({
+  elementById(LESSON_SECTION_ID)?.scrollIntoView({
     behavior: reduceMotion ? "auto" : "smooth",
   });
 }

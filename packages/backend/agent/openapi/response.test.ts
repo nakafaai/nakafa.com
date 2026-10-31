@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/agent/openapi/response";
 import { Array as Arr } from "effect";
 
-const WEAK_ETAG_PREFIX = /^W\//;
+const WEAK_ETAG_PREFIX = /^W\//u;
 
 describe("Nakafa OpenAPI response", () => {
   it("returns exact contract bytes and cache metadata", async () => {

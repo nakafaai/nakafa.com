@@ -6,7 +6,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The Quran page, which a rail entry opens. */
-const QURAN_URL = /\/en\/quran$/;
+const QURAN_URL = /\/en\/quran$/u;
 
 /** The width of the sidebar folded into its rail, in pixels: `w-12`. */
 const RAIL = 48;

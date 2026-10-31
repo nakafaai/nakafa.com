@@ -67,8 +67,8 @@ function NotificationAction({
   read: boolean;
 }) {
   const className = cn(
-    "wrap-anywhere rounded-sm text-start outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-    read ? "text-muted-foreground" : "font-medium text-foreground"
+    "focus-visible:ring-ring rounded-sm text-start wrap-anywhere outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-inset",
+    read ? "text-muted-foreground" : "text-foreground font-medium"
   );
 
   if (href === undefined) {

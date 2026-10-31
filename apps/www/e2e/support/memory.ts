@@ -8,7 +8,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The Memory page of the English site. */
 export const MEMORY_PATH = `${appRoutes.settings}/memory`;
-const MEMORY_TITLE = /Memory/;
+const MEMORY_TITLE = /Memory/u;
 /**
  * The Convex name of `nina.memory.list`, the query that reads a page of the
  * list: the page subscribes to one for each page it loads. The refs module

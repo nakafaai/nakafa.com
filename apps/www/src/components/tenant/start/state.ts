@@ -80,15 +80,15 @@ export const resumeItem = (draft: StartDraft): StartItem =>
 /** Combining marks, which NFKD splits off a letter's accent. */
 const ACCENTS = /\p{M}/gu;
 /** Each run of anything a slug cannot hold, in a suggested address. */
-const NON_SLUG_RUNS = /[^a-z0-9]+/g;
+const NON_SLUG_RUNS = /[^a-z0-9]+/gu;
 /** Hyphens at either end of a suggested address. */
-const EDGE_HYPHENS = /^-+|-+$/g;
+const EDGE_HYPHENS = /^-+|-+$/gu;
 /** Hyphens at the end of an address cut to its limit. */
-const TRAILING_HYPHENS = /-+$/;
+const TRAILING_HYPHENS = /-+$/u;
 /** Spaces and underscores in a typed address, which read as hyphens. */
-const SPACES = /[\s_]+/g;
+const SPACES = /[\s_]+/gu;
 /** Anything else a typed address cannot hold. */
-const NON_SLUG = /[^a-z0-9-]/g;
+const NON_SLUG = /[^a-z0-9-]/gu;
 
 /** Text without its accents, in lower case. */
 const plain = (text: string) =>

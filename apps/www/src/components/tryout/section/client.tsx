@@ -6,6 +6,7 @@ import { createContext, type ReactNode, Suspense, use, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
+import { PlayerTimer } from "@/components/player/timer";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
@@ -14,12 +15,17 @@ import {
   type TryoutFinish,
   useTryoutFinish,
 } from "@/components/tryout/player/finish";
+import { TryoutPlayerOpening } from "@/components/tryout/player/opening";
 import {
   getTryoutAttemptLock,
   getTryoutPublicPath,
   type TryoutPageAddress,
 } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import {
+  TryoutStartProvider,
+  useTryoutStartPhase,
+} from "@/components/tryout/runtime/start";
 import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
@@ -94,22 +100,24 @@ export function TryoutSectionPageClient({
   return (
     <TryoutContentContext value={{ bodies: content }}>
       <TryoutSectionPageContext value={{ page, pending, route, setPath }}>
-        {binding !== null && isTryoutStateLive(binding.initialState) ? (
-          <LiveTryoutSectionPage
-            binding={binding}
-            key={`${binding.attemptId}:${page.section.sectionKey}`}
-          >
-            {children}
-          </LiveTryoutSectionPage>
-        ) : (
-          <ResolvedTryoutSectionPage
-            binding={binding}
-            finish={null}
-            state={binding?.initialState ?? null}
-          >
-            {children}
-          </ResolvedTryoutSectionPage>
-        )}
+        <TryoutStartProvider>
+          {binding !== null && isTryoutStateLive(binding.initialState) ? (
+            <LiveTryoutSectionPage
+              binding={binding}
+              key={`${binding.attemptId}:${page.section.sectionKey}`}
+            >
+              {children}
+            </LiveTryoutSectionPage>
+          ) : (
+            <ResolvedTryoutSectionPage
+              binding={binding}
+              finish={null}
+              state={binding?.initialState ?? null}
+            >
+              {children}
+            </ResolvedTryoutSectionPage>
+          )}
+        </TryoutStartProvider>
       </TryoutSectionPageContext>
     </TryoutContentContext>
   );
@@ -185,7 +193,8 @@ function LiveTryoutSectionPage({
  * Renders the stable section UI from one cohesive reactive state. A page
  * rendered for a running attempt locks the app shell until the learner leaves
  * it, even once the attempt ends here, so the shell never changes under a page.
- * A running section is the player, and every other state is the section page.
+ * A running section is the player, a section the learner's press is opening is
+ * the player's frame until it runs, and every other state is the section page.
  */
 function ResolvedTryoutSectionPage({
   binding,
@@ -198,6 +207,7 @@ function ResolvedTryoutSectionPage({
   state: SectionState;
 }) {
   const { page, pending } = useTryoutSectionPage();
+  const opening = useTryoutStartPhase() === "opening";
   const attempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
   const now = useTryoutClock(
@@ -233,6 +243,19 @@ function ResolvedTryoutSectionPage({
       </TryoutPage>
     );
   }
+  if (opening) {
+    return (
+      <TryoutPage>
+        <SectionLock binding={binding} />
+        <TryoutPlayerOpening
+          questionCount={page.section.questionCount}
+          title={page.section.title}
+        >
+          <PlayerTimer seconds={page.section.timeLimitSeconds} />
+        </TryoutPlayerOpening>
+      </TryoutPage>
+    );
+  }
 
   return (
     <TryoutPage>
@@ -259,18 +282,25 @@ function ResolvedTryoutSectionPage({
   );
 }
 
-/** Locks the app shell while the attempt this page is bound to runs, so the page takes the whole screen. */
+/**
+ * Locks the app shell while the attempt this page is bound to runs, or while the learner's press opens
+ * a section here, so the page takes the whole screen from the press on.
+ */
 function SectionLock({
   binding,
 }: Pick<TryoutSectionPageClientProps, "binding">) {
-  return binding?.initialState.attempt.status === "in-progress" ? (
-    <ShellLock
-      remember={getTryoutAttemptLock(
-        binding.attemptId,
-        binding.initialState.attempt.expiresAt
-      )}
-    />
-  ) : null;
+  const opening = useTryoutStartPhase() === "opening";
+  if (binding?.initialState.attempt.status === "in-progress") {
+    return (
+      <ShellLock
+        remember={getTryoutAttemptLock(
+          binding.attemptId,
+          binding.initialState.attempt.expiresAt
+        )}
+      />
+    );
+  }
+  return opening ? <ShellLock /> : null;
 }
 
 /** Renders the section heading with its start or return action. */
@@ -286,7 +316,11 @@ function TryoutSectionHeader({
   sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
 }) {
   const { page, route, setPath } = useTryoutSectionPage();
-  const startDestination = getStartDestination(binding, route);
+  const startDestination = getStartDestination(
+    binding,
+    route,
+    page.section.sectionKey
+  );
   const attemptSetAddress: TryoutPageAddress = binding
     ? { attemptId: binding.attemptId, publicPath: page.set.publicPath }
     : { publicPath: setPath };
@@ -336,14 +370,16 @@ function TryoutSectionReview({
   return <Suspense fallback={null}>{children}</Suspense>;
 }
 
-/** Selects how a start action leaves a public or retained section route. */
+/** Selects how a start action leaves a public or retained section route: it lands on this section. */
 function getStartDestination(
   binding: TryoutSectionPageClientProps["binding"],
-  route: TryoutSectionRoute
+  route: TryoutSectionRoute,
+  sectionKey: string
 ): TryoutStartDestination | null {
   if (!binding) {
     return {
       address: { publicPath: getTryoutPublicPath(route) },
+      sectionKey,
       successNavigation: "stay",
     };
   }
@@ -354,6 +390,7 @@ function getStartDestination(
 
   return {
     address: { publicPath: binding.startPath },
+    sectionKey,
     successNavigation: "destination",
   };
 }

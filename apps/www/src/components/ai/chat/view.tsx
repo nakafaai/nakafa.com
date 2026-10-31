@@ -10,7 +10,7 @@ import { NinaTranscript } from "@/components/ai/transcript";
  */
 export function AiChat({ footer }: { footer?: ReactNode }) {
   return (
-    <div className="relative flex size-full min-w-0 flex-col overflow-hidden text-chat">
+    <div className="text-chat relative flex size-full min-w-0 flex-col overflow-hidden">
       <AiChatHeader />
 
       <NinaTranscript />

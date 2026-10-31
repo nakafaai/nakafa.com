@@ -51,7 +51,7 @@ export const editorScroll = cva("text-sm/relaxed");
  * it the hint as `data-placeholder`, and these classes draw that hint in muted text.
  */
 export const editorPlaceholder = cva(
-  "[&_.is-editor-empty]:before:pointer-events-none [&_.is-editor-empty]:before:float-left [&_.is-editor-empty]:before:h-0 [&_.is-editor-empty]:before:text-muted-foreground [&_.is-editor-empty]:before:content-[attr(data-placeholder)]"
+  "[&_.is-editor-empty]:before:text-muted-foreground [&_.is-editor-empty]:before:pointer-events-none [&_.is-editor-empty]:before:float-left [&_.is-editor-empty]:before:h-0 [&_.is-editor-empty]:before:content-[attr(data-placeholder)]"
 );
 
 /**
@@ -70,7 +70,7 @@ export const editorPlaceholder = cva(
  * (`linkVariants`, `emphasisVariants`), in every text.
  */
 export const editorDocument = cva(
-  "wrap-break-word relative min-h-full outline-none [font-feature-settings:'liga'_0] [font-variant-ligatures:none] [white-space:break-spaces] [&_hr]:my-3 [&_pre]:whitespace-pre-wrap [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-3",
+  "[&_pre]:bg-muted relative min-h-full [font-feature-settings:'liga'_0] wrap-break-word [white-space:break-spaces] outline-none [font-variant-ligatures:none] [&_hr]:my-3 [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:whitespace-pre-wrap",
   {
     compoundVariants: [
       { class: "px-4 py-3 [&>*+*]:mt-2", size: "page", text: "plain" },
@@ -83,7 +83,7 @@ export const editorDocument = cva(
       text: {
         article: "",
         plain:
-          "[&_blockquote]:border-s-2 [&_blockquote]:ps-3 [&_blockquote]:text-muted-foreground [&_code]:rounded-sm [&_code]:bg-muted [&_code]:px-1 [&_code]:font-mono [&_code]:text-muted-foreground [&_h1]:font-semibold [&_h1]:text-xl [&_h2]:font-semibold [&_h2]:text-lg [&_h3]:font-semibold [&_h3]:text-base [&_li>p]:m-0 [&_ol]:list-decimal [&_ol]:ps-5 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:p-2 [&_th]:border [&_th]:p-2 [&_th]:text-start [&_th]:font-semibold [&_ul:not([data-type=taskList])]:list-disc [&_ul:not([data-type=taskList])]:ps-5",
+          "[&_blockquote]:text-muted-foreground [&_code]:bg-muted [&_code]:text-muted-foreground [&_blockquote]:border-s-2 [&_blockquote]:ps-3 [&_code]:rounded-sm [&_code]:px-1 [&_code]:font-mono [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_li>p]:m-0 [&_ol]:list-decimal [&_ol]:ps-5 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:p-2 [&_th]:border [&_th]:p-2 [&_th]:text-start [&_th]:font-semibold [&_ul:not([data-type=taskList])]:list-disc [&_ul:not([data-type=taskList])]:ps-5",
       },
     },
     defaultVariants: {

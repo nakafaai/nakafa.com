@@ -9,7 +9,7 @@ import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error"
 import { expireAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
 import { readAttemptStart } from "@repo/backend/confect/tryouts/runtime/lookup";
 import {
-  requireInternalEntrySection,
+  requireEntrySection,
   startSectionAttempt,
 } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
 import { createTryoutAttempt } from "@repo/backend/confect/tryouts/start/attempt";
@@ -49,7 +49,7 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
     );
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
-      yield* requireInternalEntrySection(source.sections, entrySectionKey);
+      yield* requireEntrySection(source.sections, entrySectionKey);
     }
     const [scaleVersion, access] = yield* Effect.all(
       [selectAttemptScale(source, input.now), requireAttemptAccess(input)],

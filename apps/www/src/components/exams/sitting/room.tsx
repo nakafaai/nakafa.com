@@ -70,7 +70,7 @@ function RoomCode() {
         text={roomJoinAddress(origin, sittingId, value.token)}
       />
       <p
-        className="font-medium font-mono text-5xl tabular-nums tracking-widest"
+        className="font-mono text-5xl font-medium tracking-widest tabular-nums"
         translate="no"
       >
         {value.token}

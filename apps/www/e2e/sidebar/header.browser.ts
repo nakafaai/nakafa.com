@@ -87,9 +87,13 @@ test("a phone shows the app's bar again on a page without a header of its own, a
           await quran.click();
           await page.waitForURL("**/en/quran");
         });
+        // The app's bar stands in the page's main. The sidebar's sheet, still closing from the press, holds
+        // a search row of the same name outside it for a moment.
         yield* Effect.promise(() =>
           expect(
-            page.getByRole("button", { name: "Search content..." })
+            page.locator("main").getByRole("button", {
+              name: "Search content...",
+            })
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
         );
         yield* Effect.promise(() =>

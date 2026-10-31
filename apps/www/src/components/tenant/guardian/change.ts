@@ -123,6 +123,23 @@ export const verifyLinkChange: OptimisticUpdate<
     (page) => setLinkStatus(page, linkId, "verified")
   );
 
+/**
+ * Shows a pending link at its corrected address at once, its failed checks counting again from none. The server
+ * answers the guardian the address brings.
+ */
+export const readdressLinkChange: OptimisticUpdate<
+  typeof guardians.links.readdress
+> = (localStore, { email, linkId, slug }) =>
+  changeLinkPages(
+    localStore,
+    slug,
+    () => true,
+    (page) =>
+      Arr.map(page, (link) =>
+        link.id === linkId ? { ...link, email, mismatches: 0 } : link
+      )
+  );
+
 /** Shows a link as revoked at once. */
 export const revokeLinkChange: OptimisticUpdate<
   typeof guardians.links.revoke

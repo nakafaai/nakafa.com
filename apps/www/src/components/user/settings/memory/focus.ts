@@ -1,3 +1,4 @@
+import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Option, String as Str } from "effect";
 import type { Memory } from "@/components/user/settings/memory/list";
 
@@ -53,9 +54,7 @@ export function memoryNeighbour(
  */
 function focusIsInEditor() {
   return (
-    document
-      .getElementById(MEMORY_EDITOR_ID)
-      ?.contains(document.activeElement) === true
+    elementById(MEMORY_EDITOR_ID)?.contains(document.activeElement) === true
   );
 }
 
@@ -66,7 +65,7 @@ function focusIsInEditor() {
 function neighbourRow(neighbour: Option.Option<Memory["id"]>) {
   return Option.filter(
     Option.flatMap(neighbour, (id) =>
-      Option.fromNullishOr(document.getElementById(memoryRowId(id)))
+      Option.fromNullishOr(elementById(memoryRowId(id)))
     ),
     (row) => !row.matches(":disabled")
   );
@@ -83,7 +82,7 @@ export function focusAfterDelete(neighbour: Option.Option<Memory["id"]>) {
   }
 
   return Option.getOrElse(neighbourRow(neighbour), () =>
-    document.getElementById(MEMORY_ADD_ID)
+    elementById(MEMORY_ADD_ID)
   );
 }
 
@@ -116,7 +115,7 @@ export function handFocusOn(list: HTMLElement | null): Option.Option<string> {
   if (list === null || held === null || !list.contains(held)) {
     return NOTHING_HANDED;
   }
-  focusFirst([document.getElementById(MEMORY_SEARCH_ID)]);
+  focusFirst([elementById(MEMORY_SEARCH_ID)]);
   return Option.liftPredicate(held.id, Str.isNonEmpty);
 }
 
@@ -127,6 +126,6 @@ export function handFocusOn(list: HTMLElement | null): Option.Option<string> {
  */
 export function takeHandedFocus(handed: Option.Option<string>) {
   if (Option.isSome(handed)) {
-    focusFirst([document.getElementById(handed.value)]);
+    focusFirst([elementById(handed.value)]);
   }
 }

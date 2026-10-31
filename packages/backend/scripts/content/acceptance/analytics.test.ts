@@ -9,7 +9,7 @@ import { FetchClient } from "@repo/utilities/http/client";
 import { Effect } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
 
-const LOOPBACK_ORIGIN = /^http:\/\/127\.0\.0\.1:[1-9][0-9]*$/;
+const LOOPBACK_ORIGIN = /^http:\/\/127\.0\.0\.1:[1-9][0-9]*$/u;
 
 /** Whether anything still accepts connections at the origin. */
 const isListening = (origin: string) =>

@@ -11,10 +11,10 @@ export function Videos() {
     <VideoCard>
       <div />
 
-      <div className="mx-auto w-fit rounded-sm bg-card/80 px-3 py-2 backdrop-blur-sm">
+      <div className="bg-card/80 mx-auto w-fit rounded-sm px-3 py-2 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-2">
           <HugeIcons className="hidden size-4 sm:block" icon={YoutubeIcon} />
-          <span className="text-pretty text-xs">{t("discover")}</span>
+          <span className="text-xs text-pretty">{t("discover")}</span>
         </div>
       </div>
     </VideoCard>
@@ -24,7 +24,7 @@ export function Videos() {
 function VideoCard({ children }: { children: React.ReactNode }) {
   return (
     <a
-      className="group relative flex aspect-square overflow-hidden rounded-md border p-3 text-card-foreground shadow-xs"
+      className="group text-card-foreground relative flex aspect-square overflow-hidden rounded-md border p-3 shadow-xs"
       href={COMPANY_SOCIAL_PROFILES.youtube}
       rel="noopener noreferrer"
       target="_blank"

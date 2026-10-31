@@ -103,7 +103,7 @@ export function SourceTrigger({
   return (
     <HoverCardTrigger
       className={cn(
-        "group/source flex min-w-0 items-start gap-2 rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "group/source focus-visible:ring-ring flex min-w-0 items-start gap-2 rounded-sm text-start outline-none focus-visible:ring-2",
         className
       )}
       closeDelay={0}
@@ -117,7 +117,7 @@ export function SourceTrigger({
       />
       <span className="flex min-w-0 flex-col">
         <span
-          className="wrap-anywhere line-clamp-2 py-0.5 text-sm group-hover/source:underline group-focus-visible/source:underline"
+          className="line-clamp-2 py-0.5 text-sm wrap-anywhere group-hover/source:underline group-focus-visible/source:underline"
           data-slot="source-title"
           dir="auto"
         >
@@ -125,7 +125,7 @@ export function SourceTrigger({
         </span>
         {named ? (
           <span
-            className="truncate text-muted-foreground text-xs"
+            className="text-muted-foreground truncate text-xs"
             data-slot="source-host"
           >
             {host}
@@ -155,7 +155,7 @@ export function SourceContent({ className, description }: SourceContentProps) {
   return (
     <HoverCardContent className={cn("w-80 p-3 shadow-xs", className)}>
       <p
-        className="wrap-anywhere line-clamp-2 py-0.5 text-muted-foreground text-sm"
+        className="text-muted-foreground line-clamp-2 py-0.5 text-sm wrap-anywhere"
         dir="auto"
       >
         {text}

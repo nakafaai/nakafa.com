@@ -3,7 +3,7 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { lineSceneCards, VISUAL_CARD_FOOTER } from "@/e2e/support/selector";
 
 /** KaTeX's runtime, the one chunk that typesets math in the browser. */
-const KATEX_RUNTIME = /\/assets\/katex-[\w-]+\.js/;
+const KATEX_RUNTIME = /\/assets\/katex-[\w-]+\.js/u;
 
 /** The interval separator of each locale's readouts, as `intervalSeparator` writes it. */
 const separators = { de: "; ", en: ", ", id: "; " } as const;

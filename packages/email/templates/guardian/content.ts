@@ -7,7 +7,7 @@ import { Schema } from "effect";
  * one value an email may carry (ADR 0027, ADR 0034).
  */
 export const GuardianCodeEmailInput = Schema.Struct({
-  code: Schema.String.check(Schema.isPattern(/^\d{6}$/)),
+  code: Schema.String.check(Schema.isPattern(/^\d{6}$/u)),
   locale: ActiveAppLocaleCodeSchema,
 });
 

@@ -14,7 +14,7 @@ import { readMermaidMetadata } from "@repo/design-system/lib/markdown/mermaid";
 import { blockGapVariants, codeVariants } from "@repo/design-system/lib/prose";
 import { Array as Arr, Option } from "effect";
 
-const LANGUAGE_REGEX = /language-([^\s]+)/;
+const LANGUAGE_REGEX = /language-(?<language>[^\s]+)/u;
 
 export const reactCodeComponents: ReactMarkdownComponents = {
   code: ({ node, children, className, ...props }) => {

@@ -1,6 +1,7 @@
 import {
   Certificate01Icon,
   ChartBarLineIcon,
+  MortarboardIcon,
   Notification01Icon,
   Settings01Icon,
   TaskEdit01Icon,
@@ -43,19 +44,27 @@ export function TenantNavigation() {
 
 /**
  * The school's own groups, as the learner's sidebar has them: first the main pages with no label,
- * the notifications for everyone, a student's own exams, grades and report cards, the exams and the
- * school's report cards for a viewer who may open them, then the management group, with the
- * settings entry, only for a viewer who may manage the school. The school has no home of its own:
- * its root opens the viewer's main page. The viewer's classes come last, when the viewer has any, so
- * they never move the groups above them.
+ * the notifications for everyone, a student's own exams, grades and report cards, the exams, the
+ * school's report cards, and the graduation for a viewer who may open them, then the management
+ * group, with the settings entry, only for a viewer who may manage the school. The school has no
+ * home of its own: its root opens the viewer's main page. The viewer's classes come last, when the
+ * viewer has any, so they never move the groups above them.
  */
 function TenantSchoolGroups() {
   const tenant = useTenant();
-  const { canManage, canOpenExams, canOpenReports, role, slug } = tenant;
+  const {
+    canManage,
+    canOpenExams,
+    canOpenGraduation,
+    canOpenReports,
+    role,
+    slug,
+  } = tenant;
   const matchRoute = useMatchRoute();
   const tExams = useTranslations("Exams");
   const tGrades = useTranslations("SchoolGrades");
   const tNotifications = useTranslations("Notifications");
+  const tGraduation = useTranslations("SchoolGraduation");
   const tReports = useTranslations("SchoolReports");
   const tSettings = useTranslations("SchoolSettings");
 
@@ -162,6 +171,24 @@ function TenantSchoolGroups() {
             >
               <HugeIcons icon={Certificate01Icon} />
               <span className="truncate">{tReports("title")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ) : null}
+        {canOpenGraduation ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={
+                matchRoute({
+                  fuzzy: true,
+                  params: { slug },
+                  to: "/school/$slug/graduation",
+                }) !== false
+              }
+              render={<Link params={{ slug }} to="/school/$slug/graduation" />}
+              tooltip={tGraduation("title")}
+            >
+              <HugeIcons icon={MortarboardIcon} />
+              <span className="truncate">{tGraduation("title")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ) : null}

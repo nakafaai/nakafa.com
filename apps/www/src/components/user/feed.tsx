@@ -66,7 +66,7 @@ export function FeedName({ children }: { children: ReactNode }) {
 export function FeedAge({ at, children }: { at: number; children: string }) {
   return (
     <time
-      className="shrink-0 text-muted-foreground"
+      className="text-muted-foreground shrink-0"
       dateTime={DateTime.formatIso(DateTime.makeUnsafe(at))}
     >
       {children}

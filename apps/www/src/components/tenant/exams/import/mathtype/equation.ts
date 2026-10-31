@@ -71,14 +71,14 @@ const MAX_DEPTH = 64;
 const ASCII_END = 0x7f;
 
 /** LaTeX that starts with a command name. */
-const COMMAND = /^\\[A-Za-z]/;
+const COMMAND = /^\\[A-Za-z]/u;
 
 /** Whether a character's math LaTeX is a command, as a Greek letter typed in text style is. */
 const isCommand = (latex: Option.Option<string>) =>
   Option.exists(latex, (command) => COMMAND.test(command));
 
 /** A letter of the Latin alphabet, the only character a function name joins. */
-const LETTER = /^[A-Za-z]$/;
+const LETTER = /^[A-Za-z]$/u;
 
 /**
  * What a record adds to its list: a line with its pieces, which a template, pile or matrix reads

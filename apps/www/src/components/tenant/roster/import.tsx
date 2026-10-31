@@ -1,37 +1,17 @@
-import type { GenericId } from "@confect/core";
-import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
-import {
-  CalendarRemove01Icon,
-  Cancel01Icon,
-  Download01Icon,
-  IdentityCardIcon,
-  Upload01Icon,
-  UserCheck01Icon,
-  UserLock01Icon,
-  UserMultiple02Icon,
-  UserQuestion01Icon,
-} from "@hugeicons/core-free-icons";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import roster from "@repo/backend/confect/_generated/refs/roster";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import {
-  IMPORT_BATCH,
-  type RosterLine,
-} from "@repo/backend/confect/roster/schema";
+import { IMPORT_BATCH } from "@repo/backend/confect/roster/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, DateTime, Effect, Option, Order, Result } from "effect";
-import { useRef, useState, useTransition } from "react";
+import { Array as Arr, Effect, Option } from "effect";
+import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ColumnFilter } from "@/components/shared/table/column";
-import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
-import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -39,95 +19,31 @@ import {
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
-  EXPORT_HEADER,
-  type ReadRow,
-  RowProblem,
-  readDapodikSheet,
-  type SheetProblem,
-  studentsOf,
-} from "@/components/tenant/roster/dapodik";
+  type FileProblem,
+  RosterFileChoice,
+} from "@/components/tenant/roster/choose";
+import { type ReadRow, studentsOf } from "@/components/tenant/roster/dapodik";
+import { RosterStudentsExport } from "@/components/tenant/roster/export";
+import { RosterGradesExport } from "@/components/tenant/roster/grades";
+import { activePeriodOf } from "@/components/tenant/roster/period";
+import { RosterPreviewTable } from "@/components/tenant/roster/preview";
 import {
   RosterUnitChoice,
   RosterUnitProvider,
   useRosterUnit,
 } from "@/components/tenant/roster/unit";
-import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { UnitId } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
-import { reportClientException } from "@/lib/analytics/client";
-
-/**
- * The look of each status, in the preview's status cell and in its column's filter, one icon per
- * status: the two ages of a student who imports, and the problem that keeps each other row out,
- * which reads as a danger.
- */
-const ROSTER_STATUS_LOOKS = {
-  adult: { icon: UserCheck01Icon, tone: "success" },
-  birth: { icon: CalendarRemove01Icon, tone: "destructive" },
-  cohort: { icon: UserMultiple02Icon, tone: "destructive" },
-  name: { icon: UserQuestion01Icon, tone: "destructive" },
-  nisn: { icon: IdentityCardIcon, tone: "destructive" },
-  under: { icon: UserLock01Icon, tone: "info" },
-} as const satisfies Record<
-  typeof RowProblem.Type | "adult" | "under",
-  StatusLook
->;
 
 const SOURCE = "components/tenant/roster/import";
-
-/** The file types the chooser offers: the XLSX file that Dapodik exports. */
-const SHEET_TYPES =
-  ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-/** The columns of the preview table. */
-const rowColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  typeof ReadRow.Type
->();
-
-/** The status of one read row: under or over the age limit, or the problem that keeps it out. */
-const statusOf = (row: typeof ReadRow.Type) => {
-  if (row.outcome === "problem") {
-    return row.problem;
-  }
-  return row.row.underAgeLimit ? "under" : "adult";
-};
-
-/** Why a chosen file shows no preview: its sheet is refused, or the file cannot be read at all. */
-type FileProblem = typeof SheetProblem.Type | "unreadable";
-
-/**
- * Reads the first sheet of an XLSX file in the browser. The reader loads only when the Admin
- * chooses a file, so it stays out of the page's first JavaScript, and the file never leaves
- * the device: only the rows the Admin applies reach the server (ADR 0015).
- */
-const readFile = (file: File, today: DateTime.Utc) =>
-  Effect.tryPromise(async () => {
-    const { readSheet } = await import("read-excel-file/browser");
-    return readSheet(file);
-  }).pipe(Effect.map((rows) => readDapodikSheet(rows, today)));
-
-/** Writes the period's students into an XLSX file with the columns the import reads. */
-const writeFile = (lines: readonly (typeof RosterLine.Type)[]) =>
-  Effect.tryPromise(async () => {
-    const { default: writeXlsxFile } = await import("write-excel-file/browser");
-    await writeXlsxFile([
-      EXPORT_HEADER,
-      ...Arr.map(lines, (line) => [
-        line.name,
-        line.nisn ?? "",
-        line.cohortName,
-      ]),
-    ]).toFile("nakafa-dapodik.xlsx");
-  });
 
 /**
  * The Dapodik import of the school (ADR 0015, K13): the Admin chooses the unit, reads a
  * Dapodik XLSX export, checks every row in the preview, and applies the students into the
  * unit's active period, or cancels and nothing is written. Export writes the period's
- * students back into a file to compare with Dapodik.
+ * students back into a file to compare with Dapodik, and Export grades a class group's report data.
  */
 export function RosterImportSettings() {
   const { slug } = useTenant();
@@ -168,109 +84,51 @@ function RosterImportContent() {
 }
 
 /**
- * The import into one unit's active period. The header holds the same actions from the first paint: until a file is
- * read the unit choice, Export and Import, which wait disabled while the period is read and stay disabled for a unit
- * with no active period, and the body says what to do; once a file is read the header shows the search and status
- * filter of the preview with Cancel and Import students, and the preview is the body. The rows go to the server in
- * batches of `IMPORT_BATCH`, each one transaction, so a retry after a failed batch adds no duplicate.
+ * The import into one unit's active period. The header holds its actions enabled from the first
+ * paint and waits for nothing: until a file is read the unit choice, Export, Export grades and
+ * Import, each of which reads the period itself after its press, and the body says what to do; once
+ * a file is read the header shows the search and status filter of the preview with Cancel and
+ * Import students, and the preview is the body. The rows go to the server in batches of
+ * `IMPORT_BATCH`, each one transaction, so a retry after a failed batch adds no duplicate.
  */
 function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
   const t = useTranslations("SchoolRoster");
   const { slug } = useTenant();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const active = useQuery(
-    tenancy.cohorts.activePeriod,
-    isSettled ? { slug, unitId } : "skip"
-  );
-  if (QueryResult.isFailure(active)) {
-    throw active.error;
-  }
-  // The period the import fills: none while it is read or when the unit has no active period.
-  const period = QueryResult.isSuccess(active)
-    ? Option.fromNullOr(active.value)
-    : Option.none();
   const apply = useMutation(roster.imports.apply);
-  const exportLines = useAction(roster.exports.lines);
-  const input = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<
     readonly (typeof ReadRow.Type)[] | undefined
   >(undefined);
   const [problem, setProblem] = useState<FileProblem | undefined>(undefined);
-  const [isReading, startReading] = useTransition();
   const [isApplying, startApplying] = useTransition();
-  const [isExporting, startExporting] = useTransition();
 
-  const choose = (file: File) =>
-    startReading(async () => {
-      const read = await Effect.runPromise(
-        Effect.result(readFile(file, DateTime.nowUnsafe()))
-      );
-      if (Result.isFailure(read)) {
-        setProblem("unreadable");
-        return;
-      }
-      if (read.success.outcome === "refused") {
-        setProblem(read.success.problem);
-        return;
-      }
-      setProblem(undefined);
-      setPreview(read.success.rows);
-    });
-
-  // The batches go one after another and stop at the first refusal, which the save reports.
-  const applyBatches = (
-    periodId: GenericId.GenericId<"tenantPeriods">,
-    rows: readonly (typeof ReadRow.Type)[]
-  ) =>
+  // The press reads the period, then the batches go one after another and stop at the first refusal,
+  // which the save reports.
+  const applyBatches = (rows: readonly (typeof ReadRow.Type)[]) =>
     Effect.runPromise(
       Effect.result(
-        Effect.forEach(
-          Arr.chunksOf(studentsOf(rows), IMPORT_BATCH),
-          (batch) =>
-            Effect.tryPromise(() =>
-              apply({ periodId, rows: batch, slug })
-            ).pipe(Effect.flatMap(Effect.fromResult)),
-          { discard: true }
+        activePeriodOf(slug, unitId).pipe(
+          Effect.flatMap((periodId) =>
+            Effect.forEach(
+              Arr.chunksOf(studentsOf(rows), IMPORT_BATCH),
+              (batch) =>
+                Effect.tryPromise(() =>
+                  apply({ periodId, rows: batch, slug })
+                ).pipe(Effect.flatMap(Effect.fromResult)),
+              { discard: true }
+            )
+          )
         )
       )
     );
 
-  const submit = (
-    periodId: GenericId.GenericId<"tenantPeriods">,
-    rows: readonly (typeof ReadRow.Type)[]
-  ) =>
+  const submit = (rows: readonly (typeof ReadRow.Type)[]) =>
     startApplying(() =>
       saveSchool(
-        () => applyBatches(periodId, rows),
+        () => applyBatches(rows),
         SOURCE,
         () => {
           toast.success({ title: "school-roster-imported.title" });
           setPreview(undefined);
-        }
-      )
-    );
-
-  const download = (periodId: GenericId.GenericId<"tenantPeriods">) =>
-    startExporting(() =>
-      saveSchool(
-        () => exportLines({ periodId, slug }),
-        SOURCE,
-        (lines) => {
-          Effect.runFork(
-            writeFile(lines).pipe(
-              Effect.catch((error) =>
-                reportClientException(error, { source: SOURCE }).pipe(
-                  Effect.andThen(
-                    Effect.sync(() => {
-                      toast.error({
-                        title: "school-roster-export-failed.title",
-                      });
-                    })
-                  )
-                )
-              )
-            )
-          );
         }
       )
     );
@@ -294,11 +152,7 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
               disabled={
                 isApplying || Arr.isReadonlyArrayEmpty(studentsOf(preview))
               }
-              onClick={() => {
-                if (Option.isSome(period)) {
-                  submit(period.value, preview);
-                }
-              }}
+              onClick={() => submit(preview)}
               type="button"
             >
               <Spinner isLoading={isApplying} />
@@ -316,73 +170,47 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
       actions={
         <>
           <RosterUnitChoice />
-          <input
-            accept={SHEET_TYPES}
-            aria-label={t("file-label")}
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              if (file) {
-                choose(file);
-              }
+          <RosterStudentsExport />
+          <RosterGradesExport />
+          <RosterFileChoice
+            onProblem={setProblem}
+            onRows={(rows) => {
+              setProblem(undefined);
+              setPreview(rows);
             }}
-            ref={input}
-            type="file"
           />
-          <Button
-            disabled={isExporting || Option.isNone(period)}
-            onClick={() => {
-              if (Option.isSome(period)) {
-                download(period.value);
-              }
-            }}
-            type="button"
-            variant="outline"
-          >
-            {isExporting ? (
-              <Spinner isLoading />
-            ) : (
-              <HugeIcons icon={Download01Icon} />
-            )}
-            {t("export")}
-          </Button>
-          <Button
-            disabled={isReading || Option.isNone(period)}
-            onClick={() => input.current?.click()}
-            type="button"
-          >
-            {isReading ? (
-              <Spinner isLoading />
-            ) : (
-              <HugeIcons icon={Upload01Icon} />
-            )}
-            {t("import")}
-          </Button>
         </>
       }
     >
-      {QueryResult.isSuccess(active) ? (
-        <RosterImportEmpty period={period} problem={problem} />
-      ) : null}
+      <RosterImportEmpty problem={problem} unitId={unitId} />
     </SettingsTablePage>
   );
 }
 
 /**
- * The body of the import before a file is read: what to do, the reason a file was refused, or, for a unit with no
- * active period, that the period comes first.
+ * The body of the import before a file is read, drawn from the first paint: what to do, or the
+ * reason a file was refused. A unit that turns out to have no active period says the period comes
+ * first instead.
  */
 function RosterImportEmpty({
-  period,
   problem,
+  unitId,
 }: {
-  period: Option.Option<GenericId.GenericId<"tenantPeriods">>;
   problem: FileProblem | undefined;
+  unitId: UnitId;
 }) {
   const t = useTranslations("SchoolRoster");
+  const { slug } = useTenant();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const active = useQuery(
+    tenancy.cohorts.activePeriod,
+    isSettled ? { slug, unitId } : "skip"
+  );
+  if (QueryResult.isFailure(active)) {
+    throw active.error;
+  }
 
-  if (Option.isNone(period)) {
+  if (QueryResult.isSuccess(active) && active.value === null) {
     return (
       <TableEmpty
         act="pointing"
@@ -398,103 +226,6 @@ function RosterImportEmpty({
         problem === undefined ? "empty-description" : `file-${problem}`
       )}
       title={t(problem === undefined ? "empty" : "file-refused")}
-    />
-  );
-}
-
-/** The class group a read row names, or none for a row that a problem keeps out. */
-const cohortOf = (row: typeof ReadRow.Type) =>
-  row.outcome === "row" ? (row.row.cohortName ?? "") : "";
-
-/**
- * The preview of a read file: each row, its class group and its status, which shows the rows a problem keeps out. The
- * header's search finds a row by its name or its NISN, and the class group and status heads filter the rows.
- */
-function RosterPreviewTable({
-  rows,
-}: {
-  readonly rows: readonly (typeof ReadRow.Type)[];
-}) {
-  const t = useTranslations("SchoolRoster");
-  const cohorts = Arr.sort(
-    Arr.filter(Arr.dedupe(Arr.map(rows, cohortOf)), (cohort) => cohort !== ""),
-    Order.String
-  );
-
-  const columns = rowColumns.columns([
-    rowColumns.accessor((row) => row.line, {
-      header: t("line"),
-      id: "line",
-      sortFn: "basic",
-    }),
-    // The name with the NISN after it, so the header's search finds a row by either; the cell shows the name alone.
-    rowColumns.accessor(
-      (row) => (row.outcome === "row" ? `${row.row.name} ${row.row.nisn}` : ""),
-      {
-        cell: (info) =>
-          info.row.original.outcome === "row" ? (
-            <span className="font-medium" dir="auto">
-              {info.row.original.row.name}
-            </span>
-          ) : null,
-        filterFn: "includesString",
-        header: t("name"),
-        id: "name",
-        sortFn: "text",
-      }
-    ),
-    rowColumns.accessor((row) => (row.outcome === "row" ? row.row.nisn : ""), {
-      cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
-      enableSorting: false,
-      header: t("nisn"),
-      id: "nisn",
-    }),
-    rowColumns.accessor(cohortOf, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="cohort"
-          options={namedOptions(cohorts, GRADE_ICONS)}
-          title={t("cohort")}
-        />
-      ),
-      id: "cohort",
-    }),
-    rowColumns.accessor(statusOf, {
-      cell: (info) => (
-        <TableStatus
-          icon={ROSTER_STATUS_LOOKS[info.getValue()].icon}
-          label={t(`status-${info.getValue()}`)}
-          tone={ROSTER_STATUS_LOOKS[info.getValue()].tone}
-        />
-      ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(
-            ["under", "adult", ...RowProblem.literals] as const,
-            (status) => ({
-              icon: ROSTER_STATUS_LOOKS[status].icon,
-              label: t(`status-${status}`),
-              value: status,
-            })
-          )}
-          title={t("status")}
-        />
-      ),
-      id: "status",
-    }),
-  ]);
-
-  return (
-    <DataTable
-      columns={columns}
-      data={rows}
-      rowId={(row) => String(row.line)}
-      search="name"
     />
   );
 }

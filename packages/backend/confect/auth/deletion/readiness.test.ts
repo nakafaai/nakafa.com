@@ -33,7 +33,7 @@ const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 /** What the claim's failure or its defect leaves in the logged cause. */
 const CLAIM_CAUSE_PATTERN =
-  /Unable to complete account cleanup\.|private adapter detail/;
+  /Unable to complete account cleanup\.|private adapter detail/u;
 /** The rejection that a deletion gets while its preparation is temporarily unavailable. */
 const deletionUnavailable = {
   body: {

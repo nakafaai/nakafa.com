@@ -32,8 +32,8 @@ const isLocked = (
 
 /**
  * The caller's own locked report cards in the school, the newest card first, each with its class group, period, PDF
- * and hash. The read is the caller's own cards only, so it checks the owner by construction, and a card before its
- * lock, whose note and grades may still change, stays with the school.
+ * and hash. The read is the caller's own cards only, so it checks the owner by construction, and it takes locked cards
+ * only: a card before its lock, whose note and grades may still change, stays with the school.
  */
 export const own = FunctionImpl.make(
   databaseSchema,
@@ -45,7 +45,11 @@ export const own = FunctionImpl.make(
     const storage = yield* StorageReader;
     const rows = yield* reader
       .table("reportCards")
-      .index("by_personId", (query) => query.eq("personId", person._id), "desc")
+      .index(
+        "by_personId_and_state",
+        (query) => query.eq("personId", person._id).eq("state", "locked"),
+        "desc"
+      )
       .take(REPORT_LIMIT)
       .pipe(Effect.orDie);
     const cards = yield* Effect.forEach(Arr.filter(rows, isLocked), (row) =>

@@ -6,21 +6,21 @@ import {
 } from "@repo/design-system/lib/markdown/inline";
 import { Array as Arr, Schema } from "effect";
 
-const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})[^`]*$/;
+const FENCE_OPEN = /^ {0,3}(?<marker>`{3,}|~{3,})[^`]*$/u;
 /** Fences whose renderer needs the complete source. */
 const COMPLETE_SOURCE_FENCE =
-  /^ {0,3}(?:`{3,}|~{3,})\s*(?:math|mermaid)(?:\s|$)/i;
+  /^ {0,3}(?:`{3,}|~{3,})\s*(?:math|mermaid)(?:\s|$)/iu;
 /** A final line holding only a block marker that content has not followed. */
 const PARTIAL_BLOCK =
-  /^ {0,3}(?:`{1,2}|~{1,2}|#{1,6}|-{1,2}|[*+>]|\d{1,9}[.)]?)$/;
+  /^ {0,3}(?:`{1,2}|~{1,2}|#{1,6}|-{1,2}|[*+>]|\d{1,9}[.)]?)$/u;
 /** A line that starts a new block, which inline spans never cross. */
-const BLOCK_START = /^ {0,3}(?:[-*+]\s|\d{1,9}[.)]\s|#{1,6}\s|>|\|)/;
+const BLOCK_START = /^ {0,3}(?:[-*+]\s|\d{1,9}[.)]\s|#{1,6}\s|>|\|)/u;
 /** An escaped character, which never separates table cells. */
-const ESCAPED = /\\./g;
+const ESCAPED = /\\./gu;
 /** A fence line with at most three spaces of indentation. */
-const FENCE_MARKER = /^ {0,3}(`+|~+)[ \t]*$/;
-const TABLE_DELIMITER = /^ {0,3}\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$/;
-const PARTIAL_TABLE_DELIMITER = /^ {0,3}\|?[\s:|-]*$/;
+const FENCE_MARKER = /^ {0,3}(?<marker>`+|~+)[ \t]*$/u;
+const TABLE_DELIMITER = /^ {0,3}\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$/u;
+const PARTIAL_TABLE_DELIMITER = /^ {0,3}\|?[\s:|-]*$/u;
 
 const TailStateSchema = Schema.Struct({
   ...InlineStateSchema.fields,

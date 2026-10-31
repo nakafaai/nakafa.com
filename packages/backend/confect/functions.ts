@@ -1,11 +1,5 @@
 import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { Effect, Scheduler as EffectScheduler } from "effect";
-
-const runTrigger = RegisteredFunction.runHandlerPromise(undefined, {
-  scheduler: new EffectScheduler.MixedScheduler("sync"),
-});
-
 import { chatsHandler } from "@repo/backend/confect/triggers/chats/chats";
 import { commentsHandler } from "@repo/backend/confect/triggers/comments/comments";
 import { learningViewsHandler } from "@repo/backend/confect/triggers/contents/views";
@@ -20,6 +14,12 @@ import {
   customMutation,
 } from "convex-helpers/server/customFunctions";
 import { Triggers } from "convex-helpers/server/triggers";
+import { Effect, Scheduler as EffectScheduler } from "effect";
+
+const runTrigger = RegisteredFunction.runHandlerPromise(undefined, {
+  scheduler: new EffectScheduler.MixedScheduler("sync"),
+});
+
 export const triggers = new Triggers<DataModel>();
 export const mutation = customMutation(rawMutation, customCtx(triggers.wrapDB));
 export const internalMutation = customMutation(

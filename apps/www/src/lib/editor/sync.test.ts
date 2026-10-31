@@ -33,7 +33,7 @@ import {
 } from "@/test/sync";
 
 /** The text of two letters typed by two editors, in either order. */
-const TWO_LETTERS = /^[ab]{2}$/;
+const TWO_LETTERS = /^[ab]{2}$/u;
 
 describe("editor/sync convergence", () => {
   it.effect("converges two editors on one document and loses no step", () =>

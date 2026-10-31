@@ -114,7 +114,7 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
         ) : (
           <span aria-hidden className="size-8 shrink-0" />
         )}
-        <h2 className="shrink-0 font-medium text-sm">
+        <h2 className="shrink-0 text-sm font-medium">
           {t("question", { number })}
         </h2>
         <QuestionType
@@ -124,7 +124,7 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
         />
         {editing.displayed.key === null &&
         needsKey(editing.displayed.template) ? (
-          <span className="flex items-center gap-1 text-muted-foreground text-xs">
+          <span className="text-muted-foreground flex items-center gap-1 text-xs">
             <HugeIcons
               aria-hidden="true"
               className={statusIconVariants({

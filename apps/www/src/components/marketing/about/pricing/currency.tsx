@@ -10,8 +10,8 @@ import type { PricingCurrency } from "@/lib/pricing/monthly";
 const currencyBranchVariants = cva("", {
   variants: {
     currency: {
-      EUR: "in-data-[currency=EUR]:contents hidden",
-      IDR: "in-data-[currency=IDR]:contents hidden",
+      EUR: "hidden in-data-[currency=EUR]:contents",
+      IDR: "hidden in-data-[currency=IDR]:contents",
       USD: "in-data-[currency=EUR]:hidden in-data-[currency=IDR]:hidden",
     },
   },
@@ -21,8 +21,8 @@ const currencyBranchVariants = cva("", {
 const currencyTextVariants = cva("", {
   variants: {
     currency: {
-      EUR: "in-data-[currency=EUR]:inline hidden",
-      IDR: "in-data-[currency=IDR]:inline hidden",
+      EUR: "hidden in-data-[currency=EUR]:inline",
+      IDR: "hidden in-data-[currency=IDR]:inline",
       USD: "in-data-[currency=EUR]:hidden in-data-[currency=IDR]:hidden",
     },
   },

@@ -49,17 +49,17 @@ describe("marketing/about/pricing-display", () => {
   it("formats Indonesian pricing in rupiah", () => {
     const price = getProPricingDisplay("IDR");
 
-    expect(price.free.text.replace(/\s+/g, " ")).toBe("Rp 0");
-    expect(price.pro.text.replace(/\s+/g, " ")).toBe("Rp 79.000");
-    expect(price.proYearly.text.replace(/\s+/g, " ")).toBe("Rp 790.000");
+    expect(price.free.text.replace(/\s+/gu, " ")).toBe("Rp 0");
+    expect(price.pro.text.replace(/\s+/gu, " ")).toBe("Rp 79.000");
+    expect(price.proYearly.text.replace(/\s+/gu, " ")).toBe("Rp 790.000");
   });
 
   it("formats euro pricing in the German locale", () => {
     const price = getProPricingDisplay("EUR");
 
-    expect(price.free.text.replace(/\s+/g, " ")).toBe("0,00 €");
-    expect(price.pro.text.replace(/\s+/g, " ")).toBe("8,99 €");
-    expect(price.proYearly.text.replace(/\s+/g, " ")).toBe("89,90 €");
+    expect(price.free.text.replace(/\s+/gu, " ")).toBe("0,00 €");
+    expect(price.pro.text.replace(/\s+/gu, " ")).toBe("8,99 €");
+    expect(price.proYearly.text.replace(/\s+/gu, " ")).toBe("89,90 €");
   });
 
   it("formats dollar pricing in the English locale", () => {

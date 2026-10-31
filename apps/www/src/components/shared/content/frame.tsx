@@ -17,7 +17,7 @@ export function LayoutContent({ children, className, width }: Props) {
     <article
       className={cn(
         contentWidthVariants({ width }),
-        "wrap-anywhere px-6",
+        "px-6 wrap-anywhere",
         className
       )}
     >

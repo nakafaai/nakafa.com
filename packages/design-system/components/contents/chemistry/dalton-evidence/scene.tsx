@@ -34,7 +34,7 @@ export function MoleculePanel({
 }) {
   return (
     <section className="flex min-h-36 flex-col items-center justify-center gap-4 p-3 text-center">
-      <div className="font-medium text-muted-foreground text-sm">{title}</div>
+      <div className="text-muted-foreground text-sm font-medium">{title}</div>
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
         {Arr.map(molecules, (molecule) => (
           <MoleculeGroup key={molecule.id} molecule={molecule} />
@@ -74,7 +74,7 @@ function Atom({ symbol }: { symbol: AtomSymbol }) {
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none grid size-9 select-none place-items-center rounded-full border-2 border-background font-semibold text-background shadow-sm"
+      className="border-background text-background pointer-events-none grid size-9 place-items-center rounded-full border-2 font-semibold shadow-sm select-none"
       style={{ backgroundColor: getAtomColor(symbol) }}
     >
       <InlineMath math={`\\mathrm{${symbol}}`} />

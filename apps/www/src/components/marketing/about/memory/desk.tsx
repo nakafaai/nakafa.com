@@ -140,7 +140,7 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
           />
         ))}
       </div>
-      <p className="grid min-h-6 text-muted-foreground text-sm tabular-nums">
+      <p className="text-muted-foreground grid min-h-6 text-sm tabular-nums">
         {Arr.map(Arr.dedupe(Arr.map(facts, (fact) => fact.when)), (when) => (
           <span
             aria-hidden={when !== latest?.when}

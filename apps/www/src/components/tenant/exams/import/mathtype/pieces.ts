@@ -60,10 +60,10 @@ const runsOf = (pieces: readonly Piece[]) =>
   );
 
 /** A command name at the end of LaTeX, which a letter after it would lengthen. */
-const TRAILING_COMMAND = /\\[A-Za-z]+$/;
+const TRAILING_COMMAND = /\\[A-Za-z]+$/u;
 
 /** A letter at the start of LaTeX. */
-const LEADING_LETTER = /^[A-Za-z]/;
+const LEADING_LETTER = /^[A-Za-z]/u;
 
 /**
  * Two pieces of LaTeX side by side, with a space between them only where a command name ends and

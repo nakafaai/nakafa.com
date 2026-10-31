@@ -16,7 +16,7 @@ const cardSectionVariants = cva("has-data-[slot=card-footer]:pb-0", {
 });
 
 const cardSectionFooterVariants = cva(
-  "@container/card-footer min-h-15 shrink-0 flex-wrap items-center justify-end gap-x-4 gap-y-3 border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
+  "bg-muted/20 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 @container/card-footer min-h-15 shrink-0 flex-wrap items-center justify-end gap-x-4 gap-y-3 border-t py-3 [.border-t]:pt-3",
   {
     variants: {
       bottomSheet: {
@@ -46,7 +46,7 @@ const cardSectionHintVariants = cva("me-auto max-w-xl flex-1 text-sm", {
 // `min-h-8` keeps the small size's height as the floor of a one-line label, and
 // `min-w-fit` keeps each action as wide as its label needs, up to the room it has.
 const cardSectionActionsVariants = cva(
-  "@max-3xs/card-footer:*:wrap-normal flex flex-wrap items-center justify-end gap-2 @max-3xs/card-footer:*:h-auto @max-3xs/card-footer:*:min-h-8 @max-3xs/card-footer:*:min-w-fit @max-3xs/card-footer:*:flex-1 @max-3xs/card-footer:*:whitespace-normal @max-3xs/card-footer:[&_svg:not(.animate-spin)]:hidden",
+  "flex flex-wrap items-center justify-end gap-2 @max-3xs/card-footer:*:h-auto @max-3xs/card-footer:*:min-h-8 @max-3xs/card-footer:*:min-w-fit @max-3xs/card-footer:*:flex-1 @max-3xs/card-footer:*:wrap-normal @max-3xs/card-footer:*:whitespace-normal @max-3xs/card-footer:[&_svg:not(.animate-spin)]:hidden",
   {
     defaultVariants: {
       share: false,

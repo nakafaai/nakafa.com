@@ -28,7 +28,7 @@ function SheetClose(props: SheetPrimitive.Close.Props) {
 }
 
 const sheetPopupVariants = cva(
-  "fixed z-50 flex flex-col overflow-y-auto bg-popover text-popover-foreground shadow-lg transition-[opacity,translate,width] duration-surface will-change-transform [--sheet-inset:0px] data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
+  "bg-popover text-popover-foreground duration-surface fixed z-50 flex flex-col overflow-y-auto shadow-lg transition-[opacity,translate,width] will-change-transform [--sheet-inset:0px] data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
   {
     defaultVariants: {
       inset: false,
@@ -54,7 +54,7 @@ function SheetBackdrop({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   return (
     <SheetPrimitive.Backdrop
       className={cn(
-        "fixed inset-0 z-50 bg-black/32 backdrop-blur-sm transition-opacity duration-surface data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
+        "duration-surface fixed inset-0 z-50 bg-black/32 backdrop-blur-sm transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
         className
       )}
       data-slot="sheet-backdrop"
@@ -94,7 +94,7 @@ function SheetPopup({
       >
         {children}
         {!!showCloseButton && (
-          <SheetPrimitive.Close className="pressable absolute inset-e-2 top-2 inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-transparent opacity-80 outline-none transition-[scale,color,background-color,box-shadow,opacity] pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background focus-visible:transition-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0">
+          <SheetPrimitive.Close className="pressable focus-visible:ring-ring focus-visible:ring-offset-background absolute inset-e-2 top-2 inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-transparent opacity-80 transition-[scale,color,background-color,box-shadow,opacity] outline-none hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:transition-none pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
             <HugeIcons icon={Cancel01Icon} />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>

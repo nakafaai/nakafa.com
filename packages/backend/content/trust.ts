@@ -12,8 +12,8 @@ import {
 } from "@repo/utilities/stage";
 import { Array as Arr, Schema } from "effect";
 
-const TRAILING_DOT = /\.$/;
-const CLOUD_HOST = /^[a-z0-9-]+\.convex\.cloud$/;
+const TRAILING_DOT = /\.$/u;
+const CLOUD_HOST = /^[a-z0-9-]+\.convex\.cloud$/u;
 const AgentTrustSchema = Schema.Struct({
   key: TrustedKeySchema,
   stage: DeployStageSchema,
