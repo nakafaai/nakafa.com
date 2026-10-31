@@ -118,7 +118,7 @@ describe("waiting for the page to settle", () => {
   );
 
   it.effect(
-    "starts by itself six seconds after a page that nobody touches",
+    "starts by itself ten seconds after a page that nobody touches",
     () =>
       Effect.gen(function* () {
         stubReadyState("complete");
@@ -131,7 +131,7 @@ describe("waiting for the page to settle", () => {
         const waiting = yield* Effect.forkChild(untilFreshPageRead);
         yield* Effect.yieldNow;
         yield* Effect.yieldNow;
-        yield* TestClock.adjust("5 seconds");
+        yield* TestClock.adjust("9 seconds");
         expect(waiting.pollUnsafe()).toBeUndefined();
 
         yield* TestClock.adjust("1 second");

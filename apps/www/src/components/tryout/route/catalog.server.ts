@@ -311,11 +311,19 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
         trackKey: page.track.trackKey,
       },
     });
+    const exam = `${page.exam.title} ${page.track.title}`;
     return {
       countryPath: getTryoutPublicPath({ country: input.country }),
       examOptions: buildTryoutExamOptions(countryPage.value.exams),
       examPath,
-      head: head.value,
+      // Every exam has a Year 2027, so the page names its exam too.
+      head: {
+        ...head.value,
+        description:
+          page.track.description ??
+          tTryouts("track-metadata-description", { exam }),
+        title: exam,
+      },
       kind: "found" as const,
       labels,
       list,

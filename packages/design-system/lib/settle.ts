@@ -4,7 +4,7 @@ import { Array as Arr, Duration, Effect, MutableRef } from "effect";
 const SETTLE_TIMEOUT = Duration.seconds(1);
 
 /** How long a settled page that nobody touches holds its decoration back. */
-const UNTOUCHED_WAIT = Duration.seconds(6);
+const UNTOUCHED_WAIT = Duration.seconds(10);
 
 /** The gestures that say a reader is on the page. */
 const READER_GESTURES = [
@@ -67,12 +67,13 @@ const untilGesture = Effect.callback<void>((resume) => {
 });
 
 /**
- * Completes once a settled page has its reader: at the first gesture, or after six
+ * Completes once a settled page has its reader: at the first gesture, or after ten
  * seconds without one, and then at the browser's next idle moment. A phone spends
  * those seconds on the page itself, and a picture that moves only for its own sake,
- * such as a page's particles, toys and Nina's life, waits here. The wait is longer
- * than the five quiet seconds that mark a page as interactive, so decoration never
- * counts as the page's own loading.
+ * such as a page's particles, toys and Nina's life, waits here. A slow phone is still
+ * hydrating and fetching a few seconds after the load, so the wait reaches well past
+ * the five quiet seconds that mark a page as interactive after that: at six, the
+ * particles landed inside the page's own loading and made half its blocking time.
  */
 export const untilPageRead = Effect.suspend(() =>
   MutableRef.get(readerSeen)

@@ -190,6 +190,8 @@ export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({
     } = loaderData;
     return toRouterHead(
       createSeoHead({
+        // The SEO copy's title already ends in the site name.
+        absoluteTitle: title,
         alternates,
         canonicalPath,
         description,
@@ -197,7 +199,7 @@ export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({
         indexable: true,
         jsonLd: makeBreadcrumbNodes(breadcrumbs),
         locale,
-        parts: [title],
+        parts: [],
         type: "website",
       })
     );

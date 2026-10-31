@@ -75,7 +75,8 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
         ],
         locale,
         // The name is the same in every language, and its meaning tells them apart.
-        parts: [title, meaning.text],
+        // Hud and Luqman mean themselves, so they name it once.
+        parts: title === meaning.text ? [title] : [title, meaning.text],
         type: "book",
       })
     );
