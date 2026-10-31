@@ -51,7 +51,7 @@ const changeTask = (
 };
 
 /**
- * Shows the student's work as handed in at once, at `at`: late after the deadline,
+ * Shows the student's work as handed in at once, at `at`, with the text it hands in: late after the deadline,
  * and counted when it is the student's first.
  */
 export const submitUpdate =
@@ -63,6 +63,7 @@ export const submitUpdate =
       mine: {
         late: at > task.deadline,
         score: task.mine?.score ?? null,
+        text: args.text,
         updatedAt: at,
       },
     }));

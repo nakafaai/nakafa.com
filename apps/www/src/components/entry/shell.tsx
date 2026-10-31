@@ -1,3 +1,4 @@
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import type { ReactNode } from "react";
 
 /** Reuses the authenticated entry-page split layout across auth and onboarding. */
@@ -15,9 +16,11 @@ export function EntryShell({ children }: { children: ReactNode }) {
  */
 export function EntryShellPanel({ children }: { children: ReactNode }) {
   return (
-    <div className="col-span-3 flex min-h-svh flex-col gap-4 overflow-y-auto p-6 sm:px-12 sm:py-8 lg:min-h-0">
-      {children}
-    </div>
+    <ScrollArea className="col-span-3 lg:min-h-0">
+      <div className="flex min-h-svh flex-col gap-4 p-6 sm:px-12 sm:py-8 lg:min-h-full">
+        {children}
+      </div>
+    </ScrollArea>
   );
 }
 

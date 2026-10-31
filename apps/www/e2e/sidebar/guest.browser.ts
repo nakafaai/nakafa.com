@@ -46,10 +46,11 @@ for (const viewport of sidebarViewports) {
           // The panel's inner surface paints on desktop and the sheet's on
           // phones; the desktop wrapper itself takes no room beside the page.
           // The footer of each account renders, and the root's signed-in hint
-          // shows the visitor's one before the first paint.
+          // shows the visitor's one before the first paint. Beside the page the
+          // sidebar's toggle has a footer of its own above it.
           const footer = page
             .locator('[data-sidebar="sidebar"]:visible')
-            .locator('[data-slot="sidebar-footer"]:visible');
+            .locator('[data-account="visitor"]');
 
           if (viewport.name === "compact") {
             const sidebarTrigger = page
