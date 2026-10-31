@@ -329,7 +329,6 @@ export function TeacherLayer({
               <ExamText
                 documentId={question.rubric}
                 key={`${question.rubric}-${frozen}`}
-                size="line"
               >
                 <ExamDocument
                   label={t("rubric-of", { number })}
@@ -353,7 +352,6 @@ export function TeacherLayer({
             <ExamText
               documentId={question.explanation}
               key={`${question.explanation}-${frozen}`}
-              size="line"
             >
               <ExamDocument
                 label={t("explanation-of", { number })}

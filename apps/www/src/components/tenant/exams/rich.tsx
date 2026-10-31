@@ -10,8 +10,9 @@ import {
   PicturesProvider,
   pictureFileHandler,
 } from "@repo/design-system/components/editor/picture";
+import type { Node } from "@tiptap/pm/model";
 import type { Transaction } from "@tiptap/pm/state";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import {
   type ComponentProps,
   createContext,
@@ -23,6 +24,7 @@ import {
   useState,
 } from "react";
 import { queuePictureFile } from "@/components/tenant/exams/picture";
+import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam, useExamEditing } from "@/components/tenant/exams/provider";
 import { useDocumentLabels } from "@/lib/editor/labels";
 import { pictureIdsPlugin } from "@/lib/editor/pictures";
@@ -45,6 +47,10 @@ interface ExamDocumentWiring {
   readonly onChange: (transaction: Transaction) => void;
   /** Called once with the editor, as soon as it exists. */
   readonly onEditor: (editor: DocumentEditorInstance) => void;
+  /** Whether the editor waits for its document, so the text the server holds stands in its place. */
+  readonly opening?: boolean | undefined;
+  /** The text the server holds, which stands in for the editor while it opens. */
+  readonly stored?: Option.Option<Node> | undefined;
 }
 
 /** The wiring of the rich text below, which its owner provides. */
@@ -59,10 +65,12 @@ export function ExamDocumentWiringProvider({
   extensions,
   onChange,
   onEditor,
+  opening = false,
+  stored = Option.none(),
 }: ExamDocumentWiring & { readonly children: ReactNode }) {
   return (
     <ExamDocumentWiringContext
-      value={{ content, extensions, onChange, onEditor }}
+      value={{ content, extensions, onChange, onEditor, opening, stored }}
     >
       {children}
     </ExamDocumentWiringContext>
@@ -96,13 +104,22 @@ interface ExamDocumentProps {
  * when the editor takes focus. A picture pasted or dropped into the text waits for its alt text in
  * the exam's queue, which inserts it into this editor. The editor gives its place up when it is
  * removed. Its owner, a question's text or an option row, wires it through `ExamDocumentWiringProvider`.
+ * While the owner opens the document, the text the server holds stands in for the editor, so a text with
+ * words never shows empty on the way to its editor.
  */
 export function ExamDocument({
   label,
   placeholder,
   size = "page",
 }: ExamDocumentProps) {
-  const { content, extensions, onChange, onEditor } = useDocumentWiring();
+  const {
+    content,
+    extensions,
+    onChange,
+    onEditor,
+    opening = false,
+    stored = Option.none(),
+  } = useDocumentWiring();
   const { exam, slug } = useExam();
   const labels = useDocumentLabels();
   const activate = useExamEditing((state) => state.activate);
@@ -158,20 +175,23 @@ export function ExamDocument({
         labels={labels.pictures}
         urls={addresses}
       >
-        <DocumentEditor
-          content={content}
-          extensions={allExtensions}
-          label={label}
-          onChange={onChange}
-          onEditor={(editor) => {
-            own.current = editor;
-            editor.registerPlugin(pictureIdsPlugin(setPictureIds));
-            onEditor(editor);
-          }}
-          onFocus={activate}
-          placeholder={placeholder}
-          size={size}
-        />
+        {opening ? <PreviewProse article doc={stored} size={size} /> : null}
+        <div className={opening ? "hidden" : "contents"}>
+          <DocumentEditor
+            content={content}
+            extensions={allExtensions}
+            label={label}
+            onChange={onChange}
+            onEditor={(editor) => {
+              own.current = editor;
+              editor.registerPlugin(pictureIdsPlugin(setPictureIds));
+              onEditor(editor);
+            }}
+            onFocus={activate}
+            placeholder={placeholder}
+            size={size}
+          />
+        </div>
       </PicturesProvider>
     </FormulaLabelsProvider>
   );

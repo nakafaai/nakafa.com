@@ -24,10 +24,7 @@ import { type StoreApi, useStore } from "zustand";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { refusePaste } from "@/components/tenant/exams/picture";
-import {
-  PreviewProse,
-  usePageDocument,
-} from "@/components/tenant/exams/preview";
+import { usePageDocument } from "@/components/tenant/exams/preview";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
 import {
@@ -131,8 +128,6 @@ interface ExamTextProps {
   readonly documentId: Id<"editorDocuments">;
   /** Called once with the editor, when the server has opened the document and the text takes changes. */
   readonly onOpen?: (editor: DocumentEditorInstance) => void;
-  /** The room the text takes at least, as the document the caller composes takes it. */
-  readonly size: "line" | "page";
 }
 
 /**
@@ -145,12 +140,7 @@ interface ExamTextProps {
  * Until the server opens the document the editor holds nothing, so the text the server holds is drawn
  * in its place, and a text with words never shows empty or as its hint on the way to its editor.
  */
-export function ExamText({
-  children,
-  documentId,
-  onOpen,
-  size,
-}: ExamTextProps) {
+export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
   const { exam, gone, slug } = useExam();
   const frozen = isLocked(exam);
   const labels = useDocumentLabels();
@@ -348,9 +338,10 @@ export function ExamText({
       extensions={extensions}
       onChange={change}
       onEditor={open}
+      opening={drawn}
+      stored={stored}
     >
-      {drawn ? <PreviewProse article doc={stored} size={size} /> : null}
-      <div className={drawn ? "hidden" : "contents"}>{children}</div>
+      {children}
     </ExamDocumentWiringProvider>
   );
 }

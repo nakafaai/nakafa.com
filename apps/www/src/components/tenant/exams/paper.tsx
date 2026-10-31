@@ -365,7 +365,6 @@ function LivePaper({
             editor.commands.focus("end");
           }
         }}
-        size="page"
       >
         <ExamDocument
           label={t("question-text", { number })}
