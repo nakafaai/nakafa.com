@@ -78,21 +78,23 @@ test("an admin previews a Dapodik file, imports its students into the active per
   await chooseFile(page, await sheetFile("daftar_pd.xlsx", DAPODIK));
   const raka = page.getByRole("row").filter({ hasText: "Raka Pratama" });
   await expect(raka).toContainText("0012345678");
-  await expect(raka).toContainText("Under 18");
+  await expect(raka).toContainText("Ready");
   await expect(
     page.getByRole("row").filter({ hasText: "Sari Dewi" })
-  ).toContainText("18 or older");
+  ).toContainText("Ready");
   await expect(
     page.getByRole("row").filter({ hasText: "NISN is not 10 digits" })
   ).toHaveCount(1);
   // Each status is a badge with the status's own icon, as every School table draws a state.
-  for (const status of ["Under 18", "18 or older", "NISN is not 10 digits"]) {
+  for (const status of ["Ready", "NISN is not 10 digits"]) {
     const badge = page
       .locator('[data-slot="badge"]')
-      .filter({ hasText: status });
+      .filter({ hasText: status })
+      .first();
     await expect(badge.locator("svg")).toHaveCount(1);
   }
-  // The preview reads only the name, NISN, birth date and class group: the NIK never shows.
+  // The preview reads only the name, NISN and class group: the birth date and NIK never show.
+  await expect(page.getByText("2013-05-21")).toHaveCount(0);
   await expect(page.getByText("3201000000000001")).toHaveCount(0);
 
   await page

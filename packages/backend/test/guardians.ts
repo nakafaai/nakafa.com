@@ -51,12 +51,9 @@ export const startLink = (fixture: Fixture, email: typeof Email.Type = IBU) =>
   });
 
 /** Staff writes the student's roster row. */
-export const setRoster = (
-  fixture: Fixture,
-  facts: { nisn?: typeof Nisn.Type; underAgeLimit: boolean }
-) =>
+export const setRoster = (fixture: Fixture, nisn: typeof Nisn.Type) =>
   fixture.as("counselor").mutation(refs.public.roster.entries.set, {
-    ...facts,
+    nisn,
     personId: fixture.people.student.personId,
     slug: nf,
   });

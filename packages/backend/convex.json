@@ -8,6 +8,11 @@
     "staticApi": true
   },
   "node": {
-    "nodeVersion": "24"
+    "nodeVersion": "24",
+    "externalPackages": [
+      "takumi-pdf",
+      "@fontsource-variable/inter",
+      "@fontsource-variable/noto-naskh-arabic"
+    ]
   }
 }

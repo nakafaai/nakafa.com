@@ -142,7 +142,7 @@ export function PreviewProse({
 }: {
   article: boolean;
   doc: Option.Option<Node>;
-  size: "line" | "page";
+  size: "line" | "page" | "paper";
 }) {
   const shown = useDeferredValue(Option.getOrElse(doc, () => EMPTY_TEXT));
   const [figures, setFigures] = useState<readonly HTMLElement[]>([]);
@@ -360,7 +360,7 @@ export function QuestionPreview({
         inert
       >
         <QuestionPaper>
-          <PreviewProse article doc={doc} size="page" />
+          <PreviewProse article doc={doc} size="paper" />
           <PaperSketch question={question} />
         </QuestionPaper>
       </div>

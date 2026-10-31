@@ -97,7 +97,7 @@ interface ExamDocumentProps {
   /** The hint shown while the text is empty. */
   readonly placeholder: string;
   /** The room the text takes at least: an option takes one line, and a prompt a page of writing. */
-  readonly size?: "line" | "page";
+  readonly size?: "line" | "page" | "paper";
 }
 
 /**

@@ -42,7 +42,7 @@ interface DocumentEditorProps {
   /** The hint shown while the document is empty. */
   placeholder: string;
   /** The room the text takes at least, so a short text such as an option takes one line. */
-  size?: "line" | "page";
+  size?: "line" | "page" | "paper";
 }
 
 /**

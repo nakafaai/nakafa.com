@@ -88,7 +88,7 @@ export function SittingReader({
   return (
     <>
       <div
-        className={editorDocument({ size, text: "article" })}
+        className={cn(editorDocument({ size, text: "article" }), "min-h-0")}
         data-slot="sitting-document"
         ref={draw}
       />
