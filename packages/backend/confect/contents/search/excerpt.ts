@@ -32,7 +32,9 @@ export function buildContentSearchExcerpt(
 export function textAfterTitle(text: string, title: string) {
   const body = normalizeText(text);
   const heading = normalizeText(title);
-  return body.startsWith(heading) ? body.slice(heading.length).trimStart() : body;
+  return body.startsWith(heading)
+    ? body.slice(heading.length).trimStart()
+    : body;
 }
 
 /** Only the final term in each query variant may match a word prefix. */
