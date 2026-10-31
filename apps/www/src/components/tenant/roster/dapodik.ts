@@ -15,8 +15,8 @@ import {
 } from "effect";
 
 /**
- * The age limit of the consent gate for Indonesia, UU 35/2014 Pasal 1 angka 1, read here
- * until the signed country profile gives it (ADR 0032, ADR 0034).
+ * The age limit for Indonesia, UU 35/2014 Pasal 1 angka 1, read here until the signed
+ * country profile gives it (ADR 0032, ADR 0034).
  */
 const AGE_LIMIT = 18;
 
