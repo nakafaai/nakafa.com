@@ -3,11 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { PrintableLetter } from "@repo/backend/confect/records/letter";
 import { Schema } from "effect";
 
-/**
- * The drawing of an issued SKL's PDF (ADR 0033, S6): `draw` reads the letter's printable
- * copy, draws the PDF, stores it, and `lock` locks the letter with its file. Only an issue
- * schedules them.
- */
+/** The printable copy of an issued SKL, and the lock that `draw` writes once its PDF is stored (ADR 0033, S6). */
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalQuery({
@@ -23,13 +19,6 @@ export default GroupSpec.make()
         letterId: Id("graduationLetters"),
         storageId: Id("_storage"),
       }),
-      returns: () => Schema.Null,
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalAction({
-      name: "draw",
-      args: () => ({ letterId: Id("graduationLetters") }),
       returns: () => Schema.Null,
     })
   );

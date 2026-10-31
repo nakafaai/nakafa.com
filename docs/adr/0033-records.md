@@ -317,7 +317,7 @@ says why.
    report as not started. The prepared run joins S3, when attendance gives a report data
    to gather before anyone writes.
 3. **The states are `draft`, `completed`, `approved`, `locked`.** `approved` holds the
-   approval while the PDF is drawn in an action (`records/prints:draw`), which stores the
+   approval while the PDF is drawn in an action (`records/draw:report`), which stores the
    PDF and locks the report; only the lock is journaled. The homeroom teacher takes a
    handed-in report back while the principal has not approved it.
 4. **The check is a public mutation behind one token bucket for every caller.** A check

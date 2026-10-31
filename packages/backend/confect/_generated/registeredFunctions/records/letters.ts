@@ -9,5 +9,4 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["printable"]: RegisteredConvexFunction.register({ ...definitions["printable"], handler: forward(definitions["printable"].handler) }),
 ["lock"]: RegisteredConvexFunction.register({ ...definitions["lock"], handler: forward(definitions["lock"].handler) }),
-["draw"]: RegisteredConvexFunction.register({ ...definitions["draw"], handler: forward(definitions["draw"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../records/letters.spec")["default"]>;

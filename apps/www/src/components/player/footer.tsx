@@ -20,7 +20,8 @@ import { usePlayer } from "@/components/player/provider";
  * view shows, so nothing moves when next becomes review or the view changes. It sticks to the
  * bottom of the screen, so a learner moves on without scrolling back. A `note` that holds for the whole paper
  * stands in the centre from the large breakpoint, and on its own line under the row below it, where the row
- * has no room for words. The list measures the footer through `data-player-footer`, so the end of the list
+ * has no room for words. Each zone names its cell, so a note in the centre never pushes next out of the row.
+ * The list measures the footer through `data-player-footer`, so the end of the list
  * counts as reached once it clears the footer.
  */
 export function PlayerFooter({
@@ -40,13 +41,13 @@ export function PlayerFooter({
     >
       <fieldset className="mx-auto grid min-h-16 w-full max-w-7xl min-w-0 grid-cols-[1fr_auto_1fr] grid-rows-[4rem] items-center gap-x-2 border-0 px-4 sm:px-6">
         <legend className="sr-only">{t("controls")}</legend>
-        <div className="flex justify-start">
+        <div className="col-start-1 row-start-1 flex justify-start">
           <PlayerPrevious />
         </div>
-        <div className="relative flex items-center self-stretch">
+        <div className="relative col-start-2 row-start-1 flex items-center self-stretch">
           {children}
         </div>
-        <div className="flex justify-end">
+        <div className="col-start-3 row-start-1 flex justify-end">
           <PlayerNext />
         </div>
         {note === undefined ? null : (
