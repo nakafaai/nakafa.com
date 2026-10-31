@@ -1,4 +1,8 @@
 import {
+  letterScript,
+  optionLetter,
+} from "@repo/backend/confect/exams/letters";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -13,12 +17,6 @@ import {
   type MatchPart,
   pairedWith,
 } from "@/components/exams/sitting/response";
-
-/** The character code of the letter A, which names the first answer. */
-const LETTER_A = 65;
-
-/** The letter that names an answer by its place: A for the first, B for the second, and so on. */
-const answerLetter = (index: number) => String.fromCharCode(LETTER_A + index);
 
 /**
  * A matching question as a paper lays it out: the answers in one column, each named by its letter, and
@@ -46,8 +44,12 @@ export function SittingPairs({
 }) {
   const disabled = usePaperLocked();
   const t = useTranslations("Exams");
+  // The answers are named in the script of their labels, as the teacher's paper names them: أ, ب, ج for
+  // answers written in Arabic.
+  const script = letterScript(Arr.map(match.targets, (part) => part.label));
+  const letterOf = (index: number) => optionLetter(index, script);
   const items = Arr.map(match.targets, (target, index) => ({
-    label: answerLetter(index),
+    label: letterOf(index),
     value: target.id,
   }));
 
@@ -107,7 +109,7 @@ export function SittingPairs({
       <ol className="grid content-start gap-3">
         {Arr.map(match.targets, (target, index) => (
           <li className="flex min-w-0 items-start gap-3" key={target.id}>
-            <span className="font-medium">{answerLetter(index)}.</span>
+            <span className="font-medium">{letterOf(index)}.</span>
             <SittingDocument
               document={target.label}
               label={match.label}

@@ -58,6 +58,11 @@ describe("llms formatting helpers", () => {
     ).not.toContain("Source:");
   });
 
+  it("points agents only to the Markdown routes that the site serves", () => {
+    expect(AGENT_MARKDOWN_DIRECTIVE).toContain("`.md`");
+    expect(AGENT_MARKDOWN_DIRECTIVE).not.toContain("Accept: text/markdown");
+  });
+
   it("selects authored MDX descriptions without inventing content", () => {
     expect(
       getMdxDescription({

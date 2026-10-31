@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
+import { pinnedRoutes } from "@/e2e/support/corpus";
 import { MEMORY_PATH } from "@/e2e/support/memory";
 import { measureRouteJavascript } from "@/e2e/support/resources";
 import { appRoutes } from "@/e2e/support/route";
@@ -35,6 +36,12 @@ const AUTH_MAX_DECODED_BYTES = 1_638_000;
 // Limits keep the ~6% margin.
 const MEMORY_MAX_ENCODED_BYTES = 1_012_000;
 const MEMORY_MAX_DECODED_BYTES = 2_980_000;
+
+// A lesson, whose first visual card is near enough to the first screen to load
+// its 3D scene: measured on production on 30 October at 1,174,066 encoded /
+// 3,653,909 decoded bytes, 373 scripts. Limits keep the ~6% margin.
+const LESSON_MAX_ENCODED_BYTES = 1_245_000;
+const LESSON_MAX_DECODED_BYTES = 3_874_000;
 
 const routeBudgets = [
   {
@@ -71,6 +78,13 @@ const routeBudgets = [
     href: MEMORY_PATH,
     name: "English Memory signed-in graph",
     signedIn: true,
+  },
+  {
+    decodedBodySize: LESSON_MAX_DECODED_BYTES,
+    encodedBodySize: LESSON_MAX_ENCODED_BYTES,
+    href: pinnedRoutes.material.en,
+    name: "English lesson no-scroll graph",
+    signedIn: false,
   },
 ] as const;
 

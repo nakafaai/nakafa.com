@@ -1,7 +1,8 @@
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { spokenText } from "@repo/design-system/lib/markdown/spoken";
 import { Array as Arr, Record as Rec } from "effect";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import {
   categoryLabelId,
   optionLabelId,
@@ -10,7 +11,12 @@ import {
 
 type LabelEntry = readonly [id: string, label: string];
 
-/** Renders authored response labels on the server before client interaction. */
+/**
+ * Renders authored response labels on the server before client interaction. A label names its control by
+ * its own words: the drawn label is hidden from assistive technology, and its words, each formula spoken
+ * as KaTeX reads it (`spokenText`), stand beside it for screen readers. A label drawn only as math would
+ * otherwise name nothing, since its formula is MathML, which an accessible name does not read.
+ */
 export function renderTryoutResponseLabels(
   responseId: string,
   response: QuestionResponse
@@ -18,13 +24,17 @@ export function renderTryoutResponseLabels(
   return Rec.fromEntries(
     Arr.map(readLabelEntries(responseId, response), ([id, label]) => [
       id,
-      <MarkdownContent
-        className="wrap-anywhere h-auto whitespace-normal"
-        id={`${id}-label-content`}
-        key={id}
-      >
-        {label}
-      </MarkdownContent>,
+      <Fragment key={id}>
+        <div aria-hidden="true">
+          <MarkdownContent
+            className="wrap-anywhere h-auto whitespace-normal"
+            id={`${id}-label-content`}
+          >
+            {label}
+          </MarkdownContent>
+        </div>
+        <span className="sr-only">{spokenText(label)}</span>
+      </Fragment>,
     ])
   );
 }
