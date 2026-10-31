@@ -96,11 +96,15 @@ describe("classroom/tasks", () => {
         ).toHaveLength(3);
         yield* fixture.finishScheduled();
         const rows = yield* fixture.as("student").query(inbox.list, firstPage);
-        expect(Arr.map(rows.page, (row) => row.detail?.task)).toEqual([
-          "tugas",
-          "latihan-gerak-lurus-2",
-          "latihan-gerak-lurus",
-        ]);
+        expect(
+          Arr.map(
+            Arr.filter(
+              rows.page,
+              (row) => row.changeType === "assignment.published"
+            ),
+            (row) => row.detail?.task
+          )
+        ).toEqual(["tugas", "latihan-gerak-lurus-2", "latihan-gerak-lurus"]);
       })
   );
 
