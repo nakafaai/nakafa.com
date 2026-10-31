@@ -1899,7 +1899,6 @@
   },
   "Holy": {
     "holy": "Holy",
-    "interpretation-description": "What this verse means, explained by its tafsir.",
     "quran": "Quran",
     "quran-description": "Read the Quran with verse-by-verse translation.",
     "verse": "Verse",
