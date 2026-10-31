@@ -5,8 +5,7 @@ import { usePlayerSpy } from "@/components/player/watch";
 
 /**
  * Holds the questions of the player, whichever view shows them. Every
- * descendant keeps 128 px clear of the header and its toolbar row, and 80 px
- * clear of the footer, when the browser scrolls it into view, so a focused
+ * descendant keeps 80 px clear of the header, and 80 px clear of the footer, when the browser scrolls it into view, so a focused
  * option is never hidden under either. The reading line of the list follows
  * the top margin, so it always falls inside a question that was just revealed.
  */
@@ -19,7 +18,7 @@ export function PlayerQuestions({ children }: { children: ReactNode }) {
 
   return (
     <section
-      className="flex flex-col gap-12 **:scroll-mt-32 **:scroll-mb-20"
+      className="flex flex-col gap-12 **:scroll-mt-20 **:scroll-mb-20"
       ref={list}
     >
       {children}

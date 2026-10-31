@@ -196,10 +196,11 @@ describe("editor/assessment server fold", () => {
             Effect.orDie
           )
         );
+        const model = assessmentModel();
         const folded = yield* foldSteps(
-          assessmentModel,
+          model,
           "assessment-test",
-          assessmentModel.nodeFromJSON(start.toJSON()),
+          model.nodeFromJSON(start.toJSON()),
           0,
           decoded
         );

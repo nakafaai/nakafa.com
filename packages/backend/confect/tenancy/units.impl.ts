@@ -18,6 +18,7 @@ import {
   UNIT_LIMIT,
   type UnitStatus,
 } from "@repo/backend/confect/tenancy/schema";
+import { edit } from "@repo/backend/confect/tenancy/units.edit";
 import spec from "@repo/backend/confect/tenancy/units.spec";
 import { addUnit } from "@repo/backend/confect/tenancy/write/unit";
 import { Array as Arr, Effect, Layer, Schema, Struct } from "effect";
@@ -223,6 +224,7 @@ const unarchive = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(create),
+  Layer.provide(edit),
   Layer.provide(setNpsn),
   Layer.provide(setLocale),
   Layer.provide(archive),
