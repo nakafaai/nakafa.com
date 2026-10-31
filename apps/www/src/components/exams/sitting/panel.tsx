@@ -60,6 +60,18 @@ const stateLabels: Record<
   submitted: "state-submitted",
 };
 
+/**
+ * The copy keys of how long a student was gone, by the signal that began it: away from the exam after an exit, and
+ * offline after a disconnect, told in seconds or in minutes and seconds.
+ */
+const GONE_KEYS = {
+  disconnect: {
+    minutes: "signal-offline-minutes",
+    seconds: "signal-offline-seconds",
+  },
+  exit: { minutes: "signal-away-minutes", seconds: "signal-away-seconds" },
+} as const;
+
 /** The copy key of each signal of a student's screen, as the panel names it. */
 const signalLabels: Record<
   NonNullable<DashboardAttempt["latestSignal"]>["kind"],
@@ -153,6 +165,10 @@ function StudentPanel({ attempt }: { readonly attempt: DashboardAttempt }) {
           <StudentScreen attemptId={attempt.id} key={`screen-${attempt.id}`} />
           <div className="grid gap-2">
             <p className="text-muted-foreground text-sm">{t("signals")}</p>
+            {/* The device sends a lost connection once it is back, so its time never shows while the student is offline. */}
+            <p className="text-muted-foreground text-xs">
+              {t("signals-offline-note")}
+            </p>
             <SignalList
               attemptId={attempt.id}
               away={awaySince(attempt)}
@@ -302,22 +318,26 @@ function SignalList({
         />
       ) : null}
       {Arr.map(signals.results, (signal) =>
-        signal.kind === "exit" && Option.contains(away, signal.at) ? (
+        (signal.kind === "exit" || signal.kind === "disconnect") &&
+        Option.contains(away, signal.at) ? (
           <p key={`${signal.at}-${signal.kind}`}>
-            <SignalAway since={signal.at} />
+            <SignalAway kind={signal.kind} since={signal.at} />
           </p>
         ) : (
           <p key={`${signal.at}-${signal.kind}`}>
-            {signal.kind === "exit"
+            {signal.kind === "exit" || signal.kind === "disconnect"
               ? Option.match(awayFor(signals.results, signal), {
                   onNone: () => t(signalLabels[signal.kind]),
                   onSome: (seconds) =>
-                    seconds < SECONDS_IN_MINUTE
-                      ? t("signal-away-seconds", { seconds })
-                      : t("signal-away-minutes", {
-                          minutes: Math.floor(seconds / SECONDS_IN_MINUTE),
-                          seconds: seconds % SECONDS_IN_MINUTE,
-                        }),
+                    t(
+                      GONE_KEYS[signal.kind][
+                        seconds < SECONDS_IN_MINUTE ? "seconds" : "minutes"
+                      ],
+                      {
+                        minutes: Math.floor(seconds / SECONDS_IN_MINUTE),
+                        seconds: seconds % SECONDS_IN_MINUTE,
+                      }
+                    ),
                 })
               : t(signalLabels[signal.kind])}
           </p>
@@ -330,12 +350,19 @@ function SignalList({
   );
 }
 
-/** The exit the student has not come back from, with the time away counted each second. */
-function SignalAway({ since }: { readonly since: number }) {
+/** The exit or disconnect the student has not come back from, with the time gone counted each second. */
+function SignalAway({
+  kind,
+  since,
+}: {
+  readonly kind: keyof typeof GONE_KEYS;
+  readonly since: number;
+}) {
   const t = useTranslations("Exams");
   const { minutes, seconds } = awayTime(since, useSittingClock());
 
-  return minutes === 0
-    ? t("signal-away-seconds", { seconds })
-    : t("signal-away-minutes", { minutes, seconds });
+  return t(GONE_KEYS[kind][minutes === 0 ? "seconds" : "minutes"], {
+    minutes,
+    seconds,
+  });
 }
