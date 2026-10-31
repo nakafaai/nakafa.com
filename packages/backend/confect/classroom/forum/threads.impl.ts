@@ -1,8 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type {
-  ClassroomMessagesDoc,
-  ClassroomThreadsDoc,
-} from "@repo/backend/confect/_generated/docs";
+import type { ClassroomThreadsDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -17,13 +14,12 @@ import { takeUploads } from "@repo/backend/confect/classroom/forum/attach";
 import {
   DiscussionsClosed,
   MessageEmpty,
-  MessageHidden,
 } from "@repo/backend/confect/classroom/forum/errors";
 import {
   classChannel,
-  classMessage,
   classThread,
   missing,
+  nextThreadNumber,
 } from "@repo/backend/confect/classroom/forum/lookup";
 import { moveMark } from "@repo/backend/confect/classroom/forum/mark";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
@@ -32,10 +28,8 @@ import {
   noticeMentions,
 } from "@repo/backend/confect/classroom/forum/notice";
 import { opensDiscussions } from "@repo/backend/confect/classroom/forum/policy";
-import {
-  TITLE_MAX_LENGTH,
-  titleField,
-} from "@repo/backend/confect/classroom/forum/thread";
+import { start } from "@repo/backend/confect/classroom/forum/start";
+import { titleField } from "@repo/backend/confect/classroom/forum/thread";
 import spec from "@repo/backend/confect/classroom/forum/threads.spec";
 import {
   discussionView,
@@ -46,16 +40,8 @@ import {
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { openText, sealText } from "@repo/backend/confect/vault/text";
-import {
-  Array as Arr,
-  Clock,
-  Effect,
-  Layer,
-  Option,
-  String as Str,
-  Struct,
-} from "effect";
+import { sealText } from "@repo/backend/confect/vault/text";
+import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /**
  * A discussion as its own page shows it: its channel, its summary, and the
@@ -108,24 +94,6 @@ const list = FunctionImpl.make(
     });
   })
 );
-
-/** The number the next discussion of the allowed class takes. */
-const nextNumber = Effect.fn("classroom.forum.threads.next")(function* () {
-  const row = yield* Class;
-  const last = yield* (yield* DatabaseReader)
-    .table("classroomThreads")
-    .index(
-      "by_classId_and_number",
-      (query) => query.eq("classId", row._id),
-      "desc"
-    )
-    .first()
-    .pipe(Effect.orDie);
-  return Option.match(last, {
-    onNone: () => 1,
-    onSome: (found) => found.number + 1,
-  });
-});
 
 /**
  * Opens a discussion in a channel: its title and its first message, both sealed
@@ -185,7 +153,7 @@ const open = FunctionImpl.make(
         ...fields,
         authorId: principal.person._id,
         createdAt,
-        number: yield* nextNumber(),
+        number: yield* nextThreadNumber(),
         replies: 0,
         sealedTitle: yield* sealText(keys, titleField(fields), title).pipe(
           Effect.orDie
@@ -373,97 +341,6 @@ const reply = FunctionImpl.make(
     return yield* messageView(
       yield* reader.table("classroomMessages").get(messageId).pipe(Effect.orDie)
     );
-  })
-);
-
-/**
- * The title a thread takes from the message it starts from, as Discord names one:
- * the first line of its text, else its poll's question, else its first file's
- * name, cut to what a title holds. A message without text carries a poll or a file.
- */
-const titleOfMessage = Effect.fn("classroom.forum.threads.titleOf")(function* (
-  message: ClassroomMessagesDoc,
-  sealedText: ArrayBuffer
-) {
-  const line = Arr.headNonEmpty(
-    Str.split(
-      yield* openText(
-        yield* schoolKeys(message.tenantId),
-        messageField(message),
-        sealedText
-      ),
-      "\n"
-    )
-  );
-  const view = yield* messageView(message);
-  const title =
-    line === ""
-      ? (view.poll?.question ?? Arr.getUnsafe(view.attachments, 0).name)
-      : line;
-  return Str.trim(Str.slice(0, TITLE_MAX_LENGTH)(title));
-}, Effect.orDie);
-
-/**
- * Starts a thread from a message of a channel, as Slack and Discord let any message
- * take one, under the next number of the class. Starting one that stands answers
- * its number and writes nothing. A student starts one only while the school lets
- * students open discussions, and a reply or a hidden message starts none.
- */
-const start = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "start",
-  Effect.fn("classroom.forum.threads.start")(function* ({ messageId }) {
-    const principal = yield* Member;
-    const row = yield* Class;
-    const message = yield* classMessage(messageId, "forum.post");
-    if (message.threadId !== undefined) {
-      return yield* missing("forum.post");
-    }
-    if (message.sealedText === null) {
-      return yield* new MessageHidden();
-    }
-    const reader = yield* DatabaseReader;
-    if (message.startsThreadId !== undefined) {
-      const { number } = yield* reader
-        .table("classroomThreads")
-        .get(message.startsThreadId)
-        .pipe(Effect.orDie);
-      return { number };
-    }
-    if (!(yield* opensDiscussions(row, principal))) {
-      return yield* new DiscussionsClosed();
-    }
-    const number = yield* nextNumber();
-    const writer = yield* DatabaseWriter;
-    const fields = Struct.pick(message, ["channelId", "classId", "clientKey"]);
-    const createdAt = yield* Clock.currentTimeMillis;
-    const threadId = yield* writer
-      .table("classroomThreads")
-      .insert({
-        ...fields,
-        authorId: principal.person._id,
-        createdAt,
-        number,
-        replies: 0,
-        sealedTitle: yield* sealText(
-          yield* schoolKeys(row.tenantId),
-          titleField(fields),
-          yield* titleOfMessage(message, message.sealedText)
-        ).pipe(Effect.orDie),
-        tenantId: row.tenantId,
-      })
-      .pipe(Effect.orDie);
-    yield* writer
-      .table("classroomMessages")
-      .replace(
-        message._id,
-        Struct.assign(Struct.omit(message, ["_creationTime", "_id"]), {
-          startsThreadId: threadId,
-        })
-      )
-      .pipe(Effect.orDie);
-    return { number };
   })
 );
 

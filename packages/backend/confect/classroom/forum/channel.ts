@@ -52,7 +52,7 @@ export const channelValidator = Schema.Struct({
  * wrote it, whether the viewer did, the start of its text, or null once a teacher
  * hid it, and what it carries, which stands for a message without text.
  */
-export const ChannelLast = Schema.Struct({
+const ChannelLast = Schema.Struct({
   at: Schema.Finite,
   author: Schema.String,
   media: Schema.NullOr(Schema.Literals(["document", "image", "poll"])),
