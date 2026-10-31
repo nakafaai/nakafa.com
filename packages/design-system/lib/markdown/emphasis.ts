@@ -17,11 +17,16 @@ import { cva } from "class-variance-authority";
  * Everything inside the phrase reads in the surface's own text colour: math,
  * a bolder or slanted word and a sub- or superscript inherit it, and a link
  * takes it too, instead of the page's link colour, which on the surface's fill
- * reads poorly in light and not at all in dark. The link keeps its underline as
- * its cue. Inline code keeps its own muted chip, which carries its own pair.
+ * reads poorly in light and not at all in dark. A link is an `<a>`, or, in the
+ * saved words that stand in for an editor, a `[data-link]` that holds no
+ * address. The link keeps its underline as its cue. Inline code keeps its own
+ * muted chip, which carries its own pair.
+ *
+ * A note's highlight and an exam's bold phrase are this same marked phrase, so
+ * the memory editor and the exam document give their marks these classes.
  */
 export const emphasisVariants = cva(
-  "rounded-sm box-decoration-clone p-1 font-[weight:inherit] has-[.katex]:inline-block [&_a]:text-inherit",
+  "rounded-sm box-decoration-clone p-1 font-[weight:inherit] has-[.katex]:inline-block [&_:is(a,[data-link])]:text-inherit",
   {
     variants: {
       variant: {
