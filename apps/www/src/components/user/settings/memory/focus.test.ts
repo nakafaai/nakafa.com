@@ -132,9 +132,9 @@ describe("focus after a delete", () => {
   it("hands the focus of a leaving list to the search field and names the row that held it", () => {
     const row = memoryRowId(memoryId("second"));
     document.body.innerHTML = `<input id="${MEMORY_SEARCH_ID}" /><ul id="list"><li><button id="${row}" type="button"></button></li></ul>`;
-    document.getElementById(row)?.focus();
+    elementById(row)?.focus();
 
-    const handed = handFocusOn(document.getElementById("list"));
+    const handed = handFocusOn(elementById("list"));
 
     expect(handed).toEqual(Option.some(row));
     expect(document.activeElement?.id).toBe(MEMORY_SEARCH_ID);
@@ -142,21 +142,21 @@ describe("focus after a delete", () => {
 
   it("hands nothing on when the focus is outside the list, the list is gone, or the element has no id", () => {
     document.body.innerHTML = `<input id="${MEMORY_SEARCH_ID}" /><ul id="list"><li><button type="button"></button></li></ul><button id="outside" type="button"></button>`;
-    document.getElementById("outside")?.focus();
+    elementById("outside")?.focus();
 
-    expect(handFocusOn(document.getElementById("list"))).toEqual(Option.none());
+    expect(handFocusOn(elementById("list"))).toEqual(Option.none());
     expect(handFocusOn(null)).toEqual(Option.none());
     expect(document.activeElement?.id).toBe("outside");
 
     document.querySelector<HTMLButtonElement>("#list button")?.focus();
-    expect(handFocusOn(document.getElementById("list"))).toEqual(Option.none());
+    expect(handFocusOn(elementById("list"))).toEqual(Option.none());
     expect(document.activeElement?.id).toBe(MEMORY_SEARCH_ID);
   });
 
   it("gives the handed focus back to the row in the list that took the leaving one's place", () => {
     const row = memoryRowId(memoryId("second"));
     document.body.innerHTML = `<input id="${MEMORY_SEARCH_ID}" /><ul><li><button id="${row}" type="button"></button></li></ul>`;
-    document.getElementById(MEMORY_SEARCH_ID)?.focus();
+    elementById(MEMORY_SEARCH_ID)?.focus();
 
     takeHandedFocus(Option.some(row));
 
@@ -165,7 +165,7 @@ describe("focus after a delete", () => {
 
   it("keeps the focus on the search field when the new list does not hold the row, or nothing was handed", () => {
     document.body.innerHTML = `<input id="${MEMORY_SEARCH_ID}" /><ul></ul>`;
-    document.getElementById(MEMORY_SEARCH_ID)?.focus();
+    elementById(MEMORY_SEARCH_ID)?.focus();
 
     takeHandedFocus(Option.some(memoryRowId(memoryId("second"))));
     takeHandedFocus(Option.none());

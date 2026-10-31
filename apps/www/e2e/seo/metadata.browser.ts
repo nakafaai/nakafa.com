@@ -8,15 +8,12 @@ import { paginationNavigation } from "@/e2e/support/selector";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** A robots directive that keeps a page out of search indexes. */
-const NOINDEX = /noindex/;
+const NOINDEX = /noindex/u;
 
 class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing>()(
   "LessonNavigationMissing",
   { href: Schema.String }
 ) {}
-
-/** The robots directive that keeps a page out of search indexes. */
-const NOINDEX = /noindex/u;
 
 /** Captures the rendered lesson identity and its canonical metadata. */
 const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (
