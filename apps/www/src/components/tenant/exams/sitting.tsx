@@ -2,8 +2,8 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Building03Icon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
-  type QuestionGap,
   questionGap,
+  type ScheduleGap,
 } from "@repo/backend/confect/exams/parts";
 import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import type {
@@ -87,8 +87,13 @@ const emptyNotice = (template: QuestionTemplate) =>
   );
 
 /** The sentence that names what keeps a question from being scheduled. */
-const gapNotice = (gap: QuestionGap, template: QuestionTemplate) =>
-  gap === "empty" ? emptyNotice(template) : keyNotice(template);
+const gapNotice = (gap: ScheduleGap, template: QuestionTemplate) =>
+  Match.value(gap).pipe(
+    Match.when("empty", () => emptyNotice(template)),
+    Match.when("key", () => keyNotice(template)),
+    Match.when("prompt", () => "schedule-prompt" as const),
+    Match.exhaustive
+  );
 
 /**
  * The dialog that schedules one sitting of the exam: its unit, its room, its start, and its
@@ -389,7 +394,7 @@ function ScheduleNotices({
   missing,
 }: {
   readonly missing: Option.Option<{
-    readonly gap: QuestionGap;
+    readonly gap: ScheduleGap;
     readonly number: number;
     readonly template: QuestionTemplate;
   }>;
