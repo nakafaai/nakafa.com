@@ -8013,6 +8013,10 @@ export declare const api: {
                 }
               | {
                   client: Id<"integrationClients">;
+                  type: "integration.changed";
+                }
+              | {
+                  client: Id<"integrationClients">;
                   type: "integration.rotated";
                 }
               | {
@@ -8742,6 +8746,8 @@ export declare const api: {
               | "forum.mentioned"
               | "announcement.posted"
               | "assignment.published"
+              | "assignment.deadline"
+              | "assignment.missed"
               | "exam.starting"
               | "exam.reminder"
               | "grade.released";
@@ -8764,6 +8770,7 @@ export declare const api: {
             } | null;
             grade: { className: string; student: string | null } | null;
             id: Id<"notifications">;
+            missed: { className: string; student: string } | null;
             readAt?: number;
             subject:
               | { id: Id<"tenants">; kind: "tenant" }
@@ -8808,6 +8815,8 @@ export declare const api: {
             | "forum.mentioned"
             | "announcement.posted"
             | "assignment.published"
+            | "assignment.deadline"
+            | "assignment.missed"
             | "exam.starting"
             | "exam.reminder"
             | "grade.released";
@@ -8830,6 +8839,7 @@ export declare const api: {
           } | null;
           grade: { className: string; student: string | null } | null;
           id: Id<"notifications">;
+          missed: { className: string; student: string } | null;
           readAt?: number;
           subject:
             | { id: Id<"tenants">; kind: "tenant" }
@@ -15643,6 +15653,73 @@ export declare const internal: {
     };
   };
   emails: {
+    digest: {
+      delivery: {
+        render: FunctionReference<
+          "action",
+          "internal",
+          {
+            counts: Array<{
+              change:
+                | "exam.starting"
+                | "exam.reminder"
+                | "grade.released"
+                | "assignment.missed"
+                | "assignment.published"
+                | "forum.mentioned";
+              count: number;
+            }>;
+            inboxUrl: string;
+            locale: "en" | "id" | "de";
+            privacyPolicyUrl: string;
+            termsOfServiceUrl: string;
+          },
+          { html: string; subject: string; text: string }
+        >;
+      };
+      internal: {
+        claim: FunctionReference<
+          "mutation",
+          "internal",
+          {},
+          Array<{
+            address: string;
+            input: {
+              counts: Array<{
+                change:
+                  | "exam.starting"
+                  | "exam.reminder"
+                  | "grade.released"
+                  | "assignment.missed"
+                  | "assignment.published"
+                  | "forum.mentioned";
+                count: number;
+              }>;
+              inboxUrl: string;
+              locale: "en" | "id" | "de";
+              privacyPolicyUrl: string;
+              termsOfServiceUrl: string;
+            };
+            key: string;
+          }>
+        >;
+        enqueue: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            messages: Array<{
+              address: string;
+              html: string;
+              key: string;
+              subject: string;
+              text: string;
+            }>;
+          },
+          null
+        >;
+        send: FunctionReference<"action", "internal", {}, null>;
+      };
+    };
     invite: {
       delivery: {
         render: FunctionReference<
@@ -17164,6 +17241,18 @@ export declare const internal: {
           cursor: string | null;
           notice: "examStart" | "examGuardianReminder";
           sittingId: Id<"examSittings">;
+        },
+        null
+      >;
+    };
+    tasks: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: string | null;
+          notice: "taskDeadline" | "taskMissed";
+          taskId: Id<"classroomTasks">;
         },
         null
       >;

@@ -1,5 +1,6 @@
 import type {
   ClassesDoc,
+  ClassroomTasksDoc,
   NotificationsDoc,
   TenantPeopleDoc,
   TenantsDoc,
@@ -48,6 +49,34 @@ const classPart = Effect.fn("notifications.detail.class")(function* (
   });
 });
 
+/** The detail of a task row: the class part, and the task's own address. A task that is gone gives none. */
+const taskPart = Effect.fn("notifications.detail.task")(function* (
+  taskId: ClassroomTasksDoc["_id"],
+  person: TenantPeopleDoc,
+  tenant: TenantsDoc
+) {
+  const task = yield* (yield* DatabaseReader)
+    .table("classroomTasks")
+    .get(taskId)
+    .pipe(Effect.option);
+  if (Option.isNone(task)) {
+    return Option.none();
+  }
+  const part = yield* classPart(
+    task.value.classId,
+    task.value.authorId,
+    person,
+    tenant
+  );
+  return Option.map(part, (found) => ({
+    ...found,
+    channelId: null,
+    discussion: null,
+    messageId: null,
+    task: task.value.slug,
+  }));
+});
+
 /**
  * The detail of one row for its recipient: the mention's message and where it is,
  * or the announcement's class home. An invitation has none, and neither has a row
@@ -87,28 +116,10 @@ const detailOf = Effect.fn("notifications.detail")(function* (
           }));
         }),
       "assignment.published": (assignment) =>
-        Effect.gen(function* () {
-          const task = yield* reader
-            .table("classroomTasks")
-            .get(assignment.taskId)
-            .pipe(Effect.option);
-          if (Option.isNone(task)) {
-            return Option.none();
-          }
-          const part = yield* classPart(
-            task.value.classId,
-            task.value.authorId,
-            person,
-            tenant
-          );
-          return Option.map(part, (found) => ({
-            ...found,
-            channelId: null,
-            discussion: null,
-            messageId: null,
-            task: task.value.slug,
-          }));
-        }),
+        taskPart(assignment.taskId, person, tenant),
+      "assignment.deadline": (assignment) =>
+        taskPart(assignment.taskId, person, tenant),
+      "assignment.missed": () => Effect.succeedNone,
       "forum.mentioned": (mention) =>
         Effect.gen(function* () {
           const message = yield* reader
@@ -225,6 +236,29 @@ const gradeOf = Effect.fn("notifications.detail.grade")(function* (
   return { className: klass.name, student };
 });
 
+/** The task a late-task row tells of, while it stands: its class's name and the student's name. */
+const missedOf = Effect.fn("notifications.detail.missed")(function* (
+  row: Extract<NotificationsDoc, { readonly changeType: "assignment.missed" }>
+) {
+  const reader = yield* DatabaseReader;
+  const task = yield* reader
+    .table("classroomTasks")
+    .get(row.taskId)
+    .pipe(Effect.option);
+  if (Option.isNone(task)) {
+    return null;
+  }
+  const klass = yield* reader
+    .table("classes")
+    .get(task.value.classId)
+    .pipe(Effect.orDie);
+  const student = yield* reader
+    .table("tenantPeople")
+    .get(row.studentPersonId)
+    .pipe(Effect.orDie);
+  return { className: klass.name, student: student.name };
+});
+
 /** What a row shows of its source, each read when the row is read: its class detail, its sitting, and its grade. */
 export const partsOf = Effect.fn("notifications.detail.parts")(function* (
   row: NotificationsDoc,
@@ -239,5 +273,7 @@ export const partsOf = Effect.fn("notifications.detail.parts")(function* (
       : null;
   const grade =
     row.changeType === "grade.released" ? yield* gradeOf(row) : null;
-  return { detail, exam, grade };
+  const missed =
+    row.changeType === "assignment.missed" ? yield* missedOf(row) : null;
+  return { detail, exam, grade, missed };
 });

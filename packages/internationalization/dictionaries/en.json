@@ -1839,6 +1839,8 @@
     "push-home-screen": "On iPhone and iPad, notifications come only from the Home Screen: tap Share, then Add to Home Screen, and open Nakafa from its icon.",
     "assignment-published": "{actor} posted a new task in {className}.",
     "assignment-published-gone": "A task that is no longer there.",
+    "assignment-deadline": "{className}: a task's deadline is coming up.",
+    "assignment-missed": "{student} did not hand in a task in {className} on time.",
     "exam-starting": "{examTitle} opens at {opensAt, time, short} in {room}.",
     "exam-reminder": "{student} sits {examTitle} on {opensAt, date, long} at {opensAt, time, short} in {room}.",
     "exam-gone": "An exam that no longer waits to open.",

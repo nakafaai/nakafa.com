@@ -1839,6 +1839,8 @@
     "push-home-screen": "Di iPhone dan iPad, notifikasi hanya datang dari Layar Utama: ketuk Bagikan, lalu Tambah ke Layar Utama, dan buka Nakafa dari ikonnya.",
     "assignment-published": "{actor} memberi tugas baru di {className}.",
     "assignment-published-gone": "Tugas yang sudah tidak ada.",
+    "assignment-deadline": "Tenggat tugas di {className} sudah dekat.",
+    "assignment-missed": "{student} belum mengumpulkan tugas di {className} tepat waktu.",
     "exam-starting": "{examTitle} dibuka pukul {opensAt, time, short} di {room}.",
     "exam-reminder": "{student} mengikuti {examTitle} pada {opensAt, date, long} pukul {opensAt, time, short} di {room}.",
     "exam-gone": "Ujian yang tidak lagi menunggu dibuka.",

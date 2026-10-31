@@ -51,6 +51,24 @@ const AssignmentRow = Schema.Struct({
   taskId: Id("classroomTasks"),
 });
 
+/** The row of a task whose deadline nears, for one student of its class who has not handed in. Its subject is the class. */
+const DeadlineRow = Schema.Struct({
+  ...rowFields,
+  changeType: Schema.Literal("assignment.deadline"),
+  taskId: Id("classroomTasks"),
+});
+
+/**
+ * The row of a deadline a student let pass, for one guardian with a verified link to the student. Its subject is the
+ * class, and it names the student, since a guardian can follow more than one.
+ */
+const MissedRow = Schema.Struct({
+  ...rowFields,
+  changeType: Schema.Literal("assignment.missed"),
+  studentPersonId: Id("tenantPeople"),
+  taskId: Id("classroomTasks"),
+});
+
 /** The row of a sitting that opens soon, for one student it expects. Its subject is the sitting. */
 const ExamStartRow = Schema.Struct({
   ...rowFields,
@@ -90,6 +108,8 @@ export const Notification = Schema.Union([
   MentionRow,
   AnnouncementRow,
   AssignmentRow,
+  DeadlineRow,
+  MissedRow,
   ExamStartRow,
   ExamReminderRow,
   GradeReleasedRow,
@@ -101,6 +121,8 @@ const NotificationType = Schema.Literals([
   "forum.mentioned",
   "announcement.posted",
   "assignment.published",
+  "assignment.deadline",
+  "assignment.missed",
   "exam.starting",
   "exam.reminder",
   "grade.released",
@@ -125,6 +147,12 @@ const ExamDetail = Schema.Struct({
 const GradeDetail = Schema.Struct({
   className: Schema.String,
   student: Schema.NullOr(Schema.String),
+});
+
+/** The task a late-task row tells of, while the task stands: its class's name and the student's name. */
+const MissedDetail = Schema.Struct({
+  className: Schema.String,
+  student: Schema.String,
 });
 
 /**
@@ -156,6 +184,7 @@ export const NotificationView = Schema.Struct({
   exam: Schema.NullOr(ExamDetail),
   grade: Schema.NullOr(GradeDetail),
   id: Id("notifications"),
+  missed: Schema.NullOr(MissedDetail),
   readAt: Schema.optionalKey(Schema.Finite),
   subject: SubjectView,
   tenant: TenantProfile,
@@ -173,10 +202,12 @@ export const notificationView = (
     detail,
     exam,
     grade,
+    missed,
   }: {
     readonly detail: typeof ClassDetail.Type | null;
     readonly exam: typeof ExamDetail.Type | null;
     readonly grade: typeof GradeDetail.Type | null;
+    readonly missed: typeof MissedDetail.Type | null;
   }
 ) => ({
   changeType: row.changeType,
@@ -185,6 +216,7 @@ export const notificationView = (
   exam,
   grade,
   id: row._id,
+  missed,
   subject: row.subject,
   tenant,
   ...(row.readAt === undefined ? {} : { readAt: row.readAt }),

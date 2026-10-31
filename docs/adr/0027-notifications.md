@@ -26,6 +26,18 @@ that the live scheduling writes (ADR 0016 keeps a stored change name), and
 under-age flag on the school roster and keeps no birth date, so quiet hours follow
 the flag once it is set (ADR 0034).
 
+Amended on 31 October 2026: the task reminders and the notice mails are built. A
+task's reminders and its late-task notice run from the scheduler, as a sitting's
+do: publishing a task schedules them from the rules, the task keeps its jobs, and
+moving the deadline cancels the jobs that have not started and schedules new ones,
+so the planned `notificationReminders` rows and five-minute reminder cron are not
+needed. Every email of a notice leaves through one queue, `noticeMails`, because
+Resend's free plan takes 100 emails a day: a five-minute sweep sends at most 80 notice
+mails a day, leaving 20 for what is always sent, and each recipient's due rows share
+one mail that counts them. An exam leaves first, then what happened now, then the
+17:00 digest. What the limit holds back waits for the next sweep and the next day,
+a mail about an exam until the exam opens, and any other for a week.
+
 ## Context
 
 A school produces notifications from many sources: a mention or a reply in a
@@ -397,9 +409,10 @@ sitting does not show.
 | The bounds of the inbox: one request reads at most `HELD_SCHOOL_LIMIT`, 100 schools, and is refused past it with `NotificationScopeTooLarge`; each page of the consumer, the read-all, and the purge holds 50, half of the 100-entry list page of ADR 0016; a page cursor that names more than `HELD_SCHOOL_LIMIT` rows is refused with `NotificationCursorInvalid` | Live |
 | The minute sweep that starts a run for each pending journal cursor | Built |
 | `pushSubscriptions`, subscribe and unsubscribe, the push sender, and the push of mention and announcement rows held by quiet hours | Built; live once the operator sets the VAPID keys |
-| `notificationPreferences` and `notificationReminders` | Planned, program wave B |
+| `notificationPreferences` | Planned, program wave B |
+| Task reminders and late-task notices from the scheduler, `confect/notifications/tasks.ts` | Built |
+| The notice mail queue, `noticeMails`, its daily limit, and the sweep in `confect/emails/digest` | Built |
 | The notify consumer for the change types other than `person.invited` | Planned, program wave B |
-| The reminder cron | Planned, program wave B |
 | The channel table as data, `confect/notifications/rules.ts`: the routes of each kind and relation | Called: the inbox consumer asks `deliveriesOf`, which reads `routeOf`, for the invitee's inbox row. `recipientsOf` and `canSwitchOff` wait for the preferences (program wave B) |
 | The sends of a notice, `confect/notifications/delivery.ts`: `deliveriesOf` and `deliveryInstant` | `deliveriesOf` is called by the inbox consumer. `deliveryInstant` waits for the reminders, which need the zone of their school (program wave B) |
 | The zone that carries a notice, `confect/notifications/zone.ts` | Built as pure functions, not called yet (program wave B) |

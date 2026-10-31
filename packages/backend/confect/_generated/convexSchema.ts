@@ -107,6 +107,8 @@ import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
+import noticeMailBudget from "./tables/noticeMailBudget";
+import noticeMails from "./tables/noticeMails";
 import notifications from "./tables/notifications";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
@@ -254,6 +256,8 @@ export default $defineSchema({
   ninaSummaries: $Table.tableDefinition(ninaSummaries),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),
+  noticeMailBudget: $Table.tableDefinition(noticeMailBudget),
+  noticeMails: $Table.tableDefinition(noticeMails),
   notifications: $Table.tableDefinition(notifications),
   onboardingProfiles: $Table.tableDefinition(onboardingProfiles),
   operators: $Table.tableDefinition(operators),

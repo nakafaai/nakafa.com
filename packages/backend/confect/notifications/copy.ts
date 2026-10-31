@@ -10,6 +10,9 @@ const SENTENCES = {
   de: {
     "announcement.posted": "In deiner Klasse gibt es eine neue Ankündigung.",
     "assignment.published": "In deiner Klasse gibt es eine neue Aufgabe.",
+    "assignment.deadline": "Die Frist einer Aufgabe endet bald.",
+    "assignment.missed":
+      "Dein Kind hat eine Aufgabe nicht rechtzeitig abgegeben.",
     "forum.mentioned": "Jemand hat dich in deiner Klasse erwähnt.",
     "person.invited": "Du wurdest an eine Schule eingeladen.",
     "exam.starting": "Deine Prüfung beginnt bald.",
@@ -19,6 +22,8 @@ const SENTENCES = {
   en: {
     "announcement.posted": "There is a new announcement in your class.",
     "assignment.published": "There is a new task in your class.",
+    "assignment.deadline": "A task's deadline is coming up.",
+    "assignment.missed": "Your child did not hand in a task on time.",
     "forum.mentioned": "Someone mentioned you in your class.",
     "person.invited": "You have been invited to a school.",
     "exam.starting": "Your exam starts soon.",
@@ -28,6 +33,8 @@ const SENTENCES = {
   id: {
     "announcement.posted": "Ada pengumuman baru di kelasmu.",
     "assignment.published": "Ada tugas baru di kelasmu.",
+    "assignment.deadline": "Tenggat sebuah tugas sudah dekat.",
+    "assignment.missed": "Anakmu belum mengumpulkan tugas tepat waktu.",
     "forum.mentioned": "Seseorang menyebutmu di kelas.",
     "person.invited": "Kamu diundang ke sebuah sekolah.",
     "exam.starting": "Ujianmu segera dimulai.",

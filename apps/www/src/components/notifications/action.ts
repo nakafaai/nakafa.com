@@ -37,7 +37,7 @@ export function useNotificationAction(notification: ListNotification) {
   const readOne = useMutation(notifications.inbox.read).withOptimisticUpdate(
     markReadInLists
   );
-  const { detail, exam, grade, readAt } = notification;
+  const { detail, exam, grade, missed, readAt } = notification;
   const href = Option.getOrUndefined(
     Option.map(pageOf(notification), (url) => url.href)
   );
@@ -57,6 +57,19 @@ export function useNotificationAction(notification: ListNotification) {
         : t("assignment-published", {
             actor: detail.actor,
             className: detail.className,
+          })
+    ),
+    Match.when("assignment.deadline", () =>
+      detail === null
+        ? t("assignment-published-gone")
+        : t("assignment-deadline", { className: detail.className })
+    ),
+    Match.when("assignment.missed", () =>
+      missed === null
+        ? t("assignment-published-gone")
+        : t("assignment-missed", {
+            className: missed.className,
+            student: missed.student,
           })
     ),
     Match.when("announcement.posted", () =>
