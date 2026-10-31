@@ -146,7 +146,7 @@ describe("auth/login username sign-in", () => {
             password: PASSWORD,
             username: "guru.baru",
           });
-          const cookie = signedIn.headers.getSetCookie().join("; ");
+          const cookie = Arr.join(signedIn.headers.getSetCookie(), "; ");
           const session = (method: "GET" | "POST") =>
             Effect.gen(function* () {
               const response = yield* Effect.promise(() =>

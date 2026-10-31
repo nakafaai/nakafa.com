@@ -373,8 +373,10 @@ describe("authFetch", () => {
         },
       },
     });
-    const { promise: answer, resolve: answerFirstTab } =
-      Promise.withResolvers<Response>();
+    let answerFirstTab: (response: Response) => void = () => undefined;
+    const answer = new Promise<Response>((resolve) => {
+      answerFirstTab = resolve;
+    });
     fetcher
       .mockReturnValueOnce(answer)
       .mockResolvedValueOnce(new Response("fresh"));
