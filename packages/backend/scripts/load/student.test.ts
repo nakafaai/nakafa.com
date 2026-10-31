@@ -60,6 +60,29 @@ const run = (
 
 describe("load student", () => {
   it.live(
+    "numbers its first answer of a question one above the answer an earlier tab saved",
+    () =>
+      Effect.gen(function* () {
+        const server = fakeServer();
+        MutableHashMap.set(server.saved, "q1", {
+          response: ["option-1"],
+          version: 3,
+        });
+        const result = yield* run(
+          server,
+          script({ steps: [{ at: 1, question: 0 }] })
+        );
+        expect(result.exit._tag).toBe("Success");
+        expect(
+          Arr.map(result.acknowledged, (answer) => [
+            answer.question,
+            answer.version,
+          ])
+        ).toEqual([["q1", 4]]);
+      })
+  );
+
+  it.live(
     "enters with the token, answers each step one version above the last, and finishes",
     () =>
       Effect.gen(function* () {
