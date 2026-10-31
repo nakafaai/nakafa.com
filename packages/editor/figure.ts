@@ -18,7 +18,7 @@ const textAttribute = (name: string) => ({
 });
 
 /** A JSON attribute of a figure, which takes `fallback` from markup that holds none. */
-const jsonAttribute = (name: string, fallback: typeof Schema.Json.Type) => ({
+const jsonAttribute = (name: string, fallback: Schema.Json) => ({
   default: fallback,
   parseHTML: (element: Pick<HTMLElement, "getAttribute">) =>
     Option.getOrElse(

@@ -141,8 +141,8 @@ describe("exams/figure", () => {
     };
     expect(Option.isNone(draftOf(circle))).toBe(true);
     const line = made(graph);
-    if (line.component !== "MathVisual") {
-      throw new Error("A graph is a math visual.");
+    if (line.component !== "MathVisual" || line.props.scene.space !== "plane") {
+      throw new Error("A graph is a math visual on a plane.");
     }
     const point = {
       ...line,

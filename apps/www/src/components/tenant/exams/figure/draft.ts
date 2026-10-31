@@ -73,7 +73,7 @@ const richText = (text: string) => [{ text, type: "text" }];
 
 /** The number a teacher typed, with either decimal point, or none when it is no number. */
 const numberOf = (text: string) =>
-  Schema.decodeUnknownOption(Schema.FiniteFromString)(
+  Schema.decodeOption(Schema.FiniteFromString)(
     pipe(text, Str.trim, Str.replace(",", "."))
   );
 
