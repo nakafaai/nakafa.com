@@ -2,7 +2,9 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { classAccess } from "@repo/backend/confect/classroom/authority";
-import spec from "@repo/backend/confect/classroom/people.spec";
+import spec, {
+  type ClassPerson,
+} from "@repo/backend/confect/classroom/people.spec";
 import {
   classRoster,
   classTeachers,
@@ -13,10 +15,10 @@ import { Array as Arr, Effect, Layer, Order } from "effect";
 
 /** Teachers first, then by name in the order of the language-neutral comparison. */
 const byKindThenName = Order.combine(
-  Order.mapInput(Order.String, (found: { readonly kind: string }) =>
+  Order.mapInput(Order.String, (found: typeof ClassPerson.Type) =>
     found.kind === "teacher" ? "0" : "1"
   ),
-  Order.mapInput(Order.String, (found: { readonly name: string }) =>
+  Order.mapInput(Order.String, (found: typeof ClassPerson.Type) =>
     found.name.toLocaleLowerCase()
   )
 );
