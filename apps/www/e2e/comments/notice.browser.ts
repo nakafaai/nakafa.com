@@ -16,6 +16,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const PLACEHOLDER = app.Comments["add-comment-placeholder"];
 const INBOX = "/en/notifications";
 const REPLIED = app.Notifications["comment-replied"];
+/** The address of a lesson that opens one of its comments. */
+const OPENS_COMMENT = /comment=/u;
 
 /** The row of one comment, found by its text. The row's container carries the comment's id. */
 function rowOf(page: Page, text: string) {
@@ -99,7 +101,7 @@ test("a reply to a comment reaches its author's inbox and opens the reply", asyn
               timeout: readinessTimeoutMilliseconds,
             });
             await row.click();
-            await expect(author).toHaveURL(/comment=/u);
+            await expect(author).toHaveURL(OPENS_COMMENT);
             await expect(author.getByText(answer).first()).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
