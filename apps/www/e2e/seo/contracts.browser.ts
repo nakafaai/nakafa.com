@@ -13,7 +13,8 @@ import {
   Schedule,
   Schema,
 } from "effect";
-import { usageDataTrigger } from "@/e2e/support/consent";
+import { trackChanges } from "@/e2e/support/changes";
+import { allowUsageData, usageDataTrigger } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
@@ -420,8 +421,10 @@ const waitForRecordedViews = Effect.fn("NakafaE2E.waitForRecordedViews")(
 
 /**
  * Only a signed-in page records a content view: a visitor's page opens no Convex
- * client, so it records nothing (`ActiveContentViewTracker`). The learner's device
- * identifier still waits for the analytics grant.
+ * client, so it records nothing (`ActiveContentViewTracker`). Before the learner
+ * decides, a view counts for the account alone, with no device identifier
+ * (`resolveContentViewAttribution`). The identifier comes with the first view
+ * after the grant reaches the server, and every later view keeps it.
  */
 test("a learner's content views store no device identifier until analytics is allowed", async ({
   baseURL,
@@ -440,6 +443,7 @@ test("a learner's content views store no device identifier until analytics is al
         Effect.gen(function* () {
           yield* signInLearner(context, baseURL ?? "");
           const page = yield* Effect.promise(() => context.newPage());
+          const changes = yield* trackChanges(page, []);
           yield* Effect.promise(() => page.clock.install());
           yield* withObservedPageErrors(
             page,
@@ -448,24 +452,20 @@ test("a learner's content views store no device identifier until analytics is al
               const prompt = page.getByRole("region", { name: "Usage data" });
               // The open prompt proves consent settled undecided.
               yield* Effect.promise(() => expect(prompt).toBeVisible());
-              yield* Effect.promise(() =>
-                page.clock.fastForward(ENGAGEMENT_DELAY_MS)
-              );
-              const undecided = yield* readContentViewStorage(page);
-              yield* Effect.sync(() =>
-                expect(undecided).toEqual({ deviceId: null, recordedViews: 0 })
-              );
+              const undecided = yield* waitForRecordedViews(page, 1);
+              yield* Effect.sync(() => expect(undecided.deviceId).toBeNull());
 
-              yield* Effect.promise(() =>
-                prompt.getByRole("button", { name: "Allow" }).click()
-              );
-              const allowed = yield* waitForRecordedViews(page, 1);
+              // The grant reaches the server before the page is left, so the next
+              // page's view is the first one under it.
+              yield* allowUsageData(page, changes);
+              yield* openPage(page, pinnedRoutes.material.en);
+              const allowed = yield* waitForRecordedViews(page, 2);
               yield* Effect.sync(() =>
                 expect(allowed.deviceId).toMatch(STORED_DEVICE_PATTERN)
               );
 
-              yield* openPage(page, pinnedRoutes.material.en);
-              const nextPage = yield* waitForRecordedViews(page, 2);
+              yield* openPage(page, pinnedRoutes.exponent.en);
+              const nextPage = yield* waitForRecordedViews(page, 3);
               yield* Effect.sync(() =>
                 expect(nextPage.deviceId).toBe(allowed.deviceId)
               );
