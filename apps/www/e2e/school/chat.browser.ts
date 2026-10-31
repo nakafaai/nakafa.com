@@ -12,6 +12,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The address of a thread of the class. */
 const THREAD_PATH = /\/forum\/\d+/u;
 
+/** The address of the class's list of chats. */
+const FORUM_PATH = /\/forum$/u;
+
 /** The smallest PNG, one transparent pixel, as a phone's photo stands for it here. */
 const PIXEL = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
@@ -137,3 +140,80 @@ for (const viewport of [
     await context.close();
   });
 }
+
+test("a teacher archives a chat, which keeps its messages and takes no new one, restores it, and deletes it", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(
+    signInClassTeacher(context, school.slug, address("/"))
+  );
+  const page = await context.newPage();
+  await page.goto(address("/classes/fisika-x-1/forum"));
+  const add = page.getByRole("button", { name: "Add chat" });
+  await waitUntilTakenOver(add);
+  await add.click();
+  await page
+    .getByRole("dialog")
+    .getByRole("textbox", { name: "Chat name" })
+    .fill("Tugas");
+  await page.getByRole("dialog").getByRole("button", { name: "Add" }).click();
+  const chat = page.getByRole("link", { exact: true, name: "Tugas" });
+  await expect(chat).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  const menu = () =>
+    page
+      .getByRole("listitem")
+      .filter({ has: chat })
+      .getByRole("button", { name: "More actions" });
+
+  // Archived, the chat leaves the list for its own filter and takes no message.
+  await chat.click();
+  await expect(
+    page.getByRole("textbox", { name: "Write a message" })
+  ).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await menu().click();
+  await page.getByRole("menuitem", { name: "Archive chat" }).click();
+  await expect(chat).toBeHidden();
+  await expect(
+    page.getByText("This chat is archived, so it takes no new messages.")
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(
+    page.getByRole("textbox", { name: "Write a message" })
+  ).toHaveCount(0);
+  await page.getByRole("radio", { name: "Archived" }).click();
+  await expect(chat).toBeVisible();
+
+  // Restored, it is back in the list, and the filter that showed it leaves.
+  await menu().click();
+  await page.getByRole("menuitem", { name: "Restore chat" }).click();
+  await expect(page.getByRole("radio", { name: "Archived" })).toHaveCount(0);
+  await expect(chat).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Write a message" })
+  ).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+
+  await menu().click();
+  await page.getByRole("menuitem", { name: "Delete chat" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Delete chat" })
+    .click();
+  await expect(chat).toBeHidden();
+  await page.waitForURL(FORUM_PATH);
+  await page.reload();
+  await expect(
+    page.getByRole("link", { exact: true, name: "General" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(chat).toHaveCount(0);
+  await context.close();
+});

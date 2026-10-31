@@ -602,22 +602,30 @@ export declare const api: {
           "public",
           { classId: Id<"classes">; name: string; slug: string },
           {
+            archived: boolean;
             id: Id<"classroomChannels">;
             kind: "general" | "topic";
             last: {
               at: number;
               author: string;
+              media: "document" | "image" | "poll" | null;
               mine: boolean;
-              poll: {
-                multiple: boolean;
-                options: Array<string>;
-                question: string;
-              } | null;
               text: string | null;
             } | null;
             name: string;
             unread: boolean;
           }
+        >;
+        archive: FunctionReference<
+          "mutation",
+          "public",
+          {
+            archived: boolean;
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            slug: string;
+          },
+          null
         >;
         list: FunctionReference<
           "query",
@@ -638,17 +646,14 @@ export declare const api: {
             continueCursor: string;
             isDone: boolean;
             page: Array<{
+              archived: boolean;
               id: Id<"classroomChannels">;
               kind: "general" | "topic";
               last: {
                 at: number;
                 author: string;
+                media: "document" | "image" | "poll" | null;
                 mine: boolean;
-                poll: {
-                  multiple: boolean;
-                  options: Array<string>;
-                  question: string;
-                } | null;
                 text: string | null;
               } | null;
               name: string;
@@ -657,6 +662,16 @@ export declare const api: {
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
           }
+        >;
+        remove: FunctionReference<
+          "mutation",
+          "public",
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            slug: string;
+          },
+          null
         >;
         rename: FunctionReference<
           "mutation",
@@ -14220,6 +14235,14 @@ export declare const internal: {
   };
   classroom: {
     forum: {
+      channels: {
+        sweep: FunctionReference<
+          "mutation",
+          "internal",
+          { channelId: Id<"classroomChannels"> },
+          null
+        >;
+      };
       files: {
         commit: FunctionReference<
           "mutation",
