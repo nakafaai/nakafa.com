@@ -7,7 +7,6 @@ import {
 } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { GOOGLE_MANIFEST } from "@repo/backend/confect/connectors/google/manifest";
-import { cn } from "cn";
 import { Array as Arr, Effect, Option } from "effect";
 import { use } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -30,7 +29,7 @@ import {
   disconnectSchoolUpdate,
 } from "@/components/connectors/optimistic";
 import { connectFailure } from "@/components/connectors/outcome";
-import { contentWidthVariants } from "@/components/shared/content/width";
+import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
@@ -61,14 +60,14 @@ export function SchoolConnectionsSettings() {
 
   return (
     <TableFiltersProvider>
-      <SchoolSettingsHeader>
-        <TableSearch placeholder={t("search")} />
-      </SchoolSettingsHeader>
-      <div
-        className={cn(contentWidthVariants({ width: "page" }), "w-full p-4")}
-      >
-        <SchoolDirectory />
-      </div>
+      <PageFrame width="page">
+        <SchoolSettingsHeader>
+          <TableSearch placeholder={t("search")} />
+        </SchoolSettingsHeader>
+        <LayoutContent className="w-full py-4">
+          <SchoolDirectory />
+        </LayoutContent>
+      </PageFrame>
     </TableFiltersProvider>
   );
 }
@@ -168,7 +167,7 @@ function SchoolDirectory() {
         disconnect: (connection) =>
           runForumCall(
             forumCall(() =>
-              GOOGLE_MANIFEST[connection.connector].owner === "school"
+              Arr.some(school.results, ({ id }) => id === connection.id)
                 ? disconnectSchool.withOptimisticUpdate(disconnectSchoolUpdate)(
                     { connectionId: connection.id, slug }
                   )
