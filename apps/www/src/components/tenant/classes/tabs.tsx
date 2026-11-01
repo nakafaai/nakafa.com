@@ -7,12 +7,24 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cva } from "class-variance-authority";
+import {
+  Tabs,
+  TabsList,
+  TabsTab,
+} from "@repo/design-system/components/ui/tabs";
+import { Match } from "effect";
 import { useTranslations } from "use-intl";
 import type { ClassView } from "@/components/tenant/classes/view";
 import { useTenant } from "@/components/tenant/context";
 import { Link } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
+
+/** The tab of a view: a chat and a discussion stand under the forum, and a task under the tasks. */
+const tabOfView = Match.type<(typeof ClassView.Type)["_tag"]>().pipe(
+  Match.whenOr("channel", "discussion", () => "forum"),
+  Match.when("task", () => "tasks"),
+  Match.orElse((view) => view)
+);
 
 /**
  * The toolbar row of a class under its header, one height on every view: its home, its forum, its
@@ -35,85 +47,95 @@ export function ClassTabs({
   const params = { classSlug, slug };
 
   return (
-    // The line under the bar stands outside its scroller, so the current tab's underline covers it.
-    <div className="shrink-0 border-b">
-      <nav
-        aria-label={t("tabs-label")}
-        className="mx-auto -mb-px flex h-12 w-full max-w-7xl gap-1 overflow-x-auto px-1"
-      >
-        <Link
-          activeOptions={EXACT_ACTIVE_OPTIONS}
-          className={classTab({ active: tab === "home" })}
-          params={params}
-          to="/school/$slug/classes/$classSlug"
-        >
-          <HugeIcons icon={Home01Icon} />
-          {t("tabs-home")}
-        </Link>
-        <Link
-          activeOptions={EXACT_ACTIVE_OPTIONS}
-          className={classTab({
-            active:
-              tab === "forum" || tab === "channel" || tab === "discussion",
-          })}
-          params={params}
-          to="/school/$slug/classes/$classSlug/forum"
-        >
-          <HugeIcons icon={MessageMultiple01Icon} />
-          {t("tabs-forum")}
-        </Link>
-        <Link
-          activeOptions={EXACT_ACTIVE_OPTIONS}
-          className={classTab({ active: tab === "library" })}
-          params={params}
-          to="/school/$slug/classes/$classSlug/library"
-        >
-          <HugeIcons icon={LibraryIcon} />
-          {t("tabs-library")}
-        </Link>
-        <Link
-          activeOptions={EXACT_ACTIVE_OPTIONS}
-          className={classTab({ active: tab === "tasks" || tab === "task" })}
-          params={params}
-          to="/school/$slug/classes/$classSlug/tasks"
-        >
-          <HugeIcons icon={Task01Icon} />
-          {t("tabs-tasks")}
-        </Link>
-        <Link
-          activeOptions={EXACT_ACTIVE_OPTIONS}
-          className={classTab({ active: tab === "people" })}
-          params={params}
-          to="/school/$slug/classes/$classSlug/people"
-        >
-          <HugeIcons icon={UserGroupIcon} />
-          {t("tabs-people")}
-        </Link>
+    <Tabs value={tabOfView(tab)}>
+      <TabsList aria-label={t("tabs-label")} className="mx-auto max-w-7xl px-1">
+        <TabsTab
+          nativeButton={false}
+          render={
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={params}
+              to="/school/$slug/classes/$classSlug"
+            >
+              <HugeIcons icon={Home01Icon} />
+              {t("tabs-home")}
+            </Link>
+          }
+          value="home"
+        />
+        <TabsTab
+          nativeButton={false}
+          render={
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={params}
+              to="/school/$slug/classes/$classSlug/forum"
+            >
+              <HugeIcons icon={MessageMultiple01Icon} />
+              {t("tabs-forum")}
+            </Link>
+          }
+          value="forum"
+        />
+        <TabsTab
+          nativeButton={false}
+          render={
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={params}
+              to="/school/$slug/classes/$classSlug/library"
+            >
+              <HugeIcons icon={LibraryIcon} />
+              {t("tabs-library")}
+            </Link>
+          }
+          value="library"
+        />
+        <TabsTab
+          nativeButton={false}
+          render={
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={params}
+              to="/school/$slug/classes/$classSlug/tasks"
+            >
+              <HugeIcons icon={Task01Icon} />
+              {t("tabs-tasks")}
+            </Link>
+          }
+          value="tasks"
+        />
+        <TabsTab
+          nativeButton={false}
+          render={
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={params}
+              to="/school/$slug/classes/$classSlug/people"
+            >
+              <HugeIcons icon={UserGroupIcon} />
+              {t("tabs-people")}
+            </Link>
+          }
+          value="people"
+        />
         {canGrade ? (
-          <Link
-            activeOptions={EXACT_ACTIVE_OPTIONS}
-            className={classTab({ active: tab === "grades" })}
-            params={params}
-            to="/school/$slug/classes/$classSlug/grades"
-          >
-            <HugeIcons icon={ChartBarLineIcon} />
-            {t("tabs-grades")}
-          </Link>
+          <TabsTab
+            nativeButton={false}
+            render={
+              <Link
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                params={params}
+                to="/school/$slug/classes/$classSlug/grades"
+              >
+                <HugeIcons icon={ChartBarLineIcon} />
+                {t("tabs-grades")}
+              </Link>
+            }
+            value="grades"
+          />
         ) : null}
-      </nav>
-    </div>
+      </TabsList>
+    </Tabs>
   );
 }
-
-/** One tab of a class, its icon before its name. The current tab is marked as the page, and its underline marks it too. */
-const classTab = cva(
-  "inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-medium [&_svg]:size-4",
-  {
-    variants: {
-      active: {
-        false: "text-muted-foreground hover:text-foreground border-transparent",
-        true: "border-foreground text-foreground",
-      },
-    },
-  }
-);

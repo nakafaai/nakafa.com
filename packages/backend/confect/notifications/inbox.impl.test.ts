@@ -10,6 +10,7 @@ import {
   insertRows,
   inviteAt,
   NOW,
+  schoolViews,
   storedRows,
 } from "@repo/backend/test/inbox";
 import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -79,7 +80,9 @@ describe("notifications/inbox list", () => {
         expect(page.page[0]?.createdAt).toBeGreaterThan(
           page.page[1]?.createdAt ?? Number.NaN
         );
-        expect(Arr.map(page.page, (item) => item.subject)).not.toContainEqual({
+        expect(
+          Arr.map(schoolViews(page.page), (item) => item.subject)
+        ).not.toContainEqual({
           id: budiNf,
           kind: "person",
         });
@@ -186,7 +189,7 @@ describe("notifications/inbox list", () => {
         });
         expect(second.isDone).toBe(true);
         const subjects = Arr.map(
-          Arr.appendAll(first.page, second.page),
+          schoolViews(Arr.appendAll(first.page, second.page)),
           (item) => item.subject
         );
         expect(subjects).toHaveLength(2);

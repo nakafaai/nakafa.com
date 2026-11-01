@@ -1,26 +1,29 @@
 import { Match, Schema } from "effect";
 import type { ListNotification } from "@/components/notifications/state";
 
-/** The topics a reader filters the inbox by, the first of them every row. */
-export const InboxTopic = Schema.Literals([
-  "all",
-  "exams",
-  "classes",
-  "forum",
-  "school",
-  "comments",
-]);
+/** The tabs of the inbox, the first of them every row. */
+export const InboxTopic = Schema.Literals(["all", "comments", "school"]);
 
-/** The topic of what happened: anything of a class that is not its forum is the class's. */
+/**
+ * The tab of what happened. Every kind names its tab, so a new kind does not compile until it has one. Whatever happens
+ * in a school stands under School, and a reply to a comment under Comments.
+ */
 const topicOf = Match.type<ListNotification["changeType"]>().pipe(
-  Match.when("forum.mentioned", () => "forum"),
-  Match.whenOr("exam.reminder", "exam.starting", () => "exams"),
-  Match.when("person.invited", () => "school"),
+  Match.whenOr(
+    "announcement.posted",
+    "assignment.published",
+    "exam.reminder",
+    "exam.starting",
+    "forum.mentioned",
+    "grade.released",
+    "person.invited",
+    () => "school"
+  ),
   Match.when("comment.replied", () => "comments"),
-  Match.orElse(() => "classes")
+  Match.exhaustive
 );
 
-/** Whether what happened shows under a topic. */
+/** Whether what happened shows under a tab. */
 export function inTopic(
   change: ListNotification["changeType"],
   topic: typeof InboxTopic.Type

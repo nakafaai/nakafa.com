@@ -181,8 +181,8 @@ function ExploreCard({
 }) {
   return (
     <TargetLink className="group flex flex-col items-center gap-2" {...link}>
-      <div className="bg-card flex aspect-[1/0.7] w-full items-center justify-center rounded-xl border sm:aspect-[1/0.95]">
-        <div className="scale-75 sm:scale-100">{children}</div>
+      <div className="bg-card flex aspect-square w-full items-center justify-center rounded-xl border">
+        {children}
       </div>
       <h2 className="text-center text-sm sm:text-base">{title}</h2>
     </TargetLink>

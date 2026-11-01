@@ -13,7 +13,7 @@ export function QuranSurahRow({
       <div className="border-primary bg-secondary text-secondary-foreground flex size-8 shrink-0 items-center justify-center rounded-full border">
         <span className="font-mono text-xs tracking-tighter">{number}</span>
       </div>
-      <h2 className="flex min-w-0 items-baseline gap-2">{children}</h2>
+      <h2 className="flex min-w-0 items-center gap-2">{children}</h2>
     </div>
   );
 }

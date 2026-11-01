@@ -196,6 +196,6 @@ export const feedPage = Effect.fn("notifications.feed.page")(function* (
   return {
     continueCursor,
     isDone: ahead.length <= numItems,
-    page: yield* Effect.forEach(rows, (candidate) => candidate.view),
+    page: yield* Effect.all(Arr.map(rows, (candidate) => candidate.view)),
   };
 });

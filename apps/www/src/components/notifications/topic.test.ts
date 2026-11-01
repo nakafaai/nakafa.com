@@ -7,16 +7,20 @@ describe("notifications/topic", () => {
   });
 
   it.each([
-    ["forum.mentioned", "forum", "school"],
-    ["exam.starting", "exams", "forum"],
-    ["exam.reminder", "exams", "classes"],
-    ["person.invited", "school", "exams"],
-    ["assignment.published", "classes", "forum"],
-    ["announcement.posted", "classes", "school"],
-    ["grade.released", "classes", "exams"],
-    ["comment.replied", "comments", "school"],
-  ] as const)("files %s under %s and not under %s", (change, topic, other) => {
-    expect(inTopic(change, topic)).toBe(true);
-    expect(inTopic(change, other)).toBe(false);
+    "announcement.posted",
+    "assignment.published",
+    "exam.reminder",
+    "exam.starting",
+    "forum.mentioned",
+    "grade.released",
+    "person.invited",
+  ] as const)("files %s under school and not under comments", (change) => {
+    expect(inTopic(change, "school")).toBe(true);
+    expect(inTopic(change, "comments")).toBe(false);
+  });
+
+  it("files a reply under comments and not under school", () => {
+    expect(inTopic("comment.replied", "comments")).toBe(true);
+    expect(inTopic("comment.replied", "school")).toBe(false);
   });
 });

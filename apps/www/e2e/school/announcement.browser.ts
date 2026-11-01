@@ -68,6 +68,22 @@ for (const viewport of [
       page.getByText("Ulangan bab 2 pindah ke hari Selasa.")
     ).toBeVisible();
     await expect(page.getByText(EDITED)).toBeVisible();
+
+    // A pinned announcement says so, and stays pinned through a reload until a teacher takes it down.
+    await page.getByRole("button", { name: "More actions" }).click();
+    const pinnedBefore = changes.sent;
+    await page.getByRole("menuitem", { exact: true, name: "Pin" }).click();
+    await expect(page.getByLabel("Pinned")).toBeVisible();
+    await saved(changes, pinnedBefore);
+    await page.reload();
+    await expect(page.getByLabel("Pinned")).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await waitUntilTakenOver(more);
+    await more.click();
+    await page.getByRole("menuitem", { name: "Unpin" }).click();
+    await expect(page.getByLabel("Pinned")).toHaveCount(0);
+
     await page.getByRole("button", { name: "More actions" }).click();
     await page.getByRole("menuitem", { name: "Remove" }).click();
     const removedBefore = changes.sent;

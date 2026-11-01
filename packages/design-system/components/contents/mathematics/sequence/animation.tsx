@@ -13,7 +13,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -186,11 +188,14 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Arr.map(speedItems, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              <SelectLabel>{labels.setSpeed}</SelectLabel>
+              {Arr.map(speedItems, (item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
 

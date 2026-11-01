@@ -9,6 +9,7 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
+import { schoolViews } from "@repo/backend/test/inbox";
 import { journal, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
@@ -35,6 +36,7 @@ describe("classroom/tasks", () => {
         const teacher = fixture.as("teacher");
         const publish = (clientKey: string, title: string, deadline: number) =>
           teacher.mutation(tasks.publish, {
+            targets: null,
             classId: forum.classId,
             clientKey,
             deadline,
@@ -96,11 +98,9 @@ describe("classroom/tasks", () => {
         ).toHaveLength(3);
         yield* fixture.finishScheduled();
         const rows = yield* fixture.as("student").query(inbox.list, firstPage);
-        expect(Arr.map(rows.page, (row) => row.detail?.task)).toEqual([
-          "tugas",
-          "latihan-gerak-lurus-2",
-          "latihan-gerak-lurus",
-        ]);
+        expect(
+          Arr.map(schoolViews(rows.page), (row) => row.detail?.task)
+        ).toEqual(["tugas", "latihan-gerak-lurus-2", "latihan-gerak-lurus"]);
       })
   );
 
@@ -114,6 +114,7 @@ describe("classroom/tasks", () => {
         const teacher = fixture.as("teacher");
         const student = fixture.as("student");
         yield* teacher.mutation(tasks.publish, {
+          targets: null,
           classId: forum.classId,
           clientKey: "open-task",
           deadline: TENANCY_NOW + DAY,
@@ -124,6 +125,7 @@ describe("classroom/tasks", () => {
           title: "Ringkasan",
         });
         yield* teacher.mutation(tasks.publish, {
+          targets: null,
           classId: forum.classId,
           clientKey: "closed-task",
           deadline: TENANCY_NOW + DAY,
@@ -246,6 +248,7 @@ describe("classroom/tasks", () => {
         const other = yield* forumClass(fixture, term.id, "X-4", false);
         const teacher = fixture.as("teacher");
         yield* teacher.mutation(tasks.publish, {
+          targets: null,
           classId: other.classId,
           clientKey: "other-task",
           deadline: TENANCY_NOW + DAY,
@@ -259,6 +262,7 @@ describe("classroom/tasks", () => {
           fixture
             .as("student")
             .mutation(tasks.publish, {
+              targets: null,
               classId: forum.classId,
               clientKey: "student-task",
               deadline: TENANCY_NOW + DAY,
@@ -292,6 +296,7 @@ describe("classroom/tasks", () => {
         ]);
         // Work of one class is refused under another class the teacher also teaches.
         yield* teacher.mutation(tasks.publish, {
+          targets: null,
           classId: forum.classId,
           clientKey: "own-task",
           deadline: TENANCY_NOW + DAY,

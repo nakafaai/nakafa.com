@@ -93,7 +93,7 @@ test("a signed-out student who scans the room's code signs in over the room and 
   ).toBeVisible();
   // The username form opens over the room, so its sign-in returns there.
   const username = student.getByRole("link", {
-    name: "Sign in with a username",
+    name: "Use a username",
   });
   await waitUntilTakenOver(username);
   await expect(username).toHaveAttribute("href", `${room}?sign-in=username`);

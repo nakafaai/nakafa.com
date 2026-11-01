@@ -23,7 +23,7 @@ const MARK_SEAT = "\u0640";
  * assistive technology, then the letters in hijaiyah order with the hamza and its seats, then the
  * Arabic punctuation and a space. A press types its key through `onKey` and keeps the focus where it
  * was, in the text being written, so the caret never jumps. Every key draws in Amiri Quran, its letters in
- * the keypad's face with balanced metrics (`font-keypad`), so each sits inside its key near the middle. The
+ * the keypad's face with balanced metrics (`font-quran-line`), so each sits inside its key near the middle. The
  * keypad is 20rem wide and narrows with its container, and its keys share the width of their row, so it
  * fits a 320px screen.
  */
@@ -149,7 +149,7 @@ function ArabicKey({
   return (
     <Button
       aria-label={label}
-      className="font-keypad w-full px-0 text-lg"
+      className="font-quran-line w-full px-0 text-lg"
       onClick={() => onKey(text)}
       onMouseDown={(event) => event.preventDefault()}
       size="default"
