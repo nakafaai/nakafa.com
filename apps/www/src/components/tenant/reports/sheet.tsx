@@ -7,6 +7,7 @@ import {
   Edit02Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
+  RefreshIcon,
   SentIcon,
   SquareLock02Icon,
 } from "@hugeicons/core-free-icons";
@@ -269,7 +270,7 @@ function ReportLineMenu({ line }: { line: ReportLine }) {
 
 /**
  * The row menu's items on a report that exists: hand in a draft, take back or approve a
- * handed-in report, and open the check page of a locked one.
+ * handed-in report, lock again one whose PDF has not arrived, and open the check page of a locked one.
  */
 function ReportStateItems({
   menu,
@@ -300,6 +301,12 @@ function ReportStateItems({
         <DropdownMenuItem onClick={() => actions.approve(report.id)}>
           <HugeIcons icon={CheckmarkCircle02Icon} />
           {t("approve")}
+        </DropdownMenuItem>
+      ) : null}
+      {menu.lock ? (
+        <DropdownMenuItem onClick={() => actions.approve(report.id)}>
+          <HugeIcons icon={RefreshIcon} />
+          {t("lock-again")}
         </DropdownMenuItem>
       ) : null}
       {menu.open && report.hash !== null ? (

@@ -41,6 +41,18 @@ describe("the sign-in's steps", () => {
     });
   });
 
+  it("goes back to the address the parent typed, to correct it, and stays there", () => {
+    const typed = stepSignIn(mailed, { _tag: "typed", text: "042917" });
+    const back = stepSignIn(typed, { _tag: "back" });
+
+    expect(back).toEqual({
+      _tag: "email",
+      email: "ibu.siti@example.com",
+      message: undefined,
+    });
+    expect(stepSignIn(back, { _tag: "back" })).toEqual(back);
+  });
+
   it("empties the code on a resend, and keeps the code step", () => {
     const typed = stepSignIn(mailed, { _tag: "typed", text: "042917" });
 
