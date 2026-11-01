@@ -137,14 +137,12 @@ describe("classroom/library", () => {
         const stored = yield* fixture.run(libraryRows);
         expect(stored).toHaveLength(1);
         expect(encodeJsonText(stored)).not.toContain("gerak");
-        const listed = yield* fixture
-          .as("student")
-          .query(library.list, {
-            folderId: null,
-            ...firstPage,
-            classId,
-            slug: nf,
-          });
+        const listed = yield* fixture.as("student").query(library.list, {
+          folderId: null,
+          ...firstPage,
+          classId,
+          slug: nf,
+        });
         expect(listed.page).toEqual([added]);
         const byStudent = yield* fixture
           .as("student")
@@ -203,14 +201,12 @@ describe("classroom/library", () => {
         const repeat = yield* register("photo-file", png(), "Foto lagi");
         expect(repeat.id).toBe(photo.id);
         expect(yield* storageUrl(fixture.convex, repeat.storageId)).toBeNull();
-        const listed = yield* fixture
-          .as("student")
-          .query(library.list, {
-            folderId: null,
-            ...firstPage,
-            classId,
-            slug: nf,
-          });
+        const listed = yield* fixture.as("student").query(library.list, {
+          folderId: null,
+          ...firstPage,
+          classId,
+          slug: nf,
+        });
         expect(
           Arr.map(listed.page, (item) => [item.kind, item.title, item.byteSize])
         ).toEqual([
@@ -223,14 +219,12 @@ describe("classroom/library", () => {
         yield* Effect.promise(() =>
           fixture.convex.run((ctx) => ctx.storage.delete(module.storageId))
         );
-        const after = yield* fixture
-          .as("student")
-          .query(library.list, {
-            folderId: null,
-            ...firstPage,
-            classId,
-            slug: nf,
-          });
+        const after = yield* fixture.as("student").query(library.list, {
+          folderId: null,
+          ...firstPage,
+          classId,
+          slug: nf,
+        });
         expect(after.page[1]).toMatchObject({ address: null, kind: "pdf" });
       })
   );
@@ -366,27 +360,23 @@ describe("classroom/library", () => {
           bytes
         );
         const importDrive = (clientKey: string) =>
-          fixture
-            .as("teacher")
-            .action(library.importDrive, {
-              folderId: null,
-              classId,
-              clientKey,
-              fileId: "drive-file-1",
-              slug: nf,
-              title: "Modul dari Drive",
-            });
+          fixture.as("teacher").action(library.importDrive, {
+            folderId: null,
+            classId,
+            clientKey,
+            fileId: "drive-file-1",
+            slug: nf,
+            title: "Modul dari Drive",
+          });
         const imported = yield* importDrive("drive-module");
         expect((yield* importDrive("drive-module")).id).toBe(imported.id);
         expect(driveReads()).toHaveLength(4);
-        const listed = yield* fixture
-          .as("student")
-          .query(library.list, {
-            folderId: null,
-            ...firstPage,
-            classId,
-            slug: nf,
-          });
+        const listed = yield* fixture.as("student").query(library.list, {
+          folderId: null,
+          ...firstPage,
+          classId,
+          slug: nf,
+        });
         expect(listed.page).toMatchObject([
           {
             byteSize: bytes.length,
