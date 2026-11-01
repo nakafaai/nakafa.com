@@ -2275,7 +2275,9 @@
   },
   "Tryouts": {
     "title": "What try out do you want today?",
-    "metadata-description": "Choose a country, exam, and try out set from Nakafa.",
+    "hub-search-title": "Free Online Practice Exams with Instant Scores",
+    "metadata-description": "Timed practice exams, scored the moment you finish. Free and unlimited on Nakafa.",
+    "search-title": "Free {name} Practice Exam",
     "track-metadata-description": "Choose a {exam} try out set on Nakafa: timed, and scored the moment you finish.",
     "set-metadata-description": "Take {exam} {set} on Nakafa: a timed try out, scored the moment you finish.",
     "section-metadata-description": "Practice {section} from {exam} {set} on Nakafa: a timed try out, scored the moment you finish.",

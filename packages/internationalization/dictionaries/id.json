@@ -2275,7 +2275,9 @@
   },
   "Tryouts": {
     "title": "Mau coba try out apa hari ini?",
-    "metadata-description": "Pilih negara, ujian, dan set try out dari Nakafa.",
+    "hub-search-title": "Try Out Online Gratis dengan Skor Langsung",
+    "metadata-description": "Try out berwaktu dengan skor langsung setelah selesai. Gratis dan tanpa batas di Nakafa.",
+    "search-title": "Try Out {name} Gratis",
     "track-metadata-description": "Pilih set try out {exam} di Nakafa: berwaktu, dengan skor langsung setelah selesai.",
     "set-metadata-description": "Kerjakan {set} {exam} di Nakafa: try out berwaktu dengan skor langsung setelah selesai.",
     "section-metadata-description": "Latihan {section} dari {set} {exam} di Nakafa: try out berwaktu dengan skor langsung setelah selesai.",
