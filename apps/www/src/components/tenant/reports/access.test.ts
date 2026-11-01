@@ -56,6 +56,7 @@ describe("menuOf", () => {
     expect(menuOf(line("none", ["report.write"]))).toEqual({
       approve: false,
       complete: false,
+      lock: false,
       open: false,
       reopen: false,
       write: true,
