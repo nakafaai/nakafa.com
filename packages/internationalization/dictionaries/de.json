@@ -2668,6 +2668,10 @@
     "saved-description": "Suche, ändere oder lösche, was Nina behält."
   },
   "Toast": {
+    "offline-move": {
+      "title": "Du bist offline.",
+      "description": "Verbinde dich wieder, um diese Seite zu öffnen."
+    },
     "chat-deleted": {
       "title": "Dieser Chat wurde gelöscht."
     },
