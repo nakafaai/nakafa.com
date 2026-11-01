@@ -33,6 +33,7 @@ import {
   FileSystem,
   HashMap,
   Option,
+  Schedule,
   Schema,
 } from "effect";
 
@@ -59,6 +60,7 @@ const READ_LIMIT = "20000";
 
 /** A read of a whole table can time out on a busy local backend, so a failed one runs again. */
 const READ_RETRIES = 4;
+const READ_PAUSE = Duration.seconds(15);
 
 const encodeRow = Schema.encodeEffect(JsonTextSchema);
 
@@ -88,6 +90,10 @@ const PeopleRows = Schema.fromJsonString(
   )
 );
 
+const TenantOwnedRows = Schema.fromJsonString(
+  Schema.Array(Schema.Struct({ tenantId: Schema.String }))
+);
+
 /** One table's newest rows, decoded by `rows`. */
 const readRows = <Rows>(
   runtime: LocalRuntime,
@@ -102,8 +108,8 @@ const readRows = <Rows>(
     "--limit",
     READ_LIMIT,
   ]).pipe(
-    Effect.retry({ times: READ_RETRIES }),
-    Effect.flatMap(Schema.decodeEffect(rows))
+    Effect.flatMap(Schema.decodeEffect(rows)),
+    Effect.retry({ schedule: Schedule.spaced(READ_PAUSE), times: READ_RETRIES })
   );
 
 /** The school of a slug: its ID, its first unit, and its Owner, who must have signed in. */
@@ -146,29 +152,57 @@ const schoolOf = Effect.fn("contentAcceptance.full.school")(function* (
 /**
  * Writes one table's rows and then reads back the IDs of the school's rows of the table by
  * their names, which is how the next tables point at them. A name the seed wrote always has
- * a row, so a missing one is a failed import.
+ * a row, so a missing one is a failed import. A table that already holds its rows is left
+ * alone, so a run that a busy backend stopped starts again where it stopped.
  */
 const makeWriter = (
   runtime: LocalRuntime,
   tenantId: string,
   directory: string
 ) => {
-  const write = Effect.fn("contentAcceptance.full.write")(function* (
-    table: string,
-    rows: readonly object[]
+  const heldRows = Effect.fn("contentAcceptance.full.held")(function* (
+    table: string
   ) {
-    const fs = yield* FileSystem.FileSystem;
-    const lines = yield* Effect.forEach(rows, (row) => encodeRow(row));
-    const file = `${directory}/${table}.jsonl`;
-    yield* fs.writeFileString(file, Arr.join(lines, "\n"));
-    yield* runLocalConvex(runtime, `${table} import`, [
+    const stored = yield* readRows(runtime, table, TenantOwnedRows);
+    return Arr.filter(stored, (row) => row.tenantId === tenantId).length;
+  });
+  const importRows = Effect.fn("contentAcceptance.full.import")(function* (
+    table: string,
+    file: string,
+    expected: number
+  ) {
+    const imported = yield* runLocalConvex(runtime, `${table} import`, [
       "import",
       "--table",
       table,
       "--append",
       "--yes",
       file,
-    ]);
+    ]).pipe(
+      Effect.as(true),
+      Effect.orElseSucceed(() => false)
+    );
+    if (imported) {
+      return;
+    }
+    // A busy backend can time out the CLI's watch of an import that runs on regardless.
+    yield* Effect.sleep(READ_PAUSE);
+    if ((yield* heldRows(table)) < expected) {
+      return yield* acceptanceRuntimeError(`The import of ${table} failed.`);
+    }
+  });
+  const write = Effect.fn("contentAcceptance.full.write")(function* (
+    table: string,
+    rows: readonly object[]
+  ) {
+    if ((yield* heldRows(table)) >= rows.length) {
+      return;
+    }
+    const fs = yield* FileSystem.FileSystem;
+    const lines = yield* Effect.forEach(rows, (row) => encodeRow(row));
+    const file = `${directory}/${table}.jsonl`;
+    yield* fs.writeFileString(file, Arr.join(lines, "\n"));
+    yield* importRows(table, file, rows.length);
   });
   const writeNamed = Effect.fn("contentAcceptance.full.named")(function* (
     table: string,

@@ -7,12 +7,15 @@ import {
 } from "@repo/backend/scripts/content/acceptance/full";
 import {
   Array as Arr,
+  Duration,
   Effect,
+  Fiber,
   FileSystem,
   MutableHashMap,
   Option,
   String as Str,
 } from "effect";
+import { TestClock } from "effect/testing";
 
 const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
 vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
@@ -55,6 +58,8 @@ const stubBackend = (held: {
   readonly tenantPeople: readonly object[];
   readonly tenantUnits: readonly object[];
   readonly tenants: readonly object[];
+  readonly failImports?: readonly string[];
+  readonly lostWatch?: readonly string[];
   readonly named?: boolean;
 }) => {
   const written = MutableHashMap.empty<string, readonly object[]>();
@@ -79,12 +84,18 @@ const stubBackend = (held: {
       }
       const table = rest[1] ?? "";
       const text = yield* fs.readFileString(rest[4] ?? "");
+      const refused = Arr.contains(held.failImports ?? [], table);
       const rows = Arr.map(Str.split(text, "\n"), (line, index): object => ({
         _id: `${table}-${index}`,
         ...JSON.parse(line),
       }));
-      if (held.named !== false) {
+      if (held.named !== false && !refused) {
         MutableHashMap.set(written, table, rows);
+      }
+      if (refused || (held.lostWatch ?? []).includes(table)) {
+        return yield* Effect.fail(
+          new Error("The watch of the import timed out.")
+        );
       }
       yield* fs.writeFileString(spec.stdoutPath, "");
     })
@@ -208,6 +219,62 @@ describe("acceptance full school", () => {
       expect(error).toMatchObject({
         message: "No row holds the name Ganjil 2026/2027.",
       });
+    }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect("goes on when only the watch of an import timed out", () =>
+    Effect.gen(function* () {
+      const written = stubBackend({
+        ...SEEDED,
+        lostWatch: ["exams"],
+        tenantPeople: [OWNER],
+      });
+
+      const run = yield* fillAcceptanceSchool("/root", "acc-1", COUNT).pipe(
+        Effect.forkChild
+      );
+      yield* TestClock.adjust(Duration.seconds(30));
+      yield* Fiber.join(run);
+
+      expect(written("exams")).toHaveLength(COUNT.exams);
+      expect(written("tenantInvites")).toHaveLength(COUNT.invites);
+    }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect("refuses an import that left no rows", () =>
+    Effect.gen(function* () {
+      stubBackend({
+        ...SEEDED,
+        failImports: ["exams"],
+        tenantPeople: [OWNER],
+      });
+
+      const run = yield* fillAcceptanceSchool("/root", "acc-1", COUNT).pipe(
+        Effect.flip,
+        Effect.forkChild
+      );
+      yield* TestClock.adjust(Duration.seconds(30));
+
+      expect(yield* Fiber.join(run)).toMatchObject({
+        message: "The import of exams failed.",
+      });
+    }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect("leaves a table alone that already holds its rows", () =>
+    Effect.gen(function* () {
+      const written = stubBackend({ ...SEEDED, tenantPeople: [OWNER] });
+
+      yield* fillAcceptanceSchool("/root", "acc-1", COUNT);
+      const imports = mocks.command.mock.calls.length;
+      yield* fillAcceptanceSchool("/root", "acc-1", COUNT);
+
+      const repeated = Arr.filter(
+        Arr.drop(mocks.command.mock.calls, imports),
+        ([spec]) => (spec as CommandSpec).args[1] === "import"
+      );
+      expect(repeated).toEqual([]);
+      expect(written("exams")).toHaveLength(COUNT.exams);
     }).pipe(Effect.provide(nodeServicesLayer))
   );
 
