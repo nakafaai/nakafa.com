@@ -29,7 +29,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
-import { RowMenu } from "@/components/shared/table/menu";
+import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import {
@@ -224,15 +224,12 @@ function CourseTable({ preview }: { preview: Preview }) {
             id: "students",
           }),
           courseColumns.menu(({ row: { original: course } }) => (
-            <RowMenu>
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>{t("course")}</DropdownMenuLabel>
-                <CourseClass course={course} preview={preview} />
-                {course.classId === null ? null : (
-                  <CourseRosterImport courseId={course.courseId} />
-                )}
-              </DropdownMenuGroup>
-            </RowMenu>
+            <RowItems>
+              <CourseClass course={course} preview={preview} />
+              {course.classId === null ? null : (
+                <CourseRosterImport courseId={course.courseId} />
+              )}
+            </RowItems>
           )),
         ]}
         data={preview.courses}
