@@ -23,7 +23,10 @@ export function TableTitle({
 }) {
   return (
     <span className="inline-flex min-w-0 items-center gap-2 font-medium">
-      <HugeIcons className={statusIconVariants({ tone })} icon={icon} />
+      <HugeIcons
+        className={statusIconVariants({ className: "size-4", tone })}
+        icon={icon}
+      />
       {children}
     </span>
   );

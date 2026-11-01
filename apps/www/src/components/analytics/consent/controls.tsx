@@ -1,5 +1,12 @@
 import { ANALYTICS_CONSENT_ROOT_ATTRIBUTE } from "@repo/analytics/consent";
-import { CardContent } from "@repo/design-system/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { Suspense } from "react";
 import { useTranslations } from "use-intl";
@@ -7,11 +14,6 @@ import {
   ConsentActions,
   ConsentDetails,
 } from "@/components/analytics/consent/details";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-} from "@/components/shared/card/section";
 import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";
 
 /** Names the prompt section, so the hide rules below can match it. */
@@ -82,27 +84,29 @@ export function AnalyticsConsentControls({
           aria-label={t("title")}
           className="fixed right-4 bottom-4 left-4 z-50 sm:right-6 sm:bottom-6 sm:left-auto sm:w-full sm:max-w-md"
         >
-          <CardSection
-            className="max-h-[calc(100dvh-2rem)] shadow-lg"
-            description={t("prompt-description")}
-            size="sm"
-            title={t("title")}
-          >
+          <Card className="max-h-[calc(100dvh-2rem)] shadow-lg" size="sm">
+            <CardHeader>
+              <CardTitle>{t("title")}</CardTitle>
+              <CardDescription>{t("prompt-description")}</CardDescription>
+            </CardHeader>
             <div className="min-h-0 flex-1 overflow-y-auto">
               <CardContent>
                 <ConsentDetails error={consent.error} />
               </CardContent>
             </div>
-            <CardSectionFooter hint={t("prompt-footer")}>
-              <CardSectionActions>
+            <CardFooter className="flex-wrap justify-end gap-x-4 gap-y-3">
+              <p className="text-muted-foreground me-auto flex-1 text-sm">
+                {t("prompt-footer")}
+              </p>
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <ConsentActions
                   canDecline={consent.canDecline}
                   canGrant={consent.canGrant}
                   decide={consent.decide}
                 />
-              </CardSectionActions>
-            </CardSectionFooter>
-          </CardSection>
+              </div>
+            </CardFooter>
+          </Card>
         </section>
       ) : null}
 

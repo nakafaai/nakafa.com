@@ -156,6 +156,7 @@ export const ReportCohort = Schema.Struct({
   id: Id("tenantCohorts"),
   name: Schema.String,
   period: Schema.String,
+  unit: Schema.String,
 });
 
 /**

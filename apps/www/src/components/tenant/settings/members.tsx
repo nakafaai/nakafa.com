@@ -1,5 +1,6 @@
 import {
   type PaginatedQueryItem,
+  QueryResult,
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
@@ -29,11 +30,13 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ComponentProps, startTransition, useState } from "react";
+import { type ComponentProps, startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
@@ -42,7 +45,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { WithAction } from "@/components/tenant/action";
-import { useTenant } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { LineDialog } from "@/components/tenant/line";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
@@ -52,6 +55,7 @@ import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
+import { UNIT_ICONS } from "@/components/tenant/settings/choices";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { inviteChange } from "@/components/tenant/settings/grants";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
@@ -139,7 +143,17 @@ function SchoolMembersBody() {
 function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
+  const viewer = useViewerQuery();
 
+  const unitsOf = (member: MemberItem) =>
+    QueryResult.isSuccess(viewer)
+      ? Arr.map(
+          Arr.filter(viewer.value.units, (unit) =>
+            Arr.contains(member.units, unit.id)
+          ),
+          (unit) => unit.name
+        )
+      : [];
   const columns = [
     memberColumns.text((member) => member.name, {
       cell: (info) => (
@@ -149,6 +163,19 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
       ),
       header: t("member-name"),
       id: "name",
+    }),
+    memberColumns.text((member) => member.email ?? "", {
+      header: t("member-email"),
+      id: "email",
+    }),
+    memberColumns.list(unitsOf, {
+      cell: (info) => <span dir="auto">{Arr.join(info.getValue(), ", ")}</span>,
+      header: t("member-units"),
+      id: "units",
+      options: namedOptions(
+        Arr.dedupe(Arr.flatMap(members, unitsOf)),
+        UNIT_ICONS
+      ),
     }),
     memberColumns.values((member) => member.status, {
       cell: (info) => (
@@ -229,13 +256,9 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const remove = useMutation(tenancy.people.remove).withOptimisticUpdate(
     removeMemberChange
   );
-  const [isGiving, setIsGiving] = useState(false);
-  const [inviting, setInviting] = useState(0);
-  const [isInviting, setIsInviting] = useState(false);
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [renaming, setRenaming] = useState(0);
-  const [isRemoving, setIsRemoving] = useState(false);
-  const [isIssuing, setIsIssuing] = useState(false);
+  const dialogs = useDialogs<
+    "card" | "give" | "invite" | "remove" | "rename"
+  >();
   const [issued, setIssued] = useState<CardView | undefined>(undefined);
   const removable = member.removable && member.status !== "invited";
 
@@ -260,7 +283,7 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
   };
 
   const removeMember = () => {
-    setIsRemoving(false);
+    dialogs.close();
     startTransition(() =>
       saveSchool(() => remove({ personId: member.id, slug }), SOURCE)
     );
@@ -282,40 +305,32 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
         />
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuGroup>
-            <DropdownMenuItem
-              onClick={() => {
-                setRenaming((count) => count + 1);
-                setIsRenaming(true);
-              }}
-            >
+            <DropdownMenuItem onClick={() => dialogs.show("rename")}>
               <HugeIcons icon={PencilEdit02Icon} />
               {t("person-rename")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsGiving(true)}>
+            <DropdownMenuItem onClick={() => dialogs.show("give")}>
               <HugeIcons icon={UserStar01Icon} />
               {t("roles-assign-dialog")}
             </DropdownMenuItem>
             {member.status === "notInvited" ? (
               <DropdownMenuItem
                 disabled={sendLocale === undefined}
-                onClick={() => {
-                  setInviting((count) => count + 1);
-                  setIsInviting(true);
-                }}
+                onClick={() => dialogs.show("invite")}
               >
                 <HugeIcons icon={MailSend01Icon} />
                 {t("invite-action")}
               </DropdownMenuItem>
             ) : null}
             {member.status === "notInvited" && cardOffered(member.roles) ? (
-              <DropdownMenuItem onClick={() => setIsIssuing(true)}>
+              <DropdownMenuItem onClick={() => dialogs.show("card")}>
                 <HugeIcons icon={IdCardIcon} />
                 {t("invite-card")}
               </DropdownMenuItem>
             ) : null}
             {removable ? (
               <DropdownMenuItem
-                onClick={() => setIsRemoving(true)}
+                onClick={() => dialogs.show("remove")}
                 variant="destructive"
               >
                 <HugeIcons icon={UserRemove01Icon} />
@@ -325,39 +340,41 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-      <PersonRenameDialog
-        key={renaming}
-        open={isRenaming}
-        person={member}
-        setOpen={setIsRenaming}
-      />
+      {dialogs.kind === "rename" ? (
+        <PersonRenameDialog
+          key={dialogs.key}
+          open={dialogs.isOpen("rename")}
+          person={member}
+          setOpen={dialogs.setOpen}
+        />
+      ) : null}
       <SchoolGrantDialog
-        open={isGiving}
+        open={dialogs.isOpen("give")}
         person={{ id: member.id, name: member.name }}
-        setOpen={setIsGiving}
+        setOpen={dialogs.setOpen}
       />
-      {inviting === 0 ? null : (
+      {dialogs.kind === "invite" ? (
         <LineDialog
           action={t("invite-submit")}
           description={t("invite-dialog-description")}
           initial=""
           isValid={Schema.is(Email)}
-          key={inviting}
+          key={dialogs.key}
           label={t("invite-email")}
           onSave={inviteAt}
-          open={isInviting}
+          open={dialogs.isOpen("invite")}
           placeholder={t("invite-email-placeholder")}
-          setOpen={setIsInviting}
+          setOpen={dialogs.setOpen}
           title={t("invite-dialog-title")}
           type="email"
         />
-      )}
+      ) : null}
       <SchoolIssueCardDialog
         name={member.name}
         onIssued={setIssued}
-        open={isIssuing}
+        open={dialogs.isOpen("card")}
         personId={member.id}
-        setOpen={setIsIssuing}
+        setOpen={dialogs.setOpen}
         slug={slug}
       />
       <SchoolCardDialog card={issued} onClose={() => setIssued(undefined)} />
@@ -365,11 +382,7 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
         description={t("member-remove-description")}
         footer={
           <>
-            <Button
-              onClick={() => setIsRemoving(false)}
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={dialogs.close} type="button" variant="outline">
               {common("cancel")}
             </Button>
             <Button onClick={removeMember} type="button" variant="destructive">
@@ -377,8 +390,8 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
             </Button>
           </>
         }
-        open={isRemoving}
-        setOpen={setIsRemoving}
+        open={dialogs.isOpen("remove")}
+        setOpen={dialogs.setOpen}
         title={t("member-remove-title")}
       />
     </div>

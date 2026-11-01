@@ -56,11 +56,20 @@ const AiStateSchema = Schema.Struct({
     })
   ),
   /**
+   * Who the draft belongs to: an account, `null` for a visitor, and undefined
+   * while the session has no answer, so text written then waits to be saved.
+   */
+  draftOwner: Schema.UndefinedOr(Schema.NullOr(Schema.String)),
+  /** The last answered owner, which stays through a session that stops answering. */
+  lastDraftOwner: Schema.UndefinedOr(Schema.NullOr(Schema.String)),
+  /**
    * The uploads the server refused. No file holds one any more, so no send takes
    * one again, but the server counts its place until a release gives it back.
    */
   refusedUploads: Schema.Array(AiUploadIdSchema),
   text: Schema.String,
+  /** Whether the learner wrote while no owner was known, so `text` outranks a saved draft. */
+  unownedText: Schema.Boolean,
   /**
    * The uploads that are on their way or failed, by the id the composer gave
    * the file. A file with neither has no entry. The id is the key for the same
@@ -77,6 +86,13 @@ export type AiState = typeof AiStateSchema.Type;
 
 interface AiActions {
   addChatDraft: (key: string) => void;
+  /**
+   * Takes the session's answer for who the draft belongs to. A new learner ends
+   * the previous one's session, and the draft goes too unless the previous one
+   * was a visitor. Then the text written meanwhile, or else the owner's saved
+   * draft, becomes the draft. Undefined says the session has no answer yet.
+   */
+  adoptDraftOwner: (ownerId: AiState["draftOwner"]) => void;
   /** Forgets that this file is uploading or that its upload failed. */
   clearUpload: (fileId: string) => void;
   /**

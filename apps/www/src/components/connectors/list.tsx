@@ -1,12 +1,12 @@
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { ConnectorCard } from "@/components/connectors/card";
 import {
   type Connection,
   currentConnection,
 } from "@/components/connectors/optimistic";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ConnectorCard } from "@/components/user/settings/connector";
 
 /**
  * The Google connectors an owner may connect, one card each, with the state of the

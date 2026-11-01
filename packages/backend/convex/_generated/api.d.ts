@@ -629,6 +629,16 @@ export declare const api: {
           subject?: string;
         }
       >;
+      teachers: FunctionReference<
+        "query",
+        "public",
+        {
+          classIds: Array<Id<"classes">>;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+        },
+        Array<{ classId: Id<"classes">; names: Array<string> }>
+      >;
     };
     folders: {
       add: FunctionReference<
@@ -11981,7 +11991,12 @@ export declare const api: {
         "query",
         "public",
         { slug: string },
-        Array<{ id: Id<"tenantCohorts">; name: string; period: string }>
+        Array<{
+          id: Id<"tenantCohorts">;
+          name: string;
+          period: string;
+          unit: string;
+        }>
       >;
       complete: FunctionReference<
         "mutation",
@@ -12358,7 +12373,11 @@ export declare const api: {
         {
           continueCursor: string;
           isDone: boolean;
-          page: Array<{ id: Id<"tenantPeople">; name: string }>;
+          page: Array<{
+            id: Id<"tenantPeople">;
+            login: string | null;
+            name: string;
+          }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
@@ -12628,6 +12647,18 @@ export declare const api: {
           name: string;
           status: "active" | "suspended" | "removed";
         }
+      >;
+      overview: FunctionReference<
+        "query",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        Array<{
+          classes: number;
+          homeroom: string | null;
+          id: Id<"tenantCohorts">;
+          name: string;
+          students: number;
+        }>
       >;
       rename: FunctionReference<
         "mutation",
@@ -13459,6 +13490,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
+            email: string | null;
             id: Id<"tenantPeople">;
             name: string;
             removable: boolean;
@@ -13477,6 +13509,7 @@ export declare const api: {
               | "integration"
             >;
             status: "cardIssued" | "invited" | "joined" | "notInvited";
+            units: Array<Id<"tenantUnits">>;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;

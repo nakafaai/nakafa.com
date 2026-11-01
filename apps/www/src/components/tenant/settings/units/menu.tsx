@@ -16,8 +16,9 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { startTransition, useState } from "react";
+import { startTransition } from "react";
 import { useTranslations } from "use-intl";
+import { useDialogs } from "@/components/shared/dialogs";
 import { useTenant } from "@/components/tenant/context";
 import {
   archiveUnitChange,
@@ -44,13 +45,11 @@ export function UnitMenu({ unit }: { unit: Unit }) {
   const restore = useMutation(tenancy.units.unarchive).withOptimisticUpdate(
     unarchiveUnitChange
   );
-  const [isEditing, setIsEditing] = useState(false);
-  const [opening, setOpening] = useState(0);
-  const [isArchiving, setIsArchiving] = useState(false);
+  const dialogs = useDialogs<"archive" | "edit">();
   const isArchived = unit.status === "archived";
 
   const archiveUnit = () => {
-    setIsArchiving(false);
+    dialogs.close();
     startTransition(() =>
       saveSchool(() => archive({ slug, unitId: unit.id }), SOURCE)
     );
@@ -85,17 +84,12 @@ export function UnitMenu({ unit }: { unit: Unit }) {
               </DropdownMenuItem>
             ) : (
               <>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setOpening((count) => count + 1);
-                    setIsEditing(true);
-                  }}
-                >
+                <DropdownMenuItem onClick={() => dialogs.show("edit")}>
                   <HugeIcons icon={PencilEdit02Icon} />
                   {common("edit")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setIsArchiving(true)}
+                  onClick={() => dialogs.show("archive")}
                   variant="destructive"
                 >
                   <HugeIcons icon={Archive02Icon} />
@@ -106,21 +100,19 @@ export function UnitMenu({ unit }: { unit: Unit }) {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-      <UnitEditDialog
-        key={opening}
-        open={isEditing}
-        setOpen={setIsEditing}
-        unit={unit}
-      />
+      {dialogs.kind === "edit" ? (
+        <UnitEditDialog
+          key={dialogs.key}
+          open={dialogs.isOpen("edit")}
+          setOpen={dialogs.setOpen}
+          unit={unit}
+        />
+      ) : null}
       <ResponsiveDialog
         description={t("unit-archive-description")}
         footer={
           <>
-            <Button
-              onClick={() => setIsArchiving(false)}
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={dialogs.close} type="button" variant="outline">
               {common("cancel")}
             </Button>
             <Button onClick={archiveUnit} type="button" variant="destructive">
@@ -128,8 +120,8 @@ export function UnitMenu({ unit }: { unit: Unit }) {
             </Button>
           </>
         }
-        open={isArchiving}
-        setOpen={setIsArchiving}
+        open={dialogs.isOpen("archive")}
+        setOpen={dialogs.setOpen}
         title={t("unit-archive-title")}
       />
     </div>

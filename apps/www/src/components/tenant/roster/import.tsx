@@ -10,9 +10,10 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option } from "effect";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useLongAction } from "@/components/shared/pending";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
@@ -107,7 +108,7 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
     readonly (typeof ReadRow.Type)[] | undefined
   >(undefined);
   const [problem, setProblem] = useState<FileProblem | undefined>(undefined);
-  const [isApplying, startApplying] = useTransition();
+  const [isApplying, startApplying] = useLongAction();
 
   // The press reads the period, then the batches go one after another and stop at the first refusal,
   // which the save reports.

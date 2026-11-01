@@ -1,15 +1,12 @@
 import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import {
-  Building03Icon,
   Calendar01Icon,
   Calendar03Icon,
   CalendarCheckIn01Icon,
   CalendarsIcon,
   MoreHorizontalIcon,
   MortarboardIcon,
-  School01Icon,
-  SchoolIcon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
@@ -36,6 +33,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { SchoolHeader } from "@/components/tenant/header";
+import { UNIT_ICONS } from "@/components/tenant/settings/choices";
 import { Link } from "@/lib/routing/link";
 
 /** One graduating class group the viewer opens. */
@@ -48,9 +46,6 @@ const PERIOD_ICONS = [
   CalendarCheckIn01Icon,
   CalendarsIcon,
 ] as const;
-
-/** The icons of the units in the unit filter, one building for each. */
-const UNIT_ICONS = [School01Icon, SchoolIcon, Building03Icon] as const;
 
 /** The columns of the class group list. */
 const cohortColumns = tableColumns<CohortItem>();

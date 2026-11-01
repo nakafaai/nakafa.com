@@ -40,7 +40,8 @@ for (const viewport of [
     await expect(
       page.getByRole("navigation", { name: "breadcrumb" })
     ).toContainText("General");
-    await expect(page.getByText("No message yet")).toBeVisible({
+    // The rail's row says the same of this chat, so the chat's own empty state is the last.
+    await expect(page.getByText("No message yet").last()).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
 

@@ -1,3 +1,4 @@
+import { Menu02Icon } from "@hugeicons/core-free-icons";
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
@@ -5,6 +6,8 @@ import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Option, Schema } from "effect";
+import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { CurriculumNestedHeader } from "@/components/curriculum/header";
@@ -18,15 +21,17 @@ import { RefContent } from "@/components/shared/content/references";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
 import {
-  SidebarRight,
   SidebarRightFooter,
   SidebarRightHeader,
+  SidebarRightPanel,
+  SidebarRightProvider,
 } from "@/components/shared/outline/panel";
 import { SidebarTree } from "@/components/shared/outline/tree";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { GithubButton } from "@/components/sidebar/actions/github";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
+import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import {
@@ -212,76 +217,103 @@ export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({
 function CurriculumRoutePage() {
   const page = Route.useLoaderData();
   const { labels, route } = page;
+  const hasOutline = page.materialCards.length > 0;
   return (
     <LayoutMaterial>
-      <LayoutMaterialContent>
-        {route.level === "track" ? (
-          <BreadcrumbHeader
-            value={{
-              action: (
-                <CurriculumSelector
-                  currentValue={route.publicPath}
-                  label={labels.selector}
-                  options={page.options}
-                />
-              ),
-              home: HOME_TARGET,
-              homeLabel: labels.home,
-              items: [{ label: labels.subject }],
-              title: route.title,
-            }}
-          />
-        ) : (
-          <CurriculumNestedHeader
-            ancestors={page.ancestors}
-            currentRoute={route}
-            homeLabel={labels.home}
-            subjectLabel={labels.subject}
-          />
-        )}
-        <LayoutContent>
-          {page.materialCards.length > 0 ? (
-            <ContainerList className="pt-6 sm:grid-cols-1">
-              {Arr.map(page.materialCards, (material) => (
-                <CardMaterial
-                  key={material.link.publicPath}
-                  material={material}
-                />
-              ))}
-            </ContainerList>
-          ) : null}
-          {page.materialCards.length === 0 && page.childCards.length === 0 ? (
-            <ComingSoon />
-          ) : null}
-          {page.materialCards.length === 0 && page.childCards.length > 0 ? (
-            <CurriculumCardGrid
-              actionLabel={labels.routeAction}
-              cards={page.childCards}
+      <CurriculumOutline enabled={hasOutline}>
+        <LayoutMaterialContent>
+          {route.level === "track" ? (
+            <BreadcrumbHeader
+              value={{
+                action: (
+                  <CurriculumSelector
+                    currentValue={route.publicPath}
+                    label={labels.selector}
+                    options={page.options}
+                  />
+                ),
+                home: HOME_TARGET,
+                homeLabel: labels.home,
+                items: [{ label: labels.subject }],
+                title: route.title,
+              }}
             />
+          ) : (
+            <CurriculumNestedHeader
+              ancestors={page.ancestors}
+              currentRoute={route}
+              homeLabel={labels.home}
+              subjectLabel={labels.subject}
+            >
+              {hasOutline ? <CurriculumOutlineToggle /> : null}
+            </CurriculumNestedHeader>
+          )}
+          <LayoutContent>
+            {page.materialCards.length > 0 ? (
+              <ContainerList className="pt-6 sm:grid-cols-1">
+                {Arr.map(page.materialCards, (material) => (
+                  <CardMaterial
+                    key={material.link.publicPath}
+                    material={material}
+                  />
+                ))}
+              </ContainerList>
+            ) : null}
+            {page.materialCards.length === 0 && page.childCards.length === 0 ? (
+              <ComingSoon />
+            ) : null}
+            {page.materialCards.length === 0 && page.childCards.length > 0 ? (
+              <CurriculumCardGrid
+                actionLabel={labels.routeAction}
+                cards={page.childCards}
+              />
+            ) : null}
+          </LayoutContent>
+          {page.sourceUrl ? (
+            <FooterContent>
+              <RefContent githubUrl={page.sourceUrl} />
+            </FooterContent>
           ) : null}
-        </LayoutContent>
-        {page.sourceUrl ? (
-          <FooterContent>
-            <RefContent githubUrl={page.sourceUrl} />
-          </FooterContent>
+        </LayoutMaterialContent>
+        {hasOutline ? (
+          <SidebarRightPanel
+            footer={
+              <SidebarRightFooter>
+                <ReportButton />
+                {page.sourceUrl ? (
+                  <GithubButton githubUrl={page.sourceUrl} />
+                ) : null}
+                <ShareButton />
+              </SidebarRightFooter>
+            }
+            header={<SidebarRightHeader {...page.toc} />}
+          >
+            <SidebarTree data={page.chapters} title={route.title} />
+          </SidebarRightPanel>
         ) : null}
-      </LayoutMaterialContent>
-      {page.materialCards.length > 0 ? (
-        <SidebarRight
-          footer={
-            <SidebarRightFooter>
-              <ReportButton />
-              {page.sourceUrl ? (
-                <GithubButton githubUrl={page.sourceUrl} />
-              ) : null}
-              <ShareButton />
-            </SidebarRightFooter>
-          }
-          header={<SidebarRightHeader {...page.toc} />}
-        >
-          <SidebarTree data={page.chapters} title={route.title} />
-        </SidebarRight>
-      ) : null}
+      </CurriculumOutline>
     </LayoutMaterial>
   );
+}
+
+/** The state of the page's outline, for a page that lists materials. Any other page has no outline to hold. */
+function CurriculumOutline({
+  children,
+  enabled,
+}: {
+  children: ReactNode;
+  enabled: boolean;
+}) {
+  return enabled ? (
+    <SidebarRightProvider>{children}</SidebarRightProvider>
+  ) : (
+    children
+  );
+}
+
+/** Opens the page's outline from its header. */
+function CurriculumOutlineToggle() {
+  const t = useTranslations("Common");
+
+  return <PanelSheetTrigger icon={Menu02Icon} label={t("on-this-page")} />;
 }

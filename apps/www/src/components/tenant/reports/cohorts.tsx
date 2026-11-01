@@ -33,6 +33,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { SchoolHeader } from "@/components/tenant/header";
+import { UNIT_ICONS } from "@/components/tenant/settings/choices";
 import { Link } from "@/lib/routing/link";
 
 /** One class group whose report cards the viewer opens. */
@@ -80,6 +81,19 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
       ),
       header: t("cohort"),
       id: "cohort",
+    }),
+    cohortColumns.values((cohort) => cohort.unit, {
+      header: t("unit"),
+      id: "unit",
+      options: namedOptions(
+        Arr.dedupe(
+          Arr.map(
+            QueryResult.isSuccess(cohorts) ? cohorts.value : [],
+            (cohort) => cohort.unit
+          )
+        ),
+        UNIT_ICONS
+      ),
     }),
     cohortColumns.values((cohort) => cohort.period, {
       header: t("period"),

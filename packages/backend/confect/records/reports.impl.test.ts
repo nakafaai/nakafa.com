@@ -426,7 +426,12 @@ describe("records/reports", () => {
           slug: nf,
         });
         const expected = [
-          { id: cohortId, name: "X-1", period: "Ganjil 2026/2027" },
+          {
+            id: cohortId,
+            name: "X-1",
+            period: "Ganjil 2026/2027",
+            unit: expect.any(String),
+          },
         ];
         for (const account of ["teacher", "principal", "admin"] as const) {
           expect(

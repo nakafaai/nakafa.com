@@ -150,7 +150,8 @@
     "expires": "Expires",
     "mismatches": "Failed NISN checks",
     "child": "Child",
-    "child-detail": "Child"
+    "child-detail": "Child",
+    "guardian-email": "Parent email"
   },
   "SchoolRoster": {
     "import": "Import",
@@ -447,7 +448,6 @@
     "page-empty-part": "Empty part",
     "page-gap-empty": "Fill it in before you schedule the exam.",
     "page-gap-key": "Set the answer before you schedule the exam.",
-    "offline-note": "Your changes save once you are back online.",
     "add-below": "Add question below",
     "add-below-of": "Add question below question {number}",
     "question-text": "Question {number} text",
@@ -1403,7 +1403,14 @@
     "homeroom-description": "One teacher leads each cohort.",
     "webhook-changes-description": "Your system is told each time one of these happens.",
     "webhook-changes-none": "This client reads nothing a webhook sends, so edit its actions first.",
-    "webhook-client-none": "A webhook belongs to an API client, so create one first."
+    "webhook-client-none": "A webhook belongs to an API client, so create one first.",
+    "class-students": "Students",
+    "cohort-homeroom": "Homeroom teacher",
+    "cohort-students": "Students",
+    "cohort-classes": "Classes",
+    "member-login": "Login",
+    "member-email": "Email",
+    "member-units": "Units"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1706,7 +1713,8 @@
     "own-title": "My report cards",
     "own-search": "Find a class group",
     "own-empty": "No report card is locked yet.",
-    "own-empty-description": "Your report card shows here once the principal approves it."
+    "own-empty-description": "Your report card shows here once the principal approves it.",
+    "unit": "Unit"
   },
   "SchoolGraduation": {
     "title": "Graduation",
@@ -1938,6 +1946,7 @@
     "classification": "Education"
   },
   "Common": {
+    "offline-note": "Your changes save once you are back online.",
     "popup-empty": "Nothing to choose yet.",
     "page-navigation": "Pagination navigation",
     "contributor-description": "This person helps build Nakafa.",
@@ -2353,7 +2362,6 @@
     "time-hours-short": "hr",
     "time-minutes-short": "min",
     "time-seconds-short": "sec",
-    "start-part-cta": "Start",
     "complete-part-cta": "Finish",
     "complete-part-title": "Finish this section?",
     "complete-part-description": "If you finish now, the answers in this section will be locked.",
@@ -3873,8 +3881,6 @@
     "disconnect-description": "Nakafa stops reading it at once, and remove Nakafa in your Google account too to end its access there.",
     "none": "No connector yet",
     "none-description": "Connectors open here once Google has reviewed them.",
-    "courses": "Classes in Classroom",
-    "courses-refresh": "Read again",
     "courses-none": "No active course in this Classroom account.",
     "course": "Course",
     "course-students": "Students",
