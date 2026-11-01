@@ -175,6 +175,7 @@ export function PaperField({ answers }: { answers: readonly Interaction[] }) {
           entry={entry}
           labelledBy=""
           onType={Fn.constVoid}
+          saved=""
           text=""
         />
       </div>

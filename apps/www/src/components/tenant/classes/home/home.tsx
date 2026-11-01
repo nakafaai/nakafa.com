@@ -10,9 +10,9 @@ import { ItemGroup } from "@repo/design-system/components/ui/item";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { LoadFailure } from "@/components/state/failure";
 import { PostRow } from "@/components/tenant/classes/home/post";
 import { WaitingPosts } from "@/components/tenant/classes/home/scheduled";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -62,7 +62,7 @@ function ClassPosts() {
     PaginatedQueryResult.isFailure(pagination) ||
     QueryResult.isFailure(pinned)
   ) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
   // Both reads arrive before the list draws, so a pinned announcement never jumps to the top.
   if (

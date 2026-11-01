@@ -1923,6 +1923,7 @@
     "arabic-fraction": "Garis miring pecahan",
     "arabic-minus": "Tanda minus",
     "load-error": "Data ini belum dapat dimuat.",
+    "load-error-title": "Terjadi kesalahan",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
     "month": "Bulan",

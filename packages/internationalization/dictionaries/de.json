@@ -1923,6 +1923,7 @@
     "arabic-fraction": "Bruchstrich",
     "arabic-minus": "Minuszeichen",
     "load-error": "Diese Daten konnten nicht geladen werden.",
+    "load-error-title": "Etwas ist schiefgelaufen",
     "part-denied": "Dieser Teil der Schule ist nicht offen.",
     "loading": "Wird geladen",
     "month": "Monat",

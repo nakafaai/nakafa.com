@@ -9,9 +9,9 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { LoadFailure } from "@/components/state/failure";
 import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ForumComposer } from "@/components/tenant/classes/forum/composer";
 import {
@@ -122,7 +122,7 @@ function ChannelMessages() {
   ) {
     return (
       <div className="flex-1 p-4">
-        <DataFailure onRetry={reloadPage} />
+        <LoadFailure onRetry={reloadPage} />
       </div>
     );
   }

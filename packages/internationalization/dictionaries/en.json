@@ -1923,6 +1923,7 @@
     "arabic-fraction": "Fraction slash",
     "arabic-minus": "Minus sign",
     "load-error": "We could not load this data.",
+    "load-error-title": "Something went wrong",
     "part-denied": "This part of the school is not open to you.",
     "loading": "Loading",
     "month": "Month",

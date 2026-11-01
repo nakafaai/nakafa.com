@@ -36,6 +36,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import {
@@ -127,7 +128,7 @@ function GuardianLinksBody() {
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     if (failed) {
-      return <DataFailure onRetry={reloadPage} />;
+      return <LoadFailure onRetry={reloadPage} />;
     }
     return (
       <TableEmpty
