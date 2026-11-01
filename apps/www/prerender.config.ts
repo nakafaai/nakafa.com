@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -25,16 +26,57 @@ import {
   schoolNotFoundPath,
   staticNotFoundDocument,
 } from "#www/src/lib/static/notfound";
+import { PrerenderedPagesJson } from "#www/src/lib/static/prerender";
 import { deferStaticScripts } from "#www/src/lib/static/scripts";
 import { THEME_PREPAINT_SCRIPT } from "#www/src/lib/theme/prepaint";
 
 /*
- * The build steps that run after TanStack has prerendered the public pages: the
- * static answers that the browser reads on a navigation, the deferred scripts of
- * each page, the static not-found page of each locale, then the check that the
- * output holds exactly the listed pages.
+ * The list of pages that the build prerenders, and the build steps that run after
+ * TanStack has prerendered them: the static answers that the browser reads on a
+ * navigation, the deferred scripts of each page, the static not-found page of each
+ * locale, then the check that the output holds exactly the listed pages.
  * `vite.config.ts` adds them in that order.
  */
+
+/**
+ * The file where the static runner writes the public paths that the build
+ * prerenders. TanStack reads its page list from the config before the build runs,
+ * so the list is written first, by a separate process.
+ */
+export const PAGE_LIST_FILE = join(
+  import.meta.dirname,
+  ".cache/static-pages.json"
+);
+
+/**
+ * Reads the public paths that the build prerenders. The static runner writes them
+ * from the active release, so an absent release fails the build here.
+ */
+export function readPrerenderedPagePaths(): Promise<readonly string[]> {
+  return new Promise((resolve, reject) => {
+    const runner = spawn(
+      process.execPath,
+      [
+        join(import.meta.dirname, "scripts/static/run.mjs"),
+        "pages",
+        PAGE_LIST_FILE,
+      ],
+      { cwd: import.meta.dirname, env: process.env, stdio: "inherit" }
+    );
+    runner.on("error", reject);
+    runner.on("exit", (code, signal) => {
+      if (code !== 0) {
+        reject(new Error(`The page list failed with exit ${code ?? signal}.`));
+        return;
+      }
+      resolve(
+        Schema.decodeSync(PrerenderedPagesJson)(
+          readFileSync(PAGE_LIST_FILE, "utf8")
+        )
+      );
+    });
+  });
+}
 
 /**
  * The marker that React writes where a Suspense boundary failed on the server, so

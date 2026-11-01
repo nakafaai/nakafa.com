@@ -10,11 +10,13 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import { Result, Schema } from "effect";
+import { Result } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import {
   deferStaticPageScripts,
   notFoundPages,
+  PAGE_LIST_FILE,
+  readPrerenderedPagePaths,
   verifyPrerenderedPages,
   writeNotFoundPages,
   writeStaticAnswers,
@@ -29,48 +31,10 @@ import {
 import { renderRobotsTxt } from "#www/src/lib/seo/robots";
 import { PRERENDER_HEADER } from "#www/src/lib/static/calls";
 import { STATIC_HEADER_RULES } from "#www/src/lib/static/headers";
-import { PrerenderedPagesJson } from "#www/src/lib/static/prerender";
 import { workerEnvironment, workerSettings } from "#www/worker";
-
-/**
- * The file where the static runner writes the public paths that the build
- * prerenders. TanStack reads its page list from the config before the build runs,
- * so the list is written first, by a separate process.
- */
-const PAGE_LIST_FILE = join(import.meta.dirname, ".cache/static-pages.json");
 
 /** How many prerender requests run at once. Set, so the build machine's core count never changes the output. */
 const PRERENDER_CONCURRENCY = 8;
-
-/**
- * Reads the public paths that the build prerenders. The static runner writes them
- * from the active release, so an absent release fails the build here.
- */
-function readPrerenderedPagePaths(): Promise<readonly string[]> {
-  return new Promise((resolve, reject) => {
-    const runner = spawn(
-      process.execPath,
-      [
-        join(import.meta.dirname, "scripts/static/run.mjs"),
-        "pages",
-        PAGE_LIST_FILE,
-      ],
-      { cwd: import.meta.dirname, env: process.env, stdio: "inherit" }
-    );
-    runner.on("error", reject);
-    runner.on("exit", (code, signal) => {
-      if (code !== 0) {
-        reject(new Error(`The page list failed with exit ${code ?? signal}.`));
-        return;
-      }
-      resolve(
-        Schema.decodeSync(PrerenderedPagesJson)(
-          readFileSync(PAGE_LIST_FILE, "utf8")
-        )
-      );
-    });
-  });
-}
 
 /**
  * Writes the `_headers` file of the client output, so the static assets, the
@@ -451,6 +415,18 @@ export default defineConfig(async ({ command, isPreview }) => {
                 maskPath: "/",
                 prerender: { outputPath: SHELL_PATH },
               },
+        // Every route's definition sits in the first bundle, and a loader adds what
+        // it imports to it. Beside the component, a loader loads with its page (ADR 0039).
+        router: {
+          codeSplittingOptions: {
+            defaultBehavior: [
+              ["loader"],
+              ["component"],
+              ["errorComponent"],
+              ["notFoundComponent"],
+            ],
+          },
+        },
         // Server Components: content bodies render on the server, and only "use
         // client" islands ship JavaScript. An island's heavy module loads on
         // intent, never in the first load of the route.

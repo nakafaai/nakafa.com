@@ -37,6 +37,8 @@ D5. A loop that runs by itself keeps to `createFramePace`: it rests seven times 
 
 D6. What the build can draw, the build draws. Lesson code is highlighted in `CodeBlockServer`, as the line cards draw their facts in `line.server.tsx`.
 
+D7. A route's loader is a chunk of its own, which the router loads for a navigation and a hydrated page never asks for. By default the router plugin splits only the components, so every route's loader sat in the first bundle with all it imports: 505 KB decoded on every page. What a route's `head`, `beforeLoad` and `validateSearch` import stays in that bundle, because the plugin cannot split them, so a heavy module belongs in the loader or the component.
+
 ## Consequences
 
 Positive: every page loses those recalculations, the home page's first JavaScript no longer holds the sections under its first screen, and decoration leaves the thread to the reader.
