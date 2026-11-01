@@ -74,7 +74,7 @@ function TryoutSectionPage() {
     // build prerenders; a learner's page reads their attempt once it holds the client. A press belongs
     // to its page, so the next section never starts by itself.
     <TryoutPressProvider key={sectionPath}>
-      <ConvexIsland fallback={<TryoutSectionVisitor />}>
+      <ConvexIsland fallback={<TryoutSectionVisitor />} keepsPress>
         <TryoutSectionLearner />
       </ConvexIsland>
     </TryoutPressProvider>

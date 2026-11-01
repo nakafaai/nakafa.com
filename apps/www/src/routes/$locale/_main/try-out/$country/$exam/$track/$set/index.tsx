@@ -74,7 +74,7 @@ function TryoutSetPage() {
     // build prerenders; a learner's page reads their attempt once it holds the client. A press belongs
     // to its page, so the next set starts with none.
     <TryoutPressProvider key={setPath}>
-      <ConvexIsland fallback={<TryoutSetVisitor />}>
+      <ConvexIsland fallback={<TryoutSetVisitor />} keepsPress>
         <TryoutSetLearner />
       </ConvexIsland>
     </TryoutPressProvider>
