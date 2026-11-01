@@ -70,9 +70,14 @@ test("reloads once for a chunk of an earlier deploy instead of showing an error"
   await theme.click();
   await reloaded;
 
-  expect(
-    await page.evaluate((mark) => Reflect.get(window, mark), FIRST_DOCUMENT)
-  ).not.toBe(true);
+  await expect
+    .poll(() =>
+      page
+        .evaluate((mark) => Reflect.get(window, mark), FIRST_DOCUMENT)
+        // The reload destroys the page that this asks, so ask again.
+        .catch(() => true)
+    )
+    .not.toBe(true);
   await expect(page).toHaveURL(new RegExp(`${SIGN_IN}$`, "u"));
   await expect(page.getByRole("heading", { name: TITLE })).toBeVisible();
   expect(
@@ -82,8 +87,9 @@ test("reloads once for a chunk of an earlier deploy instead of showing an error"
 
 /**
  * The network drops under an open page, and a press asks for a chunk the document
- * did not load. The chunk is out of reach, not gone, so the page stays: a reload
- * would swap the lesson for the browser's offline screen.
+ * did not load. The chunk is out of reach, not gone, so the lesson stays on screen:
+ * a reload would swap it for the browser's offline screen, and the route's error
+ * would swap it for a broken page. The press answers once the network is back.
  */
 test("keeps its page when a press asks for a chunk and the network is gone", async ({
   context,
@@ -92,6 +98,7 @@ test("keeps its page when a press asks for a chunk and the network is gone", asy
   await page.goto(LESSON_PATH);
   const title = page.getByRole("heading", { level: 1 });
   await waitUntilTakenOver(title);
+  const lesson = await title.innerText();
 
   await context.setOffline(true);
   const failed = page.evaluate(
@@ -105,6 +112,8 @@ test("keeps its page when a press asks for a chunk and the network is gone", asy
   await page.getByRole("button", { name: "Search content..." }).first().click();
   await failed;
 
-  await expect(title).toBeVisible();
+  await expect(title).toHaveText(lesson);
   await context.setOffline(false);
+  await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+  await expect(title).toHaveText(lesson);
 });

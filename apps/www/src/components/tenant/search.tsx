@@ -1,5 +1,6 @@
 import { useHotkeys } from "@mantine/hooks";
-import { lazy, Suspense, useState } from "react";
+import { lazy } from "@repo/design-system/lib/lazy";
+import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { SidebarSearchButton } from "@/components/sidebar/search/button";
 

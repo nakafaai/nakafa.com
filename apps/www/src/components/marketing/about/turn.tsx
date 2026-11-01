@@ -1,12 +1,12 @@
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { TypedText } from "@repo/design-system/components/ui/typed";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { cva } from "class-variance-authority";
 import { Schema } from "effect";
 import { delay } from "motion";
 import {
   createContext,
-  lazy,
   type ReactNode,
   Suspense,
   use,

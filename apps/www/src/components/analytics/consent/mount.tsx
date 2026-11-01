@@ -1,6 +1,7 @@
+import { lazy } from "@repo/design-system/lib/lazy";
 import type { ConvexReactClient } from "convex/react";
 import { Option } from "effect";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { useStore } from "zustand";
 import {
   VisitorConsentControls,

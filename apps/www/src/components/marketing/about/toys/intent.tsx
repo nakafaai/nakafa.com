@@ -1,6 +1,7 @@
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { AfterPageRead } from "@repo/design-system/components/ui/settled";
-import { lazy, Suspense } from "react";
+import { lazy } from "@repo/design-system/lib/lazy";
+import { Suspense } from "react";
 
 /**
  * The toy layer's code, which stays out of the page's first JavaScript. Its

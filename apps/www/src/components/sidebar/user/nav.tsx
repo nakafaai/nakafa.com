@@ -2,7 +2,8 @@
 
 import { SidebarFooter } from "@repo/design-system/components/ui/sidebar-content";
 import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
-import { lazy, Suspense } from "react";
+import { lazy } from "@repo/design-system/lib/lazy";
+import { Suspense } from "react";
 import { SignedInIsland } from "@/components/providers/island";
 import { AccountPricing } from "@/components/sidebar/menu/pricing";
 import { NavUserGuest } from "@/components/sidebar/user/guest/card";

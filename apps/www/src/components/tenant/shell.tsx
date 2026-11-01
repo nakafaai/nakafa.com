@@ -30,18 +30,12 @@ import {
   Sidebar,
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { textDirection } from "@repo/internationalization/src/direction";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
-import {
-  createContext,
-  lazy,
-  type ReactNode,
-  Suspense,
-  use,
-  useState,
-} from "react";
+import { createContext, type ReactNode, Suspense, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { Authenticated } from "@/components/auth/gate";
 import { ShellLocksContext } from "@/components/sidebar/locks";

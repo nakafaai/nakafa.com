@@ -1,13 +1,9 @@
+import { lazy } from "@repo/design-system/lib/lazy";
 import {
   isToastRequested,
   subscribeToastRequests,
 } from "@repo/design-system/lib/toast/notify";
-import {
-  type ComponentProps,
-  lazy,
-  Suspense,
-  useSyncExternalStore,
-} from "react";
+import { type ComponentProps, Suspense, useSyncExternalStore } from "react";
 
 /**
  * The Toaster and Sonner's view load with the first toast, so a page without one

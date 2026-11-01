@@ -1,5 +1,6 @@
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
-import { type ComponentProps, lazy, Suspense } from "react";
+import { type ComponentProps, Suspense } from "react";
 
 /**
  * Loads the local preview listener only where a preview layout renders it. A

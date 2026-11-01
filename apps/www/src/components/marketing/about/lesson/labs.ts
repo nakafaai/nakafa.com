@@ -1,6 +1,7 @@
 import { DecimalSeparatorSchema } from "@repo/design-system/components/contents/physics/kinematics/number";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { Schema } from "effect";
-import { type ComponentType, type LazyExoticComponent, lazy } from "react";
+import type { ComponentType, LazyExoticComponent } from "react";
 import type { Lesson } from "@/components/marketing/about/lesson/id";
 
 /** The props of every lesson lab, which the lesson window passes. */

@@ -1,10 +1,11 @@
 import { useMutation } from "@confect/react";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, HashSet } from "effect";
-import { createContext, lazy, Suspense, use } from "react";
+import { createContext, Suspense, use } from "react";
 import { useLocale } from "use-intl";
 import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
 import { MoreMenu } from "@/components/shared/more";

@@ -1,9 +1,10 @@
 import { UserSwitchIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { getRouteApi, useMatchRoute } from "@tanstack/react-router";
 import { Effect } from "effect";
-import { lazy, Suspense, useOptimistic, useState, useTransition } from "react";
+import { Suspense, useOptimistic, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { EntryShellArtwork } from "@/components/entry/artwork";
 import {

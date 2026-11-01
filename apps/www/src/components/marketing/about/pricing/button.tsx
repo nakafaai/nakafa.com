@@ -3,11 +3,11 @@ import { useMounted } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useEarlyPress } from "@repo/design-system/hooks/use-press";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option } from "effect";
 import {
   createContext,
-  lazy,
   Suspense,
   use,
   useEffect,
