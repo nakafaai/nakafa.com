@@ -3,12 +3,16 @@ import { Id, type TableNames } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { newChoiceAnswers } from "@repo/backend/confect/exams/blank";
 import { StaleAnswer } from "@repo/backend/confect/exams/sittings/errors";
+import { recorderLayer } from "@repo/backend/scripts/load/recorder";
 import type { Wire } from "@repo/backend/scripts/load/wire";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { getFunctionName } from "convex/server";
 import { ConvexError } from "convex/values";
 import {
   Array as Arr,
   Effect,
+  FileSystem,
+  Layer,
   MutableHashMap,
   MutableList,
   Option,
@@ -16,6 +20,14 @@ import {
 } from "effect";
 
 const sittings = refs.public.exams.sittings;
+
+/** A recorder whose acknowledgements go to a temporary file that lasts as long as the layer. */
+export const temporaryRecorder = Layer.unwrap(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return recorderLayer(yield* fs.makeTempFileScoped());
+  }).pipe(Effect.orDie)
+).pipe(Layer.provide(nodePlatform));
 
 /** A test ID of one table, as the server's rows carry it. */
 export const idOf = <const TableName extends TableNames>(
