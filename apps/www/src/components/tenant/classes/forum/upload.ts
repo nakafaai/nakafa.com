@@ -1,8 +1,17 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { AttachmentKind } from "@repo/backend/confect/classroom/forum/attachment";
 import { LIBRARY_BYTE_LIMIT } from "@repo/backend/confect/classroom/library/file";
 import { ImageType } from "@repo/editor/upload";
-import { Data, Effect, Number as Num, type Result, Schema } from "effect";
+import {
+  Data,
+  Effect,
+  Number as Num,
+  Option,
+  type Result,
+  Schema,
+} from "effect";
 import { forumCall } from "@/components/tenant/classes/forum/call";
+import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 
 /** The longest edge of a photo a chat keeps: as sharp as WhatsApp's standard photo, a tenth of a phone's bytes. */
 const PHOTO_EDGE = 1600;
@@ -22,6 +31,34 @@ const storageId = Id("_storage");
 
 /** A file past what a message carries, which the browser refuses before it sends a byte. */
 export class FileTooLarge extends Data.TaggedError("FileTooLarge") {}
+
+/**
+ * One file on its way into the next message: what the tray shows of it, its address on this device,
+ * which shows a picture before the server holds it, and the upload the server registered.
+ */
+export const TrayFile = Schema.Struct({
+  byteSize: Schema.Int,
+  height: Schema.NullOr(Schema.Int),
+  key: Schema.String,
+  kind: AttachmentKind,
+  name: Schema.String,
+  preview: Schema.Option(Schema.String),
+  upload: Schema.Option(Id("classroomUploads")),
+  width: Schema.NullOr(Schema.Int),
+});
+
+/** The file as its message shows it before the server answers, from what this device holds. */
+export const shownFile = (
+  file: typeof TrayFile.Type
+): ForumMessage["attachments"][number] => ({
+  address: Option.getOrNull(file.preview),
+  byteSize: file.byteSize,
+  height: file.height,
+  kind: file.kind,
+  name: file.name,
+  thumbnail: Option.getOrNull(file.preview),
+  width: file.width,
+});
 
 /** The size that fits `width` by `height` inside a square of `edge`, never larger than it is. */
 export const fitted = (width: number, height: number, edge: number) => {

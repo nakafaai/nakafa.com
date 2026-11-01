@@ -2,6 +2,7 @@ import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type access from "@repo/backend/confect/_generated/refs/access";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { BuiltinRole, OwnerRole } from "@repo/backend/confect/access/schema";
 import { INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, DateTime, Duration, Option, Schema } from "effect";
 import {
@@ -16,6 +17,18 @@ import {
   type Person,
   withoutItem,
 } from "@/components/tenant/settings/state";
+
+/**
+ * The roles the viewer may give a person. The Integration role belongs to an integration client
+ * alone, and only an Owner gives the two roles that lead the school.
+ */
+export const givenRoles = (viewer: Option.Option<BuiltinRole>) =>
+  Arr.filter(
+    BuiltinRole.literals,
+    (role) =>
+      role !== "integration" &&
+      (Option.contains(viewer, "owner") || !Schema.is(OwnerRole)(role))
+  );
 
 /** The loaded Person with this ID, read from any loaded list of people, or none when no list holds it. */
 function nameOfPerson(

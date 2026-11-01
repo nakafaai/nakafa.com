@@ -26,7 +26,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
@@ -104,7 +104,7 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         <TableSearch placeholder={t("search-cohorts")} />
       </SchoolHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">
+      <TablePageBody>
         {QueryResult.isSuccess(cohorts) &&
         Arr.isReadonlyArrayEmpty(cohorts.value) ? (
           <TableEmpty
@@ -122,7 +122,7 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
             search="cohort"
           />
         ) : null}
-      </div>
+      </TablePageBody>
     </TableFiltersProvider>
   );
 }

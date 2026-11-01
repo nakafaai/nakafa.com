@@ -200,7 +200,6 @@ function UserSettingsCurriculumForm({
                   {t("curriculum")}
                 </FieldLabel>
                 <Select
-                  disabled={Arr.isReadonlyArrayEmpty(programs)}
                   items={selectItems}
                   name={field.name}
                   onValueChange={(value) => {

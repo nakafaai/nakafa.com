@@ -23,13 +23,21 @@ const NOW = Date.UTC(2026, 9, 25, 12);
 const polarGateway = vi.hoisted(() => ({ refundOrder: vi.fn() }));
 vi.mock("@repo/backend/confect/billing/polar/live", () => ({ polarGateway }));
 
+/** The fetch a scheduled refund reaches Xendit through. */
+const fetcher = vi.fn<typeof fetch>();
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
   polarGateway.refundOrder.mockReset().mockReturnValue(Effect.void);
+  fetcher.mockReset();
+  vi.stubGlobal("fetch", fetcher);
+  vi.stubEnv("XENDIT_API_KEY", "test-secret");
 });
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
 /** One learner with a Polar account, and a Pro grant when `pro` is true. */
@@ -77,6 +85,15 @@ function orderOf(
     userId: learner.userId,
   };
 }
+
+/** The order a Xendit buyer pays for one top-up pack, in the test's fixed time. */
+const xenditOrderOf = (learner: Parameters<typeof orderOf>[0]): TopUpOrder => ({
+  ...orderOf(learner, "py_pack"),
+  amount: 59_000,
+  currency: "IDR",
+  rail: "xendit",
+  refundableAmount: 59_000,
+});
 
 /** The rows a top-up order leaves behind: its payments, its packs, and its ledger. */
 function storedOf(
@@ -138,6 +155,49 @@ describe("billing/topup", () => {
       orderId: "order_topup_1",
       refundableAmount: 499,
     });
+  });
+
+  it("returns a Xendit payment of a learner without Pro through Xendit", async () => {
+    const t = createBillingTestConvex();
+    const learner = await t.mutation((ctx) => seedLearner(ctx, false));
+    fetcher.mockResolvedValue(
+      Response.json(
+        {
+          amount: 59_000,
+          payment_id: "py_pack",
+          refund_id: "rfd-1",
+          updated: "2026-10-25T12:00:00.000Z",
+        },
+        { status: 201 }
+      )
+    );
+    await t.mutation((ctx) =>
+      runInMutation(ctx, applyTopUpPaid(xenditOrderOf(learner)))
+    );
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    expect(polarGateway.refundOrder).not.toHaveBeenCalled();
+    const [url] = fetcher.mock.calls[0] ?? [];
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(String(url)).toBe("https://api.xendit.co/v3/refunds");
+  });
+
+  it("leaves a payment Xendit would not return on record for an operator", async () => {
+    const t = createBillingTestConvex();
+    const learner = await t.mutation((ctx) => seedLearner(ctx, false));
+    fetcher.mockResolvedValue(
+      Response.json(
+        { error_code: "REFUND_NOT_SUPPORTED", message: "No refund." },
+        { status: 400 }
+      )
+    );
+    await t.mutation((ctx) =>
+      runInMutation(ctx, applyTopUpPaid(xenditOrderOf(learner)))
+    );
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect((await storedOf(t, learner.userId)).payments).toEqual([
+      ["credits", "succeeded"],
+    ]);
   });
 
   it("refunds nothing for an order without Pro that charged nothing", async () => {

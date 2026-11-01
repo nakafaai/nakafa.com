@@ -19,7 +19,7 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
@@ -56,9 +56,9 @@ export function SchoolOwnReports() {
       <SchoolHeader items={[{ label: t("own-title") }]} title={t("own-title")}>
         <TableSearch placeholder={t("own-search")} />
       </SchoolHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">
+      <TablePageBody>
         <OwnReportTable />
-      </div>
+      </TablePageBody>
     </TableFiltersProvider>
   );
 }

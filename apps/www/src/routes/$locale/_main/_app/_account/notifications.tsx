@@ -45,7 +45,7 @@ function NotificationsPage() {
         <NotificationsHeader>
           <MarkAllRead first={page} scope={ACCOUNT_INBOX} />
         </NotificationsHeader>
-        <InboxTabs topics={InboxTopic.literals} width="column" />
+        <InboxTabs topics={InboxTopic.literals} />
         <LayoutContent className="flex flex-col gap-6 py-6">
           <NotificationsClockContext value={clock}>
             <NotificationsList first={page} scope={ACCOUNT_INBOX} />

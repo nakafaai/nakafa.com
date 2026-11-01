@@ -30,6 +30,35 @@ const CHECK_DELAY_MILLISECONDS = 250;
 const isSchoolName = Schema.is(SchoolName);
 
 /**
+ * The server's check of the typed address. A failed check keeps the typed name and address in
+ * place, and says so beside the field, so the founder types the address again to check it, and
+ * nothing is lost. The last answer stays while the next is checked, so a reason never blinks away
+ * between keystrokes.
+ */
+function useAddressCheck(slug: string) {
+  const [asked] = useDebouncedValue(slug, CHECK_DELAY_MILLISECONDS);
+  const check = useQuery(
+    tenancy.start.address,
+    asked === "" ? "skip" : { slug: asked }
+  );
+  const state =
+    asked === slug && QueryResult.isSuccess(check)
+      ? Option.some(check.value)
+      : Option.none();
+  const [lastAnswer, setLastAnswer] = useState(state);
+  if (Option.isSome(state) && !Option.contains(lastAnswer, state.value)) {
+    setLastAnswer(state);
+  }
+
+  return {
+    answer:
+      slug === "" ? Option.none() : Option.orElse(state, () => lastAnswer),
+    checkFailed: QueryResult.isFailure(check) && asked === slug,
+    state,
+  };
+}
+
+/**
  * The first question: the school's name, and its address, which follows the name
  * until the founder types one. The server checks the address while the founder
  * types, and a taken or reserved address keeps the questionnaire here with its
@@ -44,28 +73,10 @@ export function StartNameQuestion() {
   const slug = useTypedName((state) => state.slug);
   const setName = useTypedName((state) => state.setName);
   const setSlug = useTypedName((state) => state.setSlug);
-  const [asked] = useDebouncedValue(slug, CHECK_DELAY_MILLISECONDS);
-  const check = useQuery(
-    tenancy.start.address,
-    asked === "" ? "skip" : { slug: asked }
-  );
+  const { answer, checkFailed, state } = useAddressCheck(slug);
   const nameId = useId();
   const slugId = useId();
   const slugLabelId = useId();
-  // A failed check keeps the typed name and address in place, and says so beside the field, so
-  // the founder types the address again to check it, and nothing is lost.
-  const checkFailed = QueryResult.isFailure(check);
-  const state =
-    asked === slug && QueryResult.isSuccess(check)
-      ? Option.some(check.value)
-      : Option.none();
-  // The last answer stays while the next is checked, so a reason never blinks away between keystrokes.
-  const [lastAnswer, setLastAnswer] = useState(state);
-  if (Option.isSome(state) && !Option.contains(lastAnswer, state.value)) {
-    setLastAnswer(state);
-  }
-  const answer =
-    slug === "" ? Option.none() : Option.orElse(state, () => lastAnswer);
   // Once either field holds something, the name is required, so typing an address
   // alone never answers the question.
   const started = name !== "" || slug !== "";
@@ -73,15 +84,14 @@ export function StartNameQuestion() {
   const addressProblem =
     (started && slug === "") ||
     Option.exists(answer, (reply) => reply !== "free");
-  const addressMessage =
-    checkFailed && asked === slug
-      ? t("address-check-failed")
-      : Option.match(answer, {
-          onNone: () =>
-            started && slug === "" ? t("address-invalid") : t("required-error"),
-          onSome: (reply) =>
-            reply === "free" ? t("required-error") : t(`address-${reply}`),
-        });
+  const addressMessage = checkFailed
+    ? t("address-check-failed")
+    : Option.match(answer, {
+        onNone: () =>
+          started && slug === "" ? t("address-invalid") : t("required-error"),
+        onSome: (reply) =>
+          reply === "free" ? t("required-error") : t(`address-${reply}`),
+      });
   const message = nameProblem ? t("name-error") : addressMessage;
 
   return (

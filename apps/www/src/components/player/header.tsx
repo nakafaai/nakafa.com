@@ -3,7 +3,7 @@ import { PlayerViewSwitch } from "@/components/player/view";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
 /**
- * Keeps the player's header in one row across the app's width (`max-w-7xl`),
+ * Keeps the player's header in one row across the page's frame,
  * in three zones: back and the title at the start, the timer in the centre, and
  * the view beside the one primary action at the end. It is the player's only
  * header row: no toolbar row sits under it. The start and the end share the space left
@@ -12,7 +12,7 @@ import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
  */
 export function PlayerHeader({ children }: { children: ReactNode }) {
   return (
-    <BreadcrumbHeaderFrame contentClassName="grid max-w-7xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2">
+    <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2">
       {children}
     </BreadcrumbHeaderFrame>
   );

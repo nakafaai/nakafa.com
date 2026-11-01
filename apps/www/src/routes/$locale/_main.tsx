@@ -5,6 +5,7 @@ import { cn } from "cn";
 import { IntlProvider } from "use-intl";
 import { PageProviders } from "@/components/providers/page";
 import { SharedProviders } from "@/components/providers/shared";
+import { pageFrameVariants } from "@/components/shared/content/width";
 import { AppShell } from "@/components/sidebar/shell";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";
@@ -16,7 +17,8 @@ import { readStaticData } from "@/lib/static/data";
  * does not carry. The Common, State and Toast messages come from the locale route.
  * Pricing is here because a finished try-out set offers Pro, and the signed-in
  * screens read it from here too. ComingSoon is the body of a lesson, an article,
- * a curriculum page or a try-out catalog that has no content yet.
+ * a curriculum page or a try-out catalog that has no content yet. DataTable is the
+ * try-out catalog's table, and Error is a 3D visual that fails to draw.
  */
 const MAIN_NAMESPACES = [
   ...SHELL_MESSAGE_NAMESPACES,
@@ -33,9 +35,9 @@ const MAIN_NAMESPACES = [
 const localeRoute = getRouteApi("/$locale");
 
 /**
- * The student shell that every learn page and signed-in screen shares. An
- * unknown locale stops before any page loads. The shell's messages load with the
- * layout, so no part of it renders a raw message key.
+ * The student shell that every learn page and signed-in screen shares, at the column
+ * unless a page sets the page width. An unknown locale stops before any page loads.
+ * The shell's messages load with the layout, so no part of it renders a raw message key.
  */
 export const Route = createFileRoute("/$locale/_main")({
   loader: async ({ params }) => {
@@ -71,7 +73,9 @@ function MainLayout() {
       <PageProviders pageNavigation={pageNavigation}>
         <SharedProviders>
           <AppShell articleNavigation={articleNavigation}>
-            <div className={cn(monospace, "contents")}>
+            <div
+              className={cn(monospace, pageFrameVariants({ width: "column" }))}
+            >
               <Outlet />
             </div>
           </AppShell>

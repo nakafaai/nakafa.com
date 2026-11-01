@@ -12,7 +12,7 @@ import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
@@ -34,7 +34,7 @@ export function SchoolInsight() {
   const { role } = useTenant();
 
   return (
-    <>
+    <PageFrame width="column">
       <SchoolHeader items={[{ label: t("title") }]}>
         {Option.contains(role, "student") ? null : <QuestionTags />}
       </SchoolHeader>
@@ -48,7 +48,7 @@ export function SchoolInsight() {
           <TeacherInsight />
         )}
       </LayoutContent>
-    </>
+    </PageFrame>
   );
 }
 

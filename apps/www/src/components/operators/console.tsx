@@ -14,6 +14,7 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { OpenSchoolDialog } from "@/components/operators/open";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
+import { PageFrame } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
@@ -54,28 +55,30 @@ export function OperatorConsole() {
   const [isOpening, setIsOpening] = useState(false);
 
   return (
-    <TableFiltersProvider>
-      <BreadcrumbHeader
-        value={{
-          action: (
-            <>
-              <TableSearch placeholder={t("search")} />
-              <Button onClick={() => setIsOpening(true)} type="button">
-                {t("open")}
-              </Button>
-            </>
-          ),
-          home: HOME_TARGET,
-          homeLabel: common("home"),
-          items: [{ label: t("title") }],
-          title: t("title"),
-        }}
-      />
-      <TablePageBody width="page">
-        <OperatorSchools />
-      </TablePageBody>
-      <OpenSchoolDialog open={isOpening} setOpen={setIsOpening} />
-    </TableFiltersProvider>
+    <PageFrame width="page">
+      <TableFiltersProvider>
+        <BreadcrumbHeader
+          value={{
+            action: (
+              <>
+                <TableSearch placeholder={t("search")} />
+                <Button onClick={() => setIsOpening(true)} type="button">
+                  {t("open")}
+                </Button>
+              </>
+            ),
+            home: HOME_TARGET,
+            homeLabel: common("home"),
+            items: [{ label: t("title") }],
+            title: t("title"),
+          }}
+        />
+        <TablePageBody>
+          <OperatorSchools />
+        </TablePageBody>
+        <OpenSchoolDialog open={isOpening} setOpen={setIsOpening} />
+      </TableFiltersProvider>
+    </PageFrame>
   );
 }
 

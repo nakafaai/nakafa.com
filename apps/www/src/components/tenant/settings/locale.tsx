@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import { startTransition, useId, useState } from "react";
+import { startTransition, useId, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
   CardSection,
@@ -74,8 +74,14 @@ export function SchoolLocaleCard({
   const [chosenCurrency, setNextCurrency] = useState<string | null>(null);
   const nextCountry = chosenCountry ?? country;
   const nextCurrency = chosenCurrency ?? currency;
-  const countryNames = new Intl.DisplayNames([locale], { type: "region" });
-  const currencyNames = new Intl.DisplayNames([locale], { type: "currency" });
+  const countryNames = useMemo(
+    () => new Intl.DisplayNames([locale], { type: "region" }),
+    [locale]
+  );
+  const currencyNames = useMemo(
+    () => new Intl.DisplayNames([locale], { type: "currency" }),
+    [locale]
+  );
   const countryItems = Arr.map(countriesWith(country), (value) => ({
     label: countryNames.of(value) ?? value,
     value,
