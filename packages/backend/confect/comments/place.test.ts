@@ -18,14 +18,22 @@ const place = Ref.getFunctionReference(
   refs.public.comments.queries.getCommentPlace
 );
 
-/** A deployment with one account, whose comment stands on `slug`. */
+/** The activation of one lesson in the given languages, for one mutation. */
+const activate = (appLocales: readonly ("en" | "id")[], ctx: MutationCtx) =>
+  activateMaterialCatalog(
+    Arr.map(appLocales, (appLocale) => makeMaterialProjection(appLocale, 1))
+  ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)));
+
+/** A deployment with one account, whose comment stands on `slug`, and a lesson in `appLocales`. */
 async function commentOn(
   slug: string,
-  activate?: (ctx: MutationCtx) => Promise<void>
+  appLocales: readonly ("en" | "id")[] = []
 ) {
   const t = createConvexTestWithBetterAuth();
+  if (Arr.isReadonlyArrayNonEmpty(appLocales)) {
+    await t.mutation((ctx) => Effect.runPromise(activate(appLocales, ctx)));
+  }
   const commentId = await t.mutation(async (ctx) => {
-    await activate?.(ctx);
     const { userId } = await seedAuthenticatedUser(ctx, {
       now,
       suffix: "place",
@@ -41,14 +49,6 @@ async function commentOn(
   return { commentId, t };
 }
 
-/** Activates one lesson in the given languages. */
-const activate = (appLocales: readonly ("en" | "id")[]) => (ctx: MutationCtx) =>
-  Effect.runPromise(
-    activateMaterialCatalog(
-      Arr.map(appLocales, (appLocale) => makeMaterialProjection(appLocale, 1))
-    ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
-  );
-
 describe("comments/place", () => {
   it("opens an article's comment at the path its slug holds, in the reader's language", async () => {
     const { commentId, t } = await commentOn("articles/politics/example");
@@ -60,7 +60,7 @@ describe("comments/place", () => {
   });
 
   it("finds a lesson's path in the reader's language from its content key", async () => {
-    const { commentId, t } = await commentOn(KEY, activate(["en", "id"]));
+    const { commentId, t } = await commentOn(KEY, ["en", "id"]);
     const projection = makeMaterialProjection("id", 1);
 
     expect(await t.query(place, { appLocale: "id", commentId })).toStrictEqual({
@@ -70,7 +70,7 @@ describe("comments/place", () => {
   });
 
   it("opens a lesson in another language when the reader's has none", async () => {
-    const { commentId, t } = await commentOn(KEY, activate(["en"]));
+    const { commentId, t } = await commentOn(KEY, ["en"]);
     const projection = makeMaterialProjection("en", 1);
 
     expect(await t.query(place, { appLocale: "id", commentId })).toStrictEqual({
@@ -80,7 +80,7 @@ describe("comments/place", () => {
   });
 
   it("finds no page for a lesson that left the release, or before any release", async () => {
-    const gone = await commentOn(`${KEY}-gone`, activate(["en", "id"]));
+    const gone = await commentOn(`${KEY}-gone`, ["en", "id"]);
     expect(
       await gone.t.query(place, {
         appLocale: "id",

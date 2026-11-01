@@ -414,5 +414,5 @@ it("deletes the inbox rows of a deleted account, and keeps another account's", a
   }
 
   const rows = await t.run((ctx) => ctx.db.query("notifications").collect());
-  expect(rows.map(({ _id }) => _id)).toEqual([row]);
+  expect(Arr.map(rows, ({ _id }) => _id)).toEqual([row]);
 });

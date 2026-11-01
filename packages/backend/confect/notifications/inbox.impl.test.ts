@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { HELD_SCHOOL_LIMIT } from "@repo/backend/confect/notifications/held";
+import type { NotificationView } from "@repo/backend/confect/notifications/schema";
 import {
   addPerson,
   claim,
@@ -19,9 +20,8 @@ import { Array as Arr, Effect } from "effect";
 const { list, read, readAll } = refs.public.notifications.inbox;
 const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
 const ANA = "ana@harapan.example.test";
-const subjectsOf = <Row extends Parameters<typeof schoolViews>[0][number]>(
-  rows: readonly Row[]
-) => Arr.map(schoolViews(rows), (item) => item.subject);
+const subjectsOf = (rows: readonly (typeof NotificationView.Type)[]) =>
+  Arr.map(schoolViews(rows), (item) => item.subject);
 
 /** Fake timers keep the clock where each test sets it. */
 beforeEach(() => {
