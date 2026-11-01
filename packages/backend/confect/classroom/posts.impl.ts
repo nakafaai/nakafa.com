@@ -1,21 +1,23 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { ClassroomPostsDoc } from "@repo/backend/confect/_generated/docs";
-import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
-import {
-  classAccess,
-  classAuthority,
-} from "@repo/backend/confect/classroom/authority";
+import { classAccess } from "@repo/backend/confect/classroom/authority";
 import { PinLimit } from "@repo/backend/confect/classroom/errors";
+import { VoteRefused } from "@repo/backend/confect/classroom/forum/errors";
+import { castVote } from "@repo/backend/confect/classroom/forum/tally";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { announce } from "@repo/backend/confect/classroom/posts/announce";
+import {
+  postPollView,
+  sealPostPoll,
+} from "@repo/backend/confect/classroom/posts/poll";
 import {
   PIN_LIMIT,
   postField,
@@ -24,17 +26,8 @@ import spec from "@repo/backend/confect/classroom/posts.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
-import {
-  Array as Arr,
-  Clock,
-  Duration,
-  Effect,
-  Layer,
-  Option,
-  Struct,
-} from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /** An announcement that is not the allowed class's own, or not the caller's, refused as a missing object. */
 const missing = () =>
@@ -88,6 +81,7 @@ const postViews = Effect.fn("classroom.posts.views")(function* (
         id: post._id,
         mine: post.authorId === person._id,
         pinned: post.pinnedAt !== undefined,
+        poll: yield* postPollView(keys, post),
         text: yield* openText(keys, postField(post), post.sealedText),
       };
     }).pipe(Effect.orDie)
@@ -172,17 +166,19 @@ const pin = FunctionImpl.make(
 );
 
 /**
- * Posts an announcement to the class, sealed with the school key, records
- * `announcement.posted`, the published change, and schedules the fan-out that
- * writes the inbox row of every member of the class in batches (ADR 0027); Convex
- * schedules it only if the post commits. A repeat of a client key of the class answers that announcement and
+ * Posts an announcement to the class, sealed with the school key (`announce`). A repeat of a client key of the class answers that announcement and
  * writes nothing; whoever posts in the class may read it anyway.
  */
 const publish = FunctionImpl.make(
   databaseSchema,
   spec,
   "publish",
-  Effect.fn("classroom.posts.publish")(function* ({ clientKey, email, text }) {
+  Effect.fn("classroom.posts.publish")(function* ({
+    clientKey,
+    email,
+    poll,
+    text,
+  }) {
     const { person } = yield* Member;
     const row = yield* Class;
     const reader = yield* DatabaseReader;
@@ -197,33 +193,107 @@ const publish = FunctionImpl.make(
       return yield* postView(sent.value);
     }
     const fields = { classId: row._id, clientKey };
-    const postId = yield* (yield* DatabaseWriter)
-      .table("classroomPosts")
-      .insert({
-        ...fields,
-        authorId: person._id,
-        createdAt: yield* Clock.currentTimeMillis,
-        email,
-        sealedText: yield* sealText(
-          yield* schoolKeys(row.tenantId),
-          postField(fields),
-          text
-        ).pipe(Effect.orDie),
-        tenantId: row.tenantId,
-      })
-      .pipe(Effect.orDie);
-    yield* classAuthority.record(personActor(person), row, {
-      post: postId,
-      type: "announcement.posted",
+    const keys = yield* schoolKeys(row.tenantId);
+    const postId = yield* announce(row, person, {
+      clientKey,
+      email,
+      ...(poll === null
+        ? {}
+        : { poll: yield* sealPostPoll(keys, fields, poll) }),
+      sealedText: yield* sealText(keys, postField(fields), text).pipe(
+        Effect.orDie
+      ),
     });
-    yield* (yield* Scheduler).runAfter(
-      Duration.zero,
-      notificationsInternal.fanout.run,
-      { cursor: null, phase: "students", source: { _tag: "post", postId } }
-    );
     return yield* postView(
       yield* reader.table("classroomPosts").get(postId).pipe(Effect.orDie)
     );
+  })
+);
+
+/** The votes row of an announcement, if anyone voted. */
+const votesOf = Effect.fn("classroom.posts.votesOf")(function* (
+  postId: GenericId.GenericId<"classroomPosts">
+) {
+  return yield* (yield* DatabaseReader)
+    .table("classroomPostVotes")
+    .index("by_postId", (query) => query.eq("postId", postId))
+    .first()
+    .pipe(Effect.orDie);
+});
+
+/** The votes of some announcements of the class for the viewer, read apart so a page of posts stays still while a class votes. */
+const votes = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "votes",
+  Effect.fn("classroom.posts.votes")(function* ({ postIds }) {
+    const { person } = yield* Member;
+    const row = yield* Class;
+    const rows = yield* Effect.forEach(postIds, votesOf);
+    return Arr.map(
+      Arr.filter(Arr.getSomes(rows), (found) => found.classId === row._id),
+      (found) => ({
+        postId: found.postId,
+        votes: Arr.map(found.votes, ({ option, people }) => ({
+          count: people.length,
+          mine: Arr.contains(people, person._id),
+          option,
+        })),
+      })
+    );
+  })
+);
+
+/** Sets the viewer's choices in the poll of an announcement. No choice takes their vote back. */
+const vote = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "vote",
+  Effect.fn("classroom.posts.vote")(function* ({ options, postId }) {
+    const { person } = yield* Member;
+    const row = yield* Class;
+    const post = yield* (yield* DatabaseReader)
+      .table("classroomPosts")
+      .get(postId)
+      .pipe(Effect.option);
+    if (
+      Option.isNone(post) ||
+      post.value.classId !== row._id ||
+      post.value.poll === undefined
+    ) {
+      return yield* new AccessDenied({
+        action: "forum.post",
+        reason: "resource",
+      });
+    }
+    const { poll } = post.value;
+    const chosen = Arr.dedupe(options);
+    const held = poll.sealedOptions.length;
+    if (
+      Arr.some(chosen, (option) => option < 0 || option >= held) ||
+      (!poll.multiple && chosen.length > 1)
+    ) {
+      return yield* new VoteRefused();
+    }
+    const stored = yield* votesOf(postId);
+    const writer = (yield* DatabaseWriter).table("classroomPostVotes");
+    if (Option.isSome(stored)) {
+      yield* writer
+        .patch(stored.value._id, {
+          votes: castVote(stored.value.votes, chosen, person._id),
+        })
+        .pipe(Effect.orDie);
+      return null;
+    }
+    yield* writer
+      .insert({
+        classId: row._id,
+        postId,
+        tenantId: row.tenantId,
+        votes: castVote([], chosen, person._id),
+      })
+      .pipe(Effect.orDie);
+    return null;
   })
 );
 
@@ -251,17 +321,22 @@ const edit = FunctionImpl.make(
   })
 );
 
-/** Removes the teacher's own announcement for good. */
+/** Removes the teacher's own announcement for good, with the votes of its poll. */
 const remove = FunctionImpl.make(
   databaseSchema,
   spec,
   "remove",
   Effect.fn("classroom.posts.remove")(function* ({ postId }) {
     const post = yield* ownPost(postId);
-    yield* (yield* DatabaseWriter)
-      .table("classroomPosts")
-      .delete(post._id)
-      .pipe(Effect.orDie);
+    const writer = yield* DatabaseWriter;
+    const stored = yield* votesOf(post._id);
+    if (Option.isSome(stored)) {
+      yield* writer
+        .table("classroomPostVotes")
+        .delete(stored.value._id)
+        .pipe(Effect.orDie);
+    }
+    yield* writer.table("classroomPosts").delete(post._id).pipe(Effect.orDie);
     return null;
   })
 );
@@ -270,6 +345,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(pinned),
   Layer.provide(pin),
+  Layer.provide(votes),
+  Layer.provide(vote),
   Layer.provide(publish),
   Layer.provide(edit),
   Layer.provide(remove),

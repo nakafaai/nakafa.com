@@ -114,9 +114,7 @@ export function ForumMessageRow({
             className="group/row flex w-full min-w-0 items-center gap-1 data-[mine=true]:flex-row-reverse"
             data-mine={message.mine}
           >
-            {message.poll === null ? null : (
-              <MessagePoll message={message} poll={message.poll} />
-            )}
+            <MessagePoll message={message} />
             {message.text === "" ? (
               <MessageTime message={message} />
             ) : (

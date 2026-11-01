@@ -1,5 +1,9 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { ClientKey } from "@repo/backend/confect/classroom/forum/message";
+import {
+  PollView,
+  pollValidator,
+} from "@repo/backend/confect/classroom/forum/poll";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema } from "effect";
 
@@ -21,7 +25,7 @@ export const PostText = Schema.String.check(
  * sealed with the school key and bound to the class and the client key of its
  * send, so a repeated send writes once. `email` is the teacher's choice to send
  * the notice by email too (ADR 0027). `pinnedAt` keeps it at the top of the class
- * home. `tenantId` is copied from the class for the tenant check of every read.
+ * home. `poll` makes it a question its readers vote on, whose text is the poll's question. `tenantId` is copied from the class for the tenant check of every read.
  */
 export const postValidator = Schema.Struct({
   authorId: Id("tenantPeople"),
@@ -31,14 +35,15 @@ export const postValidator = Schema.Struct({
   editedAt: Schema.optionalKey(Schema.Finite),
   email: Schema.Boolean,
   pinnedAt: Schema.optionalKey(Schema.Finite),
+  poll: Schema.optionalKey(pollValidator),
   sealedText: Sealed,
   tenantId: Id("tenants"),
 });
 
 /**
  * One announcement as the class home shows it: its author, its text, when it was
- * posted and last edited, whether it also goes by email, whether it is pinned, and
- * whether the viewer wrote it.
+ * posted and last edited, whether it also goes by email, whether it is pinned, its
+ * poll, and whether the viewer wrote it.
  */
 export const PostView = Schema.Struct({
   author: Schema.Struct({ id: Id("tenantPeople"), name: Schema.String }),
@@ -49,6 +54,7 @@ export const PostView = Schema.Struct({
   id: Id("classroomPosts"),
   mine: Schema.Boolean,
   pinned: Schema.Boolean,
+  poll: Schema.NullOr(PollView),
   text: Schema.String,
 });
 

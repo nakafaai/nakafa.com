@@ -92,6 +92,7 @@ describe("emails/notice/internal", () => {
           classId: forum.classId,
           clientKey: "emailed-post",
           email: true,
+          poll: null,
           slug: nf,
           text: "Besok libur.",
         });
@@ -139,6 +140,7 @@ describe("emails/notice/internal", () => {
           classId: forum.classId,
           clientKey: "fanned-post",
           email: true,
+          poll: null,
           slug: nf,
           text: "Lusa ulangan.",
         });

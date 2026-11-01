@@ -9,6 +9,7 @@ import {
   pinPostUpdate,
   publishUpdate,
   removePostUpdate,
+  votePostUpdate,
 } from "@/components/tenant/classes/home/optimistic";
 
 const slug = Schema.decodeSync(TenantSlug)("sekolah");
@@ -28,6 +29,7 @@ const post = (id: string, text: string): ClassPost => ({
   id: postOf(id),
   mine: true,
   pinned: false,
+  poll: null,
   text,
 });
 
@@ -77,6 +79,7 @@ describe("class home optimistic updates", () => {
       classId,
       clientKey: sent.clientKey,
       email: false,
+      poll: null,
       slug,
       text: sent.text,
     });
@@ -167,6 +170,57 @@ describe("class home optimistic updates", () => {
     });
     expect(Arr.last(unpinning.setQuery.mock.calls)).toEqual(
       Option.some([classroom.posts.pinned, pinnedArgs, Option.some([])])
+    );
+  });
+
+  it("shows the viewer's choice in a poll at once, in the reads that hold its post", () => {
+    const voted = (postId: typeof first.id) => ({
+      classId,
+      postIds: [postId],
+      slug,
+    });
+    const { localStore, setQuery } = storeOf([
+      {
+        args: voted(first.id),
+        value: Option.some([
+          {
+            postId: first.id,
+            votes: [{ count: 1, mine: true, option: 0 }],
+          },
+        ]),
+      },
+      { args: voted(second.id), value: Option.some([]) },
+      { args: voted(first.id), value: Option.none() },
+    ]);
+    votePostUpdate(localStore, {
+      classId,
+      options: [1],
+      postId: first.id,
+      slug,
+    });
+    expect(setQuery.mock.calls).toEqual([
+      [
+        classroom.posts.votes,
+        voted(first.id),
+        Option.some([
+          {
+            postId: first.id,
+            votes: [{ count: 1, mine: true, option: 1 }],
+          },
+        ]),
+      ],
+    ]);
+    const empty = storeOf([{ args: voted(first.id), value: Option.some([]) }]);
+    votePostUpdate(empty.localStore, {
+      classId,
+      options: [0],
+      postId: first.id,
+      slug,
+    });
+    expect(empty.setQuery.mock.calls[0]?.[2]).toEqual(
+      Option.some([
+        { postId: first.id, votes: [{ count: 1, mine: true, option: 0 }] },
+      ])
     );
   });
 });

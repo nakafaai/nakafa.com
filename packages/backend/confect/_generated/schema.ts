@@ -28,9 +28,10 @@ import classroomFileUse from "./tables/classroomFileUse";
 import classroomFolders from "./tables/classroomFolders";
 import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
-import classroomPassages from "./tables/classroomPassages";
+import classroomPostVotes from "./tables/classroomPostVotes";
 import classroomPosts from "./tables/classroomPosts";
 import classroomReads from "./tables/classroomReads";
+import classroomScheduled from "./tables/classroomScheduled";
 import classroomSubmissions from "./tables/classroomSubmissions";
 import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
@@ -87,20 +88,9 @@ import graduations from "./tables/graduations";
 import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
-import guardianRequests from "./tables/guardianRequests";
-import insightCalibrations from "./tables/insightCalibrations";
-import insightDrafts from "./tables/insightDrafts";
-import insightMastery from "./tables/insightMastery";
-import insightNarratives from "./tables/insightNarratives";
-import insightScores from "./tables/insightScores";
-import insightShares from "./tables/insightShares";
-import insightTags from "./tables/insightTags";
 import integrationClients from "./tables/integrationClients";
-import integrationDeliveries from "./tables/integrationDeliveries";
 import integrationDevices from "./tables/integrationDevices";
-import integrationRequests from "./tables/integrationRequests";
 import integrationTokens from "./tables/integrationTokens";
-import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
@@ -123,9 +113,6 @@ import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
-import noticeMailBudget from "./tables/noticeMailBudget";
-import noticeMails from "./tables/noticeMails";
-import noticePreferences from "./tables/noticePreferences";
 import notifications from "./tables/notifications";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
@@ -195,9 +182,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly classroomFolders: typeof classroomFolders;
   readonly classroomLibrary: typeof classroomLibrary;
   readonly classroomMessages: typeof classroomMessages;
-  readonly classroomPassages: typeof classroomPassages;
+  readonly classroomPostVotes: typeof classroomPostVotes;
   readonly classroomPosts: typeof classroomPosts;
   readonly classroomReads: typeof classroomReads;
+  readonly classroomScheduled: typeof classroomScheduled;
   readonly classroomSubmissions: typeof classroomSubmissions;
   readonly classroomTallies: typeof classroomTallies;
   readonly classroomTasks: typeof classroomTasks;
@@ -254,20 +242,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly guardianCodes: typeof guardianCodes;
   readonly guardianConsents: typeof guardianConsents;
   readonly guardianLinks: typeof guardianLinks;
-  readonly guardianRequests: typeof guardianRequests;
-  readonly insightCalibrations: typeof insightCalibrations;
-  readonly insightDrafts: typeof insightDrafts;
-  readonly insightMastery: typeof insightMastery;
-  readonly insightNarratives: typeof insightNarratives;
-  readonly insightScores: typeof insightScores;
-  readonly insightShares: typeof insightShares;
-  readonly insightTags: typeof insightTags;
   readonly integrationClients: typeof integrationClients;
-  readonly integrationDeliveries: typeof integrationDeliveries;
   readonly integrationDevices: typeof integrationDevices;
-  readonly integrationRequests: typeof integrationRequests;
   readonly integrationTokens: typeof integrationTokens;
-  readonly integrationWebhooks: typeof integrationWebhooks;
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
@@ -290,9 +267,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly ninaSummaries: typeof ninaSummaries;
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
-  readonly noticeMailBudget: typeof noticeMailBudget;
-  readonly noticeMails: typeof noticeMails;
-  readonly noticePreferences: typeof noticePreferences;
   readonly notifications: typeof notifications;
   readonly onboardingProfiles: typeof onboardingProfiles;
   readonly operators: typeof operators;
@@ -361,9 +335,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   classroomFolders,
   classroomLibrary,
   classroomMessages,
-  classroomPassages,
+  classroomPostVotes,
   classroomPosts,
   classroomReads,
+  classroomScheduled,
   classroomSubmissions,
   classroomTallies,
   classroomTasks,
@@ -420,20 +395,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   guardianCodes,
   guardianConsents,
   guardianLinks,
-  guardianRequests,
-  insightCalibrations,
-  insightDrafts,
-  insightMastery,
-  insightNarratives,
-  insightScores,
-  insightShares,
-  insightTags,
   integrationClients,
-  integrationDeliveries,
   integrationDevices,
-  integrationRequests,
   integrationTokens,
-  integrationWebhooks,
   irtCalibrationRuns,
   irtScaleItems,
   irtScaleVersions,
@@ -456,9 +420,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   ninaSummaries,
   ninaTurns,
   ninaUploads,
-  noticeMailBudget,
-  noticeMails,
-  noticePreferences,
   notifications,
   onboardingProfiles,
   operators,

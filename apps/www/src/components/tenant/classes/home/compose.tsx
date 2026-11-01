@@ -3,6 +3,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { PostText } from "@repo/backend/confect/classroom/posts/post";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
+import { DateTimePicker } from "@repo/design-system/components/ui/date";
 import {
   Field,
   FieldGroup,
@@ -11,7 +12,7 @@ import {
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Effect, Schema, String as Str } from "effect";
+import { Effect, Option, Schema, String as Str } from "effect";
 import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -19,13 +20,15 @@ import {
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
 import { publishPost } from "@/components/tenant/classes/home/publish";
+import { scheduleAnnouncement } from "@/components/tenant/classes/home/waiting";
 import { useClassScope } from "@/components/tenant/classes/scope";
+import { deadlineOf } from "@/components/tenant/classes/tasks/deadline";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 
 /**
- * Posts an announcement to the class: its text, and whether it also goes by email (ADR 0027). The
- * dialog closes on submit and the announcement shows at once first on the class home. A send that
+ * Posts an announcement to the class, or keeps it for a time the teacher chooses: its text, and whether it also goes
+ * by email (ADR 0027). The dialog closes on submit and the announcement shows at once on the class home. A send that
  * fails brings the dialog back with what was written, so nothing is lost.
  */
 export function NewAnnouncement() {
@@ -33,13 +36,20 @@ export function NewAnnouncement() {
   const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const publish = useMutation(classroom.posts.publish);
+  const schedule = useMutation(classroom.scheduled.schedule);
   const viewer = useViewerQuery();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [email, setEmail] = useState(false);
+  const [later, setLater] = useState(false);
+  const [when, setWhen] = useState("");
   const id = useId();
   const body = Str.trim(text);
-  const ready = Schema.is(PostText)(body) && viewer._tag === "Success";
+  const publishAt = deadlineOf(when);
+  const ready =
+    Schema.is(PostText)(body) &&
+    viewer._tag === "Success" &&
+    (!later || Option.isSome(publishAt));
 
   /** Shows the announcement at once, sends it under a new key, and restores the dialog when it fails. */
   const submit = () => {
@@ -52,11 +62,23 @@ export function NewAnnouncement() {
     setEmail(false);
     runForumCall(
       Effect.flatMap(randomUuid, (clientKey) =>
-        publishPost(
-          (update, args) => publish.withOptimisticUpdate(update)(args),
-          { id: person.id, name: person.name },
-          { classId, clientKey, email, slug, text: body }
-        )
+        later && Option.isSome(publishAt)
+          ? scheduleAnnouncement(
+              (update, args) => schedule.withOptimisticUpdate(update)(args),
+              {
+                classId,
+                clientKey,
+                email,
+                publishAt: publishAt.value,
+                slug,
+                text: body,
+              }
+            ).pipe(Effect.asVoid)
+          : publishPost(
+              (update, args) => publish.withOptimisticUpdate(update)(args),
+              { id: person.id, name: person.name },
+              { classId, clientKey, email, poll: null, slug, text: body }
+            ).pipe(Effect.asVoid)
       ),
       () => {
         setText((current) => (current === "" ? body : current));
@@ -78,7 +100,7 @@ export function NewAnnouncement() {
               {common("cancel")}
             </Button>
             <Button disabled={!ready} onClick={submit}>
-              {t("post-submit")}
+              {t(later ? "post-schedule-submit" : "post-submit")}
             </Button>
           </>
         }
@@ -106,6 +128,30 @@ export function NewAnnouncement() {
             />
             <FieldLabel htmlFor={`${id}-email`}>{t("post-email")}</FieldLabel>
           </Field>
+          <Field orientation="horizontal">
+            <Checkbox
+              checked={later}
+              id={`${id}-later`}
+              onCheckedChange={(next) => setLater(next)}
+            />
+            <FieldLabel htmlFor={`${id}-later`}>
+              {t("post-schedule")}
+            </FieldLabel>
+          </Field>
+          {later ? (
+            <Field>
+              <FieldLabel htmlFor={`${id}-when`}>
+                {t("post-schedule-when")}
+              </FieldLabel>
+              <DateTimePicker
+                dayPlaceholder={t("task-day-placeholder")}
+                id={`${id}-when`}
+                onValueChange={setWhen}
+                timePlaceholder={t("task-time-placeholder")}
+                value={when}
+              />
+            </Field>
+          ) : null}
         </FieldGroup>
       </ResponsiveDialog>
     </>
