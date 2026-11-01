@@ -148,6 +148,34 @@ describe("tryouts/queries/runtime", () => {
       })
   );
 
+  it.effect("reads no question body for the state a live query repeats", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld();
+      const { attemptId } = yield* world.start();
+      yield* world.startSection(attemptId, "section-a");
+      const args = {
+        attemptId,
+        locale: "id" as const,
+        sectionKey: "section-a",
+      };
+      const initial = yield* world.learner.query(getSectionAttemptState, args);
+      yield* Effect.promise(() =>
+        world.t.mutation(async (ctx) => {
+          const items = await ctx.db
+            .query("assessmentRows")
+            .withIndex("by_kind_and_versionHash_and_language", (query) =>
+              query.eq("kind", "item")
+            )
+            .collect();
+          await Promise.all(Arr.map(items, (row) => ctx.db.delete(row._id)));
+        })
+      );
+      expect(yield* world.learner.query(getSectionAttemptState, args)).toEqual(
+        initial
+      );
+    })
+  );
+
   it.effect("refuses section attempts beyond the frozen sections", () =>
     Effect.gen(function* () {
       const world = yield* tryoutWorld();

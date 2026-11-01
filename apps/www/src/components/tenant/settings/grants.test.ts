@@ -5,6 +5,7 @@ import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Option, Schema } from "effect";
 import {
   assignGrantChange,
+  givenRoles,
   inviteChange,
   revokeGrantChange,
 } from "@/components/tenant/settings/grants";
@@ -21,6 +22,20 @@ import {
   person,
   slug,
 } from "@/test/settings";
+
+describe("the roles a viewer gives", () => {
+  it("offers an Owner every role but the Integration role, which belongs to a client", () => {
+    const roles = givenRoles(Option.some("owner"));
+
+    expect(roles).toContain("owner");
+    expect(roles).not.toContain("integration");
+  });
+
+  it("keeps the roles that lead the school from anyone else", () => {
+    expect(givenRoles(Option.some("teacher"))).not.toContain("owner");
+    expect(givenRoles(Option.none())).not.toContain("owner");
+  });
+});
 
 describe("the grants and the invites of the school", () => {
   it("lists a new grant at the top of the school's grants, with its Person, when the Person is loaded", () => {

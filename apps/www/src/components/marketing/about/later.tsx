@@ -1,4 +1,4 @@
-import { laterCode, openLaterCode } from "@/components/marketing/shared/later";
+import { laterCode, openLaterCode } from "@/components/marketing/shared/code";
 
 /** The sections under the first screen of the home page, each one's code on its own. */
 export const homeSections = {

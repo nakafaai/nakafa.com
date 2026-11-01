@@ -6,6 +6,7 @@ import {
   type PlayerStore,
   type PlayerStoreApi,
 } from "@/components/player/store";
+import { PageFrame } from "@/components/shared/content/frame";
 
 const StoreContext = createContext<PlayerStoreApi | null>(null);
 
@@ -30,7 +31,11 @@ export function PlayerProvider({
 }) {
   const [store] = useState(() => createPlayerStore({ keys, mode }));
 
-  return <StoreContext value={store}>{children}</StoreContext>;
+  return (
+    <StoreContext value={store}>
+      <PageFrame width="page">{children}</PageFrame>
+    </StoreContext>
+  );
 }
 
 /** Reads one selected slice of the player store; a part re-renders only when its slice changes. */
