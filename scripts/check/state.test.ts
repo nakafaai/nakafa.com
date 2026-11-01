@@ -40,6 +40,8 @@ const seen = MutableRef.make(0), other = 1;
         yield* stateLines(`export const limit = 10;
 const answer = compute();
 const named = Schema.String.pipe();
+const plain = Schema.Struct({});
+declare const ambient: number;
 export const read = () => {
   let calls = 0;
   const cache = MutableHashMap.empty();

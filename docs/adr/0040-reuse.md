@@ -27,11 +27,19 @@ The cost is spread over about 830 modules. No module costs more than 0.6 ms at t
 
 Convex has a way around evaluation. A module whose namespace exports `experimental_reuseContext` as `true` keeps its JavaScript context after a successful call, and the isolate scheduler sends the module's next call to the isolate that holds it. The handler then runs on a module already evaluated. Convex's source says this about it: state leaks from call to call, and reuse is not guaranteed.
 
+Measured on a real local Convex backend under the same load, with the real backend pushed to a private instance:
+
+| Function | Reuse off, user ms | Reuse on, user ms |
+| --- | --- | --- |
+| `notifications/consume:sweep` | 137 | 9 |
+| `exams/sittings/timers:sweep` | 273 | 10 |
+| `auth/queries:getCurrentUser` | | 1.5 |
+
 ## Decision
 
 D1. Every module that Confect writes and the Convex runtime runs exports `experimental_reuseContext = true`. Confect has no option for it, so `scripts/reuse` adds the line, and `bun run codegen` runs it after Confect. A `"use node"` module runs in Node, where a context is never reused, and stays as it is.
 
-D2. A module holds no state between calls, because one caller's value would reach the next caller. The `module-state` source rule rejects a top-level `let` or `var` and a top-level value made by Effect's `Mutable` modules in the domain folders. Identity stays safe because Confect builds its reader, writer, auth, and scheduler layers from each call's `ctx`, and a layer's memo map lives for one run.
+D2. A module holds no state between calls, because one caller's value would reach the next caller. The `module-state` source rule rejects a top-level `let` or `var` and a top-level value made by Effect's `Mutable` modules in the domain folders. Identity stays safe because Confect builds its reader, writer, auth, and scheduler layers from each call's `ctx`, and a layer's memo map lives for one run. The proof ran 160 calls of `getCurrentUser` on one saved context, three users and an anonymous caller in turn, with a write to the caller's row before each call so that no query cache answered. Every answer carried its own caller and the value just written.
 
 D3. Reuse is an optimization, never a contract. A failed call saves no context, a module that is not in an isolate's one saved context evaluates as it did before, and a later Convex release that drops the export only returns a call to today's cost. No code depends on a hit.
 
