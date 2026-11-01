@@ -21,6 +21,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -119,7 +120,14 @@ function OperatorSchools() {
 
   const columns = [
     schoolColumns.text((school) => school.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => (
+        <TableTitle
+          icon={School01Icon}
+          tone={STATUS_LOOKS[info.row.original.status].tone}
+        >
+          {info.getValue()}
+        </TableTitle>
+      ),
       header: t("name"),
       id: "name",
     }),

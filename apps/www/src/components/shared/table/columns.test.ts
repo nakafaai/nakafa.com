@@ -1,18 +1,18 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Building01Icon } from "@hugeicons/core-free-icons";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { tableColumns } from "@/components/shared/table/columns";
 
 /** One row of a table in these tests. */
-interface Row {
-  readonly at: number;
-  readonly name: string;
-  readonly roles: readonly string[];
-  readonly score: number | null;
-  readonly status: string;
-}
+const Row = Schema.Struct({
+  at: Schema.Finite,
+  name: Schema.String,
+  roles: Schema.Array(Schema.String),
+  score: Schema.NullOr(Schema.Finite),
+  status: Schema.String,
+});
 
-const columns = tableColumns<Row>();
+const columns = tableColumns<typeof Row.Type>();
 const options = [{ icon: Building01Icon, label: "Open", value: "open" }];
 
 describe("the columns of a table", () => {

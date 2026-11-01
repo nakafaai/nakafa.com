@@ -1,4 +1,5 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { UserGroupIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { CohortName, CohortStatus } from "@repo/backend/confect/tenancy/cohort";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -16,6 +17,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -391,13 +393,14 @@ function SchoolCohortTable({
   const columns = [
     cohortColumns.text((cohort) => cohort.name, {
       cell: (info) => (
-        <Link
-          className="font-medium"
-          params={{ cohort: info.row.original.id, slug }}
-          to="/school/$slug/settings/cohorts/$cohort"
-        >
-          {info.getValue()}
-        </Link>
+        <TableTitle icon={UserGroupIcon}>
+          <Link
+            params={{ cohort: info.row.original.id, slug }}
+            to="/school/$slug/settings/cohorts/$cohort"
+          >
+            {info.getValue()}
+          </Link>
+        </TableTitle>
       ),
       header: t("cohort-name"),
       id: "name",

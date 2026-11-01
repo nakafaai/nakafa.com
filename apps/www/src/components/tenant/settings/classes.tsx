@@ -5,7 +5,11 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { Archive02Icon, Presentation01Icon } from "@hugeicons/core-free-icons";
+import {
+  Archive02Icon,
+  MortarboardIcon,
+  Presentation01Icon,
+} from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { ClassStatus } from "@repo/backend/confect/classroom/class";
@@ -23,6 +27,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -268,18 +273,20 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
 
   const columns = [
     classColumns.text((row) => row.name, {
-      cell: (info) =>
-        isDraft(info.row.original.id) ? (
-          <span className="font-medium">{info.getValue()}</span>
-        ) : (
-          <Link
-            className="font-medium"
-            params={{ classSlug: info.row.original.slug, slug }}
-            to="/school/$slug/classes/$classSlug"
-          >
-            {info.getValue()}
-          </Link>
-        ),
+      cell: (info) => (
+        <TableTitle icon={MortarboardIcon}>
+          {isDraft(info.row.original.id) ? (
+            info.getValue()
+          ) : (
+            <Link
+              params={{ classSlug: info.row.original.slug, slug }}
+              to="/school/$slug/classes/$classSlug"
+            >
+              {info.getValue()}
+            </Link>
+          )}
+        </TableTitle>
+      ),
       header: t("class-name"),
       id: "name",
     }),

@@ -4,7 +4,7 @@ import {
   chosenDays,
   dayOfMoment,
   dayRangeOf,
-  fallsOnDays,
+  fallsOnDaysIn,
   holdsNoDays,
   withinDays,
 } from "@/components/shared/table/days";
@@ -44,7 +44,7 @@ describe("a date column's chosen days", () => {
 
 describe("the filter of a date column", () => {
   const onJakartaDays = (value: unknown, chosen: unknown) =>
-    fallsOnDays(value, chosen, "Asia/Jakarta");
+    fallsOnDaysIn(() => "Asia/Jakarta")(value, chosen, { original: {} });
 
   it("keeps a moment whose day in the school's time zone is one of the chosen days, its first and last included", () => {
     expect(onJakartaDays(EVENING, ["2026-10-31", "2026-11-02"])).toBe(true);
@@ -66,14 +66,11 @@ describe("the filter of a date column", () => {
   });
 
   it("reads each row's moment on the clock of that row", () => {
-    const filter = withinDays(({ zone }: { zone: string }) => zone);
     const onDay = (zone: string) =>
-      filter.filter(
+      fallsOnDaysIn(({ clock }: { clock: string }) => clock)(
         EVENING,
         ["2026-10-31", "2026-10-31"],
-        { original: { zone } } as never,
-        "opens",
-        () => undefined
+        { original: { clock: zone } }
       );
 
     expect(onDay("Asia/Jakarta")).toBe(true);

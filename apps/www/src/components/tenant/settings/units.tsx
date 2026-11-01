@@ -17,6 +17,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -97,9 +98,9 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
     // The name with the NPSN after it, so the header's search finds a school by either; the cell shows the name.
     unitColumns.text((unit) => `${unit.name} ${unit.npsn ?? ""}`, {
       cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.row.original.name}
-        </span>
+        <TableTitle icon={SchoolIcon}>
+          <span dir="auto">{info.row.original.name}</span>
+        </TableTitle>
       ),
       header: t("unit-add-name"),
       id: "name",

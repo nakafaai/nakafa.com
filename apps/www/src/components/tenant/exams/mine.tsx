@@ -3,6 +3,7 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   PlayIcon,
+  TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
@@ -18,6 +19,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -113,13 +115,18 @@ function StudentExamsTable({
   const columns = [
     sittingColumns.text((sitting) => sitting.examTitle, {
       cell: (info) => (
-        <TargetLink
-          className="font-medium underline-offset-4 hover:underline"
-          dir="auto"
-          target={schoolSittingTarget(slug, info.row.original.id)}
+        <TableTitle
+          icon={TaskEdit01Icon}
+          tone={STATUS_LOOKS[sittingStatusOf(info.row.original)].tone}
         >
-          {info.getValue()}
-        </TargetLink>
+          <TargetLink
+            className="underline-offset-4 hover:underline"
+            dir="auto"
+            target={schoolSittingTarget(slug, info.row.original.id)}
+          >
+            {info.getValue()}
+          </TargetLink>
+        </TableTitle>
       ),
       header: t("mine-exam"),
       id: "exam",

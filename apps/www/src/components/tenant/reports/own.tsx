@@ -7,6 +7,7 @@ import {
   Calendar04Icon,
   CheckmarkBadge01Icon,
   Download04Icon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -19,6 +20,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -89,7 +91,9 @@ function OwnReportTable() {
   const periods = Arr.dedupe(Arr.map(cards.value, (card) => card.period));
   const columns = [
     cardColumns.text((card) => card.cohort, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => (
+        <TableTitle icon={UserGroupIcon}>{info.getValue()}</TableTitle>
+      ),
       header: t("cohort"),
       id: "cohort",
     }),

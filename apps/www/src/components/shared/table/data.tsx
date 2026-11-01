@@ -20,7 +20,7 @@ import { type Header, type RowData, useTable } from "@tanstack/react-table";
 import { Array as Arr, Match } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { PaneTableRow } from "@/components/shared/pane";
+import { PaneTableRow, pressesRow } from "@/components/shared/pane";
 import { useHasPanes } from "@/components/shared/panes";
 import {
   columnAlign,
@@ -48,6 +48,9 @@ import {
 } from "@/components/shared/table/panel";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { EmptyNina } from "@/components/state/empty";
+
+/** The link of a row's first column, which is the row's primary action. */
+const ROW_LINK = "td:first-child a[href]";
 
 /** The arrow of a column's head while it sorts the rows each way. */
 const sortIcons = { asc: ArrowUp02Icon, desc: ArrowDown02Icon };
@@ -149,7 +152,11 @@ export function DataTable<TData extends RowData>({
   );
 }
 
-/** One row of the table: a row that opens beside the list on a page with panes, else a plain row. */
+/**
+ * One row of the table: a row that opens beside the list on a page with panes, else a row whose first column may hold a
+ * link. Pressing such a row presses that link, which stays a real link for the keyboard and a new tab, and a row without
+ * one draws no pointer.
+ */
 function DataTableRow({
   children,
   opens,
@@ -163,7 +170,19 @@ function DataTableRow({
   return opens ? (
     <PaneTableRow id={row.id}>{children}</PaneTableRow>
   ) : (
-    <TableRow className="h-12">{children}</TableRow>
+    <TableRow
+      className="has-[td:first-child_a[href]]:hover:bg-accent has-[td:first-child_a[href]]:hover:text-accent-foreground h-12 has-[td:first-child_a[href]]:cursor-pointer"
+      data-pressable={undefined}
+      onClick={(event) => {
+        if (pressesRow(event)) {
+          event.currentTarget
+            .querySelector<HTMLAnchorElement>(ROW_LINK)
+            ?.click();
+        }
+      }}
+    >
+      {children}
+    </TableRow>
   );
 }
 

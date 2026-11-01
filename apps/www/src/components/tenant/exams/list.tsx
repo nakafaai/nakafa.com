@@ -3,6 +3,7 @@ import {
   QueryResult,
   usePaginatedQuery,
 } from "@confect/react";
+import { TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
@@ -19,6 +20,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -159,19 +161,22 @@ function ExamListRows({
   const columns = [
     examColumns.text((exam) => exam.title, {
       cell: (info) => (
-        <span className="font-medium" dir="auto">
+        <TableTitle icon={TaskEdit01Icon}>
           {Arr.contains(saving, info.row.original.id) ? (
-            <span className="text-muted-foreground">{info.getValue()}</span>
+            <span className="text-muted-foreground" dir="auto">
+              {info.getValue()}
+            </span>
           ) : (
             <Link
               className="underline-offset-4 hover:underline"
+              dir="auto"
               params={{ exam: info.row.original.id, slug: tenant.slug }}
               to="/school/$slug/exams/$exam/edit"
             >
               {info.getValue()}
             </Link>
           )}
-        </span>
+        </TableTitle>
       ),
       header: t("title-label"),
       id: "title",

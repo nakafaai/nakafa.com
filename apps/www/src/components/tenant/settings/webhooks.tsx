@@ -12,6 +12,7 @@ import {
   Plug01Icon,
   TaskDaily01Icon,
   Unlink01Icon,
+  WebhookIcon,
 } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
@@ -36,6 +37,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -161,9 +163,9 @@ function SchoolWebhookTable() {
   const columns = [
     webhookColumns.text((webhook) => webhook.url, {
       cell: (info) => (
-        <span className="font-medium" dir="ltr">
-          {info.getValue()}
-        </span>
+        <TableTitle icon={WebhookIcon}>
+          <span dir="ltr">{info.getValue()}</span>
+        </TableTitle>
       ),
       header: t("webhook-url"),
       id: "url",

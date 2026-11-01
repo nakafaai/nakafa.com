@@ -18,8 +18,13 @@ const keeps = (
   );
 
 /** The rows of a track that its heads keep: the words of a name, and a range of questions, minutes and score. */
-export const keptSets = (
-  rows: readonly TryoutSetRow[],
+export const keptSets = <
+  Row extends Pick<
+    TryoutSetRow,
+    "durationSeconds" | "publishedScore" | "questionCount" | "title"
+  >,
+>(
+  rows: readonly Row[],
   chosen: Readonly<Record<string, readonly string[]>>
 ) =>
   Arr.filter(

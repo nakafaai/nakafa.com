@@ -9,6 +9,9 @@ import {
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
+/** The address of an exam's editor. */
+const EXAM_EDITOR = /\/exams\/[^/]+\/edit$/u;
+
 /** The most a row's menu may stand from its line: the cell's padding on both sides. */
 const MENU_PADDING = 16;
 
@@ -96,6 +99,8 @@ test("every column of the School's tables filters from its head, and the row's m
   });
   await expectEveryHeadFilters(card);
   await expectNarrowMenu(card);
+  // A row with no action of its own draws no pointer.
+  await expect(card.getByRole("row").nth(1)).not.toHaveCSS("cursor", "pointer");
   await expectFieldFilters(
     page,
     card,
@@ -110,6 +115,20 @@ test("every column of the School's tables filters from its head, and the row's m
   });
   await expectEveryHeadFilters(card);
   await expectNarrowMenu(card);
+  // A title cell leads with what the row is, and pressing the row opens it, as its name does.
+  const exam = card.getByRole("row").nth(1);
+  await expect(
+    exam.getByRole("cell").first().locator('[data-slot="badge"]')
+  ).toBeVisible();
+  await expect(exam).toHaveCSS("cursor", "pointer");
+  await exam.getByRole("cell").nth(2).click();
+  await expect(page).toHaveURL(EXAM_EDITOR, {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await page.goBack();
+  await expect(card.getByRole("row").nth(1)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expectFieldFilters(
     page,
     card,

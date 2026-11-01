@@ -25,6 +25,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -179,7 +180,9 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
 
   const columns = [
     periodColumns.text((period) => period.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => (
+        <TableTitle icon={Calendar03Icon}>{info.getValue()}</TableTitle>
+      ),
       header: t("period-name"),
       id: "name",
     }),

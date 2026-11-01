@@ -9,6 +9,7 @@ import {
   CheckmarkCircle02Icon,
   InformationCircleIcon,
   MedalFirstPlaceIcon,
+  MortarboardIcon,
   StarIcon,
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
@@ -21,6 +22,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -101,9 +103,9 @@ function OwnGradeTable() {
   const columns = [
     gradeColumns.text((grade) => grade.className, {
       cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.getValue()}
-        </span>
+        <TableTitle icon={MortarboardIcon}>
+          <span dir="auto">{info.getValue()}</span>
+        </TableTitle>
       ),
       header: t("own-class"),
       id: "class",

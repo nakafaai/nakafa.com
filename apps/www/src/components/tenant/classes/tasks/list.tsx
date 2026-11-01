@@ -10,6 +10,7 @@ import {
   Tag01Icon,
   Task01Icon,
   TaskDone01Icon,
+  TaskEdit01Icon,
   TimeQuarterPassIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
@@ -29,6 +30,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -261,13 +263,15 @@ function TaskTitle({ task }: { task: ClassTask }) {
   const { classSlug, slug } = useClassScope();
 
   return (
-    <TargetLink
-      className="font-medium underline-offset-4 hover:underline"
-      dir="auto"
-      target={schoolClassTaskTarget(slug, classSlug, task.slug)}
-    >
-      {task.title}
-    </TargetLink>
+    <TableTitle icon={TaskEdit01Icon}>
+      <TargetLink
+        className="underline-offset-4 hover:underline"
+        dir="auto"
+        target={schoolClassTaskTarget(slug, classSlug, task.slug)}
+      >
+        {task.title}
+      </TargetLink>
+    </TableTitle>
   );
 }
 

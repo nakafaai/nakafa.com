@@ -37,6 +37,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -176,7 +177,9 @@ function SchoolClientTable() {
       : "";
   const columns = [
     clientColumns.text((client) => client.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => (
+        <TableTitle icon={Key01Icon}>{info.getValue()}</TableTitle>
+      ),
       header: t("client-name"),
       id: "name",
     }),

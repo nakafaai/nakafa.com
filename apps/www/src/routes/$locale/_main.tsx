@@ -23,6 +23,7 @@ const MAIN_NAMESPACES = [
   "ComingSoon",
   "Comments",
   "DataTable",
+  "Error",
   "Player",
   "Posts",
   "Pricing",

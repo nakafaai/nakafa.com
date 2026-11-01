@@ -17,6 +17,7 @@ import { RowAction, useInvoiceDownload } from "@/components/billing/invoice";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
+import { TableTitle } from "@/components/shared/table/title";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useBillingNavigation } from "@/lib/billing/checkout";
 import {
@@ -117,6 +118,11 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
 
   const columns = [
     receiptColumns.values(kindOf, {
+      cell: (info) => (
+        <TableTitle icon={PAYMENT_KINDS[info.row.original.kind].icon}>
+          {info.getValue()}
+        </TableTitle>
+      ),
       header: t("payment-for"),
       id: "kind",
       options: kinds,

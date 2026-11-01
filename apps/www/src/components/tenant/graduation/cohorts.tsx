@@ -10,6 +10,7 @@ import {
   MortarboardIcon,
   School01Icon,
   SchoolIcon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -29,6 +30,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -73,13 +75,15 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
   const columns = [
     cohortColumns.text((cohort) => cohort.name, {
       cell: (info) => (
-        <Link
-          className="font-medium hover:underline"
-          params={{ cohortId: info.row.original.id, slug }}
-          to="/school/$slug/graduation/$cohortId"
-        >
-          {info.getValue()}
-        </Link>
+        <TableTitle icon={UserGroupIcon}>
+          <Link
+            className="hover:underline"
+            params={{ cohortId: info.row.original.id, slug }}
+            to="/school/$slug/graduation/$cohortId"
+          >
+            {info.getValue()}
+          </Link>
+        </TableTitle>
       ),
       header: t("cohort"),
       id: "cohort",

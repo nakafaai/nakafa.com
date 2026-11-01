@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import { keptSets } from "@/components/tryout/catalog/table/keep";
-import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 
 /** A set of a track with only what the heads read. */
 const set = (
@@ -9,13 +8,12 @@ const set = (
   questionCount: number,
   minutes: number,
   publishedScore: number | null
-) =>
-  ({
-    durationSeconds: minutes * 60,
-    publishedScore,
-    questionCount,
-    title,
-  }) as TryoutSetRow;
+) => ({
+  durationSeconds: minutes * 60,
+  publishedScore,
+  questionCount,
+  title,
+});
 
 const rows = [
   set("Set One", 40, 60, 700),
@@ -23,8 +21,7 @@ const rows = [
   set("Mock Three", 40, 45, 300),
 ];
 
-const titles = (kept: readonly TryoutSetRow[]) =>
-  Arr.map(kept, (row) => row.title);
+const titles = (kept: typeof rows) => Arr.map(kept, (row) => row.title);
 
 describe("the rows the heads of a track keep", () => {
   it("keeps every row while no head holds a choice", () => {

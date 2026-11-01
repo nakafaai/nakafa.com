@@ -9,6 +9,7 @@ import {
   Calendar03Icon,
   CheckmarkCircle02Icon,
   Clock01Icon,
+  Door01Icon,
   PencilEdit02Icon,
   PlayIcon,
   SchoolIcon,
@@ -31,6 +32,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -286,14 +288,19 @@ function RoomsTable({
         columns={[
           roomColumns.text((room) => room.room, {
             cell: (info) => (
-              <Link
-                className="font-medium underline-offset-4 hover:underline"
-                dir="auto"
-                params={{ exam: examId, slug, sitting: info.row.original.id }}
-                to="/school/$slug/exams/$exam/sittings/$sitting"
+              <TableTitle
+                icon={Door01Icon}
+                tone={ROOM_STATE_LOOKS[info.row.original.state].tone}
               >
-                {info.getValue()}
-              </Link>
+                <Link
+                  className="underline-offset-4 hover:underline"
+                  dir="auto"
+                  params={{ exam: examId, slug, sitting: info.row.original.id }}
+                  to="/school/$slug/exams/$exam/sittings/$sitting"
+                >
+                  {info.getValue()}
+                </Link>
+              </TableTitle>
             ),
             header: t("room"),
             id: "room",
