@@ -31,7 +31,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Select,
@@ -42,9 +41,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -69,6 +66,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -332,7 +330,7 @@ function AnswerList({
           title={t("results-no-match")}
         />
       ) : null}
-      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
+      {loadMore === null ? null : <TableEnd onLoad={loadMore} />}
     </div>
   );
 }
@@ -440,15 +438,6 @@ export function QuestionsAction({
             ),
           })}
         </ScrollArea>
-        <SheetFooter>
-          <SheetClose
-            render={
-              <Button type="button" variant="outline">
-                {common("close")}
-              </Button>
-            }
-          />
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

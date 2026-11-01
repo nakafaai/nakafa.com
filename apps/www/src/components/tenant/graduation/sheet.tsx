@@ -169,7 +169,7 @@ function CohortGraduationBody() {
     }),
     lineColumns.list(readinessOf, {
       cell: (info) => (
-        <span className="flex flex-wrap gap-1">
+        <span className="flex gap-1">
           {Arr.map(info.getValue(), (value) => (
             <TableStatus
               icon={READY_LOOKS[value].icon}
