@@ -21,7 +21,7 @@ const LazyFigure = lazy(() =>
 const NO_PLACES: readonly HTMLElement[] = [];
 
 /** The places a drawn document keeps for its figures, in the order of the document. */
-export const figurePlaces = (root: HTMLElement): readonly HTMLElement[] => {
+const figurePlaces = (root: HTMLElement): readonly HTMLElement[] => {
   const places = root.querySelectorAll<HTMLElement>(
     'figure[data-type="figure"]'
   );
@@ -85,7 +85,7 @@ function drawPictures(
  * The figures of a document drawn without an editor: each goes into the place `drawDocument` kept for it, drawn
  * by the component a try-out draws it with, as the student and the teacher both read it.
  */
-export function DrawnFigures({
+function DrawnFigures({
   doc,
   places,
 }: {

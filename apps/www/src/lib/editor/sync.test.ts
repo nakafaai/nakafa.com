@@ -20,6 +20,7 @@ import {
   tickThroughFold,
 } from "@/lib/editor/sync";
 import {
+  failingOpen,
   foldingServer,
   makePort,
   makeServer,
@@ -348,19 +349,8 @@ describe("editor/sync failures", () => {
       Effect.gen(function* () {
         const server = yield* makeServer();
         const { port } = yield* makePort();
-        const reads = yield* Ref.make(0);
-        const failsOnce: SyncTransport = {
-          ...server.transport,
-          open: (clientId) =>
-            Ref.getAndUpdate(reads, (count) => count + 1).pipe(
-              Effect.flatMap((count) =>
-                count === 0
-                  ? Effect.fail(new SyncFailed({ reason: "ran out of time" }))
-                  : server.transport.open(clientId)
-              )
-            ),
-        };
-        const start = yield* startSync(port, failsOnce).pipe(Effect.forkChild);
+        const { reads, transport } = yield* failingOpen(server.transport, 1);
+        const start = yield* startSync(port, transport).pipe(Effect.forkChild);
         yield* TestClock.adjust("2999 millis");
         expect(yield* Ref.get(reads)).toBe(1);
         yield* TestClock.adjust("1 millis");
@@ -373,17 +363,8 @@ describe("editor/sync failures", () => {
     Effect.gen(function* () {
       const server = yield* makeServer();
       const { port } = yield* makePort();
-      const reads = yield* Ref.make(0);
-      const fails: SyncTransport = {
-        ...server.transport,
-        open: () =>
-          Ref.update(reads, (count) => count + 1).pipe(
-            Effect.andThen(
-              Effect.fail(new SyncFailed({ reason: "ran out of time" }))
-            )
-          ),
-      };
-      const start = yield* startSync(port, fails).pipe(
+      const { reads, transport } = yield* failingOpen(server.transport, 5);
+      const start = yield* startSync(port, transport).pipe(
         Effect.flip,
         Effect.forkChild
       );

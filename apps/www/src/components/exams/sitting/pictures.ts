@@ -1,5 +1,8 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import { MAX_ASSET_READS } from "@repo/backend/confect/exams/asset";
+import {
+  type AssetAddress,
+  MAX_ASSET_READS,
+} from "@repo/backend/confect/exams/asset";
 import { Node } from "@tiptap/pm/model";
 import { Array as Arr, Record as Rec } from "effect";
 import { createContext } from "react";
@@ -33,9 +36,7 @@ export function pictureIdsOfDocuments(
 }
 
 /** The addresses that one read of a question's images answers, by image ID, as `SittingPictures` holds them. */
-export const addressesOf = (
-  assets: readonly { readonly id: string; readonly url: string }[]
-) =>
+export const addressesOf = (assets: readonly (typeof AssetAddress.Type)[]) =>
   Rec.fromEntries(Arr.map(assets, (asset) => [asset.id, asset.url] as const));
 
 /** The labels of an answer's parts, which hold images as a prompt does: options, statements, and their answers. */

@@ -38,6 +38,14 @@ const assetRows = Effect.flatMap(DatabaseReader, (reader) =>
   reader.table("examAssets").index("by_creation_time").take(100)
 );
 
+/** A new exam of the fixture's unit, which a test works on. */
+const newExam = (fixture: Effect.Success<typeof tenancyFixture>) =>
+  fixture.as("teacher").mutation(create, {
+    scope: { kind: "unit", unitId: fixture.units.smp },
+    slug: nf,
+    title: "PTS Matematika",
+  });
+
 describe("exams/assets", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -50,11 +58,7 @@ describe("exams/assets", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(create, {
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-          title: "PTS Matematika",
-        });
+        const made = yield* newExam(fixture);
         const url = yield* teacher.mutation(uploadUrl, {
           examId: made.id,
           slug: nf,
@@ -74,11 +78,7 @@ describe("exams/assets", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(create, {
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-          title: "PTS Matematika",
-        });
+        const made = yield* newExam(fixture);
         const storageId = yield* storeFile(fixture.convex, png());
         const registered = yield* teacher.action(register, {
           examId: made.id,
@@ -104,11 +104,7 @@ describe("exams/assets", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(create, {
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-          title: "PTS Matematika",
-        });
+        const made = yield* newExam(fixture);
         const storageId = yield* storeFile(
           fixture.convex,
           new Blob(["%PDF-1.7 not an image"], { type: "image/png" })
@@ -133,11 +129,7 @@ describe("exams/assets", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(create, {
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-          title: "PTS Matematika",
-        });
+        const made = yield* newExam(fixture);
         const storageId = yield* storeFile(
           fixture.convex,
           new Blob([new Uint8Array(IMAGE_BYTE_LIMIT + 1)], {
@@ -164,11 +156,7 @@ describe("exams/assets", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(create, {
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-          title: "PTS Matematika",
-        });
+        const made = yield* newExam(fixture);
         const storageId = yield* storeFile(fixture.convex, png());
         const byStudent = yield* fixture
           .as("student")
@@ -454,11 +442,7 @@ describe("exams/assets", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(create, {
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-          title: "PTS Bahasa",
-        });
+        const made = yield* newExam(fixture);
         const picture = yield* storeFile(fixture.convex, png());
         const clip = yield* storeFile(fixture.convex, mp3());
         yield* teacher.action(register, {

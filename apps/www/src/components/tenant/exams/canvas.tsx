@@ -12,8 +12,9 @@ import { HeldPaper } from "@/components/player/held";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { useQuestionReorder } from "@/components/tenant/exams/drag";
 import { pageAt } from "@/components/tenant/exams/pages";
-import { ExamPage, ExamPageStand } from "@/components/tenant/exams/paper";
+import { ExamPage } from "@/components/tenant/exams/paper";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
+import { PaperSketch } from "@/components/tenant/exams/preview";
 import {
   useEditorView,
   useExam,
@@ -22,6 +23,7 @@ import {
   useExamZoom,
 } from "@/components/tenant/exams/provider";
 import { ExamReadBoundary } from "@/components/tenant/exams/read";
+import { QuestionPaper } from "@/components/tenant/exams/sheet";
 import { drawnZoom, ZOOM_DEFAULT } from "@/components/tenant/exams/zoom";
 
 /**
@@ -241,7 +243,11 @@ export function ExamCanvas({
           {Arr.map(exam.questions, (question, index) => (
             <ExamReadBoundary
               key={question.id}
-              stand={<ExamPageStand question={question} />}
+              stand={
+                <QuestionPaper>
+                  <PaperSketch question={question} withControls />
+                </QuestionPaper>
+              }
             >
               <ExamPage canvas={canvas} index={index} question={question} />
             </ExamReadBoundary>

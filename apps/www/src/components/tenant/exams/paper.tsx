@@ -215,7 +215,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
                 {question.reading === null ? null : (
                   <ReadingSketch documentId={question.reading} read={read} />
                 )}
-                <PreviewProse article doc={prompt} size="paper" />
+                <PreviewProse doc={prompt} size="paper" />
               </PaperPrompt>
               <PaperSketch question={question} withControls />
             </QuestionPaper>
@@ -230,7 +230,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
             {question.reading === null ? null : (
               <ReadingSketch documentId={question.reading} read={read} />
             )}
-            <PreviewProse article doc={prompt} size="paper" />
+            <PreviewProse doc={prompt} size="paper" />
           </PaperPrompt>
           <PaperSketch question={question} withControls />
         </QuestionPaper>
@@ -247,15 +247,6 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
         </PanePortal>
       ) : null}
     </section>
-  );
-}
-
-/** A page whose read failed, in the shape it had, for the moment until it reads again. */
-export function ExamPageStand({ question }: { readonly question: Question }) {
-  return (
-    <QuestionPaper>
-      <PaperSketch question={question} withControls />
-    </QuestionPaper>
   );
 }
 

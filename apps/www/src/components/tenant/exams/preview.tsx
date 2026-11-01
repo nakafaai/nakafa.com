@@ -158,7 +158,7 @@ export function ReadingSketch({
     saved: true,
   });
 
-  return <PreviewProse article doc={doc} size="paper" />;
+  return <PreviewProse doc={doc} size="paper" />;
 }
 
 /** The document a text draws while its document is not known: one empty paragraph, as an editor holds one. */
@@ -187,16 +187,13 @@ function useDrawnPictures(doc: Node) {
 /**
  * A rich text drawn with the student's own nodes (`DrawnDocument`), in the wrapper the editor gives its text, so
  * the text takes the same box and spacing as it does once the editor mounts, and as the student reads it. A text
- * that changes while the teacher types is drawn when the browser has time. `article` gives each paragraph
- * the classes the article's paragraphs take, which the prompt and the notes of a question take in their
- * editors, and an option does not.
+ * that changes while the teacher types is drawn when the browser has time. Its paragraphs take the classes the
+ * article's paragraphs take, as the prompt and the notes of a question do in their editors.
  */
 export function PreviewProse({
-  article,
   doc,
   size,
 }: {
-  article: boolean;
   doc: Option.Option<Node>;
   size: "line" | "page" | "paper";
 }) {
@@ -215,7 +212,7 @@ export function PreviewProse({
             editorDocument({ size, text: "article" })
           )}
           doc={shown}
-          paragraphs={article}
+          paragraphs
         />
       </SittingPictures>
     </div>
@@ -224,12 +221,23 @@ export function PreviewProse({
 
 /** The label of one option drawn without an editor, at the size an option's editor takes. */
 export function OptionSketch({ label }: { label: OptionLabel }) {
-  const doc = useMemo(
-    () => Option.some(Node.fromJSON(assessmentSchema, label)),
-    [label]
-  );
+  const doc = useMemo(() => Node.fromJSON(assessmentSchema, label), [label]);
+  const urls = useDrawnPictures(doc);
 
-  return <PreviewProse article={false} doc={doc} size="line" />;
+  return (
+    <div className={editorContent({ size: "line" })}>
+      <SittingPictures value={urls}>
+        <DrawnDocument
+          className={cn(
+            editorPlaceholder(),
+            editorDocument({ size: "line", text: "article" })
+          )}
+          doc={doc}
+          paragraphs={false}
+        />
+      </SittingPictures>
+    </div>
+  );
 }
 
 /**
@@ -435,7 +443,7 @@ export function QuestionPreview({
         inert
       >
         <QuestionPaper>
-          <PreviewProse article doc={doc} size="paper" />
+          <PreviewProse doc={doc} size="paper" />
           <PaperSketch question={question} />
         </QuestionPaper>
       </div>

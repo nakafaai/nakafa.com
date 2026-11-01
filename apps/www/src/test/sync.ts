@@ -13,10 +13,11 @@ import { type Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { collab } from "prosemirror-collab";
-import type {
-  EditorPort,
-  SyncSession,
-  SyncTransport,
+import {
+  type EditorPort,
+  SyncFailed,
+  type SyncSession,
+  type SyncTransport,
 } from "@/lib/editor/session";
 import { startSync, tick } from "@/lib/editor/sync";
 
@@ -293,6 +294,23 @@ export const textOf = (doc: Node) => doc.textContent;
 
 /** The text of three letters typed by three editors, in any order. */
 export const THREE_LETTERS = /^[abc]{3}$/u;
+
+/** The transport with its first `failures` reads of the document failing, and the count of its reads. */
+export const failingOpen = (transport: SyncTransport, failures: number) =>
+  Effect.map(Ref.make(0), (reads) => {
+    const failing: SyncTransport = {
+      ...transport,
+      open: (clientId) =>
+        Ref.getAndUpdate(reads, (count) => count + 1).pipe(
+          Effect.flatMap((count) =>
+            count < failures
+              ? Effect.fail(new SyncFailed({ reason: "ran out of time" }))
+              : transport.open(clientId)
+          )
+        ),
+    };
+    return { reads, transport: failing };
+  });
 
 /** Starts one editor on the server's document. */
 export const openEditor = Effect.fn("test.sync.open")(function* (
