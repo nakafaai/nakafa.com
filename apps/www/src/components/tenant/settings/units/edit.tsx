@@ -37,6 +37,7 @@ import {
   setUnitLocaleChange,
 } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { SelectField } from "@/components/tenant/settings/select";
 import type { Unit } from "@/components/tenant/settings/state";
 import {
   UnitLevelField,
@@ -190,31 +191,12 @@ export function UnitEditDialog({
           value={nameText ?? unit.name}
         />
         <UnitLevelField id={`${id}-level`} onChange={setLevel} value={level} />
-        <Field>
-          <FieldLabel htmlFor={`${id}-zone`}>{t("unit-time-zone")}</FieldLabel>
-          <Select
-            items={timeZoneItems}
-            onValueChange={(value) => {
-              if (value !== null) {
-                setTimeZone(value);
-              }
-            }}
-            value={timeZone}
-          >
-            <SelectTrigger className="w-full" id={`${id}-zone`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {Arr.map(timeZoneItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
+        <SelectField
+          items={timeZoneItems}
+          label={t("unit-time-zone")}
+          onChoose={setTimeZone}
+          value={timeZone}
+        />
         <Field>
           <FieldLabel htmlFor={`${id}-language`}>
             {t("unit-page-language")}

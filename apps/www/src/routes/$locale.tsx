@@ -101,16 +101,17 @@ function LocaleRoot() {
       now={now}
       timeZone={localeTimeZone(locale)}
     >
-      <p className="sr-only">
-        For AI agents: use <a href="/llms.txt">/llms.txt</a> for the Nakafa
-        content index.
-      </p>
       <DesignSystemProvider direction={textDirection(locale)}>
         <div className="isolate">
           <Outlet />
         </div>
         <ShellToaster />
       </DesignSystemProvider>
+      {/* After the page and out of every snippet: first in the body, search engines quoted it as the page's description. */}
+      <div className="sr-only" data-nosnippet>
+        For AI agents: use <a href="/llms.txt">/llms.txt</a> for the Nakafa
+        content index.
+      </div>
       <TailwindIndicator />
     </IntlProvider>
   );

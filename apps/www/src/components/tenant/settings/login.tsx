@@ -40,7 +40,6 @@ export function LoginRenameDialog({
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const { slug } = useTenant();
-  const id = useId();
   const rename = useMutation(identity.logins.rename).withOptimisticUpdate(
     renameLoginChange
   );
@@ -91,21 +90,41 @@ export function LoginRenameDialog({
       title={login.person.name}
     >
       <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor={`${id}-login`}>
-            {t("card-login-name")}
-          </FieldLabel>
-          <Input
-            aria-invalid={problem}
-            id={`${id}-login`}
-            onChange={(event) => setLoginName(event.target.value)}
-            placeholder={t("card-login-name-placeholder")}
-            value={loginName}
-          />
-          <FieldDescription>{t("student-login-rule")}</FieldDescription>
-          <FieldError>{problem ? t("student-login-rule") : null}</FieldError>
-        </Field>
+        <LoginNameField
+          onChange={setLoginName}
+          problem={problem}
+          value={loginName}
+        />
       </FieldGroup>
     </ResponsiveDialog>
+  );
+}
+
+/** The field of a student card's login name, with its rule, which turns into the error once the name breaks it. */
+export function LoginNameField({
+  onChange,
+  problem,
+  value,
+}: {
+  onChange: (value: string) => void;
+  problem: boolean;
+  value: string;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const id = useId();
+
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>{t("card-login-name")}</FieldLabel>
+      <Input
+        aria-invalid={problem}
+        id={id}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={t("card-login-name-placeholder")}
+        value={value}
+      />
+      <FieldDescription>{t("student-login-rule")}</FieldDescription>
+      <FieldError>{problem ? t("student-login-rule") : null}</FieldError>
+    </Field>
   );
 }

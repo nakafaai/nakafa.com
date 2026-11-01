@@ -22,8 +22,6 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
-  FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -57,7 +55,10 @@ import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
-import { LoginRenameDialog } from "@/components/tenant/settings/login";
+import {
+  LoginNameField,
+  LoginRenameDialog,
+} from "@/components/tenant/settings/login";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
@@ -391,22 +392,11 @@ function SchoolStudentDialog({
             value={name}
           />
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-login`}>
-            {t("card-login-name")}
-          </FieldLabel>
-          <Input
-            aria-invalid={loginProblem}
-            id={`${id}-login`}
-            onChange={(event) => setLoginName(event.target.value)}
-            placeholder={t("card-login-name-placeholder")}
-            value={loginName}
-          />
-          <FieldDescription>{t("student-login-rule")}</FieldDescription>
-          <FieldError>
-            {loginProblem ? t("student-login-rule") : null}
-          </FieldError>
-        </Field>
+        <LoginNameField
+          onChange={setLoginName}
+          problem={loginProblem}
+          value={loginName}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );

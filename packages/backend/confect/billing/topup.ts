@@ -50,9 +50,8 @@ function paymentOf(order: TopUpOrder, status: "succeeded" | "refunded") {
  * Records a paid top-up order and grants its pack, the first time the payment is
  * seen. A payment that arrives again changes nothing, so a retried webhook never
  * grants a second pack. A learner without an active Pro grant keeps the payment
- * on record and gets no pack. A Polar order is then refunded through Polar, and
- * the refund's own `order.refunded` event leaves the payment refunded. Xendit has
- * no refund here, so the logged payment stays for an operator to refund.
+ * on record and gets no pack. The order is then refunded on its rail, and the
+ * rail's own refund event leaves the payment refunded.
  */
 export const applyTopUpPaid = Effect.fn("billing.topup.applyPaid")(function* (
   order: TopUpOrder
@@ -71,12 +70,14 @@ export const applyTopUpPaid = Effect.fn("billing.topup.applyPaid")(function* (
       }
     );
     // An order that charged nothing, such as a fully discounted one, has nothing to refund.
-    if (order.rail === "polar" && order.refundableAmount > 0) {
+    if (order.refundableAmount > 0) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
         billingInternal.topup.refundWithoutPro,
         {
+          currency: order.currency,
           orderId: order.providerPaymentId,
+          rail: order.rail,
           refundableAmount: order.refundableAmount,
         }
       );

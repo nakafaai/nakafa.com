@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
+  holdsTryoutQuestions,
   isTryoutRuntimeRunning,
   isTryoutStateLive,
   selectActionAttempt,
@@ -18,6 +19,22 @@ describe("isTryoutStateLive", () => {
       isTryoutStateLive({ attempt: createAttempt("completed", NOW + 1) })
     ).toBe(false);
     expect(isTryoutStateLive(null)).toBe(false);
+  });
+});
+
+describe("holdsTryoutQuestions", () => {
+  it("holds only a running attempt's questions", () => {
+    const attempt = createAttempt("in-progress", NOW + 1);
+
+    expect(holdsTryoutQuestions({ attempt, runtime: {} })).toBe(true);
+    expect(holdsTryoutQuestions({ attempt, runtime: null })).toBe(false);
+    expect(
+      holdsTryoutQuestions({
+        attempt: createAttempt("completed", NOW + 1),
+        runtime: {},
+      })
+    ).toBe(false);
+    expect(holdsTryoutQuestions(null)).toBe(false);
   });
 });
 

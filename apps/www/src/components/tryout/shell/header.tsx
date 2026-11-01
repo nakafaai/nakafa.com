@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -9,6 +10,7 @@ import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { HOME_TARGET, TRYOUT_TARGET } from "@/lib/routing/target";
 
 /**
@@ -94,7 +96,9 @@ export function TryoutPage({ children }: { children: ReactNode }) {
  */
 export function TryoutPageBody({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-6">
+    <div
+      className={cn(pageRowVariants(), "flex flex-1 flex-col space-y-6 py-6")}
+    >
       {children}
     </div>
   );
