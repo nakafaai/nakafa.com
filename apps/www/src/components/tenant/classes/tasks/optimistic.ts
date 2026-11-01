@@ -76,6 +76,7 @@ export const editUpdate: OptimisticUpdate<typeof classroom.tasks.edit> = (
 ) => {
   changeTask(localStore, args.task, (task) => ({
     ...task,
+    category: args.category,
     deadline: args.deadline,
     latePolicy: args.latePolicy,
     points: args.points,

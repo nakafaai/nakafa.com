@@ -136,6 +136,20 @@ export function TaskFields({
           </Select>
         </Field>
       </div>
+      <Field>
+        <FieldLabel htmlFor={`${id}-category`}>{t("task-category")}</FieldLabel>
+        <Input
+          dir="auto"
+          id={`${id}-category`}
+          maxLength={40}
+          onChange={(event) =>
+            onChange({ ...draft, category: event.target.value })
+          }
+          placeholder={t("task-category-placeholder")}
+          value={draft.category}
+        />
+        <FieldDescription>{t("task-category-description")}</FieldDescription>
+      </Field>
       <TaskReachField draft={draft} onChange={onChange} />
     </FieldGroup>
   );
