@@ -25,6 +25,7 @@ import type {
 import { Verdict } from "@repo/backend/confect/exams/results/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { CardContent } from "@repo/design-system/components/ui/card";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
@@ -94,7 +95,14 @@ type VerdictFilter = typeof VerdictFilter.Type;
  * server reads the answers' filters: a verdict reads only the answers of that verdict, and a name
  * search reads the students whose names match it, best match first.
  */
-function QuestionResults({ question }: { readonly question: Question }) {
+function QuestionResults({
+  question,
+  waits,
+}: {
+  readonly question: Question;
+  /** Whether the sheet is opening on this question, so it holds until the question has read. */
+  readonly waits: boolean;
+}) {
   const t = useTranslations("Exams");
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
@@ -134,7 +142,7 @@ function QuestionResults({ question }: { readonly question: Question }) {
     );
   }
   if (!QueryResult.isSuccess(stats) || Option.isNone(kept)) {
-    return null;
+    return waits ? <PopupHold /> : null;
   }
   const share = correctShare(stats.value);
   return (
@@ -330,6 +338,7 @@ export function QuestionsAction({
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
   const [selected, setSelected] = useState(0);
+  const [hasMoved, setHasMoved] = useState(false);
   const current = Arr.get(questions, selected);
 
   return (
@@ -353,7 +362,10 @@ export function QuestionsAction({
                 <Button
                   aria-pressed={index === selected}
                   key={question.id}
-                  onClick={() => setSelected(index)}
+                  onClick={() => {
+                    setSelected(index);
+                    setHasMoved(true);
+                  }}
                   size="sm"
                   type="button"
                   variant={index === selected ? "secondary" : "outline"}
@@ -367,7 +379,7 @@ export function QuestionsAction({
               // Each question holds its own search and verdict filter, so a question opened next starts with every answer.
               onSome: (question) => (
                 <TableFiltersProvider key={question.id}>
-                  <QuestionResults question={question} />
+                  <QuestionResults question={question} waits={!hasMoved} />
                 </TableFiltersProvider>
               ),
             })}

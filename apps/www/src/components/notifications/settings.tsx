@@ -13,16 +13,21 @@ import type {
 } from "@repo/backend/confect/notifications/rules";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Switch } from "@repo/design-system/components/ui/switch";
-import { Array as Arr } from "effect";
 import {
-  type ReactNode,
-  use,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetPanel,
+  SheetTitle,
+  SheetTrigger,
+} from "@repo/design-system/components/ui/sheet";
+import { Switch } from "@repo/design-system/components/ui/switch";
+import { cn } from "cn";
+import { Array as Arr } from "effect";
+import { type ReactNode, use, useOptimistic, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { ChoiceContext } from "@/components/notifications/choice";
 import { preferenceRowsOf } from "@/components/notifications/preferences";
@@ -32,32 +37,37 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 
-/** The header's button and its dialog, whose content mounts when it opens, so nothing is read before. */
+/**
+ * The header's button and its sheet. The sheet stays mounted while closed, so its content reads the reader's choices
+ * with the page and stands in place from the sheet's first frame.
+ */
 export function NoticePreferences({ children }: { children: ReactNode }) {
   const t = useTranslations("Notifications");
   const common = useTranslations("Common");
-  const [open, setOpen] = useState(false);
 
   return (
-    <>
-      <Button onClick={() => setOpen(true)} type="button" variant="outline">
-        <HugeIcons icon={Settings01Icon} />
-        <HeaderLabel>{t("preferences")}</HeaderLabel>
-      </Button>
-      <ResponsiveDialog
-        description={t("preferences-description")}
-        footer={
-          <Button onClick={() => setOpen(false)} type="button">
-            {common("close")}
+    <Sheet>
+      <SheetTrigger
+        render={
+          <Button type="button" variant="outline">
+            <HugeIcons icon={Settings01Icon} />
+            <HeaderLabel>{t("preferences")}</HeaderLabel>
           </Button>
         }
-        open={open}
-        setOpen={setOpen}
-        title={t("preferences")}
-      >
-        {open ? children : null}
-      </ResponsiveDialog>
-    </>
+      />
+      <SheetContent className="sm:max-w-xl" keepMounted showCloseButton={false}>
+        <SheetHeader>
+          <SheetTitle>{t("preferences")}</SheetTitle>
+          <SheetDescription>{t("preferences-description")}</SheetDescription>
+        </SheetHeader>
+        <SheetPanel>{children}</SheetPanel>
+        <SheetFooter>
+          <SheetClose
+            render={<Button type="button">{common("close")}</Button>}
+          />
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -150,6 +160,7 @@ function ChannelSwitch({
     <Switch
       aria-label={`${t(`kind-${kind}`)}, ${t(`channel-${channel}`)}`}
       checked={shown}
+      className={cn(save === null && "invisible")}
       onCheckedChange={(next) =>
         startSaving(async () => {
           setShown(next);

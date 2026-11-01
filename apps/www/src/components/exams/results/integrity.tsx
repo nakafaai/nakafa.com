@@ -3,6 +3,7 @@ import { SecurityCheckIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { IntegrityRow } from "@repo/backend/confect/exams/results/contract";
 import { Button } from "@repo/design-system/components/ui/button";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
@@ -75,7 +76,7 @@ function IntegrityRows() {
     throw report.error;
   }
   if (!QueryResult.isSuccess(report)) {
-    return null;
+    return <PopupHold />;
   }
   const { rows, students } = report.value;
   if (Arr.isReadonlyArrayEmpty(rows)) {

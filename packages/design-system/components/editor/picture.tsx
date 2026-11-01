@@ -141,6 +141,12 @@ export function PictureAltDialog({
     }
   }
 
+  // The picture stays while the dialog animates out, as the text does.
+  const [picture, setPicture] = useState(preview);
+  if (preview !== null && preview !== picture) {
+    setPicture(preview);
+  }
+
   const next = altText(text);
   const field = useId();
   const form = useId();
@@ -177,12 +183,12 @@ export function PictureAltDialog({
         }}
       >
         <FieldGroup>
-          {preview === null ? null : (
+          {picture === null ? null : (
             <img
               alt=""
               className="max-h-64 rounded-md object-contain"
               height={256}
-              src={preview}
+              src={picture}
               width={256}
             />
           )}

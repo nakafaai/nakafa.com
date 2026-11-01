@@ -276,11 +276,9 @@ export function PanesDetail({
         showSwipeHandle
       >
         <DrawerContent>
-          {!wide && sheet ? (
-            <PaneModeContext value={{ close, place: "sheet" }}>
-              {children}
-            </PaneModeContext>
-          ) : null}
+          <PaneModeContext value={{ close, place: "sheet" }}>
+            {children}
+          </PaneModeContext>
         </DrawerContent>
       </Drawer>
     </>

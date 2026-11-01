@@ -20,6 +20,7 @@ import {
   FieldLegend,
   FieldSet,
 } from "@repo/design-system/components/ui/field";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -240,6 +241,7 @@ export function SchoolWebhookCreateDialog({
       title={t("webhook-add")}
     >
       <FieldGroup>
+        {clients._tag === "LoadingFirstPage" ? <PopupHold /> : null}
         <Field>
           <FieldLabel htmlFor={`${id}-client`}>
             {t("webhook-client")}
