@@ -18,6 +18,7 @@ const SENTENCES = {
     "exam.starting": "Deine Prüfung beginnt bald.",
     "exam.reminder": "Eine Prüfung deines Kindes steht bevor.",
     "grade.released": "Eine neue Note wurde freigegeben.",
+    "comment.replied": "Jemand hat auf deinen Kommentar geantwortet.",
   },
   en: {
     "announcement.posted": "There is a new announcement in your class.",
@@ -29,6 +30,7 @@ const SENTENCES = {
     "exam.starting": "Your exam starts soon.",
     "exam.reminder": "Your child has an exam coming up.",
     "grade.released": "A new grade has been released.",
+    "comment.replied": "Someone replied to your comment.",
   },
   id: {
     "announcement.posted": "Ada pengumuman baru di kelasmu.",
@@ -40,6 +42,7 @@ const SENTENCES = {
     "exam.starting": "Ujianmu segera dimulai.",
     "exam.reminder": "Anakmu akan mengikuti ujian.",
     "grade.released": "Ada nilai baru yang dirilis.",
+    "comment.replied": "Ada yang membalas komentarmu.",
   },
 } satisfies Record<
   typeof AppLocaleCodeSchema.Type,

@@ -10,6 +10,7 @@ import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { dropRestores } from "@repo/backend/confect/nina/memory/restore/store";
 import { deleteBatch } from "@repo/backend/confect/nina/memory/store";
 import { dropPortrait } from "@repo/backend/confect/nina/portrait/store";
+import { cleanupReplyRows } from "@repo/backend/confect/notifications/reply";
 import { POST_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/posts/cleanup";
 import {
   removeLike,
@@ -128,6 +129,9 @@ export const cleanupUserSocialData = Effect.fn(
     return true;
   }
   if (yield* cleanupCommentLikes(userId)) {
+    return true;
+  }
+  if (yield* cleanupReplyRows(userId)) {
     return true;
   }
   if (yield* cleanupPostLikes(userId)) {

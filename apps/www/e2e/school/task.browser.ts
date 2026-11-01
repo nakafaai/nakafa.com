@@ -169,6 +169,7 @@ test("a student's work stays in the field after a hand-in, and Hand in keeps its
   await tasks.getByRole("button", { name: "New task" }).click();
   const part = tasks.getByRole("dialog");
   await part.getByRole("textbox", { name: "Title" }).fill("Remedial");
+  await part.getByRole("textbox", { name: "Category" }).fill("Remedial bab 1");
   await part
     .getByRole("textbox", { name: "What to do" })
     .fill("Kerjakan soal 1 lagi.");
@@ -181,9 +182,14 @@ test("a student's work stays in the field after a hand-in, and Hand in keeps its
   await expect(publish).toBeDisabled();
   await part.getByRole("checkbox", { name: "Acceptance Learner" }).click();
   await publish.click();
-  await expect(tasks.getByRole("link", { name: "Remedial" })).toBeVisible({
+  await expect(
+    tasks.getByRole("link", { exact: true, name: "Remedial" })
+  ).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
+  await expect(
+    tasks.getByRole("cell", { name: "Remedial bab 1" })
+  ).toBeVisible();
   await teacher.close();
 
   const taskAddress = address("/classes/fisika-x-1/tasks/latihan-gerak-lurus");
