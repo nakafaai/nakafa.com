@@ -235,6 +235,7 @@ function RoomsTable({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
+  const tenant = useTenant();
   const locale = useLocale();
   const chosen = useTableFilters((state) => state.chosen);
   const filter = Option.getOrElse(
@@ -276,6 +277,18 @@ function RoomsTable({
     return (
       <TableEmpty
         act="pointing"
+        action={
+          tenant.canOpenExams ? (
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              params={{ exam: examId, slug }}
+              to="/school/$slug/exams/$exam/edit"
+            >
+              <HugeIcons icon={PencilEdit02Icon} />
+              {t("edit-action")}
+            </Link>
+          ) : undefined
+        }
         description={t("rooms-empty-description")}
         title={t("rooms-empty")}
       />
