@@ -24,7 +24,7 @@ const FIRST_BLOCKS = 12;
 /** The blocks each later frame adds, so no one frame styles and lays out a whole lesson. */
 const NEXT_BLOCKS = 16;
 
-/** The top-level blocks of a body, whose tree has a fragment for its root. */
+/** The top-level blocks of a body or a list, a server tree having a fragment for its root. */
 function blocksOf(body: ReactNode) {
   const [root] = Children.toArray(body);
   return Children.toArray(
@@ -44,8 +44,8 @@ function landsInside(router: RegisteredRouter) {
 }
 
 /**
- * Draws a body's blocks a few at a time after a move. A lesson holds thousands of elements, and a move commits
- * inside one task, so a phone paid for every block before it could show the first one. The first frame now
+ * Draws a long page's blocks a few at a time after a move. A lesson or a surah holds thousands of elements, and a
+ * move commits inside one task, so a phone paid for every block before it could show the first one. The first frame now
  * holds what fills the screen, and the rest follow in transitions that a press can interrupt. The space held under
  * the blocks keeps the page's foot off the screen until they all stand. A page's first load stays whole, because
  * its HTML is, and a move to a heading or back to a place in the page stays whole too, so the place exists.
