@@ -8,7 +8,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -257,7 +256,6 @@ function CourseRow({
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectLabel>{t("course-class")}</SelectLabel>
               {Arr.map(items, (item) => (
                 <SelectItem key={item.value} value={item.value}>
                   {item.label}
