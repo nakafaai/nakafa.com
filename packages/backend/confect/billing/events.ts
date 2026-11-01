@@ -82,6 +82,9 @@ export const recordEvent = Effect.fn("billing.events.record")(function* (
   return recorded;
 });
 
+/** The outcomes an operator must see: Nakafa took the delivery and could not act on it. */
+const UNAPPLIED_OUTCOMES = ["invalid", "railMismatch", "unknownPayment"];
+
 /** Marks one delivery processed, and logs what it did. Invalid bodies and deliveries on the wrong rail are errors. */
 const recordOutcome = Effect.fn("billing.events.recordOutcome")(function* (
   eventId: BillingEventId,
@@ -97,7 +100,7 @@ const recordOutcome = Effect.fn("billing.events.recordOutcome")(function* (
     .table("billingEvents")
     .patch(eventId, { processedAt: now })
     .pipe(Effect.orDie);
-  if (detail.outcome === "invalid" || detail.outcome === "railMismatch") {
+  if (Arr.contains(UNAPPLIED_OUTCOMES, detail.outcome)) {
     yield* Effect.logError("Billing webhook was not applied", detail);
   } else {
     yield* Effect.logInfo("Billing webhook processed", detail);

@@ -304,13 +304,15 @@ const finish = FunctionImpl.make(
     if (code === null) {
       return ended("cancelled");
     }
-    const refused = () => Effect.succeed(ended("refused"));
     return yield* connectClaimed(claimed, code, appUser._id).pipe(
       Effect.as(ended("connected")),
       Effect.catchTags({
-        ConnectorOff: refused,
-        GoogleFailed: refused,
-        ScopesMissing: refused,
+        ConnectorOff: () => Effect.succeed(ended("failed")),
+        GoogleFailed: (failure) =>
+          Effect.logError("A Google connect failed", failure).pipe(
+            Effect.as(ended("failed"))
+          ),
+        ScopesMissing: () => Effect.succeed(ended("refused")),
       })
     );
   })

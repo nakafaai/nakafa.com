@@ -3,10 +3,15 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
+import { cn } from "cn";
 import type { ReactNode } from "react";
+import {
+  pageBoxVariants,
+  readingMeasureVariants,
+} from "@/components/shared/content/width";
 
 /**
- * The questions beside the navigator across the app's width (`max-w-7xl`),
+ * The questions beside the navigator across the page's frame,
  * right under the player's one header row. From the large breakpoint the navigator is a pane that a
  * learner resizes by dragging the handle between the two; below it the handle
  * and the pane step aside and the navigator opens as a sheet. Unlike the shared
@@ -24,7 +29,10 @@ export function PlayerMain({
 }) {
   return (
     <ResizablePanelGroup
-      className="mx-auto h-auto! max-w-7xl flex-1 overflow-visible! max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!"
+      className={cn(
+        pageBoxVariants(),
+        "h-auto! flex-1 overflow-visible! max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!"
+      )}
       orientation="horizontal"
     >
       <ResizablePanel
@@ -32,7 +40,9 @@ export function PlayerMain({
         id="questions"
         minSize="55%"
       >
-        <div className="mx-auto w-full max-w-3xl min-w-0 px-4 py-6 sm:px-6">
+        <div
+          className={cn(readingMeasureVariants(), "min-w-0 px-4 py-6 sm:px-6")}
+        >
           {children}
         </div>
       </ResizablePanel>

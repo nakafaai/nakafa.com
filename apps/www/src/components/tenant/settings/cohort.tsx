@@ -6,7 +6,8 @@ import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { contentWidthVariants } from "@/components/shared/content/width";
+import { PageFrame } from "@/components/shared/content/frame";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
@@ -58,7 +59,7 @@ function CohortFailure({ children }: { children: ReactNode }) {
   );
 
   return (
-    <>
+    <PageFrame width="column">
       <SchoolHeader
         items={[
           {
@@ -69,8 +70,8 @@ function CohortFailure({ children }: { children: ReactNode }) {
         ]}
         title={t(section.labelKey)}
       />
-      <TablePageBody width="column">{children}</TablePageBody>
-    </>
+      <TablePageBody>{children}</TablePageBody>
+    </PageFrame>
   );
 }
 
@@ -88,7 +89,7 @@ function CohortUnavailable() {
   );
 
   return (
-    <>
+    <PageFrame width="column">
       <SchoolHeader
         items={[
           {
@@ -99,7 +100,7 @@ function CohortUnavailable() {
         ]}
         title={t(section.labelKey)}
       />
-      <TablePageBody width="column">
+      <TablePageBody>
         <TableEmpty
           act="pointing"
           action={
@@ -114,7 +115,7 @@ function CohortUnavailable() {
           title={t("cohort-unavailable")}
         />
       </TablePageBody>
-    </>
+    </PageFrame>
   );
 }
 
@@ -152,51 +153,48 @@ function SchoolCohortPage({
 
   return (
     <TableFiltersProvider>
-      <SchoolHeader
-        items={[
-          {
-            label: t(section.group.key),
-            target: section.group.target,
-          },
-          {
-            label: t(section.labelKey),
-            target: section.target,
-          },
-          { label: detail === undefined ? "" : detail.name },
-        ]}
-        {...(detail === undefined ? {} : { title: detail.name })}
-      >
-        <TableSearch placeholder={t("cohort-members-search")} />
-        <WithAction action="cohort.manage">
-          <SchoolPlacementAdd
-            cohortId={cohortId}
-            slug={slug}
-            status={detail === undefined ? undefined : detail.status}
-          />
-        </WithAction>
-      </SchoolHeader>
-      <div
-        className={cn(
-          contentWidthVariants({ width: "column" }),
-          "w-full px-4 pt-4"
-        )}
-      >
-        <WithAction action="cohort.manage">
-          <SchoolHomeroomCard cohort={detail} slug={slug} />
-        </WithAction>
-      </div>
-      <TablePageBody width="column">
-        {detail === undefined ? null : (
-          <ReadBoundary>
-            <SchoolCohortMembers
+      <PageFrame width="column">
+        <SchoolHeader
+          items={[
+            {
+              label: t(section.group.key),
+              target: section.group.target,
+            },
+            {
+              label: t(section.labelKey),
+              target: section.target,
+            },
+            { label: detail === undefined ? "" : detail.name },
+          ]}
+          {...(detail === undefined ? {} : { title: detail.name })}
+        >
+          <TableSearch placeholder={t("cohort-members-search")} />
+          <WithAction action="cohort.manage">
+            <SchoolPlacementAdd
               cohortId={cohortId}
-              isArchived={detail.status === "archived"}
-              periodId={detail.periodId}
               slug={slug}
+              status={detail === undefined ? undefined : detail.status}
             />
-          </ReadBoundary>
-        )}
-      </TablePageBody>
+          </WithAction>
+        </SchoolHeader>
+        <div className={cn(pageRowVariants(), "pt-4")}>
+          <WithAction action="cohort.manage">
+            <SchoolHomeroomCard cohort={detail} slug={slug} />
+          </WithAction>
+        </div>
+        <TablePageBody>
+          {detail === undefined ? null : (
+            <ReadBoundary>
+              <SchoolCohortMembers
+                cohortId={cohortId}
+                isArchived={detail.status === "archived"}
+                periodId={detail.periodId}
+                slug={slug}
+              />
+            </ReadBoundary>
+          )}
+        </TablePageBody>
+      </PageFrame>
     </TableFiltersProvider>
   );
 }

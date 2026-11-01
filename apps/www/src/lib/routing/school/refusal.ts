@@ -4,8 +4,9 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
-import { Data, Effect, Option } from "effect";
+import { Data, Duration, Effect, Option, Schema } from "effect";
 import { readSessionCookie } from "@/lib/auth/cookie.server";
+import { readStoreEntry, writeStoreEntry } from "@/lib/content/store/entry";
 import { httpSingleAttemptLayer } from "@/lib/convex/http";
 import { readSchoolSlug } from "@/lib/routing/school/host";
 
@@ -16,6 +17,16 @@ import { readSchoolSlug } from "@/lib/routing/school/host";
  */
 class SchoolReadDeadline extends Data.TaggedError("SchoolReadDeadline") {}
 
+/** Store tag of every kept answer, which a test expires between visits. */
+export const SCHOOL_REFUSAL_TAG = "school-refusal";
+/**
+ * How long an isolate keeps a school's answer. Scanners try hundreds of addresses
+ * on invented hosts, and each one would otherwise reach Convex, so a minute bounds
+ * the reads to one a minute per host and isolate. A visitor of a school opened
+ * within that minute can see not found once; a member's session never asks.
+ */
+const SCHOOL_REFUSAL_LIFETIME = Duration.seconds(60);
+
 /**
  * Reads whether the school refuses a visitor, in one query with no session: the
  * backend decides the school's existence (`tenancy.profile.refusal`).
@@ -23,10 +34,23 @@ class SchoolReadDeadline extends Data.TaggedError("SchoolReadDeadline") {}
 const readRefusal = Effect.fn("www.routing.school.refusal")(function* (
   slug: TenantSlug
 ) {
-  return yield* HttpClient.HttpClient.pipe(
+  const parts = ["school-refusal", slug];
+  const stored = yield* readStoreEntry({ parts, schema: Schema.Boolean });
+  if (Option.isSome(stored)) {
+    return stored.value;
+  }
+  const refused = yield* HttpClient.HttpClient.pipe(
     Effect.flatMap((client) => client.query(tenancy.profile.refusal, { slug })),
     Effect.provide(httpSingleAttemptLayer())
   );
+  yield* writeStoreEntry({
+    parts,
+    schema: Schema.Boolean,
+    tags: [SCHOOL_REFUSAL_TAG],
+    ttl: SCHOOL_REFUSAL_LIFETIME,
+    value: refused,
+  });
+  return refused;
 });
 
 /**

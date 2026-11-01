@@ -1,6 +1,6 @@
 import { useMutation } from "@confect/react";
 import access from "@repo/backend/confect/_generated/refs/access";
-import { BuiltinRole, OwnerRole } from "@repo/backend/confect/access/schema";
+import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -23,7 +23,10 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { roleIcon } from "@/components/tenant/roles";
-import { assignGrantChange } from "@/components/tenant/settings/grants";
+import {
+  assignGrantChange,
+  givenRoles,
+} from "@/components/tenant/settings/grants";
 import {
   type PersonId,
   SchoolPersonPicker,
@@ -31,18 +34,6 @@ import {
 import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/settings/grant";
-
-/**
- * The roles the viewer may give a person. The Integration role belongs to an integration client
- * alone, and only an Owner gives the two roles that lead the school.
- */
-export const givenRoles = (viewer: Option.Option<BuiltinRole>) =>
-  Arr.filter(
-    BuiltinRole.literals,
-    (role) =>
-      role !== "integration" &&
-      (Option.contains(viewer, "owner") || !Schema.is(OwnerRole)(role))
-  );
 
 /**
  * The dialog that gives a role of the whole school to a person: one the viewer chooses, or the `person` that the
