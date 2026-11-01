@@ -14,7 +14,7 @@ export const KEPT_NAME_PROPERTY = "--kept-account-name";
  * kept row belongs to the session the browser holds, as `readKnownAccount`
  * decides, the script names its plan on the root and its name in a custom
  * property, and the row's styles show both. A row of another session, a row it
- * cannot read, and a storage the page cannot read leave the row hidden, as a
+ * cannot read, and a storage the page cannot read leave the row unseen, as a
  * browser that kept no row does, and the live row draws once the account loads.
  * Control characters are dropped from the name, since a CSS string reads their
  * JSON escapes as letters.

@@ -20,7 +20,7 @@ const inboxTabsVariants = cva("mx-auto", {
   },
 });
 
-/** The tab the address names, All without one, so back and a reload return to it. */
+/** The tab the address names, All without one, so a reload and a shared link return to it. */
 export function useInboxTopic(): typeof InboxTopic.Type {
   return (
     useSearch({ strict: false, select: (search) => search.topic }) ?? "all"
