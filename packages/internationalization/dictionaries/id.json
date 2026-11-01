@@ -59,6 +59,24 @@
     "outsider-check-again": "Periksa lagi"
   },
   "SchoolGuardians": {
+    "request-ask": "Tanya sekolah",
+    "request-description": "Tata usaha menjawab setiap permintaan. Tulis kebutuhan Anda secara singkat.",
+    "request-placeholder": "Yang Anda perlukan dari tata usaha",
+    "request-kind": "Permintaan",
+    "request-text": "Catatan Anda",
+    "request-state": "Status",
+    "request-student": "Siswa",
+    "request-send": "Kirim",
+    "request-approve": "Setujui",
+    "request-decline": "Tolak",
+    "request-kind-reportCopy": "Salinan rapor",
+    "request-kind-dataCorrection": "Perbaikan data",
+    "request-state-waiting": "Menunggu",
+    "request-state-approved": "Disetujui",
+    "request-state-declined": "Ditolak",
+    "family-title": "Orang tuaku",
+    "family-invite": "Undang orang tua",
+    "family-empty-description": "Tambahkan email orang tuamu agar mereka bisa masuk dan melihat nilaimu.",
     "sign-in-action": "Masuk orang tua",
     "email-label": "Email orang tua",
     "email-placeholder": "orangtua@contoh.com",
@@ -135,14 +153,15 @@
     "export-grades-loading": "Memuat rombel",
     "export-grades-no-period": "Belum ada periode aktif.",
     "export-grades-empty": "Belum ada rombel di periode ini.",
-    "file-label": "Daftar peserta didik Dapodik",
-    "empty": "Impor siswa dari Dapodik.",
-    "empty-description": "Pilih daftar peserta didik hasil ekspor Dapodik. File tetap di perangkat ini.",
+    "file-label": "Daftar peserta didik",
+    "empty": "Impor siswa.",
+    "empty-description": "Pilih daftar peserta didik dari Dapodik, atau zip CSV OneRoster. File tetap di perangkat ini.",
     "no-period": "Belum ada periode aktif.",
     "no-period-description": "Buka periode sebelum mengimpor siswa.",
     "file-refused": "File ini tidak bisa diimpor.",
-    "file-unreadable": "Pilih file XLSX hasil ekspor Dapodik.",
-    "file-header": "File tidak punya kolom Nama dan NISN.",
+    "file-unreadable": "Pilih file XLSX dari Dapodik atau zip CSV OneRoster.",
+    "file-header": "File tidak punya kolom daftar peserta didik.",
+    "file-size": "File lebih besar dari 10 MB.",
     "file-empty": "File tidak punya siswa di bawah judul kolomnya.",
     "line": "Baris",
     "name": "Nama",
@@ -468,6 +487,7 @@
     "import-title": "Impor soal",
     "import-dialog-description": "Nina menaruh soal dari berkas Word atau PDF ke ujian ini.",
     "import-submit": "Impor",
+    "import-forms": "Dari Google Forms",
     "import-hint": "Word atau PDF, paling besar 20 MB.",
     "import-drop": "Letakkan berkas Word atau PDF di sini, atau pilih satu.",
     "import-remove": "Hapus berkas",
@@ -605,6 +625,80 @@
     "student-locked-description": "Percobaan ini belum menerima jawaban."
   },
   "SchoolSettings": {
+    "setup-title": "Siapkan sekolah",
+    "setup-finish": "Selesai",
+    "setup-open": "Buka",
+    "setup-done": "Selesai",
+    "setup-plan": "Paket dan kontrak",
+    "setup-plan-description": "Lihat paket, jumlah siswa, dan tagihan sekolah.",
+    "setup-country": "Profil negara",
+    "setup-country-description": "Negara, zona waktu, bahasa, dan mata uang mengatur jam, kalender, dan harga sekolah.",
+    "setup-country-zone": "Zona waktu",
+    "setup-country-language": "Bahasa",
+    "setup-country-currency": "Mata uang",
+    "setup-country-name": "Negara",
+    "setup-period": "Periode dan kelompok kelas",
+    "setup-period-description": "Buka periode berjalan, lalu tambahkan kelompok kelasnya.",
+    "setup-import": "Impor siswa",
+    "setup-import-description": "Bawa siswa dari file Dapodik atau zip CSV OneRoster.",
+    "setup-policies": "Kebijakan sekolah",
+    "setup-policies-description": "Tentukan apa yang boleh dilakukan siswa dan siapa yang boleh bergabung.",
+    "setup-exam": "Coba satu ujian",
+    "setup-exam-description": "Tulis satu ujian dan coba sebagai siswa.",
+    "webhooks": "Webhook",
+    "webhooks-search": "Cari webhook",
+    "webhooks-empty": "Belum ada webhook yang mengirim perubahan.",
+    "webhook-add": "Buat webhook",
+    "webhook-add-description": "Webhook memberi tahu sistem lain saat ada perubahan di sekolah ini.",
+    "webhook-create": "Buat",
+    "webhook-save": "Simpan",
+    "webhook-edit": "Ubah",
+    "webhook-edit-description": "Ubah alamat tujuan dan apa yang dikirim.",
+    "webhook-url": "Alamat penerima",
+    "webhook-url-placeholder": "https://sistem.sekolah.sch.id/nakafa",
+    "webhook-url-description": "Alamat https publik yang menerima POST.",
+    "webhook-url-error": "Pakai alamat https publik.",
+    "webhook-client": "Klien",
+    "webhook-client-placeholder": "Pilih klien",
+    "webhook-changes": "Perubahan",
+    "webhook-change": {
+      "grade": {
+        "released": "Nilai dirilis"
+      },
+      "grant": {
+        "created": "Peran diberikan",
+        "ended": "Peran berakhir"
+      },
+      "guardian": {
+        "linked": "Orang tua tertaut",
+        "withdrawn": "Orang tua menarik diri"
+      },
+      "unit": {
+        "created": "Unit dibuat"
+      }
+    },
+    "webhook-revoke-title": "Cabut webhook ini?",
+    "webhook-revoke-description": "Pengiriman perubahan langsung berhenti.",
+    "webhook-secret-title": "Rahasia tanda tangan",
+    "webhook-secret-description": "Salin sekarang, karena tidak akan ditampilkan lagi. Sistemmu memeriksa setiap permintaan dengannya.",
+    "webhook-deliveries": "Pengiriman",
+    "webhook-deliveries-empty": "Belum ada perubahan yang dikirim.",
+    "delivery-status": {
+      "delivered": "Terkirim",
+      "dropped": "Tidak dikirim",
+      "due": "Menunggu",
+      "failed": "Gagal"
+    },
+    "delivery-reason": {
+      "access": "Klien tidak lagi membaca ini.",
+      "address": "Alamatnya tidak publik.",
+      "deadline": "Terlalu lama.",
+      "network": "Tidak bisa dihubungi.",
+      "revoked": "Webhook sudah berakhir.",
+      "status": "Penerima menolak."
+    },
+    "delivery-attempt": "Percobaan {attempt}",
+    "delivery-resend": "Kirim lagi",
     "student-add-name-placeholder": "Ayu Lestari",
     "invite-name-placeholder": "Budi Santoso",
     "invite-email-placeholder": "budi@example.com",
@@ -872,8 +966,11 @@
     "audit-empty": "Belum ada perubahan.",
     "audit-search": "Cari perubahan",
     "audit-export": "Ekspor",
-    "audit-operator": "Staf Nakafa",
-    "audit-system": "Sistem",
+    "audit-actor": {
+      "client": "Integrasi",
+      "operator": "Staf Nakafa",
+      "system": "Sistem"
+    },
     "audit-label": {
       "assignment": {
         "created": "Wali kelas ditetapkan",
@@ -941,6 +1038,12 @@
         "ended": "Peran berakhir"
       },
       "integration": {
+        "webhook": {
+          "created": "Webhook dibuat",
+          "changed": "Webhook diubah",
+          "rotated": "Rahasia webhook diganti",
+          "revoked": "Webhook dicabut"
+        },
         "created": "Klien dibuat",
         "rotated": "Rahasia diganti",
         "revoked": "Klien dicabut",
@@ -1005,6 +1108,9 @@
         }
       },
       "tenant": {
+        "setup": {
+          "finished": "Penyiapan selesai"
+        },
         "provisioned": "Sekolah dibuka",
         "dpa": {
           "accepted": "Perjanjian pemrosesan data disetujui"
@@ -1058,7 +1164,10 @@
         "linked": "Tautan orang tua terverifikasi",
         "withdrawn": "Persetujuan orang tua ditarik",
         "revoked": "Tautan orang tua diakhiri",
-        "readdressed": "Alamat tautan orang tua diperbaiki"
+        "readdressed": "Alamat tautan orang tua diperbaiki",
+        "request": {
+          "answered": "Permintaan orang tua dijawab"
+        }
       },
       "roster": {
         "set": "Data siswa diperbarui",
@@ -1066,6 +1175,12 @@
       },
       "login": {
         "renamed": "Nama login diubah"
+      },
+      "insight": {
+        "narrative": {
+          "shared": "Narasi dibagikan",
+          "withdrawn": "Narasi ditarik"
+        }
       }
     },
     "role-description": {
@@ -1135,6 +1250,19 @@
     "client-actions": "Aksi",
     "client-actions-footer": "Klien selalu memiliki paling sedikit satu aksi.",
     "client-action": {
+      "roster": {
+        "import": "Impor siswa"
+      },
+      "grade": {
+        "export": "Baca nilai yang dirilis",
+        "import": "Memasukkan draf nilai"
+      },
+      "guardian": {
+        "view": "Lihat tautan orang tua"
+      },
+      "unit": {
+        "view": "Lihat unit"
+      },
       "cohort": {
         "view": "Lihat kelas"
       },
@@ -1318,6 +1446,8 @@
     "post-email": "Juga kirim lewat email",
     "mention-list": "Orang yang bisa disebut",
     "mention-everyone": "Semua anggota kelas",
+    "mention-nina": "Nina, asisten AI",
+    "nina-author": "Nina, asisten AI",
     "library-empty": "Belum ada isi",
     "library-empty-description": "Berkas dan tautan kelas tampil di sini, yang terbaru di atas.",
     "library-add": "Tambah ke pustaka",
@@ -1991,6 +2121,21 @@
   },
   "Notifications": {
     "title": "Notifikasi",
+    "preferences": "Preferensi",
+    "preferences-description": "Pilih yang sampai ke kamu. Kotak masuk tetap menyimpan semua pemberitahuan.",
+    "preferences-kind": "Pemberitahuan",
+    "channel-push": "Push",
+    "channel-email": "Email",
+    "kind-commentReply": "Balasan untuk komentarmu",
+    "kind-forumMention": "Sebutan di kelas",
+    "kind-classAnnouncement": "Pengumuman kelas",
+    "kind-taskPublished": "Tugas baru",
+    "kind-taskDeadline": "Pengingat tugas",
+    "kind-gradeReleased": "Nilai yang dirilis",
+    "kind-taskMissed": "Tugas terlewat",
+    "kind-examStart": "Ujian akan dimulai",
+    "kind-examGuardianReminder": "Pengingat ujian",
+    "kind-invitation": "Undangan",
     "mark-all-read": "Tandai semua dibaca",
     "this-school": "Sekolah ini",
     "all-schools": "Semua sekolah",
@@ -2012,6 +2157,8 @@
     "push-home-screen": "Di iPhone dan iPad, notifikasi hanya datang dari Layar Utama: ketuk Bagikan, lalu Tambah ke Layar Utama, dan buka Nakafa dari ikonnya.",
     "assignment-published": "{actor} memberi tugas baru di {className}.",
     "assignment-published-gone": "Tugas yang sudah tidak ada.",
+    "assignment-deadline": "Tenggat tugas di {className} sudah dekat.",
+    "assignment-missed": "{student} belum mengumpulkan tugas di {className} tepat waktu.",
     "exam-starting": "{examTitle} dibuka pukul {opensAt, time, short} di {room}.",
     "exam-reminder": "{student} mengikuti {examTitle} pada {opensAt, date, long} pukul {opensAt, time, short} di {room}.",
     "exam-gone": "Ujian yang tidak lagi menunggu dibuka.",
@@ -2526,6 +2673,10 @@
       "title": "Sekolah ini tidak bisa dibuka dengan data tersebut.",
       "description": "Periksa alamat dan unit sekolahnya."
     },
+    "school-refusal-webhook-limit": {
+      "title": "Satu klien memegang paling banyak sepuluh webhook.",
+      "description": "Cabut yang tidak lagi dipakai."
+    },
     "school-refusal-unit-limit": {
       "title": "Batas sekolah sudah penuh.",
       "description": "Sebuah organisasi memiliki jumlah sekolah yang terbatas."
@@ -2882,6 +3033,10 @@
       "title": "Aksi ini tertutup untuk klien API.",
       "description": "Hapus aksi itu dari klien, lalu buat klien lagi."
     },
+    "school-refusal-draft-refused": {
+      "title": "Nina tidak bisa membuat draf sekarang.",
+      "description": "Aktifkan Nina untuk sekolah, atau tunggu kredit sekolah diperbarui."
+    },
     "school-refusal-promotion-state": {
       "title": "Periode ini belum bisa dibuka.",
       "description": "Terapkan dulu kenaikan kelas ke periode ini."
@@ -2973,6 +3128,10 @@
     "import-mathtype": {
       "title": "Ada persamaan berupa gambar.",
       "description": "Ketik ulang persamaan itu di editor."
+    },
+    "import-no-drive": {
+      "title": "Hubungkan Google Drive dulu",
+      "description": "Formulir dibaca lewat Google Drive-mu. Hubungkan di pengaturan akun."
     },
     "import-empty": {
       "title": "Nina tidak menemukan soal.",
@@ -3587,6 +3746,7 @@
     }
   },
   "Connectors": {
+    "course-import": "Impor siswa",
     "drive": "Google Drive",
     "drive-description": "File yang kamu pilih di Google Drive, untuk catatan dan impor.",
     "calendar": "Google Calendar",
@@ -3631,5 +3791,41 @@
     "period": "Periode",
     "approved": "Disetujui pada",
     "issued": "Diterbitkan pada"
+  },
+  "SchoolInsight": {
+    "title": "Insight",
+    "class": "Kelas",
+    "pick": "Pilih kelas",
+    "pick-description": "Capaian tiap siswa tampil di sini.",
+    "competency": "Kompetensi",
+    "mastery": "Penguasaan",
+    "evidence": "Bukti",
+    "evidence-points": "{earned} dari {possible} poin",
+    "student": "Siswa",
+    "chance": "Peluang KKTP {kktp}",
+    "chance-note": "Peluang ini tidak mengubah nilai dan hanya tampil untuk guru. Angkanya berasal dari poin di atas dan masih estimasi awal.",
+    "chance-held": "Prakiraan tidak lolos uji bulan lalu, jadi disembunyikan sampai lolos.",
+    "empty": "Belum ada yang ditampilkan",
+    "empty-description": "Setiap ujian yang dirilis tampil di sini.",
+    "narrative-title": "Narasi untuk {student}",
+    "narrative-description": "Tulisanmu tentang siswa ini. Orang tua hanya membacanya setelah kamu bagikan.",
+    "narrative-placeholder": "Kekuatan siswa ini, dan yang membantunya berikutnya",
+    "narrative-save": "Simpan",
+    "narrative-share": "Bagikan ke orang tua",
+    "narrative-withdraw": "Tarik kembali",
+    "narrative-ask": "Minta Nina",
+    "narrative-drafting": "Nina sedang menulis draf.",
+    "narrative-draft": "Draf Nina, hanya dari angka. Sesuaikan dulu sebelum disimpan.",
+    "narrative-use": "Pakai draf ini",
+    "practice": "Latihan yang dibagikan",
+    "practice-sets": "Set",
+    "practice-mean": "Skor rata-rata",
+    "practice-shared": "Dibagikan",
+    "practice-share": "Bagikan {topic} ke sekolah",
+    "practice-note": "Hanya topik yang kamu aktifkan yang sampai ke gurumu, dan kamu bisa mematikannya kapan saja.",
+    "tags": "Kompetensi",
+    "tags-description": "Sebutkan kompetensi tiap soal. Soal tanpa kompetensi dihitung untuk ujiannya.",
+    "exam": "Ujian",
+    "question": "Soal {number}"
   }
 }

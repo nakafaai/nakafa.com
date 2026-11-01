@@ -3,10 +3,27 @@ import type {
   MentionView,
 } from "@repo/backend/confect/classroom/forum/mention";
 import { MENTION_LIMIT } from "@repo/backend/confect/classroom/forum/mention";
-import { Array as Arr, Option, Order, Schema, String as Str } from "effect";
+import {
+  Array as Arr,
+  Match,
+  Option,
+  Order,
+  Schema,
+  String as Str,
+} from "effect";
 
 /** One Person a writer may mention. */
 type Person = typeof MentionablePerson.Type;
+
+/** The text a mention carries in a message: `@everyone`, `@Nina`, or the Person's name. */
+export const mentionWord = (mention: typeof MentionView.Type) =>
+  Match.value(mention).pipe(
+    Match.tagsExhaustive({
+      everyone: () => "@everyone",
+      nina: () => "@Nina",
+      person: ({ name }) => `@${name}`,
+    })
+  );
 
 /** A space or a line break, after which `@` opens a mention. */
 const SPACE = /\s/u;
@@ -110,14 +127,10 @@ export const keptMentions = (
 ) =>
   Arr.take(
     Arr.dedupeWith(
-      Arr.filter(picked, (mention) =>
-        text.includes(
-          mention._tag === "everyone" ? "@everyone" : `@${mention.name}`
-        )
-      ),
+      Arr.filter(picked, (mention) => text.includes(mentionWord(mention))),
       (self: typeof MentionView.Type, that: typeof MentionView.Type) =>
         self._tag === that._tag &&
-        (self._tag === "everyone" ||
+        (self._tag !== "person" ||
           (that._tag === "person" && self.id === that.id))
     ),
     MENTION_LIMIT
@@ -186,15 +199,4 @@ export const mentionSegments = (
   text: string,
   mentions: readonly (typeof MentionView.Type)[]
 ) =>
-  cut(
-    text,
-    Arr.sort(
-      Arr.dedupe(
-        Arr.map(mentions, (mention) =>
-          mention._tag === "everyone" ? "@everyone" : `@${mention.name}`
-        )
-      ),
-      byLength
-    ),
-    0
-  );
+  cut(text, Arr.sort(Arr.dedupe(Arr.map(mentions, mentionWord)), byLength), 0);

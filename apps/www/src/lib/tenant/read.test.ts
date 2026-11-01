@@ -65,6 +65,7 @@ const TenantView = Schema.Struct({
   ...TenantProfile.fields,
   id: Id("tenants"),
   ...TenantSettings.fields,
+  setupDone: Schema.Boolean,
 });
 
 /** The viewer of a member of the school, with no grant and no unit, decoded with the backend schemas. */
@@ -86,6 +87,7 @@ const VIEWER: SchoolViewer = {
     mascot: MASCOT,
     name: "Harapan",
     policies: { emailDomains: [], nina: false, studentThreads: false },
+    setupDone: false,
     slug: "harapan",
     status: "active",
   }),

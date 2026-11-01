@@ -19,6 +19,7 @@ import { useTranslations } from "use-intl";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsList } from "@/components/notifications/list";
 import { MarkAllRead } from "@/components/notifications/read";
+import { NoticePreferences } from "@/components/notifications/settings";
 import { InboxTabs } from "@/components/notifications/tabs";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
@@ -41,6 +42,7 @@ export function SchoolNotifications({ all }: { all: boolean }) {
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {/* Mark all read stands before the filter from the first paint, ready and final. */}
         <MarkAllRead first={Option.none()} scope={scope} />
+        <NoticePreferences />
         <InboxFilter all={all} />
       </SchoolHeader>
       <InboxTabs width="page" />

@@ -59,6 +59,24 @@
     "outsider-check-again": "Check again"
   },
   "SchoolGuardians": {
+    "request-ask": "Ask the school",
+    "request-description": "The school office answers each request. Write what you need in a few words.",
+    "request-placeholder": "What you need from the school office",
+    "request-kind": "Request",
+    "request-text": "Your note",
+    "request-state": "Status",
+    "request-student": "Student",
+    "request-send": "Send",
+    "request-approve": "Approve",
+    "request-decline": "Decline",
+    "request-kind-reportCopy": "A copy of a report",
+    "request-kind-dataCorrection": "A correction of data",
+    "request-state-waiting": "Waiting",
+    "request-state-approved": "Approved",
+    "request-state-declined": "Declined",
+    "family-title": "My parents",
+    "family-invite": "Invite a parent",
+    "family-empty-description": "Add your parent's email so they can sign in and see your grades.",
     "sign-in-action": "Parent sign-in",
     "email-label": "Parent email",
     "email-placeholder": "parent@example.com",
@@ -135,14 +153,15 @@
     "export-grades-loading": "Loading class groups",
     "export-grades-no-period": "No active period yet.",
     "export-grades-empty": "No class group in this period.",
-    "file-label": "Dapodik student list",
-    "empty": "Import the students from Dapodik.",
-    "empty-description": "Choose the student list exported from Dapodik. The file stays on this device.",
+    "file-label": "Student list",
+    "empty": "Import the students.",
+    "empty-description": "Choose the student list from Dapodik, or a OneRoster CSV zip. The file stays on this device.",
     "no-period": "No active period yet.",
     "no-period-description": "Open a period before you import students.",
     "file-refused": "This file cannot be imported.",
-    "file-unreadable": "Choose an XLSX file exported from Dapodik.",
-    "file-header": "The file has no Nama and NISN columns.",
+    "file-unreadable": "Choose an XLSX file from Dapodik or a OneRoster CSV zip.",
+    "file-header": "The file does not have the columns of a student list.",
+    "file-size": "The file is larger than 10 MB.",
     "file-empty": "The file has no student below its header.",
     "line": "Row",
     "name": "Name",
@@ -468,6 +487,7 @@
     "import-title": "Import questions",
     "import-dialog-description": "Nina adds the questions of a Word or PDF file to this exam.",
     "import-submit": "Import",
+    "import-forms": "From Google Forms",
     "import-hint": "Word or PDF, up to 20 MB.",
     "import-drop": "Drop a Word or PDF file here, or choose one.",
     "import-remove": "Remove file",
@@ -605,6 +625,80 @@
     "student-locked-description": "It takes no answers for now."
   },
   "SchoolSettings": {
+    "setup-title": "Set up school",
+    "setup-finish": "Finish setup",
+    "setup-open": "Open",
+    "setup-done": "Done",
+    "setup-plan": "Plan and contract",
+    "setup-plan-description": "See your plan, your students and what the school pays.",
+    "setup-country": "Country profile",
+    "setup-country-description": "Country, time zone, language and currency set the school's clock, calendar and prices.",
+    "setup-country-zone": "Time zone",
+    "setup-country-language": "Language",
+    "setup-country-currency": "Currency",
+    "setup-country-name": "Country",
+    "setup-period": "Period and class groups",
+    "setup-period-description": "Open the running period, then add its class groups.",
+    "setup-import": "Import students",
+    "setup-import-description": "Bring your students from a Dapodik file or a OneRoster CSV zip.",
+    "setup-policies": "School policies",
+    "setup-policies-description": "Decide what students may do, and who may join.",
+    "setup-exam": "Try one exam",
+    "setup-exam-description": "Write one exam and try it as a student.",
+    "webhooks": "Webhooks",
+    "webhooks-search": "Find a webhook",
+    "webhooks-empty": "No webhook sends changes yet.",
+    "webhook-add": "Create webhook",
+    "webhook-add-description": "A webhook tells another system when something changes in this school.",
+    "webhook-create": "Create",
+    "webhook-save": "Save",
+    "webhook-edit": "Edit",
+    "webhook-edit-description": "Change where it posts and what it sends.",
+    "webhook-url": "Receiver address",
+    "webhook-url-placeholder": "https://system.school.org/nakafa",
+    "webhook-url-description": "A public https address that accepts a POST.",
+    "webhook-url-error": "Use a public https address.",
+    "webhook-client": "Client",
+    "webhook-client-placeholder": "Choose a client",
+    "webhook-changes": "Changes",
+    "webhook-change": {
+      "grade": {
+        "released": "Grade released"
+      },
+      "grant": {
+        "created": "Role given",
+        "ended": "Role ended"
+      },
+      "guardian": {
+        "linked": "Parent linked",
+        "withdrawn": "Parent withdrew"
+      },
+      "unit": {
+        "created": "Unit created"
+      }
+    },
+    "webhook-revoke-title": "Revoke this webhook?",
+    "webhook-revoke-description": "It stops sending changes at once.",
+    "webhook-secret-title": "Signing secret",
+    "webhook-secret-description": "Copy it now, because it will not be shown again. Your system checks each request with it.",
+    "webhook-deliveries": "Deliveries",
+    "webhook-deliveries-empty": "No change has been sent yet.",
+    "delivery-status": {
+      "delivered": "Delivered",
+      "dropped": "Not sent",
+      "due": "Waiting",
+      "failed": "Failed"
+    },
+    "delivery-reason": {
+      "access": "The client no longer reads this.",
+      "address": "The address is not public.",
+      "deadline": "It took too long.",
+      "network": "It could not be reached.",
+      "revoked": "The webhook has ended.",
+      "status": "It refused the change."
+    },
+    "delivery-attempt": "Attempt {attempt}",
+    "delivery-resend": "Send again",
     "student-add-name-placeholder": "Ayu Lestari",
     "invite-name-placeholder": "Budi Santoso",
     "invite-email-placeholder": "budi@example.com",
@@ -872,8 +966,11 @@
     "audit-empty": "Nothing has changed yet.",
     "audit-search": "Find a change",
     "audit-export": "Export",
-    "audit-operator": "Nakafa staff",
-    "audit-system": "System",
+    "audit-actor": {
+      "client": "An integration",
+      "operator": "Nakafa staff",
+      "system": "System"
+    },
     "audit-label": {
       "assignment": {
         "created": "Homeroom teacher assigned",
@@ -941,6 +1038,12 @@
         "ended": "Role ended"
       },
       "integration": {
+        "webhook": {
+          "created": "Webhook created",
+          "changed": "Webhook changed",
+          "rotated": "Webhook secret rotated",
+          "revoked": "Webhook revoked"
+        },
         "created": "Client created",
         "rotated": "Secret rotated",
         "revoked": "Client revoked",
@@ -1005,6 +1108,9 @@
         }
       },
       "tenant": {
+        "setup": {
+          "finished": "Setup finished"
+        },
         "provisioned": "School opened",
         "dpa": {
           "accepted": "Data processing agreement accepted"
@@ -1058,7 +1164,10 @@
         "linked": "Parent link verified",
         "withdrawn": "Parent consent withdrawn",
         "revoked": "Parent link ended",
-        "readdressed": "Parent link address corrected"
+        "readdressed": "Parent link address corrected",
+        "request": {
+          "answered": "Parent request answered"
+        }
       },
       "roster": {
         "set": "Student record updated",
@@ -1066,6 +1175,12 @@
       },
       "login": {
         "renamed": "Login name changed"
+      },
+      "insight": {
+        "narrative": {
+          "shared": "Narrative shared",
+          "withdrawn": "Narrative taken back"
+        }
       }
     },
     "role-description": {
@@ -1135,6 +1250,19 @@
     "client-actions": "Actions",
     "client-actions-footer": "A client keeps at least one action.",
     "client-action": {
+      "roster": {
+        "import": "Import students"
+      },
+      "grade": {
+        "export": "Read released grades",
+        "import": "Enter draft grades"
+      },
+      "guardian": {
+        "view": "View guardian links"
+      },
+      "unit": {
+        "view": "View units"
+      },
       "cohort": {
         "view": "View classes"
       },
@@ -1318,6 +1446,8 @@
     "post-email": "Also send by email",
     "mention-list": "People to mention",
     "mention-everyone": "Everyone in the class",
+    "mention-nina": "Nina, the AI assistant",
+    "nina-author": "Nina, AI assistant",
     "library-empty": "Nothing here yet",
     "library-empty-description": "The class's files and links show here, the newest first.",
     "library-add": "Add to library",
@@ -1991,6 +2121,21 @@
   },
   "Notifications": {
     "title": "Notifications",
+    "preferences": "Preferences",
+    "preferences-description": "Choose what reaches you. The inbox always keeps every notice.",
+    "preferences-kind": "Notice",
+    "channel-push": "Push",
+    "channel-email": "Email",
+    "kind-commentReply": "Replies to your comments",
+    "kind-forumMention": "Mentions in a class",
+    "kind-classAnnouncement": "Class announcements",
+    "kind-taskPublished": "New tasks",
+    "kind-taskDeadline": "Task reminders",
+    "kind-gradeReleased": "Released grades",
+    "kind-taskMissed": "Missed tasks",
+    "kind-examStart": "Exams about to start",
+    "kind-examGuardianReminder": "Exam reminders",
+    "kind-invitation": "Invitations",
     "mark-all-read": "Mark all read",
     "this-school": "This school",
     "all-schools": "All schools",
@@ -2012,6 +2157,8 @@
     "push-home-screen": "On iPhone and iPad, notifications come only from the Home Screen: tap Share, then Add to Home Screen, and open Nakafa from its icon.",
     "assignment-published": "{actor} posted a new task in {className}.",
     "assignment-published-gone": "A task that is no longer there.",
+    "assignment-deadline": "{className}: a task's deadline is coming up.",
+    "assignment-missed": "{student} did not hand in a task in {className} on time.",
     "exam-starting": "{examTitle} opens at {opensAt, time, short} in {room}.",
     "exam-reminder": "{student} sits {examTitle} on {opensAt, date, long} at {opensAt, time, short} in {room}.",
     "exam-gone": "An exam that no longer waits to open.",
@@ -2526,6 +2673,10 @@
       "title": "This school can't open with these details.",
       "description": "Check the address and the school's units."
     },
+    "school-refusal-webhook-limit": {
+      "title": "A client holds ten webhooks at most.",
+      "description": "Revoke one it no longer needs."
+    },
     "school-refusal-unit-limit": {
       "title": "No room for another school.",
       "description": "An organisation holds a set number of schools."
@@ -2882,6 +3033,10 @@
       "title": "An action is closed to API clients.",
       "description": "Remove it from the client, then create the client again."
     },
+    "school-refusal-draft-refused": {
+      "title": "Nina cannot draft this now.",
+      "description": "Turn Nina on for the school, or wait until the school's credits renew."
+    },
     "school-refusal-promotion-state": {
       "title": "This period cannot open yet.",
       "description": "Apply the promotion into this period first."
@@ -2973,6 +3128,10 @@
     "import-mathtype": {
       "title": "Some equations are pictures.",
       "description": "Type them again in the editor."
+    },
+    "import-no-drive": {
+      "title": "Connect Google Drive first",
+      "description": "Forms are read through your Google Drive. Connect it in your account settings."
     },
     "import-empty": {
       "title": "Nina found no question.",
@@ -3587,6 +3746,7 @@
     }
   },
   "Connectors": {
+    "course-import": "Import students",
     "drive": "Google Drive",
     "drive-description": "Files you pick in Google Drive, for your notes and imports.",
     "calendar": "Google Calendar",
@@ -3631,5 +3791,41 @@
     "period": "Period",
     "approved": "Approved on",
     "issued": "Issued on"
+  },
+  "SchoolInsight": {
+    "title": "Insight",
+    "class": "Class",
+    "pick": "Pick a class",
+    "pick-description": "Each student's standing shows here.",
+    "competency": "Competency",
+    "mastery": "Mastery",
+    "evidence": "Evidence",
+    "evidence-points": "{earned} of {possible} points",
+    "student": "Student",
+    "chance": "Chance of KKTP {kktp}",
+    "chance-note": "This chance does not change a grade, and only teachers see it. It comes from the points above and is an initial estimate.",
+    "chance-held": "The forecast missed last month's test, so it stays hidden until it passes.",
+    "empty": "Nothing to show yet",
+    "empty-description": "Each released exam shows here.",
+    "narrative-title": "Narrative for {student}",
+    "narrative-description": "Your words about this student. Guardians read it only when you share it.",
+    "narrative-placeholder": "What this student does well, and what helps them next",
+    "narrative-save": "Save",
+    "narrative-share": "Share with guardians",
+    "narrative-withdraw": "Take back",
+    "narrative-ask": "Ask Nina",
+    "narrative-drafting": "Nina is writing a draft.",
+    "narrative-draft": "Nina's draft, from the numbers alone. Make it your own before you save it.",
+    "narrative-use": "Use this draft",
+    "practice": "Shared practice",
+    "practice-sets": "Sets",
+    "practice-mean": "Mean score",
+    "practice-shared": "Shared",
+    "practice-share": "Share {topic} with your school",
+    "practice-note": "Only the topics you switch on reach your teachers, and you can switch one off at any time.",
+    "tags": "Competencies",
+    "tags-description": "Name the competency of each question. A question with none counts for its exam.",
+    "exam": "Exam",
+    "question": "Question {number}"
   }
 }

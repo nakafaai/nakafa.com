@@ -13,6 +13,7 @@ import type {
   IntegrationName,
 } from "@repo/backend/confect/integrations/schema";
 import { endClientTokens } from "@repo/backend/confect/integrations/token";
+import { endClientWebhooks } from "@repo/backend/confect/integrations/webhook";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
@@ -151,8 +152,8 @@ export const rotateSecret = Effect.fn("integrations.client.rotate")(function* (
 
 /**
  * Revokes an active client. It holds no secret from now on: its digest and its
- * access tokens are deleted with the revocation (ADR 0029). The caller checks
- * that the client is active.
+ * access tokens are deleted with the revocation, and its webhooks end with it
+ * (ADR 0029). The caller checks that the client is active.
  */
 export const revokeClient = Effect.fn("integrations.client.revoke")(function* (
   actor: typeof TenantActor.Type,
@@ -174,6 +175,7 @@ export const revokeClient = Effect.fn("integrations.client.revoke")(function* (
     })
     .pipe(Effect.orDie);
   yield* endClientTokens(client._id);
+  yield* endClientWebhooks(actor, client);
   yield* integrationAuthority.record(actor, client, {
     client: client._id,
     type: "integration.revoked",

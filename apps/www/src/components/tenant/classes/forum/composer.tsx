@@ -62,11 +62,11 @@ const Unsent = Schema.Struct({
   uploads: Schema.Array(Id("classroomUploads")),
 });
 
-/** A mention as a send names it: a Person by ID, or everyone. */
+/** A mention as a send names it: a Person by ID, everyone, or Nina. */
 const mentionArg = (mention: typeof MentionView.Type) =>
-  mention._tag === "everyone"
-    ? { _tag: "everyone" as const }
-    : { _tag: "person" as const, id: mention.id };
+  mention._tag === "person"
+    ? { _tag: "person" as const, id: mention.id }
+    : { _tag: mention._tag };
 
 /**
  * The composer of a channel or of a discussion, as a chat's: Add for a photo, a document or a poll, the
@@ -114,7 +114,7 @@ export function ForumComposer() {
       return;
     }
     const { person } = viewer.value;
-    const author = { id: person.id, name: person.name };
+    const author = { id: person.id, name: person.name, nina: false };
     const named = Arr.map(mentions, mentionArg);
     const shown = { attachments: carried.attachments, mentions };
     setText("");

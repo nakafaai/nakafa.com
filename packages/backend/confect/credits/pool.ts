@@ -8,7 +8,7 @@ import { runningSchoolGrants } from "@repo/backend/confect/billing/school";
 import { MAX_CREDITS_PER_RESPONSE } from "@repo/backend/confect/credits/constants";
 import type { CreditPoolDraw } from "@repo/backend/confect/credits/schema";
 import { DEFAULT_NINA_DAILY_CREDITS } from "@repo/backend/confect/tenancy/policy";
-import { Array as Arr, DateTime, Effect, Option } from "effect";
+import { Array as Arr, Clock, DateTime, Effect, Option } from "effect";
 
 /** Credits each student a School grant covers adds to the school's shared Nina pool every month (K46). */
 const POOL_CREDITS_PER_SEAT = 100;
@@ -161,6 +161,31 @@ export const poolHoldOf = Effect.fn("credits.pool.holdOf")(function* (
     ),
     draw: usage.draw,
   };
+});
+
+/**
+ * The account behind a Person and what it may draw from their school's pool now, when
+ * that covers `credits`. A Person with no account, or with no pool in this school, draws
+ * nothing.
+ */
+export const schoolHoldOf = Effect.fn("credits.pool.schoolHold")(function* (
+  person: Docs["tenantPeople"],
+  tenantId: Docs["tenants"]["_id"],
+  credits: number
+) {
+  if (person.account.state !== "claimed") {
+    return Option.none();
+  }
+  const { userId } = person.account;
+  const now = yield* Clock.currentTimeMillis;
+  const pool = yield* schoolPoolOf(userId, now);
+  if (Option.isNone(pool) || pool.value.tenantId !== tenantId) {
+    return Option.none();
+  }
+  const hold = yield* poolHoldOf(pool.value, userId, now);
+  return hold.credits < credits
+    ? Option.none()
+    : Option.some({ draw: hold.draw, userId });
 });
 
 /**

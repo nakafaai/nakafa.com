@@ -1,3 +1,4 @@
+import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -24,7 +25,10 @@ import {
 } from "@repo/backend/confect/guardians/link";
 import spec from "@repo/backend/confect/guardians/links.spec";
 import { readdressLink } from "@repo/backend/confect/guardians/readdress";
-import { LINK_TERM } from "@repo/backend/confect/guardians/schema";
+import {
+  LINK_TERM,
+  STUDENT_LINK_LIMIT,
+} from "@repo/backend/confect/guardians/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -45,6 +49,24 @@ import {
 
 /** The most links one page reads. A request asks for at least one. */
 const PAGE_LIMIT = 100;
+
+/** The most links of one student a read keeps: the live ones, and the ended ones of a family that changed. */
+const STUDENT_LINK_READ = 20;
+
+/** The links of one student, newest first, live and ended. */
+const linksOfStudent = Effect.fn("guardians.links.ofStudent")(function* (
+  studentId: GenericId.GenericId<"tenantPeople">
+) {
+  return yield* (yield* DatabaseReader)
+    .table("guardianLinks")
+    .index(
+      "by_studentPersonId_and_state_status",
+      (query) => query.eq("studentPersonId", studentId),
+      "desc"
+    )
+    .take(STUDENT_LINK_READ)
+    .pipe(Effect.orDie);
+});
 
 /**
  * Starts a link between a student and a guardian's address. The student must be an
@@ -84,6 +106,15 @@ const start = FunctionImpl.make(
       });
     }
     const reader = yield* DatabaseReader;
+    const held = yield* linksOfStudent(student._id);
+    if (
+      Arr.filter(held, (link) => isLive(link, now)).length >= STUDENT_LINK_LIMIT
+    ) {
+      return yield* new LinkRefused({
+        code: "LINK_LIMIT",
+        message: "This student holds as many live links as a student may.",
+      });
+    }
     const guardian = yield* Option.match(Arr.head(links), {
       onNone: () =>
         createPerson(personActor(actor), student.tenantId, guardianName),
@@ -116,6 +147,26 @@ const start = FunctionImpl.make(
       type: "guardian.started",
     });
     return yield* linkViewOf(link, now);
+  })
+);
+
+/** The links of the signed-in student, newest first, with each guardian's name. */
+const mine = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "mine",
+  Effect.fn("guardians.links.mine")(function* () {
+    const { person } = yield* Member;
+    const now = yield* Clock.currentTimeMillis;
+    const links = yield* linksOfStudent(person._id);
+    return yield* Effect.forEach(links, (link) =>
+      Effect.map(linkViewOf(link, now), (view) => ({
+        email: view.email,
+        guardianName: view.guardian.name,
+        id: view.id,
+        status: view.status,
+      }))
+    );
   })
 );
 
@@ -209,6 +260,7 @@ const revoke = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(start),
+  Layer.provide(mine),
   Layer.provide(list),
   Layer.provide(verify),
   Layer.provide(readdress),

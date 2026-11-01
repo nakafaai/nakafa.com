@@ -10,6 +10,7 @@ import editorInternal from "@repo/backend/confect/_generated/refs/editor.server"
 import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import guardiansInternal from "@repo/backend/confect/_generated/refs/guardians.server";
+import insightInternal from "@repo/backend/confect/_generated/refs/insight.server";
 import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
@@ -37,6 +38,8 @@ const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
 const GUARDIAN_CODE_SWEEP_INTERVAL_HOURS = 1;
 const INBOX_SWEEP_INTERVAL_MINUTES = 1;
 const INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS = 1;
+const WEBHOOK_DELIVERY_PRUNE_INTERVAL_HOURS = 1;
+const WEBHOOK_SWEEP_INTERVAL_MINUTES = 1;
 const INVITE_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
@@ -46,6 +49,44 @@ const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
  * never starts.
  */
 export default CronJobs.make()
+  .add(
+    CronJob.make(
+      "delete old school API requests",
+      Duration.hours(INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS),
+      integrationsInternal.writes.sweep,
+      {}
+    )
+  )
+  .add(
+    CronJob.make(
+      "test insight forecasts",
+      Cron.make({
+        minutes: [30],
+        hours: [0],
+        days: [1],
+        months: [],
+        weekdays: [],
+      }),
+      insightInternal.calibration.run,
+      { count: 0, cursor: null, errors: 0, reached: 0 }
+    )
+  )
+  .add(
+    CronJob.make(
+      "sweep school webhooks",
+      Duration.minutes(WEBHOOK_SWEEP_INTERVAL_MINUTES),
+      integrationsInternal.hooks.sweep,
+      { cursor: null }
+    )
+  )
+  .add(
+    CronJob.make(
+      "delete old webhook deliveries",
+      Duration.hours(WEBHOOK_DELIVERY_PRUNE_INTERVAL_HOURS),
+      integrationsInternal.hooks.prune,
+      {}
+    )
+  )
   .add(
     CronJob.make(
       "sync due connectors",
@@ -59,6 +100,15 @@ export default CronJobs.make()
       "sweep billing webhooks",
       Duration.minutes(BILLING_EVENT_SWEEP_INTERVAL_MINUTES),
       billingInternal.events.sweep,
+      {}
+    )
+  )
+  .add(
+    /** Sends the notice mails that are due, as many as the day's limit leaves (ADR 0027). */
+    CronJob.make(
+      "send notice mails",
+      Duration.minutes(5),
+      emailsInternal.digest.internal.send,
       {}
     )
   )

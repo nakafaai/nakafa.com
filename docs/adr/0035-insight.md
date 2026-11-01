@@ -1,13 +1,33 @@
-# ADR 0035: Insight Predicts For Teachers Only, And Switches On Per School After A DPIA
+# ADR 0035: Insight Predicts For Teachers Only
 
 ## Status
 
 Accepted on 18 October 2026, by the orchestrator under the owner's standing
 instruction to decide, verify, and record. The owner's decisions K12, K14, K25,
-and K6 govern it, and counsel reviews the data protection impact assessment (K20)
-before the first school. Insight waits for the assessment engine switch (ADR 0031,
-wave B) and for the school grades of ADR 0033. The Implementation Status table at
-the end says which parts are live.
+and K6 govern it. The Implementation Status table at the end says which parts are
+live.
+
+Amended on 31 October 2026 by the owner's order that nothing waits on a third party:
+
+- **Insight is on in every school.** No DPIA record, no counsel's review, and no refusal stand
+  before it. The gate below is gone.
+- **The competency key.** No Aksara item and no exam question carries one, so a teacher may
+  name the competency of a question (`insightTags`), and a question with none counts for its
+  exam, by the exam's title. Nothing guesses a competency from a question's text. Aksara's
+  CASE 1.1 keys replace these names when they exist.
+- **The rating.** A rating runs from 0 to 1. After an answer that earned `share` of the
+  question's points, `rating` moves by `(share - rating) / min(count + 1, 10)`: a plain mean
+  for the first ten answers, then a tenth of the way to the latest. One answer writes one
+  row. Releasing a sitting's results runs the observations, so a teacher's scored essays
+  count, and a release happens once, so an answer counts once.
+- **The forecast.** The chance of reaching the KKTP is the share above it of a Beta
+  distribution with a uniform prior, updated by the points earned and lost, through its
+  normal approximation. Its reason is those points, shown beside it. It is labelled an
+  initial estimate until the monthly test exists; that test's threshold is a Brier score of
+  0.25, what an even guess scores, so a model must beat a coin.
+- **Narratives.** A teacher writes them for now. Nina's draft waits for its provider. The
+  teacher's share is enough for a guardian to read one; the student's own share in the
+  blueprint waits for shared practice.
 
 ## Context
 
@@ -57,9 +77,13 @@ arrive as content.
 - Each forecast is explained on request. A forecast with no reasons is not shown.
 - Forecast accuracy is compared with the real results every month. A new model
   replaces the old one only after it passes that test (blueprint, Insight
-  calibration). The test is a proper scoring rule, such as the Brier score, and its
-  acceptance threshold is an open decision for the owner. The threshold is not in
-  the blueprint, and S13 does not ship a forecast before it is set.
+  calibration). The test is the Brier score, a proper scoring rule. A standing a
+  student comes to a sitting with is a forecast, and the student's whole sitting in
+  that competency is what happened: they reached the KKTP or they did not. Each month
+  the forecast must beat always answering that month's base rate, the plain forecast
+  that knows nothing of a student. A month of fewer than 200 forecasts says too little
+  to fail it. While the newest month fails, teachers see no chance and a line that
+  says why, and the next month's pass brings it back.
 - Item difficulty is labelled an initial estimate until the IRT calibration passes
   (ADR 0031, and the blueprint's calibration rule).
 - A teacher's intervention is recorded as descriptive evidence, never as a cause.
@@ -75,7 +99,10 @@ arrive as content.
 - Private Nina conversations never enter (blueprint, Insight sources).
 - Nina drafts a narrative for the homeroom teacher. The teacher approves it and
   shares it, and the share can be withdrawn from the same page (blueprint, Narasi
-  and K3).
+  and K3). A draft is written from the student's numbers alone, with no name, draws
+  from the school's credit pool as a reply of Nina does (ADR 0025), and is not a
+  narrative until a teacher saves their own words. K6 governs a Jev judgment that
+  informs a grade, and a draft informs no grade, so it does not apply.
 
 ### Limits that always apply
 
@@ -88,20 +115,6 @@ arrive as content.
 - Item difficulty and mastery do not decide a student's placement, promotion, or
   report. The teacher decides each of them (ADR 0033, Report cards).
 
-### The DPIA gate
-
-- Insight is off in a school until the school's DPIA is recorded. The DPIA record
-  holds its version, its date, the reviewer, and the modules it switches on, and
-  Settings shows it under Security, as the blueprint's DPIA card (ADR 0027 and the
-  settings structure of `apps/www/src/lib/settings/school.ts`).
-- The gate is a Condition in access (ADR 0012), so `insight.view` is refused with
-  its reason while no DPIA is recorded. It is not a flag in the UI. The UI reads
-  the refusal from the viewer's capabilities (GLOSSARY, Viewer capabilities).
-- Changing the DPIA is a journaled change. A school can relax its quiet hours only
-  as its DPIA allows (ADR 0027).
-- Nothing in the repository stores a DPIA today. S12 adds the record, and no
-  Insight screen ships before it.
-
 ### Retention
 
 - Mastery numbers are kept during the school year and deleted with the period
@@ -109,6 +122,11 @@ arrive as content.
 - Narratives are kept during the school year, sealed, and deleted with the period.
 - Forecasts are derived. They are kept during the school year and deleted with the
   period, with their reasons.
+- A standing, a narrative and a draft each belong to one period, and a new period
+  starts them over. Archiving a period schedules their deletion 30 days on, because
+  a school can restore a period it archived by mistake, and a restored period keeps
+  everything. A sitting of a unit with no active period has no school year to count
+  in, so Insight leaves it out.
 - A school's end removes all of them after an export, 30 days after it leaves (ADR
   0033, Retention).
 
@@ -116,10 +134,8 @@ arrive as content.
 
 - Teachers see more than they did, and the explanation is always attached. A
   teacher can see why a forecast is what it is, and can reject it.
-- An Insight screen cannot appear in a school without a recorded DPIA, because the
-  refusal comes from the access layer, not from the page.
-- Competency keys from Aksara become a condition of mastery. Until they exist,
-  Insight is empty by design, and the empty state says so in one sentence.
+- Mastery starts from the first released exam, by the exam's title, and sharpens as
+  teachers name competencies and Aksara's keys arrive.
 
 ## Rejected Alternatives
 
@@ -136,10 +152,6 @@ arrive as content.
 ## What Stays Open
 
 - The mastery formula and its recorded amendment (owner, before S12).
-- The forecast's acceptance threshold for the monthly test (owner, before S13).
-- The provider of Nina's narrative drafts, and whether the K6 gate applies to
-  them. The blueprint does not state either.
-- The DPIA's review by counsel before the first school (K20).
 
 ## Implementation Status
 
@@ -147,7 +159,11 @@ arrive as content.
 | --- | --- |
 | The decisions in this ADR | Recorded by S0 |
 | Competency keys in Aksara content (CASE 1.1 mapping) | Planned, Aksara work first |
-| Mastery rows (`mastery`) | Planned, S12 |
-| Forecast rows and their reasons | Planned, S13 |
-| The DPIA record and its Condition in access | Planned, S12 |
-| Insight screens, shared practice, and narratives | Planned, S14 |
+| Competency tags typed by the teacher (`insightTags`) | Built |
+| Mastery rows (`insightMastery`), written when a sitting's results are released | Built |
+| Forecasts and their reasons, computed when read | Built |
+| The monthly test (`insightScores`, `insightCalibrations`), which takes a failing forecast off the screen | Built |
+| Insight screens for teachers and students, and teachers' narratives for guardians | Built |
+| Shared practice, per try-out track, which the student switches on and off (`insightShares`) | Built |
+| Nina's narrative drafts (`insightDrafts`) | Built |
+| Deletion with the period | Built |

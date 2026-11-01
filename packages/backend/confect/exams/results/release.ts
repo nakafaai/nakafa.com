@@ -1,15 +1,19 @@
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import insightInternal from "@repo/backend/confect/_generated/refs/insight.server";
+import {
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
 import { resultAuthority } from "@repo/backend/confect/exams/results/authority";
 import { SittingNotClosed } from "@repo/backend/confect/exams/results/errors";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
-import { Clock, Effect } from "effect";
+import { Clock, Duration, Effect } from "effect";
 
 /**
  * Releases a closed sitting's results to its students. The release is journaled under the sitting, with
  * the Person who released it as the actor. A second release changes nothing and writes no second entry,
- * so the journal holds one release for each sitting.
+ * so the journal holds one release for each sitting, and Insight observes each answer once (ADR 0035).
  */
 export const release = Effect.fn("exams.results.release")(function* () {
   const sitting = yield* ResultSitting;
@@ -31,5 +35,10 @@ export const release = Effect.fn("exams.results.release")(function* () {
   yield* resultAuthority.record(personActor(member.person), sitting, {
     type: "exam.results.released",
   });
+  yield* (yield* Scheduler).runAfter(
+    Duration.zero,
+    insightInternal.observe.run,
+    { after: null, sittingId: sitting._id }
+  );
   return null;
 });

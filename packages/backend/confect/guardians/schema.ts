@@ -108,6 +108,17 @@ export const LinkView = Schema.Struct({
   student: Schema.Struct({ id: Id("tenantPeople"), name: PersonName }),
 });
 
+/** The live links one student may hold: two parents, and two for the guardians a family changes. */
+export const STUDENT_LINK_LIMIT = 4;
+
+/** One guardian as the student sees the link: the name, the address, and the link's state. */
+export const FamilyLink = Schema.Struct({
+  email: Email,
+  guardianName: PersonName,
+  id: Id("guardianLinks"),
+  status: LinkStatus,
+});
+
 /**
  * One child as the guardian sees the link: the child's name and the link's state.
  * A pending link asks for the NISN check, and `staffCheck` says that the school

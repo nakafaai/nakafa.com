@@ -9,6 +9,7 @@ import { exam } from "@repo/backend/confect/exams/kinds";
 import { results } from "@repo/backend/confect/exams/results/kinds";
 import { sitting } from "@repo/backend/confect/exams/sittings/kinds";
 import { guardians } from "@repo/backend/confect/guardians/kinds";
+import { insight } from "@repo/backend/confect/insight/kinds";
 import { integrations } from "@repo/backend/confect/integrations/kinds";
 import { operators } from "@repo/backend/confect/operators/kinds";
 import { records } from "@repo/backend/confect/records/kinds";
@@ -48,6 +49,7 @@ const extensions = [
   ...results.extensions,
   ...billing.extensions,
   ...guardians.extensions,
+  ...insight.extensions,
   ...roster.extensions,
 ] as const;
 

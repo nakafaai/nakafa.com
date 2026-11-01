@@ -11,7 +11,7 @@ import { Schema } from "effect";
 
 /**
  * Who acted, resolved for display: a Person by name, Nakafa staff outside a
- * visit without any identity, or scheduled work.
+ * visit or an integration client without any identity, or scheduled work.
  */
 const ActorView = Schema.Union([
   Schema.Struct({
@@ -19,6 +19,7 @@ const ActorView = Schema.Union([
     kind: Schema.Literal("person"),
     name: PersonName,
   }),
+  Schema.Struct({ kind: Schema.Literal("client") }),
   Schema.Struct({ kind: Schema.Literal("operator") }),
   Schema.Struct({ kind: Schema.Literal("system") }),
 ]);

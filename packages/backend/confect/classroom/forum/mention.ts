@@ -8,6 +8,7 @@ export const MENTION_LIMIT = 20;
 export const Mention = Schema.Union([
   Schema.TaggedStruct("person", { id: Id("tenantPeople") }),
   Schema.TaggedStruct("everyone", {}),
+  Schema.TaggedStruct("nina", {}),
 ]);
 
 /** The mentions of one message, at most MENTION_LIMIT. */
@@ -28,6 +29,7 @@ export const MentionView = Schema.Union([
     name: Schema.String,
   }),
   Schema.TaggedStruct("everyone", {}),
+  Schema.TaggedStruct("nina", {}),
 ]);
 
 /** One Person a member may mention in a class, as the mention list shows it. */

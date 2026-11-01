@@ -1,8 +1,12 @@
 import { useAction, useMutation } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
+import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect } from "effect";
+import { useLocale } from "use-intl";
+import { pickFromDrive } from "@/components/tenant/classes/library/add";
+import { FORM_TYPE, importForm } from "@/components/tenant/exams/import/form";
 import { importIntoExam } from "@/components/tenant/exams/import/start";
 
 /**
@@ -29,4 +33,22 @@ export function useImportFile(slug: TenantSlug) {
         requestUrl: () => requestUrl({ examId, slug }),
       })
     );
+}
+
+/**
+ * The import of a Google Form into an exam of this school, from a browser event: the teacher picks
+ * a form of their Drive, and its questions go to the end of the exam.
+ */
+export function useImportForm(slug: TenantSlug) {
+  const pickerToken = useAction(connectors.drive.pickerToken);
+  const read = useAction(connectors.forms.questions);
+  const place = useMutation(exams.imports.place);
+  const locale = useLocale();
+
+  return (examId: Id<"exams">, hide: () => void) =>
+    importForm({
+      pick: pickFromDrive(() => pickerToken({}), locale, hide, FORM_TYPE),
+      place: (questions) => place({ examId, questions, slug }),
+      read: (formId) => read({ formId }),
+    });
 }

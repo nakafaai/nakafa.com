@@ -11,4 +11,5 @@ export default {
 ["confirm"]: RegisteredConvexFunction.register({ ...definitions["confirm"], handler: forward(definitions["confirm"].handler) }),
 ["withdraw"]: RegisteredConvexFunction.register({ ...definitions["withdraw"], handler: forward(definitions["withdraw"].handler) }),
 ["grades"]: RegisteredConvexFunction.register({ ...definitions["grades"], handler: forward(definitions["grades"].handler) }),
+["narratives"]: RegisteredConvexFunction.register({ ...definitions["narratives"], handler: forward(definitions["narratives"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../guardians/family.spec")["default"]>;

@@ -22,7 +22,7 @@ const message = (
   pending = false
 ): ForumMessage => ({
   attachments: [],
-  author: { id: personId, name: "Raka" },
+  author: { id: personId, name: "Raka", nina: false },
   clientKey: key,
   createdAt,
   discussion: null,
@@ -75,6 +75,7 @@ describe("forum read marks", () => {
       author: {
         id: Schema.decodeUnknownSync(Id("tenantPeople"))("person-2"),
         name: "Nadia",
+        nina: false,
       },
     };
     const run = [

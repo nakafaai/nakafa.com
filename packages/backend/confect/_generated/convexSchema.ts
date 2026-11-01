@@ -29,6 +29,7 @@ import classroomFileUse from "./tables/classroomFileUse";
 import classroomFolders from "./tables/classroomFolders";
 import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
+import classroomPassages from "./tables/classroomPassages";
 import classroomPosts from "./tables/classroomPosts";
 import classroomReads from "./tables/classroomReads";
 import classroomSubmissions from "./tables/classroomSubmissions";
@@ -87,9 +88,20 @@ import graduations from "./tables/graduations";
 import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
+import guardianRequests from "./tables/guardianRequests";
+import insightCalibrations from "./tables/insightCalibrations";
+import insightDrafts from "./tables/insightDrafts";
+import insightMastery from "./tables/insightMastery";
+import insightNarratives from "./tables/insightNarratives";
+import insightScores from "./tables/insightScores";
+import insightShares from "./tables/insightShares";
+import insightTags from "./tables/insightTags";
 import integrationClients from "./tables/integrationClients";
+import integrationDeliveries from "./tables/integrationDeliveries";
 import integrationDevices from "./tables/integrationDevices";
+import integrationRequests from "./tables/integrationRequests";
 import integrationTokens from "./tables/integrationTokens";
+import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
@@ -112,6 +124,9 @@ import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
+import noticeMailBudget from "./tables/noticeMailBudget";
+import noticeMails from "./tables/noticeMails";
+import noticePreferences from "./tables/noticePreferences";
 import notifications from "./tables/notifications";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
@@ -181,6 +196,7 @@ export default $defineSchema({
   classroomFolders: $Table.tableDefinition(classroomFolders),
   classroomLibrary: $Table.tableDefinition(classroomLibrary),
   classroomMessages: $Table.tableDefinition(classroomMessages),
+  classroomPassages: $Table.tableDefinition(classroomPassages),
   classroomPosts: $Table.tableDefinition(classroomPosts),
   classroomReads: $Table.tableDefinition(classroomReads),
   classroomSubmissions: $Table.tableDefinition(classroomSubmissions),
@@ -239,9 +255,20 @@ export default $defineSchema({
   guardianCodes: $Table.tableDefinition(guardianCodes),
   guardianConsents: $Table.tableDefinition(guardianConsents),
   guardianLinks: $Table.tableDefinition(guardianLinks),
+  guardianRequests: $Table.tableDefinition(guardianRequests),
+  insightCalibrations: $Table.tableDefinition(insightCalibrations),
+  insightDrafts: $Table.tableDefinition(insightDrafts),
+  insightMastery: $Table.tableDefinition(insightMastery),
+  insightNarratives: $Table.tableDefinition(insightNarratives),
+  insightScores: $Table.tableDefinition(insightScores),
+  insightShares: $Table.tableDefinition(insightShares),
+  insightTags: $Table.tableDefinition(insightTags),
   integrationClients: $Table.tableDefinition(integrationClients),
+  integrationDeliveries: $Table.tableDefinition(integrationDeliveries),
   integrationDevices: $Table.tableDefinition(integrationDevices),
+  integrationRequests: $Table.tableDefinition(integrationRequests),
   integrationTokens: $Table.tableDefinition(integrationTokens),
+  integrationWebhooks: $Table.tableDefinition(integrationWebhooks),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),
@@ -264,6 +291,9 @@ export default $defineSchema({
   ninaSummaries: $Table.tableDefinition(ninaSummaries),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),
+  noticeMailBudget: $Table.tableDefinition(noticeMailBudget),
+  noticeMails: $Table.tableDefinition(noticeMails),
+  noticePreferences: $Table.tableDefinition(noticePreferences),
   notifications: $Table.tableDefinition(notifications),
   onboardingProfiles: $Table.tableDefinition(onboardingProfiles),
   operators: $Table.tableDefinition(operators),
