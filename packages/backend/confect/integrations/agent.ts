@@ -143,9 +143,12 @@ const loadEntries = Effect.promise(
   () => import("@repo/backend/confect/_generated/spec")
 ).pipe(Effect.map(({ default: spec }) => entriesOfSpec(spec)));
 
+/** What ends the first segment of a function's name. */
+const SEGMENT_END = /[/:]/u;
+
 /** The area of one function: the first segment of its name. */
 const areaOf = ([name]: readonly [string, FunctionSpec.AnyWithProps]) =>
-  Arr.headNonEmpty(Str.split(/[/:]/u)(name));
+  Arr.headNonEmpty(Str.split(SEGMENT_END)(name));
 
 const listFunctions = Effect.fn("integrations.agent.list")(function* (
   input: unknown

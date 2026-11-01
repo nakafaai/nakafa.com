@@ -5,7 +5,6 @@ import { isActionCtx } from "@convex-dev/better-auth/utils";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import authConfig from "@repo/backend/confect/auth";
 import { authComponent } from "@repo/backend/confect/auth/client";
-import { agentOAuth } from "@repo/backend/confect/auth/oauth";
 import { readGoogleAuthConfig } from "@repo/backend/confect/auth/config";
 import { readAuthCookiePrefix } from "@repo/backend/confect/auth/cookie";
 import { ACCOUNT_DELETION_ATTEMPT_HEADER } from "@repo/backend/confect/auth/deletion/constants";
@@ -17,6 +16,7 @@ import {
   hostOnlySessionCookieHandler,
   readSchoolTrustedOrigins,
 } from "@repo/backend/confect/auth/host";
+import { agentOAuth } from "@repo/backend/confect/auth/oauth";
 import { sanitizeProviderErrorRedirectResponse } from "@repo/backend/confect/auth/redirect";
 import {
   disabledSignInPaths,

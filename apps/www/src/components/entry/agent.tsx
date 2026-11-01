@@ -42,7 +42,7 @@ export function AgentConsent({
     <div className="flex max-w-sm flex-col items-center gap-5 text-center">
       <Nina act="writing" label="" size={88} whole />
       <div className="flex flex-col gap-2">
-        <h1 className="text-balance font-semibold text-2xl">
+        <h1 className="text-2xl font-semibold text-balance">
           {t("agent-title", { name: name ?? t("agent-unnamed") })}
         </h1>
         <p className="text-muted-foreground">{t("agent-description")}</p>
