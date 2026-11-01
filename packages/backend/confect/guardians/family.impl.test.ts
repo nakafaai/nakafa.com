@@ -65,7 +65,7 @@ describe("guardians/family children and confirm", () => {
             linkId: link.id,
             staffCheck: true,
             status: "pending",
-student: expect.objectContaining({
+            student: expect.objectContaining({
               id: fixture.people.student.personId,
               name: "Student",
             }),

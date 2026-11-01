@@ -109,7 +109,7 @@ describe("records/graduations", () => {
             hasNisn: false,
             letter: null,
             missing: ["npsn", "decision", "nisn"],
-student: expect.objectContaining({
+            student: expect.objectContaining({
               id: fixture.people.student.personId,
               name: "Student",
             }),
@@ -374,7 +374,7 @@ student: expect.objectContaining({
             letter: null,
             missing: ["npsn", "decision", "nisn", "report"],
             nisn: null,
-student: expect.objectContaining({
+            student: expect.objectContaining({
               id: fixture.people.student.personId,
               name: "Student",
             }),

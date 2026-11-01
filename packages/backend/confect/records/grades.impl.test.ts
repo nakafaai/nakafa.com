@@ -114,7 +114,7 @@ describe("records/grades entry and gradebook", () => {
         expect(listed.page).toEqual([
           {
             grade: entered,
-student: expect.objectContaining({
+            student: expect.objectContaining({
               id: fixture.people.student.personId,
               name: "Student",
             }),
