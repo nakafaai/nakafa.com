@@ -12,20 +12,10 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
+import type { ColumnOption } from "@/components/shared/table/columns";
 import { TableHeadButton } from "@/components/shared/table/head";
 import { useTableFilters } from "@/components/shared/table/toolbar";
-
-/**
- * One value a column filters by: its label, and its icon, which fits the value and which no other value of the column
- * draws. A value holds a function's data (the icon), so it is a plain shape.
- */
-interface ColumnOption {
-  readonly icon: ComponentProps<typeof HugeIcons>["icon"];
-  readonly label: string;
-  readonly value: string;
-}
 
 /**
  * The head of a column that filters by the values it holds, as the try-out catalog filters its status: the column's

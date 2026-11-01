@@ -14,8 +14,8 @@ import {
   type Connection,
   disconnectOwnUpdate,
 } from "@/components/connectors/optimistic";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { LoadFailure } from "@/components/state/failure";
 import {
   forumCall,
   runForumCall,
@@ -58,7 +58,7 @@ export function UserSettingsConnectors({
     QueryResult.isFailure(live) ||
     PaginatedQueryResult.isFailure(connections)
   ) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
   const offered = QueryResult.isSuccess(live) ? live.value : initialOffered;
 

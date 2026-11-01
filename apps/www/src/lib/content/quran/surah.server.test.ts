@@ -35,7 +35,7 @@ vi.mock("@repo/internationalization/src/messages", () => ({
 
 vi.mock("@/lib/seo/generator", () => ({
   resolveSEOMetadata: vi.fn(() =>
-    Effect.succeed({ description: "Surah description" })
+    Effect.succeed({ description: "Surah description", title: "Surah title" })
   ),
 }));
 
@@ -98,6 +98,7 @@ describe("surah route read", () => {
       book: { position: 1 },
       description: "Surah description",
       kind: "found",
+      searchTitle: "Surah title",
       locale: "en",
       preBismillah: { kind: "hidden" },
       surah: "1",

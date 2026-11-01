@@ -15,10 +15,10 @@ import { Array as Arr, Option, Schema, String as Str } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   type FamilyItem,
@@ -62,7 +62,7 @@ function FamilyList() {
   const links = useQuery(guardians.links.mine, isSettled ? { slug } : "skip");
 
   if (QueryResult.isFailure(links)) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
   if (!QueryResult.isSuccess(links)) {
     return null;
@@ -97,6 +97,11 @@ function FamilyRow({ link }: { link: FamilyItem }) {
           {link.guardianName}
         </span>
         <span className="text-muted-foreground truncate">{link.email}</span>
+        {link.status === "pending" ? (
+          <span className="text-muted-foreground text-pretty">
+            {t("family-pending")}
+          </span>
+        ) : null}
       </div>
       <TableStatus
         icon={look.icon}

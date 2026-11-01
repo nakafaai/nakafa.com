@@ -1,3 +1,4 @@
+import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { useState } from "react";
@@ -62,7 +63,7 @@ export const Route = createFileRoute(
             loaderData.head.indexable &&
             match.search.attemptId === undefined &&
             match.search.view === undefined,
-          jsonLd: [],
+          jsonLd: makeBreadcrumbNodes(loaderData.head.breadcrumbs),
           locale: params.locale,
           title: loaderData.head.title,
         }),

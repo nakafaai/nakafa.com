@@ -28,7 +28,6 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -49,13 +48,13 @@ import {
   usePanes,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableSearch } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import {
   enterChange,
   releaseChange,
@@ -81,7 +80,7 @@ const LINE_STATE_LOOKS = {
 } as const satisfies Record<ReturnType<typeof stateOf>, StatusLook>;
 
 /** The columns of the gradebook. */
-const lineColumns = createColumnHelper<typeof dataTableFeatures, SheetLine>();
+const lineColumns = tableColumns<SheetLine>();
 
 /** Whether a typed text is a grade value the scheme accepts. */
 const decodeValue = Schema.decodeOption(GradeValue);
@@ -147,7 +146,7 @@ export function ClassGradebook({
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return failed ? (
-      <DataFailure onRetry={reloadPage} />
+      <LoadFailure onRetry={reloadPage} />
     ) : (
       <TableEmpty
         act="reading"
@@ -178,61 +177,41 @@ export function ClassGradebook({
     (note) => Arr.contains(held, note)
   );
 
-  const columns = lineColumns.columns([
-    lineColumns.accessor((line) => line.student.name, {
+  const columns = [
+    lineColumns.text((line) => line.student.name, {
       cell: (info) => (
         <PaneOpen id={info.row.original.student.id}>{info.getValue()}</PaneOpen>
       ),
-      filterFn: "includesString",
       header: t("student"),
       id: "student",
-      sortFn: "text",
     }),
-    lineColumns.display({
+    lineColumns.number((line) => line.grade?.value ?? null, {
       cell: (info) => <GradeValueField line={info.row.original} />,
       header: t("value"),
       id: "value",
     }),
-    lineColumns.accessor(noteOf, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="note"
-          options={namedOptions(notes, GRADE_ICONS)}
-          title={t("note")}
-        />
-      ),
+    lineColumns.values(noteOf, {
+      header: t("note"),
       id: "note",
+      options: namedOptions(notes, GRADE_ICONS),
     }),
-    lineColumns.accessor(stateOf, {
+    lineColumns.values(stateOf, {
       cell: (info) => (
         <TableStatus
           {...LINE_STATE_LOOKS[info.getValue()]}
           label={t(`state-${info.getValue()}`)}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="state"
-          options={Arr.map(["none", "draft", "released"] as const, (state) => ({
-            icon: LINE_STATE_LOOKS[state].icon,
-            label: t(`state-${state}`),
-            value: state,
-          }))}
-          title={t("state")}
-        />
-      ),
+      header: t("state"),
       id: "state",
+      options: Arr.map(["none", "draft", "released"] as const, (state) => ({
+        icon: LINE_STATE_LOOKS[state].icon,
+        label: t(`state-${state}`),
+        value: state,
+      })),
     }),
-    lineColumns.display({
-      cell: (info) => <GradeLineMenu line={info.row.original} />,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    lineColumns.menu((info) => <GradeLineMenu line={info.row.original} />),
+  ];
 
   return (
     <GradebookContext value={{ classId, scheme: scheme.value, slug }}>

@@ -6,6 +6,7 @@ import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { columnAlign } from "@/components/shared/table/align";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import {
@@ -70,26 +71,21 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
       onMouseEnter={() => setIntentActive(true)}
       onTouchStart={() => setIntentActive(true)}
     >
-      <TableCell className="px-2 sm:px-4">
+      <TableCell className={columnAlign({ align: "start" })}>
         <TryoutSetName
           address={address}
           intentActive={intentActive}
           row={row}
         />
       </TableCell>
-      <TableCell className="px-2 text-center sm:px-4" data-progress>
+      <TableCell className={columnAlign()} data-progress>
         <TryoutStatus status={row.attemptStatus} />
       </TableCell>
-      <TableCell className="px-2 text-center tabular-nums sm:px-4">
-        {row.questionCount}
-      </TableCell>
-      <TableCell className="px-2 text-center sm:px-4">
+      <TableCell className={columnAlign()}>{row.questionCount}</TableCell>
+      <TableCell className={columnAlign()}>
         <TryoutSetDuration seconds={row.durationSeconds} />
       </TableCell>
-      <TableCell
-        className="px-2 text-center tabular-nums sm:px-4"
-        data-progress
-      >
+      <TableCell className={columnAlign()} data-progress>
         {row.publishedScore}
       </TableCell>
     </TableRow>

@@ -1,7 +1,16 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { createSchool, inviteLearner } from "@/e2e/support/school";
+import {
+  createSchool,
+  hostAddress,
+  inviteLearner,
+  signInOwner,
+} from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+
+/** The address of the School tab. */
+const SCHOOL_TAB_ADDRESS = /topic=school/u;
 
 /** The sentence an invitation row shows in English. */
 const INVITATION = "You have been invited to join this school.";
@@ -135,4 +144,36 @@ test("an empty inbox shows Nina asleep beside its sentence and offers no action"
       });
     })
   );
+});
+
+test("a school's inbox has the tabs All and School, and a tab it does not have reads as All", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/notifications"));
+  const tabs = page.getByRole("tablist", { name: "Filter notifications" });
+  await expect(tabs).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(tabs.getByRole("tab")).toHaveText(["All", "School"]);
+
+  await tabs.getByRole("tab", { name: "School" }).click();
+  await expect(page).toHaveURL(SCHOOL_TAB_ADDRESS);
+  await expect(tabs.getByRole("tab", { name: "School" })).toHaveAttribute(
+    "aria-selected",
+    "true"
+  );
+
+  await page.goto(address("/notifications?topic=comments"));
+  await expect(tabs.getByRole("tab", { name: "All" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+    { timeout: readinessTimeoutMilliseconds }
+  );
+  await context.close();
 });

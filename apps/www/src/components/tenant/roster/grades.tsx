@@ -4,7 +4,6 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -39,7 +38,6 @@ export function RosterGradesExport() {
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent className="w-56">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("export-grades-label")}</DropdownMenuLabel>
           <RosterGradeCohorts />
         </DropdownMenuGroup>
       </DropdownMenuSubContent>

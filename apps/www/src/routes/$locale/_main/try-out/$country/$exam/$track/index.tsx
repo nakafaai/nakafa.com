@@ -1,3 +1,4 @@
+import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import {
   createFileRoute,
   notFound,
@@ -69,7 +70,7 @@ export const Route = createFileRoute(
           description: loaderData.head.description,
           image: loaderData.head.image,
           indexable: loaderData.head.indexable,
-          jsonLd: [],
+          jsonLd: makeBreadcrumbNodes(loaderData.head.breadcrumbs),
           locale: params.locale,
           title: loaderData.head.title,
         }),
@@ -109,7 +110,7 @@ function TryoutTrackPage() {
               },
               { label: route.page.track.title },
             ],
-            title: route.page.track.title,
+            title: `${route.page.exam.title} ${route.page.track.title}`,
           }}
         />
         <TryoutSetTable

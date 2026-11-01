@@ -27,7 +27,6 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { getRouteApi } from "@tanstack/react-router";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Record as Rec } from "effect";
 import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -41,15 +40,15 @@ import {
   PanesProvider,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { menuOf } from "@/components/tenant/reports/access";
@@ -78,7 +77,7 @@ function useCohortArgs() {
 }
 
 /** The columns of the report list. */
-const lineColumns = createColumnHelper<typeof dataTableFeatures, ReportLine>();
+const lineColumns = tableColumns<ReportLine>();
 
 /** The state of a line's report: not started, or the state the report is in. */
 const stateOf = (line: ReportLine) => line.report?.state ?? "none";
@@ -157,7 +156,7 @@ function CohortReportsBody() {
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return failed ? (
-      <DataFailure onRetry={reloadPage} />
+      <LoadFailure onRetry={reloadPage} />
     ) : (
       <TableEmpty
         act="reading"
@@ -167,47 +166,34 @@ function CohortReportsBody() {
     );
   }
 
-  const columns = lineColumns.columns([
-    lineColumns.accessor((line) => line.student.name, {
+  const columns = [
+    lineColumns.text((line) => line.student.name, {
       cell: (info) => (
         <PaneOpen id={info.row.original.student.id}>{info.getValue()}</PaneOpen>
       ),
-      filterFn: "includesString",
       header: t("student"),
       id: "student",
-      sortFn: "text",
     }),
-    lineColumns.accessor(stateOf, {
+    lineColumns.values(stateOf, {
       cell: (info) => (
         <TableStatus
           {...STATE_LOOKS[info.getValue()]}
           label={t(`state-${info.getValue()}`)}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(
-            ["none", "draft", "completed", "approved", "locked"] as const,
-            (state) => ({
-              icon: STATE_LOOKS[state].icon,
-              label: t(`state-${state}`),
-              value: state,
-            })
-          )}
-          title={t("status")}
-        />
-      ),
+      header: t("status"),
       id: "status",
+      options: Arr.map(
+        ["none", "draft", "completed", "approved", "locked"] as const,
+        (state) => ({
+          icon: STATE_LOOKS[state].icon,
+          label: t(`state-${state}`),
+          value: state,
+        })
+      ),
     }),
-    lineColumns.display({
-      cell: (info) => <ReportLineMenu line={info.row.original} />,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    lineColumns.menu((info) => <ReportLineMenu line={info.row.original} />),
+  ];
 
   return (
     <Panes>

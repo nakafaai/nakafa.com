@@ -71,7 +71,7 @@ test("the Owner records the graduation decision, issues the SKL, opens its check
     .getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(more);
   await more.click();
-  await page.getByRole("menuitem", { name: "Graduation decision" }).click();
+  await page.getByRole("menuitem", { name: "Decide graduation" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Decision number").fill("421.3/045/SMA.1/2027");
   await dialog.getByLabel("Place of issue").fill("Bandung");

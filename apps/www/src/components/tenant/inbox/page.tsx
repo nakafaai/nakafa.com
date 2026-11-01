@@ -20,13 +20,13 @@ import { useTranslations } from "use-intl";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsList } from "@/components/notifications/list";
 import { MarkAllRead } from "@/components/notifications/read";
-import { NoticePreferences } from "@/components/notifications/settings";
 import { InboxTabs } from "@/components/notifications/tabs";
 import { SchoolInboxTopic } from "@/components/notifications/topic";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import { SchoolPreferences } from "@/components/tenant/inbox/preferences";
 import { useAgeClock } from "@/components/user/ages";
 
 /**
@@ -46,7 +46,7 @@ export function SchoolNotifications({ all }: { all: boolean }) {
         {/* Mark all read stands before the filter from the first paint, ready and final. */}
         <ButtonGroup>
           <MarkAllRead first={Option.none()} scope={scope} />
-          <NoticePreferences />
+          <SchoolPreferences />
           <InboxFilter all={all} />
         </ButtonGroup>
       </SchoolHeader>

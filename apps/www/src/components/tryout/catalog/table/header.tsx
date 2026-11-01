@@ -1,7 +1,6 @@
 import {
   ArrowDown02Icon,
   ArrowUp02Icon,
-  ArrowUpDownIcon,
   FilterIcon,
   Menu01Icon,
 } from "@hugeicons/core-free-icons";
@@ -10,21 +9,24 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
-import { cn } from "cn";
+import { TableHeader, TableRow } from "@repo/design-system/components/ui/table";
 import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { TableHeadButton } from "@/components/shared/table/head";
+import {
+  ColumnHead,
+  HeadPanel,
+  HeadRange,
+  HeadReset,
+  HeadSort,
+  HeadText,
+  useIsFiltered,
+} from "@/components/shared/table/panel";
 import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
 import type { TryoutSetStatusFilter } from "@/components/tryout/catalog/table/types";
 import {
@@ -55,79 +57,71 @@ const headings = {
   },
 } as const;
 
+/** The icon of a head: the way it sorts the rows, or the filter while it sorts none. */
+const sortIcons = {
+  asc: ArrowUp02Icon,
+  desc: ArrowDown02Icon,
+  none: FilterIcon,
+};
+
 /** Fixed columns keep the same geometry while the server changes row order. */
 export function TryoutTableHeader() {
   return (
     <TableHeader className="bg-background sticky top-0 z-10">
       <TableRow>
-        <TryoutSortHeading field="title" />
+        <TryoutColumnHeading field="title" />
         <TryoutStatusHeading />
-        <TryoutSortHeading field="questionCount" />
-        <TryoutSortHeading field="durationSeconds" />
-        <TryoutSortHeading field="publishedScore" />
+        <TryoutColumnHeading field="questionCount" />
+        <TryoutColumnHeading field="durationSeconds" />
+        <TryoutColumnHeading field="publishedScore" />
       </TableRow>
     </TableHeader>
   );
 }
 
-/** A stable menu updates only the URL sort and preserves keyboard focus. */
-function TryoutSortHeading({ field }: { field: keyof typeof headings }) {
+/**
+ * The head of a column that sorts the track: the URL holds the sort, so a change keeps keyboard focus, and the page's
+ * filters hold what the column keeps of the rows the table has read.
+ */
+function TryoutColumnHeading({ field }: { field: keyof typeof headings }) {
   const { onSort, sort } = useTryoutSetTable();
   const t = useTranslations("Tryouts");
-  const tTable = useTranslations("DataTable");
+  const filtered = useIsFiltered(field);
   const copy = headings[field];
-  const direction = sort.field === field ? sort.direction : undefined;
-  const indicator = {
-    asc: { icon: ArrowUp02Icon, label: "ascending" },
-    desc: { icon: ArrowDown02Icon, label: "descending" },
-    none: { icon: ArrowUpDownIcon, label: "none" },
-  } as const;
-  const selected = indicator[direction ?? "none"];
+  const label = t(copy.label);
+  const sorted = sort.field === field ? sort.direction : "none";
+  const place = field === "title" ? "start" : "center";
+
   return (
-    <TableHead
-      aria-sort={selected.label}
-      className={cn("px-2 sm:px-4", field !== "title" && "text-center")}
-      scope="col"
-    >
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <TableHeadButton
-              align={field === "title" ? "start" : "center"}
-              aria-label={t("set-sort-label", { column: t(copy.label) })}
-              icon={selected.icon}
-            >
-              {t(copy.label)}
-            </TableHeadButton>
+    <ColumnHead place={place} sorted={sorted}>
+      <HeadPanel
+        trigger={
+          <TableHeadButton
+            active={sorted !== "none" || filtered}
+            align={place}
+            aria-label={t("set-filter-label", { column: label })}
+            icon={sortIcons[sorted]}
+          >
+            {label}
+          </TableHeadButton>
+        }
+      >
+        <HeadSort
+          ascending={t(copy.asc)}
+          descending={t(copy.desc)}
+          onSort={(descending) =>
+            onSort({ direction: descending ? "desc" : "asc", field })
           }
+          sorted={sorted}
         />
-        <DropdownMenuContent
-          align="start"
-          className="w-max max-w-[calc(100vw-1rem)]"
-        >
-          <DropdownMenuGroup>
-            <DropdownMenuRadioGroup
-              onValueChange={(value) => {
-                if (value === "asc" || value === "desc") {
-                  onSort({ field, direction: value });
-                }
-              }}
-              value={direction ?? ""}
-            >
-              <DropdownMenuLabel>{tTable("sort")}</DropdownMenuLabel>
-              <DropdownMenuRadioItem className="whitespace-normal" value="asc">
-                <HugeIcons icon={ArrowUp02Icon} />
-                {t(copy.asc)}
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem className="whitespace-normal" value="desc">
-                <HugeIcons icon={ArrowDown02Icon} />
-                {t(copy.desc)}
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </TableHead>
+        {field === "title" ? (
+          <HeadText column={field} label={label} />
+        ) : (
+          <HeadRange column={field} label={label} />
+        )}
+        <HeadReset column={field} />
+      </HeadPanel>
+    </ColumnHead>
   );
 }
 
@@ -136,7 +130,7 @@ function TryoutStatusHeading() {
   const { filter, onFilter } = useTryoutSetTable();
   const t = useTranslations("Tryouts");
   return (
-    <TableHead className="px-2 text-center sm:px-4" scope="col">
+    <ColumnHead place="center">
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -177,7 +171,7 @@ function TryoutStatusHeading() {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-    </TableHead>
+    </ColumnHead>
   );
 }
 

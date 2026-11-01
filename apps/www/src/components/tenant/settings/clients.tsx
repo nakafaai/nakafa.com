@@ -7,6 +7,7 @@ import {
 } from "@confect/react";
 import {
   CommandLineIcon,
+  Copy01Icon,
   Delete02Icon,
   Key01Icon,
   MoreHorizontalIcon,
@@ -14,7 +15,9 @@ import {
   Plug01Icon,
   Unlink01Icon,
 } from "@hugeicons/core-free-icons";
+import { useClipboard } from "@mantine/hooks";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
+import type { IssuedClient } from "@repo/backend/confect/integrations/clients.spec";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -27,22 +30,22 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -75,15 +78,12 @@ const PAGE_SIZE = 25;
 type ClientItem = PaginatedQueryItem<typeof integrations.clients.list>;
 
 /** The columns of the clients table. */
-const clientColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  ClientItem
->();
+const clientColumns = tableColumns<ClientItem>();
 
 /** Shows a secret the server issued once, which the page's secret dialog holds. */
-const SecretIssueContext = createContext<((secret: string) => void) | null>(
-  null
-);
+const SecretIssueContext = createContext<
+  ((issued: typeof IssuedClient.Type) => void) | null
+>(null);
 
 /** Reads what shows an issued secret. It throws outside the clients page, which always provides it. */
 function useIssueSecret() {
@@ -101,7 +101,7 @@ function useIssueSecret() {
  */
 export function SchoolClientsSettings() {
   const t = useTranslations("SchoolSettings");
-  const [issuedSecret, setIssuedSecret] = useState<string | undefined>(
+  const [issued, setIssued] = useState<typeof IssuedClient.Type | undefined>(
     undefined
   );
   const [isCreating, setIsCreating] = useState(false);
@@ -120,19 +120,20 @@ export function SchoolClientsSettings() {
         }
       >
         <ReadBoundary>
-          <SecretIssueContext value={setIssuedSecret}>
+          <SecretIssueContext value={setIssued}>
             <SchoolClientTable />
           </SecretIssueContext>
         </ReadBoundary>
         <SchoolClientCreateDialog
-          onIssued={setIssuedSecret}
+          onIssued={setIssued}
           open={isCreating}
           setOpen={setIsCreating}
         />
         <SchoolSecretDialog
           description={t("client-secret-description")}
-          onClose={() => setIssuedSecret(undefined)}
-          secret={issuedSecret}
+          identifier={issued?.id}
+          onClose={() => setIssued(undefined)}
+          secret={issued?.secret}
           title={t("client-secret-title")}
         />
       </SettingsTablePage>
@@ -163,7 +164,7 @@ function SchoolClientTable() {
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     if (failed) {
-      return <DataFailure onRetry={reloadPage} />;
+      return <LoadFailure onRetry={reloadPage} />;
     }
     return (
       <TableEmpty
@@ -179,31 +180,22 @@ function SchoolClientTable() {
     QueryResult.isSuccess(viewer)
       ? scopeNameOf(client.scope, viewer.value.tenant.name, viewer.value.units)
       : "";
-  const columns = clientColumns.columns([
-    clientColumns.accessor((client) => client.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-      filterFn: "includesString",
+  const columns = [
+    clientColumns.text((client) => client.name, {
+      cell: (info) => (
+        <TableTitle icon={Key01Icon}>{info.getValue()}</TableTitle>
+      ),
       header: t("client-name"),
       id: "name",
-      sortFn: "text",
     }),
-    clientColumns.accessor(scopeName, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="scope"
-          options={
-            QueryResult.isSuccess(viewer)
-              ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
-              : []
-          }
-          title={t("client-scope")}
-        />
-      ),
+    clientColumns.values(scopeName, {
+      header: t("client-scope"),
       id: "scope",
+      options: QueryResult.isSuccess(viewer)
+        ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
+        : [],
     }),
-    clientColumns.accessor((client) => client.status, {
+    clientColumns.values((client) => client.status, {
       cell: (info) => (
         <TableStatus
           icon={CLIENT_STATUS_LOOKS[info.getValue()].icon}
@@ -211,30 +203,20 @@ function SchoolClientTable() {
           tone={CLIENT_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(IntegrationStatus.literals, (status) => ({
-            icon: CLIENT_STATUS_LOOKS[status].icon,
-            label: t(`client-${status}`),
-            value: status,
-          }))}
-          title={t("client-status")}
-        />
-      ),
+      header: t("client-status"),
       id: "status",
+      options: Arr.map(IntegrationStatus.literals, (status) => ({
+        icon: CLIENT_STATUS_LOOKS[status].icon,
+        label: t(`client-${status}`),
+        value: status,
+      })),
     }),
-    clientColumns.display({
-      cell: (info) =>
-        info.row.original.status === "active" ? (
-          <SchoolClientMenu client={info.row.original} />
-        ) : null,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    clientColumns.menu((info) =>
+      info.row.original.status === "active" ? (
+        <SchoolClientMenu client={info.row.original} />
+      ) : null
+    ),
+  ];
 
   return (
     <>
@@ -260,6 +242,7 @@ function SchoolClientTable() {
 function SchoolClientMenu({ client }: { client: ClientItem }) {
   const { slug } = useTenant();
   const issueSecret = useIssueSecret();
+  const clipboard = useClipboard({ timeout: 1500 });
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const rotate = useMutation(integrations.clients.rotate);
@@ -303,13 +286,17 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
                 saveSchool(
                   () => rotate({ clientId: client.id, slug }),
                   SOURCE,
-                  (issued) => issueSecret(issued.secret)
+                  (answer) => issueSecret(answer)
                 )
               )
             }
           >
             <HugeIcons icon={Key01Icon} />
             {t("client-rotate")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => clipboard.copy(client.id)}>
+            <HugeIcons icon={Copy01Icon} />
+            {t("client-id-copy")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setIsConnecting(true)}>
             <HugeIcons icon={CommandLineIcon} />

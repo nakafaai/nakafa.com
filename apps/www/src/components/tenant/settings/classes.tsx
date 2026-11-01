@@ -5,7 +5,11 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { Archive02Icon, Presentation01Icon } from "@hugeicons/core-free-icons";
+import {
+  Archive02Icon,
+  MortarboardIcon,
+  Presentation01Icon,
+} from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { ClassStatus } from "@repo/backend/confect/classroom/class";
@@ -13,22 +17,22 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -58,10 +62,7 @@ const CLASS_STATUS_LOOKS = {
 const PAGE_SIZE = 25;
 
 /** The columns of the classrooms table. */
-const classColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  SchoolClass
->();
+const classColumns = tableColumns<SchoolClass>();
 
 /** The school's units as the viewer reads them, each with its level. */
 type ViewerUnits = Ref.Returns<typeof tenancy.viewer.get>["units"];
@@ -260,7 +261,7 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     if (failed) {
-      return <DataFailure onRetry={reloadPage} />;
+      return <LoadFailure onRetry={reloadPage} />;
     }
     return (
       <TableEmpty
@@ -271,26 +272,26 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
     );
   }
 
-  const columns = classColumns.columns([
-    classColumns.accessor((row) => row.name, {
-      cell: (info) =>
-        isDraft(info.row.original.id) ? (
-          <span className="font-medium">{info.getValue()}</span>
-        ) : (
-          <Link
-            className="font-medium"
-            params={{ classSlug: info.row.original.slug, slug }}
-            to="/school/$slug/classes/$classSlug"
-          >
-            {info.getValue()}
-          </Link>
-        ),
-      filterFn: "includesString",
+  const columns = [
+    classColumns.text((row) => row.name, {
+      cell: (info) => (
+        <TableTitle icon={MortarboardIcon}>
+          {isDraft(info.row.original.id) ? (
+            info.getValue()
+          ) : (
+            <Link
+              params={{ classSlug: info.row.original.slug, slug }}
+              to="/school/$slug/classes/$classSlug"
+            >
+              {info.getValue()}
+            </Link>
+          )}
+        </TableTitle>
+      ),
       header: t("class-name"),
       id: "name",
-      sortFn: "text",
     }),
-    classColumns.accessor((row) => row.status, {
+    classColumns.values((row) => row.status, {
       cell: (info) => (
         <TableStatus
           icon={CLASS_STATUS_LOOKS[info.getValue()].icon}
@@ -298,35 +299,24 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
           tone={CLASS_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(ClassStatus.literals, (status) => ({
-            icon: CLASS_STATUS_LOOKS[status].icon,
-            label: t(`class-${status}`),
-            value: status,
-          }))}
-          title={t("class-status")}
-        />
-      ),
+      header: t("class-status"),
       id: "status",
+      options: Arr.map(ClassStatus.literals, (status) => ({
+        icon: CLASS_STATUS_LOOKS[status].icon,
+        label: t(`class-${status}`),
+        value: status,
+      })),
     }),
-    classColumns.display({
-      cell: (info) => (
-        <WithAction action="class.create">
-          {info.row.original.status === "archived" ? (
-            <SchoolClassRestore row={info.row.original} slug={slug} />
-          ) : (
-            <SchoolClassMenu row={info.row.original} slug={slug} />
-          )}
-        </WithAction>
-      ),
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    classColumns.menu((info) => (
+      <WithAction action="class.create">
+        {info.row.original.status === "archived" ? (
+          <SchoolClassRestore row={info.row.original} slug={slug} />
+        ) : (
+          <SchoolClassMenu row={info.row.original} slug={slug} />
+        )}
+      </WithAction>
+    )),
+  ];
 
   return (
     <>

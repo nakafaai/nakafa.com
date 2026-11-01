@@ -10,7 +10,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -53,7 +52,6 @@ export function BreadcrumbMenu({
         />
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuGroup>
-            <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
             {Arr.map(items, (item) => (
               <BreadcrumbMenuItem
                 item={item}

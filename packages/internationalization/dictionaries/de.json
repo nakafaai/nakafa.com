@@ -1,7 +1,9 @@
 {
   "DataTable": {
-    "sort": "Sortieren",
     "filter-by": "Nach {column} filtern",
+    "filter-contains": "Enthält",
+    "filter-highest": "Höchstens",
+    "filter-lowest": "Mindestens",
     "sort-ascending": "Aufsteigend",
     "sort-descending": "Absteigend",
     "no-results": "Keine Treffer.",
@@ -77,6 +79,7 @@
     "request-state-approved": "Angenommen",
     "request-state-declined": "Abgelehnt",
     "family-title": "Meine Eltern",
+    "family-pending": "Deine Eltern schließen die Verbindung mit einem Code an diese Adresse ab.",
     "family-invite": "Elternteil einladen",
     "family-empty-description": "Füge die E-Mail deiner Eltern hinzu, damit sie sich anmelden und deine Noten sehen können.",
     "sign-in-action": "Als Elternteil anmelden",
@@ -90,7 +93,7 @@
     "code-invalid": "Gib die sechs Ziffern aus der E-Mail ein.",
     "code-refused": "Der Code ist falsch oder abgelaufen.",
     "sign-in": "Anmelden",
-    "resend-code": "Code erneut senden",
+    "resend-code": "Erneut senden",
     "failed": "Keine Verbindung. Versuche es noch einmal.",
     "home-title": "Meine Kinder",
     "home-empty": "Noch kein Kind verknüpft.",
@@ -151,7 +154,6 @@
     "import": "Importieren",
     "export": "Exportieren",
     "export-grades": "Zeugnisnoten",
-    "export-grades-label": "Zeugnisnoten einer Klasse",
     "export-grades-loading": "Klassen werden geladen",
     "export-grades-no-period": "Noch kein aktiver Zeitraum.",
     "export-grades-empty": "Keine Klasse in diesem Zeitraum.",
@@ -418,7 +420,6 @@
     "rooms-opens": "Beginn",
     "rooms-closes": "Ende",
     "rooms-state": "Status",
-    "rooms-seats": "Plätze",
     "rooms-seats-summary": "{working} arbeiten, {away} abwesend, {offline} getrennt, {locked} gesperrt, {finished} fertig.",
     "room-state-scheduled": "Geplant",
     "room-state-open": "Offen",
@@ -680,18 +681,18 @@
     "webhook-url-error": "Nutze eine öffentliche https-Adresse.",
     "webhook-client": "Client",
     "webhook-client-placeholder": "Client wählen",
-    "webhook-changes": "Änderungen",
+    "webhook-changes": "Senden, wenn",
     "webhook-change": {
       "grade": {
         "released": "Note freigegeben"
       },
       "grant": {
-        "created": "Rolle vergeben",
-        "ended": "Rolle beendet"
+        "created": "Person erhält eine Rolle",
+        "ended": "Rolle einer Person endet"
       },
       "guardian": {
-        "linked": "Eltern verknüpft",
-        "withdrawn": "Eltern zurückgezogen"
+        "linked": "Elternteil mit Kind verknüpft",
+        "withdrawn": "Elternverknüpfung zurückgezogen"
       },
       "unit": {
         "created": "Einheit erstellt"
@@ -964,6 +965,8 @@
     "invite-revoke-description": "Die Adresse kann diese Einladung nicht mehr annehmen.",
     "invite-revoke-confirm": "Widerrufen",
     "client-name": "Name",
+    "client-id": "Client-ID",
+    "client-id-copy": "Client-ID kopieren",
     "client-status": "Status",
     "client-active": "Aktiv",
     "client-revoked": "Widerrufen",
@@ -1221,6 +1224,7 @@
     "roles-overview-description": "Nur Inhaber vergeben die Rollen Inhaber und Admin.",
     "roles-overview-footer": "Eine Person kann mehrere Rollen haben.",
     "secret-copy": "Kopieren",
+    "secret-label": "Geheimnis",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Optional, acht Ziffern",
     "logins-footer": "Eine Anmeldekarte enthält einen Anmeldenamen und einen Einmalcode.",
@@ -1312,6 +1316,7 @@
     "roles-search": "Person suchen",
     "roles-empty": "Noch hat niemand eine Rolle.",
     "card-issue-title": "Anmeldekarte",
+    "card-issue-action": "Anmeldekarte ausstellen",
     "card-login-name": "Anmeldename",
     "card-login-name-placeholder": "Anmeldename",
     "card-reissue": "Karte neu ausstellen",
@@ -1384,7 +1389,10 @@
     "locale-country": "Land",
     "locale-currency": "Währung",
     "locale-footer": "Jede Änderung wird im Prüfprotokoll festgehalten.",
-    "homeroom-description": "Eine Lehrkraft leitet jede Klasse."
+    "homeroom-description": "Eine Lehrkraft leitet jede Klasse.",
+    "webhook-changes-description": "Dein System erfährt es jedes Mal, wenn eines davon geschieht.",
+    "webhook-changes-none": "Dieser Client liest nichts, was ein Webhook sendet, also ändere zuerst seine Aktionen.",
+    "webhook-client-none": "Ein Webhook gehört zu einem API-Client, also erstelle zuerst einen."
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1428,6 +1436,8 @@
     "message-hidden": "Eine Lehrkraft hat diese Nachricht ausgeblendet.",
     "message-edited": "Bearbeitet",
     "message-edit": "Bearbeiten",
+    "post-waiting-edit": "Mitteilung bearbeiten",
+    "library-edit-title": "Eintrag bearbeiten",
     "message-save": "Speichern",
     "message-hide": "Ausblenden",
     "hide-title": "Diese Nachricht ausblenden",
@@ -1720,7 +1730,7 @@
     "value": "Wert",
     "open-letter": "SKL öffnen",
     "open-check": "Prüfseite öffnen",
-    "decide": "Abschlussbeschluss",
+    "decide": "Abschluss entscheiden",
     "decide-description": "Der Beschluss der Schulleitung für {period}, für alle Abschlussklassen.",
     "decision": "Beschlussnummer",
     "decision-placeholder": "421.3/045/SMP.1/2027",
@@ -1933,6 +1943,7 @@
     "arabic-fraction": "Bruchstrich",
     "arabic-minus": "Minuszeichen",
     "load-error": "Diese Daten konnten nicht geladen werden.",
+    "load-error-title": "Etwas ist schiefgelaufen",
     "part-denied": "Dieser Teil der Schule ist nicht offen.",
     "loading": "Wird geladen",
     "month": "Monat",
@@ -1997,6 +2008,7 @@
     "subject": "Fächer",
     "explore": "Entdecken",
     "references": "Quellen",
+    "references-description": "Öffne eine Quelle, um ihren Ursprung zu lesen.",
     "show": "Anzeigen",
     "grid": "Raster",
     "fullscreen": "Vollbild",
@@ -2156,6 +2168,8 @@
     "preferences-kind": "Mitteilung",
     "channel-push": "Push",
     "channel-email": "E-Mail",
+    "channel-on": "An",
+    "channel-off": "Aus",
     "kind-commentReply": "Antworten auf deine Kommentare",
     "kind-forumMention": "Erwähnungen in einer Klasse",
     "kind-classAnnouncement": "Klassenankündigungen",
@@ -2254,6 +2268,7 @@
     "verse": "Vers",
     "verse-count": "Vers {count}",
     "interpretation": "Tafsir",
+    "interpretation-description": "Was Vers {count} bedeutet.",
     "meaning": "Namensbedeutung",
     "revelation": "Offenbarungsort",
     "revelation-place": "{place, select, Meccan {mekkanisch} Medinan {medinensisch} other {unbekannt}}",
@@ -2268,7 +2283,9 @@
   },
   "Tryouts": {
     "title": "Welchen Probetest möchtest du heute bearbeiten?",
-    "metadata-description": "Wähle auf Nakafa ein Land, eine Prüfung und einen Probetest aus.",
+    "hub-search-title": "Kostenlose Online-Probetests mit sofortiger Auswertung",
+    "metadata-description": "Probetests mit Zeitlimit und sofortiger Auswertung. Kostenlos und unbegrenzt auf Nakafa.",
+    "search-title": "Kostenloser Probetest {name}",
     "track-metadata-description": "Wähle auf Nakafa einen Probetest für {exam}: mit Zeitlimit und sofortiger Auswertung.",
     "set-metadata-description": "Mach {exam} {set} auf Nakafa: ein Probetest mit Zeitlimit und sofortiger Auswertung.",
     "section-metadata-description": "Übe {section} aus {exam} {set} auf Nakafa: ein Probetest mit Zeitlimit und sofortiger Auswertung.",
@@ -2311,7 +2328,6 @@
     "set-column-questions": "Aufgaben",
     "set-column-score": "Punktzahl",
     "set-column-status": "Status",
-    "set-sort-label": "{column} sortieren",
     "set-sort-name-ascending": "A–Z",
     "set-sort-name-descending": "Z–A",
     "set-sort-questions-ascending": "Wenigste",
@@ -2353,6 +2369,7 @@
   },
   "Player": {
     "navigator": "Aufgaben",
+    "navigator-description": "Wähle eine Nummer, um diese Frage zu öffnen.",
     "navigator-open": "Aufgabenübersicht öffnen, Aufgabe {number}",
     "controls": "Aufgabensteuerung",
     "previous-question": "Vorherige Aufgabe",
@@ -2658,6 +2675,10 @@
     "saved-description": "Suche, ändere oder lösche, was Nina behält."
   },
   "Toast": {
+    "offline-move": {
+      "title": "Du bist offline.",
+      "description": "Verbinde dich wieder, um diese Seite zu öffnen."
+    },
     "chat-deleted": {
       "title": "Dieser Chat wurde gelöscht."
     },
@@ -3746,32 +3767,32 @@
   },
   "SEO": {
     "subject": {
-      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) | Nakafa",
+      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) - Nakafa",
       "description": "Lerne {title} in {chapter, select, __EMPTY__ {} other {{chapter} }}{material} für {grade}. Diese Seite erklärt das Konzept anhand von Beispielen und Übungen, mit denen du dein Verständnis prüfen kannst.",
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, lernen, Lernmaterial, Übungsaufgaben, Übungen, Bildung"
     },
     "exercise": {
-      "title": "{number, select, 0 {} other {Aufgabe {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
+      "title": "{number, select, 0 {} other {Aufgabe {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) - Nakafa",
       "description": "Bearbeite die {exam}-Übung zu {material}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} mit {questionCount, plural, =0 {Übungsaufgaben} =1 {einer Aufgabe} other {{questionCount} Aufgaben}} und Erklärungen, mit denen du deinen Lösungsweg prüfen kannst.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}Übung, Übungsaufgaben, Lösungen, Prüfung"
     },
     "exercise-program": {
-      "title": "Übungsaufgaben für {exam} | Nakafa",
+      "title": "Übungsaufgaben für {exam} - Nakafa",
       "description": "Wähle Übungsbereiche für {exam} in der Kategorie {category}. Jeder Bereich führt zu Aufgabensätzen mit Erklärungen, mit denen du dein Verständnis prüfen kannst.",
       "keywords": "{exam}, {category}, Übungsaufgaben, Aufgabensätze, Erklärungen, Prüfungsvorbereitung"
     },
     "curriculum": {
-      "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}} | Nakafa",
+      "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}} - Nakafa",
       "description": "Entdecke {title}{parent, select, __EMPTY__ {} other { in {parent}}}{program, select, __EMPTY__ {} other { für {program}}}. Diese Lehrplanübersicht führt Lernende zu den passenden Materialien und Übungen.",
       "keywords": "{title}, {parent, select, __EMPTY__ {} other {{parent}, }}{program, select, __EMPTY__ {} other {{program}, }}Lehrplan, Lernweg, Lernmaterialien, Übungen"
     },
     "article": {
-      "title": "{title} - {category} | Nakafa",
+      "title": "{title} - {category} - Nakafa",
       "description": "Lies {title} in {category}. Dieser Artikel bietet Kontext, Daten und Quellen, die du selbst prüfen kannst.",
       "keywords": "{title}, {category}, Analyse, Fakten, aktuell, Forschung, Informationen, Nachrichten"
     },
     "quran": {
-      "title": "Sure {number}. {name} ({transliteration}){translation, select, __EMPTY__ {} other { - {translation}}} | Nakafa",
+      "title": "Sure {transliteration}{translation, select, __EMPTY__ {} other { ({translation})}}: Arabisch und Übersetzung - Nakafa",
       "description": "Lies die Sure {name} ({transliteration}) mit einer Übersetzung Vers für Vers. {numberOfVerses} Verse aus dem heiligen Koran.",
       "keywords": "Sure {name}, Koran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }
@@ -3827,8 +3848,6 @@
   "SchoolInsight": {
     "title": "Insight",
     "class": "Klasse",
-    "pick": "Klasse wählen",
-    "pick-description": "Hier steht der Stand jedes Lernenden.",
     "competency": "Kompetenz",
     "mastery": "Beherrschung",
     "evidence": "Beleg",
@@ -3843,7 +3862,7 @@
     "narrative-description": "Deine Worte zu diesem Lernenden. Erziehungsberechtigte lesen sie erst, wenn du sie teilst.",
     "narrative-placeholder": "Was dieser Lernende gut kann, und was als Nächstes hilft",
     "narrative-save": "Speichern",
-    "narrative-share": "Mit Erziehungsberechtigten teilen",
+    "narrative-share": "Mit Eltern teilen",
     "narrative-withdraw": "Zurücknehmen",
     "narrative-ask": "Nina fragen",
     "narrative-drafting": "Nina schreibt einen Entwurf.",
@@ -3853,11 +3872,26 @@
     "practice-sets": "Sätze",
     "practice-mean": "Mittlere Punktzahl",
     "practice-shared": "Geteilt",
+    "practice-unshared": "Nicht geteilt",
     "practice-share": "{topic} mit deiner Schule teilen",
     "practice-note": "Nur die Themen, die du einschaltest, erreichen deine Lehrkräfte, und du kannst sie jederzeit ausschalten.",
     "tags": "Kompetenzen",
-    "tags-description": "Nenne die Kompetenz jeder Frage. Eine Frage ohne Kompetenz zählt für ihre Prüfung.",
+    "tags-description": "Nenne vor der Freigabe der Ergebnisse, was jede Frage prüft, eine leere Frage zählt für ihre Prüfung.",
     "exam": "Prüfung",
-    "question": "Frage {number}"
+    "question": "Frage {number}",
+    "no-class": "Noch keine Klasse",
+    "no-class-description": "Insight zeigt den Stand jeder Schülerin und jedes Schülers einer Klasse, also beginnt es mit einer Klasse.",
+    "no-class-member": "Insight zeigt den Stand in den Klassen, die du unterrichtest, also bitte deine Verwaltung, dich einer Klasse hinzuzufügen.",
+    "no-class-action": "Klassenräume öffnen",
+    "class-empty": "Noch keine Prüfung freigegeben",
+    "class-empty-description": "Gib die Ergebnisse einer Prüfung dieser Klasse frei, dann erscheint hier der Stand jeder Person.",
+    "exams-action": "Prüfungen öffnen",
+    "tags-note": "Eine Frage ohne Kompetenz zählt unter dem Namen ihrer Prüfung.",
+    "tags-empty": "Erstelle zuerst eine Prüfung, dann nenne, was ihre Fragen prüfen.",
+    "tags-done": "Fertig",
+    "tags-none": "Diese Prüfung hat noch keine Fragen.",
+    "exam-placeholder": "Prüfung wählen",
+    "question-placeholder": "Optional, zum Beispiel Brüche",
+    "narratives-note": "Öffne eine Person, um zu schreiben, was ihr als Nächstes hilft."
   }
 }

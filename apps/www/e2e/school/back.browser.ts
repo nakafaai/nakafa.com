@@ -57,3 +57,26 @@ test("the school settings sidebar leads back to the school page the viewer came 
   await expect(page).toHaveURL(address("/exams"));
   await context.close();
 });
+
+test("a press on another page while offline keeps the page and says why", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+  await page.goto(address("/settings/profile"));
+  const link = page.getByRole("link", { name: "Webhooks" });
+  await waitUntilTakenOver(link);
+
+  await context.setOffline(true);
+  await link.click();
+  await expect(page.getByText("You are offline.")).toBeVisible();
+  await expect(page).toHaveURL(address("/settings/profile"));
+  await context.close();
+});

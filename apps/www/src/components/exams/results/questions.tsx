@@ -37,14 +37,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -65,7 +57,8 @@ import {
 } from "@/components/shared/card/section";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnChoice } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -206,6 +199,9 @@ function QuestionResults({ question }: { readonly question: Question }) {
   );
 }
 
+/** The columns of a question's answers. */
+const answerColumns = tableColumns<AnswerRow>();
+
 /**
  * The values of the answers' status column, which chooses the answers the server reads: every answer,
  * or only the answers of one verdict. Each value carries the icon of its verdict.
@@ -259,48 +255,55 @@ function AnswerList({
   }
   return (
     <TableFrame>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("results-name")}</TableHead>
-            <TableHead>{t("results-answers")}</TableHead>
-            <TableHead>{t("results-points")}</TableHead>
-            <TableHead className="text-center">
-              <ColumnChoice
-                column="verdict"
-                options={verdictChoices}
-                title={t("results-status")}
-              />
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(results, (answer) => (
-            <TableRow key={answer.attemptId}>
-              <TableCell>{answer.name}</TableCell>
-              <TableCell className="min-w-56 wrap-break-word">
-                <span className="block whitespace-pre-wrap" dir="auto">
-                  {responseText(question, answer.response)}
+      <DataTable
+        columns={[
+          answerColumns.text((answer) => answer.name, {
+            header: t("results-name"),
+            id: "name",
+          }),
+          answerColumns.text(
+            (answer) => responseText(question, answer.response),
+            {
+              cell: (info) => (
+                <span
+                  className="block min-w-56 wrap-break-word whitespace-pre-wrap"
+                  dir="auto"
+                >
+                  {info.getValue()}
                 </span>
-              </TableCell>
-              <TableCell className="tabular-nums">
-                {canGrade ? (
-                  <GradeField answer={answer} question={question} />
-                ) : (
-                  answer.points
-                )}
-              </TableCell>
-              <TableCell className="text-center">
-                <TableStatus
-                  icon={VERDICT_LOOKS[answer.verdict].icon}
-                  label={t(verdictKeys[answer.verdict])}
-                  tone={VERDICT_LOOKS[answer.verdict].tone}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+              ),
+              header: t("results-answers"),
+              id: "response",
+            }
+          ),
+          answerColumns.number((answer) => answer.points, {
+            cell: (info) =>
+              canGrade ? (
+                <GradeField answer={info.row.original} question={question} />
+              ) : (
+                info.getValue()
+              ),
+            header: t("results-points"),
+            id: "points",
+          }),
+          answerColumns.choice((answer) => answer.verdict, {
+            cell: (info) => (
+              <TableStatus
+                icon={VERDICT_LOOKS[info.getValue()].icon}
+                label={t(verdictKeys[info.getValue()])}
+                tone={VERDICT_LOOKS[info.getValue()].tone}
+              />
+            ),
+            header: t("results-status"),
+            id: "verdict",
+            options: verdictChoices,
+          }),
+        ]}
+        data={results}
+        loading={loadMore !== null || results.length === 0}
+        plain
+        rowId={(answer) => answer.attemptId}
+      />
       {exhausted && results.length === 0 ? (
         <TableEmpty
           act="reading"

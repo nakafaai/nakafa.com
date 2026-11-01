@@ -1,7 +1,9 @@
 {
   "DataTable": {
-    "sort": "Sort",
     "filter-by": "Filter by {column}",
+    "filter-contains": "Contains",
+    "filter-highest": "At most",
+    "filter-lowest": "At least",
     "sort-ascending": "Ascending",
     "sort-descending": "Descending",
     "no-results": "No results.",
@@ -77,6 +79,7 @@
     "request-state-approved": "Approved",
     "request-state-declined": "Declined",
     "family-title": "My parents",
+    "family-pending": "Your parent finishes the link with a code sent to this address.",
     "family-invite": "Invite a parent",
     "family-empty-description": "Add your parent's email so they can sign in and see your grades.",
     "sign-in-action": "Parent sign-in",
@@ -90,7 +93,7 @@
     "code-invalid": "Enter the six digits from the email.",
     "code-refused": "The code is wrong or has expired.",
     "sign-in": "Sign in",
-    "resend-code": "Send the code again",
+    "resend-code": "Send again",
     "failed": "Could not connect. Try again.",
     "home-title": "My children",
     "home-empty": "No child is linked yet.",
@@ -151,7 +154,6 @@
     "import": "Import",
     "export": "Export",
     "export-grades": "Report grades",
-    "export-grades-label": "Report grades of a class group",
     "export-grades-loading": "Loading class groups",
     "export-grades-no-period": "No active period yet.",
     "export-grades-empty": "No class group in this period.",
@@ -418,7 +420,6 @@
     "rooms-opens": "Opens",
     "rooms-closes": "Closes",
     "rooms-state": "State",
-    "rooms-seats": "Seats",
     "rooms-seats-summary": "{working} working, {away} away, {offline} offline, {locked} locked, {finished} finished.",
     "room-state-scheduled": "Scheduled",
     "room-state-open": "Open",
@@ -680,18 +681,18 @@
     "webhook-url-error": "Use a public https address.",
     "webhook-client": "Client",
     "webhook-client-placeholder": "Choose a client",
-    "webhook-changes": "Changes",
+    "webhook-changes": "Send when",
     "webhook-change": {
       "grade": {
         "released": "Grade released"
       },
       "grant": {
-        "created": "Role given",
-        "ended": "Role ended"
+        "created": "Role given to a person",
+        "ended": "A person's role ended"
       },
       "guardian": {
-        "linked": "Parent linked",
-        "withdrawn": "Parent withdrew"
+        "linked": "Parent linked to a student",
+        "withdrawn": "Parent link withdrawn"
       },
       "unit": {
         "created": "Unit created"
@@ -964,6 +965,8 @@
     "invite-revoke-description": "The address can no longer accept this invite.",
     "invite-revoke-confirm": "Revoke",
     "client-name": "Name",
+    "client-id": "Client ID",
+    "client-id-copy": "Copy client ID",
     "client-status": "Status",
     "client-active": "Active",
     "client-revoked": "Revoked",
@@ -1221,6 +1224,7 @@
     "roles-overview-description": "Only an Owner gives the Owner and Admin roles.",
     "roles-overview-footer": "A person may hold more than one role.",
     "secret-copy": "Copy",
+    "secret-label": "Secret",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Optional, eight digits",
     "logins-footer": "A login card holds a login name and a one-time code.",
@@ -1312,6 +1316,7 @@
     "roles-search": "Find a person",
     "roles-empty": "No one holds a role yet.",
     "card-issue-title": "Login card",
+    "card-issue-action": "Issue a login card",
     "card-login-name": "Login name",
     "card-login-name-placeholder": "Login name",
     "card-reissue": "Reissue card",
@@ -1384,7 +1389,10 @@
     "locale-country": "Country",
     "locale-currency": "Currency",
     "locale-footer": "Every change is recorded in the audit trail.",
-    "homeroom-description": "One teacher leads each cohort."
+    "homeroom-description": "One teacher leads each cohort.",
+    "webhook-changes-description": "Your system is told each time one of these happens.",
+    "webhook-changes-none": "This client reads nothing a webhook sends, so edit its actions first.",
+    "webhook-client-none": "A webhook belongs to an API client, so create one first."
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1428,6 +1436,8 @@
     "message-hidden": "A teacher hid this message.",
     "message-edited": "Edited",
     "message-edit": "Edit",
+    "post-waiting-edit": "Edit announcement",
+    "library-edit-title": "Edit item",
     "message-save": "Save",
     "message-hide": "Hide",
     "hide-title": "Hide this message",
@@ -1720,7 +1730,7 @@
     "value": "Value",
     "open-letter": "Open SKL",
     "open-check": "Open check page",
-    "decide": "Graduation decision",
+    "decide": "Decide graduation",
     "decide-description": "The head's decision for {period}, for every graduating class group.",
     "decision": "Decision number",
     "decision-placeholder": "421.3/045/SMP.1/2027",
@@ -1933,6 +1943,7 @@
     "arabic-fraction": "Fraction slash",
     "arabic-minus": "Minus sign",
     "load-error": "We could not load this data.",
+    "load-error-title": "Something went wrong",
     "part-denied": "This part of the school is not open to you.",
     "loading": "Loading",
     "month": "Month",
@@ -1997,6 +2008,7 @@
     "subject": "Subjects",
     "explore": "Explore",
     "references": "References",
+    "references-description": "Open a source to read where this comes from.",
     "show": "Show",
     "grid": "Grid",
     "fullscreen": "Full screen",
@@ -2156,6 +2168,8 @@
     "preferences-kind": "Notice",
     "channel-push": "Push",
     "channel-email": "Email",
+    "channel-on": "On",
+    "channel-off": "Off",
     "kind-commentReply": "Replies to your comments",
     "kind-forumMention": "Mentions in a class",
     "kind-classAnnouncement": "Class announcements",
@@ -2254,6 +2268,7 @@
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
+    "interpretation-description": "What verse {count} means.",
     "meaning": "Meaning",
     "revelation": "Revelation place",
     "revelation-place": "{place, select, Meccan {Meccan} Medinan {Medinan} other {Unknown}}",
@@ -2268,7 +2283,9 @@
   },
   "Tryouts": {
     "title": "What try out do you want today?",
-    "metadata-description": "Choose a country, exam, and try out set from Nakafa.",
+    "hub-search-title": "Free Online Practice Exams with Instant Scores",
+    "metadata-description": "Timed practice exams, scored the moment you finish. Free and unlimited on Nakafa.",
+    "search-title": "Free {name} Practice Exam",
     "track-metadata-description": "Choose a {exam} try out set on Nakafa: timed, and scored the moment you finish.",
     "set-metadata-description": "Take {exam} {set} on Nakafa: a timed try out, scored the moment you finish.",
     "section-metadata-description": "Practice {section} from {exam} {set} on Nakafa: a timed try out, scored the moment you finish.",
@@ -2311,7 +2328,6 @@
     "set-column-questions": "Questions",
     "set-column-score": "Score",
     "set-column-status": "Status",
-    "set-sort-label": "Sort {column}",
     "set-sort-name-ascending": "A to Z",
     "set-sort-name-descending": "Z to A",
     "set-sort-questions-ascending": "Fewest",
@@ -2353,6 +2369,7 @@
   },
   "Player": {
     "navigator": "Questions",
+    "navigator-description": "Pick a number to open that question.",
     "navigator-open": "Open the question navigator, question {number}",
     "controls": "Question controls",
     "previous-question": "Previous question",
@@ -2658,6 +2675,10 @@
     "saved-description": "Search, edit or remove what Nina keeps."
   },
   "Toast": {
+    "offline-move": {
+      "title": "You are offline.",
+      "description": "Connect again to open this page."
+    },
     "chat-deleted": {
       "title": "This chat was deleted."
     },
@@ -3746,32 +3767,32 @@
   },
   "SEO": {
     "subject": {
-      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) | Nakafa",
+      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) - Nakafa",
       "description": "Learn {title} in {chapter, select, __EMPTY__ {} other {{chapter} }}{material} for {grade}. This page explains the concept, examples, and practice for checking understanding.",
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, learn, material, practice problems, exercises, education"
     },
     "exercise": {
-      "title": "{number, select, 0 {} other {Question {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
+      "title": "{number, select, 0 {} other {Question {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) - Nakafa",
       "description": "Take {material} {exam} exercise{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and explanations for checking your reasoning.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}exercise, practice questions, solutions, exam"
     },
     "exercise-program": {
-      "title": "{exam} Practice Questions | Nakafa",
+      "title": "{exam} Practice Questions - Nakafa",
       "description": "Choose {exam} practice domains for {category}. Each domain links to question sets with explanations for checking understanding.",
       "keywords": "{exam}, {category}, practice questions, question sets, explanations, exam preparation"
     },
     "curriculum": {
-      "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}} | Nakafa",
+      "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}} - Nakafa",
       "description": "Browse {title}{parent, select, __EMPTY__ {} other { in {parent}}}{program, select, __EMPTY__ {} other { for {program}}}. This curriculum index links learners to the relevant materials and practice routes.",
       "keywords": "{title}, {parent, select, __EMPTY__ {} other {{parent}, }}{program, select, __EMPTY__ {} other {{program}, }}curriculum, learning path, materials, practice"
     },
     "article": {
-      "title": "{title} - {category} | Nakafa",
+      "title": "{title} - {category} - Nakafa",
       "description": "Read {title} in {category}. This article presents context, data, and references readers can check.",
       "keywords": "{title}, {category}, analysis, facts, latest, research, information, news"
     },
     "quran": {
-      "title": "Surah {number}. {name} ({transliteration}){translation, select, __EMPTY__ {} other { - {translation}}} | Nakafa",
+      "title": "Surah {transliteration}{translation, select, __EMPTY__ {} other { ({translation})}}: Arabic and Translation - Nakafa",
       "description": "Read Surah {name} ({transliteration}) with verse-by-verse translation. {numberOfVerses} verses from the Holy Quran.",
       "keywords": "Surah {name}, Quran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }
@@ -3827,8 +3848,6 @@
   "SchoolInsight": {
     "title": "Insight",
     "class": "Class",
-    "pick": "Pick a class",
-    "pick-description": "Each student's standing shows here.",
     "competency": "Competency",
     "mastery": "Mastery",
     "evidence": "Evidence",
@@ -3853,11 +3872,26 @@
     "practice-sets": "Sets",
     "practice-mean": "Mean score",
     "practice-shared": "Shared",
+    "practice-unshared": "Not shared",
     "practice-share": "Share {topic} with your school",
     "practice-note": "Only the topics you switch on reach your teachers, and you can switch one off at any time.",
     "tags": "Competencies",
-    "tags-description": "Name the competency of each question. A question with none counts for its exam.",
+    "tags-description": "Name what each question tests before results are released, and a question left empty counts under its exam.",
     "exam": "Exam",
-    "question": "Question {number}"
+    "question": "Question {number}",
+    "no-class": "No class yet",
+    "no-class-description": "Insight shows how each student stands in a class, so it starts with one.",
+    "no-class-member": "Insight shows how each student stands in the classes you teach, so ask your admin to add you to one.",
+    "no-class-action": "Open classrooms",
+    "class-empty": "No released exam yet",
+    "class-empty-description": "Release the results of an exam this class sat, and each student's standing shows here.",
+    "exams-action": "Open exams",
+    "tags-note": "A question with no competency counts under its exam's name.",
+    "tags-empty": "Create an exam first, then name what its questions test.",
+    "tags-done": "Done",
+    "tags-none": "This exam has no questions yet.",
+    "exam-placeholder": "Choose an exam",
+    "question-placeholder": "Optional, such as Fractions",
+    "narratives-note": "Open a student to write what helps them next."
   }
 }

@@ -402,6 +402,18 @@ it("deletes the inbox rows of a deleted account, and keeps another account's", a
           })
         );
     await insert(owner);
+    await ctx.db.insert("noticeMails", {
+      change: "comment.replied",
+      dueAt: now,
+      expiresAt: now,
+      rank: 2,
+      recipientUserId: owner,
+    });
+    await ctx.db.insert("noticePreferences", {
+      channel: "email",
+      kind: "commentReply",
+      userId: owner,
+    });
     return insert(retained);
   });
 
@@ -415,4 +427,10 @@ it("deletes the inbox rows of a deleted account, and keeps another account's", a
 
   const rows = await t.run((ctx) => ctx.db.query("notifications").collect());
   expect(Arr.map(rows, ({ _id }) => _id)).toEqual([row]);
+  expect(await t.run((ctx) => ctx.db.query("noticeMails").collect())).toEqual(
+    []
+  );
+  expect(
+    await t.run((ctx) => ctx.db.query("noticePreferences").collect())
+  ).toEqual([]);
 });

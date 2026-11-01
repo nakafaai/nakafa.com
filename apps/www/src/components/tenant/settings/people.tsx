@@ -9,6 +9,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Select,
   SelectContent,
+  SelectEmpty,
   SelectGroup,
   SelectItem,
   SelectTrigger,
@@ -18,8 +19,8 @@ import { Array as Arr, Option, Schema } from "effect";
 import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
@@ -83,7 +84,7 @@ function SchoolPersonSelect() {
   return (
     <>
       {PaginatedQueryResult.isFailure(pagination) ? (
-        <DataFailure onRetry={reloadPage} />
+        <LoadFailure onRetry={reloadPage} />
       ) : null}
       <PersonSelect people={pagination.results}>
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (
@@ -120,7 +121,7 @@ function SchoolStudentSelect() {
   return (
     <>
       {PaginatedQueryResult.isFailure(pagination) ? (
-        <DataFailure onRetry={reloadPage} />
+        <LoadFailure onRetry={reloadPage} />
       ) : null}
       <PersonSelect people={pagination.results}>
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (
@@ -139,11 +140,7 @@ function SchoolStudentSelect() {
 function NoStudents() {
   const t = useTranslations("SchoolSettings");
 
-  return (
-    <p className="text-muted-foreground px-2 py-1.5 text-sm">
-      {t("student-picker-empty")}
-    </p>
-  );
+  return <SelectEmpty>{t("student-picker-empty")}</SelectEmpty>;
 }
 
 /**

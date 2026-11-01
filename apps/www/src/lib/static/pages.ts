@@ -10,6 +10,9 @@ const SEARCH_SEGMENT = "search";
 /** The sign-in page, which the sitemap leaves out because it is no content. */
 const SIGN_IN_SEGMENT = "auth";
 
+/** The try-out family segment, which every locale spells the same way. */
+const TRYOUT_SEGMENT = "try-out";
+
 /**
  * Whether a path is left out of the static build: the search screen, whose answer
  * depends on its query. A path is `/<locale>/<family>/...`. The sitemap lists the
@@ -18,6 +21,21 @@ const SIGN_IN_SEGMENT = "auth";
 export function isExcludedPath(path: string): boolean {
   const [, , family] = path.split("/");
   return family === SEARCH_SEGMENT;
+}
+
+/** The segments of a try-out section's path: `/<locale>/try-out/<country>/<exam>/<track>/<set>/<section>`. */
+const TRYOUT_SECTION_SEGMENTS = 8;
+
+/**
+ * Whether the sitemap leaves a page out that the build still writes: a try-out
+ * section, which the head marks as not indexed, so its set stands for it in search.
+ */
+export function isUnlistedPath(path: string): boolean {
+  const segments = path.split("/");
+  return (
+    segments[2] === TRYOUT_SEGMENT &&
+    segments.length === TRYOUT_SECTION_SEGMENTS
+  );
 }
 
 /**

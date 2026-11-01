@@ -5,12 +5,8 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  Table,
-  TableBody,
   TableCell,
   TableFooter,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr, Option } from "effect";
@@ -24,9 +20,16 @@ import {
 } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
 import { columnAlign } from "@/components/shared/table/align";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import type { GraduationLine } from "@/components/tenant/graduation/sheet";
 import { checkAddress } from "@/components/tenant/reports/check";
+
+/** The columns of a transcript. */
+const subjectColumns =
+  tableColumns<NonNullable<GraduationLine["transcript"]>["subjects"][number]>();
 
 /**
  * The open student's graduation: whether a NISN is on file, their SKL's number and state, what
@@ -88,45 +91,38 @@ export function GraduationLineDetail({
               {t("transcript-empty")}
             </p>
           ) : (
-            <TableFrame>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className={columnAlign({ align: "start" })}>
-                      {t("subject")}
-                    </TableHead>
-                    <TableHead className={columnAlign()}>
-                      {t("value")}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Arr.map(found.transcript.subjects, (subject) => (
-                    <TableRow key={subject.subject}>
-                      <TableCell
-                        className={columnAlign({ align: "start" })}
-                        dir="auto"
-                      >
-                        {subject.subject}
+            <TableFiltersProvider>
+              <TableFrame>
+                <DataTable
+                  columns={[
+                    subjectColumns.text((subject) => subject.subject, {
+                      cell: (info) => <span dir="auto">{info.getValue()}</span>,
+                      header: t("subject"),
+                      id: "subject",
+                    }),
+                    subjectColumns.number((subject) => subject.value, {
+                      cell: (info) => twoDecimals(info.getValue()),
+                      header: t("value"),
+                      id: "value",
+                    }),
+                  ]}
+                  data={found.transcript.subjects}
+                  plain
+                  rowId={(subject) => subject.subject}
+                >
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell className={columnAlign({ align: "start" })}>
+                        {t("average")}
                       </TableCell>
                       <TableCell className={columnAlign()}>
-                        {twoDecimals(subject.value)}
+                        {twoDecimals(found.transcript.average)}
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell className={columnAlign({ align: "start" })}>
-                      {t("average")}
-                    </TableCell>
-                    <TableCell className={columnAlign()}>
-                      {twoDecimals(found.transcript.average)}
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
-            </TableFrame>
+                  </TableFooter>
+                </DataTable>
+              </TableFrame>
+            </TableFiltersProvider>
           )}
         </div>
       </PaneBody>

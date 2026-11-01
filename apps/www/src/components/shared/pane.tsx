@@ -9,7 +9,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { TableRow } from "@repo/design-system/components/ui/table";
 import { Option } from "effect";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { usePaneMode, usePanes } from "@/components/shared/panes";
 
@@ -165,6 +165,15 @@ const ROW_CONTROLS =
   "a, button, input, label, select, textarea, [role=menuitem]";
 
 /**
+ * Whether a press landed on the row itself: not on a control of its own, and not on a menu or a dialog the row opened,
+ * whose press React carries through the row although it stands elsewhere on the page.
+ */
+export const pressesRow = (event: MouseEvent<HTMLTableRowElement>) =>
+  event.target instanceof Element &&
+  event.currentTarget.contains(event.target) &&
+  event.target.closest(ROW_CONTROLS) === null;
+
+/**
  * A data table's row on a page with panes: pressing it opens the row beside the list,
  * unless the press lands on a control of its own, and the open row stays marked.
  */
@@ -185,13 +194,9 @@ export function PaneTableRow({
       className="h-12"
       data-state={isOpen ? "selected" : undefined}
       onClick={(event) => {
-        if (
-          event.target instanceof Element &&
-          event.target.closest(ROW_CONTROLS) !== null
-        ) {
-          return;
+        if (pressesRow(event)) {
+          show(id);
         }
-        show(id);
       }}
     >
       {children}

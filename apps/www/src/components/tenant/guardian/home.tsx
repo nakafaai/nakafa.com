@@ -16,19 +16,9 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { DataFailure } from "@/components/shared/failure";
 import {
   PaneBody,
   PaneFooter,
@@ -43,13 +33,12 @@ import {
   usePanes,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
-import { columnAlign } from "@/components/shared/table/align";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import {
   type ChildItem,
@@ -67,7 +56,7 @@ const SOURCE = "components/tenant/guardian/home";
 type ChildGrade = Ref.Returns<typeof guardians.family.grades>[number];
 
 /** The columns of the children table. */
-const childColumns = createColumnHelper<typeof dataTableFeatures, ChildItem>();
+const childColumns = tableColumns<ChildItem>();
 
 /**
  * The parent home (ADR 0034): the linked children in a table, and the child a press opens
@@ -93,7 +82,7 @@ export function GuardianHome() {
         />
         <div className="flex w-full min-w-0 flex-1 flex-col">
           {QueryResult.isFailure(children) ? (
-            <DataFailure onRetry={reloadPage} />
+            <LoadFailure onRetry={reloadPage} />
           ) : null}
           {QueryResult.isSuccess(children) ? (
             <GuardianChildren items={children.value} />
@@ -117,16 +106,15 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
     );
   }
 
-  const columns = childColumns.columns([
-    childColumns.accessor((child) => child.student.name, {
+  const columns = [
+    childColumns.text((child) => child.student.name, {
       cell: (info) => (
         <PaneOpen id={info.row.original.linkId}>{info.getValue()}</PaneOpen>
       ),
       header: t("child"),
       id: "child",
-      sortFn: "text",
     }),
-    childColumns.accessor((child) => child.status, {
+    childColumns.values((child) => child.status, {
       cell: (info) => (
         <TableStatus
           icon={LINK_STATUS_LOOKS[info.getValue()].icon}
@@ -134,22 +122,15 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
           tone={LINK_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(LinkStatus.literals, (status) => ({
-            icon: LINK_STATUS_LOOKS[status].icon,
-            label: t(`status-${status}`),
-            value: status,
-          }))}
-          title={t("status")}
-        />
-      ),
+      header: t("status"),
       id: "status",
+      options: Arr.map(LinkStatus.literals, (status) => ({
+        icon: LINK_STATUS_LOOKS[status].icon,
+        label: t(`status-${status}`),
+        value: status,
+      })),
     }),
-  ]);
+  ];
 
   return (
     <Panes>
@@ -299,7 +280,7 @@ function GuardianGrades({ child }: { child: ChildItem }) {
     <>
       <PaneBody>
         {QueryResult.isFailure(grades) ? (
-          <DataFailure onRetry={reloadPage} />
+          <LoadFailure onRetry={reloadPage} />
         ) : null}
         {QueryResult.isSuccess(grades) ? (
           <GuardianGradeTable grades={grades.value} />
@@ -364,6 +345,9 @@ function GuardianGrades({ child }: { child: ChildItem }) {
   );
 }
 
+/** The columns of a child's grades. */
+const gradeColumns = tableColumns<ChildGrade>();
+
 /** The child's released grades in a plain table, or one sentence while none is released. */
 function GuardianGradeTable({ grades }: { grades: readonly ChildGrade[] }) {
   const t = useTranslations("SchoolGuardians");
@@ -371,31 +355,29 @@ function GuardianGradeTable({ grades }: { grades: readonly ChildGrade[] }) {
     return <p className="text-muted-foreground text-sm">{t("grades-empty")}</p>;
   }
   return (
-    <TableFrame>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className={columnAlign({ align: "start" })}>
-              {t("grade-class")}
-            </TableHead>
-            <TableHead className={columnAlign()}>{t("grade-value")}</TableHead>
-            <TableHead className={columnAlign()}>{t("grade-note")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(grades, (grade) => (
-            <TableRow key={grade.id}>
-              <TableCell className={columnAlign({ align: "start" })} dir="auto">
-                {grade.className}
-              </TableCell>
-              <TableCell className={columnAlign()}>{grade.value}</TableCell>
-              <TableCell className={columnAlign()}>
-                {grade.band ?? t(`kktp-${grade.kktp}`)}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableFrame>
+    <TableFiltersProvider>
+      <TableFrame>
+        <DataTable
+          columns={[
+            gradeColumns.text((grade) => grade.className, {
+              cell: (info) => <span dir="auto">{info.getValue()}</span>,
+              header: t("grade-class"),
+              id: "class",
+            }),
+            gradeColumns.number((grade) => grade.value, {
+              header: t("grade-value"),
+              id: "value",
+            }),
+            gradeColumns.text(
+              (grade) => grade.band ?? t(`kktp-${grade.kktp}`),
+              { header: t("grade-note"), id: "note" }
+            ),
+          ]}
+          data={grades}
+          plain
+          rowId={(grade) => grade.id}
+        />
+      </TableFrame>
+    </TableFiltersProvider>
   );
 }

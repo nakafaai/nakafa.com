@@ -215,15 +215,26 @@ export const ApiGrade = Schema.Struct({
   value: Schema.Finite,
 });
 
+/** What one field of a change can hold at its end. */
+const CHANGE_VALUES = [
+  Schema.Boolean,
+  Schema.Finite,
+  Schema.Null,
+  Schema.String,
+] as const;
+
+/** One field of a change: a value, or a flat record of values, as a grant's role, scope and term are. */
+const ChangeField = Schema.Union([
+  ...CHANGE_VALUES,
+  Schema.Record(Schema.String, Schema.Union(CHANGE_VALUES)),
+]);
+
 /**
  * One published change of the school's journal, the same event a webhook posts: its IDs,
  * enums and reason codes, never a name, an email or free text (ADR 0016).
  */
 export const ApiChange = Schema.Struct({
-  change: Schema.Record(
-    Schema.String,
-    Schema.Union([Schema.Boolean, Schema.Finite, Schema.Null, Schema.String])
-  ),
+  change: Schema.Record(Schema.String, ChangeField),
   id: Schema.String,
   occurredAt: Schema.String,
   subject: Schema.Struct({ id: Schema.String, kind: Schema.String }),

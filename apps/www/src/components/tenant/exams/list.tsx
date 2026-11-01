@@ -3,11 +3,11 @@ import {
   QueryResult,
   usePaginatedQuery,
 } from "@confect/react";
+import { TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime, Option } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
@@ -15,15 +15,17 @@ import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { useFormatTimeZone } from "@/components/shared/table/calendar";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   CreateExam,
@@ -41,7 +43,7 @@ import { Link } from "@/lib/routing/link";
 const EXAM_PAGE_SIZE = 20;
 
 /** The columns of the exams table. */
-const examColumns = createColumnHelper<typeof dataTableFeatures, ListedExam>();
+const examColumns = tableColumns<ListedExam>();
 
 /**
  * The exams of the school, newest first, each with its title, its unit, its questions and its day. An exam that the
@@ -133,6 +135,7 @@ function ExamListRows({
   saving: readonly ListedExam["id"][];
 }) {
   const t = useTranslations("Exams");
+  const formatZone = useFormatTimeZone();
   const format = useFormatter();
   const tenant = useTenant();
   const viewer = useViewerQuery();
@@ -153,59 +156,55 @@ function ExamListRows({
         );
   const places = Arr.dedupe(Arr.map(rows, (exam) => placeOf(exam.scope)));
   if (failed && Arr.isReadonlyArrayEmpty(rows)) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
 
-  const columns = examColumns.columns([
-    examColumns.accessor((exam) => exam.title, {
+  const columns = [
+    examColumns.text((exam) => exam.title, {
       cell: (info) => (
-        <span className="font-medium" dir="auto">
+        <TableTitle
+          icon={TaskEdit01Icon}
+          tone={info.row.original.questionCount === 0 ? "warning" : "neutral"}
+        >
           {Arr.contains(saving, info.row.original.id) ? (
-            <span className="text-muted-foreground">{info.getValue()}</span>
+            <span className="text-muted-foreground" dir="auto">
+              {info.getValue()}
+            </span>
           ) : (
             <Link
               className="underline-offset-4 hover:underline"
+              dir="auto"
               params={{ exam: info.row.original.id, slug: tenant.slug }}
               to="/school/$slug/exams/$exam/edit"
             >
               {info.getValue()}
             </Link>
           )}
-        </span>
+        </TableTitle>
       ),
-      filterFn: "includesString",
       header: t("title-label"),
       id: "title",
-      sortFn: "text",
     }),
-    examColumns.accessor((exam) => placeOf(exam.scope), {
+    examColumns.values((exam) => placeOf(exam.scope), {
       cell: (info) => <span dir="auto">{placeName(info.getValue())}</span>,
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="unit"
-          options={Arr.zipWith(
-            places,
-            namedOptions(places, UNIT_ICONS),
-            (place, option) => ({
-              icon: option.icon,
-              label: placeName(place),
-              value: place,
-            })
-          )}
-          title={t("unit")}
-        />
-      ),
+      header: t("unit"),
       id: "unit",
+      options: Arr.zipWith(
+        places,
+        namedOptions(places, UNIT_ICONS),
+        (place, option) => ({
+          icon: option.icon,
+          label: placeName(place),
+          value: place,
+        })
+      ),
     }),
-    examColumns.accessor((exam) => exam.questionCount, {
+    examColumns.number((exam) => exam.questionCount, {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
-      enableSorting: false,
       header: t("questions-column"),
       id: "questions",
     }),
-    examColumns.accessor((exam) => exam.createdAt, {
+    examColumns.days((exam) => exam.createdAt, {
       cell: (info) => (
         <span className="text-muted-foreground tabular-nums">
           {format.dateTime(
@@ -214,19 +213,16 @@ function ExamListRows({
           )}
         </span>
       ),
-      enableSorting: false,
       header: t("created-column"),
       id: "created",
+      timeZone: formatZone,
     }),
-    examColumns.display({
-      cell: (info) =>
-        Arr.contains(saving, info.row.original.id) ? null : (
-          <ExamRowMenu exam={info.row.original} />
-        ),
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    examColumns.menu((info) =>
+      Arr.contains(saving, info.row.original.id) ? null : (
+        <ExamRowMenu exam={info.row.original} />
+      )
+    ),
+  ];
 
   return (
     <>
