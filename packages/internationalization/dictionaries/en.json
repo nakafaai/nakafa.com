@@ -3563,6 +3563,7 @@
     "metadata-title": "Nakafa Pricing: Free and Pro",
     "metadata-description": "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online try outs.",
     "breadcrumb": "Pricing",
+    "price-line": "{free} costs nothing. {pro} costs {monthly} a month, or {yearly} a year, before tax.",
     "checkout-line": "Current price and checkout: {url}",
     "comparison-title": "What {price} comes to",
     "drink-title": "About {count} {item}",

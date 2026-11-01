@@ -3563,6 +3563,7 @@
     "metadata-title": "Nakafa Preise: Kostenlos und Pro",
     "metadata-description": "Vergleiche Nakafa Kostenlos und Pro für Lernmaterialien, Übungsaufgaben, den KI-Tutor Nina und Online-Probetests.",
     "breadcrumb": "Preise",
+    "price-line": "{free} kostet nichts. {pro} kostet {monthly} im Monat oder {yearly} im Jahr, zuzüglich Steuern.",
     "checkout-line": "Aktueller Preis und Bezahlung: {url}",
     "comparison-title": "So viel sind {price}",
     "drink-title": "Etwa {count} {item}",

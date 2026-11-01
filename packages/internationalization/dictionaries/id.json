@@ -3563,6 +3563,7 @@
     "metadata-title": "Harga Nakafa: Gratis dan Pro",
     "metadata-description": "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan try out online.",
     "breadcrumb": "Harga",
+    "price-line": "{free} tanpa biaya. {pro} seharga {monthly} per bulan, atau {yearly} per tahun, belum termasuk pajak.",
     "checkout-line": "Harga saat ini dan pembayaran: {url}",
     "comparison-title": "{price} itu segini",
     "drink-title": "Kira-kira {count} {item}",
