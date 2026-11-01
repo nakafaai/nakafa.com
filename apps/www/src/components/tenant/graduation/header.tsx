@@ -19,9 +19,10 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Stream, Tuple } from "effect";
-import { type ReactNode, useState, useTransition } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useLongAction } from "@/components/shared/pending";
 import { TableSearch } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { GraduationDecisionDialog } from "@/components/tenant/graduation/decision";
@@ -103,8 +104,8 @@ function GraduationActions({
   const { slug } = useTenant();
   const issue = useMutation(records.graduations.issue);
   const [isDeciding, setIsDeciding] = useState(false);
-  const [isIssuing, startIssuing] = useTransition();
-  const [isExporting, startExporting] = useTransition();
+  const [isIssuing, startIssuing] = useLongAction();
+  const [isExporting, startExporting] = useLongAction();
   const canDecide = Arr.contains(overview.can, "graduation.decide");
   const canIssue = Arr.contains(overview.can, "graduation.issue");
 
