@@ -213,7 +213,7 @@ function DataTableHead<TData extends RowData>({
         index,
         Option.getOrElse(
           Arr.findLastIndex(
-            header.headerGroup.headers,
+            header.headerGroup?.headers ?? [],
             (head) => head.column.columnDef.meta?.filter !== undefined
           ),
           () => index

@@ -102,10 +102,7 @@ export function HeadPanel({
   return (
     <Popover>
       <PopoverTrigger render={trigger} />
-      <PopoverContent
-        align={use(HeadMenuContext)}
-        className="w-auto gap-0 p-0"
-      >
+      <PopoverContent align={use(HeadMenuContext)} className="w-auto gap-0 p-0">
         {children}
       </PopoverContent>
     </Popover>
