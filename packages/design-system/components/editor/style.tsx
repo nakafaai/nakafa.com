@@ -10,6 +10,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -122,6 +123,7 @@ export function RichEditorStyle({
         }
       >
         <DropdownMenuRadioGroup onValueChange={apply} value={used}>
+          <DropdownMenuLabel>{labels.style}</DropdownMenuLabel>
           {Arr.map(styles, (style) => (
             <DropdownMenuRadioItem key={style.name} value={style.name}>
               <HugeIcons icon={style.icon} />

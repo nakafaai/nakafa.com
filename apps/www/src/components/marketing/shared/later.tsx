@@ -101,8 +101,11 @@ function LaterBody<Props extends object>({
  * hydrates it at the lowest priority, in small slices, so a phone never pays for a
  * part of the page that the reader has not reached. The browser also skips the
  * layout of a section far from the screen, and holds the height of one screen for
- * it until then. The boundary sits under a box that holds no state, so nothing
- * that changes here reaches the section's HTML while it waits.
+ * it until then. That skipping also clips the box at its padding edge, so the box
+ * reaches a little past its section, with the same margin taken back, and a ring or
+ * a shadow on the section's last line stays whole. The boundary sits under a box that
+ * holds no state, so nothing that changes here reaches the section's HTML while it
+ * waits.
  */
 export function LaterSection<Props extends object>({
   children,
@@ -146,7 +149,7 @@ export function LaterSection<Props extends object>({
 
   return (
     <div
-      className="[contain-intrinsic-block-size:auto_100lvh] [content-visibility:auto]"
+      className="-my-2 py-2 [contain-intrinsic-block-size:auto_100lvh] [content-visibility:auto]"
       ref={box}
     >
       <Suspense fallback={null}>

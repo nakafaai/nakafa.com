@@ -18,6 +18,7 @@ import {
 } from "@/components/exams/sitting/answer";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import {
+  ReaderPrimer,
   SittingDocument,
   useReaderLoaded,
 } from "@/components/exams/sitting/document";
@@ -45,6 +46,7 @@ import {
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
+import { HeldPaper, usePaperText } from "@/components/player/held";
 import { readQuestionIds } from "@/components/player/ids";
 import {
   PlayerQuestion,
@@ -54,41 +56,28 @@ import {
 } from "@/components/player/question";
 
 /**
- * Keeps the paper out of sight until it can draw its first question: the reader has loaded, and the first
- * prompt has answered, as the prompts of a paper answer together. So the student meets the paper whole, as the
- * try-out shows its questions, and no option moves when its prompt arrives. A prompt that cannot be read yet
- * answers too, with the failure that the question shows as nothing.
+ * The paper of a sitting, out of sight until it can draw its first screen: the reader has loaded, and the prompts
+ * of its first questions have answered. So the student meets the paper whole, as the try-out shows its questions,
+ * and no option moves when its prompt arrives. A prompt that cannot be read yet answers too, with the failure that
+ * the question shows as nothing.
  */
 export function PaperReveal({
   children,
-  deviceId,
   paper,
-  sittingId,
-  slug,
 }: {
   readonly children: ReactNode;
-  readonly deviceId: string;
   readonly paper: PaperValue;
-  readonly sittingId: GenericId.GenericId<"examSittings">;
-  readonly slug: TenantSlug;
 }) {
   const loaded = useReaderLoaded(true);
-  const first = Arr.head(paper.questions);
-  const prompt = useQuery(
-    exams.sittings.prompt,
-    Option.isSome(first)
-      ? { deviceId, questionId: first.value.id, sittingId, slug }
-      : "skip"
-  );
 
   return (
-    <div
-      className={
-        loaded && !QueryResult.isLoading(prompt) ? undefined : "invisible"
-      }
+    <HeldPaper
+      keys={Arr.map(paper.questions, (question) => question.id)}
+      ready={loaded}
     >
+      <ReaderPrimer />
       {children}
-    </div>
+    </HeldPaper>
   );
 }
 
@@ -120,6 +109,7 @@ export const SittingQuestion = memo(function SittingQuestion({
     sittingId,
     slug,
   });
+  usePaperText(question.id, !QueryResult.isLoading(prompt));
   const choose = useChooseAnswer();
   const flagQuestion = useFlagQuestion({ deviceId, sittingId, slug });
   const locked = usePaperLocked();

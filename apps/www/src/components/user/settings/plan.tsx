@@ -21,7 +21,6 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { PlanPayments } from "@/components/user/settings/payments";
 import { UpgradePlanCard } from "@/components/user/settings/upgrade";
 import { reportClientException } from "@/lib/analytics/client";
 import { useBillingNavigation } from "@/lib/billing/checkout";
@@ -102,7 +101,6 @@ function PassPlanCard({ endsAt }: { endsAt: number }) {
     >
       <CardSectionFooter hint={t("plan-pass-footer")}>
         <CardSectionActions>
-          <PlanPayments />
           <Button
             disabled={billing.isPending || !isActiveLocale(locale)}
             onClick={handleExtend}
@@ -185,7 +183,7 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
 /**
  * The footer of a plan Xendit bills, which no provider portal manages: the
  * receipts, and the cancel that ends the plan with its paid period once the
- * learner confirms. A plan that already ends says so and offers the receipts.
+ * learner confirms. A plan that already ends says so.
  */
 function XenditPlanFooter({
   ending,
@@ -202,19 +200,12 @@ function XenditPlanFooter({
   ).withOptimisticUpdate(cancelPlanChange);
 
   if (ending) {
-    return (
-      <CardSectionFooter hint={t("plan-xendit-ending-footer")}>
-        <CardSectionActions>
-          <PlanPayments />
-        </CardSectionActions>
-      </CardSectionFooter>
-    );
+    return <CardSectionFooter hint={t("plan-xendit-ending-footer")} />;
   }
 
   return (
     <CardSectionFooter hint={t("plan-xendit-footer")}>
       <CardSectionActions>
-        <PlanPayments />
         <Button
           onClick={() => setIsConfirming(true)}
           type="button"

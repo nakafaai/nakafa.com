@@ -16,6 +16,15 @@ export class GradeReleased extends Schema.TaggedError<GradeReleased>()(
   refusal("GRADE_RELEASED", "This grade is already released.")
 ) {}
 
+/** A change to a scheme version that has judged a grade, which keeps the version that judged it. */
+export class SchemeUsed extends Schema.TaggedError<SchemeUsed>()(
+  "SchemeUsed",
+  refusal(
+    "SCHEME_USED",
+    "This version has judged grades, so it stays as it is."
+  )
+) {}
+
 /** A scheme version that does not take effect after the school's newest one, so it would never be in force. */
 export class SchemeNotLater extends Schema.TaggedError<SchemeNotLater>()(
   "SchemeNotLater",
