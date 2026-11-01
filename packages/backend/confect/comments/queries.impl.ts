@@ -3,9 +3,11 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
+import { readCommentPlace } from "@repo/backend/confect/comments/place";
 import spec from "@repo/backend/confect/comments/queries.spec";
 import {
   type CommentDoc,
+  findComment,
   isCommentLikedBy,
 } from "@repo/backend/confect/comments/rows";
 import type { userDataValidator } from "@repo/backend/confect/lib/validators/user";
@@ -13,6 +15,7 @@ import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import { profileAccess } from "@repo/backend/confect/users/profile";
+import { materialLayer } from "@repo/backend/content/material/confect";
 import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, HashMap, Layer, Option, Struct } from "effect";
 
@@ -63,6 +66,38 @@ const withAuthors = Effect.fn("comments.queries.withAuthors")(function* (
     })
   );
 });
+
+/** Reads one comment as a list shows it, or null once it is deleted. */
+const getComment = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "getComment",
+  Effect.fn("comments.queries.getComment")(function* ({ commentId }) {
+    const comment = yield* findComment(commentId);
+    if (comment === null) {
+      return null;
+    }
+    const viewer = yield* getOptionalAppUserForRead();
+    const rows = yield* withAuthors([comment], viewer?.appUser._id ?? null);
+    return Option.getOrNull(Arr.head(rows));
+  })
+);
+
+/** Reads the page that shows a comment, which the inbox opens through its own address. */
+const getCommentPlace = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "getCommentPlace",
+  Effect.fn("comments.queries.getCommentPlace")(function* ({
+    appLocale,
+    commentId,
+  }) {
+    return yield* readCommentPlace(commentId, appLocale).pipe(
+      Effect.provide(materialLayer),
+      Effect.orDie
+    );
+  })
+);
 
 /** Reads one page of the top-level comments of a slug, newest first. Replies are read by thread. */
 const getCommentsBySlug = FunctionImpl.make(
@@ -141,6 +176,8 @@ const getCommentsByUserId = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(getComment),
+  Layer.provide(getCommentPlace),
   Layer.provide(getCommentsBySlug),
   Layer.provide(getCommentReplies),
   Layer.provide(getCommentsByUserId),

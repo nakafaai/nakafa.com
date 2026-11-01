@@ -13,6 +13,7 @@ import {
   NOW,
   nf,
   type PersonId,
+  schoolViews,
   storedRows,
 } from "@repo/backend/test/inbox";
 import { scheduledJobs, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -128,7 +129,7 @@ describe("notifications/inbox readAll", () => {
           paginationOpts: { cursor: null, numItems: 10 },
           slug: nf,
         });
-        expect(Arr.map(own.page, (item) => item.subject)).toEqual([
+        expect(Arr.map(schoolViews(own.page), (item) => item.subject)).toEqual([
           { id: anaNf, kind: "person" },
         ]);
         vi.setSystemTime(NOW + 4000);

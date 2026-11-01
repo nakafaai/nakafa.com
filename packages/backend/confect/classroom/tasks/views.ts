@@ -81,6 +81,7 @@ export const taskView = Effect.fn("classroom.tasks.view")(function* (
   const keys = yield* schoolKeys(task.tenantId);
   const mine = yield* ownSubmission(task);
   return {
+    category: task.category ?? null,
     deadline: task.deadline,
     handedIn: task.handedIn,
     id: task._id,

@@ -14,12 +14,13 @@ import { findComment } from "@repo/backend/confect/comments/rows";
 import { threadOf } from "@repo/backend/confect/comments/thread";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
+import { noticeReply } from "@repo/backend/confect/notifications/reply";
 import {
   LEARNER_TEXT_MAX_LENGTH,
   readLearnerText,
 } from "@repo/backend/confect/writing/text";
 import { cleanSlug } from "@repo/utilities/slug";
-import { Effect, Layer, Result } from "effect";
+import { Clock, Effect, Layer, Result } from "effect";
 
 /** The comment with this id. A missing comment gives the same answer to every learner. */
 const readComment = Effect.fn("comments.mutations.readComment")(function* (
@@ -38,6 +39,7 @@ const readComment = Effect.fn("comments.mutations.readComment")(function* (
 /**
  * Adds a top-level comment or a reply. A reply names its parent and the top-level
  * comment of its thread, so every reply, also a reply to a reply, sits in one thread.
+ * The author of the parent gets one inbox row for the reply, unless they wrote it.
  */
 const addComment = FunctionImpl.make(
   databaseSchema,
@@ -70,7 +72,7 @@ const addComment = FunctionImpl.make(
       });
     }
     // The trigger keeps the reply count of the thread's top-level comment.
-    return yield* writer
+    const commentId = yield* writer
       .table("comments")
       .insert({
         slug: cleanedSlug,
@@ -87,6 +89,14 @@ const addComment = FunctionImpl.make(
         replyCount: 0,
       })
       .pipe(Effect.orDie);
+    if (parentComment !== null && parentComment.userId !== user.appUser._id) {
+      yield* noticeReply(
+        commentId,
+        parentComment.userId,
+        yield* Clock.currentTimeMillis
+      );
+    }
+    return commentId;
   })
 );
 
