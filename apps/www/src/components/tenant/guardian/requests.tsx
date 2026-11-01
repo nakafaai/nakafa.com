@@ -105,7 +105,15 @@ export function ParentRequests({
                   options: kindOptions,
                 }),
                 parentColumns.text((request) => request.text, {
-                  cell: (info) => <span dir="auto">{info.getValue()}</span>,
+                  cell: (info) => (
+                    <span
+                      className="block max-w-xs truncate"
+                      dir="auto"
+                      title={info.getValue()}
+                    >
+                      {info.getValue()}
+                    </span>
+                  ),
                   header: t("request-text"),
                   id: "text",
                 }),
@@ -275,7 +283,15 @@ export function WaitingRequests({
               options: kindOptions,
             }),
             waitingColumns.text((request) => request.text, {
-              cell: (info) => <span dir="auto">{info.getValue()}</span>,
+              cell: (info) => (
+                <span
+                  className="block max-w-xs truncate"
+                  dir="auto"
+                  title={info.getValue()}
+                >
+                  {info.getValue()}
+                </span>
+              ),
               header: t("request-text"),
               id: "text",
             }),

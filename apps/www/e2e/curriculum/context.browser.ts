@@ -98,17 +98,9 @@ test("a lesson shows its curriculum path from its static page, with no read", as
                 .locator("aside")
                 .getByRole("link", { name: MATERIAL_TITLE_PATTERN });
               yield* Effect.promise(() => expect(header).toHaveCount(1));
-              // The router writes the hint's tilde as %7E, which decodes to the same hint.
+              // The link shows the canonical lesson; a press keeps the hint.
               yield* Effect.promise(() =>
-                expect
-                  .poll(async () => {
-                    const target = new URL(
-                      (await header.getAttribute("href")) ?? "",
-                      page.url()
-                    );
-                    return [target.pathname, target.searchParams.get("ctx")];
-                  })
-                  .toStrictEqual([MATERIAL_PATH, MATERIAL_CONTEXT])
+                expect(header).toHaveAttribute("href", MATERIAL_PATH)
               );
               const titleAfter = yield* Effect.promise(() =>
                 title.boundingBox()
