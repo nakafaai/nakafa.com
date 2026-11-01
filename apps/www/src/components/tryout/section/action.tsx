@@ -1,15 +1,21 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
+import { Option } from "effect";
 import type { Locale } from "use-intl";
 import { useTranslations } from "use-intl";
 import { TryoutPageLink } from "@/components/tryout/route/link";
-import type { TryoutPageAddress } from "@/components/tryout/route/path";
+import {
+  getTryoutPageTarget,
+  type TryoutPageAddress,
+} from "@/components/tryout/route/path";
+import { useAnswerPress } from "@/components/tryout/runtime/start";
 import type { TryoutSectionAttempt } from "@/components/tryout/runtime/types";
 import { StartSectionButton } from "@/components/tryout/section/start";
 import type { TryoutSummarySection } from "@/components/tryout/section/summary";
+import { TryoutActionName } from "@/components/tryout/set/name";
 import {
   StartTryoutButton,
   type StartTryoutRequest,
@@ -124,24 +130,32 @@ function TryoutReturnAction({
 
 /** Starts a ready section or links to the active section already in progress. */
 function StartOrResumeSectionCta({ value }: StartOrResumeSectionCtaProps) {
-  const tTryouts = useTranslations("Tryouts");
   const resumeAddress = getResumeAddress(value);
   const resumeSectionKey = value.activeAttempt.resumeSectionKey;
   if (resumeAddress && resumeSectionKey) {
-    return (
-      <TryoutPageLink
-        className={cn(buttonVariants(), "w-full sm:w-auto")}
-        {...resumeAddress}
-      >
-        {tTryouts("continue-cta")}
-      </TryoutPageLink>
-    );
+    return <ResumeSectionLink address={resumeAddress} />;
   }
   return (
     <StartSectionButton
       attemptId={value.activeAttempt.attemptId}
       sectionKey={value.section.sectionKey}
     />
+  );
+}
+
+/** Links to the section the running attempt continues in, and takes a press that waited for the read. */
+function ResumeSectionLink({ address }: { address: TryoutPageAddress }) {
+  const navigate = useNavigate();
+  useAnswerPress(() => {
+    Option.map(getTryoutPageTarget(address), (target) => navigate(target));
+  });
+  return (
+    <TryoutPageLink
+      className={cn(buttonVariants(), "w-full sm:w-auto")}
+      {...address}
+    >
+      <TryoutActionName name="continue-cta" />
+    </TryoutPageLink>
   );
 }
 
