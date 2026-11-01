@@ -82,7 +82,7 @@ const placedOf = (
 };
 
 /** The questions of a form in order, numbered from one. A heading or a section is no question. */
-export const placedQuestionsOf = (items: readonly (typeof FormItem.Type)[]) =>
+const placedQuestionsOf = (items: readonly (typeof FormItem.Type)[]) =>
   Arr.map(
     Arr.getSomes(
       Arr.map(items, (item) =>
