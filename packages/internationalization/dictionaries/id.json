@@ -435,6 +435,7 @@
     "group-all": "Semua kelompok",
     "try-action": "Coba sebagai siswa",
     "exam-actions": "Aksi ujian",
+    "exam-full": "Satu ujian memuat paling banyak {count} soal.",
     "delete-action": "Hapus ujian",
     "delete-title": "Hapus ujian ini?",
     "delete-description": "Semua soal dan gambarnya ikut terhapus permanen.",
@@ -2771,6 +2772,10 @@
     "school-refusal-cohort-has-homeroom": {
       "title": "Rombel ini sudah punya wali kelas.",
       "description": "Hapus wali kelas yang sekarang untuk memilih yang lain."
+    },
+    "exam-full": {
+      "title": "Ujian ini sudah penuh.",
+      "description": "Hapus satu soal untuk menambah soal."
     },
     "action-error": {
       "title": "Tindakan ini belum berhasil.",

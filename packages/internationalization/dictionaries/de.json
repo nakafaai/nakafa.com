@@ -435,6 +435,7 @@
     "group-all": "Alle Gruppen",
     "try-action": "Als Schüler testen",
     "exam-actions": "Prüfungsaktionen",
+    "exam-full": "Eine Prüfung fasst höchstens {count} Fragen.",
     "delete-action": "Prüfung löschen",
     "delete-title": "Diese Prüfung löschen?",
     "delete-description": "Ihre Fragen und Bilder werden endgültig gelöscht.",
@@ -2771,6 +2772,10 @@
     "school-refusal-cohort-has-homeroom": {
       "title": "Klasse hat schon eine Lehrkraft.",
       "description": "Die aktuelle Lehrkraft muss zuerst entfernt werden."
+    },
+    "exam-full": {
+      "title": "Diese Prüfung ist voll.",
+      "description": "Entferne eine Frage, um neue hinzuzufügen."
     },
     "action-error": {
       "title": "Aktion nicht abgeschlossen.",

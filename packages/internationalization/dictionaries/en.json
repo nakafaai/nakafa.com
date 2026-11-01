@@ -435,6 +435,7 @@
     "group-all": "All groups",
     "try-action": "Try as student",
     "exam-actions": "Exam actions",
+    "exam-full": "An exam holds {count} questions at most.",
     "delete-action": "Delete exam",
     "delete-title": "Delete this exam?",
     "delete-description": "Its questions and pictures are deleted for good.",
@@ -2771,6 +2772,10 @@
     "school-refusal-cohort-has-homeroom": {
       "title": "This cohort already has a teacher.",
       "description": "Remove the current teacher to choose another."
+    },
+    "exam-full": {
+      "title": "This exam is full.",
+      "description": "Remove a question to add another."
     },
     "action-error": {
       "title": "We could not complete this action.",
