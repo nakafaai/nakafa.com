@@ -7,12 +7,12 @@ import { useLongAction } from "@/components/shared/pending";
 /** An action's answer, which the test gives by hand. */
 function pendingAnswer() {
   const given = {
-    reject: (_reason: Error) => undefined as void,
-    resolve: () => undefined as void,
+    reject: vi.fn<(reason: Error) => void>(),
+    resolve: vi.fn<() => void>(),
   };
   const promise = new Promise<void>((resolve, reject) => {
-    given.reject = reject;
-    given.resolve = resolve;
+    given.reject.mockImplementation(reject);
+    given.resolve.mockImplementation(resolve);
   });
   return { given, promise };
 }
@@ -45,7 +45,10 @@ afterEach(() => {
 });
 
 /** Runs what is queued, inside React's act, until the action has settled. */
-const settle = () => act(() => Effect.runPromise(Effect.sleep("1 millis")));
+const settle = async () => {
+  await act(() => Promise.resolve());
+  await act(() => Promise.resolve());
+};
 
 describe("useLongAction", () => {
   it("is pending from the press until the action answers", async () => {
