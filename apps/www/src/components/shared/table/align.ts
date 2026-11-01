@@ -19,7 +19,8 @@ export const HeadAlignContext = createContext<typeof HeadAlign.Type>("center");
  * amount and actions stay in reach: the card's, or the accent the base row draws while a pressable row is hovered
  * (`data-pressable`) or its row is open (`data-state="selected"`). A last column of figures before the row's menu keeps
  * its place beside the menu. A role that may do nothing to any row draws no menu, so the menu's column goes with them
- * and leaves no empty frame on the table's edge.
+ * and leaves no empty frame on the table's edge. The row's menu takes the width of its buttons and no more, so its
+ * line stands beside them and the rest of the row's width goes to the data.
  */
 export const columnAlign = cva("", {
   defaultVariants: { align: "center" },
@@ -28,7 +29,7 @@ export const columnAlign = cva("", {
       center: "px-2 text-center tabular-nums sm:px-4",
       end: "bg-card before:bg-border sticky end-0 ps-2 pe-4 text-end tabular-nums before:absolute before:inset-y-0 before:start-0 before:w-px sm:ps-4",
       figure: "bg-card sticky end-12 px-2 text-end tabular-nums sm:px-4",
-      menu: "bg-card in-[tr[data-pressable]:hover]:bg-accent in-[tr[data-state=selected]]:bg-accent before:bg-border sticky end-0 px-2 text-end not-in-[table:has(td:last-child:not(:empty))]:hidden before:absolute before:inset-y-0 before:start-0 before:w-px sm:px-4",
+      menu: "bg-card in-[tr[data-pressable]:hover]:bg-accent in-[tr:has(td:first-child_a[href]):hover]:bg-accent in-[tr[data-state=selected]]:bg-accent before:bg-border sticky end-0 w-px px-2 text-end whitespace-nowrap not-in-[table:has(td:last-child:not(:empty))]:hidden before:absolute before:inset-y-0 before:start-0 before:w-px",
       start: "ps-4 pe-2 sm:pe-4",
     },
   },

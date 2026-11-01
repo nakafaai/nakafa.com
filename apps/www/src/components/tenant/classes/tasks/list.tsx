@@ -10,6 +10,7 @@ import {
   Tag01Icon,
   Task01Icon,
   TaskDone01Icon,
+  TaskEdit01Icon,
   TimeQuarterPassIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
@@ -19,17 +20,17 @@ import {
   standingOf,
 } from "@repo/backend/confect/classroom/tasks/task";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnChoice, ColumnFilter } from "@/components/shared/table/column";
+import { useFormatTimeZone } from "@/components/shared/table/calendar";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -48,7 +49,7 @@ import { schoolClassTaskTarget } from "@/lib/routing/school/target";
 const TASK_PAGE_SIZE = 20;
 
 /** The columns of the task table. */
-const taskColumns = createColumnHelper<typeof dataTableFeatures, ClassTask>();
+const taskColumns = tableColumns<ClassTask>();
 
 /** The icons of the categories in the category filter, each a kind of file or mark. */
 const CATEGORY_ICONS: readonly [IconSvgElement, ...IconSvgElement[]] = [
@@ -172,36 +173,28 @@ function TaskListBody() {
  */
 function useTaskColumns(categories: readonly string[]) {
   const t = useTranslations("Classroom");
+  const formatZone = useFormatTimeZone();
   const format = useFormatter();
   const { can } = useClassScope();
   const standingChoices = useStandingChoices();
 
-  return taskColumns.columns([
-    taskColumns.accessor((task) => task.title, {
+  return [
+    taskColumns.text((task) => task.title, {
       cell: (info) => <TaskTitle task={info.row.original} />,
-      enableSorting: false,
-      filterFn: "includesString",
       header: t("task-title"),
       id: "title",
     }),
-    taskColumns.accessor((task) => task.category ?? "", {
+    taskColumns.values((task) => task.category ?? "", {
       cell: (info) => (
         <span className="text-muted-foreground" dir="auto">
           {info.getValue()}
         </span>
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="category"
-          options={namedOptions(categories, CATEGORY_ICONS)}
-          title={t("task-category")}
-        />
-      ),
+      header: t("task-category"),
       id: "category",
+      options: namedOptions(categories, CATEGORY_ICONS),
     }),
-    taskColumns.accessor((task) => task.deadline, {
+    taskColumns.days((task) => task.deadline, {
       cell: (info) => (
         <span className="text-muted-foreground tabular-nums">
           {format.dateTime(
@@ -210,32 +203,32 @@ function useTaskColumns(categories: readonly string[]) {
           )}
         </span>
       ),
-      enableSorting: false,
       header: t("task-deadline"),
       id: "deadline",
+      timeZone: formatZone,
     }),
-    // A student's standing, which the server filters by; the same rule keeps the rows the table shows.
-    taskColumns.accessor((task) => standingOf(task.mine), {
-      cell: (info) => (
-        <span className="text-muted-foreground">
-          <TaskStanding task={info.row.original} />
-        </span>
-      ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () =>
-        Arr.contains(can, "task.manage") ? (
-          t("task-status")
-        ) : (
-          <ColumnChoice
-            column="standing"
-            options={standingChoices}
-            title={t("task-status")}
-          />
-        ),
-      id: "standing",
-    }),
-  ]);
+    Arr.contains(can, "task.manage")
+      ? taskColumns.number((task) => task.handedIn, {
+          cell: (info) => (
+            <span className="text-muted-foreground">
+              <TaskStanding task={info.row.original} />
+            </span>
+          ),
+          header: t("task-status"),
+          id: "handedIn",
+        })
+      : // A student's standing, which the server filters by; the same rule keeps the rows the table shows.
+        taskColumns.choice((task) => standingOf(task.mine), {
+          cell: (info) => (
+            <span className="text-muted-foreground">
+              <TaskStanding task={info.row.original} />
+            </span>
+          ),
+          header: t("task-status"),
+          id: "standing",
+          options: standingChoices,
+        }),
+  ];
 }
 
 /**
@@ -270,13 +263,15 @@ function TaskTitle({ task }: { task: ClassTask }) {
   const { classSlug, slug } = useClassScope();
 
   return (
-    <TargetLink
-      className="font-medium underline-offset-4 hover:underline"
-      dir="auto"
-      target={schoolClassTaskTarget(slug, classSlug, task.slug)}
-    >
-      {task.title}
-    </TargetLink>
+    <TableTitle icon={TaskEdit01Icon}>
+      <TargetLink
+        className="underline-offset-4 hover:underline"
+        dir="auto"
+        target={schoolClassTaskTarget(slug, classSlug, task.slug)}
+      >
+        {task.title}
+      </TargetLink>
+    </TableTitle>
   );
 }
 

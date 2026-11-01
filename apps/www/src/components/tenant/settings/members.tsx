@@ -28,16 +28,14 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { type ComponentProps, startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
 import {
@@ -83,10 +81,7 @@ const PAGE_SIZE = 25;
 type MemberItem = PaginatedQueryItem<typeof tenancy.roster.members>;
 
 /** The columns of the members table. */
-const memberColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  MemberItem
->();
+const memberColumns = tableColumns<MemberItem>();
 
 /**
  * Every active member of the school as the page's table: its name, how far it has joined, its
@@ -157,19 +152,17 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
     );
   }
 
-  const columns = memberColumns.columns([
-    memberColumns.accessor((member) => member.name, {
+  const columns = [
+    memberColumns.text((member) => member.name, {
       cell: (info) => (
         <span className="font-medium" dir="auto">
           {info.getValue()}
         </span>
       ),
-      filterFn: "includesString",
       header: t("member-name"),
       id: "name",
-      sortFn: "text",
     }),
-    memberColumns.accessor((member) => member.status, {
+    memberColumns.values((member) => member.status, {
       cell: (info) => (
         <TableStatus
           icon={STATUS_LOOKS[info.getValue()].icon}
@@ -177,22 +170,15 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
           tone={STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(MemberStatus.literals, (status) => ({
-            icon: STATUS_LOOKS[status].icon,
-            label: t(`member-status-label.${status}`),
-            value: status,
-          }))}
-          title={t("member-status")}
-        />
-      ),
+      header: t("member-status"),
       id: "status",
+      options: Arr.map(MemberStatus.literals, (status) => ({
+        icon: STATUS_LOOKS[status].icon,
+        label: t(`member-status-label.${status}`),
+        value: status,
+      })),
     }),
-    memberColumns.accessor((member) => member.roles, {
+    memberColumns.list((member) => member.roles, {
       cell: (info) => (
         <div className="inline-flex flex-wrap justify-center gap-1">
           {Arr.map(info.getValue(), (role) => (
@@ -200,34 +186,23 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
           ))}
         </div>
       ),
-      enableSorting: false,
-      filterFn: "anyOf",
-      header: () => (
-        <ColumnFilter
-          column="roles"
-          options={Arr.map(
-            Arr.dedupe(Arr.flatMap(members, (member) => member.roles)),
-            (role) => ({
-              icon: roleLooks[role].icon,
-              label: tSchool(`role.${role}`),
-              value: role,
-            })
-          )}
-          title={t("member-roles")}
-        />
-      ),
+      header: t("member-roles"),
       id: "roles",
-    }),
-    memberColumns.display({
-      cell: (info) => (
-        <WithAction action="person.manage">
-          <SchoolMemberMenu member={info.row.original} />
-        </WithAction>
+      options: Arr.map(
+        Arr.dedupe(Arr.flatMap(members, (member) => member.roles)),
+        (role) => ({
+          icon: roleLooks[role].icon,
+          label: tSchool(`role.${role}`),
+          value: role,
+        })
       ),
-      id: "actions",
-      meta: { align: "menu" },
     }),
-  ]);
+    memberColumns.menu((info) => (
+      <WithAction action="person.manage">
+        <SchoolMemberMenu member={info.row.original} />
+      </WithAction>
+    )),
+  ];
 
   return (
     <DataTable

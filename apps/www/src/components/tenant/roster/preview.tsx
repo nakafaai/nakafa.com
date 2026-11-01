@@ -4,12 +4,10 @@ import {
   UserMultiple02Icon,
   UserQuestion01Icon,
 } from "@hugeicons/core-free-icons";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Order } from "effect";
 import { useTranslations } from "use-intl";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { type ReadRow, RowProblem } from "@/components/tenant/roster/dapodik";
@@ -28,10 +26,7 @@ const ROSTER_STATUS_LOOKS = {
 } as const satisfies Record<typeof RowProblem.Type | "ready", StatusLook>;
 
 /** The columns of the preview table. */
-const rowColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  typeof ReadRow.Type
->();
+const rowColumns = tableColumns<typeof ReadRow.Type>();
 
 /** The status of one read row: ready, or the problem that keeps it out. */
 const statusOf = (row: typeof ReadRow.Type) => {
@@ -72,44 +67,30 @@ export function RosterPreviewTable({
     Order.String
   );
 
-  const columns = rowColumns.columns([
-    rowColumns.accessor((row) => row.line, {
-      header: t("line"),
-      id: "line",
-      sortFn: "basic",
-    }),
+  const columns = [
+    rowColumns.number((row) => row.line, { header: t("line"), id: "line" }),
     // The name with its identity after it, so the header's search finds a row by either; the cell shows the name alone.
-    rowColumns.accessor((row) => `${nameOf(row)} ${identityOf(row)}`, {
+    rowColumns.text((row) => `${nameOf(row)} ${identityOf(row)}`, {
       cell: (info) =>
         info.row.original.outcome === "problem" ? null : (
           <span className="font-medium" dir="auto">
             {nameOf(info.row.original)}
           </span>
         ),
-      filterFn: "includesString",
       header: t("name"),
       id: "name",
-      sortFn: "text",
     }),
-    rowColumns.accessor(identityOf, {
+    rowColumns.text(identityOf, {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
-      enableSorting: false,
       header: t("nisn"),
       id: "nisn",
     }),
-    rowColumns.accessor(cohortOf, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="cohort"
-          options={namedOptions(cohorts, GRADE_ICONS)}
-          title={t("cohort")}
-        />
-      ),
+    rowColumns.values(cohortOf, {
+      header: t("cohort"),
       id: "cohort",
+      options: namedOptions(cohorts, GRADE_ICONS),
     }),
-    rowColumns.accessor(statusOf, {
+    rowColumns.values(statusOf, {
       cell: (info) => (
         <TableStatus
           icon={ROSTER_STATUS_LOOKS[info.getValue()].icon}
@@ -117,25 +98,18 @@ export function RosterPreviewTable({
           tone={ROSTER_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(
-            ["ready", ...RowProblem.literals] as const,
-            (status) => ({
-              icon: ROSTER_STATUS_LOOKS[status].icon,
-              label: t(`status-${status}`),
-              value: status,
-            })
-          )}
-          title={t("status")}
-        />
-      ),
+      header: t("status"),
       id: "status",
+      options: Arr.map(
+        ["ready", ...RowProblem.literals] as const,
+        (status) => ({
+          icon: ROSTER_STATUS_LOOKS[status].icon,
+          label: t(`status-${status}`),
+          value: status,
+        })
+      ),
     }),
-  ]);
+  ];
 
   return (
     <DataTable

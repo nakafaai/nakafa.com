@@ -21,7 +21,7 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
             code: -32_020,
             data: { request_id: "golden-request" },
             message:
-              "The MCP-Protocol-Version header is required for modern requests.",
+              "The MCP-Protocol-Version header is required. This server supports protocol version 2026-07-28.",
           },
           id: 31,
           jsonrpc: "2.0",
@@ -124,7 +124,7 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
             code: -32_020,
             data: { request_id: "golden-request" },
             message:
-              "The MCP-Protocol-Version header is required for modern requests.",
+              "The MCP-Protocol-Version header is required. This server supports protocol version 2026-07-28.",
           },
           id: 30,
           jsonrpc: "2.0",

@@ -103,14 +103,14 @@ const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
       FIRST_DOCUMENT
     );
     await waitUntilTakenOver(selector);
+    const reloaded = page.waitForEvent("load", {
+      timeout: readinessTimeoutMilliseconds,
+    });
     await selector.click();
-    await expect
-      .poll(
-        () =>
-          page.evaluate((mark) => Reflect.get(window, mark), FIRST_DOCUMENT),
-        { timeout: readinessTimeoutMilliseconds }
-      )
-      .not.toBe(true);
+    await reloaded;
+    expect(
+      await page.evaluate((mark) => Reflect.get(window, mark), FIRST_DOCUMENT)
+    ).not.toBe(true);
   });
   // The press after the reload, once React has the reloaded page, meets the chunk
   // still missing, and the page shows what broke. A chunk the reloaded page needs

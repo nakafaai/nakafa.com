@@ -296,10 +296,7 @@ function ArticlePage() {
             footer={
               <SidebarRightFooter>
                 <CommentsButton />
-                <ReferenceButton
-                  references={article.references}
-                  title={metadata.title}
-                />
+                <ReferenceButton references={article.references} />
                 <ReportButton />
                 {article.sourceUrl ? (
                   <GithubButton githubUrl={article.sourceUrl} />

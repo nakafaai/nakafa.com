@@ -1,7 +1,22 @@
 import { describe, expect, it } from "@effect/vitest";
-import { inTopic } from "@/components/notifications/topic";
+import { Schema } from "effect";
+import {
+  InboxAddressTopic,
+  inTopic,
+  SchoolInboxAddressTopic,
+} from "@/components/notifications/topic";
 
 describe("notifications/topic", () => {
+  it("reads an address's tab, and All for a tab the inbox does not have", () => {
+    const nakafa = Schema.decodeUnknownSync(InboxAddressTopic);
+    const school = Schema.decodeUnknownSync(SchoolInboxAddressTopic);
+
+    expect(nakafa("comments")).toBe("comments");
+    expect(nakafa("exams")).toBe("all");
+    expect(school("school")).toBe("school");
+    expect(school("comments")).toBe("all");
+  });
+
   it("shows every row under all", () => {
     expect(inTopic("forum.mentioned", "all")).toBe(true);
   });

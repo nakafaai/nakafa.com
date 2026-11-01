@@ -127,6 +127,27 @@ const verifyKeptRow = Effect.fn("NakafaE2E.verifyKeptRow")(function* (
 });
 
 /**
+ * A browser's first signed-in page has no row to draw. The footer holds the room
+ * of a free account from its first frame, so the toggle above it stands still when
+ * the live row arrives.
+ */
+const verifyNoKeptRow = Effect.fn("NakafaE2E.verifyNoKeptRow")(function* (
+  page: Page,
+  baseURL: string
+) {
+  yield* seedAnalyticsConsent(page, "denied");
+  yield* signInLearner(page.context(), baseURL);
+  yield* Effect.promise(async () => {
+    await page.goto("/en/user/settings");
+    await expect(liveAccountButton(page)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await page.waitForLoadState("networkidle");
+  });
+  expect(yield* readCumulativeLayoutShift(page)).toBe(0);
+});
+
+/**
  * A learner opens a page, and the footer shows the account. The next page,
  * before any of its scripts run, already draws the row the browser kept: the
  * kept name, at the height the live row stands at. Once the scripts run and the
@@ -379,6 +400,20 @@ test.describe("the signed-in sidebar footer", () => {
         page,
         Effect.fromNullishOr(baseURL).pipe(
           Effect.flatMap((origin) => verifyFirstFrame(page, origin))
+        )
+      )
+    );
+  });
+
+  test("holds the account's room on a browser's first signed-in page, so nothing moves", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.fromNullishOr(baseURL).pipe(
+          Effect.flatMap((origin) => verifyNoKeptRow(page, origin))
         )
       )
     );

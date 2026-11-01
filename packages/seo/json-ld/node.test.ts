@@ -4,6 +4,7 @@ import { FOUNDER, ORGANIZATION_ID } from "@repo/seo/json-ld/constants";
 import {
   makeBreadcrumbNodes,
   makeCollectionPageNode,
+  makeContributorsNode,
   makeEducationalOrganizationNode,
   makeFaqPageNode,
   makeProductNode,
@@ -117,6 +118,38 @@ describe("makeSurahNode", () => {
       position: 1,
     });
     expect(node).not.toHaveProperty("numberOfPages");
+  });
+});
+
+describe("makeContributorsNode", () => {
+  it("lists each person in order, with the profiles they have", () => {
+    const node = makeContributorsNode({
+      description: "The people who build Nakafa.",
+      inLanguage: "en",
+      name: "Contributor",
+      people: [
+        { name: "Nabil", profiles: ["https://github.com/nabilfatih"] },
+        { name: "Sita", profiles: [] },
+      ],
+      url: "https://nakafa.com/en/contributor",
+    });
+
+    expect(node.mainEntity.itemListElement).toStrictEqual([
+      {
+        "@type": "ListItem",
+        item: {
+          "@type": "Person",
+          name: "Nabil",
+          sameAs: ["https://github.com/nabilfatih"],
+        },
+        position: 1,
+      },
+      {
+        "@type": "ListItem",
+        item: { "@type": "Person", name: "Sita" },
+        position: 2,
+      },
+    ]);
   });
 });
 

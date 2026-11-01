@@ -1,7 +1,9 @@
 {
   "DataTable": {
-    "sort": "Urutkan",
     "filter-by": "Saring menurut {column}",
+    "filter-contains": "Berisi",
+    "filter-highest": "Maksimal",
+    "filter-lowest": "Minimal",
     "sort-ascending": "Naik",
     "sort-descending": "Turun",
     "no-results": "Tidak ada hasil.",
@@ -418,7 +420,6 @@
     "rooms-opens": "Dibuka",
     "rooms-closes": "Ditutup",
     "rooms-state": "Status",
-    "rooms-seats": "Kursi",
     "rooms-seats-summary": "{working} mengerjakan, {away} keluar, {offline} terputus, {locked} terkunci, {finished} selesai.",
     "room-state-scheduled": "Terjadwal",
     "room-state-open": "Berlangsung",
@@ -964,6 +965,8 @@
     "invite-revoke-description": "Alamat ini tidak dapat lagi menerima undangan ini.",
     "invite-revoke-confirm": "Cabut",
     "client-name": "Nama",
+    "client-id": "ID klien",
+    "client-id-copy": "Salin ID klien",
     "client-status": "Status",
     "client-active": "Aktif",
     "client-revoked": "Dicabut",
@@ -1221,6 +1224,7 @@
     "roles-overview-description": "Hanya Pemilik yang bisa memberi peran Pemilik dan Admin.",
     "roles-overview-footer": "Satu orang bisa memegang lebih dari satu peran.",
     "secret-copy": "Salin",
+    "secret-label": "Rahasia",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Opsional, delapan digit",
     "logins-footer": "Kartu masuk berisi nama pengguna dan kode sekali pakai.",
@@ -2004,6 +2008,7 @@
     "subject": "Mata pelajaran",
     "explore": "Jelajahi",
     "references": "Referensi",
+    "references-description": "Buka sumber untuk membaca asalnya.",
     "show": "Tampilkan",
     "grid": "Kisi",
     "fullscreen": "Layar penuh",
@@ -2163,6 +2168,8 @@
     "preferences-kind": "Pemberitahuan",
     "channel-push": "Push",
     "channel-email": "Email",
+    "channel-on": "Nyala",
+    "channel-off": "Mati",
     "kind-commentReply": "Balasan untuk komentarmu",
     "kind-forumMention": "Sebutan di kelas",
     "kind-classAnnouncement": "Pengumuman kelas",
@@ -2261,6 +2268,7 @@
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir",
+    "interpretation-description": "Makna ayat {count}.",
     "meaning": "Makna nama",
     "revelation": "Tempat turun",
     "revelation-place": "{place, select, Meccan {Makkiyah} Medinan {Madaniyah} other {Tidak diketahui}}",
@@ -2320,7 +2328,6 @@
     "set-column-questions": "Soal",
     "set-column-score": "Nilai",
     "set-column-status": "Status",
-    "set-sort-label": "Urutkan {column}",
     "set-sort-name-ascending": "A–Z",
     "set-sort-name-descending": "Z–A",
     "set-sort-questions-ascending": "Paling sedikit",
@@ -2668,6 +2675,10 @@
     "saved-description": "Cari, ubah, atau hapus yang Nina simpan."
   },
   "Toast": {
+    "offline-move": {
+      "title": "Kamu sedang offline.",
+      "description": "Sambungkan lagi untuk membuka halaman ini."
+    },
     "chat-deleted": {
       "title": "Obrolan ini sudah dihapus."
     },
@@ -3879,6 +3890,7 @@
     "practice-sets": "Set",
     "practice-mean": "Skor rata-rata",
     "practice-shared": "Dibagikan",
+    "practice-unshared": "Tidak dibagikan",
     "practice-share": "Bagikan {topic} ke sekolah",
     "practice-note": "Hanya topik yang kamu aktifkan yang sampai ke gurumu, dan kamu bisa mematikannya kapan saja.",
     "tags": "Kompetensi",

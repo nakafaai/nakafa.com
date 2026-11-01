@@ -1,7 +1,9 @@
 {
   "DataTable": {
-    "sort": "Sort",
     "filter-by": "Filter by {column}",
+    "filter-contains": "Contains",
+    "filter-highest": "At most",
+    "filter-lowest": "At least",
     "sort-ascending": "Ascending",
     "sort-descending": "Descending",
     "no-results": "No results.",
@@ -418,7 +420,6 @@
     "rooms-opens": "Opens",
     "rooms-closes": "Closes",
     "rooms-state": "State",
-    "rooms-seats": "Seats",
     "rooms-seats-summary": "{working} working, {away} away, {offline} offline, {locked} locked, {finished} finished.",
     "room-state-scheduled": "Scheduled",
     "room-state-open": "Open",
@@ -964,6 +965,8 @@
     "invite-revoke-description": "The address can no longer accept this invite.",
     "invite-revoke-confirm": "Revoke",
     "client-name": "Name",
+    "client-id": "Client ID",
+    "client-id-copy": "Copy client ID",
     "client-status": "Status",
     "client-active": "Active",
     "client-revoked": "Revoked",
@@ -1221,6 +1224,7 @@
     "roles-overview-description": "Only an Owner gives the Owner and Admin roles.",
     "roles-overview-footer": "A person may hold more than one role.",
     "secret-copy": "Copy",
+    "secret-label": "Secret",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Optional, eight digits",
     "logins-footer": "A login card holds a login name and a one-time code.",
@@ -2004,6 +2008,7 @@
     "subject": "Subjects",
     "explore": "Explore",
     "references": "References",
+    "references-description": "Open a source to read where this comes from.",
     "show": "Show",
     "grid": "Grid",
     "fullscreen": "Full screen",
@@ -2163,6 +2168,8 @@
     "preferences-kind": "Notice",
     "channel-push": "Push",
     "channel-email": "Email",
+    "channel-on": "On",
+    "channel-off": "Off",
     "kind-commentReply": "Replies to your comments",
     "kind-forumMention": "Mentions in a class",
     "kind-classAnnouncement": "Class announcements",
@@ -2261,6 +2268,7 @@
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
+    "interpretation-description": "What verse {count} means.",
     "meaning": "Meaning",
     "revelation": "Revelation place",
     "revelation-place": "{place, select, Meccan {Meccan} Medinan {Medinan} other {Unknown}}",
@@ -2320,7 +2328,6 @@
     "set-column-questions": "Questions",
     "set-column-score": "Score",
     "set-column-status": "Status",
-    "set-sort-label": "Sort {column}",
     "set-sort-name-ascending": "A to Z",
     "set-sort-name-descending": "Z to A",
     "set-sort-questions-ascending": "Fewest",
@@ -2668,6 +2675,10 @@
     "saved-description": "Search, edit or remove what Nina keeps."
   },
   "Toast": {
+    "offline-move": {
+      "title": "You are offline.",
+      "description": "Connect again to open this page."
+    },
     "chat-deleted": {
       "title": "This chat was deleted."
     },
@@ -3879,6 +3890,7 @@
     "practice-sets": "Sets",
     "practice-mean": "Mean score",
     "practice-shared": "Shared",
+    "practice-unshared": "Not shared",
     "practice-share": "Share {topic} with your school",
     "practice-note": "Only the topics you switch on reach your teachers, and you can switch one off at any time.",
     "tags": "Competencies",

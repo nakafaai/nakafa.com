@@ -9,6 +9,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Select,
   SelectContent,
+  SelectEmpty,
   SelectGroup,
   SelectItem,
   SelectTrigger,
@@ -139,11 +140,7 @@ function SchoolStudentSelect() {
 function NoStudents() {
   const t = useTranslations("SchoolSettings");
 
-  return (
-    <p className="text-muted-foreground px-2 py-1.5 text-sm">
-      {t("student-picker-empty")}
-    </p>
-  );
+  return <SelectEmpty>{t("student-picker-empty")}</SelectEmpty>;
 }
 
 /**
