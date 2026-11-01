@@ -30,7 +30,7 @@ import { NewAnnouncement } from "@/components/tenant/classes/home/compose";
 import { ClassHome } from "@/components/tenant/classes/home/home";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { LibraryList } from "@/components/tenant/classes/library/list";
-import { LibraryUploadsScope } from "@/components/tenant/classes/library/scope";
+import { LibraryScope } from "@/components/tenant/classes/library/scope";
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { classPath } from "@/components/tenant/classes/path";
 import { PeopleList } from "@/components/tenant/classes/people";
@@ -158,6 +158,31 @@ function ClassPage({
 }
 
 /**
+ * The name of the folder a folder page shows, read from the same list the library shows, and whether the class holds
+ * no such folder once that list has arrived.
+ */
+function useViewFolder(classId: Resolved["id"]) {
+  const view = useClassView();
+  const { slug } = useClassScope();
+  const folderId =
+    view._tag === "folder" ? Option.some(view.folderId) : Option.none();
+  const folders = useQuery(
+    classroom.folders.list,
+    Option.isSome(folderId) ? { classId, slug } : "skip"
+  );
+
+  if (QueryResult.isFailure(folders)) {
+    throw folders.error;
+  }
+  const listed = QueryResult.isSuccess(folders) ? folders.value : null;
+  const name = Option.map(
+    Arr.findFirst(listed ?? [], (found) => Option.contains(folderId, found.id)),
+    (found) => found.name
+  );
+  return { missing: listed !== null && Option.isNone(name), name };
+}
+
+/**
  * The resolved class: the path and the title that its header shows, given to the view, which
  * draws the header with its own actions, the tabs, and its body. The channel's name and the
  * discussion's number and title end the path, read from the same channel list and discussion the
@@ -185,11 +210,15 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
     classroom.tasks.get,
     view._tag === "task" ? { classId: klass.id, slug, task: view.task } : "skip"
   );
+  const folder = useViewFolder(klass.id);
 
   if (QueryResult.isFailure(thread)) {
     if (isLostAccess(thread.error)) {
       throw thread.error;
     }
+    return <ClassMissing />;
+  }
+  if (folder.missing) {
     return <ClassMissing />;
   }
   const found = QueryResult.isSuccess(thread)
@@ -223,11 +252,13 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
     })),
     QueryResult.isSuccess(task)
       ? Option.some(task.value.title)
-      : Option.map(found, (shown) =>
-          t("discussion-label", {
-            number: shown.discussion.number,
-            title: shown.discussion.title,
-          })
+      : Option.orElse(folder.name, () =>
+          Option.map(found, (shown) =>
+            t("discussion-label", {
+              number: shown.discussion.number,
+              title: shown.discussion.title,
+            })
+          )
         )
   );
 
@@ -323,9 +354,16 @@ function ClassBody({
   }
   if (view._tag === "library") {
     return (
-      <LibraryUploadsScope>
+      <LibraryScope folderId={null}>
         <LibraryList />
-      </LibraryUploadsScope>
+      </LibraryScope>
+    );
+  }
+  if (view._tag === "folder") {
+    return (
+      <LibraryScope folderId={view.folderId}>
+        <LibraryList />
+      </LibraryScope>
     );
   }
   if (view._tag === "tasks") {

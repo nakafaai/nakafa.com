@@ -7,7 +7,7 @@ import { readClassAddress } from "@/lib/tenant/params";
 
 /** The library of one class of the school, the newest item first. A failed address to a class is not found for every viewer. */
 export const Route = createFileRoute(
-  "/school/$slug/classes/$classSlug/library"
+  "/school/$slug/classes/$classSlug/library/"
 )({
   beforeLoad: ({ params }) => {
     const classAddress = readClassAddress(params.classSlug);
