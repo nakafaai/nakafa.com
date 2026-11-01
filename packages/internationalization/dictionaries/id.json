@@ -2106,6 +2106,7 @@
     "preferences-kind": "Pemberitahuan",
     "channel-push": "Push",
     "channel-email": "Email",
+    "kind-commentReply": "Balasan untuk komentarmu",
     "kind-forumMention": "Sebutan di kelas",
     "kind-classAnnouncement": "Pengumuman kelas",
     "kind-taskPublished": "Tugas baru",

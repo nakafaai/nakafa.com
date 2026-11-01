@@ -2106,6 +2106,7 @@
     "preferences-kind": "Mitteilung",
     "channel-push": "Push",
     "channel-email": "E-Mail",
+    "kind-commentReply": "Antworten auf deine Kommentare",
     "kind-forumMention": "Erwähnungen in einer Klasse",
     "kind-classAnnouncement": "Klassenankündigungen",
     "kind-taskPublished": "Neue Aufgaben",
