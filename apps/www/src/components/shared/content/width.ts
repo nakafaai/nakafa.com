@@ -28,5 +28,14 @@ export const pageRowVariants = cva(
   `mx-auto w-full max-w-(--page-width) ${pageGutterVariants()}`
 );
 
+/**
+ * A page header's row, which every header of the app and of School reads: its gap keeps the sidebar's button a full
+ * gutter step from the path after it, so the two never read as one control. The row names the `header` container that
+ * its controls fold by.
+ */
+export const pageHeaderRowVariants = cva(
+  `${pageRowVariants()} @container/header flex min-w-0 items-center gap-4`
+);
+
 /** A readable measure inside a wider page, such as the questions beside a navigator or the messages of a chat. */
 export const readingMeasureVariants = cva("mx-auto w-full max-w-3xl");
