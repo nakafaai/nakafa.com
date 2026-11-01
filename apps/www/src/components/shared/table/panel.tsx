@@ -13,7 +13,6 @@ import {
 } from "@repo/design-system/components/ui/input-group";
 import {
   NumberField,
-  NumberFieldGroup,
   NumberFieldInput,
 } from "@repo/design-system/components/ui/number";
 import {
@@ -21,14 +20,28 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { TableHead } from "@repo/design-system/components/ui/table";
+import {
+  TableHead,
+  TableHeader,
+} from "@repo/design-system/components/ui/table";
 import type { VariantProps } from "class-variance-authority";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import type { ReactElement, ReactNode } from "react";
+import { type ReactElement, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
-import { columnAlign } from "@/components/shared/table/align";
+import {
+  columnAlign,
+  type HeadAlign,
+  HeadMenuContext,
+} from "@/components/shared/table/align";
 import { boundOf } from "@/components/shared/table/filter";
 import { useTableFilters } from "@/components/shared/table/toolbar";
+
+/** The word for each way to sort a kind of column: the head already names the column, so one word says the rest. */
+const sortWords = {
+  days: { asc: "sort-oldest", desc: "sort-newest" },
+  number: { asc: "sort-smallest", desc: "sort-largest" },
+  text: { asc: "sort-a-z", desc: "sort-z-a" },
+} as const;
 
 /** How a column's head names the way it sorts the rows, for assistive technology. */
 const sortNames = {
@@ -38,15 +51,28 @@ const sortNames = {
 } as const;
 
 /**
+ * The head row of a table, one look on every table: the muted surface, which the card's rows sit under as one piece and
+ * which stays solid while they scroll beneath it.
+ */
+export function ColumnHeads({ children }: { children: ReactNode }) {
+  return (
+    <TableHeader className="bg-muted sticky top-0 z-10">{children}</TableHeader>
+  );
+}
+
+/**
  * One head of a table, in its place in the line. A head holds what filters its column, so this is the one module that
  * draws a `TableHead`: a table without a filter in a head has no other way to draw one.
  */
 export function ColumnHead({
   children,
+  menu = "center",
   place,
   sorted,
 }: {
   children?: ReactNode;
+  /** Where the head's menu opens under it. */
+  menu?: typeof HeadAlign.Type;
   place: VariantProps<typeof columnAlign>["align"];
   /** How the column sorts the rows, for a head that sorts them. */
   sorted?: keyof typeof sortNames | undefined;
@@ -57,7 +83,7 @@ export function ColumnHead({
       className={columnAlign({ align: place })}
       scope="col"
     >
-      {children}
+      <HeadMenuContext value={menu}>{children}</HeadMenuContext>
     </TableHead>
   );
 }
@@ -76,28 +102,31 @@ export function HeadPanel({
   return (
     <Popover>
       <PopoverTrigger render={trigger} />
-      <PopoverContent align="start" className="w-auto gap-0 p-0">
+      <PopoverContent
+        align={use(HeadMenuContext)}
+        className="w-auto gap-0 p-0"
+      >
         {children}
       </PopoverContent>
     </Popover>
   );
 }
 
-/** The two ways to sort the rows by a column, the way that sorts them now pressed. */
+/** The two ways to sort the rows by a column, side by side, the way that sorts them now pressed. */
 export function HeadSort({
-  ascending,
-  descending,
+  kind,
   onSort,
   sorted,
 }: {
-  ascending: string;
-  descending: string;
+  kind: keyof typeof sortWords;
   /** Sorts the rows by the column, the highest first when `descending` is true. */
   onSort: (descending: boolean) => void;
   sorted: keyof typeof sortNames;
 }) {
+  const t = useTranslations("DataTable");
+
   return (
-    <div className="flex flex-wrap gap-1 border-b p-2">
+    <div className="grid grid-cols-2 gap-1 border-b p-2">
       <Button
         aria-pressed={sorted === "asc"}
         onClick={() => onSort(false)}
@@ -106,7 +135,7 @@ export function HeadSort({
         variant={sorted === "asc" ? "secondary" : "ghost"}
       >
         <HugeIcons icon={ArrowUp02Icon} />
-        {ascending}
+        {t(sortWords[kind].asc)}
       </Button>
       <Button
         aria-pressed={sorted === "desc"}
@@ -116,7 +145,7 @@ export function HeadSort({
         variant={sorted === "desc" ? "secondary" : "ghost"}
       >
         <HugeIcons icon={ArrowDown02Icon} />
-        {descending}
+        {t(sortWords[kind].desc)}
       </Button>
     </div>
   );
@@ -140,7 +169,7 @@ export function HeadText({ column, label }: { column: string; label: string }) {
   const text = Option.getOrElse(Arr.head(useChosen(column)), () => "");
 
   return (
-    <div className="w-56 p-2">
+    <div className="w-48 p-2">
       <InputGroup>
         <InputGroupAddon>
           <HugeIcons icon={Search01Icon} />
@@ -175,17 +204,21 @@ function RangeField({
 }) {
   return (
     <NumberField
+      className="min-w-0 flex-1"
       onValueChange={(value) => onChange(value === null ? "" : String(value))}
       value={Option.getOrNull(boundOf(text))}
     >
-      <NumberFieldGroup>
-        <NumberFieldInput aria-label={label} placeholder={placeholder} />
-      </NumberFieldGroup>
+      <NumberFieldInput
+        aria-label={label}
+        className="h-full bg-transparent"
+        data-slot="input-group-control"
+        placeholder={placeholder}
+      />
     </NumberField>
   );
 }
 
-/** The two fields of a column of numbers: it keeps the rows whose number stands between them. */
+/** The range of a column of numbers, one control with a line between its ends: it keeps the rows between them. */
 export function HeadRange({
   column,
   label,
@@ -202,19 +235,21 @@ export function HeadRange({
     choose(column, from === "" && to === "" ? [] : [from, to]);
 
   return (
-    <div className="grid w-56 grid-cols-2 gap-2 p-2">
-      <RangeField
-        label={`${label}, ${t("filter-lowest")}`}
-        onChange={(text) => keep(text, highest)}
-        placeholder={t("filter-lowest")}
-        text={lowest}
-      />
-      <RangeField
-        label={`${label}, ${t("filter-highest")}`}
-        onChange={(text) => keep(lowest, text)}
-        placeholder={t("filter-highest")}
-        text={highest}
-      />
+    <div className="w-48 p-2">
+      <InputGroup className="divide-input divide-x">
+        <RangeField
+          label={`${label}, ${t("filter-lowest")}`}
+          onChange={(text) => keep(text, highest)}
+          placeholder={t("filter-lowest")}
+          text={lowest}
+        />
+        <RangeField
+          label={`${label}, ${t("filter-highest")}`}
+          onChange={(text) => keep(lowest, text)}
+          placeholder={t("filter-highest")}
+          text={highest}
+        />
+      </InputGroup>
     </div>
   );
 }

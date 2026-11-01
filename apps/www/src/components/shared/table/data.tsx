@@ -13,12 +13,11 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { type Header, type RowData, useTable } from "@tanstack/react-table";
-import { Array as Arr, Match } from "effect";
-import type { ReactNode } from "react";
+import { Array as Arr, Match, Option } from "effect";
+import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { PaneTableRow, pressesRow } from "@/components/shared/pane";
 import { useHasPanes } from "@/components/shared/panes";
@@ -26,6 +25,7 @@ import {
   columnAlign,
   HeadAlignContext,
   headPlace,
+  menuPlaceOf,
   placeOf,
 } from "@/components/shared/table/align";
 import { HeadDays } from "@/components/shared/table/calendar";
@@ -39,6 +39,7 @@ import { columnFiltersOf } from "@/components/shared/table/filter";
 import { TableHeadButton } from "@/components/shared/table/head";
 import {
   ColumnHead,
+  ColumnHeads,
   HeadPanel,
   HeadRange,
   HeadReset,
@@ -103,9 +104,9 @@ export function DataTable<TData extends RowData>({
   return (
     <Table
       aria-busy={loading}
-      containerClassName="flex-1 [&_[data-slot=table-cell]]:whitespace-nowrap [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-card"
+      containerClassName="flex-1 [&_[data-slot=table-cell]]:whitespace-nowrap"
     >
-      <TableHeader>
+      <ColumnHeads>
         {Arr.map(table.getHeaderGroups(), (group) => (
           <TableRow key={group.id}>
             {Arr.map(group.headers, (header, index) => (
@@ -115,7 +116,7 @@ export function DataTable<TData extends RowData>({
             ))}
           </TableRow>
         ))}
-      </TableHeader>
+      </ColumnHeads>
       <TableBody>
         {Arr.isReadonlyArrayNonEmpty(rows) || loading ? (
           Arr.map(rows, (row) => (
@@ -208,6 +209,16 @@ function DataTableHead<TData extends RowData>({
   }
   return (
     <ColumnHead
+      menu={menuPlaceOf(
+        index,
+        Option.getOrElse(
+          Arr.findLastIndex(
+            header.headerGroup.headers,
+            (head) => head.column.columnDef.meta?.filter !== undefined
+          ),
+          () => index
+        )
+      )}
       place={place}
       sorted={column.getCanSort() ? column.getIsSorted() || "none" : undefined}
     >
@@ -240,17 +251,17 @@ function HeadControl<TData extends RowData>({
         <ColumnChoice column={id} options={options} title={title} />
       ),
       days: () => (
-        <SortingHead header={header} icon={Calendar03Icon} name={children}>
+        <SortingHead header={header} kind="days" name={children}>
           <HeadDays column={id} />
         </SortingHead>
       ),
       number: () => (
-        <SortingHead header={header} icon={FilterIcon} name={children}>
+        <SortingHead header={header} kind="number" name={children}>
           <HeadRange column={id} label={title} />
         </SortingHead>
       ),
       text: () => (
-        <SortingHead header={header} icon={FilterIcon} name={children}>
+        <SortingHead header={header} kind="text" name={children}>
           <HeadText column={id} label={title} />
         </SortingHead>
       ),
@@ -268,34 +279,32 @@ function HeadControl<TData extends RowData>({
 function SortingHead<TData extends RowData>({
   children,
   header,
-  icon,
+  kind,
   name,
 }: {
   children: ReactNode;
   header: Header<typeof dataTableFeatures, TData>;
-  /** The icon of a head that neither sorts nor filters yet. */
-  icon: typeof FilterIcon;
+  kind: ComponentProps<typeof HeadSort>["kind"];
   name: ReactNode;
 }) {
-  const t = useTranslations("DataTable");
   const column = header.column;
   const sorted = column.getIsSorted() || "none";
   const filtered = useIsFiltered(column.id);
+  const idle = kind === "days" ? Calendar03Icon : FilterIcon;
 
   return (
     <HeadPanel
       trigger={
         <TableHeadButton
           active={sorted !== "none" || filtered}
-          icon={sorted === "none" ? icon : sortIcons[sorted]}
+          icon={sorted === "none" ? idle : sortIcons[sorted]}
         >
           {name}
         </TableHeadButton>
       }
     >
       <HeadSort
-        ascending={t("sort-ascending")}
-        descending={t("sort-descending")}
+        kind={kind}
         onSort={(descending) => column.toggleSorting(descending)}
         sorted={sorted}
       />
