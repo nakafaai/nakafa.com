@@ -89,26 +89,21 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
     threshold: 0.1,
   });
 
-  const isInView = entry?.isIntersecting ?? false;
-  // Viewport visibility gates work without overriding the user's Play/Pause intent.
-  const isAnimating = isPlaying && isInView;
-  const deferredAnimating = useDeferredValue(isAnimating);
-  const deferredTableCount = useDeferredValue(tableCount);
-
   const isMobile = useMediaQuery("(max-width: 640px)");
 
   const maxTables = isMobile ? MAX_TABLES_MOBILE : MAX_TABLES_DESKTOP;
+
+  const isInView = entry?.isIntersecting ?? false;
+  const isEffectivelyPlaying = isPlaying && tableCount < maxTables;
+  // Viewport visibility gates work without overriding the user's Play/Pause intent.
+  const isAnimating = isEffectivelyPlaying && isInView;
+  const deferredAnimating = useDeferredValue(isAnimating);
+  const deferredTableCount = useDeferredValue(tableCount);
 
   // Calculate chair count based on the formula U_n = 2n + 2
   const chairCount = 2 * deferredTableCount + 2;
 
   useEffect(() => {
-    // Stop playing when maximum table count is reached
-    if (deferredTableCount >= maxTables) {
-      setIsPlaying(false);
-      return;
-    }
-
     if (!deferredAnimating) {
       return;
     }
@@ -130,7 +125,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
     return () => {
       Effect.runFork(Fiber.interrupt(interval));
     };
-  }, [deferredAnimating, deferredTableCount, maxTables, speed]);
+  }, [deferredAnimating, maxTables, speed]);
 
   const resetAnimation = useCallback(() => {
     setTableCount(1);
@@ -138,7 +133,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
   }, []);
 
   const togglePlayPause = useCallback(() => {
-    if (!isPlaying && tableCount >= maxTables) {
+    if (tableCount >= maxTables) {
       // If at max table count and trying to play, restart from beginning
       setTableCount(1);
       setIsPlaying(true);
@@ -302,14 +297,14 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
 
       <VisualCardActions>
         <Button
-          aria-label={isPlaying ? labels.pause : labels.play}
+          aria-label={isEffectivelyPlaying ? labels.pause : labels.play}
           onClick={togglePlayPause}
           size="icon"
-          variant={isPlaying ? "outline" : "default"}
+          variant={isEffectivelyPlaying ? "outline" : "default"}
         >
-          <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
+          <HugeIcons icon={isEffectivelyPlaying ? PauseIcon : PlayIcon} />
           <span className="sr-only">
-            {isPlaying ? labels.pause : labels.play}
+            {isEffectivelyPlaying ? labels.pause : labels.play}
           </span>
         </Button>
         <VisualCardMenu>

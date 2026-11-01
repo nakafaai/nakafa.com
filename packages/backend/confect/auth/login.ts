@@ -191,7 +191,7 @@ const clearOnSuccess = Effect.fn("auth.login.clear")(function* (
  * every host except a school host, where the request answers with the school's own login
  * (ADR 0009). The `username` plugin still owns the password check, so a school login
  * signs in with the same session as every other account. The router adds this plugin
- * (`confect/http`), because only a request names the host that it serves.
+ * (`confect/auth/http`), because only a request names the host that it serves.
  */
 export function schoolUsernameSignIn(
   ctx: ActionCtx

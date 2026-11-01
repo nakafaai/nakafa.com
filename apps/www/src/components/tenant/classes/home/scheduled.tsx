@@ -35,6 +35,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
 import { useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
+import { useDialogs } from "@/components/shared/dialogs";
 import {
   forumCall,
   runForumCall,
@@ -110,8 +111,7 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
   const { classId, slug } = useClassScope();
   const cancel = useMutation(classroom.scheduled.cancel);
   // Each opening of the dialog mounts it again, so it starts from the announcement as it is then.
-  const [editing, setEditing] = useState(0);
-  const [isEditing, setIsEditing] = useState(false);
+  const dialogs = useDialogs<"edit">();
 
   return (
     <ItemActions>
@@ -128,12 +128,7 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
           }
         />
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            onClick={() => {
-              setEditing((count) => count + 1);
-              setIsEditing(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => dialogs.show("edit")}>
             <HugeIcons icon={PencilEdit02Icon} />
             {t("message-edit")}
           </DropdownMenuItem>
@@ -157,14 +152,14 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      {editing === 0 ? null : (
+      {dialogs.kind === "edit" ? (
         <WaitingDialog
-          key={editing}
-          open={isEditing}
+          key={dialogs.key}
+          open={dialogs.isOpen("edit")}
           post={post}
-          setOpen={setIsEditing}
+          setOpen={dialogs.setOpen}
         />
-      )}
+      ) : null}
     </ItemActions>
   );
 }

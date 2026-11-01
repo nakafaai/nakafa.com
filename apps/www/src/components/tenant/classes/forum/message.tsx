@@ -39,6 +39,7 @@ import {
 } from "effect";
 import { startTransition, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
+import { useDialogs } from "@/components/shared/dialogs";
 import {
   forumCall,
   runForumCall,
@@ -235,13 +236,11 @@ function MessageActions({
   const { editable, hasMenu, threads } = useMessageRights(message);
   const common = useTranslations("Common");
   const navigate = useNavigate();
-  const [hiding, setHiding] = useState(false);
   const start = useMutation(classroom.forum.threads.start);
   const rename = useMutation(
     classroom.forum.threads.rename
   ).withOptimisticUpdate(renameDiscussionUpdate);
-  const [renaming, setRenaming] = useState(0);
-  const [isRenaming, setIsRenaming] = useState(false);
+  const dialogs = useDialogs<"hide" | "rename">();
   const { discussion } = message;
 
   /** Starts a thread from this message and opens it beside its chat. */
@@ -304,18 +303,13 @@ function MessageActions({
               </DropdownMenuItem>
             ) : null}
             {scope.canManage ? (
-              <DropdownMenuItem onClick={() => setHiding(true)}>
+              <DropdownMenuItem onClick={() => dialogs.show("hide")}>
                 <HugeIcons icon={ViewOffSlashIcon} />
                 {t("message-hide")}
               </DropdownMenuItem>
             ) : null}
             {discussion === null ? null : (
-              <DropdownMenuItem
-                onClick={() => {
-                  setRenaming((count) => count + 1);
-                  setIsRenaming(true);
-                }}
-              >
+              <DropdownMenuItem onClick={() => dialogs.show("rename")}>
                 <HugeIcons icon={TextFontIcon} />
                 {t("discussion-rename")}
               </DropdownMenuItem>
@@ -323,13 +317,17 @@ function MessageActions({
           </DropdownMenuContent>
         </DropdownMenu>
       ) : null}
-      <HideMessage message={message} open={hiding} setOpen={setHiding} />
-      {discussion === null || renaming === 0 ? null : (
+      <HideMessage
+        message={message}
+        open={dialogs.isOpen("hide")}
+        setOpen={dialogs.setOpen}
+      />
+      {discussion === null || dialogs.kind !== "rename" ? null : (
         <LineDialog
           description={t("discussion-rename-description")}
           initial={discussion.title}
           isValid={Schema.is(DiscussionTitleText)}
-          key={renaming}
+          key={dialogs.key}
           label={t("discussion-title")}
           onSave={(title) =>
             startTransition(() =>
@@ -345,9 +343,9 @@ function MessageActions({
               )
             )
           }
-          open={isRenaming}
+          open={dialogs.isOpen("rename")}
           placeholder={t("discussion-title-placeholder")}
-          setOpen={setIsRenaming}
+          setOpen={dialogs.setOpen}
           title={t("discussion-rename")}
         />
       )}

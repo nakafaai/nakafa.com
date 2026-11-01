@@ -1,12 +1,8 @@
 import type { GenericId } from "@confect/core";
 import { useMutation } from "@confect/react";
 import { NETWORK_RETRY_SCHEDULE } from "@repo/backend/client/network";
-import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import {
-  AttemptState,
-  DeviceId,
-} from "@repo/backend/confect/exams/sittings/schema";
+import { DeviceId } from "@repo/backend/confect/exams/sittings/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
@@ -20,28 +16,11 @@ import {
   type SittingFlight,
 } from "@/components/exams/sitting/device";
 import {
-  EntryMessage,
+  type Admission,
   entryRefusalMessage,
   sittingFailureMessage,
 } from "@/components/exams/sitting/entry";
 import { reportClientException } from "@/lib/analytics/client";
-
-/**
- * What one entry with a token comes to: the attempt that admits the student, with the correction of
- * the device's clock, the sentence that explains a refusal, or a failure that the screen reports in
- * general terms.
- */
-const Admission = Schema.Union([
-  Schema.TaggedStruct("admitted", {
-    attemptId: Id("examAttempts"),
-    clockOffset: Schema.Finite,
-    deviceId: DeviceId,
-    state: AttemptState,
-  }),
-  Schema.TaggedStruct("refused", { message: EntryMessage }),
-  Schema.TaggedStruct("failed", {}),
-]);
-export type Admission = typeof Admission.Type;
 
 /**
  * The device of one entry: the one the browser keeps, else the one that an entry in flight already

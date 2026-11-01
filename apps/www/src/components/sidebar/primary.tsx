@@ -61,6 +61,7 @@ function PrimaryMenuItem({ item }: { item: PrimaryItem }) {
             item={item}
           />
         }
+        keepsPress
       >
         <LearnerPrimaryMenuItem item={item} />
       </ConvexIsland>

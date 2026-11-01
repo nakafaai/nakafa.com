@@ -104,7 +104,11 @@ export function ExamEditor({
   );
 }
 
-/** Reads the exam for the editor, before the browser paints, so an edit shows in the frame it is made. */
+/**
+ * Reads the exam for the editor, before the browser paints, so an edit shows in the frame it is made. The answer goes
+ * up through a layout effect, because `useQuery` throws a failure that names no refusal during render: the read needs a
+ * boundary of its own, and a boundary around the workspace would take the teacher's writing off the screen.
+ */
 function ExamRead({ examId, slug }: { examId: Id<"exams">; slug: TenantSlug }) {
   const read = use(ExamReadContext);
   if (read === null) {

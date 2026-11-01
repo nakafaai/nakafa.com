@@ -11,24 +11,21 @@ import { useConvexConnectionState } from "convex/react";
 import { Option } from "effect";
 import {
   type FormEvent,
-  useCallback,
   useEffect,
   useId,
+  useReducer,
   useRef,
   useState,
   useTransition,
 } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import {
-  type Admission,
-  useEnterSitting,
-} from "@/components/exams/sitting/admit";
+import { useEnterSitting } from "@/components/exams/sitting/admit";
 import { isActive, takesAnswers } from "@/components/exams/sitting/attempt";
 import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { SittingBody, SittingNotice } from "@/components/exams/sitting/body";
 import { useReaderLoaded } from "@/components/exams/sitting/document";
-import type { EntryMessage } from "@/components/exams/sitting/entry";
+import { startEntry, stepEntry } from "@/components/exams/sitting/entry";
 import { entersBySelf, pageRoomEntry } from "@/components/exams/sitting/join";
 import { StudentOutcome } from "@/components/exams/sitting/outcome";
 import { StudentPlayer } from "@/components/exams/sitting/player";
@@ -44,9 +41,6 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { isConvexOffline } from "@/lib/convex/online";
 import { useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
-
-/** An admission that lets the student into the sitting, with the attempt it opened. */
-type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
 
 /**
  * What a page that enters by itself says while the connection is gone. The entry waits in the client and goes
@@ -250,30 +244,17 @@ function useSittingEntry({
   readonly slug: TenantSlug;
 }) {
   const enter = useEnterSitting();
-  const [admitted, setAdmitted] = useState<Admitted | null>(null);
-  const [message, setMessage] = useState<typeof EntryMessage.Type | null>(null);
   // What the page enters with by itself, taken once: a room's code is spent as it is read.
   const [selfEntry] = useState(() => pageRoomEntry(sittingId));
   const [tokenText, setTokenText] = useState(() =>
     Option.getOrElse(selfEntry, () => "")
   );
-  // The page's own entry has not been answered yet, so it shows the paper's frame.
-  const [joining, setJoining] = useState(() => Option.isSome(selfEntry));
+  // Until the page's own entry is answered, the screen shows the paper's frame.
+  const [standing, receive] = useReducer(stepEntry, selfEntry, startEntry);
   const resumed = useRef(false);
   const tokenId = useId();
   // The entry waits for the server's answer: a second press would send a second device with the same token.
   const [entering, startEntering] = useTransition();
-
-  /** Shows the admission, or the sentence that explains why the entry was refused. */
-  const receive = useCallback((next: Admission) => {
-    setJoining(false);
-    if (next._tag === "admitted") {
-      setAdmitted(next);
-      setMessage(null);
-      return;
-    }
-    setMessage(next._tag === "refused" ? next.message : null);
-  }, []);
 
   useEffect(() => {
     if (resumed.current || !enterable) {
@@ -285,7 +266,7 @@ function useSittingEntry({
         await enter({ sittingId, slug, token: selfEntry.value }, receive);
       });
     }
-  }, [enter, enterable, receive, selfEntry, sittingId, slug]);
+  }, [enter, enterable, selfEntry, sittingId, slug]);
 
   /** Enters with the token that the student typed. */
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -296,10 +277,10 @@ function useSittingEntry({
   }
 
   return {
-    admitted,
+    admitted: standing._tag === "admitted" ? standing : null,
     entering,
-    joining,
-    message,
+    joining: standing._tag === "joining",
+    message: standing._tag === "refused" ? standing.message : null,
     setTokenText,
     submit,
     tokenId,

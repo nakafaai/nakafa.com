@@ -11,8 +11,7 @@ import { LOCALES } from "@repo/internationalization/src/locale";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Option, Schema } from "effect";
-import { useEffect, useEffectEvent } from "react";
-import { useTranslations } from "use-intl";
+import { type ReactNode, useEffect, useEffectEvent } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
@@ -26,12 +25,19 @@ import {
 } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
+  useAnswerPress,
+  useSetTryoutPressed,
   useSetTryoutStartPhase,
+  useTryoutPressed,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
 import { START_ERROR, START_PART_ERROR } from "@/components/tryout/set/copy";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
+import {
+  TryoutActionName,
+  type TryoutActionNameKey,
+} from "@/components/tryout/set/name";
 import {
   startAttemptProgram,
   startEntrySectionProgram,
@@ -81,10 +87,9 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
   return (
     <ConvexIsland
       fallback={
-        <TryoutStartSignInButton
-          label={startLabelOf(props.attempt)}
-          request={props.request}
-        />
+        <TryoutStartSignInButton request={props.request}>
+          <TryoutActionName name={startNameOf(props.attempt)} pending />
+        </TryoutStartSignInButton>
       }
       keepsPress
     >
@@ -94,11 +99,13 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
 }
 
 /**
- * The label of a set's start action for its attempt: continue a running one, restart a finished one, and
+ * The name of a set's start action for its attempt: continue a running one, restart a finished one, and
  * start one otherwise. The button the page shows before its client and the live action read it alike, so the
- * label never changes when the client arrives.
+ * name never changes when the client arrives.
  */
-function startLabelOf(attempt: StartTryoutButtonProps["attempt"]) {
+function startNameOf(
+  attempt: StartTryoutButtonProps["attempt"]
+): TryoutActionNameKey {
   if (attempt?.status === "in-progress") {
     return "continue-cta";
   }
@@ -112,17 +119,17 @@ function startLabelOf(attempt: StartTryoutButtonProps["attempt"]) {
  * action answers it once it mounts; a session that could not be read sends it to sign in.
  */
 function TryoutStartSignInButton({
-  label,
+  children,
   request,
 }: {
-  readonly label: ReturnType<typeof startLabelOf>;
+  /** The action's name, which the attempt decides. */
+  readonly children: ReactNode;
   readonly request: StartTryoutRequest;
 }) {
   const navigate = useNavigate();
-  const t = useTranslations("Tryouts");
   const hasError = useLiveSession((state) => state.hasError);
-  const phase = useTryoutStartPhase();
-  const setPhase = useSetTryoutStartPhase();
+  const pressed = useTryoutPressed();
+  const setPressed = useSetTryoutPressed();
   const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
   /** Sends a visitor to sign in before any attempt starts. */
@@ -136,26 +143,26 @@ function TryoutStartSignInButton({
   /** Answers a press: at once for a visitor, and once the session is known for a learner. */
   function onStart() {
     if (hasSignedInHint(document.cookie) && !hasError) {
-      setPhase("pressed");
+      setPressed(true);
       return;
     }
     signIn();
   }
   const press = useEarlyPress<HTMLButtonElement>(onStart);
   const answerPress = useEffectEvent(() => {
-    setPhase("idle");
+    setPressed(false);
     signIn();
   });
   useEffect(() => {
-    if (phase === "pressed" && hasError) {
+    if (pressed && hasError) {
       answerPress();
     }
-  }, [hasError, phase]);
+  }, [hasError, pressed]);
 
   return (
     <Button {...press}>
-      <Spinner icon={Rocket01Icon} isLoading={phase === "pressed"} />
-      {t(label)}
+      <Spinner icon={Rocket01Icon} isLoading={pressed} />
+      {children}
     </Button>
   );
 }
@@ -171,6 +178,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const navigate = useNavigate();
   const phase = useTryoutStartPhase();
   const setPhase = useSetTryoutStartPhase();
+  const pressed = useTryoutPressed();
+  const setPressed = useSetTryoutPressed();
   /** Navigates to one try-out page. A page that names no route leaves the page on screen, and its start idle. */
   function navigateTo(
     address: TryoutPageAddress,
@@ -187,7 +196,6 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const startAttempt = useMutation(tryouts.mutations.attempts.startAttempt);
   const startSection = useMutation(tryouts.mutations.sections.start);
   const convex = useConvex();
-  const t = useTranslations("Tryouts");
   const now = useTryoutClock(false);
   const [dialogOpen, dialog] = useDisclosure(false);
   const activeAttempt = attempt?.status === "in-progress";
@@ -213,12 +221,10 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     isAuthenticated && !activeAttempt && !QueryResult.isSuccess(access);
   const attemptLoading = isAuthenticated && attempt === undefined;
   const resolvingAccess = isLoading || accessLoading || attemptLoading;
-  const pressed = phase === "pressed";
-  const started = phase === "starting" || phase === "opening";
+  const started = phase !== "idle";
   const dialogKind = QueryResult.isSuccess(access)
     ? access.value.kind
     : "free-attempt";
-  const buttonLabel = t(startLabelOf(attempt));
   const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
   /** Opens the correct decision or continues an already-active runtime, once the page knows which. */
@@ -227,11 +233,11 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       return;
     }
     if (resolvingAccess) {
-      setPhase("pressed");
+      setPressed(true);
       return;
     }
     if (pressed) {
-      setPhase("idle");
+      setPressed(false);
     }
     if (!isAuthenticated) {
       navigate({
@@ -333,7 +339,10 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     <>
       <Button inert={started} onClick={answerStart}>
         <Spinner icon={Rocket01Icon} isLoading={started || pressed} />
-        {buttonLabel}
+        <TryoutActionName
+          name={startNameOf(attempt)}
+          pending={attempt === undefined}
+        />
       </Button>
       <TryoutStartDialog
         directEntry={directEntry}
@@ -360,8 +369,13 @@ function ResumeTryoutLink({
 }: {
   readonly request: StartTryoutRequest;
 }) {
-  const t = useTranslations("Tryouts");
+  const navigate = useNavigate();
   const pathname = `/${request.locale}${getTryoutPublicPathHref(request.destination.publicPath)}`;
+  useAnswerPress(() => {
+    Option.map(getTryoutPageTarget(request.destination), (target) =>
+      navigate(target)
+    );
+  });
   // The section loads on the server before it shows, so the link shows its loader while it does.
   const navigating = useRouterState({
     select: (state) =>
@@ -370,7 +384,7 @@ function ResumeTryoutLink({
   return (
     <TryoutPageLink className={buttonVariants()} {...request.destination}>
       <Spinner icon={Rocket01Icon} isLoading={navigating} />
-      {t("continue-cta")}
+      <TryoutActionName name="continue-cta" />
     </TryoutPageLink>
   );
 }
