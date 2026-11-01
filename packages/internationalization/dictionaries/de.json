@@ -3796,6 +3796,7 @@
     "none-description": "Konnektoren erscheinen hier, sobald Google sie geprüft hat.",
     "refused": "Nicht verbunden",
     "refused-description": "Google hat nicht jeden Zugriff erlaubt, den dieser Konnektor braucht. Verbinde neu und lass jedes Häkchen gesetzt.",
+    "failed-description": "Google konnte diese Verbindung nicht abschließen. Versuche es gleich noch einmal.",
     "courses": "Kurse in Classroom",
     "courses-description": "Die Kurse, die du in Google Classroom unterrichtest. Wähle für jeden die Klasse, und seine Aufgaben kommen als Aufgaben dieser Klasse an.",
     "courses-hint": "Schüler treten über ihre eigene Einladung bei.",
