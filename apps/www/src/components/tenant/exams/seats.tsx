@@ -93,24 +93,25 @@ export function RoomSeats({
 }) {
   const t = useTranslations("Exams");
   const seats = useRoomSeats(sittingId, slug);
+  const dots = Option.match(seats, { onNone: Arr.empty, onSome: seatDots });
 
   return (
     <span
-      {...Option.match(seats, {
-        onNone: () => ({}),
-        onSome: (counts) => ({
-          "aria-label": t("rooms-seats-summary", counts),
-          role: "img",
-        }),
-      })}
+      {...Option.match(
+        Option.filter(seats, () => Arr.isReadonlyArrayNonEmpty(dots)),
+        {
+          onNone: () => ({}),
+          onSome: (counts) => ({
+            "aria-label": t("rooms-seats-summary", counts),
+            role: "img",
+          }),
+        }
+      )}
       className="flex w-36 flex-wrap gap-0.5"
     >
-      {Arr.map(
-        Option.match(seats, { onNone: Arr.empty, onSome: seatDots }),
-        (dot) => (
-          <span className={seatDot({ kind: dot.kind })} key={dot.id} />
-        )
-      )}
+      {Arr.map(dots, (dot) => (
+        <span className={seatDot({ kind: dot.kind })} key={dot.id} />
+      ))}
     </span>
   );
 }
