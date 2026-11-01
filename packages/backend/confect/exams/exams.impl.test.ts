@@ -9,7 +9,7 @@ import { Array as Arr, Effect } from "effect";
 
 const { cohorts, create, duplicate, list, open, rename } =
   refs.public.exams.exams;
-const { copy, reading } = refs.public.exams.questions;
+const { copy, reading, scoring, template } = refs.public.exams.questions;
 
 /** One minute, so two exams made in turn have different creation times. */
 const LATER = TENANCY_NOW + 60_000;
@@ -423,23 +423,38 @@ describe("exams/exams cohorts", () => {
       })
   );
 
-  it.effect("copies a question that holds no reading with none", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const teacher = fixture.as("teacher");
-      const made = yield* teacher.mutation(create, {
-        scope: { kind: "unit", unitId: fixture.units.smp },
-        slug: nf,
-        title: "PTS IPA",
-      });
+  it.effect(
+    "copies a question that holds no reading with none, and keeps how it scores",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const made = yield* teacher.mutation(create, {
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+          title: "PTS IPA",
+        });
+        const [first] = made.questions;
+        const ids = { examId: made.id, questionId: first.id, slug: nf };
+        yield* teacher.mutation(template, {
+          ...ids,
+          labels: [],
+          revision: first.revision,
+          template: "choices",
+        });
+        const scored = yield* teacher.mutation(scoring, {
+          ...ids,
+          scoring: "perPart",
+        });
 
-      const copied = yield* teacher.mutation(duplicate, {
-        examId: made.id,
-        slug: nf,
-        title: "PTS IPA (salinan)",
-      });
+        const copied = yield* teacher.mutation(duplicate, {
+          examId: made.id,
+          slug: nf,
+          title: "PTS IPA (salinan)",
+        });
 
-      expect(copied.questions[0].reading).toBeNull();
-    })
+        expect(copied.questions[0].reading).toBeNull();
+        expect(copied.questions[0].scoring).toEqual(scored.scoring);
+      })
   );
 });
