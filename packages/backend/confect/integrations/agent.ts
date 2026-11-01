@@ -21,7 +21,6 @@ import {
   Effect,
   Layer,
   Match,
-  Option,
   Order,
   Record as Rec,
   Schema,
@@ -108,9 +107,9 @@ const unknownFunction = new NakafaAgentInputError({
 });
 
 /** The tool error of a run that never reached an answer. */
-const unreachable = (cause: unknown) =>
+const unreachable = () =>
   new NakafaAgentInputError({
-    cause,
+    cause: "The function run reached no answer.",
     message: "Nakafa did not answer this call. Try again.",
   });
 
@@ -119,10 +118,12 @@ const entriesOf = (
   group: GroupSpec.AnyWithProps,
   path: string
 ): ReadonlyArray<readonly [string, FunctionSpec.AnyWithProps]> => [
-  ...Arr.filterMap(Rec.values(group.functions), (spec) =>
-    spec.functionVisibility === "public"
-      ? Option.some([`${path}:${spec.name}`, spec] as const)
-      : Option.none()
+  ...Arr.map(
+    Arr.filter(
+      Rec.values(group.functions),
+      (spec) => spec.functionVisibility === "public"
+    ),
+    (spec) => [`${path}:${spec.name}`, spec] as const
   ),
   ...Arr.flatMap(Rec.toEntries(group.groups), ([name, child]) =>
     entriesOf(child, `${path}/${name}`)
@@ -215,7 +216,7 @@ const callFunction = Effect.fn("integrations.agent.call")(
       input,
       "Send the function's name and its arguments."
     );
-    const origin = yield* Config.string("CONVEX_CLOUD_URL");
+    const origin = yield* Config.String("CONVEX_CLOUD_URL");
     const path = Str.replaceAll(":", "/")(name);
     const client = yield* HttpClient.HttpClient;
     const response = yield* client.execute(
@@ -249,8 +250,8 @@ const callFunction = Effect.fn("integrations.agent.call")(
   Effect.provide(Layer.merge(FetchClient, ConvexConfigProvider.layer)),
   Effect.catchTags({
     ConfigError: Effect.die,
-    HttpClientError: (cause) => Effect.fail(unreachable(cause)),
-    SchemaError: (cause) => Effect.fail(unreachable(cause)),
+    HttpClientError: () => Effect.fail(unreachable()),
+    SchemaError: () => Effect.fail(unreachable()),
   })
 );
 

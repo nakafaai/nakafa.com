@@ -70,9 +70,9 @@ const readAccess = Effect.fn("integrations.mcp.access")(function* (
     }).pipe(Effect.orDie);
   }
   const identity = yield* Effect.exit((yield* Auth).getUserIdentity);
-  return {
-    outcome: Exit.isSuccess(identity) ? "person" : "unauthorized",
-  } as const;
+  return Exit.isSuccess(identity)
+    ? ({ outcome: "person" } as const)
+    : ({ outcome: "unauthorized" } as const);
 });
 
 /**
