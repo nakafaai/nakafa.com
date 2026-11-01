@@ -448,7 +448,6 @@
     "page-empty-part": "Bagian kosong",
     "page-gap-empty": "Isi dulu sebelum menjadwalkan ujian.",
     "page-gap-key": "Tentukan jawabannya sebelum menjadwalkan ujian.",
-    "offline-note": "Perubahanmu tersimpan saat kamu kembali online.",
     "add-below": "Tambah di bawah",
     "add-below-of": "Tambah soal di bawah soal {number}",
     "question-text": "Teks soal {number}",
@@ -1943,6 +1942,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "offline-note": "Perubahanmu tersimpan saat kamu kembali online.",
     "popup-empty": "Belum ada pilihan.",
     "page-navigation": "Navigasi halaman",
     "contributor-description": "Orang ini ikut membangun Nakafa.",

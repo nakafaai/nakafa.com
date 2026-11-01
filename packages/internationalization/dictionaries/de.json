@@ -448,7 +448,6 @@
     "page-empty-part": "Leerer Teil",
     "page-gap-empty": "Vor dem Planen der Prüfung ausfüllen.",
     "page-gap-key": "Vor dem Planen der Prüfung die Antwort festlegen.",
-    "offline-note": "Deine Änderungen werden gespeichert, sobald du wieder online bist.",
     "add-below": "Frage darunter hinzufügen",
     "add-below-of": "Frage unter Frage {number} hinzufügen",
     "question-text": "Text von Frage {number}",
@@ -1943,6 +1942,7 @@
     "classification": "Bildung"
   },
   "Common": {
+    "offline-note": "Deine Änderungen werden gespeichert, sobald du wieder online bist.",
     "popup-empty": "Noch nichts zur Auswahl.",
     "page-navigation": "Seitennavigation",
     "contributor-description": "Diese Person baut Nakafa mit auf.",
