@@ -2773,6 +2773,9 @@
       "title": "Klasse hat schon eine Lehrkraft.",
       "description": "Die aktuelle Lehrkraft muss zuerst entfernt werden."
     },
+    "exam-copying": {
+      "title": "Die Prüfung wird kopiert."
+    },
     "exam-full": {
       "title": "Diese Prüfung ist voll.",
       "description": "Entferne eine Frage, um neue hinzuzufügen."

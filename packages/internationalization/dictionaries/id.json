@@ -2773,6 +2773,9 @@
       "title": "Rombel ini sudah punya wali kelas.",
       "description": "Hapus wali kelas yang sekarang untuk memilih yang lain."
     },
+    "exam-copying": {
+      "title": "Menyalin ujian ini."
+    },
     "exam-full": {
       "title": "Ujian ini sudah penuh.",
       "description": "Hapus satu soal untuk menambah soal."

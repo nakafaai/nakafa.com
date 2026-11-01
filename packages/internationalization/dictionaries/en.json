@@ -2773,6 +2773,9 @@
       "title": "This cohort already has a teacher.",
       "description": "Remove the current teacher to choose another."
     },
+    "exam-copying": {
+      "title": "Copying this exam."
+    },
     "exam-full": {
       "title": "This exam is full.",
       "description": "Remove a question to add another."
