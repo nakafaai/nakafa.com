@@ -3,6 +3,8 @@ import { Effect } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
+
 test("the exam import offers a Google Form where the deployment offers Drive", async ({
   baseURL,
   browser,
@@ -21,7 +23,7 @@ test("the exam import offers a Google Form where the deployment offers Drive", a
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Fisika");
   await dialog.getByRole("button", { name: "Create exam" }).click();
-  await page.waitForURL(/\/exams\/[^/]+\/edit$/u);
+  await page.waitForURL(EDITOR_PATH);
 
   const header = page.locator("header").filter({
     has: page.getByRole("button", { name: "More actions" }),
