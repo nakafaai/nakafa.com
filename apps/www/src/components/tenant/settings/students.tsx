@@ -76,6 +76,7 @@ import {
   SchoolDateTime,
   useSchoolTimeZone,
 } from "@/components/tenant/settings/time";
+import { useKeptRows } from "@/lib/data/kept";
 
 const SOURCE = "components/tenant/settings/students";
 

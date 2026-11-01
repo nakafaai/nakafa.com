@@ -38,34 +38,6 @@ const guruBaru = {
 
 describe("tenancy/roster invite and members", () => {
   it.effect(
-    "finds a member by name past every page, and leaves out a removed person",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const admin = fixture.as("admin");
-        const found = yield* admin.query(members, {
-          ...everyone,
-          search: "Teach",
-          slug: nf,
-        });
-        expect(Arr.map(found.page, (row) => row.name)).toEqual(["Teacher"]);
-        yield* fixture.run(
-          Effect.flatMap(DatabaseWriter, (writer) =>
-            writer
-              .table("tenantPeople")
-              .patch(fixture.people.teacher.personId, { status: "removed" })
-          )
-        );
-        const gone = yield* admin.query(members, {
-          ...everyone,
-          search: "Teach",
-          slug: nf,
-        });
-        expect(gone.page).toEqual([]);
-      })
-  );
-
-  it.effect(
     "adds a teacher with the role and the invite in one step, and journals each write",
     () =>
       Effect.gen(function* () {

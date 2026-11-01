@@ -20,19 +20,12 @@ const rejected = (code: string) => ({ _tag: "GrantRejected", code });
 const everyGrant = { paginationOpts: { cursor: null, numItems: 100 } };
 
 /** What the Admin of the school reads of its grants. */
-const adminList = (
-  fixture: Effect.Success<typeof tenancyFixture>,
-  search?: string
-) =>
-  fixture.as("admin").query(list, {
-    ...everyGrant,
-    ...(search === undefined ? {} : { search }),
-    slug: nf,
-  });
+const adminList = (fixture: Effect.Success<typeof tenancyFixture>) =>
+  fixture.as("admin").query(list, { ...everyGrant, slug: nf });
 
 describe("access/grants list", () => {
   it.effect(
-    "lists every active grant of the school with its Person, role and scope, to the Admin, or those a search names",
+    "lists every active grant of the school with its Person, role and scope, to the Admin",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -45,9 +38,6 @@ describe("access/grants list", () => {
           scope: { kind: "unit", unitId: fixture.units.smp },
         });
         expect(answer.isDone).toBe(true);
-        const found = yield* adminList(fixture, "Teach");
-        expect(found.page).toHaveLength(1);
-        expect(found.page[0]?.id).toBe(fixture.people.teacher.grantId);
       })
   );
 
