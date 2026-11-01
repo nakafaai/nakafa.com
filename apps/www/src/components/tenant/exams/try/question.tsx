@@ -132,7 +132,7 @@ export function ExamTryQuestion({
       />
       <PlayerQuestionHeader number={number} />
       <PlayerQuestionPrompt>
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <TryPaperMedia question={question} />
           {question.reading === null ? null : (
             <ExamTryPrompt current={current} documentId={question.reading} />

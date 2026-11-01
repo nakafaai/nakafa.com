@@ -224,7 +224,7 @@ export const SittingQuestion = memo(function SittingQuestion({
       <PlayerQuestionHeader number={question.number} />
       <SittingPictures value={addresses}>
         <PlayerQuestionPrompt>
-          <div className="grid gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {QueryResult.isSuccess(prompt) ? (
               <PaperMedia items={prompt.value.media} />
             ) : null}
