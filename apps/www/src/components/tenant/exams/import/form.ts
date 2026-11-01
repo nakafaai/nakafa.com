@@ -16,15 +16,13 @@ export class FormDriveMissing extends Data.TaggedError("FormDriveMissing") {}
 type FormCalls<PickError, ReadError, PlaceError> = Readonly<{
   pick: Effect.Effect<Option.Option<DriveFile>, PickError>;
   place: (
-    questions: readonly (typeof PlacedQuestion.Type)[]
+    questions: readonly PlacedQuestion[]
   ) => Promise<
     Result.Result<Ref.Returns<typeof exams.imports.place>, PlaceError>
   >;
   read: (
     formId: string
-  ) => Promise<
-    Result.Result<readonly (typeof PlacedQuestion.Type)[] | null, ReadError>
-  >;
+  ) => Promise<Result.Result<readonly PlacedQuestion[] | null, ReadError>>;
 }>;
 
 /**

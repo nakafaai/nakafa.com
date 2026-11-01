@@ -1,7 +1,9 @@
+import type { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import type exams from "@repo/backend/confect/_generated/refs/exams";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Effect, Option, Result, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { importForm } from "@/components/tenant/exams/import/form";
 
 const question = {
@@ -12,7 +14,7 @@ const question = {
   options: ["Ya", "Tidak"],
   prompt: "Sudah belajar?",
 };
-const placedId = Schema.decodeSync(Id("examQuestions"))("question-1");
+const placedId = Schema.decodeUnknownSync(Id("examQuestions"))("question-1");
 const form = {
   id: "form-1",
   mimeType: "application/vnd.google-apps.form",
@@ -23,17 +25,17 @@ const form = {
 const calls = (
   answers: {
     keyless?: number;
-    placed?: readonly unknown[];
+    placed?: Ref.Returns<typeof exams.imports.place>["placed"];
     questions?: readonly (typeof question)[] | null;
   } = {}
 ) => ({
-  pick: Effect.succeed(Option.some(form)),
+  pick: Effect.succeedSome(form),
   place: vi.fn(() =>
     Promise.resolve(
       Result.succeed({
         keyless: answers.keyless ?? 0,
         left: 0,
-        placed: (answers.placed ?? [{ id: placedId, number: 1 }]) as never,
+        placed: answers.placed ?? [{ id: placedId, number: 1 }],
       })
     )
   ),
