@@ -14,9 +14,6 @@ export type Choice = Extract<Interaction, { kind: "choice" }>;
 /** The label of one option: a rich document of its own, which the option's editor writes. */
 export type OptionLabel = Choice["options"][number]["label"];
 
-/** The number that an option ID holds at its end, when it holds one. */
-const OPTION_NUMBER = /-(?<digits>\d+)$/u;
-
 /** Whether an interaction is a choice. */
 export const isChoice = (answer: Interaction): answer is Choice =>
   answer.kind === "choice";
@@ -211,17 +208,11 @@ export const toggledKey = (
 
 /**
  * The ID of a new option: the choice's prefix, `reason-` for a two-tier question's reason and `option-` for any
- * other, and the number after the largest one that the choice holds, so a new option never shares an ID with an
- * option the question still holds. An ID that a removed option held can come back, which is safe, because options
- * change only while the exam is unfrozen, and no attempt holds an answer then.
+ * other, and `unique`, which no option has held. An exam takes edits while its sitting runs (ADR 0031), so an ID
+ * that came back would hand a student's saved choice to the new option and score it against the new option's key.
  */
-const nextOptionId = (choice: Choice) => {
-  const largest = Arr.reduce(choice.options, 0, (most, option) => {
-    const digits = OPTION_NUMBER.exec(option.id)?.[1];
-    return digits === undefined ? most : Math.max(most, Number(digits));
-  });
-  return `${choice.id === REASON_ID ? REASON_ID : "option"}-${largest + 1}`;
-};
+const newOptionId = (choice: Choice, unique: string) =>
+  `${choice.id === REASON_ID ? REASON_ID : "option"}-${unique}`;
 
 /**
  * The most options a choice takes once it holds `count` options: a single-answer choice keeps one,
@@ -232,11 +223,13 @@ const limitAfter = (choice: Choice, count: number) =>
 
 /**
  * The answers with one empty option added at the end of the choice named `choiceId`. A choice that
- * holds the most options it may take is left as it is, so the teacher cannot add past A to E.
+ * holds the most options it may take is left as it is, so the teacher cannot add past A to E. An edit
+ * runs more than once, on the page and in the writer, so the press draws `unique` once for all of them.
  */
 export const withOptionAdded = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
-  choiceId: string
+  choiceId: string,
+  unique: string
 ): Arr.NonEmptyArray<Interaction> =>
   Arr.map(answers, (answer) =>
     isChoice(answer) &&
@@ -247,7 +240,7 @@ export const withOptionAdded = (
           maxChoices: limitAfter(answer, answer.options.length + 1),
           options: [
             ...answer.options,
-            { id: nextOptionId(answer), label: emptyLabel() },
+            { id: newOptionId(answer, unique), label: emptyLabel() },
           ],
         }
       : answer

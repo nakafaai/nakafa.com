@@ -1,18 +1,21 @@
 import type { GenericId } from "@confect/core";
+import { Id } from "@repo/backend/confect/_generated/id";
 import {
   type ExamResponse,
   NO_RESPONSE,
   typedText,
 } from "@repo/backend/confect/assessment/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import { useEffect, useRef, useState } from "react";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import {
   useSendAnswer,
   useSendFinish,
 } from "@/components/exams/sitting/answer";
+import { readSittingDevice } from "@/components/exams/sitting/device";
 import { isStaleAnswer } from "@/components/exams/sitting/entry";
+import { toastUnsentAnswers } from "@/components/exams/sitting/forget";
 import { keptAttempt, keptFinish } from "@/components/exams/sitting/keep";
 import type {
   PaperQuestion,
@@ -117,6 +120,74 @@ export function useResendKeptAnswers({
         )
     );
   }, [attemptId, deviceId, finish, locked, paper, send, sittingId, slug]);
+}
+
+/**
+ * Sends the answers the browser still holds for an attempt that closed while its page was away, when the
+ * student comes back. The server takes them for a moment after the deadline (`WRITE_ALLOWANCE_MS`), and the
+ * student who reloads in that moment loses nothing. Past it the server refuses them, and the student is told,
+ * since a closed attempt shows no paper to type them into again. A page that watched the attempt close
+ * sent its own answers, so `enabled` is only for a visit that arrived at a closed attempt.
+ */
+export function useSendClosedKept({
+  attemptId,
+  enabled,
+  sittingId,
+  slug,
+}: {
+  readonly attemptId: GenericId.GenericId<"examAttempts">;
+  readonly enabled: boolean;
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+  readonly slug: TenantSlug;
+}) {
+  const send = useSendAnswer();
+  const sent = useRef(false);
+
+  useEffect(() => {
+    if (!enabled || sent.current) {
+      return;
+    }
+    sent.current = true;
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const device = yield* readSittingDevice(sittingId);
+        if (Option.isNone(device)) {
+          return;
+        }
+        const { answers } = yield* keptAttempt(sittingId, attemptId).read();
+        const failures = yield* Effect.forEach(
+          Rec.toEntries(answers),
+          ([questionId, answer]) =>
+            send(
+              {
+                attemptId,
+                deviceId: device.value,
+                questionId: Schema.decodeSync(Id("examQuestions"))(questionId),
+                response: answer.response,
+                sittingId,
+                slug,
+                version: answer.version,
+              },
+              answer.answeredAt
+            )
+        );
+        const refused = Arr.filter(
+          Arr.getSomes(failures),
+          (failure) => !isStaleAnswer(failure)
+        );
+        if (Arr.isReadonlyArrayNonEmpty(refused)) {
+          toastUnsentAnswers();
+        }
+      }).pipe(
+        Effect.provide(keptStorage),
+        Effect.catchTag("KeyValueStoreError", (error) =>
+          reportClientException(error, {
+            source: "components/exams/sitting/closed",
+          })
+        )
+      )
+    );
+  }, [attemptId, enabled, send, sittingId, slug]);
 }
 
 /**

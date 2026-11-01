@@ -493,6 +493,9 @@
     "remove-many-description": "The questions and their answers leave this exam.",
     "student-retry": "This sitting could not load, so try again in a moment.",
     "student-opens-at": "This sitting opens {time}.",
+    "student-entry-waiting": "You will enter once you are back online.",
+    "student-second-tab-title": "This exam is open in another tab.",
+    "student-second-tab-description": "Go back to that tab, or close it and this tab takes over.",
     "student-scheduled-footer": "The token field opens with the sitting.",
     "student-back-home": "Back to home",
     "seat-last-activity": "Active {time}.",
@@ -2997,6 +3000,10 @@
     "sitting-locked": {
       "title": "This sitting is locked.",
       "description": "Ask your teacher what to do next."
+    },
+    "sitting-answers-unsent": {
+      "title": "Some answers may not have saved.",
+      "description": "Answers kept on this device did not reach the exam before it closed, so tell your proctor."
     },
     "sitting-attempt-closed": {
       "title": "This attempt has closed.",
