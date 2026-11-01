@@ -22,6 +22,7 @@ import {
   FULL_SCHOOL,
   peopleOf,
   personName,
+  type SchoolCounts,
   SUBJECTS,
 } from "@repo/backend/scripts/content/acceptance/roll";
 import { JsonTextSchema } from "@repo/utilities/json";
@@ -238,7 +239,7 @@ const makeWriter = (
  * school's Owner must have signed in, because a guardian link and an exam name who started them.
  */
 export const fillAcceptanceSchool = Effect.fn("contentAcceptance.fullSchool")(
-  function* (root: string, slug: string, count: typeof FULL_SCHOOL) {
+  function* (root: string, slug: string, count: typeof SchoolCounts.Type) {
     const runtime = yield* readLocalRuntime(root);
     if (runtime === undefined) {
       return yield* acceptanceRuntimeError(

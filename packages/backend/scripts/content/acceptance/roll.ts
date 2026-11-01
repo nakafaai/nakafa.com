@@ -1,4 +1,14 @@
-import { Array as Arr, Option, String as Str } from "effect";
+import { Array as Arr, Option, Schema, String as Str } from "effect";
+
+/** How many of each record a school holds. */
+export const SchoolCounts = Schema.Struct({
+  classes: Schema.Int,
+  exams: Schema.Int,
+  guardians: Schema.Int,
+  invites: Schema.Int,
+  students: Schema.Int,
+  teachers: Schema.Int,
+});
 
 /** How many of each record a full school holds. */
 export const FULL_SCHOOL = {
@@ -8,7 +18,7 @@ export const FULL_SCHOOL = {
   invites: 300,
   students: 1000,
   teachers: 200,
-} as const;
+} satisfies typeof SchoolCounts.Type;
 
 /** The subjects of a cohort's classes. Five classes of twenty cohorts make the full school's hundred. */
 export const SUBJECTS = [
@@ -63,7 +73,7 @@ export const cohortOf = (index: number) => {
 };
 
 /** The indexes of the school's people of each kind, in the order they are written. */
-export const peopleOf = (count: typeof FULL_SCHOOL) => {
+export const peopleOf = (count: typeof SchoolCounts.Type) => {
   const guardiansFrom = count.students + count.teachers;
   const invitedFrom = guardiansFrom + count.guardians;
   return {

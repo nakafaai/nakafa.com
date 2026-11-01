@@ -1,6 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
   fillAcceptanceSchool,
   fullMode,
@@ -86,10 +87,8 @@ const stubBackend = (held: {
       const [, verb, ...rest] = spec.args;
       if (verb === "data") {
         const table = rest[0] ?? "";
-        yield* fs.writeFileString(
-          spec.stdoutPath,
-          Schema.encodeSync(JsonTextSchema)(printed(table))
-        );
+        const text = yield* Schema.encodeEffect(JsonTextSchema)(printed(table));
+        yield* fs.writeFileString(spec.stdoutPath, text);
         return;
       }
       const table = rest[1] ?? "";
@@ -102,9 +101,9 @@ const stubBackend = (held: {
       if (held.named !== false && !refused) {
         MutableHashMap.set(written, table, rows);
       }
-      if (refused || (held.lostWatch ?? []).includes(table)) {
-        return yield* Effect.fail(
-          new Error("The watch of the import timed out.")
+      if (refused || Arr.contains(held.lostWatch ?? [], table)) {
+        return yield* acceptanceRuntimeError(
+          "The watch of the import timed out."
         );
       }
       yield* fs.writeFileString(spec.stdoutPath, "");
