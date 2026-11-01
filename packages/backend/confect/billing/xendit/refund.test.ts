@@ -460,4 +460,38 @@ describe("billing/xendit/refund", () => {
       unknown: "unknownPayment",
     });
   });
+
+  it("keeps a paid top-up on record and returns the money when Pro ended before it was paid", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      await seedXenditCheckout(ctx, "pro.topup");
+      const outcome = await runInMutation(
+        ctx,
+        processXenditEvent(
+          xenditSessionDelivery("payment_session.completed", "py_1")
+        )
+      );
+      return {
+        lots: await ctx.db.query("creditLots").collect(),
+        outcome,
+        payments: await ctx.db.query("billingPayments").collect(),
+        scheduled: await ctx.db.system.query("_scheduled_functions").collect(),
+      };
+    });
+    expect(result.outcome).toBe("applied");
+    expect(result.payments).toMatchObject([{ kind: "credits" }]);
+    expect(result.lots).toHaveLength(0);
+    expect(result.scheduled).toContainEqual(
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            orderId: "py_1",
+            rail: "xendit",
+            refundableAmount: 59_000,
+          }),
+        ],
+        name: expect.stringContaining("refundWithoutPro"),
+      })
+    );
+  });
 });
