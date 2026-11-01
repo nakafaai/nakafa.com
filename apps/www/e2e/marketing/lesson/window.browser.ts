@@ -26,6 +26,7 @@ const FOCUS_PROBE = "data-focus-probe";
  */
 const PHYSICS_TAB = "Fisika";
 const MATHEMATICS_TAB = "Matematika";
+const CHEMISTRY_TAB = "Kimia";
 const CELL_TAB = "Biologi";
 const CELL_VIEW = "Model struktur bakteri";
 
@@ -62,6 +63,12 @@ test("home lesson window opens the next lesson by itself while it is on screen",
               );
               yield* Effect.promise(() =>
                 expect(selected).toHaveText(MATHEMATICS_TAB, {
+                  timeout: LESSON_WAIT_MS,
+                })
+              );
+              // The first turn is not the last: the window keeps turning.
+              yield* Effect.promise(() =>
+                expect(selected).toHaveText(CHEMISTRY_TAB, {
                   timeout: LESSON_WAIT_MS,
                 })
               );

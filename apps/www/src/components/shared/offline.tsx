@@ -15,7 +15,7 @@ import { isConvexOffline } from "@/lib/convex/online";
  * Whether the page has no connection. The browser knows at once when the device leaves its network, and the
  * client notices a connection that went quiet about a minute later, so each answers for the other.
  */
-export function useExamOffline() {
+export function useOffline() {
   const { online } = useNetwork();
   const connection = useConvexConnectionState();
 
@@ -23,13 +23,14 @@ export function useExamOffline() {
 }
 
 /**
- * What the editor's header and the paper's bar say while the connection is gone: the person keeps
- * working, and every change waits on the page and saves once the connection is back. A phone shows
- * the icon, which names it in its tooltip.
+ * What a page that saves as the person works says while the connection is gone: the exam editor's
+ * header, the paper's bar and the try-out player's header. The person keeps working, and every change
+ * waits on the page and saves once the connection is back. A phone shows the icon, which names it in
+ * its tooltip. A page on a good connection says nothing.
  */
-export function ExamOffline() {
-  const t = useTranslations("Exams");
-  const offline = useExamOffline();
+export function OfflineNote() {
+  const t = useTranslations("Common");
+  const offline = useOffline();
 
   if (!offline) {
     return null;

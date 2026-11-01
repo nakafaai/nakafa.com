@@ -150,7 +150,8 @@
     "expires": "Läuft ab",
     "mismatches": "Fehlgeschlagene NISN-Prüfungen",
     "child": "Kind",
-    "child-detail": "Kind"
+    "child-detail": "Kind",
+    "guardian-email": "E-Mail der Eltern"
   },
   "SchoolRoster": {
     "import": "Importieren",
@@ -447,7 +448,6 @@
     "page-empty-part": "Leerer Teil",
     "page-gap-empty": "Vor dem Planen der Prüfung ausfüllen.",
     "page-gap-key": "Vor dem Planen der Prüfung die Antwort festlegen.",
-    "offline-note": "Deine Änderungen werden gespeichert, sobald du wieder online bist.",
     "add-below": "Frage darunter hinzufügen",
     "add-below-of": "Frage unter Frage {number} hinzufügen",
     "question-text": "Text von Frage {number}",
@@ -1403,7 +1403,14 @@
     "homeroom-description": "Eine Lehrkraft leitet jede Klasse.",
     "webhook-changes-description": "Dein System erfährt es jedes Mal, wenn eines davon geschieht.",
     "webhook-changes-none": "Dieser Client liest nichts, was ein Webhook sendet, also ändere zuerst seine Aktionen.",
-    "webhook-client-none": "Ein Webhook gehört zu einem API-Client, also erstelle zuerst einen."
+    "webhook-client-none": "Ein Webhook gehört zu einem API-Client, also erstelle zuerst einen.",
+    "class-students": "Lernende",
+    "cohort-homeroom": "Klassenleitung",
+    "cohort-students": "Lernende",
+    "cohort-classes": "Klassen",
+    "member-login": "Anmeldename",
+    "member-email": "E-Mail",
+    "member-units": "Einheiten"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1702,7 +1709,8 @@
     "own-title": "Meine Zeugnisse",
     "own-search": "Klasse suchen",
     "own-empty": "Noch kein Zeugnis abgeschlossen.",
-    "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt."
+    "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt.",
+    "unit": "Einheit"
   },
   "SchoolGraduation": {
     "title": "Abschluss",
@@ -1934,6 +1942,7 @@
     "classification": "Bildung"
   },
   "Common": {
+    "offline-note": "Deine Änderungen werden gespeichert, sobald du wieder online bist.",
     "popup-empty": "Noch nichts zur Auswahl.",
     "page-navigation": "Seitennavigation",
     "contributor-description": "Diese Person baut Nakafa mit auf.",
@@ -2349,7 +2358,6 @@
     "time-hours-short": "Std.",
     "time-minutes-short": "Min.",
     "time-seconds-short": "Sek.",
-    "start-part-cta": "Starten",
     "complete-part-cta": "Beenden",
     "complete-part-title": "Diesen Abschnitt beenden?",
     "complete-part-description": "Wenn du jetzt abschließt, werden die Antworten in diesem Abschnitt gesperrt.",
@@ -3868,8 +3876,6 @@
     "disconnect-description": "Nakafa liest es sofort nicht mehr, und entferne Nakafa auch in deinem Google-Konto, damit der Zugriff dort endet.",
     "none": "Noch kein Konnektor",
     "none-description": "Konnektoren erscheinen hier, sobald Google sie geprüft hat.",
-    "courses": "Kurse in Classroom",
-    "courses-refresh": "Neu lesen",
     "courses-none": "Kein aktiver Kurs in diesem Classroom-Konto.",
     "course": "Kurs",
     "course-students": "Schüler",

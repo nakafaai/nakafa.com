@@ -29,6 +29,7 @@ import { Array as Arr } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -215,9 +216,7 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
     revokeWebhookChange
   );
   const [isPending, startTransition] = useTransition();
-  const [isRevoking, setIsRevoking] = useState(false);
-  const [isReading, setIsReading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const dialogs = useDialogs<"edit" | "read" | "revoke">();
   const names = {
     clientId: webhook.clientId,
     slug,
@@ -239,13 +238,13 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
           }
         />
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => setIsReading(true)}>
+          <DropdownMenuItem onClick={() => dialogs.show("read")}>
             <HugeIcons icon={TaskDaily01Icon} />
             {t("webhook-deliveries")}
           </DropdownMenuItem>
           {webhook.status === "active" ? (
             <>
-              <DropdownMenuItem onClick={() => setIsEditing(true)}>
+              <DropdownMenuItem onClick={() => dialogs.show("edit")}>
                 <HugeIcons icon={PencilEdit02Icon} />
                 {t("webhook-edit")}
               </DropdownMenuItem>
@@ -266,7 +265,7 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => setIsRevoking(true)}
+                onClick={() => dialogs.show("revoke")}
                 variant="destructive"
               >
                 <HugeIcons icon={Delete02Icon} />
@@ -280,16 +279,12 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
         description={t("webhook-revoke-description")}
         footer={
           <>
-            <Button
-              onClick={() => setIsRevoking(false)}
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={dialogs.close} type="button" variant="outline">
               {common("cancel")}
             </Button>
             <Button
               onClick={() => {
-                setIsRevoking(false);
+                dialogs.close();
                 startTransition(() => saveSchool(() => revoke(names), SOURCE));
               }}
               type="button"
@@ -299,19 +294,20 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
             </Button>
           </>
         }
-        open={isRevoking}
-        setOpen={setIsRevoking}
+        open={dialogs.isOpen("revoke")}
+        setOpen={dialogs.setOpen}
         title={t("webhook-revoke-title")}
       />
       <SchoolDeliverySheet
-        open={isReading}
-        setOpen={setIsReading}
+        open={dialogs.isOpen("read")}
+        setOpen={dialogs.setOpen}
         webhook={webhook}
       />
-      {isEditing ? (
+      {dialogs.kind === "edit" ? (
         <SchoolWebhookEditDialog
-          open
-          setOpen={setIsEditing}
+          key={dialogs.key}
+          open={dialogs.isOpen("edit")}
+          setOpen={dialogs.setOpen}
           webhook={webhook}
         />
       ) : null}

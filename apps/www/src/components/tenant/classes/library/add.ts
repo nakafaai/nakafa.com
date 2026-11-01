@@ -108,8 +108,8 @@ export class DriveMissing extends Data.TaggedError("DriveMissing") {}
 /**
  * Lets the teacher pick one file of their own Google Drive. The server gives
  * the Picker its token first, so an account without Drive is told before
- * anything opens; `hide` then clears the page for Google's Picker, whose module
- * loads only now. It answers the picked file, or none when the teacher closed
+ * anything opens, and Google's Picker, whose module loads only now, runs `hide`
+ * once it can show. It answers the picked file, or none when the teacher closed
  * the Picker.
  */
 export const pickFromDrive = Effect.fn("classroom.library.pickDrive")(
@@ -125,10 +125,9 @@ export const pickFromDrive = Effect.fn("classroom.library.pickDrive")(
     if (keys === null) {
       return yield* new DriveMissing();
     }
-    hide();
     const { pickDriveFile } = yield* Effect.tryPromise(
       () => import("@/components/tenant/classes/library/drive")
     );
-    return yield* pickDriveFile(keys, locale, accept);
+    return yield* pickDriveFile(keys, locale, hide, accept);
   }
 );

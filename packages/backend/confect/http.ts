@@ -1,58 +1,88 @@
 import {
-  HttpRouter as ConfectHttpRouter,
-  ConvexConfigProvider,
-} from "@confect/server";
-import { isActionCtx } from "@convex-dev/better-auth/utils";
-import { authComponent } from "@repo/backend/confect/auth/client";
-import { agentGrants } from "@repo/backend/confect/auth/grant";
-import { guardianCodeSignIn } from "@repo/backend/confect/auth/guardian";
-import { schoolUsernameSignIn } from "@repo/backend/confect/auth/login";
-import { authDiscoveryRoutes } from "@repo/backend/confect/auth/route";
-import { createAuth } from "@repo/backend/confect/auth/runtime";
-import { batchRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/batch";
-import { publicRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/public";
-import { publicationRoutes } from "@repo/backend/confect/contentRelease/ingress/route";
-import { schoolMcpRoutes } from "@repo/backend/confect/integrations/mcp";
-import { schoolApiRoutes } from "@repo/backend/confect/integrations/routes";
-import { agentApiRoutes } from "@repo/backend/confect/routes/agent/api";
-import { agentMcpRoutes } from "@repo/backend/confect/routes/agent/mcp/route";
-import { requestIdentity } from "@repo/backend/confect/routes/middleware/identity";
-import { requestLogger } from "@repo/backend/confect/routes/middleware/logger";
-import { polarRoutes } from "@repo/backend/confect/routes/polar";
-import { registerResendRoutes } from "@repo/backend/confect/routes/resend";
-import { xenditRoutes } from "@repo/backend/confect/routes/xendit";
-import { Effect, Layer } from "effect";
+  type GenericActionCtx,
+  type GenericDataModel,
+  type HttpRouter,
+  httpActionGeneric,
+  httpRouter,
+  type PublicHttpAction,
+  ROUTABLE_HTTP_METHODS,
+  type RoutableMethod,
+} from "convex/server";
+import { Array as Arr, Option, Predicate } from "effect";
 
-const http = ConfectHttpRouter.make(
-  Layer.mergeAll(
-    authDiscoveryRoutes,
-    agentApiRoutes,
-    agentMcpRoutes,
-    schoolApiRoutes,
-    schoolMcpRoutes,
-    polarRoutes,
-    xenditRoutes,
-    publicationRoutes,
-    batchRuntimeRoutes,
-    publicRuntimeRoutes
-  ).pipe(
-    Layer.provide(requestIdentity.layer),
-    Layer.provide(requestLogger.layer)
+/** A family's router, which its module builds as it evaluates. */
+type LoadRouter = () => Promise<{ readonly default: HttpRouter }>;
+
+/**
+ * Every family of HTTP paths and the module that serves it. Convex reuses no context for an
+ * action, so each HTTP call evaluates this module and all that it imports, and a family
+ * loads only for its own paths: a token read pays for the auth routes and no others.
+ */
+const FAMILIES = [
+  {
+    load: () => import("@repo/backend/confect/auth/http"),
+    routes: [
+      { path: "/.well-known/openid-configuration" },
+      { pathPrefix: "/api/auth/" },
+    ],
+  },
+  {
+    load: () => import("@repo/backend/confect/contentRelease/http/router"),
+    routes: [{ pathPrefix: "/internal/content/" }],
+  },
+  {
+    load: () => import("@repo/backend/confect/integrations/http"),
+    routes: [{ pathPrefix: "/api/school/" }],
+  },
+  {
+    load: () => import("@repo/backend/confect/routes/agent/http"),
+    routes: [{ path: "/internal/mcp" }, { pathPrefix: "/internal/agent/" }],
+  },
+  {
+    load: () => import("@repo/backend/confect/routes/hooks"),
+    routes: [
+      { pathPrefix: "/polar/" },
+      { pathPrefix: "/resend/" },
+      { pathPrefix: "/xendit/" },
+    ],
+  },
+];
+
+/** A route's own handler, which Convex and `convex-test` both run and the published types leave out. */
+const hasHandler = (
+  route: PublicHttpAction
+): route is PublicHttpAction & {
+  readonly _handler: (
+    ctx: GenericActionCtx<GenericDataModel>,
+    request: Request
+  ) => Promise<Response>;
+} => Predicate.hasProperty(route, "_handler");
+
+/** One path's action here: it evaluates the family's router and runs that router's own route. */
+const forwardTo = (load: LoadRouter, method: RoutableMethod) =>
+  httpActionGeneric((ctx, request) =>
+    load().then(({ default: router }) =>
+      Option.fromNullOr(
+        router.lookup(new URL(request.url).pathname, method)
+      ).pipe(
+        Option.map(([route]) => route),
+        Option.filter(hasHandler),
+        Option.match({
+          onNone: () => Promise.resolve(new Response(null, { status: 404 })),
+          onSome: (route) => route._handler(ctx, request),
+        })
+      )
+    )
+  );
+
+const http = httpRouter();
+
+Arr.forEach(FAMILIES, ({ load, routes }) =>
+  Arr.forEach(routes, (route) =>
+    Arr.forEach(ROUTABLE_HTTP_METHODS, (method) =>
+      http.route({ ...route, handler: forwardTo(load, method), method })
+    )
   )
 );
 
-// SDK-owned routes use Confect's documented plain component boundary. The router alone
-// adds the school username and guardian code sign-ins, because only a request names the
-// school host of them.
-authComponent.registerRoutesLazy(http, (ctx) =>
-  Effect.runSync(
-    createAuth(
-      ctx,
-      isActionCtx(ctx)
-        ? [schoolUsernameSignIn(ctx), guardianCodeSignIn(ctx), agentGrants(ctx)]
-        : []
-    ).pipe(Effect.provide(ConvexConfigProvider.layer))
-  )
-);
-registerResendRoutes(http);
 export default http;

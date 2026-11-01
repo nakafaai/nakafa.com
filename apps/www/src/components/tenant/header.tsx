@@ -7,7 +7,6 @@ import {
 } from "@repo/design-system/components/ui/breadcrumb";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Separator } from "@repo/design-system/components/ui/separator";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
 import { SidebarContext } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "cn";
@@ -62,16 +61,11 @@ export function SchoolHeader({
       >
         {/* The exam editor draws no sidebar, so a page that shows in its place, such as its not-found page, has none to toggle. */}
         {hasSidebar ? (
-          <>
-            <SidebarTrigger
-              className="-ms-2 size-9 shrink-0 lg:hidden"
-              label={tCommon("toggle-sidebar")}
-            />
-            <Separator
-              className="me-1 h-4 max-sm:hidden lg:hidden"
-              orientation="vertical"
-            />
-          </>
+          <SidebarTrigger
+            className="size-9 shrink-0 lg:hidden"
+            label={tCommon("toggle-sidebar")}
+            variant="outline"
+          />
         ) : null}
         {title === undefined ? null : (
           <h1 className="sr-only" dir="auto">

@@ -24,9 +24,10 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { startTransition, useState } from "react";
+import { startTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -137,10 +138,7 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
   const viewer = useViewerQuery();
   const navigate = useNavigate();
   const router = useRouter();
-  const [isRevoking, setIsRevoking] = useState(false);
-  const [isGiving, setIsGiving] = useState(false);
-  const [changing, setChanging] = useState(0);
-  const [isChanging, setIsChanging] = useState(false);
+  const dialogs = useDialogs<"change" | "give" | "revoke">();
   const own =
     QueryResult.isSuccess(viewer) && viewer.value.person.id === grant.person.id;
 
@@ -160,23 +158,20 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
           }
         />
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => setIsGiving(true)}>
+          <DropdownMenuItem onClick={() => dialogs.show("give")}>
             <HugeIcons icon={UserStar01Icon} />
             {t("roles-assign-dialog")}
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!grant.revocable}
-            onClick={() => {
-              setChanging((count) => count + 1);
-              setIsChanging(true);
-            }}
+            onClick={() => dialogs.show("change")}
           >
             <HugeIcons icon={UserEdit01Icon} />
             {t("grant-change")}
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!grant.revocable}
-            onClick={() => setIsRevoking(true)}
+            onClick={() => dialogs.show("revoke")}
             variant="destructive"
           >
             <HugeIcons icon={Delete02Icon} />
@@ -185,32 +180,28 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
         </DropdownMenuContent>
       </DropdownMenu>
       <SchoolGrantDialog
-        open={isGiving}
+        open={dialogs.isOpen("give")}
         person={grant.person}
-        setOpen={setIsGiving}
+        setOpen={dialogs.setOpen}
       />
-      {changing === 0 ? null : (
+      {dialogs.kind === "change" ? (
         <SchoolRoleChangeDialog
           grant={grant}
-          key={changing}
-          open={isChanging}
-          setOpen={setIsChanging}
+          key={dialogs.key}
+          open={dialogs.isOpen("change")}
+          setOpen={dialogs.setOpen}
         />
-      )}
+      ) : null}
       <ResponsiveDialog
         description={t("grant-revoke-description")}
         footer={
           <>
-            <Button
-              onClick={() => setIsRevoking(false)}
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={dialogs.close} type="button" variant="outline">
               {common("cancel")}
             </Button>
             <Button
               onClick={() => {
-                setIsRevoking(false);
+                dialogs.close();
                 startTransition(async () => {
                   if (own) {
                     await navigate({
@@ -250,8 +241,8 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
             </Button>
           </>
         }
-        open={isRevoking}
-        setOpen={setIsRevoking}
+        open={dialogs.isOpen("revoke")}
+        setOpen={dialogs.setOpen}
         title={t("grant-revoke-title")}
       />
     </div>
