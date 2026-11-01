@@ -11,6 +11,8 @@ export const InboxTopic = Schema.Literals(["all", "comments", "school"]);
 const topicOf = Match.type<ListNotification["changeType"]>().pipe(
   Match.whenOr(
     "announcement.posted",
+    "assignment.deadline",
+    "assignment.missed",
     "assignment.published",
     "exam.reminder",
     "exam.starting",
