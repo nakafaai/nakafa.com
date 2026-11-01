@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   Cause,
   Deferred,
@@ -149,11 +149,19 @@ function openDocument(
 }
 
 /** Reports a missing script and says whether the failure was taken over. */
-function reportMissingScript(target: EventTarget) {
-  const event = new Event("vite:preloadError", { cancelable: true });
+function reportMissingScript(target: EventTarget, payload?: Error) {
+  const event = Object.assign(
+    new Event("vite:preloadError", { cancelable: true }),
+    { payload }
+  );
   target.dispatchEvent(event);
   return event.defaultPrevented;
 }
+
+/** What a browser that names the file reports for an import that failed. */
+const FAILED_IMPORT = new Error(
+  "error loading dynamically imported module: https://nakafa.com/assets/a.js"
+);
 
 describe("STALE_CHUNK_SCRIPT", () => {
   it("reloads once and holds back every failure until the page goes", () => {
@@ -199,6 +207,68 @@ describe("STALE_CHUNK_SCRIPT", () => {
 
     expect(reportMissingScript(online.target)).toBe(true);
     expect(online.reload).toHaveBeenCalledOnce();
+  });
+
+  describe("for a failure that names its file", () => {
+    const fetcher = vi.fn<typeof fetch>();
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.stubGlobal("fetch", fetcher);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    });
+
+    it("reloads at once for a chunk that a deploy removed", async () => {
+      fetcher.mockResolvedValueOnce(new Response(null, { status: 404 }));
+      const { reload, target } = openDocument(tab().storage);
+
+      expect(reportMissingScript(target, FAILED_IMPORT)).toBe(true);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(fetcher.mock.lastCall?.[0]).toBe("https://nakafa.com/assets/a.js");
+      expect(reload).toHaveBeenCalledOnce();
+    });
+
+    it("leaves a tab that is going elsewhere, whose chunk still exists", async () => {
+      fetcher.mockResolvedValueOnce(new Response(null));
+      const { storage } = tab();
+      const { reload, target } = openDocument(storage);
+
+      expect(reportMissingScript(target, FAILED_IMPORT)).toBe(true);
+      await vi.advanceTimersByTimeAsync(4999);
+
+      expect(reload).not.toHaveBeenCalled();
+      expect(reportMissingScript(openDocument(storage).target)).toBe(true);
+    });
+
+    it("reloads a tab that stayed, once a navigation had its time", async () => {
+      fetcher.mockRejectedValueOnce(new TypeError("no answer"));
+      const { reload, target } = openDocument(tab().storage);
+
+      reportMissingScript(target, FAILED_IMPORT);
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(reload).toHaveBeenCalledOnce();
+    });
+
+    it("never reloads a tab whose storage refuses the mark", async () => {
+      fetcher.mockResolvedValueOnce(new Response(null, { status: 404 }));
+      const { reload, target } = openDocument({
+        getItem: () => null,
+        setItem: () => {
+          throw new Error("Storage is full.");
+        },
+      });
+
+      reportMissingScript(target, FAILED_IMPORT);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(reload).not.toHaveBeenCalled();
+    });
   });
 
   it("never reloads without storage, which could not stop a loop", () => {
