@@ -11,3 +11,9 @@ export const {
   deleteOne,
   deleteMany,
 } = createApi(schema, createAuthOptions);
+
+/**
+ * Keeps this module's context between calls (ADR 0040). It builds every Better Auth option as it
+ * evaluates, and `createApi` holds only the tables those options name, so no caller's value stays.
+ */
+export const experimental_reuseContext = true;
