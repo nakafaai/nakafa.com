@@ -13,6 +13,7 @@ import {
 } from "@/components/notifications/inbox";
 import { markAllReadInLists } from "@/components/notifications/mutation";
 import { hasUnread } from "@/components/notifications/state";
+import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
@@ -64,7 +65,7 @@ export function MarkAllRead({
       variant="outline"
     >
       <HugeIcons icon={CheckmarkCircle02Icon} />
-      <span className="max-sm:sr-only">{t("mark-all-read")}</span>
+      <HeaderLabel>{t("mark-all-read")}</HeaderLabel>
     </Button>
   );
 }

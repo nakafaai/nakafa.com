@@ -21,16 +21,24 @@ test("an owner reads each step of the setup, opens one, and finishing takes it o
     .locator("header")
     .getByRole("button", { name: "Finish setup" });
   await waitUntilTakenOver(finish);
+  const main = page.getByRole("main");
   for (const step of [
-    "Plan and contract",
-    "Country profile",
-    "Period and class groups",
-    "Import students",
-    "School policies",
-    "Try one exam",
+    "Cohorts",
+    "Students",
+    "Classrooms",
+    "Teachers",
+    "Parents",
+    "First exam",
+    "Plan",
+    "Country and currency",
+    "Time zone and language",
+    "Policies",
   ]) {
-    await expect(page.getByRole("heading", { name: step })).toBeVisible();
+    await expect(main.getByText(step, { exact: true })).toBeVisible();
   }
+  // The defaults read as names, never as the codes the school stores.
+  await expect(main.getByText("Indonesia, ")).toBeVisible();
+  await expect(main.getByText("IDR", { exact: true })).toHaveCount(0);
   const entry = page
     .locator('[data-slot="sidebar"]')
     .getByRole("link", { name: "Set up school" });

@@ -71,27 +71,19 @@ const loadFlaggedPlacements = Effect.fn(
   return HashSet.fromIterable(Arr.map(flags, (flag) => flag.question));
 });
 
-/**
- * Loads a section's compact runtime, which a live query repeats on every write, and the bodies of its
- * questions, which a page reads once.
- */
-export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
+/** Loads a section's compact runtime with the access and the placements its bodies read through. */
+const loadSectionGraph = Effect.fn("tryouts.runtime.loadSectionGraph")(
   function* (
     attempt: Docs["tryoutAttempts"],
-    section: Docs["tryoutSectionAttempts"],
-    appLocale: AppLocaleCode
+    section: Docs["tryoutSectionAttempts"]
   ) {
     const loaded = yield* loadSectionRows(attempt, section);
     if (!loaded) {
-      return { content: [], runtime: null };
+      return null;
     }
-    const content = yield* readSectionBodies({
-      access: loaded.access,
-      appLocale,
-      placements: loaded.placements,
-    });
     return {
-      content,
+      access: loaded.access,
+      placements: loaded.placements,
       runtime: {
         attemptId: attempt._id,
         expiresAt: section.expiresAt,
@@ -103,6 +95,39 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
         ),
         section: loaded.currentSection,
       },
+    };
+  }
+);
+
+/** Loads a section's compact runtime, which a live query repeats on every write. */
+export const loadSectionRuntime = Effect.fn(
+  "tryouts.runtime.loadSectionRuntime"
+)(function* (
+  attempt: Docs["tryoutAttempts"],
+  section: Docs["tryoutSectionAttempts"]
+) {
+  const graph = yield* loadSectionGraph(attempt, section);
+  return graph?.runtime ?? null;
+});
+
+/** Loads a section's compact runtime and the bodies of its questions, which a page reads once. */
+export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
+  function* (
+    attempt: Docs["tryoutAttempts"],
+    section: Docs["tryoutSectionAttempts"],
+    appLocale: AppLocaleCode
+  ) {
+    const graph = yield* loadSectionGraph(attempt, section);
+    if (!graph) {
+      return { content: [], runtime: null };
+    }
+    return {
+      content: yield* readSectionBodies({
+        access: graph.access,
+        appLocale,
+        placements: graph.placements,
+      }),
+      runtime: graph.runtime,
     };
   }
 );

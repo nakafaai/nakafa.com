@@ -266,7 +266,6 @@ const gate = make({
   ) =>
     writeAnswer({
       answer,
-      attempt: live.attempt,
       now,
       placement: live.placement,
       section: live.section,

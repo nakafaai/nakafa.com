@@ -5,6 +5,7 @@ import type { JoinOutcome } from "@repo/backend/confect/exams/sittings/contract"
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -205,7 +206,11 @@ function RoomJoinForm() {
           translate="no"
           value={token}
         />
-        <FieldError>
+        {/* The hint keeps the two lines a refusal needs, so the button never moves. */}
+        <FieldDescription className="min-h-[2lh]">
+          {t("student-token-hint")}
+        </FieldDescription>
+        <FieldError className="min-h-[2lh]">
           {refusal === null ? null : t(refusals[refusal], { school: name })}
         </FieldError>
       </Field>

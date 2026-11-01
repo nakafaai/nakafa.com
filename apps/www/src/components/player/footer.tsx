@@ -12,11 +12,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { cn } from "cn";
 import { Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { readNeighbor, readPosition } from "@/components/player/order";
 import { usePlayer } from "@/components/player/provider";
+import { pageRowVariants } from "@/components/shared/content/width";
 
 /**
  * The controls under the questions in one row: previous at the start, the navigator opener below the large
@@ -37,7 +39,12 @@ export function PlayerFooter({ children }: { children: ReactNode }) {
       className="bg-background sticky bottom-0 z-10 border-t pb-[env(safe-area-inset-bottom,0px)]"
       data-player-footer=""
     >
-      <fieldset className="mx-auto grid h-16 w-full max-w-7xl min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-x-2 border-0 px-4 sm:px-6">
+      <fieldset
+        className={cn(
+          pageRowVariants(),
+          "grid h-16 min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-x-2 border-0"
+        )}
+      >
         <legend className="sr-only">{t("controls")}</legend>
         <div className="flex justify-start">
           <PlayerPrevious />

@@ -342,3 +342,67 @@ test("an admin places a student in a cohort, moves the student to another, and s
   await expect(kept.getByRole("textbox", { name: "NISN" })).toHaveValue("");
   await context.close();
 });
+
+test("a student added with a card joins a cohort and takes a parent at once, and an empty picker says where students come from", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
+  await page.goto(address("/settings/periods"));
+  await openSemester(page, changes);
+  await page.goto(address("/settings/cohorts"));
+  await addCohort(page, "7A");
+
+  await page.getByRole("link", { name: "7A" }).click();
+  const cohort = page.url();
+  const place = page
+    .locator("header")
+    .getByRole("button", { name: "Add student" });
+  await waitUntilTakenOver(place);
+  await place.click();
+  const placing = page.getByRole("dialog");
+  await placing.getByRole("combobox", { name: "Student" }).click();
+  await expect(
+    page.getByText("Add a student in Student accounts first.")
+  ).toBeVisible();
+  await page.goto(address("/settings/students"));
+
+  const add = page
+    .locator("header")
+    .getByRole("button", { name: "Add student" });
+  await waitUntilTakenOver(add);
+  await add.click();
+  const enrolling = page.getByRole("dialog");
+  await enrolling
+    .getByRole("textbox", { exact: true, name: "Name" })
+    .fill("Ayu Lestari");
+  await enrolling.getByLabel("Login name").fill("ayu.lestari");
+  await enrolling.getByRole("button", { name: "Add student" }).click();
+  await expect(page.getByRole("dialog", { name: "Login card" })).toBeVisible();
+
+  await page.goto(cohort);
+  await waitUntilTakenOver(place);
+  await place.click();
+  await placing.getByRole("combobox", { name: "Student" }).click();
+  await page.getByRole("option", { name: "Ayu Lestari" }).click();
+  await placing.getByRole("button", { name: "Add student" }).click();
+  await expect(
+    page.getByRole("main").getByText("Ayu Lestari", { exact: true })
+  ).toBeVisible();
+
+  await page.goto(address("/settings/guardians"));
+  const link = page
+    .locator("header")
+    .getByRole("button", { name: "Link a parent" });
+  await waitUntilTakenOver(link);
+  await link.click();
+  await page.getByRole("dialog").getByRole("combobox").first().click();
+  await expect(page.getByRole("option", { name: "Ayu Lestari" })).toBeVisible();
+  await context.close();
+});

@@ -4,7 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { ContributorGallery } from "@/components/contributor/gallery";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { HeaderContent } from "@/components/shared/content/header";
 import { contributors } from "@/lib/data/contributor";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
@@ -62,9 +62,11 @@ function ContributorPage() {
         icon={LoveKoreanFingerIcon}
         title={t("title")}
       />
-      <LayoutContent className="w-full pb-20">
-        <ContributorGallery contributors={contributors} />
-      </LayoutContent>
+      <PageFrame width="column">
+        <LayoutContent className="w-full pb-20">
+          <ContributorGallery contributors={contributors} />
+        </LayoutContent>
+      </PageFrame>
     </>
   );
 }

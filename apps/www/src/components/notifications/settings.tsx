@@ -30,6 +30,7 @@ import {
 import { useTranslations } from "use-intl";
 import { ChoiceContext } from "@/components/notifications/choice";
 import { preferenceRowsOf } from "@/components/notifications/preferences";
+import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { columnAlign } from "@/components/shared/table/align";
 import { TableFrame } from "@/components/shared/table/frame";
 
@@ -42,7 +43,7 @@ export function NoticePreferences({ children }: { children: ReactNode }) {
     <>
       <Button onClick={() => setOpen(true)} type="button" variant="outline">
         <HugeIcons icon={Settings01Icon} />
-        <span className="max-sm:sr-only">{t("preferences")}</span>
+        <HeaderLabel>{t("preferences")}</HeaderLabel>
       </Button>
       <ResponsiveDialog
         description={t("preferences-description")}

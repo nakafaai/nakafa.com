@@ -4,8 +4,8 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { finishSchoolStart } from "@/e2e/support/school";
 
-/** The address of the Exams page, where the new Owner lands. */
-const EXAMS_ADDRESS = /\/exams$/u;
+/** The address of the setup, where the new Owner lands. */
+const SETUP_ADDRESS = /\/setup$/u;
 
 /** The target of K42: from signing in to a school that is ready, under two minutes. */
 const TARGET = Duration.minutes(2);
@@ -62,9 +62,9 @@ for (const viewport of VIEWPORTS) {
       finishSchoolStart(page, baseURL, { name, slug: `harapan-${tag}` })
     );
 
-    await page.waitForURL(EXAMS_ADDRESS);
+    await page.waitForURL(SETUP_ADDRESS);
     await expect(
-      page.getByRole("button", { name: "Create exam" })
+      page.getByRole("button", { name: "Finish setup" })
     ).toBeVisible();
     const finished = await Effect.runPromise(Clock.currentTimeMillis);
     expect(finished - started).toBeLessThan(Duration.toMillis(PAGE_BUDGET));

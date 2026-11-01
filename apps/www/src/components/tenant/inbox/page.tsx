@@ -4,6 +4,7 @@ import {
   SchoolIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +22,8 @@ import { NotificationsList } from "@/components/notifications/list";
 import { MarkAllRead } from "@/components/notifications/read";
 import { InboxTabs } from "@/components/notifications/tabs";
 import { SchoolInboxTopic } from "@/components/notifications/topic";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
+import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { SchoolPreferences } from "@/components/tenant/inbox/preferences";
@@ -39,20 +41,22 @@ export function SchoolNotifications({ all }: { all: boolean }) {
   const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
 
   return (
-    <>
+    <PageFrame width="column">
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {/* Mark all read stands before the filter from the first paint, ready and final. */}
-        <MarkAllRead first={Option.none()} scope={scope} />
-        <SchoolPreferences />
-        <InboxFilter all={all} />
+        <ButtonGroup>
+          <MarkAllRead first={Option.none()} scope={scope} />
+          <SchoolPreferences />
+          <InboxFilter all={all} />
+        </ButtonGroup>
       </SchoolHeader>
-      <InboxTabs topics={SchoolInboxTopic.literals} width="page" />
+      <InboxTabs topics={SchoolInboxTopic.literals} />
       <LayoutContent className="flex w-full flex-col py-6">
         <NotificationsClockContext value={clock}>
           <NotificationsList first={Option.none()} scope={scope} />
         </NotificationsClockContext>
       </LayoutContent>
-    </>
+    </PageFrame>
   );
 }
 
@@ -68,9 +72,9 @@ function InboxFilter({ all }: { all: boolean }) {
         render={
           <Button type="button" variant="outline">
             <HugeIcons icon={FilterHorizontalIcon} />
-            <span className="max-sm:sr-only">
+            <HeaderLabel>
               {all ? t("all-schools") : t("this-school")}
-            </span>
+            </HeaderLabel>
           </Button>
         }
       />

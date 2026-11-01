@@ -293,7 +293,11 @@ export const finishSchoolStart = Effect.fn("NakafaE2E.finishSchoolStart")(
     baseURL: string | undefined,
     school: Record<"name" | "slug", string>
   ) {
-    const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
+    const schoolHome = hostAddress(
+      baseURL,
+      `${school.slug}.localhost`,
+      "/setup"
+    );
     yield* Effect.tryPromise(async () => {
       const opened = page.waitForEvent("framenavigated", {
         predicate: (frame) => {

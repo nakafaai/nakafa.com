@@ -1,3 +1,4 @@
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { createFileRoute } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import { AccountPreferences } from "@/components/notifications/account";
@@ -44,10 +45,12 @@ function NotificationsPage() {
     <LayoutMaterial>
       <LayoutMaterialContent>
         <NotificationsHeader>
-          <MarkAllRead first={page} scope={ACCOUNT_INBOX} />
-          <AccountPreferences />
+          <ButtonGroup>
+            <MarkAllRead first={page} scope={ACCOUNT_INBOX} />
+            <AccountPreferences />
+          </ButtonGroup>
         </NotificationsHeader>
-        <InboxTabs topics={InboxTopic.literals} width="column" />
+        <InboxTabs topics={InboxTopic.literals} />
         <LayoutContent className="flex flex-col gap-6 py-6">
           <NotificationsClockContext value={clock}>
             <NotificationsList first={page} scope={ACCOUNT_INBOX} />
