@@ -184,7 +184,7 @@ describe("readTryoutRouteHead", () => {
         });
 
         expect(Option.getOrThrow(head).description).toBe(
-          "metadata-description"
+          "route-metadata-description Indonesia"
         );
       })
   );
@@ -219,7 +219,9 @@ describe("readTryoutRouteHead", () => {
       });
 
       expect(Option.getOrThrow(head).image).toBe("social-snbt.png");
-      expect(Option.getOrThrow(head).description).toBe("metadata-description");
+      expect(Option.getOrThrow(head).description).toBe(
+        "route-metadata-description Indonesia"
+      );
       expect(catalog.resolveTryoutExamArtwork).toHaveBeenCalledExactlyOnceWith(
         expect.objectContaining({ examKey: "snbt", publicPath: COUNTRY })
       );

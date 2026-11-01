@@ -126,12 +126,16 @@ export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
       publicPath: source.publicPath,
       title: source.title,
     });
+    // A route the catalog does not describe names itself, so no two pages share a description.
+    const description =
+      source.description ??
+      tTryouts("route-metadata-description", { name: source.title });
     if (input.kind !== "exam") {
       return Option.some<TryoutRouteHead>({
         alternates,
         breadcrumbs,
         canonicalPath: `/${input.locale}/${source.publicPath}`,
-        description: source.description ?? tTryouts("metadata-description"),
+        description,
         image: getOgUrl(input.locale, source.publicPath),
         indexable: true,
         title: tTryouts("search-title", { name: source.title }),
@@ -149,7 +153,7 @@ export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
       alternates,
       breadcrumbs,
       canonicalPath: `/${input.locale}/${source.publicPath}`,
-      description: source.description ?? tTryouts("metadata-description"),
+      description,
       image: artwork.socialImageSrc,
       indexable: true,
       title: tTryouts("search-title", { name: source.title }),

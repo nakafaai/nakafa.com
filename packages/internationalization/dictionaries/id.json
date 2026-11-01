@@ -2267,6 +2267,7 @@
   },
   "Articles": {
     "description": "Baca artikel edukatif dengan konteks, data, dan rujukan yang jelas.",
+    "category-description": "Baca artikel {category} dengan konteks, data, dan rujukan yang jelas.",
     "politics": "Politik",
     "contributor": "Kontributor",
     "articles": "Artikel"
@@ -2295,6 +2296,7 @@
     "title": "Mau coba try out apa hari ini?",
     "hub-search-title": "Try Out Online Gratis dengan Skor Langsung",
     "metadata-description": "Try out berwaktu dengan skor langsung setelah selesai. Gratis dan tanpa batas di Nakafa.",
+    "route-metadata-description": "Try out {name} berwaktu dengan skor langsung setelah selesai. Gratis dan tanpa batas di Nakafa.",
     "search-title": "Try Out {name} Gratis",
     "track-metadata-description": "Pilih set try out {exam} di Nakafa: berwaktu, dengan skor langsung setelah selesai.",
     "set-metadata-description": "Kerjakan {set} {exam} di Nakafa: try out berwaktu dengan skor langsung setelah selesai.",
