@@ -79,12 +79,7 @@ const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
   return {
     kind: "found" as const,
     arabic: view.surah.name.arabic,
-    book: {
-      description: meaning.text,
-      name: title,
-      numberOfVerses: view.surah.numberOfVerses,
-      position: surahNumber,
-    },
+    book: { name: t("quran"), position: surahNumber },
     breadcrumbs: createBreadcrumbItems(locale, [
       { name: tCommon("home"), path: "" },
       { name: t("quran"), path: "/quran" },
@@ -114,6 +109,7 @@ const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
     }),
     preBismillah,
     references: getQuranReferences(view.sources, view.tafsirAccess),
+    searchTitle: seo.title,
     snapshotId: view.snapshotId,
     surah: data.surah,
     surahNumber,
