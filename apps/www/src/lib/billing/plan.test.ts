@@ -28,6 +28,7 @@ const SUBSCRIPTION: BillingSubscription = {
 };
 
 const FREE: BillingOverview = {
+  hasPayments: false,
   credits: {
     allowance: 10,
     balance: 10,

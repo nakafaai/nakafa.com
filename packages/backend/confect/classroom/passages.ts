@@ -15,11 +15,14 @@ export const MAX_READ_BYTES = 20 * 1024 * 1024;
 export const SEARCH_LIMIT = 4;
 
 /** What the model is told when it reads a teacher's file into text. */
-export const READ_INSTRUCTIONS = [
-  "You read a file a teacher published to their class, so a class assistant can search it.",
-  "Write out the text of the file in its own language, in reading order, with a blank line between paragraphs.",
-  "Describe a figure in one sentence where it stands. Add nothing else, and answer with the text alone.",
-].join("\n");
+export const READ_INSTRUCTIONS = Arr.join(
+  [
+    "You read a file a teacher published to their class, so a class assistant can search it.",
+    "Write out the text of the file in its own language, in reading order, with a blank line between paragraphs.",
+    "Describe a figure in one sentence where it stands. Add nothing else, and answer with the text alone.",
+  ],
+  "\n"
+);
 
 /** One passage of a published file, with its vector. Deleting these rows loses nothing, because a build makes them again (ADR 0023). */
 export const classroomPassageValidator = Schema.Struct({

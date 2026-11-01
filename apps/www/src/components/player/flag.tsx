@@ -25,7 +25,7 @@ const flagButton = cva(
  * changes. The button keeps one name and one width, its name for a screen
  * reader alone on a phone, and says whether the question is flagged through its
  * pressed state. The question's flag changes at once, so a press never waits
- * for the server. A footer whose centre holds a note keeps the flag before it at every width.
+ * for the server. A footer with a `PlayerNote` keeps the flag before the note at every width.
  */
 export function PlayerFlag({
   beforeNote = false,

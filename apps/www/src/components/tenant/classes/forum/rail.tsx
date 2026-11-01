@@ -11,9 +11,10 @@ import {
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@repo/design-system/components/ui/toggle-group";
+  Tabs,
+  TabsList,
+  TabsTab,
+} from "@repo/design-system/components/ui/tabs";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -183,32 +184,27 @@ function ChatFilters({
   const choose = useTableFilters((state) => state.choose);
 
   return (
-    <div className="shrink-0 px-2 pb-2">
-      <ToggleGroup
-        aria-label={t("chat-filter")}
-        className="w-full"
-        onValueChange={(next) => {
-          if (Schema.is(ChatFilter)(next)) {
-            choose(CHAT_FILTER, [next]);
-          }
-        }}
-        size="sm"
-        type="single"
-        value={filter}
-        variant="outline"
-      >
+    <Tabs
+      onValueChange={(next) => {
+        if (Schema.is(ChatFilter)(next)) {
+          choose(CHAT_FILTER, [next]);
+        }
+      }}
+      value={filter}
+    >
+      <TabsList aria-label={t("chat-filter")} className="px-1">
         {Arr.map(
           Arr.filter(
             ChatFilter.literals,
             (value) => anyArchived || value !== "archived"
           ),
           (value) => (
-            <ToggleGroupItem key={value} value={value}>
+            <TabsTab key={value} value={value}>
               {t(`chat-filter-${value}`)}
-            </ToggleGroupItem>
+            </TabsTab>
           )
         )}
-      </ToggleGroup>
-    </div>
+      </TabsList>
+    </Tabs>
   );
 }

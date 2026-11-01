@@ -1,4 +1,8 @@
-import type { OptimisticUpdate, PaginatedQueryItem } from "@confect/react";
+import type {
+  OptimisticLocalStore,
+  OptimisticUpdate,
+  PaginatedQueryItem,
+} from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
 import {
@@ -85,6 +89,7 @@ export const storeSchemeChange: OptimisticUpdate<
     ...normalizeScheme({ bands, kktp }),
     effectiveFrom,
     id: Schema.decodeUnknownSync(Id("gradingSchemes"))(draftText()),
+    used: false,
   };
   for (const query of localStore.getAllQueries(records.schemes.list)) {
     if (
@@ -112,3 +117,44 @@ export const SchemeVersionsContext = createContext<{
   newest: Option.Option<SchemeVersion>;
   ready: boolean;
 }>({ newest: Option.none(), ready: false });
+
+/** Replaces the versions of a school in every page the store holds. */
+const changeVersions = (
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
+  slug: string,
+  change: (page: readonly SchemeVersion[]) => SchemeVersion[]
+) => {
+  for (const query of localStore.getAllQueries(records.schemes.list)) {
+    if (Option.isSome(query.value) && query.args.slug === slug) {
+      localStore.setQuery(
+        records.schemes.list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: change(query.value.value.page),
+        })
+      );
+    }
+  }
+};
+
+/** Shows a corrected version at once. */
+export const amendSchemeChange: OptimisticUpdate<
+  typeof records.schemes.amend
+> = (localStore, { bands, kktp, schemeId, slug }) => {
+  const scheme = normalizeScheme({ bands, kktp });
+  changeVersions(localStore, slug, (page) =>
+    Arr.map(page, (version) =>
+      version.id === schemeId ? { ...version, ...scheme } : version
+    )
+  );
+};
+
+/** Takes a removed version out of the list at once. */
+export const removeSchemeChange: OptimisticUpdate<
+  typeof records.schemes.remove
+> = (localStore, { schemeId, slug }) => {
+  changeVersions(localStore, slug, (page) =>
+    Arr.filter(page, (version) => version.id !== schemeId)
+  );
+};
