@@ -10,7 +10,7 @@ import {
 import { paperAnswers } from "@repo/backend/confect/exams/parts";
 import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { lazy, type ReactNode, Suspense } from "react";
+import { lazy, type ReactNode, Suspense, useMemo } from "react";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import { ReaderPrimer } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
@@ -104,6 +104,10 @@ export function ExamTryQuestion({
   const flagged = useExamTry((state) => Rec.has(state.flags, question.id));
   // The try shows the paper a student would meet, which leaves out every part that shows nothing.
   const answers = paperAnswers(question.answers);
+  const labels = useMemo(
+    () => partLabels(question.answers),
+    [question.answers]
+  );
   const choice = choiceOf(answers);
   const reasons = reasonOf(answers);
   const entry = writtenOf(answers);
@@ -132,7 +136,7 @@ export function ExamTryQuestion({
           <ExamTryPrompt documentId={question.prompt} />
         </div>
       </PlayerQuestionPrompt>
-      <TryPictures documents={partLabels(answers)}>
+      <TryPictures documents={labels}>
         <PlayerQuestionAnswer>
           {Option.isSome(choice) ? (
             <SittingChoice

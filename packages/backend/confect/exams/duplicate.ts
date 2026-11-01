@@ -117,7 +117,8 @@ const copyReading = Effect.fn("exams.duplicate.reading")(function* (
 
 /**
  * Copies an exam for a new use, with what its questions say now, each in a new document, and no sitting, room or
- * result, so a teacher can edit it however the exam it came from is locked. The copy stands in the same scope.
+ * result, so a teacher can edit it however the exam it came from is locked. The copy stands in the same scope, and
+ * holds as many questions as the exam it came from, so it is never full.
  */
 export const duplicateExam = Effect.fn("exams.exam.duplicate")(function* (
   source: ExamSource,
@@ -177,7 +178,7 @@ export const duplicateExam = Effect.fn("exams.exam.duplicate")(function* (
             : { scoring: question.scoring }),
           template: question.template,
         }
-      );
+      ).pipe(Effect.catchTag("ExamFull", Effect.die));
       return {
         order: Arr.append(order, copied),
         readings:
