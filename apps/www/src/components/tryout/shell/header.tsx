@@ -1,5 +1,6 @@
 "use client";
 
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
@@ -14,6 +15,8 @@ import { HOME_TARGET, TRYOUT_TARGET } from "@/lib/routing/target";
  * Keeps navigation, heading, and the primary action in one row at every width. On a
  * phone the path folds whole into its menu, as Google Drive folds it, so the page's
  * name sits beside it; from md the path, the centred name and the action stand apart.
+ * "Set 1" means nothing without its path, so the heading says the path to readers and
+ * crawlers that do not see the row.
  */
 export function TryoutPageHeader({
   children,
@@ -55,6 +58,12 @@ export function TryoutPageHeader({
         className="min-w-0 truncate text-base font-medium md:max-w-xs md:text-center"
         title={title}
       >
+        <span className="sr-only">
+          {Arr.join(
+            Arr.map(path, (item) => item.label),
+            " "
+          )}{" "}
+        </span>
         {title}
       </h1>
       <div className="flex shrink-0 justify-end">{children}</div>

@@ -99,7 +99,7 @@ function TryoutTrackPage() {
               },
               { label: route.page.track.title },
             ],
-            title: route.page.track.title,
+            title: `${route.page.exam.title} ${route.page.track.title}`,
           }}
         />
         <TryoutSetTable
