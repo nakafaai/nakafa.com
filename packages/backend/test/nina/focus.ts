@@ -5,10 +5,7 @@ import type { NinaFocus } from "@repo/backend/confect/nina/contract/focus";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
-import {
-  insertStartedAttempt,
-  TRYOUT_NOW,
-} from "@repo/backend/test/tryout/world";
+import { insertStartedAttempt } from "@repo/backend/test/tryout/world";
 import { Effect, type Exit, type Layer } from "effect";
 
 const database = (ctx: MutationCtx) =>
@@ -26,8 +23,11 @@ export async function createFocusTest() {
     const attemptId = await insertStartedAttempt(ctx, nina.identity.userId, {
       entry: true,
     });
+    const attempt = await ctx.db.get("tryoutAttempts", attemptId);
+    assert.ok(attempt, "Expected the started attempt.");
+    const completedAt = attempt.startedAt + 1;
     await ctx.db.patch("tryoutAttempts", attemptId, {
-      completedAt: TRYOUT_NOW + 1,
+      completedAt,
       endReason: "submitted",
       status: "completed",
     });
@@ -53,7 +53,7 @@ export async function createFocusTest() {
       "Expected the entry section and its first question."
     );
     await ctx.db.patch("tryoutSectionAttempts", section._id, {
-      completedAt: TRYOUT_NOW + 1,
+      completedAt,
       endReason: "submitted",
       status: "completed",
     });
