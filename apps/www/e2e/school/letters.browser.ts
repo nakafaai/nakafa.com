@@ -10,6 +10,9 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 /** The editors of the first question's options, whose names carry each option's letter. */
 const OPTION_OF_FIRST = /^Question 1, option /u;
 
+/** The first question of the paper, in its editor. */
+const FIRST_QUESTION = /^Question 1\b/u;
+
 /** The four options of the new question, written in Arabic: book, pen, house, door. */
 const WORDS = ["كتاب", "قلم", "بيت", "باب"] as const;
 
@@ -56,7 +59,16 @@ test("an Arabic option set is lettered in abjad order on the teacher's paper", a
     );
   }
 
-  // Its text stands beside its letter, on the side an Arabic set reads from.
-  await expect(options.first()).toHaveCSS("text-align", "start");
+  // The letter stands in the option's circle, and the first circle on the side an Arabic set reads from.
+  const circles = page
+    .getByRole("region", { name: FIRST_QUESTION })
+    .locator('[data-slot="radio"]');
+  await expect(circles.first()).toHaveText(ABJAD[0]);
+  await expect(options.first()).toHaveCSS("text-align", "right");
+  const [first, second] = await Promise.all([
+    circles.nth(0).boundingBox(),
+    circles.nth(1).boundingBox(),
+  ]);
+  expect(first?.x).toBeGreaterThan(second?.x ?? first?.x ?? 0);
   await context.close();
 });

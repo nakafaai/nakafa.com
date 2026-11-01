@@ -5,7 +5,6 @@ import {
 } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskPoints } from "@repo/backend/confect/classroom/tasks/task";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   NumberField,
   NumberFieldDecrement,
@@ -20,6 +19,8 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
+import { TableEnd } from "@/components/shared/table/pages";
+import { TableName } from "@/components/shared/table/title";
 import {
   TableSearch,
   useServerSearch,
@@ -96,11 +97,7 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
         <DataTable
           columns={[
             workColumns.text((work) => work.person.name, {
-              cell: (info) => (
-                <span className="font-medium" dir="auto">
-                  {info.getValue()}
-                </span>
-              ),
+              cell: (info) => <TableName>{info.getValue()}</TableName>,
               header: t("task-student"),
               id: "student",
             }),
@@ -137,7 +134,7 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
           rowId={(work) => work.id}
         />
       </TableFrame>
-      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
+      {loadMore === null ? null : <TableEnd onLoad={loadMore} />}
     </>
   );
 }

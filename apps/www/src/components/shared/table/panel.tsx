@@ -109,10 +109,7 @@ export function HeadPanel({
   return (
     <Popover>
       <PopoverTrigger render={trigger} />
-      <PopoverContent
-        align={use(HeadMenuContext)}
-        className="w-auto min-w-56 gap-2 p-2"
-      >
+      <PopoverContent align={use(HeadMenuContext)} className="w-72 p-2">
         {children}
       </PopoverContent>
     </Popover>
@@ -138,7 +135,6 @@ export function HeadSort({
         aria-pressed={sorted === "asc"}
         className="flex-1"
         onClick={() => onSort(false)}
-        size="sm"
         type="button"
         variant={sorted === "asc" ? "secondary" : "outline"}
       >
@@ -149,7 +145,6 @@ export function HeadSort({
         aria-pressed={sorted === "desc"}
         className="flex-1"
         onClick={() => onSort(true)}
-        size="sm"
         type="button"
         variant={sorted === "desc" ? "secondary" : "outline"}
       >
@@ -265,7 +260,6 @@ export function HeadReset({ column }: { column: string }) {
     <Button
       className="w-full"
       onClick={() => choose(column, [])}
-      size="sm"
       type="button"
       variant="ghost"
     >

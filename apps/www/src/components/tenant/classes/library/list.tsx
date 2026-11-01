@@ -4,6 +4,7 @@ import {
   usePaginatedQuery,
 } from "@confect/react";
 import {
+  ArrowRight01Icon,
   Delete02Icon,
   Folder01Icon,
   Image01Icon,
@@ -16,7 +17,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Match } from "effect";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -27,7 +28,7 @@ import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
-import { RowCopy } from "@/components/shared/table/menu";
+import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
@@ -222,9 +223,9 @@ function LibraryActions() {
 
 /**
  * The rows of the library: each folder, which opens on its own page, then each item's title, which
- * opens it in a new tab, who added it, and when, with the files being added first, in a data table, or
- * nothing while the first page loads. A teacher changes a row from its menu. A failed read shows its
- * sentence and Try again in the table's place.
+ * opens it in a new tab, its kind, who added it, and when, with the files being added first, in a data
+ * table, or nothing while the first page loads. Every row's menu opens it, and a teacher changes it there
+ * too. A failed read shows its sentence and Try again in the table's place.
  */
 function LibraryRows({
   folders,
@@ -238,7 +239,6 @@ function LibraryRows({
   const t = useTranslations("Classroom");
   const formatZone = useFormatTimeZone();
   const format = useFormatter();
-  const { can } = useClassScope();
 
   const rows: readonly LibraryRow[] = [
     ...Arr.map(folders, folderRow),
@@ -250,6 +250,20 @@ function LibraryRows({
       cell: (info) => <LibraryTitle row={info.row.original} />,
       header: t("library-title"),
       id: "title",
+    }),
+    libraryColumns.values((row) => shownOf(row).kind, {
+      cell: (info) => (
+        <span className="text-muted-foreground">
+          {t(`library-kind-${info.getValue()}`)}
+        </span>
+      ),
+      header: t("library-type"),
+      id: "kind",
+      options: Arr.map(["folder", "pdf", "image", "link"] as const, (kind) => ({
+        icon: KIND_ICONS[kind],
+        label: t(`library-kind-${kind}`),
+        value: kind,
+      })),
     }),
     libraryColumns.values((row) => shownOf(row).author, {
       cell: (info) => (
@@ -277,13 +291,7 @@ function LibraryRows({
       id: "added",
       timeZone: formatZone,
     }),
-    libraryColumns.menu((info) =>
-      Arr.contains(can, "library.manage") ? (
-        <LibraryRowMenu row={info.row.original} />
-      ) : (
-        <RowCopy value={shownOf(info.row.original).title} />
-      )
-    ),
+    libraryColumns.menu((info) => <LibraryRowMenu row={info.row.original} />),
   ];
 
   return (
@@ -356,23 +364,81 @@ function LibraryItemLink({ row }: { row: LibraryRow }) {
   );
 }
 
-/** The menu of a row for a teacher: a saved folder's, a saved item's, or its title for what the server is still keeping. */
+/**
+ * The menu of a row: Open for everyone, with a teacher's changes to a saved folder or a saved item below it, and the
+ * title to copy for what has nothing to open, such as what the server is still keeping.
+ */
 function LibraryRowMenu({ row }: { row: LibraryRow }) {
-  if (row._tag === "item") {
-    return <LibraryRemove item={row.item} />;
+  const { can } = useClassScope();
+  const manages = Arr.contains(can, "library.manage");
+
+  if (
+    row._tag === "upload" ||
+    (row._tag === "folder" && !isSavedFolder(row.folder)) ||
+    (!manages && row._tag === "item" && row.item.address === null)
+  ) {
+    return <RowCopy value={shownOf(row).title} />;
   }
-  return row._tag === "folder" && isSavedFolder(row.folder) ? (
-    <FolderRowMenu folder={row.folder} />
+  if (!manages) {
+    return (
+      <RowItems>
+        <LibraryOpen row={row} />
+      </RowItems>
+    );
+  }
+  return row._tag === "item" ? (
+    <LibraryRemove item={row.item}>
+      <LibraryOpen row={row} />
+    </LibraryRemove>
   ) : (
-    <RowCopy value={shownOf(row).title} />
+    <FolderRowMenu folder={row.folder}>
+      <LibraryOpen row={row} />
+    </FolderRowMenu>
+  );
+}
+
+/** The menu item that opens a row: a saved folder on its own page, and an item at its address in a new tab. */
+function LibraryOpen({ row }: { row: LibraryRow }) {
+  const t = useTranslations("Classroom");
+  const { classSlug, slug } = useClassScope();
+
+  if (row._tag === "folder" && isSavedFolder(row.folder)) {
+    return (
+      <DropdownMenuItem
+        render={
+          <Link {...schoolClassFolderTarget(slug, classSlug, row.folder.id)}>
+            <HugeIcons icon={ArrowRight01Icon} />
+            {t("library-open")}
+          </Link>
+        }
+      />
+    );
+  }
+  const address = row._tag === "item" ? row.item.address : null;
+
+  return address === null ? null : (
+    <DropdownMenuItem
+      render={
+        <a href={address} rel="noopener noreferrer" target="_blank">
+          <HugeIcons icon={ArrowRight01Icon} />
+          {t("library-open")}
+        </a>
+      }
+    />
   );
 }
 
 /**
- * The menu of a saved item for a teacher: Edit, which opens its dialog, and Remove, which asks first
- * and takes the row away at once.
+ * The menu of a saved item for a teacher: what every row can do (`children`), Edit, which opens its dialog, and Remove,
+ * which asks first and takes the row away at once.
  */
-function LibraryRemove({ item }: { item: LibraryItem }) {
+function LibraryRemove({
+  children,
+  item,
+}: {
+  children: ReactNode;
+  item: LibraryItem;
+}) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
   const remove = useMutation(classroom.library.remove);
@@ -399,6 +465,7 @@ function LibraryRemove({ item }: { item: LibraryItem }) {
         }
         title={t("library-remove-title")}
       >
+        {children}
         <DropdownMenuItem onClick={() => dialogs.show("edit")}>
           <HugeIcons icon={PencilEdit02Icon} />
           {t("library-edit")}

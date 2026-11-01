@@ -1,10 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import type { AnswerRow } from "@repo/backend/confect/exams/results/contract";
+import type {
+  AnswerRow,
+  StudentRow,
+} from "@repo/backend/confect/exams/results/contract";
 import { Option, Schema } from "effect";
 import {
   gradedAttempt,
   gradedPage,
+  gradedStudents,
   typedPoints,
 } from "@/components/exams/results/graded";
 
@@ -19,7 +23,52 @@ const answerOf = (id: string): typeof AnswerRow.Type => ({
   verdict: "pending",
 });
 
+/** One student's row of the list, with a submitted attempt's score. */
+const studentOf = (id: string): typeof StudentRow.Type => ({
+  answered: 2,
+  attemptId: attemptId(id),
+  awaySeconds: 0,
+  exits: 0,
+  name: `Siswa ${id}`,
+  pending: 1,
+  points: 3,
+  state: "submitted",
+  submittedAt: 1000,
+});
+
 describe("components/exams/results graded", () => {
+  it("moves a student's score by the change, and takes an answer that waited off the pending count", () => {
+    const page = [studentOf("a"), studentOf("b")];
+    expect(
+      gradedStudents(page, {
+        attemptId: attemptId("a"),
+        before: 0,
+        pending: true,
+        points: 4,
+      })
+    ).toEqual([{ ...page[0], pending: 0, points: 7 }, page[1]]);
+    expect(
+      gradedStudents(page, {
+        attemptId: attemptId("b"),
+        before: 2,
+        pending: false,
+        points: 1,
+      })
+    ).toEqual([page[0], { ...page[1], points: 2 }]);
+  });
+
+  it("leaves a student who holds no score yet", () => {
+    const running = { ...studentOf("a"), pending: null, points: null };
+    expect(
+      gradedStudents([running], {
+        attemptId: attemptId("a"),
+        before: 0,
+        pending: true,
+        points: 4,
+      })
+    ).toEqual([running]);
+  });
+
   it("gives the graded answer its points and the verdict they earn, and leaves the others", () => {
     const page = [answerOf("a"), answerOf("b")];
     expect(

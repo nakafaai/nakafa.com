@@ -6,6 +6,7 @@ import { HashSet } from "effect";
  * cannot take one of these roots, and no username can be one.
  */
 export const APPLICATION_ROUTE_ROOTS = HashSet.make(
+  "agent",
   "articles",
   "auth",
   "chat",

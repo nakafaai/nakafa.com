@@ -135,7 +135,8 @@ function DatePicker({
  * A field that holds one local time, written as a `datetime-local` value such as
  * `2026-10-27T08:15`: a date field and a time select side by side in one group. The label of the
  * field names its date trigger, by `id`. While the value holds no time, the field keeps the half
- * the person chose, and it reports a value once both halves are chosen.
+ * the person chose, and it reports a value once both halves are chosen. A field narrower than both
+ * halves, in a drawer on the narrowest phone, gives up the time's clock, so the group stays in its column.
  */
 function DateTimePicker({
   className,
@@ -179,7 +180,7 @@ function DateTimePicker({
 
   return (
     <ButtonGroup
-      className={cn("w-full", className)}
+      className={cn("@container/when w-full", className)}
       data-slot="date-time-picker"
     >
       <DatePicker
@@ -193,6 +194,7 @@ function DateTimePicker({
       />
       <TimeSelect
         aria-label={t("time")}
+        className="@max-2xs/when:[&>svg:first-child]:hidden"
         onValueChange={(time) => choose({ ...parts, time })}
         placeholder={timePlaceholder}
         step={step}

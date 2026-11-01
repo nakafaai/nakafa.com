@@ -11,6 +11,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { RowCopy } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableName } from "@/components/shared/table/title";
 import { type ReadRow, RowProblem } from "@/components/tenant/roster/dapodik";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 
@@ -25,6 +26,9 @@ const ROSTER_STATUS_LOOKS = {
   nisn: { icon: IdentityCardIcon, tone: "destructive" },
   ready: { icon: UserCheck01Icon, tone: "success" },
 } as const satisfies Record<typeof RowProblem.Type | "ready", StatusLook>;
+
+/** How many rows of a read file the preview draws at a time, since a whole school's file holds thousands. */
+const PREVIEW_PAGE_SIZE = 50;
 
 /** The columns of the preview table. */
 const rowColumns = tableColumns<typeof ReadRow.Type>();
@@ -74,9 +78,7 @@ export function RosterPreviewTable({
     rowColumns.text((row) => `${nameOf(row)} ${identityOf(row)}`, {
       cell: (info) =>
         info.row.original.outcome === "problem" ? null : (
-          <span className="font-medium" dir="auto">
-            {nameOf(info.row.original)}
-          </span>
+          <TableName>{nameOf(info.row.original)}</TableName>
         ),
       header: t("name"),
       id: "name",
@@ -117,6 +119,7 @@ export function RosterPreviewTable({
     <DataTable
       columns={columns}
       data={rows}
+      pageSize={PREVIEW_PAGE_SIZE}
       rowId={(row) => String(row.line)}
       search="name"
     />

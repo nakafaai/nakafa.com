@@ -21,6 +21,7 @@ import type {
 } from "@repo/backend/confect/records/letter";
 import { transcriptOf } from "@repo/backend/confect/records/transcript";
 import { rosterEntryOf } from "@repo/backend/confect/roster/entry";
+import { listedPersonOf } from "@repo/backend/confect/tenancy/listed";
 import { lastGradeOf } from "@repo/backend/confect/tenancy/promotion/destination";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 
@@ -159,7 +160,7 @@ export const lineOf = Effect.fn("records.graduations.line")(function* (
         Option.isSome(transcript),
       unit,
     }),
-    student: { id: person._id, name: person.name },
+    student: yield* listedPersonOf(person),
     transcript: Option.getOrNull(transcript),
   };
   return { entry, line, transcript };

@@ -88,24 +88,45 @@ function useChannelPages() {
   return pagination;
 }
 
-/** The list inside its filters. */
-function ChatList() {
-  const t = useTranslations("Classroom");
-  const { can, classId, slug } = useClassScope();
+/** What the list shows of its pages and of the channels being saved, under the filter the reader holds. */
+function useChatRows(saving: readonly string[]) {
   const chosen = useChatFilter();
-  const [drafts] = useState(createChannelDrafts);
   const pagination = useChannelPages();
-  const saving = useStore(drafts, (state) => state.names);
   const loadingFirst = pagination._tag === "LoadingFirstPage";
   const failed = PaginatedQueryResult.isFailure(pagination);
   const listed = failed ? [] : pagination.results;
   const anyArchived = Arr.some(listed, (channel) => channel.archived);
-  // Bringing back the last archived chat takes the filter away, so the list falls back to every chat.
-  const filter = chosen === "archived" && !anyArchived ? "all" : chosen;
-  const empty =
-    !(loadingFirst || failed) &&
-    Arr.isReadonlyArrayEmpty(listed) &&
-    Arr.isReadonlyArrayEmpty(saving);
+
+  return {
+    anyArchived,
+    empty:
+      !(loadingFirst || failed) &&
+      Arr.isReadonlyArrayEmpty(listed) &&
+      Arr.isReadonlyArrayEmpty(saving),
+    failed,
+    // Bringing back the last archived chat takes the filter away, so the list falls back to every chat.
+    filter: chosen === "archived" && !anyArchived ? "all" : chosen,
+    listed,
+    loadingFirst,
+    pagination,
+  };
+}
+
+/** The list inside its filters. */
+function ChatList() {
+  const t = useTranslations("Classroom");
+  const { can, classId, slug } = useClassScope();
+  const [drafts] = useState(createChannelDrafts);
+  const saving = useStore(drafts, (state) => state.names);
+  const {
+    anyArchived,
+    empty,
+    failed,
+    filter,
+    listed,
+    loadingFirst,
+    pagination,
+  } = useChatRows(saving);
 
   return (
     <>
@@ -186,8 +207,8 @@ function useChatFilter() {
 
 /**
  * The filters of the list, joined in one frame as tall as the search above them, as WhatsApp sets them above its
- * chats. They always stand three, in equal columns, so what a filter later shows beside its word moves nothing.
- * Choosing the current one keeps it.
+ * chats. They always stand three across the rail, each word the same distance from its lines. Choosing the current one
+ * keeps it.
  */
 function ChatFilters({ filter }: { filter: typeof ChatFilter.Type }) {
   const t = useTranslations("Classroom");
@@ -196,7 +217,7 @@ function ChatFilters({ filter }: { filter: typeof ChatFilter.Type }) {
   return (
     <ToggleGroup
       aria-label={t("chat-filter")}
-      className="flex w-full"
+      className="w-full"
       onValueChange={(next) => {
         if (Schema.is(ChatFilter)(next)) {
           choose(CHAT_FILTER, [next]);
@@ -205,7 +226,7 @@ function ChatFilters({ filter }: { filter: typeof ChatFilter.Type }) {
       value={filter}
     >
       {Arr.map(CHAT_FILTERS, (value) => (
-        <ToggleGroupItem className="flex-1" key={value} value={value}>
+        <ToggleGroupItem key={value} value={value}>
           {t(`chat-filter-${value}`)}
         </ToggleGroupItem>
       ))}

@@ -33,20 +33,22 @@ const SETTINGS_PATH = "/school/$slug/settings";
  * Renders the navigation of the school sidebar. The settings sections replace it
  * on a settings route for a viewer who opens any of them, and otherwise the school's
  * own groups show. It stays mounted from the page the viewer leaves into
- * settings, so it remembers that page for the settings' way back.
+ * settings, so it remembers that page for the settings' way back. The school's own
+ * groups stay mounted behind the settings sections, so the classes keep their rows
+ * and their live reads, and the way back draws them at once.
  */
 export function TenantNavigation() {
   const { reach, slug } = useTenant();
   const isSettings = useRouteMatched(SETTINGS_PATH, { exact: false });
   const opensSettings = Option.isSome(firstSettingsTarget(slug, reach));
+  const showsSettings = opensSettings && isSettings;
 
   return (
     <SettingsReturnProvider path={SETTINGS_PATH}>
-      {opensSettings && isSettings ? (
-        <SchoolSettingsNav />
-      ) : (
+      <div className={showsSettings ? "hidden" : "contents"}>
         <TenantSchoolGroups />
-      )}
+      </div>
+      {showsSettings ? <SchoolSettingsNav /> : null}
     </SettingsReturnProvider>
   );
 }

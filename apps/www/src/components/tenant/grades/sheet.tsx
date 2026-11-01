@@ -4,7 +4,12 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { CircleIcon, Edit02Icon, SentIcon } from "@hugeicons/core-free-icons";
+import {
+  CircleIcon,
+  Edit02Icon,
+  PencilEdit02Icon,
+  SentIcon,
+} from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
 import {
@@ -41,12 +46,15 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableText } from "@/components/shared/table/text";
 import { TableSearch } from "@/components/shared/table/toolbar";
 import {
+  correctChange,
   enterChange,
   releaseChange,
   type SheetLine,
 } from "@/components/tenant/grades/change";
+import { LineDialog } from "@/components/tenant/line";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 import { saveSchool } from "@/components/tenant/settings/save";
 
@@ -156,6 +164,11 @@ export function ClassGradebook({
       header: t("student"),
       id: "student",
     }),
+    lineColumns.text((line) => line.student.email ?? "", {
+      cell: (info) => <TableText>{info.getValue()}</TableText>,
+      header: t("email"),
+      id: "email",
+    }),
     lineColumns.number((line) => line.grade?.value ?? null, {
       cell: (info) => <GradeValueField line={info.row.original} />,
       header: t("value"),
@@ -188,7 +201,7 @@ export function ClassGradebook({
     <GradebookContext
       value={isRead ? { classId, scheme: scheme.value, slug } : undefined}
     >
-      <Panes>
+      <Panes id="grades">
         <PanesList>
           <TablePages pageSize={GRADEBOOK_PAGE_SIZE} pagination={pagination}>
             <DataTable
@@ -274,7 +287,8 @@ function GradeValueField({ line }: { line: SheetLine }) {
 
 /**
  * The open student: the grade field, the result the scheme judges, the state, and the
- * scheme's KKTP; a draft releases from the footer. A student the list no longer holds closes.
+ * scheme's KKTP; a draft releases from the footer, and a released grade corrects from it. A student
+ * the list no longer holds closes.
  */
 function GradeLineDetail({ lines }: { lines: readonly SheetLine[] }) {
   const t = useTranslations("SchoolGrades");
@@ -318,6 +332,15 @@ function GradeLineDetail({ lines }: { lines: readonly SheetLine[] }) {
             <GradeReleaseButton gradeId={found.grade.id} line={found} />
           </PaneFooter>
         ) : null}
+        {found.grade?.state === "released" ? (
+          <PaneFooter>
+            <GradeCorrectButton
+              gradeId={found.grade.id}
+              line={found}
+              value={found.grade.value}
+            />
+          </PaneFooter>
+        ) : null}
       </>
     ),
   });
@@ -350,6 +373,69 @@ function GradeReleaseButton({
       <HugeIcons icon={SentIcon} />
       {t("release")}
     </Button>
+  );
+}
+
+/** Corrects one released grade from the open student, in a dialog that names who hears of it. */
+function GradeCorrectButton({
+  gradeId,
+  line,
+  value,
+}: {
+  gradeId: NonNullable<SheetLine["grade"]>["id"];
+  line: SheetLine;
+  value: number;
+}) {
+  const t = useTranslations("SchoolGrades");
+  const { classId, slug } = useGradebook();
+  const correct = useMutation(records.grades.correct).withOptimisticUpdate(
+    correctChange(classId, line.student.id)
+  );
+  const [isOpen, setIsOpen] = useState(false);
+  const [opening, setOpening] = useState(0);
+  const [, startTransition] = useTransition();
+
+  const save = (typed: string) => {
+    const next = Option.flatMap(Num.parse(typed), decodeValue);
+    if (Option.isNone(next)) {
+      return;
+    }
+    startTransition(() =>
+      saveSchool(() => correct({ gradeId, slug, value: next.value }), SOURCE)
+    );
+  };
+
+  return (
+    <>
+      <Button
+        onClick={() => {
+          setOpening((count) => count + 1);
+          setIsOpen(true);
+        }}
+        type="button"
+        variant="outline"
+      >
+        <HugeIcons icon={PencilEdit02Icon} />
+        {t("correct")}
+      </Button>
+      {opening === 0 ? null : (
+        <LineDialog
+          action={t("correct")}
+          description={t("correct-description")}
+          initial={String(value)}
+          isValid={(typed) =>
+            Option.isSome(Option.flatMap(Num.parse(typed), decodeValue))
+          }
+          key={opening}
+          label={t("value-label", { name: line.student.name })}
+          onSave={save}
+          open={isOpen}
+          placeholder={t("value-placeholder")}
+          setOpen={setIsOpen}
+          title={t("correct")}
+        />
+      )}
+    </>
   );
 }
 

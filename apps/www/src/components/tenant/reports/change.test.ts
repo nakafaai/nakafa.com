@@ -27,7 +27,11 @@ const line = (
 ): ReportLine => ({
   can,
   report,
-  student: { id: personId, name: personId === raka ? "Raka" : "Sari" },
+  student: {
+    email: null,
+    id: personId,
+    name: personId === raka ? "Raka" : "Sari",
+  },
 });
 
 /** A draft of Sari's report. */

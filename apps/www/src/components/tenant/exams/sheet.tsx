@@ -1,4 +1,5 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import type { optionDirection } from "@repo/backend/confect/exams/letters";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
 import {
@@ -63,23 +64,34 @@ export function OptionAddRoom() {
 }
 
 /** The options of the paper, one column on a narrow paper and two on a wide one, as the player lays them out. */
-export function PaperOptions({ children }: { children: ReactNode }) {
+export function PaperOptions({
+  children,
+  dir,
+}: {
+  children: ReactNode;
+  /** The way the set reads, which its letters decide. */
+  dir: ReturnType<typeof optionDirection>;
+}) {
   return (
-    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">{children}</div>
+    <div className="grid grid-cols-1 gap-2 md:grid-cols-2" dir={dir}>
+      {children}
+    </div>
   );
 }
 
 /**
- * One option of the paper, as the player draws it: the student's own control, unmarked and out of reach, a
- * radio for one answer and a check box for several, then its letter and rich text, in the player's choice frame. Only the
- * cursor differs, since the text is edited here. The key is marked by letter in the teacher's layer, and the
- * letters run in the paper's reading order.
+ * One option of the paper, as the player draws it: the student's own circle with its letter, unmarked and out
+ * of reach, a radio for one answer and a check box for several, then its rich text, in the player's choice
+ * frame. Only the cursor differs, since the text is edited here. The key is marked by letter in the teacher's
+ * layer, and letters run in the paper's reading order.
  */
 export function PaperOption({
   children,
+  letter,
   multiple,
 }: {
   children: ReactNode;
+  letter: string;
   /** Whether the question takes several answers, so the student meets check boxes. */
   multiple: boolean;
 }) {
@@ -93,9 +105,9 @@ export function PaperOption({
     >
       <span className="contents" inert>
         {multiple ? (
-          <Checkbox className="mt-1 shrink-0" />
+          <Checkbox letter={letter} />
         ) : (
-          <Radio className="mt-1 shrink-0" value="unmarked" />
+          <Radio letter={letter} value="unmarked" />
         )}
       </span>
       {children}

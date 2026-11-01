@@ -18,6 +18,7 @@ import {
 } from "@/components/tenant/classes/tasks/draft";
 import { TaskFields } from "@/components/tenant/classes/tasks/fields";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
+import { useClockZone } from "@/components/tenant/settings/time";
 
 /**
  * Publishes a task to the class: its title, what it asks, its deadline in the browser's own time,
@@ -31,7 +32,7 @@ export function NewTask() {
   const publish = useMutation(classroom.tasks.publish);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(EMPTY_DRAFT);
-  const checked = checkedDraft(draft);
+  const checked = checkedDraft(draft, useClockZone());
 
   const submit = () => {
     if (Option.isNone(checked)) {

@@ -139,7 +139,7 @@ describe("inbox row destinations", () => {
     );
   });
 
-  it("opens the parent home for a child's released grade, and no page for a student's own", () => {
+  it("opens the parent home for a child's released grade, and the student's grades for their own", () => {
     const grade = { id: "grade-1", kind: "grade" };
     expect(
       href(
@@ -156,7 +156,7 @@ describe("inbox row destinations", () => {
           student: null,
         })
       )
-    ).toEqual(Option.none());
+    ).toEqual(Option.some("https://harapan.nakafa.com/grades"));
   });
 
   it("opens no page for a class row without its detail, or for a subject of any other kind", () => {

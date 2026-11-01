@@ -103,31 +103,46 @@ const paidSeats = Effect.fn("billing.school.paidSeats")(function* (
   return Arr.reduce(grants, 0, (total, grant) => total + grant.seats);
 });
 
-/** The open invoice of one school's account for exactly one term, if the school holds one. */
-const openTermInvoice = Effect.fn("billing.school.openTermInvoice")(function* (
-  accountId: Docs["billingAccounts"]["_id"],
-  term: { readonly start: number; readonly end: number }
-) {
-  const open = yield* (yield* DatabaseReader)
-    .table("billingInvoices")
-    .index("by_accountId_and_status", (query) =>
-      query.eq("accountId", accountId).eq("status", "open")
-    )
-    .take(OPEN_INVOICE_LIMIT)
-    .pipe(Effect.orDie);
-  return Arr.findFirst(
-    open,
-    (invoice) =>
-      invoice.periodStart === term.start && invoice.periodEnd === term.end
-  );
-});
+/** The students one invoice bills, across its lines. */
+export const invoiceSeats = (invoice: Docs["billingInvoices"]) =>
+  Arr.reduce(invoice.lines, 0, (total, line) => total + line.quantity);
+
+/** The students a list of invoices bills. */
+const sumSeats = (invoices: readonly Docs["billingInvoices"][]) =>
+  Arr.reduce(invoices, 0, (total, invoice) => total + invoiceSeats(invoice));
+
+/**
+ * The open invoices of one school's account whose term still runs at `now`. One whose term has ended
+ * can no longer pay for it, so it holds no student back from the next term's invoice.
+ */
+const runningOpenInvoices = Effect.fn("billing.school.runningOpenInvoices")(
+  function* (accountId: Docs["billingAccounts"]["_id"], now: number) {
+    const open = yield* (yield* DatabaseReader)
+      .table("billingInvoices")
+      .index("by_accountId_and_status", (query) =>
+        query.eq("accountId", accountId).eq("status", "open")
+      )
+      .take(OPEN_INVOICE_LIMIT)
+      .pipe(Effect.orDie);
+    return Arr.filter(open, (invoice) => invoice.periodEnd > now);
+  }
+);
+
+/** The students that the open invoices of one school's account already bill at `now`. */
+export const invoicedSeats = Effect.fn("billing.school.invoicedSeats")(
+  function* (accountId: Docs["billingAccounts"]["_id"], now: number) {
+    return sumSeats(yield* runningOpenInvoices(accountId, now));
+  }
+);
 
 /**
  * Issues the invoice one school pays for a term (K45, K47): one line for the
- * enrolled students its running grants do not pay for yet, at the term's price
- * for the days still to run, due in 14 days, and a journal entry for it. The open
- * invoice of the same term is returned instead, so a second request issues
- * nothing. A school whose students are all paid for has nothing to invoice.
+ * enrolled students that neither its running grants nor an open invoice cover yet,
+ * at the term's price for the days still to run, due in 14 days, and a journal
+ * entry for it. So students added after an invoice get their own, and no student
+ * is billed twice for overlapping terms. With nobody left to bill, the open invoice
+ * of the same term is returned, so a second request issues nothing; a school whose
+ * students are all covered otherwise has nothing to invoice.
  */
 export const issueSchoolInvoice = Effect.fn("billing.school.issueInvoice")(
   function* (
@@ -138,13 +153,20 @@ export const issueSchoolInvoice = Effect.fn("billing.school.issueInvoice")(
     const now = yield* Clock.currentTimeMillis;
     const term = termOf(offer, tenant.country, now);
     const accountId = yield* ensureSchoolAccount(tenant);
-    const open = yield* openTermInvoice(accountId, term);
-    if (Option.isSome(open)) {
-      return { invoiceId: open.value._id, number: open.value.number };
-    }
+    const open = yield* runningOpenInvoices(accountId, now);
     const seats =
-      (yield* countStudents(tenant._id)) - (yield* paidSeats(tenant._id, now));
+      (yield* countStudents(tenant._id)) -
+      (yield* paidSeats(tenant._id, now)) -
+      sumSeats(open);
     if (seats < 1) {
+      const same = Arr.findFirst(
+        open,
+        (invoice) =>
+          invoice.periodStart === term.start && invoice.periodEnd === term.end
+      );
+      if (Option.isSome(same)) {
+        return { invoiceId: same.value._id, number: same.value.number };
+      }
       return yield* new SchoolSeatsPaid({
         code: schoolSeatsPaidCode,
         message: "Every enrolled student is already paid for.",

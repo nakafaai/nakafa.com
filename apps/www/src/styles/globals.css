@@ -191,11 +191,26 @@
 
 /*
  * A try-out action's name depends on the learner's attempt, which no first
- * paint knows. Under a signed-in hint it keeps its room and stays hidden until
- * the learner read answers (`components/tryout/set/name.tsx`).
+ * paint knows. Under a signed-in hint it shows what this browser last read for
+ * the page, which the cell's own script names in `data-kept-name`, or keeps its
+ * room with no name on a first visit, until the learner read answers
+ * (`components/tryout/set/name.tsx`).
  */
-:root[data-signed-in="yes"] [data-learner-read="pending"] {
+:root[data-signed-in="yes"] [data-learner-read="pending"]:not([data-kept-name]),
+:root[data-signed-in="yes"] [data-learner-read="pending"][data-kept-name] > * {
   visibility: hidden;
+}
+
+:root[data-signed-in="yes"]
+  [data-learner-read="pending"][data-kept-name="start-cta"]
+  > [data-name="start-cta"],
+:root[data-signed-in="yes"]
+  [data-learner-read="pending"][data-kept-name="continue-cta"]
+  > [data-name="continue-cta"],
+:root[data-signed-in="yes"]
+  [data-learner-read="pending"][data-kept-name="restart-cta"]
+  > [data-name="restart-cta"] {
+  visibility: visible;
 }
 
 /*

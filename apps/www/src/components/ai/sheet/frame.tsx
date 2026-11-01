@@ -62,6 +62,7 @@ export function AiSheet() {
     initialWidth: MIN_WIDTH,
     maxWidth: MAX_WIDTH,
     minWidth: MIN_WIDTH,
+    storageKey: "nakafa-resize-nina",
   });
   const expanded = width === MAX_WIDTH;
 

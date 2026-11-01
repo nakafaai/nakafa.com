@@ -36,7 +36,7 @@ const UPCOMING_ROW = /Lab 3/u;
 
 /** How a room reads its seats at a glance, and a seat its silence. */
 const SOME_WORKING = /^\d+ working/u;
-const ONE_OFFLINE = /1 offline/u;
+const ONE_GONE = /1 (?:away|offline)/u;
 const AWAY_FOR = /^.*Away for \d+/u;
 
 test("a person whose only role is Proctor runs a room end to end, and is refused moving or cancelling a room, the exam's editor, its list and its results", async ({
@@ -84,9 +84,7 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })
@@ -245,9 +243,7 @@ test("a server failure of the room's read keeps the proctor on the room, and the
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
 
   // The entry changes the room, and the next read of it fails with a failure that names no refusal, as a function
   // that ran out of time does, so the seats leave and the proctor stays on the room's page.
@@ -255,7 +251,7 @@ test("a server failure of the room's read keeps the proctor on the room, and the
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(token).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
   await expect(
-    proctor.getByRole("heading", { name: "Something broke" })
+    proctor.getByRole("heading", { name: "Something went wrong" })
   ).toHaveCount(0);
 
   // The server answers again, and the student's seat is there with no press.
@@ -295,9 +291,7 @@ test("a student whose connection drops shows on the seat with a clock that runs,
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })
@@ -327,7 +321,9 @@ test("a student whose connection drops shows on the seat with a clock that runs,
     timeout: SILENCE_MILLISECONDS,
   });
   await expect(seat).toContainText(AWAY_FOR);
-  await expect(rooms.getByRole("img", { name: ONE_OFFLINE })).toBeVisible({
+  // A browser that opens the proctor's page in a window of its own takes the focus, so the student left before the
+  // connection went, and a student who left stays away.
+  await expect(rooms.getByRole("img", { name: ONE_GONE })).toBeVisible({
     timeout: ROOM_READ_MILLISECONDS,
   });
 

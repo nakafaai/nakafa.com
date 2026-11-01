@@ -144,7 +144,7 @@ function SittingResultsContent({
               </ButtonGroup>
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>
-            <Panes>
+            <Panes id="results">
               <PanesList>
                 <TablePageBody>
                   {canRelease || releasedAt !== null ? null : (
@@ -222,23 +222,22 @@ function ResultsHeader({
   );
 }
 
-/** The header of a results page that cannot show its exam: the way back to the exam list, for a viewer who may open it. */
+/**
+ * The header of a results page that does not show its exam yet: the way back to the exam list, for a viewer who may
+ * open it, and the page's own name last, since a header's last crumb is the page it stands on.
+ */
 function ExamsCrumbHeader() {
   const t = useTranslations("Exams");
   const tenant = useTenant();
 
   return (
     <SchoolHeader
-      items={
-        tenant.canOpenExams
-          ? [
-              {
-                label: t("title"),
-                target: schoolExamsTarget(tenant.slug),
-              },
-            ]
-          : []
-      }
+      items={[
+        ...(tenant.canOpenExams
+          ? [{ label: t("title"), target: schoolExamsTarget(tenant.slug) }]
+          : []),
+        { label: t("results-title") },
+      ]}
       title={t("results-title")}
     />
   );

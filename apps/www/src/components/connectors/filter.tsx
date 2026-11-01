@@ -19,8 +19,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import {
-  DIRECTORY_CATEGORIES,
   DirectoryCategory,
+  type DirectoryEntry,
+  directoryCategories,
 } from "@/components/connectors/directory";
 import { chosenOne } from "@/components/shared/table/filter";
 import { useTableFilters } from "@/components/shared/table/toolbar";
@@ -39,8 +40,12 @@ const CATEGORY_ICONS = {
   schedule: Calendar03Icon,
 };
 
-/** The header's filter of the directory by category, which stands out while one is chosen. */
-export function ServiceFilter() {
+/** The header's filter of `services` by category, which stands out while one is chosen. */
+export function ServiceFilter({
+  services,
+}: {
+  services: readonly (typeof DirectoryEntry.Type)["service"][];
+}) {
   const t = useTranslations("Connectors");
   const common = useTranslations("Common");
   const chosen = useTableFilters((state) => state.chosen);
@@ -81,7 +86,7 @@ export function ServiceFilter() {
               <HugeIcons icon={CATEGORY_ICONS[ALL]} />
               {t("category-all")}
             </DropdownMenuRadioItem>
-            {Arr.map(DIRECTORY_CATEGORIES, (shown) => (
+            {Arr.map(directoryCategories(services), (shown) => (
               <DropdownMenuRadioItem key={shown} value={shown}>
                 <HugeIcons icon={CATEGORY_ICONS[shown]} />
                 {t(`category-${shown}`)}

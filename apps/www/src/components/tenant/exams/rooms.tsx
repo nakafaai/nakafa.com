@@ -19,7 +19,6 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "use-intl";
@@ -31,6 +30,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -97,6 +97,7 @@ export function ExamRooms({
   examId: GenericId.GenericId<"exams">;
   slug: TenantSlug;
 }) {
+  const t = useTranslations("Exams");
   const tenant = useTenant();
   // The exam list is for the exam editors only, so a viewer who reads rooms alone gets no link to it.
   const examsItems = useExamsItems(tenant.canOpenExams);
@@ -105,7 +106,10 @@ export function ExamRooms({
     <ReadBoundary
       fallback={(failure) => (
         <>
-          <SchoolHeader items={examsItems} />
+          <SchoolHeader
+            items={[...examsItems, { label: t("rooms-title") }]}
+            title={t("rooms-title")}
+          />
           <TablePageBody>{failure}</TablePageBody>
         </>
       )}
@@ -157,7 +161,10 @@ function ExamRoomsContent({
     return Option.match(kept, {
       onNone: () => (
         <>
-          <SchoolHeader items={examsItems} />
+          <SchoolHeader
+            items={[...examsItems, { label: t("rooms-title") }]}
+            title={t("rooms-title")}
+          />
           <TablePageBody>
             <p className="text-muted-foreground p-4 text-sm md:p-6">
               {t("rooms-unavailable")}
@@ -393,7 +400,7 @@ function RoomsTable({
         loading={!PaginatedQueryResult.isExhausted(pagination)}
         rowId={(room) => room.id}
       />
-      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
+      {loadMore === null ? null : <TableEnd onLoad={loadMore} />}
     </>
   );
 }

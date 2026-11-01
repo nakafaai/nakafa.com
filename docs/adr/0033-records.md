@@ -91,8 +91,9 @@ import is a source and an export is a product of Records.
   subject teachers. `released` is visible to the student and to the class's
   subject teachers.
 - A subject teacher enters a draft and releases it. A repeated release changes
-  nothing and journals nothing. A correction after release is a later slice,
-  which writes its own journaled change, so the first release stays on record.
+  nothing and journals nothing. A correction after release writes its own
+  journaled change, `grade.corrected`, so the first release stays on record, and
+  tells the student and the guardians again.
 - The `grade.released` change holds the IDs of the class, the student, and the
   period, and the state. It never holds the value, a name, or text (ADR 0016).
   A consumer reads the value from the grade row when it loads the subject, and

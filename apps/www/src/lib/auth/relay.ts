@@ -30,6 +30,24 @@ function withBrowserHost(request: Request): Request {
 }
 
 /**
+ * The request with an empty JSON body when it sends nothing at all. Better Auth's session refresh
+ * posts no body, and Convex gives every action's request a body stream, so Better Auth would
+ * refuse the refresh with 415 for naming no media type, and a session would end on its date
+ * however active its owner is.
+ */
+function withJsonBody(request: Request): Request {
+  if (
+    request.headers.has("content-type") ||
+    (request.headers.get("content-length") ?? "0") !== "0"
+  ) {
+    return request;
+  }
+  const headers = new Headers(request.headers);
+  headers.set("content-type", "application/json");
+  return new Request(request, { body: "{}", headers });
+}
+
+/**
  * Answers one read: the relay's own answer for a request that sends no
  * credentials (`answerWithoutAuth`), or else Better Auth's, reached with the
  * browser's host (`withBrowserHost`) and given as the browser gets it
@@ -79,7 +97,7 @@ export function createAuthProxy(handler: AuthRouteHandler) {
       ),
     POST: (request: Request) =>
       runServerEffect(
-        writeAuthResponse(handler, withBrowserHost(request)).pipe(
+        writeAuthResponse(handler, withJsonBody(withBrowserHost(request))).pipe(
           answerAuthDeadline,
           Effect.flatMap((response) => withSessionHint(request, response)),
           logRouteFailure(request)

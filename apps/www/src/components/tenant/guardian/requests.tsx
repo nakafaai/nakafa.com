@@ -1,5 +1,10 @@
 import type { GenericId, Ref } from "@confect/core";
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import {
+  type PaginatedQueryItem,
+  QueryResult,
+  useMutation,
+  useQuery,
+} from "@confect/react";
 import {
   Cancel01Icon,
   CancelCircleIcon,
@@ -7,6 +12,7 @@ import {
   Clock01Icon,
   Copy01Icon,
   PencilEdit02Icon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { RequestKind } from "@repo/backend/confect/guardians/request";
@@ -29,7 +35,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
-import { RowCopy, RowItems } from "@/components/shared/table/menu";
+import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -43,7 +49,7 @@ const REQUEST_LIMIT = 500;
 type ParentRequest = Ref.Returns<typeof guardians.requests.ofLink>[number];
 
 /** One request that waits for the school office. */
-type WaitingRequest = Ref.Returns<typeof guardians.requests.waiting>[number];
+type WaitingRequest = PaginatedQueryItem<typeof guardians.requests.waiting>;
 
 /** The columns of a parent's requests. */
 const parentColumns = tableColumns<ParentRequest>();
@@ -73,6 +79,39 @@ function useKindOptions() {
     label: t(`request-kind-${kind}`),
     value: kind,
   }));
+}
+
+/** The menu of one request's row: its whole note, which the table cuts to one line. */
+function RequestMenu({ request }: { request: ParentRequest }) {
+  const t = useTranslations("SchoolGuardians");
+  const common = useTranslations("Common");
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <RowItems>
+        <DropdownMenuItem onClick={() => setOpen(true)}>
+          <HugeIcons icon={ViewIcon} />
+          {t("request-read")}
+        </DropdownMenuItem>
+      </RowItems>
+      <ResponsiveDialog
+        description={t(`request-state-${request.state}`)}
+        footer={
+          <Button onClick={() => setOpen(false)} type="button">
+            {common("close")}
+          </Button>
+        }
+        open={open}
+        setOpen={setOpen}
+        title={t(`request-kind-${request.kind}`)}
+      >
+        <p className="text-sm whitespace-pre-wrap" dir="auto">
+          {request.text}
+        </p>
+      </ResponsiveDialog>
+    </>
+  );
 }
 
 /** What a parent asked about one child, and the button that asks again. */
@@ -134,7 +173,7 @@ export function ParentRequests({
                   ),
                 }),
                 parentColumns.menu((info) => (
-                  <RowCopy value={info.row.original.text} />
+                  <RequestMenu request={info.row.original} />
                 )),
               ]}
               data={requests.value}

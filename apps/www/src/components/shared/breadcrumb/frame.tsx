@@ -2,7 +2,7 @@ import { SidebarScopeStart } from "@repo/design-system/components/ui/sidebar-sco
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageHeaderRowVariants } from "@/components/shared/content/width";
 import { ShellTitle } from "@/components/sidebar/lock";
 
 /**
@@ -20,7 +20,7 @@ export function HeaderLabel({ children }: { children: ReactNode }) {
  * that locks the shell, such as a running attempt, hides the trigger from its first
  * paint, as the shell hides its own bar, so nothing shifts when the lock applies. On a
  * desktop the sidebar sits beside the page, and the row is the page's alone. The row is one
- * row of the page (`pageRowVariants`), so it stands on the edges of the body under it.
+ * row of the page (`pageHeaderRowVariants`), so it stands on the edges of the body under it.
  */
 export function BreadcrumbHeaderFrame({
   children,
@@ -42,16 +42,13 @@ export function BreadcrumbHeaderFrame({
       data-slot="page-header"
     >
       <ShellTitle />
-      <div
-        className={cn(
-          pageRowVariants(),
-          "@container/header flex min-w-0 items-center gap-2"
-        )}
-      >
-        <SidebarScopeStart
-          className="group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden lg:hidden"
-          label={tCommon("toggle-sidebar")}
-        />
+      <div className={pageHeaderRowVariants()}>
+        <div className="[display:var(--app-shell-locked,contents)]">
+          <SidebarScopeStart
+            className="group-data-locked/sidebar-wrapper:hidden lg:hidden"
+            label={tCommon("toggle-sidebar")}
+          />
+        </div>
         <div
           className={cn(
             "flex min-w-0 flex-1 items-center justify-between gap-3 py-3",

@@ -13,7 +13,6 @@ import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
@@ -29,6 +28,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
+import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   useServerSearch,
@@ -122,12 +122,12 @@ function StudentName({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   return (
     <Button
       aria-pressed={chosen}
-      className="h-auto px-0"
+      className="h-auto max-w-xs px-0 md:max-w-sm"
       onClick={() => (chosen ? close() : show(row.attemptId))}
       type="button"
       variant="link"
     >
-      {row.name}
+      <span className="truncate">{row.name}</span>
     </Button>
   );
 }
@@ -309,9 +309,7 @@ export function StudentsTable() {
         rowId={(row) => row.attemptId}
       />
       {PaginatedQueryResult.isCanLoadMore(students) ? (
-        <Intersection
-          onIntersect={() => students.loadMore(STUDENT_PAGE_SIZE)}
-        />
+        <TableEnd onLoad={() => students.loadMore(STUDENT_PAGE_SIZE)} />
       ) : null}
     </>
   );

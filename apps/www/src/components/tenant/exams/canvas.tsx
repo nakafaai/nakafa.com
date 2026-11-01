@@ -1,5 +1,6 @@
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useCallbackRef, useMediaQuery } from "@mantine/hooks";
+import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
@@ -253,15 +254,23 @@ export function ExamCanvas({
             </ExamReadBoundary>
           ))}
           {frozen ? null : (
-            <Button
-              className="w-full"
-              onClick={() => actions.addQuestion(null)}
-              type="button"
-              variant="outline"
-            >
-              <HugeIcons aria-hidden="true" icon={Add01Icon} />
-              {t("add-question")}
-            </Button>
+            <div className="grid gap-2">
+              <Button
+                className="w-full"
+                disabled={actions.room < 1}
+                onClick={() => actions.addQuestion(null)}
+                type="button"
+                variant="outline"
+              >
+                <HugeIcons aria-hidden="true" icon={Add01Icon} />
+                {t("add-question")}
+              </Button>
+              {actions.room < 1 ? (
+                <p className="text-muted-foreground text-center text-sm">
+                  {t("exam-full", { count: MAX_EXAM_QUESTIONS })}
+                </p>
+              ) : null}
+            </div>
           )}
         </div>
       </HeldPaper>

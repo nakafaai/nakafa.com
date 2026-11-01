@@ -147,7 +147,6 @@ export function CodeBlockSelectTrigger({
         "text-muted-foreground w-fit border-none text-sm shadow-none",
         className
       )}
-      size="sm"
       {...props}
     />
   );

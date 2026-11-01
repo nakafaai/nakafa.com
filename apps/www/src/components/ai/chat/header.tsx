@@ -239,7 +239,9 @@ export function ChatHeader({
     <BreadcrumbHeaderFrame>
       <div className="min-w-0 flex-1">{children}</div>
       <div className="flex shrink-0 items-center gap-2">
-        <ButtonGroup aria-label={t("chat-actions")}>{actions}</ButtonGroup>
+        {actions === undefined ? null : (
+          <ButtonGroup aria-label={t("chat-actions")}>{actions}</ButtonGroup>
+        )}
         <PanelSheetTrigger
           icon={MessageMultiple02Icon}
           label={t("chat-history")}

@@ -29,6 +29,7 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableText } from "@/components/shared/table/text";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { GraduationLineDetail } from "@/components/tenant/graduation/detail";
 import {
@@ -126,6 +127,11 @@ function CohortGraduationBody() {
       header: t("student"),
       id: "student",
     }),
+    lineColumns.text((line) => line.student.email ?? "", {
+      cell: (info) => <TableText>{info.getValue()}</TableText>,
+      header: t("email"),
+      id: "email",
+    }),
     lineColumns.values((line) => (line.hasNisn ? "yes" : "no"), {
       cell: (info) => t(`nisn-${info.getValue()}`),
       header: t("nisn"),
@@ -163,7 +169,7 @@ function CohortGraduationBody() {
     }),
     lineColumns.list(readinessOf, {
       cell: (info) => (
-        <span className="flex flex-wrap gap-1">
+        <span className="flex gap-1">
           {Arr.map(info.getValue(), (value) => (
             <TableStatus
               icon={READY_LOOKS[value].icon}
@@ -189,7 +195,7 @@ function CohortGraduationBody() {
   ];
 
   return (
-    <Panes>
+    <Panes id="graduation">
       <PanesList>
         <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
           <DataTable

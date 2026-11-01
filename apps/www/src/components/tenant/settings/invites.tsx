@@ -32,6 +32,7 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
+import { TableName } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -123,11 +124,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
   const columns = [
     // The name with the address after it, so the header's search finds an invitee by either; the cell shows the name.
     inviteColumns.text((invite) => `${invite.name} ${invite.email}`, {
-      cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.row.original.name}
-        </span>
-      ),
+      cell: (info) => <TableName>{info.row.original.name}</TableName>,
       header: t("invite-name"),
       id: "name",
     }),

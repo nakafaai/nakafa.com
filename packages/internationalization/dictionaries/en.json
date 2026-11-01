@@ -11,6 +11,8 @@
     "sort-oldest": "Oldest",
     "sort-newest": "Newest",
     "no-results": "No results.",
+    "searching": "Looking through the list.",
+    "no-values": "No values yet",
     "reset": "Reset"
   },
   "School": {
@@ -67,6 +69,7 @@
     "outsider-check-again": "Check again"
   },
   "SchoolGuardians": {
+    "email": "Email",
     "request-ask": "Ask the school",
     "request-description": "The school office answers each request. Write what you need in a few words.",
     "request-placeholder": "What you need from the school office",
@@ -151,7 +154,11 @@
     "mismatches": "Failed NISN checks",
     "child": "Child",
     "child-detail": "Child",
-    "guardian-email": "Parent email"
+    "guardian-email": "Parent email",
+    "check": "Check",
+    "check-nisn": "NISN",
+    "check-school": "School",
+    "request-read": "Read"
   },
   "SchoolRoster": {
     "import": "Import",
@@ -274,7 +281,7 @@
     "sitting": "Sitting",
     "student-enter": "Enter sitting",
     "student-enter-footer": "Your proctor gives you the token.",
-    "student-token-placeholder": "Enter the token from your proctor",
+    "student-token-placeholder": "Enter the token",
     "student-token-hint": "Your proctor shows the token.",
     "student-token-refused": "The token does not match, so check it and try again.",
     "student-too-many-tries": "Too many tries, so wait a minute and try again.",
@@ -436,6 +443,7 @@
     "group-all": "All groups",
     "try-action": "Try as student",
     "exam-actions": "Exam actions",
+    "exam-full": "An exam holds {count} questions at most.",
     "delete-action": "Delete exam",
     "delete-title": "Delete this exam?",
     "delete-description": "Its questions and pictures are deleted for good.",
@@ -497,6 +505,8 @@
     "student-scheduled-footer": "The token field opens with the sitting.",
     "student-back-home": "Back to home",
     "seat-last-activity": "Active {time}.",
+    "seat-finished": "Finished {time}.",
+    "seat-locked": "Locked {time}.",
     "seat-away-seconds": "Away for {seconds} s.",
     "seat-away-minutes": "Away for {minutes} min {seconds} s.",
     "title-needed": "Every exam needs a title.",
@@ -768,6 +778,7 @@
     "billing-add-footer": "New students are billed for the rest of the term.",
     "billing-free-empty": "Enroll students to upgrade to School.",
     "billing-school-footer": "Every student is paid for.",
+    "billing-open-footer": "Pay the open invoice below to finish.",
     "billing-dialog-title": "Choose a term",
     "billing-dialog-description": "Pay per enrolled student for the days left in the term.",
     "billing-dialog-seats": "Pay per enrolled student, with seats that renew until you cancel them.",
@@ -788,9 +799,11 @@
     "invoice-term": "Term",
     "invoice-students": "Students",
     "invoice-total": "Total",
+    "invoice-due": "Due",
     "invoice-status": "Status",
     "invoice-draft": "Draft",
     "invoice-open": "Open",
+    "invoice-overdue": "Overdue",
     "invoice-paid": "Paid",
     "invoice-void": "Void",
     "invoice-pay": "Pay",
@@ -1031,6 +1044,7 @@
         "restored": "Classroom restored"
       },
       "grade": {
+        "corrected": "Grade corrected",
         "released": "Grade released"
       },
       "message": {
@@ -1240,7 +1254,7 @@
     "login-person": "Person",
     "login-issued": "Issued",
     "logins-empty": "No login card issued yet.",
-    "logins-search": "Find a login or student",
+    "logins-search": "Find a student",
     "members-empty": "No one has joined the school yet.",
     "members-empty-description": "Invite a teacher or an admin. Students join through Student accounts.",
     "members-search": "Find a name",
@@ -1306,6 +1320,7 @@
       }
     },
     "person-placeholder": "Choose a person",
+    "person-search": "Find a person",
     "student-picker-empty": "Add a student in Student accounts first.",
     "teacher-picker-empty": "Invite a teacher in Invites first.",
     "roles-grants-description": "Every role that a person of this school holds, and what it covers.",
@@ -1337,7 +1352,6 @@
     "card-qr-label": "QR code with the card code",
     "card-copy": "Copy code",
     "card-print": "Print card",
-    "card-print-footer": "Print sends the card to your printer.",
     "student-add": "Add student",
     "student-add-title": "Add a student",
     "student-add-description": "The student gets a login name and a first login card, added together.",
@@ -1523,6 +1537,8 @@
     "library-submit": "Add",
     "library-added-by": "Added by",
     "library-added": "Added",
+    "library-type": "Type",
+    "library-open": "Open",
     "library-kind-link": "Link",
     "library-kind-pdf": "PDF",
     "library-kind-image": "Image",
@@ -1536,6 +1552,12 @@
     "people-role": "Role",
     "people-teacher": "Teacher",
     "people-student": "Student",
+    "people-email": "Email",
+    "people-status": "Status",
+    "people-joined": "Joined",
+    "people-waiting": "Not joined",
+    "people-copy-name": "Copy name",
+    "people-copy-email": "Copy email",
     "people-empty": "No one in this class yet",
     "people-empty-description": "A teacher and the students of its class group show here.",
     "tasks-empty": "No task yet",
@@ -1550,6 +1572,7 @@
     "task-reach-some": "Some students",
     "task-reach-count": "{count, plural, one {# student} other {# students}}",
     "task-category": "Category",
+    "task-open": "Open task",
     "task-category-placeholder": "Homework",
     "task-category-description": "Optional, it groups the class's tasks.",
     "task-late": "Late work",
@@ -1565,6 +1588,8 @@
     "task-work": "Your work",
     "task-student": "Student",
     "task-hand-in": "Hand in",
+    "task-closed": "This task closed at its deadline.",
+    "task-missing": "Not handed in yet",
     "task-work-empty": "No work yet",
     "task-work-empty-description": "The work students hand in shows here.",
     "task-work-search": "Search students",
@@ -1642,6 +1667,7 @@
     "library-kind-folder": "Folder"
   },
   "SchoolGrades": {
+    "email": "Email",
     "student": "Student",
     "value": "Grade",
     "value-label": "Grade of {name}",
@@ -1655,6 +1681,8 @@
     "kktp-notReached": "Below KKTP",
     "search": "Search students",
     "release": "Release",
+    "correct": "Correct grade",
+    "correct-description": "The student and their parents are told the new grade.",
     "empty": "No student in this class yet.",
     "empty-description": "Students appear here once they are placed in the class group.",
     "detail": "Student's grade",
@@ -1666,9 +1694,11 @@
     "own-band": "Band",
     "own-band-none": "No band",
     "own-empty": "No grade is released yet.",
-    "own-empty-description": "Each grade shows here once its teacher releases it."
+    "own-empty-description": "Each grade shows here once its teacher releases it.",
+    "own-open-cards": "Report cards"
   },
   "SchoolReports": {
+    "email": "Email",
     "title": "Report cards",
     "cohort": "Class group",
     "period": "Period",
@@ -1712,6 +1742,7 @@
     "unit": "Unit"
   },
   "SchoolGraduation": {
+    "email": "Email",
     "title": "Graduation",
     "cohort": "Class group",
     "unit": "Unit",
@@ -2472,7 +2503,7 @@
     "agent-allow": "Allow",
     "agent-deny": "Deny",
     "agent-description": "This agent can read and change everything you can do in Nakafa. Allow only an agent you trust.",
-    "agent-failed": "Your answer was not saved. Try again.",
+    "agent-failed": "Your answer did not save, so try again.",
     "agent-title": "Let {name} use your account?",
     "agent-unnamed": "This agent",
     "back-to-nakafa": "Back to Nakafa",
@@ -2755,7 +2786,7 @@
       "description": "Sign in with an operator account."
     },
     "school-refusal-provision": {
-      "title": "This school can't open with these details.",
+      "title": "This school cannot open yet.",
       "description": "Check the address and the school's units."
     },
     "school-refusal-webhook-limit": {
@@ -2789,6 +2820,13 @@
     "school-refusal-cohort-has-homeroom": {
       "title": "This cohort already has a teacher.",
       "description": "Remove the current teacher to choose another."
+    },
+    "exam-copying": {
+      "title": "Copying this exam."
+    },
+    "exam-full": {
+      "title": "This exam is full.",
+      "description": "Remove a question to add another."
     },
     "action-error": {
       "title": "We could not complete this action.",
@@ -3032,7 +3070,7 @@
     },
     "sitting-answers-unsent": {
       "title": "Some answers may not have saved.",
-      "description": "Answers on this device may not have reached the exam before it closed, so tell your proctor."
+      "description": "Some may not have reached the exam, so tell your proctor."
     },
     "sitting-attempt-closed": {
       "title": "This attempt has closed.",
@@ -3220,7 +3258,7 @@
     },
     "import-no-drive": {
       "title": "Connect Google Drive first",
-      "description": "Forms are read through your Google Drive. Connect it in your account settings."
+      "description": "Forms are read through Google Drive, so connect it in settings."
     },
     "import-empty": {
       "title": "Nina found no question.",
@@ -3287,7 +3325,8 @@
       "description": "Choose an active student without this email."
     },
     "school-roster-imported": {
-      "title": "The students are in the roster."
+      "title": "The students are in the roster.",
+      "description": "Open Members to give each one a login card."
     },
     "school-roster-export-failed": {
       "title": "The file was not saved."
@@ -3838,7 +3877,7 @@
     "classroom-line": "Classes, students and tasks.",
     "forms": "Google Forms",
     "forms-line": "Turn a form into an exam.",
-    "drive-line": "Files for your class library.",
+    "drive-line": "Files you pick, for your class and notes.",
     "calendar-line": "Your events, for Nina to read.",
     "holder-school": "This school",
     "holder-personal": "Your account",
@@ -3872,21 +3911,13 @@
     "open-exams": "Open exams",
     "course-import": "Import students",
     "drive": "Google Drive",
-    "drive-description": "Files you pick in Google Drive, for your notes and imports.",
     "calendar": "Google Calendar",
-    "calendar-description": "Your upcoming events, so Nina can answer what is coming this week.",
     "classroom": "Google Classroom",
-    "classroom-description": "Your Classroom classes, their students and their tasks, to bring into the school.",
     "connect": "Connect",
     "reconnect": "Connect again",
-    "reconnect-hint": "Google stopped accepting this connection.",
-    "connected": "Connected.",
-    "not-connected": "Not connected.",
     "disconnect": "Disconnect",
     "disconnect-title": "Disconnect {name}",
     "disconnect-description": "Nakafa stops reading it at once, and remove Nakafa in your Google account too to end its access there.",
-    "none": "No connector yet",
-    "none-description": "Connectors open here once Google has reviewed them.",
     "courses-none": "No active course in this Classroom account.",
     "course": "Course",
     "course-students": "Students",
@@ -3920,7 +3951,7 @@
     "evidence-points": "{earned} of {possible} points",
     "student": "Student",
     "chance": "Chance of KKTP {kktp}",
-    "chance-note": "This chance does not change a grade, and only teachers see it. It comes from the points above and is an initial estimate.",
+    "chance-note": "Only teachers see this chance, and it never changes a grade.",
     "chance-held": "The forecast missed last month's test, so it stays hidden until it passes.",
     "empty": "Nothing to show yet",
     "empty-description": "Each released exam shows here.",
@@ -3952,12 +3983,27 @@
     "class-empty": "No released exam yet",
     "class-empty-description": "Release the results of an exam this class sat, and each student's standing shows here.",
     "exams-action": "Open exams",
-    "tags-note": "A question with no competency counts under its exam's name.",
     "tags-empty": "Create an exam first, then name what its questions test.",
     "tags-done": "Done",
     "tags-none": "This exam has no questions yet.",
     "exam-placeholder": "Choose an exam",
     "question-placeholder": "Optional, such as Fractions",
-    "narratives-note": "Open a student to write what helps them next."
+    "narratives-note": "Open a student to write what helps them next.",
+    "tabs-label": "Insight views",
+    "tab-students": "Students",
+    "tab-practice": "Practice",
+    "email": "Email",
+    "competencies-count": "Skills",
+    "observations": "Answers",
+    "narrative": "Narrative",
+    "narrative-none": "Not written",
+    "narrative-saved": "Written",
+    "narrative-shared": "Shared",
+    "narrative-open": "Narrative",
+    "students-empty": "No students yet",
+    "students-empty-description": "Each student placed in this class shows here.",
+    "practice-empty": "No shared practice yet",
+    "practice-class-note": "Only the topics a student switches on show here.",
+    "practice-own-empty-description": "Your try-out practice shows here, and you choose what to share."
   }
 }

@@ -1,5 +1,6 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
+  ArrowRight01Icon,
   Award02Icon,
   Book02Icon,
   Bookmark01Icon,
@@ -7,6 +8,7 @@ import {
   Flag01Icon,
   Folder01Icon,
   Note01Icon,
+  PencilEdit02Icon,
   Tag01Icon,
   Task01Icon,
   TaskDone01Icon,
@@ -19,15 +21,17 @@ import {
   TaskStanding as Standing,
   standingOf,
 } from "@repo/backend/confect/classroom/tasks/task";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
+import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
-import { RowItems, RowOpen } from "@/components/shared/table/menu";
+import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -38,8 +42,10 @@ import {
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { NewTask } from "@/components/tenant/classes/tasks/create";
+import { EditTaskDialog } from "@/components/tenant/classes/tasks/edit";
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { useClockZone } from "@/components/tenant/settings/time";
 import { useKeptRows } from "@/lib/data/kept";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolClassTaskTarget } from "@/lib/routing/school/target";
@@ -158,13 +164,12 @@ function TaskListBody() {
 }
 
 /**
- * The columns of the task table: each task's title, which opens it, the category it is filed under, its deadline, and where it
- * stands, the viewer's own work for a student and the number of work handed in for a teacher.
+ * The columns of the task table: each task's title, which opens it, the category it is filed under, its deadline, where it
+ * stands, the viewer's own work for a student and the number of work handed in for a teacher, and what the row can do.
  */
 function useTaskColumns(categories: readonly string[]) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
-  const formatZone = useFormatTimeZone();
+  const timeZone = useClockZone();
   const format = useFormatter();
   const { can } = useClassScope();
   const standingChoices = useStandingChoices();
@@ -190,25 +195,16 @@ function useTaskColumns(categories: readonly string[]) {
         <span className="text-muted-foreground tabular-nums">
           {format.dateTime(
             DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium", timeStyle: "short" }
+            { dateStyle: "medium", timeStyle: "short", timeZone }
           )}
         </span>
       ),
       header: t("task-deadline"),
       id: "deadline",
-      timeZone: formatZone,
+      timeZone: () => timeZone,
     }),
-    Arr.contains(can, "task.manage")
-      ? taskColumns.number((task) => task.handedIn, {
-          cell: (info) => (
-            <span className="text-muted-foreground">
-              <TaskStanding task={info.row.original} />
-            </span>
-          ),
-          header: t("task-status"),
-          id: "handedIn",
-        })
-      : // A student's standing, which the server filters by; the same rule keeps the rows the table shows.
+    Arr.contains(can, "task.submit")
+      ? // A student's standing, which the server filters by; the same rule keeps the rows the table shows.
         taskColumns.choice((task) => standingOf(task.mine), {
           cell: (info) => (
             <span className="text-muted-foreground">
@@ -218,13 +214,49 @@ function useTaskColumns(categories: readonly string[]) {
           header: t("task-status"),
           id: "standing",
           options: standingChoices,
+        })
+      : taskColumns.number((task) => task.handedIn, {
+          cell: (info) => (
+            <span className="text-muted-foreground">
+              <TaskStanding task={info.row.original} />
+            </span>
+          ),
+          header: t("task-status"),
+          id: "handedIn",
         }),
-    taskColumns.menu(() => (
-      <RowItems>
-        <RowOpen icon={TaskEdit01Icon} label={common("open")} />
-      </RowItems>
-    )),
+    taskColumns.menu((info) => <TaskRowMenu task={info.row.original} />),
   ];
+}
+
+/** What a row of the task table can do: open the task, and edit it for a teacher who keeps the class's tasks. */
+function TaskRowMenu({ task }: { task: ClassTask }) {
+  const t = useTranslations("Classroom");
+  const { can, classSlug, slug } = useClassScope();
+  const [openings, setOpenings] = useState(0);
+
+  return (
+    <>
+      <RowItems>
+        <DropdownMenuItem
+          render={
+            <TargetLink
+              target={schoolClassTaskTarget(slug, classSlug, task.slug)}
+            >
+              <HugeIcons icon={ArrowRight01Icon} />
+              {t("task-open")}
+            </TargetLink>
+          }
+        />
+        {Arr.contains(can, "task.manage") ? (
+          <DropdownMenuItem onClick={() => setOpenings((count) => count + 1)}>
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("task-edit")}
+          </DropdownMenuItem>
+        ) : null}
+      </RowItems>
+      {openings === 0 ? null : <EditTaskDialog key={openings} task={task} />}
+    </>
+  );
 }
 
 /**
@@ -271,11 +303,11 @@ function TaskTitle({ task }: { task: ClassTask }) {
   );
 }
 
-/** Where a task stands: how many handed work in, for a teacher who keeps the class's tasks, or the viewer's own work. */
+/** Where a task stands: the viewer's own work for a student of the class, and how many handed work in for anyone else. */
 export function TaskStanding({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
   const { can } = useClassScope();
-  if (Arr.contains(can, "task.manage")) {
+  if (!Arr.contains(can, "task.submit")) {
     return t("task-handed-in-count", { count: task.handedIn });
   }
   if (task.mine !== null && task.mine.score !== null) {

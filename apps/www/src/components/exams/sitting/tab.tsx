@@ -26,7 +26,9 @@ const HANDOVER = Duration.seconds(1);
  */
 function usePaperTab(attemptId: GenericId.GenericId<"examAttempts">) {
   const [tab, setTab] = useState<typeof PaperTab.Type>(() =>
-    "locks" in navigator ? "checking" : "held"
+    typeof navigator === "undefined" || "locks" in navigator
+      ? "checking"
+      : "held"
   );
 
   useEffect(() => {
@@ -83,11 +85,15 @@ export function SittingTabGuard({
   children,
   deviceId,
   slug,
+  waiting,
 }: {
   readonly attemptId: GenericId.GenericId<"examAttempts">;
+  /** The paper, which this tab draws while it holds it. */
   readonly children: ReactNode;
   readonly deviceId: typeof DeviceId.Type;
   readonly slug: TenantSlug;
+  /** What this tab draws while it holds no paper. */
+  readonly waiting: ReactNode;
 }) {
   const tab = usePaperTab(attemptId);
   const signal = useMutation(exams.sittings.signal);
@@ -111,17 +117,11 @@ export function SittingTabGuard({
     );
   }, [attemptId, deviceId, signal, slug, tab]);
 
-  return <PaperTabContext value={tab}>{children}</PaperTabContext>;
-}
-
-/** What this tab draws while it holds the paper. */
-export function SittingTabHeld({ children }: { children: ReactNode }) {
-  return use(PaperTabContext) === "held" ? children : null;
-}
-
-/** What this tab draws while it holds no paper. */
-export function SittingTabWaiting({ children }: { children: ReactNode }) {
-  return use(PaperTabContext) === "held" ? null : children;
+  return (
+    <PaperTabContext value={tab}>
+      {tab === "held" ? children : waiting}
+    </PaperTabContext>
+  );
 }
 
 /** What a tab says while another tab of the browser holds the paper. */

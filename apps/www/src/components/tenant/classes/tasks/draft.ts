@@ -39,10 +39,13 @@ export const EMPTY_DRAFT: typeof TaskDraft.Type = {
   title: "",
 };
 
-/** The form of a task as it stands, its deadline in the browser's own time. */
-export const draftOf = (task: ClassTask): typeof TaskDraft.Type => ({
+/** The form of a task as it stands, its deadline on the school's clock. */
+export const draftOf = (
+  task: ClassTask,
+  timeZone: string
+): typeof TaskDraft.Type => ({
   category: task.category ?? "",
-  deadline: localDeadline(task.deadline),
+  deadline: localDeadline(task.deadline, timeZone),
   latePolicy: task.latePolicy,
   points: task.points,
   targets: task.targets,
@@ -62,11 +65,11 @@ const categoryOf = (category: string) => {
  * The task a form names once every field holds what the server accepts: the trimmed title and text, the instant of
  * the deadline, the points, and the late policy. None while any field does not.
  */
-export const checkedDraft = (draft: typeof TaskDraft.Type) =>
+export const checkedDraft = (draft: typeof TaskDraft.Type, timeZone: string) =>
   Option.map(
     Option.all({
       category: categoryOf(draft.category),
-      deadline: deadlineOf(draft.deadline),
+      deadline: deadlineOf(draft.deadline, timeZone),
       points: Option.filter(
         Option.fromNullOr(draft.points),
         Schema.is(TaskPoints)

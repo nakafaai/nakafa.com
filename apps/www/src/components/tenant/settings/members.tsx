@@ -15,6 +15,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -23,7 +24,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ComponentProps, startTransition } from "react";
+import { type ComponentProps, startTransition, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
@@ -34,9 +35,11 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
+import { TableName } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
+  useServerSearch,
 } from "@/components/shared/table/toolbar";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
@@ -45,13 +48,20 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleLooks } from "@/components/tenant/roles";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
+import {
+  type CardView,
+  SchoolCardDialog,
+} from "@/components/tenant/settings/card";
 import { UNIT_ICONS } from "@/components/tenant/settings/choices";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { inviteChange } from "@/components/tenant/settings/grants";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
+import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
+import { cardOffered } from "@/components/tenant/settings/offer";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { useKeptRows } from "@/lib/data/kept";
 
 const SOURCE = "components/tenant/settings/members";
 
@@ -110,27 +120,24 @@ export function SchoolMembersSettings() {
   );
 }
 
-/** The members of the school, read a page at a time, with the table and its end. */
+/** The members of the school, read a page at a time, in a data table, or its empty state when the school has none. */
 function SchoolMembersBody() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
-    tenancy.roster.members,
-    isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
-  );
-
-  return (
-    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
-      <SchoolMemberTable members={pagination.results} />
-    </TablePages>
-  );
-}
-
-/** The members in a data table, or the table's empty state when the school has none. */
-function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
+  const search = useServerSearch();
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
+  const pagination = usePaginatedQuery(
+    tenancy.roster.members,
+    isSettled ? { slug, ...(search === "" ? {} : { search }) } : "skip",
+    { initialNumItems: PAGE_SIZE }
+  );
+  // A new search's first page loads behind the rows the table shows, so the table never blanks.
+  const kept = useKeptRows(
+    pagination._tag === "LoadingFirstPage",
+    pagination.results
+  );
+  const members = Option.getOrElse(kept, () => []);
   const viewer = useViewerQuery();
 
   const unitsOf = (member: MemberItem) =>
@@ -144,11 +151,7 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
       : [];
   const columns = [
     memberColumns.text((member) => member.name, {
-      cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.getValue()}
-        </span>
-      ),
+      cell: (info) => <TableName>{info.getValue()}</TableName>,
       header: t("member-name"),
       id: "name",
     }),
@@ -191,14 +194,11 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
       ),
       header: t("member-roles"),
       id: "roles",
-      options: Arr.map(
-        Arr.dedupe(Arr.flatMap(members, (member) => member.roles)),
-        (role) => ({
-          icon: roleLooks[role].icon,
-          label: tSchool(`role.${role}`),
-          value: role,
-        })
-      ),
+      options: Arr.map(BuiltinRole.literals, (role) => ({
+        icon: roleLooks[role].icon,
+        label: tSchool(`role.${role}`),
+        value: role,
+      })),
     }),
     memberColumns.menu((info) => (
       <WithAction
@@ -211,25 +211,26 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={members}
-      empty={
-        <TableEmpty
-          act="waving"
-          description={t("members-empty-description")}
-          title={t("members-empty")}
-        />
-      }
-      rowId={(member) => member.id}
-      search="name"
-    />
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+      <DataTable
+        columns={columns}
+        data={members}
+        empty={
+          <TableEmpty
+            act="waving"
+            description={t("members-empty-description")}
+            title={t("members-empty")}
+          />
+        }
+        rowId={(member) => member.id}
+      />
+    </TablePages>
   );
 }
 
 /**
- * The row menu of a member: Rename, Give a role, which gives the member a role of the whole school, Invite for a member
- * nothing waits for yet, such as a student an import added, and Remove for a member whom the viewer may remove, one who
+ * The row menu of a member: Rename, Give a role, which gives the member a role of the whole school, Invite and a login
+ * card for a member nothing waits for yet, such as a student an import added, who may have no address, and Remove for a member whom the viewer may remove, one who
  * joined, one whose card waits, and one whose invite ended or card expired. Remove asks first, and the account of a member
  * who joined loses the school at once. An invited member is handled on the invitations page, and the list answers which
  * rows the viewer may remove.
@@ -247,7 +248,10 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const remove = useMutation(tenancy.people.remove).withOptimisticUpdate(
     removeMemberChange
   );
-  const dialogs = useDialogs<"give" | "invite" | "remove" | "rename">();
+  const dialogs = useDialogs<
+    "card" | "give" | "invite" | "remove" | "rename"
+  >();
+  const [issued, setIssued] = useState<CardView | undefined>(undefined);
   const removable = member.removable && member.status !== "invited";
 
   /** Invites the member at the address typed, in the viewer's language. */
@@ -297,6 +301,12 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
             {t("invite-action")}
           </DropdownMenuItem>
         ) : null}
+        {member.status === "notInvited" && cardOffered(member.roles) ? (
+          <DropdownMenuItem onClick={() => dialogs.show("card")}>
+            <HugeIcons icon={IdCardIcon} />
+            {t("invite-card")}
+          </DropdownMenuItem>
+        ) : null}
         {removable ? (
           <DropdownMenuItem
             onClick={() => dialogs.show("remove")}
@@ -336,6 +346,15 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
           type="email"
         />
       ) : null}
+      <SchoolIssueCardDialog
+        name={member.name}
+        onIssued={setIssued}
+        open={dialogs.isOpen("card")}
+        personId={member.id}
+        setOpen={dialogs.setOpen}
+        slug={slug}
+      />
+      <SchoolCardDialog card={issued} onClose={() => setIssued(undefined)} />
       <ResponsiveDialog
         description={t("member-remove-description")}
         footer={

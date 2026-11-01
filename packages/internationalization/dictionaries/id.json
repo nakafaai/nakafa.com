@@ -11,6 +11,8 @@
     "sort-oldest": "Terlama",
     "sort-newest": "Terbaru",
     "no-results": "Tidak ada hasil.",
+    "searching": "Mencari di seluruh daftar.",
+    "no-values": "Belum ada nilai",
     "reset": "Atur ulang"
   },
   "School": {
@@ -67,6 +69,7 @@
     "outsider-check-again": "Periksa lagi"
   },
   "SchoolGuardians": {
+    "email": "Email",
     "request-ask": "Tanya sekolah",
     "request-description": "Tata usaha menjawab setiap permintaan. Tulis kebutuhan Anda secara singkat.",
     "request-placeholder": "Yang Anda perlukan dari tata usaha",
@@ -151,7 +154,11 @@
     "mismatches": "Cek NISN gagal",
     "child": "Anak",
     "child-detail": "Anak",
-    "guardian-email": "Email orang tua"
+    "guardian-email": "Email orang tua",
+    "check": "Pemeriksaan",
+    "check-nisn": "NISN",
+    "check-school": "Sekolah",
+    "request-read": "Baca"
   },
   "SchoolRoster": {
     "import": "Impor",
@@ -274,7 +281,7 @@
     "sitting": "Sesi ujian",
     "student-enter": "Masuk ke sesi",
     "student-enter-footer": "Pengawas memberikan tokennya.",
-    "student-token-placeholder": "Masukkan token dari pengawas",
+    "student-token-placeholder": "Masukkan token",
     "student-token-hint": "Pengawas menunjukkan tokennya.",
     "student-token-refused": "Token tidak cocok, jadi periksa lagi lalu coba kembali.",
     "student-too-many-tries": "Terlalu banyak percobaan, jadi tunggu satu menit lalu coba lagi.",
@@ -436,6 +443,7 @@
     "group-all": "Semua kelompok",
     "try-action": "Coba sebagai siswa",
     "exam-actions": "Aksi ujian",
+    "exam-full": "Satu ujian memuat paling banyak {count} soal.",
     "delete-action": "Hapus ujian",
     "delete-title": "Hapus ujian ini?",
     "delete-description": "Semua soal dan gambarnya ikut terhapus permanen.",
@@ -497,6 +505,8 @@
     "student-scheduled-footer": "Kolom token terbuka bersama sesi.",
     "student-back-home": "Kembali ke beranda",
     "seat-last-activity": "Aktif {time}.",
+    "seat-finished": "Selesai {time}.",
+    "seat-locked": "Dikunci {time}.",
     "seat-away-seconds": "Keluar selama {seconds} detik.",
     "seat-away-minutes": "Keluar selama {minutes} menit {seconds} detik.",
     "title-needed": "Setiap ujian perlu judul.",
@@ -768,6 +778,7 @@
     "billing-add-footer": "Siswa baru ditagih untuk sisa periode.",
     "billing-free-empty": "Daftarkan siswa untuk upgrade ke School.",
     "billing-school-footer": "Semua siswa sudah dibayar.",
+    "billing-open-footer": "Bayar tagihan terbuka di bawah untuk menyelesaikannya.",
     "billing-dialog-title": "Pilih periode",
     "billing-dialog-description": "Bayar per siswa terdaftar untuk sisa hari periode.",
     "billing-dialog-seats": "Bayar per siswa terdaftar, dengan kursi yang diperpanjang sampai kamu membatalkannya.",
@@ -788,9 +799,11 @@
     "invoice-term": "Periode",
     "invoice-students": "Siswa",
     "invoice-total": "Total",
+    "invoice-due": "Jatuh tempo",
     "invoice-status": "Status",
     "invoice-draft": "Draf",
     "invoice-open": "Terbuka",
+    "invoice-overdue": "Terlambat",
     "invoice-paid": "Lunas",
     "invoice-void": "Batal",
     "invoice-pay": "Bayar",
@@ -1031,6 +1044,7 @@
         "restored": "Ruang kelas dipulihkan"
       },
       "grade": {
+        "corrected": "Nilai dikoreksi",
         "released": "Nilai dirilis"
       },
       "message": {
@@ -1240,7 +1254,7 @@
     "login-person": "Orang",
     "login-issued": "Diterbitkan",
     "logins-empty": "Belum ada kartu masuk yang diterbitkan.",
-    "logins-search": "Cari login atau siswa",
+    "logins-search": "Cari siswa",
     "members-empty": "Belum ada anggota yang bergabung.",
     "members-empty-description": "Undang guru atau admin. Siswa masuk lewat Akun siswa.",
     "members-search": "Cari nama",
@@ -1306,6 +1320,7 @@
       }
     },
     "person-placeholder": "Pilih orang",
+    "person-search": "Cari orang",
     "student-picker-empty": "Tambahkan siswa di Akun siswa dulu.",
     "teacher-picker-empty": "Undang guru di Undangan dulu.",
     "roles-grants-description": "Setiap peran yang dimiliki orang di sekolah ini, dan wilayah yang dicakupnya.",
@@ -1337,7 +1352,6 @@
     "card-qr-label": "Kode QR berisi kode kartu",
     "card-copy": "Salin kode",
     "card-print": "Cetak kartu",
-    "card-print-footer": "Cetak mengirim kartu ke printer Anda.",
     "student-add": "Tambah siswa",
     "student-add-title": "Tambah siswa",
     "student-add-description": "Siswa mendapat nama masuk dan kartu masuk pertama, ditambahkan bersamaan.",
@@ -1523,6 +1537,8 @@
     "library-submit": "Tambah",
     "library-added-by": "Ditambahkan oleh",
     "library-added": "Ditambahkan",
+    "library-type": "Jenis",
+    "library-open": "Buka",
     "library-kind-link": "Tautan",
     "library-kind-pdf": "PDF",
     "library-kind-image": "Gambar",
@@ -1536,6 +1552,12 @@
     "people-role": "Peran",
     "people-teacher": "Guru",
     "people-student": "Siswa",
+    "people-email": "Email",
+    "people-status": "Status",
+    "people-joined": "Bergabung",
+    "people-waiting": "Belum bergabung",
+    "people-copy-name": "Salin nama",
+    "people-copy-email": "Salin email",
     "people-empty": "Belum ada orang di kelas ini",
     "people-empty-description": "Guru dan siswa dari rombel kelas ini tampil di sini.",
     "tasks-empty": "Belum ada tugas",
@@ -1550,6 +1572,7 @@
     "task-reach-some": "Sebagian siswa",
     "task-reach-count": "{count} siswa",
     "task-category": "Kategori",
+    "task-open": "Buka tugas",
     "task-category-placeholder": "PR",
     "task-category-description": "Opsional, untuk mengelompokkan tugas kelas.",
     "task-late": "Kerja terlambat",
@@ -1565,6 +1588,8 @@
     "task-work": "Pekerjaanmu",
     "task-student": "Siswa",
     "task-hand-in": "Kumpulkan",
+    "task-closed": "Tugas ini ditutup saat tenggatnya.",
+    "task-missing": "Belum mengumpulkan",
     "task-work-empty": "Belum ada pekerjaan",
     "task-work-empty-description": "Pekerjaan yang dikumpulkan siswa tampil di sini.",
     "task-work-search": "Cari siswa",
@@ -1642,6 +1667,7 @@
     "library-kind-folder": "Folder"
   },
   "SchoolGrades": {
+    "email": "Email",
     "student": "Siswa",
     "value": "Nilai",
     "value-label": "Nilai {name}",
@@ -1655,6 +1681,8 @@
     "kktp-notReached": "Di bawah KKTP",
     "search": "Cari siswa",
     "release": "Rilis",
+    "correct": "Koreksi nilai",
+    "correct-description": "Siswa dan orang tuanya diberi tahu nilai barunya.",
     "empty": "Belum ada siswa di kelas ini.",
     "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya.",
     "detail": "Nilai siswa",
@@ -1666,9 +1694,11 @@
     "own-band": "Predikat",
     "own-band-none": "Tanpa predikat",
     "own-empty": "Belum ada nilai yang dirilis.",
-    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya."
+    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya.",
+    "own-open-cards": "Rapor"
   },
   "SchoolReports": {
+    "email": "Email",
     "title": "Rapor",
     "cohort": "Rombel",
     "period": "Periode",
@@ -1712,6 +1742,7 @@
     "unit": "Unit"
   },
   "SchoolGraduation": {
+    "email": "Email",
     "title": "Kelulusan",
     "cohort": "Rombel",
     "unit": "Satuan pendidikan",
@@ -2472,7 +2503,7 @@
     "agent-allow": "Izinkan",
     "agent-deny": "Tolak",
     "agent-description": "Agen ini bisa membaca dan mengubah semua yang bisa kamu lakukan di Nakafa. Izinkan hanya agen yang kamu percaya.",
-    "agent-failed": "Jawabanmu belum tersimpan. Coba lagi.",
+    "agent-failed": "Jawabanmu gagal tersimpan, jadi coba lagi.",
     "agent-title": "Izinkan {name} memakai akunmu?",
     "agent-unnamed": "Agen ini",
     "back-to-nakafa": "Kembali ke Nakafa",
@@ -2751,15 +2782,15 @@
       "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
     },
     "school-refusal-not-operator": {
-      "title": "Hanya staf Nakafa yang bisa melakukan ini.",
+      "title": "Ini hanya untuk staf Nakafa.",
       "description": "Masuk dengan akun operator."
     },
     "school-refusal-provision": {
-      "title": "Sekolah ini tidak bisa dibuka dengan data tersebut.",
+      "title": "Sekolah ini belum bisa dibuka.",
       "description": "Periksa alamat dan unit sekolahnya."
     },
     "school-refusal-webhook-limit": {
-      "title": "Satu klien memegang paling banyak sepuluh webhook.",
+      "title": "Satu klien hanya boleh 10 webhook.",
       "description": "Cabut yang tidak lagi dipakai."
     },
     "school-refusal-unit-limit": {
@@ -2789,6 +2820,13 @@
     "school-refusal-cohort-has-homeroom": {
       "title": "Rombel ini sudah punya wali kelas.",
       "description": "Hapus wali kelas yang sekarang untuk memilih yang lain."
+    },
+    "exam-copying": {
+      "title": "Menyalin ujian ini."
+    },
+    "exam-full": {
+      "title": "Ujian ini sudah penuh.",
+      "description": "Hapus satu soal untuk menambah soal."
     },
     "action-error": {
       "title": "Tindakan ini belum berhasil.",
@@ -3031,8 +3069,8 @@
       "description": "Tanyakan guru apa yang harus dilakukan selanjutnya."
     },
     "sitting-answers-unsent": {
-      "title": "Sebagian jawaban mungkin belum tersimpan.",
-      "description": "Jawaban di perangkat ini mungkin belum masuk sebelum ujian ditutup, jadi beri tahu pengawas."
+      "title": "Jawaban mungkin belum tersimpan.",
+      "description": "Mungkin belum masuk sebelum ujian ditutup, jadi beri tahu pengawas."
     },
     "sitting-attempt-closed": {
       "title": "Percobaan ini sudah ditutup.",
@@ -3123,7 +3161,7 @@
       "description": "Hapus aksi itu dari klien, lalu buat klien lagi."
     },
     "school-refusal-draft-refused": {
-      "title": "Nina tidak bisa membuat draf sekarang.",
+      "title": "Nina belum bisa membuat draf.",
       "description": "Aktifkan Nina untuk sekolah, atau tunggu kredit sekolah diperbarui."
     },
     "school-refusal-promotion-state": {
@@ -3168,7 +3206,7 @@
     },
     "school-refusal-login-name-refused": {
       "title": "Nama login ini tidak diizinkan.",
-      "description": "Pakai 3 sampai 32 karakter, a sampai z, 0 sampai 9, titik, garis bawah atau strip."
+      "description": "Pakai 3 sampai 32 karakter, a sampai z, 0 sampai 9, titik, _ atau -."
     },
     "school-refusal-login-name-taken": {
       "title": "Nama login ini sudah dipakai.",
@@ -3220,7 +3258,7 @@
     },
     "import-no-drive": {
       "title": "Hubungkan Google Drive dulu",
-      "description": "Formulir dibaca lewat Google Drive-mu. Hubungkan di pengaturan akun."
+      "description": "Formulir dibaca lewat Google Drive, jadi hubungkan di pengaturan."
     },
     "import-empty": {
       "title": "Nina tidak menemukan soal.",
@@ -3268,7 +3306,7 @@
     },
     "forum-file-quota": {
       "title": "File tidak ditambahkan.",
-      "description": "Chat sekolah ini sudah mencapai batas penyimpanan. Sembunyikan file lama dulu."
+      "description": "Penyimpanan chat sekolah sudah penuh. Sembunyikan file lama dulu."
     },
     "school-refusal-report-closed": {
       "title": "Rapor ini sudah berlanjut.",
@@ -3287,7 +3325,8 @@
       "description": "Pilih siswa aktif yang belum memakai email ini."
     },
     "school-roster-imported": {
-      "title": "Siswa sudah masuk ke daftar."
+      "title": "Siswa sudah masuk ke daftar.",
+      "description": "Buka Anggota untuk memberi tiap siswa kartu login."
     },
     "school-roster-export-failed": {
       "title": "File tidak tersimpan."
@@ -3838,7 +3877,7 @@
     "classroom-line": "Kelas, siswa, dan tugas.",
     "forms": "Google Formulir",
     "forms-line": "Ubah formulir jadi ujian.",
-    "drive-line": "Berkas untuk pustaka kelasmu.",
+    "drive-line": "Berkas pilihanmu, untuk kelas dan catatan.",
     "calendar-line": "Agendamu, untuk dibaca Nina.",
     "holder-school": "Sekolah ini",
     "holder-personal": "Akunmu",
@@ -3872,21 +3911,13 @@
     "open-exams": "Buka ujian",
     "course-import": "Impor siswa",
     "drive": "Google Drive",
-    "drive-description": "File yang kamu pilih di Google Drive, untuk catatan dan impor.",
     "calendar": "Google Calendar",
-    "calendar-description": "Acara mendatangmu, supaya Nina bisa menjawab apa yang ada minggu ini.",
     "classroom": "Google Classroom",
-    "classroom-description": "Kelas Classroom-mu, siswanya, dan tugasnya, untuk dibawa ke sekolah.",
     "connect": "Hubungkan",
     "reconnect": "Hubungkan lagi",
-    "reconnect-hint": "Google tidak lagi menerima koneksi ini.",
-    "connected": "Terhubung.",
-    "not-connected": "Belum terhubung.",
     "disconnect": "Putuskan",
     "disconnect-title": "Putuskan {name}",
     "disconnect-description": "Nakafa langsung berhenti membacanya, dan hapus juga Nakafa di akun Google-mu supaya aksesnya berakhir di sana.",
-    "none": "Belum ada konektor",
-    "none-description": "Konektor terbuka di sini setelah Google meninjaunya.",
     "courses-none": "Tidak ada kursus aktif di akun Classroom ini.",
     "course": "Kursus",
     "course-students": "Siswa",
@@ -3920,7 +3951,7 @@
     "evidence-points": "{earned} dari {possible} poin",
     "student": "Siswa",
     "chance": "Peluang KKTP {kktp}",
-    "chance-note": "Peluang ini tidak mengubah nilai dan hanya tampil untuk guru. Angkanya berasal dari poin di atas dan masih estimasi awal.",
+    "chance-note": "Hanya guru yang melihat peluang ini, dan peluang ini tidak mengubah nilai.",
     "chance-held": "Prakiraan tidak lolos uji bulan lalu, jadi disembunyikan sampai lolos.",
     "empty": "Belum ada yang ditampilkan",
     "empty-description": "Setiap ujian yang dirilis tampil di sini.",
@@ -3952,12 +3983,27 @@
     "class-empty": "Belum ada ujian yang dirilis",
     "class-empty-description": "Rilis hasil ujian yang diikuti kelas ini, dan capaian tiap siswa tampil di sini.",
     "exams-action": "Buka ujian",
-    "tags-note": "Soal tanpa kompetensi dihitung atas nama ujiannya.",
     "tags-empty": "Buat ujian dulu, lalu tulis yang diuji tiap soalnya.",
     "tags-done": "Selesai",
     "tags-none": "Ujian ini belum punya soal.",
     "exam-placeholder": "Pilih ujian",
     "question-placeholder": "Opsional, misalnya Pecahan",
-    "narratives-note": "Buka seorang siswa untuk menulis yang membantunya berikutnya."
+    "narratives-note": "Buka seorang siswa untuk menulis yang membantunya berikutnya.",
+    "tabs-label": "Tampilan insight",
+    "tab-students": "Siswa",
+    "tab-practice": "Latihan",
+    "email": "Email",
+    "competencies-count": "Kemampuan",
+    "observations": "Jawaban",
+    "narrative": "Narasi",
+    "narrative-none": "Belum ditulis",
+    "narrative-saved": "Ditulis",
+    "narrative-shared": "Dibagikan",
+    "narrative-open": "Narasi",
+    "students-empty": "Belum ada siswa",
+    "students-empty-description": "Setiap siswa di kelas ini tampil di sini.",
+    "practice-empty": "Belum ada latihan yang dibagikan",
+    "practice-class-note": "Hanya topik yang diaktifkan siswa yang tampil di sini.",
+    "practice-own-empty-description": "Latihan try-out kamu tampil di sini, dan kamu yang memilih apa yang dibagikan."
   }
 }

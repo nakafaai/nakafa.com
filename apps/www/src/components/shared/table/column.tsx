@@ -23,8 +23,9 @@ import { useTableFilters } from "@/components/shared/table/toolbar";
 /**
  * The head of a column that filters by the values it holds, as the try-out catalog filters its status: the column's
  * name with the filter's icon, which stands out while a value is chosen, and a menu of the values, each with its icon,
- * and Reset once one is chosen. Choosing values keeps the rows whose column holds any of them, so a table page keeps
- * its filters in the columns they filter and never in its header.
+ * and Reset once one is chosen. A column that holds no value yet says so in the same menu, so its head stands as every
+ * other head does and fills in once a row holds a value. Choosing values keeps the rows whose column holds any of them,
+ * so a table page keeps its filters in the columns they filter and never in its header.
  */
 export function ColumnFilter({
   column,
@@ -46,11 +47,6 @@ export function ColumnFilter({
   const filtered = Arr.isReadonlyArrayNonEmpty(chosen);
   const align = use(HeadMenuContext);
 
-  // A column that holds no value yet has nothing to filter by, so its head is its name and never an empty menu.
-  if (Arr.isReadonlyArrayEmpty(options) && !filtered) {
-    return title;
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -68,6 +64,9 @@ export function ColumnFilter({
         <DropdownMenuGroup>
           <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
           <DropdownMenuGroup>
+            {Arr.isReadonlyArrayEmpty(options) ? (
+              <DropdownMenuItem disabled>{t("no-values")}</DropdownMenuItem>
+            ) : null}
             {Arr.map(options, (option) => (
               <DropdownMenuCheckboxItem
                 checked={Arr.contains(chosen, option.value)}

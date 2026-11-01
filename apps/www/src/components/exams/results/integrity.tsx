@@ -8,10 +8,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -141,7 +139,6 @@ function IntegrityRows() {
  */
 export function IntegrityAction() {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const { sittingId, slug } = useResultsScope();
 
   return (
@@ -150,7 +147,7 @@ export function IntegrityAction() {
         render={
           <Button type="button" variant="outline">
             <HugeIcons icon={SecurityCheckIcon} />
-            <span className="max-sm:sr-only">{t("integrity")}</span>
+            <span className="@max-3xl/header:sr-only">{t("integrity")}</span>
           </Button>
         }
       />
@@ -171,15 +168,6 @@ export function IntegrityAction() {
             </ReadBoundary>
           </div>
         </ScrollArea>
-        <SheetFooter>
-          <SheetClose
-            render={
-              <Button type="button" variant="outline">
-                {common("close")}
-              </Button>
-            }
-          />
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

@@ -70,7 +70,7 @@ export function ForumDiscussion({
 
   return (
     <PanesProvider>
-      <Panes fill="parent">
+      <Panes fill="parent" id="thread">
         <PanesList>
           <ForumChannel
             canManage={canManage}

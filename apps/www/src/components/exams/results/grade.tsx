@@ -16,6 +16,7 @@ import { useResultsScope } from "@/components/exams/results/context";
 import {
   gradedAttempt,
   gradedPage,
+  gradedStudents,
   typedPoints,
 } from "@/components/exams/results/graded";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
@@ -23,15 +24,18 @@ import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 /**
  * The points a teacher gives one answer, as a teacher writes a mark beside an answer on a paper: a whole
  * number from none to the question's points, saved when the teacher leaves the field or presses Enter.
- * The field names the question's points beside the number, and the answer shows its points and verdict at
- * once, and both roll back when the server refuses the grade. A number outside the range stays in the field,
+ * The field names the question's points beside the number, and the answer and the student's row show the grade at
+ * once, and all of it rolls back when the server refuses the grade. A number outside the range stays in the field,
  * marked, for the teacher to correct, and Escape brings the saved points back.
  */
 export function GradeField({
   answer,
   question,
 }: {
-  readonly answer: Pick<typeof AnswerRow.Type, "attemptId" | "name" | "points">;
+  readonly answer: Pick<
+    typeof AnswerRow.Type,
+    "attemptId" | "name" | "points" | "verdict"
+  >;
   readonly question: Pick<typeof QuestionSummary.Type, "id" | "points">;
 }) {
   const t = useTranslations("Exams");
@@ -55,6 +59,25 @@ export function GradeField({
                 questionId: args.questionId,
               })
             )
+          );
+        }
+      }
+      for (const query of localStore.getAllQueries(
+        exams.results.results.byStudent
+      )) {
+        if (Option.isSome(query.value)) {
+          localStore.setQuery(
+            exams.results.results.byStudent,
+            query.args,
+            Option.some({
+              ...query.value.value,
+              page: gradedStudents(query.value.value.page, {
+                attemptId: args.attemptId,
+                before: answer.points,
+                pending: answer.verdict === "pending",
+                points: args.points,
+              }),
+            })
           );
         }
       }

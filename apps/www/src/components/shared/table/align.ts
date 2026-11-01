@@ -46,7 +46,7 @@ export const columnAlign = cva("in-[thead]:bg-muted", {
       end: "bg-card in-[tr[data-pressable]:hover]:bg-muted in-[tr:has(td:first-child_a[href]):hover]:bg-muted in-[tr[data-state=selected]]:bg-muted before:bg-border sticky end-0 ps-2 pe-4 text-end tabular-nums before:absolute before:inset-y-0 before:start-0 before:w-px sm:ps-4",
       figure:
         "bg-card in-[tr[data-pressable]:hover]:bg-muted in-[tr:has(td:first-child_a[href]):hover]:bg-muted in-[tr[data-state=selected]]:bg-muted sticky end-12 px-2 text-end tabular-nums sm:px-4",
-      menu: "bg-card in-[tr[data-pressable]:hover]:bg-muted in-[tr:has(td:first-child_a[href]):hover]:bg-muted in-[tr[data-state=selected]]:bg-muted before:bg-border sticky end-0 w-px px-2 text-end whitespace-nowrap before:absolute before:inset-y-0 before:start-0 before:w-px",
+      menu: "bg-card in-[tr[data-pressable]:hover]:bg-muted in-[tr:has(td:first-child_a[href]):hover]:bg-muted in-[tr[data-state=selected]]:bg-muted before:bg-border sticky end-0 w-px px-2 py-0 text-end whitespace-nowrap before:absolute before:inset-y-0 before:start-0 before:w-px",
       start: "ps-4 pe-2 sm:pe-4",
     },
   },

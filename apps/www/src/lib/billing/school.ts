@@ -41,21 +41,35 @@ export function transferMailto(number: string) {
 
 /**
  * The sentence under the plan: what paying does when there are students to pay
- * for, and otherwise why there is nothing to pay.
+ * for, that an open invoice waits when it holds the rest, and otherwise why there
+ * is nothing to pay.
  */
 export function planHintKey(overview: SchoolBilling) {
   const free = overview.plan.kind === "free";
   if (Arr.isReadonlyArrayNonEmpty(overview.quotes)) {
     return free ? "billing-free-footer" : "billing-add-footer";
   }
+  if (Arr.some(overview.invoices, (invoice) => invoice.status === "open")) {
+    return "billing-open-footer";
+  }
   return free ? "billing-free-empty" : "billing-school-footer";
+}
+
+/** Where an invoice stands at `now`: an open one past its due day is overdue, whatever its table holds. */
+export function invoiceStanding(
+  invoice: Pick<SchoolBilling["invoices"][number], "dueAt" | "status">,
+  now: number
+) {
+  return invoice.status === "open" && invoice.dueAt < now
+    ? ("overdue" as const)
+    : invoice.status;
 }
 
 /**
  * Lists the invoice a school asks for at once, at the top of its invoices: the
  * chosen term's quote, open and due in 14 days, with no number until the server
- * issues it. A term that already has an open invoice lists nothing new, because the
- * server returns that invoice.
+ * issues it. A quote names only students no open invoice bills, so the invoice is
+ * always a new one, and it takes every quote with it, because it bills those students.
  */
 export const schoolPayChange: OptimisticUpdate<typeof billing.school.pay> = (
   localStore,
@@ -70,22 +84,13 @@ export const schoolPayChange: OptimisticUpdate<typeof billing.school.pay> = (
   if (Option.isNone(quote)) {
     return;
   }
-  const alreadyOpen = Arr.some(
-    overview.invoices,
-    (invoice) =>
-      invoice.status === "open" &&
-      invoice.periodStart === quote.value.periodStart &&
-      invoice.periodEnd === quote.value.periodEnd
-  );
-  if (alreadyOpen) {
-    return;
-  }
   const now = DateTime.nowUnsafe();
   localStore.setQuery(
     billing.school.overview,
     { slug },
     Option.some({
       ...overview,
+      quotes: [],
       invoices: Arr.prepend(overview.invoices, {
         number: "",
         status: "open" as const,

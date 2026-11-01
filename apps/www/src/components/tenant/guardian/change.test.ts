@@ -49,7 +49,7 @@ const child = (status: ChildItem["status"]): ChildItem => ({
   linkId,
   staffCheck: false,
   status,
-  student: { id: studentId, name: "Raka" },
+  student: { email: null, id: studentId, name: "Raka" },
 });
 
 /** The page of the first list of the school's links, as the store holds it now. */

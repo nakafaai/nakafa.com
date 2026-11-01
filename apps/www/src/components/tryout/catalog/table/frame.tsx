@@ -94,11 +94,7 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
             )}
           </TableBody>
         </Table>
-        <span
-          aria-live="polite"
-          className="text-muted-foreground pointer-events-none absolute inset-x-4 bottom-3 text-xs empty:hidden"
-          role="status"
-        >
+        <span aria-live="polite" className="sr-only" role="status">
           {status}
         </span>
       </div>

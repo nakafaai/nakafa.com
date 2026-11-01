@@ -10,6 +10,7 @@ import {
 import { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import {
   LatePolicy,
+  MissingStudent,
   SubmissionView,
   TaskAddress,
   TaskCategory,
@@ -111,6 +112,14 @@ export default GroupSpec.make()
         task: TaskAddress,
       }),
       item: () => SubmissionView,
+      error: () => AccessDenied,
+    }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicPaginatedQuery({
+      name: "missing",
+      args: () => ({ ...classArgs, task: TaskAddress }),
+      item: () => MissingStudent,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })
   )

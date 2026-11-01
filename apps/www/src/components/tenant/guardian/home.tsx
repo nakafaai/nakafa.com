@@ -1,7 +1,9 @@
 import type { Ref } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
+  Building03Icon,
   CheckmarkBadge01Icon,
+  IdentityCardIcon,
   UserRemove01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
@@ -40,6 +42,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { RowCopy, RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
+import { TableText } from "@/components/shared/table/text";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
@@ -113,10 +116,17 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
   const columns = [
     childColumns.text((child) => child.student.name, {
       cell: (info) => (
-        <PaneOpen id={info.row.original.linkId}>{info.getValue()}</PaneOpen>
+        <PaneOpen id={info.row.original.linkId}>
+          <TableText>{info.getValue()}</TableText>
+        </PaneOpen>
       ),
       header: t("child"),
       id: "child",
+    }),
+    childColumns.text((child) => child.student.email ?? "", {
+      cell: (info) => <TableText>{info.getValue()}</TableText>,
+      header: t("email"),
+      id: "email",
     }),
     childColumns.values((child) => child.status, {
       cell: (info) => (
@@ -134,6 +144,15 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
         value: status,
       })),
     }),
+    childColumns.values((child) => (child.staffCheck ? "school" : "nisn"), {
+      cell: (info) => t(`check-${info.getValue()}`),
+      header: t("check"),
+      id: "check",
+      options: [
+        { icon: IdentityCardIcon, label: t("check-nisn"), value: "nisn" },
+        { icon: Building03Icon, label: t("check-school"), value: "school" },
+      ],
+    }),
     childColumns.menu(() => (
       <RowItems>
         <RowOpen icon={ViewIcon} label={common("open")} />
@@ -142,7 +161,7 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
   ];
 
   return (
-    <Panes>
+    <Panes id="guardian">
       <PanesList>
         <DataTable
           columns={columns}
@@ -177,11 +196,16 @@ function GuardianChild({ items }: { items: readonly ChildItem[] }) {
           <GuardianConfirm child={found} />
         ) : null}
         {found.status === "pending" && found.staffCheck ? (
-          <PaneBody>
-            <p className="text-muted-foreground text-sm">
-              {t("child-staff-check")}
-            </p>
-          </PaneBody>
+          <>
+            <PaneBody>
+              <p className="text-muted-foreground text-sm">
+                {t("child-staff-check")}
+              </p>
+            </PaneBody>
+            <PaneFooter>
+              <GuardianWithdraw child={found} />
+            </PaneFooter>
+          </>
         ) : null}
         {found.status === "verified" ? (
           <>
@@ -252,6 +276,7 @@ function GuardianConfirm({ child }: { child: ChildItem }) {
         </Field>
       </PaneBody>
       <PaneFooter>
+        <GuardianWithdraw child={child} />
         <Button
           disabled={nisn.length !== 10 || isPending}
           inert={isPending}
@@ -268,9 +293,7 @@ function GuardianConfirm({ child }: { child: ChildItem }) {
 
 /** The released grades of a child of a verified link, and the way to withdraw consent. */
 function GuardianGrades({ child }: { child: ChildItem }) {
-  const t = useTranslations("SchoolGuardians");
   const { slug } = useTenant();
-  const common = useTranslations("Common");
   const grades = useQuery(guardians.family.grades, {
     linkId: child.linkId,
     slug,
@@ -279,11 +302,6 @@ function GuardianGrades({ child }: { child: ChildItem }) {
     linkId: child.linkId,
     slug,
   });
-  const withdraw = useMutation(guardians.family.withdraw).withOptimisticUpdate(
-    withdrawChange
-  );
-  const [, startTransition] = useTransition();
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   return (
     <>
@@ -309,15 +327,33 @@ function GuardianGrades({ child }: { child: ChildItem }) {
           : null}
       </PaneBody>
       <PaneFooter>
-        <Button
-          onClick={() => setIsWithdrawing(true)}
-          type="button"
-          variant="destructive"
-        >
-          <HugeIcons icon={UserRemove01Icon} />
-          {t("withdraw")}
-        </Button>
+        <GuardianWithdraw child={child} />
       </PaneFooter>
+    </>
+  );
+}
+
+/** Ends a child's link, verified or still waiting, once the parent confirms it. */
+function GuardianWithdraw({ child }: { child: ChildItem }) {
+  const t = useTranslations("SchoolGuardians");
+  const common = useTranslations("Common");
+  const { slug } = useTenant();
+  const withdraw = useMutation(guardians.family.withdraw).withOptimisticUpdate(
+    withdrawChange
+  );
+  const [, startTransition] = useTransition();
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  return (
+    <>
+      <Button
+        onClick={() => setIsWithdrawing(true)}
+        type="button"
+        variant="destructive"
+      >
+        <HugeIcons icon={UserRemove01Icon} />
+        {t("withdraw")}
+      </Button>
       <ResponsiveDialog
         description={t("withdraw-description")}
         footer={

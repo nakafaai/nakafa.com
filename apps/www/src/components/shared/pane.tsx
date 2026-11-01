@@ -9,9 +9,10 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { TableRow } from "@repo/design-system/components/ui/table";
 import { Option } from "effect";
-import type { MouseEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { usePaneMode, usePanes } from "@/components/shared/panes";
+import { pressesRow } from "@/components/shared/row";
 
 /**
  * A detail's header: its title, and what it shows on a second line, so it holds two lines at most
@@ -150,7 +151,7 @@ export function PaneOpen({
 
   return (
     <button
-      className="font-medium underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
+      className="block max-w-52 min-w-36 text-start font-medium wrap-break-word whitespace-normal underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none sm:max-w-80"
       dir="auto"
       onClick={() => show(id)}
       type="button"
@@ -159,19 +160,6 @@ export function PaneOpen({
     </button>
   );
 }
-
-/** The elements of a row that do their own thing when pressed, so pressing them opens no row. */
-const ROW_CONTROLS =
-  "a, button, input, label, select, textarea, [role=menuitem]";
-
-/**
- * Whether a press landed on the row itself: not on a control of its own, and not on a menu or a dialog the row opened,
- * whose press React carries through the row although it stands elsewhere on the page.
- */
-export const pressesRow = (event: MouseEvent<HTMLTableRowElement>) =>
-  event.target instanceof Element &&
-  event.currentTarget.contains(event.target) &&
-  event.target.closest(ROW_CONTROLS) === null;
 
 /**
  * A data table's row on a page with panes: pressing it opens the row beside the list,

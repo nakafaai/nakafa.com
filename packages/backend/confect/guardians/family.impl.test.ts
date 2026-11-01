@@ -53,6 +53,26 @@ const linked = Effect.fn("test.guardians.family.linked")(function* (
   return { guardian: guardian.client, link };
 });
 
+describe("guardians/links list search", () => {
+  it.effect("finds a link by the student's name or by the address", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const { link } = yield* linked(fixture);
+      const counselor = fixture.as("counselor");
+      const listed = (search: string) =>
+        counselor.query(refs.public.guardians.links.list, {
+          ...firstPage,
+          search,
+          slug: nf,
+        });
+      expect((yield* listed("Stud")).page).toMatchObject([{ id: link.id }]);
+      expect((yield* listed(link.email)).page).toMatchObject([{ id: link.id }]);
+      expect((yield* listed("Teacher")).page).toEqual([]);
+      expect((yield* listed("nobody@example.test")).page).toEqual([]);
+    })
+  );
+});
+
 describe("guardians/family children and confirm", () => {
   it.effect(
     "lists the guardian's child, and verifies the link with the right NISN",
@@ -65,7 +85,10 @@ describe("guardians/family children and confirm", () => {
             linkId: link.id,
             staffCheck: true,
             status: "pending",
-            student: { id: fixture.people.student.personId, name: "Student" },
+            student: expect.objectContaining({
+              id: fixture.people.student.personId,
+              name: "Student",
+            }),
           },
         ]);
         yield* setRoster(fixture, NISN);
@@ -125,6 +148,10 @@ describe("guardians/family children and confirm", () => {
             slug: nf,
           })
         ).toBe("refused");
+        // With every try spent the parent waits for staff, instead of a form that can only refuse.
+        expect(
+          (yield* guardian.query(children, { slug: nf }))[0]?.staffCheck
+        ).toBe(true);
         const listed = yield* fixture
           .as("counselor")
           .query(refs.public.guardians.links.list, { ...firstPage, slug: nf });

@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { TenantGrantsDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Grant } from "@repo/backend/confect/access/access";
@@ -15,41 +16,65 @@ import {
 } from "@repo/backend/confect/access/grant";
 import { change } from "@repo/backend/confect/access/grants.change";
 import spec from "@repo/backend/confect/access/grants.spec";
+import { activeGrants } from "@repo/backend/confect/access/policy";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Person } from "@repo/backend/confect/tenancy/access";
 import { personAccess } from "@repo/backend/confect/tenancy/authority";
-import { Effect, Layer, Number as Num, Struct } from "effect";
+import { listedPersonOf } from "@repo/backend/confect/tenancy/listed";
+import { namedPeople } from "@repo/backend/confect/tenancy/named";
+import type { ListedPerson } from "@repo/backend/confect/tenancy/schema";
+import { Array as Arr, Effect, Layer, Number as Num, Struct } from "effect";
 
 /** The largest page one request reads. */
 const PAGE_LIMIT = 100;
 
 /**
- * The active grants of the member's school, one page at a time. The index holds
- * active grants only, so a revoked or expired grant is never read. Each row reads
- * the Person who holds the grant once, by ID, and says whether ending it leaves the
- * school an Owner who has signed in, so the list offers Revoke only where it can end.
+ * The active grants of the member's school, one page at a time, or those of the people a
+ * search finds by name, so a search reaches every page. The index holds active grants
+ * only, so a revoked or expired grant is never read. Each row reads the Person who holds
+ * the grant once, by ID, and says whether ending it leaves the school an Owner who has
+ * signed in, so the list offers Revoke only where it can end.
  */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("access.grants.list")(function* ({ paginationOpts }) {
+  Effect.fn("access.grants.list")(function* ({ paginationOpts, search }) {
     const { tenant } = yield* Member;
     const reader = yield* DatabaseReader;
+    const owners = yield* signedInOwners(tenant._id);
+    const pageOptions = Struct.assign(paginationOpts, {
+      numItems: Num.min(paginationOpts.numItems, PAGE_LIMIT),
+    });
+    const row = (grant: TenantGrantsDoc, person: typeof ListedPerson.Type) => ({
+      id: grant._id,
+      person,
+      revocable: leavesOwner(grant, owners),
+      role: grant.role,
+      scope: grant.scope,
+    });
+    if (search !== undefined) {
+      const people = yield* namedPeople(tenant._id, search, pageOptions);
+      const page = yield* Effect.forEach(
+        people.page,
+        (person) =>
+          Effect.map(
+            Effect.all([activeGrants(person._id), listedPersonOf(person)]),
+            ([grants, listed]) => Arr.map(grants, (grant) => row(grant, listed))
+          ),
+        { concurrency: "unbounded" }
+      );
+      return Struct.assign(people, { page: Arr.flatten(page) });
+    }
     const grants = yield* reader
       .table("tenantGrants")
       .index("by_tenantId_and_status", (query) =>
         query.eq("tenantId", tenant._id).eq("status", "active")
       )
-      .paginate(
-        Struct.assign(paginationOpts, {
-          numItems: Num.min(paginationOpts.numItems, PAGE_LIMIT),
-        })
-      )
+      .paginate(pageOptions)
       .pipe(Effect.orDie);
-    const owners = yield* signedInOwners(tenant._id);
     const page = yield* Effect.forEach(
       grants.page,
       (grant) =>
@@ -58,13 +83,8 @@ const list = FunctionImpl.make(
           .get(grant.personId)
           .pipe(
             Effect.orDie,
-            Effect.map((person) => ({
-              id: grant._id,
-              person: { id: person._id, name: person.name },
-              revocable: leavesOwner(grant, owners),
-              role: grant.role,
-              scope: grant.scope,
-            }))
+            Effect.flatMap(listedPersonOf),
+            Effect.map((person) => row(grant, person))
           ),
       { concurrency: "unbounded" }
     );

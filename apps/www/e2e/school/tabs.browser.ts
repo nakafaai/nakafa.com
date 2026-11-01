@@ -54,9 +54,7 @@ test("a student with a sitting open in two tabs answers in both, and each tab ke
   await waitUntilTakenOver(
     first.getByRole("button", { name: "Enter sitting" })
   );
-  await first
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await first.getByPlaceholder("Enter the token").fill(sitting.token);
   await first.getByRole("button", { name: "Enter sitting" }).click();
   await expect(firstOption(first, 1)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,

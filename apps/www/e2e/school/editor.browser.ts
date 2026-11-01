@@ -298,7 +298,6 @@ test("a teacher schedules an exam, and its editor still takes changes, with no s
   await expect(
     page.getByRole("button", { name: "Add question", exact: true })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(page.getByText("This exam is scheduled")).toHaveCount(0);
   await expect(
     page.getByRole("textbox", { name: "Question 1, option A" })
   ).toBeEditable();

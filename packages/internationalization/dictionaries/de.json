@@ -11,6 +11,8 @@
     "sort-oldest": "Älteste",
     "sort-newest": "Neueste",
     "no-results": "Keine Treffer.",
+    "searching": "Liste wird durchsucht.",
+    "no-values": "Noch keine Werte",
     "reset": "Zurücksetzen"
   },
   "School": {
@@ -67,6 +69,7 @@
     "outsider-check-again": "Erneut prüfen"
   },
   "SchoolGuardians": {
+    "email": "E-Mail",
     "request-ask": "Die Schule fragen",
     "request-description": "Das Sekretariat beantwortet jede Anfrage. Schreibe kurz, was du brauchst.",
     "request-placeholder": "Was du vom Sekretariat brauchst",
@@ -151,7 +154,11 @@
     "mismatches": "Fehlgeschlagene NISN-Prüfungen",
     "child": "Kind",
     "child-detail": "Kind",
-    "guardian-email": "E-Mail der Eltern"
+    "guardian-email": "E-Mail der Eltern",
+    "check": "Prüfung",
+    "check-nisn": "NISN",
+    "check-school": "Schule",
+    "request-read": "Lesen"
   },
   "SchoolRoster": {
     "import": "Importieren",
@@ -274,7 +281,7 @@
     "sitting": "Prüfungstermin",
     "student-enter": "Sitzung betreten",
     "student-enter-footer": "Die Aufsicht gibt dir den Token.",
-    "student-token-placeholder": "Token von der Aufsicht eingeben",
+    "student-token-placeholder": "Token eingeben",
     "student-token-hint": "Die Aufsicht zeigt dir den Token.",
     "student-token-refused": "Das Token passt nicht, daher prüfe es und versuche es erneut.",
     "student-too-many-tries": "Zu viele Versuche, daher warte eine Minute und versuche es erneut.",
@@ -436,6 +443,7 @@
     "group-all": "Alle Gruppen",
     "try-action": "Als Schüler testen",
     "exam-actions": "Prüfungsaktionen",
+    "exam-full": "Eine Prüfung fasst höchstens {count} Fragen.",
     "delete-action": "Prüfung löschen",
     "delete-title": "Diese Prüfung löschen?",
     "delete-description": "Ihre Fragen und Bilder werden endgültig gelöscht.",
@@ -497,6 +505,8 @@
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
     "student-back-home": "Zur Startseite",
     "seat-last-activity": "Aktiv {time}.",
+    "seat-finished": "Fertig {time}.",
+    "seat-locked": "Gesperrt {time}.",
     "seat-away-seconds": "Seit {seconds} s weg.",
     "seat-away-minutes": "Seit {minutes} min {seconds} s weg.",
     "title-needed": "Jede Prüfung braucht einen Titel.",
@@ -768,6 +778,7 @@
     "billing-add-footer": "Neue Schüler werden für den Rest des Zeitraums berechnet.",
     "billing-free-empty": "Schreibe Schüler für das Upgrade ein.",
     "billing-school-footer": "Alle Schüler sind bezahlt.",
+    "billing-open-footer": "Bezahle die offene Rechnung unten, um abzuschließen.",
     "billing-dialog-title": "Zeitraum wählen",
     "billing-dialog-description": "Bezahle pro eingeschriebenem Schüler für die restlichen Tage des Zeitraums.",
     "billing-dialog-seats": "Bezahle pro eingeschriebenem Schüler, mit Plätzen, die sich verlängern, bis du sie kündigst.",
@@ -788,9 +799,11 @@
     "invoice-term": "Zeitraum",
     "invoice-students": "Schüler",
     "invoice-total": "Gesamt",
+    "invoice-due": "Fällig",
     "invoice-status": "Status",
     "invoice-draft": "Entwurf",
     "invoice-open": "Offen",
+    "invoice-overdue": "Überfällig",
     "invoice-paid": "Bezahlt",
     "invoice-void": "Storniert",
     "invoice-pay": "Bezahlen",
@@ -1031,6 +1044,7 @@
         "restored": "Lerngruppe wiederhergestellt"
       },
       "grade": {
+        "corrected": "Note korrigiert",
         "released": "Note freigegeben"
       },
       "message": {
@@ -1240,7 +1254,7 @@
     "login-person": "Person",
     "login-issued": "Ausgestellt",
     "logins-empty": "Noch keine Anmeldekarte ausgegeben.",
-    "logins-search": "Login, Schüler suchen",
+    "logins-search": "Schüler suchen",
     "members-empty": "Noch niemand ist der Schule beigetreten.",
     "members-empty-description": "Lade Lehrkräfte oder Administratoren ein. Schüler kommen über Schülerkonten dazu.",
     "members-search": "Name suchen",
@@ -1306,6 +1320,7 @@
       }
     },
     "person-placeholder": "Person wählen",
+    "person-search": "Person suchen",
     "student-picker-empty": "Füge zuerst einen Schüler unter Schülerkonten hinzu.",
     "teacher-picker-empty": "Lade zuerst eine Lehrkraft unter Einladungen ein.",
     "roles-grants-description": "Jede Rolle, die eine Person dieser Schule hat, und wofür sie gilt.",
@@ -1337,7 +1352,6 @@
     "card-qr-label": "QR-Code mit dem Kartencode",
     "card-copy": "Code kopieren",
     "card-print": "Karte drucken",
-    "card-print-footer": "Drucken sendet die Karte an deinen Drucker.",
     "student-add": "Schüler hinzufügen",
     "student-add-title": "Schüler hinzufügen",
     "student-add-description": "Der Schüler erhält einen Anmeldenamen und eine erste Anmeldekarte, beides in einem Schritt.",
@@ -1523,6 +1537,8 @@
     "library-submit": "Hinzufügen",
     "library-added-by": "Hinzugefügt von",
     "library-added": "Hinzugefügt",
+    "library-type": "Art",
+    "library-open": "Öffnen",
     "library-kind-link": "Link",
     "library-kind-pdf": "PDF",
     "library-kind-image": "Bild",
@@ -1536,6 +1552,12 @@
     "people-role": "Rolle",
     "people-teacher": "Lehrkraft",
     "people-student": "Schüler:in",
+    "people-email": "E-Mail",
+    "people-status": "Status",
+    "people-joined": "Beigetreten",
+    "people-waiting": "Nicht beigetreten",
+    "people-copy-name": "Name kopieren",
+    "people-copy-email": "E-Mail kopieren",
     "people-empty": "Noch niemand in dieser Klasse",
     "people-empty-description": "Lehrkräfte und Lernende der Lerngruppe stehen hier.",
     "tasks-empty": "Noch keine Aufgabe",
@@ -1550,6 +1572,7 @@
     "task-reach-some": "Einige Lernende",
     "task-reach-count": "{count, plural, one {# Person} other {# Personen}}",
     "task-category": "Kategorie",
+    "task-open": "Aufgabe öffnen",
     "task-category-placeholder": "Hausaufgabe",
     "task-category-description": "Optional, sie ordnet die Aufgaben der Klasse.",
     "task-late": "Späte Abgabe",
@@ -1565,6 +1588,8 @@
     "task-work": "Deine Arbeit",
     "task-student": "Schüler",
     "task-hand-in": "Abgeben",
+    "task-closed": "Diese Aufgabe endete mit ihrer Frist.",
+    "task-missing": "Noch nicht abgegeben",
     "task-work-empty": "Noch keine Arbeit",
     "task-work-empty-description": "Die Arbeiten der Schüler erscheinen hier.",
     "task-work-search": "Schüler suchen",
@@ -1642,6 +1667,7 @@
     "library-kind-folder": "Ordner"
   },
   "SchoolGrades": {
+    "email": "E-Mail",
     "student": "Schüler",
     "value": "Note",
     "value-label": "Note von {name}",
@@ -1655,6 +1681,8 @@
     "kktp-notReached": "Unter dem KKTP",
     "search": "Schüler suchen",
     "release": "Freigeben",
+    "correct": "Note korrigieren",
+    "correct-description": "Lernende und Eltern erfahren die neue Note.",
     "empty": "Noch kein Schüler in dieser Klasse.",
     "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
     "detail": "Note der Schülerin oder des Schülers",
@@ -1666,9 +1694,11 @@
     "own-band": "Stufe",
     "own-band-none": "Ohne Stufe",
     "own-empty": "Noch keine Note freigegeben.",
-    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
+    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt.",
+    "own-open-cards": "Zeugnisse"
   },
   "SchoolReports": {
+    "email": "E-Mail",
     "title": "Zeugnisse",
     "cohort": "Klasse",
     "period": "Zeitraum",
@@ -1712,6 +1742,7 @@
     "unit": "Einheit"
   },
   "SchoolGraduation": {
+    "email": "E-Mail",
     "title": "Abschluss",
     "cohort": "Klasse",
     "unit": "Einheit",
@@ -2755,11 +2786,11 @@
       "description": "Melde dich mit einem Operator-Konto an."
     },
     "school-refusal-provision": {
-      "title": "Diese Schule lässt sich so nicht eröffnen.",
+      "title": "Die Schule lässt sich nicht öffnen.",
       "description": "Prüfe die Adresse und die Einheiten der Schule."
     },
     "school-refusal-webhook-limit": {
-      "title": "Ein Client hält höchstens zehn Webhooks.",
+      "title": "Höchstens 10 Webhooks je Client.",
       "description": "Widerrufe einen, den er nicht mehr braucht."
     },
     "school-refusal-unit-limit": {
@@ -2789,6 +2820,13 @@
     "school-refusal-cohort-has-homeroom": {
       "title": "Klasse hat schon eine Lehrkraft.",
       "description": "Die aktuelle Lehrkraft muss zuerst entfernt werden."
+    },
+    "exam-copying": {
+      "title": "Die Prüfung wird kopiert."
+    },
+    "exam-full": {
+      "title": "Diese Prüfung ist voll.",
+      "description": "Entferne eine Frage, um neue hinzuzufügen."
     },
     "action-error": {
       "title": "Aktion nicht abgeschlossen.",
@@ -2827,7 +2865,7 @@
       "description": "Versuche es erneut."
     },
     "invoice-error": {
-      "title": "Die Rechnung konnte nicht geladen werden.",
+      "title": "Die Rechnung lädt gerade nicht.",
       "description": "Bitte versuche es noch einmal."
     },
     "portal-error": {
@@ -3031,8 +3069,8 @@
       "description": "Frag deine Lehrkraft, was du als Nächstes tun sollst."
     },
     "sitting-answers-unsent": {
-      "title": "Einige Antworten wurden vielleicht nicht gespeichert.",
-      "description": "Antworten auf diesem Gerät kamen vielleicht nicht an, bevor die Prüfung schloss, also sag es deiner Aufsicht."
+      "title": "Vielleicht fehlen Antworten.",
+      "description": "Sie kamen vielleicht nicht mehr an, also sag es deiner Aufsicht."
     },
     "sitting-attempt-closed": {
       "title": "Dieser Versuch ist beendet.",
@@ -3123,8 +3161,8 @@
       "description": "Entferne sie vom Client und lege ihn dann neu an."
     },
     "school-refusal-draft-refused": {
-      "title": "Nina kann das gerade nicht entwerfen.",
-      "description": "Schalte Nina für die Schule ein, oder warte, bis die Credits der Schule erneuert werden."
+      "title": "Nina kann das jetzt nicht entwerfen.",
+      "description": "Schalte Nina ein, oder warte auf neue Credits der Schule."
     },
     "school-refusal-promotion-state": {
       "title": "Diese Periode öffnet noch nicht.",
@@ -3168,7 +3206,7 @@
     },
     "school-refusal-login-name-refused": {
       "title": "Dieser Anmeldename ist ungültig.",
-      "description": "Nutze 3 bis 32 Zeichen, a bis z, 0 bis 9, Punkt, Unterstrich oder Bindestrich."
+      "description": "Nutze 3 bis 32 Zeichen, nur a bis z, 0 bis 9, Punkt, _ und -."
     },
     "school-refusal-login-name-taken": {
       "title": "Diesen Anmeldenamen gibt es schon.",
@@ -3220,7 +3258,7 @@
     },
     "import-no-drive": {
       "title": "Verbinde zuerst Google Drive",
-      "description": "Formulare werden über dein Google Drive gelesen. Verbinde es in deinen Kontoeinstellungen."
+      "description": "Formulare laufen über Google Drive, verbinde es in den Einstellungen."
     },
     "import-empty": {
       "title": "Nina hat keine Frage gefunden.",
@@ -3287,7 +3325,8 @@
       "description": "Wähle ein aktives Kind ohne diese E-Mail."
     },
     "school-roster-imported": {
-      "title": "Die Schüler sind in der Liste."
+      "title": "Die Schüler sind in der Liste.",
+      "description": "Öffne Mitglieder, um jedem eine Anmeldekarte zu geben."
     },
     "school-roster-export-failed": {
       "title": "Datei nicht gespeichert."
@@ -3361,7 +3400,7 @@
       "description": "Wähle für diese Klasse einen anderen Namen."
     },
     "school-refusal-channel-fixed": {
-      "title": "Der allgemeine Kanal behält seinen Namen.",
+      "title": "Der allgemeine Kanal heißt immer so.",
       "description": "Benenne stattdessen einen Themenkanal um."
     }
   },
@@ -3838,7 +3877,7 @@
     "classroom-line": "Kurse, Lernende und Aufgaben.",
     "forms": "Google Formulare",
     "forms-line": "Formular als Prüfung.",
-    "drive-line": "Dateien für deine Kurse.",
+    "drive-line": "Dateien deiner Wahl, für Kurs und Notizen.",
     "calendar-line": "Deine Termine, für Nina.",
     "holder-school": "Diese Schule",
     "holder-personal": "Dein Konto",
@@ -3872,21 +3911,13 @@
     "open-exams": "Prüfungen öffnen",
     "course-import": "Schüler importieren",
     "drive": "Google Drive",
-    "drive-description": "Dateien, die du in Google Drive auswählst, für Notizen und Importe.",
     "calendar": "Google Kalender",
-    "calendar-description": "Deine nächsten Termine, damit Nina sagen kann, was diese Woche ansteht.",
     "classroom": "Google Classroom",
-    "classroom-description": "Deine Classroom-Kurse, ihre Schüler und Aufgaben, um sie in die Schule zu holen.",
     "connect": "Verbinden",
     "reconnect": "Neu verbinden",
-    "reconnect-hint": "Google nimmt diese Verbindung nicht mehr an.",
-    "connected": "Verbunden.",
-    "not-connected": "Nicht verbunden.",
     "disconnect": "Trennen",
     "disconnect-title": "{name} trennen",
     "disconnect-description": "Nakafa liest es sofort nicht mehr, und entferne Nakafa auch in deinem Google-Konto, damit der Zugriff dort endet.",
-    "none": "Noch kein Konnektor",
-    "none-description": "Konnektoren erscheinen hier, sobald Google sie geprüft hat.",
     "courses-none": "Kein aktiver Kurs in diesem Classroom-Konto.",
     "course": "Kurs",
     "course-students": "Schüler",
@@ -3920,7 +3951,7 @@
     "evidence-points": "{earned} von {possible} Punkten",
     "student": "Lernende",
     "chance": "Chance auf KKTP {kktp}",
-    "chance-note": "Diese Chance ändert keine Note und ist nur für Lehrkräfte sichtbar. Sie stammt aus den Punkten oben und ist eine erste Schätzung.",
+    "chance-note": "Nur Lehrkräfte sehen diese Chance, und sie ändert keine Note.",
     "chance-held": "Die Prognose hat den Test des letzten Monats nicht bestanden und bleibt verborgen, bis sie ihn besteht.",
     "empty": "Noch nichts zu zeigen",
     "empty-description": "Jede freigegebene Prüfung erscheint hier.",
@@ -3952,12 +3983,27 @@
     "class-empty": "Noch keine Prüfung freigegeben",
     "class-empty-description": "Gib die Ergebnisse einer Prüfung dieser Klasse frei, dann erscheint hier der Stand jeder Person.",
     "exams-action": "Prüfungen öffnen",
-    "tags-note": "Eine Frage ohne Kompetenz zählt unter dem Namen ihrer Prüfung.",
     "tags-empty": "Erstelle zuerst eine Prüfung, dann nenne, was ihre Fragen prüfen.",
     "tags-done": "Fertig",
     "tags-none": "Diese Prüfung hat noch keine Fragen.",
     "exam-placeholder": "Prüfung wählen",
     "question-placeholder": "Optional, zum Beispiel Brüche",
-    "narratives-note": "Öffne eine Person, um zu schreiben, was ihr als Nächstes hilft."
+    "narratives-note": "Öffne eine Person, um zu schreiben, was ihr als Nächstes hilft.",
+    "tabs-label": "Insight-Ansichten",
+    "tab-students": "Lernende",
+    "tab-practice": "Übung",
+    "email": "E-Mail",
+    "competencies-count": "Fähigkeiten",
+    "observations": "Antworten",
+    "narrative": "Bericht",
+    "narrative-none": "Nicht geschrieben",
+    "narrative-saved": "Geschrieben",
+    "narrative-shared": "Geteilt",
+    "narrative-open": "Bericht",
+    "students-empty": "Noch keine Lernenden",
+    "students-empty-description": "Alle Lernenden dieser Klasse stehen hier.",
+    "practice-empty": "Noch keine geteilte Übung",
+    "practice-class-note": "Hier stehen nur die Themen, die Lernende einschalten.",
+    "practice-own-empty-description": "Deine Try-out-Übung steht hier, und du wählst, was du teilst."
   }
 }
