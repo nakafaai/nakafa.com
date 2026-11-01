@@ -77,7 +77,7 @@ describe("answerFailedDocument", () => {
 
   it.effect("keeps Start's answer where no release binds a shell", () =>
     Effect.gen(function* () {
-      worker.env.ASSETS = undefined;
+      Reflect.deleteProperty(worker.env, "ASSETS");
       const failure = startError();
 
       expect(yield* answerFailedDocument(navigation, failure)).toBe(failure);
