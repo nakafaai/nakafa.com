@@ -53,16 +53,18 @@ export function NavPrimary() {
 /** One shortcut, whose destination reads the learner's preferences on the page's Convex island. */
 function PrimaryMenuItem({ item }: { item: PrimaryItem }) {
   return (
-    <ConvexIsland
-      fallback={
-        <PrimaryLink
-          destination={getPrimaryNavigationTarget(item)}
-          item={item}
-        />
-      }
-    >
-      <LearnerPrimaryMenuItem item={item} />
-    </ConvexIsland>
+    <SidebarMenuItem>
+      <ConvexIsland
+        fallback={
+          <PrimaryLink
+            destination={getPrimaryNavigationTarget(item)}
+            item={item}
+          />
+        }
+      >
+        <LearnerPrimaryMenuItem item={item} />
+      </ConvexIsland>
+    </SidebarMenuItem>
   );
 }
 
@@ -105,25 +107,23 @@ function PrimaryLink({
   const isActive = useRouteMatched(destination.to, { exact: false });
 
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        isActive={isActive}
-        render={
-          <Link
-            activeOptions={EXACT_ACTIVE_OPTIONS}
-            {...destination}
-            onFocus={prefetchAskNina}
-            onPointerEnter={prefetchAskNina}
-            onTouchStart={prefetchAskNina}
-            {...(isAskNina && { preload: false })}
-            title={label}
-          />
-        }
-        tooltip={label}
-      >
-        <HugeIcons icon={item.icon} />
-        <span className="truncate">{label}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
+    <SidebarMenuButton
+      isActive={isActive}
+      render={
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          {...destination}
+          onFocus={prefetchAskNina}
+          onPointerEnter={prefetchAskNina}
+          onTouchStart={prefetchAskNina}
+          {...(isAskNina && { preload: false })}
+          title={label}
+        />
+      }
+      tooltip={label}
+    >
+      <HugeIcons icon={item.icon} />
+      <span className="truncate">{label}</span>
+    </SidebarMenuButton>
   );
 }

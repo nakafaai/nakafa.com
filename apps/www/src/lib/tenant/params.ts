@@ -23,6 +23,11 @@ export function readClassAddress(classSlug: string) {
   return Schema.decodeOption(ClassAddress)(classSlug);
 }
 
+/** The folder at an address of a class's library, or none when the address names no folder. */
+export function readFolderAddress(folder: string) {
+  return Schema.decodeUnknownOption(Id("classroomFolders"))(folder);
+}
+
 /** The digits of a discussion's address: a number without a leading zero. */
 const DiscussionAddress = Schema.String.check(
   Schema.isPattern(/^[1-9][0-9]{0,8}$/u)

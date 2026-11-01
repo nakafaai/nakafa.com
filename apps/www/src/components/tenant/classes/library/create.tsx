@@ -42,7 +42,10 @@ import {
   LibraryDriveField,
   LibraryFileField,
 } from "@/components/tenant/classes/library/fields";
-import { useLibraryUploads } from "@/components/tenant/classes/library/scope";
+import {
+  useLibraryFolder,
+  useLibraryUploads,
+} from "@/components/tenant/classes/library/scope";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
@@ -93,6 +96,7 @@ export function AddToLibrary() {
   const { classId, slug } = useClassScope();
   const viewer = useViewerQuery();
   const uploads = useLibraryUploads();
+  const folderId = useLibraryFolder();
   const offered = useQuery(connectors.google.offered, {});
   const addLink = useMutation(classroom.library.addLink);
   const requestUrl = useMutation(classroom.library.uploadUrl);
@@ -188,7 +192,7 @@ export function AddToLibrary() {
         addLibraryLink(
           (update, args) => addLink.withOptimisticUpdate(update)(args),
           author,
-          { address: link, classId, clientKey, slug, title: heading }
+          { address: link, classId, clientKey, folderId, slug, title: heading }
         )
       ),
       () => {
@@ -212,7 +216,14 @@ export function AddToLibrary() {
             chosen,
             () => requestUrl({ classId, slug }),
             (storageId) =>
-              register({ classId, clientKey, slug, storageId, title: heading })
+              register({
+                classId,
+                clientKey,
+                folderId,
+                slug,
+                storageId,
+                title: heading,
+              })
           )
       ).pipe(
         Effect.catchTags({
@@ -236,6 +247,7 @@ export function AddToLibrary() {
               classId,
               clientKey,
               fileId: picked.id,
+              folderId,
               slug,
               title: heading,
             })
