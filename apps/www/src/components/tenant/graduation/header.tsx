@@ -196,7 +196,7 @@ function GraduationActions({
           type="button"
         >
           {isIssuing ? <Spinner isLoading /> : <HugeIcons icon={SentIcon} />}
-          {t("issue")}
+          <span className="@max-sm/header:sr-only">{t("issue")}</span>
         </Button>
       ) : null}
       {canDecide ? (
