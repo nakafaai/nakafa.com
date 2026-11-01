@@ -18,8 +18,8 @@ import { Array as Arr, Option, Schema } from "effect";
 import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
@@ -83,7 +83,7 @@ function SchoolPersonSelect() {
   return (
     <>
       {PaginatedQueryResult.isFailure(pagination) ? (
-        <DataFailure onRetry={reloadPage} />
+        <LoadFailure onRetry={reloadPage} />
       ) : null}
       <PersonSelect people={pagination.results}>
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (
@@ -120,14 +120,29 @@ function SchoolStudentSelect() {
   return (
     <>
       {PaginatedQueryResult.isFailure(pagination) ? (
-        <DataFailure onRetry={reloadPage} />
+        <LoadFailure onRetry={reloadPage} />
       ) : null}
       <PersonSelect people={pagination.results}>
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (
           <Intersection onIntersect={() => pagination.loadMore(PICKER_SIZE)} />
         ) : null}
+        {PaginatedQueryResult.isExhausted(pagination) &&
+        !Arr.isReadonlyArrayNonEmpty(pagination.results) ? (
+          <NoStudents />
+        ) : null}
       </PersonSelect>
     </>
+  );
+}
+
+/** What a student picker says with nobody to choose: where students come from. */
+function NoStudents() {
+  const t = useTranslations("SchoolSettings");
+
+  return (
+    <p className="text-muted-foreground px-2 py-1.5 text-sm">
+      {t("student-picker-empty")}
+    </p>
   );
 }
 

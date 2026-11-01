@@ -167,11 +167,13 @@ describe("sitemap route pages", () => {
     Effect.gen(function* () {
       expect(yield* readPaths("base")).toEqual([
         "/",
+        "/articles",
         "/contributor",
         "/curricula",
         "/pricing",
         "/quran",
         "/search",
+        "/try-out",
       ]);
       expect(yield* readPaths("quran_en")).toEqual(["/quran/1", "/quran/2"]);
     })
@@ -283,11 +285,13 @@ describe("sitemap route pages", () => {
     Effect.gen(function* () {
       expect((yield* readSitemapRoutePage("base")).routes).toEqual([
         { path: "/" },
+        { path: "/articles" },
         { path: "/contributor" },
         { lastModified: "2026-10-02", path: "/curricula" },
         { path: "/pricing" },
         { lastModified: "2026-10-03", path: "/quran" },
         { path: "/search" },
+        { lastModified: "2026-10-01", path: "/try-out" },
       ]);
     })
   );

@@ -7,10 +7,13 @@ import { Schema } from "effect";
 
 /** Which steps of the setup the school's own data already shows as done. */
 const SetupState = Schema.Struct({
+  classroom: Schema.Boolean,
   cohort: Schema.Boolean,
   exam: Schema.Boolean,
+  parent: Schema.Boolean,
   period: Schema.Boolean,
   student: Schema.Boolean,
+  teacher: Schema.Boolean,
 });
 
 /**

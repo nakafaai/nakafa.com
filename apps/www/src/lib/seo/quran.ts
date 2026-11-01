@@ -7,6 +7,9 @@ import type { Locale } from "use-intl";
 import { createSEOKeywords } from "@/lib/seo/keywords";
 import { fetchSEOTranslationsNamespace } from "@/lib/seo/translations";
 
+/** The value a title's message reads as no meaning. */
+const EMPTY_MEANING = "__EMPTY__";
+
 /** Generates localized SEO metadata for one Quran surah payload. */
 export const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
   (surah: PublishedQuranSurah, locale: Locale) =>
@@ -15,6 +18,9 @@ export const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
       const transliteration = surah.name.transliteration;
       const localizedMeaning = formatQuranMeaning(surah.name.meaning, locale);
       const revelation = surah.revelation.place;
+      // Hud and Luqman mean themselves, so the title names them once.
+      const titleMeaning =
+        localizedMeaning === transliteration ? EMPTY_MEANING : localizedMeaning;
 
       const t = yield* fetchSEOTranslationsNamespace(locale, "SEO");
 
@@ -23,7 +29,7 @@ export const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
           number: surah.number,
           name,
           transliteration,
-          translation: localizedMeaning,
+          translation: titleMeaning,
         }),
         description: t("quran.description", {
           name,

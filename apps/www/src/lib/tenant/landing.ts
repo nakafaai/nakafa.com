@@ -1,5 +1,5 @@
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";
-import type { Option } from "effect";
+import { Option } from "effect";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import {
   type HomeAccess,
@@ -11,7 +11,8 @@ import { canManageSchool, roleOf, type SchoolViewer } from "@/lib/tenant/frame";
 /**
  * The page a member's school opens on, by the member's main work there, as Vercel opens on a team's projects: the
  * exams for staff who may open them, the student's own exams for a student and for a member with no grant, then the
- * settings for a manager, the report cards for a teacher who keeps them, and the notifications otherwise.
+ * settings for a manager, the report cards for a teacher who keeps them, a parent's children, and the notifications
+ * otherwise.
  */
 export function landingOf(
   viewer: {
@@ -22,6 +23,9 @@ export function landingOf(
   },
   access: Pick<HomeAccess, "canCreate" | "canWatch">
 ) {
+  if (Option.contains(viewer.role, "guardian")) {
+    return "/school/$slug/parents" as const;
+  }
   if (viewer.canOpenExams) {
     return "/school/$slug/exams" as const;
   }

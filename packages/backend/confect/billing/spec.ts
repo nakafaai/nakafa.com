@@ -234,6 +234,21 @@ export class XenditDeactivateError extends Schema.TaggedError<XenditDeactivateEr
 }
 export const XenditDeactivateErrorWire = publicFailure(XenditDeactivateError);
 
+/** Raised when Xendit would not return a payment that bought nothing, so an operator refunds it by hand. */
+export const xenditRefundErrorCode = "XENDIT_REFUND_ERROR";
+export class XenditRefundError extends Schema.TaggedError<XenditRefundError>()(
+  "XenditRefundError",
+  {
+    code: Schema.Literal(xenditRefundErrorCode),
+    cause: Schema.optional(Schema.Unknown),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof xenditRefundErrorCode;
+  declare readonly message: string;
+}
+export const XenditRefundErrorWire = publicFailure(XenditRefundError);
+
 /** Raised when Xendit would not open the recurring plan of a paid first month, after every retry, so an operator opens it. */
 export const xenditPlanErrorCode = "XENDIT_PLAN_ERROR";
 export class XenditPlanError extends Schema.TaggedError<XenditPlanError>()(

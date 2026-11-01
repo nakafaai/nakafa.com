@@ -15,8 +15,8 @@ import {
 import { useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { LoadFailure } from "@/components/state/failure";
 import {
   forumCall,
   runForumCall,
@@ -51,7 +51,7 @@ export function TaskPage({ task: address }: { task: string }) {
     return isDenied(read.error) ? (
       <ClassMissingBody />
     ) : (
-      <DataFailure onRetry={reloadPage} />
+      <LoadFailure onRetry={reloadPage} />
     );
   }
   if (!QueryResult.isSuccess(read)) {

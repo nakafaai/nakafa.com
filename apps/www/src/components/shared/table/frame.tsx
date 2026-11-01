@@ -6,10 +6,9 @@ import {
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
 import type { ActSchema } from "@repo/mascot/nina/act";
-import type { VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type { ReactNode } from "react";
-import { contentWidthVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { tableCardVariants } from "@/components/shared/table/card";
 import { EmptyNina } from "@/components/state/empty";
 
@@ -37,20 +36,10 @@ export function TableFrame({ children }: { children: ReactNode }) {
  * place; a table taller than the card scrolls inside it with its column heads in view. The table
  * closes on its last row (`tableCardVariants`).
  */
-export function TablePageBody({
-  children,
-  width = "page",
-}: {
-  children: ReactNode;
-  /** The width of the page's content: the column of a settings section, or the page width. */
-  width?: NonNullable<VariantProps<typeof contentWidthVariants>["width"]>;
-}) {
+export function TablePageBody({ children }: { children: ReactNode }) {
   return (
     <div
-      className={cn(
-        contentWidthVariants({ width }),
-        "flex min-h-0 w-full flex-1 flex-col p-4"
-      )}
+      className={cn(pageRowVariants(), "flex min-h-0 flex-1 flex-col py-4")}
       data-slot="table-page-body"
     >
       <div

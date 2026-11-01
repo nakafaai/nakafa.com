@@ -54,7 +54,11 @@ describe("guardians/links", () => {
         });
         const entries = yield* fixture.run(journal);
         expect(Arr.map(entries, (entry) => entry.change.type)).toEqual(
-          expect.arrayContaining(["person.created", "guardian.started"])
+          expect.arrayContaining([
+            "person.created",
+            "grant.created",
+            "guardian.started",
+          ])
         );
         const listed = yield* fixture
           .as("admin")

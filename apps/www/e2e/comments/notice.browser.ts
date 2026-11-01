@@ -12,10 +12,12 @@ import { LESSON_PATH, openChatPage } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const PLACEHOLDER = app.Comments["add-comment-placeholder"];
 const INBOX = "/en/notifications";
 const REPLIED = app.Notifications["comment-replied"];
+const REPLY_MAIL = `${app.Notifications["kind-commentReply"]}, ${app.Notifications["channel-email"]}`;
 /** The address of a lesson that opens one of its comments. */
 const OPENS_COMMENT = /comment=/u;
 
@@ -41,6 +43,20 @@ async function post(page: Page, text: string) {
   });
 }
 
+/** Opens the Nakafa inbox's preferences, and answers the switch of a reply's mail. */
+async function openReplyMail(page: Page) {
+  const preferences = page
+    .locator("header")
+    .getByRole("button", { name: app.Notifications.preferences });
+  await waitUntilTakenOver(preferences);
+  await preferences.click();
+  const mail = page
+    .getByRole("dialog")
+    .getByRole("switch", { name: REPLY_MAIL });
+  await expect(mail).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  return mail;
+}
+
 /** Opens the lesson's comments in one learner's page, with the feed mounted. */
 const openComments = Effect.fn("NakafaE2E.openNoticeComments")(function* (
   page: Page,
@@ -56,7 +72,8 @@ const openComments = Effect.fn("NakafaE2E.openNoticeComments")(function* (
 /**
  * A reply reaches the learner it answers: a row in the Nakafa inbox under the
  * Comments topic, which opens the reply on its lesson, above the list, and reads
- * itself. The learner who replied gets no row for their own reply.
+ * itself. The learner who replied gets no row for their own reply, and the author
+ * switches the reply's mail off from the same inbox.
  */
 test("a reply to a comment reaches its author's inbox and opens the reply", async ({
   baseURL,
@@ -112,6 +129,16 @@ test("a reply to a comment reaches its author's inbox and opens the reply", asyn
             await expect(
               replier.getByRole("link", { name: REPLIED })
             ).toHaveCount(0);
+          });
+
+          yield* Effect.promise(async () => {
+            await author.goto(INBOX);
+            const mail = await openReplyMail(author);
+            await expect(mail).toBeChecked();
+            await mail.click();
+            await expect(mail).not.toBeChecked();
+            await author.reload();
+            await expect(await openReplyMail(author)).not.toBeChecked();
           });
         })
       )

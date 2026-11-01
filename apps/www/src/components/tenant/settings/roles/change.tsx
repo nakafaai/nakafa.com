@@ -13,10 +13,8 @@ import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { changeGrantRoleChange } from "@/components/tenant/settings/edits";
-import {
-  givenRoles,
-  SchoolRoleSelect,
-} from "@/components/tenant/settings/grant";
+import { SchoolRoleSelect } from "@/components/tenant/settings/grant";
+import { givenRoles } from "@/components/tenant/settings/grants";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Grant } from "@/components/tenant/settings/state";
 

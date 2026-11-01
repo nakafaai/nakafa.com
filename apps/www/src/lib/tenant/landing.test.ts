@@ -19,6 +19,12 @@ const rights = (
 const NO_EXAMS = { canCreate: false, canWatch: false };
 
 describe("tenant/landing", () => {
+  it("opens a parent's children", () => {
+    expect(
+      landingOf({ ...rights(), role: Option.some("guardian") }, NO_EXAMS)
+    ).toBe("/school/$slug/parents");
+  });
+
   it("opens the exams for staff who may open them, whatever else they may do", () => {
     expect(
       landingOf(

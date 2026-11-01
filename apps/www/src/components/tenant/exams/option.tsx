@@ -86,8 +86,9 @@ export function OptionRow({
   const t = useTranslations("Exams");
   const tCommon = useTranslations("Common");
   const editor = useRef<DocumentEditorInstance | null>(null);
-  // Whether the words in the editor went unanswered, which shows the retry until the server holds them.
-  const [unsaved, setUnsaved] = useState(false);
+  // The words the server never answered for, which show the retry until the server holds them or the next save goes.
+  const [unanswered, setUnanswered] = useState<OptionLabel | null>(null);
+  const unsaved = unanswered !== null && !holdsLabel(label, unanswered);
   // The label the server held at the last render, which the editor holds too while the teacher has typed nothing
   // on top of it since.
   const previous = useRef(label);
@@ -108,9 +109,10 @@ export function OptionRow({
   });
   // Sends one label, and keeps the words when the server never answered, or takes the label back when it refused.
   const saveLabel = useCallbackRef((next: OptionLabel) => {
+    setUnanswered(null);
     save(next, (reason) => {
       if (reason === "unanswered") {
-        setUnsaved(true);
+        setUnanswered(next);
         return;
       }
       restoreUnstored(next);
@@ -143,7 +145,6 @@ export function OptionRow({
       json: editor.current?.getJSON(),
     });
     if (Option.isSome(edit)) {
-      setUnsaved(false);
       Effect.runFork(saver.touch(edit.value).pipe(Effect.andThen(saver.flush)));
     }
   };
@@ -166,11 +167,7 @@ export function OptionRow({
       return;
     }
     const held = current.getJSON();
-    if (holdsLabel(held, label)) {
-      setUnsaved(false);
-      return;
-    }
-    if (!holdsLabel(held, before)) {
+    if (holdsLabel(held, label) || !holdsLabel(held, before)) {
       return;
     }
     current.commands.setContent(

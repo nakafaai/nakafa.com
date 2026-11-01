@@ -1,5 +1,8 @@
 import { DateTime, Option, Schema } from "effect";
 
+/** The zone of an account's notices: an account keeps none, and Nakafa's learners are in Indonesia. */
+export const ACCOUNT_TIME_ZONE = "Asia/Jakarta";
+
 /** A wall-clock time of the day: an hour and a minute on the clock of a zone. */
 const ClockTime = Schema.Struct({
   hour: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 23 })),

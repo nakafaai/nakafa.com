@@ -22,6 +22,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { EmptyNina } from "@/components/state/empty";
+import { LoadFailure } from "@/components/state/failure";
 import { ChannelMenu } from "@/components/tenant/classes/forum/menu";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -65,7 +66,7 @@ export function ChannelRows({
     return null;
   }
   if (failed && Arr.isReadonlyArrayEmpty(channels)) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
   const rows = Arr.filter(
     Arr.appendAll(Arr.map(channels, savedRow), Arr.map(saving, savingRow)),
