@@ -1,14 +1,6 @@
-import { Button } from "@repo/design-system/components/ui/button";
-import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, type Result } from "effect";
-import { type ComponentProps, useTransition } from "react";
+import { useTransition } from "react";
 import { reportClientException } from "@/lib/analytics/client";
 import { invoiceBlob } from "@/lib/billing/invoice";
 
@@ -28,39 +20,6 @@ const saveInvoice = (blob: Blob, name: string) =>
     link.click();
     URL.revokeObjectURL(url);
   });
-
-/** One row's action: an icon button that names itself in a tooltip and shows its work. */
-export function RowAction({
-  icon,
-  isPending,
-  label,
-  onClick,
-}: {
-  icon: ComponentProps<typeof HugeIcons>["icon"];
-  isPending: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label={label}
-            disabled={isPending}
-            onClick={onClick}
-            size="icon-sm"
-            type="button"
-            variant="ghost"
-          >
-            <Spinner icon={icon} isLoading={isPending} />
-          </Button>
-        }
-      />
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
-  );
-}
 
 /** Asks for one invoice, saves the file, and says so in a toast when it cannot be drawn. */
 export function useInvoiceDownload() {

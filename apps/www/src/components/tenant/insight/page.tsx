@@ -23,6 +23,7 @@ import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
@@ -223,6 +224,9 @@ function OwnInsight() {
               header: t("evidence"),
               id: "evidence",
             }),
+            skillColumns.menu((info) => (
+              <RowCopy value={info.row.original.competency} />
+            )),
           ]}
           data={mine.value}
           rowId={(skill) => skill.competency}

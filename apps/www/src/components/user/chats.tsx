@@ -12,7 +12,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -286,13 +288,16 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
           }
         />
         <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
-            onClick={() => setConfirmDelete(true)}
-            variant="destructive"
-          >
-            <HugeIcons icon={Delete02Icon} />
-            {t("delete")}
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("menu-actions")}</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => setConfirmDelete(true)}
+              variant="destructive"
+            >
+              <HugeIcons icon={Delete02Icon} />
+              {t("delete")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
       <ResponsiveDialog

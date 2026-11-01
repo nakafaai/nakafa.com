@@ -1,21 +1,17 @@
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { type ComponentProps, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
+import { RowItems } from "@/components/shared/table/menu";
 
 /**
- * The menu of one table row whose last action is destructive, with the action's icon, below the row's other actions
- * when it has any. The action opens a confirmation, and `onConfirm` runs only once the viewer confirms it, so nothing
+ * What the menu of one table row holds when its last action is destructive: the action with its icon, below the row's other
+ * actions when it has any. The action opens a confirmation, and `onConfirm` runs only once the viewer confirms it, so nothing
  * is removed by a single click. A row that may not take the action keeps it in view, disabled, so every row's menu
  * reads the same.
  */
@@ -44,38 +40,19 @@ export function ConfirmRowMenu({
   const [isConfirming, setIsConfirming] = useState(false);
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          {children === undefined ? null : (
-            <>
-              <DropdownMenuGroup>{children}</DropdownMenuGroup>
-              <DropdownMenuSeparator />
-            </>
-          )}
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              disabled={disabled}
-              onClick={() => setIsConfirming(true)}
-              variant="destructive"
-            >
-              <HugeIcons icon={icon} />
-              {action}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <>
+      <RowItems>
+        {children}
+        {children === undefined ? null : <DropdownMenuSeparator />}
+        <DropdownMenuItem
+          disabled={disabled}
+          onClick={() => setIsConfirming(true)}
+          variant="destructive"
+        >
+          <HugeIcons icon={icon} />
+          {action}
+        </DropdownMenuItem>
+      </RowItems>
       <ResponsiveDialog
         description={description}
         footer={
@@ -103,6 +80,6 @@ export function ConfirmRowMenu({
         setOpen={setIsConfirming}
         title={title}
       />
-    </div>
+    </>
   );
 }

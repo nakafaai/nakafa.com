@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -41,6 +42,7 @@ const CATEGORY_ICONS = {
 /** The header's filter of the directory by category, which stands out while one is chosen. */
 export function ServiceFilter() {
   const t = useTranslations("Connectors");
+  const common = useTranslations("Common");
   const chosen = useTableFilters((state) => state.chosen);
   const choose = useTableFilters((state) => state.choose);
   const category = chosenOne(
@@ -65,6 +67,7 @@ export function ServiceFilter() {
       />
       <DropdownMenuContent align="end" className="min-w-48">
         <DropdownMenuGroup>
+          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             onValueChange={(next) =>
               choose(

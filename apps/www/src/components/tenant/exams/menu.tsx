@@ -10,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -32,6 +33,7 @@ import { Link } from "@/lib/routing/link";
  */
 export function ExamMenu() {
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
   const { gone } = useExam();
   const locked = useExamLocked();
   const [dialog, setDialog] = useState<"delete" | "import" | null>(null);
@@ -57,20 +59,23 @@ export function ExamMenu() {
           <SplitMenuTrigger />
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => setDialog("import")}>
-                <HugeIcons icon={FileImportIcon} />
-                {t("import-action")}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                onClick={() => setDialog("delete")}
-                variant="destructive"
-              >
-                <HugeIcons icon={Delete02Icon} />
-                {t("delete-action")}
-              </DropdownMenuItem>
+              <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => setDialog("import")}>
+                  <HugeIcons icon={FileImportIcon} />
+                  {t("import-action")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  onClick={() => setDialog("delete")}
+                  variant="destructive"
+                >
+                  <HugeIcons icon={Delete02Icon} />
+                  {t("delete-action")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>

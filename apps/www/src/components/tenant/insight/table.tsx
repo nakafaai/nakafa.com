@@ -8,6 +8,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { StudentNarrative } from "@/components/tenant/insight/narrative";
@@ -105,6 +106,9 @@ export function ClassInsightTable({
                       ),
                     ]
                   : []),
+                skillColumns.menu((info) => (
+                  <RowCopy value={info.row.original.student} />
+                )),
               ]}
               data={rows}
               rowId={(row) => row.key}

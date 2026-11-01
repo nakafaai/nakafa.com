@@ -20,6 +20,12 @@ function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
 }
 
 /**
+ * Makes the handle that joins a `DropdownMenu` to a `DropdownMenuTrigger` drawn outside it, so a
+ * dialog that opens from a menu stands beside the menu and never inside it.
+ */
+const createDropdownMenuHandle = MenuPrimitive.createHandle;
+
+/**
  * Renders the positioned menu popup. A menu that sets `keepMounted` stays in the
  * document while closed, hidden, so its items are ready before it opens.
  */
@@ -287,6 +293,7 @@ function DropdownMenuShortcut({
 }
 
 export {
+  createDropdownMenuHandle,
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,

@@ -11,7 +11,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -121,34 +123,40 @@ export function PageActions({
             }
           />
           <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem disabled={index === 0} onClick={moveUp}>
-              <HugeIcons aria-hidden="true" icon={ArrowUp02Icon} />
-              {t("move-up")}
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={index === count - 1} onClick={moveDown}>
-              <HugeIcons aria-hidden="true" icon={ArrowDown02Icon} />
-              {t("move-down")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={copy}>
-              <HugeIcons aria-hidden="true" icon={Copy01Icon} />
-              {t("copy")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={addBelow}>
-              <HugeIcons aria-hidden="true" icon={Add01Icon} />
-              {t("add-below")}
-            </DropdownMenuItem>
-            {count > 1 ? (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setAsking(true)}
-                  variant="destructive"
-                >
-                  <HugeIcons aria-hidden="true" icon={Delete02Icon} />
-                  {t("remove")}
-                </DropdownMenuItem>
-              </>
-            ) : null}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+              <DropdownMenuItem disabled={index === 0} onClick={moveUp}>
+                <HugeIcons aria-hidden="true" icon={ArrowUp02Icon} />
+                {t("move-up")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={index === count - 1}
+                onClick={moveDown}
+              >
+                <HugeIcons aria-hidden="true" icon={ArrowDown02Icon} />
+                {t("move-down")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={copy}>
+                <HugeIcons aria-hidden="true" icon={Copy01Icon} />
+                {t("copy")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={addBelow}>
+                <HugeIcons aria-hidden="true" icon={Add01Icon} />
+                {t("add-below")}
+              </DropdownMenuItem>
+              {count > 1 ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setAsking(true)}
+                    variant="destructive"
+                  >
+                    <HugeIcons aria-hidden="true" icon={Delete02Icon} />
+                    {t("remove")}
+                  </DropdownMenuItem>
+                </>
+              ) : null}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -12,6 +12,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -119,5 +120,6 @@ function usePersonColumns() {
         value: kind,
       })),
     }),
+    personColumns.menu((info) => <RowCopy value={info.row.original.name} />),
   ];
 }

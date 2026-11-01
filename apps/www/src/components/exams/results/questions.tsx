@@ -68,6 +68,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -305,6 +306,11 @@ function AnswerList({
             id: "verdict",
             options: verdictChoices,
           }),
+          answerColumns.menu((info) => (
+            <RowCopy
+              value={responseText(question, info.row.original.response)}
+            />
+          )),
         ]}
         data={results}
         loading={loadMore !== null || results.length === 0}

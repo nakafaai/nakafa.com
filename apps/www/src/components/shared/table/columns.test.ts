@@ -100,4 +100,15 @@ describe("the columns of a table", () => {
       meta: { align: "menu" },
     });
   });
+
+  it("names the row whose menu does not answer yet", () => {
+    const cell = () => "menu";
+    const inert = () => true;
+
+    expect(columns.menu(cell, { inert })).toEqual({
+      cell,
+      id: "actions",
+      meta: { align: "menu", inert },
+    });
+  });
 });

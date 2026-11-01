@@ -3,7 +3,7 @@ import {
   QueryResult,
   usePaginatedQuery,
 } from "@confect/react";
-import { TaskEdit01Icon } from "@hugeicons/core-free-icons";
+import { Calendar03Icon, TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -17,6 +17,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -99,8 +100,8 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
  * data table, or nothing while the first page loads. A first page that failed shows the failure alone. Each
  * row shows where the exam belongs, how many questions it holds and when it was created. The title links to its
  * editor, and the row menu opens its editor, its rooms, the exam as a student sees it, and Delete. A viewer who may
- * only open the exam's rooms, such as a Proctor, follows the title to the rooms and has no menu. An exam that the
- * server is still saving shows its title without a link and no menu, so it is inert.
+ * only open the exam's rooms, such as a Proctor, follows the title to the rooms, and the menu offers the same. An exam
+ * that the server is still saving shows its title without a link and its menu stays inert.
  */
 function ExamListRows({
   exams: rows,
@@ -190,11 +191,17 @@ function ExamListRows({
       id: "created",
       timeZone: formatZone,
     }),
-    examColumns.menu((info) =>
-      Arr.contains(saving, info.row.original.id) ||
-      !info.row.original.canEdit ? null : (
-        <ExamRowMenu exam={info.row.original} />
-      )
+    examColumns.menu(
+      (info) =>
+        Arr.contains(saving, info.row.original.id) ||
+        !info.row.original.canEdit ? (
+          <RowItems>
+            <RowOpen icon={Calendar03Icon} label={t("rooms-title")} />
+          </RowItems>
+        ) : (
+          <ExamRowMenu exam={info.row.original} />
+        ),
+      { inert: (row) => Arr.contains(saving, row.id) }
     ),
   ];
 

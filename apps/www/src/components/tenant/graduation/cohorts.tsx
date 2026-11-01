@@ -5,20 +5,12 @@ import {
   Calendar03Icon,
   CalendarCheckIn01Icon,
   CalendarsIcon,
-  MoreHorizontalIcon,
   MortarboardIcon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
@@ -27,6 +19,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
@@ -141,35 +134,18 @@ function GraduationCohortMenu({
   const common = useTranslations("Common");
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              render={
-                <Link
-                  params={{ cohortId, slug }}
-                  to="/school/$slug/graduation/$cohortId"
-                >
-                  <HugeIcons icon={MortarboardIcon} />
-                  {common("open")}
-                </Link>
-              }
-            />
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <RowItems>
+      <DropdownMenuItem
+        render={
+          <Link
+            params={{ cohortId, slug }}
+            to="/school/$slug/graduation/$cohortId"
+          >
+            <HugeIcons icon={MortarboardIcon} />
+            {common("open")}
+          </Link>
+        }
+      />
+    </RowItems>
   );
 }

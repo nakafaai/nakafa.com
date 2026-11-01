@@ -12,6 +12,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { SchoolPlacementMove } from "@/components/tenant/settings/placement";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
@@ -79,7 +80,9 @@ export function SchoolCohortMembers({
           slug={slug}
           targets={targets}
         />
-      ) : null
+      ) : (
+        <RowCopy value={info.row.original.name} />
+      )
     ),
   ];
 

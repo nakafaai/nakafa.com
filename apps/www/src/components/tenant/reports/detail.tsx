@@ -32,6 +32,7 @@ import { usePanes } from "@/components/shared/panes";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { menuOf } from "@/components/tenant/reports/access";
@@ -140,6 +141,9 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
                     (subject) => subject.band ?? t(`kktp-${subject.kktp}`),
                     { header: t("result"), id: "result" }
                   ),
+                  subjectColumns.menu((info) => (
+                    <RowCopy value={info.row.original.className} />
+                  )),
                 ]}
                 data={report.subjects}
                 plain

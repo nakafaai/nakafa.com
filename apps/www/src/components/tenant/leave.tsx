@@ -9,7 +9,9 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -72,12 +74,15 @@ export function TenantOutsiderActions({
             </TooltipContent>
           </Tooltip>
           <DropdownMenuContent align="end" className="w-60">
-            <DropdownMenuItem
-              onClick={() => startChecking(() => router.invalidate())}
-            >
-              <HugeIcons icon={Refresh01Icon} />
-              {t("outsider-check-again")}
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => startChecking(() => router.invalidate())}
+              >
+                <HugeIcons icon={Refresh01Icon} />
+                {t("outsider-check-again")}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </ButtonGroup>

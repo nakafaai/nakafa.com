@@ -5,6 +5,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -50,6 +51,7 @@ export function Language({ compact = false }: { compact?: boolean }) {
         className="w-max max-w-[calc(100vw-2rem)]"
       >
         <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("menu-language")}</DropdownMenuLabel>
           {Arr.map(languages, (language) => (
             <DropdownMenuItem
               disabled={isPending}

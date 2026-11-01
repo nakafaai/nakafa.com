@@ -38,6 +38,7 @@ import type {
 import { dataTableFeatures } from "@/components/shared/table/features";
 import { columnFiltersOf } from "@/components/shared/table/filter";
 import { TableHeadButton } from "@/components/shared/table/head";
+import { RowMenu } from "@/components/shared/table/menu";
 import {
   ColumnHead,
   ColumnHeads,
@@ -64,8 +65,8 @@ const sortIcons = { asc: ArrowUp02Icon, desc: ArrowDown02Icon };
  * taller than the card scrolling inside it with its column heads in view, or as a part of a page (`TableFrame`). The
  * page's header row searches it: its search box keeps the rows whose `search` column holds the text. Every column
  * filters from its head by what it holds (`tableColumns`), and a column of text, numbers or moments sorts from there
- * too. Every row has the height of a row with its three-dot menu, so rows with and without one keep one rhythm. The
- * heads are true before the rows are read, so they stand from the first frame and the rows fill in under them. A list
+ * too. Every row ends in its three-dot menu, the one action of a row, which the table draws itself around what the
+ * menu column gives it (`RowItems`), so a table cannot put a text button in a row. The heads are true before the rows are read, so they stand from the first frame and the rows fill in under them. A list
  * that holds no record shows its `empty` state under the heads, and a filter that leaves no row shows Nina searching in
  * the rows' place. On a page with panes, pressing a row opens it beside the list. A column's meta places its head and
  * cells: a column of badges in the middle, a column of numbers or the row's menu at the end.
@@ -139,7 +140,15 @@ export function DataTable<TData extends RowData>({
                     })}
                     key={cell.id}
                   >
-                    <table.FlexRender cell={cell} />
+                    {cell.column.columnDef.meta?.align === "menu" ? (
+                      <RowMenu
+                        inert={cell.column.columnDef.meta.inert?.(row.original)}
+                      >
+                        <table.FlexRender cell={cell} />
+                      </RowMenu>
+                    ) : (
+                      <table.FlexRender cell={cell} />
+                    )}
                   </TableCell>
                 ))}
               </DataTableRow>

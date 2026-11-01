@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -63,6 +64,7 @@ export function SchoolNotifications({ all }: { all: boolean }) {
 /** The header's filter: this school's rows, or every school's, kept in the page's address. */
 function InboxFilter({ all }: { all: boolean }) {
   const t = useTranslations("Notifications");
+  const common = useTranslations("Common");
   const { slug } = useTenant();
   const navigate = useNavigate();
 
@@ -80,6 +82,7 @@ function InboxFilter({ all }: { all: boolean }) {
       />
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuGroup>
+          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             onValueChange={(value) =>
               navigate({

@@ -21,6 +21,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -134,6 +135,9 @@ function OwnGradeTable() {
         value: kktp,
       })),
     }),
+    gradeColumns.menu((info) => (
+      <RowCopy value={info.row.original.className} />
+    )),
   ];
 
   return (

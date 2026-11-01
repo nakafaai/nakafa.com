@@ -4,12 +4,7 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import {
-  CircleIcon,
-  Edit02Icon,
-  MoreHorizontalIcon,
-  SentIcon,
-} from "@hugeicons/core-free-icons";
+import { CircleIcon, Edit02Icon, SentIcon } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
 import {
@@ -18,12 +13,7 @@ import {
 } from "@repo/backend/confect/records/scheme";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
@@ -48,6 +38,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableSearch } from "@/components/shared/table/toolbar";
@@ -365,7 +356,6 @@ function GradeReleaseButton({
 /** The row menu of a draft: release it, which shows it to its student. Other lines have no menu. */
 function GradeLineMenu({ line }: { line: SheetLine }) {
   const t = useTranslations("SchoolGrades");
-  const common = useTranslations("Common");
   const { classId, slug } = useGradebook();
   const release = useMutation(records.grades.release).withOptimisticUpdate(
     releaseChange(classId, line.student.id)
@@ -373,35 +363,20 @@ function GradeLineMenu({ line }: { line: SheetLine }) {
   const [, startTransition] = useTransition();
   const { grade } = line;
   if (grade === null || grade.state !== "draft") {
-    return null;
+    return <RowCopy value={line.student.name} />;
   }
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            onClick={() =>
-              startTransition(() =>
-                saveSchool(() => release({ gradeId: grade.id, slug }), SOURCE)
-              )
-            }
-          >
-            <HugeIcons icon={SentIcon} />
-            {t("release")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <RowItems>
+      <DropdownMenuItem
+        onClick={() =>
+          startTransition(() =>
+            saveSchool(() => release({ gradeId: grade.id, slug }), SOURCE)
+          )
+        }
+      >
+        <HugeIcons icon={SentIcon} />
+        {t("release")}
+      </DropdownMenuItem>
+    </RowItems>
   );
 }

@@ -3,7 +3,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -68,13 +70,16 @@ export function MoreMenu({
           }
         />
         <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
-            onClick={() => setDeleting(true)}
-            variant="destructive"
-          >
-            <HugeIcons icon={Delete02Icon} />
-            {t("delete")}
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("menu-actions")}</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => setDeleting(true)}
+              variant="destructive"
+            >
+              <HugeIcons icon={Delete02Icon} />
+              {t("delete")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
       {menuOpened ? (

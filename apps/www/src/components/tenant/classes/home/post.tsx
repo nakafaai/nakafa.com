@@ -12,7 +12,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -160,38 +162,41 @@ function PostActions({
           }
         />
         <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
-            onClick={() =>
-              runForumCall(
-                forumCall(() =>
-                  pin.withOptimisticUpdate(pinPostUpdate(post))({
-                    classId,
-                    pinned: !post.pinned,
-                    postId: post.id,
-                    slug,
-                  })
-                ),
-                toastForumFailure
-              )
-            }
-          >
-            <HugeIcons icon={post.pinned ? PinOffIcon : PinIcon} />
-            {t(post.pinned ? "post-unpin" : "post-pin")}
-          </DropdownMenuItem>
-          {post.mine ? (
-            <>
-              {post.poll === null ? (
-                <DropdownMenuItem onClick={onEdit}>
-                  <HugeIcons icon={PencilEdit02Icon} />
-                  {t("message-edit")}
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() =>
+                runForumCall(
+                  forumCall(() =>
+                    pin.withOptimisticUpdate(pinPostUpdate(post))({
+                      classId,
+                      pinned: !post.pinned,
+                      postId: post.id,
+                      slug,
+                    })
+                  ),
+                  toastForumFailure
+                )
+              }
+            >
+              <HugeIcons icon={post.pinned ? PinOffIcon : PinIcon} />
+              {t(post.pinned ? "post-unpin" : "post-pin")}
+            </DropdownMenuItem>
+            {post.mine ? (
+              <>
+                {post.poll === null ? (
+                  <DropdownMenuItem onClick={onEdit}>
+                    <HugeIcons icon={PencilEdit02Icon} />
+                    {t("message-edit")}
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuItem onClick={() => setRemoving(true)}>
+                  <HugeIcons icon={Delete02Icon} />
+                  {t("post-remove")}
                 </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuItem onClick={() => setRemoving(true)}>
-                <HugeIcons icon={Delete02Icon} />
-                {t("post-remove")}
-              </DropdownMenuItem>
-            </>
-          ) : null}
+              </>
+            ) : null}
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
       <ResponsiveDialog

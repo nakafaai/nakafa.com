@@ -1,8 +1,10 @@
 import type { Ref } from "@confect/core";
 import { useAction, useMutation } from "@confect/react";
+import { Download04Icon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
-import { Button } from "@repo/design-system/components/ui/button";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Select,
@@ -21,6 +23,7 @@ import { useTranslations } from "use-intl";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
+import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import {
   forumCall,
@@ -180,7 +183,9 @@ function CourseTable({
               ),
             }),
             courseColumns.menu((info) =>
-              info.row.original.classId === null ? null : (
+              info.row.original.classId === null ? (
+                <RowCopy value={info.row.original.name} />
+              ) : (
                 <CourseRosterImport courseId={info.row.original.courseId} />
               )
             ),
@@ -278,22 +283,22 @@ function CourseRosterImport({ courseId }: { courseId: string }) {
   const [isImporting, startImporting] = useTransition();
 
   return (
-    <Button
-      disabled={isImporting}
-      onClick={() =>
-        startImporting(() =>
-          saveSchool(
-            () => importRoster({ courseId, slug }),
-            SOURCE,
-            () => toast.success({ title: "school-roster-imported.title" })
+    <RowItems>
+      <DropdownMenuItem
+        disabled={isImporting}
+        onClick={() =>
+          startImporting(() =>
+            saveSchool(
+              () => importRoster({ courseId, slug }),
+              SOURCE,
+              () => toast.success({ title: "school-roster-imported.title" })
+            )
           )
-        )
-      }
-      size="sm"
-      type="button"
-      variant="outline"
-    >
-      {t("course-import")}
-    </Button>
+        }
+      >
+        <HugeIcons icon={Download04Icon} />
+        {t("course-import")}
+      </DropdownMenuItem>
+    </RowItems>
   );
 }

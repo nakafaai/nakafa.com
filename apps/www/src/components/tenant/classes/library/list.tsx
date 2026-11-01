@@ -27,6 +27,7 @@ import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
@@ -276,13 +277,13 @@ function LibraryRows({
       id: "added",
       timeZone: formatZone,
     }),
-    ...(Arr.contains(can, "library.manage")
-      ? [
-          libraryColumns.menu((info) => (
-            <LibraryRowMenu row={info.row.original} />
-          )),
-        ]
-      : []),
+    libraryColumns.menu((info) =>
+      Arr.contains(can, "library.manage") ? (
+        <LibraryRowMenu row={info.row.original} />
+      ) : (
+        <RowCopy value={shownOf(info.row.original).title} />
+      )
+    ),
   ];
 
   return (
@@ -355,14 +356,16 @@ function LibraryItemLink({ row }: { row: LibraryRow }) {
   );
 }
 
-/** The menu of a row for a teacher: a saved folder's, a saved item's, or none for what the server is still keeping. */
+/** The menu of a row for a teacher: a saved folder's, a saved item's, or its title for what the server is still keeping. */
 function LibraryRowMenu({ row }: { row: LibraryRow }) {
   if (row._tag === "item") {
     return <LibraryRemove item={row.item} />;
   }
   return row._tag === "folder" && isSavedFolder(row.folder) ? (
     <FolderRowMenu folder={row.folder} />
-  ) : null;
+  ) : (
+    <RowCopy value={shownOf(row).title} />
+  );
 }
 
 /**

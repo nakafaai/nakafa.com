@@ -2,23 +2,17 @@ import { useMutation } from "@confect/react";
 import {
   Archive02Icon,
   ArchiveRestoreIcon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
 } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { startTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
+import { RowItems } from "@/components/shared/table/menu";
 import { useTenant } from "@/components/tenant/context";
 import {
   archiveUnitChange,
@@ -56,50 +50,35 @@ export function UnitMenu({ unit }: { unit: Unit }) {
   };
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
+    <>
+      <RowItems>
+        {isArchived ? (
+          <DropdownMenuItem
+            onClick={() =>
+              startTransition(() =>
+                saveSchool(() => restore({ slug, unitId: unit.id }), SOURCE)
+              )
+            }
+          >
+            <HugeIcons icon={ArchiveRestoreIcon} />
+            {t("unit-restore")}
+          </DropdownMenuItem>
+        ) : (
+          <>
+            <DropdownMenuItem onClick={() => dialogs.show("edit")}>
+              <HugeIcons icon={PencilEdit02Icon} />
+              {common("edit")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => dialogs.show("archive")}
+              variant="destructive"
             >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuGroup>
-            {isArchived ? (
-              <DropdownMenuItem
-                onClick={() =>
-                  startTransition(() =>
-                    saveSchool(() => restore({ slug, unitId: unit.id }), SOURCE)
-                  )
-                }
-              >
-                <HugeIcons icon={ArchiveRestoreIcon} />
-                {t("unit-restore")}
-              </DropdownMenuItem>
-            ) : (
-              <>
-                <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-                  <HugeIcons icon={PencilEdit02Icon} />
-                  {common("edit")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => dialogs.show("archive")}
-                  variant="destructive"
-                >
-                  <HugeIcons icon={Archive02Icon} />
-                  {t("unit-archive")}
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+              <HugeIcons icon={Archive02Icon} />
+              {t("unit-archive")}
+            </DropdownMenuItem>
+          </>
+        )}
+      </RowItems>
       {dialogs.kind === "edit" ? (
         <UnitEditDialog
           key={dialogs.key}
@@ -124,6 +103,6 @@ export function UnitMenu({ unit }: { unit: Unit }) {
         setOpen={dialogs.setOpen}
         title={t("unit-archive-title")}
       />
-    </div>
+    </>
   );
 }

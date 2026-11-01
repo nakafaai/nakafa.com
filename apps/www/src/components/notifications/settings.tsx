@@ -12,6 +12,7 @@ import type {
   Relation,
 } from "@repo/backend/confect/notifications/rules";
 import { Button } from "@repo/design-system/components/ui/button";
+import { DropdownMenuCheckboxItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
@@ -35,6 +36,7 @@ import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
+import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 
 /**
@@ -131,6 +133,18 @@ export function PreferenceTable({
             }),
             channelColumn("push"),
             channelColumn("email"),
+            preferenceColumns.menu(({ row: { original } }) => (
+              <RowItems>
+                {Arr.map(original.channels, (channel) => (
+                  <ChannelItem
+                    channel={channel}
+                    key={channel}
+                    kind={original.kind}
+                    on={isOn(original.kind, channel)}
+                  />
+                ))}
+              </RowItems>
+            )),
           ]}
           data={preferenceRowsOf(relation)}
           plain
@@ -138,6 +152,38 @@ export function PreferenceTable({
         />
       </TableFrame>
     </TableFiltersProvider>
+  );
+}
+
+/** One channel of one kind in the row's menu, which saves the same choice as its switch. */
+function ChannelItem({
+  channel,
+  kind,
+  on,
+}: {
+  channel: typeof PreferenceChannel.Type;
+  kind: typeof NoticeKind.Type;
+  on: boolean;
+}) {
+  const t = useTranslations("Notifications");
+  const save = use(ChoiceContext);
+  const [shown, setShown] = useOptimistic(on);
+  const [, startSaving] = useTransition();
+
+  return (
+    <DropdownMenuCheckboxItem
+      checked={shown}
+      closeOnClick={false}
+      disabled={save === null}
+      onCheckedChange={(next) =>
+        startSaving(async () => {
+          setShown(next);
+          await save?.(channel, kind, next);
+        })
+      }
+    >
+      {t(`channel-${channel}`)}
+    </DropdownMenuCheckboxItem>
   );
 }
 

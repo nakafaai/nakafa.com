@@ -6,19 +6,13 @@ import {
 import {
   Archive02Icon,
   Delete02Icon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
   Target02Icon,
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { DEFAULT_GRADING_SCHEME } from "@repo/backend/confect/records/scheme";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -33,6 +27,7 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -255,36 +250,23 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
   const dialogs = useDialogs<"edit" | "remove">();
 
   if (version.used || !Arr.contains(reach, "scheme.manage")) {
-    return null;
+    return <RowCopy value={String(version.kktp)} />;
   }
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-            <HugeIcons icon={PencilEdit02Icon} />
-            {t("grading-edit")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => dialogs.show("remove")}
-            variant="destructive"
-          >
-            <HugeIcons icon={Delete02Icon} />
-            {t("grading-remove")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <RowItems>
+        <DropdownMenuItem onClick={() => dialogs.show("edit")}>
+          <HugeIcons icon={PencilEdit02Icon} />
+          {t("grading-edit")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => dialogs.show("remove")}
+          variant="destructive"
+        >
+          <HugeIcons icon={Delete02Icon} />
+          {t("grading-remove")}
+        </DropdownMenuItem>
+      </RowItems>
       {dialogs.kind === "edit" ? (
         <SchemeVersionDialog editing={Option.some(version)} key={dialogs.key} />
       ) : null}

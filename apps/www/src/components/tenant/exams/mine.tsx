@@ -4,10 +4,10 @@ import {
   Clock01Icon,
   PlayIcon,
   TaskEdit01Icon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
-import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
 import { useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -17,6 +17,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -196,17 +197,22 @@ function SittingScore({ sitting }: { readonly sitting: Sitting }) {
 function SittingAction({ sitting }: { readonly sitting: Sitting }) {
   const t = useTranslations("Exams");
   const tCommon = useTranslations("Common");
-  const { slug } = useTenant();
 
   if (sittingStatusOf(sitting) !== "open") {
-    return null;
+    return (
+      <RowItems>
+        <RowOpen icon={ViewIcon} label={tCommon("open")} />
+      </RowItems>
+    );
   }
   return (
-    <TargetLink
-      className={buttonVariants({ size: "sm" })}
-      target={schoolSittingTarget(slug, sitting.id)}
-    >
-      {sitting.attempt === null ? t("student-start") : tCommon("continue")}
-    </TargetLink>
+    <RowItems>
+      <RowOpen
+        icon={PlayIcon}
+        label={
+          sitting.attempt === null ? t("student-start") : tCommon("continue")
+        }
+      />
+    </RowItems>
   );
 }

@@ -3,6 +3,7 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   CheckmarkBadge01Icon,
   UserRemove01Icon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { LinkStatus } from "@repo/backend/confect/guardians/schema";
@@ -37,6 +38,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { RowCopy, RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
@@ -97,6 +99,7 @@ export function GuardianHome() {
 /** The children beside the open child, or the empty state while no child is linked. */
 function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
   const t = useTranslations("SchoolGuardians");
+  const common = useTranslations("Common");
   if (Arr.isReadonlyArrayEmpty(items)) {
     return (
       <TableEmpty
@@ -131,6 +134,11 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
         value: status,
       })),
     }),
+    childColumns.menu(() => (
+      <RowItems>
+        <RowOpen icon={ViewIcon} label={common("open")} />
+      </RowItems>
+    )),
   ];
 
   return (
@@ -374,6 +382,9 @@ function GuardianGradeTable({ grades }: { grades: readonly ChildGrade[] }) {
               (grade) => grade.band ?? t(`kktp-${grade.kktp}`),
               { header: t("grade-note"), id: "note" }
             ),
+            gradeColumns.menu((info) => (
+              <RowCopy value={info.row.original.className} />
+            )),
           ]}
           data={grades}
           plain

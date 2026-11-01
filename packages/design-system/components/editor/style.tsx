@@ -35,6 +35,7 @@ export function RichEditorStyle({
     heading2: string;
     heading3: string;
     style: string;
+    styleMenu: string;
     text: string;
   };
 }) {
@@ -123,7 +124,7 @@ export function RichEditorStyle({
         }
       >
         <DropdownMenuRadioGroup onValueChange={apply} value={used}>
-          <DropdownMenuLabel>{labels.style}</DropdownMenuLabel>
+          <DropdownMenuLabel>{labels.styleMenu}</DropdownMenuLabel>
           {Arr.map(styles, (style) => (
             <DropdownMenuRadioItem key={style.name} value={style.name}>
               <HugeIcons icon={style.icon} />

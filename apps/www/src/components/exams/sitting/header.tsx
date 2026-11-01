@@ -5,7 +5,9 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -116,6 +118,7 @@ function SittingProctorActions({
   readonly token: string;
 }) {
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
 
   return (
     <ButtonGroup>
@@ -133,13 +136,16 @@ function SittingProctorActions({
       <DropdownMenu>
         <SplitMenuTrigger />
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem
-            onClick={() => onOpen("close")}
-            variant="destructive"
-          >
-            <HugeIcons icon={CancelCircleIcon} />
-            {t("close-sitting")}
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => onOpen("close")}
+              variant="destructive"
+            >
+              <HugeIcons icon={CancelCircleIcon} />
+              {t("close-sitting")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </ButtonGroup>

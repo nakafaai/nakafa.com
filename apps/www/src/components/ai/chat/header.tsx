@@ -18,6 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -129,29 +130,32 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
               finalFocus={menuFinalFocus}
             >
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={handleEdit}>
-                  <HugeIcons icon={Edit01Icon} />
-                  {t("rename-chat")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setConfirmShare(true)}
-                  onFocus={warmShare}
-                  onPointerDown={warmShare}
-                  onPointerEnter={warmShare}
-                >
-                  <HugeIcons icon={LinkForwardIcon} />
-                  {t("share-chat")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => setConfirmDelete(true)}
-                  variant="destructive"
-                >
-                  <HugeIcons icon={Delete02Icon} />
-                  {t("delete-chat")}
-                </DropdownMenuItem>
+                <DropdownMenuLabel>{tCommon("menu-actions")}</DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={handleEdit}>
+                    <HugeIcons icon={Edit01Icon} />
+                    {t("rename-chat")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setConfirmShare(true)}
+                    onFocus={warmShare}
+                    onPointerDown={warmShare}
+                    onPointerEnter={warmShare}
+                  >
+                    <HugeIcons icon={LinkForwardIcon} />
+                    {t("share-chat")}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => setConfirmDelete(true)}
+                    variant="destructive"
+                  >
+                    <HugeIcons icon={Delete02Icon} />
+                    {t("delete-chat")}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>

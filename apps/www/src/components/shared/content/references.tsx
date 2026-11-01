@@ -11,7 +11,9 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -63,30 +65,33 @@ export function RefContent({ githubUrl, className }: Props) {
             <span className="sr-only">{t("more")}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem
-              render={
-                <a
-                  href={COMPANY_SOCIAL_PROFILES.youtube}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <HugeIcons icon={YoutubeIcon} />
-                  {t("videos")}
-                </a>
-              }
-            />
-            <DropdownMenuItem
-              render={
-                <a
-                  href={COMPANY_SOCIAL_PROFILES.discord}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <HugeIcons icon={DiscordIcon} />
-                  {t("community")}
-                </a>
-              }
-            />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{t("menu-sources")}</DropdownMenuLabel>
+              <DropdownMenuItem
+                render={
+                  <a
+                    href={COMPANY_SOCIAL_PROFILES.youtube}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <HugeIcons icon={YoutubeIcon} />
+                    {t("videos")}
+                  </a>
+                }
+              />
+              <DropdownMenuItem
+                render={
+                  <a
+                    href={COMPANY_SOCIAL_PROFILES.discord}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <HugeIcons icon={DiscordIcon} />
+                    {t("community")}
+                  </a>
+                }
+              />
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </ButtonGroup>

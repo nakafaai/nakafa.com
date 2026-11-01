@@ -7,7 +7,6 @@ import {
 } from "@confect/react";
 import {
   AtIcon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
   Refresh01Icon,
 } from "@hugeicons/core-free-icons";
@@ -16,12 +15,7 @@ import identity from "@repo/backend/confect/_generated/refs/identity";
 import { LoginName } from "@repo/backend/confect/identity/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
   FieldDescription,
@@ -47,6 +41,7 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
@@ -206,7 +201,6 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
   const { slug } = useTenant();
   const issueCard = useIssueCard();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const reissue = useMutation(identity.cards.reissue).withOptimisticUpdate(
     reissueCardChange
   );
@@ -214,45 +208,32 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
   const dialogs = useDialogs<"login" | "rename">();
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              inert={isPending}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-            <HugeIcons icon={PencilEdit02Icon} />
-            {t("person-rename")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => dialogs.show("login")}>
-            <HugeIcons icon={AtIcon} />
-            {t("login-rename")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() =>
-              startTransition(() =>
-                saveSchool(
-                  () => reissue({ personId: login.person.id, slug }),
-                  SOURCE,
-                  (card) => issueCard({ ...card, name: login.person.name })
-                )
+    <>
+      <RowItems>
+        <DropdownMenuItem onClick={() => dialogs.show("rename")}>
+          <HugeIcons icon={PencilEdit02Icon} />
+          {t("person-rename")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => dialogs.show("login")}>
+          <HugeIcons icon={AtIcon} />
+          {t("login-rename")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={isPending}
+          onClick={() =>
+            startTransition(() =>
+              saveSchool(
+                () => reissue({ personId: login.person.id, slug }),
+                SOURCE,
+                (card) => issueCard({ ...card, name: login.person.name })
               )
-            }
-          >
-            <HugeIcons icon={Refresh01Icon} />
-            {t("card-reissue")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            )
+          }
+        >
+          <HugeIcons icon={Refresh01Icon} />
+          {t("card-reissue")}
+        </DropdownMenuItem>
+      </RowItems>
       {dialogs.kind === "rename" ? (
         <PersonRenameDialog
           key={dialogs.key}
@@ -269,7 +250,7 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
           setOpen={dialogs.setOpen}
         />
       ) : null}
-    </div>
+    </>
   );
 }
 

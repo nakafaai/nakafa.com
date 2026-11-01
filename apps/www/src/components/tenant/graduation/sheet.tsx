@@ -6,19 +6,12 @@ import {
   CircleIcon,
   Download04Icon,
   IdentityCardIcon,
-  MoreHorizontalIcon,
   SquareLock02Icon,
   UserCheck01Icon,
   UserRemove01Icon,
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
@@ -33,6 +26,7 @@ import {
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
@@ -223,50 +217,34 @@ function CohortGraduationBody() {
 /** The row menu of one student: open the SKL's PDF and its check page, once it is locked. */
 function GraduationLineMenu({ line }: { line: GraduationLine }) {
   const t = useTranslations("SchoolGraduation");
-  const common = useTranslations("Common");
   const locale = useLocale();
 
   if (line.letter === null || line.letter.file === null) {
-    return null;
+    return <RowCopy value={line.student.name} />;
   }
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem
-            render={
-              <a href={line.letter.file} rel="noopener" target="_blank">
-                <HugeIcons icon={Download04Icon} />
-                {t("open-letter")}
-              </a>
-            }
-          />
-          <DropdownMenuItem
-            render={
-              <a
-                href={checkAddress(locale, line.letter.hash)}
-                rel="noopener"
-                target="_blank"
-              >
-                <HugeIcons icon={CheckmarkBadge01Icon} />
-                {t("open-check")}
-              </a>
-            }
-          />
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <RowItems>
+      <DropdownMenuItem
+        render={
+          <a href={line.letter.file} rel="noopener" target="_blank">
+            <HugeIcons icon={Download04Icon} />
+            {t("open-letter")}
+          </a>
+        }
+      />
+      <DropdownMenuItem
+        render={
+          <a
+            href={checkAddress(locale, line.letter.hash)}
+            rel="noopener"
+            target="_blank"
+          >
+            <HugeIcons icon={CheckmarkBadge01Icon} />
+            {t("open-check")}
+          </a>
+        }
+      />
+    </RowItems>
   );
 }

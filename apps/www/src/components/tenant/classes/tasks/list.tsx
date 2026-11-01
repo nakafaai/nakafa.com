@@ -27,6 +27,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -162,6 +163,7 @@ function TaskListBody() {
  */
 function useTaskColumns(categories: readonly string[]) {
   const t = useTranslations("Classroom");
+  const common = useTranslations("Common");
   const formatZone = useFormatTimeZone();
   const format = useFormatter();
   const { can } = useClassScope();
@@ -217,6 +219,11 @@ function useTaskColumns(categories: readonly string[]) {
           id: "standing",
           options: standingChoices,
         }),
+    taskColumns.menu(() => (
+      <RowItems>
+        <RowOpen icon={TaskEdit01Icon} label={common("open")} />
+      </RowItems>
+    )),
   ];
 }
 

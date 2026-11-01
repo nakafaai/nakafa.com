@@ -2,6 +2,7 @@ import type { GenericId, Ref } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   Cancel01Icon,
+  CancelCircleIcon,
   CheckmarkCircle02Icon,
   Clock01Icon,
   Copy01Icon,
@@ -10,7 +11,8 @@ import {
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { RequestKind } from "@repo/backend/confect/guardians/request";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -27,6 +29,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
+import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -130,6 +133,9 @@ export function ParentRequests({
                     })
                   ),
                 }),
+                parentColumns.menu((info) => (
+                  <RowCopy value={info.row.original.text} />
+                )),
               ]}
               data={requests.value}
               plain
@@ -296,21 +302,21 @@ export function WaitingRequests({
               id: "text",
             }),
             waitingColumns.menu((info) => (
-              <ButtonGroup>
-                <Button
+              <RowItems>
+                <DropdownMenuItem
                   onClick={() => decide(info.row.original, "approved")}
-                  type="button"
                 >
+                  <HugeIcons icon={CheckmarkCircle02Icon} />
                   {t("request-approve")}
-                </Button>
-                <Button
+                </DropdownMenuItem>
+                <DropdownMenuItem
                   onClick={() => decide(info.row.original, "declined")}
-                  type="button"
-                  variant="outline"
+                  variant="destructive"
                 >
+                  <HugeIcons icon={CancelCircleIcon} />
                   {t("request-decline")}
-                </Button>
-              </ButtonGroup>
+                </DropdownMenuItem>
+              </RowItems>
             )),
           ]}
           data={Arr.filter(

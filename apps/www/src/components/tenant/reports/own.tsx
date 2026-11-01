@@ -10,7 +10,7 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
-import { Button } from "@repo/design-system/components/ui/button";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
@@ -20,6 +20,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
@@ -105,8 +106,8 @@ function OwnReportTable() {
       timeZone: formatZone,
     }),
     cardColumns.menu((info) => (
-      <div className="flex justify-end gap-2">
-        <Button
+      <RowItems>
+        <DropdownMenuItem
           render={
             <a
               href={checkAddress(locale, info.row.original.hash)}
@@ -117,20 +118,16 @@ function OwnReportTable() {
               {t("open-check")}
             </a>
           }
-          size="sm"
-          variant="outline"
         />
-        <Button
+        <DropdownMenuItem
           render={
             <a href={info.row.original.file} rel="noopener" target="_blank">
               <HugeIcons icon={Download04Icon} />
               {t("open-pdf")}
             </a>
           }
-          size="sm"
-          variant="outline"
         />
-      </div>
+      </RowItems>
     )),
   ];
 

@@ -1,4 +1,4 @@
-import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
+import { CheckmarkCircle02Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { TableCell, TableRow } from "@repo/design-system/components/ui/table";
 import { useNavigate } from "@tanstack/react-router";
@@ -6,7 +6,9 @@ import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { pressesRow } from "@/components/shared/pane";
 import { columnAlign } from "@/components/shared/table/align";
+import { RowItems, RowMenu, RowOpen } from "@/components/shared/table/menu";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import {
@@ -28,7 +30,7 @@ export function TryoutTableRows({
       <TableRow>
         <TableCell
           className="text-muted-foreground h-24 text-center"
-          colSpan={5}
+          colSpan={6}
         >
           {emptyLabel}
         </TableCell>
@@ -61,7 +63,7 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
   return (
     <TableRow
       onClick={(event) => {
-        if (event.target instanceof Element && event.target.closest("a")) {
+        if (!pressesRow(event)) {
           return;
         }
         setIntentActive(true);
@@ -86,7 +88,23 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
         <TryoutSetDuration seconds={row.durationSeconds} />
       </TableCell>
       <TableCell className={columnAlign()}>{row.publishedScore}</TableCell>
+      <TableCell className={columnAlign({ align: "menu" })}>
+        <RowMenu inert={undefined}>
+          <TryoutSetMenu />
+        </RowMenu>
+      </TableCell>
     </TableRow>
+  );
+}
+
+/** What a set's row offers: Open, which presses the row. */
+function TryoutSetMenu() {
+  const common = useTranslations("Common");
+
+  return (
+    <RowItems>
+      <RowOpen icon={ViewIcon} label={common("open")} />
+    </RowItems>
   );
 }
 

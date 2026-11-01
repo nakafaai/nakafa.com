@@ -154,7 +154,7 @@ function contextNames(sourceFile: SourceFile) {
 }
 
 /** Returns the text of an element's tag, such as `Card.Header`, or undefined for `this` and namespaced tags. */
-function tagText(node: Node): string | undefined {
+export function tagText(node: Node): string | undefined {
   if (isIdentifier(node)) {
     return node.text;
   }
@@ -166,7 +166,7 @@ function tagText(node: Node): string | undefined {
 }
 
 /** Returns every node below one node, in source order. */
-function nodesBelow(node: Node): readonly Node[] {
+export function nodesBelow(node: Node): readonly Node[] {
   return Arr.flatMap(children(node), (child) =>
     Arr.prepend(nodesBelow(child), child)
   );

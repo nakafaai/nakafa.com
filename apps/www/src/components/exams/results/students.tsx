@@ -3,7 +3,6 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   HourglassIcon,
-  MoreHorizontalIcon,
   SquareLock01Icon,
   UserGroupIcon,
   ViewIcon,
@@ -12,13 +11,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
@@ -35,6 +28,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowItems } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   useServerSearch,
@@ -145,31 +139,15 @@ function StudentRowMenu({
   readonly attemptId: (typeof StudentRowSchema.Type)["attemptId"];
 }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const show = usePanes((state) => state.show);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            aria-label={common("more-actions")}
-            size="icon-sm"
-            variant="ghost"
-          >
-            <HugeIcons icon={MoreHorizontalIcon} />
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => show(attemptId)}>
-            <HugeIcons icon={ViewIcon} />
-            {t("results-answers")}
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <RowItems>
+      <DropdownMenuItem onClick={() => show(attemptId)}>
+        <HugeIcons icon={ViewIcon} />
+        {t("results-answers")}
+      </DropdownMenuItem>
+    </RowItems>
   );
 }
 
