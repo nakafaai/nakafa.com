@@ -10,8 +10,9 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { cn } from "cn";
 import { Effect, Option } from "effect";
-import { useTransition } from "react";
+import { type ReactNode, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { decodePlayerMode } from "@/components/player/mode";
 import { usePlayer } from "@/components/player/provider";
@@ -70,6 +71,24 @@ function useChooseView() {
 }
 
 /**
+ * One view's name on the menu's button. Both names hold the same cell, so the button
+ * keeps the width of the longer one and the header does not move when the view changes.
+ */
+function PlayerViewName({
+  children,
+  shown,
+}: {
+  children: ReactNode;
+  shown: boolean;
+}) {
+  return (
+    <span className={cn("col-start-1 row-start-1", !shown && "invisible")}>
+      {children}
+    </span>
+  );
+}
+
+/**
  * The view's menu: its button shows the current view, its icon beside its name as Finish beside it does, and the
  * icon alone on a phone, where the name stays for a screen reader. The menu names what it chooses, and each choice
  * carries its own icon.
@@ -83,8 +102,13 @@ function PlayerViewMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button type="button" variant="outline" />}>
         <HugeIcons icon={mode === "single" ? File01Icon : ListViewIcon} />
-        <span className="max-sm:sr-only">
-          {t(mode === "single" ? "mode-single" : "mode-list")}
+        <span className="grid max-sm:sr-only">
+          <PlayerViewName shown={mode === "list"}>
+            {t("mode-list")}
+          </PlayerViewName>
+          <PlayerViewName shown={mode === "single"}>
+            {t("mode-single")}
+          </PlayerViewName>
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

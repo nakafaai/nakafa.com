@@ -10,7 +10,7 @@ import id from "@repo/internationalization/dictionaries/id.json" with {
 };
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { activate } from "@/e2e/support/input";
+import { activate, press } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForRunningSection } from "@/e2e/support/player";
@@ -138,7 +138,9 @@ const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
     expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
   );
   yield* Effect.promise(() => waitUntilTakenOver(start));
-  yield* activate(start, hasTouch);
+  // The live action replaces the button when the page's client arrives, and a
+  // press finds whichever one stands.
+  yield* Effect.promise(() => press(start, hasTouch));
   yield* activate(
     page.getByRole("dialog").getByRole("button", {
       exact: true,

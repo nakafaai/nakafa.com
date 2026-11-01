@@ -3,8 +3,9 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { redirectResultValidator } from "@repo/backend/confect/tryouts/attemptPage/spec";
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useLocale } from "use-intl";
+import { createStore, type StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
   PLAYER_MODE_PARAM,
@@ -41,6 +42,25 @@ type LearnerRead<Value> =
   | { readonly kind: "notFound" }
   | { readonly kind: "pending" }
   | { readonly kind: "visitor" };
+
+/** The read of a page before its Convex client exists, or with none: a visitor's. */
+const VISITOR_READ = { kind: "visitor" } as const;
+
+/**
+ * Holds one page's learner read. The read needs the page's Convex client, which arrives after
+ * hydration, and the page must not remount when it does: the press, the phase and the focus on it would
+ * go. So an island beside the page reads, writes here, and the page stays mounted.
+ */
+export function createLearnerReadStore<Read>() {
+  return createStore<Read | typeof VISITOR_READ>(() => VISITOR_READ);
+}
+
+/** Writes a page's learner read for the page beside it, before the browser paints. */
+export function useKeepLearnerRead<Read>(store: StoreApi<Read>, read: Read) {
+  useLayoutEffect(() => {
+    store.setState(read, true);
+  }, [read, store]);
+}
 
 /** The attempt a URL names, if it names one. */
 function attemptOf(search: TryoutAttemptSearch) {
@@ -106,19 +126,14 @@ export function useAttemptSignIn(input: {
 
 /**
  * What the read of a learner's page needs to know first: whether the URL is valid, the attempt it
- * names, and whether Convex holds the session yet. A URL that names an attempt without a session goes
- * to sign-in (`useAttemptSignIn`).
+ * names, and whether Convex holds the session yet.
  */
-function useLearnerGate(input: {
-  readonly publicPath: string;
-  readonly search: TryoutAttemptSearch;
-}) {
-  useAttemptSignIn(input);
+function useLearnerGate(search: TryoutAttemptSearch) {
   const locale = useLocale();
   const isLoading = useConvexAuth((state) => state.isLoading);
   const isAuthenticated = useConvexAuth((state) => state.isAuthenticated);
-  const intent = readAddressIntent(input.search);
-  const attemptId = attemptOf(input.search);
+  const intent = readAddressIntent(search);
+  const attemptId = attemptOf(search);
 
   return {
     attemptId,
@@ -173,10 +188,7 @@ export function useLearnerSet(input: {
   readonly page: SetPage;
   readonly search: TryoutAttemptSearch;
 }) {
-  const gate = useLearnerGate({
-    publicPath: input.page.set.publicPath,
-    search: input.search,
-  });
+  const gate = useLearnerGate(input.search);
   const read = useQuery(
     tryouts.queries.attemptPage.getSet,
     gate.readable
@@ -232,10 +244,7 @@ export function useLearnerSection(input: {
   readonly search: TryoutAttemptSearch;
   readonly setPath: string;
 }) {
-  const gate = useLearnerGate({
-    publicPath: input.publicPath,
-    search: input.search,
-  });
+  const gate = useLearnerGate(input.search);
   const read = useQuery(
     tryouts.queries.attemptPage.getSection,
     gate.readable

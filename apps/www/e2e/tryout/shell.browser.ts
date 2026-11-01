@@ -151,7 +151,7 @@ const verifyPrefetchedHeadings = Effect.fn(
   const section = yield* settledSection(page);
   const sectionHref = yield* readSectionHref(section);
   const sectionTitle = yield* Effect.promise(() =>
-    section.locator("h3").innerText()
+    section.getByRole("heading", { level: 2 }).innerText()
   );
   yield* openPrefetched(
     page,

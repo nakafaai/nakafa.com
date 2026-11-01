@@ -169,10 +169,14 @@ miss, so the build reads Convex.
   reader, query included, and no Worker runs. `isLearnerPage`, `readVisitorAsset`, `staticPagePath` and
   the `/_tryout` folder are deleted. A missing page still reaches the Worker, whose decisions answer the
   static not-found page.
-- **The read moves.** The try-out layout, its hint in route context and its Convex provider are deleted:
-  the context held the build's answer on a static page, and each page's island already mounts the
-  client. The hooks under an island hold a client, which only a signed-in hint starts, so they read
-  without asking for the hint. An address with `?attemptId` and no hint goes to sign-in, as before.
+- **The read moves.** The hint in route context and the layout's Convex provider are deleted: the
+  context held the build's answer on a static page. The hooks under an island hold a client, which
+  only a signed-in hint starts, so they read without asking for the hint. An address with `?attemptId`
+  and no hint goes to sign-in, as before.
+- **The page stays mounted.** A set or a section used to swap a visitor's tree for a learner's when the
+  client arrived, which took a press, its phase and its button with it: on a static page the swap
+  comes after hydration, so `start.browser.ts` lost an early press. An island beside the page now
+  reads the attempt into a per-page store, and the page stays mounted until an attempt replaces it.
 - **A track's rows.** Every reader's first rows are the build's. A learner's table reads its own rows
   live and keeps the build's on screen until they arrive, so the table never empties. Under a signed-in
   hint the marks of those rows, status, score and the completion circle, are hidden with their room

@@ -1,13 +1,18 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Schema } from "effect";
+import { useState } from "react";
+import { useStore } from "zustand";
 import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
 import { TryoutAttemptReview } from "@/components/tryout/review/screen";
 import { readTryoutSectionFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
+import { TryoutAttemptIsland } from "@/components/tryout/route/island";
 import {
+  createLearnerReadStore,
   useAttemptSignIn,
+  useKeepLearnerRead,
   useLearnerSection,
 } from "@/components/tryout/route/live";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
@@ -22,8 +27,11 @@ import { readStaticData } from "@/lib/static/data";
  * browser once the session is known (`useLearnerSection`), and a URL bound to an
  * attempt answers for that attempt alone.
  */
-/** The read of a page without a Convex client: a visitor's. */
-const VISITOR = { kind: "visitor" } as const;
+/** What the page reads of a learner's attempt through the section. */
+type LearnerSection = ReturnType<typeof useLearnerSection>;
+type LearnerSectionStore = ReturnType<
+  typeof createLearnerReadStore<LearnerSection>
+>;
 
 export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$track/$set/$section/"
@@ -65,25 +73,23 @@ export const Route = createFileRoute(
 });
 
 function TryoutSectionPage() {
+  const [learner] = useState(() => createLearnerReadStore<LearnerSection>());
   return (
-    // A visitor's page holds no Convex client, so it draws the section as every visitor sees it, which the
-    // build prerenders; a learner's page reads their attempt once it holds the client.
-    <ConvexIsland fallback={<TryoutSectionVisitor />}>
-      <TryoutSectionLearner />
-    </ConvexIsland>
+    <>
+      <ConvexIsland>
+        <TryoutSectionLearner store={learner} />
+      </ConvexIsland>
+      <TryoutSectionView store={learner} />
+    </>
   );
 }
 
-/** The section as every visitor sees it. An address bound to an attempt goes to sign-in. */
-function TryoutSectionVisitor() {
-  const route = Route.useLoaderData();
-  const search = Route.useSearch();
-  useAttemptSignIn({ publicPath: route.sectionPath, search });
-  return <TryoutSectionView learner={VISITOR} />;
-}
-
-/** A learner's section: their attempt through it, read in the browser (`useLearnerSection`). */
-function TryoutSectionLearner() {
+/** Reads a learner's attempt through the section in the browser, for the page beside it (`useLearnerSection`). */
+function TryoutSectionLearner({
+  store,
+}: {
+  readonly store: LearnerSectionStore;
+}) {
   const route = Route.useLoaderData();
   const search = Route.useSearch();
   const learner = useLearnerSection({
@@ -92,21 +98,20 @@ function TryoutSectionLearner() {
     search,
     setPath: route.setPath,
   });
-  return (
-    <>
-      <ShellLockCarry pending={learner.kind === "pending"} />
-      <TryoutSectionView learner={learner} />
-    </>
-  );
+  useKeepLearnerRead(store, learner);
+  return <ShellLockCarry pending={learner.kind === "pending"} />;
 }
 
-/** Draws the section from the learner read: the attempt's page, or the catalog's while there is none. */
-function TryoutSectionView({
-  learner,
-}: {
-  readonly learner: ReturnType<typeof useLearnerSection>;
-}) {
+/**
+ * Draws the section from the learner read: the attempt's page, or the catalog's while there is none.
+ * It stays mounted while the session starts, so a press on its start survives. An address bound to an
+ * attempt without a session goes to sign-in.
+ */
+function TryoutSectionView({ store }: { readonly store: LearnerSectionStore }) {
   const route = Route.useLoaderData();
+  const search = Route.useSearch();
+  const learner = useStore(store);
+  useAttemptSignIn({ publicPath: route.sectionPath, search });
   // A read that answered decides the shell's lock, so the first frame's lock can go.
   usePrepaintRelease(
     learner.kind === "attempt" ||
@@ -131,16 +136,18 @@ function TryoutSectionView({
       initialNow={route.now}
       key={view.binding?.attemptId ?? "catalog"}
     >
-      <TryoutSectionPageClient
-        binding={view.binding}
-        content={view.content}
-        page={view.page}
-        pending={learner.kind === "pending"}
-        route={route.route}
-        setPath={view.setPath}
-      >
-        <TryoutAttemptReview binding={view.binding} />
-      </TryoutSectionPageClient>
+      <TryoutAttemptIsland live={view.binding !== null}>
+        <TryoutSectionPageClient
+          binding={view.binding}
+          content={view.content}
+          page={view.page}
+          pending={learner.kind === "pending"}
+          route={route.route}
+          setPath={view.setPath}
+        >
+          <TryoutAttemptReview binding={view.binding} />
+        </TryoutSectionPageClient>
+      </TryoutAttemptIsland>
     </TryoutClockProvider>
   );
 }

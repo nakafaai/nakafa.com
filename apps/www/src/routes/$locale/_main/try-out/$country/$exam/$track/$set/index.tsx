@@ -1,5 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Schema } from "effect";
+import { useState } from "react";
+import { useStore } from "zustand";
 import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
@@ -22,8 +24,9 @@ import { readStaticData } from "@/lib/static/data";
  * in the browser once the session is known (`useLearnerSet`), and a URL bound to an
  * attempt answers for that attempt alone.
  */
-/** The read of a page without a Convex client: a visitor's. */
-const VISITOR = { kind: "visitor" } as const;
+/** What the page reads of a learner's attempt on the set. */
+type LearnerSet = ReturnType<typeof useLearnerSet>;
+type LearnerSetStore = ReturnType<typeof createLearnerReadStore<LearnerSet>>;
 
 export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$track/$set/"
@@ -64,43 +67,36 @@ export const Route = createFileRoute(
 });
 
 function TryoutSetPage() {
-  return (
-    // A visitor's page holds no Convex client, so it draws the set as every visitor sees it, which the
-    // build prerenders; a learner's page reads their attempt once it holds the client.
-    <ConvexIsland fallback={<TryoutSetVisitor />}>
-      <TryoutSetLearner />
-    </ConvexIsland>
-  );
-}
-
-/** The set as every visitor sees it. An address bound to an attempt goes to sign-in. */
-function TryoutSetVisitor() {
-  const route = Route.useLoaderData();
-  const search = Route.useSearch();
-  useAttemptSignIn({ publicPath: route.page.set.publicPath, search });
-  return <TryoutSetView learner={VISITOR} />;
-}
-
-/** A learner's set: their attempt through it, read in the browser (`useLearnerSet`). */
-function TryoutSetLearner() {
-  const route = Route.useLoaderData();
-  const search = Route.useSearch();
-  const learner = useLearnerSet({ page: route.page, search });
+  const [learner] = useState(() => createLearnerReadStore<LearnerSet>());
   return (
     <>
-      <ShellLockCarry pending={learner.kind === "pending"} />
-      <TryoutSetView learner={learner} />
+      <ConvexIsland>
+        <TryoutSetLearner store={learner} />
+      </ConvexIsland>
+      <TryoutSetView store={learner} />
     </>
   );
 }
 
-/** Draws the set from the learner read: the attempt's page, or the catalog's while there is none. */
-function TryoutSetView({
-  learner,
-}: {
-  readonly learner: ReturnType<typeof useLearnerSet>;
-}) {
+/** Reads a learner's attempt on the set in the browser, for the page beside it (`useLearnerSet`). */
+function TryoutSetLearner({ store }: { readonly store: LearnerSetStore }) {
   const route = Route.useLoaderData();
+  const search = Route.useSearch();
+  const learner = useLearnerSet({ page: route.page, search });
+  useKeepLearnerRead(store, learner);
+  return <ShellLockCarry pending={learner.kind === "pending"} />;
+}
+
+/**
+ * Draws the set from the learner read: the attempt's page, or the catalog's while there is none. It
+ * stays mounted while the session starts. An address bound to an attempt without a session goes to
+ * sign-in.
+ */
+function TryoutSetView({ store }: { readonly store: LearnerSetStore }) {
+  const route = Route.useLoaderData();
+  const search = Route.useSearch();
+  const learner = useStore(store);
+  useAttemptSignIn({ publicPath: route.page.set.publicPath, search });
   // A read that answered decides the shell's lock, so the first frame's lock can go.
   usePrepaintRelease(
     learner.kind === "attempt" ||
@@ -125,16 +121,18 @@ function TryoutSetView({
       initialNow={route.now}
       key={view.binding?.attemptId ?? "catalog"}
     >
-      <TryoutSetPageClient
-        binding={view.binding}
-        content={view.content}
-        page={view.page}
-        pending={learner.kind === "pending"}
-        restartTarget={view.restartTarget}
-        route={route.route}
-      >
-        <TryoutAttemptReview binding={view.binding} />
-      </TryoutSetPageClient>
+      <TryoutAttemptIsland live={view.binding !== null}>
+        <TryoutSetPageClient
+          binding={view.binding}
+          content={view.content}
+          page={view.page}
+          pending={learner.kind === "pending"}
+          restartTarget={view.restartTarget}
+          route={route.route}
+        >
+          <TryoutAttemptReview binding={view.binding} />
+        </TryoutSetPageClient>
+      </TryoutAttemptIsland>
     </TryoutClockProvider>
   );
 }
