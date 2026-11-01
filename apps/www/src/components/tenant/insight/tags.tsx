@@ -1,9 +1,13 @@
-import type { GenericId, Ref } from "@confect/core";
+import type { GenericId } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Tag01Icon } from "@hugeicons/core-free-icons";
+import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import insight from "@repo/backend/confect/_generated/refs/insight";
-import { Competency } from "@repo/backend/confect/insight/schema";
+import {
+  Competency,
+  QuestionTag as TagView,
+} from "@repo/backend/confect/insight/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -40,10 +44,10 @@ const EXAM_PAGE = 50;
 const decodeCompetency = Schema.decodeOption(Competency);
 
 /** The questions the dialog shows, with the exam they belong to. */
-interface ShownTags {
-  readonly examId: GenericId.GenericId<"exams">;
-  readonly tags: Ref.Returns<typeof insight.tags.list>;
-}
+const ShownTags = Schema.Struct({
+  examId: Id("exams"),
+  tags: Schema.Array(TagView),
+});
 
 /**
  * The button and the dialog that name what each question of an exam tests, the newest exam first. Each field saves when
@@ -60,7 +64,7 @@ export function QuestionTags() {
   const [isWanted, setIsWanted] = useState(false);
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
-  const [shown, setShown] = useState<ShownTags | null>(null);
+  const [shown, setShown] = useState<typeof ShownTags.Type | null>(null);
   const list = useQuery(
     exams.exams.list,
     isWanted && isSettled
