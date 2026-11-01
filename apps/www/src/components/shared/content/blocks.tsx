@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  getElementScrollRestorationEntry,
   type RegisteredRouter,
+  useElementScrollRestoration,
   useHydrated,
   useRouter,
 } from "@tanstack/react-router";
@@ -31,11 +31,8 @@ function blocksOf(body: ReactNode) {
 }
 
 /** Whether this move lands past the top of the page, which only a page that stands whole can give. */
-function landsInside(router: RegisteredRouter) {
-  const saved = getElementScrollRestorationEntry(router, {
-    getElement: () => window,
-  });
-  return router.latestLocation.hash !== "" || (saved?.scrollY ?? 0) > 0;
+function landsInside(router: RegisteredRouter, savedScroll: number) {
+  return router.latestLocation.hash !== "" || savedScroll > 0;
 }
 
 /**
@@ -48,9 +45,14 @@ function landsInside(router: RegisteredRouter) {
 export function ContentBlocks({ children }: { readonly children: ReactNode }) {
   const router = useRouter();
   const hydrated = useHydrated();
+  const saved = useElementScrollRestoration({
+    getElement: () => globalThis.window,
+  });
   const blocks = useMemo(() => blocksOf(children), [children]);
   const [shown, setShown] = useState(() =>
-    hydrated && !landsInside(router) ? FIRST_BLOCKS : blocks.length
+    hydrated && !landsInside(router, saved?.scrollY ?? 0)
+      ? FIRST_BLOCKS
+      : blocks.length
   );
   const waiting = shown < blocks.length;
 
