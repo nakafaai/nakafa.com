@@ -2,10 +2,11 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   type ClassPost,
   editPostUpdate,
+  pinPostUpdate,
   publishUpdate,
   removePostUpdate,
 } from "@/components/tenant/classes/home/optimistic";
@@ -26,6 +27,7 @@ const post = (id: string, text: string): ClassPost => ({
   email: false,
   id: postOf(id),
   mine: true,
+  pinned: false,
   text,
 });
 
@@ -120,5 +122,51 @@ describe("class home optimistic updates", () => {
         Option.some({ isDone: false, page: [] }),
       ],
     ]);
+  });
+
+  it("shows a pinned announcement on its page and first at the top of the home, and takes it down again", () => {
+    const pinnedArgs = { classId, slug };
+    const held = post("held", "Sudah disematkan.");
+    const pinnedQueries = [
+      { args: pinnedArgs, value: Option.some([{ ...held, pinned: true }]) },
+      { args: { classId: otherClass, slug }, value: Option.some([]) },
+      { args: pinnedArgs, value: Option.none() },
+    ];
+    /** The store of the home, which answers the pages and the pinned announcements by the query it is asked for. */
+    const homeStore = () => {
+      const store = storeOf(pages);
+      store.localStore.getAllQueries.mockImplementation((query) =>
+        query === classroom.posts.pinned ? pinnedQueries : pages
+      );
+      return store;
+    };
+    const pinning = homeStore();
+    pinPostUpdate(first)(pinning.localStore, {
+      classId,
+      pinned: true,
+      postId: first.id,
+      slug,
+    });
+    expect(Arr.last(pinning.setQuery.mock.calls)).toEqual(
+      Option.some([
+        classroom.posts.pinned,
+        pinnedArgs,
+        Option.some([
+          { ...first, pinned: true },
+          { ...held, pinned: true },
+        ]),
+      ])
+    );
+
+    const unpinning = homeStore();
+    pinPostUpdate(held)(unpinning.localStore, {
+      classId,
+      pinned: false,
+      postId: held.id,
+      slug,
+    });
+    expect(Arr.last(unpinning.setQuery.mock.calls)).toEqual(
+      Option.some([classroom.posts.pinned, pinnedArgs, Option.some([])])
+    );
   });
 });

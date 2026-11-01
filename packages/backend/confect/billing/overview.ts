@@ -3,6 +3,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { findAccount } from "@repo/backend/confect/billing/accounts";
 import { latestPersonalGrant } from "@repo/backend/confect/billing/grants";
 import { proHoldingOf } from "@repo/backend/confect/billing/holding";
+import { hasPersonalPayment } from "@repo/backend/confect/billing/payments";
 import type {
   BillingRail,
   billingOverviewValidator,
@@ -151,6 +152,7 @@ export const readBillingOverview = Effect.fn("billing.overview.read")(
     const lots = yield* readSpendableLots(user._id, now);
     const pool = yield* readPoolDay(user._id, now);
     return {
+      hasPayments: yield* hasPersonalPayment(user._id),
       plan: user.plan,
       subscription: Option.match(personal, {
         onNone: () => null,

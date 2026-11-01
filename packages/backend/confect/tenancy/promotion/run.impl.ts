@@ -5,6 +5,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   type DatabaseWriter,
+  type Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
@@ -47,7 +48,7 @@ type StepRun = (
 ) => Effect.Effect<
   typeof StepOutcome.Type,
   PromotionStepFailure,
-  DatabaseReader | DatabaseWriter
+  DatabaseReader | DatabaseWriter | Scheduler
 >;
 
 /** Each step's work, by the direction of the run that does it. */
