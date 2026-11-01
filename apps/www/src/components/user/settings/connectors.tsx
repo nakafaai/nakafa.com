@@ -13,8 +13,8 @@ import { connectCallback } from "@/components/connectors/address";
 import {
   ServiceActions,
   ServiceDetail,
+  ServiceEmpty,
   ServiceHeader,
-  ServiceIdle,
   ServiceStatus,
 } from "@/components/connectors/detail";
 import {
@@ -28,7 +28,7 @@ import {
   type Connection,
   disconnectOwnUpdate,
 } from "@/components/connectors/optimistic";
-import { PaneBody, PaneFooter } from "@/components/shared/pane";
+import { PaneFill, PaneFooter } from "@/components/shared/pane";
 import {
   Panes,
   PanesDetail,
@@ -146,12 +146,12 @@ export function AccountDirectory({
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail label={t("detail")}>
+        <PanesDetail defaultSize="50%" label={t("detail")}>
           <ServiceDetail entries={entries}>
             <ServiceHeader />
-            <PaneBody>
-              <ServiceIdle />
-            </PaneBody>
+            <PaneFill>
+              <ServiceEmpty />
+            </PaneFill>
             <PaneFooter>
               <ServiceStatus />
               <ServiceActions />

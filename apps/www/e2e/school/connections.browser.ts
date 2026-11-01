@@ -105,9 +105,7 @@ test("the Owner finds every service in a library, searches and filters it, and o
 
   await openOf(page, "Google Forms").click();
   const detail = page.getByRole("complementary", { name: "Connector detail" });
-  await expect(
-    detail.getByText("Connects through Google Drive.")
-  ).toBeVisible();
+  await expect(detail.getByText("Not connected yet")).toBeVisible();
   await expect(detail.getByText("Your account")).toBeVisible();
   await picture(page, "detail");
 

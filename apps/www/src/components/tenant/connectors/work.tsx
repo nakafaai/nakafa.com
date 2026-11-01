@@ -4,23 +4,32 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@tanstack/react-router";
 import { Option } from "effect";
 import { useTranslations } from "use-intl";
-import { ServiceIdle } from "@/components/connectors/detail";
+import { ServiceEmpty } from "@/components/connectors/detail";
 import { holderOf } from "@/components/connectors/directory";
 import { useService } from "@/components/connectors/service";
 import { TableStatus } from "@/components/shared/table/status";
-import { ClassroomCourses } from "@/components/tenant/connectors/classroom";
+import {
+  ClassroomCourses,
+  CoursesAction,
+} from "@/components/tenant/connectors/classroom";
 import { useTenant } from "@/components/tenant/context";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
 
-/** The work a connection opens in a school, or the service's logo while it opens none. */
-export function SchoolServiceWork() {
+/** Whether the open service is a connected Classroom, the one connection that opens work in a school's pane. */
+function useOpensCourses() {
   const { service, state } = useService();
 
-  if (service.key === "classroom" && Option.contains(state, "connected")) {
-    return <ClassroomCourses />;
-  }
+  return service.key === "classroom" && Option.contains(state, "connected");
+}
 
-  return <ServiceIdle />;
+/** The work a connection opens in a school, or Nina saying where the service stands while it opens none. */
+export function SchoolServiceWork() {
+  return useOpensCourses() ? <ClassroomCourses /> : <ServiceEmpty />;
+}
+
+/** What that work asks for next, in the footer with the service's own buttons. */
+export function SchoolServiceAction() {
+  return useOpensCourses() ? <CoursesAction /> : null;
 }
 
 /**
@@ -36,7 +45,12 @@ export function SchoolHolder() {
   }
 
   return (
-    <TableStatus icon={UserIcon} label={t("holder-personal")} tone="neutral" />
+    <TableStatus
+      band
+      icon={UserIcon}
+      label={t("holder-personal")}
+      tone="neutral"
+    />
   );
 }
 
