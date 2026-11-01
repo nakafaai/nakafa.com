@@ -92,18 +92,14 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
   const answers = proctor.getByRole("complementary", {
     name: "Student's answers",
   });
-  await expect(
-    answers.getByText("Choose a student to see their answers.")
-  ).toBeVisible();
+  await expect(answers).toHaveCount(0);
   await students.getByRole("button", { name: LEARNER_NAME }).click();
   await expect(
     answers.getByRole("heading", { name: LEARNER_NAME })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(answers.getByText("Question 1")).toBeVisible();
   await answers.getByRole("button", { name: "Close" }).click();
-  await expect(
-    answers.getByText("Choose a student to see their answers.")
-  ).toBeVisible();
+  await expect(answers).toHaveCount(0);
   await header.getByRole("button", { name: "Questions" }).click();
   await expect(
     proctor.getByRole("dialog", { name: "Questions" }).getByRole("button", {

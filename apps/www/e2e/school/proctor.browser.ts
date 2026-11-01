@@ -251,7 +251,7 @@ test("a server failure of the room's read keeps the proctor on the room, and the
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(token).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
   await expect(
-    proctor.getByRole("heading", { name: "Something broke" })
+    proctor.getByRole("heading", { name: "Something went wrong" })
   ).toHaveCount(0);
 
   // The server answers again, and the student's seat is there with no press.
