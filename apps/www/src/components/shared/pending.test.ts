@@ -1,11 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { Data, Deferred, Effect, MutableRef, Option } from "effect";
+import { MutableRef, Option } from "effect";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { useLongAction } from "@/components/shared/pending";
 
-/** The failure an action ends in. */
-class LostAnswer extends Data.TaggedError("LostAnswer") {}
+/** An action's answer, which the test gives by hand. */
+function pendingAnswer() {
+  const given = {
+    reject: (_reason: Error) => undefined as void,
+    resolve: () => undefined as void,
+  };
+  const promise = new Promise<void>((resolve, reject) => {
+    given.reject = reject;
+    given.resolve = resolve;
+  });
+  return { given, promise };
+}
 
 /** The hook as the page's last render left it. */
 const latest = MutableRef.make<Option.Option<ReturnType<typeof useLongAction>>>(
@@ -39,37 +49,35 @@ const settle = () => act(() => Effect.runPromise(Effect.sleep("1 millis")));
 
 describe("useLongAction", () => {
   it("is pending from the press until the action answers", async () => {
-    const answer = Deferred.makeUnsafe<void, LostAnswer>();
+    const answer = pendingAnswer();
     expect(hook()[0]).toBe(false);
 
-    act(() => hook()[1](() => Effect.runPromise(Deferred.await(answer))));
+    act(() => hook()[1](() => answer.promise));
     expect(hook()[0]).toBe(true);
 
-    Deferred.doneUnsafe(answer, Effect.void);
+    answer.given.resolve();
     await settle();
     expect(hook()[0]).toBe(false);
   });
 
   it("ends pending when the action rejects, so the button comes back", async () => {
-    const answer = Deferred.makeUnsafe<void, LostAnswer>();
-    act(() => hook()[1](() => Effect.runPromise(Deferred.await(answer))));
+    const answer = pendingAnswer();
+    act(() => hook()[1](() => answer.promise));
 
-    Deferred.doneUnsafe(answer, Effect.fail(new LostAnswer()));
+    answer.given.reject(new Error("lost"));
     await settle();
 
     expect(hook()[0]).toBe(false);
   });
 
   it("leaves the action running after the page has gone", async () => {
-    const answer = Deferred.makeUnsafe<void, LostAnswer>();
+    const answer = pendingAnswer();
     const finished = vi.fn();
-    act(() =>
-      hook()[1](() => Effect.runPromise(Deferred.await(answer)).then(finished))
-    );
+    act(() => hook()[1](() => answer.promise.then(finished)));
     act(() => root.unmount());
     root = createRoot(document.createElement("div"));
 
-    Deferred.doneUnsafe(answer, Effect.void);
+    answer.given.resolve();
     await settle();
 
     expect(finished).toHaveBeenCalledTimes(1);
