@@ -242,7 +242,9 @@ function CourseRow({
       </TableCell>
       <TableCell className={columnAlign()}>
         <Select
-          disabled={Arr.isReadonlyArrayEmpty(preview.classes)}
+          disabled={
+            course.classId === null && Arr.isReadonlyArrayEmpty(preview.classes)
+          }
           items={items}
           onValueChange={pick}
           value={course.classId ?? UNLINKED}
