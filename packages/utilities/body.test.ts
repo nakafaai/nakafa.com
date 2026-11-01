@@ -108,6 +108,27 @@ describe("bounded response body", () => {
       });
     })
   );
+  it.effect("keeps the limit failure when a stream's cancel hook rejects", () =>
+    Effect.gen(function* () {
+      const cancel = vi.fn(() =>
+        Promise.reject(new TypeError("cancel failed"))
+      );
+      const stream = Stream.fromReadableStream({
+        evaluate: () =>
+          new ReadableStream<Uint8Array>({
+            cancel,
+            pull: (controller) =>
+              controller.enqueue(new TextEncoder().encode("oversized")),
+          }),
+        onError: () => "read failed",
+      });
+      expect(
+        yield* readBoundedStream(stream, 4).pipe(Effect.flip)
+      ).toMatchObject({ _tag: "BodyLimitError", actualBytes: 9, maxBytes: 4 });
+      expect(cancel).toHaveBeenCalledOnce();
+    })
+  );
+
   it.effect("cancels an unfinished reader when its Effect is interrupted", () =>
     Effect.gen(function* () {
       const pullStarted = yield* Deferred.make<void>();
