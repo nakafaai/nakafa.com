@@ -2126,6 +2126,7 @@
     "preferences-kind": "Notice",
     "channel-push": "Push",
     "channel-email": "Email",
+    "kind-commentReply": "Replies to your comments",
     "kind-forumMention": "Mentions in a class",
     "kind-classAnnouncement": "Class announcements",
     "kind-taskPublished": "New tasks",
