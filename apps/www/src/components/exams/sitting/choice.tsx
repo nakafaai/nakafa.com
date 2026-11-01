@@ -51,7 +51,7 @@ export function SittingChoice({
             value={option.id}
           >
             <LetteredChoice
-              id={`${`${id}-${option.id}`}-label`}
+              id={`${id}-${option.id}-label`}
               letter={letterOf(index)}
             >
               <SittingDocument document={option.label} size="line" />
@@ -80,7 +80,7 @@ export function SittingChoice({
           }
         >
           <LetteredChoice
-            id={`${`${id}-${option.id}`}-label`}
+            id={`${id}-${option.id}-label`}
             letter={letterOf(index)}
           >
             <SittingDocument document={option.label} size="line" />
