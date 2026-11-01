@@ -1,6 +1,7 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, Effect } from "effect";
 import { useEffect } from "react";
@@ -18,14 +19,29 @@ import { saveKnownSchools } from "@/lib/identity/schools";
 const SCHOOL_PAGE = 20;
 
 /**
- * The account's schools, read live. The menu loads this part, and with it the
- * school contracts, once it warms, so no page carries them in its first
- * JavaScript. The schools are the account's own, so they are read once Convex
- * holds its session, and the rows the browser kept stand until the first page
- * answers. A failed read shows one disabled line, so the group is never silently
- * empty. The next page loads as the end of the list comes into view.
+ * The account's schools, read live. A read that fails shows one disabled line, so the group is never silently empty,
+ * and a failure the server names no reason for stays here too: this menu stands in every page's frame, outside the
+ * page's own recovery, so it would otherwise take the whole page with it.
  */
 export function SidebarMembershipItems() {
+  const t = useTranslations("Common");
+
+  return (
+    <ErrorBoundary
+      fallback={<DropdownMenuItem disabled>{t("load-error")}</DropdownMenuItem>}
+    >
+      <SidebarMembershipRows />
+    </ErrorBoundary>
+  );
+}
+
+/**
+ * The rows of the account's schools. The menu loads this part, and with it the school contracts, once it warms, so no
+ * page carries them in its first JavaScript. The schools are the account's own, so they are read once Convex holds its
+ * session, and the rows the browser kept stand until the first page answers. The next page loads as the end of the list
+ * comes into view.
+ */
+function SidebarMembershipRows() {
   const t = useTranslations("Common");
   const isAuthenticated = useConvexAuth(
     (auth) => auth.isAuthenticated && !auth.isLoading

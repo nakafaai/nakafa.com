@@ -27,10 +27,7 @@ import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
-import {
-  chosenGrade,
-  GRADE_ICONS,
-} from "@/components/tenant/settings/choices";
+import { chosenGrade, GRADE_ICONS } from "@/components/tenant/settings/choices";
 import {
   CohortGradeField,
   CohortNameField,

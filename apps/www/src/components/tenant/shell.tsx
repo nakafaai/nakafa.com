@@ -225,20 +225,28 @@ function TenantSwitcher() {
  * as the player's, stands at the top of the page. A page that answers questions
  * locks the frame with `ShellLock`, as a running try-out locks the app shell: the
  * sidebar hides and ignores its toggles, so a student sees none of the school's
- * navigation while answering, and it returns unchanged when the page goes. The
- * pathname is read here, not in the shell, so the shell's context value does not
- * change on navigation. Leaving the frame for the editor mounts the pages anew, so the
+ * navigation while answering, and it returns unchanged when the page goes. A
+ * sitting and a teacher's try are papers from their first draw, so their addresses
+ * lock the frame before their paper is read, and the page never moves sideways
+ * when it arrives. The pathname is read here, not in the shell, so the shell's
+ * context value does not change on navigation. Leaving the frame for the editor mounts the pages anew, so the
  * exam a create just answered with is held here, above both.
  */
 function TenantFrame({ children }: { children: ReactNode }) {
   const isEditor = useRouteMatched("/school/$slug/exams/$exam/edit", {
     exact: true,
   });
+  const isTry = useRouteMatched("/school/$slug/exams/$exam/try", {
+    exact: true,
+  });
+  const isSitting = useRouteMatched("/school/$slug/sittings/$sitting", {
+    exact: true,
+  });
   const [created] = useState(createCreatedExams);
   const tCommon = useTranslations("Common");
   const locale = useLocale();
   const [locks, setLocks] = useState(0);
-  const locked = locks > 0;
+  const locked = locks > 0 || isTry || isSitting;
   // The sidebar sits at the start edge of the page: left for every left-to-right language.
   const side = textDirection(locale) === "rtl" ? "right" : "left";
 
