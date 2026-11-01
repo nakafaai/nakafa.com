@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, Record as Rec, Schema } from "effect";
 import { canWarm, readPressableLinks, warmLinks } from "@/lib/routing/warm";
 
 vi.mock("@repo/design-system/lib/settle", async () => {
@@ -7,8 +7,11 @@ vi.mock("@repo/design-system/lib/settle", async () => {
   return { untilPageSettled: Fx.void };
 });
 
+/** One link of a page: its address and how far down the page it stands. */
+const DrawnLink = Schema.Struct({ href: Schema.String, top: Schema.Finite });
+
 /** Draws links at the heights given, each a line tall, as the browser would lay them out. */
-function drawLinks(links: readonly { href: string; top: number }[]) {
+function drawLinks(links: readonly (typeof DrawnLink.Type)[]) {
   document.body.replaceChildren(
     ...Arr.map(links, ({ href, top }) => {
       const link = document.createElement("a");
