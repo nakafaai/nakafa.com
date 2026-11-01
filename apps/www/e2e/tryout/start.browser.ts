@@ -336,10 +336,12 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
           await page.waitForURL(ATTEMPT_ADDRESS);
 
           await page.goto(setHref, { waitUntil: "commit" });
-          await expect(page.locator(ACTION)).toHaveText(
-            messages["continue-cta"],
-            { timeout: readinessTimeoutMilliseconds }
-          );
+          await expect(
+            page.locator("main").getByRole("link", {
+              exact: true,
+              name: messages["continue-cta"],
+            })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
         });
         const names = yield* Effect.promise(() =>
           page.evaluate((key) => Reflect.get(window, key), NAMES_KEY)
