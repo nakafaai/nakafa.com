@@ -86,7 +86,10 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
       <TableCell className="px-2 text-center sm:px-4">
         <TryoutSetDuration seconds={row.durationSeconds} />
       </TableCell>
-      <TableCell className="px-2 text-center tabular-nums sm:px-4" data-progress>
+      <TableCell
+        className="px-2 text-center tabular-nums sm:px-4"
+        data-progress
+      >
         {row.publishedScore}
       </TableCell>
     </TableRow>
@@ -112,13 +115,13 @@ function TryoutSetName({
     >
       <span
         aria-hidden="true"
-        data-progress
         className={cn(
           "flex size-5 shrink-0 items-center justify-center rounded-full border",
           row.attemptStatus === "completed"
             ? "bg-secondary text-secondary-foreground border-transparent"
             : "border-muted-foreground/40"
         )}
+        data-progress
       >
         {row.attemptStatus === "completed" && (
           <HugeIcons className="size-4" icon={CheckmarkCircle02Icon} />

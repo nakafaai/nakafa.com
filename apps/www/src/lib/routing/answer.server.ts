@@ -117,7 +117,7 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
       return bare.value;
     }
   }
-  if (!rendersRequest(request)) {
+  if (!isRenderedRoutePath(url)) {
     return yield* answerUnmatchedRequest(request);
   }
   return yield* answerSchoolPage(request, 200, answerRouted(request, route));

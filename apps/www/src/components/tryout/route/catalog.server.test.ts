@@ -28,6 +28,9 @@ const catalog = vi.hoisted(() => ({
   resolveTryoutExamArtwork: vi.fn(),
 }));
 
+vi.mock("@tanstack/react-start/server", () => ({
+  getRequest: () => new Request("https://nakafa.com/en/try-out"),
+}));
 vi.mock("@/components/tryout/catalog/options", () => ({
   buildTryoutCountryOptions: catalog.buildTryoutCountryOptions,
   buildTryoutExamOptions: catalog.buildTryoutExamOptions,

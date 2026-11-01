@@ -23,6 +23,9 @@ const catalog = vi.hoisted(() => ({
   readTryoutTrackPage: vi.fn(),
 }));
 
+vi.mock("@tanstack/react-start/server", () => ({
+  getRequest: () => new Request("https://nakafa.com/en/try-out"),
+}));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutCountryPage: catalog.readTryoutCountryPage,
   readTryoutExamPage: catalog.readTryoutExamPage,
