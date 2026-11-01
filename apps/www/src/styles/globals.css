@@ -200,7 +200,7 @@
 :root:not([data-kept-plan]) [data-kept-account],
 :root:not([data-kept-plan])
   [data-slot="sidebar-footer"][data-account="member"]:not(
-    :has(li:not([data-kept-account] li))
+    :has(li:not([data-kept-account], [data-kept-account] li))
   ),
 :root:not([data-kept-plan="free"]) [data-kept-plan-part="free"],
 :root:not([data-kept-plan="pro"]) [data-kept-plan-part="pro"] {

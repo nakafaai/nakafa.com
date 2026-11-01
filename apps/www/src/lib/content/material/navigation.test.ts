@@ -68,7 +68,7 @@ function publishedContext(
   )(testProgramContexts);
   return {
     ancestors: [testProgramRoot, testProgramClass],
-    context,
+    context: { nodeKey: group.nodeKey, programKey: group.programKey },
     group,
     hash: "functions",
     label: "Functions",

@@ -46,6 +46,7 @@ describe("classroom/library edit", () => {
         const { classId, fixture, term } = yield* libraryClass();
         const teacher = fixture.as("teacher");
         const added = yield* teacher.mutation(library.addLink, {
+          folderId: null,
           address: "https://youtu.be/lama",
           classId,
           clientKey: "edited-link",
@@ -54,6 +55,7 @@ describe("classroom/library edit", () => {
         });
         expect(
           yield* teacher.mutation(library.edit, {
+            folderId: null,
             address: "https://youtu.be/baru",
             classId,
             itemId: added.id,
@@ -62,6 +64,7 @@ describe("classroom/library edit", () => {
           })
         ).toBeNull();
         yield* teacher.mutation(library.edit, {
+          folderId: null,
           address: null,
           classId,
           itemId: added.id,
@@ -69,6 +72,7 @@ describe("classroom/library edit", () => {
           title: "Video pilihan",
         });
         const listed = yield* teacher.query(library.list, {
+          folderId: null,
           ...firstPage,
           classId,
           slug: nf,
@@ -89,11 +93,15 @@ describe("classroom/library edit", () => {
         const refusals = yield* Effect.all([
           fixture
             .as("student")
-            .mutation(library.edit, { ...edit, classId })
+            .mutation(library.edit, { folderId: null, ...edit, classId })
             .pipe(Effect.flip),
           fixture
             .as("teacher")
-            .mutation(library.edit, { ...edit, classId: other.classId })
+            .mutation(library.edit, {
+              folderId: null,
+              ...edit,
+              classId: other.classId,
+            })
             .pipe(Effect.flip),
         ]);
         expect(refusals).toMatchObject([denied("role"), denied("resource")]);
@@ -106,6 +114,7 @@ describe("classroom/library edit", () => {
       const storageId = yield* storeFile(fixture.convex, pdf());
       const teacher = fixture.as("teacher");
       const { id } = yield* teacher.action(library.register, {
+        folderId: null,
         classId,
         clientKey: "edited-file",
         slug: nf,
@@ -113,6 +122,7 @@ describe("classroom/library edit", () => {
         title: "Modul lama",
       });
       yield* teacher.mutation(library.edit, {
+        folderId: null,
         address: "https://example.com/abaikan",
         classId,
         itemId: id,
@@ -120,6 +130,7 @@ describe("classroom/library edit", () => {
         title: "Modul baru",
       });
       const listed = yield* teacher.query(library.list, {
+        folderId: null,
         ...firstPage,
         classId,
         slug: nf,

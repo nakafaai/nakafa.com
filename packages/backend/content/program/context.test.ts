@@ -21,7 +21,10 @@ import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { programLayer } from "@repo/backend/content/program/confect";
-import { readProgramContext } from "@repo/backend/content/program/context";
+import {
+  readProgramContext,
+  readProgramPlacements,
+} from "@repo/backend/content/program/context";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
 import {
@@ -53,6 +56,13 @@ const CONTEXT_INPUT = {
   nodeKey: GROUP_KEY,
   parentPath: MATERIAL_PARENT_PATH,
   programKey: PROGRAM_KEY,
+  publicPath: MATERIAL_PUBLIC_PATH,
+};
+
+const PLACE_INPUT = {
+  contentKey: SOURCE_MATERIAL.contentKey,
+  materialKey: MATERIAL_KEY,
+  parentPath: MATERIAL_PARENT_PATH,
   publicPath: MATERIAL_PUBLIC_PATH,
 };
 
@@ -153,32 +163,22 @@ const stageRoutes = Effect.fn("test.stageProgramContextRoutes")(function* (
   );
 });
 describe("contentRelease/program/context", () => {
-  it.effect("returns unmanaged before program publication", () =>
+  it.effect("shows no place before program publication", () =>
     Effect.gen(function* () {
       const t = yield* Confect.pipe(Effect.provide(confectLayer));
       yield* t.run(
         Effect.gen(function* () {
-          const result = yield* (yield* QueryRunner).runQuery(
-            refs.public.contentRelease.program.context,
-            {
-              appLocale: "en",
-              ...CONTEXT_INPUT,
-            }
+          const places = yield* (yield* QueryRunner).runQuery(
+            refs.public.contentRelease.program.placements,
+            { appLocale: "en", ...PLACE_INPUT }
           );
-          expect(result).toEqual({
-            ancestorJson: [],
-            groupJson: null,
-            managed: false,
-            mappingJson: null,
-            parentJson: null,
-            resolvedCanonicalPath: null,
-          });
+          expect(places).toEqual([]);
         })
       );
     })
   );
   it.effect(
-    "resolves one verified material context and its card-list parent",
+    "reads each curriculum place of a material once, with the path above its card list",
     () =>
       Effect.gen(function* () {
         const data = yield* makeProgramSnapshotData();
@@ -190,26 +190,46 @@ describe("contentRelease/program/context", () => {
               subjectRoute(),
               groupRoute(),
               mappingRoute(),
+              mappingRoute(2, PublicPathSchema.make("subjects/test/other")),
             ]);
             expect(
               yield* (yield* QueryRunner).runQuery(
-                refs.public.contentRelease.program.context,
-                {
-                  appLocale: "en",
-                  ...CONTEXT_INPUT,
-                }
+                refs.public.contentRelease.program.placements,
+                { appLocale: "en", ...PLACE_INPUT }
               )
-            ).toMatchObject({
-              ancestorJson: [expect.any(String)],
-              groupJson: expect.any(String),
-              mappingJson: expect.any(String),
-              parentJson: expect.any(String),
-              resolvedCanonicalPath: MATERIAL_PARENT_PATH,
-              managed: true,
-            });
+            ).toMatchObject([
+              {
+                ancestorJson: [expect.any(String)],
+                groupJson: expect.any(String),
+                mappingJson: expect.any(String),
+                parentJson: expect.any(String),
+                resolvedCanonicalPath: MATERIAL_PARENT_PATH,
+              },
+            ]);
           })
         );
       })
+  );
+  it.effect("shows no place for a mapping that resolves to no context", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const t = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* t.run(
+        Effect.gen(function* () {
+          yield* activateProgramSnapshot(data);
+          yield* stageRoutes(data, [
+            subjectRoute(),
+            groupRoute(),
+            mappingRoute(1, PublicPathSchema.make("subjects/test/other")),
+          ]);
+          expect(
+            yield* readProgramPlacements("en", PLACE_INPUT).pipe(
+              Effect.provide(programLayer)
+            )
+          ).toEqual([]);
+        })
+      );
+    })
   );
   it.effect(
     "resolves a moved exact lesson from the current signed projection",

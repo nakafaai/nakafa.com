@@ -1,28 +1,43 @@
-/** The attribute that the root element carries while a lesson's placement is not yet known. */
-export const PLACEMENT_PENDING_ATTRIBUTE = "data-placement";
+/** The attribute of each path a lesson's HTML holds: the `ctx` hint it answers, empty for its own. */
+export const PLACEMENT_PATH_ATTRIBUTE = "data-placement-path";
+
+/** The id of the style that shows the path of the address's hint. */
+const PLACEMENT_STYLE_ID = "placement-paint";
+
+/** Accepts a `ctx` hint of the shape `program~node`, as the links write it. */
+const HINT_PATTERN = "^[^~]+~[^~]+$";
 
 /**
- * Marks the root element before the first paint when the address carries a
- * curriculum hint (`?ctx=program~node`), so a lesson keeps its breadcrumb path
- * hidden in its row until the browser knows the placement. The static page
- * cannot see the query, and without the mark it would paint the lesson's own
- * path first and swap it when the placement arrives.
+ * Shows the path of the address's curriculum hint before the first paint. A lesson
+ * is static, so its HTML holds its own path and one hidden path for each curriculum
+ * place that shows it. This script is the only
+ * reader of the address before the page's scripts arrive, and it needs no network,
+ * so the path stands at the first paint on any phone, in a row of the same height.
  */
 export const PLACEMENT_PREPAINT_SCRIPT = `(function () {
   try {
     var hint = new URLSearchParams(window.location.search).get("ctx");
-    if (hint && /^[^~]+~[^~]+$/.test(hint)) {
-      document.documentElement.setAttribute("${PLACEMENT_PENDING_ATTRIBUTE}", "pending");
+    if (hint && new RegExp("${HINT_PATTERN}").test(hint)) {
+      var style = document.createElement("style");
+      style.id = "${PLACEMENT_STYLE_ID}";
+      style.textContent = '[${PLACEMENT_PATH_ATTRIBUTE}=""]{display:none!important}[${PLACEMENT_PATH_ATTRIBUTE}="' + CSS.escape(hint) + '"]{display:contents!important}';
+      document.head.appendChild(style);
     }
   } catch (error) {}
 })();`;
 
-/** Hides the lesson's breadcrumb path in its row until the placement of the address's hint is read. */
-export function holdPlacementPaint() {
-  document.documentElement.setAttribute(PLACEMENT_PENDING_ATTRIBUTE, "pending");
-}
-
-/** Shows the lesson's breadcrumb path: its placement is known, or the lesson has left the page. */
-export function settlePlacementPaint() {
-  document.documentElement.removeAttribute(PLACEMENT_PENDING_ATTRIBUTE);
+/**
+ * Shows the path of a hint that the lesson holds, as the script does for a hard
+ * load, or the lesson's own path with no hint. A hint the lesson does not hold, which
+ * only a forged address carries, comes here as none, so its row shows the lesson.
+ */
+export function paintPlacement(hint: string | null) {
+  document.querySelector(`#${PLACEMENT_STYLE_ID}`)?.remove();
+  if (hint === null) {
+    return;
+  }
+  const style = document.createElement("style");
+  style.id = PLACEMENT_STYLE_ID;
+  style.textContent = `[${PLACEMENT_PATH_ATTRIBUTE}=""]{display:none!important}[${PLACEMENT_PATH_ATTRIBUTE}="${CSS.escape(hint)}"]{display:contents!important}`;
+  document.head.append(style);
 }
