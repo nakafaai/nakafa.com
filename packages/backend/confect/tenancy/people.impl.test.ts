@@ -10,7 +10,7 @@ import {
 import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
-const { create, list, teachers } = refs.public.tenancy.people;
+const { create, list, students, teachers } = refs.public.tenancy.people;
 const { create: createCohort } = refs.public.tenancy.cohorts;
 const periods = refs.public.tenancy.periods;
 const denied = (reason: "resource" | "role" | "condition") => ({
@@ -194,5 +194,24 @@ describe("tenancy/people list and create", () => {
         denied("role"),
       ]);
     })
+  );
+});
+
+describe("tenancy/people students", () => {
+  it.effect(
+    "lists the active students of the school once each, and no teacher or Admin",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const listed = yield* fixture.as("admin").query(students, {
+          paginationOpts: { cursor: null, numItems: 50 },
+          slug: nf,
+        });
+        const ids = Arr.map(listed.page, (person) => person.id);
+        expect(ids).toContain(fixture.people.student.personId);
+        expect(ids).not.toContain(fixture.people.teacher.personId);
+        expect(ids).not.toContain(fixture.people.admin.personId);
+        expect(Arr.dedupe(ids)).toEqual(ids);
+      })
   );
 });

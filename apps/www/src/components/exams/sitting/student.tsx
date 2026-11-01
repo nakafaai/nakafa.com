@@ -35,7 +35,12 @@ import { StudentOutcome } from "@/components/exams/sitting/outcome";
 import { StudentPlayer } from "@/components/exams/sitting/player";
 import { PaperFrame } from "@/components/exams/sitting/recovery";
 import { SittingRetry } from "@/components/exams/sitting/retry";
-import { SittingTabGuard } from "@/components/exams/sitting/tab";
+import {
+  SittingTabElsewhere,
+  SittingTabGuard,
+  SittingTabHeld,
+  SittingTabWaiting,
+} from "@/components/exams/sitting/tab";
 import {
   CardSection,
   CardSectionActions,
@@ -139,14 +144,22 @@ export function StudentSitting({
         attemptId={attempt.id}
         deviceId={admitted.deviceId}
         slug={slug}
-        title={sitting.examTitle}
       >
-        <StudentPlayer
-          admission={admitted}
-          attempt={attempt}
-          sitting={sitting}
-          slug={slug}
-        />
+        <SittingTabHeld>
+          <StudentPlayer
+            admission={admitted}
+            attempt={attempt}
+            sitting={sitting}
+            slug={slug}
+          />
+        </SittingTabHeld>
+        <SittingTabWaiting>
+          <PaperFrame
+            bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+          >
+            <SittingTabElsewhere />
+          </PaperFrame>
+        </SittingTabWaiting>
       </SittingTabGuard>
     );
   }
