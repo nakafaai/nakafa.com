@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const MATERIAL_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -8,6 +9,9 @@ const MATERIAL_CONTEXT =
   "merdeka~class-11-mathematics-function-composition-inverse-function";
 const CURRICULUM_PATH = "/en/curriculum/merdeka/class-11/mathematics";
 const CLASS_ADDRESS = /\/curriculum\/merdeka\/class-11$/u;
+const MATERIAL_TITLE = "Function Concept";
+/** The last link of the path that the hint names, which only that path holds. */
+const PLACED_CARD = "Function Composition and Inverses";
 
 /** The two widths the breadcrumb row is proven at: a phone and a desktop. */
 const VIEWPORTS = [
@@ -16,9 +20,10 @@ const VIEWPORTS = [
 ] as const;
 
 /**
- * Samples the breadcrumb on every frame from the document's start: the text a
- * reader sees (none while the row is hidden), the address, the title's box, and
- * every layout shift that the browser reports. It runs before any page script.
+ * Samples the breadcrumb on every frame from the first paint: the text of the path
+ * a reader sees (none while the row is hidden), the address, the title with its
+ * box, and every layout shift that the browser reports. It runs before any page
+ * script. A frame before the first paint shows nothing, so it counts for nothing.
  */
 const SAMPLER = `(() => {
   const samples = [];
@@ -38,7 +43,13 @@ const SAMPLER = `(() => {
     return element.innerText.replace(/\\s+/g, " ").trim();
   };
   const sample = () => {
-    const nav = document.querySelector('nav[aria-label="Breadcrumb"]');
+    if (performance.getEntriesByType("paint").length === 0) {
+      requestAnimationFrame(sample);
+      return;
+    }
+    const nav = [...document.querySelectorAll('nav[aria-label="Breadcrumb"]')].find(
+      (element) => element.checkVisibility()
+    );
     const title = document.querySelector("h1:not(.sr-only)");
     const box = title ? title.getBoundingClientRect() : null;
     const text = nav ? visibleText(nav) : "";
@@ -46,9 +57,10 @@ const SAMPLER = `(() => {
     const entry = {
       path: location.pathname,
       text,
+      title: title ? title.innerText : "",
       top: box ? Math.round(box.top) : null,
     };
-    if (!last || last.path !== entry.path || last.text !== entry.text || last.top !== entry.top) {
+    if (!last || last.path !== entry.path || last.text !== entry.text || last.title !== entry.title || last.top !== entry.top) {
       samples.push(entry);
     }
     requestAnimationFrame(sample);
@@ -62,32 +74,42 @@ const PaintRecord = Schema.Struct({
     Schema.Struct({
       path: Schema.String,
       text: Schema.String,
+      title: Schema.String,
       top: Schema.NullOr(Schema.Finite),
     })
   ),
   shifts: Schema.Array(Schema.Finite),
 });
 
-/** Waits until the lesson's breadcrumb shows its placement, then a little longer, and returns what was painted. */
-async function settle(page: Page) {
+/** Waits until the lesson's breadcrumb shows its placement. */
+async function showsPlacement(page: Page) {
   await expect(
     page
       .getByRole("navigation", { name: "Breadcrumb", exact: true })
       .locator('a[href*="/curriculum/merdeka/class-11/mathematics#"]')
   ).toBeVisible({ timeout: 20_000 });
+}
+
+/** Waits for the placement, then a little longer, and returns what the sampler recorded. */
+async function settle(page: Page) {
+  await showsPlacement(page);
   await page.waitForTimeout(750);
   return Schema.decodeUnknownSync(PaintRecord)(
     await page.evaluate(() => Reflect.get(window, "__placementPaint"))
   );
 }
 
-/** The distinct breadcrumb texts that the lesson painted once its row showed anything. */
+/**
+ * The distinct breadcrumb texts that the lesson painted once its row showed
+ * anything. The address moves before the page does, so a frame counts only once
+ * the lesson's own title stands on the page.
+ */
 function paintedTexts(samples: (typeof PaintRecord.Type)["samples"]) {
   return Arr.dedupe(
     Arr.map(
       Arr.filter(
         samples,
-        (sample) => sample.path === MATERIAL_PATH && sample.text !== ""
+        (sample) => sample.title === MATERIAL_TITLE && sample.text !== ""
       ),
       (sample) => sample.text
     )
@@ -99,7 +121,7 @@ function titleTops(samples: (typeof PaintRecord.Type)["samples"]) {
   return Arr.dedupe(
     Arr.getSomes(
       Arr.map(
-        Arr.filter(samples, (sample) => sample.path === MATERIAL_PATH),
+        Arr.filter(samples, (sample) => sample.title === MATERIAL_TITLE),
         (sample) => Option.fromNullishOr(sample.top)
       )
     )
@@ -128,6 +150,7 @@ for (const viewport of VIEWPORTS) {
         contentType: "application/json",
       });
       expect(texts, visit).toHaveLength(1);
+      expect(texts[0], visit).toContain(PLACED_CARD);
       expect(shift, visit).toBe(0);
       expect(tops, visit).toHaveLength(1);
     }
@@ -165,7 +188,7 @@ test("the path of a lesson under a curriculum hint links the curriculum and the 
 }) => {
   await page.setViewportSize({ height: 900, width: 1440 });
   await page.goto(`${MATERIAL_PATH}?ctx=${MATERIAL_CONTEXT}`);
-  await settle(page);
+  await showsPlacement(page);
   const path = page.getByRole("navigation", {
     name: "Breadcrumb",
     exact: true,
@@ -185,11 +208,12 @@ test("the path of a lesson under a curriculum hint folds behind one menu on a ph
 }) => {
   await page.setViewportSize({ height: 844, width: 390 });
   await page.goto(`${MATERIAL_PATH}?ctx=${MATERIAL_CONTEXT}`);
-  await settle(page);
-  await page
+  await showsPlacement(page);
+  const more = page
     .getByRole("navigation", { name: "Breadcrumb", exact: true })
-    .getByRole("button", { name: "More" })
-    .click();
+    .getByRole("button", { name: "More" });
+  await waitUntilTakenOver(more);
+  await more.click();
   await expect(
     page.getByRole("menuitem").filter({ hasText: "Class 11" })
   ).toBeVisible();
@@ -222,7 +246,8 @@ test("the breadcrumb of a lesson whose match the router already holds paints onc
   // The lesson loads first without a hint, so the router holds its match, keyed
   // by the lesson's path alone, with no placement in it.
   await page.goto(MATERIAL_PATH);
-  await page.waitForFunction(() => window.__TSR_ROUTER__ !== undefined);
+  // A navigation before React holds the page leaves the static tree in the body.
+  await waitUntilTakenOver(page.getByRole("heading", { level: 1 }));
   await page.evaluate(
     (href) => window.__TSR_ROUTER__?.navigate({ href }),
     CURRICULUM_PATH
