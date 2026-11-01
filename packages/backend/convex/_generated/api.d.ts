@@ -15274,7 +15274,12 @@ export declare const internal: {
       refundWithoutPro: FunctionReference<
         "action",
         "internal",
-        { orderId: string; refundableAmount: number },
+        {
+          currency: "EUR" | "IDR" | "USD";
+          orderId: string;
+          rail: "polar" | "xendit";
+          refundableAmount: number;
+        },
         null
       >;
     };

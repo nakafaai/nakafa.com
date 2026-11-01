@@ -71,6 +71,36 @@ test("a learner in Indonesia chooses the monthly plan or a pass, each in rupiah"
   );
 });
 
+test("a checkout the payment provider refuses says so once, and the learner can press again", async ({
+  baseURL,
+  page,
+}) => {
+  await runOnPage(page, baseURL, (origin) =>
+    Effect.gen(function* () {
+      yield* openChatPage(page, origin);
+      yield* Effect.promise(async () => {
+        await page.goto(SUBSCRIPTIONS);
+        const upgrade = page.getByRole("button", { name: "Upgrade" });
+        await waitUntilTakenOver(upgrade);
+        await upgrade.click();
+        const dialog = page.getByRole("dialog", { name: "Choose how to pay" });
+        await dialog.getByText("1-month pass", { exact: true }).click();
+        // The local runtime holds no real Xendit key, so Xendit refuses the session.
+        await dialog.getByRole("button", { name: "Continue" }).dblclick();
+        await expect(dialog).toBeHidden();
+        const failure = page.getByText("We could not open Pro checkout.");
+        await expect(failure).toHaveCount(1);
+        await expect(upgrade).toBeEnabled();
+        await picture(page, "refused");
+        await upgrade.click();
+        await expect(
+          dialog.getByText("1-month pass", { exact: true })
+        ).toBeVisible();
+      });
+    })
+  );
+});
+
 test("a pass holder sees when the pass ends, finds the receipt in Payments, and extends it with passes only", async ({
   baseURL,
   page,

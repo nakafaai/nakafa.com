@@ -196,7 +196,7 @@ describe("billing/xendit/session", () => {
     expect(result.grants).toHaveLength(1);
   });
 
-  it("keeps a paid top-up on record for an operator when Pro ended before it was paid", async () => {
+  it("keeps a paid top-up on record and returns the money when Pro ended before it was paid", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       await seedXenditCheckout(ctx, "pro.topup");
@@ -216,8 +216,15 @@ describe("billing/xendit/session", () => {
     expect(result.outcome).toBe("applied");
     expect(result.payments).toMatchObject([{ kind: "credits" }]);
     expect(result.lots).toHaveLength(0);
-    expect(result.scheduled).not.toContainEqual(
+    expect(result.scheduled).toContainEqual(
       expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            orderId: "py_1",
+            rail: "xendit",
+            refundableAmount: 59_000,
+          }),
+        ],
         name: expect.stringContaining("refundWithoutPro"),
       })
     );
