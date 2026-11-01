@@ -12,6 +12,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Item,
@@ -136,7 +137,9 @@ export function ClassTeachersDialog({
         {PaginatedQueryResult.isFailure(pagination) ? (
           <LoadFailure onRetry={reloadPage} />
         ) : null}
-        {pagination._tag === "LoadingFirstPage" ? null : (
+        {pagination._tag === "LoadingFirstPage" ? (
+          <PopupHold />
+        ) : (
           <ClassTeacherList
             classId={classId}
             slug={slug}
