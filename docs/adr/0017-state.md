@@ -9,7 +9,9 @@ working set are two more instances of the store rule (Instances Of The Store
 Rule). Amended on 17 October 2026: the pending actions of the chat stay out of
 transitions (Pending Actions Are Not Transitions). Amended on 30 October 2026:
 a press before hydration is kept and replayed (A Press Before Hydration), and
-text typed before hydration is kept with it.
+text typed before hydration is kept with it. Amended on 1 November 2026: a
+School action that can outlast its press stays out of transitions too (Pending
+Actions Are Not Transitions).
 
 ## Decision
 
@@ -80,6 +82,12 @@ holds the pending flags of a send, a stop, or a retry. The admission
 navigation tests in `apps/www/e2e/chat/leave.browser.ts` check that a learner
 can leave while an admission is pending. Rename, sharing, and delete need no pending state: they
 update the loaded lists optimistically and roll back on failure.
+
+Google's Picker follows the same rule. A teacher can browse Drive for as long as
+they like, so the library's add dialog
+(`apps/www/src/components/tenant/classes/library/create.tsx`) runs the Picker
+outside any transition and holds `picking` in its draft
+(`apps/www/src/components/tenant/classes/library/draft.ts`).
 
 ## A Press Before Hydration
 
