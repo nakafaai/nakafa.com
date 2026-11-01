@@ -21,7 +21,7 @@ function admission(clockOffset: number): Admission {
     _tag: "admitted",
     attemptId: Schema.decodeUnknownSync(Id("examAttempts"))("attempt_1"),
     clockOffset,
-    deviceId: Schema.decodeUnknownSync(DeviceId)(
+    deviceId: Schema.decodeSync(DeviceId)(
       "018f3a1e-7c2b-7d4e-9a10-3b5c8f2e6d11"
     ),
     state: "inProgress",
