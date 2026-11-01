@@ -97,6 +97,11 @@ function FamilyRow({ link }: { link: FamilyItem }) {
           {link.guardianName}
         </span>
         <span className="text-muted-foreground truncate">{link.email}</span>
+        {link.status === "pending" ? (
+          <span className="text-muted-foreground text-pretty">
+            {t("family-pending")}
+          </span>
+        ) : null}
       </div>
       <TableStatus
         icon={look.icon}

@@ -4,6 +4,7 @@ import {
   SchoolIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,9 +43,11 @@ export function SchoolNotifications({ all }: { all: boolean }) {
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {/* Mark all read stands before the filter from the first paint, ready and final. */}
-        <MarkAllRead first={Option.none()} scope={scope} />
-        <NoticePreferences />
-        <InboxFilter all={all} />
+        <ButtonGroup>
+          <MarkAllRead first={Option.none()} scope={scope} />
+          <NoticePreferences />
+          <InboxFilter all={all} />
+        </ButtonGroup>
       </SchoolHeader>
       <InboxTabs topics={SchoolInboxTopic.literals} width="page" />
       <LayoutContent className="flex w-full flex-col py-6">

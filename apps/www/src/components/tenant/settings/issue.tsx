@@ -84,7 +84,7 @@ export function SchoolIssueCardDialog({
       }
       open={open}
       setOpen={setOpen}
-      title={t("card-issue-title")}
+      title={t("card-issue-action")}
     >
       <FieldGroup>
         <Field>
