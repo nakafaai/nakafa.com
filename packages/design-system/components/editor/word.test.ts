@@ -2,10 +2,12 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import {
+  wholeLists,
   wordLists,
   wordPaste,
 } from "@repo/design-system/components/editor/word";
 import { Editor } from "@tiptap/core";
+import { Fragment, Slice } from "@tiptap/pm/model";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Array as Arr } from "effect";
 
@@ -70,6 +72,51 @@ describe("wordLists", () => {
     expect(wordLists(`<p style='margin:0'>biasa</p>${item("·", "satu")}`)).toBe(
       '<p style="margin:0">biasa</p><ul><li><p>satu</p></li></ul>'
     );
+  });
+});
+
+describe("wholeLists", () => {
+  const { schema } = new Editor({ element: null, extensions: [StarterKit] });
+  const item = (text: string) =>
+    schema.nodes.listItem.create(
+      null,
+      schema.nodes.paragraph.create(null, schema.text(text))
+    );
+  const list = (...texts: readonly string[]) =>
+    schema.nodes.bulletList.create(null, Arr.map(texts, item));
+
+  it("closes a paste that opens with a list of several items, so its first item stays one", () => {
+    const pasted = new Slice(Fragment.from(list("satu", "dua")), 3, 3);
+
+    expect(wholeLists(pasted)).toEqual(
+      new Slice(Fragment.from(list("satu", "dua")), 0, 3)
+    );
+  });
+
+  it("closes a list of one item with more blocks after it", () => {
+    const content = Fragment.fromArray([
+      list("satu"),
+      schema.nodes.paragraph.create(null, schema.text("akhir")),
+    ]);
+
+    expect(wholeLists(new Slice(content, 3, 1)).openStart).toBe(0);
+  });
+
+  it("leaves part of one item open, so it joins the line at the caret", () => {
+    const pasted = new Slice(Fragment.from(list("satu")), 3, 3);
+
+    expect(wholeLists(pasted)).toBe(pasted);
+  });
+
+  it("leaves a paste that opens with anything else as it is, and an empty one", () => {
+    const paragraph = new Slice(
+      Fragment.from(schema.nodes.paragraph.create(null, schema.text("biasa"))),
+      1,
+      1
+    );
+
+    expect(wholeLists(paragraph)).toBe(paragraph);
+    expect(wholeLists(Slice.empty)).toBe(Slice.empty);
   });
 });
 
