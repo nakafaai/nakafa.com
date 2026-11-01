@@ -28,6 +28,7 @@ import {
   CALLBACK_PATH,
   GOOGLE_MANIFEST,
   type GoogleConnector,
+  grantsConnector,
   requestedScopes,
 } from "@repo/backend/confect/connectors/google/manifest";
 import {
@@ -260,8 +261,8 @@ const connectClaimed = Effect.fn("connectors.google.connectClaimed")(function* (
     redirectUri: claimed.redirectUri,
     verifier: claimed.verifier,
   }).pipe(Effect.provide(FetchClient));
-  const needed = requestedScopes(claimed.connector);
-  if (!Arr.every(needed, (scope) => Arr.contains(grant.scopes, scope))) {
+  if (!grantsConnector(claimed.connector, grant.scopes)) {
+    yield* Effect.logWarning("A Google connect missed a scope", grant.scopes);
     return yield* new ScopesMissing();
   }
   const { runMutation } = yield* MutationRunner;
@@ -270,7 +271,7 @@ const connectClaimed = Effect.fn("connectors.google.connectClaimed")(function* (
     owner: claimed.owner,
     personId: claimed.personId,
     refreshToken: grant.refreshToken,
-    scopes: needed,
+    scopes: requestedScopes(claimed.connector),
     subject: grant.subject,
     userId,
   }).pipe(Effect.orDie);
