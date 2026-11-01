@@ -7,6 +7,8 @@ import {
   Tuple,
 } from "effect";
 import { KeyValueStore } from "effect/persistence";
+import { keptStorage } from "@/components/player/storage";
+import { reportClientException } from "@/lib/analytics/client";
 
 /** Every name a try-out action can carry, which share its one cell. */
 export const TryoutActionNameSchema = Schema.Literals([
@@ -84,6 +86,20 @@ export const keepName = Effect.fn("tryout.kept.keep")(function* (
   ).pipe(Effect.orDie);
   yield* store.set(KEPT_NAMES_KEY, text);
 });
+
+/**
+ * Keeps a set's name for this browser's next hard load. A browser that refuses its storage paints the
+ * page as a first visit does.
+ */
+export const keepActionName = Effect.fn("tryout.kept.action")(
+  function* (address: string, name: TryoutActionNameKey) {
+    yield* keepName(address, name);
+  },
+  Effect.provide(keptStorage),
+  Effect.catchTag("KeyValueStoreError", (error) =>
+    reportClientException(error, { source: "components/tryout/set/kept" })
+  )
+);
 
 /**
  * The inline script, the first child of the name's cell, that names the cell before the first paint.

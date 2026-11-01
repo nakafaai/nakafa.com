@@ -9,11 +9,8 @@ import {
   pageGutterVariants,
   readingMeasureVariants,
 } from "@/components/shared/content/width";
-import {
-  PaneStartProvider,
-  PanesGroupProvider,
-  SizedPane,
-} from "@/components/shared/panes";
+import { PanesGroupProvider, SizedPane } from "@/components/shared/panes";
+import { PaneStartContext } from "@/components/shared/panes/start";
 
 /**
  * The questions beside the navigator across the page's frame,
@@ -62,7 +59,7 @@ export function PlayerMain({
             className="z-0 items-start [&>div]:sticky [&>div]:top-[50svh]"
             withHandle
           />
-          <PaneStartProvider size="25%">
+          <PaneStartContext value="25%">
             <SizedPane
               className="overflow-visible!"
               id="navigator"
@@ -71,7 +68,7 @@ export function PlayerMain({
             >
               {navigator}
             </SizedPane>
-          </PaneStartProvider>
+          </PaneStartContext>
         </>
       )}
     </PanesGroupProvider>
