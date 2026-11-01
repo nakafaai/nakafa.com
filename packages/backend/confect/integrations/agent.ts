@@ -1,8 +1,4 @@
-import {
-  type FunctionSpec,
-  type GroupSpec,
-  Spec,
-} from "@confect/core";
+import { type FunctionSpec, type GroupSpec, Spec } from "@confect/core";
 import { ConvexConfigProvider } from "@confect/server";
 import { decodeAgentInput } from "@repo/backend/agent/decode";
 import {
