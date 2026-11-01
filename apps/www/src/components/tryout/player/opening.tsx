@@ -30,6 +30,8 @@ import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
+import { ConvexIsland } from "@/components/providers/island";
+import { OfflineNote } from "@/components/shared/offline";
 import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
 
 /** The running player's code, which reaches KaTeX and the Markdown reader. */
@@ -110,6 +112,9 @@ export function TryoutPlayerOpening({
               <HugeIcons icon={ArrowLeft01Icon} />
             </Button>
             <PlayerTitle>{title}</PlayerTitle>
+            <ConvexIsland>
+              <OfflineNote />
+            </ConvexIsland>
           </PlayerHeaderStart>
           {children}
           <PlayerHeaderEnd>

@@ -10,9 +10,9 @@ import {
   PlayerHeaderStart,
   PlayerTitle,
 } from "@/components/player/header";
+import { OfflineNote } from "@/components/shared/offline";
 import { ShellLock } from "@/components/sidebar/lock";
 import { useTenant } from "@/components/tenant/context";
-import { ExamOffline } from "@/components/tenant/exams/offline";
 import { TargetLink } from "@/lib/routing/link";
 import {
   schoolExamEditTarget,
@@ -47,7 +47,7 @@ export function PaperBar({
         <PlayerHeaderStart>
           {back}
           <PlayerTitle>{title}</PlayerTitle>
-          <ExamOffline />
+          <OfflineNote />
         </PlayerHeaderStart>
         {timer}
         <PlayerHeaderEnd>{children}</PlayerHeaderEnd>

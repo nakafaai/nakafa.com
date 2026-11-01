@@ -447,7 +447,6 @@
     "page-empty-part": "Empty part",
     "page-gap-empty": "Fill it in before you schedule the exam.",
     "page-gap-key": "Set the answer before you schedule the exam.",
-    "offline-note": "Your changes save once you are back online.",
     "add-below": "Add question below",
     "add-below-of": "Add question below question {number}",
     "question-text": "Question {number} text",
@@ -1934,6 +1933,7 @@
     "classification": "Education"
   },
   "Common": {
+    "offline-note": "Your changes save once you are back online.",
     "popup-empty": "Nothing to choose yet.",
     "page-navigation": "Pagination navigation",
     "contributor-description": "This person helps build Nakafa.",
