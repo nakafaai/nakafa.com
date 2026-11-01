@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { DeviceId } from "@repo/backend/confect/exams/sittings/schema";
+import { Option, Schema } from "effect";
 import {
+  type Admission,
   entryRefusalMessage,
   failureGroupCopyOf,
   isFinalRefusal,
@@ -8,7 +11,72 @@ import {
   isStaleAnswer,
   refusalCopyOf,
   sittingFailureMessage,
+  startEntry,
+  stepEntry,
 } from "@/components/exams/sitting/entry";
+
+/** An admission at one correction of the device's clock. */
+function admission(clockOffset: number): Admission {
+  return {
+    _tag: "admitted",
+    attemptId: Schema.decodeUnknownSync(Id("examAttempts"))("attempt_1"),
+    clockOffset,
+    deviceId: Schema.decodeSync(DeviceId)(
+      "018f3a1e-7c2b-7d4e-9a10-3b5c8f2e6d11"
+    ),
+    state: "inProgress",
+  };
+}
+
+const refused: Admission = {
+  _tag: "refused",
+  message: "student-token-refused",
+};
+
+describe("startEntry", () => {
+  it("joins a page that holds something to enter with, and an empty token counts", () => {
+    expect(startEntry(Option.some("ROOM42"))._tag).toBe("joining");
+    expect(startEntry(Option.some(""))._tag).toBe("joining");
+  });
+
+  it("waits for a token on a page that holds nothing to enter with", () => {
+    expect(startEntry(Option.none())._tag).toBe("waiting");
+  });
+});
+
+describe("stepEntry", () => {
+  it("ends joining on any answer", () => {
+    const joining = startEntry(Option.some(""));
+
+    expect(stepEntry(joining, admission(0))).toEqual(admission(0));
+    expect(stepEntry(joining, refused)).toEqual(refused);
+    expect(stepEntry(joining, { _tag: "failed" })._tag).toBe("failed");
+  });
+
+  it("replaces a refusal with the next answer, so a failure says no old sentence", () => {
+    const waiting = startEntry(Option.none());
+
+    expect(stepEntry(stepEntry(waiting, refused), admission(0))).toEqual(
+      admission(0)
+    );
+    expect(
+      stepEntry(stepEntry(waiting, refused), { _tag: "failed" })._tag
+    ).toBe("failed");
+  });
+
+  it("keeps an admission through a later refusal or failure, so the paper still shows", () => {
+    const admitted = stepEntry(startEntry(Option.none()), admission(5));
+
+    expect(stepEntry(admitted, refused)).toEqual(admission(5));
+    expect(stepEntry(admitted, { _tag: "failed" })).toEqual(admission(5));
+  });
+
+  it("takes a later admission, whose clock correction is the newer one", () => {
+    const admitted = stepEntry(startEntry(Option.none()), admission(5));
+
+    expect(stepEntry(admitted, admission(9))).toEqual(admission(9));
+  });
+});
 
 describe("isStaleAnswer", () => {
   it("names only the answer that the server already holds or has replaced", () => {

@@ -1,5 +1,7 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect, Schema } from "effect";
+import { createAiStore } from "@/components/ai/store/create";
 import {
   clearAiDraftText,
   resolveAiDraftText,
@@ -239,5 +241,119 @@ describe("ai/store/draft owner change", () => {
         ownerChanged: true,
       });
     }
+  });
+});
+
+/** The draft that the tab keeps, as its owner and text. */
+const StoredDraft = Schema.fromJsonString(
+  Schema.Struct({ owner: Schema.String, text: Schema.String })
+);
+const DRAFT_KEY = "nakafa-ai-draft";
+
+/** Puts a saved draft in the tab, as an earlier page left it. */
+const saveDraft = (owner: string, text: string) =>
+  sessionStorage.setItem(DRAFT_KEY, encodeJsonText({ owner, text }));
+
+/** The draft that the tab keeps now. */
+const savedDraft = () =>
+  Schema.decodeSync(StoredDraft)(sessionStorage.getItem(DRAFT_KEY) ?? "");
+
+describe("the draft's owner", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it("opens the owner's saved draft on the session's first answer", () => {
+    saveDraft("learner", "Saved words");
+    const store = createAiStore();
+
+    store.getState().adoptDraftOwner("learner");
+
+    expect(store.getState().text).toBe("Saved words");
+  });
+
+  it("keeps text written before the session answers ahead of an older saved draft, and saves it", () => {
+    saveDraft("learner", "Older words");
+    const store = createAiStore();
+
+    store.getState().setText("Typed first");
+    expect(sessionStorage.getItem(DRAFT_KEY)).toContain("Older words");
+    store.getState().adoptDraftOwner("learner");
+
+    expect(store.getState().text).toBe("Typed first");
+    expect(savedDraft()).toEqual({ owner: "learner", text: "Typed first" });
+  });
+
+  it("saves what is written once the owner is known, and a cleared draft leaves the tab", () => {
+    const store = createAiStore();
+    store.getState().adoptDraftOwner("learner");
+
+    store.getState().setText("Hello");
+    expect(savedDraft()).toEqual({ owner: "learner", text: "Hello" });
+
+    store.getState().setText("");
+    expect(sessionStorage.getItem(DRAFT_KEY)).toBeNull();
+  });
+
+  it("reads a function of the text, and writes nothing for the same text", () => {
+    const store = createAiStore();
+    store.getState().adoptDraftOwner("learner");
+    store.getState().setText("Hello");
+    sessionStorage.clear();
+
+    store.getState().setText((text) => text);
+    expect(sessionStorage.getItem(DRAFT_KEY)).toBeNull();
+
+    store.getState().setText((text) => `${text} again`);
+    expect(store.getState().text).toBe("Hello again");
+  });
+
+  it("lets a visitor who signs in keep the draft and its files", () => {
+    const store = createAiStore();
+    store.getState().adoptDraftOwner(null);
+    store.getState().setText("Written as a visitor");
+    const { composerKey } = store.getState();
+
+    store.getState().adoptDraftOwner("learner");
+
+    expect(store.getState().text).toBe("Written as a visitor");
+    expect(store.getState().composerKey).toBe(composerKey);
+    expect(savedDraft()).toEqual({
+      owner: "learner",
+      text: "Written as a visitor",
+    });
+  });
+
+  it("takes everything from the previous learner when another signs in", () => {
+    const store = createAiStore();
+    store.getState().adoptDraftOwner("learner");
+    store.getState().setText("Private words");
+    store.getState().openAsk({ id: "ask_1", text: "Explain" });
+    const { composerKey } = store.getState();
+
+    store.getState().adoptDraftOwner("other");
+
+    expect(store.getState().text).toBe("");
+    expect(store.getState().ask).toBeNull();
+    expect(store.getState().composerKey).toBe(composerKey + 1);
+    expect(sessionStorage.getItem(DRAFT_KEY)).toBeNull();
+  });
+
+  it("keeps the learner through a session that stops answering for a moment", () => {
+    const store = createAiStore();
+    store.getState().adoptDraftOwner("learner");
+    store.getState().setText("First");
+    const { composerKey } = store.getState();
+
+    store.getState().adoptDraftOwner(undefined);
+    store.getState().setText("First and more");
+    expect(savedDraft().text).toBe("First");
+
+    store.getState().adoptDraftOwner("learner");
+
+    expect(store.getState().text).toBe("First and more");
+    expect(store.getState().composerKey).toBe(composerKey);
+    expect(savedDraft()).toEqual({ owner: "learner", text: "First and more" });
   });
 });

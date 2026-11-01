@@ -4,7 +4,6 @@ import {
   ArrowRight01Icon,
   Clock01Icon,
   RefreshIcon,
-  School01Icon,
   SquareLock02Icon,
   Tick02Icon,
   Unlink02Icon,
@@ -48,9 +47,6 @@ const STATE_LOOKS = {
   soon: { icon: Clock01Icon, tone: "neutral" },
 } as const satisfies Record<string, StatusLook>;
 
-/** Whom a connection serves, in its own icon. */
-const HOLDER_ICONS = { personal: UserIcon, school: School01Icon } as const;
-
 /**
  * The open service, beside the list on a wide screen and in a sheet on a phone. Whatever a connector
  * lets a school set lives here, so the directory stays one list however many connectors join it.
@@ -76,11 +72,10 @@ export function ServiceDetail({
   );
 }
 
-/** The service's header, where it stands and whom it serves, and the work a connection opens. */
+/** A header of the service's name, a body of what it holds, and a footer of where it stands and what it asks for. */
 function ServicePane() {
   const t = useTranslations("Connectors");
-  const { service, state } = useService();
-  const holder = holderOf(service);
+  const { service } = useService();
 
   return (
     <>
@@ -89,44 +84,38 @@ function ServicePane() {
         title={t(service.key)}
       />
       <PaneBody>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <ServiceTile />
-            <div className="flex min-w-0 flex-wrap gap-2">
-              {Option.isSome(state) ? (
-                <TableStatus
-                  icon={STATE_LOOKS[state.value].icon}
-                  label={t(`state-${state.value}`)}
-                  tone={STATE_LOOKS[state.value].tone}
-                />
-              ) : null}
-              <TableStatus
-                icon={HOLDER_ICONS[holder]}
-                label={t(`holder-${holder}`)}
-                tone="neutral"
-              />
-            </div>
-          </div>
-          {service.key === "forms" && Option.contains(state, "open") ? (
-            <p className="text-muted-foreground text-sm">
-              {t("status-through-drive")}
-            </p>
-          ) : null}
-          {service.key === "classroom" &&
-          Option.contains(state, "connected") ? (
-            <ClassroomCourses />
-          ) : null}
-        </div>
+        <ServiceWork />
       </PaneBody>
       <ServiceFooter />
     </>
   );
 }
 
-/** What a service asks for next: its connection, a way out of it, or the work it opens. */
+/** The work a connection opens, or the service's logo while it opens none. */
+function ServiceWork() {
+  const t = useTranslations("Connectors");
+  const { service, state } = useService();
+
+  if (service.key === "classroom" && Option.contains(state, "connected")) {
+    return <ClassroomCourses />;
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-3 text-center">
+      <ServiceTile />
+      {service.key === "forms" && Option.contains(state, "open") ? (
+        <p className="text-muted-foreground text-sm">
+          {t("status-through-drive")}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** Where a service stands, and what it asks for next: its connection, a way out of it, or the work it opens. */
 function ServiceFooter() {
   const t = useTranslations("Connectors");
-  const { connection, service, state } = useService();
+  const { service, state } = useService();
   const { canOpenExams, slug } = useTenant();
   const startsConnect = Option.exists(
     state,
@@ -137,12 +126,9 @@ function ServiceFooter() {
     canOpenExams &&
     Option.contains(state, "connected");
 
-  if (!startsConnect && Option.isNone(connection)) {
-    return null;
-  }
-
   return (
     <PaneFooter>
+      <ServiceStatus />
       <DisconnectAction />
       {startsConnect ? <ConnectAction /> : null}
       {opensExams ? (
@@ -152,6 +138,34 @@ function ServiceFooter() {
         </Link>
       ) : null}
     </PaneFooter>
+  );
+}
+
+/**
+ * How the connection stands, and a personal one says so. A school's connection names no holder, because the page
+ * already stands in the school.
+ */
+function ServiceStatus() {
+  const t = useTranslations("Connectors");
+  const { service, state } = useService();
+
+  return (
+    <div className="me-auto flex min-w-0 flex-wrap gap-2">
+      {Option.isSome(state) ? (
+        <TableStatus
+          icon={STATE_LOOKS[state.value].icon}
+          label={t(`state-${state.value}`)}
+          tone={STATE_LOOKS[state.value].tone}
+        />
+      ) : null}
+      {holderOf(service) === "personal" ? (
+        <TableStatus
+          icon={UserIcon}
+          label={t("holder-personal")}
+          tone="neutral"
+        />
+      ) : null}
+    </div>
   );
 }
 

@@ -297,7 +297,7 @@ const readClient = Effect.fn("auth.grant.client")(function* (
 /**
  * What the router adds to the OAuth server for an agent. A client that registers itself is
  * untrusted, so every authorization asks the person, which the server skips unless the request
- * says `prompt=consent`. The router adds this plugin (`confect/http`), because only an action
+ * says `prompt=consent`. The router adds this plugin (`confect/auth/http`), because only an action
  * can sign a token.
  */
 export function agentGrants(

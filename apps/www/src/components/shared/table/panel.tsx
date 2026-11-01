@@ -5,6 +5,7 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
@@ -95,7 +96,8 @@ export function ColumnHead({
 
 /**
  * The panel a column's head opens, under the head's button (`trigger`): the ways to sort the rows, what filters the
- * column, and Reset once it holds a choice. The table draws the button, so it stands in its place in the line.
+ * column, and Reset once it holds a choice, each the panel's whole width, so no row leaves a gap at its end. The table
+ * draws the button, so it stands in its place in the line.
  */
 export function HeadPanel({
   children,
@@ -107,7 +109,10 @@ export function HeadPanel({
   return (
     <Popover>
       <PopoverTrigger render={trigger} />
-      <PopoverContent align={use(HeadMenuContext)} className="w-auto gap-0 p-0">
+      <PopoverContent
+        align={use(HeadMenuContext)}
+        className="w-auto min-w-56 gap-2 p-2"
+      >
         {children}
       </PopoverContent>
     </Popover>
@@ -128,28 +133,30 @@ export function HeadSort({
   const t = useTranslations("DataTable");
 
   return (
-    <div className="grid grid-cols-2 gap-1 border-b p-2">
+    <ButtonGroup className="w-full">
       <Button
         aria-pressed={sorted === "asc"}
+        className="flex-1"
         onClick={() => onSort(false)}
         size="sm"
         type="button"
-        variant={sorted === "asc" ? "secondary" : "ghost"}
+        variant={sorted === "asc" ? "secondary" : "outline"}
       >
         <HugeIcons icon={ArrowUp02Icon} />
         {t(sortWords[kind].asc)}
       </Button>
       <Button
         aria-pressed={sorted === "desc"}
+        className="flex-1"
         onClick={() => onSort(true)}
         size="sm"
         type="button"
-        variant={sorted === "desc" ? "secondary" : "ghost"}
+        variant={sorted === "desc" ? "secondary" : "outline"}
       >
         <HugeIcons icon={ArrowDown02Icon} />
         {t(sortWords[kind].desc)}
       </Button>
-    </div>
+    </ButtonGroup>
   );
 }
 
@@ -171,24 +178,19 @@ export function HeadText({ column, label }: { column: string; label: string }) {
   const text = Option.getOrElse(Arr.head(useChosen(column)), () => "");
 
   return (
-    <div className="w-48 p-2">
-      <InputGroup>
-        <InputGroupAddon>
-          <HugeIcons icon={Search01Icon} />
-        </InputGroupAddon>
-        <InputGroupInput
-          aria-label={label}
-          onChange={(event) =>
-            choose(
-              column,
-              event.target.value === "" ? [] : [event.target.value]
-            )
-          }
-          placeholder={t("filter-contains")}
-          value={text}
-        />
-      </InputGroup>
-    </div>
+    <InputGroup>
+      <InputGroupAddon>
+        <HugeIcons icon={Search01Icon} />
+      </InputGroupAddon>
+      <InputGroupInput
+        aria-label={label}
+        onChange={(event) =>
+          choose(column, event.target.value === "" ? [] : [event.target.value])
+        }
+        placeholder={t("filter-contains")}
+        value={text}
+      />
+    </InputGroup>
   );
 }
 
@@ -206,7 +208,7 @@ function RangeField({
 }) {
   return (
     <NumberField
-      className="min-w-0 flex-1"
+      className="not-first:border-input min-w-0 flex-1 not-first:border-s"
       onValueChange={(value) => onChange(value === null ? "" : String(value))}
       value={Option.getOrNull(boundOf(text))}
     >
@@ -237,22 +239,20 @@ export function HeadRange({
     choose(column, from === "" && to === "" ? [] : [from, to]);
 
   return (
-    <div className="w-48 p-2">
-      <InputGroup className="divide-input divide-x">
-        <RangeField
-          label={`${label}, ${t("filter-lowest")}`}
-          onChange={(text) => keep(text, highest)}
-          placeholder={t("filter-lowest")}
-          text={lowest}
-        />
-        <RangeField
-          label={`${label}, ${t("filter-highest")}`}
-          onChange={(text) => keep(lowest, text)}
-          placeholder={t("filter-highest")}
-          text={highest}
-        />
-      </InputGroup>
-    </div>
+    <InputGroup>
+      <RangeField
+        label={`${label}, ${t("filter-lowest")}`}
+        onChange={(text) => keep(text, highest)}
+        placeholder={t("filter-lowest")}
+        text={lowest}
+      />
+      <RangeField
+        label={`${label}, ${t("filter-highest")}`}
+        onChange={(text) => keep(lowest, text)}
+        placeholder={t("filter-highest")}
+        text={highest}
+      />
+    </InputGroup>
   );
 }
 
@@ -262,16 +262,15 @@ export function HeadReset({ column }: { column: string }) {
   const choose = useTableFilters((state) => state.choose);
 
   return useIsFiltered(column) ? (
-    <div className="border-t p-2">
-      <Button
-        onClick={() => choose(column, [])}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
-        <HugeIcons icon={Cancel01Icon} />
-        {t("reset")}
-      </Button>
-    </div>
+    <Button
+      className="w-full"
+      onClick={() => choose(column, [])}
+      size="sm"
+      type="button"
+      variant="ghost"
+    >
+      <HugeIcons icon={Cancel01Icon} />
+      {t("reset")}
+    </Button>
   ) : null;
 }

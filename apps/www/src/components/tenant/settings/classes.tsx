@@ -17,6 +17,7 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -29,6 +30,10 @@ import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
+import {
+  GRADE_ICONS,
+  TEACHER_ICONS,
+} from "@/components/tenant/settings/choices";
 import { SchoolClassAdd } from "@/components/tenant/settings/class/add";
 import type { SchoolClass } from "@/components/tenant/settings/class/changes";
 import {
@@ -273,7 +278,37 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
     isSettled ? { periodId, slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
+  const classIds = Arr.filter(
+    Arr.map(pagination.results, (row) => row.id),
+    (id) => !isDraft(id)
+  );
+  const cohorts = useQuery(
+    tenancy.cohorts.overview,
+    isSettled ? { periodId, slug } : "skip"
+  );
+  const teachers = useQuery(
+    classroom.classes.teachers,
+    isSettled && Arr.isReadonlyArrayNonEmpty(classIds)
+      ? { classIds, periodId, slug }
+      : "skip"
+  );
 
+  const cohortOf = (row: SchoolClass) =>
+    QueryResult.isSuccess(cohorts)
+      ? Arr.findFirst(cohorts.value, (cohort) => cohort.id === row.cohortId)
+      : Option.none();
+  const cohortName = (row: SchoolClass) =>
+    Option.match(cohortOf(row), {
+      onNone: () => "",
+      onSome: (cohort) => cohort.name,
+    });
+  const teachersOf = (row: SchoolClass) =>
+    QueryResult.isSuccess(teachers)
+      ? Option.match(
+          Arr.findFirst(teachers.value, (found) => found.classId === row.id),
+          { onNone: () => [], onSome: (found) => found.names }
+        )
+      : [];
   const columns = [
     classColumns.text((row) => row.name, {
       cell: (info) => (
@@ -293,6 +328,31 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
       header: t("class-name"),
       id: "name",
     }),
+    classColumns.values(cohortName, {
+      header: t("class-cohort"),
+      id: "cohort",
+      options: namedOptions(
+        Arr.dedupe(Arr.map(pagination.results, cohortName)),
+        GRADE_ICONS
+      ),
+    }),
+    classColumns.list(teachersOf, {
+      cell: (info) => <span dir="auto">{Arr.join(info.getValue(), ", ")}</span>,
+      header: t("class-teachers"),
+      id: "teachers",
+      options: namedOptions(
+        Arr.dedupe(Arr.flatMap(pagination.results, teachersOf)),
+        TEACHER_ICONS
+      ),
+    }),
+    classColumns.number(
+      (row) =>
+        Option.match(cohortOf(row), {
+          onNone: () => null,
+          onSome: (cohort) => cohort.students,
+        }),
+      { header: t("class-students"), id: "students" }
+    ),
     classColumns.values((row) => row.status, {
       cell: (info) => (
         <TableStatus

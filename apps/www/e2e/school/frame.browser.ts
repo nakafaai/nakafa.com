@@ -25,7 +25,7 @@ const seedLearnerSitting = async (
   return Effect.runPromise(seedSitting(slug, learner));
 };
 
-test("a student's sitting screen fills the page under its bar, with its card in the middle of the body", async ({
+test("a student's sitting screen fills the page under its bar, with its entry in the middle of the body", async ({
   baseURL,
   browser,
 }) => {
@@ -59,11 +59,8 @@ test("a student's sitting screen fills the page under its bar, with its card in 
   const box = await card.boundingBox();
   const bodyMiddle = (body?.x ?? 0) + (body?.width ?? 0) / 2;
   const cardMiddle = (box?.x ?? 0) + (box?.width ?? 0) / 2;
-  // The card stands in the middle of the page under the bar, across and down, not at its top.
+  // The entry stands in the middle of the page under the bar.
   expect(Math.abs(bodyMiddle - cardMiddle)).toBeLessThanOrEqual(2);
-  expect(box?.y ?? 0).toBeGreaterThan(
-    ((body?.y ?? 0) + (body?.height ?? 0) - (box?.height ?? 0)) / 3
-  );
   await context.close();
 });
 

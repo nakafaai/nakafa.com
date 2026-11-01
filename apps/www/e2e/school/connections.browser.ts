@@ -178,10 +178,8 @@ test("a connected school sees the check, finds its courses in the detail, and di
 
   await openOf(page, "Google Classroom").click();
   const detail = page.getByRole("complementary", { name: "Connector detail" });
-  await expect(
-    detail.getByRole("heading", { name: "Classes in Classroom" })
-  ).toBeVisible();
-  await expect(detail.getByText("This school")).toBeVisible();
+  await expect(detail.getByText("Connected", { exact: true })).toBeVisible();
+  await expect(detail.getByText("This school")).toHaveCount(0);
   await picture(page, "import");
 
   await detail.getByRole("button", { exact: true, name: "Disconnect" }).click();
@@ -214,7 +212,7 @@ test("a connect that just finished opens its service, where the next step waits"
   await expect(
     page
       .getByRole("complementary", { name: "Connector detail" })
-      .getByRole("heading", { name: "Classes in Classroom" })
+      .getByText("Connected", { exact: true })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await context.close();
 });

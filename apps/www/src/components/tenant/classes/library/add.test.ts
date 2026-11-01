@@ -162,7 +162,7 @@ describe("pickFromDrive", () => {
   const keys = { accessToken: "access", apiKey: "key", appId: "972685787969" };
 
   it.effect(
-    "tells an account without Drive before anything opens, and otherwise hides the dialog and answers the Picker's file",
+    "tells an account without Drive before anything opens, and otherwise hands the Picker the way to hide the dialog",
     () =>
       Effect.gen(function* () {
         const hide = vi.fn();
@@ -188,8 +188,7 @@ describe("pickFromDrive", () => {
             hide
           )
         ).toEqual(Option.some(picked));
-        expect(hide).toHaveBeenCalledTimes(1);
-        expect(pickDriveFile).toHaveBeenCalledWith(keys, "id", undefined);
+        expect(pickDriveFile).toHaveBeenCalledWith(keys, "id", hide, undefined);
       })
   );
 });

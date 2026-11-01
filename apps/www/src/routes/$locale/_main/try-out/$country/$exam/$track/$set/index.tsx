@@ -13,6 +13,7 @@ import {
 } from "@/components/tryout/route/live";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
+import { TryoutPressProvider } from "@/components/tryout/runtime/start";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import { readStaticData } from "@/lib/static/data";
 
@@ -65,12 +66,18 @@ export const Route = createFileRoute(
 });
 
 function TryoutSetPage() {
+  const setPath = Route.useLoaderData({
+    select: (route) => route.page.set.publicPath,
+  });
   return (
     // A visitor's page holds no Convex client, so it draws the set as every visitor sees it, which the
-    // build prerenders; a learner's page reads their attempt once it holds the client.
-    <ConvexIsland fallback={<TryoutSetVisitor />}>
-      <TryoutSetLearner />
-    </ConvexIsland>
+    // build prerenders; a learner's page reads their attempt once it holds the client. A press belongs
+    // to its page, so the next set starts with none.
+    <TryoutPressProvider key={setPath}>
+      <ConvexIsland fallback={<TryoutSetVisitor />} keepsPress>
+        <TryoutSetLearner />
+      </ConvexIsland>
+    </TryoutPressProvider>
   );
 }
 

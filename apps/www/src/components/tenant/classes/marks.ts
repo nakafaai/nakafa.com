@@ -54,3 +54,10 @@ export const withMarks = <A extends { readonly id: string }>(
     ({ klass, mascot }) => ({ ...klass, mascot })
   );
 };
+
+/**
+ * The animal of one class of a list too long to keep its animals apart, such as every class of a
+ * school: the first of the class's own seeded order. The id alone decides it, so a page of the list
+ * that loads later changes no mark.
+ */
+export const markOf = (id: string) => Arr.getUnsafe(cast(id, ANIMALS), 0);

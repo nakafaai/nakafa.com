@@ -213,6 +213,7 @@ export function PanesList({ children }: { children: ReactNode }) {
 export function PanesDetail({
   alwaysOn = false,
   children,
+  defaultSize = "35%",
   label,
   onClose,
   open,
@@ -221,6 +222,8 @@ export function PanesDetail({
   alwaysOn?: boolean;
   /** The detail's header, body and footer. */
   children: ReactNode;
+  /** The share of the row the second pane starts at, for a detail that holds a table. */
+  defaultSize?: `${number}%`;
   /** The pane's name for a screen reader. */
   label: string;
   /** Closes a row that the page's own selection holds, in place of the panes' own. */
@@ -243,7 +246,7 @@ export function PanesDetail({
         <>
           <ResizableHandle withHandle />
           <ResizablePanel
-            defaultSize="35%"
+            defaultSize={defaultSize}
             id="detail"
             maxSize="55%"
             minSize="25%"

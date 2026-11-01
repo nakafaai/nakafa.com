@@ -3,7 +3,7 @@ import {
   cancelAnalyticsConsentSessionSave,
 } from "@repo/analytics/consent/session";
 import { Effect, Fiber, Option } from "effect";
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { createConsentSaveAction } from "@/lib/analytics/consent/decision";
 import type { AnalyticsConsentStore } from "@/lib/analytics/consent/store";
 
@@ -19,16 +19,16 @@ type DecisionHookOptions = Omit<
  * The in-flight save lives in the consent store, so every reader's decision
  * and the controller's cleanups see the same save. Callbacks close over the
  * store and an options ref only, so their identity survives renders and
- * consumer effects rerun solely on prompt changes. Options mirror post-commit
- * because render-time ref writes are banned.
+ * consumer effects rerun solely on prompt changes. Options mirror in a layout
+ * effect, as ADR 0017 says, because render-time ref writes are banned.
  */
 export function useAnalyticsConsentDecision(
   store: AnalyticsConsentStore,
   options: DecisionHookOptions
 ) {
   const optionsRef = useRef(options);
-  // Post-commit mirror: handlers and later cleanups read fresh options.
-  useEffect(() => {
+  // Handlers and later cleanups read the options of the latest commit.
+  useLayoutEffect(() => {
     optionsRef.current = options;
   });
 
