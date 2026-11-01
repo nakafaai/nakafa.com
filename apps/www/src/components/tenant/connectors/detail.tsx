@@ -13,6 +13,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import type { ActSchema } from "@repo/mascot/nina/act";
 import { Link } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { useState, useTransition } from "react";
@@ -24,8 +25,9 @@ import {
   holderOf,
 } from "@/components/connectors/directory";
 import { DisconnectDialog } from "@/components/connectors/disconnect";
-import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
+import { PaneFill, PaneFooter, PaneHeader } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { ServiceTile } from "@/components/tenant/connectors/card";
 import { ClassroomCourses } from "@/components/tenant/connectors/classroom";
@@ -36,16 +38,19 @@ import {
 import { useTenant } from "@/components/tenant/context";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
 
-/** How each state of a service looks in its detail. */
+/** How each state of a service looks in its detail, and what Nina does in its body. */
 const STATE_LOOKS = {
-  connected: { icon: Tick02Icon, tone: "success" },
-  failed: { icon: Alert02Icon, tone: "destructive" },
-  locked: { icon: SquareLock02Icon, tone: "neutral" },
-  open: { icon: Add01Icon, tone: "neutral" },
-  reconnect: { icon: RefreshIcon, tone: "warning" },
-  refused: { icon: Alert02Icon, tone: "warning" },
-  soon: { icon: Clock01Icon, tone: "neutral" },
-} as const satisfies Record<string, StatusLook>;
+  connected: { act: "relaxed", icon: Tick02Icon, tone: "success" },
+  failed: { act: "searching", icon: Alert02Icon, tone: "destructive" },
+  locked: { act: "reading", icon: SquareLock02Icon, tone: "neutral" },
+  open: { act: "waving", icon: Add01Icon, tone: "neutral" },
+  reconnect: { act: "searching", icon: RefreshIcon, tone: "warning" },
+  refused: { act: "thinking", icon: Alert02Icon, tone: "warning" },
+  soon: { act: "reading", icon: Clock01Icon, tone: "neutral" },
+} as const satisfies Record<
+  string,
+  StatusLook & { act: typeof ActSchema.Type }
+>;
 
 /**
  * The open service, beside the list on a wide screen and in a sheet on a phone. Whatever a connector
@@ -72,7 +77,10 @@ export function ServiceDetail({
   );
 }
 
-/** A header of the service's name, a body of what it holds, and a footer of where it stands and what it asks for. */
+/**
+ * One anatomy for every connector: a header of its tile and name as on its card, a body that a table or an empty
+ * state fills, and a footer of every badge and button.
+ */
 function ServicePane() {
   const t = useTranslations("Connectors");
   const { service } = useService();
@@ -81,34 +89,53 @@ function ServicePane() {
     <>
       <PaneHeader
         description={t("by", { provider: service.provider })}
+        icon={<ServiceTile />}
         title={t(service.key)}
       />
-      <PaneBody>
+      <PaneFill>
         <ServiceWork />
-      </PaneBody>
+      </PaneFill>
       <ServiceFooter />
     </>
   );
 }
 
-/** The work a connection opens, or the service's logo while it opens none. */
+/** The work a connection opens, or Nina saying where the service stands while it opens none. */
 function ServiceWork() {
-  const t = useTranslations("Connectors");
   const { service, state } = useService();
 
   if (service.key === "classroom" && Option.contains(state, "connected")) {
     return <ClassroomCourses />;
   }
+  if (Option.isNone(state)) {
+    return null;
+  }
+
+  return <ServiceEmpty state={state.value} />;
+}
+
+/** The empty body of a service in one state: the same words for every connector, which only its name and line change. */
+function ServiceEmpty({ state }: { state: keyof typeof STATE_LOOKS }) {
+  const t = useTranslations("Connectors");
+  const { service } = useService();
+  const line = t(`${service.key}-line`);
 
   return (
-    <div className="flex flex-col items-center gap-3 text-center">
-      <ServiceTile />
-      {service.key === "forms" && Option.contains(state, "open") ? (
-        <p className="text-muted-foreground text-sm">
-          {t("status-through-drive")}
-        </p>
-      ) : null}
-    </div>
+    <TableEmpty
+      act={STATE_LOOKS[state].act}
+      description={
+        {
+          connected: line,
+          failed: t("status-failed"),
+          locked: t("status-locked"),
+          open: line,
+          reconnect: t("reconnect-hint"),
+          refused: t("status-refused"),
+          soon: t("status-soon"),
+        }[state]
+      }
+      title={t(`pane-${state}`)}
+    />
   );
 }
 
@@ -153,6 +180,7 @@ function ServiceStatus() {
     <div className="me-auto flex min-w-0 flex-wrap gap-2">
       {Option.isSome(state) ? (
         <TableStatus
+          band
           icon={STATE_LOOKS[state.value].icon}
           label={t(`state-${state.value}`)}
           tone={STATE_LOOKS[state.value].tone}
@@ -160,6 +188,7 @@ function ServiceStatus() {
       ) : null}
       {holderOf(service) === "personal" ? (
         <TableStatus
+          band
           icon={UserIcon}
           label={t("holder-personal")}
           tone="neutral"
@@ -192,12 +221,11 @@ function ConnectAction() {
   );
 }
 
-/** Ends a connection, which names the service it really ends: Forms ends through Drive. */
+/** Ends a connection. Its dialog names the service it really ends: Forms ends through Drive. */
 function DisconnectAction() {
   const t = useTranslations("Connectors");
   const { connection, service } = useService();
   const [confirming, setConfirming] = useState(false);
-  const name = t(service.connector);
 
   if (Option.isNone(connection)) {
     return null;
@@ -211,13 +239,11 @@ function DisconnectAction() {
         variant="outline"
       >
         <HugeIcons icon={Unlink02Icon} />
-        {service.key === service.connector
-          ? t("disconnect")
-          : t("disconnect-service", { name })}
+        {t("disconnect")}
       </Button>
       <DisconnectDialog
         connection={connection.value}
-        name={name}
+        name={t(service.connector)}
         open={confirming}
         setOpen={setConfirming}
       />

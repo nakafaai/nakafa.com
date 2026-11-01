@@ -1,17 +1,28 @@
 import type { Ref } from "@confect/core";
 import { useAction, useMutation } from "@confect/react";
+import {
+  Mortarboard01Icon,
+  MoreHorizontalIcon,
+  UserAdd01Icon,
+} from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -21,7 +32,9 @@ import { useTranslations } from "use-intl";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import {
   forumCall,
   runForumCall,
@@ -37,20 +50,24 @@ const SOURCE = "components/tenant/connectors/classroom";
 /** What a preview answers: the school's classes, its connection, and the courses it teaches. */
 type Preview = NonNullable<Ref.Returns<typeof connectors.classroom.preview>>;
 
+/** One course of a preview. */
+type Course = Preview["courses"][number];
+
 /** The value of the class picker that leaves a course unlinked. */
 const UNLINKED = "none";
 
 /**
  * The work a connected Classroom opens (journey J7): the courses that the school's connection
- * teaches, each with its students and the class it fills. Picking a class links the course at once,
- * and its coursework arrives as the class's tasks; picking none removes the link. The courses load
- * each time the open service shows them, so the page calls Google only when a reader opened it, and
- * opening it again reads Google again.
+ * teaches, each with its students and the class it fills, edge to edge in the pane's body. A course's
+ * menu links it to a class at once, and its coursework arrives as the class's tasks; picking none
+ * removes the link. The courses load each time the open service shows them, so the page calls Google
+ * only when a reader opened it, and opening it again reads Google again.
  */
 export function ClassroomCourses() {
   const { slug } = useTenant();
   const preview = useAction(connectors.classroom.preview);
   const [isLoading, startLoading] = useTransition();
+  const [hasFailed, setHasFailed] = useState(false);
   const [shown, setShown] = useState<Option.Option<Preview>>(Option.none);
 
   const load = () =>
@@ -58,37 +75,53 @@ export function ClassroomCourses() {
       runForumCall(
         forumCall(() => preview({ slug })).pipe(
           Effect.tap((answer) =>
-            Effect.sync(() => setShown(Option.fromNullOr(answer)))
+            Effect.sync(() => {
+              setHasFailed(answer === null);
+              setShown(Option.fromNullOr(answer));
+            })
           )
         ),
-        toastForumFailure
+        () => setHasFailed(true)
       )
     );
 
   return (
-    <div className="flex flex-col gap-3">
+    <>
       <Intersection once onIntersect={load} />
       {Option.match(shown, {
-        onNone: () => (isLoading ? <Spinner className="mx-auto" /> : null),
+        onNone: () =>
+          hasFailed ? (
+            <LoadFailure isPending={isLoading} onRetry={load} />
+          ) : (
+            <CoursesLoading />
+          ),
         onSome: (found) => (
-          <>
-            {Arr.isReadonlyArrayEmpty(found.classes) &&
-            Arr.isReadonlyArrayNonEmpty(found.courses) ? (
-              <NoClassToFill />
-            ) : null}
-            <CourseTable
-              classCell={(course) => (
+          <CourseTable
+            menu={(course) => (
+              <CourseMenu>
                 <CourseClass
                   course={course}
                   preview={found}
                   setPreview={setShown}
                 />
-              )}
-              preview={found}
-            />
-          </>
+                {course.classId === null ? null : (
+                  <CourseRosterImport courseId={course.courseId} />
+                )}
+              </CourseMenu>
+            )}
+            preview={found}
+          />
         ),
       })}
+    </>
+  );
+}
+
+/** The body while Google reads the courses. */
+function CoursesLoading() {
+  return (
+    <div className="flex flex-1 items-center justify-center">
+      <Spinner />
     </div>
   );
 }
@@ -99,97 +132,140 @@ function NoClassToFill() {
   const { slug } = useTenant();
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <p className="text-muted-foreground text-sm">{t("courses-no-class")}</p>
-      <Link
-        className={buttonVariants({ variant: "outline" })}
-        params={{ slug }}
-        to="/school/$slug/settings/classes"
-      >
-        {t("courses-no-class-action")}
-      </Link>
-    </div>
+    <TableEmpty
+      act="pointing"
+      action={
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ slug }}
+          to="/school/$slug/settings/classes"
+        >
+          {t("courses-no-class-action")}
+        </Link>
+      }
+      description={t("courses-no-class")}
+      title={t("courses-no-class-title")}
+    />
   );
 }
 
 /** The columns of the courses. */
-const courseColumns = tableColumns<Preview["courses"][number]>();
+const courseColumns = tableColumns<Course>();
 
 /**
- * The courses of a preview in a table, or a sentence when it has none: each course's name and section, its students,
- * the class it fills, which the caller composes, and the import of a linked course.
+ * The courses of a preview in a table, or the empty state when it has none or the school has no class for them: each
+ * course's name and section, its students, the class it fills, and its menu, which the caller composes. A course linked
+ * to a class the school archived names that, so a cell never shows the class's raw ID.
  */
 function CourseTable({
-  classCell,
+  menu,
   preview,
 }: {
-  classCell: (course: Preview["courses"][number]) => ReactNode;
+  menu: (course: Course) => ReactNode;
   preview: Preview;
 }) {
   const t = useTranslations("Connectors");
-  const classOf = (course: Preview["courses"][number]) =>
-    Option.getOrElse(
-      Option.map(
-        Arr.findFirst(preview.classes, (klass) => klass.id === course.classId),
-        (klass) => klass.name
-      ),
-      () => t("course-unlinked")
-    );
+  const classOf = (course: Course) =>
+    course.classId === null
+      ? t("course-unlinked")
+      : Option.getOrElse(
+          Option.map(
+            Arr.findFirst(
+              preview.classes,
+              (klass) => klass.id === course.classId
+            ),
+            (klass) => klass.name
+          ),
+          () => t("course-archived")
+        );
 
   if (Arr.isReadonlyArrayEmpty(preview.courses)) {
-    return <p className="text-muted-foreground text-sm">{t("courses-none")}</p>;
+    return (
+      <TableEmpty
+        act="searching"
+        description={t("courses-none")}
+        title={t("courses-none-title")}
+      />
+    );
+  }
+  if (Arr.isReadonlyArrayEmpty(preview.classes)) {
+    return <NoClassToFill />;
   }
 
   return (
     <TableFiltersProvider>
-      <div className="-mx-4 border-t [&_[data-slot=table-cell]]:whitespace-nowrap">
-        <DataTable
-          columns={[
-            courseColumns.text(
-              (course) =>
-                course.section === null
-                  ? course.name
-                  : t("course-name", {
-                      name: course.name,
-                      section: course.section,
-                    }),
-              {
-                cell: (info) => (
-                  <span className="font-medium" dir="auto">
-                    {info.getValue()}
-                  </span>
-                ),
-                header: t("course"),
-                id: "course",
-              }
-            ),
-            courseColumns.number((course) => course.students, {
+      <DataTable
+        columns={[
+          courseColumns.text(
+            (course) =>
+              course.section === null
+                ? course.name
+                : t("course-name", {
+                    name: course.name,
+                    section: course.section,
+                  }),
+            {
               cell: (info) => (
-                <span className="text-muted-foreground">{info.getValue()}</span>
+                <span className="font-medium" dir="auto">
+                  {info.getValue()}
+                </span>
               ),
-              header: t("course-students"),
-              id: "students",
-            }),
-            courseColumns.values(classOf, {
-              cell: (info) => classCell(info.row.original),
-              header: t("course-class"),
-              id: "class",
-              options: namedOptions(
-                Arr.dedupe(Arr.map(preview.courses, classOf)),
-                GRADE_ICONS
-              ),
-            }),
-            courseColumns.menu((info) =>
-              info.row.original.classId === null ? null : (
-                <CourseRosterImport courseId={info.row.original.courseId} />
-              )
+              header: t("course"),
+              id: "course",
+            }
+          ),
+          courseColumns.number((course) => course.students, {
+            cell: (info) => (
+              <span className="text-muted-foreground">{info.getValue()}</span>
             ),
-          ]}
-          data={preview.courses}
-          rowId={(course) => course.courseId}
-        />
-      </div>
+            header: t("course-students"),
+            id: "students",
+          }),
+          courseColumns.values(classOf, {
+            header: t("course-class"),
+            id: "class",
+            options: namedOptions(
+              Arr.dedupe(Arr.map(preview.courses, classOf)),
+              GRADE_ICONS
+            ),
+          }),
+          courseColumns.menu((info) => menu(info.row.original)),
+        ]}
+        data={preview.courses}
+        plain
+        rowId={(course) => course.courseId}
+      />
     </TableFiltersProvider>
+  );
+}
+
+/** A course's one action: the ghost three dots, opening what it can do, which the caller composes. */
+function CourseMenu({ children }: { children: ReactNode }) {
+  const t = useTranslations("Connectors");
+  const common = useTranslations("Common");
+
+  return (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("course")}</DropdownMenuLabel>
+            {children}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
@@ -199,21 +275,14 @@ function CourseClass({
   preview,
   setPreview,
 }: {
-  course: Preview["courses"][number];
+  course: Course;
   preview: Preview;
   setPreview: (preview: Option.Option<Preview>) => void;
 }) {
   const t = useTranslations("Connectors");
   const { slug } = useTenant();
   const link = useMutation(connectors.classroom.link);
-  const items = [
-    { label: t("course-unlinked"), value: UNLINKED },
-    ...Arr.map(preview.classes, (klass) => ({
-      label: klass.name,
-      value: klass.id,
-    })),
-  ];
-  const withClass = (classId: Preview["courses"][number]["classId"]) =>
+  const withClass = (classId: Course["classId"]) =>
     Option.some({
       ...preview,
       courses: Arr.map(preview.courses, (row) =>
@@ -246,27 +315,30 @@ function CourseClass({
   };
 
   return (
-    <Select
-      disabled={
-        course.classId === null && Arr.isReadonlyArrayEmpty(preview.classes)
-      }
-      items={items}
-      onValueChange={pick}
-      value={course.classId ?? UNLINKED}
-    >
-      <SelectTrigger aria-label={t("course-class")} className="w-full min-w-40">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          {Arr.map(items, (item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      </SelectContent>
-    </Select>
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <HugeIcons icon={Mortarboard01Icon} />
+        {t("course-class")}
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="w-56">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("course-class")}</DropdownMenuLabel>
+          <DropdownMenuRadioGroup
+            onValueChange={pick}
+            value={course.classId ?? UNLINKED}
+          >
+            <DropdownMenuRadioItem value={UNLINKED}>
+              {t("course-unlinked")}
+            </DropdownMenuRadioItem>
+            {Arr.map(preview.classes, (klass) => (
+              <DropdownMenuRadioItem key={klass.id} value={klass.id}>
+                {klass.name}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuGroup>
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
   );
 }
 
@@ -278,7 +350,7 @@ function CourseRosterImport({ courseId }: { courseId: string }) {
   const [isImporting, startImporting] = useTransition();
 
   return (
-    <Button
+    <DropdownMenuItem
       disabled={isImporting}
       onClick={() =>
         startImporting(() =>
@@ -289,11 +361,9 @@ function CourseRosterImport({ courseId }: { courseId: string }) {
           )
         )
       }
-      size="sm"
-      type="button"
-      variant="outline"
     >
+      <Spinner icon={UserAdd01Icon} isLoading={isImporting} />
       {t("course-import")}
-    </Button>
+    </DropdownMenuItem>
   );
 }

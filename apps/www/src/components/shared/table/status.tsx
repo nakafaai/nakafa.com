@@ -1,6 +1,10 @@
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { STATUS_BADGES, type StatusTone } from "@repo/design-system/lib/status";
+import {
+  BAND_STATUS_BADGES,
+  STATUS_BADGES,
+  type StatusTone,
+} from "@repo/design-system/lib/status";
 import type { ComponentProps } from "react";
 
 /**
@@ -18,10 +22,13 @@ export type StatusLook = Pick<
  * icon of its own, so no two states of the table share one.
  */
 export function TableStatus({
+  band = false,
   icon,
   label,
   tone,
 }: {
+  /** Whether the badge stands on a muted band, such as a pane's footer, where a muted fill would melt away. */
+  band?: boolean;
   /** The icon of the state, which no other state of the table uses. */
   icon: ComponentProps<typeof HugeIcons>["icon"];
   /** The name of the state, as the reader sees it. */
@@ -29,7 +36,7 @@ export function TableStatus({
   tone: typeof StatusTone.Type;
 }) {
   return (
-    <Badge variant={STATUS_BADGES[tone]}>
+    <Badge variant={band ? BAND_STATUS_BADGES[tone] : STATUS_BADGES[tone]}>
       <HugeIcons data-icon="inline-start" icon={icon} />
       {label}
     </Badge>

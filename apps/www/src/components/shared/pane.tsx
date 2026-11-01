@@ -8,22 +8,41 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { TableRow } from "@repo/design-system/components/ui/table";
+import { cva } from "class-variance-authority";
+import { cn } from "cn";
 import { Option } from "effect";
 import type { MouseEvent, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { usePaneMode, usePanes } from "@/components/shared/panes";
+import { tableCardVariants } from "@/components/shared/table/card";
+
+/** The phone's header: centred under the swipe handle, or a row from the start with a detail's icon. */
+const sheetHeaderVariants = cva("relative", {
+  variants: {
+    icon: { false: "px-10", true: "flex-row items-center gap-3 text-start!" },
+  },
+});
+
+/** The phone's close button: in the corner of a centred header, or at the end of a header's row. */
+const sheetCloseVariants = cva("", {
+  variants: { icon: { false: "absolute end-2 top-2", true: "shrink-0" } },
+});
 
 /**
  * A detail's header: its title, and what it shows on a second line, so it holds two lines at most
- * as every header does, and a long one cuts off with its whole text on hover. Beside the list a
- * row's detail holds the button that closes it; an always-on detail has none. The phone's drawer
- * holds the same button, for a reader who does not swipe.
+ * as every header does, and a long one cuts off with its whole text on hover. A detail of a thing
+ * with its own icon stands it before the title, as the thing's card does. Beside the list a row's
+ * detail holds the button that closes it; an always-on detail has none. The phone's drawer holds
+ * the same button, for a reader who does not swipe.
  */
 export function PaneHeader({
   description,
+  icon,
   title,
 }: {
   description?: string | undefined;
+  /** The thing's own icon, before the title. */
+  icon?: ReactNode;
   title: string;
 }) {
   const t = useTranslations("Common");
@@ -31,22 +50,28 @@ export function PaneHeader({
 
   if (place === "sheet") {
     return (
-      <DrawerHeader className="relative px-10" data-pane-header="">
-        <DrawerTitle className="truncate" dir="auto" title={title}>
-          {title}
-        </DrawerTitle>
-        {description === undefined ? null : (
-          <DrawerDescription
-            className="truncate"
-            dir="auto"
-            title={description}
-          >
-            {description}
-          </DrawerDescription>
-        )}
+      <DrawerHeader
+        className={sheetHeaderVariants({ icon: icon !== undefined })}
+        data-pane-header=""
+      >
+        {icon}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <DrawerTitle className="truncate" dir="auto" title={title}>
+            {title}
+          </DrawerTitle>
+          {description === undefined ? null : (
+            <DrawerDescription
+              className="truncate"
+              dir="auto"
+              title={description}
+            >
+              {description}
+            </DrawerDescription>
+          )}
+        </div>
         <Button
           aria-label={t("close")}
-          className="absolute end-2 top-2"
+          className={sheetCloseVariants({ icon: icon !== undefined })}
           onClick={close}
           size="icon-sm"
           type="button"
@@ -60,23 +85,26 @@ export function PaneHeader({
 
   return (
     <header
-      className="flex min-h-14 shrink-0 items-center gap-2 border-b py-2 ps-4 pe-[var(--pane-end,1rem)]"
+      className="flex min-h-14 shrink-0 items-center gap-2 border-b py-2 px-(--pane-end,1rem)"
       data-pane-header=""
       data-slot="pane-header"
     >
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <h2 className="truncate text-sm font-medium" dir="auto" title={title}>
-          {title}
-        </h2>
-        {description === undefined ? null : (
-          <p
-            className="text-muted-foreground truncate text-sm"
-            dir="auto"
-            title={description}
-          >
-            {description}
-          </p>
-        )}
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        {icon}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <h2 className="truncate text-sm font-medium" dir="auto" title={title}>
+            {title}
+          </h2>
+          {description === undefined ? null : (
+            <p
+              className="text-muted-foreground truncate text-sm"
+              dir="auto"
+              title={description}
+            >
+              {description}
+            </p>
+          )}
+        </div>
       </div>
       {close === undefined ? null : (
         <Button
@@ -101,15 +129,33 @@ export function PaneHeader({
 export function PaneBody({ children }: { children: ReactNode }) {
   return (
     <ScrollArea className="flex-1">
-      <div className="py-4 ps-4 pe-[var(--pane-end,1rem)]">{children}</div>
+      <div className="py-4 px-(--pane-end,1rem)">{children}</div>
     </ScrollArea>
+  );
+}
+
+/**
+ * A detail's body that one thing fills from edge to edge, with no padding of its own: a table, which scrolls inside it
+ * with its heads in view and closes on its last row (`tableCardVariants`), or an empty state in its middle.
+ */
+export function PaneFill({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className={cn(
+        tableCardVariants(),
+        "bg-card flex min-h-0 flex-1 flex-col overflow-y-auto"
+      )}
+      data-slot="pane-fill"
+    >
+      {children}
+    </div>
   );
 }
 
 /** A detail's footer: its actions at the end, on a second row where a narrow pane cannot hold them in one. */
 export function PaneFooter({ children }: { children: ReactNode }) {
   return (
-    <footer className="bg-muted/70 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t py-3 ps-4 pe-[var(--pane-end,1rem)]">
+    <footer className="bg-muted/70 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t py-3 px-(--pane-end,1rem)">
       {children}
     </footer>
   );
