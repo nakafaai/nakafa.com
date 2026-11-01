@@ -9,6 +9,7 @@ import {
 import { guardMcpOrigin } from "@repo/backend/confect/routes/agent/mcp/guard";
 import { readMcpRequest } from "@repo/backend/confect/routes/agent/mcp/input";
 import {
+  MISSING_PROTOCOL_MESSAGE,
   refuseMcpRequest,
   refuseUnservedMethod,
 } from "@repo/backend/confect/routes/agent/mcp/refusal";
@@ -20,7 +21,6 @@ import {
   withMcpResponseHeaders,
 } from "@repo/backend/confect/routes/agent/mcp/response";
 import { RequestIdentity } from "@repo/backend/confect/routes/middleware/identity";
-import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import { Effect, Layer, Option, Result } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
@@ -81,9 +81,7 @@ const handleMcp = Effect.gen(function* () {
         parsedBody,
         400,
         -32_020,
-        // A client on an earlier revision opens with `initialize` and has no way
-        // forward, so this message is all it can show its user.
-        `The MCP-Protocol-Version header is required. This server supports protocol version ${NAKAFA_MCP_PROTOCOL_VERSION}.`,
+        MISSING_PROTOCOL_MESSAGE,
         requestId
       ),
       request
