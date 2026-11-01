@@ -7,7 +7,7 @@ import {
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Effect } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
@@ -17,7 +17,11 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const HOME = "/en";
 const ONBOARDING = "/en/onboarding";
 const SETTINGS = "/en/user/settings";
+const NOTIFICATIONS = "/en/notifications";
 const SIGN_IN = "/en/auth";
+const SESSION_ANSWER = "**/api/auth/get-session**";
+/** How long the session's answer is held back, so a page sits in its first state. */
+const SESSION_DELAY_MILLISECONDS = 1500;
 const HINT_COOKIE = "nakafa-signed-in";
 const VISITOR_FOOTER = '[data-slot="sidebar-footer"][data-account="visitor"]';
 const MEMBER_FOOTER = '[data-slot="sidebar-footer"][data-account="member"]';
@@ -277,3 +281,61 @@ test("signing out in one tab sends an account screen in another to sign-in", asy
     )
   );
 });
+
+/**
+ * The live session reads signed out until the page starts it after hydration, and
+ * on 1 November a redirect that trusted that state sent every hard load of an
+ * account screen to sign-in and on to home. An account screen moves only on the
+ * answer that no session stands. The answer is held back here, so the page sits in
+ * its first state well past a frame, and the learner's address never changes.
+ */
+for (const path of [SETTINGS, NOTIFICATIONS]) {
+  test(`a hard load of ${path} keeps a signed-in learner there`, async ({
+    baseURL,
+    browser,
+  }) => {
+    expect(baseURL).toBeTruthy();
+    const origin = baseURL ?? "";
+    await Effect.runPromise(
+      withBrowserContext(browser, contextOptions(origin), (context) =>
+        Effect.gen(function* () {
+          yield* signInLearner(context, origin);
+          const page = yield* Effect.promise(() => context.newPage());
+          const addresses = MutableList.make<string>();
+          page.on("framenavigated", (frame) => {
+            if (frame === page.mainFrame()) {
+              MutableList.append(addresses, new URL(frame.url()).pathname);
+            }
+          });
+          yield* Effect.promise(() =>
+            page.route(SESSION_ANSWER, async (route) => {
+              await page.waitForTimeout(SESSION_DELAY_MILLISECONDS);
+              await route.continue();
+            })
+          );
+          yield* withObservedPageErrors(
+            page,
+            Effect.gen(function* () {
+              yield* Effect.promise(() =>
+                page.goto(path, { waitUntil: "load" })
+              );
+              yield* Effect.promise(() =>
+                expect(
+                  page.locator(MEMBER_FOOTER).getByRole("button").first()
+                ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+              );
+              yield* Effect.promise(() =>
+                page.waitForTimeout(SESSION_DELAY_MILLISECONDS)
+              );
+              yield* Effect.sync(() =>
+                expect(
+                  Arr.dedupe(MutableList.toArray(addresses))
+                ).toStrictEqual([path])
+              );
+            })
+          );
+        })
+      )
+    );
+  });
+}
