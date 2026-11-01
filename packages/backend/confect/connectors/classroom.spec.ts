@@ -1,6 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
+import {
+  AccessDenied,
+  GrantRejected,
+} from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import {
@@ -75,7 +78,13 @@ export default GroupSpec.make()
       args: () => ({ courseId: Schema.NonEmptyString, slug: TenantSlug }),
       returns: () => ImportSummary,
       error: () =>
-        Schema.Union([AuthFailure, AccessDenied, ConnectorOff, GoogleFailed]),
+        Schema.Union([
+          AuthFailure,
+          AccessDenied,
+          ConnectorOff,
+          GoogleFailed,
+          GrantRejected,
+        ]),
     }).middleware(Session)
   )
   .addFunction(

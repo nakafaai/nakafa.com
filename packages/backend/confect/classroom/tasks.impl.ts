@@ -270,23 +270,19 @@ const missing = FunctionImpl.make(
       Arr.dedupe(Arr.map(page.page, (member) => member.personId)),
       (personId) =>
         Effect.gen(function* () {
-          const person = yield* reader
-            .table("tenantPeople")
-            .get(personId)
-            .pipe(Effect.orDie);
+          const person = yield* reader.table("tenantPeople").get(personId);
           const handedIn = yield* reader
             .table("classroomSubmissions")
             .index("by_taskId_and_personId", (query) =>
               query.eq("taskId", found._id).eq("personId", personId)
             )
-            .first()
-            .pipe(Effect.orDie);
+            .first();
           return person.status === "active" &&
             reaches(found, personId) &&
             Option.isNone(handedIn)
             ? Option.some({ id: person._id, name: person.name })
             : Option.none();
-        }),
+        }).pipe(Effect.orDie),
       { concurrency: "unbounded" }
     );
     return Struct.assign(page, { page: Arr.getSomes(students) });
