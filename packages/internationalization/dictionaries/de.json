@@ -1407,6 +1407,7 @@
     "announcement-placeholder": "Test zu Kapitel 2 am Montag um 7:30",
     "discussion-first-placeholder": "Worüber die Klasse sprechen soll",
     "discussion-title-placeholder": "Eine Frage an die Klasse",
+    "discussion-title-hint": "Nenne, worüber die Klasse spricht.",
     "handin-placeholder": "Deine Antwort oder ein Link zu deiner Arbeit",
     "library-title-placeholder": "Modul Bewegungslehre",
     "task-day-placeholder": "Tag wählen",
