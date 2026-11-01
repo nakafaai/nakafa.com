@@ -4,7 +4,7 @@ import { ClassSubject } from "@repo/backend/confect/classroom/class";
 import { ReportHash } from "@repo/backend/confect/records/hash";
 import { GradeValue } from "@repo/backend/confect/records/scheme";
 import { Nisn } from "@repo/backend/confect/roster/schema";
-import { PersonName } from "@repo/backend/confect/tenancy/schema";
+import { ListedPerson, PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
 /**
@@ -84,7 +84,7 @@ export const ReportAction = Schema.Literals([
 export const ReportLine = Schema.Struct({
   can: Schema.Array(ReportAction),
   report: Schema.NullOr(ReportView),
-  student: Schema.Struct({ id: Id("tenantPeople"), name: PersonName }),
+  student: ListedPerson,
 });
 
 /**

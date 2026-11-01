@@ -126,7 +126,7 @@ describe("records/reports", () => {
           {
             can: ["report.write"],
             report: null,
-            student: { id: student, name: "Student" },
+            student: expect.objectContaining({ id: student, name: "Student" }),
           },
         ]);
         const draft = yield* writeNote(fixture, cohortId, student, "Rajin.");

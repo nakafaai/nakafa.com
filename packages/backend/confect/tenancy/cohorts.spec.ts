@@ -40,6 +40,7 @@ const CohortOverview = Schema.Struct({
 
 /** One Person placed in a cohort, as the cohort's members list shows them, with their school login. */
 const PlacedPersonView = Schema.Struct({
+  email: Schema.NullOr(Schema.String),
   id: Id("tenantPeople"),
   login: Schema.NullOr(Schema.String),
   name: PersonName,

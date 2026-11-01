@@ -22,6 +22,7 @@ import {
 } from "@repo/backend/confect/guardians/schema";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { rosterEntryOf } from "@repo/backend/confect/roster/entry";
+import { listedPersonOf } from "@repo/backend/confect/tenancy/listed";
 import type { Email } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Clock, Effect, Match, Option, Struct } from "effect";
 
@@ -129,7 +130,7 @@ export const childViewOf = Effect.fn("guardians.link.child")(function* (
     linkId: link._id,
     staffCheck: Option.isNone(entry),
     status: linkStatusOf(link, now),
-    student: { id: student._id, name: student.name },
+    student: yield* listedPersonOf(student),
   };
   return view;
 });

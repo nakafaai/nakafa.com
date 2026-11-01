@@ -151,7 +151,8 @@
     "mismatches": "Failed NISN checks",
     "child": "Child",
     "child-detail": "Child",
-    "guardian-email": "Parent email"
+    "guardian-email": "Parent email",
+    "email": "Email"
   },
   "SchoolRoster": {
     "import": "Import",
@@ -1667,7 +1668,8 @@
     "own-band": "Band",
     "own-band-none": "No band",
     "own-empty": "No grade is released yet.",
-    "own-empty-description": "Each grade shows here once its teacher releases it."
+    "own-empty-description": "Each grade shows here once its teacher releases it.",
+    "email": "Email"
   },
   "SchoolReports": {
     "title": "Report cards",
@@ -1710,7 +1712,8 @@
     "own-search": "Find a class group",
     "own-empty": "No report card is locked yet.",
     "own-empty-description": "Your report card shows here once the principal approves it.",
-    "unit": "Unit"
+    "unit": "Unit",
+    "email": "Email"
   },
   "SchoolGraduation": {
     "title": "Graduation",
@@ -1762,7 +1765,8 @@
     "nip-description": "Optional, for a head who is a civil servant.",
     "save-decision": "Save decision",
     "issue": "Issue letters",
-    "export-readiness": "Export for e-Ijazah"
+    "export-readiness": "Export for e-Ijazah",
+    "email": "Email"
   },
   "SchoolStart": {
     "metadata-title": "Open your school",

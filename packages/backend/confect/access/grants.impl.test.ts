@@ -29,7 +29,10 @@ describe("access/grants list", () => {
         });
         expect(answer.page).toContainEqual({
           id: fixture.people.teacher.grantId,
-          person: { id: fixture.people.teacher.personId, name: "Teacher" },
+          person: expect.objectContaining({
+            id: fixture.people.teacher.personId,
+            name: "Teacher",
+          }),
           revocable: true,
           role: { key: "teacher", kind: "builtin" },
           scope: { kind: "unit", unitId: fixture.units.smp },

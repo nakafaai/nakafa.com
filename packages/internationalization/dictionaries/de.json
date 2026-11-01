@@ -151,7 +151,8 @@
     "mismatches": "Fehlgeschlagene NISN-Prüfungen",
     "child": "Kind",
     "child-detail": "Kind",
-    "guardian-email": "E-Mail der Eltern"
+    "guardian-email": "E-Mail der Eltern",
+    "email": "E-Mail"
   },
   "SchoolRoster": {
     "import": "Importieren",
@@ -1667,7 +1668,8 @@
     "own-band": "Stufe",
     "own-band-none": "Ohne Stufe",
     "own-empty": "Noch keine Note freigegeben.",
-    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
+    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt.",
+    "email": "E-Mail"
   },
   "SchoolReports": {
     "title": "Zeugnisse",
@@ -1710,7 +1712,8 @@
     "own-search": "Klasse suchen",
     "own-empty": "Noch kein Zeugnis abgeschlossen.",
     "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt.",
-    "unit": "Einheit"
+    "unit": "Einheit",
+    "email": "E-Mail"
   },
   "SchoolGraduation": {
     "title": "Abschluss",
@@ -1762,7 +1765,8 @@
     "nip-description": "Optional, für eine verbeamtete Schulleitung.",
     "save-decision": "Beschluss speichern",
     "issue": "SKL ausstellen",
-    "export-readiness": "Für e-Ijazah exportieren"
+    "export-readiness": "Für e-Ijazah exportieren",
+    "email": "E-Mail"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",

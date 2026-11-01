@@ -21,6 +21,7 @@ import {
 import spec from "@repo/backend/confect/records/reports.spec";
 import { Cohort } from "@repo/backend/confect/tenancy/access";
 import { cohortAuthority } from "@repo/backend/confect/tenancy/authority";
+import { listedPersonOf } from "@repo/backend/confect/tenancy/listed";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 
 /** The most units, and the most class groups of one period, the report pages list. */
@@ -127,7 +128,7 @@ export const sheet = FunctionImpl.make(
               action === "report.write" ? writes : Arr.contains(allowed, action)
             ),
             report: Option.getOrNull(Option.map(report, reportView)),
-            student: { id: person._id, name: person.name },
+            student: yield* listedPersonOf(person),
           };
           return line;
         }),

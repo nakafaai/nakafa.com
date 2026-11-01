@@ -109,7 +109,10 @@ describe("records/graduations", () => {
             hasNisn: false,
             letter: null,
             missing: ["npsn", "decision", "nisn"],
-            student: { id: fixture.people.student.personId, name: "Student" },
+student: expect.objectContaining({
+              id: fixture.people.student.personId,
+              name: "Student",
+            }),
             transcript: {
               average: 85.5,
               subjects: [
@@ -371,7 +374,10 @@ describe("records/graduations", () => {
             letter: null,
             missing: ["npsn", "decision", "nisn", "report"],
             nisn: null,
-            student: { id: fixture.people.student.personId, name: "Student" },
+student: expect.objectContaining({
+              id: fixture.people.student.personId,
+              name: "Student",
+            }),
             transcript: null,
           },
         ]);

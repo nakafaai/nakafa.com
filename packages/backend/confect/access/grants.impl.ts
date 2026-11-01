@@ -20,6 +20,7 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Person } from "@repo/backend/confect/tenancy/access";
 import { personAccess } from "@repo/backend/confect/tenancy/authority";
+import { listedPersonOf } from "@repo/backend/confect/tenancy/listed";
 import { Effect, Layer, Number as Num, Struct } from "effect";
 
 /** The largest page one request reads. */
@@ -58,9 +59,10 @@ const list = FunctionImpl.make(
           .get(grant.personId)
           .pipe(
             Effect.orDie,
+            Effect.flatMap(listedPersonOf),
             Effect.map((person) => ({
               id: grant._id,
-              person: { id: person._id, name: person.name },
+              person,
               revocable: leavesOwner(grant, owners),
               role: grant.role,
               scope: grant.scope,
