@@ -33,6 +33,7 @@ describe("classroom/classes create", () => {
           .query(channels.list, { ...firstPage, classId: made.id, slug: nf });
         expect(listed.page).toEqual([
           {
+            archived: false,
             id: expect.any(String),
             kind: "general",
             last: null,

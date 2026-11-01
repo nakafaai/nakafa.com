@@ -19,9 +19,10 @@ import { useTenant } from "@/components/tenant/context";
 import { Link } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
-/** The tab of a view: a chat and a discussion stand under the forum, and a task under the tasks. */
+/** The tab of a view: a chat and a discussion stand under the forum, a folder under the library, and a task under the tasks. */
 const tabOfView = Match.type<(typeof ClassView.Type)["_tag"]>().pipe(
   Match.whenOr("channel", "discussion", () => "forum"),
+  Match.when("folder", () => "library"),
   Match.when("task", () => "tasks"),
   Match.orElse((view) => view)
 );

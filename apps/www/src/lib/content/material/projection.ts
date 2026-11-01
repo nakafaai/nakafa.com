@@ -2,7 +2,6 @@ import type { Ref } from "@confect/core";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { toAnchorSlug } from "@repo/utilities/slug";
 
 import { Array as Arr, Effect } from "effect";
@@ -31,41 +30,15 @@ function leadsDownTo(ancestors: readonly ContextRoute[], parent: ContextRoute) {
   );
 }
 
-/** Verifies the public query result before it can affect learner navigation. */
+/** Verifies one place of the public query before it can affect learner navigation. */
 export const decodePublishedMaterialContext = Effect.fn(
   "NakafaMaterial.decodePublishedContext"
 )(function* (
   locale: Locale,
   material: PublishedMaterialIdentity,
-  context: MaterialContextIdentity,
-  result: Ref.Returns<typeof contentRelease.program.context>
+  result: Ref.Returns<typeof contentRelease.program.placements>[number]
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  if (!result.managed) {
-    return yield* new PublishedProjectionError({
-      appLocale,
-      publicPath: material.publicPath,
-    });
-  }
-  if (
-    result.groupJson === null &&
-    result.mappingJson === null &&
-    result.parentJson === null &&
-    result.resolvedCanonicalPath === null
-  ) {
-    return null;
-  }
-  if (
-    result.groupJson === null ||
-    result.mappingJson === null ||
-    result.parentJson === null ||
-    result.resolvedCanonicalPath === null
-  ) {
-    return yield* new PublishedProjectionError({
-      appLocale,
-      publicPath: material.publicPath,
-    });
-  }
   const [ancestors, group, mapping, parent] = yield* Effect.all([
     Effect.forEach(result.ancestorJson, (row) =>
       decodeCurriculumJson(row, locale, "materials")
@@ -74,6 +47,7 @@ export const decodePublishedMaterialContext = Effect.fn(
     decodeCurriculumJson(result.mappingJson, locale, material.publicPath),
     decodeCurriculumJson(result.parentJson, locale, "materials"),
   ]);
+  const context = { nodeKey: group.nodeKey, programKey: group.programKey };
   if (
     !leadsDownTo(ancestors, parent) ||
     Arr.some(
@@ -83,8 +57,6 @@ export const decodePublishedMaterialContext = Effect.fn(
         ancestor.programKey !== context.programKey
     ) ||
     group.appLocale !== appLocale ||
-    group.nodeKey !== context.nodeKey ||
-    group.programKey !== context.programKey ||
     group.parentPath !== parent.publicPath ||
     mapping.appLocale !== appLocale ||
     mapping.materialContextNodeKey !== group.nodeKey ||

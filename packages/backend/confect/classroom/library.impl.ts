@@ -32,6 +32,7 @@ import {
   LIBRARY_BYTE_LIMIT,
 } from "@repo/backend/confect/classroom/library/file";
 import { libraryField } from "@repo/backend/confect/classroom/library/item";
+import { itemPlace } from "@repo/backend/confect/classroom/library/place";
 import { libraryViews } from "@repo/backend/confect/classroom/library/views";
 import spec from "@repo/backend/confect/classroom/library.spec";
 import { ConnectorOff } from "@repo/backend/confect/connectors/errors";
@@ -61,16 +62,21 @@ import {
 const storageIdSchema = Id("_storage");
 type StorageId = typeof storageIdSchema.Type;
 
-/** One page of the class library, the newest item first. */
+/** One page of a folder of the class library, or of the items in none, the newest item first. */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("classroom.library.list")(function* ({ paginationOpts }) {
+  Effect.fn("classroom.library.list")(function* ({ folderId, paginationOpts }) {
     const row = yield* Class;
     const found = yield* (yield* DatabaseReader)
       .table("classroomLibrary")
-      .index("by_classId", (query) => query.eq("classId", row._id), "desc")
+      .index(
+        "by_classId_and_folderId",
+        (query) =>
+          query.eq("classId", row._id).eq("folderId", folderId ?? undefined),
+        "desc"
+      )
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
     return Struct.assign(found, { page: yield* libraryViews(found.page) });
@@ -103,6 +109,7 @@ const addLink = FunctionImpl.make(
   Effect.fn("classroom.library.addLink")(function* ({
     address,
     clientKey,
+    folderId,
     title,
   }) {
     const { person } = yield* Member;
@@ -117,6 +124,7 @@ const addLink = FunctionImpl.make(
       .table("classroomLibrary")
       .insert({
         ...fields,
+        ...(yield* itemPlace(row._id, folderId)),
         authorId: person._id,
         createdAt: yield* Clock.currentTimeMillis,
         kind: "link",
@@ -199,7 +207,7 @@ const register = FunctionImpl.make(
   spec,
   "register",
   Effect.fn("classroom.library.register")(
-    function* ({ classId, clientKey, slug, storageId, title }) {
+    function* ({ classId, clientKey, folderId, slug, storageId, title }) {
       yield* requireAuth();
       const { runQuery } = yield* QueryRunner;
       const { authorId } = yield* libraryAuthor(classId, slug);
@@ -230,6 +238,7 @@ const register = FunctionImpl.make(
               classId,
               clientKey,
               contentType,
+              folderId,
               storageId,
               title,
             });
@@ -253,7 +262,7 @@ const importDrive = FunctionImpl.make(
   spec,
   "importDrive",
   Effect.fn("classroom.library.importDrive")(
-    function* ({ classId, clientKey, fileId, slug, title }) {
+    function* ({ classId, clientKey, fileId, folderId, slug, title }) {
       const { appUser } = yield* requireAuth();
       const { authorId } = yield* libraryAuthor(classId, slug);
       const access = yield* ownDriveAccess(appUser._id);
@@ -288,6 +297,7 @@ const importDrive = FunctionImpl.make(
         classId,
         clientKey,
         contentType: contentType.value,
+        folderId,
         storageId,
         title,
       });
@@ -320,6 +330,7 @@ const commit = FunctionImpl.make(
       .table("classroomLibrary")
       .insert({
         ...fields,
+        ...(yield* itemPlace(row._id, args.folderId)),
         authorId: args.authorId,
         byteSize: args.byteSize,
         contentType: args.contentType,
