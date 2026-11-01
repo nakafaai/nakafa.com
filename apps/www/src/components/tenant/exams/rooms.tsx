@@ -9,6 +9,7 @@ import {
   Calendar03Icon,
   CheckmarkCircle02Icon,
   Clock01Icon,
+  PencilEdit02Icon,
   PlayIcon,
   SchoolIcon,
   UserGroupIcon,
@@ -16,6 +17,7 @@ import {
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -50,6 +52,7 @@ import {
   roomsOfGroup,
 } from "@/components/tenant/exams/filter";
 import { RoomMenu } from "@/components/tenant/exams/move";
+import { RoomSeats } from "@/components/tenant/exams/seats";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -203,7 +206,8 @@ function ExamRoomsContent({
             params={{ exam: examId, slug }}
             to="/school/$slug/exams/$exam/edit"
           >
-            {t("edit-action")}
+            <HugeIcons icon={PencilEdit02Icon} />
+            <span className="@max-sm/header:sr-only">{t("edit-action")}</span>
           </Link>
         ) : null}
       </SchoolHeader>
@@ -326,6 +330,9 @@ function RoomsTable({
                 title={t("rooms-state")}
               />
             </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              {t("rooms-seats")}
+            </TableHead>
             <TableHead className="px-2 sm:px-4" />
           </TableRow>
         </TableHeader>
@@ -404,6 +411,11 @@ function RoomItem({
           label={t(`room-state-${room.state}`)}
           tone={ROOM_STATE_LOOKS[room.state].tone}
         />
+      </TableCell>
+      <TableCell className="px-2 text-center sm:px-4">
+        {room.state === "open" ? (
+          <RoomSeats sittingId={room.id} slug={slug} />
+        ) : null}
       </TableCell>
       <TableCell className="px-2 text-end sm:px-4">
         <RoomMenu examId={examId} room={room} slug={slug} />

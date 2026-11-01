@@ -12,13 +12,15 @@ import {
   questionView,
   templateLabels,
 } from "@repo/backend/confect/exams/question";
+import { templatePoints } from "@repo/backend/confect/exams/scoring";
 import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Clock, Effect } from "effect";
 
 /**
  * Gives one question another template at the revision the editor saw: its answers take the
  * template's bounds, or the options it fixes labelled with `labels`, and its key stays only when it
- * still fits (`asTemplate`), and the revision rises by one. A revision that is no longer current is
+ * still fits (`asTemplate`), its points rise to what the template shares (`templatePoints`), and the
+ * revision rises by one. A revision that is no longer current is
  * refused as `RevisionStale`, and labels that do not name each fixed option once, or that a
  * template without fixed options is given, are refused as `AnswersDoNotFit`; neither writes
  * anything, and the question's own template saves nothing.
@@ -54,6 +56,7 @@ export const switchTemplate = Effect.fn("exams.question.template")(function* (
   const fields = {
     answers,
     key,
+    points: templatePoints(question.points, edit.template),
     revision,
     template: edit.template,
     updatedAt: at,

@@ -32,7 +32,7 @@ for (const viewport of [
     const changes = await Effect.runPromise(trackChanges(page, []));
     await page.goto(address("/classes/fisika-x-1/forum"));
 
-    // The forum lists its channels, and the general channel opens its messages.
+    // The forum opens on its list of chats, and the general chat opens its messages.
     const general = page.getByRole("link", { name: "General", exact: true });
     await waitUntilTakenOver(general);
     await general.click();
@@ -134,7 +134,7 @@ test("every class page draws its content in the browser, without an error state 
   // its rows, or its empty state, in one card that fills the body under the header and the tabs.
   const pages = [
     { card: false, path: "/classes/fisika-x-1", shows: "Fisika X-1" },
-    { card: true, path: "/classes/fisika-x-1/forum", shows: "General" },
+    { card: false, path: "/classes/fisika-x-1/forum", shows: "General" },
     { card: false, path: channel, shows: "General" },
     { card: false, path: "/classes/fisika-x-1/forum/1", shows: "General" },
     { card: true, path: "/classes/fisika-x-1/library", shows: "Fisika X-1" },
@@ -145,8 +145,8 @@ test("every class page draws its content in the browser, without an error state 
     expect(served?.status(), path).toBe(200);
     await waitUntilTakenOver(
       page
-        .getByRole("navigation", { name: "Class" })
-        .getByRole("link", { name: "Forum" })
+        .getByRole("tablist", { name: "Class" })
+        .getByRole("tab", { name: "Forum" })
     );
     await expect(
       page.getByRole("main").getByText(shows, { exact: true }).first(),
@@ -166,11 +166,11 @@ test("every class page draws its content in the browser, without an error state 
       expect(placed.bottom, path).toBeGreaterThanOrEqual(placed.viewport - 17);
     }
   }
-  // The channel list's search sits in the header and keeps the channels whose name holds its text.
+  // The list of chats keeps its search above its rows, and it keeps the chats whose name holds its text.
   await page.goto(address("/classes/fisika-x-1/forum"));
   const search = page
-    .locator('[data-slot="page-header"]')
-    .getByRole("textbox", { name: "Search channels" });
+    .getByRole("complementary", { name: "Chats" })
+    .getByRole("textbox", { name: "Search chats" });
   await waitUntilTakenOver(search);
   await search.fill("zzz");
   await expect(

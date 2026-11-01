@@ -3,11 +3,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentResult } from "@repo/backend/confect/exams/results/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import {
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { Array as Arr, Number as Num } from "effect";
 import { useTranslations } from "use-intl";
 import { useSessionSettled } from "@/components/exams/results/context";
@@ -77,10 +73,10 @@ export function StudentResults({
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <CardSection>
-          <CardHeader>
-            <CardTitle>{t("student-finished")}</CardTitle>
-          </CardHeader>
+        <CardSection
+          description={t("student-finished-description")}
+          title={t("student-finished")}
+        >
           <CardContent>{failure}</CardContent>
           <CardSectionFooter hint={t("student-results-footer")} />
         </CardSection>
@@ -115,10 +111,10 @@ function StudentResultsContent({
   }
   if (!QueryResult.isSuccess(result) || result.value === null) {
     return (
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("student-finished")}</CardTitle>
-        </CardHeader>
+      <CardSection
+        description={t("student-finished-description")}
+        title={t("student-finished")}
+      >
         <CardSectionFooter hint={t("student-results-footer")} />
       </CardSection>
     );
@@ -126,10 +122,10 @@ function StudentResultsContent({
   const { points, questions } = result.value;
   const total = Num.sumAll(Arr.map(questions, (question) => question.points));
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("student-finished")}</CardTitle>
-      </CardHeader>
+    <CardSection
+      description={t("student-results-description")}
+      title={t("student-finished")}
+    >
       <CardContent className="grid gap-3 text-sm">
         <p className="text-2xl font-semibold tabular-nums">
           {t("student-score", { points, total })}

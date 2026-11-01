@@ -3,18 +3,25 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import {
+  ChannelArchived,
   DiscussionsClosed,
   MentionRefused,
+  MessageEmpty,
+  MessageHidden,
+  UploadGone,
 } from "@repo/backend/confect/classroom/forum/errors";
 import { Mentions } from "@repo/backend/confect/classroom/forum/mention";
 import {
   ClientKey,
   DiscussionNumber,
+  MessageBody,
   MessageText,
+  MessageUploads,
   MessageView,
 } from "@repo/backend/confect/classroom/forum/message";
 import {
   DiscussionTitle,
+  ThreadRow,
   ThreadView,
 } from "@repo/backend/confect/classroom/forum/thread";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
@@ -25,14 +32,22 @@ import { Schema } from "effect";
 /**
  * The numbered discussions of a class's forum (ADR 0025). A member of the class
  * or a subject teacher opens one in a channel with a title and a first message,
- * and replies in it; a student opens one only while the school lets students
- * open discussions. Whoever opened a discussion, or a subject teacher, renames
- * it. Whoever reads the forum reads a discussion by its number and its replies,
- * newest first. A discussion of another class is refused as a missing object.
+ * and replies in it, or starts one from any message of a channel, as a chat's
+ * thread; a student opens one only while the school lets students open discussions. Whoever opened a discussion, or a subject teacher, renames
+ * it. Whoever reads the forum lists the class's discussions, the newest first,
+ * and reads a discussion by its number and its replies, newest first. A discussion of another class is refused as a missing object.
  */
 export default GroupSpec.make()
   .middleware(Session)
   .middleware(RequireMember)
+  .addFunction(
+    FunctionSpec.publicPaginatedQuery({
+      name: "list",
+      args: () => ({ classId: Id("classes"), slug: TenantSlug }),
+      item: () => ThreadRow,
+      error: () => AccessDenied,
+    }).middleware(ClassAccess, { action: "forum.read", arg: "classId" })
+  )
   .addFunction(
     FunctionSpec.publicMutation({
       name: "open",
@@ -47,7 +62,30 @@ export default GroupSpec.make()
       }),
       returns: () => ThreadView,
       error: () =>
-        Schema.Union([AccessDenied, DiscussionsClosed, MentionRefused]),
+        Schema.Union([
+          AccessDenied,
+          ChannelArchived,
+          DiscussionsClosed,
+          MentionRefused,
+        ]),
+    }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "start",
+      args: () => ({
+        classId: Id("classes"),
+        messageId: Id("classroomMessages"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Struct({ number: DiscussionNumber }),
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          ChannelArchived,
+          DiscussionsClosed,
+          MessageHidden,
+        ]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   )
   .addFunction(
@@ -91,14 +129,22 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "reply",
       args: () => ({
+        attachments: MessageUploads,
         classId: Id("classes"),
         clientKey: ClientKey,
         mentions: Mentions,
         number: DiscussionNumber,
         slug: TenantSlug,
-        text: MessageText,
+        text: MessageBody,
       }),
       returns: () => MessageView,
-      error: () => Schema.Union([AccessDenied, MentionRefused]),
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          ChannelArchived,
+          MentionRefused,
+          MessageEmpty,
+          UploadGone,
+        ]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   );

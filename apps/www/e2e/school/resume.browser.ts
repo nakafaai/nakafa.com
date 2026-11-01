@@ -157,6 +157,48 @@ test("an entry that the server failed goes again by itself, so the student reach
   await studentContext.close();
 });
 
+test("a Finish that the page closed on goes again on the next visit, so the server holds what the screen said", async ({
+  baseURL,
+  browser,
+}) => {
+  const { changes, student, studentContext } = await studentAtEntry(
+    baseURL,
+    browser,
+    "finish"
+  );
+  await student.getByRole("button", { name: "Enter sitting" }).click();
+  const option = student
+    .getByRole("article", { name: "Question 1" })
+    .getByRole("radio")
+    .first();
+  await expect(option).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  // The call never reaches the server, as on a phone that drops the network, and the screen says finished at once.
+  changes.loseNext("exams/sittings:finish");
+  await student.getByRole("button", { exact: true, name: "Finish" }).click();
+  await student
+    .getByRole("dialog")
+    .getByRole("button", { exact: true, name: "Finish" })
+    .click();
+  const finished = student.getByText("You finished this exam.");
+  await expect(finished).toBeVisible();
+
+  // The page goes, and the next visit sends the Finish that the browser kept.
+  await student.reload();
+  await expect(finished).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect
+    .poll(() => changes.argumentsOf("exams/sittings:finish").length, {
+      timeout: readinessTimeoutMilliseconds,
+    })
+    .toBe(2);
+
+  // The server holds it now: another visit reads the finish, and no paper comes back.
+  await student.reload();
+  await expect(finished).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(student.getByRole("article")).toHaveCount(0);
+  await studentContext.close();
+});
+
 test("a server failure of a paper's read keeps the student in the paper's frame, and the paper comes back by itself", async ({
   baseURL,
   browser,
@@ -193,4 +235,50 @@ test("a server failure of a paper's read keeps the student in the paper's frame,
       .first()
   ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
   await studentContext.close();
+});
+
+test("a server failure of one read keeps a teacher in the school, and the page comes back by itself", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `learner-${school.slug}@acceptance.example.test`;
+  const learnerContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: learnerContext,
+      slug: school.slug,
+    })
+  );
+  await learnerContext.close();
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+
+  const teacher = await ownerContext.newPage();
+  const changes = await Effect.runPromise(trackChanges(teacher, []));
+  await teacher.goto(address(`/exams/${sitting.examId}/edit`));
+  const paper = teacher.getByRole("textbox", { name: "Question 1 text" });
+  await expect(paper).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  // The exam's read fails with a failure that names no refusal, as a function that ran out of time does, so the page
+  // leaves and the school's shell stays around it.
+  changes.failQuery("exams/exams:open", "ServerBroke");
+  await teacher.reload();
+  await expect(
+    teacher.getByRole("link", { exact: true, name: "Exams" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(paper).toHaveCount(0);
+  await expect(
+    teacher.getByRole("heading", { name: "Something broke" })
+  ).toHaveCount(0);
+
+  // The server answers again, and the page is back with no press.
+  changes.recoverQuery();
+  await expect(paper).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await ownerContext.close();
 });

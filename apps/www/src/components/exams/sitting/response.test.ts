@@ -1,13 +1,17 @@
 import { describe, expect, it } from "@effect/vitest";
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
+import { reasonAnswers } from "@repo/backend/confect/exams/reason";
 import { Option, Schema } from "effect";
 import {
   choiceOf,
+  heldBy,
   markedWith,
   pairedWith,
   pairingOf,
+  reasonOf,
   tableOf,
   toggleOption,
+  withHeld,
   writtenOf,
 } from "@/components/exams/sitting/response";
 
@@ -61,6 +65,38 @@ describe("choiceOf", () => {
     const found = choiceOf([choice(1), choice(1)]);
 
     expect(Option.isNone(found)).toBe(true);
+  });
+});
+
+describe("reasonOf, heldBy and withHeld", () => {
+  const [answer, reason] = reasonAnswers();
+
+  it("reads an answer and its reason from two choices alone", () => {
+    expect(Option.isSome(reasonOf([answer, reason]))).toBe(true);
+    expect(Option.isNone(reasonOf([answer]))).toBe(true);
+    expect(Option.isNone(reasonOf([answer, reason, reason]))).toBe(true);
+    expect(
+      Option.isNone(
+        reasonOf([answer, { id: "text", kind: "textEntry", label: "Answer" }])
+      )
+    ).toBe(true);
+  });
+
+  it("keeps each choice's option apart in the one response, so a new pick replaces only its own", () => {
+    if (answer.kind !== "choice" || reason.kind !== "choice") {
+      throw new Error("reasonAnswers holds two choices");
+    }
+    const response = ["option-2", "reason-1"];
+
+    expect(heldBy(reason, response)).toEqual(["reason-1"]);
+    expect(withHeld(reason, ["reason-3"], response)).toEqual([
+      "option-2",
+      "reason-3",
+    ]);
+    expect(withHeld(answer, ["option-1"], ["reason-1"])).toEqual([
+      "reason-1",
+      "option-1",
+    ]);
   });
 });
 

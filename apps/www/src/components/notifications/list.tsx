@@ -8,15 +8,18 @@ import {
 } from "@/components/notifications/inbox";
 import { PushOffer } from "@/components/notifications/push";
 import { NotificationRow } from "@/components/notifications/row";
+import { useInboxTopic } from "@/components/notifications/tabs";
+import { inTopic } from "@/components/notifications/topic";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { FeedEmpty, FeedNotice } from "@/components/user/feed";
 
 /**
- * The rows of the inbox, newest first. The server's first page is on the screen before the
- * browser connects, and the next page loads as the end of the list comes into view. A failed
- * read shows above the rows the inbox holds and keeps them, and the rows stay inert until the
- * live inbox takes a change, so every change shows at once.
+ * The rows of the inbox, newest first, in one card whose lines run edge to edge, of the tab the header's second row
+ * them. The server's first page is on the screen before the browser connects, and the next page loads as the end of
+ * the list comes into view, under a topic too, so a topic with few rows keeps reading. A failed read shows above the
+ * rows the inbox holds and keeps them, and the rows stay inert until the live inbox takes a change, so every change
+ * shows at once.
  */
 export function NotificationsList({
   first,
@@ -28,20 +31,34 @@ export function NotificationsList({
 }) {
   const t = useTranslations("Notifications");
   const { empty, failed, loadMore, ready, rows } = useInbox(first, slug);
+  const topic = useInboxTopic();
+  const shown = Arr.filter(rows, (row) => inTopic(row.changeType, topic));
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-4">
       {failed && (
         <FeedNotice>
           <DataFailure onRetry={reloadPage} />
         </FeedNotice>
       )}
       {empty && <FeedEmpty>{t("empty")}</FeedEmpty>}
-      <div className="flex flex-col" inert={!ready}>
-        {Arr.map(rows, (notification) => (
-          <NotificationRow key={notification.id} notification={notification} />
-        ))}
-        {loadMore && <Intersection onIntersect={loadMore} />}
-      </div>
+      {!empty && Arr.isReadonlyArrayEmpty(shown) && (
+        <FeedEmpty>{t("topic-empty")}</FeedEmpty>
+      )}
+      {Arr.isReadonlyArrayNonEmpty(shown) ? (
+        <div
+          className="bg-card ring-foreground/10 overflow-hidden rounded-xl shadow-xs ring-1 *:px-4 *:last:border-b-0"
+          inert={!ready}
+        >
+          {Arr.map(shown, (notification) => (
+            <NotificationRow
+              key={notification.id}
+              notification={notification}
+            />
+          ))}
+        </div>
+      ) : null}
+      {loadMore && <Intersection onIntersect={loadMore} />}
       <PushOffer />
     </div>
   );

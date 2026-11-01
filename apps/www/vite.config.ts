@@ -12,11 +12,7 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
 import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
-import {
-  browserAssets,
-  browserEnvironment,
-  prepareBrowserShell,
-} from "#www/bundle.config";
+import { browserAssets, prepareBrowserShell } from "#www/bundle.config";
 import {
   deferStaticPageScripts,
   notFoundPages,
@@ -396,7 +392,6 @@ export default defineConfig(async ({ command, isPreview }) => {
   return {
     build: browserAssets,
     environments: {
-      client: browserEnvironment,
       // Workers Logs maps stack traces without the embedded sources, and the
       // upload refuses more than 60 MiB of maps: the sources were 47 of 65 MiB.
       [workerSettings.viteEnvironments.entry]: {

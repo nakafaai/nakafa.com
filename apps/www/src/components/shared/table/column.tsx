@@ -51,6 +51,11 @@ export function ColumnFilter({
   const choose = useTableFilters((state) => state.choose);
   const filtered = Arr.isReadonlyArrayNonEmpty(chosen);
 
+  // A column that holds no value yet has nothing to filter by, so its head is its name and never an empty menu.
+  if (Arr.isReadonlyArrayEmpty(options) && !filtered) {
+    return title;
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger

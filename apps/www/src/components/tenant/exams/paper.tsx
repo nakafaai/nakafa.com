@@ -1,33 +1,20 @@
-import { Alert02Icon, ListPlusIcon } from "@hugeicons/core-free-icons";
-import {
-  letterScript,
-  optionLetter,
-} from "@repo/backend/confect/exams/letters";
+import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { questionGap } from "@repo/backend/confect/exams/parts";
 import {
-  CHOICE_OPTIONS_MAX,
-  CHOICE_OPTIONS_MIN,
-  fixedOptions,
   type QuestionTemplate,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { statusIconVariants } from "@repo/design-system/lib/status";
 import { Array as Arr, Match, Option } from "effect";
 import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { usePaperText } from "@/components/player/held";
 import { PanePortal } from "@/components/shared/panes";
-import {
-  choiceOf,
-  keyWithoutOption,
-  type OptionLabel,
-  withOptionAdded,
-  withOptionLabel,
-  withOptionRemoved,
-} from "@/components/tenant/exams/answer";
+import { isChoice } from "@/components/tenant/exams/answer";
+import { ChoiceSheet } from "@/components/tenant/exams/choice";
 import { MatchColumn } from "@/components/tenant/exams/columns";
 import { PageActions, QuestionGrip } from "@/components/tenant/exams/controls";
 import {
@@ -38,13 +25,15 @@ import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
 import { TableSheet } from "@/components/tenant/exams/matrix";
+import { ExamPaperMedia } from "@/components/tenant/exams/media";
 import type { Question } from "@/components/tenant/exams/optimistic";
-import { OptionRow } from "@/components/tenant/exams/option";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   PaperSketch,
   PreviewProse,
+  ReadingSketch,
   usePageDocument,
+  usePageRead,
 } from "@/components/tenant/exams/preview";
 import {
   useExam,
@@ -56,9 +45,8 @@ import { ExamDocument } from "@/components/tenant/exams/rich";
 import { activeQuestion } from "@/components/tenant/exams/selection";
 import {
   PaperField,
-  PaperOption,
-  PaperOptions,
   PaperPairs,
+  PaperPrompt,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
 import { tableOf } from "@/components/tenant/exams/table";
@@ -190,7 +178,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
   const saved = !(awaiting || isPlaceholderId(question.prompt));
   const number = index + 1;
   const page = useRef<HTMLElement>(null);
-  const { mounted, reached } = usePageWindow(page, canvas);
+  const { measured, mounted, reached } = usePageWindow(page, canvas);
   const editing = useQuestionEditing(question);
   // A question the teacher just added or copied, which the server has not saved yet, comes into view.
   useEffect(() => {
@@ -213,13 +201,15 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
   const read = reached && isSettled;
   // The notes are drawn only in the chosen page's panel, so a live page that is not chosen reads none.
   const readNotes = read && (chosen || !live);
-  const prompt = usePageDocument({
+  const { answered, doc: prompt } = usePageRead({
     documentId: question.prompt,
     editing: live,
     open: chosen,
     read,
     saved,
   });
+  // A page far from the view moves nothing on screen when its text arrives, so the canvas waits only for the near ones.
+  usePaperText(question.id, !saved || answered || (measured && !reached));
   const rubric = usePageDocument({
     documentId: question.rubric,
     editing: live,
@@ -253,21 +243,28 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
         <Suspense
           fallback={
             <QuestionPaper selected={chosen}>
-              <PreviewProse article doc={prompt} size="page" />
+              <PaperPrompt>
+                <ExamPaperMedia question={question} />
+                {question.reading === null ? null : (
+                  <ReadingSketch documentId={question.reading} read={read} />
+                )}
+                <PreviewProse article doc={prompt} size="paper" />
+              </PaperPrompt>
               <PaperSketch question={question} withControls />
             </QuestionPaper>
           }
         >
-          <LivePaper
-            chosen={chosen}
-            editing={editing}
-            number={number}
-            question={question}
-          />
+          <LivePaper editing={editing} number={number} question={question} />
         </Suspense>
       ) : (
         <QuestionPaper selected={chosen}>
-          <PreviewProse article doc={prompt} size="page" />
+          <PaperPrompt>
+            <ExamPaperMedia question={question} />
+            {question.reading === null ? null : (
+              <ReadingSketch documentId={question.reading} read={read} />
+            )}
+            <PreviewProse article doc={prompt} size="paper" />
+          </PaperPrompt>
           <PaperSketch question={question} withControls />
         </QuestionPaper>
       )}
@@ -293,84 +290,73 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
  * page moves nothing.
  */
 function LivePaper({
-  chosen,
   editing,
   number,
   question,
 }: {
-  chosen: boolean;
   editing: QuestionEditing;
   number: number;
   question: Question;
 }) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
+  const chosen = useExamSelection((state) =>
+    Option.exists(
+      activeQuestion(exam.questions, state.selected),
+      (active) => active.question.id === question.id
+    )
+  );
   // The prompt's editor opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone,
   // so the words the teacher typed stay on screen.
   const frozen = isLocked(exam);
   const locked = useExamLocked();
   const selection = useExamSelectionStore();
-  const { displayed, saveAnswers } = editing;
-  const choice = Option.getOrNull(choiceOf(displayed.answers));
-  // The options are named in the script of their labels: أ, ب, ج for a set written in Arabic.
-  const script = letterScript(
-    choice === null ? [] : Arr.map(choice.options, (option) => option.label)
-  );
+  const { displayed } = editing;
   const match = Option.getOrNull(matchOf(displayed.answers));
   const table = Option.getOrNull(tableOf(displayed.answers));
-  // The label the server holds for an option. Its editor starts from that label, and a label the server does not
-  // store goes back to it, so the editor never keeps text that is not saved. An option the server does not hold
-  // yet has the label the paper shows.
-  const savedLabel = (option: {
-    readonly id: string;
-    readonly label: OptionLabel;
-  }): OptionLabel =>
-    Option.match(choiceOf(question.answers), {
-      onNone: () => option.label,
-      onSome: (saved) =>
-        Option.match(
-          Arr.findFirst(saved.options, (item) => item.id === option.id),
-          {
-            onNone: () => option.label,
-            onSome: (item) => item.label,
-          }
-        ),
-    });
-
-  // A template that fixes its options keeps their number, so the teacher neither adds nor removes one.
-  const fixed = Option.isSome(fixedOptions(displayed.template));
-  const canAddOption =
-    choice !== null &&
-    choice.options.length < CHOICE_OPTIONS_MAX &&
-    !fixed &&
-    !locked;
 
   return (
     <QuestionPaper selected={chosen}>
-      <ExamText
-        documentId={question.prompt}
-        key={`${question.prompt}-${frozen}`}
-        onOpen={(editor: DocumentEditorInstance) => {
-          const { write, writing } = selection.getState();
-          if (writing !== question.id) {
-            return;
-          }
-          write(null);
-          // A teacher who went on to write somewhere else meanwhile keeps the caret there.
-          if (
-            document.activeElement?.closest(
-              "[contenteditable='true'], input, textarea"
-            ) === null
-          ) {
-            editor.commands.focus("end");
-          }
-        }}
-      >
-        <ExamDocument
-          label={t("question-text", { number })}
-          placeholder={t("prompt-placeholder")}
-        />
-      </ExamText>
+      <PaperPrompt>
+        <ExamPaperMedia question={question} />
+        {question.reading === null ? null : (
+          <ExamText
+            documentId={question.reading}
+            key={`${question.reading}-${frozen}`}
+          >
+            <ExamDocument
+              label={t("reading-text", { number })}
+              placeholder={t("reading-placeholder")}
+              size="paper"
+            />
+          </ExamText>
+        )}
+        <ExamText
+          documentId={question.prompt}
+          key={`${question.prompt}-${frozen}`}
+          onOpen={(editor: DocumentEditorInstance) => {
+            const { write, writing } = selection.getState();
+            if (writing !== question.id) {
+              return;
+            }
+            write(null);
+            // A teacher who went on to write somewhere else meanwhile keeps the caret there.
+            if (
+              document.activeElement?.closest(
+                "[contenteditable='true'], input, textarea"
+              ) === null
+            ) {
+              editor.commands.focus("end");
+            }
+          }}
+        >
+          <ExamDocument
+            label={t("question-text", { number })}
+            placeholder={t("prompt-placeholder")}
+            size="paper"
+          />
+        </ExamText>
+      </PaperPrompt>
       {match === null ? null : (
         <PaperPairs>
           <MatchColumn
@@ -403,70 +389,17 @@ function LivePaper({
           table={table}
         />
       )}
-      {choice === null ? null : (
-        <PaperOptions>
-          {Arr.map(choice.options, (option, index) => (
-            <OptionRow
-              key={option.id}
-              label={savedLabel(option)}
-              locked={locked}
-              onRemove={
-                choice.options.length > CHOICE_OPTIONS_MIN && !fixed
-                  ? () =>
-                      saveAnswers((draft) => ({
-                        ...draft,
-                        answers: withOptionRemoved(draft.answers, option.id),
-                        key: keyWithoutOption(draft.key, option.id),
-                      }))
-                  : null
-              }
-              onSave={(label: OptionLabel, unstored: () => void) =>
-                saveAnswers(
-                  (draft) => ({
-                    ...draft,
-                    answers: withOptionLabel(draft.answers, option.id, label),
-                  }),
-                  unstored
-                )
-              }
-              removeName={t("option-remove-of", {
-                letter: optionLetter(index, script),
-                number,
-              })}
-            >
-              <PaperOption multiple={choice.maxChoices !== 1}>
-                <ExamDocument
-                  label={t("option-of", {
-                    letter: optionLetter(index, script),
-                    number,
-                  })}
-                  placeholder={t("option-placeholder")}
-                  size="line"
-                />
-              </PaperOption>
-            </OptionRow>
-          ))}
-        </PaperOptions>
-      )}
+      {Arr.map(Arr.filter(displayed.answers, isChoice), (choice) => (
+        <ChoiceSheet
+          choice={choice}
+          chosen={chosen}
+          editing={editing}
+          key={choice.id}
+          number={number}
+          question={question}
+        />
+      ))}
       <PaperField answers={displayed.answers} />
-      {canAddOption ? (
-        <div className={chosen ? undefined : "invisible"}>
-          <Button
-            onClick={() =>
-              saveAnswers((draft) => ({
-                ...draft,
-                answers: withOptionAdded(draft.answers),
-              }))
-            }
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <HugeIcons aria-hidden="true" icon={ListPlusIcon} />
-            {t("option-add")}
-          </Button>
-        </div>
-      ) : null}
     </QuestionPaper>
   );
 }

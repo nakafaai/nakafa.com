@@ -2,7 +2,7 @@ import { Upload01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { DateTime, Effect, Result } from "effect";
+import { Effect, Result } from "effect";
 import { useRef, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -23,11 +23,11 @@ export type FileProblem = typeof SheetProblem.Type | "unreadable";
  * chooses a file, so it stays out of the page's first JavaScript, and the file never leaves
  * the device: only the rows the Admin applies reach the server (ADR 0015).
  */
-const readFile = (file: File, today: DateTime.Utc) =>
+const readFile = (file: File) =>
   Effect.tryPromise(async () => {
     const { readSheet } = await import("read-excel-file/browser");
     return readSheet(file);
-  }).pipe(Effect.map((rows) => readDapodikSheet(rows, today)));
+  }).pipe(Effect.map(readDapodikSheet));
 
 /**
  * Import: the hidden file chooser and its button, enabled from the first paint, since choosing a
@@ -47,9 +47,7 @@ export function RosterFileChoice({
 
   const choose = (file: File) =>
     startReading(async () => {
-      const read = await Effect.runPromise(
-        Effect.result(readFile(file, DateTime.nowUnsafe()))
-      );
+      const read = await Effect.runPromise(Effect.result(readFile(file)));
       if (Result.isFailure(read)) {
         onProblem("unreadable");
         return;

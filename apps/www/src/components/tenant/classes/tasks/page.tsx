@@ -96,6 +96,12 @@ function TaskDetails({ task }: { task: ClassTask }) {
         <dd>{task.points}</dd>
         <dt className="text-muted-foreground">{t("task-late")}</dt>
         <dd>{t(`task-late-${task.latePolicy}`)}</dd>
+        {task.targets === null ? null : (
+          <>
+            <dt className="text-muted-foreground">{t("task-reach")}</dt>
+            <dd>{t("task-reach-count", { count: task.targets.length })}</dd>
+          </>
+        )}
         <dt className="text-muted-foreground">{t("task-status")}</dt>
         <dd>
           <TaskStanding task={task} />

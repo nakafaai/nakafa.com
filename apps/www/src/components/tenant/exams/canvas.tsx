@@ -8,10 +8,12 @@ import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Option } from "effect";
 import { type RefObject, useEffect } from "react";
 import { useTranslations } from "use-intl";
+import { HeldPaper } from "@/components/player/held";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { useQuestionReorder } from "@/components/tenant/exams/drag";
 import { pageAt } from "@/components/tenant/exams/pages";
 import { ExamPage } from "@/components/tenant/exams/paper";
+import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   useEditorView,
   useExam,
@@ -222,30 +224,41 @@ export function ExamCanvas({
       viewportClassName="relative"
       viewportRef={canvas}
     >
-      <div
-        className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 md:px-6"
-        style={{ zoom: drawnPercent / 100 }}
-      >
-        {Arr.map(exam.questions, (question, index) => (
-          <ExamPage
-            canvas={canvas}
-            index={index}
-            key={question.id}
-            question={question}
-          />
-        ))}
-        {frozen ? null : (
-          <Button
-            className="w-full"
-            onClick={() => actions.addQuestion(null)}
-            type="button"
-            variant="outline"
-          >
-            <HugeIcons aria-hidden="true" icon={Add01Icon} />
-            {t("add-question")}
-          </Button>
+      <HeldPaper
+        keys={Arr.map(
+          Arr.filter(
+            exam.questions,
+            (question) => !isPlaceholderId(question.prompt)
+          ),
+          (question) => question.id
         )}
-      </div>
+        ready
+      >
+        <div
+          className="mx-auto flex w-full max-w-212 flex-col gap-8 px-4 py-6 md:px-6"
+          style={{ zoom: drawnPercent / 100 }}
+        >
+          {Arr.map(exam.questions, (question, index) => (
+            <ExamPage
+              canvas={canvas}
+              index={index}
+              key={question.id}
+              question={question}
+            />
+          ))}
+          {frozen ? null : (
+            <Button
+              className="w-full"
+              onClick={() => actions.addQuestion(null)}
+              type="button"
+              variant="outline"
+            >
+              <HugeIcons aria-hidden="true" icon={Add01Icon} />
+              {t("add-question")}
+            </Button>
+          )}
+        </div>
+      </HeldPaper>
     </ScrollArea>
   );
 }

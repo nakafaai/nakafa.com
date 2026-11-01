@@ -1,5 +1,6 @@
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
+import { NETWORK_RETRY_SCHEDULE } from "@repo/backend/client/network";
 import { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import {
   Data,
@@ -46,6 +47,26 @@ const OVERTAKEN_RETRIES = 8;
 /** A save that never reached the server, because a save queued before it was refused first. */
 export class SaveDropped extends Data.TaggedError("SaveDropped") {}
 
+/** Why the server does not hold a save: it refused it, or it never said no. */
+const UnstoredReason = Schema.Literals(["refused", "unanswered"]);
+
+/** What the page does with a save the server does not hold, given why. */
+export type Unstored = (reason: typeof UnstoredReason.Type) => void;
+
+/** Whether a save's call never finished, as a call the network lost or a function that ran out of time. */
+const isUnanswered = (error: unknown) =>
+  Predicate.isTagged(error, "ExamCallFailed");
+
+/**
+ * Whether the server never said no to a save: its call went unanswered, it stayed behind another editor, or it
+ * waited behind a save that failed. Its words may be stored as they stand, so they stay with the teacher, unlike
+ * a save the server refused, whose words it will never store.
+ */
+export const isUnrefused = (error: unknown) =>
+  isUnanswered(error) ||
+  Predicate.isTagged(error, "RevisionStale") ||
+  Predicate.isTagged(error, "SaveDropped");
+
 /**
  * The draft a save starts from: the draft the server answered this writer last, or the draft the render
  * holds when no save of this writer has been answered. The render wins only with a higher revision, which
@@ -67,7 +88,8 @@ const startingDraft = (
  * that draft. A save that the server answers becomes the answered draft, so two saves started together both
  * land, one after the other. A save another editor overtook is refused with nothing written, so it tries again
  * on the render once that holds the other editor's save, and two teachers writing in one question both land. A
- * save that fails clears the answered draft, and every save queued before the failure is dropped unsent. The render can
+ * call that goes unanswered goes again before it counts as a failure, since a function that ran out of time wrote
+ * nothing, and the revision refuses it if it did. A save that fails clears the answered draft, and every save queued before the failure is dropped unsent. The render can
  * still show the failed save's optimistic answers until React renders the rollback, so a save built on that
  * render could land the very change the server refused. A save queued after the failure starts from the render,
  * which may still lag the rollback for a moment, since the drop covers only the saves queued before the failure.
@@ -103,7 +125,13 @@ export const makeQuestionWriter = <E>(
             const saved = yield* send(
               { ...edit(base), revision: base.revision },
               base
-            ).pipe(Effect.tapError(() => Ref.set(answered, Option.none())));
+            ).pipe(
+              Effect.retry({
+                schedule: NETWORK_RETRY_SCHEDULE,
+                while: isUnanswered,
+              }),
+              Effect.tapError(() => Ref.set(answered, Option.none()))
+            );
             yield* Ref.set(answered, Option.some(saved));
           }).pipe(
             Effect.retry({

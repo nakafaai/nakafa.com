@@ -5,6 +5,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
+import { useTranslations } from "use-intl";
 
 const DialogCreateHandle = DialogPrimitive.createHandle;
 
@@ -72,6 +73,7 @@ function DialogContent({
   size?: "default" | "wide";
   showCloseButton?: boolean;
 }) {
+  const t = useTranslations("Common");
   const { className: closeClassName, ...closeButtonProps } = closeProps ?? {};
 
   return (
@@ -97,14 +99,13 @@ function DialogContent({
           {children}
           {showCloseButton && (
             <DialogPrimitive.Close
-              aria-label="Close"
+              aria-label={t("close")}
               className={cn("absolute top-2 right-2", closeClassName)}
               data-slot="dialog-close"
               render={<Button size="icon-sm" variant="ghost" />}
               {...closeButtonProps}
             >
               <HugeIcons data-icon="icon" icon={CancelIcon} />
-              <span className="sr-only">Close</span>
             </DialogPrimitive.Close>
           )}
         </DialogPrimitive.Popup>
@@ -116,7 +117,10 @@ function DialogContent({
 function DialogHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-2 p-6 pb-3 max-sm:pb-4", className)}
+      className={cn(
+        "flex flex-col gap-2 border-b p-6 pb-4 last:border-b-0 has-[+[data-slot=dialog-footer]]:border-b-0",
+        className
+      )}
       data-slot="dialog-header"
       {...props}
     />
@@ -125,12 +129,9 @@ function DialogHeader({ className, ...props }: ComponentProps<"div">) {
 
 function DialogFooter({
   className,
-  showCloseButton = false,
-  children,
   variant = "default",
   ...props
 }: ComponentProps<"div"> & {
-  showCloseButton?: boolean;
   variant?: "bare" | "default";
 }) {
   return (
@@ -143,14 +144,7 @@ function DialogFooter({
       )}
       data-slot="dialog-footer"
       {...props}
-    >
-      {children}
-      {showCloseButton && (
-        <DialogPrimitive.Close render={<Button variant="outline" />}>
-          Close
-        </DialogPrimitive.Close>
-      )}
-    </div>
+    />
   );
 }
 
@@ -164,7 +158,7 @@ function DialogPanel({
   return (
     <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade={scrollFade}>
       <div
-        className={cn("min-w-0 p-6 pt-1", className)}
+        className={cn("min-w-0 p-6", className)}
         data-slot="dialog-panel"
         {...props}
       />

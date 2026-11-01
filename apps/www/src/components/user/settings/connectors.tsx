@@ -1,17 +1,19 @@
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  useMutation,
-  useQuery,
-} from "@confect/react";
+import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
-import { GOOGLE_MANIFEST } from "@repo/backend/confect/connectors/google/manifest";
+import {
+  GOOGLE_MANIFEST,
+  type GoogleConnector,
+} from "@repo/backend/confect/connectors/google/manifest";
 import { Array as Arr, Effect, Option } from "effect";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConnectorActionsContext } from "@/components/connectors/actions";
 import { connectCallback } from "@/components/connectors/address";
 import { ConnectorList } from "@/components/connectors/list";
-import { disconnectOwnUpdate } from "@/components/connectors/optimistic";
+import {
+  CONNECTION_PAGE_SIZE,
+  type Connection,
+  disconnectOwnUpdate,
+} from "@/components/connectors/optimistic";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import {
@@ -19,40 +21,46 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
-
-/** How many of the account's connections the page reads. */
-const CONNECTION_PAGE_SIZE = 20;
+import {
+  type PreloadedPage,
+  usePaginatedPreloaded,
+} from "@/lib/data/paginated";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**
  * The account's own Google connectors (journey J8): Drive and Calendar, which Nina
  * reads for this account alone. Connecting sends the browser to Google and back
  * to this page; disconnecting ends the connection at once.
  */
-export function UserSettingsConnectors() {
+export function UserSettingsConnectors({
+  first,
+  initialOffered,
+}: {
+  first: PreloadedPage<Connection>;
+  initialOffered: readonly GoogleConnector[];
+}) {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const offered = useQuery(connectors.google.offered, isSettled ? {} : "skip");
+  const live = usePreloadedQueryResult(
+    connectors.google.offered,
+    isSettled ? {} : "skip",
+    initialOffered
+  );
   const connections = usePaginatedPreloaded(
     connectors.connections.listOwn,
     isSettled ? {} : "skip",
     { initialNumItems: CONNECTION_PAGE_SIZE },
-    Option.none()
+    Option.some(first)
   );
   const start = useMutation(connectors.google.startPersonal);
   const disconnect = useMutation(connectors.connections.disconnectOwn);
 
   if (
-    QueryResult.isFailure(offered) ||
+    QueryResult.isFailure(live) ||
     PaginatedQueryResult.isFailure(connections)
   ) {
     return <DataFailure onRetry={reloadPage} />;
   }
-  if (
-    !QueryResult.isSuccess(offered) ||
-    connections._tag === "LoadingFirstPage"
-  ) {
-    return null;
-  }
+  const offered = QueryResult.isSuccess(live) ? live.value : initialOffered;
 
   return (
     <ConnectorActionsContext
@@ -86,7 +94,7 @@ export function UserSettingsConnectors() {
       <ConnectorList
         connections={connections.results}
         offered={Arr.filter(
-          offered.value,
+          offered,
           (connector) => GOOGLE_MANIFEST[connector].owner === "personal"
         )}
       />

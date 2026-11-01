@@ -84,7 +84,8 @@ function EditTaskDialog({ task }: { task: ClassTask }) {
       next.text !== task.text ||
       next.deadline !== task.deadline ||
       next.points !== task.points ||
-      next.latePolicy !== task.latePolicy
+      next.latePolicy !== task.latePolicy ||
+      next.targets !== task.targets
   );
 
   const save = () => {

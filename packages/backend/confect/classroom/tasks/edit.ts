@@ -5,13 +5,15 @@ import { TaskPointsFixed } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import {
   type LatePolicy,
+  type TaskTargets,
   taskField,
 } from "@repo/backend/confect/classroom/tasks/task";
 import { classTask } from "@repo/backend/confect/classroom/tasks/views";
+import { classTargets } from "@repo/backend/confect/classroom/tasks/write";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
-import { Effect, Struct } from "effect";
+import { Array as Arr, Effect, Struct } from "effect";
 
 /**
  * Changes a task of the allowed class: its title, what it asks, its deadline, its points, and what late work gets.
@@ -23,6 +25,7 @@ export const editTask = Effect.fn("classroom.tasks.edit")(function* (args: {
   readonly deadline: number;
   readonly latePolicy: typeof LatePolicy.Type;
   readonly points: number;
+  readonly targets: typeof TaskTargets.Type | null;
   readonly task: string;
   readonly text: string;
   readonly title: string;
@@ -37,7 +40,9 @@ export const editTask = Effect.fn("classroom.tasks.edit")(function* (args: {
   const before = yield* openText(keys, taskField(found), found.sealedText).pipe(
     Effect.orDie
   );
-  const edited = Struct.assign(found, {
+  const reach = yield* classTargets(args.targets);
+  const edited = Struct.assign(Struct.omit(found, ["targets"]), {
+    ...reach,
     deadline: args.deadline,
     latePolicy: args.latePolicy,
     points: args.points,
@@ -61,7 +66,8 @@ export const editTask = Effect.fn("classroom.tasks.edit")(function* (args: {
     args.title !== found.title ||
     args.text !== before ||
     args.points !== found.points ||
-    args.latePolicy !== found.latePolicy;
+    args.latePolicy !== found.latePolicy ||
+    Arr.join(args.targets ?? [], ",") !== Arr.join(found.targets ?? [], ",");
   if (content) {
     yield* classAuthority.record(actor, row, {
       task: found._id,

@@ -13,7 +13,7 @@ import { slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
 
-const { get, open, rename, replies, reply } =
+const { get, list, open, rename, replies, reply } =
   refs.public.classroom.forum.threads;
 const { page, send } = refs.public.classroom.forum.messages;
 const { setPolicy } = refs.public.tenancy.settings;
@@ -23,6 +23,55 @@ describe("classroom/forum threads", () => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
   });
+
+  it.effect(
+    "lists a class's discussions, the newest first, each with its channel and unread for whoever has not read its newest reply",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-9");
+        const teacher = fixture.as("teacher");
+        for (const [clientKey, title] of [
+          ["older-discussion", "Bab 1"],
+          ["newer-discussion", "Bab 2"],
+        ] as const) {
+          yield* teacher.mutation(open, {
+            ...forum,
+            clientKey,
+            mentions: [],
+            slug: nf,
+            text: "Mulai di sini.",
+            title,
+          });
+        }
+        yield* teacher.mutation(reply, {
+          attachments: [],
+          classId: forum.classId,
+          clientKey: "first-reply",
+          mentions: [],
+          number: 1,
+          slug: nf,
+          text: "Balasan pertama.",
+        });
+        const listed = yield* fixture.as("student").query(list, {
+          ...firstPage,
+          classId: forum.classId,
+          slug: nf,
+        });
+        expect(
+          Arr.map(listed.page, (row) => [
+            row.channelId,
+            row.discussion.title,
+            row.discussion.replies,
+            row.discussion.unread,
+          ])
+        ).toEqual([
+          [forum.channelId, "Bab 2", 0, false],
+          [forum.channelId, "Bab 1", 1, true],
+        ]);
+      })
+  );
 
   it.effect(
     "numbers the discussions of a class in order, seals the title, and shows each in its channel through its opening message",
@@ -141,6 +190,7 @@ describe("classroom/forum threads", () => {
         });
         vi.setSystemTime(TENANCY_NOW + 2000);
         const answer = yield* student.mutation(reply, {
+          attachments: [],
           classId: forum.classId,
           clientKey: "student-reply",
           mentions: [],
@@ -150,6 +200,7 @@ describe("classroom/forum threads", () => {
         });
         vi.setSystemTime(TENANCY_NOW + 3000);
         const second = yield* teacher.mutation(reply, {
+          attachments: [],
           classId: forum.classId,
           clientKey: "teacher-reply",
           mentions: [],
@@ -158,6 +209,7 @@ describe("classroom/forum threads", () => {
           text: "Betul.",
         });
         const retried = yield* student.mutation(reply, {
+          attachments: [],
           classId: forum.classId,
           clientKey: "student-reply",
           mentions: [],
@@ -219,6 +271,8 @@ describe("classroom/forum threads", () => {
         const forum = yield* forumClass(fixture, term.id, "X-4");
         const teacher = fixture.as("teacher");
         const plain = yield* teacher.mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "plain-message",
           mentions: [],
@@ -234,6 +288,7 @@ describe("classroom/forum threads", () => {
           title: "Diskusi",
         });
         yield* teacher.mutation(reply, {
+          attachments: [],
           classId: forum.classId,
           clientKey: "teacher-key",
           mentions: [],
@@ -255,6 +310,7 @@ describe("classroom/forum threads", () => {
             .pipe(Effect.flip),
           student
             .mutation(reply, {
+              attachments: [],
               classId: forum.classId,
               clientKey: "teacher-key",
               mentions: [],
@@ -265,6 +321,7 @@ describe("classroom/forum threads", () => {
             .pipe(Effect.flip),
           teacher
             .mutation(reply, {
+              attachments: [],
               classId: forum.classId,
               clientKey: plain.clientKey,
               mentions: [],
@@ -309,6 +366,7 @@ describe("classroom/forum threads", () => {
             .pipe(Effect.flip),
           teacher
             .mutation(reply, {
+              attachments: [],
               classId: forum.classId,
               clientKey: "missing-discussion",
               mentions: [],
@@ -322,6 +380,7 @@ describe("classroom/forum threads", () => {
         const admin = yield* fixture
           .as("admin")
           .mutation(reply, {
+            attachments: [],
             classId: other.classId,
             clientKey: "admin-reply",
             mentions: [],

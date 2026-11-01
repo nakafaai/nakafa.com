@@ -3,7 +3,7 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/question";
+import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
@@ -26,6 +26,8 @@ import {
   removeUpdate,
   renamedExam,
   renameUpdate,
+  scoredQuestion,
+  scoringUpdate,
   templateUpdate,
 } from "@/components/tenant/exams/optimistic";
 
@@ -51,7 +53,10 @@ const question = (id: string, revision = 0): Question => ({
   explanation: promptId(`explanation-${id}`),
   id: questionId(id),
   key: null,
+  media: [],
   points: 1,
+  reading: null,
+  scoring: { kind: "allOrNothing" },
   prompt: promptId(`prompt-${id}`),
   revision,
   rubric: promptId(`rubric-${id}`),
@@ -252,9 +257,12 @@ describe("placeholderQuestion", () => {
       explanation: promptId("draft-explanation"),
       id: questionId("draft"),
       key: null,
+      media: [],
       points: 3,
       prompt: promptId("draft-prompt"),
+      reading: null,
       rubric: promptId("draft-rubric"),
+      scoring: { kind: "allOrNothing" },
       template: "choice",
     });
 
@@ -420,6 +428,42 @@ describe("pointedQuestion", () => {
 
     expect(pointed.questions[0]).toEqual(first);
     expect(pointed.questions[1]).toEqual({ ...second, points: 5 });
+  });
+});
+
+describe("scoredQuestion", () => {
+  it("gives one question its rule, raises points too few for its steps, and keeps the others", () => {
+    const scored = scoredQuestion(
+      viewOf([first, second]),
+      second.id,
+      "wrongParts"
+    );
+
+    expect(scored.questions[0]).toEqual(first);
+    expect(scored.questions[1]).toMatchObject({
+      points: 2,
+      scoring: { kind: "wrongParts" },
+    });
+  });
+});
+
+describe("scoringUpdate", () => {
+  it("shows the rule of a question in the store while the server saves it", () => {
+    const view = viewOf([first, second]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+
+    scoringUpdate(localStore, {
+      examId,
+      questionId: first.id,
+      scoring: "perPart",
+      slug,
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some(scoredQuestion(view, first.id, "perPart"))
+    );
   });
 });
 

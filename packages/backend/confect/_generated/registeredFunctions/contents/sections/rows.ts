@@ -13,5 +13,4 @@ export default {
 ["save"]: RegisteredConvexFunction.register({ ...definitions["save"], handler: forward(definitions["save"].handler) }),
 ["prune"]: RegisteredConvexFunction.register({ ...definitions["prune"], handler: forward(definitions["prune"].handler) }),
 ["finish"]: RegisteredConvexFunction.register({ ...definitions["finish"], handler: forward(definitions["finish"].handler) }),
-["page"]: RegisteredConvexFunction.register({ ...definitions["page"], handler: forward(definitions["page"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../contents/sections/rows.spec")["default"]>;

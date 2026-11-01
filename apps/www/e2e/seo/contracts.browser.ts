@@ -175,7 +175,7 @@ const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
   ) {
     // The byline stays visible; pending streamed copies do not.
     const dateBlock = page
-      .getByRole("paragraph")
+      .locator("dl")
       .filter({ has: page.locator("time[datetime]") });
     yield* Effect.promise(() => expect(dateBlock).toHaveCount(1));
     yield* Effect.promise(() => expect(dateBlock).toBeVisible());
@@ -196,14 +196,17 @@ const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
     );
     const blockText = yield* Effect.promise(() => dateBlock.textContent());
     const labels = dateLabels[route.locale];
+    const neverUpdated =
+      structuredDates.dateModified === undefined ||
+      structuredDates.dateModified === structuredDates.datePublished;
     yield* Effect.sync(() => {
       expect(blockText).toContain(labels.published);
       expect(timeDates).toEqual(
-        structuredDates.dateModified === undefined
+        neverUpdated
           ? [structuredDates.datePublished]
           : [structuredDates.datePublished, structuredDates.dateModified]
       );
-      if (structuredDates.dateModified === undefined) {
+      if (neverUpdated) {
         expect(blockText).not.toContain(labels.updated);
       } else {
         expect(blockText).toContain(labels.updated);

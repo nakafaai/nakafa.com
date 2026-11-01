@@ -54,10 +54,11 @@ const lastSignalTime = (
     onSome: (signal) => Num.max(attempt.startedAt, signal.at),
   });
 
-/**
- * One attempt as the dashboard shows it. The latest signal decides whether the student is
- * away: an exit or a disconnect with no return after it (ADR 0013).
- */
+/** Whether a student's latest signal leaves them away: an exit or a disconnect with no return after it (ADR 0013). */
+export const isAway = (signal: ExamSignalsDoc) =>
+  signal.kind === "exit" || signal.kind === "disconnect";
+
+/** One attempt as the dashboard shows it. The latest signal decides whether the student is away. */
 const attemptRow = Effect.fn("exams.sittings.dashboard.attempt")(function* (
   attempt: ExamAttemptsDoc
 ) {
@@ -77,10 +78,7 @@ const attemptRow = Effect.fn("exams.sittings.dashboard.attempt")(function* (
     .first()
     .pipe(Effect.orDie);
   return {
-    away: Option.exists(
-      latest,
-      (signal) => signal.kind === "exit" || signal.kind === "disconnect"
-    ),
+    away: Option.exists(latest, isAway),
     deadline: attempt.deadline,
     id: attempt._id,
     lastActiveAt: lastSignalTime(attempt, latest),

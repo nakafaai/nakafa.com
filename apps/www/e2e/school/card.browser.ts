@@ -16,7 +16,7 @@ test("a wrong card code is refused with one message that does not say whether th
   const school = await Effect.runPromise(createSchool());
   await page.goto(hostAddress(baseURL, `${school.slug}.localhost`, "/"));
 
-  await page.getByRole("link", { name: "Sign in with a username" }).click();
+  await page.getByRole("link", { name: "Use a username" }).click();
   await page.waitForURL(USERNAME_ADDRESS);
   await waitUntilTakenOver(page.getByRole("button", { name: "Sign in" }));
   await page.getByLabel("School username").fill("guru.tidak");
@@ -70,7 +70,7 @@ test("a student whose card an Admin printed signs in with the school username, t
   const card = await Effect.runPromise(seedCard(school.slug));
   await page.goto(hostAddress(baseURL, `${school.slug}.localhost`, "/"));
 
-  await page.getByRole("link", { name: "Sign in with a username" }).click();
+  await page.getByRole("link", { name: "Use a username" }).click();
   await page.waitForURL(USERNAME_ADDRESS);
   await waitUntilTakenOver(page.getByRole("button", { name: "Sign in" }));
   await page.getByLabel("School username").fill(card.loginName);
@@ -81,9 +81,10 @@ test("a student whose card an Admin printed signs in with the school username, t
   await expect(page.getByText("Siswa Uji").first()).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(
-    page.getByRole("link", { name: "Sign in with a username" })
-  ).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
+  await expect(page.getByRole("link", { name: "Use a username" })).toHaveCount(
+    0,
+    { timeout: readinessTimeoutMilliseconds }
+  );
 });
 
 test("a signed-in learner who is not a member of an existing school sees the outsider page", async ({
@@ -116,14 +117,12 @@ test("a signed-in learner who is not a member of an existing school sees the out
   ).toBeVisible();
   await expect(
     page.getByText(
-      "You are signed in as Acceptance Learner, which has no invite here yet, so ask an admin to send one or sign in with the address it went to."
+      "Acceptance Learner has no invite here yet, so ask an admin or sign in with the invited address."
     )
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Switch account" })
   ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Sign in with a card" })
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Use a card" })).toBeVisible();
   await context.close();
 });

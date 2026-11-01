@@ -5,6 +5,7 @@ import {
   InputTextIcon,
   LinkSquare02Icon,
   NoteEditIcon,
+  QuestionIcon,
   RadioButtonIcon,
   Table02Icon,
   ThumbsUpDownIcon,
@@ -16,6 +17,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -37,6 +39,7 @@ const TEMPLATE_ICON = {
   essay: NoteEditIcon,
   match: LinkSquare02Icon,
   numeric: DecimalsArrowRightIcon,
+  reason: QuestionIcon,
   short: InputTextIcon,
   table: Table02Icon,
   truefalse: ThumbsUpDownIcon,
@@ -50,6 +53,7 @@ const TEMPLATE_NAME = {
   essay: "template-essay",
   match: "template-match",
   numeric: "template-numeric",
+  reason: "template-reason",
   short: "template-short",
   table: "template-table",
   truefalse: "template-truefalse",
@@ -108,6 +112,7 @@ export function QuestionType({
             }}
             value={template}
           >
+            <DropdownMenuLabel>{t("template-title")}</DropdownMenuLabel>
             {Arr.map(QuestionTemplate.literals, (item) => (
               <DropdownMenuRadioItem key={item} value={item}>
                 <HugeIcons icon={TEMPLATE_ICON[item]} />

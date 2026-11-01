@@ -26,6 +26,7 @@ const task = (address: string, mine: ClassTask["mine"]): ClassTask => ({
   mine,
   points: 50,
   slug: address,
+  targets: null,
   text: "Kerjakan.",
   title: address,
 });
@@ -171,6 +172,7 @@ describe("task optimistic updates", () => {
       deadline: 900,
       latePolicy: "close",
       points: 40,
+      targets: null,
       slug,
       task: "ringkasan",
       text: "Kerjakan lagi.",

@@ -131,7 +131,7 @@ function CohortReportsHeader() {
             to: "/school/$slug/reports",
           },
         },
-        { label: title ?? "" },
+        ...(title === undefined ? [] : [{ label: title }]),
       ]}
       {...(title === undefined ? {} : { title })}
     >

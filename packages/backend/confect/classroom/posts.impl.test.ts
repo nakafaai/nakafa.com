@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { PIN_LIMIT } from "@repo/backend/confect/classroom/posts/post";
 import {
   denied,
   firstPage,
@@ -13,7 +14,8 @@ import { journal, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
 
-const { edit, list, publish, remove } = refs.public.classroom.posts;
+const { edit, list, pin, pinned, publish, remove } =
+  refs.public.classroom.posts;
 
 describe("classroom/posts", () => {
   beforeEach(() => {
@@ -174,5 +176,92 @@ describe("classroom/posts", () => {
         });
         expect(listed.page).toEqual([]);
       })
+  );
+
+  it.effect(
+    "pins an announcement of the class to the top of its home for every reader, and refuses a sixth",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-1");
+        const teacher = fixture.as("teacher");
+        const post = (index: number) =>
+          teacher.mutation(publish, {
+            classId: forum.classId,
+            clientKey: `pinned-post-${index}`,
+            email: false,
+            slug: nf,
+            text: `Pengumuman ${index}`,
+          });
+        const scope = { classId: forum.classId, slug: nf };
+        const posts = yield* Effect.forEach(Arr.range(1, PIN_LIMIT + 1), post);
+        const first = Arr.getUnsafe(posts, 0);
+        const last = Arr.getUnsafe(posts, PIN_LIMIT);
+        expect(first.pinned).toBe(false);
+
+        yield* Effect.forEach(
+          Arr.take(posts, PIN_LIMIT),
+          (found) =>
+            teacher.mutation(pin, {
+              ...scope,
+              pinned: true,
+              postId: found.id,
+            }),
+          { discard: true }
+        );
+        expect(
+          yield* teacher
+            .mutation(pin, { ...scope, pinned: true, postId: last.id })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "PinLimit" });
+        // Pinning one that stands changes nothing, so a full class still answers.
+        expect(
+          yield* teacher.mutation(pin, {
+            ...scope,
+            pinned: true,
+            postId: first.id,
+          })
+        ).toBeNull();
+        const read = yield* fixture.as("student").query(pinned, scope);
+        expect(read).toHaveLength(PIN_LIMIT);
+        expect(Arr.every(read, (found) => found.pinned)).toBe(true);
+
+        yield* teacher.mutation(pin, {
+          ...scope,
+          pinned: false,
+          postId: first.id,
+        });
+        const left = yield* teacher.query(pinned, scope);
+        expect(Arr.map(left, (found) => found.id)).not.toContain(first.id);
+      })
+  );
+
+  it.effect("refuses a student and an announcement of another class", () =>
+    Effect.gen(function* () {
+      const fixture = yield* keyedFixture;
+      const term = yield* period(fixture, fixture.units.smp);
+      const forum = yield* forumClass(fixture, term.id, "X-1");
+      const other = yield* forumClass(fixture, term.id, "X-2", false);
+      const teacher = fixture.as("teacher");
+      const posted = yield* teacher.mutation(publish, {
+        classId: forum.classId,
+        clientKey: "pinned-refused",
+        email: false,
+        slug: nf,
+        text: "Pengumuman",
+      });
+      const args = { pinned: true, postId: posted.id, slug: nf };
+      const refusals = yield* Effect.all([
+        fixture
+          .as("student")
+          .mutation(pin, { ...args, classId: forum.classId })
+          .pipe(Effect.flip),
+        teacher
+          .mutation(pin, { ...args, classId: other.classId })
+          .pipe(Effect.flip),
+      ]);
+      expect(refusals).toMatchObject([denied("role"), denied("resource")]);
+    })
   );
 });

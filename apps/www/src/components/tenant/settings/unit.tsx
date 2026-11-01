@@ -6,6 +6,7 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -18,8 +19,8 @@ export type UnitId = Ref.Returns<
 >["units"][number]["id"];
 
 /**
- * Renders the choice of the unit whose periods and cohorts a settings page shows, as a
- * toolbar row above the page's table. It shows only when the school has more than one unit.
+ * Renders the choice of the unit whose periods and cohorts a settings page shows, in its
+ * header's button group. It shows only when the school has more than one unit.
  */
 export function SchoolUnitChoice({
   onChoose,
@@ -37,33 +38,32 @@ export function SchoolUnitChoice({
   }));
 
   return (
-    <div className="flex items-center gap-2">
-      <Select
-        items={items}
-        onValueChange={(value) => {
-          const chosen = Schema.decodeUnknownOption(Id("tenantUnits"))(value);
-          if (Option.isSome(chosen)) {
-            onChoose(chosen.value);
-          }
-        }}
-        value={unitId}
+    <Select
+      items={items}
+      onValueChange={(value) => {
+        const chosen = Schema.decodeUnknownOption(Id("tenantUnits"))(value);
+        if (Option.isSome(chosen)) {
+          onChoose(chosen.value);
+        }
+      }}
+      value={unitId}
+    >
+      <SelectTrigger
+        aria-label={t("unit-choice")}
+        className="w-auto max-w-28 sm:max-w-xs"
       >
-        <SelectTrigger
-          aria-label={t("unit-choice")}
-          className="w-auto max-w-48 sm:max-w-xs"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-    </div>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>{t("unit-choice")}</SelectLabel>
+          {Arr.map(items, (item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }

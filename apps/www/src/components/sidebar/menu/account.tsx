@@ -9,15 +9,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import type { Mascot } from "@repo/mascot/code";
-import { type ReactNode, useLayoutEffect } from "react";
+import { type ReactNode, useLayoutEffect, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { AccountButtonFace } from "@/components/sidebar/menu/face";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";
@@ -55,13 +55,18 @@ export function AccountMenu({
   description?: string | undefined;
   /** The name on the account button: the school person's name in a school, the account's name on the main site. */
   name: string;
-  /** Signs the viewer out, then leaves the page the way the sidebar needs. */
-  onSignOut: () => void;
+  /**
+   * Signs the viewer out, then leaves the page the way the sidebar needs. The menu
+   * stays open with its loader until the promise settles, because the server takes
+   * a moment to answer and a closed menu would show nothing.
+   */
+  onSignOut: () => Promise<void>;
 }) {
   const t = useTranslations("Auth");
   const [open, { close, set }] = useDisclosure(false);
   const { warm, warmed } = useMenuWarm();
   const side = useSidebar((sidebar) => (sidebar.isMobile ? "bottom" : "right"));
+  const [isSigningOut, startSigningOut] = useTransition();
 
   useLayoutEffect(() => close, [close]);
 
@@ -119,8 +124,12 @@ export function AccountMenu({
             </>
           ) : null}
           <DropdownMenuGroup>
-            <DropdownMenuItem onClick={onSignOut}>
-              <HugeIcons icon={Logout01Icon} />
+            <DropdownMenuItem
+              closeOnClick={false}
+              disabled={isSigningOut}
+              onClick={() => startSigningOut(onSignOut)}
+            >
+              <Spinner icon={Logout01Icon} isLoading={isSigningOut} />
               {t("logout")}
             </DropdownMenuItem>
           </DropdownMenuGroup>

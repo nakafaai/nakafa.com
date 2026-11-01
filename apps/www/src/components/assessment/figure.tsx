@@ -1,8 +1,18 @@
 "use client";
 
-import type { FigureAttrs } from "@nakafa/aksara-contracts/assessment/figure";
+import {
+  type FigureAttrs,
+  FigureAttrsSchema,
+} from "@nakafa/aksara-contracts/assessment/figure";
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
-import { Array as Arr, Match, Record as Rec, Struct } from "effect";
+import {
+  Array as Arr,
+  Match,
+  Option,
+  Record as Rec,
+  Schema,
+  Struct,
+} from "effect";
 import { lazy } from "react";
 import { InlineContent } from "@/components/assessment/inline";
 import { MermaidMdx } from "@/lib/content/renderer/client/base/media";
@@ -80,6 +90,14 @@ export function AssessmentFigure({ attrs }: { readonly attrs: FigureAttrs }) {
       )}
     </figure>
   );
+}
+
+/** A figure read from the attributes of a document's node. What the contract refuses draws nothing. */
+export function DocumentFigure({ attrs }: { readonly attrs: unknown }) {
+  return Option.match(Schema.decodeUnknownOption(FigureAttrsSchema)(attrs), {
+    onNone: () => null,
+    onSome: (figure) => <AssessmentFigure attrs={figure} />,
+  });
 }
 
 /** A data chart: categories and the named series of bars or lines over them. */

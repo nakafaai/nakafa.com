@@ -30,9 +30,11 @@ import {
 import { useExam } from "@/components/tenant/exams/provider";
 import { cellsKey } from "@/components/tenant/exams/table";
 import {
+  isUnrefused,
   makeQuestionWriter,
   type QuestionDraft,
   type QuestionWrite,
+  type Unstored,
 } from "@/components/tenant/exams/writer";
 
 /**
@@ -106,11 +108,12 @@ export function useQuestionEditing(question: Question) {
   /**
    * Saves the answers and the key that `edit` makes of this question, and shows them at once. The edit runs on
    * the draft the writer starts from, so the edits of one question land in the order they were made. `unstored`
-   * runs when the server does not store the change, so the option that asked can take its text back.
+   * runs when the server does not store the change, and says whether it refused it, so the option that asked
+   * takes its text back only then, and otherwise keeps the teacher's words for a retry.
    */
   const saveAnswers = (
     edit: (draft: QuestionDraft) => QuestionWrite,
-    unstored?: () => void
+    unstored?: Unstored
   ) => {
     const base = current();
     const next: QuestionDraft = { ...edit(base), revision: base.revision };
@@ -125,9 +128,9 @@ export function useQuestionEditing(question: Question) {
       }
     };
     runExamAction(writer.save(edit), {
-      onFailure: () => {
+      onFailure: (error) => {
         settle();
-        unstored?.();
+        unstored?.(isUnrefused(error) ? "unanswered" : "refused");
       },
       onSuccess: settle,
     });
@@ -149,7 +152,7 @@ export function useQuestionEditing(question: Question) {
     if (!Arr.contains(markedOptions(draft.key), optionId)) {
       saveAnswers((base) => ({
         ...base,
-        key: markedKey(base.answers, optionId),
+        key: markedKey(base.answers, base.key, optionId),
       }));
     }
   };

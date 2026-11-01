@@ -18,6 +18,7 @@ import {
 } from "@/components/exams/sitting/answer";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import {
+  ReaderPrimer,
   SittingDocument,
   useReaderLoaded,
 } from "@/components/exams/sitting/document";
@@ -25,6 +26,7 @@ import { SittingField } from "@/components/exams/sitting/field";
 import { useKeptText } from "@/components/exams/sitting/kept";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
 import { useFlagQuestion } from "@/components/exams/sitting/mark";
+import { PaperMedia } from "@/components/exams/sitting/media";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import type {
   PaperQuestion,
@@ -34,14 +36,17 @@ import {
   pictureIdsOfDocuments,
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
+import { SittingReason } from "@/components/exams/sitting/reason";
 import {
   choiceOf,
   pairingOf,
+  reasonOf,
   tableOf,
   writtenOf,
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
+import { HeldPaper, usePaperText } from "@/components/player/held";
 import { readQuestionIds } from "@/components/player/ids";
 import {
   PlayerQuestion,
@@ -51,41 +56,28 @@ import {
 } from "@/components/player/question";
 
 /**
- * Keeps the paper out of sight until it can draw its first question: the reader has loaded, and the first
- * prompt has answered, as the prompts of a paper answer together. So the student meets the paper whole, as the
- * try-out shows its questions, and no option moves when its prompt arrives. A prompt that cannot be read yet
- * answers too, with the failure that the question shows as nothing.
+ * The paper of a sitting, out of sight until it can draw its first screen: the reader has loaded, and the prompts
+ * of its first questions have answered. So the student meets the paper whole, as the try-out shows its questions,
+ * and no option moves when its prompt arrives. A prompt that cannot be read yet answers too, with the failure that
+ * the question shows as nothing.
  */
 export function PaperReveal({
   children,
-  deviceId,
   paper,
-  sittingId,
-  slug,
 }: {
   readonly children: ReactNode;
-  readonly deviceId: string;
   readonly paper: PaperValue;
-  readonly sittingId: GenericId.GenericId<"examSittings">;
-  readonly slug: TenantSlug;
 }) {
   const loaded = useReaderLoaded(true);
-  const first = Arr.head(paper.questions);
-  const prompt = useQuery(
-    exams.sittings.prompt,
-    Option.isSome(first)
-      ? { deviceId, questionId: first.value.id, sittingId, slug }
-      : "skip"
-  );
 
   return (
-    <div
-      className={
-        loaded && !QueryResult.isLoading(prompt) ? undefined : "invisible"
-      }
+    <HeldPaper
+      keys={Arr.map(paper.questions, (question) => question.id)}
+      ready={loaded}
     >
+      <ReaderPrimer />
       {children}
-    </div>
+    </HeldPaper>
   );
 }
 
@@ -117,12 +109,17 @@ export const SittingQuestion = memo(function SittingQuestion({
     sittingId,
     slug,
   });
+  usePaperText(question.id, !QueryResult.isLoading(prompt));
   const choose = useChooseAnswer();
   const flagQuestion = useFlagQuestion({ deviceId, sittingId, slug });
   const locked = usePaperLocked();
   const keptText = useKeptText({ attemptId, question, sittingId });
   const choice = useMemo(
     () => choiceOf(question.interactions),
+    [question.interactions]
+  );
+  const reasons = useMemo(
+    () => reasonOf(question.interactions),
     [question.interactions]
   );
   const entry = useMemo(
@@ -138,6 +135,16 @@ export const SittingQuestion = memo(function SittingQuestion({
     [question.interactions]
   );
   const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
+  const readingText = QueryResult.isSuccess(prompt)
+    ? prompt.value.reading
+    : null;
+  const readingDocument = useMemo(
+    () =>
+      readingText === null
+        ? null
+        : Schema.decodeSync(JsonTextSchema)(readingText),
+    [readingText]
+  );
   const promptDocument = useMemo(
     () =>
       promptText === null
@@ -148,10 +155,11 @@ export const SittingQuestion = memo(function SittingQuestion({
   // The images of the prompt and of the options, resolved in one read by this student's device.
   const pictureIds = useMemo(() => {
     const labels = Arr.appendAll(
-      Option.match(choice, {
-        onNone: () => [],
-        onSome: (found) => Arr.map(found.options, (option) => option.label),
-      }),
+      Arr.flatMap(question.interactions, (interaction) =>
+        interaction.kind === "choice"
+          ? Arr.map(interaction.options, (option) => option.label)
+          : []
+      ),
       Arr.appendAll(
         Option.match(pairing, {
           onNone: () => [],
@@ -172,9 +180,12 @@ export const SittingQuestion = memo(function SittingQuestion({
       )
     );
     return pictureIdsOfDocuments(
-      promptDocument === null ? labels : [promptDocument, ...labels]
+      Arr.filter(
+        [promptDocument, readingDocument, ...labels],
+        (document) => document !== null
+      )
     );
-  }, [choice, pairing, promptDocument, table]);
+  }, [question.interactions, pairing, promptDocument, readingDocument, table]);
   const pictures = useQuery(
     exams.sittings.images,
     pictureIds.length === 0
@@ -211,9 +222,17 @@ export const SittingQuestion = memo(function SittingQuestion({
       <PlayerQuestionHeader number={question.number} />
       <SittingPictures value={addresses}>
         <PlayerQuestionPrompt>
-          {promptDocument === null ? null : (
-            <SittingDocument document={promptDocument} />
-          )}
+          <div className="grid gap-6">
+            {QueryResult.isSuccess(prompt) ? (
+              <PaperMedia items={prompt.value.media} />
+            ) : null}
+            {readingDocument === null ? null : (
+              <SittingDocument document={readingDocument} />
+            )}
+            {promptDocument === null ? null : (
+              <SittingDocument document={promptDocument} />
+            )}
+          </div>
         </PlayerQuestionPrompt>
         <PlayerQuestionAnswer>
           {Option.isSome(choice) ? (
@@ -221,6 +240,14 @@ export const SittingQuestion = memo(function SittingQuestion({
               choice={choice.value}
               labelledBy={ids.title}
               onChoose={onChoose}
+              response={chosenOptions(question.response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(reasons) ? (
+            <SittingReason
+              answer={reasons.value[0]}
+              onChoose={onChoose}
+              reason={reasons.value[1]}
               response={chosenOptions(question.response ?? NO_RESPONSE)}
             />
           ) : null}

@@ -40,6 +40,7 @@ describe("notifications/detail", () => {
           text: "Ulangan hari Senin.",
         });
         yield* teacher.mutation(tasks.publish, {
+          targets: null,
           classId: forum.classId,
           clientKey: "detail-task",
           deadline: TENANCY_NOW + 86_400_000,
@@ -50,6 +51,8 @@ describe("notifications/detail", () => {
           title: "Latihan",
         });
         yield* teacher.mutation(send, {
+          attachments: [],
+          poll: null,
           ...forum,
           clientKey: "detail-mention",
           mentions: [{ _tag: "person", id: fixture.people.student.personId }],

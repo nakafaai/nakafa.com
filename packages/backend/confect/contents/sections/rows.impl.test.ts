@@ -14,7 +14,6 @@ const stored = Ref.getFunctionReference(rows.stored);
 const save = Ref.getFunctionReference(rows.save);
 const prune = Ref.getFunctionReference(rows.prune);
 const finish = Ref.getFunctionReference(rows.finish);
-const page = Ref.getFunctionReference(rows.page);
 
 const section = {
   anchor: "bentuk-matriks",
@@ -121,31 +120,5 @@ describe("section rows", () => {
     ).toMatchObject([
       { key: "primary", model, releaseId: KNOWLEDGE_RELEASE.releaseId },
     ]);
-  });
-
-  it("reads the stored sections of a language back, a page at a time", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await t.mutation(seedKnowledge);
-    await t.mutation(save, {
-      model,
-      releaseId: KNOWLEDGE_RELEASE.releaseId,
-      sections,
-      source,
-    });
-    expect(await t.query(page, { appLocale: "id", cursor: null })).toEqual({
-      next: null,
-      sections: [
-        {
-          contentKey: section.contentKey,
-          headingPath: section.headingPath,
-          ordinal: section.ordinal,
-          text: section.text,
-        },
-      ],
-    });
-    expect(await t.query(page, { appLocale: "de", cursor: null })).toEqual({
-      next: null,
-      sections: [],
-    });
   });
 });

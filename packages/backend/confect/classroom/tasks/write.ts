@@ -5,18 +5,21 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { classAuthority } from "@repo/backend/confect/classroom/authority";
 import { classSlugOf } from "@repo/backend/confect/classroom/class";
 import type { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { classRoster } from "@repo/backend/confect/classroom/roster";
 import {
   type LatePolicy,
+  type TaskTargets,
   taskField,
 } from "@repo/backend/confect/classroom/tasks/task";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { sealText } from "@repo/backend/confect/vault/text";
-import { Clock, Duration, Effect, Option } from "effect";
+import { Array as Arr, Clock, Duration, Effect, Option } from "effect";
 
 /**
  * The first free address of a title in a class: the title's own form, then the
@@ -46,11 +49,29 @@ const freeAddress = Effect.fn("classroom.tasks.address")(function* (
   return yield* firstFree(1);
 });
 
+/** The students a task names, refused as a missing object unless each of them learns in the allowed class. */
+export const classTargets = Effect.fn("classroom.tasks.targets")(function* (
+  targets: typeof TaskTargets.Type | null
+) {
+  if (targets === null) {
+    return {};
+  }
+  const roster = yield* classRoster(yield* Class);
+  const learners = Arr.map(roster, (person) => person._id);
+  if (!Arr.every(targets, (personId) => Arr.contains(learners, personId))) {
+    return yield* new AccessDenied({
+      action: "task.manage",
+      reason: "resource",
+    });
+  }
+  return { targets };
+});
+
 /**
  * Publishes a task to the allowed class for its author: its text sealed with the
  * school key, under the first free address of its title, and records
  * `assignment.published`, the published change. The fan-out writes the inbox
- * row of each member of the class, scheduled in the same transaction (ADR 0027).
+ * row of each member it reaches, scheduled in the same transaction (ADR 0027).
  * A repeat of a client key of the class answers that task and writes nothing.
  * A teacher's publish and the Classroom import both write through it.
  */
@@ -63,7 +84,8 @@ export const writeTask = Effect.fn("classroom.tasks.write")(function* (
     readonly points: number;
     readonly text: string;
     readonly title: string;
-  }
+  },
+  reach: { readonly targets?: typeof TaskTargets.Type }
 ) {
   const row = yield* Class;
   const reader = yield* DatabaseReader;
@@ -82,6 +104,7 @@ export const writeTask = Effect.fn("classroom.tasks.write")(function* (
     .table("classroomTasks")
     .insert({
       ...fields,
+      ...reach,
       authorId: author._id,
       createdAt: yield* Clock.currentTimeMillis,
       deadline: draft.deadline,
