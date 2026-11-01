@@ -74,6 +74,23 @@ describe("generateQuranMetadata", () => {
     })
   );
 
+  it.effect("names a surah once when its name means itself", () =>
+    Effect.gen(function* () {
+      const result = yield* generateQuranMetadata(
+        {
+          ...surah,
+          name: {
+            ...surah.name,
+            meaning: { ...surah.name.meaning, en: surah.name.transliteration },
+          },
+        },
+        "en"
+      );
+
+      expect(result.title).toBe("Surah 1. Al-Fatihah - Nakafa");
+    })
+  );
+
   it.effect(
     "uses the same authenticated Quran names in every shell locale",
     () =>

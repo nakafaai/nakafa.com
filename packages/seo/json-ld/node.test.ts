@@ -2,11 +2,11 @@ import { describe, expect, it } from "@effect/vitest";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { FOUNDER, ORGANIZATION_ID } from "@repo/seo/json-ld/constants";
 import {
-  makeBookNode,
   makeBreadcrumbNodes,
   makeCollectionPageNode,
   makeEducationalOrganizationNode,
   makeFaqPageNode,
+  makeSurahNode,
   makeWebsiteNode,
 } from "@repo/seo/json-ld/node";
 
@@ -91,24 +91,31 @@ describe("makeCollectionPageNode", () => {
   });
 });
 
-describe("makeBookNode", () => {
-  it("describes one Quran surah as a free EBook", () => {
-    expect(
-      makeBookNode({
-        description: "The Opening",
-        inLanguage: "en",
-        name: "Al-Fatihah",
-        position: 1,
-        totalPages: 7,
-        url: "https://nakafa.com/en/quran/1",
-      })
-    ).toMatchObject({
-      "@type": "Book",
-      bookFormat: "EBook",
+describe("makeSurahNode", () => {
+  it("describes one surah as a free chapter of the book, with no page count", () => {
+    const node = makeSurahNode({
+      bookName: "Quran",
+      bookUrl: "https://nakafa.com/en/quran",
+      description: "Read Surah Al-Fatihah with 7 verses.",
+      inLanguage: "en",
+      meaning: "The Opening",
+      name: "Al-Fatihah",
+      position: 1,
+      url: "https://nakafa.com/en/quran/1",
+    });
+
+    expect(node).toMatchObject({
+      "@type": "Chapter",
+      alternateName: "The Opening",
       isAccessibleForFree: true,
-      numberOfPages: 7,
+      isPartOf: {
+        "@type": "Book",
+        name: "Quran",
+        url: "https://nakafa.com/en/quran",
+      },
       position: 1,
     });
+    expect(node).not.toHaveProperty("numberOfPages");
   });
 });
 

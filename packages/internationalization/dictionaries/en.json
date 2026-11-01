@@ -3760,7 +3760,7 @@
       "keywords": "{title}, {category}, analysis, facts, latest, research, information, news"
     },
     "quran": {
-      "title": "Surah {number}. {name} ({transliteration}){translation, select, __EMPTY__ {} other { - {translation}}} - Nakafa",
+      "title": "Surah {transliteration}{translation, select, __EMPTY__ {} other { ({translation})}}: Arabic and Translation - Nakafa",
       "description": "Read Surah {name} ({transliteration}) with verse-by-verse translation. {numberOfVerses} verses from the Holy Quran.",
       "keywords": "Surah {name}, Quran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }

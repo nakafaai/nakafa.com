@@ -3760,7 +3760,7 @@
       "keywords": "{title}, {category}, Analyse, Fakten, aktuell, Forschung, Informationen, Nachrichten"
     },
     "quran": {
-      "title": "Sure {number}. {name} ({transliteration}){translation, select, __EMPTY__ {} other { - {translation}}} - Nakafa",
+      "title": "Sure {transliteration}{translation, select, __EMPTY__ {} other { ({translation})}}: Arabisch und Übersetzung - Nakafa",
       "description": "Lies die Sure {name} ({transliteration}) mit einer Übersetzung Vers für Vers. {numberOfVerses} Verse aus dem heiligen Koran.",
       "keywords": "Sure {name}, Koran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }

@@ -3760,7 +3760,7 @@
       "keywords": "{title}, {category}, analisis, fakta, terkini, riset, informasi, berita"
     },
     "quran": {
-      "title": "Surat {number}. {name} ({transliteration}){translation, select, __EMPTY__ {} other { - {translation}}} - Nakafa",
+      "title": "Surah {transliteration}{translation, select, __EMPTY__ {} other { ({translation})}}: Arab, Latin dan Tafsir - Nakafa",
       "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Qur'an.",
       "keywords": "Surat {name}, Al-Qur'an{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}, tafsir"
     }
