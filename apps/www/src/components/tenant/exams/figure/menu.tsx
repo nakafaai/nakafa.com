@@ -11,7 +11,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -77,7 +76,6 @@ export function FigureMenu() {
       </ToolHint>
       <DropdownMenuContent align="start">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("figure")}</DropdownMenuLabel>
           {Arr.map(FigureKind.literals, (kind) => (
             <DropdownMenuItem
               disabled={active === null}

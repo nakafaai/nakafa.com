@@ -1,20 +1,15 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { Share08Icon, SquareLock02Icon } from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
 import { Switch } from "@repo/design-system/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { Array as Arr } from "effect";
 import { useOptimistic, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { columnAlign } from "@/components/shared/table/align";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
   type InsightStudent,
@@ -26,6 +21,12 @@ import {
 import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/insight/practice";
+
+/** The columns of the practice a class's students share. */
+const sharedColumns = tableColumns<ReturnType<typeof practiceRowsOf>[number]>();
+
+/** The columns of a student's own practice. */
+const topicColumns = tableColumns<OwnTopic>();
 
 /** The practice a class's students share with their teachers, and nothing where none does. */
 export function SharedPractice({
@@ -40,42 +41,36 @@ export function SharedPractice({
     return null;
   }
   return (
-    <TableFrame>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className={columnAlign({ align: "start" })}>
-              {t("student")}
-            </TableHead>
-            <TableHead className={columnAlign({ align: "start" })}>
-              {t("practice")}
-            </TableHead>
-            <TableHead className={columnAlign()}>
-              {t("practice-sets")}
-            </TableHead>
-            <TableHead className={columnAlign()}>
-              {t("practice-mean")}
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(rows, (row) => (
-            <TableRow key={row.key}>
-              <TableCell className={columnAlign({ align: "start" })} dir="auto">
-                {row.student}
-              </TableCell>
-              <TableCell className={columnAlign({ align: "start" })}>
-                <span className="uppercase">{topicNameOf(row)}</span>
-              </TableCell>
-              <TableCell className={columnAlign()}>{row.sets}</TableCell>
-              <TableCell className={columnAlign()}>
-                {scoreOf(row.mean)}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableFrame>
+    <TableFiltersProvider>
+      <TableFrame>
+        <DataTable
+          columns={[
+            sharedColumns.text((row) => row.student, {
+              cell: (info) => <span dir="auto">{info.getValue()}</span>,
+              header: t("student"),
+              id: "student",
+            }),
+            sharedColumns.text(topicNameOf, {
+              cell: (info) => (
+                <span className="uppercase">{info.getValue()}</span>
+              ),
+              header: t("practice"),
+              id: "topic",
+            }),
+            sharedColumns.number((row) => row.sets, {
+              header: t("practice-sets"),
+              id: "sets",
+            }),
+            sharedColumns.number((row) => scoreOf(row.mean), {
+              header: t("practice-mean"),
+              id: "mean",
+            }),
+          ]}
+          data={rows}
+          rowId={(row) => row.key}
+        />
+      </TableFrame>
+    </TableFiltersProvider>
   );
 }
 
@@ -100,38 +95,55 @@ export function OwnPractice() {
   }
   return (
     <>
-      <TableFrame>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className={columnAlign({ align: "start" })}>
-                {t("practice")}
-              </TableHead>
-              <TableHead className={columnAlign()}>
-                {t("practice-sets")}
-              </TableHead>
-              <TableHead className={columnAlign()}>
-                {t("practice-mean")}
-              </TableHead>
-              <TableHead className={columnAlign()}>
-                {t("practice-shared")}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Arr.map(topics.value, (topic) => (
-              <OwnTopicRow key={topicNameOf(topic)} topic={topic} />
-            ))}
-          </TableBody>
-        </Table>
-      </TableFrame>
+      <TableFiltersProvider>
+        <TableFrame>
+          <DataTable
+            columns={[
+              topicColumns.text(topicNameOf, {
+                cell: (info) => (
+                  <span className="uppercase">{info.getValue()}</span>
+                ),
+                header: t("practice"),
+                id: "topic",
+              }),
+              topicColumns.number((topic) => topic.sets, {
+                header: t("practice-sets"),
+                id: "sets",
+              }),
+              topicColumns.number((topic) => scoreOf(topic.mean), {
+                header: t("practice-mean"),
+                id: "mean",
+              }),
+              topicColumns.values((topic) => (topic.shared ? "on" : "off"), {
+                cell: (info) => <OwnTopicShare topic={info.row.original} />,
+                header: t("practice-shared"),
+                id: "shared",
+                options: [
+                  {
+                    icon: Share08Icon,
+                    label: t("practice-shared"),
+                    value: "on",
+                  },
+                  {
+                    icon: SquareLock02Icon,
+                    label: t("practice-unshared"),
+                    value: "off",
+                  },
+                ],
+              }),
+            ]}
+            data={topics.value}
+            rowId={topicNameOf}
+          />
+        </TableFrame>
+      </TableFiltersProvider>
       <p className="text-muted-foreground text-sm">{t("practice-note")}</p>
     </>
   );
 }
 
-/** One topic of a student's practice. Its switch moves at once, and a refused change moves it back. */
-function OwnTopicRow({ topic }: { topic: OwnTopic }) {
+/** The switch of one topic of a student's practice. It moves at once, and a refused change moves it back. */
+function OwnTopicShare({ topic }: { topic: OwnTopic }) {
   const t = useTranslations("SchoolInsight");
   const { slug } = useTenant();
   const share = useMutation(insight.practice.share);
@@ -146,27 +158,15 @@ function OwnTopicRow({ topic }: { topic: OwnTopic }) {
   };
 
   return (
-    <TableRow>
-      <TableCell className={columnAlign({ align: "start" })}>
-        <span className="uppercase">{topicNameOf(topic)}</span>
-      </TableCell>
-      <TableCell className={columnAlign()}>{topic.sets}</TableCell>
-      <TableCell className={columnAlign()}>{scoreOf(topic.mean)}</TableCell>
-      <TableCell className={columnAlign()}>
-        <Switch
-          aria-label={t("practice-share", { topic: topicNameOf(topic) })}
-          checked={shared}
-          onCheckedChange={(next) =>
-            startSaving(async () => {
-              setShared(next);
-              await saveSchool(
-                () => (next ? share(names) : stop(names)),
-                SOURCE
-              );
-            })
-          }
-        />
-      </TableCell>
-    </TableRow>
+    <Switch
+      aria-label={t("practice-share", { topic: topicNameOf(topic) })}
+      checked={shared}
+      onCheckedChange={(next) =>
+        startSaving(async () => {
+          setShared(next);
+          await saveSchool(() => (next ? share(names) : stop(names)), SOURCE);
+        })
+      }
+    />
   );
 }

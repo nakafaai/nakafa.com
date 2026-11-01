@@ -205,7 +205,9 @@ export function QuranInterpretationControls({
     <QuranInterpretationContext value={contextValue}>
       {children}
       <ResponsiveDialog
-        description={t("verse-count", { count: selectedVerseNumber })}
+        description={t("interpretation-description", {
+          count: selectedVerseNumber,
+        })}
         footer={
           <Button onClick={close} type="button">
             {common("close")}

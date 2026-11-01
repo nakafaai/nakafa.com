@@ -2,6 +2,7 @@ import { getRouteApi, useLocation } from "@tanstack/react-router";
 import { Effect, Schema } from "effect";
 import { useState } from "react";
 import { ConvexIsland } from "@/components/providers/island";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data";
 import { TryoutSetFrame } from "@/components/tryout/catalog/table/frame";
 import { CatalogQuery } from "@/components/tryout/catalog/table/query";
@@ -83,13 +84,15 @@ export function TryoutSetTable({ bootstrap, title }: TryoutSetTableProps) {
         title,
       }}
     >
-      <ConvexIsland
-        fallback={
-          <TryoutSetVisitorCatalog bootstrap={bootstrap} request={request} />
-        }
-      >
-        <TryoutSetSignedCatalog bootstrap={bootstrap} request={request} />
-      </ConvexIsland>
+      <TableFiltersProvider>
+        <ConvexIsland
+          fallback={
+            <TryoutSetVisitorCatalog bootstrap={bootstrap} request={request} />
+          }
+        >
+          <TryoutSetSignedCatalog bootstrap={bootstrap} request={request} />
+        </ConvexIsland>
+      </TableFiltersProvider>
     </TryoutSetTableContext>
   );
 }

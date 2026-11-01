@@ -5,7 +5,6 @@ import {
   createFacetedUniqueValues,
   createFilteredRowModel,
   createSortedRowModel,
-  filterFn_includesString,
   rowSortingFeature,
   sortFn_alphanumeric,
   sortFn_basic,
@@ -13,7 +12,12 @@ import {
   sortFn_text,
   tableFeatures,
 } from "@tanstack/react-table";
-import { anyOfFilter, oneOfFilter } from "@/components/shared/table/filter";
+import {
+  anyOfFilter,
+  oneOfFilter,
+  rangeFilter,
+  textFilter,
+} from "@/components/shared/table/filter";
 
 /**
  * What every Nakafa data table can do, as shadcn's data table registers it on TanStack
@@ -27,7 +31,8 @@ export const dataTableFeatures = tableFeatures({
   filteredRowModel: createFilteredRowModel(),
   filterFns: {
     anyOf: anyOfFilter,
-    includesString: filterFn_includesString,
+    holdsText: textFilter,
+    inRange: rangeFilter,
     oneOf: oneOfFilter,
   },
   rowSortingFeature,

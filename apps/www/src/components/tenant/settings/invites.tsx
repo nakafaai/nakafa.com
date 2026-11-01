@@ -26,17 +26,15 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { useFormatTimeZone } from "@/components/shared/table/calendar";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { daysColumn } from "@/components/shared/table/days";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
 import {
@@ -74,10 +72,7 @@ const PAGE_SIZE = 25;
 type InviteItem = PaginatedQueryItem<typeof tenancy.invites.list>;
 
 /** The columns of the invites table. */
-const inviteColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  InviteItem
->();
+const inviteColumns = tableColumns<InviteItem>();
 
 /**
  * The invites of the school: Invite in the header, then every pending and expired invite in a
@@ -135,6 +130,7 @@ function SchoolInvitesBody() {
 /** The invites in a data table, or the table's empty state when there is none. */
 function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
   const t = useTranslations("SchoolSettings");
+  const formatZone = useFormatTimeZone();
   const tSchool = useTranslations("School");
   const timeZone = useSchoolTimeZone();
 
@@ -148,25 +144,22 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     );
   }
 
-  const columns = inviteColumns.columns([
+  const columns = [
     // The name with the address after it, so the header's search finds an invitee by either; the cell shows the name.
-    inviteColumns.accessor((invite) => `${invite.name} ${invite.email}`, {
+    inviteColumns.text((invite) => `${invite.name} ${invite.email}`, {
       cell: (info) => (
         <span className="font-medium" dir="auto">
           {info.row.original.name}
         </span>
       ),
-      filterFn: "includesString",
       header: t("invite-name"),
       id: "name",
-      sortFn: "text",
     }),
-    inviteColumns.accessor((invite) => invite.email, {
+    inviteColumns.text((invite) => invite.email, {
       header: t("invite-email"),
       id: "email",
-      sortFn: "text",
     }),
-    inviteColumns.accessor((invite) => invite.roles, {
+    inviteColumns.list((invite) => invite.roles, {
       cell: (info) => (
         <div className="inline-flex flex-wrap justify-center gap-1">
           {Arr.map(info.getValue(), (role) => (
@@ -174,25 +167,18 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
           ))}
         </div>
       ),
-      enableSorting: false,
-      filterFn: "anyOf",
-      header: () => (
-        <ColumnFilter
-          column="role"
-          options={Arr.map(
-            Arr.dedupe(Arr.flatMap(invites, (invite) => invite.roles)),
-            (role) => ({
-              icon: roleLooks[role].icon,
-              label: tSchool(`role.${role}`),
-              value: role,
-            })
-          )}
-          title={t("invite-role")}
-        />
-      ),
+      header: t("invite-role"),
       id: "role",
+      options: Arr.map(
+        Arr.dedupe(Arr.flatMap(invites, (invite) => invite.roles)),
+        (role) => ({
+          icon: roleLooks[role].icon,
+          label: tSchool(`role.${role}`),
+          value: role,
+        })
+      ),
     }),
-    inviteColumns.accessor((invite) => invite.expiresAt, {
+    inviteColumns.days((invite) => invite.expiresAt, {
       cell: (info) =>
         info.row.original.status === "expired" ? (
           <TableStatus
@@ -205,15 +191,12 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
         ),
       header: t("invite-expires"),
       id: "expires",
-      sortFn: "basic",
-      ...daysColumn(timeZone),
+      timeZone: () => Option.getOrElse(timeZone, formatZone),
     }),
-    inviteColumns.display({
-      cell: (info) => <SchoolInviteMenu invite={info.row.original} />,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    inviteColumns.menu((info) => (
+      <SchoolInviteMenu invite={info.row.original} />
+    )),
+  ];
 
   return (
     <DataTable
