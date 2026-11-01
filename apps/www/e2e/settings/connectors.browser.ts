@@ -61,7 +61,7 @@ for (const viewport of [
       timeout: readinessTimeoutMilliseconds,
     });
     await expect(page.getByRole("alert")).toContainText(
-      "Tick every box on the Google screen."
+      "Tick every box at Google."
     );
     await expect(page.getByRole("alert")).toHaveCount(1);
 

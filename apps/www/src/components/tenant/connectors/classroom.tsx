@@ -1,10 +1,10 @@
 import type { Ref } from "@confect/core";
 import { useAction, useMutation } from "@confect/react";
-import { Download04Icon, RefreshIcon } from "@hugeicons/core-free-icons";
+import { RefreshIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Select,
   SelectContent,
@@ -13,15 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@repo/design-system/components/ui/sheet";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -52,19 +43,16 @@ type Preview = NonNullable<Ref.Returns<typeof connectors.classroom.preview>>;
 const UNLINKED = "none";
 
 /**
- * The next step of a connected Classroom (journey J7): a sheet of the courses that the school's
- * connection teaches, each with its students and the class it fills. Picking a class links the
- * course at once, and its coursework arrives as the class's tasks; picking none removes the link.
- * The courses load when the viewer points at the button, so the sheet opens ready and the page
- * calls Google only on intent.
+ * The work a connected Classroom opens (journey J7): the courses that the school's connection
+ * teaches, each with its students and the class it fills. Picking a class links the course at once,
+ * and its coursework arrives as the class's tasks; picking none removes the link. The courses load
+ * as the open service shows them, so the page calls Google only when a reader opened it.
  */
-export function ClassroomImport() {
+export function ClassroomCourses() {
   const t = useTranslations("Connectors");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const preview = useAction(connectors.classroom.preview);
   const [isLoading, startLoading] = useTransition();
-  const [isOpen, setIsOpen] = useState(false);
   const [shown, setShown] = useState<Option.Option<Preview>>(Option.none);
 
   const load = () =>
@@ -78,75 +66,50 @@ export function ClassroomImport() {
         toastForumFailure
       )
     );
-  const loadOnce = () => {
-    if (Option.isNone(shown) && !isLoading) {
-      load();
-    }
-  };
 
   return (
-    <>
-      <Button
-        onClick={() => {
-          loadOnce();
-          setIsOpen(true);
-        }}
-        onFocus={loadOnce}
-        onPointerEnter={loadOnce}
-        size="sm"
-        type="button"
-      >
-        <HugeIcons icon={Download04Icon} />
-        {t("courses-import")}
-      </Button>
-      <Sheet onOpenChange={setIsOpen} open={isOpen}>
-        <SheetContent className="w-full max-w-none sm:max-w-2xl">
-          <SheetHeader>
-            <SheetTitle>{t("courses")}</SheetTitle>
-            <SheetDescription>{t("courses-description")}</SheetDescription>
-          </SheetHeader>
-          {Option.match(shown, {
-            onNone: () => null,
-            onSome: (found) => (
-              <>
-                {Arr.isReadonlyArrayEmpty(found.classes) &&
-                Arr.isReadonlyArrayNonEmpty(found.courses) ? (
-                  <NoClassToFill />
-                ) : null}
-                <CourseTable
-                  classCell={(course) => (
-                    <CourseClass
-                      course={course}
-                      preview={found}
-                      setPreview={setShown}
-                    />
-                  )}
+    <section className="flex flex-col gap-3">
+      <div className="flex items-start gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h3 className="text-sm font-medium">{t("courses")}</h3>
+          <p className="text-muted-foreground text-sm">
+            {t("courses-description")}
+          </p>
+        </div>
+        <Button
+          aria-label={t("courses-refresh")}
+          disabled={isLoading}
+          onClick={load}
+          size="icon-sm"
+          type="button"
+          variant="outline"
+        >
+          <Spinner icon={RefreshIcon} isLoading={isLoading} />
+        </Button>
+      </div>
+      <Intersection once onIntersect={load} />
+      {Option.match(shown, {
+        onNone: () => null,
+        onSome: (found) => (
+          <>
+            {Arr.isReadonlyArrayEmpty(found.classes) &&
+            Arr.isReadonlyArrayNonEmpty(found.courses) ? (
+              <NoClassToFill />
+            ) : null}
+            <CourseTable
+              classCell={(course) => (
+                <CourseClass
+                  course={course}
                   preview={found}
+                  setPreview={setShown}
                 />
-              </>
-            ),
-          })}
-          <SheetFooter>
-            <Button
-              disabled={isLoading}
-              onClick={load}
-              type="button"
-              variant="outline"
-            >
-              <Spinner icon={RefreshIcon} isLoading={isLoading} />
-              {t("courses-refresh")}
-            </Button>
-            <SheetClose
-              render={
-                <Button type="button" variant="outline">
-                  {common("close")}
-                </Button>
-              }
+              )}
+              preview={found}
             />
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-    </>
+          </>
+        ),
+      })}
+    </section>
   );
 }
 
@@ -156,7 +119,7 @@ function NoClassToFill() {
   const { slug } = useTenant();
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-6">
+    <div className="flex flex-wrap items-center justify-between gap-2">
       <p className="text-muted-foreground text-sm">{t("courses-no-class")}</p>
       <Link
         className={buttonVariants({ variant: "outline" })}
@@ -194,65 +157,59 @@ function CourseTable({
     );
 
   if (Arr.isReadonlyArrayEmpty(preview.courses)) {
-    return (
-      <p className="text-muted-foreground px-6 text-sm">{t("courses-none")}</p>
-    );
+    return <p className="text-muted-foreground text-sm">{t("courses-none")}</p>;
   }
 
   return (
-    <div className="px-6">
-      <TableFiltersProvider>
-        <TableFrame>
-          <DataTable
-            columns={[
-              courseColumns.text(
-                (course) =>
-                  course.section === null
-                    ? course.name
-                    : t("course-name", {
-                        name: course.name,
-                        section: course.section,
-                      }),
-                {
-                  cell: (info) => (
-                    <span className="font-medium" dir="auto">
-                      {info.getValue()}
-                    </span>
-                  ),
-                  header: t("course"),
-                  id: "course",
-                }
-              ),
-              courseColumns.number((course) => course.students, {
+    <TableFiltersProvider>
+      <TableFrame>
+        <DataTable
+          columns={[
+            courseColumns.text(
+              (course) =>
+                course.section === null
+                  ? course.name
+                  : t("course-name", {
+                      name: course.name,
+                      section: course.section,
+                    }),
+              {
                 cell: (info) => (
-                  <span className="text-muted-foreground">
+                  <span className="font-medium" dir="auto">
                     {info.getValue()}
                   </span>
                 ),
-                header: t("course-students"),
-                id: "students",
-              }),
-              courseColumns.values(classOf, {
-                cell: (info) => classCell(info.row.original),
-                header: t("course-class"),
-                id: "class",
-                options: namedOptions(
-                  Arr.dedupe(Arr.map(preview.courses, classOf)),
-                  GRADE_ICONS
-                ),
-              }),
-              courseColumns.menu((info) =>
-                info.row.original.classId === null ? null : (
-                  <CourseRosterImport courseId={info.row.original.courseId} />
-                )
+                header: t("course"),
+                id: "course",
+              }
+            ),
+            courseColumns.number((course) => course.students, {
+              cell: (info) => (
+                <span className="text-muted-foreground">{info.getValue()}</span>
               ),
-            ]}
-            data={preview.courses}
-            rowId={(course) => course.courseId}
-          />
-        </TableFrame>
-      </TableFiltersProvider>
-    </div>
+              header: t("course-students"),
+              id: "students",
+            }),
+            courseColumns.values(classOf, {
+              cell: (info) => classCell(info.row.original),
+              header: t("course-class"),
+              id: "class",
+              options: namedOptions(
+                Arr.dedupe(Arr.map(preview.courses, classOf)),
+                GRADE_ICONS
+              ),
+            }),
+            courseColumns.menu((info) =>
+              info.row.original.classId === null ? null : (
+                <CourseRosterImport courseId={info.row.original.courseId} />
+              )
+            ),
+          ]}
+          data={preview.courses}
+          rowId={(course) => course.courseId}
+        />
+      </TableFrame>
+    </TableFiltersProvider>
   );
 }
 

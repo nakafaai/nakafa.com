@@ -19,9 +19,16 @@ const CONSENT = "https://accounts.google.com/**";
 /** The widths every state of the directory is pictured at: a phone, a tablet and a desktop. */
 const WIDTHS = [390, 768, 1440] as const;
 
+/** Every card of the directory. */
+const cards = (page: Page) => page.locator("[data-slot=card]");
+
 /** One service's card on the page. */
 const cardOf = (page: Page, name: string) =>
-  page.locator("[data-slot=card]").filter({ hasText: name });
+  cards(page).filter({ hasText: name });
+
+/** The press on a card, which opens its service. */
+const openOf = (page: Page, name: string) =>
+  cardOf(page, name).getByRole("button", { exact: true, name });
 
 /** Keeps a picture of the page at every width, each without a sideways scroll. */
 async function picture(page: Page, state: string) {
@@ -63,7 +70,7 @@ async function openDirectory(
   return { page, slug: school.slug };
 }
 
-test("the Owner finds every service in words, searches them, and one press on plus goes to Google", async ({
+test("the Owner finds every service in a library, searches and filters it, and one press on plus goes to Google", async ({
   baseURL,
   browser,
 }) => {
@@ -71,25 +78,38 @@ test("the Owner finds every service in words, searches them, and one press on pl
   const { page } = await openDirectory(context, baseURL, signInOwner);
   const classroom = cardOf(page, "Google Classroom");
 
-  await expect(classroom.getByText("Not connected.")).toBeVisible({
+  await expect(classroom.getByText("by Google")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(classroom.getByText("School", { exact: true })).toBeVisible();
-  await expect(
-    cardOf(page, "Google Forms").getByText("Connects through Google Drive.")
-  ).toBeVisible();
-  await expect(page.locator("[data-slot=card]")).toHaveCount(4);
+  await expect(cards(page)).toHaveCount(4);
   await expect(page.getByText(RAW_KEY)).toHaveCount(0);
   await picture(page, "open");
 
   const search = page.getByRole("textbox", { name: "Search connectors" });
   await search.fill("form");
-  await expect(page.locator("[data-slot=card]")).toHaveCount(1);
+  await expect(cards(page)).toHaveCount(1);
   await picture(page, "search");
   await search.fill("zoom");
   await expect(page.getByText("No connector found")).toBeVisible();
   await picture(page, "search-none");
   await search.fill("");
+
+  await page.getByRole("button", { name: "Filter connectors" }).click();
+  await page.getByRole("menuitemradio", { name: "Schedule" }).click();
+  await expect(cards(page)).toHaveCount(1);
+  await expect(cardOf(page, "Google Calendar")).toBeVisible();
+  await picture(page, "filter");
+  await page.getByRole("button", { name: "Filter connectors" }).click();
+  await page.getByRole("menuitemradio", { name: "All" }).click();
+  await expect(cards(page)).toHaveCount(4);
+
+  await openOf(page, "Google Forms").click();
+  const detail = page.getByRole("complementary", { name: "Connector detail" });
+  await expect(
+    detail.getByText("Connects through Google Drive.")
+  ).toBeVisible();
+  await expect(detail.getByText("Your account")).toBeVisible();
+  await picture(page, "detail");
 
   const plus = classroom.getByRole("button", {
     name: "Connect Google Classroom",
@@ -115,9 +135,9 @@ test("a connect that ended badly says so on the card that tried, and plus starts
   );
   const classroom = cardOf(page, "Google Classroom");
 
-  await expect(
-    classroom.getByText("Tick every box on the Google screen.")
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(classroom.getByText("Tick every box at Google.")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(page.getByRole("alert")).toHaveCount(1);
   await expect(
     classroom.getByRole("button", { name: "Connect Google Classroom" })
@@ -127,15 +147,15 @@ test("a connect that ended badly says so on the card that tried, and plus starts
   await page.goto(
     `${page.url().split("?")[0]}?connect=failed&connector=classroom`
   );
-  await expect(
-    classroom.getByText("The connect failed, so try again.")
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(classroom.getByText("Connect failed, try again.")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(page.getByRole("alert")).toHaveCount(1);
   await picture(page, "failed");
   await context.close();
 });
 
-test("a connected school imports next and disconnects at once, and no state moves the card", async ({
+test("a connected school sees the check, finds its courses in the detail, and disconnects at once, and no state moves the card", async ({
   baseURL,
   browser,
 }) => {
@@ -144,40 +164,60 @@ test("a connected school imports next and disconnects at once, and no state move
   const classroom = cardOf(page, "Google Classroom");
 
   await page.setViewportSize({ height: 900, width: 1440 });
-  await expect(classroom.getByText("Not connected.")).toBeVisible({
+  await expect(classroom.getByText("by Google")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   const before = await classroom.boundingBox();
 
   await Effect.runPromise(runAcceptanceCommand("connection", slug, "active"));
   await expect(
-    classroom.getByText("Connected.", { exact: true })
+    classroom.getByRole("img", { name: "Connected." })
   ).toBeVisible();
   expect(await classroom.boundingBox()).toEqual(before);
   await picture(page, "connected");
 
-  const importing = classroom.getByRole("button", { name: "Import classes" });
-  await waitUntilTakenOver(importing);
-  await importing.click();
-  const sheet = page.getByRole("dialog", { name: "Classes in Classroom" });
-  await expect(sheet).toBeVisible();
+  await openOf(page, "Google Classroom").click();
+  const detail = page.getByRole("complementary", { name: "Connector detail" });
+  await expect(
+    detail.getByRole("heading", { name: "Classes in Classroom" })
+  ).toBeVisible();
+  await expect(detail.getByText("This school")).toBeVisible();
   await picture(page, "import");
-  await sheet.getByRole("button", { name: "Close" }).last().click();
-  await expect(sheet).toBeHidden();
 
-  await classroom
-    .getByRole("button", { name: "Manage Google Classroom" })
-    .click();
-  await page
-    .getByRole("menuitem", { name: "Disconnect Google Classroom" })
+  await detail
+    .getByRole("button", { name: "Disconnect Google Classroom" })
     .click();
   const dialog = page.getByRole("dialog", {
     name: "Disconnect Google Classroom",
   });
   await picture(page, "disconnect");
   await dialog.getByRole("button", { name: "Disconnect" }).click();
-  await expect(classroom.getByText("Not connected.")).toBeVisible();
+  await expect(
+    classroom.getByRole("button", { name: "Connect Google Classroom" })
+  ).toBeVisible();
+  await expect(
+    detail.getByRole("button", { exact: true, name: "Connect" })
+  ).toBeVisible();
   expect(await classroom.boundingBox()).toEqual(before);
+  await context.close();
+});
+
+test("a connect that just finished opens its service, where the next step waits", async ({
+  baseURL,
+  browser,
+}) => {
+  const context = await browser.newContext();
+  const { page, slug } = await openDirectory(context, baseURL, signInOwner);
+
+  await Effect.runPromise(runAcceptanceCommand("connection", slug, "active"));
+  await page.goto(
+    `${page.url().split("?")[0]}?connect=connected&connector=classroom`
+  );
+  await expect(
+    page
+      .getByRole("complementary", { name: "Connector detail" })
+      .getByRole("heading", { name: "Classes in Classroom" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await context.close();
 });
 
@@ -196,7 +236,9 @@ test("a connection Google stopped accepting says so, and connects again with one
     timeout: readinessTimeoutMilliseconds,
   });
   await picture(page, "reconnect");
-  const again = classroom.getByRole("button", { name: "Connect again" });
+  const again = classroom.getByRole("button", {
+    name: "Connect Google Classroom again",
+  });
   await waitUntilTakenOver(again);
   const consent = page.waitForURL(CONSENT);
   await again.click();
@@ -215,7 +257,9 @@ test("a teacher without the school's permission sees why, and keeps their own se
   await expect(
     classroom.getByText("Only an Admin can connect this.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(classroom.getByRole("button")).toHaveCount(0);
+  await expect(
+    classroom.getByRole("button", { name: "Connect Google Classroom" })
+  ).toHaveCount(0);
   await expect(
     cardOf(page, "Google Drive").getByRole("button", {
       name: "Connect Google Drive",

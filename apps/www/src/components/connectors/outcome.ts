@@ -16,3 +16,10 @@ export const connectFailure = (
   connector === shown && (connect === "failed" || connect === "refused")
     ? Option.some(connect)
     : Option.none();
+
+/** The connector a connect just finished, whose detail opens by itself as the next step. */
+export const connectedService = ({
+  connect,
+  connector,
+}: typeof ConnectSearch.Type) =>
+  connect === "connected" ? Option.fromUndefinedOr(connector) : Option.none();
