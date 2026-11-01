@@ -11717,6 +11717,20 @@ export declare const api: {
       >;
     };
     grades: {
+      correct: FunctionReference<
+        "mutation",
+        "public",
+        { gradeId: Id<"classGrades">; slug: string; value: number },
+        {
+          band?: string;
+          classId: Id<"classes">;
+          id: Id<"classGrades">;
+          kktp: "reached" | "notReached";
+          personId: Id<"tenantPeople">;
+          state: "draft" | "released";
+          value: number;
+        }
+      >;
       enter: FunctionReference<
         "mutation",
         "public",

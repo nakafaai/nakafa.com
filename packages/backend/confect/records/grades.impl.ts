@@ -4,6 +4,7 @@ import { classAccess } from "@repo/backend/confect/classroom/authority";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { gradeAccess } from "@repo/backend/confect/records/authority";
+import { correct } from "@repo/backend/confect/records/grades/correct";
 import { enter } from "@repo/backend/confect/records/grades/enter";
 import { own } from "@repo/backend/confect/records/grades/own";
 import { release } from "@repo/backend/confect/records/grades/release";
@@ -15,6 +16,7 @@ import { Layer } from "effect";
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(enter),
   Layer.provide(release),
+  Layer.provide(correct),
   Layer.provide(sheet),
   Layer.provide(scheme),
   Layer.provide(own),

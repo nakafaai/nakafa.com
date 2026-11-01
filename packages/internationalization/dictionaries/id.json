@@ -1651,6 +1651,8 @@
     "kktp-notReached": "Di bawah KKTP",
     "search": "Cari siswa",
     "release": "Rilis",
+    "correct": "Koreksi nilai",
+    "correct-description": "Siswa dan orang tuanya diberi tahu nilai barunya.",
     "empty": "Belum ada siswa di kelas ini.",
     "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya.",
     "detail": "Nilai siswa",

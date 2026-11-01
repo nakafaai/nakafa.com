@@ -70,6 +70,17 @@ export function enterChange(
 }
 
 /** Shows a draft as released at once, on every loaded page of its class. */
+/** Shows a released grade under its corrected value at once. */
+export function correctChange(
+  classId: ClassId,
+  personId: SheetLine["student"]["id"]
+): OptimisticUpdate<typeof records.grades.correct> {
+  return (localStore, { value }) =>
+    changeLine(localStore, classId, personId, (grade) =>
+      grade === null ? grade : { ...grade, value }
+    );
+}
+
 export function releaseChange(
   classId: ClassId,
   personId: SheetLine["student"]["id"]

@@ -1651,6 +1651,8 @@
     "kktp-notReached": "Below KKTP",
     "search": "Search students",
     "release": "Release",
+    "correct": "Correct grade",
+    "correct-description": "The student and their parents are told the new grade.",
     "empty": "No student in this class yet.",
     "empty-description": "Students appear here once they are placed in the class group.",
     "detail": "Student's grade",
