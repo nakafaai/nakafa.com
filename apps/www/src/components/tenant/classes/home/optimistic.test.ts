@@ -173,6 +173,29 @@ describe("class home optimistic updates", () => {
     );
   });
 
+  it("flags only the pinned announcement on a page that holds others", () => {
+    const { localStore, setQuery } = storeOf(pages);
+    localStore.getAllQueries.mockImplementation((query) =>
+      query === classroom.posts.pinned ? [] : pages
+    );
+    pinPostUpdate(second)(localStore, {
+      classId,
+      pinned: true,
+      postId: second.id,
+      slug,
+    });
+    expect(setQuery.mock.calls).toEqual([
+      [
+        classroom.posts.list,
+        listArgs(classId, "older"),
+        Option.some({
+          isDone: true,
+          page: [{ ...second, pinned: true }, third],
+        }),
+      ],
+    ]);
+  });
+
   it("shows the viewer's choice in a poll at once, in the reads that hold its post", () => {
     const voted = (postId: typeof first.id) => ({
       classId,
