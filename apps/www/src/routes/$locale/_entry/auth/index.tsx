@@ -25,13 +25,12 @@ const AuthSearch = Schema.Struct({
 });
 
 /**
- * The sign-in page takes the root metadata, which names its title, description
- * and the canonical address of the locale's home, as the reference app does. The
- * build prerenders it, so its loader reads the static answers and every visitor
- * opens the static page. A signed-in visitor never sees it: a move between pages
- * passes the gate, which sends them on to the page the intent names, or home,
- * before the loader runs, and the static page hides its body before the first
- * paint and sends them on once Better Auth confirms the session.
+ * The sign-in page names itself and takes the root description. The build
+ * prerenders it, so its loader reads the static answers and every visitor opens the
+ * static page. A signed-in visitor never sees it: a move between pages passes the
+ * gate, which sends them on to the page the intent names, or home, before the loader
+ * runs, and the static page hides its body before the first paint and sends them on
+ * once Better Auth confirms the session.
  */
 export const Route = createFileRoute("/$locale/_entry/auth/")({
   validateSearch: Schema.toStandardSchemaV1(AuthSearch),
@@ -49,7 +48,7 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
     const [messages, legal] = await Promise.all([
       readStaticData(readRouteMessages, {
         locale: params.locale,
-        namespaces: ["Metadata"],
+        namespaces: ["Auth", "Metadata"],
       }),
       readStaticData(readAuthLegalFn, { locale: params.locale }),
     ]);
@@ -58,7 +57,16 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
       messages,
       namespace: "Metadata",
     });
-    return { description: t("description"), legal, title: t("title") };
+    const tAuth = createTranslator({
+      locale: params.locale,
+      messages,
+      namespace: "Auth",
+    });
+    return {
+      description: t("description"),
+      legal,
+      title: tAuth("sign-in-title"),
+    };
   },
   head: ({ loaderData, params }) =>
     loaderData === undefined
