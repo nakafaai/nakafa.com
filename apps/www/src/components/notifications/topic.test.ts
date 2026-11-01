@@ -18,4 +18,9 @@ describe("notifications/topic", () => {
     expect(inTopic(change, "school")).toBe(true);
     expect(inTopic(change, "comments")).toBe(false);
   });
+
+  it("files a reply under comments and not under school", () => {
+    expect(inTopic("comment.replied", "comments")).toBe(true);
+    expect(inTopic("comment.replied", "school")).toBe(false);
+  });
 });
