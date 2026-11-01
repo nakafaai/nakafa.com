@@ -20,6 +20,45 @@ const denied = (reason: "resource" | "role" | "condition") => ({
 });
 const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
 
+describe("tenancy/people search", () => {
+  it.effect("finds people by name, of the status and account it asks for", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const admin = fixture.as("admin");
+      const named = (args: { account?: "unclaimed"; search: string }) =>
+        admin.query(list, {
+          ...firstPage,
+          slug: nf,
+          status: "active",
+          ...args,
+        });
+      expect((yield* named({ search: "Teach" })).page).toMatchObject([
+        { id: fixture.people.teacher.personId },
+      ]);
+      expect(
+        (yield* named({ account: "unclaimed", search: "Teach" })).page
+      ).toEqual([]);
+      expect((yield* named({ search: "Suspended" })).page).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "finds a student or a teacher by name, and leaves out whoever lacks the role",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const admin = fixture.as("admin");
+        const found = (search: string) =>
+          admin.query(students, { ...firstPage, search, slug: nf });
+        expect((yield* found("Student")).page).toMatchObject([
+          { id: fixture.people.student.personId },
+        ]);
+        expect((yield* found("Teacher")).page).toEqual([]);
+        expect((yield* found("Suspended")).page).toEqual([]);
+      })
+  );
+});
+
 describe("tenancy/people list and create", () => {
   it.effect(
     "lists the people of one status, with whether each holds an account",
