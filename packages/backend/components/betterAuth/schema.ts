@@ -24,7 +24,7 @@ export const tables = {
     displayUsername: v.optional(v.union(v.null(), v.string())),
     userId: v.optional(v.union(v.null(), v.string())),
   })
-    .index("email_name", ["email", "name"])
+    .index("email_name", ["email","name"])
     .index("name", ["name"])
     .index("userId", ["userId"])
     .index("username", ["username"]),
@@ -38,7 +38,7 @@ export const tables = {
     userId: v.string(),
   })
     .index("expiresAt", ["expiresAt"])
-    .index("expiresAt_userId", ["expiresAt", "userId"])
+    .index("expiresAt_userId", ["expiresAt","userId"])
     .index("token", ["token"])
     .index("userId", ["userId"]),
   account: defineTable({
@@ -57,8 +57,8 @@ export const tables = {
     hostedDomain: v.optional(v.union(v.null(), v.string())),
   })
     .index("accountId", ["accountId"])
-    .index("accountId_providerId", ["accountId", "providerId"])
-    .index("providerId_userId", ["providerId", "userId"])
+    .index("accountId_providerId", ["accountId","providerId"])
+    .index("providerId_userId", ["providerId","userId"])
     .index("userId", ["userId"]),
   verification: defineTable({
     identifier: v.string(),
@@ -69,6 +69,46 @@ export const tables = {
   })
     .index("expiresAt", ["expiresAt"])
     .index("identifier", ["identifier"]),
+  oauthApplication: defineTable({
+    name: v.optional(v.union(v.null(), v.string())),
+    icon: v.optional(v.union(v.null(), v.string())),
+    metadata: v.optional(v.union(v.null(), v.string())),
+    clientId: v.optional(v.union(v.null(), v.string())),
+    clientSecret: v.optional(v.union(v.null(), v.string())),
+    redirectUrls: v.optional(v.union(v.null(), v.string())),
+    type: v.optional(v.union(v.null(), v.string())),
+    disabled: v.optional(v.union(v.null(), v.boolean())),
+    userId: v.optional(v.union(v.null(), v.string())),
+    createdAt: v.optional(v.union(v.null(), v.number())),
+    updatedAt: v.optional(v.union(v.null(), v.number())),
+  })
+    .index("clientId", ["clientId"])
+    .index("userId", ["userId"]),
+  oauthAccessToken: defineTable({
+    accessToken: v.optional(v.union(v.null(), v.string())),
+    refreshToken: v.optional(v.union(v.null(), v.string())),
+    accessTokenExpiresAt: v.optional(v.union(v.null(), v.number())),
+    refreshTokenExpiresAt: v.optional(v.union(v.null(), v.number())),
+    clientId: v.optional(v.union(v.null(), v.string())),
+    userId: v.optional(v.union(v.null(), v.string())),
+    scopes: v.optional(v.union(v.null(), v.string())),
+    createdAt: v.optional(v.union(v.null(), v.number())),
+    updatedAt: v.optional(v.union(v.null(), v.number())),
+  })
+    .index("accessToken", ["accessToken"])
+    .index("refreshToken", ["refreshToken"])
+    .index("clientId", ["clientId"])
+    .index("userId", ["userId"]),
+  oauthConsent: defineTable({
+    clientId: v.optional(v.union(v.null(), v.string())),
+    userId: v.optional(v.union(v.null(), v.string())),
+    scopes: v.optional(v.union(v.null(), v.string())),
+    createdAt: v.optional(v.union(v.null(), v.number())),
+    updatedAt: v.optional(v.union(v.null(), v.number())),
+    consentGiven: v.optional(v.union(v.null(), v.boolean())),
+  })
+    .index("clientId_userId", ["clientId","userId"])
+    .index("userId", ["userId"]),
   jwks: defineTable({
     publicKey: v.string(),
     privateKey: v.string(),

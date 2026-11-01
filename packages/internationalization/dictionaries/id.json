@@ -2415,6 +2415,13 @@
     "contribute": "Berkontribusi"
   },
   "Auth": {
+    "agent-address": "Setelah itu kamu kembali ke {host}.",
+    "agent-allow": "Izinkan",
+    "agent-deny": "Tolak",
+    "agent-description": "Agen ini bisa membaca dan mengubah semua yang bisa kamu lakukan di Nakafa. Izinkan hanya agen yang kamu percaya.",
+    "agent-failed": "Jawabanmu belum tersimpan. Coba lagi.",
+    "agent-title": "Izinkan {name} memakai akunmu?",
+    "agent-unnamed": "Agen ini",
     "back-to-nakafa": "Kembali ke Nakafa",
     "continue-with-google": "Masuk dengan Google",
     "sign-in-title": "Masuk ke Nakafa",

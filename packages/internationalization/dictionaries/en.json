@@ -2415,6 +2415,13 @@
     "contribute": "Contribute"
   },
   "Auth": {
+    "agent-address": "You go back to {host} after this.",
+    "agent-allow": "Allow",
+    "agent-deny": "Deny",
+    "agent-description": "This agent can read and change everything you can do in Nakafa. Allow only an agent you trust.",
+    "agent-failed": "Your answer was not saved. Try again.",
+    "agent-title": "Let {name} use your account?",
+    "agent-unnamed": "This agent",
     "back-to-nakafa": "Back to Nakafa",
     "continue-with-google": "Continue with Google",
     "sign-in-title": "Sign in to Nakafa",
