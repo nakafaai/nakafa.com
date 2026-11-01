@@ -92,15 +92,16 @@ export function useSetTryoutPressed() {
  * the link that continues a running attempt, so the press does what the action does.
  */
 export function useAnswerPress(answer: () => void) {
-  const pressed = useTryoutPressed();
-  const setPressed = useSetTryoutPressed();
-  const answerPress = useEffectEvent(() => {
-    setPressed(false);
-    answer();
-  });
+  const store = useTryoutPressStore();
+  const answerPress = useEffectEvent(answer);
   useEffect(() => {
-    if (pressed) {
-      answerPress();
-    }
-  }, [pressed]);
+    const takePress = () => {
+      if (store.getState()) {
+        store.setState(false, true);
+        answerPress();
+      }
+    };
+    takePress();
+    return store.subscribe(takePress);
+  }, [store]);
 }
