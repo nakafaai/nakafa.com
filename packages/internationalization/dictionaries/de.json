@@ -2344,6 +2344,7 @@
   },
   "Player": {
     "navigator": "Aufgaben",
+    "navigator-description": "Wähle eine Nummer, um diese Frage zu öffnen.",
     "navigator-open": "Aufgabenübersicht öffnen, Aufgabe {number}",
     "controls": "Aufgabensteuerung",
     "previous-question": "Vorherige Aufgabe",

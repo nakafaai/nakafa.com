@@ -2344,6 +2344,7 @@
   },
   "Player": {
     "navigator": "Soal",
+    "navigator-description": "Pilih nomor untuk membuka soal itu.",
     "navigator-open": "Buka navigasi soal, soal {number}",
     "controls": "Kontrol soal",
     "previous-question": "Soal sebelumnya",

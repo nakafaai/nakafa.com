@@ -1,6 +1,7 @@
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerPanel,
   DrawerTitle,
@@ -47,6 +48,7 @@ export function PlayerSheet({ children }: { children: ReactNode }) {
       >
         <DrawerHeader>
           <DrawerTitle>{t("navigator")}</DrawerTitle>
+          <DrawerDescription>{t("navigator-description")}</DrawerDescription>
         </DrawerHeader>
         <DrawerPanel className={cn(monospace, "grid gap-4")} ref={body}>
           {children}

@@ -2344,6 +2344,7 @@
   },
   "Player": {
     "navigator": "Questions",
+    "navigator-description": "Pick a number to open that question.",
     "navigator-open": "Open the question navigator, question {number}",
     "controls": "Question controls",
     "previous-question": "Previous question",
