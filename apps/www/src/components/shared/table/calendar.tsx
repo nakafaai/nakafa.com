@@ -31,6 +31,8 @@ export function HeadDays({ column }: { column: string }) {
 
   return (
     <Calendar
+      className="p-0 [--cell-size:--spacing(9)]"
+      classNames={{ root: "w-full" }}
       {...Option.match(from, {
         onNone: () => ({}),
         onSome: (defaultMonth) => ({ defaultMonth }),
