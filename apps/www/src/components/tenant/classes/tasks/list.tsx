@@ -196,17 +196,8 @@ function useTaskColumns(categories: readonly string[]) {
       id: "deadline",
       timeZone: formatZone,
     }),
-    Arr.contains(can, "task.manage")
-      ? taskColumns.number((task) => task.handedIn, {
-          cell: (info) => (
-            <span className="text-muted-foreground">
-              <TaskStanding task={info.row.original} />
-            </span>
-          ),
-          header: t("task-status"),
-          id: "handedIn",
-        })
-      : // A student's standing, which the server filters by; the same rule keeps the rows the table shows.
+    Arr.contains(can, "task.submit")
+      ? // A student's standing, which the server filters by; the same rule keeps the rows the table shows.
         taskColumns.choice((task) => standingOf(task.mine), {
           cell: (info) => (
             <span className="text-muted-foreground">
@@ -216,6 +207,15 @@ function useTaskColumns(categories: readonly string[]) {
           header: t("task-status"),
           id: "standing",
           options: standingChoices,
+        })
+      : taskColumns.number((task) => task.handedIn, {
+          cell: (info) => (
+            <span className="text-muted-foreground">
+              <TaskStanding task={info.row.original} />
+            </span>
+          ),
+          header: t("task-status"),
+          id: "handedIn",
         }),
   ];
 }
@@ -264,11 +264,11 @@ function TaskTitle({ task }: { task: ClassTask }) {
   );
 }
 
-/** Where a task stands: how many handed work in, for a teacher who keeps the class's tasks, or the viewer's own work. */
+/** Where a task stands: the viewer's own work for a student of the class, and how many handed work in for anyone else. */
 export function TaskStanding({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
   const { can } = useClassScope();
-  if (Arr.contains(can, "task.manage")) {
+  if (!Arr.contains(can, "task.submit")) {
     return t("task-handed-in-count", { count: task.handedIn });
   }
   if (task.mine !== null && task.mine.score !== null) {
