@@ -47,6 +47,12 @@ const deProgramSubject = readTestPublishedRoute(
   "de"
 );
 
+/** The curriculum place that the addresses of these tests name. */
+const PLACE = {
+  nodeKey: "class-11-mathematics-function-composition-inverse-function",
+  programKey: "merdeka",
+};
+
 vi.mock("@/lib/content/article/category", () => ({
   readPublishedArticleCategory: publishedMocks.articleCategory,
   readPublishedCategoryAlternates: publishedMocks.categoryAlternates,
@@ -55,7 +61,7 @@ vi.mock("@/lib/content/article/route", () => ({
   readPublishedArticleRoute: publishedMocks.articleRoute,
 }));
 vi.mock("@/lib/content/material/context", () => ({
-  readPublishedMaterialContext: publishedMocks.materialContext,
+  readPublishedMaterialPlacements: publishedMocks.materialContext,
 }));
 vi.mock("@/lib/content/material/route", () => ({
   readPublishedMaterialRoute: publishedMocks.materialRoute,
@@ -276,14 +282,28 @@ describe("published localized route ownership", () => {
       const search =
         "?ctx=merdeka~class-11-mathematics-function-composition-inverse-function";
       publishedMocks.materialContext
-        .mockReturnValueOnce(Effect.succeed({ context: {} }))
-        .mockReturnValueOnce(Effect.succeed(null));
+        .mockReturnValueOnce(Effect.succeed([{ context: PLACE }]))
+        .mockReturnValueOnce(Effect.succeed([]));
 
       const verified = yield* readMaterialHref(search);
       expect(verified).toBe(`/${previewIdProjection.publicPath}${search}`);
 
       const omitted = yield* readMaterialHref(search);
       expect(omitted).toBe(`/${previewIdProjection.publicPath}`);
+
+      publishedMocks.materialContext
+        .mockReturnValueOnce(
+          Effect.succeed([{ context: { ...PLACE, nodeKey: "other" } }])
+        )
+        .mockReturnValueOnce(
+          Effect.succeed([{ context: { ...PLACE, programKey: "other" } }])
+        );
+      expect(yield* readMaterialHref(search)).toBe(
+        `/${previewIdProjection.publicPath}`
+      );
+      expect(yield* readMaterialHref(search)).toBe(
+        `/${previewIdProjection.publicPath}`
+      );
     })
   );
 
