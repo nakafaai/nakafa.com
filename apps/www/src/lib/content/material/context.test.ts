@@ -6,6 +6,7 @@ import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curricul
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer, Schema } from "effect";
 import { readPublishedMaterialPlacements } from "@/lib/content/material/context";
+import { activateTestRelease } from "@/test/active";
 import { makeProgramContextRuntimeSource } from "@/test/content/program-context";
 import { previewProjection } from "@/test/content-preview";
 import {
@@ -16,8 +17,17 @@ import {
   testProgramRoot,
   testProgramSubject,
 } from "@/test/content-program";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
 const [group] = Schema.decodeUnknownSync(Schema.Tuple([CurriculumRouteSchema]))(
   testProgramGroups
 );
@@ -59,6 +69,8 @@ vi.mock("@confect/js", async (importOriginal) => {
 });
 beforeEach(() => {
   runtimeQueryMock.mockReset();
+  resetTestRuntimeCache();
+  activateTestRelease(ReleaseIdSchema.make("release-material"));
 });
 describe("published material places", () => {
   it.effect(
@@ -116,6 +128,21 @@ describe("published material places", () => {
           publicPath: previewProjection.publicPath,
         });
       })
+  );
+
+  it.effect("asks Convex once for a material's places in one release", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValue(Effect.succeed([place]));
+
+      for (const _ of [1, 2, 3]) {
+        yield* readPublishedMaterialPlacements("en", previewProjection);
+      }
+      expect(runtimeQueryMock).toHaveBeenCalledOnce();
+
+      activateTestRelease(ReleaseIdSchema.make("release-material-next"));
+      yield* readPublishedMaterialPlacements("en", previewProjection);
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+    })
   );
 
   it.effect("pins the read when its caller reads several in one release", () =>
