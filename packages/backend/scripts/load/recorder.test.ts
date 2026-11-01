@@ -71,7 +71,7 @@ describe("load recorder", () => {
         yield* (yield* Recorder).acknowledge(first);
         // The line is on disk while the run still holds the recorder, so a killed run keeps it.
         expect(yield* fs.readFileString(path)).toBe(
-          `${JSON.stringify(first)}\n`
+          '{"attempt":"a","question":"q1","response":["option-1"],"version":1}\n'
         );
       }).pipe(Effect.provide(recorderLayer(path)));
     }).pipe(Effect.scoped, Effect.provide(nodePlatform))

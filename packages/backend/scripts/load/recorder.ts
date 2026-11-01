@@ -14,6 +14,8 @@ import {
 
 /** One line of the file that holds a run's acknowledgements. */
 const AcknowledgedLine = Schema.fromJsonString(Acknowledged);
+const encodeLine = Schema.encodeEffect(AcknowledgedLine);
+const decodeLine = Schema.decodeEffect(AcknowledgedLine);
 
 /**
  * Collects what a run measures: every timed call, and every answer whose write the server
@@ -44,21 +46,19 @@ export const recorderLayer = (path: string) =>
       const samples = MutableList.make<Sample>();
       return Recorder.of({
         acknowledge: (answer) =>
-          Schema.encodeEffect(AcknowledgedLine)(answer).pipe(
+          encodeLine(answer).pipe(
             Effect.flatMap((line) =>
               fs.writeFileString(path, `${line}\n`, { flag: "a" })
             ),
             Effect.orDie
           ),
-        acknowledged: fs
-          .stream(path)
-          .pipe(
-            Stream.decodeText(),
-            Stream.splitLines,
-            Stream.mapEffect(Schema.decodeEffect(AcknowledgedLine)),
-            Stream.runCollect,
-            Effect.orDie
-          ),
+        acknowledged: fs.stream(path).pipe(
+          Stream.decodeText(),
+          Stream.splitLines,
+          Stream.mapEffect((line) => decodeLine(line)),
+          Stream.runCollect,
+          Effect.orDie
+        ),
         sample: (sample) =>
           Effect.sync(() => MutableList.append(samples, sample)),
         samples: Effect.sync(() => MutableList.toArray(samples)),
