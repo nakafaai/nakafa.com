@@ -2,7 +2,11 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskText } from "@repo/backend/confect/classroom/tasks/task";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import {
   Array as Arr,
@@ -34,8 +38,9 @@ import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 
 /**
  * One task of a class: what it asks and when it is due, worth how many points, and what late work
- * gets, then the student's own hand-in or, for its teacher, the work handed in. A task the class
- * does not hold shows the missing state, a failed read its sentence and Try again.
+ * gets, then the student's own hand-in or, for its teacher, the work handed in. A reader who neither
+ * teaches the class nor learns in it sees the task alone. A task the class does not hold shows the
+ * missing state, a failed read its sentence and Try again.
  */
 export function TaskPage({ task: address }: { task: string }) {
   const { can, classId, slug } = useClassScope();
@@ -62,11 +67,10 @@ export function TaskPage({ task: address }: { task: string }) {
   return (
     <div className="flex w-full min-w-0 flex-col gap-6">
       <TaskDetails task={task} />
-      {Arr.contains(can, "task.manage") ? (
-        <TaskWorkTable task={task} />
-      ) : (
+      {Arr.contains(can, "task.manage") ? <TaskWorkTable task={task} /> : null}
+      {Arr.contains(can, "task.submit") && !Arr.contains(can, "task.manage") ? (
         <HandIn key={task.id} task={task} />
-      )}
+      ) : null}
     </div>
   );
 }
@@ -117,8 +121,9 @@ function TaskDetails({ task }: { task: ClassTask }) {
 /**
  * The student's hand-in: one field that holds the work they handed in, and Hand in, which waits disabled until the
  * field holds new work. The work shows as handed in at once and stays in the field, so the student reads and changes
- * it there, and the button keeps its words and its place. A refusal, such as a task that closed at its deadline, shows
- * the toast every School action uses, and the field keeps the text.
+ * it there, and the button keeps its words and its place. A task that closes at its deadline says so once that passes,
+ * and takes no more work. A refusal the page could not foresee shows the toast every School action uses, and the field
+ * keeps the text.
  */
 function HandIn({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
@@ -127,7 +132,11 @@ function HandIn({ task }: { task: ClassTask }) {
   const [text, setText] = useState(task.mine?.text ?? "");
   const id = useId();
   const body = Str.trim(text);
-  const ready = Schema.is(TaskText)(body) && body !== task.mine?.text;
+  const isClosed =
+    task.latePolicy === "close" &&
+    task.deadline < DateTime.toEpochMillis(DateTime.nowUnsafe());
+  const ready =
+    !isClosed && Schema.is(TaskText)(body) && body !== task.mine?.text;
 
   const handIn = () => {
     if (!ready) {
@@ -158,8 +167,12 @@ function HandIn({ task }: { task: ClassTask }) {
           id={`${id}-work`}
           onChange={(event) => setText(event.target.value)}
           placeholder={t("handin-placeholder")}
+          readOnly={isClosed}
           value={text}
         />
+        {isClosed ? (
+          <FieldDescription>{t("task-closed")}</FieldDescription>
+        ) : null}
       </Field>
       <div className="flex justify-end">
         <Button disabled={!ready} type="submit">

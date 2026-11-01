@@ -1559,6 +1559,7 @@
     "task-work": "Deine Arbeit",
     "task-student": "Schüler",
     "task-hand-in": "Abgeben",
+    "task-closed": "Diese Aufgabe endete mit ihrer Frist.",
     "task-work-empty": "Noch keine Arbeit",
     "task-work-empty-description": "Die Arbeiten der Schüler erscheinen hier.",
     "task-work-search": "Schüler suchen",
@@ -3267,7 +3268,8 @@
       "description": "Wähle ein aktives Kind ohne diese E-Mail."
     },
     "school-roster-imported": {
-      "title": "Die Schüler sind in der Liste."
+      "title": "Die Schüler sind in der Liste.",
+      "description": "Öffne Mitglieder, um jedem eine Anmeldekarte zu geben."
     },
     "school-roster-export-failed": {
       "title": "Datei nicht gespeichert."

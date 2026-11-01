@@ -48,9 +48,15 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleLooks } from "@/components/tenant/roles";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
+import {
+  type CardView,
+  SchoolCardDialog,
+} from "@/components/tenant/settings/card";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { inviteChange } from "@/components/tenant/settings/grants";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
+import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
+import { cardOffered } from "@/components/tenant/settings/offer";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
@@ -204,8 +210,8 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
 }
 
 /**
- * The row menu of a member: Rename, Give a role, which gives the member a role of the whole school, Invite for a member
- * nothing waits for yet, such as a student an import added, and Remove for a member whom the viewer may remove, one who
+ * The row menu of a member: Rename, Give a role, which gives the member a role of the whole school, Invite and a login
+ * card for a member nothing waits for yet, such as a student an import added, who may have no address, and Remove for a member whom the viewer may remove, one who
  * joined, one whose card waits, and one whose invite ended or card expired. Remove asks first, and the account of a member
  * who joined loses the school at once. An invited member is handled on the invitations page, and the list answers which
  * rows the viewer may remove.
@@ -229,6 +235,8 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renaming, setRenaming] = useState(0);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isIssuing, setIsIssuing] = useState(false);
+  const [issued, setIssued] = useState<CardView | undefined>(undefined);
   const removable = member.removable && member.status !== "invited";
 
   /** Invites the member at the address typed, in the viewer's language. */
@@ -299,6 +307,12 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
                 {t("invite-action")}
               </DropdownMenuItem>
             ) : null}
+            {member.status === "notInvited" && cardOffered(member.roles) ? (
+              <DropdownMenuItem onClick={() => setIsIssuing(true)}>
+                <HugeIcons icon={IdCardIcon} />
+                {t("invite-card")}
+              </DropdownMenuItem>
+            ) : null}
             {removable ? (
               <DropdownMenuItem
                 onClick={() => setIsRemoving(true)}
@@ -338,6 +352,15 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
           type="email"
         />
       )}
+      <SchoolIssueCardDialog
+        name={member.name}
+        onIssued={setIssued}
+        open={isIssuing}
+        personId={member.id}
+        setOpen={setIsIssuing}
+        slug={slug}
+      />
+      <SchoolCardDialog card={issued} onClose={() => setIssued(undefined)} />
       <ResponsiveDialog
         description={t("member-remove-description")}
         footer={

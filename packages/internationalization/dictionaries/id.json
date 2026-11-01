@@ -1559,6 +1559,7 @@
     "task-work": "Pekerjaanmu",
     "task-student": "Siswa",
     "task-hand-in": "Kumpulkan",
+    "task-closed": "Tugas ini ditutup saat tenggatnya.",
     "task-work-empty": "Belum ada pekerjaan",
     "task-work-empty-description": "Pekerjaan yang dikumpulkan siswa tampil di sini.",
     "task-work-search": "Cari siswa",
@@ -3267,7 +3268,8 @@
       "description": "Pilih siswa aktif yang belum memakai email ini."
     },
     "school-roster-imported": {
-      "title": "Siswa sudah masuk ke daftar."
+      "title": "Siswa sudah masuk ke daftar.",
+      "description": "Buka Anggota untuk memberi tiap siswa kartu login."
     },
     "school-roster-export-failed": {
       "title": "File tidak tersimpan."

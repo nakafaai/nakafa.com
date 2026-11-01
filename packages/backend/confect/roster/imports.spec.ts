@@ -1,6 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { AccessDenied, GrantRejected } from "@repo/backend/confect/access/errors";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import {
@@ -32,7 +32,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => ImportSummary,
-      error: () => AccessDenied,
+      error: () => Schema.Union([GrantRejected, AccessDenied]),
     }).middleware(PeriodAccess, { action: "roster.import", arg: "periodId" })
   )
   .addFunction(
@@ -45,7 +45,7 @@ export default GroupSpec.make()
         source: SourcedImport,
       }),
       returns: () => ImportSummary,
-      error: () => AccessDenied,
+      error: () => Schema.Union([GrantRejected, AccessDenied]),
     }).middleware(PeriodAccess, { action: "roster.import", arg: "periodId" })
   )
   .addFunction(

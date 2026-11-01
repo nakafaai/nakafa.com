@@ -1559,6 +1559,7 @@
     "task-work": "Your work",
     "task-student": "Student",
     "task-hand-in": "Hand in",
+    "task-closed": "This task closed at its deadline.",
     "task-work-empty": "No work yet",
     "task-work-empty-description": "The work students hand in shows here.",
     "task-work-search": "Search students",
@@ -3267,7 +3268,8 @@
       "description": "Choose an active student without this email."
     },
     "school-roster-imported": {
-      "title": "The students are in the roster."
+      "title": "The students are in the roster.",
+      "description": "Open Members to give each one a login card."
     },
     "school-roster-export-failed": {
       "title": "The file was not saved."
