@@ -2,3 +2,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 
 export const cancelPlan = registeredFunctions.cancelPlan;
 export const deactivate = registeredFunctions.deactivate;
+export const experimental_reuseContext = true;

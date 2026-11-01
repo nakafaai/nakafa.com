@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/le
 
 export const setPreferredCurriculum = registeredFunctions.setPreferredCurriculum;
 export const setPreferredTryoutCountry = registeredFunctions.setPreferredTryoutCountry;
+export const experimental_reuseContext = true;

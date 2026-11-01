@@ -5,3 +5,4 @@ export const list = registeredFunctions.list;
 export const readdress = registeredFunctions.readdress;
 export const resend = registeredFunctions.resend;
 export const revoke = registeredFunctions.revoke;
+export const experimental_reuseContext = true;

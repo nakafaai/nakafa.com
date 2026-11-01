@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/te
 
 export const invite = registeredFunctions.invite;
 export const sweep = registeredFunctions.sweep;
+export const experimental_reuseContext = true;

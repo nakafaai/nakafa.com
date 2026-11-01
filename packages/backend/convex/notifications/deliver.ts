@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/no
 export const forget = registeredFunctions.forget;
 export const notice = registeredFunctions.notice;
 export const send = registeredFunctions.send;
+export const experimental_reuseContext = true;

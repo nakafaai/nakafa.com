@@ -4,3 +4,4 @@ export const getChat = registeredFunctions.getChat;
 export const getChatTitle = registeredFunctions.getChatTitle;
 export const getOwnChats = registeredFunctions.getOwnChats;
 export const getShareToken = registeredFunctions.getShareToken;
+export const experimental_reuseContext = true;

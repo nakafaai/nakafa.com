@@ -5,3 +5,4 @@ export const artifactPlan = registeredFunctions.artifactPlan;
 export const page = registeredFunctions.page;
 export const routePage = registeredFunctions.routePage;
 export const state = registeredFunctions.state;
+export const experimental_reuseContext = true;

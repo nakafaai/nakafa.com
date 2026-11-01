@@ -5,3 +5,4 @@ export const pruneLearningPopularity = registeredFunctions.pruneLearningPopulari
 export const refreshLearningPopularityWindowPage = registeredFunctions.refreshLearningPopularityWindowPage;
 export const scheduleLearningPopularityExpiries = registeredFunctions.scheduleLearningPopularityExpiries;
 export const scheduleLearningPopularityRefreshes = registeredFunctions.scheduleLearningPopularityRefreshes;
+export const experimental_reuseContext = true;

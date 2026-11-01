@@ -11,3 +11,4 @@ export const stored = registeredFunctions.stored;
 export const sweep = registeredFunctions.sweep;
 export const uploadUrl = registeredFunctions.uploadUrl;
 export const urls = registeredFunctions.urls;
+export const experimental_reuseContext = true;

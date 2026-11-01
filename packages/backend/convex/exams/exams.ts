@@ -7,3 +7,4 @@ export const open = registeredFunctions.open;
 export const remove = registeredFunctions.remove;
 export const rename = registeredFunctions.rename;
 export const schedule = registeredFunctions.schedule;
+export const experimental_reuseContext = true;

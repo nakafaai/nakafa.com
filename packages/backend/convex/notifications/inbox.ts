@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/no
 export const list = registeredFunctions.list;
 export const read = registeredFunctions.read;
 export const readAll = registeredFunctions.readAll;
+export const experimental_reuseContext = true;
