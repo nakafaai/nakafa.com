@@ -51,9 +51,10 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "getCommentPlace",
+      // The address of a page, which anyone can write, so it is read as text.
       args: () => ({
         appLocale: appLocaleValidator,
-        commentId: IdSchema("comments"),
+        commentId: Schema.String,
       }),
       returns: () => Schema.NullOr(CommentPlace),
     })

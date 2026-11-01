@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import { listChats } from "@repo/backend/confect/chats/list";
@@ -45,12 +46,19 @@ const getChatTitle = FunctionImpl.make(
   spec,
   "getChatTitle",
   Effect.fn("chats.queries.getChatTitle")(function* (args) {
+    const ctx = yield* QueryCtxService;
+    const chatId = ctx.db.normalizeId("chats", args.chatId);
+    if (chatId === null) {
+      return null;
+    }
+    // A hidden chat and a missing one read alike, so no stranger learns which it is.
     const viewer = yield* getOptionalAppUserForRead();
-    return yield* readChat(args.chatId, viewer?.appUser._id ?? null).pipe(
+    const title = yield* readChat(chatId, viewer?.appUser._id ?? null).pipe(
       Effect.flatMap(openChat),
       Effect.map((chat) => chat.title ?? null),
       Effect.catchTag("ChatAccessError", () => Effect.succeed(null))
     );
+    return { title };
   })
 );
 /**
