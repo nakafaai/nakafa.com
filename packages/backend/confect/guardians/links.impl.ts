@@ -195,11 +195,12 @@ const list = FunctionImpl.make(
         minimum: 1,
       }),
     });
-    if (search !== undefined && Schema.is(Email)(search)) {
+    const address = search?.toLowerCase();
+    if (Schema.is(Email)(address)) {
       const addressed = yield* (yield* DatabaseReader)
         .table("guardianLinks")
         .index("by_tenantId_and_email", (query) =>
-          query.eq("tenantId", tenant._id).eq("email", search)
+          query.eq("tenantId", tenant._id).eq("email", address)
         )
         .paginate(pageOptions)
         .pipe(Effect.orDie);
