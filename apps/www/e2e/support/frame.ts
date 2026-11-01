@@ -15,8 +15,8 @@ export function readFrameProblems(page: Page) {
     const desktop = 1024;
     const mostControls = 2;
     const near = 12;
-    const edges =
-      '[data-slot="input-group"],[data-slot="tabs-tab"],[data-slot="item"],[data-slot="card"],[data-slot="table-card"]';
+    const tabs = '[data-slot="tabs-tab"]';
+    const edges = `${tabs},[data-slot="input-group"],[data-slot="item"],[data-slot="card"],[data-slot="table-card"]`;
     const body =
       "h1,h2,h3,p,li,td,th,button,a,input,textarea,img,[data-slot=card],[data-slot=table-card],[data-slot=tabs-tab]";
 
@@ -123,7 +123,7 @@ export function readFrameProblems(page: Page) {
      * What should stand on the line the header's first letter draws, and on the edge that mirrors it: a search
      * bar, a tab, a list row, a card. Their own edge counts, filled or bordered, not only their text, so a rail
      * that starts a few pixels off reads as a body wider than its header. What stands well inside, such as a
-     * card in a card, is left alone.
+     * card in a card, is left alone, and a tab row that scrolls may run on to the screen's edge.
      */
     const edgeProblems = (header: Element, start: number, end: number) => {
       const path = header.querySelector('[data-slot="breadcrumb"]');
@@ -139,7 +139,8 @@ export function readFrameProblems(page: Page) {
           return [
             (left < -tolerance || (left > tolerance && left < near)) &&
               `${name(element)} starts ${Math.round(left)} px off the header's first letter`,
-            (right > tolerance || (right < -tolerance && right > -near)) &&
+            element.matches(tabs) === false &&
+              (right > tolerance || (right < -tolerance && right > -near)) &&
               `${name(element)} ends ${Math.round(right)} px off the header's right edge`,
           ].filter((problem) => typeof problem === "string");
         })
