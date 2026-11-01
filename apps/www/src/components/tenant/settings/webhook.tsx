@@ -318,8 +318,11 @@ export function SchoolWebhookEditDialog({
     changeWebhookChange
   );
   const [isPending, startTransition] = useTransition();
-  const [url, setUrl] = useState(webhook.url);
-  const [changes, setChanges] = useState<readonly Change[]>(webhook.changes);
+  // The fields hold what the admin chose, and the webhook's own values until they choose.
+  const [typedUrl, setUrl] = useState<string | null>(null);
+  const [chosenChanges, setChanges] = useState<readonly Change[] | null>(null);
+  const url = typedUrl ?? webhook.url;
+  const changes = chosenChanges ?? webhook.changes;
   const offered = offeredChanges(webhook.clientActions);
   const address = decodeUrl(url.trim());
   const carried = decodeChanges(changes);

@@ -10,6 +10,7 @@ import {
 } from "@repo/design-system/components/ui/scroller";
 import { loadMathFonts } from "@repo/design-system/lib/markdown/fonts";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
+import { cn } from "cn";
 import { Array as Arr, Effect, Fiber } from "effect";
 import { memo, useEffect } from "react";
 import { useTranslations } from "use-intl";
@@ -21,6 +22,7 @@ import { AiChatError } from "@/components/ai/chat/retry";
 import { LastMessageContext } from "@/components/ai/message/last";
 import { sameRow } from "@/components/ai/message/row";
 import { AiChatMessage } from "@/components/ai/message/view";
+import { pageRowVariants } from "@/components/shared/content/width";
 
 /**
  * Agent supplies messages; shadcn preserves the reader's position. This is the
@@ -53,7 +55,7 @@ export function NinaTranscript() {
         <MessageScrollerViewport aria-label={t("messages")}>
           <MessageScrollerContent
             aria-busy={busy}
-            className="mx-auto w-full max-w-3xl p-6"
+            className={cn(pageRowVariants(), "py-6")}
           >
             {Arr.map(messages, (message, index) => (
               <TranscriptRow

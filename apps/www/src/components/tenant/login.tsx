@@ -63,8 +63,8 @@ function TenantLoginForm() {
   /** Submits the form. `submitLogin` decides the answer, and a signed-in student returns to the page they were on. */
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setMessage(undefined);
     startTransition(async () => {
-      setMessage(undefined);
       const deviceId = await Effect.runPromise(pageDeviceIdOf());
       const step = await Effect.runPromise(
         submitLogin(
@@ -100,10 +100,11 @@ function TenantLoginForm() {
       className="flex w-full max-w-sm flex-col gap-6"
       onSubmit={handleSubmit}
     >
-      <FieldDescription className="text-center">
+      {/* Each takes the two lines the longest refusal needs, so the form never moves. */}
+      <FieldDescription className="min-h-[2lh] text-center">
         {t("card-hint")}
       </FieldDescription>
-      <FieldError className="text-center">{message}</FieldError>
+      <FieldError className="min-h-[2lh] text-center">{message}</FieldError>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor={`${id}-username`}>
@@ -137,7 +138,11 @@ function TenantLoginForm() {
             }
             id={`${id}-password`}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder={t("password-placeholder")}
+            placeholder={t(
+              code.trim() === ""
+                ? "password-placeholder"
+                : "password-new-placeholder"
+            )}
             type="password"
             value={password}
           />

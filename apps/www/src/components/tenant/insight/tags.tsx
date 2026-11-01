@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { Tag01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import insight from "@repo/backend/confect/_generated/refs/insight";
 import { Competency } from "@repo/backend/confect/insight/schema";
@@ -9,6 +10,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -67,6 +69,7 @@ export function QuestionTags() {
   return (
     <>
       <Button onClick={() => setOpen(true)} type="button" variant="outline">
+        <HugeIcons icon={Tag01Icon} />
         {t("tags")}
       </Button>
       <ResponsiveDialog

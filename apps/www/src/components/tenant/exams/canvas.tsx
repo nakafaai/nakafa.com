@@ -6,7 +6,7 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Option } from "effect";
-import { type RefObject, useEffect } from "react";
+import { type RefObject, useEffect, useEffectEvent } from "react";
 import { useTranslations } from "use-intl";
 import { HeldPaper } from "@/components/player/held";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
@@ -128,7 +128,7 @@ export function ExamCanvas({
   });
 
   /** Chooses the page of an element the teacher pressed or focused, as a design tool chooses the page in hand. */
-  const choosePage = useCallbackRef((event: Event) => {
+  const choosePage = useEffectEvent((event: Event) => {
     const page =
       event.target instanceof Element
         ? event.target.closest<HTMLElement>("[data-question]")
@@ -162,7 +162,7 @@ export function ExamCanvas({
         root.removeEventListener(event, choosePage)
       );
     };
-  }, [canvas, choosePage]);
+  }, [canvas]);
 
   // The teacher's hand ends the hold of a page the footer chose, so the page in view is chosen again.
   useEffect(() => {

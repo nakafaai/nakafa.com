@@ -20,7 +20,7 @@ import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { columnAlign } from "@/components/shared/table/align";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useMyClasses } from "@/components/tenant/classes/mine";
@@ -50,13 +50,13 @@ function StudentInsight() {
   const t = useTranslations("SchoolInsight");
 
   return (
-    <>
+    <PageFrame width="column">
       <SchoolHeader items={[{ label: t("title") }]} />
       <LayoutContent className="flex w-full flex-col gap-4 py-6">
         <OwnInsight />
         <OwnPractice />
       </LayoutContent>
-    </>
+    </PageFrame>
   );
 }
 
@@ -79,7 +79,7 @@ function TeacherInsight() {
   );
 
   return (
-    <>
+    <PageFrame width="column">
       <SchoolHeader items={[{ label: t("title") }]}>
         {Option.isSome(chosen) ? (
           <Select
@@ -108,7 +108,7 @@ function TeacherInsight() {
           <NoClass />
         ) : null}
       </LayoutContent>
-    </>
+    </PageFrame>
   );
 }
 

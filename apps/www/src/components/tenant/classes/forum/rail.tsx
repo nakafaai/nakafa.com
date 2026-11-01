@@ -68,24 +68,31 @@ const chatsOf = (
       : !channel.archived && (filter !== "unread" || channel.unread)
   );
 
-/** The list inside its filters. */
-function ChatList() {
-  const t = useTranslations("Classroom");
-  const { can, classId, slug } = useClassScope();
-  const chosen = useChatFilter();
-  const [drafts] = useState(createChannelDrafts);
+/** The class's chats, page by page. A viewer who lost the class goes to the page's boundary. */
+function useChannelPages() {
+  const { classId, slug } = useClassScope();
   const pagination = usePaginatedQuery(
     classroom.forum.channels.list,
     { classId, slug },
     { initialNumItems: CHANNEL_PAGE_SIZE }
   );
-  const saving = useStore(drafts, (state) => state.names);
   if (
     PaginatedQueryResult.isFailure(pagination) &&
     isLostAccess(pagination.error)
   ) {
     throw pagination.error;
   }
+  return pagination;
+}
+
+/** The list inside its filters. */
+function ChatList() {
+  const t = useTranslations("Classroom");
+  const { can, classId, slug } = useClassScope();
+  const chosen = useChatFilter();
+  const [drafts] = useState(createChannelDrafts);
+  const pagination = useChannelPages();
+  const saving = useStore(drafts, (state) => state.names);
   const loadingFirst = pagination._tag === "LoadingFirstPage";
   const failed = PaginatedQueryResult.isFailure(pagination);
   const listed = failed ? [] : pagination.results;
@@ -192,7 +199,7 @@ function ChatFilters({
       }}
       value={filter}
     >
-      <TabsList aria-label={t("chat-filter")} className="px-1">
+      <TabsList aria-label={t("chat-filter")} className="px-4">
         {Arr.map(
           Arr.filter(
             ChatFilter.literals,

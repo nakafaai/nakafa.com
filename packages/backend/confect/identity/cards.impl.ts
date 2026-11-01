@@ -1,6 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
+import { assignRole } from "@repo/backend/confect/access/grant";
 import {
   type CardRefusal,
   cardOf,
@@ -101,6 +102,7 @@ const enroll = FunctionImpl.make(
     const person = yield* createPerson(by, tenant._id, name);
     yield* personAuthority.check("card.issue", person);
     yield* claimLoginName(person, login.success);
+    yield* assignRole(by, person, "student", { kind: "tenant" });
     const card = yield* writeCard(person, issuer, Option.none());
     yield* personAuthority.record(by, person, {
       card: card.cardId,

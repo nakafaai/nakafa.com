@@ -32,6 +32,7 @@ import {
 import { PublicPathLink } from "@/lib/routing/public/link";
 import {
   articleCategoryTarget,
+  CONTRIBUTOR_TARGET,
   LANDING_TARGET,
   PRICING_TARGET,
 } from "@/lib/routing/target";
@@ -130,6 +131,12 @@ export function Footer({
                   <FooterLink
                     label={tMarketing("pricing")}
                     target={PRICING_TARGET}
+                  />
+                </li>
+                <li>
+                  <FooterLink
+                    label={tCommon("contributor")}
+                    target={CONTRIBUTOR_TARGET}
                   />
                 </li>
                 <li>

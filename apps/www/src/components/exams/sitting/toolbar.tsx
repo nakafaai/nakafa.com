@@ -13,6 +13,7 @@ import { Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { useSittingStore } from "@/components/exams/sitting/context";
 import { SittingFilter } from "@/components/exams/sitting/seat";
+import { pageRowVariants } from "@/components/shared/content/width";
 
 /**
  * The seats' filters, in the tab bar under the room's header: all students, the ones that need
@@ -34,7 +35,7 @@ export function SittingFilterRow() {
       }
       value={filter}
     >
-      <TabsList aria-label={t("filter-label")} className="px-1 md:px-3">
+      <TabsList aria-label={t("filter-label")} className={pageRowVariants()}>
         <TabsTab value="all">
           <HugeIcons aria-hidden="true" icon={UserGroupIcon} />
           {t("filter-all")}
