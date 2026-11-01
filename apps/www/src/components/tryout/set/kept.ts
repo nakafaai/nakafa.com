@@ -21,10 +21,13 @@ export type TryoutActionNameKey = typeof TryoutActionNameSchema.Type;
 const KEPT_NAMES_KEY = "nakafa-tryout-names";
 
 /** The attribute the page's script sets on the name's cell, which the styles read. */
-export const KEPT_NAME_ATTRIBUTE = "data-kept-name";
+const KEPT_NAME_ATTRIBUTE = "data-kept-name";
 
 /** How many pages the browser remembers. The page read longest ago leaves first. */
 const KEPT_PAGES = 40;
+
+/** The part of an attempt that names a set's action. */
+const AttemptStatus = Schema.Struct({ status: Schema.String });
 
 const KeptNamesJson = Schema.fromJsonString(
   Schema.Record(Schema.String, TryoutActionNameSchema)
@@ -37,7 +40,7 @@ const decodeKeptNames = Schema.decodeOption(KeptNamesJson);
  * start one otherwise.
  */
 export function tryoutActionNameOf(
-  attempt: { readonly status: string } | null | undefined
+  attempt: typeof AttemptStatus.Type | null | undefined
 ): TryoutActionNameKey {
   if (attempt?.status === "in-progress") {
     return "continue-cta";

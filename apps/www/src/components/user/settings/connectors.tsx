@@ -142,7 +142,7 @@ export function AccountDirectory({
           ),
       }}
     >
-      <Panes>
+      <Panes id="account-connectors">
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
