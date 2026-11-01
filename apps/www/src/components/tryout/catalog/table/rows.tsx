@@ -6,7 +6,7 @@ import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { pressesRow } from "@/components/shared/pane";
+import { pressesRow } from "@/components/shared/row";
 import { columnAlign } from "@/components/shared/table/align";
 import { RowItems, RowMenu, RowOpen } from "@/components/shared/table/menu";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";

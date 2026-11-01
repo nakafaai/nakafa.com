@@ -200,6 +200,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
               redo: labels("redo"),
               strike: labels("strike"),
               style: labels("style"),
+              styleMenu: labels("style-menu"),
               tasks: labels("tasks"),
               text: labels("text"),
               underline: labels("underline"),
