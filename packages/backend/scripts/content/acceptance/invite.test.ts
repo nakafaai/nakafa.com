@@ -334,7 +334,7 @@ describe("acceptance invite", () => {
           .readFileString(`${root}/expired.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -350,7 +350,7 @@ describe("acceptance invite", () => {
             .pipe(Effect.flip)
         ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
         expect(MutableList.toArray(specs)).toEqual([]);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(

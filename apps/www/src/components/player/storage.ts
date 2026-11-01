@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer, Predicate } from "effect";
 import { KeyValueStore } from "effect/persistence";
 
 /**
@@ -37,6 +37,14 @@ export const keptStorage = Layer.effect(KeyValueStore.KeyValueStore)(
             catch: storageFailure("get", key),
             try: () => storage.getItem(key) ?? undefined,
           }),
+        keys: Effect.try({
+          catch: storageFailure("keys"),
+          try: () =>
+            Arr.filter(
+              Arr.makeBy(storage.length, (index) => storage.key(index)),
+              Predicate.isNotNull
+            ),
+        }),
         remove: (key) =>
           Effect.try({
             catch: storageFailure("remove", key),
