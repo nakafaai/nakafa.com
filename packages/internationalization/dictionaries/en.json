@@ -3715,6 +3715,7 @@
     "empty-description": "Each released exam shows here.",
     "narrative-title": "Narrative for {student}",
     "narrative-description": "Your words about this student. Guardians read it only when you share it.",
+    "narrative-placeholder": "What this student does well, and what helps them next",
     "narrative-save": "Save",
     "narrative-share": "Share with guardians",
     "narrative-withdraw": "Take back",
