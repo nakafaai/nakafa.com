@@ -101,6 +101,32 @@ test("a checkout the payment provider refuses says so once, and the learner can 
   );
 });
 
+test.describe("outside Indonesia", () => {
+  // A browser in New York shows dollars, which the local runtime sells through Polar.
+  test.use({ timezoneId: "America/New_York" });
+
+  test("a checkout Polar refuses says so once, and the learner can press again", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        yield* openChatPage(page, origin);
+        yield* Effect.promise(async () => {
+          await page.goto(SUBSCRIPTIONS);
+          const upgrade = page.getByRole("button", { name: "Upgrade" });
+          await waitUntilTakenOver(upgrade);
+          // The local runtime holds no real Polar token, so Polar refuses the checkout.
+          await upgrade.dblclick();
+          const failure = page.getByText("We could not open Pro checkout.");
+          await expect(failure).toHaveCount(1);
+          await expect(upgrade).toBeEnabled();
+        });
+      })
+    );
+  });
+});
+
 test("a pass holder sees when the pass ends, finds the receipt in Payments, and extends it with passes only", async ({
   baseURL,
   page,
