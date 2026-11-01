@@ -2,4 +2,4 @@
 "@repo/backend": patch
 ---
 
-Start a search result's excerpt after its title, so a result never repeats its own title.
+Start a search excerpt where the lesson starts, so a learner never reads a raw path.
