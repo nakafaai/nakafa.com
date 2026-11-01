@@ -7,13 +7,13 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
-import { useTranslations } from "use-intl";
 import { ConvexIsland } from "@/components/providers/island";
 import {
   useSetTryoutStartPhase,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
 import { START_PART_ERROR } from "@/components/tryout/set/copy";
+import { TryoutActionName } from "@/components/tryout/set/name";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 interface StartSectionButtonProps {
@@ -82,11 +82,10 @@ function StartSectionControl({
   inert: boolean;
   onStart?: () => void;
 }) {
-  const tTryouts = useTranslations("Tryouts");
   return (
     <Button inert={inert} onClick={onStart} type="button">
       <Spinner className="size-4" icon={Rocket01Icon} isLoading={inert} />
-      {tTryouts("start-part-cta")}
+      <TryoutActionName name="start-cta" />
     </Button>
   );
 }
