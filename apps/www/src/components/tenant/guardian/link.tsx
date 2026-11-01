@@ -1,7 +1,6 @@
 import { type PaginatedQueryItem, useMutation } from "@confect/react";
 import {
   CheckmarkBadge01Icon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
   Unlink01Icon,
   UserEdit01Icon,
@@ -9,17 +8,15 @@ import {
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
+import { RowItems } from "@/components/shared/table/menu";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { GuardianLinkAddressDialog } from "@/components/tenant/guardian/address";
@@ -29,7 +26,6 @@ import {
 } from "@/components/tenant/guardian/change";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { isDraft } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/guardian/link";
 
@@ -106,7 +102,6 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
  */
 export function GuardianLinkMenu({ link }: { link: LinkItem }) {
   const t = useTranslations("SchoolGuardians");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const verify = useMutation(guardians.links.verify).withOptimisticUpdate(
     verifyLinkChange
@@ -117,57 +112,40 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
   return (
     <div className="flex justify-end">
       {link.status === "pending" || link.status === "verified" ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                aria-label={common("more-actions")}
-                inert={isDraft(link.id)}
-                size="icon-sm"
-                variant="ghost"
-              >
-                <HugeIcons icon={MoreHorizontalIcon} />
-              </Button>
-            }
-          />
-          <DropdownMenuContent align="end" className="w-48">
-            <WithAction action="person.manage">
-              <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-                <HugeIcons icon={UserEdit01Icon} />
-                {t("link-rename")}
-              </DropdownMenuItem>
-            </WithAction>
-            {link.status === "pending" ? (
-              <>
-                <DropdownMenuItem onClick={() => dialogs.show("readdress")}>
-                  <HugeIcons icon={PencilEdit02Icon} />
-                  {t("link-readdress")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    startTransition(() =>
-                      saveSchool(
-                        () => verify({ linkId: link.id, slug }),
-                        SOURCE
-                      )
-                    )
-                  }
-                >
-                  <HugeIcons icon={CheckmarkBadge01Icon} />
-                  {t("link-verify")}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            ) : null}
-            <DropdownMenuItem
-              onClick={() => dialogs.show("revoke")}
-              variant="destructive"
-            >
-              <HugeIcons icon={Unlink01Icon} />
-              {t("link-revoke")}
+        <RowItems>
+          <WithAction action="person.manage">
+            <DropdownMenuItem onClick={() => dialogs.show("rename")}>
+              <HugeIcons icon={UserEdit01Icon} />
+              {t("link-rename")}
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </WithAction>
+          {link.status === "pending" ? (
+            <>
+              <DropdownMenuItem onClick={() => dialogs.show("readdress")}>
+                <HugeIcons icon={PencilEdit02Icon} />
+                {t("link-readdress")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  startTransition(() =>
+                    saveSchool(() => verify({ linkId: link.id, slug }), SOURCE)
+                  )
+                }
+              >
+                <HugeIcons icon={CheckmarkBadge01Icon} />
+                {t("link-verify")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          ) : null}
+          <DropdownMenuItem
+            onClick={() => dialogs.show("revoke")}
+            variant="destructive"
+          >
+            <HugeIcons icon={Unlink01Icon} />
+            {t("link-revoke")}
+          </DropdownMenuItem>
+        </RowItems>
       ) : null}
       <GuardianLinkDialogs dialogs={dialogs} link={link} />
     </div>

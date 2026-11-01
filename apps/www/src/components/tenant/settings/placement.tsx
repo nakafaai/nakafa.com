@@ -1,19 +1,10 @@
 import { useMutation } from "@confect/react";
-import {
-  IdCardIcon,
-  MoreHorizontalIcon,
-  Move01Icon,
-} from "@hugeicons/core-free-icons";
+import { IdCardIcon, Move01Icon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
   FieldGroup,
@@ -25,6 +16,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
+import { RowItems } from "@/components/shared/table/menu";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import {
   moveStudentChange,
@@ -184,30 +176,17 @@ export function SchoolPlacementMove({
   };
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => dialogs.show("move")}>
-            <HugeIcons icon={Move01Icon} />
-            {t("placement-move")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => dialogs.show("entry")}>
-            <HugeIcons icon={IdCardIcon} />
-            {t("roster-entry")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <>
+      <RowItems>
+        <DropdownMenuItem onClick={() => dialogs.show("move")}>
+          <HugeIcons icon={Move01Icon} />
+          {t("placement-move")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => dialogs.show("entry")}>
+          <HugeIcons icon={IdCardIcon} />
+          {t("roster-entry")}
+        </DropdownMenuItem>
+      </RowItems>
       {dialogs.kind === "entry" ? (
         <RosterEntryDialog
           key={dialogs.key}
@@ -248,6 +227,6 @@ export function SchoolPlacementMove({
           />
         </FieldGroup>
       </ResponsiveDialog>
-    </div>
+    </>
   );
 }

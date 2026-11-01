@@ -8,6 +8,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { LoadFailure } from "@/components/state/failure";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
@@ -64,6 +65,9 @@ export function TaskMissingTable({ task }: { task: ClassTask }) {
               header: t("task-student"),
               id: "name",
             }),
+            missingColumns.menu((info) => (
+              <RowCopy value={info.row.original.name} />
+            )),
           ]}
           data={pagination.results}
           rowId={(student) => student.id}

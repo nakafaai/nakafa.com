@@ -1,6 +1,5 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -8,11 +7,11 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { type ComponentProps, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
-import { RowMenu } from "@/components/shared/table/menu";
+import { RowItems } from "@/components/shared/table/menu";
 
 /**
- * The menu of one table row whose last action is destructive, with the action's icon, below the row's other actions
- * when it has any. The action opens a confirmation, and `onConfirm` runs only once the viewer confirms it, so nothing
+ * What the menu of one table row holds when its last action is destructive: the action with its icon, below the row's other
+ * actions when it has any. The action opens a confirmation, and `onConfirm` runs only once the viewer confirms it, so nothing
  * is removed by a single click. A row that may not take the action keeps it in view, disabled, so every row's menu
  * reads the same.
  */
@@ -42,24 +41,18 @@ export function ConfirmRowMenu({
 
   return (
     <>
-      <RowMenu>
-        {children === undefined ? null : (
-          <>
-            <DropdownMenuGroup>{children}</DropdownMenuGroup>
-            <DropdownMenuSeparator />
-          </>
-        )}
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            disabled={disabled}
-            onClick={() => setIsConfirming(true)}
-            variant="destructive"
-          >
-            <HugeIcons icon={icon} />
-            {action}
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </RowMenu>
+      <RowItems>
+        {children}
+        {children === undefined ? null : <DropdownMenuSeparator />}
+        <DropdownMenuItem
+          disabled={disabled}
+          onClick={() => setIsConfirming(true)}
+          variant="destructive"
+        >
+          <HugeIcons icon={icon} />
+          {action}
+        </DropdownMenuItem>
+      </RowItems>
       <ResponsiveDialog
         description={description}
         footer={

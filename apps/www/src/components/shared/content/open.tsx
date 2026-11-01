@@ -2,6 +2,7 @@ import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSubContent,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
@@ -49,6 +50,7 @@ export function OpenInSubmenuContent() {
   return (
     <DropdownMenuSubContent className="w-56">
       <DropdownMenuGroup>
+        <DropdownMenuLabel>{t("open")}</DropdownMenuLabel>
         {Arr.map(links, (item) => (
           <DropdownMenuItem
             key={item.title}

@@ -12,6 +12,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableText } from "@/components/shared/table/text";
 import { TableName } from "@/components/shared/table/title";
@@ -86,7 +87,9 @@ export function SchoolCohortMembers({
           slug={slug}
           targets={targets}
         />
-      ) : null
+      ) : (
+        <RowCopy value={info.row.original.name} />
+      )
     ),
   ];
 

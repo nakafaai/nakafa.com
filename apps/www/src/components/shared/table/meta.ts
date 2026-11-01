@@ -16,6 +16,8 @@ declare module "@tanstack/react-table" {
     readonly align?: "end" | "figure" | "menu";
     /** What the column's head filters the rows by. */
     readonly filter?: HeadFilter;
+    /** Whether a row's menu does not answer yet, such as a row the server has not confirmed. */
+    readonly inert?: (row: TData) => boolean;
     /** The column's name, which its head says it filters by. */
     readonly title?: string;
   }

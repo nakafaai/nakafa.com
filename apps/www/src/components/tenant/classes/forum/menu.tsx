@@ -19,6 +19,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -94,82 +95,91 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
         />
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuGroup>
-            <DropdownMenuItem
-              render={
-                <TargetLink
-                  target={schoolClassChannelTarget(slug, classSlug, channel.id)}
-                >
-                  <HugeIcons icon={ViewIcon} />
-                  {common("open")}
-                </TargetLink>
-              }
-            />
-            <DropdownMenuItem
-              disabled={!channel.unread}
-              onClick={() =>
-                runForumCall(
-                  Effect.flatMap(Clock.currentTimeMillis, (at) =>
-                    forumCall(() =>
-                      mark.withOptimisticUpdate(markUpdate)({
-                        at,
-                        classId,
-                        place: { _tag: "channel", channelId: channel.id },
-                        slug,
-                      })
-                    )
-                  ),
-                  Fn.constVoid
-                )
-              }
-            >
-              <HugeIcons icon={CheckmarkCircle02Icon} />
-              {t("channel-mark-read")}
-            </DropdownMenuItem>
-            {managed ? (
-              <>
-                <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-                  <HugeIcons icon={PencilEdit02Icon} />
-                  {t("channel-rename")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    runForumCall(
+            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                render={
+                  <TargetLink
+                    target={schoolClassChannelTarget(
+                      slug,
+                      classSlug,
+                      channel.id
+                    )}
+                  >
+                    <HugeIcons icon={ViewIcon} />
+                    {common("open")}
+                  </TargetLink>
+                }
+              />
+              <DropdownMenuItem
+                disabled={!channel.unread}
+                onClick={() =>
+                  runForumCall(
+                    Effect.flatMap(Clock.currentTimeMillis, (at) =>
                       forumCall(() =>
-                        archive({
-                          archived: !channel.archived,
-                          channelId: channel.id,
+                        mark.withOptimisticUpdate(markUpdate)({
+                          at,
                           classId,
+                          place: { _tag: "channel", channelId: channel.id },
                           slug,
                         })
-                      ),
-                      toastForumFailure
-                    )
-                  }
-                >
-                  <HugeIcons
-                    icon={channel.archived ? ArchiveRestoreIcon : Archive02Icon}
-                  />
-                  {t(
-                    channel.archived ? "channel-unarchive" : "channel-archive"
-                  )}
-                </DropdownMenuItem>
+                      )
+                    ),
+                    Fn.constVoid
+                  )
+                }
+              >
+                <HugeIcons icon={CheckmarkCircle02Icon} />
+                {t("channel-mark-read")}
+              </DropdownMenuItem>
+              {managed ? (
+                <>
+                  <DropdownMenuItem onClick={() => dialogs.show("rename")}>
+                    <HugeIcons icon={PencilEdit02Icon} />
+                    {t("channel-rename")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      runForumCall(
+                        forumCall(() =>
+                          archive({
+                            archived: !channel.archived,
+                            channelId: channel.id,
+                            classId,
+                            slug,
+                          })
+                        ),
+                        toastForumFailure
+                      )
+                    }
+                  >
+                    <HugeIcons
+                      icon={
+                        channel.archived ? ArchiveRestoreIcon : Archive02Icon
+                      }
+                    />
+                    {t(
+                      channel.archived ? "channel-unarchive" : "channel-archive"
+                    )}
+                  </DropdownMenuItem>
+                </>
+              ) : null}
+            </DropdownMenuGroup>
+            {managed ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => dialogs.show("remove")}
+                    variant="destructive"
+                  >
+                    <HugeIcons icon={Delete02Icon} />
+                    {t("channel-remove")}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
               </>
             ) : null}
           </DropdownMenuGroup>
-          {managed ? (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => dialogs.show("remove")}
-                  variant="destructive"
-                >
-                  <HugeIcons icon={Delete02Icon} />
-                  {t("channel-remove")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </>
-          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
       {dialogs.kind === "rename" ? (

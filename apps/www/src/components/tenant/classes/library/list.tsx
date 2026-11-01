@@ -14,10 +14,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Match } from "effect";
 import { type ReactNode, useState } from "react";
@@ -31,7 +28,7 @@ import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
-import { RowMenu } from "@/components/shared/table/menu";
+import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
@@ -368,8 +365,8 @@ function LibraryItemLink({ row }: { row: LibraryRow }) {
 }
 
 /**
- * The menu of a row: Open for everyone, with a teacher's changes to a saved folder or a saved item below it, and none for
- * what the server is still keeping.
+ * The menu of a row: Open for everyone, with a teacher's changes to a saved folder or a saved item below it, and the
+ * title to copy for what has nothing to open, such as what the server is still keeping.
  */
 function LibraryRowMenu({ row }: { row: LibraryRow }) {
   const { can } = useClassScope();
@@ -377,17 +374,16 @@ function LibraryRowMenu({ row }: { row: LibraryRow }) {
 
   if (
     row._tag === "upload" ||
-    (row._tag === "folder" && !isSavedFolder(row.folder))
+    (row._tag === "folder" && !isSavedFolder(row.folder)) ||
+    (!manages && row._tag === "item" && row.item.address === null)
   ) {
-    return null;
+    return <RowCopy value={shownOf(row).title} />;
   }
   if (!manages) {
     return (
-      <RowMenu>
-        <DropdownMenuGroup>
-          <LibraryOpen row={row} />
-        </DropdownMenuGroup>
-      </RowMenu>
+      <RowItems>
+        <LibraryOpen row={row} />
+      </RowItems>
     );
   }
   return row._tag === "item" ? (

@@ -37,7 +37,7 @@ export function SheetHistory() {
 
 /** Renders recent Nina chats in the header menu. */
 function SheetHistoryContent() {
-  const t = useTranslations("Ai");
+  const common = useTranslations("Common");
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const pagination = usePaginatedQuery(
@@ -56,7 +56,7 @@ function SheetHistoryContent() {
   return (
     <DropdownMenuContent align="end" className="max-h-64 w-72">
       <DropdownMenuGroup>
-        <DropdownMenuLabel>{t("recent-chats")}</DropdownMenuLabel>
+        <DropdownMenuLabel>{common("menu-chats")}</DropdownMenuLabel>
         {Arr.map(results, (chat) => {
           const isPrivate = chat.visibility === "private";
           return (

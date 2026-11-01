@@ -3,25 +3,22 @@ import {
   Calendar03Icon,
   Copy01Icon,
   Delete02Icon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Function as Fn } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { RowItems } from "@/components/shared/table/menu";
 import { useTenant } from "@/components/tenant/context";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { useDuplicateExam } from "@/components/tenant/exams/duplicate";
@@ -53,62 +50,49 @@ export function ExamRowMenu({ exam }: { exam: ListedExam }) {
   };
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              render={
-                <Link params={params} to="/school/$slug/exams/$exam/edit">
-                  <HugeIcons icon={PencilEdit02Icon} />
-                  {common("edit")}
-                </Link>
-              }
-            />
-            <DropdownMenuItem
-              render={
-                <Link params={params} to="/school/$slug/exams/$exam">
-                  <HugeIcons icon={Calendar03Icon} />
-                  {t("rooms-title")}
-                </Link>
-              }
-            />
-            <DropdownMenuItem
-              render={
-                <Link params={params} to="/school/$slug/exams/$exam/try">
-                  <HugeIcons icon={ViewIcon} />
-                  {t("try-action")}
-                </Link>
-              }
-            />
-            <DropdownMenuItem disabled={isPending} onClick={press}>
-              <HugeIcons icon={Copy01Icon} />
-              {t("duplicate-action")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              onClick={() => setIsDeleting(true)}
-              variant="destructive"
-            >
-              <HugeIcons icon={Delete02Icon} />
-              {common("delete")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <>
+      <RowItems>
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            render={
+              <Link params={params} to="/school/$slug/exams/$exam/edit">
+                <HugeIcons icon={PencilEdit02Icon} />
+                {common("edit")}
+              </Link>
+            }
+          />
+          <DropdownMenuItem
+            render={
+              <Link params={params} to="/school/$slug/exams/$exam">
+                <HugeIcons icon={Calendar03Icon} />
+                {t("rooms-title")}
+              </Link>
+            }
+          />
+          <DropdownMenuItem
+            render={
+              <Link params={params} to="/school/$slug/exams/$exam/try">
+                <HugeIcons icon={ViewIcon} />
+                {t("try-action")}
+              </Link>
+            }
+          />
+          <DropdownMenuItem disabled={isPending} onClick={press}>
+            <HugeIcons icon={Copy01Icon} />
+            {t("duplicate-action")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            onClick={() => setIsDeleting(true)}
+            variant="destructive"
+          >
+            <HugeIcons icon={Delete02Icon} />
+            {common("delete")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </RowItems>
       <ResponsiveDialog
         description={t("delete-description")}
         footer={
@@ -126,6 +110,6 @@ export function ExamRowMenu({ exam }: { exam: ListedExam }) {
         setOpen={setIsDeleting}
         title={t("delete-title")}
       />
-    </div>
+    </>
   );
 }

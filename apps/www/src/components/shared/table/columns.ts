@@ -65,7 +65,7 @@ type AnyColumn<TData extends RowData> = ReturnType<
  */
 export type TableColumn<TData extends RowData> = AnyColumn<TData> & {
   readonly meta:
-    | { readonly align: "menu" }
+    | { readonly align: "menu"; readonly inert?: (row: TData) => boolean }
     | { readonly filter: HeadFilter; readonly title: string };
 };
 
@@ -117,12 +117,21 @@ export const tableColumns = <TData extends RowData>() => ({
     enableSorting: false,
     filterFn: "anyOf",
   }),
-  /** The row's menu, which holds no data, so it is the one column with nothing to filter by. */
+  /**
+   * The row's menu, which holds no data, so it is the one column with nothing to filter by. The table draws its three-dot
+   * button in every row, and `cell` gives what the menu holds: `RowItems` with the row's actions, and any dialog they
+   * open beside it. `inert` names a row whose button does not answer yet, such as one the server has not confirmed.
+   */
   menu: (
     cell: ColumnDefTemplate<
       CellContext<typeof dataTableFeatures, TData, unknown>
-    >
-  ): TableColumn<TData> => ({ cell, id: "actions", meta: { align: "menu" } }),
+    >,
+    { inert }: { readonly inert?: (row: TData) => boolean } = {}
+  ): TableColumn<TData> => ({
+    cell,
+    id: "actions",
+    meta: { align: "menu", ...(inert === undefined ? {} : { inert }) },
+  }),
   /** A column of numbers, a row without one reading as nothing. */
   number: <TValue extends number | null>(
     read: AccessorFn<TData, TValue>,

@@ -77,6 +77,7 @@ export function QuestionType({
   template: QuestionTemplate;
 }) {
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
   const name = t(TEMPLATE_NAME[template]);
 
   if (!editable) {
@@ -120,7 +121,7 @@ export function QuestionType({
             }}
             value={template}
           >
-            <DropdownMenuLabel>{t("template-title")}</DropdownMenuLabel>
+            <DropdownMenuLabel>{common("menu-type")}</DropdownMenuLabel>
             {Arr.map(QuestionTemplate.literals, (item) => (
               <DropdownMenuRadioItem key={item} value={item}>
                 <HugeIcons icon={TEMPLATE_ICON[item]} />

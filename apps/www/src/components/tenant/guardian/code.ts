@@ -38,8 +38,9 @@ const GuardianSignIn = Schema.Union([
 ]);
 type GuardianSignIn = typeof GuardianSignIn.Type;
 
-/** One change to the sign-in: a key in the field, a sentence, a request on its way, or a mailed code. */
+/** One change to the sign-in: back to the address, a key in the field, a sentence, a request on its way, or a mailed code. */
 const SignInChange = Schema.Union([
+  Schema.TaggedStruct("back", {}),
   Schema.TaggedStruct("refused", { message: Schema.String }),
   Schema.TaggedStruct("sent", { address: Schema.String }),
   Schema.TaggedStruct("typed", { text: Schema.String }),
@@ -53,12 +54,19 @@ export const SIGN_IN_START: GuardianSignIn = {
   message: undefined,
 };
 
-/** The sign-in after one change. A mailed code starts the code step empty, on a resend too. */
+/**
+ * The sign-in after one change. A mailed code starts the code step empty, on a resend too, and going
+ * back brings the address the parent typed, to correct it.
+ */
 export function stepSignIn(
   form: GuardianSignIn,
   change: typeof SignInChange.Type
 ): GuardianSignIn {
   return Match.valueTags(change, {
+    back: () =>
+      form._tag === "code"
+        ? { _tag: "email" as const, email: form.sentTo, message: undefined }
+        : form,
     refused: ({ message }) => ({ ...form, message }),
     sent: ({ address }) => ({
       _tag: "code" as const,

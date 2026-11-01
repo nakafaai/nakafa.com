@@ -8,6 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -106,6 +107,7 @@ export function GuestLanguageMenu() {
           sideOffset={4}
         >
           <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("menu-language")}</DropdownMenuLabel>
             <LanguageMenuItems />
           </DropdownMenuGroup>
         </DropdownMenuContent>
@@ -129,6 +131,7 @@ export function SidebarLanguageSubmenu() {
         side={side}
       >
         <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("menu-language")}</DropdownMenuLabel>
           <LanguageMenuItems />
         </DropdownMenuGroup>
       </DropdownMenuSubContent>

@@ -96,7 +96,7 @@ export function SidebarSchools({
   return (
     <div className="contents not-has-[[role=menuitem]]:hidden">
       <DropdownMenuGroup>
-        <DropdownMenuLabel>{t("your-schools")}</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("menu-schools")}</DropdownMenuLabel>
         {children}
         {canOpenSchool ? <SidebarStartSchoolMenuItem /> : null}
       </DropdownMenuGroup>

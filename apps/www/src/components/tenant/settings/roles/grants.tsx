@@ -6,19 +6,13 @@ import {
 } from "@confect/react";
 import {
   Delete02Icon,
-  MoreHorizontalIcon,
   UserEdit01Icon,
   UserStar01Icon,
 } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -31,6 +25,7 @@ import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableText } from "@/components/shared/table/text";
 import { TableName } from "@/components/shared/table/title";
@@ -113,7 +108,9 @@ export function SchoolGrantTable() {
         ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
         : [],
     }),
-    grantColumns.menu((info) => <SchoolGrantMenu grant={info.row.original} />),
+    grantColumns.menu((info) => <SchoolGrantMenu grant={info.row.original} />, {
+      inert: (row) => isDraft(row.id),
+    }),
   ];
 
   return (
@@ -157,42 +154,28 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
     QueryResult.isSuccess(viewer) && viewer.value.person.id === grant.person.id;
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              inert={isDraft(grant.id)}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => dialogs.show("give")}>
-            <HugeIcons icon={UserStar01Icon} />
-            {t("roles-assign-dialog")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!grant.revocable}
-            onClick={() => dialogs.show("change")}
-          >
-            <HugeIcons icon={UserEdit01Icon} />
-            {t("grant-change")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!grant.revocable}
-            onClick={() => dialogs.show("revoke")}
-            variant="destructive"
-          >
-            <HugeIcons icon={Delete02Icon} />
-            {t("grant-revoke")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <>
+      <RowItems>
+        <DropdownMenuItem onClick={() => dialogs.show("give")}>
+          <HugeIcons icon={UserStar01Icon} />
+          {t("roles-assign-dialog")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={!grant.revocable}
+          onClick={() => dialogs.show("change")}
+        >
+          <HugeIcons icon={UserEdit01Icon} />
+          {t("grant-change")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={!grant.revocable}
+          onClick={() => dialogs.show("revoke")}
+          variant="destructive"
+        >
+          <HugeIcons icon={Delete02Icon} />
+          {t("grant-revoke")}
+        </DropdownMenuItem>
+      </RowItems>
       <SchoolGrantDialog
         open={dialogs.isOpen("give")}
         person={grant.person}
@@ -259,6 +242,6 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
         setOpen={dialogs.setOpen}
         title={t("grant-revoke-title")}
       />
-    </div>
+    </>
   );
 }

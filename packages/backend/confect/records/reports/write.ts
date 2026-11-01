@@ -133,10 +133,21 @@ export const reopen = FunctionImpl.make(
   })
 );
 
+/** Asks for the PDF of an approved report, which locks it. */
+const drawReport = Effect.fn("records.reports.draw")(function* (
+  reportId: ReportCardsDoc["_id"]
+) {
+  yield* (yield* Scheduler)
+    .runAfter(Duration.zero, recordsInternal.draw.report, { reportId })
+    .pipe(Effect.orDie);
+});
+
 /**
  * Approves a handed-in report. The released grades are copied onto it, its content
  * hash is taken, and its PDF is drawn next, which locks it. The approval is the
- * principal's; the lock is journaled with the hash once the PDF is stored.
+ * principal's; the lock is journaled with the hash once the PDF is stored. A report
+ * approved already whose PDF never arrived asks for it again, with what it was
+ * approved with, so a failed draw never strands it.
  */
 export const approve = FunctionImpl.make(
   databaseSchema,
@@ -145,6 +156,10 @@ export const approve = FunctionImpl.make(
   Effect.fn("records.reports.approve")(function* () {
     const report = yield* Report;
     const { person } = yield* Member;
+    if (report.state === "approved") {
+      yield* drawReport(report._id);
+      return reportView(report);
+    }
     if (report.state !== "completed") {
       return yield* new ReportClosed();
     }
@@ -166,11 +181,7 @@ export const approve = FunctionImpl.make(
       subjects,
       updatedAt: now,
     });
-    yield* (yield* Scheduler)
-      .runAfter(Duration.zero, recordsInternal.draw.report, {
-        reportId: report._id,
-      })
-      .pipe(Effect.orDie);
+    yield* drawReport(report._id);
     return view;
   })
 );

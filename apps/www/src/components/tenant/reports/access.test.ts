@@ -57,6 +57,7 @@ describe("menuOf", () => {
     expect(menuOf(line("none", ["report.write"]))).toEqual({
       approve: false,
       complete: false,
+      lock: false,
       open: false,
       reopen: false,
       write: true,
@@ -78,6 +79,10 @@ describe("menuOf", () => {
     });
     expect(menuOf(line("draft", ["report.approve"]))).toMatchObject({
       approve: false,
+    });
+    expect(menuOf(line("approved", ["report.approve"]))).toMatchObject({
+      approve: false,
+      lock: true,
     });
     expect(menuOf(line("locked", []))).toMatchObject({
       open: true,

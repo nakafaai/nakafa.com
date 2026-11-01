@@ -7,7 +7,6 @@ import {
 import {
   IdCardIcon,
   MailSend01Icon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
   UserAdd01Icon,
   UserCircleIcon,
@@ -20,13 +19,7 @@ import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
@@ -39,6 +32,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
@@ -209,7 +203,10 @@ function SchoolMembersBody() {
       })),
     }),
     memberColumns.menu((info) => (
-      <WithAction action="person.manage">
+      <WithAction
+        action="person.manage"
+        otherwise={<RowCopy value={info.row.original.name} />}
+      >
         <SchoolMemberMenu member={info.row.original} />
       </WithAction>
     )),
@@ -287,56 +284,41 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
   };
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-              <HugeIcons icon={PencilEdit02Icon} />
-              {t("person-rename")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => dialogs.show("give")}>
-              <HugeIcons icon={UserStar01Icon} />
-              {t("roles-assign-dialog")}
-            </DropdownMenuItem>
-            {member.status === "notInvited" ? (
-              <DropdownMenuItem
-                disabled={sendLocale === undefined}
-                onClick={() => dialogs.show("invite")}
-              >
-                <HugeIcons icon={MailSend01Icon} />
-                {t("invite-action")}
-              </DropdownMenuItem>
-            ) : null}
-            {member.status === "notInvited" && cardOffered(member.roles) ? (
-              <DropdownMenuItem onClick={() => dialogs.show("card")}>
-                <HugeIcons icon={IdCardIcon} />
-                {t("invite-card")}
-              </DropdownMenuItem>
-            ) : null}
-            {removable ? (
-              <DropdownMenuItem
-                onClick={() => dialogs.show("remove")}
-                variant="destructive"
-              >
-                <HugeIcons icon={UserRemove01Icon} />
-                {t("member-remove")}
-              </DropdownMenuItem>
-            ) : null}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <>
+      <RowItems>
+        <DropdownMenuItem onClick={() => dialogs.show("rename")}>
+          <HugeIcons icon={PencilEdit02Icon} />
+          {t("person-rename")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => dialogs.show("give")}>
+          <HugeIcons icon={UserStar01Icon} />
+          {t("roles-assign-dialog")}
+        </DropdownMenuItem>
+        {member.status === "notInvited" ? (
+          <DropdownMenuItem
+            disabled={sendLocale === undefined}
+            onClick={() => dialogs.show("invite")}
+          >
+            <HugeIcons icon={MailSend01Icon} />
+            {t("invite-action")}
+          </DropdownMenuItem>
+        ) : null}
+        {member.status === "notInvited" && cardOffered(member.roles) ? (
+          <DropdownMenuItem onClick={() => dialogs.show("card")}>
+            <HugeIcons icon={IdCardIcon} />
+            {t("invite-card")}
+          </DropdownMenuItem>
+        ) : null}
+        {removable ? (
+          <DropdownMenuItem
+            onClick={() => dialogs.show("remove")}
+            variant="destructive"
+          >
+            <HugeIcons icon={UserRemove01Icon} />
+            {t("member-remove")}
+          </DropdownMenuItem>
+        ) : null}
+      </RowItems>
       {dialogs.kind === "rename" ? (
         <PersonRenameDialog
           key={dialogs.key}
@@ -391,6 +373,6 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
         setOpen={dialogs.setOpen}
         title={t("member-remove-title")}
       />
-    </div>
+    </>
   );
 }

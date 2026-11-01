@@ -86,8 +86,11 @@ const stubBackend = (held: {
       const fs = yield* FileSystem.FileSystem;
       const [, verb, ...rest] = spec.args;
       if (verb === "data") {
-        const table = rest[0] ?? "";
-        const text = yield* Schema.encodeEffect(JsonTextSchema)(printed(table));
+        const rows = printed(rest[0] ?? "");
+        // The real CLI prints nothing on stdout for a table that holds no row.
+        const text = Arr.isReadonlyArrayEmpty(rows)
+          ? ""
+          : yield* Schema.encodeEffect(JsonTextSchema)(rows);
         yield* fs.writeFileString(spec.stdoutPath, text);
         return;
       }

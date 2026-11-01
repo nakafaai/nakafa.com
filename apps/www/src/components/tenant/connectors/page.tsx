@@ -34,7 +34,7 @@ import {
   disconnectSchoolUpdate,
 } from "@/components/connectors/optimistic";
 import { connectedService } from "@/components/connectors/outcome";
-import { PaneBody, PaneFooter } from "@/components/shared/pane";
+import { PaneFill, PaneFooter } from "@/components/shared/pane";
 import {
   Panes,
   PanesDetail,
@@ -49,8 +49,10 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { CoursesProvider } from "@/components/tenant/connectors/courses";
 import {
   SchoolHolder,
+  SchoolServiceAction,
   SchoolServiceWork,
   ServiceExams,
 } from "@/components/tenant/connectors/work";
@@ -185,19 +187,22 @@ function SchoolDirectory() {
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail defaultSize="45%" label={t("detail")}>
+        <PanesDetail defaultSize="50%" label={t("detail")}>
           <ServiceDetail entries={entries}>
             <ServiceHeader />
-            <PaneBody>
-              <SchoolServiceWork />
-            </PaneBody>
-            <PaneFooter>
-              <ServiceStatus>
-                <SchoolHolder />
-              </ServiceStatus>
-              <ServiceActions />
-              <ServiceExams />
-            </PaneFooter>
+            <CoursesProvider>
+              <PaneFill>
+                <SchoolServiceWork />
+              </PaneFill>
+              <PaneFooter>
+                <ServiceStatus>
+                  <SchoolHolder />
+                </ServiceStatus>
+                <ServiceActions />
+                <SchoolServiceAction />
+                <ServiceExams />
+              </PaneFooter>
+            </CoursesProvider>
           </ServiceDetail>
         </PanesDetail>
       </Panes>

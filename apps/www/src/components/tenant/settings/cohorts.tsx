@@ -16,6 +16,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -41,6 +42,7 @@ import { createCohortChange } from "@/components/tenant/settings/groups";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
+import { isDraft } from "@/components/tenant/settings/state";
 import {
   SchoolUnitChoice,
   type UnitId,
@@ -466,15 +468,21 @@ function SchoolCohortTable({
         value: status,
       })),
     }),
-    cohortColumns.menu((info) => (
-      <WithAction action="cohort.manage">
-        {info.row.original.status === "archived" ? (
-          <SchoolCohortRestore cohort={info.row.original} slug={slug} />
-        ) : (
-          <SchoolCohortMenu cohort={info.row.original} slug={slug} />
-        )}
-      </WithAction>
-    )),
+    cohortColumns.menu(
+      (info) => (
+        <WithAction
+          action="cohort.manage"
+          otherwise={<RowCopy value={info.row.original.name} />}
+        >
+          {info.row.original.status === "archived" ? (
+            <SchoolCohortRestore cohort={info.row.original} slug={slug} />
+          ) : (
+            <SchoolCohortMenu cohort={info.row.original} slug={slug} />
+          )}
+        </WithAction>
+      ),
+      { inert: (row) => isDraft(row.id) }
+    ),
   ];
 
   return (

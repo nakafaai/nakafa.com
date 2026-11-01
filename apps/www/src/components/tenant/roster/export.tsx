@@ -8,6 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -67,6 +68,7 @@ const saveStudents = (lines: readonly (typeof RosterLine.Type)[]) =>
  */
 export function RosterExport() {
   const t = useTranslations("SchoolRoster");
+  const common = useTranslations("Common");
   const { slug } = useTenant();
   const read = useRosterUnit();
   const exportLines = useAction(roster.exports.lines);
@@ -118,6 +120,7 @@ export function RosterExport() {
       />
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuGroup>
+          <DropdownMenuLabel>{common("menu-export")}</DropdownMenuLabel>
           <DropdownMenuItem onClick={saveStudentsOfUnit}>
             <HugeIcons icon={UserListIcon} />
             {t("export-students")}

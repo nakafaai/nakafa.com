@@ -18,6 +18,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { TableName } from "@/components/shared/table/title";
 import {
@@ -123,6 +124,9 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
               header: t("task-points"),
               id: "points",
             }),
+            workColumns.menu((info) => (
+              <RowCopy value={info.row.original.text} />
+            )),
           ]}
           data={Option.getOrElse(kept, Arr.empty)}
           empty={<WorkEmpty searched={search !== ""} />}

@@ -10,13 +10,16 @@ import {
   Ticket01Icon,
 } from "@hugeicons/core-free-icons";
 import billingRefs from "@repo/backend/confect/_generated/refs/billing";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Record as Rec } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { RowAction, useInvoiceDownload } from "@/components/billing/invoice";
+import { useInvoiceDownload } from "@/components/billing/invoice";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
+import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useBillingNavigation } from "@/lib/billing/checkout";
@@ -72,16 +75,20 @@ function InvoiceAction({ payment }: { payment: Receipt }) {
   const draw = useAction(billingRefs.receipts.download);
   const { download, isPending } = useInvoiceDownload();
 
-  if (!isActiveLocale(locale)) {
-    return null;
-  }
   return (
-    <RowAction
-      icon={Download04Icon}
-      isPending={isPending}
-      label={t("payment-download")}
-      onClick={() => download(() => draw({ locale, paymentId: payment.id }))}
-    />
+    <RowItems>
+      <DropdownMenuItem
+        disabled={!isActiveLocale(locale) || isPending}
+        onClick={() => {
+          if (isActiveLocale(locale)) {
+            download(() => draw({ locale, paymentId: payment.id }));
+          }
+        }}
+      >
+        <HugeIcons icon={Download04Icon} />
+        {t("payment-download")}
+      </DropdownMenuItem>
+    </RowItems>
   );
 }
 
@@ -91,12 +98,15 @@ function PortalAction() {
   const billing = useBillingNavigation();
 
   return (
-    <RowAction
-      icon={LinkSquare02Icon}
-      isPending={billing.isPending}
-      label={t("payment-portal")}
-      onClick={() => billing.openPortal({ source: "settings-invoice" })}
-    />
+    <RowItems>
+      <DropdownMenuItem
+        disabled={billing.isPending}
+        onClick={() => billing.openPortal({ source: "settings-invoice" })}
+      >
+        <HugeIcons icon={LinkSquare02Icon} />
+        {t("payment-portal")}
+      </DropdownMenuItem>
+    </RowItems>
   );
 }
 

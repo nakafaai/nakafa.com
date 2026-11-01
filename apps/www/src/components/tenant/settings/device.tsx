@@ -12,7 +12,9 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
@@ -102,26 +104,31 @@ export function SchoolDeviceDialog({
                 <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={() =>
-                    startTransition(() =>
-                      saveSchool(
-                        () => deny({ slug, userCode: code }),
-                        SOURCE,
-                        () => {
-                          close();
-                          toast.success({
-                            title: "school-device-denied.title",
-                          });
-                        }
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>
+                    {common("menu-actions")}
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      startTransition(() =>
+                        saveSchool(
+                          () => deny({ slug, userCode: code }),
+                          SOURCE,
+                          () => {
+                            close();
+                            toast.success({
+                              title: "school-device-denied.title",
+                            });
+                          }
+                        )
                       )
-                    )
-                  }
-                  variant="destructive"
-                >
-                  <HugeIcons icon={UnavailableIcon} />
-                  {t("device-deny")}
-                </DropdownMenuItem>
+                    }
+                    variant="destructive"
+                  >
+                    <HugeIcons icon={UnavailableIcon} />
+                    {t("device-deny")}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </ButtonGroup>

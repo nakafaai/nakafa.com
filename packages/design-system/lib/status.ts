@@ -26,6 +26,15 @@ export const STATUS_BADGES = {
 } as const satisfies Record<typeof StatusTone.Type, string>;
 
 /**
+ * The badge variant of each tone on a muted band, such as a pane's footer: a neutral state takes a border and the
+ * page's fill there, because the muted fill it wears on a card would melt into the band.
+ */
+export const BAND_STATUS_BADGES = {
+  ...STATUS_BADGES,
+  neutral: "muted-subtle",
+} as const satisfies Record<typeof StatusTone.Type, string>;
+
+/**
  * The icon of a status line, a status said in a sentence rather than a badge: the icon takes the tone's
  * colour, and the words keep the muted text beside it, so one accent carries the meaning.
  */

@@ -36,6 +36,7 @@ import {
   Option,
   Schedule,
   Schema,
+  String as Str,
 } from "effect";
 
 /** The moments a full school's rows take relative to the moment it is seeded. */
@@ -112,6 +113,8 @@ const readRows = <Rows>(
     "--limit",
     READ_LIMIT,
   ]).pipe(
+    // The CLI prints nothing for a table that holds no row.
+    Effect.map((printed) => (Str.isEmpty(printed) ? "[]" : printed)),
     Effect.flatMap(Schema.decodeEffect(rows)),
     Effect.retry({ schedule: Schedule.spaced(READ_PAUSE), times: READ_RETRIES })
   );

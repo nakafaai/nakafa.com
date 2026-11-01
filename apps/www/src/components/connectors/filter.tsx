@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -46,6 +47,7 @@ export function ServiceFilter({
   services: readonly (typeof DirectoryEntry.Type)["service"][];
 }) {
   const t = useTranslations("Connectors");
+  const common = useTranslations("Common");
   const chosen = useTableFilters((state) => state.chosen);
   const choose = useTableFilters((state) => state.choose);
   const category = chosenOne(
@@ -70,6 +72,7 @@ export function ServiceFilter({
       />
       <DropdownMenuContent align="end" className="min-w-48">
         <DropdownMenuGroup>
+          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             onValueChange={(next) =>
               choose(

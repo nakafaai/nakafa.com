@@ -8,6 +8,7 @@ import {
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -153,6 +154,7 @@ function TenantLanguageSubmenu() {
         side={side}
       >
         <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("menu-language")}</DropdownMenuLabel>
           {Arr.map(languages, (language) => (
             <DropdownMenuItem
               key={language.value}

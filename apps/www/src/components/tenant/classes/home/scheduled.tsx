@@ -12,7 +12,9 @@ import { DateTimePicker } from "@repo/design-system/components/ui/date";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import {
@@ -130,28 +132,31 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
           }
         />
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-            <HugeIcons icon={PencilEdit02Icon} />
-            {t("message-edit")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() =>
-              runForumCall(
-                forumCall(() =>
-                  cancel.withOptimisticUpdate(cancelWaitingUpdate)({
-                    classId,
-                    scheduledId: post.id,
-                    slug,
-                  })
-                ),
-                toastForumFailure
-              )
-            }
-            variant="destructive"
-          >
-            <HugeIcons icon={Cancel01Icon} />
-            {t("post-schedule-cancel")}
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => dialogs.show("edit")}>
+              <HugeIcons icon={PencilEdit02Icon} />
+              {t("message-edit")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                runForumCall(
+                  forumCall(() =>
+                    cancel.withOptimisticUpdate(cancelWaitingUpdate)({
+                      classId,
+                      scheduledId: post.id,
+                      slug,
+                    })
+                  ),
+                  toastForumFailure
+                )
+              }
+              variant="destructive"
+            >
+              <HugeIcons icon={Cancel01Icon} />
+              {t("post-schedule-cancel")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
       {dialogs.kind === "edit" ? (

@@ -5,6 +5,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -37,6 +38,7 @@ export function ColumnFilter({
   title: string;
 }) {
   const t = useTranslations("DataTable");
+  const common = useTranslations("Common");
   // The store's own record is the selection, so the snapshot stays the same object between renders; a list made in
   // the selector would be new on every read, and React would render the head without end.
   const all = useTableFilters((state) => state.chosen);
@@ -60,39 +62,42 @@ export function ColumnFilter({
       />
       <DropdownMenuContent align={align} className="min-w-48">
         <DropdownMenuGroup>
-          {Arr.isReadonlyArrayEmpty(options) ? (
-            <DropdownMenuItem disabled>{t("no-values")}</DropdownMenuItem>
+          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            {Arr.isReadonlyArrayEmpty(options) ? (
+              <DropdownMenuItem disabled>{t("no-values")}</DropdownMenuItem>
+            ) : null}
+            {Arr.map(options, (option) => (
+              <DropdownMenuCheckboxItem
+                checked={Arr.contains(chosen, option.value)}
+                closeOnClick={false}
+                key={option.value}
+                onCheckedChange={(next) =>
+                  choose(
+                    column,
+                    next
+                      ? Arr.append(chosen, option.value)
+                      : Arr.filter(chosen, (value) => value !== option.value)
+                  )
+                }
+              >
+                <HugeIcons icon={option.icon} />
+                {option.label}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuGroup>
+          {filtered ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => choose(column, [])}>
+                  <HugeIcons icon={Cancel01Icon} />
+                  {t("reset")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </>
           ) : null}
-          {Arr.map(options, (option) => (
-            <DropdownMenuCheckboxItem
-              checked={Arr.contains(chosen, option.value)}
-              closeOnClick={false}
-              key={option.value}
-              onCheckedChange={(next) =>
-                choose(
-                  column,
-                  next
-                    ? Arr.append(chosen, option.value)
-                    : Arr.filter(chosen, (value) => value !== option.value)
-                )
-              }
-            >
-              <HugeIcons icon={option.icon} />
-              {option.label}
-            </DropdownMenuCheckboxItem>
-          ))}
         </DropdownMenuGroup>
-        {filtered ? (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => choose(column, [])}>
-                <HugeIcons icon={Cancel01Icon} />
-                {t("reset")}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </>
-        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -116,6 +121,7 @@ export function ColumnChoice({
   title: string;
 }) {
   const t = useTranslations("DataTable");
+  const common = useTranslations("Common");
   const all = useTableFilters((state) => state.chosen);
   const chosen = Option.getOrElse(Rec.get(all, column), () => []);
   const choose = useTableFilters((state) => state.choose);
@@ -141,6 +147,7 @@ export function ColumnChoice({
       />
       <DropdownMenuContent align={align} className="min-w-48">
         <DropdownMenuGroup>
+          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             onValueChange={(next) =>
               choose(

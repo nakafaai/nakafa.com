@@ -6,6 +6,7 @@ import {
   CheckmarkCircle02Icon,
   Download04Icon,
   PencilEdit02Icon,
+  RefreshIcon,
   SentIcon,
 } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
@@ -32,6 +33,7 @@ import { usePanes } from "@/components/shared/panes";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { menuOf } from "@/components/tenant/reports/access";
@@ -140,6 +142,9 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
                     (subject) => subject.band ?? t(`kktp-${subject.kktp}`),
                     { header: t("result"), id: "result" }
                   ),
+                  subjectColumns.menu((info) => (
+                    <RowCopy value={info.row.original.className} />
+                  )),
                 ]}
                 data={report.subjects}
                 plain
@@ -226,6 +231,12 @@ function ReportStateButtons({
         <Button onClick={() => actions.approve(report.id)} type="button">
           <HugeIcons icon={CheckmarkCircle02Icon} />
           {t("approve")}
+        </Button>
+      ) : null}
+      {menu.lock ? (
+        <Button onClick={() => actions.approve(report.id)} type="button">
+          <HugeIcons icon={RefreshIcon} />
+          {t("lock-again")}
         </Button>
       ) : null}
       {menu.open && report.hash !== null ? (

@@ -35,6 +35,7 @@ import {
 } from "#scripts/check/files";
 import { inspectFrameSource } from "#scripts/check/frame";
 import { inspectGatewaySource } from "#scripts/check/gateway";
+import { inspectMenuSource } from "#scripts/check/menus";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
@@ -71,7 +72,7 @@ function lineReport(lines: readonly string[]) {
 }
 
 /**
- * Applies the Effect-native, array, gateway, React, props drilling, state, refs,
+ * Applies the Effect-native, array, gateway, React, props drilling, menu, state, refs,
  * sealed message, settings card, and class source policies to authored modules. The array rules read each module's types
  * from its project on disk, and their findings join the Effect-native findings
  * before the list is sorted. Every finding is a violation: no baseline or
@@ -104,6 +105,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectToastSource(file, sourceFile),
         inspectReactSource(file, sourceFile),
         inspectDrillingSource(file, sourceFile),
+        inspectMenuSource(file, sourceFile),
         inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),

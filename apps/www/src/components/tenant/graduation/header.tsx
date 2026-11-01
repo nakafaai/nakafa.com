@@ -11,7 +11,9 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -177,16 +179,22 @@ function GraduationActions({
             }
           />
           <DropdownMenuContent align="end" className="w-56">
-            {canDecide ? (
-              <DropdownMenuItem onClick={() => setIsDeciding(true)}>
-                <HugeIcons icon={CheckmarkBadge01Icon} />
-                {t("decide")}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+              {canDecide ? (
+                <DropdownMenuItem onClick={() => setIsDeciding(true)}>
+                  <HugeIcons icon={CheckmarkBadge01Icon} />
+                  {t("decide")}
+                </DropdownMenuItem>
+              ) : null}
+              <DropdownMenuItem
+                disabled={isExporting}
+                onClick={exportReadiness}
+              >
+                <HugeIcons icon={FileExportIcon} />
+                {t("export-readiness")}
               </DropdownMenuItem>
-            ) : null}
-            <DropdownMenuItem disabled={isExporting} onClick={exportReadiness}>
-              <HugeIcons icon={FileExportIcon} />
-              {t("export-readiness")}
-            </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </ButtonGroup>

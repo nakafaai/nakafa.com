@@ -17,8 +17,9 @@ export const canOpenReports = (viewer: Pick<Viewer, "units">) =>
 
 /**
  * The items a report's row menu shows: write the note while it is not handed in, hand in
- * a draft, take back a handed-in report, approve a handed-in report, and open a locked
- * one. Each needs the action the server allows on the line.
+ * a draft, take back a handed-in report, approve a handed-in report, lock again one approved
+ * whose PDF has not arrived, and open a locked one. Each needs the action the server allows
+ * on the line.
  */
 export const menuOf = (line: ReportLine) => {
   const state = line.report?.state ?? "none";
@@ -27,6 +28,7 @@ export const menuOf = (line: ReportLine) => {
   return {
     approve: may("report.approve") && state === "completed",
     complete: may("report.complete") && state === "draft",
+    lock: may("report.approve") && state === "approved",
     open: state === "locked",
     reopen: may("report.complete") && state === "completed",
     write: may("report.write") && (state === "none" || state === "draft"),

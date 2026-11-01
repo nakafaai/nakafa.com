@@ -17,7 +17,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -296,24 +298,27 @@ function MessageActions({
             }
           />
           <DropdownMenuContent align="end" className="w-40">
-            {editable ? (
-              <DropdownMenuItem onClick={onEdit}>
-                <HugeIcons icon={PencilEdit02Icon} />
-                {t("message-edit")}
-              </DropdownMenuItem>
-            ) : null}
-            {scope.canManage ? (
-              <DropdownMenuItem onClick={() => dialogs.show("hide")}>
-                <HugeIcons icon={ViewOffSlashIcon} />
-                {t("message-hide")}
-              </DropdownMenuItem>
-            ) : null}
-            {discussion === null ? null : (
-              <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-                <HugeIcons icon={TextFontIcon} />
-                {t("discussion-rename")}
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+              {editable ? (
+                <DropdownMenuItem onClick={onEdit}>
+                  <HugeIcons icon={PencilEdit02Icon} />
+                  {t("message-edit")}
+                </DropdownMenuItem>
+              ) : null}
+              {scope.canManage ? (
+                <DropdownMenuItem onClick={() => dialogs.show("hide")}>
+                  <HugeIcons icon={ViewOffSlashIcon} />
+                  {t("message-hide")}
+                </DropdownMenuItem>
+              ) : null}
+              {discussion === null ? null : (
+                <DropdownMenuItem onClick={() => dialogs.show("rename")}>
+                  <HugeIcons icon={TextFontIcon} />
+                  {t("discussion-rename")}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : null}
