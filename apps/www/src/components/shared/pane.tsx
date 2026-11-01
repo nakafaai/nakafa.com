@@ -60,7 +60,7 @@ export function PaneHeader({
 
   return (
     <header
-      className="flex min-h-14 shrink-0 items-center gap-2 border-b px-4 py-2"
+      className="flex min-h-14 shrink-0 items-center gap-2 border-b py-2 ps-4 pe-[var(--pane-end,1rem)]"
       data-pane-header=""
       data-slot="pane-header"
     >
@@ -101,7 +101,7 @@ export function PaneHeader({
 export function PaneBody({ children }: { children: ReactNode }) {
   return (
     <ScrollArea className="flex-1">
-      <div className="p-4">{children}</div>
+      <div className="py-4 ps-4 pe-[var(--pane-end,1rem)]">{children}</div>
     </ScrollArea>
   );
 }
@@ -109,7 +109,7 @@ export function PaneBody({ children }: { children: ReactNode }) {
 /** A detail's footer: its actions at the end, on a second row where a narrow pane cannot hold them in one. */
 export function PaneFooter({ children }: { children: ReactNode }) {
   return (
-    <footer className="bg-muted/70 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-4 py-3">
+    <footer className="bg-muted/70 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t py-3 ps-4 pe-[var(--pane-end,1rem)]">
       {children}
     </footer>
   );

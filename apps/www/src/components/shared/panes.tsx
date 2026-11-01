@@ -160,7 +160,8 @@ const panesVariants = cva("min-h-0", {
     },
     width: {
       full: "w-full",
-      page: pageBoxVariants(),
+      // A pane's lines run to the group's edge, and what it holds ends on the edge the header's row mirrors.
+      page: `${pageBoxVariants()} [--pane-end:1.5rem]`,
     },
   },
 });

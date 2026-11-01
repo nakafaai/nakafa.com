@@ -77,6 +77,7 @@ const schoolPaths = [
   "/settings/policies",
   "/settings/clients",
   "/settings/audit",
+  "/settings/connections",
 ];
 
 /** The pages of one exam that its Owner sees: its rooms, its editor, its try, and one sitting with its results. */
@@ -89,7 +90,11 @@ const examPaths = (sitting: { examId: string; sittingId: string }) => [
 ];
 
 /** The pages of the class that the acceptance runtime seeds for its class teacher. */
-const classPaths = ["/classes/fisika-x-1", "/classes/fisika-x-1/forum"];
+const classPaths = [
+  "/classes/fisika-x-1",
+  "/classes/fisika-x-1/forum",
+  "/classes/fisika-x-1/library",
+];
 
 /**
  * Reads every header row that is drawn, the page's own, an open pane's, or the
