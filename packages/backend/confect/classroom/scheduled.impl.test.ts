@@ -15,6 +15,7 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
 
 const { cancel, edit, list, schedule } = refs.public.classroom.scheduled;
+const { release } = refs.internal.classroom.scheduled;
 const posts = refs.public.classroom.posts;
 
 const HOUR = 3_600_000;
@@ -113,6 +114,20 @@ describe("classroom/scheduled", () => {
         );
         expect(yield* read(fixture, scope)).toEqual([]);
       })
+  );
+
+  it.effect("posts nothing for a run that outlives its cancel", () =>
+    Effect.gen(function* () {
+      const { fixture, kept, scope, teacher } = yield* waiting;
+      yield* teacher.mutation(cancel, { ...scope, scheduledId: kept.id });
+      expect(
+        yield* fixture.internal.mutation(release, {
+          classId: scope.classId,
+          clientKey: kept.clientKey,
+        })
+      ).toBeNull();
+      expect(yield* read(fixture, scope)).toEqual([]);
+    })
   );
 
   it.effect(
