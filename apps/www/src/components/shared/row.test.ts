@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Option } from "effect";
 import { pressesRow } from "@/components/shared/row";
 
 /** A table row with a plain cell and a button in another cell. */
@@ -9,12 +10,16 @@ const rowOf = () => {
   return row;
 };
 
+/** The element of a row that the test presses. */
+const elementOf = (row: HTMLTableRowElement, selector: string) =>
+  Option.getOrThrow(Option.fromNullishOr(row.querySelector(selector)));
+
 describe("pressesRow", () => {
   it("counts a press on the row's own cell", () => {
     const row = rowOf();
 
     expect(
-      pressesRow({ currentTarget: row, target: row.querySelector("td") })
+      pressesRow({ currentTarget: row, target: elementOf(row, "td") })
     ).toBe(true);
   });
 
@@ -22,7 +27,7 @@ describe("pressesRow", () => {
     const row = rowOf();
 
     expect(
-      pressesRow({ currentTarget: row, target: row.querySelector("span") })
+      pressesRow({ currentTarget: row, target: elementOf(row, "span") })
     ).toBe(false);
   });
 
@@ -34,6 +39,8 @@ describe("pressesRow", () => {
   });
 
   it("ignores a press with no element behind it", () => {
-    expect(pressesRow({ currentTarget: rowOf(), target: null })).toBe(false);
+    expect(
+      pressesRow({ currentTarget: rowOf(), target: new EventTarget() })
+    ).toBe(false);
   });
 });
