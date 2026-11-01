@@ -6,6 +6,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 import { Base64Url } from "effect/encoding";
 
@@ -18,12 +19,9 @@ const REDIRECT_URI = "https://agent.example/callback";
 const CODE_VERIFIER = "agent-verifier-agent-verifier-agent-verifier-0123";
 
 /** The JSON body of an answer. */
-const bodyOf = <S extends Schema.Top & { readonly DecodingServices: never }>(
-  schema: S,
-  response: Response
-) =>
+const jsonOf = (response: Response) =>
   Effect.promise(() => response.text()).pipe(
-    Effect.flatMap(Schema.decodeEffect(Schema.fromJsonString(schema)))
+    Effect.flatMap(Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown)))
   );
 
 /** A token request as an agent sends it. */
@@ -70,7 +68,7 @@ const authorizeAgent = Effect.gen(function* () {
   );
   const registered = yield* Effect.promise(() =>
     t.fetch("/api/auth/mcp/register", {
-      body: JSON.stringify({
+      body: encodeJsonText({
         client_name: "Test agent",
         grant_types: ["authorization_code", "refresh_token"],
         redirect_uris: [REDIRECT_URI],
@@ -80,7 +78,9 @@ const authorizeAgent = Effect.gen(function* () {
       method: "POST",
     })
   );
-  const { client_id: clientId } = yield* bodyOf(Registered, registered);
+  const { client_id: clientId } = yield* jsonOf(registered).pipe(
+    Effect.flatMap(Schema.decodeUnknownEffect(Registered))
+  );
   const challenge = yield* Effect.promise(() =>
     crypto.subtle.digest("SHA-256", new TextEncoder().encode(CODE_VERIFIER))
   ).pipe(Effect.map((bytes) => Base64Url.encode(new Uint8Array(bytes))));
@@ -114,7 +114,7 @@ const answerConsent = (
     );
     const answered = yield* Effect.promise(() =>
       t.fetch("/api/auth/oauth2/consent", {
-        body: JSON.stringify({
+        body: encodeJsonText({
           accept,
           consent_code: location.searchParams.get("consent_code"),
         }),
@@ -122,7 +122,9 @@ const answerConsent = (
         method: "POST",
       })
     );
-    const { redirectURI } = yield* bodyOf(Consent, answered);
+    const { redirectURI } = yield* jsonOf(answered).pipe(
+      Effect.flatMap(Schema.decodeUnknownEffect(Consent))
+    );
     return new URL(redirectURI);
   });
 
@@ -142,7 +144,9 @@ const signIn = Effect.gen(function* () {
       })
     )
   );
-  const tokens = yield* bodyOf(Tokens, response);
+  const tokens = yield* jsonOf(response).pipe(
+    Effect.flatMap(Schema.decodeUnknownEffect(Tokens))
+  );
   return { clientId, person, t, tokens };
 });
 
@@ -185,7 +189,11 @@ describe("auth/grant", () => {
       const renewed = yield* Effect.promise(() =>
         t.fetch("/api/auth/mcp/token", refresh)
       );
-      expect((yield* bodyOf(Tokens, renewed)).expires_in).toBe(900);
+      expect(
+        (yield* jsonOf(renewed).pipe(
+          Effect.flatMap(Schema.decodeUnknownEffect(Tokens))
+        )).expires_in
+      ).toBe(900);
       const replayed = yield* Effect.promise(() =>
         t.fetch("/api/auth/mcp/token", refresh)
       );
@@ -201,11 +209,14 @@ describe("auth/grant", () => {
           t.fetch("/api/auth/agent/list", {
             headers: { authorization: SIGNED_IN },
           })
-        ).pipe(Effect.flatMap((response) => bodyOf(Agents, response)));
+        ).pipe(
+          Effect.flatMap(jsonOf),
+          Effect.flatMap(Schema.decodeUnknownEffect(Agents))
+        );
       expect(yield* list()).toEqual([{ clientId, name: "Test agent" }]);
       const revoked = yield* Effect.promise(() =>
         t.fetch("/api/auth/agent/revoke", {
-          body: JSON.stringify({ client_id: clientId }),
+          body: encodeJsonText({ client_id: clientId }),
           headers: SIGNED_IN_JSON,
           method: "POST",
         })
@@ -249,7 +260,7 @@ describe("auth/grant", () => {
       );
       const refused = yield* Effect.promise(() =>
         t.fetch("/api/auth/mcp/register", {
-          body: JSON.stringify({ redirect_uris: [REDIRECT_URI] }),
+          body: encodeJsonText({ redirect_uris: [REDIRECT_URI] }),
           headers: { "content-type": "application/json" },
           method: "POST",
         })

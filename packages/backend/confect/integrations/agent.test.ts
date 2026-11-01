@@ -5,6 +5,7 @@ import { SCHOOL_MCP_PATH } from "@repo/backend/confect/integrations/api";
 import type { Fixture } from "@repo/backend/test/api";
 import { type McpRequest, modernPost } from "@repo/backend/test/mcp/harness";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Record as Rec, Schema } from "effect";
 
 /** The one stand-in for Convex's HTTP API in this file. */
@@ -53,13 +54,10 @@ const send = (fixture: Fixture, request: McpRequest) => {
   );
 };
 
-/** The decoded JSON body of an answer. */
-const decoded = <S extends Schema.Top & { readonly DecodingServices: never }>(
-  schema: S,
-  response: Response
-) =>
+/** The JSON body of an answer. */
+const jsonOf = (response: Response) =>
   Effect.promise(() => response.text()).pipe(
-    Effect.flatMap(Schema.decodeEffect(Schema.fromJsonString(schema)))
+    Effect.flatMap(Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown)))
   );
 
 /** Calls one tool as the school's admin. */
@@ -71,14 +69,19 @@ const call = (
   send(
     fixture,
     modernPost(1, "tools/call", { arguments: args, name }, name)
-  ).pipe(Effect.flatMap((response) => decoded(ToolAnswer, response)));
+  ).pipe(
+    Effect.flatMap(jsonOf),
+    Effect.flatMap(Schema.decodeUnknownEffect(ToolAnswer))
+  );
 
 describe("the agent tools of a signed-in person", () => {
   it.effect("offers three tools in place of a client's", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const answer = yield* send(fixture, modernPost(1, "tools/list"));
-      const list = yield* decoded(ToolList, answer);
+      const list = yield* jsonOf(answer).pipe(
+        Effect.flatMap(Schema.decodeUnknownEffect(ToolList))
+      );
       expect(Arr.map(list.result.tools, (tool) => tool.name)).toEqual([
         "nakafa_list_functions",
         "nakafa_describe_function",
@@ -98,7 +101,7 @@ describe("the agent tools of a signed-in person", () => {
       const listed = yield* call(fixture, "nakafa_list_functions", {
         area: "integrations",
       });
-      const names = JSON.stringify(listed.result.structuredContent);
+      const names = encodeJsonText(listed.result.structuredContent);
       expect(names).toContain("integrations/clients:create");
       // `tokens` holds internal functions only, so an agent never sees them.
       expect(names).not.toContain("integrations/tokens:");
@@ -153,7 +156,7 @@ describe("the agent tools of a signed-in person", () => {
         name: "tenancy/people:list",
       });
       expect(refused.result.isError).toBe(true);
-      expect(JSON.stringify(refused.result.structuredContent)).toContain(
+      expect(encodeJsonText(refused.result.structuredContent)).toContain(
         "Forbidden"
       );
       fetcher.mockResolvedValueOnce(new Response("not json"));
