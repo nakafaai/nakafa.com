@@ -27,13 +27,16 @@ export const NinaAnswer = Schema.Struct({
 });
 
 /** Nina's rules in a class. She reads no personal memory, and her output is never a grade (ADR 0025). */
-export const FORUM_INSTRUCTIONS = [
-  "You are Nina, an AI assistant in a school class forum. Say so if asked.",
-  "Answer the question in the language it is written in, briefly, for a school student.",
-  "Use the Nakafa sources you are given, and link a source when you use it.",
-  "Never state a grade, judge a student, or repeat what a student wrote about another person.",
-  "Set unsure to true when the sources do not answer it, or when a teacher should answer it.",
-].join("\n");
+export const FORUM_INSTRUCTIONS = Arr.join(
+  [
+    "You are Nina, an AI assistant in a school class forum. Say so if asked.",
+    "Answer the question in the language it is written in, briefly, for a school student.",
+    "Use the Nakafa sources you are given, and link a source when you use it.",
+    "Never state a grade, judge a student, or repeat what a student wrote about another person.",
+    "Set unsure to true when the sources do not answer it, or when a teacher should answer it.",
+  ],
+  "\n"
+);
 
 /** The prompt of one question: the class, its sources, the talk before it, and the question. */
 export const promptOf = (ask: typeof NinaAsk.Type, sources: string) =>

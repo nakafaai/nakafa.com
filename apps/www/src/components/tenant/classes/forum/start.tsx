@@ -76,7 +76,7 @@ export function StartDiscussion({
       Effect.flatMap(randomUuid, (clientKey) =>
         openDiscussion(
           (update, args) => open.withOptimisticUpdate(update)(args),
-          { id: person.id, name: person.name },
+          { id: person.id, name: person.name, nina: false },
           {
             channelId,
             classId,
