@@ -22,14 +22,22 @@ function Avatar({
   );
 }
 
-function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
+/**
+ * The picture itself, a plain image, so the first HTML holds it and the browser
+ * paints it as it arrives. A muted circle holds its place until then.
+ */
+function AvatarImage({ className, ...props }: React.ComponentProps<"img">) {
   return (
-    <AvatarPrimitive.Image
+    <img
+      alt=""
       className={cn(
-        "aspect-square size-full rounded-full object-cover",
+        "bg-muted aspect-square size-full rounded-full object-cover",
         className
       )}
       data-slot="avatar-image"
+      decoding="sync"
+      height={96}
+      width={96}
       {...props}
     />
   );
