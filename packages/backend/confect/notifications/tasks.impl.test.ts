@@ -205,6 +205,35 @@ describe("notifications/tasks schedule", () => {
 });
 
 describe("notifications/tasks run", () => {
+  it.effect("reminds only the students a task goes to", () =>
+    Effect.gen(function* () {
+      const fixture = yield* keyedFixture;
+      const made = yield* published(fixture, TENANCY_NOW + 3 * DAY);
+      yield* fixture.run(
+        Effect.flatMap(DatabaseWriter, (writer) =>
+          writer
+            .table("classroomTasks")
+            .patch(made.taskId, { targets: [fixture.people.admin.personId] })
+        ).pipe(Effect.orDie)
+      );
+      yield* fixture.internal.mutation(run, {
+        cursor: null,
+        notice: "taskDeadline",
+        taskId: made.taskId,
+      });
+      const notices = yield* noticesOf(
+        fixture,
+        fixture.people.student.personId
+      );
+      expect(
+        Arr.filter(
+          notices.rows,
+          (row) => row.changeType === "assignment.deadline"
+        )
+      ).toEqual([]);
+    })
+  );
+
   it.effect("reminds a student who has not handed in, and only them", () =>
     Effect.gen(function* () {
       const fixture = yield* keyedFixture;
