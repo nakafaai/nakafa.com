@@ -68,8 +68,12 @@ export function SchoolLocaleCard({
   const setLocale = useMutation(
     tenancy.settings.setLocale
   ).withOptimisticUpdate(setLocaleChange);
-  const [nextCountry, setNextCountry] = useState(country);
-  const [nextCurrency, setNextCurrency] = useState(currency);
+  // The fields hold what the admin chose, and the school's own values until they choose, so a page drawn from an
+  // older read shows the live value once it arrives.
+  const [chosenCountry, setNextCountry] = useState<string | null>(null);
+  const [chosenCurrency, setNextCurrency] = useState<string | null>(null);
+  const nextCountry = chosenCountry ?? country;
+  const nextCurrency = chosenCurrency ?? currency;
   const countryNames = new Intl.DisplayNames([locale], { type: "region" });
   const currencyNames = new Intl.DisplayNames([locale], { type: "currency" });
   const countryItems = Arr.map(countriesWith(country), (value) => ({
