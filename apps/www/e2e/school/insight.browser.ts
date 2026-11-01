@@ -69,6 +69,7 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
   const picker = teacher.getByRole("combobox", { name: "Class" });
   await waitUntilTakenOver(picker);
   await expect(picker).toContainText("Fisika X-1");
+  await teacher.getByRole("tab", { name: "Mastery" }).click();
   await expect(teacher.getByText("No released exam yet")).toBeVisible();
   await expect(teacher.getByRole("link", { name: "Open exams" })).toBeVisible();
 
@@ -143,7 +144,7 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
   await expect(teacher.getByText("Gerak lurus").first()).toBeVisible();
   await expect(
     teacher.getByText(
-      "A question with no competency counts under its exam's name."
+      "Only teachers see this chance, and it never changes a grade."
     )
   ).toBeVisible();
 

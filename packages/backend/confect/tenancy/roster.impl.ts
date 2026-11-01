@@ -27,6 +27,7 @@ import {
   tenantAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
+import { emailOf } from "@repo/backend/confect/tenancy/email";
 import {
   AddressInvited,
   AddressMember,
