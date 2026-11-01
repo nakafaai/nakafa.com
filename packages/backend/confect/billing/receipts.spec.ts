@@ -4,8 +4,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
+import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
 /** The buyer asked for an invoice Nakafa cannot give: another's, unpaid, or sold by another merchant. */
