@@ -1,16 +1,13 @@
-import { BotManagement, Ruleset, type Zone } from "@alchemy.run/cloudflare";
-import { adopt } from "alchemy/AdoptPolicy";
+import { BotManagement, type Zone } from "@alchemy.run/cloudflare";
 import { Effect } from "effect";
-import {
-  renderTrainingCrawlerExpression,
-  TRAINING_CRAWLERS,
-} from "#www/src/lib/seo/crawlers";
 
 /**
  * The bot policy of the nakafa.com zone, deployed from production only. The AI
  * search, user and training classes all allow at the edge, so answer services can
- * read and cite, and training is refused by robots.txt and one WAF rule. Bot
- * Preference Sync, Bot Fight Mode and AI Labyrinth stay off. Alchemy documents
+ * read and cite, and training is refused by robots.txt and one WAF rule, whose
+ * expression `renderTrainingCrawlerExpression` writes. The deploy token holds no
+ * Zone WAF Write, so that rule stands in Cloudflare outside this stack, and an
+ * operator changes it there. Bot Preference Sync, Bot Fight Mode and AI Labyrinth stay off. Alchemy documents
  * `fightMode` as the Free plan's field and the other fields set here as shared
  * across plans. Some accounts still reject a shared field, and then that field is
  * dropped from this resource.
@@ -27,19 +24,4 @@ export const deployNakafaBots = Effect.fn("deploy.nakafaBots")(function* (
     crawlerProtection: "disabled",
     fightMode: false,
   });
-
-  // The Ruleset owns the whole custom firewall phase of the zone, as the
-  // nakafa.id redirect does for its phase, so the rule replaces what the phase held.
-  yield* Ruleset.Ruleset("NakafaTrainingCrawlers", {
-    zone,
-    phase: "http_request_firewall_custom",
-    rules: [
-      {
-        action: "block",
-        description: "Refuse the training-only crawlers by user agent",
-        enabled: true,
-        expression: renderTrainingCrawlerExpression(TRAINING_CRAWLERS),
-      },
-    ],
-  }).pipe(adopt(true));
 });
