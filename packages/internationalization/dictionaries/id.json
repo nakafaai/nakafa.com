@@ -2672,6 +2672,10 @@
     "saved-description": "Cari, ubah, atau hapus yang Nina simpan."
   },
   "Toast": {
+    "offline-move": {
+      "title": "Kamu sedang offline.",
+      "description": "Sambungkan lagi untuk membuka halaman ini."
+    },
     "chat-deleted": {
       "title": "Obrolan ini sudah dihapus."
     },

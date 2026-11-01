@@ -8,7 +8,10 @@ import { ACCOUNT_INBOX } from "@/components/notifications/inbox";
 import { NotificationsList } from "@/components/notifications/list";
 import { MarkAllRead } from "@/components/notifications/read";
 import { InboxTabs } from "@/components/notifications/tabs";
-import { InboxTopic } from "@/components/notifications/topic";
+import {
+  InboxAddressTopic,
+  InboxTopic,
+} from "@/components/notifications/topic";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
@@ -18,7 +21,7 @@ import { notificationsScreenFn } from "@/lib/account/home.functions";
 
 /** The tab the address names, All without one. */
 const NotificationsSearch = Schema.Struct({
-  topic: Schema.optionalKey(InboxTopic),
+  topic: Schema.optionalKey(InboxAddressTopic),
 });
 
 export const Route = createFileRoute(

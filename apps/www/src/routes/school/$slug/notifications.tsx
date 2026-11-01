@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Schema } from "effect";
 import type { ReactElement } from "react";
-import { SchoolInboxTopic } from "@/components/notifications/topic";
+import { SchoolInboxAddressTopic } from "@/components/notifications/topic";
 import { SchoolNotifications } from "@/components/tenant/inbox/page";
 
 /**
@@ -10,7 +10,7 @@ import { SchoolNotifications } from "@/components/tenant/inbox/page";
  */
 const NotificationsSearch = Schema.Struct({
   schools: Schema.optionalKey(Schema.Literal("all")),
-  topic: Schema.optionalKey(SchoolInboxTopic),
+  topic: Schema.optionalKey(SchoolInboxAddressTopic),
 });
 
 /** The account's notifications on the school's host. */
