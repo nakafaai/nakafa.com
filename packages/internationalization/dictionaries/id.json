@@ -2068,7 +2068,7 @@
   "Holy": {
     "holy": "Suci",
     "quran": "Al-Qur'an",
-    "quran-description": "Baca Al-Qur'an dengan terjemahan dan tafsir per ayat.",
+    "quran-description": "Baca 114 surah Al-Qur'an dalam bahasa Arab dengan terjemahan dan tafsir per ayat, gratis di Nakafa.",
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir",
@@ -2236,7 +2236,7 @@
   },
   "Contributor": {
     "title": "Kontributor",
-    "description": "Temui orang-orang yang membuat Nakafa menjadi mungkin."
+    "description": "Kenali orang-orang yang menulis, memeriksa, dan membangun Nakafa, tempat belajar gratis dari SD sampai universitas."
   },
   "ComingSoon": {
     "title": "Segera Hadir",
