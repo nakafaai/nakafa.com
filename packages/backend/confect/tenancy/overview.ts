@@ -9,7 +9,7 @@ import spec from "@repo/backend/confect/tenancy/cohorts.spec";
 import { Array as Arr, Effect, Option } from "effect";
 
 /** The most placements one cohort's count reads, past any class group a school forms. */
-export const COHORT_COUNT_LIMIT = 300;
+const COHORT_COUNT_LIMIT = 300;
 
 /**
  * What a settings table shows of each cohort of one period: its homeroom teacher, and how many

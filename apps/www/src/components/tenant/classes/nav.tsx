@@ -100,23 +100,32 @@ function TenantSchoolClasses() {
 
   return Arr.map(
     Arr.filter(viewer.value.units, (unit) => unit.status === "active"),
-    (unit) => <TenantUnitClasses id={unit.id} key={unit.id} name={unit.name} />
+    (unit) => <TenantUnitClasses key={unit.id} unit={unit} />
   );
 }
 
-/** The classes of a unit's active period, or nothing for a unit with none. */
+/**
+ * The active classes of a unit's active period that the viewer does not already find under their
+ * own, a page at a time. A unit the viewer does not lead refuses the list, so it draws nothing, and
+ * so does a unit with no active period.
+ */
 function TenantUnitClasses({
-  id,
-  name,
+  unit,
 }: {
-  id: Ref.Args<typeof tenancy.cohorts.activePeriod>["unitId"];
-  name: string;
+  unit: Ref.Returns<typeof tenancy.viewer.get>["units"][number];
 }) {
   const { slug } = useTenant();
+  const mine = useMyClasses();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const period = useQuery(
     tenancy.cohorts.activePeriod,
-    isSettled ? { slug, unitId: id } : "skip"
+    isSettled ? { slug, unitId: unit.id } : "skip"
+  );
+  const periodId = QueryResult.isSuccess(period) ? period.value : null;
+  const pagination = usePaginatedQuery(
+    classroom.classes.list,
+    periodId === null ? "skip" : { periodId, slug },
+    { initialNumItems: PAGE_SIZE }
   );
 
   if (QueryResult.isFailure(period)) {
@@ -125,33 +134,6 @@ function TenantUnitClasses({
     }
     throw period.error;
   }
-  if (!QueryResult.isSuccess(period) || period.value === null) {
-    return null;
-  }
-
-  return <TenantPeriodClasses label={name} periodId={period.value} />;
-}
-
-/**
- * The active classes of one period that the viewer does not already find under their own, a page
- * at a time. A unit the viewer does not lead refuses the list, so it draws nothing.
- */
-function TenantPeriodClasses({
-  label,
-  periodId,
-}: {
-  label: string;
-  periodId: Ref.Args<typeof tenancy.cohorts.list>["periodId"];
-}) {
-  const { slug } = useTenant();
-  const mine = useMyClasses();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
-    classroom.classes.list,
-    isSettled ? { periodId, slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
-  );
-
   if (PaginatedQueryResult.isFailure(pagination)) {
     if (isDenied(pagination.error)) {
       return null;
@@ -171,7 +153,7 @@ function TenantPeriodClasses({
   }
 
   return (
-    <TenantSidebarGroup icon={UserMultiple02Icon} label={label}>
+    <TenantSidebarGroup icon={UserMultiple02Icon} label={unit.name}>
       {Arr.map(rows, (klass) => (
         <TenantClassItem
           key={klass.id}

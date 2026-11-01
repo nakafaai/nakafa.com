@@ -31,11 +31,11 @@ const CohortView = Schema.Struct({
 
 /** What a settings table shows of one cohort beside its own fields. */
 const CohortOverview = Schema.Struct({
-  classes: Schema.Number,
+  classes: Schema.Finite,
   homeroom: Schema.NullOr(PersonName),
   id: Id("tenantCohorts"),
   name: CohortName,
-  students: Schema.Number,
+  students: Schema.Finite,
 });
 
 /** One Person placed in a cohort, as the cohort's members list shows them, with their school login. */
