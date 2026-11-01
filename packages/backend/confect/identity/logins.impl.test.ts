@@ -33,6 +33,29 @@ beforeEach(() => {
 
 describe("identity/logins list", () => {
   it.effect(
+    "finds the login of a person a search names, and skips a person with none",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* issueFirst(fixture, "guru.baru");
+        const invitee = yield* inviteePerson(fixture);
+        const admin = fixture.as("admin");
+        const found = yield* admin.query(list, {
+          paginationOpts: firstPage,
+          search: invitee.name,
+          slug: nf,
+        });
+        expect(found.page).toMatchObject([{ loginName: "guru.baru" }]);
+        const none = yield* admin.query(list, {
+          paginationOpts: firstPage,
+          search: "Teacher",
+          slug: nf,
+        });
+        expect(none.page).toEqual([]);
+      })
+  );
+
+  it.effect(
     "lists each school login with its Person and the time its login was issued",
     () =>
       Effect.gen(function* () {

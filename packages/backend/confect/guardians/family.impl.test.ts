@@ -53,6 +53,26 @@ const linked = Effect.fn("test.guardians.family.linked")(function* (
   return { guardian: guardian.client, link };
 });
 
+describe("guardians/links list search", () => {
+  it.effect("finds a link by the student's name or by the address", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const { link } = yield* linked(fixture);
+      const counselor = fixture.as("counselor");
+      const listed = (search: string) =>
+        counselor.query(refs.public.guardians.links.list, {
+          ...firstPage,
+          search,
+          slug: nf,
+        });
+      expect((yield* listed("Stud")).page).toMatchObject([{ id: link.id }]);
+      expect((yield* listed(link.email)).page).toMatchObject([{ id: link.id }]);
+      expect((yield* listed("Teacher")).page).toEqual([]);
+      expect((yield* listed("nobody@example.test")).page).toEqual([]);
+    })
+  );
+});
+
 describe("guardians/family children and confirm", () => {
   it.effect(
     "lists the guardian's child, and verifies the link with the right NISN",
