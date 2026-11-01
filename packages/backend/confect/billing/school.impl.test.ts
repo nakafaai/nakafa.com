@@ -167,6 +167,13 @@ describe("billing/school", () => {
         offer: "school.seat.semester",
         slug: nf,
       });
+      // The semester paid for everyone enrolled, so a second invoice needs a student it has not covered.
+      yield* fixture.as("admin").mutation(refs.public.identity.cards.enroll, {
+        loginName: "siswa.baru",
+        name: "Siswa Baru",
+        slug: nf,
+        unitId: fixture.units.smp,
+      });
       const year = yield* owner.mutation(pay, {
         offer: "school.seat.year",
         slug: nf,
