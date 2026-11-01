@@ -18,7 +18,7 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Schema, String as Str } from "effect";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, type ReactNode, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
@@ -203,7 +203,13 @@ export function NewFolder() {
  * The menu of a saved folder for a teacher: Rename, which opens its dialog, and Delete, which asks first, takes the
  * row away at once, and leaves the folder's files in the library.
  */
-export function FolderRowMenu({ folder }: { folder: LibraryFolder }) {
+export function FolderRowMenu({
+  children,
+  folder,
+}: {
+  children: ReactNode;
+  folder: LibraryFolder;
+}) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
   const rename = useMutation(classroom.folders.rename);
@@ -231,6 +237,7 @@ export function FolderRowMenu({ folder }: { folder: LibraryFolder }) {
         }
         title={t("library-folder-remove-title")}
       >
+        {children}
         <DropdownMenuItem onClick={() => dialogs.show("rename")}>
           <HugeIcons icon={PencilEdit02Icon} />
           {t("library-folder-rename")}

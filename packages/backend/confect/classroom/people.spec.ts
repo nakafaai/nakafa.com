@@ -10,9 +10,11 @@ import { Schema } from "effect";
 /** What a Person is in a class: one who teaches it, or a student placed in its cohort. */
 export const ClassPersonKind = Schema.Literals(["student", "teacher"]);
 
-/** One Person of a class as its People tab shows them. */
+/** One Person of a class as its People tab shows them. `email` reaches only who keeps the class (`list`). */
 export const ClassPerson = Schema.Struct({
+  email: Schema.NullOr(Schema.String),
   id: Id("tenantPeople"),
+  joined: Schema.Boolean,
   kind: ClassPersonKind,
   name: Schema.String,
 });
@@ -21,7 +23,8 @@ export const ClassPerson = Schema.Struct({
  * The People tab of a class: who teaches it and who learns in it (ADR 0025).
  * Whoever may view the class reads the list, its members and the leaders of the
  * school. A teacher is managed in the school's settings, and a student through
- * their cohort, so a class page only reads.
+ * their cohort, so a class page only reads. An address is personal, so only a
+ * viewer who keeps the class's tasks reads it, never a classmate.
  */
 export default GroupSpec.make()
   .middleware(Session)
