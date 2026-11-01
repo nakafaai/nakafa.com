@@ -9639,6 +9639,8 @@ export declare const api: {
                 }
               | { name: string; type: "tenant.name.set" }
               | { type: "tenant.setup.finished" }
+              | { scheme: Id<"gradingSchemes">; type: "scheme.amended" }
+              | { scheme: Id<"gradingSchemes">; type: "scheme.removed" }
               | { scheme: Id<"gradingSchemes">; type: "scheme.stored" }
               | { type: "tenant.suspended" }
               | { type: "tenant.reactivated" }
@@ -14730,6 +14732,28 @@ export declare const internal: {
         null
       >;
     };
+    receipts: {
+      read: FunctionReference<
+        "query",
+        "internal",
+        {
+          locale: "en" | "id" | "de";
+          paymentId: Id<"billingPayments">;
+          userId: Id<"users">;
+        },
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        } | null
+      >;
+    };
     reconcile: {
       applySubscription: FunctionReference<
         "mutation",
@@ -14777,28 +14801,6 @@ export declare const internal: {
           } | null
         >;
       };
-    };
-    receipts: {
-      read: FunctionReference<
-        "query",
-        "internal",
-        {
-          locale: "en" | "id" | "de";
-          paymentId: Id<"billingPayments">;
-          userId: Id<"users">;
-        },
-        {
-          buyer: { email: string | null; name: string };
-          dueOn: string | null;
-          issuedOn: string;
-          lines: Array<{ amount: string; description: string }>;
-          locale: "en" | "id" | "de";
-          number: string;
-          paidWith: string | null;
-          status: "open" | "paid" | "void";
-          total: string;
-        } | null
-      >;
     };
     topup: {
       refundWithoutPro: FunctionReference<
