@@ -98,6 +98,7 @@
     "code-refused": "The code is wrong or has expired.",
     "sign-in": "Sign in",
     "resend-code": "Send again",
+    "change-address": "Use another address",
     "failed": "Could not connect. Try again.",
     "home-title": "My children",
     "home-empty": "No child is linked yet.",

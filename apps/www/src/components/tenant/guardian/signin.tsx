@@ -1,5 +1,9 @@
 import { useMutation } from "@confect/react";
-import { Login03Icon, MailSend01Icon } from "@hugeicons/core-free-icons";
+import {
+  ArrowLeft01Icon,
+  Login03Icon,
+  MailSend01Icon,
+} from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -188,15 +192,26 @@ function GuardianSignInForm() {
           {form._tag === "email" ? t("send-code") : t("sign-in")}
         </Button>
         {form._tag === "email" ? null : (
-          <Button
-            disabled={isPending}
-            onClick={requestCode}
-            type="button"
-            variant="ghost"
-          >
-            <HugeIcons icon={MailSend01Icon} />
-            {t("resend-code")}
-          </Button>
+          <>
+            <Button
+              disabled={isPending}
+              onClick={requestCode}
+              type="button"
+              variant="ghost"
+            >
+              <HugeIcons icon={MailSend01Icon} />
+              {t("resend-code")}
+            </Button>
+            <Button
+              disabled={isPending}
+              onClick={() => change({ _tag: "back" })}
+              type="button"
+              variant="ghost"
+            >
+              <HugeIcons icon={ArrowLeft01Icon} />
+              {t("change-address")}
+            </Button>
+          </>
         )}
       </div>
     </form>
