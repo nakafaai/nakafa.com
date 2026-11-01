@@ -39,7 +39,9 @@ const ADDRESS = "learner-1a2b3c4d@acceptance.example.test";
 const APP_USERS =
   '[{"_id":"app-user-0","authId":"someone-else"},{"_id":"app-user-1","authId":"user-1"}]';
 const INVITED = '{"invite":"invite-1","person":"person-1"}';
-const INBOX_ROWS = '[{"recipientPersonId":"person-1"}]';
+/** An account's reply notice, which names no Person, stands before the invited Person's row. */
+const INBOX_ROWS =
+  '[{"commentId":"comment-1"},{"recipientPersonId":"person-1"}]';
 const CreatedAccount = Schema.fromJsonString(
   Schema.Struct({
     input: Schema.Struct({

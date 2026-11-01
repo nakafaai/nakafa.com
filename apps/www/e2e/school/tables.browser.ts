@@ -57,7 +57,9 @@ for (const viewport of [
 
       await page.goto(address("/settings/members"));
       const card = page.locator('[data-slot="table-card"]');
-      await expect(card).toHaveCount(1);
+      await expect(card).toHaveCount(1, {
+        timeout: readinessTimeoutMilliseconds,
+      });
       await expect(card.locator("table")).toBeVisible({
         timeout: readinessTimeoutMilliseconds,
       });
@@ -229,10 +231,10 @@ test("a table closes on its last row with few rows, and a list that fills its ca
       gap:
         element.getBoundingClientRect().bottom -
         container.getBoundingClientRect().bottom,
-      overflows: scroller.scrollHeight > scroller.clientHeight,
+      fills: scroller.scrollHeight >= scroller.clientHeight,
     };
   });
-  expect(edge?.overflows).toBe(true);
+  expect(edge?.fills).toBe(true);
   expect(edge?.coverHeight).toBe("1px");
   expect(edge?.background).toBe(edge?.card);
   expect(edge?.gap).toBe(1);

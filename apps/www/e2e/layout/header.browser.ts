@@ -292,10 +292,14 @@ const checkSchoolPages = <E>(
       })
   );
 
-/** Presses the table's first row, whose pane opens beside the list on a desktop. */
+/** Presses the first seat of a room, whose pane opens beside the seats on a desktop. */
 const openPane = (page: Page) =>
   Effect.promise(async () => {
-    await page.locator("tr[data-pressable] td").first().click();
+    await page
+      .getByRole("list", { name: "Student seats" })
+      .getByRole("link")
+      .first()
+      .click();
     await expect(page.locator('[data-slot="pane-header"]')).toBeVisible();
   });
 
