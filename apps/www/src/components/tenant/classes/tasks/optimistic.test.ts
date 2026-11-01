@@ -19,6 +19,7 @@ const personId = Schema.decodeUnknownSync(Id("tenantPeople"))("person-1");
 
 /** A task of the class at `address`, due at 100. */
 const task = (address: string, mine: ClassTask["mine"]): ClassTask => ({
+  category: null,
   deadline: 100,
   handedIn: 3,
   id: taskOf(address),
@@ -168,6 +169,7 @@ describe("task optimistic updates", () => {
       ],
     ]);
     editUpdate(moved.localStore, {
+      category: null,
       classId,
       deadline: 900,
       latePolicy: "close",

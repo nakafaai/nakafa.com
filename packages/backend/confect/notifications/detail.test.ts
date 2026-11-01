@@ -44,6 +44,7 @@ describe("notifications/detail", () => {
           classId: forum.classId,
           clientKey: "detail-task",
           deadline: TENANCY_NOW + 86_400_000,
+          category: null,
           latePolicy: "accept",
           points: 10,
           slug: nf,
