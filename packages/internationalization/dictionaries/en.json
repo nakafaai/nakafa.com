@@ -1357,7 +1357,7 @@
     "no-unit-description": "Restore or add a unit first, because periods and cohorts belong to one.",
     "no-unit-action": "Open units",
     "cohorts-no-period-action": "Open periods",
-    "student-login-rule": "Use 3 to 32 characters, a to z, 0 to 9, dot, underscore or hyphen.",
+    "student-login-rule": "3 to 32 letters, digits, dots or dashes.",
     "policy-domains-invalid": "Check {domains}, and write each domain on its own line.",
     "policy-domains-limit": "Use up to {limit} different domains, each on its own line.",
     "device-title": "Connect a device",
@@ -1884,7 +1884,7 @@
     "entry-parent": "Type the address of your child's school to go there.",
     "entry-field": "School address",
     "entry-hint": "It is in the link from the school, like harapan.nakafa.com.",
-    "entry-invalid": "Type a school address like harapan.nakafa.com.",
+    "entry-invalid": "For example harapan.nakafa.com.",
     "entry-submit": "Continue",
     "entry-open": "Open a school"
   },
