@@ -3,10 +3,11 @@
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import { Activity, lazy, Suspense, useRef, useState } from "react";
+import { Activity, Suspense, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { readChatArgs } from "@/components/ai/chat/access";
 import { useAi } from "@/components/ai/context";

@@ -1,6 +1,7 @@
+import { lazy } from "@repo/design-system/lib/lazy";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { createIsomorphicFn } from "@tanstack/react-start";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { hasSignedInHint } from "@/lib/auth/hint";
 
 /**

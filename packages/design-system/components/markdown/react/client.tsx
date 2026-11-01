@@ -9,7 +9,8 @@ import {
   useFenceSource,
 } from "@repo/design-system/components/markdown/react/source";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { type ComponentProps, lazy, Suspense } from "react";
+import { lazy } from "@repo/design-system/lib/lazy";
+import { type ComponentProps, Suspense } from "react";
 import { useTranslations } from "use-intl";
 
 const LazyMarkdownCodeBlock = lazy(() =>

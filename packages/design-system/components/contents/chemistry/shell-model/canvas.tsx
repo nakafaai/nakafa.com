@@ -7,8 +7,9 @@ import {
 import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { useTheme } from "@repo/design-system/providers/theme";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 
 /** The model loads once the lab asks for it, and its frame holds the place meanwhile. */
 const ShellModelStage = lazy(() =>

@@ -3,8 +3,9 @@
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
+import { Suspense, useState } from "react";
 
 const LineScene = lazy(() =>
   import("@repo/design-system/components/contents/mathematics/line/scene").then(

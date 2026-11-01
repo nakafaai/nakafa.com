@@ -10,7 +10,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -24,6 +23,7 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactNode, useState, useTransition } from "react";
@@ -41,6 +41,7 @@ import {
 import { useTenant } from "@/components/tenant/context";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { Link } from "@/lib/routing/link";
 
 const SOURCE = "components/tenant/connectors/classroom";
 
@@ -107,16 +108,22 @@ export function ClassroomImport() {
           {Option.match(shown, {
             onNone: () => null,
             onSome: (found) => (
-              <CourseTable
-                classCell={(course) => (
-                  <CourseClass
-                    course={course}
-                    preview={found}
-                    setPreview={setShown}
-                  />
-                )}
-                preview={found}
-              />
+              <>
+                {Arr.isReadonlyArrayEmpty(found.classes) &&
+                Arr.isReadonlyArrayNonEmpty(found.courses) ? (
+                  <NoClassToFill />
+                ) : null}
+                <CourseTable
+                  classCell={(course) => (
+                    <CourseClass
+                      course={course}
+                      preview={found}
+                      setPreview={setShown}
+                    />
+                  )}
+                  preview={found}
+                />
+              </>
             ),
           })}
           <SheetFooter>
@@ -140,6 +147,25 @@ export function ClassroomImport() {
         </SheetContent>
       </Sheet>
     </>
+  );
+}
+
+/** What a school with no class does first, because a course only fills a class that exists. */
+function NoClassToFill() {
+  const t = useTranslations("Connectors");
+  const { slug } = useTenant();
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 px-6">
+      <p className="text-muted-foreground text-sm">{t("courses-no-class")}</p>
+      <Link
+        className={buttonVariants({ variant: "outline" })}
+        params={{ slug }}
+        to="/school/$slug/settings/classes"
+      >
+        {t("courses-no-class-action")}
+      </Link>
+    </div>
   );
 }
 
@@ -284,6 +310,9 @@ function CourseClass({
 
   return (
     <Select
+      disabled={
+        course.classId === null && Arr.isReadonlyArrayEmpty(preview.classes)
+      }
       items={items}
       onValueChange={pick}
       value={course.classId ?? UNLINKED}
@@ -293,7 +322,6 @@ function CourseClass({
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectLabel>{t("course-class")}</SelectLabel>
           {Arr.map(items, (item) => (
             <SelectItem key={item.value} value={item.value}>
               {item.label}

@@ -12,6 +12,23 @@ export const HeadAlign = Schema.Literals(["center", "end", "start"]);
 export const HeadAlignContext = createContext<typeof HeadAlign.Type>("center");
 
 /**
+ * Where a column's menu opens under its head, so the pointer barely moves: at the start under the first column, at the
+ * end under the last that has one, and centred under the rest. The popup still moves to stay on the screen.
+ */
+export const HeadMenuContext = createContext<typeof HeadAlign.Type>("center");
+
+/** Where the menu of a column opens, by its place among the columns that hold one, up to `last`. */
+export const menuPlaceOf = (
+  index: number,
+  last: number
+): typeof HeadAlign.Type => {
+  if (index === 0) {
+    return "start";
+  }
+  return index === last ? "end" : "center";
+};
+
+/**
  * Where a column's head and cells stand, as the try-out tables place them: the first column, which names the row, at
  * the start, and every other column in the middle, its figures in digits of one width. A last column of figures stands
  * at the end, so the table's text keeps one inset from both of its edges at every width. It and the row's menu stay at
@@ -22,7 +39,7 @@ export const HeadAlignContext = createContext<typeof HeadAlign.Type>("center");
  * and leaves no empty frame on the table's edge. The row's menu takes the width of its buttons and no more, so its
  * line stands beside them and the rest of the row's width goes to the data.
  */
-export const columnAlign = cva("", {
+export const columnAlign = cva("in-[thead]:bg-muted", {
   defaultVariants: { align: "center" },
   variants: {
     align: {

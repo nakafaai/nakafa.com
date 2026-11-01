@@ -26,8 +26,9 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { Array as Arr } from "effect";
-import { lazy, type ReactNode, Suspense, useMemo, useState } from "react";
+import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 /** The scene loads once the lab asks for it, and its frame holds the place meanwhile. */
 const ParabolicMovementStage = lazy(() =>

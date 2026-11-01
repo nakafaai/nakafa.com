@@ -12,7 +12,9 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
+import { use } from "react";
 import { useTranslations } from "use-intl";
+import { HeadMenuContext } from "@/components/shared/table/align";
 import type { ColumnOption } from "@/components/shared/table/columns";
 import { TableHeadButton } from "@/components/shared/table/head";
 import { useTableFilters } from "@/components/shared/table/toolbar";
@@ -40,6 +42,7 @@ export function ColumnFilter({
   const chosen = Option.getOrElse(Rec.get(all, column), () => []);
   const choose = useTableFilters((state) => state.choose);
   const filtered = Arr.isReadonlyArrayNonEmpty(chosen);
+  const align = use(HeadMenuContext);
 
   // A column that holds no value yet has nothing to filter by, so its head is its name and never an empty menu.
   if (Arr.isReadonlyArrayEmpty(options) && !filtered) {
@@ -59,7 +62,7 @@ export function ColumnFilter({
           </TableHeadButton>
         }
       />
-      <DropdownMenuContent align="start" className="min-w-48">
+      <DropdownMenuContent align={align} className="min-w-48">
         <DropdownMenuGroup>
           {Arr.map(options, (option) => (
             <DropdownMenuCheckboxItem
@@ -117,6 +120,7 @@ export function ColumnChoice({
   const all = useTableFilters((state) => state.chosen);
   const chosen = Option.getOrElse(Rec.get(all, column), () => []);
   const choose = useTableFilters((state) => state.choose);
+  const align = use(HeadMenuContext);
   const first = Option.map(Arr.head(options), (option) => option.value);
   const value = Option.getOrElse(
     Option.orElse(Arr.head(chosen), () => first),
@@ -136,7 +140,7 @@ export function ColumnChoice({
           </TableHeadButton>
         }
       />
-      <DropdownMenuContent align="start" className="min-w-48">
+      <DropdownMenuContent align={align} className="min-w-48">
         <DropdownMenuGroup>
           <DropdownMenuRadioGroup
             onValueChange={(next) =>

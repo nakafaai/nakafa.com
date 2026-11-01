@@ -23,10 +23,11 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
 import type { ComponentType, ReactNode } from "react";
-import { lazy, Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 

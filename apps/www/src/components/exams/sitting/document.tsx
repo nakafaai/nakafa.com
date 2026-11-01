@@ -1,6 +1,7 @@
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect } from "effect";
-import { type ComponentProps, lazy, Suspense, useEffect } from "react";
+import { type ComponentProps, Suspense, useEffect } from "react";
 import { usePaperDrawable } from "@/components/player/held";
 
 /**

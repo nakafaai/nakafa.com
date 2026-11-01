@@ -4,9 +4,11 @@ import {
   isCallExpression,
   isExportDeclaration,
   isExternalModuleReference,
+  isFunctionDeclaration,
   isIdentifier,
   isImportDeclaration,
   isImportEqualsDeclaration,
+  isNamedImports,
   isPropertyAccessExpression,
   isStringLiteralLikeNode,
   isTryStatement,
@@ -144,10 +146,44 @@ function isTypeofObjectComparison(node: Node) {
   );
 }
 
+/** Whether a module declares a function `lazy`: the wrapper of React's that the others import. */
+function declaresLazy(sourceFile: SourceFile) {
+  return Arr.some(
+    sourceFile.statements,
+    (statement) =>
+      isFunctionDeclaration(statement) && statement.name?.text === "lazy"
+  );
+}
+
+/** Whether a node imports `lazy` from React, outside the one wrapper of it. */
+function isReactLazyImport(sourceFile: SourceFile, node: Node) {
+  if (
+    !(
+      isImportDeclaration(node) && isStringLiteralLikeNode(node.moduleSpecifier)
+    ) ||
+    node.moduleSpecifier.text !== "react"
+  ) {
+    return false;
+  }
+  const bindings = node.importClause?.namedBindings;
+  return (
+    !declaresLazy(sourceFile) &&
+    bindings !== undefined &&
+    isNamedImports(bindings) &&
+    Arr.some(
+      bindings.elements,
+      (element) => (element.propertyName ?? element.name).text === "lazy"
+    )
+  );
+}
+
 /** Returns the native module, failure, and narrowing syntax at one node. */
 function syntaxCandidates(sourceFile: SourceFile, node: Node) {
   if (isNodeModuleLoad(node)) {
     return [candidate("node-module", sourceFile, node)];
+  }
+  if (isReactLazyImport(sourceFile, node)) {
+    return [candidate("react-lazy", sourceFile, node)];
   }
   if (isTryStatement(node) && node.catchClause !== undefined) {
     return [candidate("try-catch", sourceFile, node)];

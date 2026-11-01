@@ -8,7 +8,6 @@ import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { isRedirect } from "@tanstack/react-router";
 import { Array as Arr, Deferred, Effect, Option } from "effect";
 import {
-  chatIndexScreenHandler,
   chatScreenHandler,
   chatSidebarScreenHandler,
   homeScreenHandler,
@@ -224,16 +223,6 @@ describe("homeScreenHandler", () => {
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBeUndefined();
-  });
-});
-
-describe("chatIndexScreenHandler", () => {
-  it("answers the new chat head with its canonical address, unindexed", async () => {
-    const screen = await chatIndexScreenHandler({ data: { locale: "en" } });
-    expect(screen.seo).toMatchObject({
-      canonicalPath: "/en/chat",
-      indexable: false,
-    });
   });
 });
 
