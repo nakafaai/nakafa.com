@@ -20,7 +20,7 @@ const CONSENT = "https://accounts.google.com/**";
 const WIDTHS = [390, 768, 1440] as const;
 
 /** Every card of the directory. */
-const cards = (page: Page) => page.locator("[data-slot=item]");
+const cards = (page: Page) => page.locator("[data-slot=card]");
 
 /** One service's card on the page. */
 const cardOf = (page: Page, name: string) =>
@@ -134,7 +134,7 @@ test("a connect that ended badly says so on the card that tried, and plus starts
   const classroom = cardOf(page, "Google Classroom");
 
   await expect(
-    classroom.getByText("Tick every box on the Google screen.")
+    classroom.getByText("Tick every box at Google.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(page.getByRole("alert")).toHaveCount(1);
   await expect(
@@ -146,7 +146,7 @@ test("a connect that ended badly says so on the card that tried, and plus starts
     `${page.url().split("?")[0]}?connect=failed&connector=classroom`
   );
   await expect(
-    classroom.getByText("The connect failed, so try again.")
+    classroom.getByText("Connect failed, try again.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(page.getByRole("alert")).toHaveCount(1);
   await picture(page, "failed");

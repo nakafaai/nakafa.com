@@ -8,7 +8,6 @@ import {
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { GOOGLE_MANIFEST } from "@repo/backend/confect/connectors/google/manifest";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { ItemGroup } from "@repo/design-system/components/ui/item";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { use } from "react";
@@ -256,11 +255,11 @@ function ServiceList({
   return (
     <ScrollArea className="min-h-0 flex-1">
       <div className="@container p-4">
-        <ItemGroup className="grid auto-rows-fr gap-4 @xl:grid-cols-2">
+        <div className="grid auto-rows-fr gap-4 @xl:grid-cols-2">
           {Arr.map(shown, (entry) => (
             <ServiceCard entry={entry} key={entry.service.key} />
           ))}
-        </ItemGroup>
+        </div>
       </div>
     </ScrollArea>
   );

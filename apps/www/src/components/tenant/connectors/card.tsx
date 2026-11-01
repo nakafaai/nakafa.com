@@ -8,15 +8,15 @@ import {
 import { ServiceLogo } from "@repo/design-system/components/logos/service";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@repo/design-system/components/ui/item";
+  Card,
+  CardAction,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   Tooltip,
@@ -51,7 +51,7 @@ const MARKS = {
 /** The states a card says in words in place of its maker, as its corner alone cannot tell them. */
 const SPOKEN = ["failed", "locked", "reconnect", "refused", "soon"] as const;
 
-const bylineVariants = cva("text-sm", {
+const footerVariants = cva("text-sm", {
   defaultVariants: { tone: "muted" },
   variants: {
     tone: { destructive: "text-destructive", muted: "text-muted-foreground" },
@@ -59,33 +59,38 @@ const bylineVariants = cva("text-sm", {
 });
 
 /**
- * One service of the directory: its logo in a tile, its name, one line, and its maker, or the words
- * of a state that asks for the reader. A press on the card opens the service's detail beside the
- * list. The corner connects with one press, or marks where the service stands, so a state that
- * changes moves nothing.
+ * One service of the directory: its logo in a tile, its name and one line, and a footer that names
+ * its maker, or says a state that asks for the reader. A press on the card opens the service's
+ * detail beside the list. The corner connects with one press, or marks where the service stands,
+ * so a state that changes moves nothing.
  */
 export function ServiceCard({ entry }: { entry: typeof DirectoryEntry.Type }) {
   const t = useTranslations("Connectors");
 
   return (
     <ServiceContext value={entry}>
-      <Item
-        className="hover:bg-muted has-data-open:bg-muted relative items-start"
-        render={<li />}
-        variant="outline"
+      <Card
+        className="has-data-open:bg-muted hover:bg-muted relative pb-0"
+        size="sm"
       >
-        <ServiceTile />
-        <ItemContent className="min-w-0">
-          <ItemTitle className="w-full">
-            <ServiceOpen />
-          </ItemTitle>
-          <ItemDescription>{t(`${entry.service.key}-line`)}</ItemDescription>
-          <ServiceByline />
-        </ItemContent>
-        <ItemActions className="relative">
-          <CornerAction />
-        </ItemActions>
-      </Item>
+        <div className="flex flex-1 items-start gap-3 px-(--card-spacing)">
+          <ServiceTile />
+          <CardHeader className="min-w-0 flex-1 px-0">
+            <CardTitle>
+              <ServiceOpen />
+            </CardTitle>
+            <CardDescription className="leading-snug">
+              {t(`${entry.service.key}-line`)}
+            </CardDescription>
+            <CardAction className="relative">
+              <CornerAction />
+            </CardAction>
+          </CardHeader>
+        </div>
+        <CardFooter className="bg-muted/50 border-t p-(--card-spacing)">
+          <ServiceFooter />
+        </CardFooter>
+      </Card>
     </ServiceContext>
   );
 }
@@ -95,9 +100,9 @@ export function ServiceTile() {
   const { service } = useService();
 
   return (
-    <ItemMedia className="bg-background ring-foreground/10 size-10 rounded-lg ring-1">
-      <ServiceLogo className="size-6" name={service.key} />
-    </ItemMedia>
+    <span className="bg-background ring-foreground/10 flex size-10 shrink-0 items-center justify-center rounded-lg ring-1">
+      <ServiceLogo className="size-5" name={service.key} />
+    </span>
   );
 }
 
@@ -121,14 +126,14 @@ function ServiceOpen() {
 }
 
 /** Who makes a service, or the words of a state that asks for the reader. */
-function ServiceByline() {
+function ServiceFooter() {
   const t = useTranslations("Connectors");
   const { service, state } = useService();
   const spoken = Option.filter(state, (now) => Arr.contains(SPOKEN, now));
 
   if (Option.isNone(spoken)) {
     return (
-      <p className={bylineVariants()}>
+      <p className={footerVariants()}>
         {t("by", { provider: service.provider })}
       </p>
     );
@@ -137,7 +142,7 @@ function ServiceByline() {
 
   return (
     <p
-      className={bylineVariants({ tone: lost ? "destructive" : "muted" })}
+      className={footerVariants({ tone: lost ? "destructive" : "muted" })}
       role={lost ? "alert" : undefined}
     >
       {t(`status-${spoken.value}`)}
