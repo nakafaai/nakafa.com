@@ -1,4 +1,11 @@
-import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Option,
+  Record as Rec,
+  Schema,
+  Tuple,
+} from "effect";
 import { KeyValueStore } from "effect/persistence";
 
 /** Every name a try-out action can carry, which share its one cell. */
@@ -63,10 +70,10 @@ export const keepName = Effect.fn("tryout.kept.keep")(function* (
   const names = yield* readKeptNames();
   const store = yield* KeyValueStore.KeyValueStore;
   const newest = Arr.takeRight(
-    Arr.append(Rec.toEntries(Rec.remove(names, address)), [address, name] as [
-      string,
-      TryoutActionNameKey,
-    ]),
+    Arr.append(
+      Rec.toEntries(Rec.remove(names, address)),
+      Tuple.make(address, name)
+    ),
     KEPT_PAGES
   );
   const text = yield* Schema.encodeEffect(KeptNamesJson)(
