@@ -59,20 +59,14 @@ export function TableEnd({
   onLoad: () => void;
   onLoadRest?: () => void;
 }) {
-  return useNeedsEveryRow() ? (
-    <NextPage onLoad={onLoadRest} />
-  ) : (
-    <Intersection onIntersect={onLoad} />
-  );
-}
-
-/** Reads the next page as soon as it can, wherever the end of the list stands. */
-function NextPage({ onLoad }: { onLoad: () => void }) {
-  const load = useEffectEvent(onLoad);
+  const needsEveryRow = useNeedsEveryRow();
+  const loadRest = useEffectEvent(onLoadRest);
 
   useEffect(() => {
-    load();
-  }, []);
+    if (needsEveryRow) {
+      loadRest();
+    }
+  }, [needsEveryRow]);
 
-  return null;
+  return needsEveryRow ? null : <Intersection onIntersect={onLoad} />;
 }
