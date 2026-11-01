@@ -36,9 +36,15 @@ const script = (fields: Partial<StudentScript> = {}): StudentScript => ({
   ...fields,
 });
 
-/** The names of the calls the server took, in order. */
+/** The name of the heartbeat, which runs beside a student's steps in no fixed order. */
+const BEAT = "exams/screens:beat";
+
+/** The names of the calls the server took, in order, without the heartbeat. */
 const names = (server: ReturnType<typeof fakeServer>) =>
-  Arr.map(server.calls(), (call) => call.name);
+  Arr.filter(
+    Arr.map(server.calls(), (call) => call.name),
+    (name) => name !== BEAT
+  );
 
 /** Runs one student against the server from now, and returns what the recorder holds. */
 const run = (
@@ -59,6 +65,21 @@ const run = (
   }).pipe(Effect.provide(temporaryRecorder));
 
 describe("load student", () => {
+  it.live("beats for each open tab under a session of its own", () =>
+    Effect.gen(function* () {
+      const server = fakeServer();
+      const result = yield* run(server, script({ secondTab: true }));
+      expect(result.exit._tag).toBe("Success");
+      const beats = Arr.filter(server.calls(), (call) => call.name === BEAT);
+      expect(beats).toHaveLength(2);
+      expect(new Set(Arr.map(beats, (call) => call.args.session)).size).toBe(2);
+      expect(beats[0]?.args).toMatchObject({
+        attemptId: "a1",
+        slug: "sekolah",
+      });
+    })
+  );
+
   it.live(
     "numbers its first answer of a question one above the answer an earlier tab saved",
     () =>
@@ -119,7 +140,10 @@ describe("load student", () => {
         ]);
         expect(MutableHashMap.size(server.saved)).toBe(3);
         expect(
-          Arr.dedupe(Arr.map(result.samples, (sample) => sample.name))
+          Arr.filter(
+            Arr.dedupe(Arr.map(result.samples, (sample) => sample.name)),
+            (name) => name !== "mutation:beat"
+          )
         ).toEqual([
           "query:student",
           "mutation:enter",
