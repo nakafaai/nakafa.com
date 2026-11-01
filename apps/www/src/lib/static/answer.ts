@@ -20,7 +20,10 @@ const keptAnswers = MutableHashMap.empty<
 >();
 
 /** The Response that a server function's own decoder takes for one static answer. */
-function answerOf(file: { readonly body: BodyInit; readonly contentType: string }) {
+function answerOf(file: {
+  readonly body: BodyInit;
+  readonly contentType: string;
+}) {
   return new Response(file.body, {
     headers: { "content-type": file.contentType, [X_TSS_SERIALIZED]: "true" },
   });

@@ -1,4 +1,4 @@
-import { useLocation, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { Effect, Fiber } from "effect";
 import { useEffect } from "react";
 import { warmLinks } from "@/lib/routing/warm";
@@ -9,23 +9,25 @@ import { warmLinks } from "@/lib/routing/warm";
  */
 export function NavigationWarmth() {
   const router = useRouter();
-  const pathname = useLocation({ select: (location) => location.pathname });
 
   useEffect(() => {
+    let running = Effect.runFork(warmLinks(router));
     const warm = () => {
+      Effect.runFork(Fiber.interrupt(running));
       running = Effect.runFork(warmLinks(router));
     };
-    let running = Effect.runFork(warmLinks(router));
+    const stopFollowing = router.subscribe("onResolved", warm);
     // A page can scroll in an element, whose `scrollend` reaches the window on capture.
     window.addEventListener("scrollend", warm, {
       capture: true,
       passive: true,
     });
     return () => {
+      stopFollowing();
       window.removeEventListener("scrollend", warm, { capture: true });
       Effect.runFork(Fiber.interrupt(running));
     };
-  }, [pathname, router]);
+  }, [router]);
 
   return null;
 }
