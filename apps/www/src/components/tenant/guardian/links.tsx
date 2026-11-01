@@ -165,7 +165,10 @@ function useStatusText() {
       : t(`status-${link.status}`);
 }
 
-/** The links in a data table: the student, the parent's address, the state, and the row menu. */
+/**
+ * The links in a data table: the student, the parent's name, the state, and the row menu. The open link shows the
+ * parent's address, so these columns all fit beside it on a laptop.
+ */
 function GuardianLinkTable() {
   const t = useTranslations("SchoolGuardians");
   const links = useLinks();
@@ -188,11 +191,6 @@ function GuardianLinkTable() {
     linkColumns.accessor((link) => link.guardian.name, {
       header: t("guardian-name"),
       id: "guardian",
-      sortFn: "text",
-    }),
-    linkColumns.accessor((link) => link.email, {
-      header: t("email-label"),
-      id: "email",
       sortFn: "text",
     }),
     linkColumns.accessor((link) => link.status, {
@@ -263,9 +261,6 @@ function GuardianLinkDetail() {
         />
         <PaneBody>
           <PaneFacts>
-            <PaneFact label={t("guardian-name")}>
-              {found.guardian.name}
-            </PaneFact>
             <PaneFact label={t("email-label")}>
               <span className="break-all">{found.email}</span>
             </PaneFact>

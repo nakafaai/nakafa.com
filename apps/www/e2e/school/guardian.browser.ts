@@ -52,7 +52,7 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   await dialog.getByLabel("Parent email").fill(mistyped);
   await dialog.getByRole("button", { name: "Link a parent" }).click();
   const row = settings.getByRole("row").filter({ hasText: "Siswa Uji" });
-  await expect(row).toContainText(mistyped);
+  await expect(row).toContainText("Ibu Uji");
   await expect(row).toContainText("Pending");
 
   // The mistyped email is corrected in place, from a dialog filled in with it, and the link stays pending.
@@ -66,9 +66,17 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   await corrected.fill(email);
   const readdressedBefore = changes.sent;
   await saveEmail.click();
-  await expect(row).toContainText(email);
   await expect(row).toContainText("Pending");
   await saved(changes, readdressedBefore);
+  // The table names the parent, and its search finds the link by the new address alone.
+  const search = settings
+    .locator("header")
+    .getByPlaceholder("Find a student or email");
+  await search.fill(mistyped);
+  await expect(row).toBeHidden();
+  await search.fill(email);
+  await expect(row).toBeVisible();
+  await search.clear();
 
   // The parent's name is corrected the same way, and the row shows it at once.
   await row.getByRole("button", { name: "More actions" }).click();
