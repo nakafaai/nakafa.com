@@ -12,6 +12,7 @@ import {
   ResultsScopeContext,
   useSessionSettled,
 } from "@/components/exams/results/context";
+import { IntegrityAction } from "@/components/exams/results/integrity";
 import { QuestionsAction } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
 import { StudentsTable } from "@/components/exams/results/students";
@@ -139,6 +140,7 @@ function SittingResultsContent({
               <ButtonGroup>
                 <TableSearch placeholder={t("results-search")} />
                 <QuestionsAction questions={questions} />
+                <IntegrityAction />
               </ButtonGroup>
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>

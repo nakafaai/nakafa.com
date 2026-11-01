@@ -90,7 +90,7 @@ const SECONDS_IN_MINUTE = 60;
  * How often a submitted student left the exam and for how long in all (K25), an indication for the
  * teacher only: empty before the attempt is submitted, and a zero when the student never left.
  */
-function AwayCell({
+export function AwayCell({
   awaySeconds,
   exits,
 }: {

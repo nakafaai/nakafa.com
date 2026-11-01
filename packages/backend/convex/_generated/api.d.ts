@@ -7482,6 +7482,26 @@ export declare const api: {
           },
           null
         >;
+        integrity: FunctionReference<
+          "query",
+          "public",
+          { sittingId: Id<"examSittings">; slug: string },
+          {
+            rows: Array<{
+              attemptId: Id<"examAttempts">;
+              awaySeconds: number;
+              blur: number;
+              copy: number;
+              disconnect: number;
+              exits: number;
+              fullscreenExit: number;
+              name: string;
+              paste: number;
+              secondTab: number;
+            }>;
+            students: number;
+          }
+        >;
         mine: FunctionReference<
           "query",
           "public",

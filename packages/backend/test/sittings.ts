@@ -12,6 +12,7 @@ import { encodeAnswers, encodeKey } from "@repo/backend/confect/exams/question";
 import type { EnterOutcome } from "@repo/backend/confect/exams/sittings/contract";
 import {
   RoomName,
+  type SignalKind,
   SittingGroup,
 } from "@repo/backend/confect/exams/sittings/schema";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
@@ -333,7 +334,7 @@ export const seedSignal = (
   args: {
     at: number;
     attemptId: GenericId.GenericId<"examAttempts">;
-    kind: "exit" | "return" | "disconnect" | "blur";
+    kind: typeof SignalKind.Type;
   }
 ) =>
   fixture.run(

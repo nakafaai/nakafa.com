@@ -43,7 +43,31 @@ D2. A module holds no state between calls, because one caller's value would reac
 
 D3. Reuse is an optimization, never a contract. A failed call saves no context, a module that is not in an isolate's one saved context evaluates as it did before, and a later Convex release that drops the export only returns a call to today's cost. No code depends on a hit.
 
-D4. Leaf table schemas and lazy registration stay undone, and a cold call keeps paying for evaluation. The table above says why: the first ceiling cannot be reached while a table declares real fields, and the second needs a change inside Confect.
+D4. Leaf table schemas and lazy registration stay undone, and a cold call keeps paying for evaluation. The target holds for a burst and not for a lone cold call, for the reasons under Cold Calls.
+
+## Cold Calls
+
+After the deploy of 1 November, production read like this, in milliseconds of JavaScript per call:
+
+| Traffic | p10 | Median | p90 | Executions |
+| --- | --- | --- | --- | --- |
+| Before, 31 October | 150 | 233 | 300 | 507 |
+| A build's reads, a burst | 4 | 7 | 24 | 767 |
+| Quiet traffic | 4 | 271 | 321 | 90 |
+
+A burst fell about 33 times. A lone cold call did not fall, and the crons rose about 8%: `notifications/consume:sweep` from 236 to 254, `exams/sittings/timers:sweep` from 239 to 255, on a small sample.
+
+Each part of that rise was measured with the options of the Convex bundler, in CPU milliseconds, compile plus first evaluation in a fresh process, the median of nine, old and new in turn:
+
+| Comparison | `notifications/consume` | `contentRelease/runtime/active` |
+| --- | --- | --- |
+| Effect 4.0.5 to 4.1.0, Confect 10.4.1 to 10.5.0 | 145.5 to 150.9 | 145.9 to 150.0 |
+| No table imports anything, the ceiling | 194.4 to 119.2 | 179.1 to 120.1 |
+| No mascot drawings, 47 KB out | 200.6 to 194.9 | 186.4 to 192.0 |
+
+The upgrade adds 88 to 102 KB of Effect to every entry, 58 KB of it the `effect/crypto` family, and no application code. Importing `effect/crypto/Digest` directly instead of the barrel removes none of it. That is 1 to 4% of evaluation, about the width of the noise here. The handler path did not move: the first call took 5.7 and 5.5 ms, and a warm call 0.18 and 0.19 ms. So the upgrade explains part of the 8%, and no single cause in our code holds the rest. The sample is too small to name one.
+
+Leaf tables have a real ceiling of a third, but it needs a table to declare no fields, and every field a table declares must be imported to exist. A cut we can make today, such as the mascot drawings, moves about 3% of the bytes and lands inside the noise, so the 8% of bytes the best such cuts would free is not worth moving the schema of 20 modules. Lazy registration matters to one group: 7.5 of the 11.7 ms in `exams/sittings` is `paper`, and that compile happens inside Confect, which no patch may change.
 
 ## Consequences
 

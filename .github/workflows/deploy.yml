@@ -77,6 +77,8 @@ jobs:
       # Database I/O. A release never changes, so a deploy starts from the reads of the last
       # deploy of the same release and the same code behind them, and asks Convex only for
       # what is new (ADR 0038). The store is local to this job; the Worker never binds it.
+      # The store holds Convex's answers, so the key names the code that shapes them and the
+      # backend's own manifest, which pins the contracts. A dependency bump elsewhere keeps it.
       - name: Read the active content release
         id: release
         working-directory: packages/backend
@@ -89,7 +91,7 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/reads
-          key: reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-${{ hashFiles('bun.lock', 'packages/backend/client/content/**', 'packages/backend/client/quran/**', 'packages/backend/content/**', 'packages/backend/confect/contentRelease/**', 'packages/backend/confect/tryouts/queries/**', '!**/*.test.ts') }}
+          key: reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-${{ hashFiles('packages/backend/package.json', 'packages/backend/content/**', 'packages/backend/confect/contentRelease/**', 'packages/backend/confect/tryouts/queries/**', '!**/*.test.ts') }}
 
       - name: Serve the reads to the build
         working-directory: apps/www
