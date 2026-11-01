@@ -100,9 +100,9 @@ describe("KEPT_NAME_SCRIPT", () => {
   });
 
   it("leaves the cell alone for an address it kept nothing for", () => {
-    expect(
-      runScript(JSON.stringify({ [SET]: "continue-cta" }), "/en/try-out")
-    ).toStrictEqual({});
+    expect(runScript(`{"${SET}":"continue-cta"}`, "/en/try-out")).toStrictEqual(
+      {}
+    );
   });
 
   it("leaves the cell alone without storage or with storage it cannot read", () => {

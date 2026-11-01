@@ -1,3 +1,4 @@
+import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
 import {
   Array as Arr,
   Effect,
@@ -21,7 +22,7 @@ export type TryoutActionNameKey = typeof TryoutActionNameSchema.Type;
 const KEPT_NAMES_KEY = "nakafa-tryout-names";
 
 /** The attribute the page's script sets on the name's cell, which the styles read. */
-export const KEPT_NAME_ATTRIBUTE = "data-kept-name";
+const KEPT_NAME_ATTRIBUTE = "data-kept-name";
 
 /** How many pages the browser remembers. The page read longest ago leaves first. */
 const KEPT_PAGES = 40;
@@ -32,12 +33,17 @@ const KeptNamesJson = Schema.fromJsonString(
 
 const decodeKeptNames = Schema.decodeOption(KeptNamesJson);
 
+/** The part of an attempt that names a set's action. */
+const TryoutActionAttemptSchema = Schema.Struct({
+  status: tryoutStatusValidator,
+});
+
 /**
  * The name of a set's action for its attempt: continue a running one, restart a finished one, and
  * start one otherwise.
  */
 export function tryoutActionNameOf(
-  attempt: { readonly status: string } | null | undefined
+  attempt: typeof TryoutActionAttemptSchema.Type | null | undefined
 ): TryoutActionNameKey {
   if (attempt?.status === "in-progress") {
     return "continue-cta";
