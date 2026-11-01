@@ -2,7 +2,6 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
   fillAcceptanceSchool,
   fullMode,
