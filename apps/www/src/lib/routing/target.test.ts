@@ -4,6 +4,7 @@ import type { LinkTarget } from "@/lib/routing/link";
 import {
   addressTarget,
   articleCategoryTarget,
+  commentTarget,
   curriculumPublicPathTarget,
   curriculumTarget,
   publicPathTarget,
@@ -14,6 +15,15 @@ import {
 function routeOf(target: Option.Option<LinkTarget>) {
   return Option.map(target, (linked) => linked.to);
 }
+
+describe("a comment's target", () => {
+  it("opens the comment's own address, which reads the page that shows it", () => {
+    expect(commentTarget("comment-1")).toMatchObject({
+      params: { commentId: "comment-1" },
+      to: "/$locale/comment/$commentId",
+    });
+  });
+});
 
 describe("public path targets", () => {
   it("names the article index, a category, and an article, and no other article shape", () => {

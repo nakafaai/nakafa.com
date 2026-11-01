@@ -12,6 +12,16 @@ const WARMED_LINKS = 6;
 /** The links two at a time, so a slow phone keeps room for what the reader does. */
 const WARMED_AT_ONCE = 2;
 
+/** Every link inside the app. */
+const LINKS = 'a[href^="/"]';
+
+/**
+ * The tabs of a page, which it marks with `data-warm`. A tab is the likely next
+ * press and a phone has no hover to warn the page, so a tab is worth a read of the
+ * Worker, which a look at any other link does not spend.
+ */
+const TABS = `${LINKS}[data-warm]`;
+
 /** The part of the Network Information API that this reads, which Safari and Firefox lack. */
 const Connection = Schema.Struct({
   effectiveType: Schema.optionalKey(Schema.String),
@@ -50,9 +60,13 @@ export function canWarm(connection: unknown) {
 }
 
 /** The addresses that the reader can press now, on screen, top of the page first. */
-export function readPressableLinks(root: ParentNode, height: number) {
+export function readPressableLinks(
+  root: ParentNode,
+  height: number,
+  selector = LINKS
+) {
   const pressable = Arr.filter(
-    Arr.fromIterable(root.querySelectorAll('a[href^="/"]')),
+    Arr.fromIterable(root.querySelectorAll(selector)),
     (link) => {
       const { bottom, top } = link.getBoundingClientRect();
       return bottom > 0 && top < height && link.checkVisibility();
@@ -106,10 +120,18 @@ export const warmLinks = Effect.fn("www.routing.warmLinks")(function* (
     return;
   }
   const current = router.state.location.publicHref;
+  const height = window.innerHeight;
   const links = Arr.take(
     Arr.filter(
-      readPressableLinks(document, window.innerHeight),
-      (href) => href !== current && isStaticLink(router, href)
+      Arr.dedupe(
+        Arr.appendAll(
+          readPressableLinks(document, height, TABS),
+          Arr.filter(readPressableLinks(document, height), (href) =>
+            isStaticLink(router, href)
+          )
+        )
+      ),
+      (href) => href !== current
     ),
     WARMED_LINKS
   );
