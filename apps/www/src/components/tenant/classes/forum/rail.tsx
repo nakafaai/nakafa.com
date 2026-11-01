@@ -1,7 +1,8 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
-import { Search01Icon } from "@hugeicons/core-free-icons";
+import { Archive02Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
@@ -11,10 +12,9 @@ import {
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
-  Tabs,
-  TabsList,
-  TabsTab,
-} from "@repo/design-system/components/ui/tabs";
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@repo/design-system/components/ui/toggle-group";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -37,13 +37,16 @@ import { isLostAccess } from "@/components/tenant/refusal";
 /** What the list of chats shows: every open chat, the unread ones, the class's threads, or the archived chats. */
 const ChatFilter = Schema.Literals(["all", "unread", "threads", "archived"]);
 
+/** The filters that always stand above the list, so the group keeps its shape. Archived chats open from under it. */
+const CHAT_FILTERS = ["all", "unread", "threads"] as const;
+
 /** The key the list's filter keeps its choice under, in the filters of its table page. */
 const CHAT_FILTER = "chat";
 
 /**
  * The list of a class's chats, as a chat app keeps it beside the open chat: a search over the names
  * and Add chat for whoever manages the forum, the filters, and the chats in position order, the
- * general chat first. An archived chat leaves the list for the Archived filter, which shows once a
+ * general chat first. An archived chat leaves the list for Archived under it, which shows once a
  * chat is archived. A chat that the server is still saving shows its name without a link. The next
  * page loads when the end of the list comes into view, so the list has no button. A class with no
  * chat shows the empty state without a search, a failed read shows its own sentence and a retry,
@@ -106,11 +109,14 @@ function ChatList() {
 
   return (
     <>
-      <div className="flex shrink-0 items-center gap-2 py-2 lg:pe-2">
-        <ChatSearch />
-        {Arr.contains(can, "forum.manage") ? (
-          <AddChannel classId={classId} drafts={drafts} slug={slug} />
-        ) : null}
+      <div className="flex shrink-0 flex-col gap-2 pt-2 lg:pe-2">
+        <div className="flex items-center gap-2">
+          <ChatSearch />
+          {Arr.contains(can, "forum.manage") ? (
+            <AddChannel classId={classId} drafts={drafts} slug={slug} />
+          ) : null}
+        </div>
+        {empty ? null : <ChatFilters filter={filter} />}
       </div>
       {empty ? (
         <TableEmpty
@@ -120,7 +126,6 @@ function ChatList() {
         />
       ) : (
         <>
-          <ChatFilters anyArchived={anyArchived} filter={filter} />
           <ScrollArea className="min-h-0 flex-1">
             {filter === "threads" ? (
               <ThreadRows />
@@ -139,6 +144,7 @@ function ChatList() {
               />
             ) : null}
           </ScrollArea>
+          {anyArchived ? <ArchivedChats shown={filter === "archived"} /> : null}
         </>
       )}
     </>
@@ -178,20 +184,19 @@ function useChatFilter() {
   );
 }
 
-/** The filters of the list, as WhatsApp sets them above its chats. Choosing the current one keeps it. */
-function ChatFilters({
-  anyArchived,
-  filter,
-}: {
-  /** Whether the class holds an archived chat, so the filter that shows it has something to show. */
-  anyArchived: boolean;
-  filter: typeof ChatFilter.Type;
-}) {
+/**
+ * The filters of the list, joined in one frame as tall as the search above them, as WhatsApp sets them above its
+ * chats. They always stand three, in equal columns, so what a filter later shows beside its word moves nothing.
+ * Choosing the current one keeps it.
+ */
+function ChatFilters({ filter }: { filter: typeof ChatFilter.Type }) {
   const t = useTranslations("Classroom");
   const choose = useTableFilters((state) => state.choose);
 
   return (
-    <Tabs
+    <ToggleGroup
+      aria-label={t("chat-filter")}
+      className="flex w-full"
       onValueChange={(next) => {
         if (Schema.is(ChatFilter)(next)) {
           choose(CHAT_FILTER, [next]);
@@ -199,19 +204,32 @@ function ChatFilters({
       }}
       value={filter}
     >
-      <TabsList aria-label={t("chat-filter")} className="lg:pe-2">
-        {Arr.map(
-          Arr.filter(
-            ChatFilter.literals,
-            (value) => anyArchived || value !== "archived"
-          ),
-          (value) => (
-            <TabsTab key={value} value={value}>
-              {t(`chat-filter-${value}`)}
-            </TabsTab>
-          )
-        )}
-      </TabsList>
-    </Tabs>
+      {Arr.map(CHAT_FILTERS, (value) => (
+        <ToggleGroupItem className="flex-1" key={value} value={value}>
+          {t(`chat-filter-${value}`)}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  );
+}
+
+/** Opens the archived chats, from under the list, as WhatsApp keeps them apart from its filters. */
+function ArchivedChats({ shown }: { shown: boolean }) {
+  const t = useTranslations("Classroom");
+  const choose = useTableFilters((state) => state.choose);
+
+  return (
+    <div className="shrink-0 pb-2 lg:pe-2">
+      <Button
+        aria-pressed={shown}
+        className="w-full justify-start"
+        onClick={() => choose(CHAT_FILTER, ["archived"])}
+        size="sm"
+        variant={shown ? "secondary" : "ghost"}
+      >
+        <HugeIcons icon={Archive02Icon} />
+        {t("chat-filter-archived")}
+      </Button>
+    </div>
   );
 }
