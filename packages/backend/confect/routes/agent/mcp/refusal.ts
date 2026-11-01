@@ -15,6 +15,13 @@ const PARSE_ERROR_CODE = -32_700;
 const UNSUPPORTED_PROTOCOL_VERSION_CODE = -32_022;
 
 /**
+ * The refusal of a request with no MCP-Protocol-Version header. A client on an
+ * earlier revision opens with `initialize` and has no way forward, so this
+ * message is all it can show its user.
+ */
+export const MISSING_PROTOCOL_MESSAGE = `The MCP-Protocol-Version header is required. This server supports protocol version ${NAKAFA_MCP_PROTOCOL_VERSION}.`;
+
+/**
  * Nakafa's transport rules, applied before the engine: the endpoint takes POST
  * only, with a JSON body that is one JSON-RPC 2.0 request, and it serves
  * protocol version 2026-07-28 only. The engine answers these refusals with a

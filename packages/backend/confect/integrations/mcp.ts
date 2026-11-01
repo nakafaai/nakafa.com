@@ -11,6 +11,7 @@ import {
 } from "@repo/backend/confect/routes/agent/mcp/discovery";
 import { readMcpRequest } from "@repo/backend/confect/routes/agent/mcp/input";
 import {
+  MISSING_PROTOCOL_MESSAGE,
   refuseMcpRequest,
   refuseUnservedMethod,
 } from "@repo/backend/confect/routes/agent/mcp/refusal";
@@ -99,7 +100,7 @@ const handleSchoolMcp = Effect.gen(function* () {
         parsedBody,
         400,
         MISSING_PROTOCOL_CODE,
-        "The MCP-Protocol-Version header is required for modern requests.",
+        MISSING_PROTOCOL_MESSAGE,
         requestId
       ),
       request
