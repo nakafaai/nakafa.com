@@ -162,10 +162,11 @@ function GuardianSignInForm() {
               placeholder="123456"
               value={code}
             />
-            <FieldDescription>
+            {/* A long address takes two lines, which the field keeps, so a one-line refusal never moves the button. */}
+            <FieldDescription className="min-h-[2lh]">
               {t("code-description", { email: sentTo })}
             </FieldDescription>
-            <FieldError>{message}</FieldError>
+            <FieldError className="min-h-[2lh]">{message}</FieldError>
           </Field>
         )}
       </FieldGroup>
