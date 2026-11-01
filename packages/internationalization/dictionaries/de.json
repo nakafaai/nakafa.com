@@ -680,18 +680,18 @@
     "webhook-url-error": "Nutze eine öffentliche https-Adresse.",
     "webhook-client": "Client",
     "webhook-client-placeholder": "Client wählen",
-    "webhook-changes": "Änderungen",
+    "webhook-changes": "Senden, wenn",
     "webhook-change": {
       "grade": {
         "released": "Note freigegeben"
       },
       "grant": {
-        "created": "Rolle vergeben",
-        "ended": "Rolle beendet"
+        "created": "Person erhält eine Rolle",
+        "ended": "Rolle einer Person endet"
       },
       "guardian": {
-        "linked": "Eltern verknüpft",
-        "withdrawn": "Eltern zurückgezogen"
+        "linked": "Elternteil mit Kind verknüpft",
+        "withdrawn": "Elternverknüpfung zurückgezogen"
       },
       "unit": {
         "created": "Einheit erstellt"
@@ -1385,7 +1385,10 @@
     "locale-country": "Land",
     "locale-currency": "Währung",
     "locale-footer": "Jede Änderung wird im Prüfprotokoll festgehalten.",
-    "homeroom-description": "Eine Lehrkraft leitet jede Klasse."
+    "homeroom-description": "Eine Lehrkraft leitet jede Klasse.",
+    "webhook-changes-description": "Dein System erfährt es jedes Mal, wenn eines davon geschieht.",
+    "webhook-changes-none": "Dieser Client liest nichts, was ein Webhook sendet, also ändere zuerst seine Aktionen.",
+    "webhook-client-none": "Ein Webhook gehört zu einem API-Client, also erstelle zuerst einen."
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -3832,8 +3835,6 @@
   "SchoolInsight": {
     "title": "Insight",
     "class": "Klasse",
-    "pick": "Klasse wählen",
-    "pick-description": "Hier steht der Stand jedes Lernenden.",
     "competency": "Kompetenz",
     "mastery": "Beherrschung",
     "evidence": "Beleg",
@@ -3861,8 +3862,22 @@
     "practice-share": "{topic} mit deiner Schule teilen",
     "practice-note": "Nur die Themen, die du einschaltest, erreichen deine Lehrkräfte, und du kannst sie jederzeit ausschalten.",
     "tags": "Kompetenzen",
-    "tags-description": "Nenne die Kompetenz jeder Frage. Eine Frage ohne Kompetenz zählt für ihre Prüfung.",
+    "tags-description": "Nenne vor der Freigabe der Ergebnisse, was jede Frage prüft, eine leere Frage zählt für ihre Prüfung.",
     "exam": "Prüfung",
-    "question": "Frage {number}"
+    "question": "Frage {number}",
+    "no-class": "Noch keine Klasse",
+    "no-class-description": "Insight zeigt den Stand jeder Schülerin und jedes Schülers einer Klasse, also beginnt es mit einer Klasse.",
+    "no-class-member": "Insight zeigt den Stand in den Klassen, die du unterrichtest, also bitte deine Verwaltung, dich einer Klasse hinzuzufügen.",
+    "no-class-action": "Klassenräume öffnen",
+    "class-empty": "Noch keine Prüfung freigegeben",
+    "class-empty-description": "Gib die Ergebnisse einer Prüfung dieser Klasse frei, dann erscheint hier der Stand jeder Person.",
+    "exams-action": "Prüfungen öffnen",
+    "tags-note": "Eine Frage ohne Kompetenz zählt unter dem Namen ihrer Prüfung.",
+    "tags-empty": "Erstelle zuerst eine Prüfung, dann nenne, was ihre Fragen prüfen.",
+    "tags-done": "Fertig",
+    "tags-none": "Diese Prüfung hat noch keine Fragen.",
+    "exam-placeholder": "Prüfung wählen",
+    "question-placeholder": "Optional, zum Beispiel Brüche",
+    "narratives-note": "Öffne eine Person, um zu schreiben, was ihr als Nächstes hilft."
   }
 }

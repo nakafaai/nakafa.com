@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -18,6 +19,8 @@ import { useTenant } from "@/components/tenant/context";
 import { StudentNarrative } from "@/components/tenant/insight/narrative";
 import { SharedPractice } from "@/components/tenant/insight/practice";
 import { percentOf, skillRowsOf } from "@/components/tenant/insight/rows";
+import { QuestionTags } from "@/components/tenant/insight/tags";
+import { Link } from "@/lib/routing/link";
 
 /**
  * One class as its teacher reads it: each student's competencies with the points behind them and, while the forecast
@@ -49,9 +52,21 @@ export function ClassInsightTable({
     <>
       {Arr.isReadonlyArrayEmpty(rows) ? (
         <TableEmpty
-          act="waving"
-          description={t("empty-description")}
-          title={t("empty")}
+          act="pointing"
+          action={
+            <>
+              <Link
+                className={buttonVariants()}
+                params={{ slug }}
+                to="/school/$slug/exams"
+              >
+                {t("exams-action")}
+              </Link>
+              <QuestionTags />
+            </>
+          }
+          description={t("class-empty-description")}
+          title={t("class-empty")}
         />
       ) : (
         <TableFrame>
@@ -108,10 +123,19 @@ export function ClassInsightTable({
           </Table>
         </TableFrame>
       )}
-      <p className="text-muted-foreground text-sm">
-        {found.value.forecasts ? t("chance-note") : t("chance-held")}
-      </p>
+      {Arr.isReadonlyArrayEmpty(rows) ? null : (
+        <>
+          <p className="text-muted-foreground text-sm">
+            {found.value.forecasts ? t("chance-note") : t("chance-held")}
+          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-muted-foreground text-sm">{t("tags-note")}</p>
+            <QuestionTags />
+          </div>
+        </>
+      )}
       <SharedPractice students={found.value.students} />
+      <p className="text-muted-foreground text-sm">{t("narratives-note")}</p>
       <div className="flex flex-wrap gap-2">
         {Arr.map(found.value.students, (student) => (
           <StudentNarrative

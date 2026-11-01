@@ -3,6 +3,9 @@ import { Effect } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** Where a school with no client goes to create one. */
+const CLIENTS_ADDRESS = /\/settings\/clients$/u;
+
 test("an owner gives a client a webhook, reads its secret once, edits it, reads its log, and revokes it", async ({
   baseURL,
   browser,
@@ -14,7 +17,25 @@ test("an owner gives a client a webhook, reads its secret once, edits it, reads 
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
 
-  await page.goto(address("/settings/clients"));
+  // With no client, the field says what must happen first and takes the admin there.
+  await page.goto(address("/settings/webhooks"));
+  const addWebhook = page
+    .locator("header")
+    .getByRole("button", { name: "Create webhook" });
+  await waitUntilTakenOver(addWebhook);
+  await addWebhook.click();
+  const noClient = page.getByRole("dialog");
+  await expect(
+    noClient.getByText(
+      "A webhook belongs to an API client, so create one first."
+    )
+  ).toBeVisible();
+  await expect(
+    noClient.getByRole("combobox", { name: "Client" })
+  ).toBeDisabled();
+  await noClient.getByRole("link", { name: "Create client" }).click();
+  await expect(page).toHaveURL(CLIENTS_ADDRESS);
+
   const addClient = page
     .locator("header")
     .getByRole("button", { name: "Create client" });
@@ -34,8 +55,13 @@ test("an owner gives a client a webhook, reads its secret once, edits it, reads 
     .click();
   const dialog = page.getByRole("dialog");
   const create = dialog.getByRole("button", { name: "Create" });
-  await dialog.getByRole("combobox", { name: "Client" }).click();
-  await page.getByRole("option", { name: "Sistem Sekolah" }).click();
+  // The one client stands chosen, and what it can send shows at once.
+  await expect(dialog.getByRole("combobox", { name: "Client" })).toContainText(
+    "Sistem Sekolah"
+  );
+  await expect(
+    dialog.getByRole("checkbox", { name: "Grade released" })
+  ).toBeVisible();
 
   // A private or a plain address is refused where it is typed.
   await dialog.getByLabel("Receiver address").fill("http://10.0.0.8/hook");

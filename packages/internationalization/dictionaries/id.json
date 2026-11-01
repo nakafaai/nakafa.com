@@ -680,18 +680,18 @@
     "webhook-url-error": "Pakai alamat https publik.",
     "webhook-client": "Klien",
     "webhook-client-placeholder": "Pilih klien",
-    "webhook-changes": "Perubahan",
+    "webhook-changes": "Kirim saat",
     "webhook-change": {
       "grade": {
         "released": "Nilai dirilis"
       },
       "grant": {
-        "created": "Peran diberikan",
-        "ended": "Peran berakhir"
+        "created": "Seseorang diberi peran",
+        "ended": "Peran seseorang berakhir"
       },
       "guardian": {
-        "linked": "Orang tua tertaut",
-        "withdrawn": "Orang tua menarik diri"
+        "linked": "Orang tua ditautkan ke siswa",
+        "withdrawn": "Tautan orang tua ditarik"
       },
       "unit": {
         "created": "Unit dibuat"
@@ -1385,7 +1385,10 @@
     "locale-country": "Negara",
     "locale-currency": "Mata uang",
     "locale-footer": "Setiap perubahan tercatat di jejak audit.",
-    "homeroom-description": "Satu guru memimpin setiap rombel."
+    "homeroom-description": "Satu guru memimpin setiap rombel.",
+    "webhook-changes-description": "Sistemmu diberi tahu setiap kali salah satunya terjadi.",
+    "webhook-changes-none": "Klien ini tidak membaca apa pun yang dikirim webhook, jadi ubah aksinya dulu.",
+    "webhook-client-none": "Webhook milik sebuah klien API, jadi buat dulu kliennya."
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -3832,8 +3835,6 @@
   "SchoolInsight": {
     "title": "Insight",
     "class": "Kelas",
-    "pick": "Pilih kelas",
-    "pick-description": "Capaian tiap siswa tampil di sini.",
     "competency": "Kompetensi",
     "mastery": "Penguasaan",
     "evidence": "Bukti",
@@ -3861,8 +3862,22 @@
     "practice-share": "Bagikan {topic} ke sekolah",
     "practice-note": "Hanya topik yang kamu aktifkan yang sampai ke gurumu, dan kamu bisa mematikannya kapan saja.",
     "tags": "Kompetensi",
-    "tags-description": "Sebutkan kompetensi tiap soal. Soal tanpa kompetensi dihitung untuk ujiannya.",
+    "tags-description": "Tulis yang diuji tiap soal sebelum hasil dirilis, dan soal yang kosong dihitung untuk ujiannya.",
     "exam": "Ujian",
-    "question": "Soal {number}"
+    "question": "Soal {number}",
+    "no-class": "Belum ada kelas",
+    "no-class-description": "Insight menampilkan capaian tiap siswa di sebuah kelas, jadi mulai dari satu kelas.",
+    "no-class-member": "Insight menampilkan capaian tiap siswa di kelas yang kamu ajar, jadi minta admin menambahkanmu ke satu kelas.",
+    "no-class-action": "Buka kelas",
+    "class-empty": "Belum ada ujian yang dirilis",
+    "class-empty-description": "Rilis hasil ujian yang diikuti kelas ini, dan capaian tiap siswa tampil di sini.",
+    "exams-action": "Buka ujian",
+    "tags-note": "Soal tanpa kompetensi dihitung atas nama ujiannya.",
+    "tags-empty": "Buat ujian dulu, lalu tulis yang diuji tiap soalnya.",
+    "tags-done": "Selesai",
+    "tags-none": "Ujian ini belum punya soal.",
+    "exam-placeholder": "Pilih ujian",
+    "question-placeholder": "Opsional, misalnya Pecahan",
+    "narratives-note": "Buka seorang siswa untuk menulis yang membantunya berikutnya."
   }
 }
