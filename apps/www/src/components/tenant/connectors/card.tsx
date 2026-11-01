@@ -29,11 +29,7 @@ import { Array as Arr, Option } from "effect";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConnectorActions } from "@/components/connectors/actions";
-import {
-  CONNECTABLE,
-  type DirectoryEntry,
-  LOST,
-} from "@/components/connectors/directory";
+import { type DirectoryEntry, LOST } from "@/components/connectors/directory";
 import { usePanes } from "@/components/shared/panes";
 import type { StatusLook } from "@/components/shared/table/status";
 import {
@@ -159,7 +155,12 @@ function CornerAction() {
   }
   const now = state.value;
 
-  if (now === "reconnect" || Arr.contains(CONNECTABLE, now)) {
+  if (
+    now === "failed" ||
+    now === "open" ||
+    now === "reconnect" ||
+    now === "refused"
+  ) {
     return <ConnectAction />;
   }
 
