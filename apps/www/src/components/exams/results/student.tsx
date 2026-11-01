@@ -3,15 +3,11 @@ import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentResult } from "@repo/backend/confect/exams/results/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { CardContent } from "@repo/design-system/components/ui/card";
 import { Array as Arr, Number as Num } from "effect";
 import { useTranslations } from "use-intl";
 import { useSessionSettled } from "@/components/exams/results/context";
 import { responseText, verdictKeys } from "@/components/exams/results/model";
-import {
-  CardSection,
-  CardSectionFooter,
-} from "@/components/shared/card/section";
+import { SittingNotice } from "@/components/exams/sitting/body";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
@@ -58,8 +54,8 @@ function AnswerItem({
 }
 
 /**
- * The card of a finished attempt, at the top of its page: it says the exam is finished. Until the teacher
- * releases the results, its footer says when they come. After the release it shows the score first, then
+ * A finished attempt, at the top of its page: it says the exam is finished. Until the teacher releases the
+ * results, the sentence under it says when they come. After the release it shows the score first, then
  * each question with the answer that the student chose and its verdict, and no key or explanation.
  */
 export function StudentResults({
@@ -73,13 +69,12 @@ export function StudentResults({
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <CardSection
-          description={t("student-finished-description")}
+        <SittingNotice
+          description={t("student-results-footer")}
           title={t("student-finished")}
         >
-          <CardContent>{failure}</CardContent>
-          <CardSectionFooter hint={t("student-results-footer")} />
-        </CardSection>
+          {failure}
+        </SittingNotice>
       )}
       read={{ args: { sittingId, slug }, ref: exams.results.results.mine }}
     >
@@ -89,7 +84,7 @@ export function StudentResults({
 }
 
 /**
- * The student's own result once it is in. The attempt is finished whatever the read answers, so the card says so
+ * The student's own result once it is in. The attempt is finished whatever the read answers, so the page says so
  * while the read waits, as for a student who finished offline, and the score fills in when it is released.
  */
 function StudentResultsContent({
@@ -111,32 +106,27 @@ function StudentResultsContent({
   }
   if (!QueryResult.isSuccess(result) || result.value === null) {
     return (
-      <CardSection
-        description={t("student-finished-description")}
+      <SittingNotice
+        description={t("student-results-footer")}
         title={t("student-finished")}
-      >
-        <CardSectionFooter hint={t("student-results-footer")} />
-      </CardSection>
+      />
     );
   }
   const { points, questions } = result.value;
   const total = Num.sumAll(Arr.map(questions, (question) => question.points));
   return (
-    <CardSection
-      description={t("student-results-description")}
+    <SittingNotice
+      description={t("student-results-released")}
       title={t("student-finished")}
     >
-      <CardContent className="grid gap-3 text-sm">
-        <p className="text-2xl font-semibold tabular-nums">
-          {t("student-score", { points, total })}
-        </p>
-        <ul aria-label={t("student-answers")} className="grid gap-3">
-          {Arr.map(questions, (question) => (
-            <AnswerItem key={question.number} question={question} />
-          ))}
-        </ul>
-      </CardContent>
-      <CardSectionFooter hint={t("student-results-released")} />
-    </CardSection>
+      <p className="text-2xl font-semibold tabular-nums">
+        {t("student-score", { points, total })}
+      </p>
+      <ul aria-label={t("student-answers")} className="grid gap-3 text-sm">
+        {Arr.map(questions, (question) => (
+          <AnswerItem key={question.number} question={question} />
+        ))}
+      </ul>
+    </SittingNotice>
   );
 }

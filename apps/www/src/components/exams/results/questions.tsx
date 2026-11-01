@@ -5,6 +5,8 @@ import {
   useQuery,
 } from "@confect/react";
 import {
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
   CancelCircleIcon,
   ChartHistogramIcon,
   CheckmarkCircle02Icon,
@@ -23,12 +25,20 @@ import type {
   QuestionSummary as QuestionSummarySchema,
 } from "@repo/backend/confect/exams/results/contract";
 import { Verdict } from "@repo/backend/confect/exams/results/schema";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { CardContent } from "@repo/design-system/components/ui/card";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
 import {
   Sheet,
   SheetClose,
@@ -52,16 +62,12 @@ import {
   responseText,
   verdictKeys,
 } from "@/components/exams/results/model";
-import {
-  CardSection,
-  CardSectionFooter,
-} from "@/components/shared/card/section";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -147,47 +153,40 @@ function QuestionResults({
   const share = correctShare(stats.value);
   return (
     <>
-      <CardSection
-        description={t("results-question-description")}
-        title={t("question", { number: question.number })}
-      >
-        <CardContent className="grid gap-3 text-sm">
-          <p>
-            {share === null
-              ? t("results-no-answers")
-              : t("results-share", { share })}
-          </p>
-          <ul className="grid gap-2">
-            {Arr.map(stats.value.optionCounts, (option, index) => (
-              <li className="flex justify-between gap-4" key={option.optionId}>
-                <span>
-                  {t(
-                    isReasonOption(option.optionId)
-                      ? "reason-option"
-                      : "option",
-                    {
-                      letter: optionLetter(
-                        optionPlace(question.optionIds, index),
-                        question.optionScript
-                      ),
-                    }
-                  )}
-                </span>
-                <span className="tabular-nums">{option.count}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-        <CardSectionFooter
-          hint={
-            stats.value.complete
-              ? t("results-counted", { counted: stats.value.counted })
-              : t("results-incomplete", { counted: stats.value.counted })
-          }
-        />
-      </CardSection>
-      <div className="flex justify-end">
-        <TableSearch placeholder={t("results-search")} />
+      <div className="flex flex-col gap-3 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0 text-sm">
+            <p className="font-medium">
+              {share === null
+                ? t("results-no-answers")
+                : t("results-share", { share })}
+            </p>
+            <p className="text-muted-foreground">
+              {stats.value.complete
+                ? t("results-counted", { counted: stats.value.counted })
+                : t("results-incomplete", { counted: stats.value.counted })}
+            </p>
+          </div>
+          <TableSearch placeholder={t("results-search")} />
+        </div>
+        <ul className="flex flex-wrap gap-2">
+          {Arr.map(stats.value.optionCounts, (option, index) => (
+            <li key={option.optionId}>
+              <Badge className="tabular-nums" variant="muted">
+                {t(
+                  isReasonOption(option.optionId) ? "reason-option" : "option",
+                  {
+                    letter: optionLetter(
+                      optionPlace(question.optionIds, index),
+                      question.optionScript
+                    ),
+                  }
+                )}
+                <span>{option.count}</span>
+              </Badge>
+            </li>
+          ))}
+        </ul>
       </div>
       {PaginatedQueryResult.isFailure(answers) ? (
         <DataFailure onRetry={reloadPage} />
@@ -262,7 +261,7 @@ function AnswerList({
     );
   }
   return (
-    <TableFrame>
+    <div className="border-t [&_[data-slot=table-cell]]:whitespace-nowrap">
       <DataTable
         columns={[
           answerColumns.text((answer) => answer.name, {
@@ -320,15 +319,16 @@ function AnswerList({
         />
       ) : null}
       {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
-    </TableFrame>
+    </div>
   );
 }
 
 /**
  * Questions, in the results page's header row: it opens a sheet with the questions of the exam, one at a
- * time. A question's button selects it, and its statistics and answers show below. The selection lives
- * in this component, so nothing above it is re-rendered. On a phone the button keeps its icon, so the
- * page's name keeps its room.
+ * time, however many there are. The header row of the sheet's body steps through them or picks one from a
+ * list, and stays in place while the statistics and answers scroll under it. The selection lives in this
+ * component, so nothing above it is re-rendered. On a phone the button keeps its icon, so the page's name
+ * keeps its room.
  */
 export function QuestionsAction({
   questions,
@@ -340,6 +340,14 @@ export function QuestionsAction({
   const [selected, setSelected] = useState(0);
   const [hasMoved, setHasMoved] = useState(false);
   const current = Arr.get(questions, selected);
+  const move = (index: number) => {
+    setSelected(index);
+    setHasMoved(true);
+  };
+  const items = Arr.map(questions, (question) => ({
+    label: t("question", { number: question.number }),
+    value: question.id,
+  }));
 
   return (
     <Sheet>
@@ -355,35 +363,69 @@ export function QuestionsAction({
         <SheetHeader>
           <SheetTitle>{t("questions")}</SheetTitle>
         </SheetHeader>
-        <ScrollArea className="flex-1">
-          <div className="flex flex-col gap-4 p-4">
-            <div className="flex flex-wrap gap-2">
-              {Arr.map(questions, (question, index) => (
+        {Option.match(current, {
+          onNone: () => null,
+          onSome: (question) => (
+            <div className="border-b p-4">
+              <ButtonGroup className="w-full">
                 <Button
-                  aria-pressed={index === selected}
-                  key={question.id}
-                  onClick={() => {
-                    setSelected(index);
-                    setHasMoved(true);
-                  }}
-                  size="sm"
+                  aria-label={common("previous")}
+                  disabled={selected === 0}
+                  onClick={() => move(selected - 1)}
+                  size="icon"
                   type="button"
-                  variant={index === selected ? "secondary" : "outline"}
+                  variant="outline"
                 >
-                  {t("question", { number: question.number })}
+                  <HugeIcons icon={ArrowLeft01Icon} />
                 </Button>
-              ))}
+                <Select
+                  items={items}
+                  onValueChange={(id) =>
+                    Option.map(
+                      Arr.findFirstIndex(
+                        questions,
+                        (candidate) => candidate.id === id
+                      ),
+                      move
+                    )
+                  }
+                  value={question.id}
+                >
+                  <SelectTrigger className="min-w-0 flex-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Arr.map(items, (item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  aria-label={common("next")}
+                  disabled={selected === questions.length - 1}
+                  onClick={() => move(selected + 1)}
+                  size="icon"
+                  type="button"
+                  variant="outline"
+                >
+                  <HugeIcons icon={ArrowRight01Icon} />
+                </Button>
+              </ButtonGroup>
             </div>
-            {Option.match(current, {
-              onNone: () => null,
-              // Each question holds its own search and verdict filter, so a question opened next starts with every answer.
-              onSome: (question) => (
-                <TableFiltersProvider key={question.id}>
-                  <QuestionResults question={question} waits={!hasMoved} />
-                </TableFiltersProvider>
-              ),
-            })}
-          </div>
+          ),
+        })}
+        <ScrollArea className="min-h-0 flex-1">
+          {Option.match(current, {
+            onNone: () => null,
+            // Each question holds its own search and verdict filter, so a question opened next starts with every answer.
+            onSome: (question) => (
+              <TableFiltersProvider key={question.id}>
+                <QuestionResults question={question} waits={!hasMoved} />
+              </TableFiltersProvider>
+            ),
+          })}
         </ScrollArea>
         <SheetFooter>
           <SheetClose

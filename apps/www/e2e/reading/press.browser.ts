@@ -66,7 +66,7 @@ const PRESSES = [
   {
     from: CURRICULUM,
     link: (page: Page) =>
-      page.locator('main a[href*="function-concept?ctx="]').first(),
+      page.locator('main a[href$="/function-concept"]').first(),
     name: "a curriculum card to its lesson",
   },
   {

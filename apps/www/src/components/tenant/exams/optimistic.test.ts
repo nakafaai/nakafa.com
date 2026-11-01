@@ -386,6 +386,7 @@ describe("the optimistic updates of the new questions", () => {
     const existing: ListedExam = {
       createdAt: 0,
       id: examIdOf("exam-old"),
+      canEdit: true,
       questionCount: 3,
       scope: { kind: "tenant" },
       title: "Lama",
@@ -414,7 +415,12 @@ describe("the optimistic updates of the new questions", () => {
       Option.some({
         isDone: false,
         page: [
-          { ...draft, questionCount: 1, scope: { kind: "tenant" } },
+          {
+            ...draft,
+            canEdit: true,
+            questionCount: 1,
+            scope: { kind: "tenant" },
+          },
           existing,
         ],
       })

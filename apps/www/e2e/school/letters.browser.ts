@@ -55,5 +55,8 @@ test("an Arabic option set is lettered in abjad order on the teacher's paper", a
       `Question 1, option ${letter}`
     );
   }
+
+  // Its text stands beside its letter, on the side an Arabic set reads from.
+  await expect(options.first()).toHaveCSS("text-align", "start");
   await context.close();
 });

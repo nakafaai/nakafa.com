@@ -17,7 +17,7 @@ import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { list, set } = refs.public.insight.tags;
-const { mine, ofClass } = refs.public.insight.reads;
+const { classes, mine, ofClass } = refs.public.insight.reads;
 const narratives = refs.public.insight.narratives;
 const { run } = refs.internal.insight.observe;
 
@@ -31,6 +31,38 @@ const untagged = (tags: readonly (typeof QuestionTag.Type)[]) =>
   Arr.every(tags, (found) => found.competency === null);
 
 describe("insight", () => {
+  it.effect(
+    "lists a leader the running classes they read, and the classes of no other",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const { classId } = yield* forumClass(fixture, term.id, "X-1");
+        const page = {
+          paginationOpts: { cursor: null, numItems: 10 },
+          slug: nf,
+        };
+        const planned = yield* fixture.as("admin").query(classes, page);
+        expect(planned.page).toEqual([]);
+        yield* fixture.as("admin").mutation(refs.public.tenancy.periods.open, {
+          periodId: term.id,
+          slug: nf,
+        });
+        const admin = yield* fixture.as("admin").query(classes, page);
+        expect(Arr.map(admin.page, (row) => row.id)).toEqual([classId]);
+        const student = yield* fixture.as("student").query(classes, page);
+        expect(student.page).toEqual([]);
+        yield* fixture
+          .as("admin")
+          .mutation(refs.public.classroom.classes.archive, {
+            classId,
+            slug: nf,
+          });
+        const archived = yield* fixture.as("admin").query(classes, page);
+        expect(archived.page).toEqual([]);
+      })
+  );
+
   it.effect(
     "shows a student's own standing and keeps the class view from them",
     () =>

@@ -17,6 +17,12 @@ export const Route = createFileRoute("/$locale/_main/_app/comment/$commentId")({
       throw notFound();
     }
     // The address is the server's answer, so it stays an href, not a typed route.
-    throw redirect({ href: address.value, statusCode: 307 });
+    // A comment may store an address that moved, which only the Worker's redirects
+    // know, so the browser loads the document instead of the router matching it.
+    throw redirect({
+      href: address.value,
+      reloadDocument: true,
+      statusCode: 307,
+    });
   },
 });

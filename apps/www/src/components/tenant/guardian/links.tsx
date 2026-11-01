@@ -1,4 +1,9 @@
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import { Link01Icon } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { LinkStatus } from "@repo/backend/confect/guardians/schema";
@@ -42,7 +47,7 @@ import {
   GuardianLinkMenu,
   type LinkItem,
 } from "@/components/tenant/guardian/link";
-import { StaffRequests } from "@/components/tenant/guardian/requests";
+import { WaitingRequests } from "@/components/tenant/guardian/requests";
 import { GuardianLinkStartDialog } from "@/components/tenant/guardian/start";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -119,9 +124,20 @@ function GuardianLinksBody() {
     isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
+  const waiting = useQuery(
+    guardians.requests.waiting,
+    isSettled ? { slug } : "skip"
+  );
 
+  if (QueryResult.isFailure(waiting)) {
+    throw waiting.error;
+  }
   const failed = PaginatedQueryResult.isFailure(pagination);
-  if (pagination._tag === "LoadingFirstPage") {
+  // Both reads arrive before the list draws, so a waiting request never pushes the table down.
+  if (
+    pagination._tag === "LoadingFirstPage" ||
+    !QueryResult.isSuccess(waiting)
+  ) {
     return null;
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
@@ -142,7 +158,7 @@ function GuardianLinksBody() {
       <Panes>
         <PanesList>
           {failed ? <DataFailure onRetry={reloadPage} /> : null}
-          <StaffRequests />
+          <WaitingRequests requests={waiting.value} />
           <GuardianLinkTable />
           {PaginatedQueryResult.isCanLoadMore(pagination) ? (
             <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />

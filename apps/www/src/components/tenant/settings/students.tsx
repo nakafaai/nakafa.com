@@ -1,6 +1,5 @@
 import {
   type PaginatedQueryItem,
-  PaginatedQueryResult,
   QueryResult,
   useMutation,
   usePaginatedQuery,
@@ -31,7 +30,6 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -44,12 +42,11 @@ import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -127,7 +124,7 @@ export function SchoolStudentsSettings() {
       >
         <ReadBoundary>
           <CardIssueContext value={setIssued}>
-            <SchoolLoginsBody />
+            <SchoolLoginTable />
           </CardIssueContext>
         </ReadBoundary>
         <SchoolStudentDialog
@@ -141,50 +138,21 @@ export function SchoolStudentsSettings() {
   );
 }
 
-/** The school's logins, read a page at a time, with the table and its end. */
-function SchoolLoginsBody() {
+/**
+ * The school's login names, read a page at a time, in a data table that finds a login name and
+ * sorts by when each card was issued, or the table's empty state when no card is issued.
+ */
+function SchoolLoginTable() {
+  const t = useTranslations("SchoolSettings");
   const { slug } = useTenant();
+  const formatZone = useFormatTimeZone();
+  const timeZone = useSchoolTimeZone();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     identity.logins.list,
     isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
-
-  const failed = PaginatedQueryResult.isFailure(pagination);
-
-  return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      {pagination._tag === "LoadingFirstPage" ||
-      (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-        <SchoolLoginTable logins={pagination.results} />
-      )}
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
-    </>
-  );
-}
-
-/**
- * The login names in a data table that finds a login name and sorts by when each card was
- * issued, or the table's empty state when no card is issued.
- */
-function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
-  const t = useTranslations("SchoolSettings");
-  const formatZone = useFormatTimeZone();
-  const timeZone = useSchoolTimeZone();
-
-  if (Arr.isReadonlyArrayEmpty(logins)) {
-    return (
-      <TableEmpty
-        act="pointing"
-        description={t("logins-footer")}
-        title={t("logins-empty")}
-      />
-    );
-  }
 
   const columns = [
     // The login name with the student's name after it, so the header's search finds a login by either; the cell
@@ -210,12 +178,21 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={logins}
-      rowId={(login) => login.person.id}
-      search="login"
-    />
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+      <DataTable
+        columns={columns}
+        data={pagination.results}
+        empty={
+          <TableEmpty
+            act="pointing"
+            description={t("logins-footer")}
+            title={t("logins-empty")}
+          />
+        }
+        rowId={(login) => login.person.id}
+        search="login"
+      />
+    </TablePages>
   );
 }
 
@@ -390,7 +367,11 @@ function SchoolStudentDialog({
                       unitId,
                     }),
                   SOURCE,
-                  (card) => onAdded({ ...card, name: studentName })
+                  (card) => {
+                    setName("");
+                    setLoginName("");
+                    onAdded({ ...card, name: studentName });
+                  }
                 )
               );
             }}

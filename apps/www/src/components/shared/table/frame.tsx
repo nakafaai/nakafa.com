@@ -57,9 +57,10 @@ export function TablePageBody({ children }: { children: ReactNode }) {
 
 /**
  * The body of a list that holds no record yet: what the list will hold, in one
- * sentence, with Nina doing what fits the list, in the middle of the body in place of
- * column heads over nothing. The page's action that adds the first record sits in the
- * page header.
+ * sentence, with Nina doing what fits the list, in the middle of the body. A table
+ * draws it under its column heads (`empty` on `DataTable`), which stand from the first
+ * frame, and a list without heads draws it in its place. The page's action that adds
+ * the first record sits in the page header.
  */
 export function TableEmpty({
   action,
