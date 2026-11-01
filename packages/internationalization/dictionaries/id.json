@@ -155,7 +155,11 @@
     "mismatches": "Cek NISN gagal",
     "child": "Anak",
     "child-detail": "Anak",
-    "guardian-email": "Email orang tua"
+    "guardian-email": "Email orang tua",
+    "check": "Pemeriksaan",
+    "check-nisn": "NISN",
+    "check-school": "Sekolah",
+    "request-read": "Baca"
   },
   "SchoolRoster": {
     "import": "Impor",
@@ -530,7 +534,6 @@
     "presence-more": "{names} sedang mengedit",
     "template-choice": "Pilihan ganda",
     "template-choices": "Pilihan ganda kompleks",
-    "template-title": "Jenis soal",
     "template-label": "Jenis soal: {type}",
     "template-truefalse": "Benar-salah",
     "template-cause": "Sebab-akibat",
@@ -1692,7 +1695,8 @@
     "own-band": "Predikat",
     "own-band-none": "Tanpa predikat",
     "own-empty": "Belum ada nilai yang dirilis.",
-    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya."
+    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya.",
+    "own-open-cards": "Rapor"
   },
   "SchoolReports": {
     "email": "Email",
@@ -1970,6 +1974,19 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "menu-actions": "Aksi",
+    "menu-attach": "Lampirkan",
+    "menu-chats": "Obrolan",
+    "menu-export": "Ekspor",
+    "menu-filter": "Filter",
+    "menu-insert": "Sisipkan",
+    "menu-language": "Bahasa",
+    "menu-pages": "Halaman",
+    "menu-school": "Sekolah",
+    "menu-schools": "Sekolah",
+    "menu-sources": "Sumber",
+    "menu-theme": "Tema",
+    "menu-type": "Tipe",
     "offline-note": "Perubahanmu tersimpan saat kamu kembali online.",
     "popup-empty": "Belum ada pilihan.",
     "page-navigation": "Navigasi halaman",
@@ -2092,7 +2109,6 @@
     "navigate": "Navigasi",
     "close": "Tutup",
     "community": "Komunitas",
-    "your-schools": "Sekolahmu",
     "open-school": "Buka sekolah",
     "report": "Lapor",
     "copy-content": "Salin Konten",
@@ -2657,6 +2673,7 @@
     "divider": "Garis pemisah",
     "more": "Lainnya",
     "style": "Gaya teks",
+    "style-menu": "Gaya",
     "text": "Teks biasa",
     "insert": "Sisipkan blok",
     "subscript": "Subskrip",
@@ -3574,7 +3591,6 @@
     "input-tokens": "Input",
     "output-tokens": "Output",
     "total-tokens": "Total",
-    "recent-chats": "Obrolan Terbaru",
     "speed": "Kecepatan pemutaran",
     "tool-failures": {
       "math": "Pemeriksaan matematika gagal",

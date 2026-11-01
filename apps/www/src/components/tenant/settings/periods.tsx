@@ -20,6 +20,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -38,6 +39,7 @@ import {
 } from "@/components/tenant/settings/period";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { isDraft } from "@/components/tenant/settings/state";
 import { createPeriodChange } from "@/components/tenant/settings/terms";
 import {
   SchoolUnitChoice,
@@ -204,15 +206,21 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
         value: status,
       })),
     }),
-    periodColumns.menu((info) => (
-      <WithAction action="period.manage">
-        {info.row.original.status === "archived" ? (
-          <SchoolPeriodRestore period={info.row.original} slug={slug} />
-        ) : (
-          <SchoolPeriodMenu period={info.row.original} slug={slug} />
-        )}
-      </WithAction>
-    )),
+    periodColumns.menu(
+      (info) => (
+        <WithAction
+          action="period.manage"
+          otherwise={<RowCopy value={info.row.original.name} />}
+        >
+          {info.row.original.status === "archived" ? (
+            <SchoolPeriodRestore period={info.row.original} slug={slug} />
+          ) : (
+            <SchoolPeriodMenu period={info.row.original} slug={slug} />
+          )}
+        </WithAction>
+      ),
+      { inert: (row) => isDraft(row.id) }
+    ),
   ];
 
   return (

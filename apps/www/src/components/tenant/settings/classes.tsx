@@ -19,6 +19,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -369,15 +370,21 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
         value: status,
       })),
     }),
-    classColumns.menu((info) => (
-      <WithAction action="class.create">
-        {info.row.original.status === "archived" ? (
-          <SchoolClassRestore row={info.row.original} slug={slug} />
-        ) : (
-          <SchoolClassMenu row={info.row.original} slug={slug} />
-        )}
-      </WithAction>
-    )),
+    classColumns.menu(
+      (info) => (
+        <WithAction
+          action="class.create"
+          otherwise={<RowCopy value={info.row.original.name} />}
+        >
+          {info.row.original.status === "archived" ? (
+            <SchoolClassRestore row={info.row.original} slug={slug} />
+          ) : (
+            <SchoolClassMenu row={info.row.original} slug={slug} />
+          )}
+        </WithAction>
+      ),
+      { inert: (row) => isDraft(row.id) }
+    ),
   ];
 
   return (

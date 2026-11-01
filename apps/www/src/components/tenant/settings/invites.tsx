@@ -9,18 +9,14 @@ import {
   IdIcon,
   MailEdit01Icon,
   MailSend01Icon,
-  MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -33,6 +29,7 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableName } from "@/components/shared/table/title";
@@ -169,9 +166,10 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
       id: "expires",
       timeZone: () => Option.getOrElse(timeZone, formatZone),
     }),
-    inviteColumns.menu((info) => (
-      <SchoolInviteMenu invite={info.row.original} />
-    )),
+    inviteColumns.menu(
+      (info) => <SchoolInviteMenu invite={info.row.original} />,
+      { inert: (row) => isDraft(row.id) }
+    ),
   ];
 
   return (
@@ -267,59 +265,45 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
   };
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              inert={isDraft(invite.id)}
-              size="icon-sm"
-              variant="ghost"
+    <>
+      <RowItems>
+        <DropdownMenuItem
+          disabled={sendLocale === undefined || isResending}
+          onClick={() => {
+            if (sendLocale !== undefined) {
+              (isExpired ? sendExpired : sendPending)(sendLocale);
+            }
+          }}
+        >
+          <HugeIcons icon={MailSend01Icon} />
+          {t("invite-resend")}
+        </DropdownMenuItem>
+        {isExpired ? null : (
+          <>
+            <DropdownMenuItem
+              disabled={sendLocale === undefined}
+              onClick={() => dialogs.show("readdress")}
             >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            disabled={sendLocale === undefined || isResending}
-            onClick={() => {
-              if (sendLocale !== undefined) {
-                (isExpired ? sendExpired : sendPending)(sendLocale);
-              }
-            }}
-          >
-            <HugeIcons icon={MailSend01Icon} />
-            {t("invite-resend")}
-          </DropdownMenuItem>
-          {isExpired ? null : (
-            <>
-              <DropdownMenuItem
-                disabled={sendLocale === undefined}
-                onClick={() => dialogs.show("readdress")}
-              >
-                <HugeIcons icon={MailEdit01Icon} />
-                {t("invite-readdress")}
+              <HugeIcons icon={MailEdit01Icon} />
+              {t("invite-readdress")}
+            </DropdownMenuItem>
+            {cardOffered(invite.roles) ? (
+              <DropdownMenuItem onClick={() => dialogs.show("issue")}>
+                <HugeIcons icon={IdIcon} />
+                {t("invite-card")}
               </DropdownMenuItem>
-              {cardOffered(invite.roles) ? (
-                <DropdownMenuItem onClick={() => dialogs.show("issue")}>
-                  <HugeIcons icon={IdIcon} />
-                  {t("invite-card")}
-                </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => dialogs.show("revoke")}
-                variant="destructive"
-              >
-                <HugeIcons icon={Delete02Icon} />
-                {t("invite-revoke")}
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            ) : null}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => dialogs.show("revoke")}
+              variant="destructive"
+            >
+              <HugeIcons icon={Delete02Icon} />
+              {t("invite-revoke")}
+            </DropdownMenuItem>
+          </>
+        )}
+      </RowItems>
       <ResponsiveDialog
         description={t("invite-revoke-description")}
         footer={
@@ -372,6 +356,6 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
           type="email"
         />
       ) : null}
-    </div>
+    </>
   );
 }

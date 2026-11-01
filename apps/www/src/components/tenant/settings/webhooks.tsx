@@ -6,7 +6,6 @@ import {
 import {
   Delete02Icon,
   Key01Icon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
   Plug01Icon,
   TaskDaily01Icon,
@@ -17,11 +16,8 @@ import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -33,6 +29,7 @@ import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -224,57 +221,44 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
   };
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => dialogs.show("read")}>
-            <HugeIcons icon={TaskDaily01Icon} />
-            {t("webhook-deliveries")}
-          </DropdownMenuItem>
-          {webhook.status === "active" ? (
-            <>
-              <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-                <HugeIcons icon={PencilEdit02Icon} />
-                {t("webhook-edit")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={isPending}
-                onClick={() =>
-                  startTransition(() =>
-                    saveSchool(
-                      () => rotate(names),
-                      SOURCE,
-                      (issued) => issueSecret(issued.secret)
-                    )
+    <>
+      <RowItems>
+        <DropdownMenuItem onClick={() => dialogs.show("read")}>
+          <HugeIcons icon={TaskDaily01Icon} />
+          {t("webhook-deliveries")}
+        </DropdownMenuItem>
+        {webhook.status === "active" ? (
+          <>
+            <DropdownMenuItem onClick={() => dialogs.show("edit")}>
+              <HugeIcons icon={PencilEdit02Icon} />
+              {t("webhook-edit")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={isPending}
+              onClick={() =>
+                startTransition(() =>
+                  saveSchool(
+                    () => rotate(names),
+                    SOURCE,
+                    (issued) => issueSecret(issued.secret)
                   )
-                }
-              >
-                <HugeIcons icon={Key01Icon} />
-                {t("client-rotate")}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => dialogs.show("revoke")}
-                variant="destructive"
-              >
-                <HugeIcons icon={Delete02Icon} />
-                {t("client-revoke")}
-              </DropdownMenuItem>
-            </>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
+                )
+              }
+            >
+              <HugeIcons icon={Key01Icon} />
+              {t("client-rotate")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => dialogs.show("revoke")}
+              variant="destructive"
+            >
+              <HugeIcons icon={Delete02Icon} />
+              {t("client-revoke")}
+            </DropdownMenuItem>
+          </>
+        ) : null}
+      </RowItems>
       <ResponsiveDialog
         description={t("webhook-revoke-description")}
         footer={
@@ -311,6 +295,6 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
           webhook={webhook}
         />
       ) : null}
-    </div>
+    </>
   );
 }

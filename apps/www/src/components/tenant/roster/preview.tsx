@@ -9,6 +9,7 @@ import { useTranslations } from "use-intl";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
+import { RowCopy } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableName } from "@/components/shared/table/title";
 import { type ReadRow, RowProblem } from "@/components/tenant/roster/dapodik";
@@ -111,6 +112,7 @@ export function RosterPreviewTable({
         })
       ),
     }),
+    rowColumns.menu((info) => <RowCopy value={nameOf(info.row.original)} />),
   ];
 
   return (

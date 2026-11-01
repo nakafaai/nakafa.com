@@ -13,9 +13,10 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableNote } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import { useTenant } from "@/components/tenant/context";
-import { NarrativeButton } from "@/components/tenant/insight/narrative";
+import { NarrativeMenu } from "@/components/tenant/insight/narrative";
 import {
   type InsightStudent,
   type OwnTopic,
@@ -73,7 +74,7 @@ export function SharedPractice({
             id: "mean",
           }),
           sharedColumns.menu((info) => (
-            <NarrativeButton id={info.row.original.studentId} />
+            <NarrativeMenu id={info.row.original.studentId} />
           )),
         ]}
         data={rows}
@@ -145,6 +146,9 @@ export function OwnPractice() {
               },
             ],
           }),
+          topicColumns.menu((info) => (
+            <RowCopy value={topicNameOf(info.row.original)} />
+          )),
         ]}
         data={isRead ? topics.value : []}
         empty={

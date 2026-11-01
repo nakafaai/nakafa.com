@@ -155,7 +155,11 @@
     "mismatches": "Fehlgeschlagene NISN-Prüfungen",
     "child": "Kind",
     "child-detail": "Kind",
-    "guardian-email": "E-Mail der Eltern"
+    "guardian-email": "E-Mail der Eltern",
+    "check": "Prüfung",
+    "check-nisn": "NISN",
+    "check-school": "Schule",
+    "request-read": "Lesen"
   },
   "SchoolRoster": {
     "import": "Importieren",
@@ -530,7 +534,6 @@
     "presence-more": "{names} bearbeiten gerade",
     "template-choice": "Einfachauswahl",
     "template-choices": "Mehrfachauswahl",
-    "template-title": "Fragetyp",
     "template-label": "Fragetyp: {type}",
     "template-truefalse": "Richtig oder falsch",
     "template-cause": "Ursache und Wirkung",
@@ -1692,7 +1695,8 @@
     "own-band": "Stufe",
     "own-band-none": "Ohne Stufe",
     "own-empty": "Noch keine Note freigegeben.",
-    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
+    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt.",
+    "own-open-cards": "Zeugnisse"
   },
   "SchoolReports": {
     "email": "E-Mail",
@@ -1970,6 +1974,19 @@
     "classification": "Bildung"
   },
   "Common": {
+    "menu-actions": "Aktionen",
+    "menu-attach": "Anhängen",
+    "menu-chats": "Chats",
+    "menu-export": "Export",
+    "menu-filter": "Filter",
+    "menu-insert": "Einfügen",
+    "menu-language": "Sprache",
+    "menu-pages": "Seiten",
+    "menu-school": "Schule",
+    "menu-schools": "Schulen",
+    "menu-sources": "Quellen",
+    "menu-theme": "Design",
+    "menu-type": "Typ",
     "offline-note": "Deine Änderungen werden gespeichert, sobald du wieder online bist.",
     "popup-empty": "Noch nichts zur Auswahl.",
     "page-navigation": "Seitennavigation",
@@ -2092,7 +2109,6 @@
     "navigate": "Navigieren",
     "close": "Schließen",
     "community": "Community",
-    "your-schools": "Deine Schulen",
     "open-school": "Schule eröffnen",
     "report": "Melden",
     "copy-content": "Inhalt kopieren",
@@ -2657,6 +2673,7 @@
     "divider": "Trennlinie",
     "more": "Mehr",
     "style": "Textstil",
+    "style-menu": "Stil",
     "text": "Normaler Text",
     "insert": "Block einfügen",
     "subscript": "Tiefgestellt",
@@ -3574,7 +3591,6 @@
     "input-tokens": "Eingabe",
     "output-tokens": "Ausgabe",
     "total-tokens": "Gesamt",
-    "recent-chats": "Letzte Chats",
     "speed": "Wiedergabegeschwindigkeit",
     "tool-failures": {
       "math": "Mathematische Prüfung fehlgeschlagen",

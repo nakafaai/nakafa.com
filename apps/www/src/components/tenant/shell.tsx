@@ -12,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -146,6 +147,7 @@ function TenantAccount() {
  */
 function TenantSwitcher() {
   const t = useTranslations("School");
+  const common = useTranslations("Common");
   const locale = useLocale();
   const tenant = useTenant();
   const { warm, warmed } = useMenuWarm();
@@ -188,6 +190,7 @@ function TenantSwitcher() {
             </Suspense>
           ) : null}
           <DropdownMenuGroup>
+            <DropdownMenuLabel>{common("menu-school")}</DropdownMenuLabel>
             <DropdownMenuItem
               render={
                 <Link

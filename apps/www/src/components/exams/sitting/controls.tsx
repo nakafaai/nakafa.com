@@ -10,7 +10,9 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -36,6 +38,7 @@ export function StudentPanelActions({
   readonly state: DashboardAttempt["state"];
 }) {
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
 
   if (state !== "inProgress" && state !== "locked") {
     return (
@@ -89,14 +92,17 @@ export function StudentPanelActions({
           <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuItem onClick={() => onOpen("add-minutes")}>
-            <HugeIcons icon={TimeQuarterPassIcon} />
-            {t("add-minutes")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onOpen("allow-device")}>
-            <HugeIcons icon={SmartPhone01Icon} />
-            {t("allow-device")}
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => onOpen("add-minutes")}>
+              <HugeIcons icon={TimeQuarterPassIcon} />
+              {t("add-minutes")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onOpen("allow-device")}>
+              <HugeIcons icon={SmartPhone01Icon} />
+              {t("allow-device")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </ButtonGroup>

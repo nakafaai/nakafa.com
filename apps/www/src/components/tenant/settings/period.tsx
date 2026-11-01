@@ -1,8 +1,8 @@
 import { useMutation } from "@confect/react";
 import {
   Archive02Icon,
+  ArchiveRestoreIcon,
   CheckmarkCircle02Icon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
 } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -10,12 +10,7 @@ import { PeriodName } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DatePicker } from "@repo/design-system/components/ui/date";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
   FieldGroup,
@@ -29,8 +24,9 @@ import { Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
+import { RowItems } from "@/components/shared/table/menu";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { isDraft, type Period } from "@/components/tenant/settings/state";
+import type { Period } from "@/components/tenant/settings/state";
 import {
   archivePeriodChange,
   editPeriodChange,
@@ -57,20 +53,18 @@ export function SchoolPeriodRestore({
   );
 
   return (
-    <div className="flex justify-end">
-      <Button
+    <RowItems>
+      <DropdownMenuItem
         onClick={() =>
           startTransition(() =>
             saveSchool(() => restore({ periodId: period.id, slug }), SOURCE)
           )
         }
-        size="sm"
-        type="button"
-        variant="outline"
       >
+        <HugeIcons icon={ArchiveRestoreIcon} />
         {t("period-restore")}
-      </Button>
-    </div>
+      </DropdownMenuItem>
+    </RowItems>
   );
 }
 
@@ -90,7 +84,6 @@ export function SchoolPeriodMenu({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const open = useMutation(tenancy.periods.open).withOptimisticUpdate(
     openPeriodChange
   );
@@ -107,70 +100,56 @@ export function SchoolPeriodMenu({
   const dialogs = useDialogs<"edit">();
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              inert={isDraft(period.id)}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-            <HugeIcons icon={PencilEdit02Icon} />
-            {t("period-edit")}
+    <>
+      <RowItems>
+        <DropdownMenuItem onClick={() => dialogs.show("edit")}>
+          <HugeIcons icon={PencilEdit02Icon} />
+          {t("period-edit")}
+        </DropdownMenuItem>
+        {period.status === "planned" ? (
+          <DropdownMenuItem
+            onClick={() =>
+              startTransition(() =>
+                saveSchool(() => open({ periodId: period.id, slug }), SOURCE)
+              )
+            }
+          >
+            <HugeIcons icon={CheckmarkCircle02Icon} />
+            {t("period-open")}
           </DropdownMenuItem>
-          {period.status === "planned" ? (
-            <DropdownMenuItem
-              onClick={() =>
-                startTransition(() =>
-                  saveSchool(() => open({ periodId: period.id, slug }), SOURCE)
+        ) : null}
+        {period.status === "active" ? (
+          <DropdownMenuItem
+            onClick={() =>
+              startTransition(() =>
+                saveSchool(
+                  () => archive({ periodId: period.id, slug }),
+                  SOURCE,
+                  () =>
+                    toast.success(
+                      { title: "school-period-archived.title" },
+                      {
+                        action: {
+                          label: "undo",
+                          onClick: () =>
+                            startTransition(() =>
+                              saveSchool(
+                                () => restore({ periodId: period.id, slug }),
+                                SOURCE
+                              )
+                            ),
+                        },
+                      }
+                    )
                 )
-              }
-            >
-              <HugeIcons icon={CheckmarkCircle02Icon} />
-              {t("period-open")}
-            </DropdownMenuItem>
-          ) : null}
-          {period.status === "active" ? (
-            <DropdownMenuItem
-              onClick={() =>
-                startTransition(() =>
-                  saveSchool(
-                    () => archive({ periodId: period.id, slug }),
-                    SOURCE,
-                    () =>
-                      toast.success(
-                        { title: "school-period-archived.title" },
-                        {
-                          action: {
-                            label: "undo",
-                            onClick: () =>
-                              startTransition(() =>
-                                saveSchool(
-                                  () => restore({ periodId: period.id, slug }),
-                                  SOURCE
-                                )
-                              ),
-                          },
-                        }
-                      )
-                  )
-                )
-              }
-            >
-              <HugeIcons icon={Archive02Icon} />
-              {t("period-archive")}
-            </DropdownMenuItem>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
+              )
+            }
+          >
+            <HugeIcons icon={Archive02Icon} />
+            {t("period-archive")}
+          </DropdownMenuItem>
+        ) : null}
+      </RowItems>
       {dialogs.kind === "edit" ? (
         <PeriodDialog
           description={t("period-edit-description")}
@@ -190,7 +169,7 @@ export function SchoolPeriodMenu({
           title={t("period-edit")}
         />
       ) : null}
-    </div>
+    </>
   );
 }
 

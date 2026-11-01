@@ -8,18 +8,11 @@ import {
 import {
   Download01Icon,
   InformationCircleIcon,
-  MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
@@ -40,6 +33,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
@@ -210,28 +204,13 @@ function AuditEntryMenu({ entry }: { entry: EntryItem }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => setOpen(true)}>
-              <HugeIcons icon={InformationCircleIcon} />
-              {t("audit-details")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <>
+      <RowItems>
+        <DropdownMenuItem onClick={() => setOpen(true)}>
+          <HugeIcons icon={InformationCircleIcon} />
+          {t("audit-details")}
+        </DropdownMenuItem>
+      </RowItems>
       <Sheet onOpenChange={setOpen} open={open}>
         <SheetContent>
           <SheetHeader>
@@ -272,7 +251,7 @@ function AuditEntryMenu({ entry }: { entry: EntryItem }) {
           </SheetFooter>
         </SheetContent>
       </Sheet>
-    </div>
+    </>
   );
 }
 

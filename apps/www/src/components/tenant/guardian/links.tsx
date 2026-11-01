@@ -29,6 +29,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -48,6 +49,7 @@ import { GuardianLinkStartDialog } from "@/components/tenant/guardian/start";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import { useKeptRows } from "@/lib/data/kept";
 
@@ -227,11 +229,17 @@ function GuardianLinkTable() {
         value: status,
       })),
     }),
-    linkColumns.menu((info) => (
-      <WithAction action="guardian.link">
-        <GuardianLinkMenu link={info.row.original} />
-      </WithAction>
-    )),
+    linkColumns.menu(
+      (info) => (
+        <WithAction
+          action="guardian.link"
+          otherwise={<RowCopy value={info.row.original.student.name} />}
+        >
+          <GuardianLinkMenu link={info.row.original} />
+        </WithAction>
+      ),
+      { inert: (row) => isDraft(row.id) }
+    ),
   ];
 
   return <DataTable columns={columns} data={links} rowId={(link) => link.id} />;

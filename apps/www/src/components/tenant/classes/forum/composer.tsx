@@ -19,7 +19,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -79,6 +81,7 @@ const mentionArg = (mention: typeof MentionView.Type) =>
  */
 export function ForumComposer() {
   const t = useTranslations("Classroom");
+  const common = useTranslations("Common");
   const { channelId, classId, discussion, slug } = useChannelScope();
   const send = useMutation(classroom.forum.messages.send);
   const reply = useMutation(classroom.forum.threads.reply);
@@ -262,20 +265,23 @@ export function ForumComposer() {
               }
             />
             <DropdownMenuContent align="start" className="w-44">
-              <DropdownMenuItem onClick={() => photos.current?.click()}>
-                <HugeIcons icon={Image01Icon} />
-                {t("attach-photo")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => documents.current?.click()}>
-                <HugeIcons icon={File02Icon} />
-                {t("attach-document")}
-              </DropdownMenuItem>
-              {discussion === undefined ? (
-                <DropdownMenuItem onClick={() => setPolling(true)}>
-                  <HugeIcons icon={ChartBarLineIcon} />
-                  {t("attach-poll")}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>{common("menu-attach")}</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => photos.current?.click()}>
+                  <HugeIcons icon={Image01Icon} />
+                  {t("attach-photo")}
                 </DropdownMenuItem>
-              ) : null}
+                <DropdownMenuItem onClick={() => documents.current?.click()}>
+                  <HugeIcons icon={File02Icon} />
+                  {t("attach-document")}
+                </DropdownMenuItem>
+                {discussion === undefined ? (
+                  <DropdownMenuItem onClick={() => setPolling(true)}>
+                    <HugeIcons icon={ChartBarLineIcon} />
+                    {t("attach-poll")}
+                  </DropdownMenuItem>
+                ) : null}
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </InputGroupAddon>

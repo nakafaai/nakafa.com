@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -71,6 +72,7 @@ export function TryoutTableHeader() {
         <TryoutColumnHeading field="questionCount" />
         <TryoutColumnHeading field="durationSeconds" />
         <TryoutColumnHeading field="publishedScore" />
+        <ColumnHead place="menu" width="menu" />
       </TableRow>
     </ColumnHeads>
   );
@@ -125,6 +127,7 @@ function TryoutColumnHeading({ field }: { field: keyof typeof headings }) {
 function TryoutStatusHeading() {
   const { filter, onFilter } = useTryoutSetTable();
   const t = useTranslations("Tryouts");
+  const common = useTranslations("Common");
   return (
     <ColumnHead place="center">
       <DropdownMenu>
@@ -146,6 +149,7 @@ function TryoutStatusHeading() {
           className="w-max max-w-[calc(100vw-1rem)]"
         >
           <DropdownMenuGroup>
+            <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
             <DropdownMenuRadioGroup
               onValueChange={(value) => {
                 if (Schema.is(setFilterValidator)(value)) {

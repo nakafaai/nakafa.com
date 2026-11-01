@@ -14,10 +14,7 @@ import type {
   ClassPerson,
   ClassPersonKind,
 } from "@repo/backend/confect/classroom/people.spec";
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
@@ -27,7 +24,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
-import { RowMenu } from "@/components/shared/table/menu";
+import { RowItems } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableName } from "@/components/shared/table/title";
 import {
@@ -177,22 +174,20 @@ function PersonMenu({ person }: { person: typeof ClassPerson.Type }) {
   const t = useTranslations("Classroom");
 
   return (
-    <RowMenu>
-      <DropdownMenuGroup>
+    <RowItems>
+      <CopyItem
+        icon={Copy01Icon}
+        label={t("people-copy-name")}
+        value={person.name}
+      />
+      {person.email === null ? null : (
         <CopyItem
-          icon={Copy01Icon}
-          label={t("people-copy-name")}
-          value={person.name}
+          icon={Mail01Icon}
+          label={t("people-copy-email")}
+          value={person.email}
         />
-        {person.email === null ? null : (
-          <CopyItem
-            icon={Mail01Icon}
-            label={t("people-copy-email")}
-            value={person.email}
-          />
-        )}
-      </DropdownMenuGroup>
-    </RowMenu>
+      )}
+    </RowItems>
   );
 }
 

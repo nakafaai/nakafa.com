@@ -9,7 +9,6 @@ import {
   Copy01Icon,
   Delete02Icon,
   Key01Icon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
   Plug01Icon,
   Unlink01Icon,
@@ -20,11 +19,8 @@ import type { IssuedClient } from "@repo/backend/confect/integrations/clients.sp
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -36,6 +32,7 @@ import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -194,7 +191,9 @@ function SchoolClientTable() {
     clientColumns.menu((info) =>
       info.row.original.status === "active" ? (
         <SchoolClientMenu client={info.row.original} />
-      ) : null
+      ) : (
+        <RowCopy value={info.row.original.id} />
+      )
     ),
   ];
 
@@ -236,57 +235,44 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
   const dialogs = useDialogs<"connect" | "edit" | "revoke">();
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-            <HugeIcons icon={PencilEdit02Icon} />
-            {t("client-edit")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={isPending}
-            onClick={() =>
-              startTransition(() =>
-                saveSchool(
-                  () => rotate({ clientId: client.id, slug }),
-                  SOURCE,
-                  (answer) => issueSecret(answer)
-                )
+    <>
+      <RowItems>
+        <DropdownMenuItem onClick={() => dialogs.show("edit")}>
+          <HugeIcons icon={PencilEdit02Icon} />
+          {t("client-edit")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={isPending}
+          onClick={() =>
+            startTransition(() =>
+              saveSchool(
+                () => rotate({ clientId: client.id, slug }),
+                SOURCE,
+                (answer) => issueSecret(answer)
               )
-            }
-          >
-            <HugeIcons icon={Key01Icon} />
-            {t("client-rotate")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => clipboard.copy(client.id)}>
-            <HugeIcons icon={Copy01Icon} />
-            {t("client-id-copy")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => dialogs.show("connect")}>
-            <HugeIcons icon={CommandLineIcon} />
-            {t("device-title")}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => dialogs.show("revoke")}
-            variant="destructive"
-          >
-            <HugeIcons icon={Delete02Icon} />
-            {t("client-revoke")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            )
+          }
+        >
+          <HugeIcons icon={Key01Icon} />
+          {t("client-rotate")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => clipboard.copy(client.id)}>
+          <HugeIcons icon={Copy01Icon} />
+          {t("client-id-copy")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => dialogs.show("connect")}>
+          <HugeIcons icon={CommandLineIcon} />
+          {t("device-title")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => dialogs.show("revoke")}
+          variant="destructive"
+        >
+          <HugeIcons icon={Delete02Icon} />
+          {t("client-revoke")}
+        </DropdownMenuItem>
+      </RowItems>
       <ResponsiveDialog
         description={t("client-revoke-description")}
         footer={
@@ -329,6 +315,6 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
         setOpen={dialogs.setOpen}
         slug={slug}
       />
-    </div>
+    </>
   );
 }

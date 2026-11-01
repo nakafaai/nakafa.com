@@ -155,7 +155,11 @@
     "mismatches": "Failed NISN checks",
     "child": "Child",
     "child-detail": "Child",
-    "guardian-email": "Parent email"
+    "guardian-email": "Parent email",
+    "check": "Check",
+    "check-nisn": "NISN",
+    "check-school": "School",
+    "request-read": "Read"
   },
   "SchoolRoster": {
     "import": "Import",
@@ -530,7 +534,6 @@
     "presence-more": "{names} are editing",
     "template-choice": "Multiple choice",
     "template-choices": "Complex multiple choice",
-    "template-title": "Question type",
     "template-label": "Question type: {type}",
     "template-truefalse": "True or false",
     "template-cause": "Cause and effect",
@@ -1692,7 +1695,8 @@
     "own-band": "Band",
     "own-band-none": "No band",
     "own-empty": "No grade is released yet.",
-    "own-empty-description": "Each grade shows here once its teacher releases it."
+    "own-empty-description": "Each grade shows here once its teacher releases it.",
+    "own-open-cards": "Report cards"
   },
   "SchoolReports": {
     "email": "Email",
@@ -1970,6 +1974,19 @@
     "classification": "Education"
   },
   "Common": {
+    "menu-actions": "Actions",
+    "menu-attach": "Attach",
+    "menu-chats": "Chats",
+    "menu-export": "Export",
+    "menu-filter": "Filter",
+    "menu-insert": "Insert",
+    "menu-language": "Language",
+    "menu-pages": "Pages",
+    "menu-school": "School",
+    "menu-schools": "Schools",
+    "menu-sources": "Sources",
+    "menu-theme": "Theme",
+    "menu-type": "Type",
     "offline-note": "Your changes save once you are back online.",
     "popup-empty": "Nothing to choose yet.",
     "page-navigation": "Pagination navigation",
@@ -2092,7 +2109,6 @@
     "navigate": "Navigate",
     "close": "Close",
     "community": "Community",
-    "your-schools": "Your schools",
     "open-school": "Open a school",
     "report": "Report",
     "copy-content": "Copy Content",
@@ -2657,6 +2673,7 @@
     "divider": "Divider",
     "more": "More",
     "style": "Text style",
+    "style-menu": "Style",
     "text": "Normal text",
     "insert": "Insert a block",
     "subscript": "Subscript",
@@ -3574,7 +3591,6 @@
     "input-tokens": "Input",
     "output-tokens": "Output",
     "total-tokens": "Total",
-    "recent-chats": "Recent Chats",
     "speed": "Playback speed",
     "tool-failures": {
       "math": "Math check failed",

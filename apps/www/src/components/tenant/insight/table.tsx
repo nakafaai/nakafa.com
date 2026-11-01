@@ -36,7 +36,7 @@ import { TableTitle } from "@/components/shared/table/title";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
-  NarrativeButton,
+  NarrativeMenu,
   NarrativeProvider,
 } from "@/components/tenant/insight/narrative";
 import { SharedPractice } from "@/components/tenant/insight/practice";
@@ -166,7 +166,7 @@ export function ClassInsightTabs({
                       ]
                     : []),
                   skillColumns.menu((info) => (
-                    <NarrativeButton id={info.row.original.studentId} />
+                    <NarrativeMenu id={info.row.original.studentId} />
                   )),
                 ]}
                 data={skillRowsOf(students)}
@@ -277,7 +277,7 @@ function ClassStudents({
             ],
           }),
           studentColumns.menu((info) => (
-            <NarrativeButton id={info.row.original.id} />
+            <NarrativeMenu id={info.row.original.id} />
           )),
         ]}
         data={studentRowsOf(students)}

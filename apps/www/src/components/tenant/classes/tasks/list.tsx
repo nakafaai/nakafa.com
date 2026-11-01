@@ -21,10 +21,7 @@ import {
   TaskStanding as Standing,
   standingOf,
 } from "@repo/backend/confect/classroom/tasks/task";
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useState } from "react";
@@ -34,7 +31,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
-import { RowMenu } from "@/components/shared/table/menu";
+import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -239,26 +236,24 @@ function TaskRowMenu({ task }: { task: ClassTask }) {
 
   return (
     <>
-      <RowMenu>
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            render={
-              <TargetLink
-                target={schoolClassTaskTarget(slug, classSlug, task.slug)}
-              >
-                <HugeIcons icon={ArrowRight01Icon} />
-                {t("task-open")}
-              </TargetLink>
-            }
-          />
-          {Arr.contains(can, "task.manage") ? (
-            <DropdownMenuItem onClick={() => setOpenings((count) => count + 1)}>
-              <HugeIcons icon={PencilEdit02Icon} />
-              {t("task-edit")}
-            </DropdownMenuItem>
-          ) : null}
-        </DropdownMenuGroup>
-      </RowMenu>
+      <RowItems>
+        <DropdownMenuItem
+          render={
+            <TargetLink
+              target={schoolClassTaskTarget(slug, classSlug, task.slug)}
+            >
+              <HugeIcons icon={ArrowRight01Icon} />
+              {t("task-open")}
+            </TargetLink>
+          }
+        />
+        {Arr.contains(can, "task.manage") ? (
+          <DropdownMenuItem onClick={() => setOpenings((count) => count + 1)}>
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("task-edit")}
+          </DropdownMenuItem>
+        ) : null}
+      </RowItems>
       {openings === 0 ? null : <EditTaskDialog key={openings} task={task} />}
     </>
   );

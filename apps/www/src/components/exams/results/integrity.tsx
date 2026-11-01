@@ -24,6 +24,7 @@ import { AwayCell } from "@/components/exams/results/students";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
@@ -117,6 +118,9 @@ function IntegrityRows() {
                 header: t("integrity-signals"),
                 id: "signals",
               }),
+              integrityColumns.menu((info) => (
+                <RowCopy value={info.row.original.name} />
+              )),
             ]}
             data={rows}
             plain

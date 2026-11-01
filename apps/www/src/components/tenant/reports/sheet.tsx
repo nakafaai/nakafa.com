@@ -5,7 +5,6 @@ import {
   CheckmarkCircle02Icon,
   CircleIcon,
   Edit02Icon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
   RefreshIcon,
   SentIcon,
@@ -13,13 +12,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Option, Record as Rec } from "effect";
@@ -37,6 +30,7 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
@@ -227,44 +221,30 @@ function CohortReportsBody() {
  */
 function ReportLineMenu({ line }: { line: ReportLine }) {
   const t = useTranslations("SchoolReports");
-  const common = useTranslations("Common");
   const [isWriting, setIsWriting] = useState(false);
   const menu = menuOf(line);
 
   if (!Rec.some(menu, (shown) => shown)) {
-    return null;
+    return <RowCopy value={line.student.name} />;
   }
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          {menu.write ? (
-            <DropdownMenuItem onClick={() => setIsWriting(true)}>
-              <HugeIcons icon={PencilEdit02Icon} />
-              {t("write")}
-            </DropdownMenuItem>
-          ) : null}
-          {line.report === null ? null : (
-            <ReportStateItems menu={menu} report={line.report} />
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <>
+      <RowItems>
+        {menu.write ? (
+          <DropdownMenuItem onClick={() => setIsWriting(true)}>
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("write")}
+          </DropdownMenuItem>
+        ) : null}
+        {line.report === null ? null : (
+          <ReportStateItems menu={menu} report={line.report} />
+        )}
+      </RowItems>
       {menu.write ? (
         <ReportNoteDialog line={line} open={isWriting} setOpen={setIsWriting} />
       ) : null}
-    </div>
+    </>
   );
 }
 

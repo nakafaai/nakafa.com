@@ -2,15 +2,16 @@ import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { File02Icon, Target02Icon } from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { TableAction, TableActionName } from "@/components/shared/table/action";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableNote } from "@/components/shared/table/frame";
+import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import { useTenant } from "@/components/tenant/context";
 import { percentOf } from "@/components/tenant/insight/rows";
@@ -62,7 +63,7 @@ export function OwnMastery() {
             header: t("observations"),
             id: "observations",
           }),
-          skillColumns.menu(() => <OwnExamsLink />),
+          skillColumns.menu(() => <OwnExamsItems />),
         ]}
         data={isRead ? mine.value : []}
         empty={
@@ -91,20 +92,21 @@ export function OwnMastery() {
   );
 }
 
-/** The action of a row of a student's standing: the exams its points came from. */
-function OwnExamsLink() {
+/** The menu of a row of a student's standing: the exams its points came from. */
+function OwnExamsItems() {
   const t = useTranslations("SchoolInsight");
   const { slug } = useTenant();
 
   return (
-    <TableAction
-      nativeButton={false}
-      render={
-        <Link params={{ slug }} to="/school/$slug/exams">
-          <HugeIcons icon={File02Icon} />
-          <TableActionName>{t("exams-action")}</TableActionName>
-        </Link>
-      }
-    />
+    <RowItems>
+      <DropdownMenuItem
+        render={
+          <Link params={{ slug }} to="/school/$slug/exams">
+            <HugeIcons icon={File02Icon} />
+            {t("exams-action")}
+          </Link>
+        }
+      />
+    </RowItems>
   );
 }

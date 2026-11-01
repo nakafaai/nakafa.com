@@ -12,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -53,7 +54,10 @@ export function LearnMoreSubmenu({ children }: { children: ReactNode }) {
         className="w-max max-w-[calc(100vw-2rem)]"
         side={side}
       >
-        <DropdownMenuGroup>{children}</DropdownMenuGroup>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("more")}</DropdownMenuLabel>
+          {children}
+        </DropdownMenuGroup>
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   );
@@ -91,7 +95,10 @@ export function GuestLearnMoreMenu({ children }: { children: ReactNode }) {
           side={side}
           sideOffset={4}
         >
-          <DropdownMenuGroup>{children}</DropdownMenuGroup>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("more")}</DropdownMenuLabel>
+            {children}
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </SidebarMenuItem>

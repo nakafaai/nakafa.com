@@ -3,6 +3,7 @@ import { QueryResult, useMutation } from "@confect/react";
 import { NoteEditIcon } from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
 import { Button } from "@repo/design-system/components/ui/button";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
@@ -17,7 +18,7 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { TableAction, TableActionName } from "@/components/shared/table/action";
+import { RowItems } from "@/components/shared/table/menu";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import type { InsightStudent } from "@/components/tenant/insight/rows";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -98,16 +99,18 @@ export function NarrativeProvider({
   );
 }
 
-/** The action of a row that names a student: their narrative. */
-export function NarrativeButton({ id }: { id: InsightStudent["id"] }) {
+/** The menu of a row that names a student: their narrative. */
+export function NarrativeMenu({ id }: { id: InsightStudent["id"] }) {
   const t = useTranslations("SchoolInsight");
   const choose = useNarrativeChoice((state) => state.choose);
 
   return (
-    <TableAction onClick={() => choose(id)} type="button">
-      <HugeIcons icon={NoteEditIcon} />
-      <TableActionName>{t("narrative-open")}</TableActionName>
-    </TableAction>
+    <RowItems>
+      <DropdownMenuItem onClick={() => choose(id)}>
+        <HugeIcons icon={NoteEditIcon} />
+        {t("narrative-open")}
+      </DropdownMenuItem>
+    </RowItems>
   );
 }
 

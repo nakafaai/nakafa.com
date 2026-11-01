@@ -11,7 +11,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -78,21 +80,26 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
               }
             />
             <DropdownMenuContent align="end" className="w-48">
-              <Activity mode={activeChatId ? "visible" : "hidden"}>
-                <DropdownMenuItem onClick={() => setActiveChatId(null)}>
-                  <HugeIcons icon={Add01Icon} />
-                  {t("Ai.new-chat")}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>
+                  {t("Common.menu-actions")}
+                </DropdownMenuLabel>
+                <Activity mode={activeChatId ? "visible" : "hidden"}>
+                  <DropdownMenuItem onClick={() => setActiveChatId(null)}>
+                    <HugeIcons icon={Add01Icon} />
+                    {t("Ai.new-chat")}
+                  </DropdownMenuItem>
+                </Activity>
+                <DropdownMenuItem
+                  className="hidden sm:flex"
+                  onClick={onResizeToggle}
+                >
+                  <HugeIcons
+                    icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
+                  />
+                  {t(expanded ? "Ai.narrower" : "Ai.wider")}
                 </DropdownMenuItem>
-              </Activity>
-              <DropdownMenuItem
-                className="hidden sm:flex"
-                onClick={onResizeToggle}
-              >
-                <HugeIcons
-                  icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
-                />
-                {t(expanded ? "Ai.narrower" : "Ai.wider")}
-              </DropdownMenuItem>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button onClick={() => setOpen(false)} size="icon-sm" variant="ghost">

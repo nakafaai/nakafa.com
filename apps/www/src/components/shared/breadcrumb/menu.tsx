@@ -10,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -55,6 +56,7 @@ export function BreadcrumbMenu({
           className="w-auto max-w-[calc(100vw-2rem)] min-w-48"
         >
           <DropdownMenuGroup>
+            <DropdownMenuLabel>{tCommon("menu-pages")}</DropdownMenuLabel>
             {Arr.map(items, (item) => (
               <BreadcrumbMenuItem
                 item={item}

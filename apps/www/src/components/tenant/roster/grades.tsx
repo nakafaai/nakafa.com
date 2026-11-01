@@ -4,6 +4,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -29,6 +30,7 @@ import { useRosterUnit } from "@/components/tenant/roster/unit";
  */
 export function RosterGradesExport() {
   const t = useTranslations("SchoolRoster");
+  const common = useTranslations("Common");
 
   return (
     <DropdownMenuSub>
@@ -38,6 +40,7 @@ export function RosterGradesExport() {
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent className="w-56">
         <DropdownMenuGroup>
+          <DropdownMenuLabel>{common("menu-export")}</DropdownMenuLabel>
           <RosterGradeCohorts />
         </DropdownMenuGroup>
       </DropdownMenuSubContent>
