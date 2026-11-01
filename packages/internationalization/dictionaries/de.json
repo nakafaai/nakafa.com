@@ -3870,8 +3870,6 @@
     "disconnect-description": "Nakafa liest es sofort nicht mehr, und entferne Nakafa auch in deinem Google-Konto, damit der Zugriff dort endet.",
     "none": "Noch kein Konnektor",
     "none-description": "Konnektoren erscheinen hier, sobald Google sie geprüft hat.",
-    "courses": "Kurse in Classroom",
-    "courses-refresh": "Neu lesen",
     "courses-none": "Kein aktiver Kurs in diesem Classroom-Konto.",
     "course": "Kurs",
     "course-students": "Schüler",

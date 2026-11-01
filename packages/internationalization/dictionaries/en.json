@@ -3870,8 +3870,6 @@
     "disconnect-description": "Nakafa stops reading it at once, and remove Nakafa in your Google account too to end its access there.",
     "none": "No connector yet",
     "none-description": "Connectors open here once Google has reviewed them.",
-    "courses": "Classes in Classroom",
-    "courses-refresh": "Read again",
     "courses-none": "No active course in this Classroom account.",
     "course": "Course",
     "course-students": "Students",
