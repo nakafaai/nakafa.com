@@ -9,7 +9,11 @@ import {
   pageGutterVariants,
   readingMeasureVariants,
 } from "@/components/shared/content/width";
-import { PanesGroup, SizedPane } from "@/components/shared/panes";
+import {
+  PaneStartContext,
+  PanesGroupProvider,
+  SizedPane,
+} from "@/components/shared/panes";
 
 /**
  * The questions beside the navigator across the page's frame,
@@ -29,7 +33,7 @@ export function PlayerMain({
   navigator: ReactNode;
 }) {
   return (
-    <PanesGroup
+    <PanesGroupProvider
       className={cn(
         pageBoxVariants(),
         "h-auto! flex-1 overflow-visible! max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!"
@@ -58,17 +62,18 @@ export function PlayerMain({
             className="z-0 items-start [&>div]:sticky [&>div]:top-[50svh]"
             withHandle
           />
-          <SizedPane
-            className="overflow-visible!"
-            defaultSize="25%"
-            id="navigator"
-            maxSize="40%"
-            minSize="18%"
-          >
-            {navigator}
-          </SizedPane>
+          <PaneStartContext value="25%">
+            <SizedPane
+              className="overflow-visible!"
+              id="navigator"
+              maxSize="40%"
+              minSize="18%"
+            >
+              {navigator}
+            </SizedPane>
+          </PaneStartContext>
         </>
       )}
-    </PanesGroup>
+    </PanesGroupProvider>
   );
 }

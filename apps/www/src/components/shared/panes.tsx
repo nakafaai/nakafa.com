@@ -38,6 +38,9 @@ const decodePaneSizes = Schema.decodeUnknownOption(
 /** Names the group of panes that the panes inside it keep their sizes under. */
 const PanesGroupContext = createContext("panes");
 
+/** The size a pane starts at until a person sets one, as a share of the group's width or a length. */
+export const PaneStartContext = createContext("35%");
+
 /** Which row of a page's list is open beside it, by its ID, and whether the phone's sheet shows it. */
 const PanesState = Schema.Struct({
   open: Schema.Option(Schema.String),
@@ -176,7 +179,7 @@ function useKeptSizes(group: string) {
  * kept, so a window that narrows a pane for a moment leaves their size alone. Every two-pane layout of Nakafa is one of
  * these: `Panes` for a page's list and its detail, and the player for its questions and their navigator.
  */
-export function PanesGroup({
+export function PanesGroupProvider({
   children,
   className,
   id,
@@ -204,19 +207,21 @@ export function PanesGroup({
 }
 
 /**
- * A pane with its own size, which starts at the size a person kept for it, read once as it opens, or else at
- * `defaultSize`. The pane that takes the room the others leave is a plain `ResizablePanel`.
+ * A pane with its own size, which starts at the size a person kept for it, read once as it opens, or else at the size
+ * of its `PaneStartContext`. The pane that takes the room the others leave is a plain `ResizablePanel`.
  */
 export function SizedPane({
-  defaultSize,
   id,
   ...props
-}: Omit<ComponentProps<typeof ResizablePanel>, "id"> & { id: string }) {
+}: Omit<ComponentProps<typeof ResizablePanel>, "defaultSize" | "id"> & {
+  id: string;
+}) {
   const group = use(PanesGroupContext);
+  const fallback = use(PaneStartContext);
   const [sizes] = useKeptSizes(group);
   const [start] = useState(() =>
     Option.match(Rec.get(sizes, `${group}-${id}`), {
-      onNone: () => defaultSize,
+      onNone: () => fallback,
       onSome: (kept) => `${kept}%`,
     })
   );
@@ -301,7 +306,7 @@ export function Panes({
   const providedWidth = use(PanesWidthContext);
 
   return (
-    <PanesGroup
+    <PanesGroupProvider
       className={panesVariants({
         fill,
         keeps,
@@ -311,7 +316,7 @@ export function Panes({
       id={id}
     >
       {children}
-    </PanesGroup>
+    </PanesGroupProvider>
   );
 }
 
@@ -329,17 +334,18 @@ export function PanesRail({
 }) {
   return (
     <>
-      <SizedPane
-        className="flex min-w-0 flex-col"
-        defaultSize="20rem"
-        id="rail"
-        maxSize="50%"
-        minSize="18rem"
-      >
-        <aside aria-label={label} className="flex min-h-0 flex-1 flex-col">
-          {children}
-        </aside>
-      </SizedPane>
+      <PaneStartContext value="20rem">
+        <SizedPane
+          className="flex min-w-0 flex-col"
+          id="rail"
+          maxSize="50%"
+          minSize="18rem"
+        >
+          <aside aria-label={label} className="flex min-h-0 flex-1 flex-col">
+            {children}
+          </aside>
+        </SizedPane>
+      </PaneStartContext>
       <ResizableHandle withHandle />
     </>
   );
@@ -403,26 +409,23 @@ export function PanesDetail({
       {beside ? (
         <>
           <ResizableHandle withHandle />
-          <SizedPane
-            defaultSize={defaultSize}
-            id="detail"
-            maxSize="55%"
-            minSize="25%"
-          >
-            <aside
-              aria-label={label}
-              className="bg-background flex h-full flex-col"
-            >
-              <PaneModeContext
-                value={{
-                  close: alwaysOn ? undefined : close,
-                  place: "aside",
-                }}
+          <PaneStartContext value={defaultSize}>
+            <SizedPane id="detail" maxSize="55%" minSize="25%">
+              <aside
+                aria-label={label}
+                className="bg-background flex h-full flex-col"
               >
-                {children}
-              </PaneModeContext>
-            </aside>
-          </SizedPane>
+                <PaneModeContext
+                  value={{
+                    close: alwaysOn ? undefined : close,
+                    place: "aside",
+                  }}
+                >
+                  {children}
+                </PaneModeContext>
+              </aside>
+            </SizedPane>
+          </PaneStartContext>
         </>
       ) : null}
       <Drawer
