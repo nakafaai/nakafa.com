@@ -13,6 +13,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { Button } from "@repo/design-system/components/ui/button";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Sheet,
@@ -138,7 +139,7 @@ function DeliveryList({ webhook }: { webhook: Webhook }) {
   );
 
   if (pagination._tag === "LoadingFirstPage") {
-    return null;
+    return <PopupHold />;
   }
   if (PaginatedQueryResult.isFailure(pagination)) {
     return <LoadFailure onRetry={reloadPage} />;
@@ -191,7 +192,7 @@ export function SchoolDeliverySheet({
           </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {open ? <DeliveryList webhook={webhook} /> : null}
+          <DeliveryList webhook={webhook} />
         </div>
         <SheetFooter>
           <SheetClose

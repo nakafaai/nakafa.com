@@ -86,7 +86,7 @@ function DialogContent({
       >
         <DialogPrimitive.Popup
           className={cn(
-            "data-closed:fade-out-0 data-closed:zoom-out-98 data-open:fade-in-0 data-open:zoom-in-98 bg-popover text-popover-foreground duration-surface motion-safe:data-closed:animate-out motion-safe:data-open:animate-in relative row-start-2 flex max-h-[min(90dvh,900px)] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border text-sm shadow-lg/5 ease-out outline-none",
+            "data-closed:fade-out-0 data-closed:zoom-out-98 data-open:fade-in-0 data-open:zoom-in-98 bg-popover text-popover-foreground duration-surface motion-safe:data-closed:animate-out motion-safe:data-open:animate-in relative row-start-2 flex max-h-[min(90dvh,900px)] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border text-sm shadow-lg/5 ease-out outline-none has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0",
             size === "default" && "sm:max-w-md",
             size === "wide" && "sm:max-w-7xl",
             bottomStickOnMobile &&

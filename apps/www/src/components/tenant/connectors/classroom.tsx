@@ -4,6 +4,7 @@ import { Download04Icon, RefreshIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Button } from "@repo/design-system/components/ui/button";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
@@ -106,7 +107,7 @@ export function ClassroomImport() {
             <SheetDescription>{t("courses-description")}</SheetDescription>
           </SheetHeader>
           {Option.match(shown, {
-            onNone: () => null,
+            onNone: () => (isLoading ? <PopupHold /> : null),
             onSome: (found) => (
               <>
                 {Arr.isReadonlyArrayEmpty(found.classes) &&
