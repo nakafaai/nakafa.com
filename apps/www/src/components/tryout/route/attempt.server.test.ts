@@ -18,7 +18,7 @@ vi.mock("@repo/internationalization/src/translator", () => ({
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutSetPage: mocks.readTryoutSetPage,
 }));
-vi.mock("@/components/tryout/route/catalog.server", () => ({
+vi.mock("@/components/tryout/route/metadata.server", () => ({
   readTryoutRouteHead: mocks.readTryoutRouteHead,
 }));
 

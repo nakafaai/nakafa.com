@@ -2,7 +2,7 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Clock, Effect, Option } from "effect";
 import { readTryoutSetPage } from "@/components/tryout/catalog/source.server";
-import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
+import { readTryoutRouteHead } from "@/components/tryout/route/metadata.server";
 import { createTryoutSetRestartTarget } from "@/components/tryout/route/owner";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { serverHandler } from "@/lib/server/fn";
