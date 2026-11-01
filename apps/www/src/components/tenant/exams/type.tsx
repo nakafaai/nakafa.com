@@ -17,6 +17,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -111,6 +112,7 @@ export function QuestionType({
             }}
             value={template}
           >
+            <DropdownMenuLabel>{t("template-title")}</DropdownMenuLabel>
             {Arr.map(QuestionTemplate.literals, (item) => (
               <DropdownMenuRadioItem key={item} value={item}>
                 <HugeIcons icon={TEMPLATE_ICON[item]} />

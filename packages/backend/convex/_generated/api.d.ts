@@ -221,6 +221,7 @@ export declare const api: {
             } | null;
             resetAt: number;
           };
+          hasPayments: boolean;
           pass: { endsAt: number } | null;
           plan: "free" | "pro";
           subscription: {
@@ -249,6 +250,7 @@ export declare const api: {
         Array<{
           amount: number;
           currency: "EUR" | "IDR" | "USD";
+          id: Id<"billingPayments">;
           kind: "cycle" | "pass" | "invoice" | "credits";
           paidAt: number;
           rail: "polar" | "xendit";
@@ -267,7 +269,37 @@ export declare const api: {
         }>
       >;
     };
+    receipts: {
+      download: FunctionReference<
+        "action",
+        "public",
+        { locale: "en" | "id" | "de"; paymentId: Id<"billingPayments"> },
+        { base64: string; name: string }
+      >;
+      school: FunctionReference<
+        "action",
+        "public",
+        { locale: "en" | "id" | "de"; number: string; slug: string },
+        { base64: string; name: string }
+      >;
+    };
     school: {
+      invoice: FunctionReference<
+        "query",
+        "public",
+        { locale: "en" | "id" | "de"; number: string; slug: string },
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        } | null
+      >;
       overview: FunctionReference<
         "query",
         "public",
@@ -1418,6 +1450,7 @@ export declare const api: {
           email: boolean;
           id: Id<"classroomPosts">;
           mine: boolean;
+          pinned: boolean;
           text: string;
         }
       >;
@@ -1447,11 +1480,39 @@ export declare const api: {
             email: boolean;
             id: Id<"classroomPosts">;
             mine: boolean;
+            pinned: boolean;
             text: string;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      pin: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          pinned: boolean;
+          postId: Id<"classroomPosts">;
+          slug: string;
+        },
+        null
+      >;
+      pinned: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        Array<{
+          author: { id: Id<"tenantPeople">; name: string };
+          clientKey: string;
+          createdAt: number;
+          editedAt: number | null;
+          email: boolean;
+          id: Id<"classroomPosts">;
+          mine: boolean;
+          pinned: boolean;
+          text: string;
+        }>
       >;
       publish: FunctionReference<
         "mutation",
@@ -1471,6 +1532,7 @@ export declare const api: {
           email: boolean;
           id: Id<"classroomPosts">;
           mine: boolean;
+          pinned: boolean;
           text: string;
         }
       >;
@@ -10738,6 +10800,23 @@ export declare const api: {
       >;
     };
     schemes: {
+      amend: FunctionReference<
+        "mutation",
+        "public",
+        {
+          bands: Array<{ label: string; minimum: number }>;
+          kktp: number;
+          schemeId: Id<"gradingSchemes">;
+          slug: string;
+        },
+        {
+          bands: Array<{ label: string; minimum: number }>;
+          effectiveFrom: number;
+          id: Id<"gradingSchemes">;
+          kktp: number;
+          used: boolean;
+        }
+      >;
       list: FunctionReference<
         "query",
         "public",
@@ -10760,10 +10839,17 @@ export declare const api: {
             effectiveFrom: number;
             id: Id<"gradingSchemes">;
             kktp: number;
+            used: boolean;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { schemeId: Id<"gradingSchemes">; slug: string },
+        null
       >;
       store: FunctionReference<
         "mutation",
@@ -10779,6 +10865,7 @@ export declare const api: {
           effectiveFrom: number;
           id: Id<"gradingSchemes">;
           kktp: number;
+          used: boolean;
         }
       >;
     };
@@ -14135,6 +14222,24 @@ export declare const internal: {
         }>
       >;
     };
+    draw: {
+      invoice: FunctionReference<
+        "action",
+        "internal",
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        },
+        string
+      >;
+    };
     events: {
       apply: FunctionReference<
         "mutation",
@@ -14235,6 +14340,28 @@ export declare const internal: {
           } | null
         >;
       };
+    };
+    receipts: {
+      read: FunctionReference<
+        "query",
+        "internal",
+        {
+          locale: "en" | "id" | "de";
+          paymentId: Id<"billingPayments">;
+          userId: Id<"users">;
+        },
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        } | null
+      >;
     };
     topup: {
       refundWithoutPro: FunctionReference<

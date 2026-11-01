@@ -1,4 +1,9 @@
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ItemGroup } from "@repo/design-system/components/ui/item";
@@ -16,8 +21,8 @@ import { isLostAccess } from "@/components/tenant/refusal";
 const POST_PAGE_SIZE = 20;
 
 /**
- * The home of a class: its announcements, newest first (ADR 0025). The next page loads when the
- * end of the list comes into view, so the list has no button. A class with no announcement shows
+ * The home of a class: its pinned announcements on top, then the others, newest first (ADR 0025). The
+ * next page loads when the end of the list comes into view, so the list has no button. A class with no announcement shows
  * its empty state, a failed read its sentence and Try again, and a viewer who lost the school's
  * access is sent to the refused page.
  */
@@ -30,16 +35,27 @@ export function ClassHome() {
     isSettled ? { classId, slug } : "skip",
     { initialNumItems: POST_PAGE_SIZE }
   );
+  const pinned = useQuery(
+    classroom.posts.pinned,
+    isSettled ? { classId, slug } : "skip"
+  );
   if (
     PaginatedQueryResult.isFailure(pagination) &&
     isLostAccess(pagination.error)
   ) {
     throw pagination.error;
   }
-  if (PaginatedQueryResult.isFailure(pagination)) {
+  if (
+    PaginatedQueryResult.isFailure(pagination) ||
+    QueryResult.isFailure(pinned)
+  ) {
     return <DataFailure onRetry={reloadPage} />;
   }
-  if (pagination._tag === "LoadingFirstPage") {
+  // Both reads arrive before the list draws, so a pinned announcement never jumps to the top.
+  if (
+    pagination._tag === "LoadingFirstPage" ||
+    !QueryResult.isSuccess(pinned)
+  ) {
     return null;
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
@@ -55,9 +71,15 @@ export function ClassHome() {
   return (
     <>
       <ItemGroup aria-label={t("posts")}>
-        {Arr.map(pagination.results, (post) => (
+        {Arr.map(pinned.value, (post) => (
           <PostRow key={post.clientKey} post={post} />
         ))}
+        {Arr.map(
+          Arr.filter(pagination.results, (post) => !post.pinned),
+          (post) => (
+            <PostRow key={post.clientKey} post={post} />
+          )
+        )}
       </ItemGroup>
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(POST_PAGE_SIZE)} />

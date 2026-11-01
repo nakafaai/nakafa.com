@@ -12,7 +12,7 @@ export type ClassPost = Ref.Returns<
   typeof classroom.posts.list
 >["page"][number];
 
-const { list } = classroom.posts;
+const { list, pinned } = classroom.posts;
 
 /**
  * Writes what `change` makes of each page of the class's announcements that the store holds. A
@@ -80,3 +80,38 @@ export const removePostUpdate: OptimisticUpdate<
       : Option.none()
   );
 };
+
+/**
+ * Shows an announcement pinned or taken down at once: its flag on every page that holds it, and its place at the top
+ * of the home, where a pinned one comes first.
+ */
+export const pinPostUpdate =
+  (post: ClassPost): OptimisticUpdate<typeof classroom.posts.pin> =>
+  (localStore, args) => {
+    changePages(localStore, args.classId, (page) =>
+      Arr.some(page, (found) => found.id === args.postId)
+        ? Option.some(
+            Arr.map(page, (found) =>
+              found.id === args.postId
+                ? { ...found, pinned: args.pinned }
+                : found
+            )
+          )
+        : Option.none()
+    );
+    for (const query of localStore.getAllQueries(pinned)) {
+      if (Option.isSome(query.value) && query.args.classId === args.classId) {
+        const others = Arr.filter(
+          query.value.value,
+          (found) => found.id !== args.postId
+        );
+        localStore.setQuery(
+          pinned,
+          query.args,
+          Option.some(
+            args.pinned ? [{ ...post, pinned: true }, ...others] : others
+          )
+        );
+      }
+    }
+  };

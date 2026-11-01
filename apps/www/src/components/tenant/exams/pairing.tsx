@@ -11,7 +11,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -114,11 +116,14 @@ export function MatchKey({
                 <SelectValue placeholder={t("pair-choose")} />
               </SelectTrigger>
               <SelectContent>
-                {Arr.map(items, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>{t("answer-placeholder")}</SelectLabel>
+                  {Arr.map(items, (item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </li>
