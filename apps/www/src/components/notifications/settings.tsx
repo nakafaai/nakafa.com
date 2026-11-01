@@ -34,6 +34,7 @@ const SOURCE = "components/notifications/preferences";
 /** The header's button and its dialog: each kind of notice this member gets, with a switch for each channel. */
 export function NoticePreferences() {
   const t = useTranslations("Notifications");
+  const common = useTranslations("Common");
   const [open, setOpen] = useState(false);
 
   return (
@@ -44,6 +45,11 @@ export function NoticePreferences() {
       </Button>
       <ResponsiveDialog
         description={t("preferences-description")}
+        footer={
+          <Button onClick={() => setOpen(false)} type="button">
+            {common("close")}
+          </Button>
+        }
         open={open}
         setOpen={setOpen}
         title={t("preferences")}
