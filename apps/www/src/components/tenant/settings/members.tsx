@@ -41,6 +41,7 @@ import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
+import { TableText } from "@/components/shared/table/text";
 import { TableName } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
@@ -162,6 +163,7 @@ function SchoolMembersBody() {
       id: "name",
     }),
     memberColumns.text((member) => member.email ?? "", {
+      cell: (info) => <TableText>{info.getValue()}</TableText>,
       header: t("member-email"),
       id: "email",
     }),
