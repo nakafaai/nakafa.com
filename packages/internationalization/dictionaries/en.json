@@ -60,6 +60,7 @@
   "SchoolGuardians": {
     "request-ask": "Ask the school",
     "request-description": "The school office answers each request. Write what you need in a few words.",
+    "request-placeholder": "What you need from the school office",
     "request-kind": "Request",
     "request-text": "Your note",
     "request-state": "Status",

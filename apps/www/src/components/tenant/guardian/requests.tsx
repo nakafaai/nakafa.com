@@ -177,6 +177,7 @@ function AskDialog({
             aria-label={t("request-text")}
             maxLength={REQUEST_LIMIT}
             onChange={(event) => setText(event.target.value)}
+            placeholder={t("request-placeholder")}
             rows={4}
             value={text}
           />

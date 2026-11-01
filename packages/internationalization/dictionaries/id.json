@@ -60,6 +60,7 @@
   "SchoolGuardians": {
     "request-ask": "Tanya sekolah",
     "request-description": "Tata usaha menjawab setiap permintaan. Tulis kebutuhan Anda secara singkat.",
+    "request-placeholder": "Yang Anda perlukan dari tata usaha",
     "request-kind": "Permintaan",
     "request-text": "Catatan Anda",
     "request-state": "Status",

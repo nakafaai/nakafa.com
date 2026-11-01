@@ -60,6 +60,7 @@
   "SchoolGuardians": {
     "request-ask": "Die Schule fragen",
     "request-description": "Das Sekretariat beantwortet jede Anfrage. Schreibe kurz, was du brauchst.",
+    "request-placeholder": "Was du vom Sekretariat brauchst",
     "request-kind": "Anfrage",
     "request-text": "Deine Notiz",
     "request-state": "Status",
