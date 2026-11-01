@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/no
 export const publicKey = registeredFunctions.publicKey;
 export const subscribe = registeredFunctions.subscribe;
 export const unsubscribe = registeredFunctions.unsubscribe;
+export const experimental_reuseContext = true;

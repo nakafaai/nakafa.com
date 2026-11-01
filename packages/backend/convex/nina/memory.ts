@@ -15,3 +15,4 @@ export const purge = registeredFunctions.purge;
 export const remove = registeredFunctions.remove;
 export const restore = registeredFunctions.restore;
 export const state = registeredFunctions.state;
+export const experimental_reuseContext = true;

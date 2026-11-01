@@ -7,3 +7,4 @@ export const continueAccountDeletionCommit = registeredFunctions.continueAccount
 export const getAccountDeletionAttemptStatus = registeredFunctions.getAccountDeletionAttemptStatus;
 export const prepareCurrentAccountDeletion = registeredFunctions.prepareCurrentAccountDeletion;
 export const sweepAccountDeletionRetention = registeredFunctions.sweepAccountDeletionRetention;
+export const experimental_reuseContext = true;

@@ -6,3 +6,4 @@ export const listUnprocessed = registeredFunctions.listUnprocessed;
 export const process = registeredFunctions.process;
 export const record = registeredFunctions.record;
 export const sweep = registeredFunctions.sweep;
+export const experimental_reuseContext = true;

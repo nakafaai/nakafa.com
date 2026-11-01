@@ -5,3 +5,4 @@ export const issue = registeredFunctions.issue;
 export const print = registeredFunctions.print;
 export const redeem = registeredFunctions.redeem;
 export const reissue = registeredFunctions.reissue;
+export const experimental_reuseContext = true;

@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/op
 
 export const sweep = registeredFunctions.sweep;
 export const visit = registeredFunctions.visit;
+export const experimental_reuseContext = true;

@@ -4,3 +4,4 @@ export const cleanupDeletedUserBilling = registeredFunctions.cleanupDeletedUserB
 export const deleteRows = registeredFunctions.deleteRows;
 export const readAccounts = registeredFunctions.readAccounts;
 export const readSubscriptions = registeredFunctions.readSubscriptions;
+export const experimental_reuseContext = true;

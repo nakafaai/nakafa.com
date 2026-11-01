@@ -11,7 +11,7 @@
   "scripts": {
     "acceptance": "node scripts/content/acceptance/main.ts",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "codegen": "confect codegen && node scripts/refs/main.ts",
+    "codegen": "confect codegen && node scripts/refs/main.ts && node scripts/reuse/main.ts",
     "confect:dev": "confect dev",
     "deploy": "bun run codegen && convex deploy",
     "dev": "convex dev --tail-logs",

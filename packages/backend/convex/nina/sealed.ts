@@ -6,3 +6,4 @@ export const message = registeredFunctions.message;
 export const recordFailure = registeredFunctions.recordFailure;
 export const seal = registeredFunctions.seal;
 export const thread = registeredFunctions.thread;
+export const experimental_reuseContext = true;

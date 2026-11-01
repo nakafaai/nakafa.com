@@ -6,3 +6,4 @@ export const offered = registeredFunctions.offered;
 export const startPersonal = registeredFunctions.startPersonal;
 export const startSchool = registeredFunctions.startSchool;
 export const store = registeredFunctions.store;
+export const experimental_reuseContext = true;
