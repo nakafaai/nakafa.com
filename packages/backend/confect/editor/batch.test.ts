@@ -351,7 +351,7 @@ describe("editor/batch node and mark types", () => {
   );
 
   it.effect(
-    "reads a batch whose step holds a paragraph or a table, and refuses one that holds a figure the editor does not read",
+    "reads a batch whose step holds a paragraph or a table, and refuses one that holds a node the editor does not read",
     () =>
       Effect.gen(function* () {
         const nodeBatch = (type: string) =>
@@ -372,7 +372,7 @@ describe("editor/batch node and mark types", () => {
           });
         yield* decodeBatch(nodeBatch("paragraph"));
         yield* decodeBatch(nodeBatch("table"));
-        const refused = yield* decodeBatch(nodeBatch("figure")).pipe(
+        const refused = yield* decodeBatch(nodeBatch("iframe")).pipe(
           Effect.flip
         );
         expect(refused._tag).toBe("SchemaError");

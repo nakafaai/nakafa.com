@@ -27,6 +27,9 @@ import { Schema } from "effect";
 /** The class and school that every public function of the library names. */
 const classArgs = { classId: Id("classes"), slug: TenantSlug };
 
+/** The folder an item sits in, or none for the top of the library. */
+const folderArg = { folderId: Schema.NullOr(Id("classroomFolders")) };
+
 /**
  * The library of a class (ADR 0025): links and files that its subject teachers
  * add, which whoever reads the forum reads, newest first. A file goes to the
@@ -35,13 +38,14 @@ const classArgs = { classId: Id("classes"), slug: TenantSlug };
  * address of a file is read after the access check of each read (ADR 0028). A
  * teacher may also import a file picked in Google Drive, which the server reads
  * with the teacher's own Drive connection and checks the same way. A teacher
- * retitles any item and readdresses a link. `commit` is internal: only the registration calls it.
+ * retitles any item, moves it to a folder, and readdresses a link. `list` reads one
+ * folder, or the items in none. `commit` is internal: only the registration calls it.
  */
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "list",
-      args: () => classArgs,
+      args: () => ({ ...classArgs, ...folderArg }),
       item: () => LibraryView,
       error: () => AccessDenied,
     })
@@ -54,6 +58,7 @@ export default GroupSpec.make()
       name: "addLink",
       args: () => ({
         ...classArgs,
+        ...folderArg,
         address: LinkAddress,
         clientKey: ClientKey,
         title: LibraryTitle,
@@ -92,6 +97,7 @@ export default GroupSpec.make()
       name: "register",
       args: () => ({
         ...classArgs,
+        ...folderArg,
         clientKey: ClientKey,
         storageId: Id("_storage"),
         title: LibraryTitle,
@@ -111,6 +117,7 @@ export default GroupSpec.make()
       name: "importDrive",
       args: () => ({
         ...classArgs,
+        ...folderArg,
         clientKey: ClientKey,
         fileId: DriveFileId,
         title: LibraryTitle,
@@ -132,6 +139,7 @@ export default GroupSpec.make()
       name: "edit",
       args: () => ({
         ...classArgs,
+        ...folderArg,
         address: Schema.NullOr(LinkAddress),
         itemId: Id("classroomLibrary"),
         title: LibraryTitle,
@@ -158,6 +166,7 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "commit",
       args: () => ({
+        ...folderArg,
         authorId: Id("tenantPeople"),
         byteSize: Schema.Int.check(Schema.isGreaterThan(0)),
         classId: Id("classes"),

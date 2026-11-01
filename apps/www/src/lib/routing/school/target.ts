@@ -160,6 +160,19 @@ export function schoolClassLibraryTarget(
   } satisfies LinkTarget;
 }
 
+/** One folder of a class's library. */
+export function schoolClassFolderTarget(
+  slug: TenantSlug,
+  classSlug: string,
+  folder: string
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, folder, slug },
+    to: "/school/$slug/classes/$classSlug/library/$folder",
+  } satisfies LinkTarget;
+}
+
 /** The tasks of one class of a school, by deadline. */
 export function schoolClassTasksTarget(
   slug: TenantSlug,
