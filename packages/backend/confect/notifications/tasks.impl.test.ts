@@ -49,6 +49,7 @@ const published = Effect.fn("test.notifications.tasks")(function* (
     latePolicy: "accept",
     points: 100,
     slug: nf,
+    targets: null,
     text: "Kerjakan soal 1 sampai 10.",
     title: "Latihan Gerak Lurus",
   });
@@ -137,6 +138,7 @@ describe("notifications/tasks schedule", () => {
           latePolicy: "accept",
           points: 100,
           slug: nf,
+          targets: null,
           task: before.slug,
           text: "Kerjakan soal 1 sampai 10.",
           title: "Latihan Gerak Lurus",
@@ -153,6 +155,7 @@ describe("notifications/tasks schedule", () => {
           latePolicy: "close",
           points: 100,
           slug: nf,
+          targets: null,
           task: before.slug,
           text: "Kerjakan soal 1 sampai 10.",
           title: "Latihan Gerak Lurus",
