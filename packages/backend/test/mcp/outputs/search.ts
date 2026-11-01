@@ -17,7 +17,7 @@ export const SEARCH_CONTENT_OUTPUT = {
       description: "",
       title: "Article 0",
       excerpt:
-        "Article 0 Article 0 articles/politics/article-0 rational function grade eleven asymptote",
+        "Article 0 articles/politics/article-0 rational function grade eleven asymptote",
     },
   ],
   limit: 10,

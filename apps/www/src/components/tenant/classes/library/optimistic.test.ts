@@ -13,6 +13,7 @@ import {
 const slug = Schema.decodeSync(TenantSlug)("sekolah");
 const classOf = Schema.decodeUnknownSync(Id("classes"));
 const itemOf = Schema.decodeUnknownSync(Id("classroomLibrary"));
+const folderOf = Schema.decodeUnknownSync(Id("classroomFolders"));
 const classId = classOf("class-1");
 const otherClass = classOf("class-2");
 
@@ -23,14 +24,20 @@ const link = (id: string, title: string): LibraryItem => ({
   byteSize: null,
   clientKey: `key-${id}-0000`,
   createdAt: 1,
+  folderId: null,
   id: itemOf(id),
   kind: "link",
   title,
 });
 
 /** The arguments of one page of a class's library. */
-const listArgs = (forClass: typeof classId, cursor: string | null) => ({
+const listArgs = (
+  forClass: typeof classId,
+  cursor: string | null,
+  folderId: LibraryItem["folderId"] = null
+) => ({
   classId: forClass,
+  folderId,
   paginationOpts: { cursor, numItems: 20 },
   slug,
 });
@@ -72,6 +79,7 @@ describe("class library optimistic updates", () => {
       address: sent.address ?? "",
       classId,
       clientKey: sent.clientKey,
+      folderId: null,
       slug,
       title: sent.title,
     });
@@ -101,6 +109,7 @@ describe("class library optimistic updates", () => {
     editItemUpdate(localStore, {
       address: "https://example.com/baru",
       classId,
+      folderId: null,
       itemId: first.id,
       slug,
       title: "Video baru",
@@ -108,6 +117,7 @@ describe("class library optimistic updates", () => {
     editItemUpdate(localStore, {
       address: null,
       classId,
+      folderId: null,
       itemId: second.id,
       slug,
       title: "Materi baru",
@@ -144,6 +154,54 @@ describe("class library optimistic updates", () => {
           isDone: true,
           page: [{ ...second, title: "Materi baru" }],
         }),
+      ],
+    ]);
+  });
+
+  it("takes an item moved to a folder out of the pages of the place it left, and shows a link in its own folder", () => {
+    const folderId = folderOf("folder-1");
+    const held = link("held", "Di folder");
+    const { localStore, setQuery } = storeOf([
+      {
+        args: listArgs(classId, null),
+        value: Option.some({ isDone: true, page: [first] }),
+      },
+      {
+        args: listArgs(classId, null, folderId),
+        value: Option.some({ isDone: true, page: [held] }),
+      },
+    ]);
+    editItemUpdate(localStore, {
+      address: null,
+      classId,
+      folderId,
+      itemId: first.id,
+      slug,
+      title: first.title,
+    });
+    addLinkUpdate({ ...first, folderId })(localStore, {
+      address: first.address ?? "",
+      classId,
+      clientKey: first.clientKey,
+      folderId,
+      slug,
+      title: first.title,
+    });
+    expect(setQuery.mock.calls).toEqual([
+      [
+        classroom.library.list,
+        listArgs(classId, null),
+        Option.some({ isDone: true, page: [] }),
+      ],
+      [
+        classroom.library.list,
+        listArgs(classId, null, folderId),
+        Option.some({ isDone: true, page: [held] }),
+      ],
+      [
+        classroom.library.list,
+        listArgs(classId, null, folderId),
+        Option.some({ isDone: true, page: [{ ...first, folderId }, held] }),
       ],
     ]);
   });

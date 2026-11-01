@@ -47,6 +47,7 @@ export const addLibraryLink = Effect.fn("classroom.library.addLink")(function* <
         byteSize: null,
         clientKey: args.clientKey,
         createdAt,
+        folderId: args.folderId,
         id,
         kind: "link",
         title: args.title,

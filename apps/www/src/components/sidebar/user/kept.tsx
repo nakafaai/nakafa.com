@@ -78,26 +78,30 @@ export function KeptAccount() {
 function KeptAccountRow() {
   const t = useTranslations("Auth");
   return (
-    <div className="contents" data-kept-account inert>
-      <div className="contents" data-kept-plan-part="free">
-        <PricingItem />
-        <SidebarMenuSeparator />
-      </div>
-      <SidebarMenuItem>
-        <SidebarMenuButton size="lg">
-          <AccountButtonFace
-            avatar={<KeptAvatar />}
-            description={
-              <>
-                <span data-kept-plan-part="free">{t("plan-free")}</span>
-                <span data-kept-plan-part="pro">{t("plan-pro")}</span>
-              </>
-            }
-            name={<span className="before:content-(--kept-account-name)" />}
-          />
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </div>
+    <li className="contents" data-kept-account inert>
+      <ul className="contents">
+        <li className="contents" data-kept-plan-part="free">
+          <ul className="contents">
+            <PricingItem />
+            <SidebarMenuSeparator />
+          </ul>
+        </li>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg">
+            <AccountButtonFace
+              avatar={<KeptAvatar />}
+              description={
+                <>
+                  <span data-kept-plan-part="free">{t("plan-free")}</span>
+                  <span data-kept-plan-part="pro">{t("plan-pro")}</span>
+                </>
+              }
+              name={<span className="before:content-(--kept-account-name)" />}
+            />
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </ul>
+    </li>
   );
 }
 
