@@ -82,14 +82,12 @@ describe("try-out Markdown", () => {
     Effect.gen(function* () {
       catalog.country
         .mockReturnValueOnce(
-          Effect.succeed(
-            Option.some({
-              country: COUNTRY,
-              exams: [{ ...EXAM, description: "The entrance test." }],
-            })
-          )
+          Effect.succeedSome({
+            country: COUNTRY,
+            exams: [{ ...EXAM, description: "The entrance test." }],
+          })
         )
-        .mockReturnValueOnce(Effect.succeed(Option.none()));
+        .mockReturnValueOnce(Effect.succeedNone);
 
       expect(yield* text("try-out/indonesia")).toContain(
         `- [SNBT](${BASE_URL}/en/try-out/indonesia/snbt): The entrance test.`
