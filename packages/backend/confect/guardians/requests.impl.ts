@@ -73,7 +73,6 @@ const ofLink = FunctionImpl.make(
         };
       }).pipe(Effect.orDie)
     );
-    return Struct.assign(rows, { page });
   })
 );
 
