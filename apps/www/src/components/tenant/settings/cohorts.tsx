@@ -8,7 +8,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option, Order, Schema } from "effect";
 import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -30,7 +30,6 @@ import { isDenied } from "@/components/tenant/refusal";
 import {
   chosenGrade,
   GRADE_ICONS,
-  gradeItems,
 } from "@/components/tenant/settings/choices";
 import {
   CohortGradeField,
@@ -409,7 +408,13 @@ function SchoolCohortTable({
       header: t("cohort-grade"),
       id: "grade",
       options: namedOptions(
-        Arr.map(gradeItems, ({ value }) => value),
+        Arr.map(
+          Arr.sort(
+            Arr.dedupe(Arr.map(cohorts.value, (cohort) => cohort.grade)),
+            Order.Number
+          ),
+          String
+        ),
         GRADE_ICONS
       ),
     }),

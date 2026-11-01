@@ -9,6 +9,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
   TableBody,
@@ -17,7 +18,7 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { type Header, type RowData, useTable } from "@tanstack/react-table";
 import { Array as Arr, Match, Option } from "effect";
-import { type ComponentProps, type ReactNode, use } from "react";
+import { type ComponentProps, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { PaneTableRow, pressesRow } from "@/components/shared/pane";
 import { useHasPanes } from "@/components/shared/panes";
@@ -76,6 +77,7 @@ export function DataTable<TData extends RowData>({
   data,
   empty,
   loading = false,
+  pageSize,
   plain = false,
   rowId,
   search,
@@ -88,6 +90,8 @@ export function DataTable<TData extends RowData>({
   empty?: ReactNode;
   /** Whether more rows may still arrive, so a table with no row waits for them before it says it found none. */
   loading?: boolean;
+  /** How many rows to draw at a time for a list held whole in memory, more as the end comes near. */
+  pageSize?: number;
   /** Whether a row stays a plain row on a page with panes, as a table inside an open pane's rows do. */
   plain?: boolean;
   rowId: (row: TData) => string;
@@ -106,6 +110,8 @@ export function DataTable<TData extends RowData>({
     state: { columnFilters: columnFiltersOf(chosen, search, text) },
   });
   const rows = table.getRowModel().rows;
+  const [drawn, setDrawn] = useState(pageSize ?? rows.length);
+  const shown = pageSize === undefined ? rows : Arr.take(rows, drawn);
   const waiting = use(TableWaitingContext) || loading;
   const isBare = Arr.isReadonlyArrayEmpty(data);
   const showsEmpty = isBare && !waiting && empty !== undefined;
@@ -130,7 +136,7 @@ export function DataTable<TData extends RowData>({
         </ColumnHeads>
         <TableBody>
           {Arr.isReadonlyArrayNonEmpty(rows) || waiting || showsEmpty ? (
-            Arr.map(rows, (row) => (
+            Arr.map(shown, (row) => (
               <DataTableRow key={row.id} opens={hasPanes && !plain} row={row}>
                 {Arr.map(row.getAllCells(), (cell, index) => (
                   <TableCell
@@ -162,6 +168,12 @@ export function DataTable<TData extends RowData>({
         {children}
       </Table>
       {showsEmpty ? empty : null}
+      {pageSize !== undefined && drawn < rows.length ? (
+        <Intersection
+          key={drawn}
+          onIntersect={() => setDrawn(drawn + pageSize)}
+        />
+      ) : null}
     </>
   );
 }
