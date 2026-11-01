@@ -20,7 +20,8 @@ class McpRequestBodyError extends Schema.TaggedError<McpRequestBodyError>()(
  * succeeded.
  */
 export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
-  request: Request
+  request: Request,
+  limit = MAX_MCP_REQUEST_BYTES
 ) {
   if (request.method.toUpperCase() !== "POST") {
     return {
@@ -29,7 +30,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
   }
   const declaredLength = yield* parseContentLength(
     request.headers.get("content-length"),
-    MAX_MCP_REQUEST_BYTES
+    limit
   ).pipe(
     Effect.mapError((error) =>
       bodyError(error.reason === "limit" ? "size" : "invalid")
@@ -43,10 +44,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
       request,
     };
   }
-  const bytes = yield* readBoundedBody(
-    request.body,
-    MAX_MCP_REQUEST_BYTES
-  ).pipe(
+  const bytes = yield* readBoundedBody(request.body, limit).pipe(
     Effect.mapError((error) =>
       bodyError(error._tag === "BodyLimitError" ? "size" : "invalid")
     )

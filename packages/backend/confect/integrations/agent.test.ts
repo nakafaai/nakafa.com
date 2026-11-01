@@ -145,6 +145,24 @@ describe("the agent tools of a signed-in person", () => {
       })
   );
 
+  it.effect("takes a whole file in one call, past a client's limit", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      fetcher.mockResolvedValueOnce(
+        Response.json({ status: "success", value: "ninaUploads:1" })
+      );
+      const bytes = { $bytes: "a".repeat(100_000) };
+      const answer = yield* call(fixture, "nakafa_call_function", {
+        args: { bytes },
+        name: "nina/uploads:save",
+      });
+      expect(answer.result.structuredContent).toEqual({
+        value: "ninaUploads:1",
+      });
+      expect(String(fetcher.mock.calls[0]?.[1]?.body)).toContain(bytes.$bytes);
+    })
+  );
+
   it.effect("reports a function's refusal and a call with no answer", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
