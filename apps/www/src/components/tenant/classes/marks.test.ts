@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Animal } from "@repo/mascot/animal";
 import { Array as Arr } from "effect";
-import { withMarks } from "@/components/tenant/classes/marks";
+import { markOf, withMarks } from "@/components/tenant/classes/marks";
 
 /** Classes with these ids, in this order. */
 const classesOf = (ids: readonly string[]) =>
@@ -43,5 +43,12 @@ describe("withMarks", () => {
       Animal.literals.length
     );
     expect(animals).toHaveLength(Animal.literals.length + 1);
+  });
+});
+
+describe("markOf", () => {
+  it("marks a class by its id alone, so a list that grows moves no mark", () => {
+    expect(markOf("class-a")).toEqual(markOf("class-a"));
+    expect(Arr.contains(Animal.literals, markOf("class-a").animal)).toBe(true);
   });
 });

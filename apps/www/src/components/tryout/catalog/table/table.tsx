@@ -89,6 +89,7 @@ export function TryoutSetTable({ bootstrap, title }: TryoutSetTableProps) {
           fallback={
             <TryoutSetVisitorCatalog bootstrap={bootstrap} request={request} />
           }
+          keepsPress
         >
           <TryoutSetSignedCatalog bootstrap={bootstrap} request={request} />
         </ConvexIsland>

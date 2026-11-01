@@ -23,9 +23,10 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
-import { startTransition, useState } from "react";
+import { startTransition } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useDialogs } from "@/components/shared/dialogs";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
@@ -251,8 +252,7 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
   const remove = useMutation(records.schemes.remove).withOptimisticUpdate(
     removeSchemeChange
   );
-  const [editing, setEditing] = useState(0);
-  const [isRemoving, setIsRemoving] = useState(false);
+  const dialogs = useDialogs<"edit" | "remove">();
 
   if (version.used || !Arr.contains(reach, "scheme.manage")) {
     return null;
@@ -272,12 +272,12 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
           }
         />
         <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem onClick={() => setEditing((count) => count + 1)}>
+          <DropdownMenuItem onClick={() => dialogs.show("edit")}>
             <HugeIcons icon={PencilEdit02Icon} />
             {t("grading-edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => setIsRemoving(true)}
+            onClick={() => dialogs.show("remove")}
             variant="destructive"
           >
             <HugeIcons icon={Delete02Icon} />
@@ -285,19 +285,19 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      {editing === 0 ? null : (
-        <SchemeVersionDialog editing={Option.some(version)} key={editing} />
-      )}
+      {dialogs.kind === "edit" ? (
+        <SchemeVersionDialog editing={Option.some(version)} key={dialogs.key} />
+      ) : null}
       <ResponsiveDialog
         description={t("grading-remove-description")}
         footer={
           <>
-            <Button onClick={() => setIsRemoving(false)} variant="outline">
+            <Button onClick={dialogs.close} variant="outline">
               {common("cancel")}
             </Button>
             <Button
               onClick={() => {
-                setIsRemoving(false);
+                dialogs.close();
                 startTransition(() =>
                   saveSchool(
                     () => remove({ schemeId: version.id, slug }),
@@ -311,8 +311,8 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
             </Button>
           </>
         }
-        open={isRemoving}
-        setOpen={setIsRemoving}
+        open={dialogs.isOpen("remove")}
+        setOpen={dialogs.setOpen}
         title={t("grading-remove-title")}
       />
     </>

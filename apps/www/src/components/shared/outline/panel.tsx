@@ -1,4 +1,3 @@
-import { Menu02Icon } from "@hugeicons/core-free-icons";
 import {
   SidebarContent,
   SidebarFooter,
@@ -11,10 +10,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
-import {
-  Sidebar,
-  SidebarTrigger,
-} from "@repo/design-system/components/ui/sidebar-shell";
+import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { SidebarToggle } from "@/components/sidebar/toggle";
@@ -73,26 +69,6 @@ export function SidebarRightFooter({ children }: { children: ReactNode }) {
     <SidebarFooter className="border-t">
       <SidebarMenu>{children}</SidebarMenu>
     </SidebarFooter>
-  );
-}
-
-/** The outline panel with its own provider and floating trigger. */
-export function SidebarRight(props: SidebarRightProps) {
-  const tCommon = useTranslations("Common");
-
-  return (
-    <div className="shrink-0">
-      <SidebarRightProvider>
-        <SidebarTrigger
-          className="bg-background/80 fixed top-20 right-6 z-20 size-9 backdrop-blur-xs xl:hidden"
-          icon={Menu02Icon}
-          label={tCommon("on-this-page")}
-          size="icon"
-          variant="outline"
-        />
-        <SidebarRightPanel {...props} />
-      </SidebarRightProvider>
-    </div>
   );
 }
 
