@@ -46,7 +46,12 @@ describe("classroom/folders", () => {
       Effect.gen(function* () {
         const { classId, fixture } = yield* libraryClass();
         const teacher = fixture.as("teacher");
-        const args = { classId, clientKey: "folder-1", name: "Bab 1", slug: nf };
+        const args = {
+          classId,
+          clientKey: "folder-1",
+          name: "Bab 1",
+          slug: nf,
+        };
         const added = yield* teacher.mutation(folders.add, args);
         expect(added).toMatchObject({
           author: "Teacher",
