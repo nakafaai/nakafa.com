@@ -7,6 +7,7 @@ import {
   readCohortId,
   readDiscussionNumber,
   readExamId,
+  readFolderAddress,
   readSittingId,
 } from "@/lib/tenant/params";
 
@@ -15,6 +16,7 @@ describe("school path parameters", () => {
     expect(readExamId("exam-1")).toEqual(Option.some("exam-1"));
     expect(readSittingId("sitting-1")).toEqual(Option.some("sitting-1"));
     expect(readCohortId("cohort-1")).toEqual(Option.some("cohort-1"));
+    expect(readFolderAddress("folder-1")).toEqual(Option.some("folder-1"));
   });
 
   it("names no class for an address that is not a class address", () => {

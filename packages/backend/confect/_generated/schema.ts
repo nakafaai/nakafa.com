@@ -25,6 +25,7 @@ import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
 import classroomFileUse from "./tables/classroomFileUse";
+import classroomFolders from "./tables/classroomFolders";
 import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
 import classroomPostVotes from "./tables/classroomPostVotes";
@@ -178,6 +179,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly classes: typeof classes;
   readonly classroomChannels: typeof classroomChannels;
   readonly classroomFileUse: typeof classroomFileUse;
+  readonly classroomFolders: typeof classroomFolders;
   readonly classroomLibrary: typeof classroomLibrary;
   readonly classroomMessages: typeof classroomMessages;
   readonly classroomPostVotes: typeof classroomPostVotes;
@@ -330,6 +332,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   classes,
   classroomChannels,
   classroomFileUse,
+  classroomFolders,
   classroomLibrary,
   classroomMessages,
   classroomPostVotes,

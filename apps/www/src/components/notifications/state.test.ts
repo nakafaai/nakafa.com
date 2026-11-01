@@ -66,11 +66,27 @@ describe("inbox list state", () => {
 
   it("marks only the rows of the school a slug names", () => {
     const page = [row("first")];
-    expect(markPageRead(page, 9, page[0]?.tenant.slug)).toEqual([
-      row("first", 9),
-    ]);
+    expect(
+      markPageRead(page, 9, Schema.decodeSync(TenantSlug)("harapan"))
+    ).toEqual([row("first", 9)]);
     expect(
       markPageRead(page, 9, Schema.decodeSync(TenantSlug)("lain"))
     ).toEqual(page);
+  });
+
+  it("leaves a row of the account itself out of a school's read, and marks it in the Nakafa inbox", () => {
+    const reply = Schema.decodeUnknownSync(NotificationView)({
+      actor: null,
+      changeType: "comment.replied",
+      commentId: "comment-1",
+      createdAt: 1,
+      id: "reply",
+    });
+    expect(
+      markPageRead([reply], 9, Schema.decodeSync(TenantSlug)("harapan"))
+    ).toEqual([reply]);
+    expect(markPageRead([reply], 9, undefined)).toEqual([
+      { ...reply, readAt: 9 },
+    ]);
   });
 });

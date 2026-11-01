@@ -1370,6 +1370,9 @@
     "task-reach-class": "Die ganze Klasse",
     "task-reach-some": "Einige Lernende",
     "task-reach-count": "{count, plural, one {# Person} other {# Personen}}",
+    "task-category": "Kategorie",
+    "task-category-placeholder": "Hausaufgabe",
+    "task-category-description": "Optional, sie ordnet die Aufgaben der Klasse.",
     "task-late": "Späte Abgabe",
     "task-late-accept": "Als verspätet markiert",
     "task-late-close": "Nicht angenommen",
@@ -1443,7 +1446,21 @@
     "discussion-rename": "Diskussion umbenennen",
     "discussion-rename-description": "Alle in der Klasse sehen den neuen Titel.",
     "library-edit": "Bearbeiten",
-    "library-edit-description": "Die Klasse sieht die Änderung sofort."
+    "library-edit-description": "Die Klasse sieht die Änderung sofort.",
+    "library-no-folder": "Kein Ordner",
+    "library-folder": "Ordner",
+    "library-new-folder": "Neuer Ordner",
+    "library-new-folder-description": "Halte die Dateien der Klasse zusammen, etwa nach Kapiteln.",
+    "library-folder-name": "Name",
+    "library-folder-placeholder": "Kapitel 1",
+    "library-folder-create": "Erstellen",
+    "library-folder-rename": "Umbenennen",
+    "library-folder-rename-description": "Die Klasse sieht den neuen Namen sofort.",
+    "library-folder-remove": "Löschen",
+    "library-folder-remove-title": "Diesen Ordner löschen",
+    "library-folder-remove-description": "Seine Dateien bleiben in der Bibliothek.",
+    "library-folder-empty-description": "Die Dateien und Links dieses Ordners erscheinen hier, die neuesten zuerst.",
+    "library-kind-folder": "Ordner"
   },
   "SchoolGrades": {
     "student": "Schüler",
@@ -1993,6 +2010,8 @@
     "person-invited": "Du wurdest eingeladen, dieser Schule beizutreten.",
     "forum-mentioned": "{actor} hat dich in {className} erwähnt.",
     "forum-mentioned-gone": "Du wurdest in einer Klasse erwähnt, die du nicht mehr liest.",
+    "comment-replied": "Hat auf deinen Kommentar geantwortet.",
+    "comment-replied-gone": "Diese Antwort wurde gelöscht.",
     "announcement-posted": "{actor} hat in {className} eine Ankündigung gepostet.",
     "announcement-posted-gone": "Eine Ankündigung, die es nicht mehr gibt.",
     "push-offer": "Erhalte auf diesem Gerät eine Benachrichtigung, wenn es etwas Neues gibt.",
@@ -2061,7 +2080,7 @@
   "Holy": {
     "holy": "Heilige Schriften",
     "quran": "Koran",
-    "quran-description": "Lies den Koran mit einer Übersetzung Vers für Vers.",
+    "quran-description": "Lies alle 114 Suren des Korans auf Arabisch mit einer Übersetzung Vers für Vers, kostenlos auf Nakafa.",
     "verse": "Vers",
     "verse-count": "Vers {count}",
     "interpretation": "Tafsir",
@@ -2229,7 +2248,7 @@
   },
   "Contributor": {
     "title": "Mitwirkende",
-    "description": "Lerne die Menschen kennen, die Nakafa möglich machen."
+    "description": "Lerne die Menschen kennen, die Nakafa schreiben, prüfen und bauen, den kostenlosen Lernort von der Grundschule bis zur Universität."
   },
   "ComingSoon": {
     "title": "Demnächst verfügbar",

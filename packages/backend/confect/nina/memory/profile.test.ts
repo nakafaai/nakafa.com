@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -18,8 +18,11 @@ async function finishAttempt(
   ctx: MutationCtx,
   attemptId: Id<"tryoutAttempts">
 ) {
+  const attempt = await ctx.db.get("tryoutAttempts", attemptId);
+  assert.ok(attempt, "Expected the started attempt.");
+  const completedAt = attempt.startedAt + 1;
   await ctx.db.patch("tryoutAttempts", attemptId, {
-    completedAt: TRYOUT_NOW + 1,
+    completedAt,
     endReason: "submitted",
     status: "completed",
   });
@@ -30,7 +33,7 @@ async function finishAttempt(
     )
     .collect()) {
     await ctx.db.patch("tryoutSectionAttempts", section._id, {
-      completedAt: TRYOUT_NOW + 1,
+      completedAt,
       endReason: "submitted",
       status: "completed",
     });

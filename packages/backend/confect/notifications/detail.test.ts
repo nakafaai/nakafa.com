@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { partsOf } from "@repo/backend/confect/notifications/detail";
+import { isSchoolRow } from "@repo/backend/confect/notifications/schema";
 import {
   forumClass,
   keyedFixture,
@@ -45,6 +46,7 @@ describe("notifications/detail", () => {
           classId: forum.classId,
           clientKey: "detail-task",
           deadline: TENANCY_NOW + 86_400_000,
+          category: null,
           latePolicy: "accept",
           points: 10,
           slug: nf,
@@ -78,7 +80,7 @@ describe("notifications/detail", () => {
             const ofType = (changeType: string) =>
               Arr.getUnsafe(
                 Arr.filter(
-                  rows,
+                  Arr.filter(rows, isSchoolRow),
                   (row) =>
                     row.changeType === changeType &&
                     row.recipientPersonId === student._id

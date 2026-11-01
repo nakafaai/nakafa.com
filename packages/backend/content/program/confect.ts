@@ -122,6 +122,20 @@ export const programLayer = Layer.merge(
             return yield* query.take(limit).pipe(Effect.orDie);
           }
         ),
+        mappings: Effect.fn("program.database.mappings")(
+          function* (snapshotId, appLocale, materialKey, limit) {
+            return yield* database
+              .table("curriculumRoutes")
+              .index("by_snapshotId_and_appLocale_and_materialKey", (index) =>
+                index
+                  .eq("snapshotId", snapshotId)
+                  .eq("appLocale", appLocale)
+                  .eq("materialKey", materialKey)
+              )
+              .take(limit)
+              .pipe(Effect.orDie);
+          }
+        ),
         page: Effect.fn("program.database.page")(
           function* (snapshotId, appLocale, options) {
             if (options.cursor !== null && !isProgramPosition(options.cursor)) {

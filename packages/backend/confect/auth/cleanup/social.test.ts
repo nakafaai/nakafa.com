@@ -379,3 +379,40 @@ it("deletes the likes a learner's post collected a batch at a time, and deletes 
   expect(await t.query((ctx) => ctx.db.get("posts", postId))).toBeNull();
   await t.finishAllScheduledFunctions(vi.runAllTimers);
 });
+
+it("deletes the inbox rows of a deleted account, and keeps another account's", async () => {
+  const owners = await createDeletedOwner("replies");
+  const { t, now, owner, retained } = owners;
+  const row = await t.mutation(async (ctx) => {
+    const insert = (recipientUserId: typeof owner) =>
+      ctx.db
+        .insert("comments", {
+          likeCount: 0,
+          replyCount: 0,
+          slug: "articles/example",
+          text: "A reply",
+          userId: retained,
+        })
+        .then((commentId) =>
+          ctx.db.insert("notifications", {
+            changeType: "comment.replied",
+            commentId,
+            createdAt: now,
+            recipientUserId,
+          })
+        );
+    await insert(owner);
+    return insert(retained);
+  });
+
+  while (
+    await t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
+      userId: owner,
+    })
+  ) {
+    // Each pass removes one bounded batch.
+  }
+
+  const rows = await t.run((ctx) => ctx.db.query("notifications").collect());
+  expect(Arr.map(rows, ({ _id }) => _id)).toEqual([row]);
+});

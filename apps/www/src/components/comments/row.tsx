@@ -83,15 +83,18 @@ type RowAuthor = Pick<CommentAuthor, "image" | "mascot" | "name" | "picture">;
  * the name and the age with the More menu at the end of that line, the text, then the
  * actions. The reply action and the line above the text belong to the place the row
  * sits in: a thread replies in place, and the profile opens the comment on its page.
+ * A row that repeats a comment above the list leaves the anchor to the list's own row.
  */
 export function CommentRow({
   author,
   comment,
+  repeats = false,
   replyAction,
   replyTo,
 }: {
   author: RowAuthor | null | undefined;
   comment: RowComment;
+  repeats?: boolean;
   replyAction: ReactNode;
   replyTo?: ReactNode;
 }) {
@@ -102,7 +105,7 @@ export function CommentRow({
     HashSet.has(draft.saving, comment._id)
   );
   return (
-    <div id={comment._id}>
+    <div id={repeats ? undefined : comment._id}>
       <FeedRow>
         <FeedAvatar mascot={author?.mascot} photo={photoOf(author ?? {})} />
         <FeedBody>
