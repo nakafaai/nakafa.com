@@ -3,6 +3,8 @@ import "@tanstack/react-start/server-only";
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 import { renderServerComponent } from "@tanstack/react-start/rsc";
 import { Effect, Schema } from "effect";
+import { createElement } from "react";
+import { ContentBlocks } from "@/components/shared/content/blocks";
 import { captureServerExceptionSafely } from "@/lib/analytics/exception.server";
 import { renderVerifiedArtifact } from "@/lib/content/published/artifact";
 import { ContentExecutionError } from "@/lib/content/published/errors";
@@ -36,14 +38,18 @@ class BodyRenderError extends Schema.TaggedError<BodyRenderError>()(
  * Reads the body of one signed artifact as a server component tree. Its text,
  * math and frames are server markup, and each interactive visual is a client
  * reference that its own boundary loads, so the body ships no JavaScript it does
- * not run. A missing implementation fails as the renderer's own error, and a
- * render that rejects is reported with its cause and becomes one execution error.
+ * not run. `ContentBlocks` decides how many blocks a move draws at once. A missing
+ * implementation fails as the renderer's own error, and a render that rejects is
+ * reported with its cause and becomes one execution error.
  */
 export const readRenderedBody = Effect.fn("NakafaContent.readRenderedBody")(
   function* (artifact: SignedContentArtifact) {
     const rendered = yield* renderVerifiedArtifact({ artifact });
     return yield* Effect.tryPromise({
-      try: () => renderServerComponent(rendered.element),
+      try: () =>
+        renderServerComponent(
+          createElement(ContentBlocks, null, rendered.element)
+        ),
       catch: (cause) => new BodyRenderError({ cause }),
     }).pipe(Effect.catch((error) => failBody(artifact, error.cause)));
   }

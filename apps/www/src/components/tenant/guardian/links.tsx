@@ -1,9 +1,4 @@
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { Link01Icon } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { LinkStatus } from "@repo/backend/confect/guardians/schema";
@@ -38,6 +33,7 @@ import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
+  useServerSearch,
 } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import { WithAction } from "@/components/tenant/action";
@@ -53,6 +49,7 @@ import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
+import { useKeptRows } from "@/lib/data/kept";
 
 /** How many links one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -119,28 +116,32 @@ function GuardianLinksBody() {
   const t = useTranslations("SchoolGuardians");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const search = useServerSearch();
   const pagination = usePaginatedQuery(
     guardians.links.list,
+    isSettled ? { slug, ...(search === "" ? {} : { search }) } : "skip",
+    { initialNumItems: PAGE_SIZE }
+  );
+  // A new search's first page loads behind the rows the table shows, so the table never blanks.
+  const kept = useKeptRows(
+    pagination._tag === "LoadingFirstPage",
+    pagination.results
+  );
+  const waiting = usePaginatedQuery(
+    guardians.requests.waiting,
     isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
-  const waiting = useQuery(
-    guardians.requests.waiting,
-    isSettled ? { slug } : "skip"
-  );
 
-  if (QueryResult.isFailure(waiting)) {
+  if (PaginatedQueryResult.isFailure(waiting)) {
     throw waiting.error;
   }
   const failed = PaginatedQueryResult.isFailure(pagination);
   // Both reads arrive before the list draws, so a waiting request never pushes the table down.
-  if (
-    pagination._tag === "LoadingFirstPage" ||
-    !QueryResult.isSuccess(waiting)
-  ) {
+  if (Option.isNone(kept) || PaginatedQueryResult.isLoadingFirstPage(waiting)) {
     return null;
   }
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+  if (Arr.isReadonlyArrayEmpty(kept.value) && search === "") {
     if (failed) {
       return <LoadFailure onRetry={reloadPage} />;
     }
@@ -154,11 +155,14 @@ function GuardianLinksBody() {
   }
 
   return (
-    <LinksContext value={pagination.results}>
+    <LinksContext value={kept.value}>
       <Panes>
         <PanesList>
           {failed ? <DataFailure onRetry={reloadPage} /> : null}
-          <WaitingRequests requests={waiting.value} />
+          <WaitingRequests requests={waiting.results} />
+          {PaginatedQueryResult.isCanLoadMore(waiting) ? (
+            <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
+          ) : null}
           <GuardianLinkTable />
           {PaginatedQueryResult.isCanLoadMore(pagination) ? (
             <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
@@ -192,13 +196,9 @@ function GuardianLinkTable() {
   const statusText = useStatusText();
 
   const columns = [
-    // The student's name, with the parent's address after it, so the header's search finds a link by either; the
-    // cell shows the name alone, and the name leads the sort.
-    linkColumns.text((link) => `${link.student.name} ${link.email}`, {
+    linkColumns.text((link) => link.student.name, {
       cell: (info) => (
-        <PaneOpen id={info.row.original.id}>
-          {info.row.original.student.name}
-        </PaneOpen>
+        <PaneOpen id={info.row.original.id}>{info.getValue()}</PaneOpen>
       ),
       header: t("student"),
       id: "student",
@@ -234,14 +234,7 @@ function GuardianLinkTable() {
     )),
   ];
 
-  return (
-    <DataTable
-      columns={columns}
-      data={links}
-      rowId={(link) => link.id}
-      search="student"
-    />
-  );
+  return <DataTable columns={columns} data={links} rowId={(link) => link.id} />;
 }
 
 /**

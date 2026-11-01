@@ -52,12 +52,23 @@ function markOf(address: string) {
  * It holds back every failure while the page goes, so none of them draws an error
  * for a moment, and a tab without storage never reloads. A browser without a
  * network keeps its page: the chunk is out of reach, not gone, and a reload would
- * swap the page for the browser's offline screen.
+ * swap the page for the browser's offline screen. Firefox and Safari also fail a
+ * page's running imports the moment the tab starts to leave it, and a reload then
+ * would cancel the navigation and keep the reader where they were, so a tab that
+ * is leaving never reloads. `beforeunload` is the only signal that comes before
+ * those failures, and it costs a page Firefox's back-forward cache.
  */
 export const STALE_CHUNK_SCRIPT = `(function () {
+  var leaving = false;
   var reloading = false;
+  window.addEventListener("beforeunload", function () {
+    leaving = true;
+  });
+  window.addEventListener("pageshow", function () {
+    leaving = false;
+  });
   window.addEventListener("vite:preloadError", function (event) {
-    if (!reloading) {
+    if (!leaving && !reloading) {
       if (navigator.onLine === false) {
         return;
       }

@@ -61,6 +61,16 @@ const createMemberCookie = Effect.fn("NakafaE2E.createMemberCookie")(
   Effect.provide(nodeServicesLayer)
 );
 
+/**
+ * Fills a school that `createSchool` opened with the records of a real one, a thousand students
+ * and the rest (`FULL_SCHOOL`). The school's Owner must have signed in first.
+ */
+export const fillSchool = Effect.fn("NakafaE2E.fillSchool")(function* (
+  slug: string
+) {
+  yield* runAcceptanceCommand("full", slug);
+}, Effect.provide(nodeServicesLayer));
+
 /** Signs the Owner of a school into one browser context, for the school host at `address`. */
 export const signInOwner = Effect.fn("NakafaE2E.signInOwner")(function* (
   context: BrowserContext,

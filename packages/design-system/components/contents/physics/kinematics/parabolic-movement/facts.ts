@@ -47,7 +47,7 @@ export function getParabolicFacts(
     {
       id: "peak-height",
       label: labels.peakHeight,
-      math: `h_{\\max}=${formatTrimmedMeterMath(motion.peakHeight, decimalSeparator)}`,
+      math: `h_{\\mathrm{max}}=${formatTrimmedMeterMath(motion.peakHeight, decimalSeparator)}`,
     },
   ];
 }

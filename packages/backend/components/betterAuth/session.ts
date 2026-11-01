@@ -29,3 +29,6 @@ export const live = query({
     return user !== null;
   },
 });
+
+/** Keeps this module's context between calls, since every write reads it (ADR 0040). */
+export const experimental_reuseContext = true;

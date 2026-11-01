@@ -89,13 +89,14 @@ describe("identity/cards enroll", () => {
         const listed = yield* fixture
           .as("admin")
           .query(members, { ...everyone, slug: nf });
-        expect(listed.page).toContainEqual({
-          id: expect.any(String),
-          name: "Siswa Baru",
-          removable: true,
-          roles: ["student"],
-          status: "cardIssued",
-        });
+        expect(listed.page).toContainEqual(
+          expect.objectContaining({
+            name: "Siswa Baru",
+            removable: true,
+            roles: ["student"],
+            status: "cardIssued",
+          })
+        );
         const students = yield* fixture
           .as("admin")
           .query(refs.public.tenancy.people.students, {

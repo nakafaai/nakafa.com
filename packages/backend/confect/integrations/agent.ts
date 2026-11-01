@@ -10,7 +10,9 @@ import {
   toMcpInputSchema,
   toMcpOutputSchema,
 } from "@repo/backend/agent/mcp/schema";
+import { NINA_FILE_SIZE } from "@repo/backend/client/nina/uploads";
 import { SCHOOL_MCP_PATH } from "@repo/backend/confect/integrations/api";
+import { MAX_MCP_REQUEST_BYTES } from "@repo/backend/confect/routes/agent/mcp/input";
 import { NakafaAgentInputError } from "@repo/contents/agent/errors";
 import { FetchClient } from "@repo/utilities/http/client";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -36,7 +38,14 @@ const SERVER_IDENTITY: McpSchema.Implementation = {
 };
 
 const SERVER_INSTRUCTIONS =
-  "Act in Nakafa as the person who signed you in: everything they can read or change in the app, and nothing else. Find a function with nakafa_list_functions, read its arguments with nakafa_describe_function, and run it with nakafa_call_function. School functions name their school in their arguments: tenancy/memberships:list gives the person's schools.";
+  'Act in Nakafa as the person who signed you in: everything they can read or change in the app, and nothing else. Find a function with nakafa_list_functions, read its arguments with nakafa_describe_function, and run it with nakafa_call_function. School functions name their school in their arguments: tenancy/memberships:list gives the person\'s schools. An argument that takes a file\'s bytes takes them as {"$bytes": "<base64>"}. A function whose name ends in uploadUrl answers an address: POST the file to it, and pass the storageId it answers to the function that saves the file.';
+
+/**
+ * The largest request of a signed-in person's agent. One call carries a whole file as base64, which
+ * is four bytes for every three, and the token is checked before any of it is read.
+ */
+export const MAX_AGENT_REQUEST_BYTES =
+  Math.ceil((NINA_FILE_SIZE * 4) / 3) + MAX_MCP_REQUEST_BYTES;
 
 const READ_ONLY = {
   destructiveHint: false,

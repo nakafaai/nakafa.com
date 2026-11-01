@@ -11,6 +11,7 @@
     "sort-oldest": "Terlama",
     "sort-newest": "Terbaru",
     "no-results": "Tidak ada hasil.",
+    "searching": "Mencari di seluruh daftar.",
     "reset": "Atur ulang"
   },
   "School": {
@@ -1241,7 +1242,7 @@
     "login-person": "Orang",
     "login-issued": "Diterbitkan",
     "logins-empty": "Belum ada kartu masuk yang diterbitkan.",
-    "logins-search": "Cari login atau siswa",
+    "logins-search": "Cari siswa",
     "members-empty": "Belum ada anggota yang bergabung.",
     "members-empty-description": "Undang guru atau admin. Siswa masuk lewat Akun siswa.",
     "members-search": "Cari nama",

@@ -11,6 +11,7 @@ import { classTeacherMode } from "@repo/backend/scripts/content/acceptance/class
 import { connectionMode } from "@repo/backend/scripts/content/acceptance/connection";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { forumMode } from "@repo/backend/scripts/content/acceptance/forum";
+import { fullMode } from "@repo/backend/scripts/content/acceptance/full";
 import { graduationMode } from "@repo/backend/scripts/content/acceptance/graduation";
 import { guardianMode } from "@repo/backend/scripts/content/acceptance/guardian";
 import { importMode } from "@repo/backend/scripts/content/acceptance/import";
@@ -50,6 +51,7 @@ export const acceptanceModes: readonly AcceptanceMode[] = [
   learnerMode,
   operatorMode,
   schoolMode,
+  fullMode,
   ownerMode,
   teacherMode,
   classTeacherMode,

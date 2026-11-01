@@ -1,5 +1,6 @@
 import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import { Array as Arr, Option } from "effect";
+import { ContentBlocks } from "@/components/shared/content/blocks";
 import {
   QuranInterpretationButton,
   QuranInterpretationLink,
@@ -30,7 +31,8 @@ type VerseItem = QuranVerseListProps["items"][number];
 /**
  * Renders every verse of a surah in document flow. Each verse is in the page
  * from the server on, at its final height, so the page never changes height
- * while the reader scrolls and a jump lands where the page says it will.
+ * while the reader scrolls and a jump lands where the page says it will. A move
+ * to the surah draws its first verses at once and the rest over the next frames.
  * Verses arrive once as data, so the page payload carries each verse's text
  * rather than a rendered element tree for every verse.
  */
@@ -40,13 +42,15 @@ export function QuranVerseList({ items }: QuranVerseListProps) {
   return (
     <div>
       <QuranInterpretationSprite />
-      {Arr.map(items, (item) => (
-        <QuranSurahVerse
-          isLast={Option.exists(last, (value) => value === item)}
-          item={item}
-          key={item.verse.number.inQuran}
-        />
-      ))}
+      <ContentBlocks>
+        {Arr.map(items, (item) => (
+          <QuranSurahVerse
+            isLast={Option.exists(last, (value) => value === item)}
+            item={item}
+            key={item.verse.number.inQuran}
+          />
+        ))}
+      </ContentBlocks>
     </div>
   );
 }

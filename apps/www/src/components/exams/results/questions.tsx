@@ -22,6 +22,7 @@ import {
 } from "@repo/backend/confect/exams/letters";
 import type {
   AnswerRow as AnswerRowSchema,
+  QuestionStats as QuestionStatsSchema,
   QuestionSummary as QuestionSummarySchema,
 } from "@repo/backend/confect/exams/results/contract";
 import { Verdict } from "@repo/backend/confect/exams/results/schema";
@@ -30,7 +31,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Select,
@@ -41,9 +41,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -68,6 +66,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -89,6 +88,7 @@ const VERDICT_LOOKS = {
 const ANSWER_PAGE_SIZE = 50;
 
 type Question = typeof QuestionSummarySchema.Type;
+type QuestionStats = typeof QuestionStatsSchema.Type;
 type AnswerRow = typeof AnswerRowSchema.Type;
 
 /** The verdict that a question's answers show: every answer, or only the answers of one verdict. */
@@ -150,44 +150,9 @@ function QuestionResults({
   if (!QueryResult.isSuccess(stats) || Option.isNone(kept)) {
     return waits ? <PopupHold /> : null;
   }
-  const share = correctShare(stats.value);
   return (
     <>
-      <div className="flex flex-col gap-3 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="min-w-0 text-sm">
-            <p className="font-medium">
-              {share === null
-                ? t("results-no-answers")
-                : t("results-share", { share })}
-            </p>
-            <p className="text-muted-foreground">
-              {stats.value.complete
-                ? t("results-counted", { counted: stats.value.counted })
-                : t("results-incomplete", { counted: stats.value.counted })}
-            </p>
-          </div>
-          <TableSearch placeholder={t("results-search")} />
-        </div>
-        <ul className="flex flex-wrap gap-2">
-          {Arr.map(stats.value.optionCounts, (option, index) => (
-            <li key={option.optionId}>
-              <Badge className="tabular-nums" variant="muted">
-                {t(
-                  isReasonOption(option.optionId) ? "reason-option" : "option",
-                  {
-                    letter: optionLetter(
-                      optionPlace(question.optionIds, index),
-                      question.optionScript
-                    ),
-                  }
-                )}
-                <span>{option.count}</span>
-              </Badge>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <QuestionCounts question={question} stats={stats.value} />
       {PaginatedQueryResult.isFailure(answers) ? (
         <DataFailure onRetry={reloadPage} />
       ) : null}
@@ -203,6 +168,53 @@ function QuestionResults({
         results={kept.value}
       />
     </>
+  );
+}
+
+/** The share a question scored, how many answers that counts, the search over them, and each option's count. */
+function QuestionCounts({
+  question,
+  stats,
+}: {
+  readonly question: Question;
+  readonly stats: QuestionStats;
+}) {
+  const t = useTranslations("Exams");
+  const share = correctShare(stats);
+
+  return (
+    <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0 text-sm">
+          <p className="font-medium">
+            {share === null
+              ? t("results-no-answers")
+              : t("results-share", { share })}
+          </p>
+          <p className="text-muted-foreground">
+            {stats.complete
+              ? t("results-counted", { counted: stats.counted })
+              : t("results-incomplete", { counted: stats.counted })}
+          </p>
+        </div>
+        <TableSearch placeholder={t("results-search")} />
+      </div>
+      <ul className="flex flex-wrap gap-2">
+        {Arr.map(stats.optionCounts, (option, index) => (
+          <li key={option.optionId}>
+            <Badge className="tabular-nums" variant="muted">
+              {t(isReasonOption(option.optionId) ? "reason-option" : "option", {
+                letter: optionLetter(
+                  optionPlace(question.optionIds, index),
+                  question.optionScript
+                ),
+              })}
+              <span>{option.count}</span>
+            </Badge>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -318,7 +330,7 @@ function AnswerList({
           title={t("results-no-match")}
         />
       ) : null}
-      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
+      {loadMore === null ? null : <TableEnd onLoad={loadMore} />}
     </div>
   );
 }
@@ -337,13 +349,12 @@ export function QuestionsAction({
 }) {
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
-  const [selected, setSelected] = useState(0);
-  const [hasMoved, setHasMoved] = useState(false);
+  const [{ moved, selected }, setPlace] = useState({
+    moved: false,
+    selected: 0,
+  });
   const current = Arr.get(questions, selected);
-  const move = (index: number) => {
-    setSelected(index);
-    setHasMoved(true);
-  };
+  const move = (index: number) => setPlace({ moved: true, selected: index });
   const items = Arr.map(questions, (question) => ({
     label: t("question", { number: question.number }),
     value: question.id,
@@ -422,20 +433,11 @@ export function QuestionsAction({
             // Each question holds its own search and verdict filter, so a question opened next starts with every answer.
             onSome: (question) => (
               <TableFiltersProvider key={question.id}>
-                <QuestionResults question={question} waits={!hasMoved} />
+                <QuestionResults question={question} waits={!moved} />
               </TableFiltersProvider>
             ),
           })}
         </ScrollArea>
-        <SheetFooter>
-          <SheetClose
-            render={
-              <Button type="button" variant="outline">
-                {common("close")}
-              </Button>
-            }
-          />
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

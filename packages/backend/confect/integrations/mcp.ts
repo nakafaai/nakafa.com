@@ -4,14 +4,20 @@ import {
   MutationRunner,
   type QueryRunner,
 } from "@repo/backend/confect/_generated/services";
-import { agentMcpEngine } from "@repo/backend/confect/integrations/agent";
+import {
+  agentMcpEngine,
+  MAX_AGENT_REQUEST_BYTES,
+} from "@repo/backend/confect/integrations/agent";
 import { SCHOOL_MCP_PATH } from "@repo/backend/confect/integrations/api";
 import { schoolMcpEngine } from "@repo/backend/confect/integrations/tools";
 import {
   SCHOOL_CAPABILITIES,
   withDiscoveryCapabilities,
 } from "@repo/backend/confect/routes/agent/mcp/discovery";
-import { readMcpRequest } from "@repo/backend/confect/routes/agent/mcp/input";
+import {
+  MAX_MCP_REQUEST_BYTES,
+  readMcpRequest,
+} from "@repo/backend/confect/routes/agent/mcp/input";
 import {
   MISSING_PROTOCOL_MESSAGE,
   refuseMcpRequest,
@@ -102,7 +108,10 @@ const handleSchoolMcp = Effect.gen(function* () {
       request
     );
   }
-  const bounded = yield* readMcpRequest(request).pipe(Effect.result);
+  const bounded = yield* readMcpRequest(
+    request,
+    check.outcome === "person" ? MAX_AGENT_REQUEST_BYTES : MAX_MCP_REQUEST_BYTES
+  ).pipe(Effect.result);
   if (Result.isFailure(bounded)) {
     return withMcpResponseHeaders(
       mcpTransportErrorResponse(bounded.failure.reason === "size" ? 413 : 400),

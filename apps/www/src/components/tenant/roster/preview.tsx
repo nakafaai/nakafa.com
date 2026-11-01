@@ -26,6 +26,9 @@ const ROSTER_STATUS_LOOKS = {
   ready: { icon: UserCheck01Icon, tone: "success" },
 } as const satisfies Record<typeof RowProblem.Type | "ready", StatusLook>;
 
+/** How many rows of a read file the preview draws at a time, since a whole school's file holds thousands. */
+const PREVIEW_PAGE_SIZE = 50;
+
 /** The columns of the preview table. */
 const rowColumns = tableColumns<typeof ReadRow.Type>();
 
@@ -114,6 +117,7 @@ export function RosterPreviewTable({
     <DataTable
       columns={columns}
       data={rows}
+      pageSize={PREVIEW_PAGE_SIZE}
       rowId={(row) => String(row.line)}
       search="name"
     />

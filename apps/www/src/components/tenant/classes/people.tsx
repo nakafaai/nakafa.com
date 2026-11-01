@@ -65,7 +65,7 @@ function PeopleBody() {
   return (
     <>
       <ClassHeader>
-        {empty ? null : <TableSearch placeholder={t("people-search")} />}
+        <TableSearch placeholder={t("people-search")} />
       </ClassHeader>
       <TablePageBody>
         {empty ? (
