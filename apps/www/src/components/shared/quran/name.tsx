@@ -10,7 +10,7 @@ export function QuranSurahName({
     <>
       <span className="min-w-0 text-pretty">{title}</span>
       <span
-        className="font-quran shrink-0 text-xl font-normal"
+        className="font-quran-line shrink-0 text-xl font-normal"
         dir="rtl"
         lang="ar"
       >

@@ -13,6 +13,7 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
+import { reaches } from "@repo/backend/confect/classroom/tasks/views";
 import { guardiansOf } from "@repo/backend/confect/notifications/guardians";
 import { queueMail } from "@repo/backend/confect/notifications/mail";
 import { schedulePush } from "@repo/backend/confect/notifications/schedule";
@@ -98,7 +99,7 @@ const noticeGuardians = Effect.fn("notifications.tasks.guardians")(function* (
 });
 
 /**
- * Writes one page of a task's notice: each student of the class who reads it and has not handed in gets the reminder,
+ * Writes one page of a task's notice: each student the task goes to who reads it and has not handed in gets the reminder,
  * or each of their guardians gets the late-task notice. A task that is gone or a unit that is archived sends nothing,
  * and the next run reads the next page.
  */
@@ -157,7 +158,10 @@ const run = FunctionImpl.make(
             )
             .first()
             .pipe(Effect.orDie);
-          if (!reads || Option.isSome(handedIn)) {
+          if (
+            !(reads && reaches(task.value, personId)) ||
+            Option.isSome(handedIn)
+          ) {
             return;
           }
           yield* notice === "taskDeadline"

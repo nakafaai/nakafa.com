@@ -156,10 +156,14 @@ function readPartRadii(page: Page) {
 const GROUP_CONTROLS =
   '[data-slot="button-group"] :is(button, a[data-slot="button"]):not([disabled], [inert]):visible';
 
+/** What a control opens, which says so on the page: a control's own attributes can belong to its tooltip. */
+const OPEN_OVERLAY =
+  '[role="menu"]:visible, [role="dialog"]:visible, [data-slot="popover-content"]:visible';
+
 /**
  * The owner's rule (31 Oct): a control never changes shape on any state. Takes one control of a group through hover,
  * focus and press, and through its open menu or popover where it has one, and holds every part of every group to the
- * shape it had at rest. A press moves off the control before it lets go, so it never activates the control.
+ * shape it had at rest. A press moves off the control before it lets go, so it never activates it.
  */
 const expectControlKeepsShape = Effect.fn("NakafaE2E.expectControlKeepsShape")(
   function* (page: Page, label: string, index: number, rest: unknown) {
@@ -178,31 +182,42 @@ const expectControlKeepsShape = Effect.fn("NakafaE2E.expectControlKeepsShape")(
     yield* Effect.promise(() => control.focus());
     yield* held("focus");
     const box = yield* Effect.promise(() => control.boundingBox());
-    if (box !== null) {
-      yield* Effect.promise(async () => {
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-        await page.mouse.down();
-      });
-      yield* held("press");
-      yield* Effect.promise(async () => {
-        await page.mouse.move(0, 0);
-        await page.mouse.up();
-      });
-    }
     const opens = yield* Effect.promise(() =>
       control.getAttribute("aria-haspopup")
     );
-    if (opens === null) {
+    if (box === null) {
       return;
     }
     yield* Effect.promise(async () => {
-      await control.click();
-      await expect(control).toHaveAttribute("aria-expanded", "true");
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
     });
+    yield* held("press");
+    // A menu opens on the press, and a release on its trigger after a held press closes it, so the press ends away from
+    // the control with Escape, and the open state comes from the keyboard.
+    yield* Effect.promise(async () => {
+      await page.mouse.move(0, 0);
+      await page.mouse.up();
+      await page.keyboard.press("Escape");
+      await expect(page.locator(OPEN_OVERLAY)).toHaveCount(0);
+    });
+    if (opens === null) {
+      return;
+    }
+    // A key pressed while the last popup still closes is lost, so the press repeats until it opens.
+    yield* Effect.promise(() =>
+      expect(async () => {
+        await control.focus();
+        await page.keyboard.press("Enter");
+        await expect(page.locator(OPEN_OVERLAY).first()).toBeVisible({
+          timeout: 500,
+        });
+      }).toPass()
+    );
     yield* held("open");
     yield* Effect.promise(async () => {
       await page.keyboard.press("Escape");
-      await expect(control).not.toHaveAttribute("aria-expanded", "true");
+      await expect(page.locator(OPEN_OVERLAY)).toHaveCount(0);
     });
     yield* held("close");
   }

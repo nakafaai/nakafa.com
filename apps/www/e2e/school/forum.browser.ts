@@ -145,8 +145,8 @@ test("every class page draws its content in the browser, without an error state 
     expect(served?.status(), path).toBe(200);
     await waitUntilTakenOver(
       page
-        .getByRole("navigation", { name: "Class" })
-        .getByRole("link", { name: "Forum" })
+        .getByRole("tablist", { name: "Class" })
+        .getByRole("tab", { name: "Forum" })
     );
     await expect(
       page.getByRole("main").getByText(shows, { exact: true }).first(),

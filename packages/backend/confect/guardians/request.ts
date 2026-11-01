@@ -6,7 +6,7 @@ import { Schema } from "effect";
 export const RequestKind = Schema.Literals(["reportCopy", "dataCorrection"]);
 
 /** A request waits until Staff answers it, once. */
-export const RequestState = Schema.Literals([
+const RequestState = Schema.Literals([
   "waiting",
   "approved",
   "declined",

@@ -3,6 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
+  MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { practiceOf } from "@repo/backend/confect/insight/practice";
 import {
@@ -62,26 +63,33 @@ const practiced = (
       if (student.account.state !== "claimed") {
         return yield* Effect.die("The student has an account.");
       }
-      const writer = yield* DatabaseWriter;
-      const attempt = yield* writer.table("tryoutAttempts").insert({
-        ...ATTEMPT,
-        setIdentity: setKey,
-        setKey,
-        userId: student.account.userId,
-      });
-      yield* writer.table("tryoutSetProgress").insert({
-        ...TOPIC,
-        appLocale: "id",
-        attemptNumber: 1,
-        latestAttemptId: attempt,
-        publishedScore,
-        setIdentity: setKey,
-        setKey,
-        status: "completed",
-        statusRank: 3,
-        updatedAt: TENANCY_NOW,
-        userId: student.account.userId,
-      });
+      const { userId } = student.account;
+      const ctx = yield* MutationCtx;
+      const latestAttemptId = yield* Effect.promise(() =>
+        ctx.db.insert("tryoutAttempts", {
+          ...ATTEMPT,
+          sections: [],
+          completedSectionKeys: [],
+          setIdentity: setKey,
+          setKey,
+          userId,
+        })
+      );
+      yield* Effect.promise(() =>
+        ctx.db.insert("tryoutSetProgress", {
+          ...TOPIC,
+          appLocale: "id",
+          attemptNumber: 1,
+          latestAttemptId,
+          publishedScore,
+          setIdentity: setKey,
+          setKey,
+          status: "completed",
+          statusRank: 3,
+          updatedAt: TENANCY_NOW,
+          userId,
+        })
+      );
     }).pipe(Effect.orDie)
   );
 
