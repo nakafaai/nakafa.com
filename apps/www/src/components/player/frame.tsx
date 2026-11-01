@@ -7,6 +7,7 @@ import { cn } from "cn";
 import type { ReactNode } from "react";
 import {
   pageBoxVariants,
+  pageGutterVariants,
   readingMeasureVariants,
 } from "@/components/shared/content/width";
 
@@ -41,7 +42,11 @@ export function PlayerMain({
         minSize="55%"
       >
         <div
-          className={cn(readingMeasureVariants(), "min-w-0 px-4 py-6 sm:px-6")}
+          className={cn(
+            readingMeasureVariants(),
+            pageGutterVariants(),
+            "min-w-0 py-6"
+          )}
         >
           {children}
         </div>

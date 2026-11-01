@@ -34,16 +34,17 @@ vi.mock("convex/browser", () => ({
 
 /** The exception reporter that a real failure of an optional part calls. */
 const analytics = vi.hoisted(() => ({
-  captureServerExceptionSafely:
+  scheduleCurrentServerExceptionCapture:
     vi.fn<(error: unknown, properties: unknown) => Effect.Effect<void>>(),
 }));
 
 vi.mock("@/lib/analytics/exception.server", () => ({
-  captureServerExceptionSafely: analytics.captureServerExceptionSafely,
+  scheduleCurrentServerExceptionCapture:
+    analytics.scheduleCurrentServerExceptionCapture,
 }));
 
 beforeEach(() => {
-  analytics.captureServerExceptionSafely.mockReturnValue(Effect.void);
+  analytics.scheduleCurrentServerExceptionCapture.mockReturnValue(Effect.void);
 });
 
 process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
@@ -147,7 +148,7 @@ describe("required and optional preloads", () => {
         const value = yield* readOptional(ref, { locale: "en" }, undefined);
         expect(value).toBeUndefined();
         expect(
-          analytics.captureServerExceptionSafely
+          analytics.scheduleCurrentServerExceptionCapture
         ).toHaveBeenCalledExactlyOnceWith(new PreloadFailed({ cause }), {
           operation: ref.convexFunctionName,
           source: "data.readOptional",

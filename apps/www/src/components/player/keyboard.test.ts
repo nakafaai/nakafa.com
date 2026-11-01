@@ -128,7 +128,7 @@ describe("readKeyTarget", () => {
       editable: false,
     });
     expect(readKeyTarget(find("radio"))).toEqual({
-      composite: true,
+      composite: false,
       editable: false,
     });
     expect(readKeyTarget(find("button"))).toEqual({

@@ -1,7 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  QueryCtx as QueryCtxService,
+} from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readCommentPlace } from "@repo/backend/confect/comments/place";
 import spec from "@repo/backend/confect/comments/queries.spec";
@@ -92,7 +95,12 @@ const getCommentPlace = FunctionImpl.make(
     appLocale,
     commentId,
   }) {
-    return yield* readCommentPlace(commentId, appLocale).pipe(
+    const ctx = yield* QueryCtxService;
+    const id = ctx.db.normalizeId("comments", commentId);
+    if (id === null) {
+      return null;
+    }
+    return yield* readCommentPlace(id, appLocale).pipe(
       Effect.provide(materialLayer),
       Effect.orDie
     );

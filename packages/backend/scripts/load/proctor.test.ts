@@ -17,7 +17,7 @@ const seating = {
 
 describe("load proctor", () => {
   it.live(
-    "watches the room's first page and each seat's latest answer until the run is done",
+    "watches the room's first page, its silent seats and each seat's latest answer until the run is done",
     () =>
       Effect.gen(function* () {
         const server = fakeServer();
@@ -25,10 +25,10 @@ describe("load proctor", () => {
         const proctor = yield* Effect.forkChild(
           runProctor({ done, open: server.open, seating })
         );
-        // The proctor watches the page, then one seat after another.
+        // The proctor watches the page, the silent seats, then one seat after another.
         yield* Effect.sleep("5 millis").pipe(
           Effect.repeat({
-            until: () => server.listeners().length === 1 + SEATS.length,
+            until: () => server.listeners().length === 2 + SEATS.length,
           }),
           Effect.timeout("2 seconds")
         );
@@ -53,6 +53,7 @@ describe("load proctor", () => {
         const names = Arr.map(yield* recorder.samples, (sample) => sample.name);
         expect(names).toEqual([
           "query:dashboard",
+          "query:offline",
           "query:lastAnswer",
           "query:lastAnswer",
         ]);

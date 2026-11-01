@@ -1,5 +1,7 @@
+import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import examsPublic from "@repo/backend/confect/_generated/refs/exams";
+import { PRESENCE_INTERVAL } from "@repo/backend/confect/exams/presence";
 import type { SavedView } from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Step, StudentScript } from "@repo/backend/scripts/load/plan";
@@ -16,12 +18,13 @@ import {
   MutableHashMap,
   Option,
   Random,
+  Schedule,
   Schema,
   type Scope,
 } from "effect";
 
 const sittings = examsPublic.sittings;
-const { look } = examsPublic.screens;
+const { beat, look } = examsPublic.screens;
 
 /** A student whose entry the sitting refused, with the reason it gave. */
 class EntryRefused extends Schema.TaggedError<EntryRefused>()("EntryRefused", {
@@ -74,9 +77,27 @@ const keepSaved = (versions: Versions) => (saved: typeof SavedView.Type) => {
 };
 
 /**
+ * Keeps one open tab present in its room for the tab's scope, as the player's heartbeat does: a
+ * beat at once and one each interval, under a session of its own. A real sitting sends more of
+ * these than answers, and a beat that fails waits for the next one, as it does in the browser.
+ */
+const keepPresent = Effect.fn("load.student.present")(function* (
+  wire: Wire,
+  seat: Omit<Ref.Args<typeof beat>, "session">
+) {
+  const session = yield* randomUuid;
+  yield* timed("mutation:beat", send(wire, beat, { ...seat, session })).pipe(
+    Effect.result,
+    Effect.repeat(Schedule.spaced(PRESENCE_INTERVAL)),
+    Effect.forkScoped
+  );
+});
+
+/**
  * Opens one tab of the player as a student's browser does: the connection, the student's view of
- * the sitting, the entry with the room's token from this device, the paper, and what the student
- * saved, which stays live for the tab's scope so every saved answer comes back through it.
+ * the sitting, the entry with the room's token from this device, the heartbeat, the paper, and
+ * what the student saved, which stays live for the tab's scope so every saved answer comes back
+ * through it.
  */
 const openTab = Effect.fn("load.student.tab")(function* (
   input: StudentInput,
@@ -99,6 +120,7 @@ const openTab = Effect.fn("load.student.tab")(function* (
   if (entered.outcome === "refused") {
     return yield* new EntryRefused({ reason: entered.reason });
   }
+  yield* keepPresent(wire, { attemptId: entered.attempt, deviceId, slug });
   const sheet = yield* watch(
     wire,
     sittings.paper,

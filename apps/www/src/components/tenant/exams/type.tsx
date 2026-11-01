@@ -83,7 +83,7 @@ export function QuestionType({
     return (
       <span
         className={buttonVariants({
-          className: "text-muted-foreground pointer-events-none min-w-0",
+          className: "text-muted-foreground pointer-events-none min-w-0 shrink",
           size: "sm",
           variant: "ghost",
         })}
@@ -100,7 +100,7 @@ export function QuestionType({
         render={
           <Button
             aria-label={t("template-label", { type: name })}
-            className="text-muted-foreground min-w-0"
+            className="text-muted-foreground min-w-0 shrink"
             size="sm"
             variant="ghost"
           />

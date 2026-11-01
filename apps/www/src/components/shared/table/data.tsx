@@ -172,7 +172,7 @@ function DataTableRow({
     <PaneTableRow id={row.id}>{children}</PaneTableRow>
   ) : (
     <TableRow
-      className="has-[td:first-child_a[href]]:hover:bg-accent has-[td:first-child_a[href]]:hover:text-accent-foreground h-12 has-[td:first-child_a[href]]:cursor-pointer"
+      className="has-[td:first-child_a[href]]:hover:bg-muted h-12 has-[td:first-child_a[href]]:cursor-pointer"
       data-pressable={undefined}
       onClick={(event) => {
         if (pressesRow(event)) {

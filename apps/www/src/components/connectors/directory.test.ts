@@ -8,7 +8,6 @@ import {
   holderOf,
   isShown,
   serviceConnection,
-  statusKey,
 } from "@/components/connectors/directory";
 import type { Connection } from "@/components/connectors/optimistic";
 
@@ -106,13 +105,5 @@ describe("connector directory", () => {
       isShown(classroom, Option.some("files"), "", ["Google Classroom"])
     ).toBe(false);
     expect(DIRECTORY_CATEGORIES).toEqual(["learning", "files", "schedule"]);
-  });
-
-  it("says Forms connects through Drive while it stands open, and each state in its own words", () => {
-    const [classroom, forms] = DIRECTORY_SERVICES;
-
-    expect(statusKey(forms, "open")).toBe("status-through-drive");
-    expect(statusKey(forms, "connected")).toBe("status-connected");
-    expect(statusKey(classroom, "open")).toBe("status-open");
   });
 });

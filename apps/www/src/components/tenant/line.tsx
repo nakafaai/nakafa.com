@@ -13,9 +13,10 @@ import { useTranslations } from "use-intl";
  * The dialog that changes one line of a record: its field starts from the stored value, and Save
  * waits for a new value that holds. Save closes the dialog at once and hands the value over, so the
  * row shows it at once. The caller mounts the dialog fresh for each opening, or the field keeps
- * what was typed while it is closed.
+ * what was typed while it is closed. `action` names the button when the line does more than save.
  */
 export function LineDialog({
+  action,
   description,
   initial,
   isValid,
@@ -27,6 +28,7 @@ export function LineDialog({
   title,
   type = "text",
 }: {
+  action?: string;
   description: string;
   initial: string;
   isValid: (value: string) => boolean;
@@ -68,7 +70,7 @@ export function LineDialog({
             {common("cancel")}
           </Button>
           <Button disabled={!canSave} onClick={save} type="button">
-            {settings("save")}
+            {action ?? settings("save")}
           </Button>
         </>
       }
