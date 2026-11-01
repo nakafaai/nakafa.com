@@ -448,6 +448,8 @@
     "delete-action": "Hapus ujian",
     "delete-title": "Hapus ujian ini?",
     "delete-description": "Semua soal dan gambarnya ikut terhapus permanen.",
+    "try-empty-description": "Tambahkan soal, lalu coba ujian ini sebagai siswa.",
+    "try-empty-title": "Belum ada soal",
     "try-finish": "Selesai mencoba",
     "try-note": "Jawaban di sini tidak disimpan.",
     "pages": "Halaman",

@@ -29,6 +29,7 @@ import {
   TrySlugContext,
   TryStoreContext,
 } from "@/components/tenant/exams/try/context";
+import { ExamTryEmpty } from "@/components/tenant/exams/try/empty";
 import {
   ExamTryQuestion,
   TryReveal,
@@ -76,6 +77,17 @@ export function ExamTryPaper({
     return QueryResult.isFailure(result) ? <ExamUnavailable /> : null;
   }
   const exam = kept.value;
+  if (Arr.isReadonlyArrayEmpty(exam.questions)) {
+    return (
+      <>
+        <PaperBar
+          back={<PaperBack examId={examId} />}
+          title={exam.title || t("untitled")}
+        />
+        <ExamTryEmpty examId={examId} />
+      </>
+    );
+  }
   const gone = QueryResult.isFailure(result);
 
   const models = projectTryQuestions({
