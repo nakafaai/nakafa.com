@@ -8,10 +8,7 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
-import {
-  type BreadcrumbHeaderItem,
-  BreadcrumbHeaderPath,
-} from "@/components/shared/breadcrumb/header";
+import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { SidebarRightHeader } from "@/components/shared/outline/panel";
 import {
@@ -98,24 +95,30 @@ function useMaterialNavigation() {
   };
 }
 
-/** One path of the lesson in its HTML: its own shows, and the prepaint script can show another. */
+/**
+ * One path of the lesson in its HTML: the place's, walking from the curriculum down
+ * to its card, or with no place the lesson's own, which shows until the prepaint script
+ * names another.
+ */
 function PlacementPath({
-  hint,
-  items,
+  placement,
+  title,
 }: {
-  hint: string;
-  items: readonly BreadcrumbHeaderItem[];
+  placement: MaterialPlacement | null;
+  title: string;
 }) {
   const t = useTranslations("Common");
+  const { page } = usePlacementContext();
+  const hint = placement === null ? "" : placementHint(placement);
   return (
     <div
-      className={hint === "" ? "contents" : "hidden"}
+      className={placement === null ? "contents" : "hidden"}
       {...{ [PLACEMENT_PATH_ATTRIBUTE]: hint }}
     >
       <BreadcrumbHeaderPath
         home={HOME_TARGET}
         homeLabel={t("home")}
-        items={items}
+        items={readMaterialPath(readMaterialNavigation(page, placement), title)}
         unfolds
       />
     </div>
@@ -123,26 +126,20 @@ function PlacementPath({
 }
 
 /**
- * The lesson's path: its own, and one for each curriculum place that shows it, each
- * walking from the curriculum down to the card. All of them stand in the static HTML,
- * so a reader's `ctx` shows its path at the first paint, with no read and no shift.
+ * The lesson's path: its own, and one for each curriculum place that shows it. All of
+ * them stand in the static HTML, so a reader's `ctx` shows its path at the first
+ * paint, with no read and no shift.
  */
 export function MaterialBreadcrumb({ title }: { title: string }) {
-  const { page, placements } = usePlacementContext();
+  const { placements } = usePlacementContext();
   return (
     <>
-      <PlacementPath
-        hint=""
-        items={readMaterialPath(readMaterialNavigation(page, null), title)}
-      />
+      <PlacementPath placement={null} title={title} />
       {Arr.map(placements, (placement) => (
         <PlacementPath
-          hint={placementHint(placement)}
-          items={readMaterialPath(
-            readMaterialNavigation(page, placement),
-            title
-          )}
           key={placementHint(placement)}
+          placement={placement}
+          title={title}
         />
       ))}
     </>

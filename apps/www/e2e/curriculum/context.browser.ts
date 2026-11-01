@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect, MutableList } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -115,7 +115,7 @@ test("a lesson shows its curriculum path from its static page, with no read", as
               );
               yield* Effect.sync(() => {
                 expect(
-                  MutableList.toArray(reads).filter((body) =>
+                  Arr.filter(MutableList.toArray(reads), (body) =>
                     body.includes("contentRelease/program")
                   )
                 ).toEqual([]);
