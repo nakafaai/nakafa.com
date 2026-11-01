@@ -10,6 +10,9 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 /** The words a copy adds to its exam's title. */
 const COPY_TITLE = "Uji coba salin (copy)";
 
+/** The list's row of the exam itself, not of a copy of it. */
+const ORIGINAL_ROW = /^Uji coba salin(?! \(copy\))/u;
+
 test("a teacher copies a draft from the list's row and from the editor's menu, and each copy opens to take changes", async ({
   baseURL,
   browser,
@@ -25,7 +28,9 @@ test("a teacher copies a draft from the list's row and from the editor's menu, a
   await waitUntilTakenOver(create);
   await create.click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByRole("textbox", { name: "Exam title" }).fill("Uji coba salin");
+  await dialog
+    .getByRole("textbox", { name: "Exam title" })
+    .fill("Uji coba salin");
   await dialog.getByRole("button", { name: "Create exam" }).click();
   await page.waitForURL(EDITOR_PATH);
   const editor = page.url();
@@ -46,7 +51,7 @@ test("a teacher copies a draft from the list's row and from the editor's menu, a
 
   // The list's row copies an exam without opening it first.
   await page.goto(address("/exams"));
-  const row = page.getByRole("row", { name: /^Uji coba salin(?! \(copy\))/u });
+  const row = page.getByRole("row", { name: ORIGINAL_ROW });
   await expect(row).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await row.getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Duplicate exam" }).click();

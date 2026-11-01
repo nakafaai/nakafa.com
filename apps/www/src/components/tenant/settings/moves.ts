@@ -107,7 +107,13 @@ export const placeStudentChange: OptimisticUpdate<
   changeMemberLists(
     localStore,
     (args) => isFirstPageOf(cohortId, args),
-    (page) => Arr.prepend(page, { id: personId, login: null, name: name.value })
+    (page) =>
+      Arr.prepend(page, {
+        email: null,
+        id: personId,
+        login: null,
+        name: name.value,
+      })
   );
 };
 

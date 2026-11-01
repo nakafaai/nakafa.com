@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   createSchool,
   hostAddress,
@@ -54,7 +54,7 @@ async function expectEvenPanel(page: Page, card: Locator, head: string) {
   for (const edge of [...layout.lefts, ...layout.rights, layout.bottom]) {
     expect(Math.abs(edge - layout.top), head).toBeLessThanOrEqual(EDGE_SLACK);
   }
-  expect(new Set(layout.heights).size, head).toBe(1);
+  expect(Arr.dedupe(layout.heights), head).toHaveLength(1);
   await page.keyboard.press("Escape");
 }
 
