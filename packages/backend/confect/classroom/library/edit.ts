@@ -9,6 +9,7 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { libraryField } from "@repo/backend/confect/classroom/library/item";
+import { classFolder } from "@repo/backend/confect/classroom/library/place";
 import spec from "@repo/backend/confect/classroom/library.spec";
 import { sealText } from "@repo/backend/confect/vault/text";
 import { Effect, Option } from "effect";
@@ -32,16 +33,25 @@ export const classItem = Effect.fn("classroom.library.item")(function* (
 });
 
 /**
- * Changes an item's title, and a link's address with it, sealed anew under the row that names
+ * Changes an item's title and its folder, and a link's address with them, sealed anew under the row that names
  * them. A file keeps its bytes and takes no address, so `address` holds a value for a link only.
  */
 export const edit = FunctionImpl.make(
   databaseSchema,
   spec,
   "edit",
-  Effect.fn("classroom.library.edit")(function* ({ address, itemId, title }) {
+  Effect.fn("classroom.library.edit")(function* ({
+    address,
+    folderId,
+    itemId,
+    title,
+  }) {
     const row = yield* Class;
     const item = yield* classItem(itemId);
+    if (folderId !== null) {
+      yield* classFolder(folderId);
+    }
+    const moved = { folderId: folderId ?? undefined };
     const keys = yield* schoolKeys(row.tenantId);
     const sealedTitle = yield* sealText(
       keys,
@@ -50,7 +60,7 @@ export const edit = FunctionImpl.make(
     ).pipe(Effect.orDie);
     const writer = (yield* DatabaseWriter).table("classroomLibrary");
     if (item.kind === "file" || address === null) {
-      yield* writer.patch(itemId, { sealedTitle }).pipe(Effect.orDie);
+      yield* writer.patch(itemId, { ...moved, sealedTitle }).pipe(Effect.orDie);
       return null;
     }
     const sealedAddress = yield* sealText(
@@ -59,7 +69,7 @@ export const edit = FunctionImpl.make(
       address
     ).pipe(Effect.orDie);
     yield* writer
-      .patch(itemId, { sealedAddress, sealedTitle })
+      .patch(itemId, { ...moved, sealedAddress, sealedTitle })
       .pipe(Effect.orDie);
     return null;
   })

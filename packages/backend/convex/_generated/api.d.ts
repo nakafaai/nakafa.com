@@ -627,6 +627,58 @@ export declare const api: {
         }
       >;
     };
+    folders: {
+      add: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          name: string;
+          slug: string;
+        },
+        {
+          author: string;
+          clientKey: string;
+          createdAt: number;
+          id: Id<"classroomFolders">;
+          name: string;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        Array<{
+          author: string;
+          clientKey: string;
+          createdAt: number;
+          id: Id<"classroomFolders">;
+          name: string;
+        }>
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          folderId: Id<"classroomFolders">;
+          slug: string;
+        },
+        null
+      >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          folderId: Id<"classroomFolders">;
+          name: string;
+          slug: string;
+        },
+        null
+      >;
+    };
     forum: {
       channels: {
         add: FunctionReference<
@@ -1315,6 +1367,7 @@ export declare const api: {
           address: string;
           classId: Id<"classes">;
           clientKey: string;
+          folderId: Id<"classroomFolders"> | null;
           slug: string;
           title: string;
         },
@@ -1324,6 +1377,7 @@ export declare const api: {
           byteSize: number | null;
           clientKey: string;
           createdAt: number;
+          folderId: Id<"classroomFolders"> | null;
           id: Id<"classroomLibrary">;
           kind: "link" | "pdf" | "image";
           title: string;
@@ -1341,6 +1395,7 @@ export declare const api: {
         {
           address: string | null;
           classId: Id<"classes">;
+          folderId: Id<"classroomFolders"> | null;
           itemId: Id<"classroomLibrary">;
           slug: string;
           title: string;
@@ -1354,6 +1409,7 @@ export declare const api: {
           classId: Id<"classes">;
           clientKey: string;
           fileId: string;
+          folderId: Id<"classroomFolders"> | null;
           slug: string;
           title: string;
         },
@@ -1364,6 +1420,7 @@ export declare const api: {
         "public",
         {
           classId: Id<"classes">;
+          folderId: Id<"classroomFolders"> | null;
           paginationOpts: {
             cursor: string | null;
             endCursor?: string | null;
@@ -1383,6 +1440,7 @@ export declare const api: {
             byteSize: number | null;
             clientKey: string;
             createdAt: number;
+            folderId: Id<"classroomFolders"> | null;
             id: Id<"classroomLibrary">;
             kind: "link" | "pdf" | "image";
             title: string;
@@ -1397,6 +1455,7 @@ export declare const api: {
         {
           classId: Id<"classes">;
           clientKey: string;
+          folderId: Id<"classroomFolders"> | null;
           slug: string;
           storageId: Id<"_storage">;
           title: string;
@@ -14666,6 +14725,7 @@ export declare const internal: {
             | "image/webp"
             | "image/gif"
             | "application/pdf";
+          folderId: Id<"classroomFolders"> | null;
           storageId: Id<"_storage">;
           title: string;
         },

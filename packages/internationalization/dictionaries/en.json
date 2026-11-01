@@ -1436,7 +1436,21 @@
     "discussion-rename": "Rename discussion",
     "discussion-rename-description": "Everyone in the class sees the new title.",
     "library-edit": "Edit",
-    "library-edit-description": "The class sees the change at once."
+    "library-edit-description": "The class sees the change at once.",
+    "library-no-folder": "No folder",
+    "library-folder": "Folder",
+    "library-new-folder": "New folder",
+    "library-new-folder-description": "Keep the class's files together, such as by chapter.",
+    "library-folder-name": "Name",
+    "library-folder-placeholder": "Chapter 1",
+    "library-folder-create": "Create",
+    "library-folder-rename": "Rename",
+    "library-folder-rename-description": "The class sees the new name at once.",
+    "library-folder-remove": "Delete",
+    "library-folder-remove-title": "Delete this folder",
+    "library-folder-remove-description": "Its files stay in the library.",
+    "library-folder-empty-description": "This folder's files and links show here, the newest first.",
+    "library-kind-folder": "Folder"
   },
   "SchoolGrades": {
     "student": "Student",

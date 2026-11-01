@@ -40,12 +40,16 @@ export const LIBRARY_ACCEPT = Arr.join(
   ","
 );
 
-/** What a row holds whatever it is: its class, its author, and its title sealed with the school key. */
+/**
+ * What a row holds whatever it is: its class, its author, the folder it sits in when it sits in one, and its title
+ * sealed with the school key.
+ */
 const itemFields = {
   authorId: Id("tenantPeople"),
   classId: Id("classes"),
   clientKey: ClientKey,
   createdAt: Schema.Finite,
+  folderId: Schema.optionalKey(Id("classroomFolders")),
   sealedTitle: Sealed,
   tenantId: Id("tenants"),
 };
@@ -77,7 +81,7 @@ export const LibraryKind = Schema.Literals(["link", "pdf", "image"]);
 
 /**
  * One item as the library shows it: what it is, its title, its author, when it
- * was added, and where it opens. A file's address is read for each reader after
+ * was added, the folder it sits in, and where it opens. A file's address is read for each reader after
  * the access check and is never stored (ADR 0028); a file that storage no
  * longer holds has none.
  */
@@ -87,6 +91,7 @@ export const LibraryView = Schema.Struct({
   byteSize: Schema.NullOr(Schema.Int),
   clientKey: ClientKey,
   createdAt: Schema.Finite,
+  folderId: Schema.NullOr(Id("classroomFolders")),
   id: Id("classroomLibrary"),
   kind: LibraryKind,
   title: Schema.String,
