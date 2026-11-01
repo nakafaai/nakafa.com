@@ -1,9 +1,11 @@
-import { type ReactNode, Suspense } from "react";
+import type { ReactNode } from "react";
 import type { PlayerMode } from "@/components/player/mode";
 import { PlayerDigits, PlayerTimer } from "@/components/player/timer";
-import { TryoutPlayer } from "@/components/tryout/player/client";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
-import { TryoutPlayerOpening } from "@/components/tryout/player/opening";
+import {
+  TryoutPlayerOpening,
+  TryoutRunningPlayer,
+} from "@/components/tryout/player/opening";
 import { useTryoutStartPhase } from "@/components/tryout/runtime/start";
 import {
   isTryoutRuntimeRunning,
@@ -47,7 +49,7 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
   if (value.player && isTryoutRuntimeRunning(state)) {
     return (
       <TryoutPage>
-        <TryoutPlayer
+        <TryoutRunningPlayer
           finish={value.player.finish}
           mode={value.player.mode}
           state={state}
@@ -80,7 +82,7 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
       </TryoutSetPageHeader>
       <TryoutPageBody>
         <TryoutEntryResult value={value} />
-        <TryoutEntryReview runtimeState={state}>{children}</TryoutEntryReview>
+        {state.kind === "review" ? children : null}
       </TryoutPageBody>
     </TryoutPage>
   );
@@ -179,18 +181,4 @@ function TryoutEntryAction({ value }: { value: TryoutSetEntryProps["value"] }) {
       }}
     />
   );
-}
-
-/** Renders the signed review of a finished direct-entry section, and nothing for any other state. */
-function TryoutEntryReview({
-  children,
-  runtimeState,
-}: {
-  children: ReactNode;
-  runtimeState: TryoutRuntimeState<LoadedRuntime>;
-}) {
-  if (runtimeState.kind !== "review") {
-    return null;
-  }
-  return <Suspense fallback={null}>{children}</Suspense>;
 }
