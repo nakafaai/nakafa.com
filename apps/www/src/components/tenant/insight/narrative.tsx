@@ -140,6 +140,7 @@ export function StudentNarrative({
             aria-label={t("narrative-title", { student: student.name })}
             maxLength={NARRATIVE_LIMIT}
             onChange={(event) => setText(event.target.value)}
+            placeholder={t("narrative-placeholder")}
             rows={6}
             value={text}
           />
