@@ -42,6 +42,7 @@ export default GroupSpec.make()
       name: "list",
       args: () => ({
         account: Schema.optional(Schema.Literal("unclaimed")),
+        search: Schema.optionalKey(PersonName),
         slug: TenantSlug,
         status: PersonStatus,
       }),
@@ -52,7 +53,10 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "students",
-      args: () => ({ slug: TenantSlug }),
+      args: () => ({
+        search: Schema.optionalKey(PersonName),
+        slug: TenantSlug,
+      }),
       item: () => PersonView,
       error: () => AccessDenied,
     }).middleware(TenantAccess, { action: "person.view" })
@@ -60,7 +64,11 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "teachers",
-      args: () => ({ cohortId: Id("tenantCohorts"), slug: TenantSlug }),
+      args: () => ({
+        cohortId: Id("tenantCohorts"),
+        search: Schema.optionalKey(PersonName),
+        slug: TenantSlug,
+      }),
       item: () => PersonView,
       error: () => AccessDenied,
     }).middleware(CohortAccess, { action: "cohort.manage", arg: "cohortId" })

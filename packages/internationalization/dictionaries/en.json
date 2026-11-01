@@ -1307,6 +1307,7 @@
       }
     },
     "person-placeholder": "Choose a person",
+    "person-search": "Find a person",
     "student-picker-empty": "Add a student in Student accounts first.",
     "teacher-picker-empty": "Invite a teacher in Invites first.",
     "roles-grants-description": "Every role that a person of this school holds, and what it covers.",
