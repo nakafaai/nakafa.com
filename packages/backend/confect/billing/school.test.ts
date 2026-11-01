@@ -208,7 +208,7 @@ describe("billing/school invoices", () => {
           onFailure: (cause) => String(Cause.squash(cause)),
           onSuccess: () => "issued",
         }),
-        seats: invoices.map(({ lines }) => lines[0]?.quantity),
+        seats: Arr.map(invoices, ({ lines }) => lines[0]?.quantity),
       };
     });
     expect(result.overlapping).toContain("SchoolSeatsPaid");
@@ -234,7 +234,7 @@ describe("billing/school invoices", () => {
         )
       );
       const invoices = await ctx.db.query("billingInvoices").collect();
-      return invoices.map(({ lines }) => lines[0]?.quantity);
+      return Arr.map(invoices, ({ lines }) => lines[0]?.quantity);
     });
     expect(seats).toEqual([2, 2]);
   });
