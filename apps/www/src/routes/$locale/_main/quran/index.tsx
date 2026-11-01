@@ -1,7 +1,11 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
 import { Card } from "@repo/design-system/components/ui/card";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
+import {
+  makeBreadcrumbNodes,
+  makeCollectionPageNode,
+} from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Schema } from "effect";
@@ -67,14 +71,27 @@ export const Route = createFileRoute("/$locale/_main/quran/")({
     if (loaderData === undefined) {
       return {};
     }
-    const { breadcrumbs, description, image, locale, title } = loaderData;
+    const { breadcrumbs, description, image, locale, surahs, title } =
+      loaderData;
+    const url = `${COMPANY_IDENTITY.url}/${locale}/quran`;
     return toRouterHead(
       createSeoHead({
         canonicalPath: `/${locale}/quran`,
         description,
         image,
         indexable: true,
-        jsonLd: makeBreadcrumbNodes(breadcrumbs),
+        jsonLd: [
+          ...makeBreadcrumbNodes(breadcrumbs),
+          makeCollectionPageNode({
+            description,
+            items: Arr.map(surahs, (surah) => ({
+              name: surah.title,
+              url: `${url}/${surah.number}`,
+            })),
+            name: title,
+            url,
+          }),
+        ],
         locale,
         parts: [title],
         type: "book",

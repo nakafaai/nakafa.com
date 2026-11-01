@@ -4,51 +4,60 @@ import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { loadAttemptSections } from "@repo/backend/confect/tryouts/runtime/attempt/sections";
 import { loadAttemptState } from "@repo/backend/confect/tryouts/runtime/attempt/state";
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
-import { loadSectionState } from "@repo/backend/confect/tryouts/runtime/section/questions";
+import {
+  loadSectionRuntime,
+  loadSectionState,
+} from "@repo/backend/confect/tryouts/runtime/section/questions";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect, Option } from "effect";
+
+/** Loads an attempt's compact state and the row of its entry section, when the set opens on one. */
+const loadSetAttempt = Effect.fn("tryouts.runtime.loadSetAttempt")(function* (
+  attempt: Docs["tryoutAttempts"],
+  appLocale: AppLocaleCode
+) {
+  const sections = yield* loadAttemptSections(attempt);
+  const entryFrozen = Option.getOrUndefined(
+    Arr.findFirst(attempt.sections, (frozen) => frozen.publicPath === undefined)
+  );
+  return {
+    attempt: yield* loadAttemptState({
+      appLocale,
+      attempt,
+      sections,
+    }),
+    entrySection: entryFrozen
+      ? Option.getOrUndefined(
+          Arr.findFirst(
+            sections,
+            (section) => section.sectionKey === entryFrozen.sectionKey
+          )
+        )
+      : undefined,
+  };
+});
 
 /** Loads one exact attempt without repeating immutable catalog reads. */
 export const loadSetAttemptState = Effect.fn(
   "tryouts.runtime.loadSetAttemptState"
 )(function* (attempt: Docs["tryoutAttempts"], appLocale: AppLocaleCode) {
-  const sections = yield* loadAttemptSections(attempt);
-  const entryFrozen = Option.getOrUndefined(
-    Arr.findFirst(attempt.sections, (frozen) => frozen.publicPath === undefined)
-  );
-  const entrySection = entryFrozen
-    ? Option.getOrUndefined(
-        Arr.findFirst(
-          sections,
-          (section) => section.sectionKey === entryFrozen.sectionKey
-        )
-      )
-    : undefined;
-  const { current, entry } = yield* Effect.all(
-    {
-      current: loadAttemptState({
-        appLocale,
-        attempt,
-        sections,
-      }),
-      entry: entrySection
-        ? loadSectionState(attempt, entrySection, appLocale)
-        : Effect.succeed({ content: [], runtime: null }),
-    },
-    {
-      concurrency: "unbounded",
-    }
-  );
+  const current = yield* loadSetAttempt(attempt, appLocale);
+  const entry = current.entrySection
+    ? yield* loadSectionState(attempt, current.entrySection, appLocale)
+    : { content: [], runtime: null };
   return {
     content: entry.content,
     state: {
-      attempt: current,
+      attempt: current.attempt,
       runtime: entry.runtime,
     },
   };
 });
 
-/** Reads one mutable set state through an exact owned attempt ID. */
+/**
+ * Reads one mutable set state through an exact owned attempt ID. A live query repeats this on every
+ * write, so it reads no question body.
+ */
 export const readSetAttemptState = Effect.fn(
   "tryouts.runtime.readSetAttemptState"
 )(function* (args: {
@@ -63,6 +72,11 @@ export const readSetAttemptState = Effect.fn(
   if (!attempt) {
     return null;
   }
-  const loaded = yield* loadSetAttemptState(attempt, args.locale);
-  return loaded.state;
+  const current = yield* loadSetAttempt(attempt, args.locale);
+  return {
+    attempt: current.attempt,
+    runtime: current.entrySection
+      ? yield* loadSectionRuntime(attempt, current.entrySection)
+      : null,
+  };
 });

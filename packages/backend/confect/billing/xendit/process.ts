@@ -20,6 +20,7 @@ import {
   XenditCycle,
   XenditPlanEvent,
 } from "@repo/backend/confect/billing/xendit/contract";
+import { applyRefund } from "@repo/backend/confect/billing/xendit/refund";
 import {
   applySessionCompleted,
   applySessionExpired,
@@ -222,6 +223,7 @@ const dispatch = (event: string, data: unknown) =>
     Match.when("recurring.cycle.failed", () => applyCycleFailed(data)),
     Match.when("payment_session.completed", () => applySessionCompleted(data)),
     Match.when("payment_session.expired", () => applySessionExpired(data)),
+    Match.when("refund.succeeded", () => applyRefund(data)),
     Match.orElse(() => Effect.succeed("ignored" as const))
   );
 

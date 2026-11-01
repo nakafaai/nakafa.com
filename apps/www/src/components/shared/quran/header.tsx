@@ -68,6 +68,7 @@ export function QuranSurahHeader({
         className="col-start-2 row-start-1 flex min-w-0 items-center gap-2 text-base font-medium md:justify-center md:text-center max-sm:[&_[lang=ar]]:hidden"
         title={`${title}: ${meaning}`}
       >
+        {name}{" "}
         <span
           className="sr-only"
           data-slot="surah-meaning"
@@ -75,7 +76,6 @@ export function QuranSurahHeader({
         >
           {meaning}
         </span>
-        {name}
       </h1>
       <div
         className="col-start-3 row-start-1 flex justify-end"

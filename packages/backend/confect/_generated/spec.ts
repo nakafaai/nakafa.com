@@ -193,6 +193,7 @@ import notifications_consume from "../notifications/consume.spec";
 import notifications_deliver from "../notifications/deliver.spec";
 import notifications_fanout from "../notifications/fanout.spec";
 import notifications_inbox from "../notifications/inbox.spec";
+import notifications_personal from "../notifications/personal.spec";
 import notifications_preferences from "../notifications/preferences.spec";
 import notifications_purge from "../notifications/purge.spec";
 import notifications_push from "../notifications/push.spec";
@@ -290,7 +291,7 @@ const spec: Spec.Spec<{
   readonly journal: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "journal", never, GroupSpec.NamedAt<typeof journal_audit, "audit">>, "journal">;
   readonly learningPreferences: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "learningPreferences", never, GroupSpec.NamedAt<typeof learningPreferences_mutations, "mutations"> | GroupSpec.NamedAt<typeof learningPreferences_queries, "queries">>, "learningPreferences">;
   readonly nina: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "nina", never, GroupSpec.NamedAt<typeof nina_brief, "brief"> | GroupSpec.NamedAt<typeof nina_conversation, "conversation"> | GroupSpec.NamedAt<typeof nina_documents, "documents"> | GroupSpec.NamedAt<typeof nina_focus, "focus"> | GroupSpec.NamedAt<typeof nina_judgment, "judgment"> | GroupSpec.NamedAt<typeof nina_lifecycle, "lifecycle"> | GroupSpec.NamedAt<typeof nina_memory, "memory"> | GroupSpec.NamedAt<typeof nina_messages, "messages"> | GroupSpec.NamedAt<typeof nina_phase, "phase"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof nina_portrait, GroupSpec.NamedAt<typeof nina_portrait_build, "build">>, "portrait"> | GroupSpec.NamedAt<typeof nina_presentation, "presentation"> | GroupSpec.NamedAt<typeof nina_response, "response"> | GroupSpec.NamedAt<typeof nina_sealed, "sealed"> | GroupSpec.NamedAt<typeof nina_summaries, "summaries"> | GroupSpec.NamedAt<typeof nina_turns, "turns"> | GroupSpec.NamedAt<typeof nina_uploads, "uploads"> | GroupSpec.NamedAt<typeof nina_usage, "usage"> | GroupSpec.NamedAt<typeof nina_waits, "waits">>, "nina">;
-  readonly notifications: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "notifications", never, GroupSpec.NamedAt<typeof notifications_consume, "consume"> | GroupSpec.NamedAt<typeof notifications_deliver, "deliver"> | GroupSpec.NamedAt<typeof notifications_fanout, "fanout"> | GroupSpec.NamedAt<typeof notifications_inbox, "inbox"> | GroupSpec.NamedAt<typeof notifications_preferences, "preferences"> | GroupSpec.NamedAt<typeof notifications_purge, "purge"> | GroupSpec.NamedAt<typeof notifications_push, "push"> | GroupSpec.NamedAt<typeof notifications_read, "read"> | GroupSpec.NamedAt<typeof notifications_sittings, "sittings"> | GroupSpec.NamedAt<typeof notifications_tasks, "tasks">>, "notifications">;
+  readonly notifications: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "notifications", never, GroupSpec.NamedAt<typeof notifications_consume, "consume"> | GroupSpec.NamedAt<typeof notifications_deliver, "deliver"> | GroupSpec.NamedAt<typeof notifications_fanout, "fanout"> | GroupSpec.NamedAt<typeof notifications_inbox, "inbox"> | GroupSpec.NamedAt<typeof notifications_personal, "personal"> | GroupSpec.NamedAt<typeof notifications_preferences, "preferences"> | GroupSpec.NamedAt<typeof notifications_purge, "purge"> | GroupSpec.NamedAt<typeof notifications_push, "push"> | GroupSpec.NamedAt<typeof notifications_read, "read"> | GroupSpec.NamedAt<typeof notifications_sittings, "sittings"> | GroupSpec.NamedAt<typeof notifications_tasks, "tasks">>, "notifications">;
   readonly onboarding: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "onboarding", never, GroupSpec.NamedAt<typeof onboarding_mutations, "mutations"> | GroupSpec.NamedAt<typeof onboarding_queries, "queries">>, "onboarding">;
   readonly operators: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "operators", never, GroupSpec.NamedAt<typeof operators_expiry, "expiry"> | GroupSpec.NamedAt<typeof operators_staff, "staff"> | GroupSpec.NamedAt<typeof operators_tenants, "tenants"> | GroupSpec.NamedAt<typeof operators_visits, "visits">>, "operators">;
   readonly posts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "posts", never, GroupSpec.NamedAt<typeof posts_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof posts_mutations, "mutations"> | GroupSpec.NamedAt<typeof posts_queries, "queries">>, "posts">;
@@ -585,6 +586,7 @@ const spec: Spec.Spec<{
     ["deliver"]: notifications_deliver,
     ["fanout"]: notifications_fanout,
     ["inbox"]: notifications_inbox,
+    ["personal"]: notifications_personal,
     ["preferences"]: notifications_preferences,
     ["purge"]: notifications_purge,
     ["push"]: notifications_push,

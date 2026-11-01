@@ -8,9 +8,15 @@ import {
   DatabaseReader,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { quietHoursEnd } from "@repo/backend/confect/notifications/clock";
+import {
+  ACCOUNT_TIME_ZONE,
+  quietHoursEnd,
+} from "@repo/backend/confect/notifications/clock";
 import type { NoticeKind } from "@repo/backend/confect/notifications/rules";
-import { switchedOff } from "@repo/backend/confect/notifications/switched";
+import {
+  accountSwitchedOff,
+  switchedOff,
+} from "@repo/backend/confect/notifications/switched";
 import { namedTimeZone } from "@repo/utilities/timezone";
 import {
   Array as Arr,
@@ -20,9 +26,6 @@ import {
   Effect,
   Option,
 } from "effect";
-
-/** The zone of an account's notices: an account keeps none, and Nakafa's learners are in Indonesia. */
-const ACCOUNT_TIME_ZONE = "Asia/Jakarta";
 
 /**
  * Schedules the send of one row's push: at the end of quiet hours on the clock of
@@ -95,8 +98,9 @@ export const schedulePush = Effect.fn("notifications.schedule.push")(function* (
 
 /**
  * Schedules the push of one new row of an account, which no school holds. An
- * account with no browser subscribed gets none. A student's quiet hours run on the
- * clock of Indonesia, because an account keeps no zone of its own.
+ * account that switched the push of a reply off, or with no browser subscribed, gets
+ * none. A student's quiet hours run on the clock of Indonesia, because an account
+ * keeps no zone of its own.
  */
 export const scheduleAccountPush = Effect.fn(
   "notifications.schedule.accountPush"
@@ -104,6 +108,11 @@ export const scheduleAccountPush = Effect.fn(
   notificationId: GenericId.GenericId<"notifications">,
   userId: GenericId.GenericId<"users">
 ) {
+  if (
+    Option.isSome(yield* accountSwitchedOff(userId, "commentReply", "push"))
+  ) {
+    return;
+  }
   if (Option.isNone(yield* firstSubscription(userId))) {
     return;
   }

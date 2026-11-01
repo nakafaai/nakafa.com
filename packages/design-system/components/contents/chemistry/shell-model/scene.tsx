@@ -105,7 +105,7 @@ function NucleusLabel() {
       position={[0, 0, 0]}
     >
       <InlineMath
-        math={`{}_{${sample.atomicNumber}}\\mathrm{${sample.symbol}}`}
+        math={`\\vphantom{X}_{${sample.atomicNumber}}\\mathrm{${sample.symbol}}`}
       />
     </ThreeLabel>
   );

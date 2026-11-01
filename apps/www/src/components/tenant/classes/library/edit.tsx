@@ -125,7 +125,7 @@ export function LibraryEditDialog({
       }
       open={open}
       setOpen={setOpen}
-      title={t("library-edit")}
+      title={t("library-edit-title")}
     >
       <FieldGroup>
         {isLink ? (

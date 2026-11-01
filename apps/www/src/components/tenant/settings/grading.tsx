@@ -38,6 +38,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -141,7 +142,7 @@ function GradingTable({
 
   if (Arr.isReadonlyArrayEmpty(versions)) {
     return failed ? (
-      <DataFailure onRetry={reloadPage} />
+      <LoadFailure onRetry={reloadPage} />
     ) : (
       <TableEmpty
         act="thinking"

@@ -76,6 +76,13 @@ test("a student who answers while the connection is lost keeps the answer, and t
   await expect(student.getByText("We could not load this data.")).toHaveCount(
     0
   );
+  // The student is told the answer waits, in the paper's bar, for as long as the connection is gone.
+  const waits = student.getByText(
+    "Your changes save once you are back online."
+  );
+  await expect(waits.first()).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
 
   // Back online, the player sends the kept answer, and the server's confirmation empties the browser's keep.
   await studentContext.setOffline(false);
@@ -84,6 +91,7 @@ test("a student who answers while the connection is lost keeps the answer, and t
       timeout: readinessTimeoutMilliseconds,
     })
     .toBe(0);
+  await expect(waits).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
   // The answer the server holds is the one the paper shows after a reload.
   await student.reload();
   await expect(

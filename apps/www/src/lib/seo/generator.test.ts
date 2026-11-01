@@ -52,7 +52,7 @@ const translations: TranslationNamespaces = HashMap.fromIterable([
       [
         "article.title",
         (values) =>
-          `${getValue(values, "title")} - ${getValue(values, "category")} | Nakafa`,
+          `${getValue(values, "title")} - ${getValue(values, "category")} - Nakafa`,
       ],
       [
         "curriculum.description",
@@ -88,7 +88,7 @@ const translations: TranslationNamespaces = HashMap.fromIterable([
           const parentText = parent === "__EMPTY__" ? "" : ` - ${parent}`;
           const programText = program === "__EMPTY__" ? "" : ` (${program})`;
 
-          return `${getValue(values, "title")}${parentText}${programText} | Nakafa`;
+          return `${getValue(values, "title")}${parentText}${programText} - Nakafa`;
         },
       ],
       [
@@ -104,7 +104,7 @@ const translations: TranslationNamespaces = HashMap.fromIterable([
       [
         "quran.title",
         (values) =>
-          `Surah ${getValue(values, "number")}. ${getValue(values, "name")} - ${getValue(values, "translation")} | Nakafa`,
+          `Surah ${getValue(values, "number")}. ${getValue(values, "name")} - ${getValue(values, "translation")} - Nakafa`,
       ],
       [
         "subject.description",
@@ -123,7 +123,7 @@ const translations: TranslationNamespaces = HashMap.fromIterable([
           const chapter = getValue(values, "chapter");
           const chapterPrefix = chapter === "__EMPTY__" ? "" : `${chapter} - `;
 
-          return `${getValue(values, "title")}: ${chapterPrefix}${getValue(values, "material")} (${getValue(values, "grade")}) | Nakafa`;
+          return `${getValue(values, "title")}: ${chapterPrefix}${getValue(values, "material")} (${getValue(values, "grade")}) - Nakafa`;
         },
       ],
     ]),
@@ -196,7 +196,7 @@ describe("resolveSEOMetadata", () => {
         "Hand-written subject summary for students."
       );
       expect(result.title).toBe(
-        "Trigonometric Function Graph: Mathematics (Grade 11) | Nakafa"
+        "Trigonometric Function Graph: Mathematics (Grade 11) - Nakafa"
       );
       expect(result.keywords).toEqual([
         "Trigonometric Function Graph",
@@ -245,7 +245,7 @@ describe("resolveSEOMetadata", () => {
       );
 
       expect(result.title).toBe(
-        "Function Modeling: Mathematics (Grade 11) | Nakafa"
+        "Function Modeling: Mathematics (Grade 11) - Nakafa"
       );
     })
   );
@@ -264,7 +264,7 @@ describe("resolveSEOMetadata", () => {
           "en"
         );
 
-        expect(result.title).toBe("Nakafa: Mathematics (Grade 11) | Nakafa");
+        expect(result.title).toBe("Nakafa: Mathematics (Grade 11) - Nakafa");
       })
   );
 
@@ -283,7 +283,7 @@ describe("resolveSEOMetadata", () => {
       );
 
       expect(result.description).toBe("Hand-written article summary.");
-      expect(result.title).toBe("Regional Elections - Politics | Nakafa");
+      expect(result.title).toBe("Regional Elections - Politics - Nakafa");
     })
   );
 
@@ -332,14 +332,14 @@ describe("resolveSEOMetadata", () => {
         );
 
         expect(nested.title).toBe(
-          "Mathematics - Grade 11 (Kurikulum Merdeka) | Nakafa"
+          "Mathematics - Grade 11 (Kurikulum Merdeka) - Nakafa"
         );
         expect(nested.keywords).toEqual([
           "Mathematics",
           "Grade 11",
           "Kurikulum Merdeka",
         ]);
-        expect(root.title).toBe("Mathematics | Nakafa");
+        expect(root.title).toBe("Mathematics - Nakafa");
         expect(root.description).toBe("Browse Mathematics.");
       })
   );
@@ -354,7 +354,7 @@ describe("resolveSEOMetadata", () => {
         "en"
       );
 
-      expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening | Nakafa");
+      expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening - Nakafa");
       expect(result.description).toBe("Read Surah Al-Fatihah with 7 verses.");
     })
   );

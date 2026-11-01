@@ -17,6 +17,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { LoadFailure } from "@/components/state/failure";
 import { SchoolPlacementMove } from "@/components/tenant/settings/placement";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
 
@@ -67,7 +68,7 @@ export function SchoolCohortMembers({
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     if (failed) {
-      return <DataFailure onRetry={reloadPage} />;
+      return <LoadFailure onRetry={reloadPage} />;
     }
     return (
       <TableEmpty

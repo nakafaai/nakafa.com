@@ -31,7 +31,6 @@ import {
 } from "@/components/connectors/optimistic";
 import { connectFailure } from "@/components/connectors/outcome";
 import { contentWidthVariants } from "@/components/shared/content/width";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
@@ -39,6 +38,7 @@ import {
   TableSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import {
   forumCall,
   runForumCall,
@@ -112,7 +112,7 @@ function SchoolDirectory() {
     PaginatedQueryResult.isFailure(school) ||
     PaginatedQueryResult.isFailure(own)
   ) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
 
   const hasRead =

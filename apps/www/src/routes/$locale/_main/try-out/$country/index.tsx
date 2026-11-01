@@ -1,3 +1,4 @@
+import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/$locale/_main/try-out/$country/")({
           description: loaderData.head.description,
           image: loaderData.head.image,
           indexable: true,
-          jsonLd: [],
+          jsonLd: makeBreadcrumbNodes(loaderData.head.breadcrumbs),
           locale: params.locale,
           title: loaderData.head.title,
         }),

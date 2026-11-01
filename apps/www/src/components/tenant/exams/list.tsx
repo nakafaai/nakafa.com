@@ -24,6 +24,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   CreateExam,
@@ -153,7 +154,7 @@ function ExamListRows({
         );
   const places = Arr.dedupe(Arr.map(rows, (exam) => placeOf(exam.scope)));
   if (failed && Arr.isReadonlyArrayEmpty(rows)) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
 
   const columns = examColumns.columns([
