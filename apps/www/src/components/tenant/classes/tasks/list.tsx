@@ -58,7 +58,7 @@ const CATEGORY_ICONS = [
   Flag01Icon,
   Note01Icon,
   Book02Icon,
-];
+] as const;
 
 /**
  * The look of each standing of a task in its column's filter: a task still open, work handed in, work that came
