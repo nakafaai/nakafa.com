@@ -1,6 +1,5 @@
 import type { Ref } from "@confect/core";
 import { useAction, useMutation } from "@confect/react";
-import { RefreshIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -45,10 +44,10 @@ const UNLINKED = "none";
  * The work a connected Classroom opens (journey J7): the courses that the school's connection
  * teaches, each with its students and the class it fills. Picking a class links the course at once,
  * and its coursework arrives as the class's tasks; picking none removes the link. The courses load
- * as the open service shows them, so the page calls Google only when a reader opened it.
+ * each time the open service shows them, so the page calls Google only when a reader opened it, and
+ * opening it again reads Google again.
  */
 export function ClassroomCourses() {
-  const t = useTranslations("Connectors");
   const { slug } = useTenant();
   const preview = useAction(connectors.classroom.preview);
   const [isLoading, startLoading] = useTransition();
@@ -67,23 +66,10 @@ export function ClassroomCourses() {
     );
 
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <h3 className="min-w-0 flex-1 text-sm font-medium">{t("courses")}</h3>
-        <Button
-          aria-label={t("courses-refresh")}
-          disabled={isLoading}
-          onClick={load}
-          size="icon-sm"
-          type="button"
-          variant="outline"
-        >
-          <Spinner icon={RefreshIcon} isLoading={isLoading} />
-        </Button>
-      </div>
+    <div className="flex flex-col gap-3">
       <Intersection once onIntersect={load} />
       {Option.match(shown, {
-        onNone: () => null,
+        onNone: () => (isLoading ? <Spinner className="mx-auto" /> : null),
         onSome: (found) => (
           <>
             {Arr.isReadonlyArrayEmpty(found.classes) &&
@@ -103,7 +89,7 @@ export function ClassroomCourses() {
           </>
         ),
       })}
-    </section>
+    </div>
   );
 }
 

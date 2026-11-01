@@ -17,8 +17,9 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { useDialogs } from "@/components/shared/dialogs";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { GuardianLinkAddressDialog } from "@/components/tenant/guardian/address";
@@ -31,6 +32,9 @@ import { saveSchool } from "@/components/tenant/settings/save";
 import { isDraft } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/guardian/link";
+
+/** The dialogs of a live link, from its row menu or its open pane. */
+type LinkDialog = "readdress" | "rename" | "revoke";
 
 /** One guardian link as the staff list shows it. */
 export type LinkItem = PaginatedQueryItem<typeof guardians.links.list>;
@@ -45,17 +49,12 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
     verifyLinkChange
   );
   const [, startTransition] = useTransition();
-  const [isRevoking, setIsRevoking] = useState(false);
-  // Each opening of the email dialog mounts it again, so it starts from the link as it is then.
-  const [readdressing, setReaddressing] = useState(0);
-  // Each opening of the name dialog mounts it again, so it starts from the name as it is then.
-  const [renaming, setRenaming] = useState(0);
-  const [isRenaming, setIsRenaming] = useState(false);
+  const dialogs = useDialogs<LinkDialog>();
 
   return (
     <>
       <Button
-        onClick={() => setIsRevoking(true)}
+        onClick={() => dialogs.show("revoke")}
         type="button"
         variant="destructive"
       >
@@ -64,10 +63,7 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
       </Button>
       <WithAction action="person.manage">
         <Button
-          onClick={() => {
-            setRenaming((count) => count + 1);
-            setIsRenaming(true);
-          }}
+          onClick={() => dialogs.show("rename")}
           type="button"
           variant="outline"
         >
@@ -78,7 +74,7 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
       {link.status === "pending" ? (
         <>
           <Button
-            onClick={() => setReaddressing((count) => count + 1)}
+            onClick={() => dialogs.show("readdress")}
             type="button"
             variant="outline"
           >
@@ -98,22 +94,7 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
           </Button>
         </>
       ) : null}
-      {readdressing === 0 ? null : (
-        <GuardianLinkAddressDialog key={readdressing} link={link} />
-      )}
-      {renaming === 0 ? null : (
-        <PersonRenameDialog
-          key={renaming}
-          open={isRenaming}
-          person={link.guardian}
-          setOpen={setIsRenaming}
-        />
-      )}
-      <GuardianLinkRevokeDialog
-        link={link}
-        open={isRevoking}
-        setOpen={setIsRevoking}
-      />
+      <GuardianLinkDialogs dialogs={dialogs} link={link} />
     </>
   );
 }
@@ -131,12 +112,7 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
     verifyLinkChange
   );
   const [, startTransition] = useTransition();
-  const [isRevoking, setIsRevoking] = useState(false);
-  // Each opening of the email dialog mounts it again, so it starts from the link as it is then.
-  const [readdressing, setReaddressing] = useState(0);
-  // Each opening of the name dialog mounts it again, so it starts from the name as it is then.
-  const [renaming, setRenaming] = useState(0);
-  const [isRenaming, setIsRenaming] = useState(false);
+  const dialogs = useDialogs<LinkDialog>();
 
   return (
     <div className="flex justify-end">
@@ -156,21 +132,14 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
           />
           <DropdownMenuContent align="end" className="w-48">
             <WithAction action="person.manage">
-              <DropdownMenuItem
-                onClick={() => {
-                  setRenaming((count) => count + 1);
-                  setIsRenaming(true);
-                }}
-              >
+              <DropdownMenuItem onClick={() => dialogs.show("rename")}>
                 <HugeIcons icon={UserEdit01Icon} />
                 {t("link-rename")}
               </DropdownMenuItem>
             </WithAction>
             {link.status === "pending" ? (
               <>
-                <DropdownMenuItem
-                  onClick={() => setReaddressing((count) => count + 1)}
-                >
+                <DropdownMenuItem onClick={() => dialogs.show("readdress")}>
                   <HugeIcons icon={PencilEdit02Icon} />
                   {t("link-readdress")}
                 </DropdownMenuItem>
@@ -191,7 +160,7 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
               </>
             ) : null}
             <DropdownMenuItem
-              onClick={() => setIsRevoking(true)}
+              onClick={() => dialogs.show("revoke")}
               variant="destructive"
             >
               <HugeIcons icon={Unlink01Icon} />
@@ -200,23 +169,41 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
           </DropdownMenuContent>
         </DropdownMenu>
       ) : null}
-      {readdressing === 0 ? null : (
-        <GuardianLinkAddressDialog key={readdressing} link={link} />
-      )}
-      {renaming === 0 ? null : (
+      <GuardianLinkDialogs dialogs={dialogs} link={link} />
+    </div>
+  );
+}
+
+/**
+ * The dialogs of a live link, for its row menu and its open pane alike. Each opening of the email or the name dialog
+ * mounts it again, so it starts from the link as it is then.
+ */
+function GuardianLinkDialogs({
+  dialogs,
+  link,
+}: {
+  dialogs: ReturnType<typeof useDialogs<LinkDialog>>;
+  link: LinkItem;
+}) {
+  return (
+    <>
+      {dialogs.kind === "readdress" ? (
+        <GuardianLinkAddressDialog key={dialogs.key} link={link} />
+      ) : null}
+      {dialogs.kind === "rename" ? (
         <PersonRenameDialog
-          key={renaming}
-          open={isRenaming}
+          key={dialogs.key}
+          open={dialogs.isOpen("rename")}
           person={link.guardian}
-          setOpen={setIsRenaming}
+          setOpen={dialogs.setOpen}
         />
-      )}
+      ) : null}
       <GuardianLinkRevokeDialog
         link={link}
-        open={isRevoking}
-        setOpen={setIsRevoking}
+        open={dialogs.isOpen("revoke")}
+        setOpen={dialogs.setOpen}
       />
-    </div>
+    </>
   );
 }
 

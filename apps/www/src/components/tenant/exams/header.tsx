@@ -13,10 +13,10 @@ import { isComposingKey } from "@repo/utilities/composition";
 import { Function as Fn, Option } from "effect";
 import { type ComponentProps, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
+import { OfflineNote } from "@/components/shared/offline";
 import { useTenant } from "@/components/tenant/context";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { ExamMenu, ExamMenuFrame } from "@/components/tenant/exams/menu";
-import { ExamOffline } from "@/components/tenant/exams/offline";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { ExamPresence } from "@/components/tenant/exams/presence";
 import { useExam } from "@/components/tenant/exams/provider";
@@ -80,7 +80,7 @@ export function ExamHeader() {
         readOnly={exam.archived || gone}
         value={draft ?? exam.title}
       />
-      <ExamOffline />
+      <OfflineNote />
       <ExamReadBoundary>
         <ExamPresence />
       </ExamReadBoundary>

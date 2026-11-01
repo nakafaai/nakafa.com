@@ -21,6 +21,7 @@ import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
+import { OfflineNote } from "@/components/shared/offline";
 import { TryoutContentContext } from "@/components/tryout/content/context";
 import { TryoutArticles } from "@/components/tryout/player/articles";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
@@ -90,6 +91,7 @@ export function TryoutPlayer({
             <HugeIcons icon={ArrowLeft01Icon} />
           </TryoutPageLink>
           <PlayerTitle>{title}</PlayerTitle>
+          <OfflineNote />
         </PlayerHeaderStart>
         <TryoutPlayerTimer expiresAt={runtime.expiresAt} />
         <PlayerHeaderEnd>
