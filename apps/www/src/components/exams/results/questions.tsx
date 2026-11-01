@@ -40,9 +40,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -427,15 +425,6 @@ export function QuestionsAction({
             ),
           })}
         </ScrollArea>
-        <SheetFooter>
-          <SheetClose
-            render={
-              <Button type="button" variant="outline">
-                {common("close")}
-              </Button>
-            }
-          />
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
