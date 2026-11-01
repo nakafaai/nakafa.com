@@ -60,6 +60,7 @@
   "SchoolGuardians": {
     "request-ask": "Die Schule fragen",
     "request-description": "Das Sekretariat beantwortet jede Anfrage. Schreibe kurz, was du brauchst.",
+    "request-placeholder": "Was du vom Sekretariat brauchst",
     "request-kind": "Anfrage",
     "request-text": "Deine Notiz",
     "request-state": "Status",
@@ -3758,6 +3759,7 @@
     "empty-description": "Jede freigegebene Prüfung erscheint hier.",
     "narrative-title": "Bericht zu {student}",
     "narrative-description": "Deine Worte zu diesem Lernenden. Erziehungsberechtigte lesen sie erst, wenn du sie teilst.",
+    "narrative-placeholder": "Was dieser Lernende gut kann, und was als Nächstes hilft",
     "narrative-save": "Speichern",
     "narrative-share": "Mit Erziehungsberechtigten teilen",
     "narrative-withdraw": "Zurücknehmen",
