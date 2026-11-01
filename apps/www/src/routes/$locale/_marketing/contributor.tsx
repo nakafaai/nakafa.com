@@ -5,7 +5,7 @@ import {
   makeContributorsNode,
 } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, Predicate } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { ContributorGallery } from "@/components/contributor/gallery";
@@ -68,7 +68,10 @@ export const Route = createFileRoute("/$locale/_marketing/contributor")({
                 name: loaderData.name,
                 people: Arr.map(contributors, ({ name, social }) => ({
                   name,
-                  profiles: Rec.values(social ?? {}),
+                  profiles: Arr.filter(
+                    [social?.twitter, social?.github, social?.linkedin],
+                    Predicate.isNotUndefined
+                  ),
                 })),
                 url: `${COMPANY_IDENTITY.url}/${params.locale}/contributor`,
               }),
