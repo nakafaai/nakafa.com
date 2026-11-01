@@ -1,4 +1,4 @@
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /**
  * What a tab from before a deploy reads when it calls a server function that the
@@ -105,26 +105,47 @@ export const reloadForStaleChunk = Effect.fn("www.chunks.reloadForStale")(
 );
 
 /**
+ * The tab that a stale call reloads, or none where no tab exists. A function
+ * middleware's client side also runs when a loader calls a server function during
+ * server rendering. Storage is read at each use, so a browser that refuses it
+ * fails inside `reloadForStaleChunk`, which never reloads for that.
+ */
+export function readTab() {
+  return typeof window === "undefined"
+    ? Option.none()
+    : Option.some({
+        address: window.location.pathname,
+        reload: () => window.location.reload(),
+        storage: {
+          getItem: (key: string) => window.sessionStorage.getItem(key),
+          setItem: (key: string, value: string) =>
+            window.sessionStorage.setItem(key, value),
+        },
+      });
+}
+
+/**
  * Runs a server function call and answers one that a deploy replaced as a missing
- * chunk is answered: the page reloads once at its address and the call waits for
- * it, so no caller draws an error meanwhile. Every other failure, and a function
- * still missing after the reload, reaches the caller unchanged.
+ * chunk is answered: the tab reloads once at its address and the call waits for
+ * it, so no caller draws an error meanwhile. The tab is read only once a call has
+ * failed. Every other failure, a function still missing after the reload, and a
+ * failure on the server reach the caller unchanged.
  */
 export function recoverStaleFunction<A>(
   call: () => Promise<A>,
-  page: {
-    readonly address: string;
-    readonly reload: () => void;
-    readonly storage: Pick<Storage, "getItem" | "setItem">;
-  }
+  tab: () => ReturnType<typeof readTab> = readTab
 ) {
   return Effect.tryPromise({ catch: (cause) => cause, try: call }).pipe(
     Effect.catchIf(isStaleChunkError, (cause) =>
-      reloadForStaleChunk(page.address, page.storage, page.reload).pipe(
-        Effect.flatMap((reloads) =>
-          reloads ? Effect.never : Effect.fail(cause)
-        )
-      )
+      Option.match(tab(), {
+        onNone: () => Effect.fail(cause),
+        onSome: ({ address, reload, storage }) =>
+          reloadForStaleChunk(address, storage, reload).pipe(
+            Effect.flatMap((reloads) =>
+              reloads ? Effect.never : Effect.fail(cause)
+            )
+          ),
+      })
     )
   );
 }

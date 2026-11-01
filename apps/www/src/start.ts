@@ -70,14 +70,7 @@ const pricingCurrency = createMiddleware({ type: "request" }).server(
 
 /** Reloads a tab whose server function a deploy removed, once, as a missing chunk does. */
 const staleFunction = createMiddleware({ type: "function" }).client(
-  ({ next }) =>
-    Effect.runPromise(
-      recoverStaleFunction(() => next(), {
-        address: window.location.pathname,
-        reload: () => window.location.reload(),
-        storage: window.sessionStorage,
-      })
-    )
+  ({ next }) => Effect.runPromise(recoverStaleFunction(() => next()))
 );
 
 export const startInstance = createStart(() => ({
