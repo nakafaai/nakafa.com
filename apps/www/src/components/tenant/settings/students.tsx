@@ -50,6 +50,7 @@ import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
   TableSearch,
+  useServerSearch,
 } from "@/components/shared/table/toolbar";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
@@ -148,19 +149,21 @@ function SchoolLoginTable() {
   const formatZone = useFormatTimeZone();
   const timeZone = useSchoolTimeZone();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const search = useServerSearch();
   const pagination = usePaginatedQuery(
     identity.logins.list,
-    isSettled ? { slug } : "skip",
+    isSettled ? { slug, ...(search === "" ? {} : { search }) } : "skip",
     { initialNumItems: PAGE_SIZE }
+  );
+  // A new search's first page loads behind the rows the table shows, so the table never blanks.
+  const kept = useKeptRows(
+    pagination._tag === "LoadingFirstPage",
+    pagination.results
   );
 
   const columns = [
-    // The login name with the student's name after it, so the header's search finds a login by either; the cell
-    // shows the login name.
-    loginColumns.text((login) => `${login.loginName} ${login.person.name}`, {
-      cell: (info) => (
-        <span className="font-medium">{info.row.original.loginName}</span>
-      ),
+    loginColumns.text((login) => login.loginName, {
+      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
       header: t("login-name"),
       id: "login",
     }),
@@ -181,7 +184,7 @@ function SchoolLoginTable() {
     <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
       <DataTable
         columns={columns}
-        data={pagination.results}
+        data={Option.getOrElse(kept, () => [])}
         empty={
           <TableEmpty
             act="pointing"
@@ -190,7 +193,6 @@ function SchoolLoginTable() {
           />
         }
         rowId={(login) => login.person.id}
-        search="login"
       />
     </TablePages>
   );

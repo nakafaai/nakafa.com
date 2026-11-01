@@ -37,6 +37,8 @@ import { Person } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { personAccess } from "@repo/backend/confect/tenancy/authority";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
+import { namedPeople } from "@repo/backend/confect/tenancy/named";
+import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
   Array as Arr,
   Clock,
@@ -45,6 +47,7 @@ import {
   Layer,
   Number as Num,
   Option,
+  Schema,
   Struct,
 } from "effect";
 
@@ -174,26 +177,58 @@ const mine = FunctionImpl.make(
   })
 );
 
-/** The school's links, newest first, a page at a time, clamped to one to `PAGE_LIMIT` rows. */
+/**
+ * The school's links, newest first, a page at a time, clamped to one to `PAGE_LIMIT` rows, or
+ * the links of one parent's address or of the students a search finds by name, so a search
+ * reaches every page.
+ */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("guardians.links.list")(function* ({ paginationOpts }) {
+  Effect.fn("guardians.links.list")(function* ({ paginationOpts, search }) {
     const { tenant } = yield* Member;
+    const now = yield* Clock.currentTimeMillis;
+    const pageOptions = Struct.assign(paginationOpts, {
+      numItems: Num.clamp(paginationOpts.numItems, {
+        maximum: PAGE_LIMIT,
+        minimum: 1,
+      }),
+    });
+    if (search !== undefined && Schema.is(Email)(search)) {
+      const addressed = yield* (yield* DatabaseReader)
+        .table("guardianLinks")
+        .index("by_tenantId_and_email", (query) =>
+          query.eq("tenantId", tenant._id).eq("email", search)
+        )
+        .paginate(pageOptions)
+        .pipe(Effect.orDie);
+      const found = yield* Effect.forEach(
+        addressed.page,
+        (link) => linkViewOf(link, now),
+        { concurrency: "unbounded" }
+      );
+      return Struct.assign(addressed, { page: found });
+    }
+    if (search !== undefined) {
+      const people = yield* namedPeople(tenant._id, search, pageOptions);
+      const links = yield* Effect.forEach(
+        people.page,
+        (person) => linksOfStudent(person._id),
+        { concurrency: "unbounded" }
+      );
+      const found = yield* Effect.forEach(
+        Arr.flatten(links),
+        (link) => linkViewOf(link, now),
+        { concurrency: "unbounded" }
+      );
+      return Struct.assign(people, { page: found });
+    }
     const page = yield* (yield* DatabaseReader)
       .table("guardianLinks")
       .index("by_tenantId", (query) => query.eq("tenantId", tenant._id), "desc")
-      .paginate(
-        Struct.assign(paginationOpts, {
-          numItems: Num.clamp(paginationOpts.numItems, {
-            maximum: PAGE_LIMIT,
-            minimum: 1,
-          }),
-        })
-      )
+      .paginate(pageOptions)
       .pipe(Effect.orDie);
-    const now = yield* Clock.currentTimeMillis;
     const views = yield* Effect.forEach(
       page.page,
       (link) => linkViewOf(link, now),

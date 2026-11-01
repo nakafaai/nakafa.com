@@ -40,6 +40,7 @@ import {
   pendingInviteOf,
   writeInvite,
 } from "@repo/backend/confect/tenancy/invite";
+import { namedPeople } from "@repo/backend/confect/tenancy/named";
 import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
 import { renamePerson } from "@repo/backend/confect/tenancy/rename";
 import { memberStatusOf } from "@repo/backend/confect/tenancy/roster";
@@ -137,28 +138,34 @@ const removableBy = Effect.fn("tenancy.roster.removable")(function* (
 
 /**
  * The active members of the school, a page at a time, each with its roles, its status, and
- * whether the caller may remove it. Operator Persons are visits, not members, so the page
- * leaves them out.
+ * whether the caller may remove it, or the ones a search finds by name, best match first, so
+ * a search reaches every page of a school of thousands. Operator Persons are visits, not
+ * members, so a page leaves them out, and a searched page leaves out whoever is not active.
  */
 const members = FunctionImpl.make(
   databaseSchema,
   spec,
   "members",
-  Effect.fn("tenancy.roster.members")(function* ({ paginationOpts }) {
+  Effect.fn("tenancy.roster.members")(function* ({ paginationOpts, search }) {
     const { person: caller, tenant } = yield* Member;
     const managesOwners = Arr.contains(
       yield* tenantAuthority.allowed(tenant),
       "owner.manage"
     );
-    const page = yield* (yield* DatabaseReader)
-      .table("tenantPeople")
-      .index("by_tenantId_and_status", (query) =>
-        query.eq("tenantId", tenant._id).eq("status", "active")
-      )
-      .paginate(paginationOpts)
-      .pipe(Effect.orDie);
+    const page = yield* search === undefined
+      ? (yield* DatabaseReader)
+          .table("tenantPeople")
+          .index("by_tenantId_and_status", (query) =>
+            query.eq("tenantId", tenant._id).eq("status", "active")
+          )
+          .paginate(paginationOpts)
+          .pipe(Effect.orDie)
+      : namedPeople(tenant._id, search, paginationOpts);
     const rows = yield* Effect.forEach(
-      Arr.filter(page.page, (person) => person.kind === "member"),
+      Arr.filter(
+        page.page,
+        (person) => person.kind === "member" && person.status === "active"
+      ),
       (person) => memberRow(person, caller._id, managesOwners),
       { concurrency: "unbounded" }
     );

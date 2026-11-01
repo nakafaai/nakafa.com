@@ -38,6 +38,7 @@ import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
+  useServerSearch,
 } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import { WithAction } from "@/components/tenant/action";
@@ -53,6 +54,7 @@ import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
+import { useKeptRows } from "@/lib/data/kept";
 
 /** How many links one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -119,10 +121,16 @@ function GuardianLinksBody() {
   const t = useTranslations("SchoolGuardians");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const search = useServerSearch();
   const pagination = usePaginatedQuery(
     guardians.links.list,
-    isSettled ? { slug } : "skip",
+    isSettled ? { slug, ...(search === "" ? {} : { search }) } : "skip",
     { initialNumItems: PAGE_SIZE }
+  );
+  // A new search's first page loads behind the rows the table shows, so the table never blanks.
+  const kept = useKeptRows(
+    pagination._tag === "LoadingFirstPage",
+    pagination.results
   );
   const waiting = useQuery(
     guardians.requests.waiting,
@@ -134,13 +142,10 @@ function GuardianLinksBody() {
   }
   const failed = PaginatedQueryResult.isFailure(pagination);
   // Both reads arrive before the list draws, so a waiting request never pushes the table down.
-  if (
-    pagination._tag === "LoadingFirstPage" ||
-    !QueryResult.isSuccess(waiting)
-  ) {
+  if (Option.isNone(kept) || !QueryResult.isSuccess(waiting)) {
     return null;
   }
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+  if (Arr.isReadonlyArrayEmpty(kept.value) && search === "") {
     if (failed) {
       return <LoadFailure onRetry={reloadPage} />;
     }
@@ -154,7 +159,7 @@ function GuardianLinksBody() {
   }
 
   return (
-    <LinksContext value={pagination.results}>
+    <LinksContext value={kept.value}>
       <Panes>
         <PanesList>
           {failed ? <DataFailure onRetry={reloadPage} /> : null}
@@ -192,13 +197,9 @@ function GuardianLinkTable() {
   const statusText = useStatusText();
 
   const columns = [
-    // The student's name, with the parent's address after it, so the header's search finds a link by either; the
-    // cell shows the name alone, and the name leads the sort.
-    linkColumns.text((link) => `${link.student.name} ${link.email}`, {
+    linkColumns.text((link) => link.student.name, {
       cell: (info) => (
-        <PaneOpen id={info.row.original.id}>
-          {info.row.original.student.name}
-        </PaneOpen>
+        <PaneOpen id={info.row.original.id}>{info.getValue()}</PaneOpen>
       ),
       header: t("student"),
       id: "student",
@@ -235,7 +236,6 @@ function GuardianLinkTable() {
       columns={columns}
       data={links}
       rowId={(link) => link.id}
-      search="student"
     />
   );
 }

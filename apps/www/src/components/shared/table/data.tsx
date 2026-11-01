@@ -108,7 +108,8 @@ export function DataTable<TData extends RowData>({
   const rows = table.getRowModel().rows;
   const waiting = use(TableWaitingContext) || loading;
   const isBare = Arr.isReadonlyArrayEmpty(data);
-  const showsEmpty = isBare && !waiting && empty !== undefined;
+  const showsEmpty =
+    isBare && !waiting && empty !== undefined && text.trim() === "";
 
   return (
     <>

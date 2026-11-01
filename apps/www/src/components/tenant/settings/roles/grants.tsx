@@ -23,7 +23,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -31,6 +31,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
+import { useServerSearch } from "@/components/shared/table/toolbar";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
@@ -40,6 +41,7 @@ import { SchoolRoleChangeDialog } from "@/components/tenant/settings/roles/chang
 import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { isDraft } from "@/components/tenant/settings/state";
+import { useKeptRows } from "@/lib/data/kept";
 
 const SOURCE = "components/tenant/settings/roles/grants";
 
@@ -63,10 +65,16 @@ export function SchoolGrantTable() {
   const viewer = useViewerQuery();
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const search = useServerSearch();
   const pagination = usePaginatedQuery(
     access.grants.list,
-    isSettled ? { slug } : "skip",
+    isSettled ? { slug, ...(search === "" ? {} : { search }) } : "skip",
     { initialNumItems: PAGE_SIZE }
+  );
+  // A new search's first page loads behind the rows the table shows, so the table never blanks.
+  const kept = useKeptRows(
+    pagination._tag === "LoadingFirstPage",
+    pagination.results
   );
 
   /** What a grant covers, by name: the whole school or one unit. */
@@ -104,7 +112,7 @@ export function SchoolGrantTable() {
     <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
       <DataTable
         columns={columns}
-        data={pagination.results}
+        data={Option.getOrElse(kept, () => [])}
         empty={
           <TableEmpty
             act="juggling"
@@ -113,7 +121,6 @@ export function SchoolGrantTable() {
           />
         }
         rowId={(grant) => grant.id}
-        search="person"
       />
     </TablePages>
   );

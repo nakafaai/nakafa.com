@@ -15,6 +15,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -40,6 +41,7 @@ import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
+  useServerSearch,
 } from "@/components/shared/table/toolbar";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
@@ -54,6 +56,7 @@ import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { useKeptRows } from "@/lib/data/kept";
 
 const SOURCE = "components/tenant/settings/members";
 
@@ -116,15 +119,21 @@ export function SchoolMembersSettings() {
 function SchoolMembersBody() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const search = useServerSearch();
   const pagination = usePaginatedQuery(
     tenancy.roster.members,
-    isSettled ? { slug } : "skip",
+    isSettled ? { slug, ...(search === "" ? {} : { search }) } : "skip",
     { initialNumItems: PAGE_SIZE }
+  );
+  // A new search's first page loads behind the rows the table shows, so the table never blanks.
+  const kept = useKeptRows(
+    pagination._tag === "LoadingFirstPage",
+    pagination.results
   );
 
   return (
     <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
-      <SchoolMemberTable members={pagination.results} />
+      <SchoolMemberTable members={Option.getOrElse(kept, () => [])} />
     </TablePages>
   );
 }
@@ -170,14 +179,11 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
       ),
       header: t("member-roles"),
       id: "roles",
-      options: Arr.map(
-        Arr.dedupe(Arr.flatMap(members, (member) => member.roles)),
-        (role) => ({
-          icon: roleLooks[role].icon,
-          label: tSchool(`role.${role}`),
-          value: role,
-        })
-      ),
+      options: Arr.map(BuiltinRole.literals, (role) => ({
+        icon: roleLooks[role].icon,
+        label: tSchool(`role.${role}`),
+        value: role,
+      })),
     }),
     memberColumns.menu((info) => (
       <WithAction action="person.manage">
@@ -198,7 +204,6 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
         />
       }
       rowId={(member) => member.id}
-      search="name"
     />
   );
 }

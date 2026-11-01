@@ -18,6 +18,26 @@ const notMember = { _tag: "NotMember", code: "NOT_MEMBER" };
 const rejected = (code: string) => ({ _tag: "GrantRejected", code });
 
 describe("access/grants list", () => {
+  it.effect("finds the grants of the people a search names", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const answer = yield* fixture.as("admin").query(list, {
+        paginationOpts: { cursor: null, numItems: 100 },
+        search: "Teach",
+        slug: nf,
+      });
+      expect(answer.page).toEqual([
+        {
+          id: fixture.people.teacher.grantId,
+          person: { id: fixture.people.teacher.personId, name: "Teacher" },
+          revocable: true,
+          role: { key: "teacher", kind: "builtin" },
+          scope: { kind: "unit", unitId: fixture.units.smp },
+        },
+      ]);
+    })
+  );
+
   it.effect(
     "lists every active grant of the school with its Person, role and scope, to the Admin",
     () =>
