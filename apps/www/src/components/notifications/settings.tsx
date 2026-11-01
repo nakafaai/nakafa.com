@@ -1,5 +1,9 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { Settings01Icon } from "@hugeicons/core-free-icons";
+import {
+  Notification01Icon,
+  NotificationOff01Icon,
+  Settings01Icon,
+} from "@hugeicons/core-free-icons";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import type { PreferenceChannel } from "@repo/backend/confect/notifications/preference";
 import type { NoticeKind } from "@repo/backend/confect/notifications/rules";
@@ -7,14 +11,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Switch } from "@repo/design-system/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { Array as Arr, Option } from "effect";
 import { useOptimistic, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -23,8 +19,10 @@ import {
   preferenceRowsOf,
   relationOfRole,
 } from "@/components/notifications/preferences";
-import { columnAlign } from "@/components/shared/table/align";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { saveSchool } from "@/components/tenant/settings/save";
 
@@ -53,6 +51,12 @@ export function NoticePreferences() {
   );
 }
 
+/** One kind of notice with the channels it uses. */
+type Row = ReturnType<typeof preferenceRowsOf>[number];
+
+/** The columns of the switches. */
+const preferenceColumns = tableColumns<Row>();
+
 /** The switches, each kind in a row, and an empty cell for a channel the kind does not use. */
 function PreferenceTable() {
   const t = useTranslations("Notifications");
@@ -72,48 +76,56 @@ function PreferenceTable() {
   const rows = preferenceRowsOf(
     relationOfRole(Option.getOrElse(role, () => "teacher"))
   );
+  const isOn = (kind: Row["kind"], channel: typeof PreferenceChannel.Type) =>
+    !Arr.some(off.value, (row) => row.kind === kind && row.channel === channel);
+  const channelColumn = (channel: typeof PreferenceChannel.Type) =>
+    preferenceColumns.values(
+      ({ channels, kind }) => {
+        if (!Arr.contains(channels, channel)) {
+          return "unused";
+        }
+        return isOn(kind, channel) ? "on" : "off";
+      },
+      {
+        cell: (info) =>
+          info.getValue() === "unused" ? null : (
+            <ChannelSwitch
+              channel={channel}
+              kind={info.row.original.kind}
+              on={info.getValue() === "on"}
+            />
+          ),
+        header: t(`channel-${channel}`),
+        id: channel,
+        options: [
+          { icon: Notification01Icon, label: t("channel-on"), value: "on" },
+          {
+            icon: NotificationOff01Icon,
+            label: t("channel-off"),
+            value: "off",
+          },
+        ],
+      }
+    );
 
   return (
-    <TableFrame>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className={columnAlign({ align: "start" })}>
-              {t("preferences-kind")}
-            </TableHead>
-            <TableHead className={columnAlign()}>{t("channel-push")}</TableHead>
-            <TableHead className={columnAlign()}>
-              {t("channel-email")}
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(rows, ({ channels, kind }) => (
-            <TableRow key={kind}>
-              <TableCell className={columnAlign({ align: "start" })}>
-                {t(`kind-${kind}`)}
-              </TableCell>
-              {Arr.map(["push", "email"] as const, (channel) => (
-                <TableCell className={columnAlign()} key={channel}>
-                  {Arr.contains(channels, channel) ? (
-                    <ChannelSwitch
-                      channel={channel}
-                      kind={kind}
-                      on={
-                        !Arr.some(
-                          off.value,
-                          (row) => row.kind === kind && row.channel === channel
-                        )
-                      }
-                    />
-                  ) : null}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableFrame>
+    <TableFiltersProvider>
+      <TableFrame>
+        <DataTable
+          columns={[
+            preferenceColumns.text(({ kind }) => t(`kind-${kind}`), {
+              header: t("preferences-kind"),
+              id: "kind",
+            }),
+            channelColumn("push"),
+            channelColumn("email"),
+          ]}
+          data={rows}
+          plain
+          rowId={({ kind }) => kind}
+        />
+      </TableFrame>
+    </TableFiltersProvider>
   );
 }
 

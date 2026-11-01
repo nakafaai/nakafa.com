@@ -1,4 +1,4 @@
-import { constructFilterFn } from "@tanstack/react-table";
+import { constructFilterFn, type RowData } from "@tanstack/react-table";
 import {
   Array as Arr,
   DateTime,
@@ -7,6 +7,7 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
+import type { dataTableFeatures } from "@/components/shared/table/features";
 
 /** A civil day as its key, such as `2026-10-31`. */
 const DayKey = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/u));
@@ -35,34 +36,27 @@ export const chosenDays = (
 export const holdsNoDays = (chosen: unknown) => !Schema.is(DayRange)(chosen);
 
 /**
- * Whether a cell's moment falls on one of the chosen days, as the school's clock in `timeZone` shows it, so a row is
- * kept for the day the table prints for it.
+ * Whether a cell's moment falls on one of the chosen days, as the clock of `timeZone` shows it, so a row is kept for
+ * the day the table prints for it.
  */
-export const fallsOnDaysIn =
-  (timeZone: string) => (value: unknown, chosen: unknown) => {
-    if (!(Schema.is(Schema.Finite)(value) && Schema.is(DayRange)(chosen))) {
-      return false;
-    }
-    const day = dayOfMoment(value, timeZone);
-    return chosen[0] <= day && day <= chosen[1];
-  };
+export const fallsOnDays = (
+  value: unknown,
+  chosen: unknown,
+  timeZone: string
+) => {
+  if (!(Schema.is(Schema.Finite)(value) && Schema.is(DayRange)(chosen))) {
+    return false;
+  }
+  const day = dayOfMoment(value, timeZone);
+  return chosen[0] <= day && day <= chosen[1];
+};
 
-/** Keeps the rows whose moment falls on one of the chosen days in the school's time zone. */
-export const withinDays = (timeZone: string) =>
-  constructFilterFn({
+/** Keeps the rows whose moment falls on one of the chosen days, each on the clock its row prints it by. */
+export const withinDays = <TData extends RowData>(
+  timeZone: (row: TData) => string
+) =>
+  constructFilterFn<typeof dataTableFeatures, TData>({
     autoRemove: holdsNoDays,
-    filter: fallsOnDaysIn(timeZone),
-  });
-
-/**
- * What a column of moments adds to its definition so its head chooses days as well as sorting: the filter in the
- * school's time zone and the head that chooses them. Before the school's time zone is known, the column only sorts.
- */
-export const daysColumn = (timeZone: Option.Option<string>) =>
-  Option.match(timeZone, {
-    onNone: () => ({}),
-    onSome: (zone) => ({
-      filterFn: withinDays(zone),
-      meta: { filter: "days" as const },
-    }),
+    filter: (value, chosen, row) =>
+      fallsOnDays(value, chosen, timeZone(row.original)),
   });

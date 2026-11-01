@@ -11,13 +11,12 @@ import {
 import records from "@repo/backend/confect/_generated/refs/records";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { useFormatTimeZone } from "@/components/shared/table/calendar";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
@@ -40,7 +39,7 @@ const PERIOD_ICONS = [
 ] as const;
 
 /** The columns of the report cards table. */
-const cardColumns = createColumnHelper<typeof dataTableFeatures, OwnCard>();
+const cardColumns = tableColumns<OwnCard>();
 
 /**
  * The viewer's own locked report cards in the school, the newest first: a table that finds a class group, filters by
@@ -65,6 +64,7 @@ export function SchoolOwnReports() {
 /** The table of the viewer's report cards, or the sentence of a viewer who has none locked yet. */
 function OwnReportTable() {
   const t = useTranslations("SchoolReports");
+  const formatZone = useFormatTimeZone();
   const format = useFormatter();
   const locale = useLocale();
   const { slug } = useTenant();
@@ -87,27 +87,18 @@ function OwnReportTable() {
   }
 
   const periods = Arr.dedupe(Arr.map(cards.value, (card) => card.period));
-  const columns = cardColumns.columns([
-    cardColumns.accessor((card) => card.cohort, {
+  const columns = [
+    cardColumns.text((card) => card.cohort, {
       cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-      filterFn: "includesString",
       header: t("cohort"),
       id: "cohort",
-      sortFn: "text",
     }),
-    cardColumns.accessor((card) => card.period, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="period"
-          options={namedOptions(periods, PERIOD_ICONS)}
-          title={t("period")}
-        />
-      ),
+    cardColumns.values((card) => card.period, {
+      header: t("period"),
       id: "period",
+      options: namedOptions(periods, PERIOD_ICONS),
     }),
-    cardColumns.accessor((card) => card.approvedAt, {
+    cardColumns.days((card) => card.approvedAt, {
       cell: (info) => (
         <span className="tabular-nums">
           {format.dateTime(
@@ -118,41 +109,37 @@ function OwnReportTable() {
       ),
       header: t("approved-at"),
       id: "approved",
-      sortFn: "basic",
+      timeZone: formatZone,
     }),
-    cardColumns.display({
-      cell: (info) => (
-        <div className="flex justify-end gap-2">
-          <Button
-            render={
-              <a
-                href={checkAddress(locale, info.row.original.hash)}
-                rel="noopener"
-                target="_blank"
-              >
-                <HugeIcons icon={CheckmarkBadge01Icon} />
-                {t("open-check")}
-              </a>
-            }
-            size="sm"
-            variant="outline"
-          />
-          <Button
-            render={
-              <a href={info.row.original.file} rel="noopener" target="_blank">
-                <HugeIcons icon={Download04Icon} />
-                {t("open-pdf")}
-              </a>
-            }
-            size="sm"
-            variant="outline"
-          />
-        </div>
-      ),
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    cardColumns.menu((info) => (
+      <div className="flex justify-end gap-2">
+        <Button
+          render={
+            <a
+              href={checkAddress(locale, info.row.original.hash)}
+              rel="noopener"
+              target="_blank"
+            >
+              <HugeIcons icon={CheckmarkBadge01Icon} />
+              {t("open-check")}
+            </a>
+          }
+          size="sm"
+          variant="outline"
+        />
+        <Button
+          render={
+            <a href={info.row.original.file} rel="noopener" target="_blank">
+              <HugeIcons icon={Download04Icon} />
+              {t("open-pdf")}
+            </a>
+          }
+          size="sm"
+          variant="outline"
+        />
+      </div>
+    )),
+  ];
 
   return (
     <DataTable

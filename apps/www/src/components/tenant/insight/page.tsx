@@ -1,3 +1,4 @@
+import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import insight from "@repo/backend/confect/_generated/refs/insight";
 import {
@@ -7,21 +8,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
-import { columnAlign } from "@/components/shared/table/align";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -104,6 +99,10 @@ function TeacherInsight() {
   );
 }
 
+/** The columns of a student's own standing. */
+const skillColumns =
+  tableColumns<Ref.Returns<typeof insight.reads.mine>[number]>();
+
 /** A student's own standing in each competency, without a chance. */
 function OwnInsight() {
   const t = useTranslations("SchoolInsight");
@@ -127,36 +126,33 @@ function OwnInsight() {
     );
   }
   return (
-    <TableFrame>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className={columnAlign({ align: "start" })}>
-              {t("competency")}
-            </TableHead>
-            <TableHead className={columnAlign()}>{t("mastery")}</TableHead>
-            <TableHead className={columnAlign()}>{t("evidence")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(mine.value, (skill) => (
-            <TableRow key={skill.competency}>
-              <TableCell className={columnAlign({ align: "start" })} dir="auto">
-                {skill.competency}
-              </TableCell>
-              <TableCell className={columnAlign()}>
-                {percentOf(skill.rating)}
-              </TableCell>
-              <TableCell className={columnAlign()}>
-                {t("evidence-points", {
-                  earned: skill.earned,
-                  possible: skill.possible,
-                })}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableFrame>
+    <TableFiltersProvider>
+      <TableFrame>
+        <DataTable
+          columns={[
+            skillColumns.text((skill) => skill.competency, {
+              cell: (info) => <span dir="auto">{info.getValue()}</span>,
+              header: t("competency"),
+              id: "competency",
+            }),
+            skillColumns.number((skill) => percentOf(skill.rating), {
+              header: t("mastery"),
+              id: "mastery",
+            }),
+            skillColumns.number((skill) => skill.earned, {
+              cell: (info) =>
+                t("evidence-points", {
+                  earned: info.getValue(),
+                  possible: info.row.original.possible,
+                }),
+              header: t("evidence"),
+              id: "evidence",
+            }),
+          ]}
+          data={mine.value}
+          rowId={(skill) => skill.competency}
+        />
+      </TableFrame>
+    </TableFiltersProvider>
   );
 }

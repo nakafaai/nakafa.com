@@ -8,14 +8,13 @@ import {
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { SchoolPlacementMove } from "@/components/tenant/settings/placement";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
@@ -27,10 +26,7 @@ const PAGE_SIZE = 25;
 type MemberItem = PaginatedQueryItem<typeof tenancy.cohorts.members>;
 
 /** The columns of the members table. */
-const memberColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  MemberItem
->();
+const memberColumns = tableColumns<MemberItem>();
 
 /**
  * Renders the students placed in one cohort in a data table that finds a name, with each
@@ -85,28 +81,23 @@ export function SchoolCohortMembers({
       )
     : [];
   const canMove = !isArchived && Arr.isReadonlyArrayNonEmpty(targets);
-  const columns = memberColumns.columns([
-    memberColumns.accessor((member) => member.name, {
+  const columns = [
+    memberColumns.text((member) => member.name, {
       cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-      filterFn: "includesString",
       header: t("member-name"),
       id: "name",
-      sortFn: "text",
     }),
-    memberColumns.display({
-      cell: (info) =>
-        canMove ? (
-          <SchoolPlacementMove
-            cohortId={cohortId}
-            member={info.row.original}
-            slug={slug}
-            targets={targets}
-          />
-        ) : null,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    memberColumns.menu((info) =>
+      canMove ? (
+        <SchoolPlacementMove
+          cohortId={cohortId}
+          member={info.row.original}
+          slug={slug}
+          targets={targets}
+        />
+      ) : null
+    ),
+  ];
 
   return (
     <>

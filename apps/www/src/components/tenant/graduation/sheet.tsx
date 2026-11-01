@@ -21,7 +21,6 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -34,9 +33,8 @@ import {
   PanesProvider,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
@@ -89,10 +87,7 @@ const averageOf = (line: GraduationLine) =>
   line.transcript?.average ?? NO_AVERAGE;
 
 /** The columns of the graduation list. */
-const lineColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  GraduationLine
->();
+const lineColumns = tableColumns<GraduationLine>();
 
 /**
  * The graduation of one class group (ADR 0033, S6): each placed student with their transcript
@@ -146,34 +141,25 @@ function CohortGraduationBody() {
       minimumFractionDigits: 2,
     });
 
-  const columns = lineColumns.columns([
-    lineColumns.accessor((line) => line.student.name, {
+  const columns = [
+    lineColumns.text((line) => line.student.name, {
       cell: (info) => (
         <PaneOpen id={info.row.original.student.id}>{info.getValue()}</PaneOpen>
       ),
-      filterFn: "includesString",
       header: t("student"),
       id: "student",
-      sortFn: "text",
     }),
-    lineColumns.accessor((line) => (line.hasNisn ? "yes" : "no"), {
+    lineColumns.values((line) => (line.hasNisn ? "yes" : "no"), {
       cell: (info) => t(`nisn-${info.getValue()}`),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="nisn"
-          options={Arr.map(["yes", "no"] as const, (value) => ({
-            icon: value === "yes" ? UserCheck01Icon : IdentityCardIcon,
-            label: t(`nisn-${value}`),
-            value,
-          }))}
-          title={t("nisn")}
-        />
-      ),
+      header: t("nisn"),
       id: "nisn",
+      options: Arr.map(["yes", "no"] as const, (value) => ({
+        icon: value === "yes" ? UserCheck01Icon : IdentityCardIcon,
+        label: t(`nisn-${value}`),
+        value,
+      })),
     }),
-    lineColumns.accessor(averageOf, {
+    lineColumns.number(averageOf, {
       cell: (info) =>
         info.getValue() === NO_AVERAGE ? (
           <span className="text-muted-foreground">{t("average-none")}</span>
@@ -182,31 +168,23 @@ function CohortGraduationBody() {
         ),
       header: t("average"),
       id: "average",
-      sortFn: "basic",
     }),
-    lineColumns.accessor(letterStateOf, {
+    lineColumns.values(letterStateOf, {
       cell: (info) => (
         <TableStatus
           {...LETTER_LOOKS[info.getValue()]}
           label={t(`letter-${info.getValue()}`)}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="letter"
-          options={Arr.map(["none", "issued", "locked"] as const, (state) => ({
-            icon: LETTER_LOOKS[state].icon,
-            label: t(`letter-${state}`),
-            value: state,
-          }))}
-          title={t("letter")}
-        />
-      ),
+      header: t("letter"),
       id: "letter",
+      options: Arr.map(["none", "issued", "locked"] as const, (state) => ({
+        icon: LETTER_LOOKS[state].icon,
+        label: t(`letter-${state}`),
+        value: state,
+      })),
     }),
-    lineColumns.accessor(readinessOf, {
+    lineColumns.list(readinessOf, {
       cell: (info) => (
         <span className="flex flex-wrap gap-1">
           {Arr.map(info.getValue(), (value) => (
@@ -219,30 +197,19 @@ function CohortGraduationBody() {
           ))}
         </span>
       ),
-      enableSorting: false,
-      filterFn: "anyOf",
-      header: () => (
-        <ColumnFilter
-          column="ready"
-          options={Arr.map(
-            ["ready", "npsn", "decision", "nisn", "report"] as const,
-            (value) => ({
-              icon: READY_LOOKS[value].icon,
-              label: t(`ready-${value}`),
-              value,
-            })
-          )}
-          title={t("ready")}
-        />
-      ),
+      header: t("ready"),
       id: "ready",
+      options: Arr.map(
+        ["ready", "npsn", "decision", "nisn", "report"] as const,
+        (value) => ({
+          icon: READY_LOOKS[value].icon,
+          label: t(`ready-${value}`),
+          value,
+        })
+      ),
     }),
-    lineColumns.display({
-      cell: (info) => <GraduationLineMenu line={info.row.original} />,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    lineColumns.menu((info) => <GraduationLineMenu line={info.row.original} />),
+  ];
 
   return (
     <Panes>

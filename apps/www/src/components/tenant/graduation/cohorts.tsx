@@ -22,13 +22,11 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
@@ -53,10 +51,7 @@ const PERIOD_ICONS = [
 const UNIT_ICONS = [School01Icon, SchoolIcon, Building03Icon] as const;
 
 /** The columns of the class group list. */
-const cohortColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  CohortItem
->();
+const cohortColumns = tableColumns<CohortItem>();
 
 /**
  * The graduation of the school (ADR 0033, S6): the class groups of each unit's last grade in its
@@ -75,8 +70,8 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
   }
   const loaded = QueryResult.isSuccess(cohorts) ? cohorts.value : [];
 
-  const columns = cohortColumns.columns([
-    cohortColumns.accessor((cohort) => cohort.name, {
+  const columns = [
+    cohortColumns.text((cohort) => cohort.name, {
       cell: (info) => (
         <Link
           className="font-medium hover:underline"
@@ -86,49 +81,29 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
           {info.getValue()}
         </Link>
       ),
-      filterFn: "includesString",
       header: t("cohort"),
       id: "cohort",
-      sortFn: "text",
     }),
-    cohortColumns.accessor((cohort) => cohort.unit, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="unit"
-          options={namedOptions(
-            Arr.dedupe(Arr.map(loaded, (cohort) => cohort.unit)),
-            UNIT_ICONS
-          )}
-          title={t("unit")}
-        />
-      ),
+    cohortColumns.values((cohort) => cohort.unit, {
+      header: t("unit"),
       id: "unit",
-    }),
-    cohortColumns.accessor((cohort) => cohort.period, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="period"
-          options={namedOptions(
-            Arr.dedupe(Arr.map(loaded, (cohort) => cohort.period)),
-            PERIOD_ICONS
-          )}
-          title={t("period")}
-        />
+      options: namedOptions(
+        Arr.dedupe(Arr.map(loaded, (cohort) => cohort.unit)),
+        UNIT_ICONS
       ),
+    }),
+    cohortColumns.values((cohort) => cohort.period, {
+      header: t("period"),
       id: "period",
-    }),
-    cohortColumns.display({
-      cell: (info) => (
-        <GraduationCohortMenu cohortId={info.row.original.id} slug={slug} />
+      options: namedOptions(
+        Arr.dedupe(Arr.map(loaded, (cohort) => cohort.period)),
+        PERIOD_ICONS
       ),
-      id: "actions",
-      meta: { align: "menu" },
     }),
-  ]);
+    cohortColumns.menu((info) => (
+      <GraduationCohortMenu cohortId={info.row.original.id} slug={slug} />
+    )),
+  ];
 
   return (
     <TableFiltersProvider>

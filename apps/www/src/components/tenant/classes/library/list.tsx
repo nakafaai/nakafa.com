@@ -16,19 +16,17 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, DateTime, Match, Option } from "effect";
+import { Array as Arr, DateTime, Match } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { useFormatTimeZone } from "@/components/shared/table/calendar";
+import { tableColumns } from "@/components/shared/table/columns";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
-import { daysColumn } from "@/components/shared/table/days";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import {
@@ -125,10 +123,7 @@ const rowIdOf = (row: LibraryRow) =>
   });
 
 /** The columns of the library's table. */
-const libraryColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  LibraryRow
->();
+const libraryColumns = tableColumns<LibraryRow>();
 
 /**
  * The files the teacher is adding that the library's rows do not hold yet. An upload whose row arrived is remembered
@@ -262,6 +257,7 @@ function LibraryRows({
   pending: readonly LibraryUpload[];
 }) {
   const t = useTranslations("Classroom");
+  const formatZone = useFormatTimeZone();
   const format = useFormatter();
   const { can } = useClassScope();
 
@@ -276,35 +272,26 @@ function LibraryRows({
     ...Arr.map(pending, uploadRow),
     ...Arr.map(items, itemRow),
   ];
-  const columns = libraryColumns.columns([
-    libraryColumns.accessor((row) => shownOf(row).title, {
+  const columns = [
+    libraryColumns.text((row) => shownOf(row).title, {
       cell: (info) => <LibraryTitle row={info.row.original} />,
-      enableSorting: false,
-      filterFn: "includesString",
       header: t("library-title"),
       id: "title",
     }),
-    libraryColumns.accessor((row) => shownOf(row).author, {
+    libraryColumns.values((row) => shownOf(row).author, {
       cell: (info) => (
         <span className="text-muted-foreground" dir="auto">
           {info.getValue()}
         </span>
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="author"
-          options={namedOptions(
-            Arr.dedupe(Arr.map(rows, (row) => shownOf(row).author)),
-            PERSON_ICONS
-          )}
-          title={t("library-added-by")}
-        />
-      ),
+      header: t("library-added-by"),
       id: "author",
+      options: namedOptions(
+        Arr.dedupe(Arr.map(rows, (row) => shownOf(row).author)),
+        PERSON_ICONS
+      ),
     }),
-    libraryColumns.accessor((row) => shownOf(row).createdAt, {
+    libraryColumns.days((row) => shownOf(row).createdAt, {
       cell: (info) => (
         <span className="text-muted-foreground tabular-nums">
           {format.dateTime(
@@ -315,23 +302,16 @@ function LibraryRows({
       ),
       header: t("library-added"),
       id: "added",
-      sortFn: "basic",
-      // The day prints on the reader's own clock, so the filter keeps the days that clock shows.
-      ...daysColumn(
-        Option.some(DateTime.zoneToString(DateTime.zoneMakeLocal()))
-      ),
+      timeZone: formatZone,
     }),
     ...(Arr.contains(can, "library.manage")
       ? [
-          libraryColumns.display({
-            cell: (info) => <LibraryRowMenu row={info.row.original} />,
-            header: "",
-            id: "actions",
-            meta: { align: "menu" },
-          }),
+          libraryColumns.menu((info) => (
+            <LibraryRowMenu row={info.row.original} />
+          )),
         ]
       : []),
-  ]);
+  ];
 
   return (
     <DataTable columns={columns} data={rows} rowId={rowIdOf} search="title" />

@@ -10,16 +10,12 @@ import {
   Ticket01Icon,
 } from "@hugeicons/core-free-icons";
 import billingRefs from "@repo/backend/confect/_generated/refs/billing";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option, Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { RowAction, useInvoiceDownload } from "@/components/billing/invoice";
-import { HeadAlignContext } from "@/components/shared/table/align";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { daysColumn } from "@/components/shared/table/days";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useBillingNavigation } from "@/lib/billing/checkout";
@@ -34,7 +30,7 @@ import { isActiveLocale } from "@/lib/i18n/active";
 type Receipt = Ref.Returns<typeof billingRefs.queries.payments>[number];
 
 /** The columns of the receipts table. */
-const receiptColumns = createColumnHelper<typeof dataTableFeatures, Receipt>();
+const receiptColumns = tableColumns<Receipt>();
 
 /** What each kind of payment bought, with the icon its filter draws. */
 const PAYMENT_KINDS = {
@@ -119,55 +115,32 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
     Money01Icon,
   ]);
 
-  const columns = receiptColumns.columns([
-    receiptColumns.accessor(kindOf, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <HeadAlignContext value="start">
-          <ColumnFilter
-            column="kind"
-            options={kinds}
-            title={t("payment-for")}
-          />
-        </HeadAlignContext>
-      ),
+  const columns = [
+    receiptColumns.values(kindOf, {
+      header: t("payment-for"),
       id: "kind",
+      options: kinds,
     }),
-    receiptColumns.accessor((payment) => payment.paidAt, {
-      ...daysColumn(Option.some(BILLING_TIME_ZONE)),
+    receiptColumns.days((payment) => payment.paidAt, {
       cell: (info) => formatBillingDay(info.getValue(), locale),
       header: t("payment-date"),
       id: "date",
-      sortFn: "basic",
+      timeZone: () => BILLING_TIME_ZONE,
     }),
-    receiptColumns.accessor(amountOf, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <HeadAlignContext value="end">
-          <ColumnFilter
-            column="amount"
-            options={amounts}
-            title={t("payment-amount")}
-          />
-        </HeadAlignContext>
-      ),
+    receiptColumns.values(amountOf, {
+      align: "figure",
+      header: t("payment-amount"),
       id: "amount",
-      meta: { align: "figure" },
+      options: amounts,
     }),
-    receiptColumns.display({
-      cell: (info) =>
-        info.row.original.rail === "xendit" ? (
-          <InvoiceAction payment={info.row.original} />
-        ) : (
-          <PortalAction />
-        ),
-      header: "",
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    receiptColumns.menu((info) =>
+      info.row.original.rail === "xendit" ? (
+        <InvoiceAction payment={info.row.original} />
+      ) : (
+        <PortalAction />
+      )
+    ),
+  ];
 
   return (
     <div className="bg-card flex min-h-0 flex-1 flex-col">

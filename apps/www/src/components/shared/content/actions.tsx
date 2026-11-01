@@ -12,7 +12,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
@@ -159,7 +158,6 @@ export function OpenContent({
       </Tooltip>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("more")}</DropdownMenuLabel>
           {children}
           <DropdownMenuItem
             disabled={isCopying || !(content || copySourceUrl)}

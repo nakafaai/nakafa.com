@@ -15,16 +15,14 @@ import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime, Option } from "effect";
 import { startTransition, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
@@ -68,10 +66,7 @@ const PAGE_SIZE = 25;
 type PeriodItem = PaginatedQueryItem<typeof tenancy.periods.list>;
 
 /** The columns of the periods table. */
-const periodColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  PeriodItem
->();
+const periodColumns = tableColumns<PeriodItem>();
 
 /**
  * Renders the periods of the school's unit as the page's table, with their row menus. The
@@ -182,15 +177,13 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
     );
   }
 
-  const columns = periodColumns.columns([
-    periodColumns.accessor((period) => period.name, {
+  const columns = [
+    periodColumns.text((period) => period.name, {
       cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-      filterFn: "includesString",
       header: t("period-name"),
       id: "name",
-      sortFn: "text",
     }),
-    periodColumns.accessor((period) => period.start, {
+    periodColumns.text((period) => period.start, {
       cell: (info) =>
         format.dateTimeRange(
           DateTime.toDateUtc(DateTime.makeUnsafe(info.row.original.start)),
@@ -199,9 +192,8 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
         ),
       header: t("period-dates"),
       id: "dates",
-      sortFn: "text",
     }),
-    periodColumns.accessor((period) => period.status, {
+    periodColumns.values((period) => period.status, {
       cell: (info) => (
         <TableStatus
           icon={PERIOD_STATUS_LOOKS[info.getValue()].icon}
@@ -209,35 +201,24 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
           tone={PERIOD_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(PeriodStatus.literals, (status) => ({
-            icon: PERIOD_STATUS_LOOKS[status].icon,
-            label: t(`period-${status}`),
-            value: status,
-          }))}
-          title={t("period-status")}
-        />
-      ),
+      header: t("period-status"),
       id: "status",
+      options: Arr.map(PeriodStatus.literals, (status) => ({
+        icon: PERIOD_STATUS_LOOKS[status].icon,
+        label: t(`period-${status}`),
+        value: status,
+      })),
     }),
-    periodColumns.display({
-      cell: (info) => (
-        <WithAction action="period.manage">
-          {info.row.original.status === "archived" ? (
-            <SchoolPeriodRestore period={info.row.original} slug={slug} />
-          ) : (
-            <SchoolPeriodMenu period={info.row.original} slug={slug} />
-          )}
-        </WithAction>
-      ),
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    periodColumns.menu((info) => (
+      <WithAction action="period.manage">
+        {info.row.original.status === "archived" ? (
+          <SchoolPeriodRestore period={info.row.original} slug={slug} />
+        ) : (
+          <SchoolPeriodMenu period={info.row.original} slug={slug} />
+        )}
+      </WithAction>
+    )),
+  ];
 
   return (
     <>

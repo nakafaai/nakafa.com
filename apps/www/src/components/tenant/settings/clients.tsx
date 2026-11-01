@@ -27,16 +27,14 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
@@ -75,10 +73,7 @@ const PAGE_SIZE = 25;
 type ClientItem = PaginatedQueryItem<typeof integrations.clients.list>;
 
 /** The columns of the clients table. */
-const clientColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  ClientItem
->();
+const clientColumns = tableColumns<ClientItem>();
 
 /** Shows a secret the server issued once, which the page's secret dialog holds. */
 const SecretIssueContext = createContext<((secret: string) => void) | null>(
@@ -179,31 +174,20 @@ function SchoolClientTable() {
     QueryResult.isSuccess(viewer)
       ? scopeNameOf(client.scope, viewer.value.tenant.name, viewer.value.units)
       : "";
-  const columns = clientColumns.columns([
-    clientColumns.accessor((client) => client.name, {
+  const columns = [
+    clientColumns.text((client) => client.name, {
       cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-      filterFn: "includesString",
       header: t("client-name"),
       id: "name",
-      sortFn: "text",
     }),
-    clientColumns.accessor(scopeName, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="scope"
-          options={
-            QueryResult.isSuccess(viewer)
-              ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
-              : []
-          }
-          title={t("client-scope")}
-        />
-      ),
+    clientColumns.values(scopeName, {
+      header: t("client-scope"),
       id: "scope",
+      options: QueryResult.isSuccess(viewer)
+        ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
+        : [],
     }),
-    clientColumns.accessor((client) => client.status, {
+    clientColumns.values((client) => client.status, {
       cell: (info) => (
         <TableStatus
           icon={CLIENT_STATUS_LOOKS[info.getValue()].icon}
@@ -211,30 +195,20 @@ function SchoolClientTable() {
           tone={CLIENT_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(IntegrationStatus.literals, (status) => ({
-            icon: CLIENT_STATUS_LOOKS[status].icon,
-            label: t(`client-${status}`),
-            value: status,
-          }))}
-          title={t("client-status")}
-        />
-      ),
+      header: t("client-status"),
       id: "status",
+      options: Arr.map(IntegrationStatus.literals, (status) => ({
+        icon: CLIENT_STATUS_LOOKS[status].icon,
+        label: t(`client-${status}`),
+        value: status,
+      })),
     }),
-    clientColumns.display({
-      cell: (info) =>
-        info.row.original.status === "active" ? (
-          <SchoolClientMenu client={info.row.original} />
-        ) : null,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    clientColumns.menu((info) =>
+      info.row.original.status === "active" ? (
+        <SchoolClientMenu client={info.row.original} />
+      ) : null
+    ),
+  ];
 
   return (
     <>

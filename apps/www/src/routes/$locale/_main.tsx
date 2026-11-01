@@ -22,6 +22,7 @@ const MAIN_NAMESPACES = [
   ...SHELL_MESSAGE_NAMESPACES,
   "ComingSoon",
   "Comments",
+  "DataTable",
   "Player",
   "Posts",
   "Pricing",

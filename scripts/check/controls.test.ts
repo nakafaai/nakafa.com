@@ -37,6 +37,33 @@ export function Period() {
       })
   );
 
+  it.effect("rejects a table head drawn outside the shared table", () =>
+    Effect.gen(function* () {
+      const source = `
+export function Plain() {
+  return (
+    <TableRow>
+      <TableHead>Name</TableHead>
+    </TableRow>
+  );
+}`;
+      const violations = yield* inspect(source);
+      const shared = yield* inspect(
+        source,
+        "apps/www/src/components/shared/table/data.tsx"
+      );
+      const content = yield* inspect(
+        source,
+        "packages/design-system/components/contents/table.tsx"
+      );
+      assert.deepStrictEqual(violations, [
+        `${VIEW}: declare the table with DataTable and tableColumns from components/shared/table, whose every column head holds a filter, instead of a <TableHead>.`,
+      ]);
+      assert.deepStrictEqual(shared, []);
+      assert.deepStrictEqual(content, []);
+    })
+  );
+
   it.effect("rejects a native select", () =>
     Effect.gen(function* () {
       const violations = yield* inspect(`

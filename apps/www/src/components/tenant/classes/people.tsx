@@ -5,15 +5,13 @@ import type {
   ClassPerson,
   ClassPersonKind,
 } from "@repo/backend/confect/classroom/people.spec";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
@@ -25,10 +23,7 @@ import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 
 /** The columns of the people table. */
-const personColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  typeof ClassPerson.Type
->();
+const personColumns = tableColumns<typeof ClassPerson.Type>();
 
 /** The look of each kind of Person in a class. */
 const KIND_LOOKS = {
@@ -99,39 +94,30 @@ function PeopleBody() {
 function usePersonColumns() {
   const t = useTranslations("Classroom");
 
-  return personColumns.columns([
-    personColumns.accessor((person) => person.name, {
+  return [
+    personColumns.text((person) => person.name, {
       cell: (info) => (
         <span className="font-medium" dir="auto">
           {info.getValue()}
         </span>
       ),
-      filterFn: "includesString",
       header: t("people-name"),
       id: "name",
-      sortFn: "text",
     }),
-    personColumns.accessor((person) => person.kind, {
+    personColumns.values((person) => person.kind, {
       cell: (info) => (
         <TableStatus
           {...KIND_LOOKS[info.getValue()]}
           label={t(`people-${info.getValue()}`)}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="kind"
-          options={Arr.map(["teacher", "student"] as const, (kind) => ({
-            icon: KIND_LOOKS[kind].icon,
-            label: t(`people-${kind}`),
-            value: kind,
-          }))}
-          title={t("people-role")}
-        />
-      ),
+      header: t("people-role"),
       id: "kind",
+      options: Arr.map(["teacher", "student"] as const, (kind) => ({
+        icon: KIND_LOOKS[kind].icon,
+        label: t(`people-${kind}`),
+        value: kind,
+      })),
     }),
-  ]);
+  ];
 }

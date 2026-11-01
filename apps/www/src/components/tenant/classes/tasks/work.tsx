@@ -13,19 +13,12 @@ import {
   NumberFieldIncrement,
   NumberFieldInput,
 } from "@repo/design-system/components/ui/number";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { columnAlign } from "@/components/shared/table/align";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import {
   TableSearch,
@@ -53,6 +46,9 @@ export function TaskWorkSearch() {
   const t = useTranslations("Classroom");
   return <TableSearch placeholder={t("task-work-search")} />;
 }
+
+/** The columns of the work handed in. */
+const workColumns = tableColumns<TaskWork>();
 
 /**
  * The work handed in for a task, as its teacher reads it: each student, the work, whether it came
@@ -108,26 +104,45 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
   return (
     <>
       <TableFrame>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className={columnAlign({ align: "start" })}>
-                {t("task-student")}
-              </TableHead>
-              <TableHead className={columnAlign({ align: "start" })}>
-                {t("task-work")}
-              </TableHead>
-              <TableHead className={columnAlign({ className: "w-32" })}>
-                {t("task-points")}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Arr.map(kept.value, (work) => (
-              <WorkRow key={work.id} points={task.points} work={work} />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          columns={[
+            workColumns.text((work) => work.person.name, {
+              cell: (info) => (
+                <span className="font-medium" dir="auto">
+                  {info.getValue()}
+                </span>
+              ),
+              header: t("task-student"),
+              id: "student",
+            }),
+            workColumns.text((work) => work.text, {
+              cell: (info) => (
+                <>
+                  <p className="wrap-anywhere whitespace-pre-wrap" dir="auto">
+                    {info.getValue()}
+                  </p>
+                  {info.row.original.late ? (
+                    <p className="text-muted-foreground text-xs">
+                      {t("task-handed-in-late")}
+                    </p>
+                  ) : null}
+                </>
+              ),
+              header: t("task-work"),
+              id: "work",
+            }),
+            workColumns.number((work) => work.score, {
+              cell: (info) => (
+                <WorkPoints points={task.points} work={info.row.original} />
+              ),
+              header: t("task-points"),
+              id: "points",
+            }),
+          ]}
+          data={kept.value}
+          loading={loadMore !== null}
+          rowId={(work) => work.id}
+        />
       </TableFrame>
       {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
     </>
@@ -167,11 +182,10 @@ function WorkEmpty({
 }
 
 /**
- * One student's work: the student, the work and whether it came late, and its points in a field. A
- * changed number gives the points at once when the field loses focus, and a refusal brings the old
- * points back with the toast every School action uses.
+ * The points of one student's work, in a field. A changed number gives the points at once when the field
+ * loses focus, and a refusal brings the old points back with the toast every School action uses.
  */
-function WorkRow({ points, work }: { points: number; work: TaskWork }) {
+function WorkPoints({ points, work }: { points: number; work: TaskWork }) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
   const score = useMutation(classroom.tasks.score);
@@ -202,45 +216,20 @@ function WorkRow({ points, work }: { points: number; work: TaskWork }) {
   };
 
   return (
-    <TableRow>
-      <TableCell
-        className={columnAlign({
-          align: "start",
-          className: "align-top font-medium",
-        })}
-        dir="auto"
-      >
-        {work.person.name}
-      </TableCell>
-      <TableCell
-        className={columnAlign({ align: "start", className: "align-top" })}
-      >
-        <p className="wrap-anywhere whitespace-pre-wrap" dir="auto">
-          {work.text}
-        </p>
-        {work.late ? (
-          <p className="text-muted-foreground text-xs">
-            {t("task-handed-in-late")}
-          </p>
-        ) : null}
-      </TableCell>
-      <TableCell className={columnAlign({ className: "align-top" })}>
-        <NumberField
-          defaultValue={work.score ?? undefined}
-          key={work.score}
-          max={points}
-          min={0}
-          onValueCommitted={give}
-        >
-          <NumberFieldGroup>
-            <NumberFieldDecrement />
-            <NumberFieldInput
-              aria-label={t("task-points-for", { name: work.person.name })}
-            />
-            <NumberFieldIncrement />
-          </NumberFieldGroup>
-        </NumberField>
-      </TableCell>
-    </TableRow>
+    <NumberField
+      defaultValue={work.score ?? undefined}
+      key={work.score}
+      max={points}
+      min={0}
+      onValueCommitted={give}
+    >
+      <NumberFieldGroup>
+        <NumberFieldDecrement />
+        <NumberFieldInput
+          aria-label={t("task-points-for", { name: work.person.name })}
+        />
+        <NumberFieldIncrement />
+      </NumberFieldGroup>
+    </NumberField>
   );
 }
