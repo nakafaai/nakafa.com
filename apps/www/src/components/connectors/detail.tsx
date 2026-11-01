@@ -27,19 +27,27 @@ import { usePanes } from "@/components/shared/panes";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 
-/** How each state of a service looks in its detail, and what Nina does in its body. */
+/** How each state of a service looks in its detail. */
 const STATE_LOOKS = {
-  connected: { act: "relaxed", icon: Tick02Icon, tone: "success" },
-  failed: { act: "searching", icon: Alert02Icon, tone: "destructive" },
-  locked: { act: "reading", icon: SquareLock02Icon, tone: "neutral" },
-  open: { act: "waving", icon: Add01Icon, tone: "neutral" },
-  reconnect: { act: "searching", icon: RefreshIcon, tone: "warning" },
-  refused: { act: "thinking", icon: Alert02Icon, tone: "warning" },
-  soon: { act: "reading", icon: Clock01Icon, tone: "neutral" },
-} as const satisfies Record<
-  string,
-  StatusLook & { act: typeof ActSchema.Type }
->;
+  connected: { icon: Tick02Icon, tone: "success" },
+  failed: { icon: Alert02Icon, tone: "destructive" },
+  locked: { icon: SquareLock02Icon, tone: "neutral" },
+  open: { icon: Add01Icon, tone: "neutral" },
+  reconnect: { icon: RefreshIcon, tone: "warning" },
+  refused: { icon: Alert02Icon, tone: "warning" },
+  soon: { icon: Clock01Icon, tone: "neutral" },
+} as const satisfies Record<string, StatusLook>;
+
+/** What Nina does in the body of a service in each state. */
+const STATE_ACTS = {
+  connected: "relaxed",
+  failed: "searching",
+  locked: "reading",
+  open: "waving",
+  reconnect: "searching",
+  refused: "thinking",
+  soon: "reading",
+} as const satisfies Record<keyof typeof STATE_LOOKS, typeof ActSchema.Type>;
 
 /**
  * The open service, beside the list on a wide screen and in a sheet on a phone. The page composes its
@@ -96,7 +104,7 @@ export function ServiceEmpty() {
 
   return (
     <TableEmpty
-      act={STATE_LOOKS[state.value].act}
+      act={STATE_ACTS[state.value]}
       description={
         {
           connected: line,
