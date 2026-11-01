@@ -17,9 +17,9 @@ import { TableEmpty } from "@/components/shared/table/frame";
 
 /**
  * The Google connectors an owner may connect, one card each, with the state of the
- * owner's connection. A connect that Google or an unchecked scope refused says so
- * above the cards when the browser comes back. A deployment that offers no
- * connector, as production does until Google's review, shows that instead.
+ * owner's connection. A connect that an unchecked scope refused, or that Google
+ * could not finish, says which above the cards when the browser comes back. A
+ * deployment that offers no connector shows that instead.
  */
 export function ConnectorList({
   connections,
@@ -43,10 +43,10 @@ export function ConnectorList({
 
   return (
     <div className="flex flex-col gap-6">
-      {outcome === "refused" ? (
+      {outcome === "refused" || outcome === "failed" ? (
         <Alert variant="destructive">
           <AlertTitle>{t("refused")}</AlertTitle>
-          <AlertDescription>{t("refused-description")}</AlertDescription>
+          <AlertDescription>{t(`${outcome}-description`)}</AlertDescription>
         </Alert>
       ) : null}
       {Arr.map(offered, (connector) => (

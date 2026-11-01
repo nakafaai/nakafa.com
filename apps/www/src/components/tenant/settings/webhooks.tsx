@@ -44,6 +44,7 @@ import {
 } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolDeliverySheet } from "@/components/tenant/settings/deliveries";
 import { revokeWebhookChange } from "@/components/tenant/settings/mutation";
@@ -109,9 +110,10 @@ export function SchoolWebhooksSettings() {
         actions={
           <>
             <TableSearch placeholder={t("webhooks-search")} />
-            <Button onClick={() => setIsCreating(true)} type="button">
-              {t("webhook-add")}
-            </Button>
+            <SchoolHeaderAdd
+              label={t("webhook-add")}
+              onClick={() => setIsCreating(true)}
+            />
           </>
         }
       >

@@ -126,8 +126,23 @@ function SchoolStudentSelect() {
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (
           <Intersection onIntersect={() => pagination.loadMore(PICKER_SIZE)} />
         ) : null}
+        {PaginatedQueryResult.isExhausted(pagination) &&
+        !Arr.isReadonlyArrayNonEmpty(pagination.results) ? (
+          <NoStudents />
+        ) : null}
       </PersonSelect>
     </>
+  );
+}
+
+/** What a student picker says with nobody to choose: where students come from. */
+function NoStudents() {
+  const t = useTranslations("SchoolSettings");
+
+  return (
+    <p className="text-muted-foreground px-2 py-1.5 text-sm">
+      {t("student-picker-empty")}
+    </p>
   );
 }
 

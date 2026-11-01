@@ -1,6 +1,10 @@
 import { NINA_RESPONSE_CREDITS } from "@repo/backend/confect/credits/constants";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { makeBreadcrumbNodes, makeFaqPageNode } from "@repo/seo/json-ld/node";
+import {
+  makeBreadcrumbNodes,
+  makeFaqPageNode,
+  makeProductNode,
+} from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
@@ -21,6 +25,7 @@ import { PageField } from "@/components/marketing/shared/field";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
+import { proPricing } from "@/lib/pricing/monthly";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { readStaticData } from "@/lib/static/data";
@@ -67,17 +72,18 @@ export const Route = createFileRoute("/$locale/_marketing/pricing")({
       return {};
     }
     const url = `${COMPANY_IDENTITY.url}/${params.locale}/pricing`;
+    const image = getAppSocialArtwork({
+      key: "pricing",
+      locale: params.locale,
+      publicPath: "pricing",
+    });
     return {
       ...toRouterHead(
         createSeoHead({
           absoluteTitle: loaderData.title,
           canonicalPath: `/${params.locale}/pricing`,
           description: loaderData.description,
-          image: getAppSocialArtwork({
-            key: "pricing",
-            locale: params.locale,
-            publicPath: "pricing",
-          }),
+          image,
           indexable: true,
           jsonLd: [
             ...makeBreadcrumbNodes(
@@ -89,6 +95,16 @@ export const Route = createFileRoute("/$locale/_marketing/pricing")({
             makeFaqPageNode({
               inLanguage: params.locale,
               items: loaderData.faqs,
+              url,
+            }),
+            makeProductNode({
+              description: loaderData.description,
+              image: new URL(image, COMPANY_IDENTITY.url).href,
+              name: `${COMPANY_IDENTITY.brandName} Pro`,
+              offers: Arr.map(proPricing, ({ currency, price }) => ({
+                amount: price.amount,
+                currency,
+              })),
               url,
             }),
           ],

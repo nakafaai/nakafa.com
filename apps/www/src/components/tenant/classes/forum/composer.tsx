@@ -47,10 +47,10 @@ import { sendMessage, sendReply } from "@/components/tenant/classes/forum/send";
 import { EmojiGrid } from "@/components/tenant/classes/forum/tallies";
 import {
   DOCUMENT_ACCEPT,
-  shownFile,
   UploadTray,
   useUploadTray,
 } from "@/components/tenant/classes/forum/tray";
+import { shownFile } from "@/components/tenant/classes/forum/upload";
 import { useViewerQuery } from "@/components/tenant/context";
 
 /** A message the server refused, kept with its key and all it carries so Try again never posts it twice. */

@@ -1,6 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
+import {
+  AccessDenied,
+  GrantRejected,
+} from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import {
   CardMissing,
@@ -25,7 +28,8 @@ import { Schema } from "effect";
 
 /**
  * The login cards of one school's Persons. An Admin adds a student with a login
- * name and the first card in one step, reissues the card later, and records each
+ * name, the student role and the first card in one step, so the student can join a
+ * cohort and be linked to a parent at once, reissues the card later, and records each
  * print of it. A student redeems a card on the school's host, the one function here
  * that no Admin calls.
  */
@@ -42,6 +46,7 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AccessDenied,
+          GrantRejected,
           LoginExists,
           LoginNameRefused,
           LoginNameTaken,

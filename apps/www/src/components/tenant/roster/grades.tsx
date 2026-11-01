@@ -1,4 +1,3 @@
-import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { FileExportIcon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -13,22 +12,15 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr, Option } from "effect";
-import { createContext, use } from "react";
+import { use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useTenant } from "@/components/tenant/context";
+import {
+  type GradeCohort,
+  GradeDownloadContext,
+} from "@/components/tenant/roster/download";
 import { useRosterUnit } from "@/components/tenant/roster/unit";
-
-/** One class group of the period, as the export menu lists it. */
-type CohortChoice = Ref.Returns<typeof tenancy.cohorts.list>[number];
-
-/** One class group of the period, as the export menu lists it. */
-export type GradeCohort = CohortChoice;
-
-/** The save of one class group's report data, which the menu's items run when chosen. */
-export const GradeDownloadContext = createContext<
-  (cohort: CohortChoice) => void
->(() => undefined);
 
 /**
  * The report grades of the export menu (ADR 0033, S6): a submenu of the unit's class groups in its
@@ -109,7 +101,7 @@ function RosterGradeCohorts() {
 }
 
 /** One class group of the export menu, which saves its report data when chosen. */
-function RosterGradeItem({ cohort }: { cohort: CohortChoice }) {
+function RosterGradeItem({ cohort }: { cohort: GradeCohort }) {
   const download = use(GradeDownloadContext);
 
   return (

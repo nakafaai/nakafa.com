@@ -167,18 +167,19 @@ export function PaperPairSelect() {
  * reach. The teacher writes the accepted answers or the rubric in the layer, never on the paper.
  */
 export function PaperField({ answers }: { answers: readonly Interaction[] }) {
-  return Option.match(writtenOf(answers), {
-    onNone: () => null,
-    onSome: (entry) => (
-      <div inert>
-        <SittingField
-          entry={entry}
-          labelledBy=""
-          onType={Fn.constVoid}
-          saved=""
-          text=""
-        />
-      </div>
-    ),
-  });
+  const entry = writtenOf(answers);
+  if (Option.isNone(entry)) {
+    return null;
+  }
+  return (
+    <div inert>
+      <SittingField
+        entry={entry.value}
+        labelledBy=""
+        onType={Fn.constVoid}
+        saved=""
+        text=""
+      />
+    </div>
+  );
 }
