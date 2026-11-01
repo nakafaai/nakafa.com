@@ -18,6 +18,7 @@ import { HomeTitle } from "@/components/ai/home/title";
 import { NinaInput } from "@/components/ai/input";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { useCurrentLocale } from "@/lib/routing/link";
@@ -127,7 +128,10 @@ function NewChatLayout({
         </>
       )}
       {prompt ? (
-        <StartPrompt className="mx-auto w-full max-w-3xl p-6" prompt={prompt} />
+        <StartPrompt
+          className={cn(pageRowVariants(), "py-6")}
+          prompt={prompt}
+        />
       ) : (
         <>
           <div
@@ -141,8 +145,9 @@ function NewChatLayout({
       )}
       <div
         className={cn(
-          "relative mx-auto grid w-full shrink-0",
-          prompt ? "max-w-3xl px-4 pb-4" : "max-w-3xl px-6"
+          pageRowVariants(),
+          "relative grid shrink-0",
+          prompt && "pb-4"
         )}
         key="composer"
       >

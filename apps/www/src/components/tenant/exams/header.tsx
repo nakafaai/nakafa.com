@@ -101,12 +101,16 @@ export function ExamHeaderFrame() {
 
 /**
  * The bar of the editor's header and its row. Both run the screen's full width, as the editor's panes do, so on a
- * wide screen the row lines up with the canvas under it.
+ * wide screen the row lines up with the canvas under it. It is the one page outside the page frame, as a design
+ * tool's canvas is, and `data-canvas` says so to the frame's guard.
  */
 function ExamHeaderRow({ children }: { children: ReactNode }) {
   return (
     <header className="h-14 shrink-0 border-b" data-slot="page-header">
-      <div className="flex h-full w-full items-center gap-2 px-4">
+      <div
+        className="flex h-full w-full items-center gap-2 px-4"
+        data-canvas=""
+      >
         {children}
       </div>
     </header>

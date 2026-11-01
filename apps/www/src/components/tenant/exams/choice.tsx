@@ -26,20 +26,10 @@ import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { useExamLocked } from "@/components/tenant/exams/provider";
+import { choiceTitle } from "@/components/tenant/exams/reason";
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import { PaperOption, PaperOptions } from "@/components/tenant/exams/sheet";
 import type { Unstored } from "@/components/tenant/exams/writer";
-
-/** The name of a choice on its paper: its place in an answer and its reason, and none in a question of one choice. */
-export const choiceTitle = (
-  template: Question["template"],
-  choiceId: string
-) => {
-  if (template !== "reason") {
-    return null;
-  }
-  return choiceId === REASON_ID ? "reason-title" : "reason-answer";
-};
 
 /**
  * One choice of a question on its paper, as the student meets it: its options, each written in its row, and the

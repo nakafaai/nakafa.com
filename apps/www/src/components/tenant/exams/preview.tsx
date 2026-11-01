@@ -30,7 +30,6 @@ import {
   isChoice,
   type OptionLabel,
 } from "@/components/tenant/exams/answer";
-import { choiceTitle } from "@/components/tenant/exams/choice";
 import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -39,6 +38,7 @@ import {
   useExamLive,
   useExamLocked,
 } from "@/components/tenant/exams/provider";
+import { choiceTitle } from "@/components/tenant/exams/reason";
 import {
   OptionAddRoom,
   PaperField,
@@ -110,10 +110,7 @@ export function usePageRead({
   );
   // A document removed with its exam fails its read, and the drawing keeps the text the server last answered.
   const kept = useLastValue(reply);
-  // A skipped or loading read draws no server document, so the drawing takes the editor's.
-  const stored = QueryResult.isLoading(reply)
-    ? undefined
-    : Option.getOrUndefined(kept);
+  const stored = Option.getOrUndefined(kept);
   // A document this build cannot read leaves its drawing without a prompt; the editor reports the
   // failure when the question opens. The stored steps are folded once per answer of the server.
   const served = useMemo(
@@ -128,9 +125,12 @@ export function usePageRead({
           ),
     [stored]
   );
-  const doc = open
-    ? Option.orElse(live, () => served)
-    : Option.orElse(served, () => live);
+  // A skipped or loading read prefers the editor's text, which is newer, and keeps the last answer
+  // when no editor holds the text, so a drawing never empties while it reads again.
+  const doc =
+    open || QueryResult.isLoading(reply)
+      ? Option.orElse(live, () => served)
+      : Option.orElse(served, () => live);
   return { answered: Option.isSome(doc) || !QueryResult.isLoading(reply), doc };
 }
 

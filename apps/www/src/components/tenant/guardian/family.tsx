@@ -46,7 +46,7 @@ export function StudentFamily() {
           {t("family-invite")}
         </Button>
       </SchoolHeader>
-      <TablePageBody width="page">
+      <TablePageBody>
         <FamilyList />
       </TablePageBody>
       <ParentInviteDialog open={isInviting} setOpen={setIsInviting} />

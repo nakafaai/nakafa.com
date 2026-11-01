@@ -30,7 +30,7 @@ import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -135,7 +135,7 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         <TableSearch placeholder={t("search-cohorts")} />
       </SchoolHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">
+      <TablePageBody>
         {QueryResult.isSuccess(cohorts) && Arr.isReadonlyArrayEmpty(loaded) ? (
           <TableEmpty
             act="pointing"
@@ -151,7 +151,7 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
             search="cohort"
           />
         ) : null}
-      </div>
+      </TablePageBody>
     </TableFiltersProvider>
   );
 }

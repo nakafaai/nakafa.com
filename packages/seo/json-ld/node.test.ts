@@ -7,6 +7,7 @@ import {
   makeCollectionPageNode,
   makeEducationalOrganizationNode,
   makeFaqPageNode,
+  makeProductNode,
   makeWebsiteNode,
 } from "@repo/seo/json-ld/node";
 
@@ -108,6 +109,34 @@ describe("makeBookNode", () => {
       isAccessibleForFree: true,
       numberOfPages: 7,
       position: 1,
+    });
+  });
+});
+
+describe("makeProductNode", () => {
+  it("offers the plan in each currency, by the month and before tax", () => {
+    const node = makeProductNode({
+      description: "Compare the plans.",
+      image: "https://nakafa.com/og.png",
+      name: "Nakafa Pro",
+      offers: [
+        { amount: 79_000, currency: "IDR" },
+        { amount: 8.99, currency: "USD" },
+      ],
+      url: "https://nakafa.com/en/pricing",
+    });
+
+    expect(node).toMatchObject({
+      "@type": "Product",
+      brand: { name: "Nakafa" },
+      name: "Nakafa Pro",
+    });
+    expect(node.offers).toHaveLength(2);
+    expect(node.offers[0]).toMatchObject({
+      price: 79_000,
+      priceCurrency: "IDR",
+      priceSpecification: { unitCode: "MON", valueAddedTaxIncluded: false },
+      url: "https://nakafa.com/en/pricing",
     });
   });
 });
