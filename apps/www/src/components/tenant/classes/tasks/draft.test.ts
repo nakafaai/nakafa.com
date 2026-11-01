@@ -18,6 +18,7 @@ const task: ClassTask = {
   mine: null,
   points: 40,
   slug: "ringkasan",
+  targets: null,
   text: "Kerjakan soal 1.",
   title: "Ringkasan",
 };
@@ -28,6 +29,7 @@ describe("task drafts", () => {
       deadline: "2026-11-02T23:59",
       latePolicy: "close",
       points: 40,
+      targets: null,
       text: "Kerjakan soal 1.",
       title: "Ringkasan",
     });
@@ -36,6 +38,7 @@ describe("task drafts", () => {
         deadline: task.deadline,
         latePolicy: "close",
         points: 40,
+        targets: null,
         text: "Kerjakan soal 1.",
         title: "Ringkasan",
       })
@@ -47,6 +50,9 @@ describe("task drafts", () => {
       checkedDraft({ ...draftOf(task), text: "  Soal 2.  ", title: " Baru " })
     ).toMatchObject(Option.some({ text: "Soal 2.", title: "Baru" }));
     expect(checkedDraft(EMPTY_DRAFT)).toEqual(Option.none());
+    expect(checkedDraft({ ...draftOf(task), targets: [] })).toEqual(
+      Option.none()
+    );
     expect(checkedDraft({ ...draftOf(task), points: null })).toEqual(
       Option.none()
     );

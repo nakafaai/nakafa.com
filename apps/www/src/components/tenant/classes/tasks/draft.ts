@@ -1,6 +1,8 @@
+import { Id } from "@repo/backend/confect/_generated/id";
 import {
   LatePolicy,
   TaskPoints,
+  TaskTargets,
   TaskText,
   TaskTitle,
 } from "@repo/backend/confect/classroom/tasks/task";
@@ -12,13 +14,14 @@ import {
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 
 /**
- * What a task's form holds while the teacher writes it: the title and the text as typed, the deadline as the
+ * What a task's form holds while the teacher writes it: who it goes to, none for the whole class, the title and the text as typed, the deadline as the
  * browser's date and time field holds it, the points as the number field holds them, and the late policy.
  */
 export const TaskDraft = Schema.Struct({
   deadline: Schema.String,
   latePolicy: LatePolicy,
   points: Schema.NullOr(Schema.Finite),
+  targets: Schema.NullOr(Schema.Array(Id("tenantPeople"))),
   text: Schema.String,
   title: Schema.String,
 });
@@ -28,6 +31,7 @@ export const EMPTY_DRAFT: typeof TaskDraft.Type = {
   deadline: "",
   latePolicy: "accept",
   points: 100,
+  targets: null,
   text: "",
   title: "",
 };
@@ -37,6 +41,7 @@ export const draftOf = (task: ClassTask): typeof TaskDraft.Type => ({
   deadline: localDeadline(task.deadline),
   latePolicy: task.latePolicy,
   points: task.points,
+  targets: task.targets,
   text: task.text,
   title: task.title,
 });
@@ -52,6 +57,10 @@ export const checkedDraft = (draft: typeof TaskDraft.Type) =>
       points: Option.filter(
         Option.fromNullOr(draft.points),
         Schema.is(TaskPoints)
+      ),
+      targets: Option.liftPredicate(
+        draft.targets,
+        (targets) => targets === null || Schema.is(TaskTargets)(targets)
       ),
       text: Option.liftPredicate(Str.trim(draft.text), Schema.is(TaskText)),
       title: Option.liftPredicate(Str.trim(draft.title), Schema.is(TaskTitle)),
