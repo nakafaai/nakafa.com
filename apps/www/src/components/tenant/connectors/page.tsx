@@ -9,6 +9,7 @@ import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { GOOGLE_MANIFEST } from "@repo/backend/confect/connectors/google/manifest";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { cn } from "cn";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { use } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -36,6 +37,7 @@ import {
   connectedService,
   connectFailure,
 } from "@/components/connectors/outcome";
+import { pageGutterVariants } from "@/components/shared/content/width";
 import {
   Panes,
   PanesDetail,
@@ -208,11 +210,7 @@ function SchoolDirectory() {
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail
-          defaultSize="45%"
-          empty={t("detail-empty")}
-          label={t("detail")}
-        >
+        <PanesDetail defaultSize="45%" label={t("detail")}>
           <ServiceDetail entries={entries} />
         </PanesDetail>
       </Panes>
@@ -258,7 +256,7 @@ function ServiceList({
 
   return (
     <ScrollArea className="min-h-0 flex-1">
-      <div className="@container p-4">
+      <div className={cn(pageGutterVariants(), "@container py-4")}>
         <div className="grid auto-rows-fr gap-4 @xl:grid-cols-2">
           {Arr.map(shown, (entry) => (
             <ServiceCard entry={entry} key={entry.service.key} />

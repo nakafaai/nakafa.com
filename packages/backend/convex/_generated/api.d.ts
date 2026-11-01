@@ -422,8 +422,8 @@ export declare const api: {
       getChatTitle: FunctionReference<
         "query",
         "public",
-        { chatId: Id<"chats"> },
-        string | null
+        { chatId: string },
+        null | { title: null | string }
       >;
       getOwnChats: FunctionReference<
         "query",
@@ -2047,7 +2047,7 @@ export declare const api: {
       getCommentPlace: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; commentId: Id<"comments"> },
+        { appLocale: "en" | "id" | "de"; commentId: string },
         { appLocale: "en" | "id" | "de"; publicPath: string } | null
       >;
       getCommentReplies: FunctionReference<

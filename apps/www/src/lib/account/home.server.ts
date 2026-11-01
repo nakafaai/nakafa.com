@@ -6,7 +6,7 @@ import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
-import { redirect } from "@tanstack/react-router";
+import { notFound, redirect } from "@tanstack/react-router";
 import { Clock, Effect, Option, Schema } from "effect";
 import { createTranslator } from "use-intl/core";
 import { getMaterialLooks } from "@/components/home/look";
@@ -112,21 +112,25 @@ export const chatSidebarScreenHandler = accountHandler(() =>
 
 /**
  * A saved chat: its decoded id and its title, when the visitor may read it. A
- * title that cannot be read is logged and left out, so the page still opens.
+ * title that cannot be read is logged and left out, so the page still opens, and
+ * an address that names no chat is not found.
  */
 export const chatScreenHandler = accountHandler(
   ({ id }: typeof ChatInput.Type) =>
     Effect.gen(function* () {
+      const token = yield* readToken();
+      const chat = yield* readOptional(
+        chats.queries.getChatTitle,
+        { chatId: id },
+        token
+      );
+      if (chat === null) {
+        return yield* Effect.die(notFound());
+      }
       const chatId = yield* Schema.decodeUnknownEffect(IdSchema("chats"))(
         id
       ).pipe(Effect.orDie);
-      const token = yield* readToken();
-      const title = yield* readOptional(
-        chats.queries.getChatTitle,
-        { chatId },
-        token
-      ).pipe(Effect.map(Option.fromNullishOr));
-      return { chatId, title: Option.getOrUndefined(title) };
+      return { chatId, title: chat?.title ?? undefined };
     })
 );
 

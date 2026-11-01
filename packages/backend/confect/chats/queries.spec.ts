@@ -44,10 +44,12 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "getChatTitle",
+      // The address of a page, which anyone can write, so it is read as text.
       args: () => ({
-        chatId: IdSchema("chats"),
+        chatId: Schema.String,
       }),
-      returns: () => Schema.NullOr(Schema.String),
+      returns: () =>
+        Schema.NullOr(Schema.Struct({ title: Schema.NullOr(Schema.String) })),
       error: () => AuthFailure,
     }).middleware(Session)
   )

@@ -3,6 +3,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { cn } from "cn";
 import { Array as Arr, HashMap, Option } from "effect";
 import { type ReactNode, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -21,6 +22,7 @@ import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
 import { SittingFilterRow } from "@/components/exams/sitting/toolbar";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
+import { pageGutterVariants } from "@/components/shared/content/width";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -109,7 +111,12 @@ export function SittingDashboard({
           <SittingOfflineContext value={offline}>
             <Panes>
               <PanesList>
-                <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">
+                <div
+                  className={cn(
+                    pageGutterVariants(),
+                    "grid min-w-0 content-start gap-4 py-4 md:py-6"
+                  )}
+                >
                   <SittingSeats />
                 </div>
               </PanesList>

@@ -184,9 +184,7 @@ test("a connected school sees the check, finds its courses in the detail, and di
   await expect(detail.getByText("This school")).toBeVisible();
   await picture(page, "import");
 
-  await detail
-    .getByRole("button", { name: "Disconnect Google Classroom" })
-    .click();
+  await detail.getByRole("button", { exact: true, name: "Disconnect" }).click();
   const dialog = page.getByRole("dialog", {
     name: "Disconnect Google Classroom",
   });

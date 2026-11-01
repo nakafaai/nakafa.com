@@ -342,20 +342,20 @@ it("gives a title to a chat's owner and never to a chat id alone, shared or priv
   });
   expect(
     await t.query(api.chats.queries.getChatTitle, { chatId: fixture.privateId })
-  ).toBeNull();
+  ).toStrictEqual({ title: null });
   expect(
     await owner.query(api.chats.queries.getChatTitle, {
       chatId: fixture.privateId,
     })
-  ).toBe("Secret");
+  ).toStrictEqual({ title: "Secret" });
   expect(
     await t.query(api.chats.queries.getChatTitle, { chatId: fixture.publicId })
-  ).toBeNull();
+  ).toStrictEqual({ title: null });
   expect(
     await owner.query(api.chats.queries.getChatTitle, {
       chatId: fixture.publicId,
     })
-  ).toBe("Shared");
+  ).toStrictEqual({ title: "Shared" });
   for (const chatId of [
     fixture.emptyPublic,
     fixture.emptyPrivate,
@@ -363,8 +363,11 @@ it("gives a title to a chat's owner and never to a chat id alone, shared or priv
   ]) {
     expect(
       await owner.query(api.chats.queries.getChatTitle, { chatId })
-    ).toBeNull();
+    ).toStrictEqual({ title: null });
   }
+  expect(
+    await owner.query(api.chats.queries.getChatTitle, { chatId: "abc" })
+  ).toBeNull();
   expect(
     await owner.query(api.chats.queries.getChat, { chatId: fixture.privateId })
   ).toMatchObject({ title: "Secret" });
@@ -422,15 +425,15 @@ it("opens a sealed title with its owner's key for the readers the access rules a
   ).toMatchObject({ title: "Belajar bersama" });
   expect(
     await t.query(api.chats.queries.getChatTitle, { chatId: publicId })
-  ).toBeNull();
+  ).toStrictEqual({ title: null });
   // A private title opens for its owner only.
   expect(
     await asOwner.query(api.chats.queries.getChatTitle, { chatId: privateId })
-  ).toBe("Rahasia keluarga");
+  ).toStrictEqual({ title: "Rahasia keluarga" });
   for (const viewer of [t, asStranger]) {
     expect(
       await viewer.query(api.chats.queries.getChatTitle, { chatId: privateId })
-    ).toBeNull();
+    ).toStrictEqual({ title: null });
     await expect(
       viewer.query(api.chats.queries.getChat, { chatId: privateId })
     ).rejects.toThrow("CHAT_NOT_FOUND");

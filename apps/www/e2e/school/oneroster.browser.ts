@@ -72,5 +72,20 @@ test("an admin previews a OneRoster zip and imports its students into their clas
     .getByRole("button", { name: "Import students" })
     .click();
   await expect(page.getByText("The students are in the roster.")).toBeVisible();
+
+  // An import names a student and holds no address, so the school invites them from their row.
+  await page.goto(address("/settings/members"));
+  const member = page.getByRole("row").filter({ hasText: "Raka Pratama" });
+  const menu = member.getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(menu);
+  await menu.click();
+  await page.getByRole("menuitem", { name: "Invite" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Email").fill("raka@school.example");
+  await dialog.getByRole("button", { name: "Invite" }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.goto(address("/settings/invites"));
+  await expect(page.getByText("raka@school.example")).toBeVisible();
   await context.close();
 });

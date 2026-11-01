@@ -142,7 +142,7 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
           rowId={(child) => child.linkId}
         />
       </PanesList>
-      <PanesDetail empty={t("child-detail-empty")} label={t("child-detail")}>
+      <PanesDetail label={t("child-detail")}>
         <GuardianChild items={items} />
       </PanesDetail>
     </Panes>

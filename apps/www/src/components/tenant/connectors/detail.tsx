@@ -1,8 +1,14 @@
 import {
   Add01Icon,
+  Alert02Icon,
   ArrowRight01Icon,
+  Clock01Icon,
   RefreshIcon,
+  School01Icon,
+  SquareLock02Icon,
+  Tick02Icon,
   Unlink02Icon,
+  UserIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -17,17 +23,11 @@ import {
   CONNECTABLE,
   type DirectoryEntry,
   holderOf,
-  statusKey,
 } from "@/components/connectors/directory";
 import { DisconnectDialog } from "@/components/connectors/disconnect";
-import {
-  PaneBody,
-  PaneFact,
-  PaneFacts,
-  PaneFooter,
-  PaneHeader,
-} from "@/components/shared/pane";
+import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { ServiceTile } from "@/components/tenant/connectors/card";
 import { ClassroomCourses } from "@/components/tenant/connectors/classroom";
 import {
@@ -36,6 +36,20 @@ import {
 } from "@/components/tenant/connectors/service";
 import { useTenant } from "@/components/tenant/context";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
+
+/** How each state of a service looks in its detail. */
+const STATE_LOOKS = {
+  connected: { icon: Tick02Icon, tone: "success" },
+  failed: { icon: Alert02Icon, tone: "destructive" },
+  locked: { icon: SquareLock02Icon, tone: "neutral" },
+  open: { icon: Add01Icon, tone: "neutral" },
+  reconnect: { icon: RefreshIcon, tone: "warning" },
+  refused: { icon: Alert02Icon, tone: "warning" },
+  soon: { icon: Clock01Icon, tone: "neutral" },
+} as const satisfies Record<string, StatusLook>;
+
+/** Whom a connection serves, in its own icon. */
+const HOLDER_ICONS = { personal: UserIcon, school: School01Icon } as const;
 
 /**
  * The open service, beside the list on a wide screen and in a sheet on a phone. Whatever a connector
@@ -62,10 +76,11 @@ export function ServiceDetail({
   );
 }
 
-/** The service's header, what it reads and where it stands, and the work a connection opens. */
+/** The service's header, where it stands and whom it serves, and the work a connection opens. */
 function ServicePane() {
   const t = useTranslations("Connectors");
   const { service, state } = useService();
+  const holder = holderOf(service);
 
   return (
     <>
@@ -74,23 +89,29 @@ function ServicePane() {
         title={t(service.key)}
       />
       <PaneBody>
-        <div className="flex flex-col gap-6">
-          <div className="flex items-start gap-3">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
             <ServiceTile />
-            <p className="text-muted-foreground text-sm">
-              {t(`${service.key}-description`)}
-            </p>
+            <div className="flex min-w-0 flex-wrap gap-2">
+              {Option.isSome(state) ? (
+                <TableStatus
+                  icon={STATE_LOOKS[state.value].icon}
+                  label={t(`state-${state.value}`)}
+                  tone={STATE_LOOKS[state.value].tone}
+                />
+              ) : null}
+              <TableStatus
+                icon={HOLDER_ICONS[holder]}
+                label={t(`holder-${holder}`)}
+                tone="neutral"
+              />
+            </div>
           </div>
-          <PaneFacts>
-            {Option.isSome(state) ? (
-              <PaneFact label={t("fact-status")}>
-                {t(statusKey(service, state.value))}
-              </PaneFact>
-            ) : null}
-            <PaneFact label={t("fact-holder")}>
-              {t(`holder-${holderOf(service)}`)}
-            </PaneFact>
-          </PaneFacts>
+          {service.key === "forms" && Option.contains(state, "open") ? (
+            <p className="text-muted-foreground text-sm">
+              {t("status-through-drive")}
+            </p>
+          ) : null}
           {service.key === "classroom" &&
           Option.contains(state, "connected") ? (
             <ClassroomCourses />
@@ -176,7 +197,9 @@ function DisconnectAction() {
         variant="outline"
       >
         <HugeIcons icon={Unlink02Icon} />
-        {t("disconnect-service", { name })}
+        {service.key === service.connector
+          ? t("disconnect")
+          : t("disconnect-service", { name })}
       </Button>
       <DisconnectDialog
         connection={connection.value}
