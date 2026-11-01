@@ -45,11 +45,11 @@ export function BreadcrumbHeaderFrame({
       <div
         className={cn(
           pageRowVariants(),
-          "@container/header flex min-w-0 items-center gap-1"
+          "@container/header flex min-w-0 items-center gap-2"
         )}
       >
         <SidebarScopeStart
-          className="-ms-2 group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden lg:hidden"
+          className="group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden lg:hidden"
           label={tCommon("toggle-sidebar")}
         />
         <div
