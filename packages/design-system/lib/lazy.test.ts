@@ -22,9 +22,13 @@ describe("readChunk", () => {
     () =>
       Effect.gen(function* () {
         vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
-        expect(
-          yield* readChunk(() => Promise.reject(CHUNK_GONE)).pipe(Effect.flip)
-        ).toBe(CHUNK_GONE);
+        const failure = yield* Effect.promise(() =>
+          Effect.runPromise(
+            readChunk(() => Promise.reject<string>(CHUNK_GONE))
+          ).catch((cause: unknown) => cause)
+        );
+
+        expect(failure).toBe(CHUNK_GONE);
       })
   );
 
