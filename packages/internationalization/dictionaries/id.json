@@ -67,6 +67,7 @@
     "outsider-check-again": "Periksa lagi"
   },
   "SchoolGuardians": {
+    "email": "Email",
     "request-ask": "Tanya sekolah",
     "request-description": "Tata usaha menjawab setiap permintaan. Tulis kebutuhan Anda secara singkat.",
     "request-placeholder": "Yang Anda perlukan dari tata usaha",
@@ -151,8 +152,7 @@
     "mismatches": "Cek NISN gagal",
     "child": "Anak",
     "child-detail": "Anak",
-    "guardian-email": "Email orang tua",
-    "email": "Email"
+    "guardian-email": "Email orang tua"
   },
   "SchoolRoster": {
     "import": "Impor",
@@ -1644,6 +1644,7 @@
     "library-kind-folder": "Folder"
   },
   "SchoolGrades": {
+    "email": "Email",
     "student": "Siswa",
     "value": "Nilai",
     "value-label": "Nilai {name}",
@@ -1668,10 +1669,10 @@
     "own-band": "Predikat",
     "own-band-none": "Tanpa predikat",
     "own-empty": "Belum ada nilai yang dirilis.",
-    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya.",
-    "email": "Email"
+    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya."
   },
   "SchoolReports": {
+    "email": "Email",
     "title": "Rapor",
     "cohort": "Rombel",
     "period": "Periode",
@@ -1712,10 +1713,10 @@
     "own-search": "Cari rombel",
     "own-empty": "Belum ada rapor yang dikunci.",
     "own-empty-description": "Rapor muncul di sini setelah kepala sekolah menyetujuinya.",
-    "unit": "Unit",
-    "email": "Email"
+    "unit": "Unit"
   },
   "SchoolGraduation": {
+    "email": "Email",
     "title": "Kelulusan",
     "cohort": "Rombel",
     "unit": "Satuan pendidikan",
@@ -1765,8 +1766,7 @@
     "nip-description": "Opsional, untuk kepala satuan pendidikan yang ASN.",
     "save-decision": "Simpan keputusan",
     "issue": "Terbitkan SKL",
-    "export-readiness": "Ekspor untuk e-Ijazah",
-    "email": "Email"
+    "export-readiness": "Ekspor untuk e-Ijazah"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",

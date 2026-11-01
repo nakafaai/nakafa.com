@@ -67,6 +67,7 @@
     "outsider-check-again": "Erneut prüfen"
   },
   "SchoolGuardians": {
+    "email": "E-Mail",
     "request-ask": "Die Schule fragen",
     "request-description": "Das Sekretariat beantwortet jede Anfrage. Schreibe kurz, was du brauchst.",
     "request-placeholder": "Was du vom Sekretariat brauchst",
@@ -151,8 +152,7 @@
     "mismatches": "Fehlgeschlagene NISN-Prüfungen",
     "child": "Kind",
     "child-detail": "Kind",
-    "guardian-email": "E-Mail der Eltern",
-    "email": "E-Mail"
+    "guardian-email": "E-Mail der Eltern"
   },
   "SchoolRoster": {
     "import": "Importieren",
@@ -1644,6 +1644,7 @@
     "library-kind-folder": "Ordner"
   },
   "SchoolGrades": {
+    "email": "E-Mail",
     "student": "Schüler",
     "value": "Note",
     "value-label": "Note von {name}",
@@ -1668,10 +1669,10 @@
     "own-band": "Stufe",
     "own-band-none": "Ohne Stufe",
     "own-empty": "Noch keine Note freigegeben.",
-    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt.",
-    "email": "E-Mail"
+    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
   },
   "SchoolReports": {
+    "email": "E-Mail",
     "title": "Zeugnisse",
     "cohort": "Klasse",
     "period": "Zeitraum",
@@ -1712,10 +1713,10 @@
     "own-search": "Klasse suchen",
     "own-empty": "Noch kein Zeugnis abgeschlossen.",
     "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt.",
-    "unit": "Einheit",
-    "email": "E-Mail"
+    "unit": "Einheit"
   },
   "SchoolGraduation": {
+    "email": "E-Mail",
     "title": "Abschluss",
     "cohort": "Klasse",
     "unit": "Einheit",
@@ -1765,8 +1766,7 @@
     "nip-description": "Optional, für eine verbeamtete Schulleitung.",
     "save-decision": "Beschluss speichern",
     "issue": "SKL ausstellen",
-    "export-readiness": "Für e-Ijazah exportieren",
-    "email": "E-Mail"
+    "export-readiness": "Für e-Ijazah exportieren"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
