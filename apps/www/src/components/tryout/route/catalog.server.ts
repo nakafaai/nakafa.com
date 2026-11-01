@@ -3,7 +3,7 @@ import type { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/s
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
   buildTryoutCountryOptions,
   buildTryoutExamOptions,
@@ -40,6 +40,14 @@ type TryoutRouteKind = typeof tryoutMetadataArgsValidator.kind.Type;
  */
 const TryoutRouteHeadSchema = Schema.Struct({
   alternates: Schema.Array(HeadAlternate),
+  breadcrumbs: Schema.Array(
+    Schema.Struct({
+      "@type": Schema.Literal("ListItem"),
+      item: Schema.String,
+      name: Schema.String,
+      position: Schema.Int,
+    })
+  ),
   canonicalPath: LocalizedPath,
   description: Schema.String,
   image: Schema.String,
@@ -56,6 +64,45 @@ const TryoutRouteLabelsSchema = Schema.Struct({
   tryOutShort: Schema.String,
 });
 type TryoutRouteLabels = typeof TryoutRouteLabelsSchema.Type;
+
+/** The catalog kinds of a route's ancestors, from the top of a `try-out/...` path. */
+const ANCESTOR_KINDS = ["country", "exam", "track", "set"] as const;
+
+/** How many segments a route's path holds above its first ancestor and below its last. */
+const OWN_SEGMENTS = 2;
+
+/**
+ * The breadcrumb that a search result shows for a route: home, the hub, then each
+ * ancestor by the title the catalog publishes, down to the route itself.
+ */
+const readTryoutBreadcrumbs = Effect.fn("www.tryout.route.readBreadcrumbs")(
+  function* (input: {
+    readonly locale: Locale;
+    readonly publicPath: string;
+    readonly title: string;
+  }) {
+    const appLocale = AppLocaleSchema.make(input.locale);
+    const segments = input.publicPath.split("/");
+    const labels = yield* readTryoutRouteLabels(input.locale);
+    const ancestors = yield* Effect.forEach(
+      Arr.take(ANCESTOR_KINDS, segments.length - OWN_SEGMENTS),
+      (kind, index) =>
+        readTryoutMetadata({
+          appLocale,
+          kind,
+          publicPath: Arr.join(Arr.take(segments, index + OWN_SEGMENTS), "/"),
+        })
+    );
+    return createBreadcrumbItems(input.locale, [
+      { name: labels.home, path: "" },
+      { name: labels.tryOut, path: "/try-out" },
+      ...Arr.flatMap(ancestors, ({ route }) =>
+        route ? [{ name: route.title, path: `/${route.publicPath}` }] : []
+      ),
+      { name: input.title, path: `/${input.publicPath}` },
+    ]);
+  }
+);
 
 /**
  * Reads the head facts of one published try-out route. The catalog decides the
@@ -93,14 +140,20 @@ export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
         source.alternates
       )
     );
+    const breadcrumbs = yield* readTryoutBreadcrumbs({
+      locale: input.locale,
+      publicPath: source.publicPath,
+      title: source.title,
+    });
     if (input.kind !== "exam") {
       return Option.some<TryoutRouteHead>({
         alternates,
+        breadcrumbs,
         canonicalPath: `/${input.locale}/${source.publicPath}`,
         description: source.description ?? tTryouts("metadata-description"),
         image: getOgUrl(input.locale, source.publicPath),
         indexable: true,
-        title: source.title,
+        title: tTryouts("search-title", { name: source.title }),
       });
     }
     if (!source.socialImageIdentity) {
@@ -113,11 +166,12 @@ export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
     });
     return Option.some<TryoutRouteHead>({
       alternates,
+      breadcrumbs,
       canonicalPath: `/${input.locale}/${source.publicPath}`,
       description: source.description ?? tTryouts("metadata-description"),
       image: artwork.socialImageSrc,
       indexable: true,
-      title: source.title,
+      title: tTryouts("search-title", { name: source.title }),
     });
   }
 );
@@ -165,6 +219,7 @@ export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
       }),
       labels,
       page,
+      title: tTryouts("hub-search-title"),
     };
   }
 );
@@ -322,7 +377,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
         description:
           page.track.description ??
           tTryouts("track-metadata-description", { exam }),
-        title: exam,
+        title: tTryouts("search-title", { name: exam }),
       },
       kind: "found" as const,
       labels,

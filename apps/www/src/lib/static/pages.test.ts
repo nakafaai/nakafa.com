@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { readStaticPagePaths, selectStaticPagePaths } from "@/lib/static/pages";
+import {
+  isUnlistedPath,
+  readStaticPagePaths,
+  selectStaticPagePaths,
+} from "@/lib/static/pages";
 
 const sitemap = vi.hoisted(() => ({
   descriptors: vi.fn(),
@@ -16,6 +20,16 @@ vi.mock("@/lib/sitemap/entries", () => ({
   /** Controls the canonical URLs of one sitemap page. */
   getSitemapEntries: sitemap.entries,
 }));
+
+describe("pages the sitemap leaves out", () => {
+  it("leaves out a try-out section, and no page above it or of another family", () => {
+    expect(
+      isUnlistedPath("/en/try-out/indonesia/snbt/2027/set-1/general-reasoning")
+    ).toBe(true);
+    expect(isUnlistedPath("/en/try-out/indonesia/snbt/2027/set-1")).toBe(false);
+    expect(isUnlistedPath("/en/subjects/a/b/c/d/e")).toBe(false);
+  });
+});
 
 describe("static page paths", () => {
   it("keeps the sitemap's public URLs and adds the articles and try-out indexes and the sign-in page of every locale", () => {

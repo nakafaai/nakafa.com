@@ -53,7 +53,7 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
         description:
           page.set.description ??
           tTryouts("set-metadata-description", { exam, set: page.set.title }),
-        title: [page.set.title, exam],
+        title: tTryouts("search-title", { name: `${exam} ${page.set.title}` }),
       },
       kind: "catalog" as const,
       now: yield* Clock.currentTimeMillis,

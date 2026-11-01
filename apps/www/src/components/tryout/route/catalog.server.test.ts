@@ -66,6 +66,7 @@ vi.mock("@repo/internationalization/src/translator", () => ({
 const COUNTRY = "try-out/id";
 const EXAM = "try-out/id/snbt";
 const TRACK = "try-out/id/snbt/2027";
+const TRACK_SET = "try-out/id/snbt/2027/set-1";
 
 const countryPage = {
   country: { countryKey: "id" },
@@ -113,7 +114,9 @@ function publishRoute(route: object | undefined) {
 beforeEach(() => {
   vi.clearAllMocks();
   catalog.readServerTranslator.mockImplementation(() =>
-    Promise.resolve((key: string) => key)
+    Promise.resolve((key: string, values?: { readonly name?: string }) =>
+      values?.name === undefined ? key : `${key} ${values.name}`
+    )
   );
   catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
   catalog.readTryoutSetList.mockReturnValue(
@@ -168,14 +171,79 @@ describe("readTryoutRouteHead", () => {
           { href: "https://nakafa.com/de/try-out/indonesien", hreflang: "de" },
           { href: `https://nakafa.com/en/${COUNTRY}`, hreflang: "x-default" },
         ],
+        breadcrumbs: [
+          {
+            "@type": "ListItem",
+            item: "https://nakafa.com/en",
+            name: "home",
+            position: 1,
+          },
+          {
+            "@type": "ListItem",
+            item: "https://nakafa.com/en/try-out",
+            name: "try-out",
+            position: 2,
+          },
+          {
+            "@type": "ListItem",
+            item: `https://nakafa.com/en/${COUNTRY}`,
+            name: "Indonesia",
+            position: 3,
+          },
+        ],
         canonicalPath: `/en/${COUNTRY}`,
         description: "Country",
         image: "og-url",
         indexable: true,
-        title: "Indonesia",
+        title: "search-title Indonesia",
       });
       expect(catalog.getOgUrl).toHaveBeenCalledExactlyOnceWith("en", COUNTRY);
     })
+  );
+
+  it.effect(
+    "walks the breadcrumb down each ancestor the catalog publishes, skipping one it does not",
+    () =>
+      Effect.gen(function* () {
+        catalog.readTryoutMetadata.mockImplementation(
+          ({ publicPath }: { readonly publicPath: string }) => {
+            const titles: Readonly<Record<string, string>> = {
+              [COUNTRY]: "Indonesia",
+              [TRACK]: "Year 2027",
+            };
+            const title = titles[publicPath];
+            return Effect.succeed({
+              route:
+                title === undefined && publicPath !== TRACK_SET
+                  ? undefined
+                  : {
+                      ...publishedRoute,
+                      publicPath,
+                      title: title ?? "Set 1",
+                    },
+            });
+          }
+        );
+
+        const head = yield* readTryoutRouteHead({
+          kind: "set",
+          locale: "en",
+          publicPath: TRACK_SET,
+        });
+
+        expect(
+          Option.getOrThrow(head).breadcrumbs.map(({ item, name }) => [
+            name,
+            item,
+          ])
+        ).toStrictEqual([
+          ["home", "https://nakafa.com/en"],
+          ["try-out", "https://nakafa.com/en/try-out"],
+          ["Indonesia", `https://nakafa.com/en/${COUNTRY}`],
+          ["Year 2027", `https://nakafa.com/en/${TRACK}`],
+          ["Set 1", `https://nakafa.com/en/${TRACK_SET}`],
+        ]);
+      })
   );
 
   it.effect(
@@ -414,7 +482,7 @@ describe("readTryoutTrackRoute", () => {
           examPath: EXAM,
           head: {
             description: "track-metadata-description",
-            title: "SNBT Year 2027",
+            title: "search-title SNBT Year 2027",
           },
           kind: "found",
           list: { result: { isDone: true, page: [] } },

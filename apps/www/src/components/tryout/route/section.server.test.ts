@@ -58,6 +58,7 @@ describe("readTryoutSectionRoute", () => {
           head: {
             ...head,
             description: "section-metadata-description",
+            indexable: false,
             title: ["Section 1", "Set 1", "SNBT Year 2027"],
           },
           kind: "catalog",

@@ -26,6 +26,21 @@ export function isExcludedPath(path: string): boolean {
   return family === SEARCH_SEGMENT;
 }
 
+/** The segments of a try-out section's path: `/<locale>/try-out/<country>/<exam>/<track>/<set>/<section>`. */
+const TRYOUT_SECTION_SEGMENTS = 8;
+
+/**
+ * Whether the sitemap leaves a page out that the build still writes: a try-out
+ * section, which the head marks as not indexed, so its set stands for it in search.
+ */
+export function isUnlistedPath(path: string): boolean {
+  const segments = path.split("/");
+  return (
+    segments[2] === TRYOUT_SEGMENT &&
+    segments.length === TRYOUT_SECTION_SEGMENTS
+  );
+}
+
 /**
  * Selects the public paths that the build prerenders: the sitemap's URLs without
  * the search screen, try-out tracks, sets and sections included, plus the articles
