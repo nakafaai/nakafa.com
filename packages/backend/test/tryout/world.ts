@@ -28,7 +28,7 @@ import {
   activateAssessmentTestSnapshot,
   replaceAssessmentTestSnapshot,
 } from "@repo/backend/test/snapshot/assessment";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Clock, Effect, Option, Schema } from "effect";
 
 /** The moment every try-out world starts at. */
 export const TRYOUT_NOW = Date.UTC(2026, 6, 8, 12, 0, 0);
@@ -281,7 +281,9 @@ export async function insertStartedAttempt(
   options?: Parameters<typeof startArgs>[0]
 ) {
   const started = await inMutation(() =>
-    startTryoutAttempt({ args: startArgs(options), now: TRYOUT_NOW, userId })
+    Effect.flatMap(Clock.currentTimeMillis, (now) =>
+      startTryoutAttempt({ args: startArgs(options), now, userId })
+    )
   )(ctx);
   return started.attemptId;
 }

@@ -8,11 +8,14 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-/** The row of the link the test adds. */
 /** Where the dialog sends a teacher without Drive: the account's connections. */
 const CONNECTIONS_ADDRESS = /\/en\/user\/settings\/connectors$/u;
 
+/** The row of the link the test adds. */
 const VIDEO_ROW = /Video gerak lurus/u;
+
+/** The address of one folder of the class's library. */
+const FOLDER_ADDRESS = /\/classes\/fisika-x-1\/library\/[^/]+$/u;
 
 /** The leading bytes of a PDF, which the server keeps. */
 const PDF_BYTES = Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n");
@@ -119,3 +122,100 @@ for (const viewport of [
     await context.close();
   });
 }
+
+test("a subject teacher makes a folder, moves a link into it, adds another inside, renames it, and deletes it, and the links stay", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(
+    signInClassTeacher(context, school.slug, address("/"))
+  );
+  const page = await context.newPage();
+  await page.goto(address("/classes/fisika-x-1/library"));
+  const create = page.getByRole("button", { name: "New folder" });
+  await waitUntilTakenOver(create);
+  await create.click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("button", { name: "Create" })).toBeDisabled();
+  await dialog.getByRole("textbox", { name: "Name" }).fill("Bab 1");
+  await dialog.getByRole("button", { name: "Create" }).click();
+  const folder = page.getByRole("link", { name: "Bab 1" });
+  await expect(folder).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  const add = page.getByRole("button", { name: "Add to library" });
+  const addLink = async (title: string) => {
+    await add.click();
+    await dialog.getByRole("tab", { name: "Link" }).click();
+    await dialog
+      .getByRole("textbox", { name: "Address" })
+      .fill(`https://example.com/${title.length}`);
+    await dialog.getByRole("textbox", { name: "Title" }).fill(title);
+    await dialog.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(page.getByRole("link", { name: title })).toBeVisible();
+  };
+  await addLink("Video gerak lurus");
+
+  // The link moves out of the top of the library the moment it is saved.
+  await page
+    .getByRole("row", { name: VIDEO_ROW })
+    .getByRole("button", { name: "More actions" })
+    .click();
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  await dialog.getByRole("combobox", { name: "Folder" }).click();
+  await page.getByRole("option", { name: "Bab 1" }).click();
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(
+    page.getByRole("link", { name: "Video gerak lurus" })
+  ).toBeHidden();
+
+  await folder.click();
+  await page.waitForURL(FOLDER_ADDRESS);
+  await expect(
+    page.getByRole("navigation", { name: "breadcrumb" })
+  ).toContainText("Bab 1");
+  await expect(
+    page.getByRole("link", { name: "Video gerak lurus" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(page.getByRole("button", { name: "New folder" })).toHaveCount(0);
+  await waitUntilTakenOver(add);
+  await addLink("Soal latihan");
+
+  // An address that names no folder of the class shows the class's missing state.
+  const folderAddress = page.url();
+  await page.goto(address("/classes/fisika-x-1/library/bukan-folder"));
+  await expect(page.getByRole("link", { name: "Soal latihan" })).toHaveCount(0);
+
+  await page.goto(address("/classes/fisika-x-1/library"));
+  const row = page.getByRole("row", { name: "Bab 1" });
+  const more = row.getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(more);
+  await more.click();
+  await page.getByRole("menuitem", { name: "Rename" }).click();
+  await dialog.getByRole("textbox", { name: "Name" }).fill("Gerak lurus");
+  await dialog.getByRole("button", { name: "Rename" }).click();
+  await expect(page.getByRole("link", { name: "Gerak lurus" })).toBeVisible();
+
+  await page
+    .getByRole("row", { name: "Gerak lurus" })
+    .getByRole("button", { name: "More actions" })
+    .click();
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Delete" })
+    .click();
+  await expect(page.getByRole("link", { name: "Gerak lurus" })).toBeHidden();
+  await expect(
+    page.getByRole("link", { name: "Video gerak lurus" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(page.getByRole("link", { name: "Soal latihan" })).toBeVisible();
+  await page.goto(folderAddress);
+  await expect(page.getByRole("link", { name: "Soal latihan" })).toHaveCount(0);
+  await context.close();
+});

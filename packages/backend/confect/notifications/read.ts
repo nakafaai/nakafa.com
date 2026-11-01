@@ -1,4 +1,5 @@
 import type { GenericId } from "@confect/core";
+import type { NotificationsDoc } from "@repo/backend/confect/_generated/docs";
 import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import {
   DatabaseReader,
@@ -12,6 +13,26 @@ import { Array as Arr, Duration, Effect } from "effect";
  * half of the 100 entries that one page of a list may hold (ADR 0016).
  */
 const READ_PAGE_SIZE = 50;
+
+/** Marks the rows of one page that existed when the read was asked for. */
+const markPage = Effect.fn("notifications.read.page")(function* (
+  rows: readonly NotificationsDoc[],
+  readAt: number
+) {
+  const writer = yield* DatabaseWriter;
+  yield* Effect.forEach(
+    Arr.filter(
+      rows,
+      (row) => row.readAt === undefined && row.createdAt < readAt
+    ),
+    (row) =>
+      writer
+        .table("notifications")
+        .patch(row._id, { readAt })
+        .pipe(Effect.orDie),
+    { discard: true }
+  );
+});
 
 /**
  * Marks the unread rows of one Person on one page, with the moment of the read,
@@ -33,19 +54,7 @@ export const markPersonRead = Effect.fn("notifications.read.person")(function* (
     )
     .paginate({ cursor, numItems: READ_PAGE_SIZE })
     .pipe(Effect.orDie);
-  const writer = yield* DatabaseWriter;
-  yield* Effect.forEach(
-    Arr.filter(
-      page.page,
-      (row) => row.readAt === undefined && row.createdAt < readAt
-    ),
-    (row) =>
-      writer
-        .table("notifications")
-        .patch(row._id, { readAt })
-        .pipe(Effect.orDie),
-    { discard: true }
-  );
+  yield* markPage(page.page, readAt);
   if (!page.isDone) {
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
@@ -54,3 +63,28 @@ export const markPersonRead = Effect.fn("notifications.read.person")(function* (
     );
   }
 });
+
+/** Marks one page of the rows addressed to an account itself, as `markPersonRead` does a Person's. */
+export const markAccountRead = Effect.fn("notifications.read.account")(
+  function* (
+    userId: GenericId.GenericId<"users">,
+    cursor: string | null,
+    readAt: number
+  ) {
+    const page = yield* (yield* DatabaseReader)
+      .table("notifications")
+      .index("by_recipientUserId_and_createdAt", (query) =>
+        query.eq("recipientUserId", userId)
+      )
+      .paginate({ cursor, numItems: READ_PAGE_SIZE })
+      .pipe(Effect.orDie);
+    yield* markPage(page.page, readAt);
+    if (!page.isDone) {
+      yield* (yield* Scheduler).runAfter(
+        Duration.zero,
+        notificationsInternal.read.runAccount,
+        { cursor: page.continueCursor, readAt, userId }
+      );
+    }
+  }
+);

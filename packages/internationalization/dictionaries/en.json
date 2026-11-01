@@ -1369,6 +1369,9 @@
     "task-reach-class": "The whole class",
     "task-reach-some": "Some students",
     "task-reach-count": "{count, plural, one {# student} other {# students}}",
+    "task-category": "Category",
+    "task-category-placeholder": "Homework",
+    "task-category-description": "Optional, it groups the class's tasks.",
     "task-late": "Late work",
     "task-late-accept": "Marked late",
     "task-late-close": "Not taken",
@@ -1442,7 +1445,21 @@
     "discussion-rename": "Rename discussion",
     "discussion-rename-description": "Everyone in the class sees the new title.",
     "library-edit": "Edit",
-    "library-edit-description": "The class sees the change at once."
+    "library-edit-description": "The class sees the change at once.",
+    "library-no-folder": "No folder",
+    "library-folder": "Folder",
+    "library-new-folder": "New folder",
+    "library-new-folder-description": "Keep the class's files together, such as by chapter.",
+    "library-folder-name": "Name",
+    "library-folder-placeholder": "Chapter 1",
+    "library-folder-create": "Create",
+    "library-folder-rename": "Rename",
+    "library-folder-rename-description": "The class sees the new name at once.",
+    "library-folder-remove": "Delete",
+    "library-folder-remove-title": "Delete this folder",
+    "library-folder-remove-description": "Its files stay in the library.",
+    "library-folder-empty-description": "This folder's files and links show here, the newest first.",
+    "library-kind-folder": "Folder"
   },
   "SchoolGrades": {
     "student": "Student",
@@ -1992,6 +2009,8 @@
     "person-invited": "You have been invited to join this school.",
     "forum-mentioned": "{actor} mentioned you in {className}.",
     "forum-mentioned-gone": "You were mentioned in a class you no longer read.",
+    "comment-replied": "Replied to your comment.",
+    "comment-replied-gone": "This reply was deleted.",
     "announcement-posted": "{actor} posted an announcement in {className}.",
     "announcement-posted-gone": "An announcement that is no longer there.",
     "push-offer": "Get a notification on this device when something new comes.",
@@ -2060,7 +2079,7 @@
   "Holy": {
     "holy": "Holy",
     "quran": "Quran",
-    "quran-description": "Read the Quran with verse-by-verse translation.",
+    "quran-description": "Read all 114 surahs of the Quran in Arabic with a verse-by-verse translation, free on Nakafa.",
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
@@ -2228,7 +2247,7 @@
   },
   "Contributor": {
     "title": "Contributor",
-    "description": "Meet the people who made Nakafa possible."
+    "description": "Meet the people who write, check and build Nakafa, the free place to learn from primary school to university."
   },
   "ComingSoon": {
     "title": "Coming Soon",

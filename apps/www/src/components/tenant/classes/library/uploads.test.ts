@@ -26,6 +26,7 @@ const item = (clientKey: string): LibraryItem => ({
   byteSize: 10,
   clientKey,
   createdAt: 1,
+  folderId: null,
   id: Schema.decodeUnknownSync(Id("classroomLibrary"))(`item-${clientKey}`),
   kind: "pdf",
   title: "Modul",

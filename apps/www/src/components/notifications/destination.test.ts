@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { NotificationView } from "@repo/backend/confect/notifications/schema";
 import { Option, Schema } from "effect";
-import { pageOf } from "@/components/notifications/destination";
+import { addressOf } from "@/components/notifications/destination";
 import type { ListNotification } from "@/components/notifications/state";
 
 /** An inbox row as the server sends it, of the given type, about the subject that it names, with its detail and its sitting. */
@@ -47,9 +47,25 @@ const detail = (
 });
 
 const href = (notification: ListNotification) =>
-  Option.map(pageOf(notification), (url) => url.href);
+  Option.fromUndefinedOr(addressOf(notification, "id"));
 
 describe("inbox row destinations", () => {
+  it("opens a reply through the address of its comment, in the reader's language, and a reply that is gone nowhere", () => {
+    const reply = (actor: unknown) =>
+      Schema.decodeUnknownSync(NotificationView)({
+        actor,
+        changeType: "comment.replied",
+        commentId: "comment-1",
+        createdAt: 1,
+        id: "notification-1",
+      });
+
+    expect(
+      href(reply({ mascot: "cat.0.243e66.right.open", name: "Ayu" }))
+    ).toEqual(Option.some("/id/comment/comment-1"));
+    expect(href(reply(null))).toEqual(Option.none());
+  });
+
   it("opens the school's home for an invitation, whose subject is the Person it invites", () => {
     expect(
       href(row("person.invited", { id: "person-1", kind: "person" }))
@@ -102,7 +118,7 @@ describe("inbox row destinations", () => {
       Option.some("https://harapan.nakafa.com/orang-tua")
     );
     // A sitting that no longer waits gives its student's row no page; a guardian still opens the parent home.
-    expect(pageOf(row("exam.starting", sitting))).toEqual(Option.none());
+    expect(href(row("exam.starting", sitting))).toEqual(Option.none());
     expect(href(row("exam.reminder", sitting))).toEqual(
       Option.some("https://harapan.nakafa.com/orang-tua")
     );
@@ -119,7 +135,7 @@ describe("inbox row destinations", () => {
       )
     ).toEqual(Option.some("https://harapan.nakafa.com/orang-tua"));
     expect(
-      pageOf(
+      href(
         row("grade.released", grade, null, null, {
           className: "Fisika X-1",
           student: null,
@@ -130,9 +146,9 @@ describe("inbox row destinations", () => {
 
   it("opens no page for a class row without its detail, or for a subject of any other kind", () => {
     expect(
-      pageOf(row("forum.mentioned", { id: "class-1", kind: "class" }))
+      href(row("forum.mentioned", { id: "class-1", kind: "class" }))
     ).toEqual(Option.none());
-    expect(pageOf(row("person.invited", { kind: "reminder" }))).toEqual(
+    expect(href(row("person.invited", { kind: "reminder" }))).toEqual(
       Option.none()
     );
   });
