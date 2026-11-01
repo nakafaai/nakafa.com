@@ -202,9 +202,9 @@ export function SchoolClassMenu({
         />
       )}
       <ClassTeachersDialog
-        classId={row.id}
         isRead={isMenuOpen || isTeaching}
         open={isTeaching}
+        row={row}
         setOpen={setIsTeaching}
         slug={slug}
       />

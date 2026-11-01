@@ -21,7 +21,7 @@ import {
 } from "@/components/tenant/settings/moves";
 import {
   type PersonId,
-  SchoolPersonPicker,
+  SchoolTeacherPicker,
 } from "@/components/tenant/settings/people";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { CohortDetail } from "@/components/tenant/settings/state";
@@ -92,7 +92,8 @@ export function SchoolHomeroomCard({
               {t("homeroom-teacher")}
             </FieldLabel>
             {cohort !== undefined && homeroom === null && !isArchived ? (
-              <SchoolPersonPicker
+              <SchoolTeacherPicker
+                cohortId={cohort.id}
                 id={`${id}-teacher`}
                 onChoose={setTeacherId}
                 personId={teacherId}

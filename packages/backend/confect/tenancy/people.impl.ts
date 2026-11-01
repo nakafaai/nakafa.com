@@ -7,14 +7,17 @@ import { revokeGrant } from "@repo/backend/confect/access/grant";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { Person } from "@repo/backend/confect/tenancy/access";
+import { Cohort, Person } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
-import { personAccess } from "@repo/backend/confect/tenancy/authority";
+import {
+  cohortAccess,
+  personAccess,
+} from "@repo/backend/confect/tenancy/authority";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
+import { studentsOf, teachersOf } from "@repo/backend/confect/tenancy/grantees";
 import spec from "@repo/backend/confect/tenancy/people.spec";
 import { removePerson } from "@repo/backend/confect/tenancy/remove";
 import { renamePerson } from "@repo/backend/confect/tenancy/rename";
-import { studentsOf } from "@repo/backend/confect/tenancy/students";
 import { Array as Arr, Effect, Layer, Struct } from "effect";
 
 /** One Person as the school's list shows them. */
@@ -78,6 +81,22 @@ const students = FunctionImpl.make(
   })
 );
 
+/**
+ * The teachers of the cohort's unit, a page at a time; see `teachersOf`. These are the people
+ * the Admin may choose as its homeroom teacher or as a subject teacher of its classes.
+ */
+const teachers = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "teachers",
+  Effect.fn("tenancy.people.teachers")(function* ({ paginationOpts }) {
+    const { tenant } = yield* Member;
+    const cohort = yield* Cohort;
+    const page = yield* teachersOf(tenant._id, cohort.unitId, paginationOpts);
+    return Struct.assign(page, { page: Arr.map(page.page, view) });
+  })
+);
+
 /** Creates an unclaimed active member Person. An account claims it later, through an invite. */
 const create = FunctionImpl.make(
   databaseSchema,
@@ -124,6 +143,7 @@ const remove = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(students),
+  Layer.provide(teachers),
   Layer.provide(create),
   Layer.provide(rename),
   Layer.provide(remove),
@@ -131,5 +151,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(member),
   Layer.provide(tenantAccess),
   Layer.provide(personAccess),
+  Layer.provide(cohortAccess),
   GroupImpl.finalize
 );
