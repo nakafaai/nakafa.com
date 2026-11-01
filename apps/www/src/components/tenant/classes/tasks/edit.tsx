@@ -65,7 +65,7 @@ export function EditTask({ task: address }: { task: string }) {
  * the server accepts, the task shows the change at once, and a refusal brings the dialog back with what was written.
  * Its points are fixed once work is handed in.
  */
-function EditTaskDialog({ task }: { task: ClassTask }) {
+export function EditTaskDialog({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
   const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
