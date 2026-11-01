@@ -5,6 +5,7 @@ import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cn } from "cn";
 import type * as React from "react";
 import { use } from "react";
+import { useTranslations } from "use-intl";
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
@@ -28,6 +29,7 @@ function DropdownMenuContent({
   keepMounted = false,
   side = "bottom",
   sideOffset = 4,
+  children,
   className,
   ...props
 }: MenuPrimitive.Popup.Props &
@@ -56,9 +58,26 @@ function DropdownMenuContent({
           )}
           data-slot="dropdown-menu-content"
           {...props}
-        />
+        >
+          {children}
+          <DropdownMenuNothing />
+        </MenuPrimitive.Popup>
       </MenuPrimitive.Positioner>
     </MenuPrimitive.Portal>
+  );
+}
+
+/**
+ * The sentence of a menu with no item, so a menu never opens on a thin empty line, however its
+ * caller fills it.
+ */
+function DropdownMenuNothing() {
+  const t = useTranslations("Common");
+
+  return (
+    <p className="text-muted-foreground hidden max-w-xs px-2 py-1.5 text-sm [[data-slot=dropdown-menu-content]:not(:has([role^=menuitem]))_&]:block">
+      {t("popup-empty")}
+    </p>
   );
 }
 

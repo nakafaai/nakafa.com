@@ -376,6 +376,49 @@ describe("billing/xendit/process", () => {
     expect(result).toEqual({ outcome: "applied", status: "pastDue" });
   });
 
+  it("gives a learner back their plan when a retry charges the cycle that failed", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const { subscriptionId } = await seedXenditSubscription(ctx);
+      const failed = await runInMutation(
+        ctx,
+        processXenditEvent(
+          xenditDelivery(
+            "recurring.cycle.failed",
+            xenditCycle({
+              attempt_details: [],
+              status: "RETRYING",
+              updated: "2026-10-02T00:05:00Z",
+            })
+          )
+        )
+      );
+      const delivery = xenditDelivery(
+        "recurring.cycle.succeeded",
+        xenditCycle({ updated: "2026-10-03T00:05:00Z" })
+      );
+      const paid = await runInMutation(ctx, processXenditEvent(delivery));
+      const redelivered = await runInMutation(
+        ctx,
+        processXenditEvent(delivery)
+      );
+      return {
+        failed,
+        grants: await ctx.db.query("billingGrants").collect(),
+        paid,
+        payments: await ctx.db.query("billingPayments").collect(),
+        redelivered,
+        status: (await ctx.db.get(subscriptionId))?.status,
+      };
+    });
+    expect(result.failed).toBe("applied");
+    expect(result.paid).toBe("applied");
+    expect(result.redelivered).toBe("applied");
+    expect(result.status).toBe("active");
+    expect(result.payments).toHaveLength(1);
+    expect(result.grants).toHaveLength(1);
+  });
+
   it("refuses a failed cycle whose data does not decode", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {

@@ -1,4 +1,5 @@
 import { useTranslations } from "use-intl";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { ActionLink } from "@/components/state/action";
 import { Missing } from "@/components/state/missing";
 
@@ -8,8 +9,10 @@ export function ClassMissingBody() {
   const tState = useTranslations("State");
 
   return (
-    <Missing description={t("description")} title={t("title")}>
-      <ActionLink href="/" label={tState("home-button")} variant="default" />
-    </Missing>
+    <LayoutContent className="flex flex-1 items-center py-6">
+      <Missing description={t("description")} title={t("title")}>
+        <ActionLink href="/" label={tState("home-button")} variant="default" />
+      </Missing>
+    </LayoutContent>
   );
 }

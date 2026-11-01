@@ -17,6 +17,7 @@ const MARKETING_NAMESPACES = [
   "Ai",
   "AnalyticsConsent",
   "Contributor",
+  "Error",
   "Faq",
   "Holy",
   "Landing",

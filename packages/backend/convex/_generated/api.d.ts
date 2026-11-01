@@ -13373,7 +13373,15 @@ export declare const api: {
         "query",
         "public",
         { slug: string },
-        { cohort: boolean; exam: boolean; period: boolean; student: boolean }
+        {
+          classroom: boolean;
+          cohort: boolean;
+          exam: boolean;
+          parent: boolean;
+          period: boolean;
+          student: boolean;
+          teacher: boolean;
+        }
       >;
     };
     start: {
@@ -15562,7 +15570,12 @@ export declare const internal: {
       refundWithoutPro: FunctionReference<
         "action",
         "internal",
-        { orderId: string; refundableAmount: number },
+        {
+          currency: "EUR" | "IDR" | "USD";
+          orderId: string;
+          rail: "polar" | "xendit";
+          refundableAmount: number;
+        },
         null
       >;
     };

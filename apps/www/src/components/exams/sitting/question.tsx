@@ -79,6 +79,45 @@ export function PaperReveal({
   );
 }
 
+/** The images of the prompt and of the options, resolved in one read by this student's device. */
+function useQuestionPictures({
+  deviceId,
+  interactions,
+  promptDocument,
+  readingDocument,
+  sittingId,
+  slug,
+}: {
+  readonly deviceId: string;
+  readonly interactions: PaperQuestion["interactions"];
+  readonly promptDocument: unknown;
+  readonly readingDocument: unknown;
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+  readonly slug: TenantSlug;
+}) {
+  const pictureIds = useMemo(
+    () =>
+      pictureIdsOfDocuments(
+        Arr.filter(
+          [promptDocument, readingDocument, ...partLabels(interactions)],
+          (document) => document !== null
+        )
+      ),
+    [interactions, promptDocument, readingDocument]
+  );
+  const pictures = useQuery(
+    exams.sittings.images,
+    pictureIds.length === 0
+      ? "skip"
+      : { assets: pictureIds, deviceId, sittingId, slug }
+  );
+
+  return useMemo(
+    () => (QueryResult.isSuccess(pictures) ? addressesOf(pictures.value) : {}),
+    [pictures]
+  );
+}
+
 /**
  * One question of the paper: its number, its prompt as the editor holds it now, and its options or its
  * answer line. The player's footer flags the current question. A choice or a typed answer is kept in the
@@ -150,31 +189,14 @@ export const SittingQuestion = memo(function SittingQuestion({
         : Schema.decodeSync(JsonTextSchema)(promptText),
     [promptText]
   );
-  // The images of the prompt and of the options, resolved in one read by this student's device.
-  const pictureIds = useMemo(
-    () =>
-      pictureIdsOfDocuments(
-        Arr.filter(
-          [
-            promptDocument,
-            readingDocument,
-            ...partLabels(question.interactions),
-          ],
-          (document) => document !== null
-        )
-      ),
-    [question.interactions, promptDocument, readingDocument]
-  );
-  const pictures = useQuery(
-    exams.sittings.images,
-    pictureIds.length === 0
-      ? "skip"
-      : { assets: pictureIds, deviceId, sittingId, slug }
-  );
-  const addresses = useMemo(
-    () => (QueryResult.isSuccess(pictures) ? addressesOf(pictures.value) : {}),
-    [pictures]
-  );
+  const addresses = useQuestionPictures({
+    deviceId,
+    interactions: question.interactions,
+    promptDocument,
+    readingDocument,
+    sittingId,
+    slug,
+  });
 
   /** Keeps the choice or the typed text in the browser, then sends it, numbered one above the saved version. */
   function onChoose(response: ExamResponse) {

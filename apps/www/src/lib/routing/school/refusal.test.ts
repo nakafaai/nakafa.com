@@ -40,6 +40,20 @@ describe("school page refusal", () => {
       })
   );
 
+  it.effect("asks Convex once for repeated visits to one host", () =>
+    Effect.gen(function* () {
+      serve({ refusal: answered(true) });
+
+      for (const _ of [1, 2, 3]) {
+        expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.some("en"));
+      }
+
+      expect(queriesOf()).toEqual([
+        { auth: null, path: REFUSAL, slug: "harapan" },
+      ]);
+    })
+  );
+
   it.effect("admits a visitor with no session to a school that exists", () =>
     Effect.gen(function* () {
       serve({ refusal: answered(false) });

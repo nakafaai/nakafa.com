@@ -1,5 +1,7 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { cn } from "cn";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { PublicPathLink } from "@/lib/routing/public/link";
 
 interface Props {
@@ -29,7 +31,7 @@ export function HeaderContent({
 }: Props) {
   return (
     <header className="relative py-20">
-      <div className="z-10 mx-auto max-w-3xl space-y-6 px-6">
+      <div className={cn(pageRowVariants(), "z-10 space-y-6")}>
         <div className="flex flex-col gap-3">
           {!!link && (
             <PublicPathLink
