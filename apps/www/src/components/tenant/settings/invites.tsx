@@ -30,6 +30,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useDialogs } from "@/components/shared/dialogs";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
@@ -231,12 +232,9 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
   const revoke = useMutation(tenancy.invites.revoke).withOptimisticUpdate(
     revokeInviteChange
   );
-  const [isRevoking, setIsRevoking] = useState(false);
+  const dialogs = useDialogs<"issue" | "readdress" | "revoke">();
   const [isResending, startResending] = useTransition();
-  const [isIssuing, setIsIssuing] = useState(false);
   const [issued, setIssued] = useState<CardView | undefined>(undefined);
-  const [readdressing, setReaddressing] = useState(0);
-  const [isReaddressing, setIsReaddressing] = useState(false);
   const isExpired = invite.status === "expired";
 
   /**
@@ -317,23 +315,20 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
             <>
               <DropdownMenuItem
                 disabled={sendLocale === undefined}
-                onClick={() => {
-                  setReaddressing((count) => count + 1);
-                  setIsReaddressing(true);
-                }}
+                onClick={() => dialogs.show("readdress")}
               >
                 <HugeIcons icon={MailEdit01Icon} />
                 {t("invite-readdress")}
               </DropdownMenuItem>
               {cardOffered(invite.roles) ? (
-                <DropdownMenuItem onClick={() => setIsIssuing(true)}>
+                <DropdownMenuItem onClick={() => dialogs.show("issue")}>
                   <HugeIcons icon={IdIcon} />
                   {t("invite-card")}
                 </DropdownMenuItem>
               ) : null}
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => setIsRevoking(true)}
+                onClick={() => dialogs.show("revoke")}
                 variant="destructive"
               >
                 <HugeIcons icon={Delete02Icon} />
@@ -347,16 +342,12 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
         description={t("invite-revoke-description")}
         footer={
           <>
-            <Button
-              onClick={() => setIsRevoking(false)}
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={dialogs.close} type="button" variant="outline">
               {common("cancel")}
             </Button>
             <Button
               onClick={() => {
-                setIsRevoking(false);
+                dialogs.close();
                 startTransition(() =>
                   saveSchool(
                     () => revoke({ inviteId: invite.id, slug }),
@@ -371,34 +362,34 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
             </Button>
           </>
         }
-        open={isRevoking}
-        setOpen={setIsRevoking}
+        open={dialogs.isOpen("revoke")}
+        setOpen={dialogs.setOpen}
         title={t("invite-revoke-title")}
       />
       <SchoolIssueCardDialog
         name={invite.name}
         onIssued={setIssued}
-        open={isIssuing}
+        open={dialogs.isOpen("issue")}
         personId={invite.personId}
-        setOpen={setIsIssuing}
+        setOpen={dialogs.setOpen}
         slug={slug}
       />
       <SchoolCardDialog card={issued} onClose={() => setIssued(undefined)} />
-      {readdressing === 0 ? null : (
+      {dialogs.kind === "readdress" ? (
         <LineDialog
           description={t("invite-readdress-description")}
           initial={invite.email}
           isValid={Schema.is(Email)}
-          key={readdressing}
+          key={dialogs.key}
           label={t("invite-email")}
           onSave={readdressTo}
-          open={isReaddressing}
+          open={dialogs.isOpen("readdress")}
           placeholder={t("invite-email-placeholder")}
-          setOpen={setIsReaddressing}
+          setOpen={dialogs.setOpen}
           title={t("invite-readdress")}
           type="email"
         />
-      )}
+      ) : null}
     </div>
   );
 }

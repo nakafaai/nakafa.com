@@ -21,6 +21,7 @@ import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useDialogs } from "@/components/shared/dialogs";
 import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
@@ -395,8 +396,7 @@ function LibraryRemove({ item }: { item: LibraryItem }) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
   const remove = useMutation(classroom.library.remove);
-  const [editing, setEditing] = useState(0);
-  const [isEditing, setIsEditing] = useState(false);
+  const dialogs = useDialogs<"edit">();
 
   return (
     <>
@@ -419,24 +419,19 @@ function LibraryRemove({ item }: { item: LibraryItem }) {
         }
         title={t("library-remove-title")}
       >
-        <DropdownMenuItem
-          onClick={() => {
-            setEditing((count) => count + 1);
-            setIsEditing(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => dialogs.show("edit")}>
           <HugeIcons icon={PencilEdit02Icon} />
           {t("library-edit")}
         </DropdownMenuItem>
       </ConfirmRowMenu>
-      {editing === 0 ? null : (
+      {dialogs.kind === "edit" ? (
         <LibraryEditDialog
           item={item}
-          key={editing}
-          open={isEditing}
-          setOpen={setIsEditing}
+          key={dialogs.key}
+          open={dialogs.isOpen("edit")}
+          setOpen={dialogs.setOpen}
         />
-      )}
+      ) : null}
     </>
   );
 }

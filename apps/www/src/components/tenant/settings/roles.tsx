@@ -17,9 +17,9 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { Array as Arr } from "effect";
-import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useDialogs } from "@/components/shared/dialogs";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import {
@@ -44,8 +44,7 @@ const PAGE_SIZE = 25;
  */
 export function SchoolRolesSettings() {
   const t = useTranslations("SchoolSettings");
-  const [isGuiding, setIsGuiding] = useState(false);
-  const [isGiving, setIsGiving] = useState(false);
+  const dialogs = useDialogs<"give" | "guide">();
 
   return (
     <TableFiltersProvider>
@@ -56,7 +55,7 @@ export function SchoolRolesSettings() {
               <TableSearch placeholder={t("roles-search")} />
               {/* On a phone the guide keeps its icon, so the page's name keeps its room. */}
               <Button
-                onClick={() => setIsGuiding(true)}
+                onClick={() => dialogs.show("guide")}
                 type="button"
                 variant="outline"
               >
@@ -66,7 +65,7 @@ export function SchoolRolesSettings() {
             </ButtonGroup>
             <SchoolHeaderAdd
               label={t("roles-assign")}
-              onClick={() => setIsGiving(true)}
+              onClick={() => dialogs.show("give")}
             />
           </>
         }
@@ -74,8 +73,14 @@ export function SchoolRolesSettings() {
         <ReadBoundary>
           <SchoolGrantsBody />
         </ReadBoundary>
-        <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
-        <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} />
+        <SchoolRoleGuide
+          open={dialogs.isOpen("guide")}
+          setOpen={dialogs.setOpen}
+        />
+        <SchoolGrantDialog
+          open={dialogs.isOpen("give")}
+          setOpen={dialogs.setOpen}
+        />
       </SettingsTablePage>
     </TableFiltersProvider>
   );

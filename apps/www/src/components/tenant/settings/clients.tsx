@@ -34,6 +34,7 @@ import { Array as Arr } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useDialogs } from "@/components/shared/dialogs";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
@@ -250,10 +251,7 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
     revokeClientChange
   );
   const [isPending, startTransition] = useTransition();
-  const [isRevoking, setIsRevoking] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [editing, setEditing] = useState(0);
-  const [isEditing, setIsEditing] = useState(false);
+  const dialogs = useDialogs<"connect" | "edit" | "revoke">();
 
   return (
     <div className="flex justify-end">
@@ -270,12 +268,7 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
           }
         />
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            onClick={() => {
-              setEditing((count) => count + 1);
-              setIsEditing(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => dialogs.show("edit")}>
             <HugeIcons icon={PencilEdit02Icon} />
             {t("client-edit")}
           </DropdownMenuItem>
@@ -298,13 +291,13 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
             <HugeIcons icon={Copy01Icon} />
             {t("client-id-copy")}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setIsConnecting(true)}>
+          <DropdownMenuItem onClick={() => dialogs.show("connect")}>
             <HugeIcons icon={CommandLineIcon} />
             {t("device-title")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => setIsRevoking(true)}
+            onClick={() => dialogs.show("revoke")}
             variant="destructive"
           >
             <HugeIcons icon={Delete02Icon} />
@@ -316,16 +309,12 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
         description={t("client-revoke-description")}
         footer={
           <>
-            <Button
-              onClick={() => setIsRevoking(false)}
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={dialogs.close} type="button" variant="outline">
               {common("cancel")}
             </Button>
             <Button
               onClick={() => {
-                setIsRevoking(false);
+                dialogs.close();
                 startTransition(() =>
                   saveSchool(
                     () => revoke({ clientId: client.id, slug }),
@@ -340,22 +329,22 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
             </Button>
           </>
         }
-        open={isRevoking}
-        setOpen={setIsRevoking}
+        open={dialogs.isOpen("revoke")}
+        setOpen={dialogs.setOpen}
         title={t("client-revoke-title")}
       />
-      {editing === 0 ? null : (
+      {dialogs.kind === "edit" ? (
         <SchoolClientEditDialog
           client={client}
-          key={editing}
-          open={isEditing}
-          setOpen={setIsEditing}
+          key={dialogs.key}
+          open={dialogs.isOpen("edit")}
+          setOpen={dialogs.setOpen}
         />
-      )}
+      ) : null}
       <SchoolDeviceDialog
         client={client}
-        open={isConnecting}
-        setOpen={setIsConnecting}
+        open={dialogs.isOpen("connect")}
+        setOpen={dialogs.setOpen}
         slug={slug}
       />
     </div>

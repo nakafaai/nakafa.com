@@ -21,6 +21,7 @@ import { Effect, Schema, String as Str } from "effect";
 import { type FormEvent, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useDialogs } from "@/components/shared/dialogs";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import {
   forumCall,
@@ -207,8 +208,7 @@ export function FolderRowMenu({ folder }: { folder: LibraryFolder }) {
   const { classId, slug } = useClassScope();
   const rename = useMutation(classroom.folders.rename);
   const remove = useMutation(classroom.folders.remove);
-  const [renaming, setRenaming] = useState(0);
-  const [isRenaming, setIsRenaming] = useState(false);
+  const dialogs = useDialogs<"rename">();
 
   return (
     <>
@@ -231,24 +231,19 @@ export function FolderRowMenu({ folder }: { folder: LibraryFolder }) {
         }
         title={t("library-folder-remove-title")}
       >
-        <DropdownMenuItem
-          onClick={() => {
-            setRenaming((count) => count + 1);
-            setIsRenaming(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => dialogs.show("rename")}>
           <HugeIcons icon={PencilEdit02Icon} />
           {t("library-folder-rename")}
         </DropdownMenuItem>
       </ConfirmRowMenu>
-      {renaming === 0 ? null : (
+      {dialogs.kind === "rename" ? (
         <FolderNameDialog
           action={t("library-folder-rename")}
           description={t("library-folder-rename-description")}
-          key={renaming}
+          key={dialogs.key}
           named={folder.name}
           onName={(name) => {
-            setIsRenaming(false);
+            dialogs.close();
             runForumCall(
               forumCall(() =>
                 rename.withOptimisticUpdate(renameFolderUpdate)({
@@ -261,11 +256,11 @@ export function FolderRowMenu({ folder }: { folder: LibraryFolder }) {
               toastForumFailure
             );
           }}
-          open={isRenaming}
-          setOpen={setIsRenaming}
+          open={dialogs.isOpen("rename")}
+          setOpen={dialogs.setOpen}
           title={t("library-folder-rename")}
         />
-      )}
+      ) : null}
     </>
   );
 }

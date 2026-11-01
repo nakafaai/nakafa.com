@@ -28,6 +28,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { useDialogs } from "@/components/shared/dialogs";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { isDraft, type Period } from "@/components/tenant/settings/state";
 import {
@@ -102,9 +103,8 @@ export function SchoolPeriodMenu({
   const edit = useMutation(tenancy.periods.edit).withOptimisticUpdate(
     editPeriodChange
   );
-  const [isEditing, setIsEditing] = useState(false);
   // Each opening starts the dialog again from the period as it is now.
-  const [opening, setOpening] = useState(0);
+  const dialogs = useDialogs<"edit">();
 
   return (
     <div className="flex justify-end">
@@ -122,12 +122,7 @@ export function SchoolPeriodMenu({
           }
         />
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            onClick={() => {
-              setOpening((count) => count + 1);
-              setIsEditing(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => dialogs.show("edit")}>
             <HugeIcons icon={PencilEdit02Icon} />
             {t("period-edit")}
           </DropdownMenuItem>
@@ -176,23 +171,25 @@ export function SchoolPeriodMenu({
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
-      <PeriodDialog
-        description={t("period-edit-description")}
-        fields={period}
-        key={opening}
-        onSave={(fields) =>
-          startTransition(() =>
-            saveSchool(
-              () => edit({ ...fields, periodId: period.id, slug }),
-              SOURCE
+      {dialogs.kind === "edit" ? (
+        <PeriodDialog
+          description={t("period-edit-description")}
+          fields={period}
+          key={dialogs.key}
+          onSave={(fields) =>
+            startTransition(() =>
+              saveSchool(
+                () => edit({ ...fields, periodId: period.id, slug }),
+                SOURCE
+              )
             )
-          )
-        }
-        open={isEditing}
-        saveLabel={t("period-edit-save")}
-        setOpen={setIsEditing}
-        title={t("period-edit")}
-      />
+          }
+          open={dialogs.isOpen("edit")}
+          saveLabel={t("period-edit-save")}
+          setOpen={dialogs.setOpen}
+          title={t("period-edit")}
+        />
+      ) : null}
     </div>
   );
 }
