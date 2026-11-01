@@ -9,6 +9,7 @@ export const APPLICATION_ROUTE_ROOTS = HashSet.make(
   "articles",
   "auth",
   "chat",
+  "comment",
   "contributor",
   "home",
   "notifications",

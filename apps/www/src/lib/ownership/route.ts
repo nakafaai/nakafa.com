@@ -107,6 +107,10 @@ export function isApplicationRoutePath(
     return segments.length <= 1;
   }
 
+  if (root === "comment") {
+    return segments.length === 1;
+  }
+
   if (root === "og") {
     return segments.length >= 1;
   }
