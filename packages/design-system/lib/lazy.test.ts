@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { lazy, readChunk } from "@repo/design-system/lib/lazy";
-import { Effect, Fiber } from "effect";
+import { Effect, Fiber, MutableList } from "effect";
 import { createElement, Suspense } from "react";
 import { renderToReadableStream } from "react-dom/server";
 
@@ -15,21 +15,6 @@ describe("readChunk", () => {
     Effect.gen(function* () {
       expect(yield* readChunk(() => Promise.resolve("chunk"))).toBe("chunk");
     })
-  );
-
-  it.effect(
-    "keeps the failure as the import threw it while the network stands",
-    () =>
-      Effect.gen(function* () {
-        vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
-        const failure = yield* Effect.promise(() =>
-          Effect.runPromise(
-            readChunk(() => Promise.reject<string>(CHUNK_GONE))
-          ).catch((cause: unknown) => cause)
-        );
-
-        expect(failure).toBe(CHUNK_GONE);
-      })
   );
 
   it.live("waits for the network and loads again", () =>
@@ -68,6 +53,33 @@ describe("readChunk", () => {
 });
 
 describe("lazy", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.live("hands React the failure as the import threw it", () =>
+    Effect.gen(function* () {
+      vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
+      const failures = MutableList.make<unknown>();
+      const Chunk = lazy(() =>
+        Promise.reject<{ default: () => null }>(CHUNK_GONE)
+      );
+      yield* Effect.promise(async () => {
+        const stream = await renderToReadableStream(
+          createElement(Suspense, { fallback: null }, createElement(Chunk)),
+          {
+            onError: (failure) => {
+              MutableList.append(failures, failure);
+            },
+          }
+        );
+        await stream.allReady;
+      });
+
+      expect(MutableList.toArray(failures)[0]).toBe(CHUNK_GONE);
+    })
+  );
+
   it.live("renders what its chunk holds", () =>
     Effect.gen(function* () {
       const Chunk = lazy(() =>
