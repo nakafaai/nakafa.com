@@ -2,6 +2,7 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { resultAccess } from "@repo/backend/confect/exams/results/authority";
 import { grade } from "@repo/backend/confect/exams/results/grade";
+import { integrityReport } from "@repo/backend/confect/exams/results/integrity";
 import { mine } from "@repo/backend/confect/exams/results/mine";
 import { overview } from "@repo/backend/confect/exams/results/overview";
 import {
@@ -24,6 +25,15 @@ const overviewFunction = FunctionImpl.make(
   "overview",
   Effect.fn("exams.results.overview.function")(function* () {
     return yield* overview();
+  })
+);
+
+const integrityFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "integrity",
+  Effect.fn("exams.results.integrity.function")(function* () {
+    return yield* integrityReport();
   })
 );
 
@@ -96,6 +106,7 @@ const mineFunction = FunctionImpl.make(
  */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(overviewFunction),
+  Layer.provide(integrityFunction),
   Layer.provide(byStudentFunction),
   Layer.provide(byQuestionFunction),
   Layer.provide(questionStatsFunction),
