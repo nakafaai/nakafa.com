@@ -7,11 +7,15 @@ import type { GoogleConnector } from "@repo/backend/confect/connectors/google/ma
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Option } from "effect";
-import { useState, useTransition } from "react";
+import { use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { useConnectorActions } from "@/components/connectors/actions";
+import {
+  ConnectOutcomeContext,
+  useConnectorActions,
+} from "@/components/connectors/actions";
 import { DisconnectDialog } from "@/components/connectors/disconnect";
 import type { Connection } from "@/components/connectors/optimistic";
+import { connectFailure } from "@/components/connectors/outcome";
 import {
   CardSection,
   CardSectionFooter,
@@ -28,7 +32,8 @@ const CONNECTOR_ICONS = {
  * One Google connector: what it reads, and where its connection stands. Connect
  * sends the browser to Google's consent screen and stays pending until the page
  * leaves; a connection that Google stopped accepting asks to connect again;
- * Disconnect asks first, then ends the connection at once.
+ * a connect that just ended badly says so here; Disconnect asks first, then ends
+ * the connection at once.
  */
 export function ConnectorCard({
   connection,
@@ -43,6 +48,10 @@ export function ConnectorCard({
     connection,
     (found) => found.status === "reconnect"
   );
+  const failure = Option.filter(
+    connectFailure(use(ConnectOutcomeContext), connector),
+    () => Option.isNone(connection)
+  );
 
   return (
     <CardSection
@@ -56,10 +65,14 @@ export function ConnectorCard({
     >
       <CardSectionFooter
         hint={Option.match(connection, {
-          onNone: () => t("not-connected"),
+          onNone: () =>
+            Option.match(failure, {
+              onNone: () => t("not-connected"),
+              onSome: (ended) => t(`status-${ended}`),
+            }),
           onSome: () => (reconnect ? t("reconnect-hint") : t("connected")),
         })}
-        tone={reconnect ? "destructive" : "muted"}
+        tone={reconnect || Option.isSome(failure) ? "destructive" : "muted"}
       >
         {Option.isNone(connection) ? (
           <ConnectButton connector={connector} reconnect={false} />

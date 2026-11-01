@@ -27,8 +27,8 @@ const connection = (
 const open = {
   connection: Option.none(),
   isOffered: true,
+  failure: Option.none(),
   mayConnect: true,
-  refused: false,
 };
 
 describe("connector directory", () => {
@@ -49,9 +49,14 @@ describe("connector directory", () => {
     ).toBe("reconnect");
   });
 
-  it("waits for an offer, then for permission, then says what Google refused", () => {
+  it("waits for an offer, then for permission, then says how the last connect ended", () => {
     expect(directoryState(open)).toBe("open");
-    expect(directoryState({ ...open, refused: true })).toBe("refused");
+    expect(directoryState({ ...open, failure: Option.some("refused") })).toBe(
+      "refused"
+    );
+    expect(directoryState({ ...open, failure: Option.some("failed") })).toBe(
+      "failed"
+    );
     expect(directoryState({ ...open, mayConnect: false })).toBe("locked");
     expect(
       directoryState({ ...open, isOffered: false, mayConnect: false })

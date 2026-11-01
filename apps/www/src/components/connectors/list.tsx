@@ -1,13 +1,6 @@
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@repo/design-system/components/ui/alert";
 import { Array as Arr } from "effect";
-import { use } from "react";
 import { useTranslations } from "use-intl";
-import { ConnectOutcomeContext } from "@/components/connectors/actions";
 import { ConnectorCard } from "@/components/connectors/card";
 import {
   type Connection,
@@ -29,7 +22,6 @@ export function ConnectorList({
   offered: readonly GoogleConnector[];
 }) {
   const t = useTranslations("Connectors");
-  const outcome = use(ConnectOutcomeContext);
 
   if (Arr.isReadonlyArrayEmpty(offered)) {
     return (
@@ -43,12 +35,6 @@ export function ConnectorList({
 
   return (
     <div className="flex flex-col gap-6">
-      {outcome === "refused" || outcome === "failed" ? (
-        <Alert variant="destructive">
-          <AlertTitle>{t("refused")}</AlertTitle>
-          <AlertDescription>{t(`${outcome}-description`)}</AlertDescription>
-        </Alert>
-      ) : null}
       {Arr.map(offered, (connector) => (
         <ConnectorCard
           connection={currentConnection(connections, connector)}

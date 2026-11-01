@@ -172,6 +172,7 @@ describe("connectors/google", () => {
         expect(
           yield* student.action(google.finish, { code: "code-1", state })
         ).toEqual({
+          connector: "drive",
           location: `http://localhost:3000${OWN_PAGE}`,
           outcome: "connected",
         });
@@ -210,6 +211,7 @@ describe("connectors/google", () => {
             state: yield* start(),
           })
         ).toEqual({
+          connector: "drive",
           location: `http://localhost:3000${OWN_PAGE}`,
           outcome: "cancelled",
         });
@@ -280,6 +282,7 @@ describe("connectors/google", () => {
           });
         });
         expect(yield* connect).toEqual({
+          connector: "classroom",
           location: `http://nf.localhost:3000${SCHOOL_PAGE}`,
           outcome: "connected",
         });

@@ -1,12 +1,12 @@
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
-import type { ConnectOutcome } from "@repo/backend/confect/connectors/schema";
 import { createContext, use } from "react";
 import type { Connection } from "@/components/connectors/optimistic";
+import type { ConnectSearch } from "@/components/connectors/outcome";
 
 /** Where the last connect ended when Google sent the browser back, as the page's address names it. */
-export const ConnectOutcomeContext = createContext<
-  (typeof ConnectOutcome.Type)["outcome"] | undefined
->(undefined);
+export const ConnectOutcomeContext = createContext<typeof ConnectSearch.Type>(
+  {}
+);
 
 /**
  * What a connector page does for its owner, the account or the school: start a connect at Google,

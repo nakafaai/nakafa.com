@@ -102,7 +102,7 @@ test("the Owner finds every service in words, searches them, and one press on pl
   await context.close();
 });
 
-test("a connect that Google refused says what to do, and plus starts it again", async ({
+test("a connect that ended badly says so on the card that tried, and plus starts it again", async ({
   baseURL,
   browser,
 }) => {
@@ -111,17 +111,27 @@ test("a connect that Google refused says what to do, and plus starts it again", 
     context,
     baseURL,
     signInOwner,
-    "?connect=refused"
+    "?connect=refused&connector=classroom"
   );
   const classroom = cardOf(page, "Google Classroom");
 
   await expect(
     classroom.getByText("Tick every box on the Google screen.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(page.getByRole("alert")).toHaveCount(1);
   await expect(
     classroom.getByRole("button", { name: "Connect Google Classroom" })
   ).toBeVisible();
   await picture(page, "refused");
+
+  await page.goto(
+    `${page.url().split("?")[0]}?connect=failed&connector=classroom`
+  );
+  await expect(
+    classroom.getByText("The connect failed, so try again.")
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(page.getByRole("alert")).toHaveCount(1);
+  await picture(page, "failed");
   await context.close();
 });
 

@@ -29,6 +29,7 @@ import {
   disconnectOwnUpdate,
   disconnectSchoolUpdate,
 } from "@/components/connectors/optimistic";
+import { connectFailure } from "@/components/connectors/outcome";
 import { contentWidthVariants } from "@/components/shared/content/width";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
@@ -84,7 +85,7 @@ function SchoolDirectory() {
   const locale = useLocale();
   const { reach, slug } = useTenant();
   const search = useTableFilters((state) => state.search);
-  const refused = use(ConnectOutcomeContext) === "refused";
+  const tried = use(ConnectOutcomeContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const maySee = Arr.contains(reach, "connection.view");
   const offered = useQuery(connectors.google.offered, isSettled ? {} : "skip");
@@ -199,7 +200,7 @@ function SchoolDirectory() {
                         mayConnect:
                           holderOf(service) === "personal" ||
                           Arr.contains(reach, "connection.create"),
-                        refused: refused && holderOf(service) === "school",
+                        failure: connectFailure(tried, service.connector),
                       })
                     )
                   : Option.none()
