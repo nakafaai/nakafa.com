@@ -1,5 +1,4 @@
 import {
-  type FunctionProvenance,
   type FunctionSpec,
   type GroupSpec,
   Spec,
@@ -123,22 +122,14 @@ const unreachable = () =>
 /** Whether a function declares its arguments as a Schema, as every public function here does. */
 const declaresArgs = (
   spec: FunctionSpec.AnyWithProps
-): spec is FunctionSpec.AnyWithProps & {
-  readonly functionProvenance: FunctionProvenance.AnyConfect;
-} => spec.functionProvenance._tag === "Confect";
+): spec is FunctionSpec.AnyConfect =>
+  spec.functionProvenance._tag === "Confect";
 
 /** The public functions of one group and the groups inside it, each with its Convex name. */
 const entriesOf = (
   group: GroupSpec.AnyWithProps,
   path: string
-): ReadonlyArray<
-  readonly [
-    string,
-    FunctionSpec.AnyWithProps & {
-      readonly functionProvenance: FunctionProvenance.AnyConfect;
-    },
-  ]
-> => [
+): ReadonlyArray<readonly [string, FunctionSpec.AnyConfect]> => [
   ...Arr.map(
     Arr.filter(
       Arr.filter(
