@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import { SCHOOL_FREE_STUDENTS } from "@repo/backend/confect/billing/catalog";
+import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { nf } from "@repo/backend/test/editor";
 import { keyedSchool } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -29,6 +35,76 @@ describe("exams seed seats", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
+
+  it.effect(
+    "seats a student past the free plan's limit, since the run's school holds a contract",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        // The school is already full: one student more is refused on the free plan.
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const reader = yield* DatabaseReader;
+            const writer = yield* DatabaseWriter;
+            const unit = yield* reader
+              .table("tenantUnits")
+              .index("by_tenantId_and_status", (query) =>
+                query.eq("tenantId", fixture.tenants.nf).eq("status", "active")
+              )
+              .first()
+              .pipe(
+                Effect.orDie,
+                Effect.flatMap(Effect.fromOption),
+                Effect.orDie
+              );
+            yield* Effect.forEach(
+              Arr.makeBy(SCHOOL_FREE_STUDENTS, (index) => index),
+              (index) =>
+                writer
+                  .table("tenantPeople")
+                  .insert({
+                    account: { state: "unclaimed" },
+                    kind: "member",
+                    name: `Penuh ${index}`,
+                    status: "active",
+                    tenantId: fixture.tenants.nf,
+                  })
+                  .pipe(
+                    Effect.flatMap((personId) =>
+                      writer.table("tenantGrants").insert({
+                        grantedBy: systemActor,
+                        personId,
+                        role: { key: "student", kind: "builtin" },
+                        scope: { kind: "unit", unitId: unit._id },
+                        status: "active",
+                        tenantId: fixture.tenants.nf,
+                        term: { kind: "standing" },
+                      })
+                    ),
+                    Effect.orDie
+                  ),
+              { discard: true }
+            );
+          })
+        );
+        const refused = yield* fixture.internal
+          .mutation(seats, { kind: "student", seats: [seat(1)], slug: nf })
+          .pipe(Effect.exit);
+        expect(refused._tag).toBe("Failure");
+
+        yield* fixture.internal.mutation(load, {
+          questions: 1,
+          rooms: 1,
+          slug: nf,
+        });
+        yield* fixture.internal.mutation(seats, {
+          kind: "student",
+          seats: [seat(2)],
+          slug: nf,
+        });
+      })
+  );
 
   it.effect("refuses the seed outside the acceptance runtime", () =>
     Effect.gen(function* () {
