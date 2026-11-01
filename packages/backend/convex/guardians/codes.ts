@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/gu
 export const redeem = registeredFunctions.redeem;
 export const send = registeredFunctions.send;
 export const sweep = registeredFunctions.sweep;
+export const experimental_reuseContext = true;

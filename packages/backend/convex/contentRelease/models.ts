@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/co
 export const restart = registeredFunctions.restart;
 export const resume = registeredFunctions.resume;
 export const status = registeredFunctions.status;
+export const experimental_reuseContext = true;

@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/id
 export const list = registeredFunctions.list;
 export const rename = registeredFunctions.rename;
 export const usernameOf = registeredFunctions.usernameOf;
+export const experimental_reuseContext = true;

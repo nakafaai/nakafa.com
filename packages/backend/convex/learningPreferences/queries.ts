@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/le
 export const getCurrent = registeredFunctions.getCurrent;
 export const getCurrentTryout = registeredFunctions.getCurrentTryout;
 export const listCurriculumPrograms = registeredFunctions.listCurriculumPrograms;
+export const experimental_reuseContext = true;

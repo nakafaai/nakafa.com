@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/au
 export const onCreate = registeredFunctions.onCreate;
 export const onDelete = registeredFunctions.onDelete;
 export const onUpdate = registeredFunctions.onUpdate;
+export const experimental_reuseContext = true;

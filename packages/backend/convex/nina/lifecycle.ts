@@ -7,3 +7,4 @@ export const expire = registeredFunctions.expire;
 export const presentation = registeredFunctions.presentation;
 export const recover = registeredFunctions.recover;
 export const sweep = registeredFunctions.sweep;
+export const experimental_reuseContext = true;

@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/in
 export const check = registeredFunctions.check;
 export const issue = registeredFunctions.issue;
 export const sweep = registeredFunctions.sweep;
+export const experimental_reuseContext = true;

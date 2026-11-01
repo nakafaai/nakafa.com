@@ -7,3 +7,4 @@ export const publish = registeredFunctions.publish;
 export const score = registeredFunctions.score;
 export const submissions = registeredFunctions.submissions;
 export const submit = registeredFunctions.submit;
+export const experimental_reuseContext = true;

@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/bi
 
 export const applySubscription = registeredFunctions.applySubscription;
 export const run = registeredFunctions.run;
+export const experimental_reuseContext = true;

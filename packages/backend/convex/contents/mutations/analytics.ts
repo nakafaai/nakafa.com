@@ -3,3 +3,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 export const processContentAnalyticsPartition = registeredFunctions.processContentAnalyticsPartition;
 export const scheduleContentAnalyticsPartition = registeredFunctions.scheduleContentAnalyticsPartition;
 export const scheduleContentAnalyticsPartitions = registeredFunctions.scheduleContentAnalyticsPartitions;
+export const experimental_reuseContext = true;

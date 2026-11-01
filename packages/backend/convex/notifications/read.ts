@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/no
 
 export const run = registeredFunctions.run;
 export const runAccount = registeredFunctions.runAccount;
+export const experimental_reuseContext = true;

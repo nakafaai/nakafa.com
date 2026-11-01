@@ -3,3 +3,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 export const drainDeletedUserVerifications = registeredFunctions.drainDeletedUserVerifications;
 export const loadDeletedUserVerificationCursor = registeredFunctions.loadDeletedUserVerificationCursor;
 export const saveDeletedUserVerificationCursor = registeredFunctions.saveDeletedUserVerificationCursor;
+export const experimental_reuseContext = true;

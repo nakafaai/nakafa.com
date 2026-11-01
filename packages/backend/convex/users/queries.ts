@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/us
 export const checkUsername = registeredFunctions.checkUsername;
 export const getProfileByUsername = registeredFunctions.getProfileByUsername;
 export const getUserByAuthId = registeredFunctions.getUserByAuthId;
+export const experimental_reuseContext = true;

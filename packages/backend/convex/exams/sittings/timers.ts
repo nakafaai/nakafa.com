@@ -5,3 +5,4 @@ export const closeDue = registeredFunctions.closeDue;
 export const open = registeredFunctions.open;
 export const submit = registeredFunctions.submit;
 export const sweep = registeredFunctions.sweep;
+export const experimental_reuseContext = true;

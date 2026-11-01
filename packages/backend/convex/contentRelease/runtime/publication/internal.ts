@@ -2,3 +2,4 @@ import registeredFunctions from "../../../../confect/_generated/registeredFuncti
 
 export const read = registeredFunctions.read;
 export const readBatch = registeredFunctions.readBatch;
+export const experimental_reuseContext = true;

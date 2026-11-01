@@ -5,3 +5,4 @@ export const decline = registeredFunctions.decline;
 export const end = registeredFunctions.end;
 export const list = registeredFunctions.list;
 export const request = registeredFunctions.request;
+export const experimental_reuseContext = true;

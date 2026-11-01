@@ -3,3 +3,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 export const create = registeredFunctions.create;
 export const get = registeredFunctions.get;
 export const plan = registeredFunctions.plan;
+export const experimental_reuseContext = true;

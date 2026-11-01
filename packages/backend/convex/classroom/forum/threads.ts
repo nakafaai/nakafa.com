@@ -7,3 +7,4 @@ export const rename = registeredFunctions.rename;
 export const replies = registeredFunctions.replies;
 export const reply = registeredFunctions.reply;
 export const start = registeredFunctions.start;
+export const experimental_reuseContext = true;
