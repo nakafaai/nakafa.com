@@ -5,4 +5,5 @@ export const list = registeredFunctions.list;
 export const remove = registeredFunctions.remove;
 export const rename = registeredFunctions.rename;
 export const students = registeredFunctions.students;
+export const teachers = registeredFunctions.teachers;
 export const experimental_reuseContext = true;

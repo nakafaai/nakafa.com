@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { activeGrants } from "@repo/backend/confect/access/policy";
 import { CARD_TERM } from "@repo/backend/confect/identity/card";
 import { hashCardCode } from "@repo/backend/confect/identity/secret";
 import {
@@ -352,13 +353,17 @@ describe("identity/cards enroll", () => {
         const fixture = yield* tenancyFixture;
         const enrolled = yield* fixture
           .as("admin")
-          .mutation(enroll, newStudent);
+          .mutation(enroll, { ...newStudent, unitId: fixture.units.smp });
         expect(enrolled).toEqual({
           code: expect.stringMatching(CODE_PATTERN),
           expiresAt: CARD_NOW + Duration.toMillis(CARD_TERM),
           loginName: "siswa.baru",
           personId: expect.any(String),
         });
+        const grants = yield* fixture.run(activeGrants(enrolled.personId));
+        expect(Arr.map(grants, (grant) => grant.scope)).toEqual([
+          { kind: "unit", unitId: fixture.units.smp },
+        ]);
         const entries = yield* fixture.run(journal);
         expect(Arr.map(entries, (entry) => entry.change.type)).toEqual([
           "person.created",
@@ -392,14 +397,24 @@ describe("identity/cards enroll", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        yield* fixture.as("admin").mutation(enroll, newStudent);
+        yield* fixture
+          .as("admin")
+          .mutation(enroll, { ...newStudent, unitId: fixture.units.smp });
         const taken = yield* fixture
           .as("admin")
-          .mutation(enroll, { ...newStudent, name: "Siswa Lain" })
+          .mutation(enroll, {
+            ...newStudent,
+            unitId: fixture.units.smp,
+            name: "Siswa Lain",
+          })
           .pipe(Effect.flip);
         const malformed = yield* fixture
           .as("admin")
-          .mutation(enroll, { ...newStudent, loginName: "Siswa Lain!" })
+          .mutation(enroll, {
+            ...newStudent,
+            unitId: fixture.units.smp,
+            loginName: "Siswa Lain!",
+          })
           .pipe(Effect.flip);
         expect([taken, malformed]).toMatchObject([
           { _tag: "LoginNameTaken", code: "LOGIN_NAME_TAKEN" },
@@ -415,12 +430,40 @@ describe("identity/cards enroll", () => {
       })
   );
 
+  it.effect("refuses a unit the school does not run, and writes nothing", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const unitId = yield* fixture.run(
+        Effect.gen(function* () {
+          const writer = yield* DatabaseWriter;
+          yield* writer
+            .table("tenantUnits")
+            .patch(fixture.units.sd, { status: "archived" });
+          return fixture.units.sd;
+        })
+      );
+      const refused = yield* fixture
+        .as("admin")
+        .mutation(enroll, { ...newStudent, unitId })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject({
+        _tag: "AccessDenied",
+        reason: "resource",
+      });
+      expect(yield* fixture.run(journal)).toEqual([]);
+    })
+  );
+
   it.effect("refuses a student of another school, and writes nothing", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const refused = yield* fixture
         .as("admin")
-        .mutation(enroll, { ...newStudent, slug: other })
+        .mutation(enroll, {
+          ...newStudent,
+          unitId: fixture.units.smp,
+          slug: other,
+        })
         .pipe(Effect.flip);
       expect(refused).toMatchObject({ _tag: "NotMember" });
       expect(yield* fixture.run(journal)).toEqual([]);
@@ -432,7 +475,7 @@ describe("identity/cards enroll", () => {
       const fixture = yield* tenancyFixture;
       const refused = yield* fixture
         .as("teacher")
-        .mutation(enroll, newStudent)
+        .mutation(enroll, { ...newStudent, unitId: fixture.units.smp })
         .pipe(Effect.flip);
       expect(refused).toMatchObject(denied("role"));
       expect(yield* fixture.run(journal)).toEqual([]);

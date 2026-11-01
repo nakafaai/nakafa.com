@@ -14,7 +14,7 @@ import { Array as Arr, Effect, Schema } from "effect";
 const nf = slugOf("nf");
 const calon = Schema.decodeSync(Email)("calon@harapan.example.test");
 const guru = Schema.decodeSync(Email)("guru@harapan.example.test");
-const { create, list, remove, rename } = refs.public.tenancy.people;
+const { create, list, remove, rename, teachers } = refs.public.tenancy.people;
 const { invite, list: invites } = refs.public.tenancy.invites;
 const { place } = refs.public.tenancy.placements;
 const { archive: archiveCohort, create: createCohort } =
@@ -76,6 +76,74 @@ describe("tenancy/people list and create", () => {
           fixture.invited,
           made.id,
         ]);
+      })
+  );
+
+  it.effect(
+    "lists the teachers of the cohort's unit, and nobody the assignments refuse",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const admin = fixture.as("admin");
+        const period = yield* admin.mutation(periods.create, {
+          end: "2026-12-19",
+          name: "Ganjil 2026/2027",
+          slug: nf,
+          start: "2026-07-13",
+          unitId: fixture.units.smp,
+        });
+        const cohort = yield* admin.mutation(createCohort, {
+          grade: 7,
+          name: "7A",
+          periodId: period.id,
+          slug: nf,
+        });
+        const unit = yield* admin.mutation(create, { name: "Unit", slug: nf });
+        const school = yield* admin.mutation(create, {
+          name: "School",
+          slug: nf,
+        });
+        const elsewhere = yield* admin.mutation(create, {
+          name: "Elsewhere",
+          slug: nf,
+        });
+        const learner = yield* admin.mutation(create, {
+          name: "Learner",
+          slug: nf,
+        });
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const nfId = fixture.tenants.nf;
+            const smp = fixture.units.smp;
+            yield* grantRole(nfId, unit.id, "teacher", {
+              kind: "unit",
+              unitId: smp,
+            });
+            yield* grantRole(nfId, school.id, "teacher", { kind: "tenant" });
+            yield* grantRole(nfId, elsewhere.id, "teacher", {
+              kind: "unit",
+              unitId: fixture.units.sd,
+            });
+            yield* grantRole(nfId, learner.id, "student", {
+              kind: "unit",
+              unitId: smp,
+            });
+          })
+        );
+        const page = yield* admin.query(teachers, {
+          ...firstPage,
+          cohortId: cohort.id,
+          slug: nf,
+        });
+        const names = Arr.map(page.page, (person) => person.name);
+        expect(names).toEqual(expect.arrayContaining(["Unit", "School"]));
+        expect(names).not.toContain("Elsewhere");
+        expect(names).not.toContain("Learner");
+        const refused = yield* fixture
+          .as("teacher")
+          .query(teachers, { ...firstPage, cohortId: cohort.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("role"));
       })
   );
 
