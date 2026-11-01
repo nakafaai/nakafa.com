@@ -6,6 +6,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { partsOf } from "@repo/backend/confect/notifications/detail";
+import { isSchoolRow } from "@repo/backend/confect/notifications/schema";
 import { IBU } from "@repo/backend/test/guardians";
 import {
   keyedExam,
@@ -124,7 +125,11 @@ describe("notifications/sittings", () => {
             const tenant = yield* reader
               .table("tenants")
               .get(fixture.tenants.nf);
-            return yield* partsOf(Arr.getUnsafe(rows, 0), person, tenant);
+            return yield* partsOf(
+              Arr.getUnsafe(Arr.filter(rows, isSchoolRow), 0),
+              person,
+              tenant
+            );
           }).pipe(Effect.orDie)
         );
         expect(parts).toEqual({
@@ -154,7 +159,11 @@ describe("notifications/sittings", () => {
             const tenant = yield* reader
               .table("tenants")
               .get(fixture.tenants.nf);
-            return yield* partsOf(Arr.getUnsafe(rows, 0), person, tenant);
+            return yield* partsOf(
+              Arr.getUnsafe(Arr.filter(rows, isSchoolRow), 0),
+              person,
+              tenant
+            );
           }).pipe(Effect.orDie)
         );
         expect(closed.exam).toBeNull();
@@ -242,7 +251,11 @@ describe("notifications/sittings", () => {
             const tenant = yield* reader
               .table("tenants")
               .get(fixture.tenants.nf);
-            return yield* partsOf(Arr.getUnsafe(rows, 0), person, tenant);
+            return yield* partsOf(
+              Arr.getUnsafe(Arr.filter(rows, isSchoolRow), 0),
+              person,
+              tenant
+            );
           }).pipe(Effect.orDie)
         );
         expect(parts.exam?.student).toEqual(expect.any(String));

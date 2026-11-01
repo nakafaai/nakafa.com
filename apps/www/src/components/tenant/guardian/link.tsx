@@ -121,7 +121,7 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
 /**
  * A live link's row menu: rename the parent, correct its email and check it by hand while it is pending, and end it behind a
  * confirmation. A link the server has not answered yet keeps its menu inert, and an ended link has no menu, so its
- * cell stays empty.
+ * cell stays empty. The dialogs stay mounted past a revoke, so the confirmation plays its exit as the row ends.
  */
 export function GuardianLinkMenu({ link }: { link: LinkItem }) {
   const t = useTranslations("SchoolGuardians");
@@ -138,67 +138,68 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
   const [renaming, setRenaming] = useState(0);
   const [isRenaming, setIsRenaming] = useState(false);
 
-  if (link.status !== "pending" && link.status !== "verified") {
-    return null;
-  }
-
   return (
     <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              inert={isDraft(link.id)}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          <WithAction action="person.manage">
+      {link.status === "pending" || link.status === "verified" ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                aria-label={common("more-actions")}
+                inert={isDraft(link.id)}
+                size="icon-sm"
+                variant="ghost"
+              >
+                <HugeIcons icon={MoreHorizontalIcon} />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" className="w-48">
+            <WithAction action="person.manage">
+              <DropdownMenuItem
+                onClick={() => {
+                  setRenaming((count) => count + 1);
+                  setIsRenaming(true);
+                }}
+              >
+                <HugeIcons icon={UserEdit01Icon} />
+                {t("link-rename")}
+              </DropdownMenuItem>
+            </WithAction>
+            {link.status === "pending" ? (
+              <>
+                <DropdownMenuItem
+                  onClick={() => setReaddressing((count) => count + 1)}
+                >
+                  <HugeIcons icon={PencilEdit02Icon} />
+                  {t("link-readdress")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    startTransition(() =>
+                      saveSchool(
+                        () => verify({ linkId: link.id, slug }),
+                        SOURCE
+                      )
+                    )
+                  }
+                >
+                  <HugeIcons icon={CheckmarkBadge01Icon} />
+                  {t("link-verify")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            ) : null}
             <DropdownMenuItem
-              onClick={() => {
-                setRenaming((count) => count + 1);
-                setIsRenaming(true);
-              }}
+              onClick={() => setIsRevoking(true)}
+              variant="destructive"
             >
-              <HugeIcons icon={UserEdit01Icon} />
-              {t("link-rename")}
+              <HugeIcons icon={Unlink01Icon} />
+              {t("link-revoke")}
             </DropdownMenuItem>
-          </WithAction>
-          {link.status === "pending" ? (
-            <>
-              <DropdownMenuItem
-                onClick={() => setReaddressing((count) => count + 1)}
-              >
-                <HugeIcons icon={PencilEdit02Icon} />
-                {t("link-readdress")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  startTransition(() =>
-                    saveSchool(() => verify({ linkId: link.id, slug }), SOURCE)
-                  )
-                }
-              >
-                <HugeIcons icon={CheckmarkBadge01Icon} />
-                {t("link-verify")}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
-          ) : null}
-          <DropdownMenuItem
-            onClick={() => setIsRevoking(true)}
-            variant="destructive"
-          >
-            <HugeIcons icon={Unlink01Icon} />
-            {t("link-revoke")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
       {readdressing === 0 ? null : (
         <GuardianLinkAddressDialog key={readdressing} link={link} />
       )}

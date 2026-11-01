@@ -4,7 +4,7 @@ import { PaginatedQueryResult } from "@confect/react";
 import { describe, expect, it } from "@effect/vitest";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
-import { useInbox } from "@/components/notifications/inbox";
+import { ACCOUNT_INBOX, useInbox } from "@/components/notifications/inbox";
 
 const mocks = vi.hoisted(() => ({
   settled: { isLoading: false },
@@ -28,7 +28,7 @@ describe("useInbox", () => {
       PaginatedQueryResult.loadingFirstPage({ skipped: false })
     );
 
-    const inbox = useInbox(Option.some({ isDone: true, page: [] }), undefined);
+    const inbox = useInbox(Option.some({ isDone: true, page: [] }), {});
 
     expect(mocks.usePaginatedQuery).toHaveBeenLastCalledWith(
       expect.anything(),
@@ -51,11 +51,26 @@ describe("useInbox", () => {
     );
     const slug = Schema.decodeSync(TenantSlug)("harapan");
 
-    useInbox(Option.none(), slug);
+    useInbox(Option.none(), { slug });
 
     expect(mocks.usePaginatedQuery).toHaveBeenLastCalledWith(
       expect.anything(),
       { slug },
+      { initialNumItems: 20 }
+    );
+  });
+
+  it("asks for the account's own rows in the Nakafa inbox", () => {
+    mocks.settled.isLoading = false;
+    mocks.usePaginatedQuery.mockReturnValue(
+      PaginatedQueryResult.loadingFirstPage({ skipped: false })
+    );
+
+    useInbox(Option.none(), ACCOUNT_INBOX);
+
+    expect(mocks.usePaginatedQuery).toHaveBeenLastCalledWith(
+      expect.anything(),
+      { personal: true },
       { initialNumItems: 20 }
     );
   });
@@ -66,7 +81,7 @@ describe("useInbox", () => {
       PaginatedQueryResult.loadingFirstPage({ skipped: true })
     );
 
-    const inbox = useInbox(Option.none(), undefined);
+    const inbox = useInbox(Option.none(), {});
 
     expect(mocks.usePaginatedQuery).toHaveBeenLastCalledWith(
       expect.anything(),
@@ -83,7 +98,7 @@ describe("useInbox", () => {
       PaginatedQueryResult.canLoadMore({ loadMore, results: [] })
     );
 
-    const inbox = useInbox(Option.none(), undefined);
+    const inbox = useInbox(Option.none(), {});
     inbox.loadMore?.();
 
     expect(loadMore).toHaveBeenCalledExactlyOnceWith(20);

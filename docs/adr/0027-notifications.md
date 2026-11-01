@@ -39,6 +39,19 @@ one mail that counts them. An exam leaves first, then what happened now, then th
 17:00 digest. What the limit holds back waits for the next sweep and the next day,
 a mail about an exam until the exam opens, and any other for a week.
 
+Amended on 31 October 2026: the first personal notification is built. A reply to
+an account's comment on a lesson or an article writes one `comment.replied` row in
+the transaction of the reply, addressed to the account (`recipientUserId`), with no
+school and no Person. The kind is `commentReply` and the relation `commenter`. Only
+the Nakafa inbox asks for these rows (`personal`), so they never show inside a
+school. A reply's own author gets no row, and deleting the reply or the account
+deletes the row. An account keeps no zone or language, so its push speaks Indonesian
+and a student's quiet hours run on the clock of `Asia/Jakarta`. A row opens the
+comment through `/{locale}/comment/{id}`, because a lesson's comments carry its
+content key, which only the active release turns into a path, and the inbox reads no
+release for each row. The email of the channel table waits for the notice mail queue
+and the preferences, which are keyed by Person.
+
 ## Context
 
 A school produces notifications from many sources: a mention or a reply in a
@@ -413,6 +426,7 @@ sitting does not show.
 | `notificationPreferences` | Planned, program wave B |
 | Task reminders and late-task notices from the scheduler, `confect/notifications/tasks.ts` | Built |
 | The notice mail queue, `noticeMails`, its daily limit, and the sweep in `confect/emails/digest` | Built |
+| The reply row of an account, its push, its read and its deletion, `confect/notifications/reply.ts` | Built; its digest email and its preference wait for the notice mail queue |
 | The notify consumer for the change types other than `person.invited` | Planned, program wave B |
 | The channel table as data, `confect/notifications/rules.ts`: the routes of each kind and relation | Called: the inbox consumer asks `deliveriesOf`, which reads `routeOf`, for the invitee's inbox row. `recipientsOf` and `canSwitchOff` wait for the preferences (program wave B) |
 | The sends of a notice, `confect/notifications/delivery.ts`: `deliveriesOf` and `deliveryInstant` | `deliveriesOf` is called by the inbox consumer. `deliveryInstant` waits for the reminders, which need the zone of their school (program wave B) |
