@@ -137,15 +137,6 @@ export const serviceConnection = (
     service.connector
   );
 
-/** The message that says where a service stands. Forms, while open, says it connects through Drive. */
-export const statusKey = (
-  service: DirectoryService,
-  state: typeof ServiceState.Type
-) =>
-  state === "open" && service.key === "forms"
-    ? ("status-through-drive" as const)
-    : (`status-${state}` as const);
-
 /** Whether any of a service's words holds what the viewer searched for, in the chosen category. */
 export const isShown = (
   service: DirectoryService,

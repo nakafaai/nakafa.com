@@ -83,6 +83,47 @@ export const api: {
             }
           | {
               data: {
+                clientId?: null | string;
+                clientSecret?: null | string;
+                createdAt?: null | number;
+                disabled?: null | boolean;
+                icon?: null | string;
+                metadata?: null | string;
+                name?: null | string;
+                redirectUrls?: null | string;
+                type?: null | string;
+                updatedAt?: null | number;
+                userId?: null | string;
+              };
+              model: "oauthApplication";
+            }
+          | {
+              data: {
+                accessToken?: null | string;
+                accessTokenExpiresAt?: null | number;
+                clientId?: null | string;
+                createdAt?: null | number;
+                refreshToken?: null | string;
+                refreshTokenExpiresAt?: null | number;
+                scopes?: null | string;
+                updatedAt?: null | number;
+                userId?: null | string;
+              };
+              model: "oauthAccessToken";
+            }
+          | {
+              data: {
+                clientId?: null | string;
+                consentGiven?: null | boolean;
+                createdAt?: null | number;
+                scopes?: null | string;
+                updatedAt?: null | number;
+                userId?: null | string;
+              };
+              model: "oauthConsent";
+            }
+          | {
+              data: {
                 createdAt: number;
                 expiresAt?: null | number;
                 privateKey: string;
@@ -223,6 +264,116 @@ export const api: {
                   | "expiresAt"
                   | "createdAt"
                   | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthApplication";
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "name"
+                  | "icon"
+                  | "metadata"
+                  | "clientId"
+                  | "clientSecret"
+                  | "redirectUrls"
+                  | "type"
+                  | "disabled"
+                  | "userId"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthAccessToken";
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "accessToken"
+                  | "refreshToken"
+                  | "accessTokenExpiresAt"
+                  | "refreshTokenExpiresAt"
+                  | "clientId"
+                  | "userId"
+                  | "scopes"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthConsent";
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "clientId"
+                  | "userId"
+                  | "scopes"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "consentGiven"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -442,6 +593,116 @@ export const api: {
               }>;
             }
           | {
+              model: "oauthApplication";
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "name"
+                  | "icon"
+                  | "metadata"
+                  | "clientId"
+                  | "clientSecret"
+                  | "redirectUrls"
+                  | "type"
+                  | "disabled"
+                  | "userId"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthAccessToken";
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "accessToken"
+                  | "refreshToken"
+                  | "accessTokenExpiresAt"
+                  | "refreshTokenExpiresAt"
+                  | "clientId"
+                  | "userId"
+                  | "scopes"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthConsent";
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "clientId"
+                  | "userId"
+                  | "scopes"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "consentGiven"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
               model: "jwks";
               where?: Array<{
                 connector?: "AND" | "OR";
@@ -483,7 +744,15 @@ export const api: {
       {
         join?: any;
         limit?: number;
-        model: "user" | "session" | "account" | "verification" | "jwks";
+        model:
+          | "user"
+          | "session"
+          | "account"
+          | "verification"
+          | "oauthApplication"
+          | "oauthAccessToken"
+          | "oauthConsent"
+          | "jwks";
         offset?: number;
         paginationOpts: {
           cursor: string | null;
@@ -522,7 +791,15 @@ export const api: {
       "public",
       {
         join?: any;
-        model: "user" | "session" | "account" | "verification" | "jwks";
+        model:
+          | "user"
+          | "session"
+          | "account"
+          | "verification"
+          | "oauthApplication"
+          | "oauthAccessToken"
+          | "oauthConsent"
+          | "jwks";
         select?: Array<string>;
         where?: Array<{
           connector?: "AND" | "OR";
@@ -716,6 +993,148 @@ export const api: {
                   | "expiresAt"
                   | "createdAt"
                   | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthApplication";
+              update: {
+                clientId?: null | string;
+                clientSecret?: null | string;
+                createdAt?: null | number;
+                disabled?: null | boolean;
+                icon?: null | string;
+                metadata?: null | string;
+                name?: null | string;
+                redirectUrls?: null | string;
+                type?: null | string;
+                updatedAt?: null | number;
+                userId?: null | string;
+              };
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "name"
+                  | "icon"
+                  | "metadata"
+                  | "clientId"
+                  | "clientSecret"
+                  | "redirectUrls"
+                  | "type"
+                  | "disabled"
+                  | "userId"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthAccessToken";
+              update: {
+                accessToken?: null | string;
+                accessTokenExpiresAt?: null | number;
+                clientId?: null | string;
+                createdAt?: null | number;
+                refreshToken?: null | string;
+                refreshTokenExpiresAt?: null | number;
+                scopes?: null | string;
+                updatedAt?: null | number;
+                userId?: null | string;
+              };
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "accessToken"
+                  | "refreshToken"
+                  | "accessTokenExpiresAt"
+                  | "refreshTokenExpiresAt"
+                  | "clientId"
+                  | "userId"
+                  | "scopes"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthConsent";
+              update: {
+                clientId?: null | string;
+                consentGiven?: null | boolean;
+                createdAt?: null | number;
+                scopes?: null | string;
+                updatedAt?: null | number;
+                userId?: null | string;
+              };
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "clientId"
+                  | "userId"
+                  | "scopes"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "consentGiven"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -959,6 +1378,148 @@ export const api: {
                   | "expiresAt"
                   | "createdAt"
                   | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthApplication";
+              update: {
+                clientId?: null | string;
+                clientSecret?: null | string;
+                createdAt?: null | number;
+                disabled?: null | boolean;
+                icon?: null | string;
+                metadata?: null | string;
+                name?: null | string;
+                redirectUrls?: null | string;
+                type?: null | string;
+                updatedAt?: null | number;
+                userId?: null | string;
+              };
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "name"
+                  | "icon"
+                  | "metadata"
+                  | "clientId"
+                  | "clientSecret"
+                  | "redirectUrls"
+                  | "type"
+                  | "disabled"
+                  | "userId"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthAccessToken";
+              update: {
+                accessToken?: null | string;
+                accessTokenExpiresAt?: null | number;
+                clientId?: null | string;
+                createdAt?: null | number;
+                refreshToken?: null | string;
+                refreshTokenExpiresAt?: null | number;
+                scopes?: null | string;
+                updatedAt?: null | number;
+                userId?: null | string;
+              };
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "accessToken"
+                  | "refreshToken"
+                  | "accessTokenExpiresAt"
+                  | "refreshTokenExpiresAt"
+                  | "clientId"
+                  | "userId"
+                  | "scopes"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "_id";
+                mode?: "sensitive" | "insensitive";
+                operator?:
+                  | "lt"
+                  | "lte"
+                  | "gt"
+                  | "gte"
+                  | "eq"
+                  | "in"
+                  | "not_in"
+                  | "ne"
+                  | "contains"
+                  | "starts_with"
+                  | "ends_with";
+                value:
+                  | string
+                  | number
+                  | boolean
+                  | Array<string>
+                  | Array<number>
+                  | null;
+              }>;
+            }
+          | {
+              model: "oauthConsent";
+              update: {
+                clientId?: null | string;
+                consentGiven?: null | boolean;
+                createdAt?: null | number;
+                scopes?: null | string;
+                updatedAt?: null | number;
+                userId?: null | string;
+              };
+              where?: Array<{
+                connector?: "AND" | "OR";
+                field:
+                  | "clientId"
+                  | "userId"
+                  | "scopes"
+                  | "createdAt"
+                  | "updatedAt"
+                  | "consentGiven"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:

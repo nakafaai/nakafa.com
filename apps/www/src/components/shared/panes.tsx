@@ -4,11 +4,6 @@ import {
   DrawerContent,
 } from "@repo/design-system/components/ui/drawer";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-} from "@repo/design-system/components/ui/empty";
-import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
@@ -165,7 +160,8 @@ const panesVariants = cva("min-h-0", {
     },
     width: {
       full: "w-full",
-      page: pageBoxVariants(),
+      // A pane's lines run to the group's edge, and what it holds ends on the edge the header's row mirrors.
+      page: `${pageBoxVariants()} [--pane-end:1.5rem]`,
     },
   },
 });
@@ -208,23 +204,23 @@ export function PanesList({ children }: { children: ReactNode }) {
 
 /**
  * The second pane: the handle, then the detail beside the first pane, and the phone's sheet from
- * the bottom of the screen. A row's detail says in `empty` what it will show while no row is open,
- * shows a row as it opens, and closes the row as its sheet closes. A detail without `empty` is
- * always on beside the first pane, and its sheet opens by `showSheet`. A page whose own selection
- * holds the open row passes `open` and `onClose`, and its detail closes like a row's, with or
- * without `empty`. The detail draws in one place at a time.
+ * the bottom of the screen. A row's detail shows only while a row is open, so the first pane takes
+ * the whole page until a press opens one, and it closes the row as its sheet closes. An `alwaysOn`
+ * detail stands beside the first pane however the page reads, and its sheet opens by `showSheet`.
+ * A page whose own selection holds the open row passes `open` and `onClose`, and its detail closes
+ * like a row's. The detail draws in one place at a time.
  */
 export function PanesDetail({
+  alwaysOn = false,
   children,
-  empty,
   label,
   onClose,
   open,
 }: {
+  /** Whether the detail stands beside the first pane with no row open, as the exam editor's panel does. */
+  alwaysOn?: boolean;
   /** The detail's header, body and footer. */
   children: ReactNode;
-  /** What the pane shows while no row is open, in one sentence; none for an always-on detail. */
-  empty?: string;
   /** The pane's name for a screen reader. */
   label: string;
   /** Closes a row that the page's own selection holds, in place of the panes' own. */
@@ -239,33 +235,35 @@ export function PanesDetail({
   const isOpen = open ?? rowOpen;
   const sheet = open ?? sheetOpen;
   const close = onClose ?? closePanes;
-  const closes = empty !== undefined || onClose !== undefined;
-  const beside = !closes || (wide && isOpen);
+  const beside = alwaysOn || (wide && isOpen);
 
   return (
     <>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize="35%" id="detail" maxSize="55%" minSize="25%">
-        <aside
-          aria-label={label}
-          className="bg-background flex h-full flex-col"
-        >
-          {beside ? (
-            <PaneModeContext
-              value={{ close: closes ? close : undefined, place: "aside" }}
+      {beside ? (
+        <>
+          <ResizableHandle withHandle />
+          <ResizablePanel
+            defaultSize="35%"
+            id="detail"
+            maxSize="55%"
+            minSize="25%"
+          >
+            <aside
+              aria-label={label}
+              className="bg-background flex h-full flex-col"
             >
-              {children}
-            </PaneModeContext>
-          ) : null}
-          {beside || empty === undefined ? null : (
-            <Empty className="flex-1">
-              <EmptyHeader>
-                <EmptyDescription>{empty}</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          )}
-        </aside>
-      </ResizablePanel>
+              <PaneModeContext
+                value={{
+                  close: alwaysOn ? undefined : close,
+                  place: "aside",
+                }}
+              >
+                {children}
+              </PaneModeContext>
+            </aside>
+          </ResizablePanel>
+        </>
+      ) : null}
       <Drawer
         onOpenChange={(next) => {
           if (!next) {

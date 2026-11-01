@@ -4,16 +4,17 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { DeviceId } from "@repo/backend/confect/exams/sittings/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Duration, Effect, Schema } from "effect";
-import { type ReactNode, useEffect, useState } from "react";
+import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
-import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
-import { PaperFrame } from "@/components/exams/sitting/recovery";
 import { CardSection } from "@/components/shared/card/section";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** Where a tab stands with its attempt's paper: still asking, holding it, or second to another tab. */
 const PaperTab = Schema.Literals(["checking", "elsewhere", "held"]);
+
+/** Where this tab stands with the paper, for the parts of the guard. */
+const PaperTabContext = createContext<typeof PaperTab.Type>("checking");
 
 /** How long a tab asks before it calls itself second, which covers the moment a reload's old page lets go. */
 const HANDOVER = Duration.seconds(1);
@@ -35,9 +36,11 @@ function usePaperTab(attemptId: GenericId.GenericId<"examAttempts">) {
     }
     const name = `nakafa-sitting-paper:${attemptId}`;
     const leaving = new AbortController();
-    const left = new Promise<void>((resolve) => {
-      leaving.signal.addEventListener("abort", () => resolve());
-    });
+    const left = Effect.runPromise(
+      Effect.callback<void>((resume) => {
+        leaving.signal.addEventListener("abort", () => resume(Effect.void));
+      })
+    );
     const hold = () => {
       setTab("held");
       return left;
@@ -81,14 +84,11 @@ export function SittingTabGuard({
   children,
   deviceId,
   slug,
-  title,
 }: {
   readonly attemptId: GenericId.GenericId<"examAttempts">;
   readonly children: ReactNode;
   readonly deviceId: typeof DeviceId.Type;
   readonly slug: TenantSlug;
-  /** The exam's name, for the paper's bar while this tab holds no paper. */
-  readonly title: string;
 }) {
   const tab = usePaperTab(attemptId);
   const signal = useMutation(exams.sittings.signal);
@@ -112,20 +112,27 @@ export function SittingTabGuard({
     );
   }, [attemptId, deviceId, signal, slug, tab]);
 
-  if (tab === "held") {
-    return children;
-  }
+  return <PaperTabContext value={tab}>{children}</PaperTabContext>;
+}
 
-  return (
-    <PaperFrame bar={<PaperBar back={<PaperBack />} title={title} />}>
-      {tab === "elsewhere" ? <SecondTab /> : null}
-    </PaperFrame>
-  );
+/** What this tab draws while it holds the paper. */
+export function SittingTabHeld({ children }: { children: ReactNode }) {
+  return use(PaperTabContext) === "held" ? children : null;
+}
+
+/** What this tab draws while it holds no paper. */
+export function SittingTabWaiting({ children }: { children: ReactNode }) {
+  return use(PaperTabContext) === "held" ? null : children;
 }
 
 /** What a tab says while another tab of the browser holds the paper. */
-function SecondTab() {
+export function SittingTabElsewhere() {
+  const tab = use(PaperTabContext);
   const t = useTranslations("Exams");
+
+  if (tab !== "elsewhere") {
+    return null;
+  }
 
   return (
     <SittingBody>

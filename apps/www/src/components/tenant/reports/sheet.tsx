@@ -190,7 +190,7 @@ function CohortReportsBody() {
           />
         </TablePages>
       </PanesList>
-      <PanesDetail empty={t("detail-empty")} label={t("detail")}>
+      <PanesDetail label={t("detail")}>
         <ReportLineDetail lines={pagination.results} />
       </PanesDetail>
     </Panes>

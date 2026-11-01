@@ -17,9 +17,15 @@ export const pageFrameVariants = cva("contents", {
 /** A box as wide as the page's frame, centred, for what draws its own gutter inside, such as two panes. */
 export const pageBoxVariants = cva("mx-auto w-full max-w-(--page-width)");
 
+/**
+ * The page's gutter, which draws the line every column of a page starts on: the header's first letter, the first
+ * tab, a rail's search and rows, and a table's card. The right edge mirrors it.
+ */
+export const pageGutterVariants = cva("px-4 sm:px-6");
+
 /** One row of a page, its header's, its tab row's or its body's: the page's width and gutter, centred. */
 export const pageRowVariants = cva(
-  "mx-auto w-full max-w-(--page-width) px-4 sm:px-6"
+  `mx-auto w-full max-w-(--page-width) ${pageGutterVariants()}`
 );
 
 /** A readable measure inside a wider page, such as the questions beside a navigator or the messages of a chat. */

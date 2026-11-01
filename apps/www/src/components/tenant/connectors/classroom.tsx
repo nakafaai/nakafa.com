@@ -22,7 +22,6 @@ import { useTranslations } from "use-intl";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableFrame } from "@/components/shared/table/frame";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import {
   forumCall,
@@ -69,13 +68,8 @@ export function ClassroomCourses() {
 
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex items-start gap-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h3 className="text-sm font-medium">{t("courses")}</h3>
-          <p className="text-muted-foreground text-sm">
-            {t("courses-description")}
-          </p>
-        </div>
+      <div className="flex items-center gap-3">
+        <h3 className="min-w-0 flex-1 text-sm font-medium">{t("courses")}</h3>
         <Button
           aria-label={t("courses-refresh")}
           disabled={isLoading}
@@ -162,7 +156,7 @@ function CourseTable({
 
   return (
     <TableFiltersProvider>
-      <TableFrame>
+      <div className="-mx-4 border-t [&_[data-slot=table-cell]]:whitespace-nowrap">
         <DataTable
           columns={[
             courseColumns.text(
@@ -208,7 +202,7 @@ function CourseTable({
           data={preview.courses}
           rowId={(course) => course.courseId}
         />
-      </TableFrame>
+      </div>
     </TableFiltersProvider>
   );
 }

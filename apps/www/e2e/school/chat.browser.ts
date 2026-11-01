@@ -53,11 +53,11 @@ for (const viewport of [
     ).toHaveCount(0);
 
     // The filters keep the unread chats, then the class's threads.
-    await rail.getByRole("tab", { name: "Unread" }).click();
+    await rail.getByRole("button", { name: "Unread" }).click();
     await expect(general).toBeVisible();
-    await rail.getByRole("tab", { name: "Threads" }).click();
+    await rail.getByRole("button", { name: "Threads" }).click();
     await expect(rail.getByText("No results")).toBeVisible();
-    await rail.getByRole("tab", { name: "All" }).click();
+    await rail.getByRole("button", { name: "All" }).click();
     await general.click();
     const field = page.getByRole("textbox", { name: "Write a message" });
     await waitUntilTakenOver(field);
@@ -193,13 +193,13 @@ test("a teacher archives a chat, which keeps its messages and takes no new one, 
   await expect(
     page.getByRole("textbox", { name: "Write a message" })
   ).toHaveCount(0);
-  await page.getByRole("tab", { name: "Archived" }).click();
+  await page.getByRole("button", { name: "Archived" }).click();
   await expect(chat).toBeVisible();
 
   // Restored, it is back in the list, and the filter that showed it leaves.
   await menu().click();
   await page.getByRole("menuitem", { name: "Restore chat" }).click();
-  await expect(page.getByRole("tab", { name: "Archived" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Archived" })).toHaveCount(0);
   await expect(chat).toBeVisible();
   await expect(
     page.getByRole("textbox", { name: "Write a message" })

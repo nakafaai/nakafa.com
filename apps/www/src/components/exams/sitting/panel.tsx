@@ -144,7 +144,6 @@ function SelectedPanel() {
 
   return (
     <PanesDetail
-      empty={t("panel-empty")}
       label={t("panel-label")}
       onClose={() =>
         navigate({ replace: true, resetScroll: false, search: {} })

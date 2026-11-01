@@ -19,7 +19,7 @@ export function ExamPanel() {
   const active = useActiveQuestion();
 
   return (
-    <PanesDetail label={t("teacher-layer")}>
+    <PanesDetail alwaysOn label={t("teacher-layer")}>
       <PaneHeader
         description={Option.match(active, {
           onNone: () => undefined,

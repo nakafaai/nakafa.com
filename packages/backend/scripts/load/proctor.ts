@@ -13,6 +13,7 @@ import {
 } from "effect";
 
 const sittings = examsPublic.sittings;
+const { offline } = examsPublic.screens;
 
 /** The seats that one page of a room's dashboard holds, the most the dashboard serves. */
 const PAGE_SIZE = 100;
@@ -29,9 +30,9 @@ interface ProctorInput {
 
 /**
  * Watches one room as a proctor's dashboard does until the run is done (K25): the first page of
- * the room's seats, and each seat's latest answer, which the dashboard reads per seat so an
- * answer runs only that seat's query again. A seat is watched from the first page that shows
- * it, and each first read is recorded with its timing.
+ * the room's seats, the seats that went silent, and each seat's latest answer, which the dashboard
+ * reads per seat so an answer runs only that seat's query again. A seat is watched from the first
+ * page that shows it, and each first read is recorded with its timing.
  */
 export const runProctor = Effect.fn("load.proctor")(function* (
   input: ProctorInput
@@ -54,6 +55,13 @@ export const runProctor = Effect.fn("load.proctor")(function* (
     }
   );
   yield* timed("query:dashboard", Deferred.await(page)).pipe(Effect.result);
+  const silent = yield* watch(
+    wire,
+    offline,
+    { sittingId, slug },
+    () => undefined
+  );
+  yield* timed("query:offline", Deferred.await(silent)).pipe(Effect.result);
   // Each seat that a page shows is watched until the run is done.
   yield* Effect.raceFirst(
     Deferred.await(input.done),

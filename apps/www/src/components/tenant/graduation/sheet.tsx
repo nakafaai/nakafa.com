@@ -213,7 +213,7 @@ function CohortGraduationBody() {
           />
         </TablePages>
       </PanesList>
-      <PanesDetail empty={t("detail-empty")} label={t("detail")}>
+      <PanesDetail label={t("detail")}>
         <GraduationLineDetail lines={pagination.results} />
       </PanesDetail>
     </Panes>

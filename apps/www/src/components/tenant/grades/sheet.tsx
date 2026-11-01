@@ -216,7 +216,7 @@ export function ClassGradebook({
             />
           </TablePages>
         </PanesList>
-        <PanesDetail empty={t("detail-empty")} label={t("detail")}>
+        <PanesDetail label={t("detail")}>
           {isRead ? <GradeLineDetail lines={pagination.results} /> : null}
         </PanesDetail>
       </Panes>

@@ -74,8 +74,10 @@ export const classTargets = Effect.fn("classroom.tasks.targets")(function* (
  * school key, under the first free address of its title, and records
  * `assignment.published`, the published change. The fan-out writes the inbox
  * row of each member it reaches, scheduled in the same transaction (ADR 0027).
- * A repeat of a client key of the class answers that task and writes nothing.
- * A teacher's publish and the Classroom import both write through it.
+ * A deadline already past tells no one, because a Classroom import brings the
+ * old coursework of a course and that is no news to its students. A repeat of a
+ * client key of the class answers that task and writes nothing. A teacher's
+ * publish and the Classroom import both write through it.
  */
 export const writeTask = Effect.fn("classroom.tasks.write")(function* (
   author: TenantPeopleDoc,
@@ -104,6 +106,7 @@ export const writeTask = Effect.fn("classroom.tasks.write")(function* (
   }
   const fields = { classId: row._id, clientKey: draft.clientKey };
   const writer = yield* DatabaseWriter;
+  const now = yield* Clock.currentTimeMillis;
   const taskId = yield* writer
     .table("classroomTasks")
     .insert({
@@ -111,7 +114,7 @@ export const writeTask = Effect.fn("classroom.tasks.write")(function* (
       ...reach,
       ...(draft.category === null ? {} : { category: draft.category }),
       authorId: author._id,
-      createdAt: yield* Clock.currentTimeMillis,
+      createdAt: now,
       deadline: draft.deadline,
       handedIn: 0,
       latePolicy: draft.latePolicy,
@@ -130,11 +133,13 @@ export const writeTask = Effect.fn("classroom.tasks.write")(function* (
     task: taskId,
     type: "assignment.published",
   });
-  yield* (yield* Scheduler).runAfter(
-    Duration.zero,
-    notificationsInternal.fanout.run,
-    { cursor: null, phase: "students", source: { _tag: "task", taskId } }
-  );
+  if (draft.deadline > now) {
+    yield* (yield* Scheduler).runAfter(
+      Duration.zero,
+      notificationsInternal.fanout.run,
+      { cursor: null, phase: "students", source: { _tag: "task", taskId } }
+    );
+  }
   const jobs = yield* scheduleTaskNotices(
     { _id: taskId, deadline: draft.deadline },
     row.unitId

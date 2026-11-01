@@ -109,6 +109,7 @@ export const fakeServer = (
       flagged: [],
     });
   const values: Record<string, () => unknown> = {
+    "exams/screens:offline": () => [],
     "exams/sittings:dashboard": () =>
       Ref.encodeReturnsSync(sittings.dashboard, {
         attempts: {
@@ -192,6 +193,9 @@ export const fakeServer = (
       MutableList.append(calls, { args, name });
       if (name === "exams/sittings:answer") {
         return answer(args);
+      }
+      if (name === "exams/screens:beat") {
+        return Promise.resolve({ token: "presence" });
       }
       return name === "exams/sittings:enter" ? enter() : Promise.resolve(null);
     },

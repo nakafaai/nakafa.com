@@ -78,13 +78,14 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
  * press itself, so a hover always means the whole row is clickable; a header row, an empty row and a row of plain
  * values keep still. The row says so with `data-pressable`, which a cell that paints its own background, such as a
  * sticky one, keys on to light with the row. A row marked `data-state="selected"` (the one open beside a list) keeps
- * the accent.
+ * the same colour. A row lights in `muted` and never in `accent`, which a button's hover takes, so a button inside a
+ * lit row still reads as its own target.
  */
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       className={cn(
-        "data-[state=selected]:bg-accent data-[state=selected]:text-accent-foreground data-pressable:hover:bg-accent data-pressable:hover:text-accent-foreground border-b transition-colors data-pressable:cursor-pointer",
+        "data-[state=selected]:bg-muted data-pressable:hover:bg-muted border-b transition-colors data-pressable:cursor-pointer",
         className
       )}
       data-pressable={props.onClick === undefined ? undefined : ""}
