@@ -345,21 +345,7 @@ function ClassBody({
     );
   }
   if (view._tag === "home") {
-    return (
-      <>
-        <ClassHeader>
-          {Arr.contains(klass.can, "post.publish") ? (
-            <ButtonGroup>
-              <NewPostPoll />
-              <NewAnnouncement />
-            </ButtonGroup>
-          ) : null}
-        </ClassHeader>
-        <ClassScroll>
-          <ClassHome />
-        </ClassScroll>
-      </>
-    );
+    return <HomeBody publishes={everyone} />;
   }
   if (view._tag === "library") {
     return (
@@ -419,6 +405,25 @@ function ClassBody({
       <ForumFrame shown="rail">
         <ForumPick />
       </ForumFrame>
+    </>
+  );
+}
+
+/** The class's announcements, with New announcement for its subject teachers. */
+function HomeBody({ publishes }: { publishes: boolean }) {
+  return (
+    <>
+      <ClassHeader>
+        {publishes ? (
+          <ButtonGroup>
+            <NewPostPoll />
+            <NewAnnouncement />
+          </ButtonGroup>
+        ) : null}
+      </ClassHeader>
+      <ClassScroll>
+        <ClassHome />
+      </ClassScroll>
     </>
   );
 }

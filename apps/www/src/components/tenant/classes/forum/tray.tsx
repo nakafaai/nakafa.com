@@ -1,11 +1,7 @@
 import { useAction, useMutation } from "@confect/react";
 import { Cancel01Icon, File02Icon } from "@hugeicons/core-free-icons";
-import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import {
-  ATTACHMENT_LIMIT,
-  AttachmentKind,
-} from "@repo/backend/confect/classroom/forum/attachment";
+import { ATTACHMENT_LIMIT } from "@repo/backend/confect/classroom/forum/attachment";
 import {
   Attachment,
   AttachmentAction,
@@ -23,7 +19,6 @@ import {
   Effect,
   Function as Fn,
   Option,
-  Schema,
   String as Str,
 } from "effect";
 import { useState } from "react";
@@ -33,40 +28,14 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
-import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
-import { uploadAttachment } from "@/components/tenant/classes/forum/upload";
-
-/**
- * One file on its way into the next message: what the tray shows of it, its address on this device,
- * which shows a picture before the server holds it, and the upload the server registered.
- */
-const TrayFile = Schema.Struct({
-  byteSize: Schema.Int,
-  height: Schema.NullOr(Schema.Int),
-  key: Schema.String,
-  kind: AttachmentKind,
-  name: Schema.String,
-  preview: Schema.Option(Schema.String),
-  upload: Schema.Option(Id("classroomUploads")),
-  width: Schema.NullOr(Schema.Int),
-});
+import {
+  type TrayFile,
+  uploadAttachment,
+} from "@/components/tenant/classes/forum/upload";
 
 /** The longest name a message keeps. */
 const NAME_LIMIT = 160;
-
-/** The file as its message shows it before the server answers, from what this device holds. */
-export const shownFile = (
-  file: typeof TrayFile.Type
-): ForumMessage["attachments"][number] => ({
-  address: Option.getOrNull(file.preview),
-  byteSize: file.byteSize,
-  height: file.height,
-  kind: file.kind,
-  name: file.name,
-  thumbnail: Option.getOrNull(file.preview),
-  width: file.width,
-});
 
 /** The kinds of file the picker offers for a document. */
 export const DOCUMENT_ACCEPT =

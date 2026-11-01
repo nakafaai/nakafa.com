@@ -3,7 +3,7 @@ import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { getTileShifts } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Predicate } from "effect";
-import { type RefObject, useEffect, useRef } from "react";
+import { type RefObject, useImperativeHandle, useRef } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
@@ -89,12 +89,7 @@ function TryoutHubPreference({
     ).then(() => undefined);
   }
 
-  useEffect(() => {
-    savePick.current = handleCountryClick;
-    return () => {
-      savePick.current = null;
-    };
-  });
+  useImperativeHandle(savePick, () => handleCountryClick);
 
   return null;
 }

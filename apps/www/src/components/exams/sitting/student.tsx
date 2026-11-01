@@ -133,6 +133,22 @@ export function StudentSitting({
     return <StudentScheduled sitting={sitting} />;
   }
 
+  return <StudentEntry entry={entry} isSettled={isSettled} sitting={sitting} />;
+}
+
+/** The token field of a sitting the student has not entered, on the school's paper. */
+function StudentEntry({
+  entry,
+  isSettled,
+  sitting,
+}: {
+  readonly entry: ReturnType<typeof useSittingEntry>;
+  /** Whether the session has settled, so a press can go to the server. */
+  readonly isSettled: boolean;
+  readonly sitting: typeof SittingView.Type;
+}) {
+  const t = useTranslations("Exams");
+
   return (
     <PaperFrame
       bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}

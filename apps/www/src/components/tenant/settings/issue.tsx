@@ -3,19 +3,13 @@ import identity from "@repo/backend/confect/_generated/refs/identity";
 import { LoginName } from "@repo/backend/confect/identity/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { Input } from "@repo/design-system/components/ui/input";
+import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Option, Schema } from "effect";
-import { startTransition, useId, useState } from "react";
+import { startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { CardView } from "@/components/tenant/settings/card";
+import { LoginNameField } from "@/components/tenant/settings/login";
 import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/settings/issue";
@@ -42,7 +36,6 @@ export function SchoolIssueCardDialog({
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
-  const id = useId();
   const issue = useMutation(identity.cards.issue);
   const [loginName, setLoginName] = useState("");
   const login = Schema.decodeOption(LoginName)(loginName.trim().toLowerCase());
@@ -87,20 +80,11 @@ export function SchoolIssueCardDialog({
       title={t("card-issue-title")}
     >
       <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor={`${id}-login`}>
-            {t("card-login-name")}
-          </FieldLabel>
-          <Input
-            aria-invalid={problem}
-            id={`${id}-login`}
-            onChange={(event) => setLoginName(event.target.value)}
-            placeholder={t("card-login-name-placeholder")}
-            value={loginName}
-          />
-          <FieldDescription>{t("student-login-rule")}</FieldDescription>
-          <FieldError>{problem ? t("student-login-rule") : null}</FieldError>
-        </Field>
+        <LoginNameField
+          onChange={setLoginName}
+          problem={problem}
+          value={loginName}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );
