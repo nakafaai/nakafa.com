@@ -22,7 +22,6 @@ import {
 import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
@@ -39,6 +38,7 @@ import { useClassScope } from "@/components/tenant/classes/scope";
 import { NewTask } from "@/components/tenant/classes/tasks/create";
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { useClockZone } from "@/components/tenant/settings/time";
 import { useKeptRows } from "@/lib/data/kept";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolClassTaskTarget } from "@/lib/routing/school/target";
@@ -162,7 +162,7 @@ function TaskListBody() {
  */
 function useTaskColumns(categories: readonly string[]) {
   const t = useTranslations("Classroom");
-  const formatZone = useFormatTimeZone();
+  const timeZone = useClockZone();
   const format = useFormatter();
   const { can } = useClassScope();
   const standingChoices = useStandingChoices();
@@ -188,13 +188,13 @@ function useTaskColumns(categories: readonly string[]) {
         <span className="text-muted-foreground tabular-nums">
           {format.dateTime(
             DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium", timeStyle: "short" }
+            { dateStyle: "medium", timeStyle: "short", timeZone }
           )}
         </span>
       ),
       header: t("task-deadline"),
       id: "deadline",
-      timeZone: formatZone,
+      timeZone: () => timeZone,
     }),
     Arr.contains(can, "task.submit")
       ? // A student's standing, which the server filters by; the same rule keeps the rows the table shows.

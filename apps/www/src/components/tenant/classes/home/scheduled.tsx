@@ -51,6 +51,7 @@ import {
   deadlineOf,
   localDeadline,
 } from "@/components/tenant/classes/tasks/deadline";
+import { useClockZone } from "@/components/tenant/settings/time";
 
 /**
  * The announcements the viewer keeps for later, above the class's posts, the soonest first. Nobody else in the class
@@ -76,9 +77,10 @@ export function WaitingPosts({ posts }: { posts: readonly WaitingPost[] }) {
 function WaitingRow({ post }: { post: WaitingPost }) {
   const t = useTranslations("Classroom");
   const format = useFormatter();
+  const timeZone = useClockZone();
   const when = format.dateTime(
     DateTime.toDateUtc(DateTime.makeUnsafe(post.publishAt)),
-    { dateStyle: "medium", timeStyle: "short" }
+    { dateStyle: "medium", timeStyle: "short", timeZone }
   );
 
   return (
@@ -186,10 +188,11 @@ function WaitingDialog({
   const edit = useMutation(classroom.scheduled.edit);
   const [writtenText, setText] = useState<string | null>(null);
   const [writtenWhen, setWhen] = useState<string | null>(null);
+  const timeZone = useClockZone();
   const text = writtenText ?? post.text;
-  const when = writtenWhen ?? localDeadline(post.publishAt);
+  const when = writtenWhen ?? localDeadline(post.publishAt, timeZone);
   const body = Str.trim(text);
-  const publishAt = deadlineOf(when);
+  const publishAt = deadlineOf(when, timeZone);
   const ready =
     Schema.is(PostText)(body) &&
     Option.isSome(publishAt) &&

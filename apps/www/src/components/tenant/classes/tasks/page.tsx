@@ -36,6 +36,7 @@ import {
 } from "@/components/tenant/classes/tasks/optimistic";
 import { TaskWorkTable } from "@/components/tenant/classes/tasks/work";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
+import { useClockZone } from "@/components/tenant/settings/time";
 
 /**
  * One task of a class: what it asks and when it is due, worth how many points, and what late work
@@ -85,6 +86,7 @@ export function TaskPage({ task: address }: { task: string }) {
 function TaskDetails({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
   const format = useFormatter();
+  const timeZone = useClockZone();
 
   return (
     <section className="flex flex-col gap-3 rounded-xl border p-4">
@@ -99,6 +101,7 @@ function TaskDetails({ task }: { task: ClassTask }) {
             {
               dateStyle: "full",
               timeStyle: "short",
+              timeZone,
             }
           )}
         </dd>

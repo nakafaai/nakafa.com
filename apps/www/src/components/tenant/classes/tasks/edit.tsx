@@ -24,6 +24,7 @@ import {
   type ClassTask,
   editUpdate,
 } from "@/components/tenant/classes/tasks/optimistic";
+import { useClockZone } from "@/components/tenant/settings/time";
 
 /**
  * The header's Edit task on a task's page, for its teacher. It stands from the first paint and waits disabled
@@ -75,8 +76,9 @@ function EditTaskDialog({ task }: { task: ClassTask }) {
   const [open, setOpen] = useState(true);
   // The form holds only what the teacher changed, and shows the task as it stands until then.
   const [edited, setDraft] = useState<typeof TaskDraft.Type | null>(null);
-  const draft = edited ?? draftOf(task);
-  const checked = checkedDraft(draft);
+  const timeZone = useClockZone();
+  const draft = edited ?? draftOf(task, timeZone);
+  const checked = checkedDraft(draft, timeZone);
   const changed = Option.exists(
     checked,
     (next) =>
