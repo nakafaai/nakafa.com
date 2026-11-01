@@ -75,7 +75,7 @@ const readTrackSets = (args: TrackSets) =>
   Stream.runCollect(
     Stream.paginate(null, (cursor: string | null) =>
       Effect.map(
-        readTryoutSetList(Option.none(), {
+        readTryoutSetList({
           ...args,
           paginationOpts: { cursor, numItems: TRYOUT_SET_PAGE_SIZE },
         }),

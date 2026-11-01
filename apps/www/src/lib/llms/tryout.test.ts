@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
 import { getTryoutLlmsText } from "@/lib/llms/tryout";
 
@@ -140,7 +140,6 @@ describe("try-out Markdown", () => {
       expect(track).toContain("Set 1");
       expect(track).toContain("Set 2");
       expect(catalog.sets).toHaveBeenLastCalledWith(
-        Option.none(),
         expect.objectContaining({
           paginationOpts: expect.objectContaining({ cursor: "next" }),
         })
