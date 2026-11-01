@@ -39,3 +39,7 @@ export function markPageRead(
       : row
   );
 }
+
+/** Whether any row of the inbox waits to be read. */
+export const hasUnread = (rows: readonly ListNotification[]) =>
+  Arr.some(rows, (row) => row.readAt === undefined);

@@ -63,9 +63,9 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
   });
   await expect(
     page
-      .getByRole("navigation", { name: "Class" })
-      .getByRole("link", { name: "Grades" })
-  ).toHaveAttribute("aria-current", "page");
+      .getByRole("tablist", { name: "Class" })
+      .getByRole("tab", { name: "Grades" })
+  ).toHaveAttribute("aria-selected", "true");
 
   // No grade holds a result yet, so the column's head is its name, and no filter opens an empty menu.
   await expect(

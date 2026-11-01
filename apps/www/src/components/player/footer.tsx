@@ -2,10 +2,16 @@ import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
   GridViewIcon,
+  InformationCircleIcon,
   TaskDone01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@repo/design-system/components/ui/popover";
 import { Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -18,20 +24,12 @@ import { usePlayer } from "@/components/player/provider";
  * (`PlayerFlag`), and next at the end. The outer zones take equal widths, so the centre sits on the
  * screen's middle by construction, and previous and next keep their places whatever the labels say or the
  * view shows, so nothing moves when next becomes review or the view changes. It sticks to the
- * bottom of the screen, so a learner moves on without scrolling back. A `note` that holds for the whole paper
- * stands in the centre from the large breakpoint, and on its own line under the row below it, where the row
- * has no room for words. Each zone names its cell, so a note in the centre never pushes next out of the row.
+ * bottom of the screen, so a learner moves on without scrolling back, and it is one line at every width: words
+ * about the whole paper stand behind `PlayerNote`, never in the row.
  * The list measures the footer through `data-player-footer`, so the end of the list
  * counts as reached once it clears the footer.
  */
-export function PlayerFooter({
-  children,
-  note,
-}: {
-  children?: ReactNode;
-  /** A line about the whole paper, such as a try's answers not being saved. */
-  note?: ReactNode;
-}) {
+export function PlayerFooter({ children }: { children: ReactNode }) {
   const t = useTranslations("Player");
 
   return (
@@ -39,24 +37,58 @@ export function PlayerFooter({
       className="bg-background sticky bottom-0 z-10 border-t pb-[env(safe-area-inset-bottom,0px)]"
       data-player-footer=""
     >
-      <fieldset className="mx-auto grid min-h-16 w-full max-w-7xl min-w-0 grid-cols-[1fr_auto_1fr] grid-rows-[4rem] items-center gap-x-2 border-0 px-4 sm:px-6">
+      <fieldset className="mx-auto grid h-16 w-full max-w-7xl min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-x-2 border-0 px-4 sm:px-6">
         <legend className="sr-only">{t("controls")}</legend>
-        <div className="col-start-1 row-start-1 flex justify-start">
+        <div className="flex justify-start">
           <PlayerPrevious />
         </div>
-        <div className="relative col-start-2 row-start-1 flex items-center self-stretch">
+        <div className="relative flex items-center self-stretch">
           {children}
         </div>
-        <div className="col-start-3 row-start-1 flex justify-end">
+        <div className="flex justify-end">
           <PlayerNext />
         </div>
-        {note === undefined ? null : (
-          <p className="text-muted-foreground col-span-full pb-2 text-center text-xs lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:pb-0 lg:text-sm">
-            {note}
-          </p>
-        )}
       </fieldset>
     </footer>
+  );
+}
+
+/**
+ * Words about the whole paper, such as a try's answers not being saved, behind an info control beside the
+ * footer's centre: after the navigator opener below the large breakpoint, out of the row's flow as the flag is, and
+ * on the centre from it, where no opener shows. So the opener stays on the screen's middle and the footer keeps one
+ * line. A mouse opens the words by resting on the control, and a press, a touch or the keyboard by choosing it.
+ */
+export function PlayerNote({
+  children,
+  defaultOpen = false,
+}: {
+  children: ReactNode;
+  /** Whether the words show on their own, for words a learner must not miss. */
+  defaultOpen?: boolean;
+}) {
+  const t = useTranslations("Player");
+
+  return (
+    <Popover defaultOpen={defaultOpen}>
+      <PopoverTrigger
+        openOnHover
+        render={
+          <Button
+            aria-label={t("note")}
+            className="max-lg:absolute max-lg:start-full max-lg:top-1/2 max-lg:ms-2 max-lg:-translate-y-1/2"
+            size="icon"
+            type="button"
+            variant="outline"
+          />
+        }
+      >
+        <HugeIcons icon={InformationCircleIcon} />
+      </PopoverTrigger>
+      <PopoverContent className="text-sm" side="top">
+        {children}
+      </PopoverContent>
+    </Popover>
   );
 }
 

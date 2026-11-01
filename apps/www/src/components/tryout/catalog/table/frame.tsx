@@ -6,8 +6,10 @@ import {
   TableCell,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { cn } from "cn";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { tableCardVariants } from "@/components/shared/table/card";
 import { TryoutTableHeader } from "@/components/tryout/catalog/table/header";
 import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
 import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
@@ -42,7 +44,10 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
     <div className="mx-auto flex min-h-0 w-full max-w-3xl min-w-0 flex-1 flex-col px-6 py-4">
       <div
         aria-busy={data.busy}
-        className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md border"
+        className={cn(
+          tableCardVariants(),
+          "bg-card relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md border"
+        )}
         data-catalog-snapshot={data.snapshotId}
       >
         <Table

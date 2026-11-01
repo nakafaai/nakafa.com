@@ -10,6 +10,7 @@ const BUTTON_VARIANTS = [
   "outline",
   "secondary",
   "secondary-outline",
+  "inverse-outline",
   "ghost",
   "link",
 ] as const;
