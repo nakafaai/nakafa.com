@@ -14,7 +14,11 @@ const LINE_TYPES = ["email", "number", "password", "tel", "text", "url"];
 export function pressMainAction(
   event: Pick<
     KeyboardEvent<HTMLElement>,
-    "currentTarget" | "defaultPrevented" | "nativeEvent" | "preventDefault" | "target"
+    | "currentTarget"
+    | "defaultPrevented"
+    | "nativeEvent"
+    | "preventDefault"
+    | "target"
   >,
   footer: HTMLElement | null
 ) {

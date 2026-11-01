@@ -7,17 +7,19 @@ afterEach(() => {
 
 /** A dialog's panel and footer, with what its field and its main action hold. */
 function dialog(field: string, main: string) {
-  document.body.innerHTML = `<div id="panel">${field}</div><div id="footer"><button id="cancel"></button>${main}</div>`;
+  const panel = document.createElement("div");
+  const footer = document.createElement("div");
 
-  return {
-    footer: document.getElementById("footer"),
-    panel: document.getElementById("panel") as HTMLElement,
-  };
+  panel.innerHTML = field;
+  footer.innerHTML = `<button></button>${main}`;
+  document.body.append(panel, footer);
+
+  return { footer, panel };
 }
 
 /** Sends an Enter from the panel's first child, and answers how often the main action was pressed. */
 function pressEnter(
-  { footer, panel }: ReturnType<typeof dialog>,
+  { footer, panel }: { footer: HTMLElement | null; panel: HTMLElement },
   overrides: Partial<Parameters<typeof pressMainAction>[0]> = {}
 ) {
   let pressed = 0;
@@ -33,7 +35,7 @@ function pressEnter(
       preventDefault: () => {
         prevented += 1;
       },
-      target: panel.firstElementChild as HTMLElement,
+      target: panel.firstElementChild ?? panel,
       ...overrides,
     },
     footer
