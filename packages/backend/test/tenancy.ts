@@ -244,6 +244,18 @@ export const tenancyFixture = Effect.gen(function* () {
     anonymous: client(t),
     /** Sends one HTTP request to the auth router, as a browser or a client would. */
     fetch: (path: string, init?: RequestInit) => t.fetch(path, init),
+    /** Sends one HTTP request with the verified token of one account, as an agent of theirs would. */
+    fetchAs: (
+      account: keyof typeof seeded.users,
+      path: string,
+      init?: RequestInit
+    ) =>
+      t
+        .withIdentity({
+          sessionId: seeded.users[account].sessionId,
+          subject: seeded.users[account].authUserId,
+        })
+        .fetch(path, init),
     /** Runs the scheduled functions whose time has come. */
     finishScheduled: () =>
       Effect.promise(() => t.finishAllScheduledFunctions(vi.runAllTimers)),

@@ -1,6 +1,8 @@
+import { SCHOOL_HOST_MCP_PATH } from "@repo/backend/confect/integrations/api";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Option, Schema } from "effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
+import { readAgentChallenge } from "@/lib/agent/discovery";
 import { runServerEffect } from "@/lib/server/fn";
 import { CONVEX_SITE_URL } from "@/lib/server/runtime";
 import {
@@ -48,10 +50,14 @@ const forward = Effect.fn("www.tenant.api.forward")(
       })
     );
     const bytes = yield* answer.arrayBuffer;
-    return new Response(bytes, {
-      headers: forwardedResponseHeaders(answer.headers),
-      status: answer.status,
-    });
+    const headers = forwardedResponseHeaders(answer.headers);
+    if (
+      answer.status === 401 &&
+      new URL(request.url).pathname === SCHOOL_HOST_MCP_PATH
+    ) {
+      headers.set("www-authenticate", readAgentChallenge(request));
+    }
+    return new Response(bytes, { headers, status: answer.status });
   },
   Effect.scoped,
   Effect.provide(FetchClient)

@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { forwardSchoolApiRequest } from "@/lib/tenant/api.server";
 
 /**
- * The school MCP server on a school host (ADR 0026, ADR 0029), forwarded to the Convex site
- * of the school's cell, where the bearer token is checked. Any other host answers not found.
+ * The MCP server on a school host and on the main site (ADR 0026, ADR 0029), forwarded to the
+ * Convex site of the cell, where the bearer token is checked.
  */
 export const Route = createFileRoute("/mcp")({
   server: {

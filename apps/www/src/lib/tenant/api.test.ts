@@ -43,12 +43,18 @@ describe("lib/tenant/api", () => {
     ).toBe(true);
   });
 
-  it("forwards nothing from a host that names no school", () => {
+  it("forwards only the MCP server from a host that names no school", () => {
     expect(
       Option.isNone(
         schoolApiTarget(requestTo("nakafa.com", "/api/v1/periods"), SITE)
       )
     ).toBe(true);
+    expect(
+      Option.map(
+        schoolApiTarget(requestTo("nakafa.com", "/mcp"), SITE),
+        (url) => url.href
+      )
+    ).toEqual(Option.some(`${SITE}/api/school/mcp`));
   });
 
   it("keeps the bearer token and drops the cookie both ways", () => {
