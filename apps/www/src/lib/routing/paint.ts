@@ -7,7 +7,7 @@ const FRAME_LIMIT = "100 millis";
 const nextPaint = Effect.callback<void>((resume) => {
   const frame = requestAnimationFrame(() => resume(Effect.void));
   return Effect.sync(() => cancelAnimationFrame(frame));
-}).pipe(Effect.andThen(Effect.sleep(0)));
+}).pipe(Effect.andThen(Effect.yieldNow));
 
 /**
  * Lets the browser paint a press before the next page renders. A press runs the
@@ -20,5 +20,10 @@ export const paintFirst = () =>
   typeof document === "undefined"
     ? undefined
     : Effect.runPromise(
-        nextPaint.pipe(Effect.raceFirst(Effect.sleep(FRAME_LIMIT)))
+        nextPaint.pipe(
+          Effect.timeoutOrElse({
+            duration: FRAME_LIMIT,
+            orElse: () => Effect.void,
+          })
+        )
       );
