@@ -64,7 +64,9 @@ test("a teacher gives a question a shared reading and a video, and the student m
     timeout: readinessTimeoutMilliseconds,
   });
   // The video waits for the student's press, and its player keeps them on the paper.
-  await page.getByRole("button", { name: "Percakapan" }).click();
+  const video = page.getByRole("button", { name: "Percakapan" });
+  await expect(video).toHaveCount(1);
+  await video.click();
   const player = page.getByTitle("Percakapan");
   await expect(player).toBeVisible();
   expect(await player.getAttribute("sandbox")).not.toContain("allow-popups");
