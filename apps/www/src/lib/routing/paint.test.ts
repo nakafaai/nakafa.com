@@ -3,11 +3,8 @@ import { paintFirst } from "@/lib/routing/paint";
 
 describe("paintFirst", () => {
   it("waits for a frame before the move goes on", async () => {
-    const frames: FrameRequestCallback[] = [];
-    vi.stubGlobal("requestAnimationFrame", (draw: FrameRequestCallback) => {
-      frames.push(draw);
-      return 1;
-    });
+    const frame = vi.fn<typeof requestAnimationFrame>(() => 1);
+    vi.stubGlobal("requestAnimationFrame", frame);
     let moved = false;
     const move = paintFirst()?.then(() => {
       moved = true;
@@ -16,7 +13,7 @@ describe("paintFirst", () => {
     await Promise.resolve();
     expect(moved).toBe(false);
 
-    frames[0]?.(0);
+    frame.mock.calls[0]?.[0](0);
     await move;
     expect(moved).toBe(true);
     vi.unstubAllGlobals();
