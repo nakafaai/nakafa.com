@@ -1,12 +1,15 @@
+import { useAction } from "@confect/react";
 import {
   Cancel01Icon,
   CheckmarkBadge01Icon,
   CreditCardIcon,
+  Download04Icon,
   Edit02Icon,
   Invoice01Icon,
   Mail01Icon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
+import billing from "@repo/backend/confect/_generated/refs/billing";
 import { Button } from "@repo/design-system/components/ui/button";
 import { CardContent } from "@repo/design-system/components/ui/card";
 import {
@@ -26,6 +29,7 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "use-intl";
+import { RowAction, useInvoiceDownload } from "@/components/billing/invoice";
 import {
   CardSection,
   CardSectionFooter,
@@ -33,12 +37,14 @@ import {
 import { columnAlign } from "@/components/shared/table/align";
 import { TableFrame } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { useTenant } from "@/components/tenant/context";
 import {
   formatBillingDate,
   formatCount,
   formatMinorAmount,
 } from "@/lib/billing/plan";
 import { type SchoolBilling, transferMailto } from "@/lib/billing/school";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 /** The look of each state of an invoice in its table. */
 const INVOICE_LOOKS = {
@@ -121,7 +127,10 @@ export function SchoolInvoicesCard({
                       />
                     </TableCell>
                     <TableCell className={columnAlign({ align: "menu" })}>
-                      <SchoolInvoiceAction invoice={invoice} />
+                      <div className="flex items-center justify-end gap-1">
+                        <SchoolInvoiceDownload invoice={invoice} />
+                        <SchoolInvoiceAction invoice={invoice} />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -138,6 +147,33 @@ export function SchoolInvoicesCard({
         }
       />
     </CardSection>
+  );
+}
+
+/** Hands over the PDF of an invoice that already holds its number. */
+function SchoolInvoiceDownload({
+  invoice,
+}: {
+  invoice: SchoolBilling["invoices"][number];
+}) {
+  const t = useTranslations("SchoolSettings");
+  const locale = useLocale();
+  const { slug } = useTenant();
+  const draw = useAction(billing.receipts.school);
+  const { download, isPending } = useInvoiceDownload();
+
+  if (invoice.number === "" || !isActiveLocale(locale)) {
+    return null;
+  }
+  return (
+    <RowAction
+      icon={Download04Icon}
+      isPending={isPending}
+      label={t("invoice-download")}
+      onClick={() =>
+        download(() => draw({ locale, number: invoice.number, slug }))
+      }
+    />
   );
 }
 

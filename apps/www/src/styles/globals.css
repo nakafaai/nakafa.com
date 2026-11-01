@@ -60,9 +60,11 @@
 }
 
 /*
- * The Arabic keypad's face: Amiri Quran with balanced metrics. Amiri Quran's ascent
- * (1.815em) is far taller than its descent (0.635em), so a line box sets its
- * baseline 0.59em below the middle and a key's letter sits low, past its border.
+ * The face of one line of Arabic beside other things, a key's letter or a surah's
+ * name: Amiri Quran with balanced metrics. Amiri Quran's ascent (1.815em) is far
+ * taller than its descent (0.635em), so a line box sets its baseline 0.59em below
+ * the middle: a key's letter sits low, past its border, and a surah's name pushes
+ * its title 5.5px below the number's center.
  * These overrides move the baseline up to where the letters' ink, from the hamza
  * above alef to the tails of jim and mim, is shared most evenly about a key's
  * centre: measured at the key's 18px, jim's ink centre lies 5.6px below it and
@@ -72,7 +74,7 @@
  * subset too, as Amiri Quran does; both files are the ones the page already loads.
  */
 @font-face {
-  font-family: "Amiri Quran Keys";
+  font-family: "Amiri Quran Line";
   font-style: normal;
   font-display: block;
   font-weight: 400;
@@ -86,7 +88,7 @@
 }
 
 @font-face {
-  font-family: "Amiri Quran Keys";
+  font-family: "Amiri Quran Line";
   font-style: normal;
   font-display: block;
   font-weight: 400;

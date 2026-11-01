@@ -2,18 +2,18 @@ import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 import { cn } from "cn";
 import type React from "react";
 
-export type TabsVariant = "default" | "underline";
-
+/**
+ * The one tab bar of the product, a page's second header row, a pane's or a dialog's alike. The current tab reads in the
+ * text color with its underline over the bar's line, in light and dark, and the others stay muted. Route tabs pass a
+ * `Link` through `render`. A narrow screen scrolls the bar within itself, never the page.
+ */
 export function Tabs({
   className,
   ...props
 }: TabsPrimitive.Root.Props): React.ReactElement {
   return (
     <TabsPrimitive.Root
-      className={cn(
-        "flex flex-col gap-2 data-[orientation=vertical]:flex-row",
-        className
-      )}
+      className={cn("flex shrink-0 flex-col gap-2", className)}
       data-slot="tabs"
       {...props}
     />
@@ -21,37 +21,21 @@ export function Tabs({
 }
 
 export function TabsList({
-  variant = "default",
   className,
-  children,
   ...props
-}: TabsPrimitive.List.Props & {
-  variant?: TabsVariant;
-}): React.ReactElement {
+}: TabsPrimitive.List.Props): React.ReactElement {
   return (
-    <TabsPrimitive.List
-      className={cn(
-        "text-muted-foreground relative z-0 flex w-fit items-center justify-center-safe gap-x-0.5",
-        "data-[orientation=vertical]:flex-col",
-        variant === "default"
-          ? "bg-muted text-muted-foreground rounded-lg p-0.5"
-          : "*:data-[slot=tabs-tab]:hover:bg-accent *:data-[slot=tabs-tab]:hover:text-accent-foreground data-[orientation=horizontal]:py-1 data-[orientation=vertical]:px-1",
-        className
-      )}
-      data-slot="tabs-list"
-      {...props}
-    >
-      {children}
-      <TabsPrimitive.Indicator
+    // The line under the bar stands outside its scroller, so the current tab's underline covers it.
+    <div className="w-full shrink-0 border-b">
+      <TabsPrimitive.List
         className={cn(
-          "absolute bottom-0 left-0 h-(--active-tab-height) w-(--active-tab-width) translate-x-(--active-tab-left) -translate-y-(--active-tab-bottom) transition-[width,translate] ease-in-out motion-reduce:transition-none",
-          variant === "underline"
-            ? "bg-primary z-10 data-[orientation=horizontal]:h-0.5 data-[orientation=horizontal]:translate-y-px data-[orientation=vertical]:w-0.5 data-[orientation=vertical]:-translate-x-px"
-            : "bg-background dark:bg-input -z-1 rounded-md shadow-sm/5"
+          "-mb-px flex h-12 w-full gap-1 overflow-x-auto",
+          className
         )}
-        data-slot="tab-indicator"
+        data-slot="tabs-list"
+        {...props}
       />
-    </TabsPrimitive.List>
+    </div>
   );
 }
 
@@ -62,11 +46,7 @@ export function TabsTab({
   return (
     <TabsPrimitive.Tab
       className={cn(
-        // The indicator measures the selected tab when it is released, and a
-        // tab still shrunk then puts the indicator off by up to 2px for good.
-        // So the tab shrinks over the press and returns at once: scale is in
-        // the pressed transition only.
-        "pressable hover:text-muted-foreground focus-visible:ring-ring data-active:text-foreground relative flex h-9 shrink-0 grow items-center justify-center gap-1.5 rounded-md border border-transparent px-[calc(--spacing(2.5)-1px)] text-sm whitespace-nowrap transition-[color,background-color,box-shadow] outline-none focus-visible:ring-2 active:transition-[scale,color,background-color,box-shadow] data-disabled:pointer-events-none data-disabled:opacity-64 data-[orientation=vertical]:w-full data-[orientation=vertical]:justify-start sm:h-8 sm:text-sm [&_svg]:pointer-events-none [&_svg]:-mx-0.5 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4",
+        "text-muted-foreground hover:text-foreground focus-visible:ring-ring data-active:border-foreground data-active:text-foreground inline-flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 text-sm font-medium whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-inset disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4",
         className
       )}
       data-slot="tabs-tab"

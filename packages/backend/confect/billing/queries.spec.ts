@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import {
@@ -29,6 +30,7 @@ const ProOffers = Schema.Array(
 const RecentPayment = Schema.Struct({
   amount: Schema.Int,
   currency: BillingCurrency,
+  id: Id("billingPayments"),
   kind: Schema.Literals(["cycle", "pass", "invoice", "credits"]),
   paidAt: Schema.Finite,
   rail: BillingRail,

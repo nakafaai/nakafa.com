@@ -4,6 +4,7 @@ import { NotificationView } from "@repo/backend/confect/notifications/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 import {
+  hasUnread,
   type ListNotification,
   markPageRead,
   markRowRead,
@@ -34,6 +35,12 @@ function row(id: string, readAt?: number): ListNotification {
 }
 
 describe("inbox list state", () => {
+  it("finds an unread row, and none in a read or empty inbox", () => {
+    expect(hasUnread([row("first", 3), row("second")])).toBe(true);
+    expect(hasUnread([row("first", 3)])).toBe(false);
+    expect(hasUnread([])).toBe(false);
+  });
+
   it("marks only the row with the given id read at the given moment", () => {
     expect(
       markRowRead([row("first"), row("second")], notificationId("first"), 5)

@@ -1,0 +1,13 @@
+import { ConvexFunctionDefinitions, RegisteredConvexFunction, type RegisteredFunctions } from "@confect/server";
+import databaseSchema from "../../schema";
+import groupLayer from "../../../billing/receipts.impl";
+
+const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<Returns>) => (ctx: Ctx, args: Args) => handler(ctx, args);
+
+const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../billing/receipts.spec")["default"]>(databaseSchema, groupLayer);
+
+export default {
+["download"]: RegisteredConvexFunction.register({ ...definitions["download"], handler: forward(definitions["download"].handler) }),
+["school"]: RegisteredConvexFunction.register({ ...definitions["school"], handler: forward(definitions["school"].handler) }),
+["read"]: RegisteredConvexFunction.register({ ...definitions["read"], handler: forward(definitions["read"].handler) }),
+} as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../billing/receipts.spec")["default"]>;

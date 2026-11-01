@@ -4,9 +4,11 @@ import records from "@repo/backend/confect/_generated/refs/records";
 import { Array as Arr, Option, Schema } from "effect";
 import { isDraft } from "@/components/tenant/settings/state";
 import {
+  amendSchemeChange,
   checkedScheme,
   draftOfScheme,
   nextEffectiveFrom,
+  removeSchemeChange,
   type SchemeVersion,
   storeSchemeChange,
 } from "@/components/tenant/settings/versions";
@@ -22,6 +24,7 @@ const version = (id: string, effectiveFrom: number): SchemeVersion => ({
   effectiveFrom,
   id: Schema.decodeUnknownSync(Id("gradingSchemes"))(id),
   kktp: 75,
+  used: false,
 });
 
 describe("components/tenant/settings/versions", () => {
@@ -146,5 +149,33 @@ describe("components/tenant/settings/versions", () => {
       })
     );
     expect(other.page).toHaveLength(1);
+  });
+
+  it("corrects a version at once, and takes a removed one out of the list", () => {
+    const first = version("version-1", 1000);
+    const second = version("version-2", 2000);
+    const local = createLocalStore();
+    local.seed(
+      records.schemes.list,
+      { paginationOpts: paging, slug },
+      pageOf([second, first])
+    );
+    local.seed(
+      records.schemes.list,
+      { paginationOpts: paging, slug: otherSlug },
+      pageOf([second])
+    );
+    amendSchemeChange(local.store, {
+      bands: [{ label: "Baik", minimum: 80 }],
+      kktp: 70,
+      schemeId: second.id,
+      slug,
+    });
+    removeSchemeChange(local.store, { schemeId: first.id, slug });
+    expect(
+      Arr.map(local.store.getAllQueries(records.schemes.list), ({ value }) =>
+        Arr.map(Option.getOrThrow(value).page, (row) => [row.id, row.kktp])
+      )
+    ).toEqual([[[second.id, 70]], [[second.id, 75]]]);
   });
 });
