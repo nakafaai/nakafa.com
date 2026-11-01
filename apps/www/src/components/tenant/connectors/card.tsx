@@ -24,7 +24,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { STATUS_BADGES } from "@repo/design-system/lib/status";
 import { cva } from "class-variance-authority";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConnectorActions } from "@/components/connectors/actions";
@@ -44,7 +44,13 @@ const MARKS = {
 } as const satisfies Record<string, StatusLook>;
 
 /** The states a card says in words in place of its maker, as its corner alone cannot tell them. */
-const SPOKEN = ["failed", "locked", "reconnect", "refused", "soon"] as const;
+const Spoken = Schema.Literals([
+  "failed",
+  "locked",
+  "reconnect",
+  "refused",
+  "soon",
+]);
 
 const makerVariants = cva("col-start-1 text-xs", {
   defaultVariants: { tone: "muted" },
@@ -122,7 +128,7 @@ function ServiceOpen() {
 function ServiceMaker() {
   const t = useTranslations("Connectors");
   const { service, state } = useService();
-  const spoken = Option.filter(state, (now) => Arr.contains(SPOKEN, now));
+  const spoken = Option.filter(state, Schema.is(Spoken));
 
   if (Option.isNone(spoken)) {
     return (
