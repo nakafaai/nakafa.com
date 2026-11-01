@@ -61,13 +61,13 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
             timeout: readinessTimeoutMilliseconds,
           })
           .then(() =>
-            expect(
-              page.getByRole("heading", {
-                exact: true,
-                level: 1,
-                name: target.title,
-              })
-            ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+            expect(page.getByRole("heading", { level: 1 })).toHaveAttribute(
+              "title",
+              target.title,
+              {
+                timeout: readinessTimeoutMilliseconds,
+              }
+            )
           )
           .then(() =>
             expect(target.content).toBeVisible({
