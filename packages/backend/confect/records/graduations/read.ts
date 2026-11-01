@@ -194,9 +194,9 @@ export const readiness = FunctionImpl.make(
             graduation,
             placement.personId
           );
-          const nisn = yield* Effect.transposeOption(
-            Option.map(entry, (found) => openNisn(keys, found))
-          );
+          const nisn = Option.isSome(entry)
+            ? yield* openNisn(keys, entry.value)
+            : Option.none();
           const readinessRow: typeof ReadinessRow.Type = {
             ...line,
             nisn: Option.getOrNull(nisn),

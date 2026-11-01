@@ -44,7 +44,7 @@ test("a teacher gives a question a shared reading and a video, and the student m
   // Save waits for a link YouTube shares and for words that say what it holds.
   await panel.getByRole("button", { name: "Add video" }).click();
   const dialog = page.getByRole("dialog");
-  const save = dialog.getByRole("button", { name: "Save" });
+  const save = dialog.getByRole("button", { name: "Add" });
   await dialog
     .getByRole("textbox", { name: "YouTube link" })
     .fill("video saya");

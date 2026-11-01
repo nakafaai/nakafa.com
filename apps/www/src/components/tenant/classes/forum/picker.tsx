@@ -25,14 +25,19 @@ import {
   keptMentions,
   matchPeople,
   mentionQuery,
+  mentionWord,
 } from "@/components/tenant/classes/forum/mentions";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
+import { useViewerQuery } from "@/components/tenant/context";
 
 /** A mention the writer picked, as a message shows it. */
 type Picked = typeof MentionView.Type;
 
 /** The word a mention of everyone carries in the text. */
 const EVERYONE = "everyone";
+
+/** The word a mention of Nina carries in the text, which the list matches in lower case. */
+const NINA = "nina";
 
 /**
  * The mention picker of a composer, as WhatsApp's works (ADR 0025): typing `@` opens a list at the
@@ -49,6 +54,9 @@ export function useMentionPicker(
 ) {
   const t = useTranslations("Classroom");
   const { classId, everyone, slug } = useChannelScope();
+  const viewer = useViewerQuery();
+  const ninaOn =
+    QueryResult.isSuccess(viewer) && viewer.value.tenant.policies.nina;
   const people = useQuery(classroom.forum.people.list, { classId, slug });
   const [caret, setCaret] = useState(0);
   const [picked, setPicked] = useState<readonly Picked[]>([]);
@@ -75,9 +83,14 @@ export function useMentionPicker(
     onNone: () => [],
     onSome: ({ query }) =>
       Arr.appendAll(
-        everyone && EVERYONE.startsWith(query.toLowerCase())
-          ? [{ _tag: "everyone" as const }]
-          : [],
+        [
+          ...(everyone && EVERYONE.startsWith(query.toLowerCase())
+            ? [{ _tag: "everyone" as const }]
+            : []),
+          ...(ninaOn && NINA.startsWith(query.toLowerCase())
+            ? [{ _tag: "nina" as const }]
+            : []),
+        ],
         Arr.map(
           matchPeople(QueryResult.isSuccess(people) ? people.value : [], query),
           (person) => ({ _tag: "person" as const, ...person })
@@ -99,7 +112,7 @@ export function useMentionPicker(
       text,
       typed.value.start,
       caret,
-      choice._tag === "everyone" ? EVERYONE : choice.name
+      mentionWord(choice).slice(1)
     );
     setText(next.text);
     setCaret(next.caret);
@@ -193,13 +206,22 @@ export function useMentionPicker(
             active={position === index}
             dir="auto"
             id={`${listId}-${position}`}
-            key={choice._tag === "everyone" ? EVERYONE : choice.id}
+            key={mentionWord(choice)}
             onPick={() => pick(choice)}
           >
-            {choice._tag === "everyone" ? t("mention-everyone") : choice.name}
+            <MentionChoice choice={choice} />
           </MentionOption>
         ))}
       </MentionPopup>
     ),
   };
+}
+
+/** One choice of the list: everyone and Nina say what they are, and a Person shows their name. */
+function MentionChoice({ choice }: { choice: Picked }) {
+  const t = useTranslations("Classroom");
+  if (choice._tag === "person") {
+    return choice.name;
+  }
+  return choice._tag === "everyone" ? t("mention-everyone") : t("mention-nina");
 }

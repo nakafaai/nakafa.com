@@ -12,7 +12,6 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
 import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
-import { browserAssets, prepareBrowserShell } from "#www/bundle.config";
 import {
   deferStaticPageScripts,
   notFoundPages,
@@ -387,10 +386,18 @@ function listPrerenderedPages(
   return readPrerenderedPagePaths();
 }
 
+/** The font files that the font-src policy must load from this origin, never inline. */
+const FONT_FILE_PATTERN = /\.woff2?$/u;
+
 export default defineConfig(async ({ command, isPreview }) => {
   const prerenderedPages = await listPrerenderedPages(command);
   return {
-    build: browserAssets,
+    build: {
+      // The font-src policy allows only this origin, so a font file stays a file
+      // even when it is smaller than the inline limit. Other assets keep the limit.
+      assetsInlineLimit: (filePath: string) =>
+        FONT_FILE_PATTERN.test(filePath) ? false : undefined,
+    },
     environments: {
       // Workers Logs maps stack traces without the embedded sources, and the
       // upload refuses more than 60 MiB of maps: the sources were 47 of 65 MiB.
@@ -479,7 +486,6 @@ export default defineConfig(async ({ command, isPreview }) => {
       writeStaticArtifacts,
       writeStaticAnswers(prerenderedPages),
       deferStaticPageScripts(prerenderedPages),
-      prepareBrowserShell(),
       writeNotFoundPages(prerenderedPages),
       verifyPrerenderedPages(prerenderedPages),
       // `vite dev` runs the Worker as Node runs a development server. `vite build`

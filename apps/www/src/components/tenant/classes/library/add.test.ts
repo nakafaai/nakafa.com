@@ -189,7 +189,7 @@ describe("pickFromDrive", () => {
           )
         ).toEqual(Option.some(picked));
         expect(hide).toHaveBeenCalledTimes(1);
-        expect(pickDriveFile).toHaveBeenCalledWith(keys, "id");
+        expect(pickDriveFile).toHaveBeenCalledWith(keys, "id", undefined);
       })
   );
 });

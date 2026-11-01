@@ -19,6 +19,7 @@ function row(
     exam,
     grade,
     id: "notification-1",
+    missed: null,
     subject,
     tenant: {
       kind: "school",
@@ -99,6 +100,20 @@ describe("inbox row destinations", () => {
       )
     ).toEqual(
       Option.some("https://harapan.nakafa.com/classes/fisika-x-1/tasks/latihan")
+    );
+  });
+
+  it("opens a nearing deadline's task, and the parent home for a child's missed task", () => {
+    const klass = { id: "class-1", kind: "class" };
+    expect(
+      href(
+        row("assignment.deadline", klass, detail(null, null, null, "latihan"))
+      )
+    ).toEqual(
+      Option.some("https://harapan.nakafa.com/classes/fisika-x-1/tasks/latihan")
+    );
+    expect(href(row("assignment.missed", klass))).toEqual(
+      Option.some("https://harapan.nakafa.com/orang-tua")
     );
   });
 

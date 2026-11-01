@@ -35,6 +35,7 @@ describe("classroom/posts", () => {
           classId: forum.classId,
           clientKey: "first-post",
           email: false,
+          poll: null,
           slug: nf,
           text: "Ulangan bab 2 hari Senin.",
         });
@@ -43,6 +44,7 @@ describe("classroom/posts", () => {
           classId: forum.classId,
           clientKey: "second-post",
           email: true,
+          poll: null,
           slug: nf,
           text: "Bawa kalkulator.",
         });
@@ -50,6 +52,7 @@ describe("classroom/posts", () => {
           classId: forum.classId,
           clientKey: "first-post",
           email: false,
+          poll: null,
           slug: nf,
           text: "Ulangan bab 2 hari Senin.",
         });
@@ -98,6 +101,7 @@ describe("classroom/posts", () => {
           classId: forum.classId,
           clientKey: "edited-post",
           email: false,
+          poll: null,
           slug: nf,
           text: "Ulangan hari Senin.",
         });
@@ -119,6 +123,7 @@ describe("classroom/posts", () => {
               classId: forum.classId,
               clientKey: "student-post",
               email: false,
+              poll: null,
               slug: nf,
               text: "Bukan guru",
             })
@@ -150,6 +155,7 @@ describe("classroom/posts", () => {
           classId: other.classId,
           clientKey: "edited-post",
           email: false,
+          poll: null,
           slug: nf,
           text: "Kelas lain",
         });
@@ -191,6 +197,7 @@ describe("classroom/posts", () => {
             classId: forum.classId,
             clientKey: `pinned-post-${index}`,
             email: false,
+            poll: null,
             slug: nf,
             text: `Pengumuman ${index}`,
           });
@@ -248,6 +255,7 @@ describe("classroom/posts", () => {
         classId: forum.classId,
         clientKey: "pinned-refused",
         email: false,
+        poll: null,
         slug: nf,
         text: "Pengumuman",
       });

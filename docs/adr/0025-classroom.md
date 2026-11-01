@@ -284,6 +284,13 @@ field the forum composer is. Status of the spike: planned, in program wave B.
   (ADR 0022), and it is sealed with the school key (ADR 0024). The library index
   covers only files that a teacher published (ADR 0023).
 
+The reply is built (`classroom/forum/nina.impl.ts`), as a run of its own rather than a
+turn of a chat, because a class has no chat row: `@Nina` schedules it, `begin` holds 5 credits
+of the school's pool, the model answers from the talk before the question, from the class
+library's index (ADR 0023) and from Nakafa's search with its links, and `finish` writes the
+message marked `nina` under the Person who asked, or passes the question to the class's
+teachers as a mention and gives the credits back.
+
 ### Class settings
 
 | Setting | Rule |
@@ -406,7 +413,7 @@ How the forum meets the table, decided with the first build (26 October 2026):
 | Numbered discussions: `classroomThreads`, `confect/classroom/forum/threads` (`open`, `get`, `replies`, `reply`), the opening message and replies in `classroomMessages`, the address `/classes/<class>/forum/<number>` beside its channel on a wide screen and on its own on a phone | Live |
 | Read marks: `classroomReads`, `confect/classroom/forum/reads` (`get`, `mark`), unread dots on the channel list and on the opening message of a discussion, the unread divider | Live |
 | The channels and messages of the forum: `classroomChannels` and `classroomMessages`. A topic channel can be archived, which keeps it readable and refuses every new write, or removed, which deletes it at once and leaves a sweep to delete what it held | Live |
-| Announcements on the class home: `classroomPosts`, `confect/classroom/posts` (`list`, `pinned`, `pin`, `publish`, `edit`, `remove`), at most 5 pinned to its top, and `confect/classroom/scheduled` (`list`, `schedule`, `edit`, `cancel`) with its table `classroomScheduled`, which holds an announcement for its author until its time, the published change `announcement.posted`, its inbox rows and its email (ADR 0027) | Live |
+| Announcements on the class home: `classroomPosts`, `confect/classroom/posts` (`list`, `pinned`, `pin`, `publish`, `edit`, `remove`, `votes`, `vote`), at most 5 pinned to its top, a poll on a post with its votes apart in `classroomPostVotes`, and `confect/classroom/scheduled` (`list`, `schedule`, `edit`, `cancel`) with its table `classroomScheduled`, which holds an announcement for its author until its time, the published change `announcement.posted`, its inbox rows and its email (ADR 0027) | Live |
 | Tasks: `classroomTasks` and `classroomSubmissions`, `confect/classroom/tasks` (`list`, `get`, `publish`, `reschedule`, `submit`, `submissions`, `score`), filed under a category of the teacher's words, for the whole class or for the students a task names, who alone read it and get its notice, the address `/classes/<class>/tasks/<task>`, the published changes `assignment.published` and `assignment.deadlineChanged`. | Live |
 | The class library: `classroomLibrary`, `confect/classroom/library` (`list`, `addLink`, `uploadUrl`, `register`, `remove`), the address `/classes/<class>/library`. A link holds an https address; a file is a PDF or an image of at most 20 MB, its type read from its own leading bytes and any other file deleted; titles and link addresses are sealed with the school key, and a file's address is read for each reader and never stored (ADR 0028). Folders, previews, a pick from Google Drive, and the per-school limit are planned | Live |
 | Library folders: `classroomFolders`, `confect/classroom/folders` (`list`, `add`, `rename`, `remove`), the address `/classes/<class>/library/<folder>`. One level, at most 100 in a class, and a removed folder leaves its items at the top of the library | Live |

@@ -77,7 +77,7 @@ const pressedReactions = (
 };
 
 /** The votes after the viewer's choice: their last one leaves, and each chosen option counts them. */
-const chosenVotes = (
+export const chosenVotes = (
   votes: ForumTally["votes"],
   options: readonly number[]
 ) => {

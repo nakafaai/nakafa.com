@@ -84,6 +84,7 @@ export function ForumMessageRow({
   message: ForumMessage;
   opens: boolean;
 }) {
+  const t = useTranslations("Classroom");
   const [editing, setEditing] = useState(false);
   const scope = useChannelScope();
   // Inside its own discussion the opening message needs no summary: the discussion is the page.
@@ -93,7 +94,9 @@ export function ForumMessageRow({
     <Message align={message.mine ? "end" : "start"}>
       <MessageContent>
         {message.mine || !(opens || discussion !== null) ? null : (
-          <MessageHeader dir="auto">{message.author.name}</MessageHeader>
+          <MessageHeader dir="auto">
+            {message.author.nina ? t("nina-author") : message.author.name}
+          </MessageHeader>
         )}
         {discussion === null ? null : (
           <DiscussionTitle discussion={discussion} message={message} />
@@ -111,9 +114,7 @@ export function ForumMessageRow({
             className="group/row flex w-full min-w-0 items-center gap-1 data-[mine=true]:flex-row-reverse"
             data-mine={message.mine}
           >
-            {message.poll === null ? null : (
-              <MessagePoll message={message} poll={message.poll} />
-            )}
+            <MessagePoll message={message} />
             {message.text === "" ? (
               <MessageTime message={message} />
             ) : (

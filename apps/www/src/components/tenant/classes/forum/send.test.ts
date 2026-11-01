@@ -16,6 +16,7 @@ const channelId = Schema.decodeUnknownSync(Id("classroomChannels"))("general");
 const author = {
   id: Schema.decodeUnknownSync(Id("tenantPeople"))("person-1"),
   name: "Bu Rina",
+  nina: false,
 };
 const args = {
   attachments: [],

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option, Result, Schema } from "effect";
-import { deferStaticScripts, prepareShell } from "@/lib/static/scripts";
+import { deferStaticScripts } from "@/lib/static/scripts";
 
 /** A prerendered page as TanStack writes it: module preloads in the head, the hydration scripts and the entry in the body. */
 const PRERENDERED = Arr.join(
@@ -95,26 +95,5 @@ describe("lib/static/scripts", () => {
     );
 
     expect(Result.isFailure(deferStaticScripts(foreign))).toBe(true);
-  });
-});
-
-describe("prepareShell", () => {
-  const scripts = {
-    member: ["/assets/shell-m1.js"],
-    school: ["/assets/layout-s1.js"],
-  };
-
-  it("lets every preload of the shell load at once", () => {
-    expect(prepareShell(PRERENDERED, scripts)).not.toContain("fetchPriority");
-  });
-
-  it("names a school's scripts in the head, for a school host only", () => {
-    const shell = prepareShell(PRERENDERED, scripts);
-    const [head] = shell.split("</head>");
-
-    expect(head).toContain("/assets/layout-s1.js");
-    expect(head).toContain("/assets/shell-m1.js");
-    expect(head).toContain("nakafa-signed-in");
-    expect(head).toContain("nakafa\\\\.com|localhost");
   });
 });

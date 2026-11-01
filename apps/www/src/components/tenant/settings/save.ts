@@ -130,6 +130,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-class-subject-taken.description",
     title: "school-refusal-class-subject-taken.title",
   },
+  DraftRefused: {
+    description: "school-refusal-draft-refused.description",
+    title: "school-refusal-draft-refused.title",
+  },
   SchemeNotLater: {
     description: "school-refusal-scheme-not-later.description",
     title: "school-refusal-scheme-not-later.title",
@@ -265,6 +269,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
   TeacherHasHomeroom: {
     description: "school-refusal-teacher-has-homeroom.description",
     title: "school-refusal-teacher-has-homeroom.title",
+  },
+  WebhookLimit: {
+    description: "school-refusal-webhook-limit.description",
+    title: "school-refusal-webhook-limit.title",
   },
   UnitLimit: {
     description: "school-refusal-unit-limit.description",

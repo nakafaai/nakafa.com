@@ -157,3 +157,48 @@ test("a subject teacher keeps an announcement for later, which the class's posts
   await expect(waiting).toHaveCount(0);
   await context.close();
 });
+
+test("a subject teacher asks a poll on the class home, votes, changes the vote, and removes it", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(
+    signInClassTeacher(context, school.slug, address("/"))
+  );
+  const page = await context.newPage();
+  await page.goto(address("/classes/fisika-x-1"));
+  const create = page.getByRole("button", { name: "New poll" });
+  await waitUntilTakenOver(create);
+  await create.click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Question").fill("Ulangan hari apa?");
+  await dialog.getByRole("textbox", { name: "Choice 1" }).fill("Senin");
+  await dialog.getByRole("textbox", { name: "Choice 2" }).fill("Selasa");
+  await dialog.getByRole("button", { name: "Send poll" }).click();
+  await expect(page.getByText("Ulangan hari apa?")).toBeVisible();
+
+  const monday = page.getByRole("button", { name: "Senin" });
+  await expect(monday).toBeEnabled({ timeout: readinessTimeoutMilliseconds });
+  await monday.click();
+  await expect(monday).toHaveAttribute("aria-pressed", "true");
+  const tuesday = page.getByRole("button", { name: "Selasa" });
+  await tuesday.click();
+  await expect(tuesday).toHaveAttribute("aria-pressed", "true");
+  await expect(monday).toHaveAttribute("aria-pressed", "false");
+
+  await page.getByRole("button", { name: "More actions" }).click();
+  await expect(page.getByRole("menuitem", { name: "Edit" })).toHaveCount(0);
+  await page.getByRole("menuitem", { name: "Remove" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Remove", exact: true })
+    .click();
+  await expect(page.getByText("No announcement yet")).toBeVisible();
+  await context.close();
+});

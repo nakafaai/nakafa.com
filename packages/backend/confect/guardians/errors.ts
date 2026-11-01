@@ -8,7 +8,7 @@ import { Schema } from "effect";
 export class LinkRefused extends Schema.TaggedError<LinkRefused>()(
   "LinkRefused",
   {
-    code: Schema.Literals(["NOT_STUDENT", "ALREADY_LINKED"]),
+    code: Schema.Literals(["NOT_STUDENT", "ALREADY_LINKED", "LINK_LIMIT"]),
     message: Schema.String,
   }
 ) {}

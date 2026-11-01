@@ -99,6 +99,25 @@ const school = Effect.gen(function* () {
   return { classId: forum.classId, connectionId, fixture };
 });
 
+/** Classroom as the test's Google answers it: one course of two named students and a nameless one. */
+const rosterAnswers = () =>
+  fetcher.mockImplementation((input) => {
+    if (String(input).startsWith("https://oauth2.googleapis.com/token")) {
+      return Promise.resolve(
+        json(200, { access_token: "access", expires_in: 3599, scope: "" })
+      );
+    }
+    return Promise.resolve(
+      json(200, {
+        students: [
+          { profile: { name: { fullName: "Raka Pratama" } }, userId: "s1" },
+          { profile: { name: { fullName: "Nadia Putri" } }, userId: "s2" },
+          { profile: {}, userId: "s3" },
+        ],
+      })
+    );
+  });
+
 describe("connectors/classroom", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -112,6 +131,71 @@ describe("connectors/classroom", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
+
+  it.effect(
+    "imports a linked course's named students by Google's user ID, and a second import adds nobody",
+    () =>
+      Effect.gen(function* () {
+        const { classId, connectionId, fixture } = yield* school;
+        const admin = fixture.as("admin");
+        yield* admin.mutation(classroom.link, {
+          classId,
+          connectionId,
+          courseId: "c1",
+          slug: nf,
+        });
+        rosterAnswers();
+
+        const first = yield* admin.action(classroom.importRoster, {
+          courseId: "c1",
+          slug: nf,
+        });
+        const second = yield* admin.action(classroom.importRoster, {
+          courseId: "c1",
+          slug: nf,
+        });
+
+        expect(first).toEqual({ added: 2, changed: 0, skipped: 0 });
+        expect(second).toEqual({ added: 0, changed: 2, skipped: 0 });
+      })
+  );
+
+  it.effect("refuses a course that no class links", () =>
+    Effect.gen(function* () {
+      const { fixture } = yield* school;
+
+      const refused = yield* fixture
+        .as("admin")
+        .action(classroom.importRoster, { courseId: "c9", slug: nf })
+        .pipe(Effect.flip);
+
+      expect(refused).toMatchObject({
+        _tag: "AccessDenied",
+        reason: "resource",
+      });
+      expect(fetcher).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("refuses a member the roster import is closed to", () =>
+    Effect.gen(function* () {
+      const { classId, connectionId, fixture } = yield* school;
+      yield* fixture.as("admin").mutation(classroom.link, {
+        classId,
+        connectionId,
+        courseId: "c1",
+        slug: nf,
+      });
+      rosterAnswers();
+
+      const refused = yield* fixture
+        .as("student")
+        .action(classroom.importRoster, { courseId: "c1", slug: nf })
+        .pipe(Effect.flip);
+
+      expect(refused).toMatchObject({ _tag: "AccessDenied" });
+    })
+  );
 
   it.effect(
     "previews the teacher's courses with their students for an Admin, and refuses a student and someone of another school",

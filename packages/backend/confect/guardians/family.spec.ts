@@ -63,4 +63,22 @@ export default GroupSpec.make()
       action: "guardian.child",
       arg: "linkId",
     })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "narratives",
+      args: () => ({ linkId: Id("guardianLinks"), slug: TenantSlug }),
+      returns: () =>
+        Schema.Array(
+          Schema.Struct({
+            className: Schema.String,
+            id: Id("insightNarratives"),
+            text: Schema.String,
+          })
+        ),
+      error: () => AccessDenied,
+    }).middleware(GuardianLinkAccess, {
+      action: "guardian.child",
+      arg: "linkId",
+    })
   );

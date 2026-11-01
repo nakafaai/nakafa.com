@@ -1,6 +1,10 @@
 import { Extension } from "@tiptap/core";
+import { Slice } from "@tiptap/pm/model";
 import { Plugin } from "@tiptap/pm/state";
 import { Array as Arr, Option, String as Str } from "effect";
+
+/** The nodes of a list, as the document names them. */
+const LIST_NODES = ["bulletList", "orderedList"];
 
 /** What names a paragraph as an item of a Word list: its level and its list, as `mso-list:l0 level2 lfo1`. */
 const WORD_ITEM = /mso-list:\s*l\d+\s+level(?<level>\d+)\s+lfo(?<list>\d+)/u;
@@ -157,10 +161,26 @@ export const wordLists = (html: string): string => {
   return document.body.innerHTML;
 };
 
-/** The extension that reads Word's lists as lists when a teacher pastes from Word. */
+/**
+ * A paste that opens with a whole list keeps it whole. The editor would join a pasted slice's first line to the line
+ * at the caret, and a list's first item would leave its list. Part of one item stays open, so it joins the line.
+ */
+export const wholeLists = (slice: Slice): Slice => {
+  const first = slice.content.firstChild;
+  const whole =
+    first !== null &&
+    Arr.contains(LIST_NODES, first.type.name) &&
+    (first.childCount > 1 || slice.content.childCount > 1);
+
+  return whole ? new Slice(slice.content, 0, slice.openEnd) : slice;
+};
+
+/** The extension that reads Word's lists as lists when a teacher pastes from Word, and keeps them whole. */
 export const wordPaste = Extension.create({
   name: "wordPaste",
   addProseMirrorPlugins: () => [
-    new Plugin({ props: { transformPastedHTML: wordLists } }),
+    new Plugin({
+      props: { transformPasted: wholeLists, transformPastedHTML: wordLists },
+    }),
   ],
 });

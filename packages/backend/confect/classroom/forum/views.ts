@@ -15,6 +15,7 @@ import {
   mentionedPeople,
 } from "@repo/backend/confect/classroom/forum/mention";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
+import { NINA_NAME } from "@repo/backend/confect/classroom/forum/nina";
 import {
   type PollView,
   pollField,
@@ -162,9 +163,8 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
         const mentions = Arr.flatMap(
           message.mentions ?? [],
           (mention): (typeof MentionView.Type)[] =>
-            mention._tag === "everyone"
-              ? [mention]
-              : Option.match(
+            mention._tag === "person"
+              ? Option.match(
                   Arr.findFirst(people, (found) => found._id === mention.id),
                   {
                     onNone: () => [],
@@ -177,6 +177,7 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
                     ],
                   }
                 )
+              : [mention]
         );
         const text =
           message.sealedText === null
@@ -192,14 +193,18 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
               );
         return {
           attachments: yield* attachmentViews(message, keys),
-          author: { id: message.authorId, name: author.name },
+          author: {
+            id: message.authorId,
+            name: message.nina === true ? NINA_NAME : author.name,
+            nina: message.nina === true,
+          },
           clientKey: message.clientKey,
           createdAt: message.createdAt,
           discussion,
           editedAt: message.editedAt ?? null,
           id: message._id,
           mentions,
-          mine: message.authorId === person._id,
+          mine: message.nina !== true && message.authorId === person._id,
           poll: yield* pollView(message, keys),
           text,
         };

@@ -20,7 +20,7 @@ import { Clock, Duration, Effect } from "effect";
 export const announce = Effect.fn("classroom.posts.announce")(function* (
   row: ClassesDoc,
   author: TenantPeopleDoc,
-  post: Pick<ClassroomPostsDoc, "clientKey" | "email" | "sealedText">
+  post: Pick<ClassroomPostsDoc, "clientKey" | "email" | "poll" | "sealedText">
 ) {
   const postId = yield* (yield* DatabaseWriter)
     .table("classroomPosts")
@@ -30,6 +30,7 @@ export const announce = Effect.fn("classroom.posts.announce")(function* (
       clientKey: post.clientKey,
       createdAt: yield* Clock.currentTimeMillis,
       email: post.email,
+      ...(post.poll === undefined ? {} : { poll: post.poll }),
       sealedText: post.sealedText,
       tenantId: row.tenantId,
     })

@@ -11,4 +11,6 @@ export default {
 ["cohorts"]: RegisteredConvexFunction.register({ ...definitions["cohorts"], handler: forward(definitions["cohorts"].handler) }),
 ["people"]: RegisteredConvexFunction.register({ ...definitions["people"], handler: forward(definitions["people"].handler) }),
 ["placements"]: RegisteredConvexFunction.register({ ...definitions["placements"], handler: forward(definitions["placements"].handler) }),
+["grades"]: RegisteredConvexFunction.register({ ...definitions["grades"], handler: forward(definitions["grades"].handler) }),
+["changes"]: RegisteredConvexFunction.register({ ...definitions["changes"], handler: forward(definitions["changes"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../integrations/reads.spec")["default"]>;

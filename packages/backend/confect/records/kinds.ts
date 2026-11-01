@@ -17,6 +17,12 @@ import { Schema } from "effect";
  */
 export const gradeKind = Kind.make("grade", "classGrades", {
   actions: {
+    "grade.export": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["integration"],
+    },
     "grade.release": {
       access: "write",
       grantedBy: "relations",
@@ -52,6 +58,12 @@ const classGrades = Kind.extend(classKind, {
       access: "write",
       grantedBy: "relations",
       relations: ["subjectTeacher"],
+    },
+    "grade.import": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["integration"],
     },
     "grade.list": {
       access: "read",

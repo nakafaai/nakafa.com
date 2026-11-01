@@ -101,6 +101,7 @@ describe("classroom/library", () => {
     vi.setSystemTime(TENANCY_NOW);
     fetcher.mockReset();
     vi.stubEnv("GOOGLE_CONNECTORS", "drive");
+    vi.stubEnv("GOOGLE_PICKER_API_KEY", "picker-key");
     vi.stubEnv("GOOGLE_CONNECTOR_CLIENT_ID", "client");
     vi.stubEnv("GOOGLE_CONNECTOR_CLIENT_SECRET", "secret");
   });

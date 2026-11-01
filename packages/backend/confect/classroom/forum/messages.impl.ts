@@ -145,7 +145,10 @@ const send = FunctionImpl.make(
   })
 );
 
-/** Changes the text of the sender's own message. A message a teacher hid keeps no text to change. */
+/**
+ * Changes the text of the sender's own message. A reply of Nina is no one's to
+ * change, and a message a teacher hid keeps no text to change.
+ */
 const edit = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -155,7 +158,7 @@ const edit = FunctionImpl.make(
     const row = yield* Class;
     const message = yield* classMessage(messageId, "forum.post");
     yield* channelOpen(message.channelId);
-    if (message.authorId !== person._id) {
+    if (message.nina === true || message.authorId !== person._id) {
       return yield* missing("forum.post");
     }
     if (message.sealedText === null) {

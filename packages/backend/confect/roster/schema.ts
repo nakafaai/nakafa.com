@@ -17,13 +17,17 @@ export const Nisn = Schema.String.check(Schema.isPattern(/^\d{10}$/u)).pipe(
 const RosterNisn = Schema.Struct({ blind: Schema.String, sealed: Sealed });
 
 /**
- * One student's roster row: the NISN, sealed and blinded under the school key. No
- * birth date and no NIK are stored. The row sits apart from the Person, because
- * every School function loads the Person and the NISN is a roster fact (ADR 0011).
+ * One student's roster row: the NISN, sealed and blinded under the school key, which a
+ * student a file added holds only once the school gives it. `sourcedId` is the blind of
+ * the identity a OneRoster file gives the student, the only way a later file names the
+ * same student (ADR 0029). No birth date and no NIK are stored. The row sits apart from
+ * the Person, because every School function loads the Person and the NISN is a roster
+ * fact (ADR 0011).
  */
 export const rosterEntryValidator = Schema.Struct({
-  nisn: RosterNisn,
+  nisn: Schema.optionalKey(RosterNisn),
   personId: Id("tenantPeople"),
+  sourcedId: Schema.optionalKey(Schema.String),
   tenantId: Id("tenants"),
 });
 
@@ -45,6 +49,24 @@ export const ImportRow = Schema.Struct({
   name: PersonName,
   nisn: Nisn,
 });
+
+/** The identity a OneRoster file gives a row, which the source system owns. */
+const SourcedId = Schema.NonEmptyString.check(Schema.isMaxLength(255));
+
+/**
+ * One student row of a OneRoster import, as the browser read it from the files (ADR 0029):
+ * the source's identity, never the email, the name, and the class group when the student has
+ * a homeroom class. A file holds no age, so the row leaves the under-age flag unset, and the
+ * student counts as under the limit (ADR 0034).
+ */
+export const SourcedRow = Schema.Struct({
+  cohortName: Schema.optionalKey(CohortName),
+  name: PersonName,
+  sourcedId: SourcedId,
+});
+
+/** The sources whose rows carry their own identity: a OneRoster file, and a Classroom course. */
+export const SourcedImport = Schema.Literals(["classroom", "oneroster"]);
 
 /** What one batch did: the students it added, the ones it changed, and the rows it skipped. */
 export const ImportSummary = Schema.Struct({

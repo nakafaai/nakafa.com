@@ -50,12 +50,17 @@ function markOf(address: string) {
  * failed import here, and the script shares that hook's mark, so one address
  * reloads once between them and a chunk that is really gone reaches its error.
  * It holds back every failure while the page goes, so none of them draws an error
- * for a moment, and a tab without storage never reloads.
+ * for a moment, and a tab without storage never reloads. A browser without a
+ * network keeps its page: the chunk is out of reach, not gone, and a reload would
+ * swap the page for the browser's offline screen.
  */
 export const STALE_CHUNK_SCRIPT = `(function () {
   var reloading = false;
   window.addEventListener("vite:preloadError", function (event) {
     if (!reloading) {
+      if (navigator.onLine === false) {
+        return;
+      }
       var mark = "${RELOAD_MARK}" + location.pathname;
       try {
         if (sessionStorage.getItem(mark) !== null) {
@@ -79,7 +84,9 @@ export const STALE_CHUNK_SCRIPT = `(function () {
  * reload shows the error and never loops. The mark names the address, not the
  * chunk: a press can ask for several chunks, and the one that fails first may
  * differ after the reload, which would otherwise reload again for each of them.
- * A tab without storage never reloads. Answers whether the page reloads.
+ * A tab without storage never reloads, and neither does a browser without a
+ * network, which marks nothing, so the chunk's next failure still reloads once
+ * the network is back. Answers whether the page reloads.
  */
 export const reloadForStaleChunk = Effect.fn("www.chunks.reloadForStale")(
   function* (
@@ -87,6 +94,9 @@ export const reloadForStaleChunk = Effect.fn("www.chunks.reloadForStale")(
     storage: Pick<Storage, "getItem" | "setItem">,
     reload: () => void
   ) {
+    if (navigator.onLine === false) {
+      return false;
+    }
     const marked = yield* Effect.try({
       try: () => storage.getItem(markOf(address)) !== null,
       catch: (cause) => new ReloadMarkUnavailable({ cause }),

@@ -1,6 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import connectorsPublic from "@repo/backend/confect/_generated/refs/connectors";
 import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
+import rosterPublic from "@repo/backend/confect/_generated/refs/roster";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -13,10 +14,14 @@ import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { Class } from "@repo/backend/confect/classroom/access";
-import { TaskTitle } from "@repo/backend/confect/classroom/tasks/task";
 import { writeTask } from "@repo/backend/confect/classroom/tasks/write";
 import spec from "@repo/backend/confect/connectors/classroom.spec";
 import {
+  taskTitleOf,
+  workKeyOf,
+} from "@repo/backend/confect/connectors/coursework";
+import {
+  courseRoster,
   courseStudents,
   teacherCourses,
 } from "@repo/backend/confect/connectors/google/classroom";
@@ -26,6 +31,7 @@ import { connectionToken } from "@repo/backend/confect/connectors/secret";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { IMPORT_BATCH } from "@repo/backend/confect/roster/schema";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
@@ -36,7 +42,6 @@ import {
   Number as Num,
   Option,
   pipe,
-  Schema,
   String as Str,
 } from "effect";
 
@@ -48,12 +53,6 @@ const CLASS_LIMIT = 300;
 
 /** How many courses a preview counts the students of at once. */
 const PREVIEW_CONCURRENCY = 5;
-
-/** Characters that a task title keeps on one line: line breaks and controls become a space. */
-const LINE_BREAKS = /[\p{Cc}\p{Zl}\p{Zp}]+/gu;
-
-/** Characters that a client key does not hold. */
-const KEY_UNSAFE = /[^A-Za-z0-9-]/gu;
 
 /** The refusal of a connection or a class that is not the school's own, as a missing object. */
 const missing = () =>
@@ -213,6 +212,90 @@ const preview = FunctionImpl.make(
   )
 );
 
+/** The class group and the period of a class, where the students of its course are placed. */
+const place = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "place",
+  Effect.fn("connectors.classroom.place")(function* ({ classId }) {
+    const reader = yield* DatabaseReader;
+    const row = yield* reader.table("classes").get(classId).pipe(Effect.orDie);
+    const cohort = yield* reader
+      .table("tenantCohorts")
+      .get(row.cohortId)
+      .pipe(Effect.orDie);
+    return { cohortName: cohort.name, periodId: cohort.periodId };
+  })
+);
+
+/**
+ * Imports the students of a linked course into its class group, a batch at a time, through
+ * the roster's own apply, which decides `roster.import` for the caller. Each student's
+ * identity is Google's user ID, so a second import adds nobody, and a course without a link
+ * is refused as missing.
+ */
+const importRoster = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "importRoster",
+  Effect.fn("connectors.classroom.importRoster")(
+    function* ({ courseId, slug }) {
+      yield* requireAuth();
+      const { runQuery } = yield* QueryRunner;
+      const { runMutation } = yield* MutationRunner;
+      const found = yield* runQuery(connectorsInternal.classroom.target, {
+        slug,
+      }).pipe(Effect.orDie);
+      const link =
+        found === null
+          ? Option.none()
+          : Arr.findFirst(found.links, (each) => each.courseId === courseId);
+      if (found === null || Option.isNone(link)) {
+        return yield* missing();
+      }
+      const { cohortName, periodId } = yield* runQuery(
+        connectorsInternal.classroom.place,
+        { classId: link.value.classId }
+      ).pipe(Effect.orDie);
+      const client = yield* readGoogleClient("classroom");
+      const students = yield* refreshAccess(client, found.refreshToken).pipe(
+        Effect.flatMap((accessToken) => courseRoster(accessToken, courseId)),
+        Effect.provide(FetchClient)
+      );
+      const batches = yield* Effect.forEach(
+        Arr.chunksOf(students, IMPORT_BATCH),
+        (batch) =>
+          runMutation(rosterPublic.imports.applySourced, {
+            periodId,
+            rows: Arr.map(batch, (student) => ({
+              cohortName,
+              name: student.name,
+              sourcedId: `classroom:${student.userId}`,
+            })),
+            slug,
+            source: "classroom",
+          }).pipe(
+            Effect.catchTag("NotMember", () =>
+              Effect.fail(
+                new AccessDenied({ action: "roster.import", reason: "role" })
+              )
+            )
+          )
+      );
+      return Arr.reduce(
+        batches,
+        { added: 0, changed: 0, skipped: 0 },
+        (total, batch) => ({
+          added: total.added + batch.added,
+          changed: total.changed + batch.changed,
+          skipped: total.skipped + batch.skipped,
+        })
+      );
+    },
+    Effect.catchTag("SchemaError", Effect.die)
+  )
+);
+
 /**
  * Links a Classroom course of the school's connection to one of the school's
  * classes, moves the link to another class, or removes it with no class. A
@@ -305,12 +388,6 @@ const links = FunctionImpl.make(
   })
 );
 
-/** A Classroom title as a task title: one trimmed line of at most 120 characters, or none when nothing is left. */
-const taskTitleOf = (title: string) =>
-  Schema.decodeOption(TaskTitle)(
-    pipe(title.replace(LINE_BREAKS, " "), Str.trim, Str.slice(0, 120), Str.trim)
-  );
-
 /**
  * Imports the coursework of one linked course into its class's tasks, each once
  * under a client key made from its Classroom ID, written by the member who linked
@@ -353,10 +430,7 @@ const storeWork = FunctionImpl.make(
         if (Option.isNone(title)) {
           return false;
         }
-        const clientKey = pipe(
-          `classroom-${work.workId.replace(KEY_UNSAFE, "-")}`,
-          Str.slice(0, 64)
-        );
+        const clientKey = workKeyOf(work.workId);
         const stored = yield* reader
           .table("classroomTasks")
           .index("by_classId_and_clientKey", (query) =>
@@ -404,6 +478,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(canImport),
   Layer.provide(target),
   Layer.provide(preview),
+  Layer.provide(importRoster),
+  Layer.provide(place),
   Layer.provide(link),
   Layer.provide(links),
   Layer.provide(storeWork),

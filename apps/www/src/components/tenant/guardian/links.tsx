@@ -43,6 +43,7 @@ import {
   GuardianLinkMenu,
   type LinkItem,
 } from "@/components/tenant/guardian/link";
+import { StaffRequests } from "@/components/tenant/guardian/requests";
 import { GuardianLinkStartDialog } from "@/components/tenant/guardian/start";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -142,6 +143,7 @@ function GuardianLinksBody() {
       <Panes>
         <PanesList>
           {failed ? <DataFailure onRetry={reloadPage} /> : null}
+          <StaffRequests />
           <GuardianLinkTable />
           {PaginatedQueryResult.isCanLoadMore(pagination) ? (
             <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />

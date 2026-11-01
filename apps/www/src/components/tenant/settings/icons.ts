@@ -16,6 +16,7 @@ import {
   UserLove01Icon,
   UserMultiple02Icon,
   UserSettings01Icon,
+  WebhookIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { SchoolSettingsGroup } from "@/lib/settings/school";
@@ -46,4 +47,5 @@ export const settingsSectionIcons: Record<
   roster: FileSpreadsheetIcon,
   students: StudentIcon,
   units: Building03Icon,
+  webhooks: WebhookIcon,
 };

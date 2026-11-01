@@ -53,8 +53,9 @@ export const TaskAddress = Schema.String.check(
 /**
  * One task of a class (ADR 0025): its title and its address, what it asks,
  * sealed with the school key and bound to the class and the client key of its
- * creation, its deadline in UTC, its points, its late policy, and how many
- * students have handed work in. `category` files it among the class's tasks. `targets` names the students it goes to when it
+ * creation, its deadline in UTC, its points, its late policy, how many students
+ * have handed work in, and the scheduled runs of its deadline's notices. `category`
+ * files it among the class's tasks. `targets` names the students it goes to when it
  * goes to part of the class, and without it the whole class is its target.
  */
 export const taskValidator = Schema.Struct({
@@ -65,6 +66,7 @@ export const taskValidator = Schema.Struct({
   createdAt: Schema.Finite,
   deadline: Schema.Finite,
   handedIn: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  jobs: Schema.optionalKey(Schema.Array(Id("_scheduled_functions"))),
   latePolicy: LatePolicy,
   points: TaskPoints,
   sealedText: Sealed,

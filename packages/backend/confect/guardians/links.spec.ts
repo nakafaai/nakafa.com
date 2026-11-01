@@ -7,7 +7,7 @@ import {
   LinkClosed,
   LinkRefused,
 } from "@repo/backend/confect/guardians/errors";
-import { LinkView } from "@repo/backend/confect/guardians/schema";
+import { FamilyLink, LinkView } from "@repo/backend/confect/guardians/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { PersonAccess } from "@repo/backend/confect/tenancy/access";
@@ -19,7 +19,8 @@ import { Schema } from "effect";
  * The guardian links of one school, as its Admin and Staff (Staf TU) keep them
  * (ADR 0034): start a link with the guardian's address, list the school's links,
  * check one by hand when the roster holds no NISN, correct the address of a
- * pending one, and revoke one.
+ * pending one, and revoke one. A student starts a link for themself and reads their
+ * own links.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -36,6 +37,13 @@ export default GroupSpec.make()
       returns: () => LinkView,
       error: () => Schema.Union([AccessDenied, LinkRefused]),
     }).middleware(PersonAccess, { action: "guardian.link", arg: "studentId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "mine",
+      args: () => ({ slug: TenantSlug }),
+      returns: () => Schema.Array(FamilyLink),
+    })
   )
   .addFunction(
     FunctionSpec.publicPaginatedQuery({

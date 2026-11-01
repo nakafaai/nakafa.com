@@ -9,6 +9,7 @@ import {
   matchPeople,
   mentionQuery,
   mentionSegments,
+  mentionWord,
 } from "@/components/tenant/classes/forum/mentions";
 
 const personOf = Schema.decodeUnknownSync(Id("tenantPeople"));
@@ -105,5 +106,21 @@ describe("forum mentions", () => {
       { _tag: "text", at: 0, text: "Tanpa sebutan" },
     ]);
     expect(mentionSegments("", [])).toEqual([]);
+  });
+});
+
+describe("mentionWord", () => {
+  it("writes what each mention carries in a message's text", () => {
+    expect(mentionWord({ _tag: "everyone" })).toBe("@everyone");
+    expect(mentionWord({ _tag: "nina" })).toBe("@Nina");
+  });
+});
+
+describe("keptMentions with Nina", () => {
+  it("keeps Nina once while the text still names her", () => {
+    expect(
+      keptMentions("@Nina tolong", [{ _tag: "nina" }, { _tag: "nina" }])
+    ).toEqual([{ _tag: "nina" }]);
+    expect(keptMentions("tolong", [{ _tag: "nina" }])).toEqual([]);
   });
 });

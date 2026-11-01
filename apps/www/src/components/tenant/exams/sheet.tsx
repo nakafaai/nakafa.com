@@ -19,11 +19,12 @@ import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
 /**
  * The frame of a paper: a page in the shape of the thumbnails, which a longer question makes taller,
  * with its content from the top. The chosen page is outlined, as a design tool outlines the page in hand.
+ * On a phone its side padding and the canvas's gutter add up to the player's, so a line wraps as the student reads it.
  * A flex column, since Safari keeps a grid's rows at the height the aspect ratio gave them, so a growing
  * prompt would run over the options below it.
  */
 const questionPaper = cva(
-  "bg-background flex aspect-4/3 w-full min-w-0 flex-col gap-8 rounded-xl p-6 shadow-sm md:p-10",
+  "bg-background flex aspect-4/3 w-full min-w-0 flex-col gap-8 rounded-xl px-3 py-6 shadow-sm md:p-10",
   {
     defaultVariants: { selected: false },
     variants: {
@@ -87,7 +88,7 @@ export function PaperOption({
       className={cn(
         "flex items-center gap-2 text-sm leading-none font-medium",
         choiceFrame(getTryoutSelectableChoiceVariant({ checked: false })),
-        "cursor-text select-text"
+        "w-full cursor-text select-text"
       )}
     >
       <span className="contents" inert>

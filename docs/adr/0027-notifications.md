@@ -27,6 +27,18 @@ that the live scheduling writes (ADR 0016 keeps a stored change name), and
 Amended on 31 October 2026: Nakafa keeps no age and no under-age flag (ADR 0034),
 so quiet hours cover every student.
 
+Amended on 31 October 2026: the task reminders and the notice mails are built. A
+task's reminders and its late-task notice run from the scheduler, as a sitting's
+do: publishing a task schedules them from the rules, the task keeps its jobs, and
+moving the deadline cancels the jobs that have not started and schedules new ones,
+so the planned `notificationReminders` rows and five-minute reminder cron are not
+needed. Every email of a notice leaves through one queue, `noticeMails`, because
+Resend's free plan takes 100 emails a day: a five-minute sweep sends at most 80 notice
+mails a day, leaving 20 for what is always sent, and each recipient's due rows share
+one mail that counts them. An exam leaves first, then what happened now, then the
+17:00 digest. What the limit holds back waits for the next sweep and the next day,
+a mail about an exam until the exam opens, and any other for a week.
+
 Amended on 31 October 2026: the first personal notification is built. A reply to
 an account's comment on a lesson or an article writes one `comment.replied` row in
 the transaction of the reply, addressed to the account (`recipientUserId`), with no
@@ -138,8 +150,10 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   and the invitation. A resend refreshes that row to the resend's time and marks
   it unread. Revoking the invitation deletes the row, and a revoked invitation
   that a run reads later gets none.
-- Preferences are kept for each kind and each channel (`notificationPreferences`,
-  planned). The email for an invitation and for the account is always sent.
+- Preferences are kept for each kind and each channel (`noticePreferences`). A row
+  is a channel the Person switched off, so a Person with no rows gets everything,
+  and the inbox row always stays. The email for an invitation and for the account
+  is always sent.
 - The fan-out is never one transaction. A workpool (`@convex-dev/workpool`, a
   dependency of `packages/backend` today) works in batches of 100 recipients.
   An `@all` of a teacher follows the same rule (ADR 0025).
@@ -411,10 +425,11 @@ sitting does not show.
 | The bounds of the inbox: one request reads at most `HELD_SCHOOL_LIMIT`, 100 schools, and is refused past it with `NotificationScopeTooLarge`; each page of the consumer, the read-all, and the purge holds 50, half of the 100-entry list page of ADR 0016; a page cursor that names more than `HELD_SCHOOL_LIMIT` rows is refused with `NotificationCursorInvalid` | Live |
 | The minute sweep that starts a run for each pending journal cursor | Built |
 | `pushSubscriptions`, subscribe and unsubscribe, the push sender, and the push of mention and announcement rows held by quiet hours | Built; live once the operator sets the VAPID keys |
-| `notificationPreferences` and `notificationReminders` | Planned, program wave B |
+| `noticePreferences`, read by the push and the mail queue, and the switches on the School inbox | Built |
+| Task reminders and late-task notices from the scheduler, `confect/notifications/tasks.ts` | Built |
+| The notice mail queue, `noticeMails`, its daily limit, and the sweep in `confect/emails/digest` | Built |
 | The reply row of an account, its push, its read and its deletion, `confect/notifications/reply.ts` | Built; its digest email and its preference wait for the notice mail queue |
 | The notify consumer for the change types other than `person.invited` | Planned, program wave B |
-| The reminder cron | Planned, program wave B |
 | The channel table as data, `confect/notifications/rules.ts`: the routes of each kind and relation | Called: the inbox consumer asks `deliveriesOf`, which reads `routeOf`, for the invitee's inbox row. `recipientsOf` and `canSwitchOff` wait for the preferences (program wave B) |
 | The sends of a notice, `confect/notifications/delivery.ts`: `deliveriesOf` and `deliveryInstant` | `deliveriesOf` is called by the inbox consumer. `deliveryInstant` waits for the reminders, which need the zone of their school (program wave B) |
 | The zone that carries a notice, `confect/notifications/zone.ts` | Built as pure functions, not called yet (program wave B) |

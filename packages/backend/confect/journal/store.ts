@@ -17,7 +17,7 @@ import { Effect, Option } from "effect";
 export const cursorOf = Effect.fn("journal.cursor.of")(function* (
   consumer: typeof JournalConsumer.Type,
   tenantId: GenericId.GenericId<"tenants">,
-  changeType: typeof ConsumedChangeType.Type
+  changeType: typeof ConsumedChangeType.Type | null
 ) {
   return yield* (yield* DatabaseReader)
     .table("journalCursors")
@@ -106,6 +106,28 @@ export const readAfter = Effect.fn("journal.cursor.readAfter")(function* (
     .take(numItems + position.handled.length + 1)
     .pipe(Effect.orDie);
 });
+
+/**
+ * Reads the journal entries of one tenant that a run may need, of every change type: those
+ * created at or after `since`, in creation order, bounded as `readAfter` is.
+ */
+export const readTenantAfter = Effect.fn("journal.cursor.readTenantAfter")(
+  function* (
+    tenantId: GenericId.GenericId<"tenants">,
+    position: Position,
+    numItems: number
+  ) {
+    return yield* (yield* DatabaseReader)
+      .table("journalEntries")
+      .index("by_owner_tenantId", (query) =>
+        query
+          .eq("owner.tenantId", tenantId)
+          .gte("_creationTime", position.since)
+      )
+      .take(numItems + position.handled.length + 1)
+      .pipe(Effect.orDie);
+  }
+);
 
 /** Saves where one run stopped, and whether a further run is owed. */
 export const advance = Effect.fn("journal.cursor.advance")(function* (
