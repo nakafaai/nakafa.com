@@ -24,6 +24,7 @@ import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import {
+  TryExamIdContext,
   TrySlugContext,
   TryStoreContext,
 } from "@/components/tenant/exams/try/context";
@@ -83,55 +84,57 @@ export function ExamTryPaper({
 
   return (
     <TrySlugContext value={slug}>
-      <TryStoreContext value={store}>
-        <PlayerProvider
-          keys={Arr.map(exam.questions, (question) => question.id)}
-          mode="list"
-        >
-          <PlayerKeys locked={false} questions={models} />
-          <PaperBar
-            back={<PaperBack examId={examId} />}
-            title={exam.title || t("untitled")}
+      <TryExamIdContext value={examId}>
+        <TryStoreContext value={store}>
+          <PlayerProvider
+            keys={Arr.map(exam.questions, (question) => question.id)}
+            mode="list"
           >
-            {gone ? null : (
-              <TargetLink className={buttonVariants()} target={editor}>
-                {t("try-finish")}
-              </TargetLink>
-            )}
-          </PaperBar>
-          <PlayerMain
-            navigator={
-              <PlayerSidebar>
-                <PlayerGrid questions={models} />
-                <PlayerLegend />
-              </PlayerSidebar>
-            }
-          >
-            <TryReveal questions={exam.questions}>
-              <PlayerQuestions>
-                {Arr.map(exam.questions, (question, index) => (
-                  <ExamTryQuestion
-                    key={question.id}
-                    number={index + 1}
-                    question={question}
-                  />
-                ))}
-              </PlayerQuestions>
-            </TryReveal>
-          </PlayerMain>
-          <PlayerFooter>
-            <PlayerFlag beforeNote locked={false} questions={models} />
-            <PlayerOpener />
-            <PlayerNote defaultOpen={gone} key={String(gone)}>
-              {gone ? <ExamGone /> : t("try-note")}
-            </PlayerNote>
-          </PlayerFooter>
-          <PlayerSheet>
-            <PlayerGrid questions={models} />
-            <PlayerLegend />
-          </PlayerSheet>
-        </PlayerProvider>
-      </TryStoreContext>
+            <PlayerKeys locked={false} questions={models} />
+            <PaperBar
+              back={<PaperBack examId={examId} />}
+              title={exam.title || t("untitled")}
+            >
+              {gone ? null : (
+                <TargetLink className={buttonVariants()} target={editor}>
+                  {t("try-finish")}
+                </TargetLink>
+              )}
+            </PaperBar>
+            <PlayerMain
+              navigator={
+                <PlayerSidebar>
+                  <PlayerGrid questions={models} />
+                  <PlayerLegend />
+                </PlayerSidebar>
+              }
+            >
+              <TryReveal questions={exam.questions}>
+                <PlayerQuestions>
+                  {Arr.map(exam.questions, (question, index) => (
+                    <ExamTryQuestion
+                      key={question.id}
+                      number={index + 1}
+                      question={question}
+                    />
+                  ))}
+                </PlayerQuestions>
+              </TryReveal>
+            </PlayerMain>
+            <PlayerFooter>
+              <PlayerFlag beforeNote locked={false} questions={models} />
+              <PlayerOpener />
+              <PlayerNote defaultOpen={gone} key={String(gone)}>
+                {gone ? <ExamGone /> : t("try-note")}
+              </PlayerNote>
+            </PlayerFooter>
+            <PlayerSheet>
+              <PlayerGrid questions={models} />
+              <PlayerLegend />
+            </PlayerSheet>
+          </PlayerProvider>
+        </TryStoreContext>
+      </TryExamIdContext>
     </TrySlugContext>
   );
 }
