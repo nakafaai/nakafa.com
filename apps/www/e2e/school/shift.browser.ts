@@ -33,6 +33,9 @@ const SETTLE_MILLISECONDS = 3000;
 /** How long an exam's words may take to reach the server at this load. */
 const SAVED_MILLISECONDS = 60_000;
 
+/** How long a page may take on a cold cache at a sixth of the speed, at this load. */
+const COLD_MILLISECONDS = 60_000;
+
 /** The screens a teacher works on: a phone, and a laptop. */
 const SCREENS = [
   { height: 844, width: 390 },
@@ -80,13 +83,17 @@ const writeExam = async (page: Page, address: string) => {
     await page.keyboard.type(PROMPT.repeat(3));
     await expect(prompt).toContainText(PROMPT.trim());
   }
-  // The words reach the server a moment after the last key, and a reload reads what it holds.
+  // The words reach the server a moment after the last key. A second page reads what it holds, since a reload of
+  // this one would throw away the words it has not sent yet.
+  const reader = await page.context().newPage();
   await expect(async () => {
-    await page.reload();
-    await expect(textOf(page, 1)).toHaveText(PROMPT.repeat(3).trim(), {
-      timeout: readinessTimeoutMilliseconds,
-    });
+    await reader.goto(page.url());
+    await expect(reader.locator("[data-page]").nth(2)).toContainText(
+      PROMPT.repeat(3).trim(),
+      { timeout: readinessTimeoutMilliseconds }
+    );
   }).toPass({ timeout: SAVED_MILLISECONDS });
+  await reader.close();
 };
 
 /** The shifts the page recorded that nothing the teacher did caused, with what each moved. */
@@ -121,18 +128,16 @@ for (const screen of SCREENS) {
     const page = await coldPage(context);
 
     await page.goto(editor);
-    await expect(textOf(page, 1)).toBeEditable({
-      timeout: readinessTimeoutMilliseconds,
-    });
+    await expect(textOf(page, 1)).toBeEditable({ timeout: COLD_MILLISECONDS });
     expect(await stillness(page)).toEqual([]);
 
     await page.getByRole("link", { name: "Try as student" }).click();
     await page.waitForURL(TRY_PATH);
     await expect(
       page.getByRole("heading", { exact: true, name: "Question 1" })
-    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    ).toBeVisible({ timeout: COLD_MILLISECONDS });
     await expect(page.getByText(PROMPT.trim()).first()).toBeVisible({
-      timeout: readinessTimeoutMilliseconds,
+      timeout: COLD_MILLISECONDS,
     });
     expect(await stillness(page)).toEqual([]);
     await context.close();
