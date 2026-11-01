@@ -1,8 +1,9 @@
 "use client";
 
 import { useHotkeys } from "@mantine/hooks";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { loadSearchCommandModule } from "@/components/search/command/module";
 import { ArticleNavigationContext } from "@/components/search/navigation";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";

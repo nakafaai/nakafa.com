@@ -1,6 +1,7 @@
+import { lazy } from "@repo/design-system/lib/lazy";
 import type { Node } from "@tiptap/pm/model";
 import { Array as Arr, MutableList } from "effect";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { createPortal } from "react-dom";
 
 /** A figure's code is far too heavy for a paper that holds none, so it loads with the first figure. */

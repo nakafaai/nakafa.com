@@ -23,10 +23,11 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ISOSCELES_RIGHT_TRIANGLE_ANGLE } from "@repo/math/angles";
 import { ClientOnly } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { lazy, Suspense, useState } from "react";
+import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 
 // The client-only import boundary keeps offscreen lessons from loading WebGL.

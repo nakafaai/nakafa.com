@@ -5,8 +5,9 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
-import { type ComponentProps, lazy, Suspense, useState } from "react";
+import { type ComponentProps, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /**

@@ -20,8 +20,9 @@ import {
   SheetHeader as SheetHeaderPrimitive,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
-import { Activity, lazy, Suspense, useState } from "react";
+import { Activity, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
 import { ConvexIsland } from "@/components/providers/island";

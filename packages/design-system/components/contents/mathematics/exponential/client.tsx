@@ -1,4 +1,5 @@
-import { type ComponentProps, lazy, Suspense } from "react";
+import { lazy } from "@repo/design-system/lib/lazy";
+import { type ComponentProps, Suspense } from "react";
 
 const Plot = lazy(() =>
   import(

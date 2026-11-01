@@ -1,5 +1,6 @@
+import { lazy } from "@repo/design-system/lib/lazy";
 import { Effect, Fiber, Option } from "effect";
-import { lazy, type ReactNode, Suspense, useEffect, useState } from "react";
+import { type ReactNode, Suspense, useEffect, useState } from "react";
 import {
   PageConsentControls,
   PageConsentEffects,

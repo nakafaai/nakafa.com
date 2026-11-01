@@ -1,6 +1,7 @@
 import { ANALYTICS_CONSENT_ROOT_ATTRIBUTE } from "@repo/analytics/consent";
 import { CardContent } from "@repo/design-system/components/ui/card";
-import { lazy, Suspense } from "react";
+import { lazy } from "@repo/design-system/lib/lazy";
+import { Suspense } from "react";
 import { useTranslations } from "use-intl";
 import {
   ConsentActions,

@@ -23,11 +23,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect } from "effect";
 import {
-  lazy,
   type ReactNode,
   Suspense,
   useLayoutEffect,

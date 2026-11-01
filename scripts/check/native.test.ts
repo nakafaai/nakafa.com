@@ -85,6 +85,31 @@ export const dynamic = import(name);
   );
 
   it.effect(
+    "reports React's lazy under any name, and leaves React's other imports",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { lazy } from "react";
+import { lazy as later, Suspense } from "react";
+import { Suspense as Boundary } from "react";
+import { lazy as wrapped } from "@repo/design-system/lib/lazy";
+import React from "react";
+import * as Everything from "react";
+`),
+          ["1 react-lazy", "2 react-lazy"]
+        );
+        assert.deepStrictEqual(
+          yield* findings(`import { lazy as reactLazy } from "react";
+export function lazy() {
+  return reactLazy;
+}
+`),
+          []
+        );
+      })
+  );
+
+  it.effect(
     "names a Node module by its name, so look-alike packages and paths stay",
     () =>
       Effect.gen(function* () {

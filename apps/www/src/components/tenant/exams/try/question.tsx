@@ -8,9 +8,10 @@ import {
   typedText,
 } from "@repo/backend/confect/assessment/response";
 import { paperAnswers } from "@repo/backend/confect/exams/parts";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { lazy, type ReactNode, Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import { ReaderPrimer } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";

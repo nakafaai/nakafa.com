@@ -27,6 +27,7 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { lazy } from "@repo/design-system/lib/lazy";
 import {
   getCos,
   getQuadrant,
@@ -35,14 +36,7 @@ import {
   getTan,
 } from "@repo/math/angles";
 import { Option } from "effect";
-import {
-  createContext,
-  lazy,
-  type ReactNode,
-  Suspense,
-  use,
-  useState,
-} from "react";
+import { createContext, type ReactNode, Suspense, use, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */

@@ -5,6 +5,7 @@ import {
   FigureAttrsSchema,
 } from "@nakafa/aksara-contracts/assessment/figure";
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
+import { lazy } from "@repo/design-system/lib/lazy";
 import {
   Array as Arr,
   Match,
@@ -13,7 +14,6 @@ import {
   Schema,
   Struct,
 } from "effect";
-import { lazy } from "react";
 import { InlineContent } from "@/components/assessment/inline";
 import { MermaidMdx } from "@/lib/content/renderer/client/base/media";
 import { MathVisual } from "@/lib/content/renderer/client/base/visual/math";

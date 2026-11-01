@@ -1,8 +1,9 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { useNavigate } from "@tanstack/react-router";
 import { Effect, Fiber, Option, Result } from "effect";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
   type ChatContextValue,

@@ -29,6 +29,7 @@ export const Rule = Schema.Literals([
   "object-helper",
   "promise",
   "random",
+  "react-lazy",
   "switch",
   "throw",
   "timer",
@@ -150,6 +151,11 @@ export const RULES = {
     message:
       "compose Effects with Effect.fn, wrapping a Promise SDK once in Effect.tryPromise, instead of async functions or await.",
     scope: "domain",
+  },
+  "react-lazy": {
+    message:
+      "import lazy from @repo/design-system/lib/lazy instead of react: a chunk that fails with no network waits for it there, where React's would throw the page away.",
+    scope: "code",
   },
   random: {
     message:

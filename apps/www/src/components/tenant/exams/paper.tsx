@@ -6,9 +6,10 @@ import {
 } from "@repo/backend/confect/exams/question";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { statusIconVariants } from "@repo/design-system/lib/status";
 import { Array as Arr, Match, Option } from "effect";
-import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
+import { type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { usePaperText } from "@/components/player/held";
