@@ -18,7 +18,13 @@ import {
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import { type ComponentProps, type ReactNode, useRef } from "react";
+import { pressMainAction } from "@repo/design-system/lib/dialog";
+import {
+  type ComponentProps,
+  type KeyboardEvent,
+  type ReactNode,
+  useRef,
+} from "react";
 
 interface Props {
   children?: ReactNode;
@@ -63,6 +69,9 @@ export function ResponsiveDialog({
   // dialog without one, and no dialog offers two.
   const cornerClose = !footer;
   const opened = useRef(false);
+  const footerPart = useRef<HTMLDivElement>(null);
+  const pressMain = (event: KeyboardEvent<HTMLDivElement>) =>
+    pressMainAction(event, footerPart.current);
 
   // A press on the backdrop before the dialog has finished opening is the second press of the double press
   // that opened it, so the dialog stays.
@@ -93,8 +102,10 @@ export function ResponsiveDialog({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          {hasBody ? <DialogPanel>{children}</DialogPanel> : null}
-          {!!footer && <DialogFooter>{footer}</DialogFooter>}
+          {hasBody ? (
+            <DialogPanel onKeyDown={pressMain}>{children}</DialogPanel>
+          ) : null}
+          {!!footer && <DialogFooter ref={footerPart}>{footer}</DialogFooter>}
         </DialogContent>
       </Dialog>
     );
@@ -112,8 +123,10 @@ export function ResponsiveDialog({
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        {hasBody ? <DrawerPanel>{children}</DrawerPanel> : null}
-        {!!footer && <DrawerFooter>{footer}</DrawerFooter>}
+        {hasBody ? (
+          <DrawerPanel onKeyDown={pressMain}>{children}</DrawerPanel>
+        ) : null}
+        {!!footer && <DrawerFooter ref={footerPart}>{footer}</DrawerFooter>}
       </DrawerContent>
     </Drawer>
   );

@@ -1338,7 +1338,6 @@
     "card-qr-label": "QR code with the card code",
     "card-copy": "Copy code",
     "card-print": "Print card",
-    "card-print-footer": "Print sends the card to your printer.",
     "student-add": "Add student",
     "student-add-title": "Add a student",
     "student-add-description": "The student gets a login name and a first login card, added together.",
