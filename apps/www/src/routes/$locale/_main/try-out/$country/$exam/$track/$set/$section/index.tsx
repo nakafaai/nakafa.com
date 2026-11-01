@@ -66,10 +66,14 @@ export const Route = createFileRoute(
 });
 
 function TryoutSectionPage() {
+  const sectionPath = Route.useLoaderData({
+    select: (route) => route.sectionPath,
+  });
   return (
     // A visitor's page holds no Convex client, so it draws the section as every visitor sees it, which the
-    // build prerenders; a learner's page reads their attempt once it holds the client.
-    <TryoutPressProvider>
+    // build prerenders; a learner's page reads their attempt once it holds the client. A press belongs
+    // to its page, so the next section never starts by itself.
+    <TryoutPressProvider key={sectionPath}>
       <ConvexIsland fallback={<TryoutSectionVisitor />}>
         <TryoutSectionLearner />
       </ConvexIsland>

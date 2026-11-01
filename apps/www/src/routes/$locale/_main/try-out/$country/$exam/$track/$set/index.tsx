@@ -66,10 +66,14 @@ export const Route = createFileRoute(
 });
 
 function TryoutSetPage() {
+  const setPath = Route.useLoaderData({
+    select: (route) => route.page.set.publicPath,
+  });
   return (
     // A visitor's page holds no Convex client, so it draws the set as every visitor sees it, which the
-    // build prerenders; a learner's page reads their attempt once it holds the client.
-    <TryoutPressProvider>
+    // build prerenders; a learner's page reads their attempt once it holds the client. A press belongs
+    // to its page, so the next set starts with none.
+    <TryoutPressProvider key={setPath}>
       <ConvexIsland fallback={<TryoutSetVisitor />}>
         <TryoutSetLearner />
       </ConvexIsland>

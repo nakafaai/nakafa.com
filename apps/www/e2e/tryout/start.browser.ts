@@ -10,6 +10,7 @@ import id from "@repo/internationalization/dictionaries/id.json" with {
 };
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { CONVEX_SOCKET } from "@/e2e/support/frames";
 import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -20,6 +21,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const FRAMES_KEY = "nakafaStartFrames";
 const NAMES_KEY = "nakafaActionNames";
+
+/** The set of the sections below, whose start lands on its first section. */
+const SET_HREF = "/en/try-out/indonesia/snbt/2027/set-1";
 
 /** An address that names a running attempt. */
 const ATTEMPT_ADDRESS = /attemptId=/u;
@@ -308,7 +312,6 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
   baseURL,
   page,
 }) => {
-  const setHref = "/en/try-out/indonesia/snbt/2027/set-1";
   const messages = en.Tryouts;
   await Effect.runPromise(
     withObservedPageErrors(
@@ -319,7 +322,7 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
         yield* signInLearner(page.context(), origin);
         yield* recordActionNames(page, ACTION_NAME);
         yield* Effect.promise(async () => {
-          await page.goto(setHref, { waitUntil: "commit" });
+          await page.goto(SET_HREF, { waitUntil: "commit" });
           const start = page.locator("main").getByRole("button", {
             exact: true,
             name: messages["start-cta"],
@@ -335,7 +338,7 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
             .click();
           await page.waitForURL(ATTEMPT_ADDRESS);
 
-          await page.goto(setHref, { waitUntil: "commit" });
+          await page.goto(SET_HREF, { waitUntil: "commit" });
           await expect(
             page.locator("main").getByRole("link", {
               exact: true,
@@ -355,6 +358,67 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
             messages["continue-cta"],
           ]);
         });
+      })
+    )
+  );
+});
+
+/**
+ * The read that a press waits for brings the attempt, which keys a new tree and takes the place of the
+ * button that was pressed. The press stays, and the section starts from it. The socket's answers wait
+ * through the press, so the press lands while the read is pending.
+ */
+test("a press while the learner read is pending starts the section it brings", async ({
+  baseURL,
+  page,
+}) => {
+  const section = SECTIONS[0];
+  const messages = section.messages.Tryouts;
+  let holding = false;
+  const held = MutableList.make<() => void>();
+  await page.routeWebSocket(CONVEX_SOCKET, (socket) => {
+    const server = socket.connectToServer();
+    server.onMessage((message) => {
+      if (holding) {
+        MutableList.append(held, () => socket.send(message));
+        return;
+      }
+      socket.send(message);
+    });
+  });
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        const origin = yield* Effect.fromNullishOr(baseURL);
+        yield* seedAnalyticsConsent(page, "denied");
+        yield* signInLearner(page.context(), origin);
+        yield* Effect.promise(async () => {
+          await page.goto(SET_HREF, { waitUntil: "commit" });
+          const start = page.locator("main").getByRole("button", {
+            exact: true,
+            name: messages["start-cta"],
+          });
+          await expect(start).toBeEnabled({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await waitUntilTakenOver(start);
+          await start.click();
+          await page
+            .getByRole("dialog")
+            .getByRole("button", { exact: true, name: messages["free-cta"] })
+            .click();
+          await page.waitForURL(ATTEMPT_ADDRESS);
+
+          holding = true;
+          await page.goto(section.href, { waitUntil: "commit" });
+          await page.locator(ACTION).click();
+          holding = false;
+          for (const answer of MutableList.toArray(held)) {
+            answer();
+          }
+        });
+        yield* waitForRunningSection(page);
       })
     )
   );
