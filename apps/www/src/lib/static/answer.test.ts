@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { readStaticAnswer } from "@/lib/static/answer";
 import { staticDataPath, toStaticFile } from "@/lib/static/calls";
 import { staticCallKey } from "@/lib/static/key";
@@ -40,6 +40,48 @@ describe("lib/static/answer", () => {
         expect(answer.headers.get("x-tss-serialized")).toBe("true");
         expect(yield* Effect.promise(() => answer.text())).toBe('{"t":1}');
       })
+  );
+
+  it.effect("reads one answer from the network once", () =>
+    Effect.gen(function* () {
+      const data = { locale: "en" };
+      fetcher.mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            toStaticFile("application/json", new TextEncoder().encode("[1]"))
+          )
+        )
+      );
+
+      for (const _ of [1, 2]) {
+        const answer = Option.getOrThrow(
+          yield* readStaticAnswer(URL_OF_FN, data)
+        );
+        expect(yield* Effect.promise(() => answer.text())).toBe("[1]");
+      }
+
+      expect(fetcher).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect("keeps a bounded number of answers", () =>
+    Effect.gen(function* () {
+      fetcher.mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            toStaticFile("application/json", new TextEncoder().encode("[2]"))
+          )
+        )
+      );
+
+      for (const page of Arr.range(0, 256)) {
+        yield* readStaticAnswer(URL_OF_FN, { page });
+      }
+      fetcher.mockClear();
+      yield* readStaticAnswer(URL_OF_FN, { page: 0 });
+
+      expect(fetcher).toHaveBeenCalledOnce();
+    })
   );
 
   it.effect(

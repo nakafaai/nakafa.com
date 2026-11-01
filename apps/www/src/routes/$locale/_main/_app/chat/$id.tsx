@@ -1,5 +1,8 @@
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { createFileRoute } from "@tanstack/react-router";
+import { createIsomorphicFn } from "@tanstack/react-start";
+import { Schema } from "effect";
 import { useSyncExternalStore } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
 import { readShareToken } from "@/components/ai/chat/link";
@@ -7,10 +10,23 @@ import { ReaderChatPage } from "@/components/ai/chat/reader";
 import { AiChatPage } from "@/components/ai/chat/screen";
 import { ConvexIsland } from "@/components/providers/island";
 import { chatScreenFn } from "@/lib/account/home.functions";
+import type { ChatInput } from "@/lib/account/input";
+
+/**
+ * A saved chat on the server, where its title names the document. A move between
+ * pages in the browser reads the chat live, so it waits on no Worker, and the id
+ * decodes where the address is.
+ */
+const readChatScreen = createIsomorphicFn()
+  .server((data: typeof ChatInput.Type) => chatScreenFn({ data }))
+  .client(({ id }: typeof ChatInput.Type) => ({
+    chatId: Schema.decodeUnknownSync(IdSchema("chats"))(id),
+    title: undefined,
+  }));
 
 export const Route = createFileRoute("/$locale/_main/_app/chat/$id")({
   loader: ({ params }) =>
-    chatScreenFn({ data: { id: params.id, locale: params.locale } }),
+    readChatScreen({ id: params.id, locale: params.locale }),
   head: ({ loaderData }) => ({
     // A chat Nina has not named yet keeps the title of the new chat page.
     meta:
