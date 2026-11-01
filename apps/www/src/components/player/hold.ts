@@ -5,7 +5,7 @@ import { createStore } from "zustand";
 const HELD_TEXTS = 8;
 
 /** What a paper still waits for, and the actions that end the wait, which never starts again. */
-export interface PaperHold {
+interface PaperHold {
   /** Whether the code that draws the paper's texts stands ready, so a text draws in the frame it arrives. */
   readonly drawable: boolean;
   /** Takes that code as ready. */
