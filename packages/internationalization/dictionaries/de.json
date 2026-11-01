@@ -398,6 +398,7 @@
     "schedule-description": "Wähle, wer die Prüfung schreibt, wo und wann.",
     "audience": "Wer schreibt",
     "audience-unit": "Die ganze Einheit",
+    "audience-no-cohort": "Klassengruppen erscheinen hier, sobald die Einheit eine hat.",
     "room": "Raum",
     "room-placeholder": "Labor 2",
     "starts": "Beginnt",
@@ -405,6 +406,7 @@
     "starts-time-placeholder": "Uhrzeit",
     "length": "Dauer",
     "length-minutes": "{count, plural, one {# Minute} other {# Minuten}}",
+    "schedule-room": "Gib dem Raum einen Namen, um zu planen.",
     "schedule-prompt": "Schreibe den Text von Frage {number}.",
     "schedule-key-choice": "Markiere die richtige Antwort von Frage {number}.",
     "schedule-key-short": "Füge Frage {number} eine akzeptierte Antwort hinzu.",
@@ -493,6 +495,9 @@
     "remove-many-description": "Die Fragen und ihre Antworten verlassen diese Prüfung.",
     "student-retry": "Diese Sitzung konnte nicht geladen werden, daher versuche es gleich noch einmal.",
     "student-opens-at": "Diese Sitzung beginnt {time}.",
+    "student-entry-waiting": "Du trittst ein, sobald du wieder online bist.",
+    "student-second-tab-title": "Diese Prüfung ist in einem anderen Tab geöffnet.",
+    "student-second-tab-description": "Geh zu diesem Tab zurück, oder schließe ihn, dann übernimmt dieser Tab.",
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
     "student-back-home": "Zur Startseite",
     "seat-last-activity": "Aktiv {time}.",
@@ -3013,6 +3018,10 @@
     "sitting-locked": {
       "title": "Diese Sitzung ist gesperrt.",
       "description": "Frag deine Lehrkraft, was du als Nächstes tun sollst."
+    },
+    "sitting-answers-unsent": {
+      "title": "Einige Antworten wurden vielleicht nicht gespeichert.",
+      "description": "Antworten auf diesem Gerät kamen vielleicht nicht an, bevor die Prüfung schloss, also sag es deiner Aufsicht."
     },
     "sitting-attempt-closed": {
       "title": "Dieser Versuch ist beendet.",

@@ -398,6 +398,7 @@
     "schedule-description": "Pilih siapa yang mengerjakan, di mana dan kapan.",
     "audience": "Siapa yang mengerjakan",
     "audience-unit": "Seluruh unit",
+    "audience-no-cohort": "Kelompok kelas muncul di sini setelah unit memilikinya.",
     "room": "Ruang",
     "room-placeholder": "Lab 2",
     "starts": "Mulai",
@@ -405,6 +406,7 @@
     "starts-time-placeholder": "Jam",
     "length": "Durasi",
     "length-minutes": "{count} menit",
+    "schedule-room": "Isi nama ruang untuk menjadwalkan.",
     "schedule-prompt": "Tulis teks soal {number}.",
     "schedule-key-choice": "Tandai jawaban benar soal {number}.",
     "schedule-key-short": "Tambahkan jawaban yang diterima untuk soal {number}.",
@@ -493,6 +495,9 @@
     "remove-many-description": "Soal-soal dan jawabannya keluar dari ujian ini.",
     "student-retry": "Sesi ini gagal dimuat, jadi coba lagi sebentar lagi.",
     "student-opens-at": "Sesi ini dibuka {time}.",
+    "student-entry-waiting": "Kamu akan masuk setelah kembali online.",
+    "student-second-tab-title": "Ujian ini terbuka di tab lain.",
+    "student-second-tab-description": "Kembali ke tab itu, atau tutup tab itu agar tab ini melanjutkan.",
     "student-scheduled-footer": "Kolom token terbuka bersama sesi.",
     "student-back-home": "Kembali ke beranda",
     "seat-last-activity": "Aktif {time}.",
@@ -3013,6 +3018,10 @@
     "sitting-locked": {
       "title": "Sesi ini terkunci.",
       "description": "Tanyakan guru apa yang harus dilakukan selanjutnya."
+    },
+    "sitting-answers-unsent": {
+      "title": "Sebagian jawaban mungkin belum tersimpan.",
+      "description": "Jawaban di perangkat ini mungkin belum masuk sebelum ujian ditutup, jadi beri tahu pengawas."
     },
     "sitting-attempt-closed": {
       "title": "Percobaan ini sudah ditutup.",

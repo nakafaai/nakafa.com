@@ -11,7 +11,8 @@ import {
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, Option } from "effect";
+import { randomUuid } from "@repo/utilities/uuid";
+import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "use-intl";
 import type { OptionLabel } from "@/components/tenant/exams/answer";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
@@ -205,15 +206,17 @@ export function MatchColumn({
           ? {
               icon: statements ? ListPlusIcon : AddToListIcon,
               label: t(statements ? "statement-add" : "match-answer-add"),
-              run: () =>
+              run: () => {
+                const unique = Effect.runSync(randomUuid);
                 props.editing.saveAnswers((draft) => {
-                  const answers = withPartAdded(draft.answers, side);
+                  const answers = withPartAdded(draft.answers, side, unique);
                   return {
                     ...draft,
                     answers,
                     key: pairsKey(answers, keyPairs(draft.key)),
                   };
-                }),
+                });
+              },
             }
           : null
       }

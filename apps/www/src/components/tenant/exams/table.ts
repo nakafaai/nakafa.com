@@ -14,9 +14,6 @@ type Table = Extract<Interaction, { kind: "matrix" }>;
 /** One cell of a table, as its key holds it: a statement and the column it takes. */
 type Cell = Extract<InteractionKey, { kind: "matrix" }>["answers"][number];
 
-/** The number that a statement ID holds after `statement-`, when it holds one. */
-const STATEMENT_NUMBER = /^statement-(?<digits>\d+)$/u;
-
 /** The first table of a question's answers, or none when the answers hold no table. */
 export const tableOf = (
   answers: readonly Interaction[]
@@ -49,28 +46,25 @@ export const withCellLabel = (
   }));
 
 /**
- * The answers with one empty statement added at the end of each table, numbered after the largest one
- * it holds, unless the table holds the most statements it may.
+ * The answers with one empty statement added at the end of each table, unless the table holds the most
+ * statements it may. The statement's ID ends in `unique`, which no statement has held, so a mark a student
+ * saved never lands on a new statement of an exam that takes edits while its sitting runs (ADR 0031).
  */
 export const withStatementAdded = (
-  answers: Arr.NonEmptyReadonlyArray<Interaction>
+  answers: Arr.NonEmptyReadonlyArray<Interaction>,
+  unique: string
 ) =>
-  changeTable(answers, (table) => {
-    if (table.statements.length >= CHOICE_OPTIONS_MAX) {
-      return table;
-    }
-    const largest = Arr.reduce(table.statements, 0, (most, part) => {
-      const digits = STATEMENT_NUMBER.exec(part.id)?.[1];
-      return digits === undefined ? most : Math.max(most, Number(digits));
-    });
-    return {
-      ...table,
-      statements: [
-        ...table.statements,
-        { id: `statement-${largest + 1}`, label: emptyLabel() },
-      ],
-    };
-  });
+  changeTable(answers, (table) =>
+    table.statements.length >= CHOICE_OPTIONS_MAX
+      ? table
+      : {
+          ...table,
+          statements: [
+            ...table.statements,
+            { id: `statement-${unique}`, label: emptyLabel() },
+          ],
+        }
+  );
 
 /** The answers with one statement taken out of each table, unless the table holds the fewest it may. */
 export const withStatementRemoved = (
