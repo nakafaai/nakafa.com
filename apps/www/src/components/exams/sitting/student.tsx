@@ -7,7 +7,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { useConvexConnectionState } from "convex/react";
 import { Option } from "effect";
 import {
   type FormEvent,
@@ -41,9 +40,9 @@ import {
   SittingTabWaiting,
 } from "@/components/exams/sitting/tab";
 import { useTenant } from "@/components/tenant/context";
+import { useExamOffline } from "@/components/tenant/exams/offline";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
-import { isConvexOffline } from "@/lib/convex/online";
 import { useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
 
@@ -56,9 +55,9 @@ type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
  */
 function EntryWaiting() {
   const t = useTranslations("Exams");
-  const connection = useConvexConnectionState();
+  const offline = useExamOffline();
 
-  if (!isConvexOffline(connection)) {
+  if (!offline) {
     return null;
   }
 
@@ -183,6 +182,22 @@ export function StudentSitting({
   return <StudentEntry entry={entry} isSettled={isSettled} sitting={sitting} />;
 }
 
+/** The sentence under the token field: why the entry was refused, that a press waits for the connection, or what the field wants. */
+function useEntryHint({
+  entering,
+  message,
+}: Pick<ReturnType<typeof useSittingEntry>, "entering" | "message">) {
+  const t = useTranslations("Exams");
+  const offline = useExamOffline();
+
+  if (message !== null) {
+    return t(message);
+  }
+  return entering && offline
+    ? t("student-entry-waiting")
+    : t("student-enter-footer");
+}
+
 /** The token field of a sitting the student has not entered, on the school's paper. */
 function StudentEntry({
   entry,
@@ -195,6 +210,7 @@ function StudentEntry({
   readonly sitting: typeof SittingView.Type;
 }) {
   const t = useTranslations("Exams");
+  const hint = useEntryHint(entry);
 
   return (
     <PaperFrame
@@ -223,12 +239,10 @@ function StudentEntry({
             </Button>
             {/* A refused token takes the sentence's place, so the screen holds its height. */}
             {entry.message === null ? (
-              <p className="text-muted-foreground text-sm">
-                {t("student-enter-footer")}
-              </p>
+              <p className="text-muted-foreground text-sm">{hint}</p>
             ) : (
               <p className="text-destructive text-sm" role="alert">
-                {t(entry.message)}
+                {hint}
               </p>
             )}
           </SittingNotice>

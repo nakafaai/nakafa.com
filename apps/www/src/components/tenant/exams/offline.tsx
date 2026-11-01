@@ -1,4 +1,5 @@
 import { CloudOffIcon } from "@hugeicons/core-free-icons";
+import { useNetwork } from "@mantine/hooks";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Tooltip,
@@ -11,15 +12,26 @@ import { useTranslations } from "use-intl";
 import { isConvexOffline } from "@/lib/convex/online";
 
 /**
+ * Whether the page has no connection. The browser knows at once when the device leaves its network, and the
+ * client notices a connection that went quiet about a minute later, so each answers for the other.
+ */
+export function useExamOffline() {
+  const { online } = useNetwork();
+  const connection = useConvexConnectionState();
+
+  return !online || isConvexOffline(connection);
+}
+
+/**
  * What the editor's header and the paper's bar say while the connection is gone: the person keeps
  * working, and every change waits on the page and saves once the connection is back. A phone shows
  * the icon, which names it in its tooltip.
  */
 export function ExamOffline() {
   const t = useTranslations("Exams");
-  const connection = useConvexConnectionState();
+  const offline = useExamOffline();
 
-  if (!isConvexOffline(connection)) {
+  if (!offline) {
     return null;
   }
 
