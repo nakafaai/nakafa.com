@@ -400,10 +400,7 @@ function GradeCorrectButton({
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () => correct({ gradeId, slug, value: next.value }),
-        SOURCE
-      )
+      saveSchool(() => correct({ gradeId, slug, value: next.value }), SOURCE)
     );
   };
 

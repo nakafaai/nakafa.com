@@ -126,8 +126,9 @@ export const childViewOf = Effect.fn("guardians.link.child")(function* (
   now: number
 ) {
   const student = yield* readLinkedPerson(link.studentPersonId);
-  const nisn = Option.flatMap(yield* rosterEntryOf(link.studentPersonId), (row) =>
-    Option.fromNullishOr(row.nisn)
+  const nisn = Option.flatMap(
+    yield* rosterEntryOf(link.studentPersonId),
+    (row) => Option.fromNullishOr(row.nisn)
   );
   const view: typeof ChildView.Type = {
     linkId: link._id,

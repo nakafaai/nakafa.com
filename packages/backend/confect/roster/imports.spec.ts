@@ -1,6 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { AccessDenied, GrantRejected } from "@repo/backend/confect/access/errors";
+import {
+  AccessDenied,
+  GrantRejected,
+} from "@repo/backend/confect/access/errors";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import {

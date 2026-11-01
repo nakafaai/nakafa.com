@@ -5,8 +5,8 @@ import type records from "@repo/backend/confect/_generated/refs/records";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
 import {
-  enterChange,
   correctChange,
+  enterChange,
   releaseChange,
   type SheetLine,
 } from "@/components/tenant/grades/change";
