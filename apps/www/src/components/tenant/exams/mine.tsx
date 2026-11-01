@@ -192,7 +192,7 @@ function SittingScore({ sitting }: { readonly sitting: Sitting }) {
 
 /**
  * The action of a sitting open now that the student has not finished: Start before the student has an attempt, and
- * Continue once the student has one. Any other sitting has no action, and its name still opens it.
+ * Continue once the student has one. Any other sitting offers Open, as its name does.
  */
 function SittingAction({ sitting }: { readonly sitting: Sitting }) {
   const t = useTranslations("Exams");
