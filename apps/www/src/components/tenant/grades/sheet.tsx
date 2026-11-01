@@ -54,6 +54,7 @@ import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableSearch } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import {
   enterChange,
   releaseChange,
@@ -145,7 +146,7 @@ export function ClassGradebook({
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return failed ? (
-      <DataFailure onRetry={reloadPage} />
+      <LoadFailure onRetry={reloadPage} />
     ) : (
       <TableEmpty
         act="reading"

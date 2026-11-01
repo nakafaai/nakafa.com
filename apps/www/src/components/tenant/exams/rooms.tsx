@@ -39,6 +39,7 @@ import {
   useServerSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import {
   RoomStateFilter,
@@ -266,7 +267,7 @@ function RoomsTable({
     : null;
   const empty = Arr.isReadonlyArrayEmpty(rooms);
   if (empty && failed) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
   if (empty && pagination._tag !== "Exhausted") {
     return <RoomsMore loadMore={loadMore} />;

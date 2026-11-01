@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/client/quran/interpretation";
 import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
+import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
@@ -56,6 +57,7 @@ export function QuranInterpretationControls({
   surahNumber,
 }: Props) {
   const t = useTranslations("Holy");
+  const common = useTranslations("Common");
   const [isOpen, { close, open, set }] = useDisclosure(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
   const [selectedVerseNumber, setSelectedVerseNumber] = useState(1);
@@ -206,6 +208,11 @@ export function QuranInterpretationControls({
         description={t("interpretation-description", {
           count: selectedVerseNumber,
         })}
+        footer={
+          <Button onClick={close} type="button">
+            {common("close")}
+          </Button>
+        }
         open={isOpen}
         setOpen={set}
         title={label}

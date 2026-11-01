@@ -19,7 +19,6 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Array as Arr, Option } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { DataFailure } from "@/components/shared/failure";
 import {
   PaneBody,
   PaneFooter,
@@ -39,6 +38,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import {
   type ChildItem,
@@ -82,7 +82,7 @@ export function GuardianHome() {
         />
         <div className="flex w-full min-w-0 flex-1 flex-col">
           {QueryResult.isFailure(children) ? (
-            <DataFailure onRetry={reloadPage} />
+            <LoadFailure onRetry={reloadPage} />
           ) : null}
           {QueryResult.isSuccess(children) ? (
             <GuardianChildren items={children.value} />
@@ -280,7 +280,7 @@ function GuardianGrades({ child }: { child: ChildItem }) {
     <>
       <PaneBody>
         {QueryResult.isFailure(grades) ? (
-          <DataFailure onRetry={reloadPage} />
+          <LoadFailure onRetry={reloadPage} />
         ) : null}
         {QueryResult.isSuccess(grades) ? (
           <GuardianGradeTable grades={grades.value} />

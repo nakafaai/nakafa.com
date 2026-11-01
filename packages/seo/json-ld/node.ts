@@ -52,12 +52,16 @@ const FaqPageInput = Schema.Struct({
 });
 
 /** The Quran surah that one book page describes, with its size. */
-const BookInput = Schema.Struct({
+const SurahInput = Schema.Struct({
+  /** The name of the book in the page's language, such as Al-Qur'an. */
+  bookName: Schema.String,
+  bookUrl: Schema.String,
   description: Schema.String,
   inLanguage: Schema.String,
+  /** What the surah's name means, in the page's language. */
+  meaning: Schema.String,
   name: Schema.String,
   position: Schema.Finite,
-  totalPages: Schema.Finite,
   url: Schema.String,
 });
 
@@ -156,19 +160,28 @@ export function makeProductNode(input: typeof ProductInput.Type) {
   };
 }
 
-/** The book node of one Quran surah, which is a free EBook. */
-export function makeBookNode(input: typeof BookInput.Type) {
+/**
+ * One surah as a chapter of the Quran, free to read. A surah has verses and no pages,
+ * so its length stands in its description.
+ *
+ * @see https://schema.org/Chapter
+ */
+export function makeSurahNode(input: typeof SurahInput.Type) {
   return {
     "@context": "https://schema.org",
-    "@type": "Book",
+    "@type": "Chapter",
     name: input.name,
+    alternateName: input.meaning,
     description: input.description,
     url: input.url,
     inLanguage: input.inLanguage,
-    bookFormat: "EBook",
     isAccessibleForFree: true,
     position: input.position,
-    numberOfPages: input.totalPages,
+    isPartOf: {
+      "@type": "Book",
+      name: input.bookName,
+      url: input.bookUrl,
+    },
   };
 }
 

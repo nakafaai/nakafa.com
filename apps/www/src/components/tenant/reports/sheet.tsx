@@ -48,6 +48,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { menuOf } from "@/components/tenant/reports/access";
@@ -155,7 +156,7 @@ function CohortReportsBody() {
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return failed ? (
-      <DataFailure onRetry={reloadPage} />
+      <LoadFailure onRetry={reloadPage} />
     ) : (
       <TableEmpty
         act="reading"

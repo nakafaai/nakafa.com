@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { NoticeMailsDoc } from "@repo/backend/confect/_generated/docs";
 import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -13,12 +14,20 @@ import { EMAIL_FROM, sendMail } from "@repo/backend/confect/emails/client";
 import spec from "@repo/backend/confect/emails/digest/internal.spec";
 import { resolveLegalLinks } from "@repo/backend/confect/emails/legal";
 import { isLoginAddress } from "@repo/backend/confect/identity/address";
-import { MAIL_RANKS } from "@repo/backend/confect/notifications/mail";
+import { ACCOUNT_LOCALE } from "@repo/backend/confect/notifications/copy";
+import {
+  isAccountMail,
+  isSchoolMail,
+  MAIL_RANKS,
+} from "@repo/backend/confect/notifications/mail";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { schoolAddress } from "@repo/backend/confect/tenancy/address";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { readPageCatalog } from "@repo/backend/content/publication/page";
-import { DigestChange } from "@repo/email/templates/digest/content";
+import {
+  type DigestEmailInput,
+  SchoolChange,
+} from "@repo/email/templates/digest/content";
 import {
   Array as Arr,
   Clock,
@@ -44,18 +53,52 @@ const RANK_PAGE = 200;
 /** The rows one mail counts. More than that wait for the next mail. */
 const RECIPIENT_PAGE = 50;
 
+/** The signed Pages a mail links to. */
+type Catalog = Effect.Success<ReturnType<typeof readPageCatalog>>;
+
+/** Takes a recipient's due rows off the queue, and keeps the ones that still tell something. */
+const leaveQueue = Effect.fn("emails.digest.leave")(function* (
+  rows: readonly NoticeMailsDoc[],
+  now: number
+) {
+  const writer = yield* DatabaseWriter;
+  yield* Effect.forEach(
+    rows,
+    (row) => writer.table("noticeMails").delete(row._id).pipe(Effect.orDie),
+    { discard: true }
+  );
+  return Arr.filter(rows, (row) => row.expiresAt > now);
+});
+
+/** What one mail says: what it counts, the inbox it opens, and its language with that language's legal links. */
+const inputOf = Effect.fn("emails.digest.input")(function* (
+  counts: DigestEmailInput["counts"],
+  inboxUrl: string,
+  locale: DigestEmailInput["locale"],
+  catalog: Catalog,
+  siteUrl: URL
+) {
+  const links = yield* resolveLegalLinks(catalog, locale, siteUrl);
+  return {
+    counts,
+    inboxUrl,
+    locale,
+    privacyPolicyUrl: links.privacyPolicyUrl,
+    termsOfServiceUrl: links.termsOfServiceUrl,
+  };
+});
+
 /**
- * One recipient's mail: every row of theirs that is due leaves the queue, and what still tells something is counted by
+ * One Person's mail: every row of theirs that is due leaves the queue, and what still tells something is counted by
  * kind. A recipient who left, has no real address, sits in an archived unit, or whose rows all expired gets none.
  */
-const mailOf = Effect.fn("emails.digest.mail")(function* (
+const schoolMail = Effect.fn("emails.digest.school")(function* (
   personId: GenericId.GenericId<"tenantPeople">,
   now: number,
-  catalog: Effect.Success<ReturnType<typeof readPageCatalog>>,
+  catalog: Catalog,
   siteUrl: URL
 ) {
   const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
   const rows = yield* reader
     .table("noticeMails")
     .index("by_recipientPersonId_and_dueAt", (query) =>
@@ -63,12 +106,7 @@ const mailOf = Effect.fn("emails.digest.mail")(function* (
     )
     .take(RECIPIENT_PAGE)
     .pipe(Effect.orDie);
-  yield* Effect.forEach(
-    rows,
-    (row) => writer.table("noticeMails").delete(row._id).pipe(Effect.orDie),
-    { discard: true }
-  );
-  const live = Arr.filter(rows, (row) => row.expiresAt > now);
+  const live = Arr.filter(yield* leaveQueue(rows, now), isSchoolMail);
   const person = yield* reader
     .table("tenantPeople")
     .get(personId)
@@ -100,29 +138,69 @@ const mailOf = Effect.fn("emails.digest.mail")(function* (
     .get(first.tenantId)
     .pipe(Effect.orDie);
   const school = yield* schoolAddress(siteUrl, tenant.slug);
-  const links = yield* resolveLegalLinks(
-    catalog,
-    unit.contentLanguage,
-    siteUrl
-  );
   return Option.some({
     address: user.email,
-    input: {
-      counts: Arr.filter(
-        Arr.map(DigestChange.literals, (change) => ({
+    input: yield* inputOf(
+      Arr.filter(
+        Arr.map(SchoolChange.literals, (change) => ({
           change,
           count: Arr.filter(live, (row) => row.change === change).length,
         })),
         ({ count }) => count > 0
       ),
-      inboxUrl: new URL("/notifications", school).href,
-      locale: unit.contentLanguage,
-      privacyPolicyUrl: links.privacyPolicyUrl,
-      termsOfServiceUrl: links.termsOfServiceUrl,
-    },
+      new URL("/notifications", school).href,
+      unit.contentLanguage,
+      catalog,
+      siteUrl
+    ),
     key: `notice-mail/${personId}/${first._id}`,
   });
 });
+
+/**
+ * One account's digest of the replies to its comments, which opens the Nakafa inbox in the language of an account. An
+ * account that is gone, has no real address, or whose rows all expired gets none, and its rows still leave the queue.
+ */
+const accountMail = Effect.fn("emails.digest.account")(function* (
+  userId: GenericId.GenericId<"users">,
+  now: number,
+  catalog: Catalog,
+  siteUrl: URL
+) {
+  const reader = yield* DatabaseReader;
+  const rows = yield* reader
+    .table("noticeMails")
+    .index("by_recipientUserId_and_dueAt", (query) =>
+      query.eq("recipientUserId", userId).lte("dueAt", now)
+    )
+    .take(RECIPIENT_PAGE)
+    .pipe(Effect.orDie);
+  const live = yield* leaveQueue(rows, now);
+  const user = yield* reader.table("users").get(userId).pipe(Effect.option);
+  if (
+    !Arr.isReadonlyArrayNonEmpty(live) ||
+    Option.isNone(user) ||
+    user.value.deletedAt !== undefined ||
+    isLoginAddress(user.value.email)
+  ) {
+    return Option.none();
+  }
+  return Option.some({
+    address: user.value.email,
+    input: yield* inputOf(
+      [{ change: "comment.replied", count: live.length }],
+      new URL(`/${ACCOUNT_LOCALE}/notifications`, siteUrl).href,
+      ACCOUNT_LOCALE,
+      catalog,
+      siteUrl
+    ),
+    key: `notice-mail/${userId}/${Arr.headNonEmpty(live)._id}`,
+  });
+});
+
+/** The one recipient of a row: a Person of a school, or an account. */
+const recipientOf = (row: NoticeMailsDoc) =>
+  isAccountMail(row) ? row.recipientUserId : row.recipientPersonId;
 
 /**
  * Takes the mails that are due off the queue, the ones that cannot wait first, as far as the day's limit reaches, and
@@ -158,7 +236,10 @@ const claim = FunctionImpl.make(
         .pipe(Effect.orDie)
     );
     const recipients = Arr.take(
-      Arr.dedupe(Arr.map(Arr.flatten(waiting), (row) => row.recipientPersonId)),
+      Arr.dedupeWith(
+        Arr.flatten(waiting),
+        (self, that) => recipientOf(self) === recipientOf(that)
+      ),
       room
     );
     if (!Arr.isReadonlyArrayNonEmpty(recipients)) {
@@ -169,8 +250,10 @@ const claim = FunctionImpl.make(
       Effect.provide(publicationLayer)
     );
     const mails = Arr.getSomes(
-      yield* Effect.forEach(recipients, (personId) =>
-        mailOf(personId, now, catalog, siteUrl)
+      yield* Effect.forEach(recipients, (row) =>
+        isAccountMail(row)
+          ? accountMail(row.recipientUserId, now, catalog, siteUrl)
+          : schoolMail(row.recipientPersonId, now, catalog, siteUrl)
       )
     );
     const spent = { day, sent: sent + mails.length };

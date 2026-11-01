@@ -27,6 +27,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { HOME_TARGET } from "@/lib/routing/target";
 
 /** How many schools one page of the list loads, and each page after it. */
@@ -110,7 +111,7 @@ function OperatorSchools() {
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     if (failed) {
-      return <DataFailure onRetry={reloadPage} />;
+      return <LoadFailure onRetry={reloadPage} />;
     }
     return (
       <TableEmpty

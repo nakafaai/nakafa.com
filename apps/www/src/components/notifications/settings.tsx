@@ -1,37 +1,41 @@
-import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   Notification01Icon,
   NotificationOff01Icon,
   Settings01Icon,
 } from "@hugeicons/core-free-icons";
-import notifications from "@repo/backend/confect/_generated/refs/notifications";
-import type { PreferenceChannel } from "@repo/backend/confect/notifications/preference";
-import type { NoticeKind } from "@repo/backend/confect/notifications/rules";
+import type {
+  PreferenceChannel,
+  SwitchedOff,
+} from "@repo/backend/confect/notifications/preference";
+import type {
+  NoticeKind,
+  Relation,
+} from "@repo/backend/confect/notifications/rules";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Switch } from "@repo/design-system/components/ui/switch";
-import { Array as Arr, Option } from "effect";
-import { useOptimistic, useState, useTransition } from "react";
-import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/auth/convex";
+import { Array as Arr } from "effect";
 import {
-  preferenceRowsOf,
-  relationOfRole,
-} from "@/components/notifications/preferences";
+  type ReactNode,
+  use,
+  useOptimistic,
+  useState,
+  useTransition,
+} from "react";
+import { useTranslations } from "use-intl";
+import { ChoiceContext } from "@/components/notifications/choice";
+import { preferenceRowsOf } from "@/components/notifications/preferences";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
-import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
 
-const SOURCE = "components/notifications/preferences";
-
-/** The header's button and its dialog: each kind of notice this member gets, with a switch for each channel. */
-export function NoticePreferences() {
+/** The header's button and its dialog, whose content mounts when it opens, so nothing is read before. */
+export function NoticePreferences({ children }: { children: ReactNode }) {
   const t = useTranslations("Notifications");
+  const common = useTranslations("Common");
   const [open, setOpen] = useState(false);
 
   return (
@@ -42,11 +46,16 @@ export function NoticePreferences() {
       </Button>
       <ResponsiveDialog
         description={t("preferences-description")}
+        footer={
+          <Button onClick={() => setOpen(false)} type="button">
+            {common("close")}
+          </Button>
+        }
         open={open}
         setOpen={setOpen}
         title={t("preferences")}
       >
-        {open ? <PreferenceTable /> : null}
+        {open ? children : null}
       </ResponsiveDialog>
     </>
   );
@@ -58,27 +67,19 @@ type Row = ReturnType<typeof preferenceRowsOf>[number];
 /** The columns of the switches. */
 const preferenceColumns = tableColumns<Row>();
 
-/** The switches, each kind in a row, and an empty cell for a channel the kind does not use. */
-function PreferenceTable() {
+/** The switches of one relation, each kind in a row, and an empty cell for a channel the kind does not use. */
+export function PreferenceTable({
+  off,
+  relation,
+}: {
+  /** What this reader switched off. */
+  off: readonly (typeof SwitchedOff.Type)[];
+  /** How this reader relates to the notices the table lists. */
+  relation: typeof Relation.Type;
+}) {
   const t = useTranslations("Notifications");
-  const { role, slug } = useTenant();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const off = useQuery(
-    notifications.preferences.list,
-    isSettled ? { slug } : "skip"
-  );
-
-  if (QueryResult.isFailure(off)) {
-    throw off.error;
-  }
-  if (!QueryResult.isSuccess(off)) {
-    return null;
-  }
-  const rows = preferenceRowsOf(
-    relationOfRole(Option.getOrElse(role, () => "teacher"))
-  );
   const isOn = (kind: Row["kind"], channel: typeof PreferenceChannel.Type) =>
-    !Arr.some(off.value, (row) => row.kind === kind && row.channel === channel);
+    !Arr.some(off, (row) => row.kind === kind && row.channel === channel);
   const channelColumn = (channel: typeof PreferenceChannel.Type) =>
     preferenceColumns.values(
       ({ channels, kind }) => {
@@ -121,7 +122,7 @@ function PreferenceTable() {
             channelColumn("push"),
             channelColumn("email"),
           ]}
-          data={rows}
+          data={preferenceRowsOf(relation)}
           plain
           rowId={({ kind }) => kind}
         />
@@ -141,8 +142,7 @@ function ChannelSwitch({
   on: boolean;
 }) {
   const t = useTranslations("Notifications");
-  const { slug } = useTenant();
-  const set = useMutation(notifications.preferences.set);
+  const save = use(ChoiceContext);
   const [shown, setShown] = useOptimistic(on);
   const [, startSaving] = useTransition();
 
@@ -153,10 +153,7 @@ function ChannelSwitch({
       onCheckedChange={(next) =>
         startSaving(async () => {
           setShown(next);
-          await saveSchool(
-            () => set({ channel, kind, on: next, slug }),
-            SOURCE
-          );
+          await save?.(channel, kind, next);
         })
       }
     />

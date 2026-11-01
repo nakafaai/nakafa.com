@@ -13,7 +13,6 @@ import { useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -24,6 +23,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -84,7 +84,7 @@ export function StudentExams() {
       </SchoolHeader>
       <TablePageBody>
         {QueryResult.isFailure(listed) ? (
-          <DataFailure onRetry={reloadPage} />
+          <LoadFailure onRetry={reloadPage} />
         ) : null}
         {sittings === null ? null : <StudentExamsTable sittings={sittings} />}
       </TablePageBody>

@@ -10,12 +10,15 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@repo/internationalization/src/translator", () => ({
-  readServerTranslator: () => Promise.resolve((key: string) => key),
+  readServerTranslator: () =>
+    Promise.resolve((key: string, values?: { readonly name?: string }) =>
+      values?.name === undefined ? key : `${key} ${values.name}`
+    ),
 }));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutSetPage: mocks.readTryoutSetPage,
 }));
-vi.mock("@/components/tryout/route/catalog.server", () => ({
+vi.mock("@/components/tryout/route/metadata.server", () => ({
   readTryoutRouteHead: mocks.readTryoutRouteHead,
 }));
 
@@ -55,7 +58,7 @@ describe("readTryoutSetRoute", () => {
         head: {
           ...head,
           description: "set-metadata-description",
-          title: ["Set 1", "SNBT Year 2027"],
+          title: "search-title SNBT Year 2027 Set 1",
         },
         kind: "catalog",
         page: catalogSet,

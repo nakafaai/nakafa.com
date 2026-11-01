@@ -38,6 +38,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { GraduationLineDetail } from "@/components/tenant/graduation/detail";
 import {
   CohortGraduationHeader,
@@ -126,7 +127,7 @@ function CohortGraduationBody() {
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return failed ? (
-      <DataFailure onRetry={reloadPage} />
+      <LoadFailure onRetry={reloadPage} />
     ) : (
       <TableEmpty
         act="reading"
