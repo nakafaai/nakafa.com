@@ -5,6 +5,7 @@ import {
   type ExamResponse,
   markedCells,
 } from "@repo/backend/confect/assessment/response";
+import { optionLetters } from "@repo/backend/confect/exams/letters";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
@@ -69,6 +70,9 @@ function SingleChoiceFields({
     () => ""
   );
   const labelId = `${id}-answer-label`;
+  const letterOf = optionLetters(
+    Arr.map(choice.options, (option) => option.label)
+  );
   return (
     <fieldset className="min-w-0 border-0 p-0">
       <legend className="sr-only" id={labelId}>
@@ -81,7 +85,7 @@ function SingleChoiceFields({
         onValueChange={(optionId) => onChange([optionId])}
         value={selected}
       >
-        {Arr.map(choice.options, (option) => (
+        {Arr.map(choice.options, (option, index) => (
           <TryoutSelectableRadioOption
             appearance={revealedAppearance(value.answer, option.id)}
             checked={selected === option.id}
@@ -94,6 +98,7 @@ function SingleChoiceFields({
                 document={option.label}
               />
             }
+            letter={letterOf(index)}
             value={option.id}
           />
         ))}
@@ -112,10 +117,13 @@ function MultipleChoiceFields({
   const t = useTranslations("Tryouts");
   const { id, locked, onChange, response } = value;
   const chosen = chosenOptions(response ?? []);
+  const letterOf = optionLetters(
+    Arr.map(choice.options, (option) => option.label)
+  );
   return (
     <fieldset className="grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2">
       <legend className="sr-only">{t("answer")}</legend>
-      {Arr.map(choice.options, (option) => (
+      {Arr.map(choice.options, (option, index) => (
         <TryoutSelectableMultipleChoice
           appearance={revealedAppearance(value.answer, option.id)}
           checked={Arr.contains(chosen, option.id)}
@@ -128,6 +136,7 @@ function MultipleChoiceFields({
               document={option.label}
             />
           }
+          letter={letterOf(index)}
           onCheckedChange={(checked) => {
             const next = toggleOption(
               chosen,

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { optionNamed } from "@/e2e/support/player";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -111,7 +112,7 @@ test("a teacher turns a question into complex multiple choice, marks two answers
   await reopened.getByRole("link", { name: "Try as student" }).click();
   await reopened.waitForURL(TRY_PATH);
   for (const text of ["3", "5"]) {
-    const option = reopened.getByRole("checkbox", { name: text, exact: true });
+    const option = reopened.getByRole("checkbox", { name: optionNamed(text) });
     await expect(option).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await option.click();
     await expect(option).toBeChecked();
@@ -186,7 +187,7 @@ test("a teacher turns a question into true or false and then cause and effect, w
   const trying = await context.newPage();
   await trying.goto(page.url().replace(EDIT_SUFFIX, "/try"));
   await trying.waitForURL(TRY_PATH);
-  const truth = trying.getByRole("radio", { exact: true, name: "True" });
+  const truth = trying.getByRole("radio", { name: optionNamed("True") });
   await expect(truth).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(trying.getByRole("radio")).toHaveCount(2);
   await truth.click();
@@ -457,9 +458,9 @@ test("a teacher turns a question into a true or false table, marks the key in th
     name: "Air mendidih pada 100 derajat Celsius.",
   });
   await expect(first).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await first.getByRole("radio", { exact: true, name: "True" }).click();
+  await first.getByRole("radio", { name: optionNamed("True") }).click();
   await expect(
-    first.getByRole("radio", { exact: true, name: "True" })
+    first.getByRole("radio", { name: optionNamed("True") })
   ).toBeChecked();
   await expect(trying.getByRole("radiogroup")).toHaveCount(3);
   await context.close();

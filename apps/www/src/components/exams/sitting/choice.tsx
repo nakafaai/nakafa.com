@@ -1,3 +1,4 @@
+import { optionLetters } from "@repo/backend/confect/exams/letters";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Option } from "effect";
 import { useId } from "react";
@@ -28,6 +29,9 @@ export function SittingChoice({
 }) {
   const disabled = usePaperLocked();
   const id = useId();
+  const letterOf = optionLetters(
+    Arr.map(choice.options, (option) => option.label)
+  );
 
   if (choice.maxChoices === 1) {
     return (
@@ -37,13 +41,14 @@ export function SittingChoice({
         onValueChange={(optionId) => onChoose([optionId])}
         value={Option.getOrElse(Arr.head(response), () => "")}
       >
-        {Arr.map(choice.options, (option) => (
+        {Arr.map(choice.options, (option, index) => (
           <TryoutSelectableRadioOption
             checked={Arr.contains(response, option.id)}
             disabled={disabled}
             id={`${id}-${option.id}`}
             key={option.id}
             label={<SittingDocument document={option.label} size="line" />}
+            letter={letterOf(index)}
             value={option.id}
           />
         ))}
@@ -56,13 +61,14 @@ export function SittingChoice({
       aria-labelledby={labelledBy}
       className="grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2"
     >
-      {Arr.map(choice.options, (option) => (
+      {Arr.map(choice.options, (option, index) => (
         <TryoutSelectableMultipleChoice
           checked={Arr.contains(response, option.id)}
           disabled={disabled}
           id={`${id}-${option.id}`}
           key={option.id}
           label={<SittingDocument document={option.label} size="line" />}
+          letter={letterOf(index)}
           onCheckedChange={(checked) =>
             onChoose(
               toggleOption(response, option.id, checked, choice.maxChoices)

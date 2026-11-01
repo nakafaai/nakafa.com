@@ -18,6 +18,8 @@ interface TryoutSelectableRadioOptionProps {
   disabled: boolean;
   id: string;
   label: ReactNode;
+  /** The letter that names the option in its set (`optionLetters`). */
+  letter: string;
   value: string;
 }
 
@@ -28,6 +30,7 @@ export function TryoutSelectableRadioOption({
   disabled,
   id,
   label,
+  letter,
   value,
 }: TryoutSelectableRadioOptionProps) {
   return (
@@ -40,7 +43,9 @@ export function TryoutSelectableRadioOption({
         disabled={disabled}
         value={value}
       />
-      <TryoutChoiceLabel id={id}>{label}</TryoutChoiceLabel>
+      <LetteredChoice id={`${id}-label`} letter={letter}>
+        {label}
+      </LetteredChoice>
     </TryoutChoiceFrame>
   );
 }
@@ -51,6 +56,8 @@ interface TryoutSelectableMultipleChoiceProps {
   disabled: boolean;
   id: string;
   label: ReactNode;
+  /** The letter that names the option in its set (`optionLetters`). */
+  letter: string;
   onCheckedChange: (checked: boolean) => void;
 }
 
@@ -61,6 +68,7 @@ export function TryoutSelectableMultipleChoice({
   disabled,
   id,
   label,
+  letter,
   onCheckedChange,
 }: TryoutSelectableMultipleChoiceProps) {
   return (
@@ -74,7 +82,9 @@ export function TryoutSelectableMultipleChoice({
         disabled={disabled}
         onCheckedChange={onCheckedChange}
       />
-      <TryoutChoiceLabel id={id}>{label}</TryoutChoiceLabel>
+      <LetteredChoice id={`${id}-label`} letter={letter}>
+        {label}
+      </LetteredChoice>
     </TryoutChoiceFrame>
   );
 }
@@ -84,6 +94,8 @@ interface TryoutReviewedChoiceProps {
   id: string;
   isCorrect: boolean | undefined;
   label: ReactNode;
+  /** The letter that names the option in its set (`optionLetters`). */
+  letter: string;
 }
 
 /** Renders one locked terminal choice without a mutation Interface. */
@@ -92,6 +104,7 @@ export function TryoutReviewedChoice({
   id,
   isCorrect,
   label,
+  letter,
 }: TryoutReviewedChoiceProps) {
   return (
     <TryoutChoiceFrame
@@ -103,7 +116,9 @@ export function TryoutReviewedChoice({
         className="mt-1 shrink-0"
         disabled
       />
-      <TryoutChoiceLabel id={id}>{label}</TryoutChoiceLabel>
+      <LetteredChoice id={`${id}-label`} letter={letter}>
+        {label}
+      </LetteredChoice>
     </TryoutChoiceFrame>
   );
 }
@@ -125,20 +140,27 @@ function TryoutChoiceFrame({
 }
 
 /**
- * The label of one choice, which its control names by id. Its direction
- * follows its own text, so a choice written in Arabic reads right to left in
- * an Indonesian question, and a Latin one keeps reading left to right.
+ * The letter and the text of one option, the one way every surface draws them: the player, the review,
+ * a sitting and the exam editor's paper. The control names the option by this block's id, so a screen
+ * reader says the letter a key or a teacher uses. Its direction follows the letter, which the option set
+ * chose from its labels, so an Arabic set reads right to left with أ at its start in an Indonesian
+ * question, and any other set keeps reading left to right. The letter is part of the first paint, so
+ * nothing moves when the text arrives with it.
  */
-function TryoutChoiceLabel({
+export function LetteredChoice({
   children,
   id,
+  letter,
 }: {
   children: ReactNode;
-  id: string;
+  /** The id that the control is labelled by, when the option has a control to name. */
+  id?: string;
+  letter: string;
 }) {
   return (
-    <div className="min-w-0 flex-1" dir="auto" id={`${id}-label`}>
-      {children}
+    <div className="flex min-w-0 flex-1 gap-2" dir="auto" id={id}>
+      <span className="shrink-0 font-medium">{letter}</span>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }

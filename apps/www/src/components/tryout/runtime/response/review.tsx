@@ -5,6 +5,7 @@ import {
   type ExamResponse,
   markedCells,
 } from "@repo/backend/confect/assessment/response";
+import { optionLetters } from "@repo/backend/confect/exams/letters";
 import { Array as Arr, Option } from "effect";
 import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface";
 import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
@@ -62,9 +63,12 @@ export function TryoutReviewedFields({
     return null;
   }
   const chosen = chosenOptions(response ?? []);
+  const letterOf = optionLetters(
+    Arr.map(interaction.options, (option) => option.label)
+  );
   return (
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-      {Arr.map(interaction.options, (option) => {
+      {Arr.map(interaction.options, (option, index) => {
         const isCorrect = Arr.contains(answer.correct, option.id);
         return (
           <TryoutReviewedChoice
@@ -78,6 +82,7 @@ export function TryoutReviewedFields({
                 document={option.label}
               />
             }
+            letter={letterOf(index)}
           />
         );
       })}

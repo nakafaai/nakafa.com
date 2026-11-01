@@ -6,6 +6,7 @@ import editors from "@repo/backend/confect/_generated/refs/editor";
 import {
   letterScript,
   optionLetter,
+  optionLetters,
 } from "@repo/backend/confect/exams/letters";
 import {
   CHOICE_OPTIONS_MAX,
@@ -362,12 +363,20 @@ function ChoiceSketch({
   /** The question's template, which names its choices when it holds two. */
   readonly template: Question["template"];
 }) {
+  const letterOf = optionLetters(
+    Arr.map(choice.options, (option) => option.label)
+  );
+
   return (
     <>
       <ChoiceGroup title={choiceTitle(template, choice.id)}>
         <PaperOptions>
-          {Arr.map(choice.options, (option) => (
-            <PaperOption key={option.id} multiple={choice.maxChoices !== 1}>
+          {Arr.map(choice.options, (option, index) => (
+            <PaperOption
+              key={option.id}
+              letter={letterOf(index)}
+              multiple={choice.maxChoices !== 1}
+            >
               <OptionSketch label={option.label} />
             </PaperOption>
           ))}

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { optionNamed } from "@/e2e/support/player";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -116,14 +117,14 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   // The try names each option by the question's answer label, so an option is found by its text.
   for (const option of OPTIONS) {
     await expect(
-      trying.getByRole("radio", { name: option.text, exact: true })
+      trying.getByRole("radio", { name: optionNamed(option.text) })
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   }
 
   // The student's choice is kept in the page, and the server gets no change for it.
-  await trying.getByRole("radio", { name: "5", exact: true }).click();
+  await trying.getByRole("radio", { name: optionNamed("5") }).click();
   await expect(
-    trying.getByRole("radio", { name: "5", exact: true })
+    trying.getByRole("radio", { name: optionNamed("5") })
   ).toBeChecked();
   expect(sentByTry()).toBe(sentOnEntering);
 

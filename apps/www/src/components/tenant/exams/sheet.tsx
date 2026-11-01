@@ -14,6 +14,7 @@ import { useTranslations } from "use-intl";
 import { SittingField } from "@/components/exams/sitting/field";
 import { writtenOf } from "@/components/exams/sitting/response";
 import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
+import { LetteredChoice } from "@/components/tryout/runtime/choice/surface";
 import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
 
 /**
@@ -71,15 +72,18 @@ export function PaperOptions({ children }: { children: ReactNode }) {
 
 /**
  * One option of the paper, as the player draws it: the student's own control, unmarked and out of reach, a
- * radio for one answer and a check box for several, then its rich text, in the player's choice frame. Only the
+ * radio for one answer and a check box for several, then its letter and rich text, in the player's choice frame. Only the
  * cursor differs, since the text is edited here. The key is marked by letter in the teacher's layer, and the
  * letters run in the paper's reading order.
  */
 export function PaperOption({
   children,
+  letter,
   multiple,
 }: {
   children: ReactNode;
+  /** The letter that names the option in its set, the one the student's paper shows. */
+  letter: string;
   /** Whether the question takes several answers, so the student meets check boxes. */
   multiple: boolean;
 }) {
@@ -98,7 +102,9 @@ export function PaperOption({
           <Radio className="mt-1 shrink-0" value="" />
         )}
       </span>
-      <PaperPartText>{children}</PaperPartText>
+      <LetteredChoice letter={letter}>
+        <PaperPartText>{children}</PaperPartText>
+      </LetteredChoice>
     </div>
   );
 }

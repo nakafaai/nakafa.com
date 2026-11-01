@@ -123,7 +123,7 @@ export function ChoiceSheet({
                 }
                 removeName={t("option-remove-of", { letter, number })}
               >
-                <PaperOption multiple={choice.maxChoices !== 1}>
+                <PaperOption letter={letter} multiple={choice.maxChoices !== 1}>
                   <ExamDocument
                     label={t(reason ? "reason-of" : "option-of", {
                       letter,
