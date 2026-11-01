@@ -85,7 +85,14 @@ export function isApplicationRoutePath(
 
   if (
     Arr.contains(
-      ["contributor", "home", "notifications", "pricing", "search"],
+      [
+        "contributor",
+        "home",
+        "notifications",
+        "operators",
+        "pricing",
+        "search",
+      ],
       root
     )
   ) {
