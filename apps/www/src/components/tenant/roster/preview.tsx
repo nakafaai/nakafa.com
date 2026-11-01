@@ -10,6 +10,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableName } from "@/components/shared/table/title";
 import { type ReadRow, RowProblem } from "@/components/tenant/roster/dapodik";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 
@@ -76,9 +77,7 @@ export function RosterPreviewTable({
     rowColumns.text((row) => `${nameOf(row)} ${identityOf(row)}`, {
       cell: (info) =>
         info.row.original.outcome === "problem" ? null : (
-          <span className="font-medium" dir="auto">
-            {nameOf(info.row.original)}
-          </span>
+          <TableName>{nameOf(info.row.original)}</TableName>
         ),
       header: t("name"),
       id: "name",

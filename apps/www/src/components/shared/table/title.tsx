@@ -6,6 +6,22 @@ import {
 import type { ComponentProps, ReactNode } from "react";
 
 /**
+ * A name in a table: one line up to the width a usual name reads in, and more lines past that, so the longest name a
+ * school holds reads whole and never widens its table. A short name keeps its line on a phone, where the table would
+ * otherwise narrow it first.
+ */
+export function TableName({ children }: { children: ReactNode }) {
+  return (
+    <span
+      className="block max-w-52 min-w-36 font-medium wrap-break-word whitespace-normal sm:max-w-80"
+      dir="auto"
+    >
+      {children}
+    </span>
+  );
+}
+
+/**
  * The cell that names a row, so a list's first column is never bare text: an icon alone, on no background, that says
  * what the row is, in the tone of its state where it has one, before its name. A name that opens the row keeps its link
  * here (`children`), and pressing anywhere else on the row presses that link (`DataTable`).
@@ -27,7 +43,7 @@ export function TableTitle({
         className={statusIconVariants({ className: "size-4", tone })}
         icon={icon}
       />
-      {children}
+      <TableName>{children}</TableName>
     </span>
   );
 }

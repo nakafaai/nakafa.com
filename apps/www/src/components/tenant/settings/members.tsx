@@ -41,6 +41,7 @@ import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
+import { TableName } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -156,11 +157,7 @@ function SchoolMembersBody() {
       : [];
   const columns = [
     memberColumns.text((member) => member.name, {
-      cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.getValue()}
-        </span>
-      ),
+      cell: (info) => <TableName>{info.getValue()}</TableName>,
       header: t("member-name"),
       id: "name",
     }),

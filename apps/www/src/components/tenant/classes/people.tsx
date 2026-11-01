@@ -29,6 +29,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { RowMenu } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableName } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -122,11 +123,7 @@ function usePersonColumns() {
 
   return [
     personColumns.text((person) => person.name, {
-      cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.getValue()}
-        </span>
-      ),
+      cell: (info) => <TableName>{info.getValue()}</TableName>,
       header: t("people-name"),
       id: "name",
     }),
