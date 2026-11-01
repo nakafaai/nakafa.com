@@ -3807,6 +3807,7 @@
     "none-description": "Konektor terbuka di sini setelah Google meninjaunya.",
     "refused": "Tidak terhubung",
     "refused-description": "Google tidak mengizinkan semua akses yang dibutuhkan konektor ini. Hubungkan lagi dan biarkan semua kotak tercentang.",
+    "failed-description": "Google tidak bisa menyelesaikan sambungan ini. Coba lagi sebentar lagi.",
     "courses": "Kelas di Classroom",
     "courses-description": "Kursus yang kamu ajar di Google Classroom. Pilih kelas untuk tiap kursus, dan tugas kursusnya masuk sebagai tugas kelas itu.",
     "courses-refresh": "Baca lagi",
