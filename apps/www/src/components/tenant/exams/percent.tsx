@@ -8,6 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -68,6 +69,7 @@ export function ZoomMenu({
           }}
           value={choice}
         >
+          <DropdownMenuLabel>{t("zoom")}</DropdownMenuLabel>
           <DropdownMenuGroup>
             {Arr.map(ZOOM_PRESETS, (preset) => (
               <DropdownMenuRadioItem

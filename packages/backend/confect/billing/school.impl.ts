@@ -10,6 +10,7 @@ import {
   billingOfferPrice,
   SCHOOL_FREE_STUDENTS,
 } from "@repo/backend/confect/billing/catalog";
+import { schoolInvoice } from "@repo/backend/confect/billing/receipts";
 import { billingCurrencyFor } from "@repo/backend/confect/billing/route";
 import {
   issueSchoolInvoice,
@@ -190,6 +191,33 @@ const overview = FunctionImpl.make(
  * a payment link gets its hosted payment opened at once; until then the school pays
  * by bank transfer, which an operator records.
  */
+/** The PDF copy of one of the school's invoices, and nothing for another school's. */
+const invoice = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "invoice",
+  Effect.fn("billing.school.invoice")(function* ({ locale, number }) {
+    const { tenant } = yield* Member;
+    const account = yield* findAccount(
+      { kind: "tenant", tenantId: tenant._id },
+      schoolRail(tenant.country)
+    );
+    const found = yield* (yield* DatabaseReader)
+      .table("billingInvoices")
+      .index("by_number", (query) => query.eq("number", number))
+      .first()
+      .pipe(Effect.orDie);
+    if (
+      Option.isNone(account) ||
+      Option.isNone(found) ||
+      found.value.accountId !== account.value._id
+    ) {
+      return null;
+    }
+    return schoolInvoice(found.value, tenant.name, locale);
+  })
+);
+
 const pay = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -221,6 +249,7 @@ const pay = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(overview),
+  Layer.provide(invoice),
   Layer.provide(pay),
   Layer.provide(session),
   Layer.provide(member),
