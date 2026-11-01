@@ -124,6 +124,56 @@ function useQuestionPictures({
   );
 }
 
+/** The prompt and the reading of a question as documents, or null while the prompt is not ready. */
+function usePromptDocuments(prompt: ReturnType<typeof usePromptRead>) {
+  const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
+  const readingText = QueryResult.isSuccess(prompt)
+    ? prompt.value.reading
+    : null;
+  const readingDocument = useMemo(
+    () =>
+      readingText === null
+        ? null
+        : Schema.decodeSync(JsonTextSchema)(readingText),
+    [readingText]
+  );
+  const promptDocument = useMemo(
+    () =>
+      promptText === null
+        ? null
+        : Schema.decodeSync(JsonTextSchema)(promptText),
+    [promptText]
+  );
+
+  return { promptDocument, readingDocument };
+}
+
+/**
+ * The read of one question's prompt for this student's device, once its turn comes, and at once for the question the
+ * student stands on. The paper hears when the prompt can draw.
+ */
+function usePromptRead({
+  deviceId,
+  questionId,
+  sittingId,
+  slug,
+}: {
+  readonly deviceId: string;
+  readonly questionId: PaperQuestion["id"];
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+  readonly slug: TenantSlug;
+}) {
+  const current = usePlayer((state) => state.current === questionId);
+  const turn = usePaperTurn(questionId, current);
+  const prompt = useQuery(
+    exams.sittings.prompt,
+    turn ? { deviceId, questionId, sittingId, slug } : "skip"
+  );
+  usePaperText(questionId, turn && !QueryResult.isLoading(prompt));
+
+  return prompt;
+}
+
 /**
  * One question of the paper: its number, its prompt as the editor holds it now, and its options or its
  * answer line. The player's footer flags the current question. A choice or a typed answer is kept in the
@@ -146,13 +196,12 @@ export const SittingQuestion = memo(function SittingQuestion({
   readonly slug: TenantSlug;
 }) {
   const ids = readQuestionIds(question.number);
-  const current = usePlayer((state) => state.current === question.id);
-  const turn = usePaperTurn(question.id, current);
-  const prompt = useQuery(
-    exams.sittings.prompt,
-    turn ? { deviceId, questionId: question.id, sittingId, slug } : "skip"
-  );
-  usePaperText(question.id, turn && !QueryResult.isLoading(prompt));
+  const prompt = usePromptRead({
+    deviceId,
+    questionId: question.id,
+    sittingId,
+    slug,
+  });
   const choose = useChooseAnswer();
   const flagQuestion = useFlagQuestion({ deviceId, sittingId, slug });
   const locked = usePaperLocked();
@@ -177,24 +226,7 @@ export const SittingQuestion = memo(function SittingQuestion({
     () => tableOf(question.interactions),
     [question.interactions]
   );
-  const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
-  const readingText = QueryResult.isSuccess(prompt)
-    ? prompt.value.reading
-    : null;
-  const readingDocument = useMemo(
-    () =>
-      readingText === null
-        ? null
-        : Schema.decodeSync(JsonTextSchema)(readingText),
-    [readingText]
-  );
-  const promptDocument = useMemo(
-    () =>
-      promptText === null
-        ? null
-        : Schema.decodeSync(JsonTextSchema)(promptText),
-    [promptText]
-  );
+  const { promptDocument, readingDocument } = usePromptDocuments(prompt);
   const addresses = useQuestionPictures({
     deviceId,
     interactions: question.interactions,
