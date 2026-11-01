@@ -2,7 +2,14 @@ import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Option } from "effect";
-import { createContext, type ReactNode, Suspense, use, useState } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  type ReactNode,
+  Suspense,
+  use,
+  useState,
+} from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
@@ -208,7 +215,6 @@ function ResolvedTryoutSectionPage({
   state: SectionState;
 }) {
   const { page, pending } = useTryoutSectionPage();
-  const bodies = use(TryoutContentContext)?.bodies ?? null;
   const opening = useTryoutStartPhase() === "opening";
   const attempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
@@ -232,38 +238,17 @@ function ResolvedTryoutSectionPage({
   }
 
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
-  if (
-    bodies !== null &&
-    finish &&
-    binding &&
-    isTryoutRuntimeRunning(runtimeState)
-  ) {
+  if (finish && binding && isTryoutRuntimeRunning(runtimeState)) {
     return (
-      <TryoutPage>
-        <SectionLock binding={binding} />
-        <TryoutPlayer
-          finish={finish}
-          mode={binding.mode}
-          state={runtimeState}
-          title={page.section.title}
-        />
-      </TryoutPage>
+      <TryoutRunningSection
+        binding={binding}
+        finish={finish}
+        state={runtimeState}
+      />
     );
   }
-  // The live state can say a section runs a commit before the page's read brings its
-  // bodies, which land before the browser paints, so the player waits in its frame.
-  if (opening || (finish && isTryoutRuntimeRunning(runtimeState))) {
-    return (
-      <TryoutPage>
-        <SectionLock binding={binding} />
-        <TryoutPlayerOpening
-          questionCount={page.section.questionCount}
-          title={page.section.title}
-        >
-          <PlayerTimer seconds={page.section.timeLimitSeconds} />
-        </TryoutPlayerOpening>
-      </TryoutPage>
-    );
+  if (opening) {
+    return <TryoutOpeningSection binding={binding} />;
   }
 
   return (
@@ -286,6 +271,56 @@ function ResolvedTryoutSectionPage({
           {children}
         </TryoutSectionReview>
       </TryoutPageBody>
+    </TryoutPage>
+  );
+}
+
+/**
+ * The player of a running section. The live state can say a section runs a commit before
+ * the page's read brings its bodies, which land before the browser paints, so the player
+ * waits in its frame instead of reading a section with no questions.
+ */
+function TryoutRunningSection({
+  binding,
+  finish,
+  state,
+}: {
+  binding: NonNullable<TryoutSectionPageClientProps["binding"]>;
+  finish: TryoutFinish;
+  state: ComponentProps<typeof TryoutPlayer>["state"];
+}) {
+  const { page } = useTryoutSectionPage();
+  const bodies = use(TryoutContentContext)?.bodies ?? null;
+  if (bodies === null) {
+    return <TryoutOpeningSection binding={binding} />;
+  }
+  return (
+    <TryoutPage>
+      <SectionLock binding={binding} />
+      <TryoutPlayer
+        finish={finish}
+        mode={binding.mode}
+        state={state}
+        title={page.section.title}
+      />
+    </TryoutPage>
+  );
+}
+
+/** The player's frame, while a section the learner's press opens gets ready. */
+function TryoutOpeningSection({
+  binding,
+}: Pick<TryoutSectionPageClientProps, "binding">) {
+  const { page } = useTryoutSectionPage();
+  return (
+    <TryoutPage>
+      <SectionLock binding={binding} />
+      <TryoutPlayerOpening
+        questionCount={page.section.questionCount}
+        title={page.section.title}
+      >
+        <PlayerTimer seconds={page.section.timeLimitSeconds} />
+      </TryoutPlayerOpening>
     </TryoutPage>
   );
 }
