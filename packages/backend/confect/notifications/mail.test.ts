@@ -19,7 +19,7 @@ import {
   seedPlacement,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect } from "effect";
+import { Duration, Effect, Schema } from "effect";
 
 type Fixture = Effect.Success<typeof keyedFixture>;
 type Mails = Effect.Success<ReturnType<typeof swept>>;
@@ -38,10 +38,23 @@ const HOUR = Duration.toMillis(Duration.hours(1));
 const INBOX = "http://nf.localhost:3000/notifications";
 const SLUG = "articles/example";
 
+/** What the mail provider is handed of one mail. */
+const Mail = Schema.Struct({
+  from: Schema.String,
+  html: Schema.String,
+  subject: Schema.String,
+  to: Schema.String,
+});
+
+/** What one mail must say, and to whom. */
+const Expected = Schema.Struct({
+  link: Schema.String,
+  subject: Schema.String,
+  to: Schema.String,
+});
+
 /** A school with its key and the signed Pages every mail links to, as production holds them. */
-const school = Effect.tap(keyedFixture, (fixture) =>
-  fixture.run(signedPages)
-);
+const school = Effect.tap(keyedFixture, (fixture) => fixture.run(signedPages));
 
 /** What one sweep of the queue hands the mail provider, as the cron runs it. */
 const swept = (fixture: Fixture) =>
@@ -49,7 +62,9 @@ const swept = (fixture: Fixture) =>
     const send = vi.spyOn(resend, "sendEmail");
     send.mockClear();
     yield* fixture.internal.action(digest.send, {});
-    return Arr.map(send.mock.calls, ([, message]) => message);
+    return yield* Effect.forEach(send.mock.calls, ([, message]) =>
+      Schema.decodeUnknownEffect(Mail)(message).pipe(Effect.orDie)
+    );
   });
 
 /** The address of an account. */
@@ -70,10 +85,7 @@ const addressOf = (
   );
 
 /** The one mail of a sweep: from Nakafa, to `to`, with `subject`, a link to `link`, and no name in it (ADR 0027). */
-const expectOneMail = (
-  mails: Mails,
-  mail: { link: string; subject: string; to: string }
-) => {
+const expectOneMail = (mails: Mails, mail: typeof Expected.Type) => {
   expect(mails).toMatchObject([
     { from: EMAIL_FROM, subject: mail.subject, to: mail.to },
   ]);
@@ -157,27 +169,29 @@ describe("notifications/mail", () => {
     vi.setSystemTime(TENANCY_NOW);
   });
 
-  it.effect("delivers a released grade to the guardian, never to the student", () =>
-    Effect.gen(function* () {
-      const fixture = yield* school;
-      const term = yield* period(fixture, fixture.units.smp);
-      const forum = yield* forumClass(fixture, term.id, "X-1");
-      yield* verifiedGuardian(fixture);
-      const entered = yield* fixture.as("teacher").mutation(grades.enter, {
-        classId: forum.classId,
-        personId: fixture.people.student.personId,
-        slug: nf,
-        value: 80,
-      });
-      yield* fixture
-        .as("teacher")
-        .mutation(grades.release, { gradeId: entered.id, slug: nf });
-      expectOneMail(yield* swept(fixture), {
-        link: INBOX,
-        subject: "Ada nilai baru yang dirilis.",
-        to: yield* addressOf(fixture, fixture.users.admin.userId),
-      });
-    })
+  it.effect(
+    "delivers a released grade to the guardian, never to the student",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* school;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-1");
+        yield* verifiedGuardian(fixture);
+        const entered = yield* fixture.as("teacher").mutation(grades.enter, {
+          classId: forum.classId,
+          personId: fixture.people.student.personId,
+          slug: nf,
+          value: 80,
+        });
+        yield* fixture
+          .as("teacher")
+          .mutation(grades.release, { gradeId: entered.id, slug: nf });
+        expectOneMail(yield* swept(fixture), {
+          link: INBOX,
+          subject: "Ada nilai baru yang dirilis.",
+          to: yield* addressOf(fixture, fixture.users.admin.userId),
+        });
+      })
   );
 
   it.effect("delivers a late task to the guardian", () =>

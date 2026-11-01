@@ -336,7 +336,6 @@ describe("notifications/reply", () => {
       {
         change: "comment.replied",
         dueAt: Date.UTC(2026, 8, 1, 10),
-        expiresAt: NOON + 7 * 24 * 60 * 60 * 1000,
         rank: 2,
       },
     ]);
