@@ -89,7 +89,7 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
       </TableCell>
       <TableCell className={columnAlign()}>{row.publishedScore}</TableCell>
       <TableCell className={columnAlign({ align: "menu" })}>
-        <RowMenu inert={undefined}>
+        <RowMenu>
           <TryoutSetMenu />
         </RowMenu>
       </TableCell>

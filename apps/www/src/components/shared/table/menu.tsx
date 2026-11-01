@@ -51,7 +51,7 @@ export function RowMenu({
 }: {
   children: ReactNode;
   /** Whether the button does not answer yet, such as on a row the server has not confirmed. */
-  inert: boolean | undefined;
+  inert?: boolean | undefined;
 }) {
   const common = useTranslations("Common");
   const [handle] = useState(() => createDropdownMenuHandle());
