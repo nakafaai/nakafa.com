@@ -124,28 +124,41 @@ export function readTab() {
       });
 }
 
+/** A server function call failed. It carries the failure, which is the caller's to read. */
+class ServerFunctionFailed extends Schema.TaggedError<ServerFunctionFailed>()(
+  "ServerFunctionFailed",
+  { cause: Schema.Unknown }
+) {}
+
 /**
  * Runs a server function call and answers one that a deploy replaced as a missing
  * chunk is answered: the tab reloads once at its address and the call waits for
  * it, so no caller draws an error meanwhile. The tab is read only once a call has
  * failed. Every other failure, a function still missing after the reload, and a
- * failure on the server reach the caller unchanged.
+ * failure on the server reach the caller as the call threw them, because Start
+ * carries a redirect and a not-found as that same failure.
  */
 export function recoverStaleFunction<A>(
   call: () => Promise<A>,
-  tab: () => ReturnType<typeof readTab> = readTab
+  tab: typeof readTab = readTab
 ) {
-  return Effect.tryPromise({ catch: (cause) => cause, try: call }).pipe(
-    Effect.catchIf(isStaleChunkError, (cause) =>
-      Option.match(tab(), {
-        onNone: () => Effect.fail(cause),
-        onSome: ({ address, reload, storage }) =>
-          reloadForStaleChunk(address, storage, reload).pipe(
-            Effect.flatMap((reloads) =>
-              reloads ? Effect.never : Effect.fail(cause)
-            )
-          ),
-      })
-    )
+  return Effect.tryPromise({
+    catch: (cause) => new ServerFunctionFailed({ cause }),
+    try: call,
+  }).pipe(
+    Effect.catchIf(
+      (failure) => isStaleChunkError(failure.cause),
+      (failure) =>
+        Option.match(tab(), {
+          onNone: () => Effect.fail(failure),
+          onSome: ({ address, reload, storage }) =>
+            reloadForStaleChunk(address, storage, reload).pipe(
+              Effect.flatMap((reloads) =>
+                reloads ? Effect.never : Effect.fail(failure)
+              )
+            ),
+        })
+    ),
+    Effect.catchTag("ServerFunctionFailed", ({ cause }) => Effect.die(cause))
   );
 }

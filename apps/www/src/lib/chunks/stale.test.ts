@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Deferred, Effect, Exit, Fiber, MutableHashMap, Option } from "effect";
+import {
+  Cause,
+  Deferred,
+  Effect,
+  Exit,
+  Fiber,
+  MutableHashMap,
+  Option,
+} from "effect";
 import {
   isStaleChunkError,
   readTab,
@@ -139,15 +147,19 @@ describe("STALE_CHUNK_SCRIPT", () => {
     expect(reload).not.toHaveBeenCalled();
   });
 
-  it("shares its mark with the error boundary, so an address reloads once between them", async () => {
-    const { reload, storage } = tab();
-    reportMissingScript(openDocument(storage).target);
+  it.effect(
+    "shares its mark with the error boundary, so an address reloads once between them",
+    () =>
+      Effect.gen(function* () {
+        const { reload, storage } = tab();
+        reportMissingScript(openDocument(storage).target);
 
-    await expect(
-      Effect.runPromise(reloadForStaleChunk("/en/quran", storage, reload))
-    ).resolves.toBe(false);
-    expect(reload).not.toHaveBeenCalled();
-  });
+        expect(yield* reloadForStaleChunk("/en/quran", storage, reload)).toBe(
+          false
+        );
+        expect(reload).not.toHaveBeenCalled();
+      })
+  );
 
   it("never reloads without storage, which could not stop a loop", () => {
     const refused = () => {
@@ -209,6 +221,14 @@ describe("readTab", () => {
   );
 });
 
+/** What a caller of the effect receives when it fails, as `Effect.runPromise` rejects with it. */
+const thrownBy = <A>(call: Effect.Effect<A>) =>
+  Effect.exit(call).pipe(
+    Effect.map((exit) =>
+      Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
+    )
+  );
+
 describe("recoverStaleFunction", () => {
   const gone = new Error(STALE_FUNCTION_MESSAGE);
   const failing = (cause: Error) => () => Promise.reject(cause);
@@ -250,11 +270,13 @@ describe("recoverStaleFunction", () => {
       yield* reloadForStaleChunk("/en", storage, reload);
       reload.mockClear();
 
-      const cause = yield* recoverStaleFunction(failing(gone), () =>
-        Option.some({ address: "/en", reload, storage })
-      ).pipe(Effect.flip);
+      const thrown = yield* thrownBy(
+        recoverStaleFunction(failing(gone), () =>
+          Option.some({ address: "/en", reload, storage })
+        )
+      );
 
-      expect(cause).toBe(gone);
+      expect(thrown).toBe(gone);
       expect(reload).not.toHaveBeenCalled();
     })
   );
@@ -263,35 +285,37 @@ describe("recoverStaleFunction", () => {
     "gives a loader's call on the server its failure, with no tab to reload",
     () =>
       Effect.gen(function* () {
-        const cause = yield* recoverStaleFunction(
-          failing(gone),
-          Option.none
-        ).pipe(Effect.flip);
+        const thrown = yield* thrownBy(
+          recoverStaleFunction(failing(gone), Option.none)
+        );
 
-        expect(cause).toBe(gone);
+        expect(thrown).toBe(gone);
       })
   );
 
   it.effect("reads the tab only once a call has failed", () =>
     Effect.gen(function* () {
-      const tab = vi.fn(Option.none);
+      const read = vi.fn<typeof readTab>(Option.none);
 
-      yield* recoverStaleFunction(() => Promise.resolve("read"), tab);
+      yield* recoverStaleFunction(() => Promise.resolve("read"), read);
 
-      expect(tab).not.toHaveBeenCalled();
+      expect(read).not.toHaveBeenCalled();
     })
   );
 
-  it.effect("leaves every other failure alone", () =>
+  it.effect("hands the caller every other failure as the call threw it", () =>
     Effect.gen(function* () {
       const { reload, storage } = tab();
-      const other = new Error("The read failed.");
+      const redirect = { to: "/en/auth" };
 
-      const cause = yield* recoverStaleFunction(failing(other), () =>
-        Option.some({ address: "/en", reload, storage })
-      ).pipe(Effect.flip);
+      const thrown = yield* thrownBy(
+        recoverStaleFunction(
+          () => Promise.reject(redirect),
+          () => Option.some({ address: "/en", reload, storage })
+        )
+      );
 
-      expect(cause).toBe(other);
+      expect(thrown).toBe(redirect);
       expect(reload).not.toHaveBeenCalled();
     })
   );
