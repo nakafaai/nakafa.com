@@ -47,6 +47,7 @@ import {
   pinPostUpdate,
   removePostUpdate,
 } from "@/components/tenant/classes/home/optimistic";
+import { PostPoll } from "@/components/tenant/classes/home/poll";
 import { useClassScope } from "@/components/tenant/classes/scope";
 
 /**
@@ -87,12 +88,7 @@ export function PostRow({ post }: { post: ClassPost }) {
       {editing ? (
         <PostEditor onDone={() => setEditing(false)} post={post} />
       ) : (
-        <p
-          className="basis-full text-sm wrap-anywhere whitespace-pre-wrap"
-          dir="auto"
-        >
-          {post.text}
-        </p>
+        <PostBody post={post} />
       )}
       {post.mine && post.email ? (
         <p className="text-muted-foreground basis-full text-xs">
@@ -100,6 +96,21 @@ export function PostRow({ post }: { post: ClassPost }) {
         </p>
       ) : null}
     </Item>
+  );
+}
+
+/** What an announcement says: its poll, whose question is its text, or its text, which may break anywhere. */
+function PostBody({ post }: { post: ClassPost }) {
+  if (post.poll !== null) {
+    return <PostPoll poll={post.poll} post={post} />;
+  }
+  return (
+    <p
+      className="basis-full text-sm wrap-anywhere whitespace-pre-wrap"
+      dir="auto"
+    >
+      {post.text}
+    </p>
   );
 }
 
@@ -167,10 +178,12 @@ function PostActions({
           </DropdownMenuItem>
           {post.mine ? (
             <>
-              <DropdownMenuItem onClick={onEdit}>
-                <HugeIcons icon={PencilEdit02Icon} />
-                {t("message-edit")}
-              </DropdownMenuItem>
+              {post.poll === null ? (
+                <DropdownMenuItem onClick={onEdit}>
+                  <HugeIcons icon={PencilEdit02Icon} />
+                  {t("message-edit")}
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem onClick={() => setRemoving(true)}>
                 <HugeIcons icon={Delete02Icon} />
                 {t("post-remove")}

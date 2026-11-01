@@ -71,6 +71,7 @@ describe("notifications/fanout", () => {
           classId: forum.classId,
           clientKey: "fanout-post",
           email: false,
+          poll: null,
           slug: nf,
           text: "Besok ulangan.",
         });

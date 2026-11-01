@@ -1451,6 +1451,11 @@ export declare const api: {
           id: Id<"classroomPosts">;
           mine: boolean;
           pinned: boolean;
+          poll: {
+            multiple: boolean;
+            options: Array<string>;
+            question: string;
+          } | null;
           text: string;
         }
       >;
@@ -1481,6 +1486,11 @@ export declare const api: {
             id: Id<"classroomPosts">;
             mine: boolean;
             pinned: boolean;
+            poll: {
+              multiple: boolean;
+              options: Array<string>;
+              question: string;
+            } | null;
             text: string;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -1511,6 +1521,11 @@ export declare const api: {
           id: Id<"classroomPosts">;
           mine: boolean;
           pinned: boolean;
+          poll: {
+            multiple: boolean;
+            options: Array<string>;
+            question: string;
+          } | null;
           text: string;
         }>
       >;
@@ -1521,6 +1536,11 @@ export declare const api: {
           classId: Id<"classes">;
           clientKey: string;
           email: boolean;
+          poll: {
+            multiple: boolean;
+            options: Array<string>;
+            question: string;
+          } | null;
           slug: string;
           text: string;
         },
@@ -1533,6 +1553,11 @@ export declare const api: {
           id: Id<"classroomPosts">;
           mine: boolean;
           pinned: boolean;
+          poll: {
+            multiple: boolean;
+            options: Array<string>;
+            question: string;
+          } | null;
           text: string;
         }
       >;
@@ -1541,6 +1566,30 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
         null
+      >;
+      vote: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          options: Array<number>;
+          postId: Id<"classroomPosts">;
+          slug: string;
+        },
+        null
+      >;
+      votes: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          postIds: Array<Id<"classroomPosts">>;
+          slug: string;
+        },
+        Array<{
+          postId: Id<"classroomPosts">;
+          votes: Array<{ count: number; mine: boolean; option: number }>;
+        }>
       >;
     };
     scheduled: {

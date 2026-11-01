@@ -77,7 +77,7 @@ export function NewAnnouncement() {
           : publishPost(
               (update, args) => publish.withOptimisticUpdate(update)(args),
               { id: person.id, name: person.name },
-              { classId, clientKey, email, slug, text: body }
+              { classId, clientKey, email, poll: null, slug, text: body }
             ).pipe(Effect.asVoid)
       ),
       () => {

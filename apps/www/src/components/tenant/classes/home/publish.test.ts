@@ -15,6 +15,7 @@ const args = {
   classId,
   clientKey: "0b5c9d1e-4f3a-4c2b-9a8d-7e6f5a4b3c2d",
   email: true,
+  poll: null,
   slug,
   text: "Ulangan hari Senin.",
 };
@@ -29,6 +30,7 @@ const stored: ClassPost = {
   id: Schema.decodeUnknownSync(Id("classroomPosts"))("post-1"),
   mine: true,
   pinned: false,
+  poll: null,
   text: args.text,
 };
 

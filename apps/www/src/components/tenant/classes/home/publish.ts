@@ -39,6 +39,7 @@ export const publishPost = Effect.fn("classroom.posts.publish")(function* <E>(
         id,
         mine: true,
         pinned: false,
+        poll: args.poll,
         text: args.text,
       }),
       args

@@ -36,6 +36,7 @@ describe("notifications/detail", () => {
           classId: forum.classId,
           clientKey: "detail-post",
           email: false,
+          poll: null,
           slug: nf,
           text: "Ulangan hari Senin.",
         });
