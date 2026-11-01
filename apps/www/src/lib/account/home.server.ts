@@ -88,26 +88,6 @@ export const homeScreenHandler = accountHandler(
     })
 );
 
-/** The new chat page: its localized title and description. */
-export const chatIndexScreenHandler = accountHandler(
-  ({ locale }: typeof LocaleInput.Type) =>
-    Effect.gen(function* () {
-      const t = createTranslator({
-        locale,
-        messages: yield* messagesFor(locale),
-        namespace: "Ai",
-      });
-      const seo: ScreenSeo = {
-        canonicalPath: `/${locale}/chat`,
-        description: t("new-chat-description"),
-        indexable: false,
-        locale,
-        title: t("new-chat-title"),
-      };
-      return { seo };
-    })
-);
-
 /**
  * The chat sidebar that every chat page shows: the first page of the study chats
  * of the signed-in visitor. A visitor holds no chats, so the page reads none.

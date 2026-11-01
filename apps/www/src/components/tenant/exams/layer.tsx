@@ -29,10 +29,11 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import { fieldBoxVariants } from "@repo/design-system/lib/input";
+import { lazy } from "@repo/design-system/lib/lazy";
 import type { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Function as Fn, Option, Schema } from "effect";
-import { lazy, type ReactNode, Suspense, useId, useState } from "react";
+import { type ReactNode, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { AcceptedAnswers } from "@/components/tenant/exams/accepted";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";

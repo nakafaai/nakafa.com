@@ -18,11 +18,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { languages } from "@repo/internationalization/data/lang";
 import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { type Locale, useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";

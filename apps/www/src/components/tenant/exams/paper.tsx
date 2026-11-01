@@ -1,7 +1,8 @@
 import { takesRubric } from "@repo/backend/confect/exams/question";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { Array as Arr, Option } from "effect";
-import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
+import { type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { usePaperText } from "@/components/player/held";

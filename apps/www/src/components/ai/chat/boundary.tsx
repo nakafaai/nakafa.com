@@ -1,8 +1,9 @@
 import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly, useLocation } from "@tanstack/react-router";
 import type { PropsWithChildren, ReactNode } from "react";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { readChatFailureKind } from "@/components/ai/chat/access";
 import { ChatRetryContext } from "@/components/ai/chat/recovery";
 import { useAnswerRetry } from "@/lib/convex/requery";

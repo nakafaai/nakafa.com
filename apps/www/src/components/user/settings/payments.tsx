@@ -10,7 +10,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
-import { lazy, Suspense, useState } from "react";
+import { lazy } from "@repo/design-system/lib/lazy";
+import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
   CardSection,

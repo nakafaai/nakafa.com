@@ -24,6 +24,7 @@ import {
   InputGroupButton,
 } from "@repo/design-system/components/ui/input-group";
 import { useEarlyPress } from "@repo/design-system/hooks/use-press";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
 import {
@@ -34,7 +35,6 @@ import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";
 import {
-  lazy,
   type ReactNode,
   Suspense,
   useEffectEvent,

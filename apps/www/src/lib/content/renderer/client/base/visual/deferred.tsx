@@ -1,7 +1,8 @@
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
+import { Suspense, useState } from "react";
 import type { MathSceneProps } from "@/lib/content/renderer/client/base/visual/render";
 
 const MathScene = lazy(() =>

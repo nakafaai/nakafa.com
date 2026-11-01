@@ -1,5 +1,6 @@
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { WeatherGap } from "@/components/ai/home/weather/card";
 
 /**

@@ -7,9 +7,10 @@ import {
   SidebarMenuItem,
   SidebarMenuSeparator,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, Function as Fn, Option } from "effect";
-import { lazy, Suspense, useSyncExternalStore } from "react";
+import { Suspense, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
 import { useLiveSession } from "@/components/providers/live";
 import { AccountButtonFace } from "@/components/sidebar/menu/face";

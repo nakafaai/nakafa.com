@@ -1,4 +1,5 @@
 import { drawDocument } from "@repo/design-system/components/editor/prose";
+import { lazy } from "@repo/design-system/lib/lazy";
 import {
   blockGapVariants,
   pictureVariants,
@@ -6,7 +7,7 @@ import {
 import type { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, MutableList, Option, Record as Rec } from "effect";
-import { lazy, Suspense, use, useCallback, useState } from "react";
+import { Suspense, use, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { SittingPictures } from "@/components/exams/sitting/pictures";
 

@@ -78,7 +78,7 @@ async function sortRows(page: Page) {
   await sort.click();
   await page
     .getByRole("button", {
-      name: en.Tryouts["set-sort-name-descending"],
+      name: en.DataTable["sort-z-a"],
     })
     .click();
 }

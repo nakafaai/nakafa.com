@@ -50,7 +50,7 @@ test("every head of a try-out table filters its column, and no menu shows a raw 
         await table.getByRole("button", { name: headName(HEADS.name) }).click();
         await expect(
           page.getByRole("button", {
-            name: en.Tryouts["set-sort-name-ascending"],
+            name: en.DataTable["sort-a-z"],
           })
         ).toBeVisible();
         await page

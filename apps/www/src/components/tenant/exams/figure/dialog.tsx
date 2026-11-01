@@ -15,8 +15,9 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { Array as Arr, Option, Schema } from "effect";
-import { lazy, type ReactNode, Suspense, useId, useState } from "react";
+import { type ReactNode, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { PendingFigure } from "@/components/tenant/exams/editing";
 import {

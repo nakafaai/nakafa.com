@@ -10,11 +10,12 @@ import { DeferredLearnerText } from "@repo/design-system/components/markdown/def
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { elementById } from "@repo/design-system/lib/element";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, HashSet } from "effect";
 import type { MouseEvent, ReactNode } from "react";
-import { createContext, lazy, Suspense, use } from "react";
+import { createContext, Suspense, use } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { likeInLists, unlikeInLists } from "@/components/comments/mutation";
 import {

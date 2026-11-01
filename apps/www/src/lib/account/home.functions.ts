@@ -10,16 +10,6 @@ export const homeScreenFn = createServerFn({ method: "GET" })
     return homeScreenHandler(options);
   });
 
-/** The new chat page: its localized title and description. */
-export const chatIndexScreenFn = createServerFn({ method: "GET" })
-  .validator(Schema.toStandardSchemaV1(LocaleInput))
-  .handler(async (options) => {
-    const { chatIndexScreenHandler } = await import(
-      "@/lib/account/home.server"
-    );
-    return chatIndexScreenHandler(options);
-  });
-
 /** The chat sidebar that every chat page shows. */
 export const chatSidebarScreenFn = createServerFn({ method: "GET" }).handler(
   async (options) => {

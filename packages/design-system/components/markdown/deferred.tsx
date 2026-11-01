@@ -1,5 +1,6 @@
+import { lazy } from "@repo/design-system/lib/lazy";
 import { cn } from "cn";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 
 /** The Markdown pipeline of learner text, loaded when a client draws the first text. */
 const LearnerMarkdown = lazy(() =>

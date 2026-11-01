@@ -3,10 +3,10 @@ import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/c
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
 import { EvilBrushControls } from "@repo/design-system/components/evilcharts/ui/evil-brush-controls";
 import { useBrushSelection } from "@repo/design-system/components/evilcharts/ui/evil-brush-selection";
+import { lazy } from "@repo/design-system/lib/lazy";
 import { cn } from "cn";
 import { Array as Arr, Record as Rec, Schema } from "effect";
 import {
-  lazy,
   Suspense,
   useDeferredValue,
   useId,

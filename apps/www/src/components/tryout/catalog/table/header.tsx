@@ -14,12 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { TableHeader, TableRow } from "@repo/design-system/components/ui/table";
+import { TableRow } from "@repo/design-system/components/ui/table";
 import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { TableHeadButton } from "@/components/shared/table/head";
 import {
   ColumnHead,
+  ColumnHeads,
   HeadPanel,
   HeadRange,
   HeadReset,
@@ -35,25 +36,21 @@ import {
 } from "@/components/tryout/status";
 
 const headings = {
-  title: {
-    label: "set-column-name",
-    asc: "set-sort-name-ascending",
-    desc: "set-sort-name-descending",
-  },
+  title: { kind: "text", label: "set-column-name", menu: "start" },
   questionCount: {
+    kind: "number",
     label: "set-column-questions",
-    asc: "set-sort-questions-ascending",
-    desc: "set-sort-questions-descending",
+    menu: "center",
   },
   durationSeconds: {
+    kind: "number",
     label: "set-column-duration",
-    asc: "set-sort-duration-ascending",
-    desc: "set-sort-duration-descending",
+    menu: "center",
   },
   publishedScore: {
+    kind: "number",
     label: "set-column-score",
-    asc: "set-sort-score-ascending",
-    desc: "set-sort-score-descending",
+    menu: "end",
   },
 } as const;
 
@@ -67,7 +64,7 @@ const sortIcons = {
 /** Fixed columns keep the same geometry while the server changes row order. */
 export function TryoutTableHeader() {
   return (
-    <TableHeader className="bg-background sticky top-0 z-10">
+    <ColumnHeads>
       <TableRow>
         <TryoutColumnHeading field="title" />
         <TryoutStatusHeading />
@@ -75,7 +72,7 @@ export function TryoutTableHeader() {
         <TryoutColumnHeading field="durationSeconds" />
         <TryoutColumnHeading field="publishedScore" />
       </TableRow>
-    </TableHeader>
+    </ColumnHeads>
   );
 }
 
@@ -93,7 +90,7 @@ function TryoutColumnHeading({ field }: { field: keyof typeof headings }) {
   const place = field === "title" ? "start" : "center";
 
   return (
-    <ColumnHead place={place} sorted={sorted}>
+    <ColumnHead menu={copy.menu} place={place} sorted={sorted}>
       <HeadPanel
         trigger={
           <TableHeadButton
@@ -107,8 +104,7 @@ function TryoutColumnHeading({ field }: { field: keyof typeof headings }) {
         }
       >
         <HeadSort
-          ascending={t(copy.asc)}
-          descending={t(copy.desc)}
+          kind={copy.kind}
           onSort={(descending) =>
             onSort({ direction: descending ? "desc" : "asc", field })
           }
@@ -146,7 +142,7 @@ function TryoutStatusHeading() {
           }
         />
         <DropdownMenuContent
-          align="start"
+          align="center"
           className="w-max max-w-[calc(100vw-1rem)]"
         >
           <DropdownMenuGroup>
