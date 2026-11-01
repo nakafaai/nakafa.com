@@ -235,6 +235,7 @@ function MaterialPage() {
       key={`${route.publicPath}?${ctx ?? ""}`}
       page={page.navigation}
       placements={page.placements}
+      title={metadata.title}
     >
       <LayoutMaterial>
         <ContentViewTracker
@@ -246,9 +247,7 @@ function MaterialPage() {
         />
         <SidebarRightProvider>
           <LayoutMaterialContent>
-            <ContentHeader
-              breadcrumb={<MaterialBreadcrumb title={metadata.title} />}
-            >
+            <ContentHeader breadcrumb={<MaterialBreadcrumb />}>
               <OpenContent
                 content={page.content}
                 copySourceUrl={page.copySourceUrl}

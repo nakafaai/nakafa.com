@@ -35,6 +35,7 @@ const PlacementContext = createContext<{
   readonly page: MaterialNavigationPage;
   readonly placements: readonly MaterialPlacement[];
   readonly store: PlacementStore;
+  readonly title: string;
 } | null>(null);
 
 /**
@@ -51,17 +52,20 @@ export function MaterialPlacementProvider({
   hint,
   page,
   placements,
+  title,
 }: {
   children: ReactNode;
   /** The `ctx` hint of the reader's address. */
   hint: string | undefined;
   page: MaterialNavigationPage;
   placements: readonly MaterialPlacement[];
+  title: string;
 }) {
   const [value] = useState(() => ({
     page,
     placements,
     store: createPlacementStore(),
+    title,
   }));
 
   useLayoutEffect(() => {
@@ -100,15 +104,9 @@ function useMaterialNavigation() {
  * to its card, or with no place the lesson's own, which shows until the prepaint script
  * names another.
  */
-function PlacementPath({
-  placement,
-  title,
-}: {
-  placement: MaterialPlacement | null;
-  title: string;
-}) {
+function PlacementPath({ placement }: { placement: MaterialPlacement | null }) {
   const t = useTranslations("Common");
-  const { page } = usePlacementContext();
+  const { page, title } = usePlacementContext();
   const hint = placement === null ? "" : placementHint(placement);
   return (
     <div
@@ -130,17 +128,13 @@ function PlacementPath({
  * them stand in the static HTML, so a reader's `ctx` shows its path at the first
  * paint, with no read and no shift.
  */
-export function MaterialBreadcrumb({ title }: { title: string }) {
+export function MaterialBreadcrumb() {
   const { placements } = usePlacementContext();
   return (
     <>
-      <PlacementPath placement={null} title={title} />
+      <PlacementPath placement={null} />
       {Arr.map(placements, (placement) => (
-        <PlacementPath
-          key={placementHint(placement)}
-          placement={placement}
-          title={title}
-        />
+        <PlacementPath key={placementHint(placement)} placement={placement} />
       ))}
     </>
   );
