@@ -226,7 +226,7 @@ function CohortGraduationBody() {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </PanesList>
-      <PanesDetail empty={t("detail-empty")} label={t("detail")}>
+      <PanesDetail label={t("detail")}>
         <GraduationLineDetail lines={pagination.results} />
       </PanesDetail>
     </Panes>

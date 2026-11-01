@@ -138,10 +138,7 @@ export function StudentAnswersPanel() {
   const t = useTranslations("Exams");
 
   return (
-    <PanesDetail
-      empty={t("results-answers-empty")}
-      label={t("results-student-answers")}
-    >
+    <PanesDetail label={t("results-student-answers")}>
       <OpenAttempt />
     </PanesDetail>
   );
