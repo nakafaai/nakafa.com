@@ -37,7 +37,7 @@ import {
   PlayerQuestionHeader,
   PlayerQuestionPrompt,
 } from "@/components/player/question";
-import { ExamPaperMedia } from "@/components/tenant/exams/media";
+import { TryPaperMedia } from "@/components/tenant/exams/media";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
 import { useLastValue } from "@/lib/data/kept";
@@ -122,7 +122,7 @@ export function ExamTryQuestion({
       <PlayerQuestionHeader number={number} />
       <PlayerQuestionPrompt>
         <div className="grid gap-6">
-          <ExamPaperMedia question={question} />
+          <TryPaperMedia question={question} />
           {question.reading === null ? null : (
             <ExamTryPrompt documentId={question.reading} />
           )}

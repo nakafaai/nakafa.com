@@ -121,7 +121,9 @@ describe("coherent article publication", () => {
             publicPath: projection.publicPath,
           }
         );
-        expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud");
+        expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud", {
+          fetch: expect.any(Function),
+        });
         expect(deliveryMock).toHaveBeenCalledExactlyOnceWith(
           {
             appLocale: "en",

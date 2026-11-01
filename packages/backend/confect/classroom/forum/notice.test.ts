@@ -11,6 +11,7 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
+import { schoolViews } from "@repo/backend/test/inbox";
 import { slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
 
@@ -24,9 +25,8 @@ const inboxOf = (
   fixture: Effect.Success<typeof keyedFixture>,
   account: "student" | "teacher"
 ) =>
-  Effect.map(
-    fixture.as(account).query(inbox.list, firstPage),
-    (listed) => listed.page
+  Effect.map(fixture.as(account).query(inbox.list, firstPage), (listed) =>
+    schoolViews(listed.page)
   );
 
 describe("classroom/forum mentions", () => {

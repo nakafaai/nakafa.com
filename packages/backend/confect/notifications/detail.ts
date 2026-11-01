@@ -8,7 +8,10 @@ import type {
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { NINA_NAME } from "@repo/backend/confect/classroom/forum/nina";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
-import type { ClassDetail } from "@repo/backend/confect/notifications/schema";
+import type {
+  ClassDetail,
+  SchoolRow,
+} from "@repo/backend/confect/notifications/schema";
 import { Effect, Match, Option } from "effect";
 
 /**
@@ -84,7 +87,7 @@ const taskPart = Effect.fn("notifications.detail.task")(function* (
  * whose source is gone or whose class the recipient no longer reads.
  */
 const detailOf = Effect.fn("notifications.detail")(function* (
-  row: NotificationsDoc,
+  row: SchoolRow,
   person: TenantPeopleDoc,
   tenant: TenantsDoc
 ) {
@@ -263,7 +266,7 @@ const missedOf = Effect.fn("notifications.detail.missed")(function* (
 
 /** What a row shows of its source, each read when the row is read: its class detail, its sitting, and its grade. */
 export const partsOf = Effect.fn("notifications.detail.parts")(function* (
-  row: NotificationsDoc,
+  row: SchoolRow,
   person: TenantPeopleDoc,
   tenant: TenantsDoc
 ) {

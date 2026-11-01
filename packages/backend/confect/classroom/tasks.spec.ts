@@ -12,6 +12,7 @@ import {
   LatePolicy,
   SubmissionView,
   TaskAddress,
+  TaskCategory,
   TaskPoints,
   TaskStanding,
   TaskTargets,
@@ -62,6 +63,7 @@ export default GroupSpec.make()
       name: "publish",
       args: () => ({
         ...classArgs,
+        category: Schema.NullOr(TaskCategory),
         clientKey: ClientKey,
         deadline: Schema.Finite,
         latePolicy: LatePolicy,
@@ -79,6 +81,7 @@ export default GroupSpec.make()
       name: "edit",
       args: () => ({
         ...classArgs,
+        category: Schema.NullOr(TaskCategory),
         deadline: Schema.Finite,
         latePolicy: LatePolicy,
         points: TaskPoints,

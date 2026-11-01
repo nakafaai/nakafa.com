@@ -14,6 +14,7 @@ import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { classRoster } from "@repo/backend/confect/classroom/roster";
 import {
   type LatePolicy,
+  type TaskCategory,
   type TaskTargets,
   taskField,
 } from "@repo/backend/confect/classroom/tasks/task";
@@ -79,6 +80,7 @@ export const classTargets = Effect.fn("classroom.tasks.targets")(function* (
 export const writeTask = Effect.fn("classroom.tasks.write")(function* (
   author: TenantPeopleDoc,
   draft: {
+    readonly category: typeof TaskCategory.Type | null;
     readonly clientKey: typeof ClientKey.Type;
     readonly deadline: number;
     readonly latePolicy: typeof LatePolicy.Type;
@@ -107,6 +109,7 @@ export const writeTask = Effect.fn("classroom.tasks.write")(function* (
     .insert({
       ...fields,
       ...reach,
+      ...(draft.category === null ? {} : { category: draft.category }),
       authorId: author._id,
       createdAt: yield* Clock.currentTimeMillis,
       deadline: draft.deadline,
