@@ -10,7 +10,9 @@ test("an owner reads each step of the setup, opens one, and finishing takes it o
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
-  const context = await browser.newContext();
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
 
@@ -29,7 +31,9 @@ test("an owner reads each step of the setup, opens one, and finishing takes it o
   ]) {
     await expect(page.getByRole("heading", { name: step })).toBeVisible();
   }
-  const entry = page.getByRole("link", { name: "Set up school" });
+  const entry = page
+    .locator('[data-slot="sidebar"]')
+    .getByRole("link", { name: "Set up school" });
   await expect(entry).toBeVisible();
 
   await finish.click();
