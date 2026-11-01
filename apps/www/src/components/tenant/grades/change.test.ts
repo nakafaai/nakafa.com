@@ -23,7 +23,11 @@ const scheme = { bands: [{ label: "Baik", minimum: 80 }], kktp: 75 };
 /** A line of the gradebook with the grade it holds. */
 const line = (personId: typeof raka, grade: SheetLine["grade"]): SheetLine => ({
   grade,
-  student: { id: personId, name: personId === raka ? "Raka" : "Sari" },
+  student: {
+    email: null,
+    id: personId,
+    name: personId === raka ? "Raka" : "Sari",
+  },
 });
 
 /** A released grade of Sari, which no entry changes. */

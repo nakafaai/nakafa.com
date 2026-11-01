@@ -85,7 +85,10 @@ describe("guardians/family children and confirm", () => {
             linkId: link.id,
             staffCheck: true,
             status: "pending",
-            student: { id: fixture.people.student.personId, name: "Student" },
+            student: expect.objectContaining({
+              id: fixture.people.student.personId,
+              name: "Student",
+            }),
           },
         ]);
         yield* setRoster(fixture, NISN);

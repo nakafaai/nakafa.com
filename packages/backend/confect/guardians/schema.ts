@@ -1,5 +1,9 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Email, PersonName } from "@repo/backend/confect/tenancy/schema";
+import {
+  Email,
+  ListedPerson,
+  PersonName,
+} from "@repo/backend/confect/tenancy/schema";
 import { Duration, Schema } from "effect";
 
 /** How long a link waits for its check: the term of an invite (ADR 0034, GLOSSARY Invite). */
@@ -128,7 +132,7 @@ export const ChildView = Schema.Struct({
   linkId: Id("guardianLinks"),
   staffCheck: Schema.Boolean,
   status: LinkStatus,
-  student: Schema.Struct({ id: Id("tenantPeople"), name: PersonName }),
+  student: ListedPerson,
 });
 
 /** The answer of a NISN check: verified, or refused with the same words as a wrong code. */

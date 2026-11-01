@@ -10,7 +10,11 @@ import {
 import { ReportHash } from "@repo/backend/confect/records/hash";
 import { GradeValue } from "@repo/backend/confect/records/scheme";
 import { Nisn } from "@repo/backend/confect/roster/schema";
-import { Npsn, PersonName } from "@repo/backend/confect/tenancy/schema";
+import {
+  ListedPerson,
+  Npsn,
+  PersonName,
+} from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
 /** One subject of a transcript: its name and its value on the 0 to 100 scale, to two decimals. */
@@ -113,7 +117,7 @@ export const GraduationLine = Schema.Struct({
   hasNisn: Schema.Boolean,
   letter: Schema.NullOr(LetterView),
   missing: Schema.Array(Missing),
-  student: Schema.Struct({ id: Id("tenantPeople"), name: PersonName }),
+  student: ListedPerson,
   transcript: Schema.NullOr(Transcript),
 });
 

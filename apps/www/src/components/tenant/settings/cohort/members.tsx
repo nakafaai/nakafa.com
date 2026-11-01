@@ -13,6 +13,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
+import { TableText } from "@/components/shared/table/text";
 import { TableName } from "@/components/shared/table/title";
 import { SchoolPlacementMove } from "@/components/tenant/settings/placement";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
@@ -67,6 +68,11 @@ export function SchoolCohortMembers({
       cell: (info) => <TableName>{info.getValue()}</TableName>,
       header: t("member-name"),
       id: "name",
+    }),
+    memberColumns.text((member) => member.email ?? "", {
+      cell: (info) => <TableText>{info.getValue()}</TableText>,
+      header: t("member-email"),
+      id: "email",
     }),
     memberColumns.text((member) => member.login ?? "", {
       header: t("member-login"),

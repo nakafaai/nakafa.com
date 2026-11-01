@@ -69,6 +69,7 @@
     "outsider-check-again": "Periksa lagi"
   },
   "SchoolGuardians": {
+    "email": "Email",
     "request-ask": "Tanya sekolah",
     "request-description": "Tata usaha menjawab setiap permintaan. Tulis kebutuhan Anda secara singkat.",
     "request-placeholder": "Yang Anda perlukan dari tata usaha",
@@ -1660,6 +1661,7 @@
     "library-kind-folder": "Folder"
   },
   "SchoolGrades": {
+    "email": "Email",
     "student": "Siswa",
     "value": "Nilai",
     "value-label": "Nilai {name}",
@@ -1689,6 +1691,7 @@
     "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya."
   },
   "SchoolReports": {
+    "email": "Email",
     "title": "Rapor",
     "cohort": "Rombel",
     "period": "Periode",
@@ -1732,6 +1735,7 @@
     "unit": "Unit"
   },
   "SchoolGraduation": {
+    "email": "Email",
     "title": "Kelulusan",
     "cohort": "Rombel",
     "unit": "Satuan pendidikan",

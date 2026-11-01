@@ -1,8 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type {
-  TenantGrantsDoc,
-  TenantPeopleDoc,
-} from "@repo/backend/confect/_generated/docs";
+import type { TenantGrantsDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Grant } from "@repo/backend/confect/access/access";
@@ -25,7 +22,9 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Person } from "@repo/backend/confect/tenancy/access";
 import { personAccess } from "@repo/backend/confect/tenancy/authority";
+import { listedPersonOf } from "@repo/backend/confect/tenancy/listed";
 import { namedPeople } from "@repo/backend/confect/tenancy/named";
+import type { ListedPerson } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Effect, Layer, Number as Num, Struct } from "effect";
 
 /** The largest page one request reads. */
@@ -49,9 +48,9 @@ const list = FunctionImpl.make(
     const pageOptions = Struct.assign(paginationOpts, {
       numItems: Num.min(paginationOpts.numItems, PAGE_LIMIT),
     });
-    const row = (grant: TenantGrantsDoc, person: TenantPeopleDoc) => ({
+    const row = (grant: TenantGrantsDoc, person: typeof ListedPerson.Type) => ({
       id: grant._id,
-      person: { id: person._id, name: person.name },
+      person,
       revocable: leavesOwner(grant, owners),
       role: grant.role,
       scope: grant.scope,
@@ -61,8 +60,9 @@ const list = FunctionImpl.make(
       const page = yield* Effect.forEach(
         people.page,
         (person) =>
-          Effect.map(activeGrants(person._id), (grants) =>
-            Arr.map(grants, (grant) => row(grant, person))
+          Effect.map(
+            Effect.all([activeGrants(person._id), listedPersonOf(person)]),
+            ([grants, listed]) => Arr.map(grants, (grant) => row(grant, listed))
           ),
         { concurrency: "unbounded" }
       );
@@ -83,6 +83,7 @@ const list = FunctionImpl.make(
           .get(grant.personId)
           .pipe(
             Effect.orDie,
+            Effect.flatMap(listedPersonOf),
             Effect.map((person) => row(grant, person))
           ),
       { concurrency: "unbounded" }

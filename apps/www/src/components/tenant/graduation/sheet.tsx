@@ -35,6 +35,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableText } from "@/components/shared/table/text";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { GraduationLineDetail } from "@/components/tenant/graduation/detail";
 import {
@@ -131,6 +132,11 @@ function CohortGraduationBody() {
       ),
       header: t("student"),
       id: "student",
+    }),
+    lineColumns.text((line) => line.student.email ?? "", {
+      cell: (info) => <TableText>{info.getValue()}</TableText>,
+      header: t("email"),
+      id: "email",
     }),
     lineColumns.values((line) => (line.hasNisn ? "yes" : "no"), {
       cell: (info) => t(`nisn-${info.getValue()}`),

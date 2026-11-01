@@ -51,6 +51,7 @@ import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableText } from "@/components/shared/table/text";
 import { TableSearch } from "@/components/shared/table/toolbar";
 import {
   correctChange,
@@ -167,6 +168,11 @@ export function ClassGradebook({
       ),
       header: t("student"),
       id: "student",
+    }),
+    lineColumns.text((line) => line.student.email ?? "", {
+      cell: (info) => <TableText>{info.getValue()}</TableText>,
+      header: t("email"),
+      id: "email",
     }),
     lineColumns.number((line) => line.grade?.value ?? null, {
       cell: (info) => <GradeValueField line={info.row.original} />,

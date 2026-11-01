@@ -26,6 +26,7 @@ import {
 import { restoreCohort } from "@repo/backend/confect/tenancy/cohort.restore";
 import { edit } from "@repo/backend/confect/tenancy/cohorts.edit";
 import spec from "@repo/backend/confect/tenancy/cohorts.spec";
+import { emailOf } from "@repo/backend/confect/tenancy/email";
 import { cohortMembers } from "@repo/backend/confect/tenancy/members";
 import { overview } from "@repo/backend/confect/tenancy/overview";
 import {
@@ -126,11 +127,14 @@ const members = FunctionImpl.make(
           .first()
           .pipe(
             Effect.orDie,
-            Effect.map((login) => ({
-              id: person._id,
-              login: Option.isSome(login) ? login.value.name : null,
-              name: person.name,
-            }))
+            Effect.flatMap((login) =>
+              Effect.map(emailOf(person), (email) => ({
+                email,
+                id: person._id,
+                login: Option.isSome(login) ? login.value.name : null,
+                name: person.name,
+              }))
+            )
           ),
       { concurrency: "unbounded" }
     );

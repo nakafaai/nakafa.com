@@ -38,6 +38,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableText } from "@/components/shared/table/text";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -156,6 +157,11 @@ function CohortReportsBody() {
       ),
       header: t("student"),
       id: "student",
+    }),
+    lineColumns.text((line) => line.student.email ?? "", {
+      cell: (info) => <TableText>{info.getValue()}</TableText>,
+      header: t("email"),
+      id: "email",
     }),
     lineColumns.values(stateOf, {
       cell: (info) => (

@@ -69,6 +69,7 @@
     "outsider-check-again": "Erneut prüfen"
   },
   "SchoolGuardians": {
+    "email": "E-Mail",
     "request-ask": "Die Schule fragen",
     "request-description": "Das Sekretariat beantwortet jede Anfrage. Schreibe kurz, was du brauchst.",
     "request-placeholder": "Was du vom Sekretariat brauchst",
@@ -1660,6 +1661,7 @@
     "library-kind-folder": "Ordner"
   },
   "SchoolGrades": {
+    "email": "E-Mail",
     "student": "Schüler",
     "value": "Note",
     "value-label": "Note von {name}",
@@ -1689,6 +1691,7 @@
     "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
   },
   "SchoolReports": {
+    "email": "E-Mail",
     "title": "Zeugnisse",
     "cohort": "Klasse",
     "period": "Zeitraum",
@@ -1732,6 +1735,7 @@
     "unit": "Einheit"
   },
   "SchoolGraduation": {
+    "email": "E-Mail",
     "title": "Abschluss",
     "cohort": "Klasse",
     "unit": "Einheit",
