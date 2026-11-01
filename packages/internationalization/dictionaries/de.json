@@ -1907,6 +1907,7 @@
     "classification": "Bildung"
   },
   "Common": {
+    "popup-empty": "Noch nichts zur Auswahl.",
     "page-navigation": "Seitennavigation",
     "contributor-description": "Diese Person baut Nakafa mit auf.",
     "undo": "Rückgängig",

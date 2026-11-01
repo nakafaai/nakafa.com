@@ -1907,6 +1907,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "popup-empty": "Belum ada pilihan.",
     "page-navigation": "Navigasi halaman",
     "contributor-description": "Orang ini ikut membangun Nakafa.",
     "undo": "Urungkan",
