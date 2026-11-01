@@ -1,10 +1,5 @@
 import type { Ref } from "@confect/core";
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import { QueryResult, usePaginatedQuery, useQuery } from "@confect/react";
 import {
   Archive02Icon,
   MortarboardIcon,
@@ -15,24 +10,21 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { ClassStatus } from "@repo/backend/confect/classroom/class";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { LoadFailure } from "@/components/state/failure";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -282,24 +274,6 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
     { initialNumItems: PAGE_SIZE }
   );
 
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  if (pagination._tag === "LoadingFirstPage") {
-    return null;
-  }
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    if (failed) {
-      return <LoadFailure onRetry={reloadPage} />;
-    }
-    return (
-      <TableEmpty
-        act="writing"
-        action={<ClassesCohortLink periodId={periodId} />}
-        description={t("classes-description")}
-        title={t("classes-empty")}
-      />
-    );
-  }
-
   const columns = [
     classColumns.text((row) => row.name, {
       cell: (info) => (
@@ -347,17 +321,21 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
   ];
 
   return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
       <DataTable
         columns={columns}
         data={pagination.results}
+        empty={
+          <TableEmpty
+            act="writing"
+            action={<ClassesCohortLink periodId={periodId} />}
+            description={t("classes-description")}
+            title={t("classes-empty")}
+          />
+        }
         rowId={(row) => row.id}
         search="name"
       />
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
-    </>
+    </TablePages>
   );
 }

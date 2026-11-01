@@ -57,6 +57,23 @@ const STATUS_LOOKS = {
  */
 export function StudentExams() {
   const t = useTranslations("Exams");
+
+  return (
+    <TableFiltersProvider>
+      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
+        <TableSearch placeholder={t("exams-search")} />
+      </SchoolHeader>
+      <TablePageBody>
+        <StudentExamsTable />
+      </TablePageBody>
+    </TableFiltersProvider>
+  );
+}
+
+/** The student's sittings in the School table, or the empty state while the student has none. */
+function StudentExamsTable() {
+  const t = useTranslations("Exams");
+  const locale = useLocale();
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const listed = useQuery(exams.sittings.mine, isSettled ? { slug } : "skip");
@@ -68,48 +85,11 @@ export function StudentExams() {
     }
   }, [listed]);
 
-  if (QueryResult.isFailure(listed) && isLostAccess(listed.error)) {
-    throw listed.error;
-  }
-  const sittings = QueryResult.isSuccess(listed)
-    ? orderSittings(listed.value)
-    : null;
-
-  return (
-    <TableFiltersProvider>
-      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {sittings !== null && Arr.isReadonlyArrayNonEmpty(sittings) ? (
-          <TableSearch placeholder={t("exams-search")} />
-        ) : null}
-      </SchoolHeader>
-      <TablePageBody>
-        {QueryResult.isFailure(listed) ? (
-          <LoadFailure onRetry={reloadPage} />
-        ) : null}
-        {sittings === null ? null : <StudentExamsTable sittings={sittings} />}
-      </TablePageBody>
-    </TableFiltersProvider>
-  );
-}
-
-/** The student's sittings in the School table, or the empty state while the student has none. */
-function StudentExamsTable({
-  sittings,
-}: {
-  readonly sittings: readonly Sitting[];
-}) {
-  const t = useTranslations("Exams");
-  const locale = useLocale();
-  const { slug } = useTenant();
-
-  if (Arr.isReadonlyArrayEmpty(sittings)) {
-    return (
-      <TableEmpty
-        act="sleeping"
-        description={t("mine-empty-description")}
-        title={t("mine-empty")}
-      />
-    );
+  if (QueryResult.isFailure(listed)) {
+    if (isLostAccess(listed.error)) {
+      throw listed.error;
+    }
+    return <LoadFailure onRetry={reloadPage} />;
   }
 
   const columns = [
@@ -176,7 +156,15 @@ function StudentExamsTable({
   return (
     <DataTable
       columns={columns}
-      data={sittings}
+      data={QueryResult.isSuccess(listed) ? orderSittings(listed.value) : []}
+      empty={
+        <TableEmpty
+          act="sleeping"
+          description={t("mine-empty-description")}
+          title={t("mine-empty")}
+        />
+      }
+      loading={!QueryResult.isSuccess(listed)}
       rowId={(sitting) => sitting.id}
       search="exam"
     />

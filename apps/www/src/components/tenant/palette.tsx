@@ -176,8 +176,15 @@ function TenantPaletteRow({
  * viewer opens.
  */
 function usePaletteGroups(): readonly PaletteGroup[] {
-  const { canOpenExams, canOpenGraduation, canOpenReports, reach, role, slug } =
-    useTenant();
+  const {
+    canOpenExams,
+    canOpenGraduation,
+    canOpenReports,
+    home,
+    reach,
+    role,
+    slug,
+  } = useTenant();
   const classes = useMyClasses();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
@@ -220,7 +227,7 @@ function usePaletteGroups(): readonly PaletteGroup[] {
           } satisfies PaletteItem,
         ]
       : []),
-    ...(canOpenExams
+    ...(canOpenExams || home.canWatch
       ? [
           {
             icon: { hugeicon: TaskEdit01Icon },

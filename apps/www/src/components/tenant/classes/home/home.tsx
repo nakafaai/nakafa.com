@@ -28,20 +28,8 @@ const POST_PAGE_SIZE = 20;
  * access is sent to the refused page.
  */
 export function ClassHome() {
-  const { can } = useClassScope();
-
-  return (
-    <>
-      {Arr.contains(can, "post.publish") ? <WaitingPosts /> : null}
-      <ClassPosts />
-    </>
-  );
-}
-
-/** The posts of the class, the pinned ones first. */
-function ClassPosts() {
   const t = useTranslations("Classroom");
-  const { classId, slug } = useClassScope();
+  const { can, classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     classroom.posts.list,
@@ -51,6 +39,10 @@ function ClassPosts() {
   const pinned = useQuery(
     classroom.posts.pinned,
     isSettled ? { classId, slug } : "skip"
+  );
+  const scheduled = useQuery(
+    classroom.scheduled.list,
+    isSettled && Arr.contains(can, "post.publish") ? { classId, slug } : "skip"
   );
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -64,36 +56,40 @@ function ClassPosts() {
   ) {
     return <LoadFailure onRetry={reloadPage} />;
   }
-  // Both reads arrive before the list draws, so a pinned announcement never jumps to the top.
+  // Every read arrives before the list draws, so a pinned announcement never jumps to the top and a
+  // kept one never pushes the list down.
   if (
     pagination._tag === "LoadingFirstPage" ||
-    !QueryResult.isSuccess(pinned)
+    !QueryResult.isSuccess(pinned) ||
+    (Arr.contains(can, "post.publish") && QueryResult.isLoading(scheduled))
   ) {
     return null;
-  }
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    return (
-      <TableEmpty
-        act="reading"
-        description={t("posts-empty-description")}
-        title={t("posts-empty")}
-      />
-    );
   }
 
   return (
     <>
-      <ItemGroup aria-label={t("posts")}>
-        {Arr.map(pinned.value, (post) => (
-          <PostRow key={post.clientKey} post={post} />
-        ))}
-        {Arr.map(
-          Arr.filter(pagination.results, (post) => !post.pinned),
-          (post) => (
+      {QueryResult.isSuccess(scheduled) ? (
+        <WaitingPosts posts={scheduled.value} />
+      ) : null}
+      {Arr.isReadonlyArrayEmpty(pagination.results) ? (
+        <TableEmpty
+          act="reading"
+          description={t("posts-empty-description")}
+          title={t("posts-empty")}
+        />
+      ) : (
+        <ItemGroup aria-label={t("posts")}>
+          {Arr.map(pinned.value, (post) => (
             <PostRow key={post.clientKey} post={post} />
-          )
-        )}
-      </ItemGroup>
+          ))}
+          {Arr.map(
+            Arr.filter(pagination.results, (post) => !post.pinned),
+            (post) => (
+              <PostRow key={post.clientKey} post={post} />
+            )
+          )}
+        </ItemGroup>
+      )}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(POST_PAGE_SIZE)} />
       ) : null}

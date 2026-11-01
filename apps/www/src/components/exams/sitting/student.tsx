@@ -4,7 +4,6 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import { CardContent } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -24,7 +23,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { useEnterSitting } from "@/components/exams/sitting/admit";
 import { isActive, takesAnswers } from "@/components/exams/sitting/attempt";
 import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
-import { SittingBody } from "@/components/exams/sitting/body";
+import { SittingBody, SittingNotice } from "@/components/exams/sitting/body";
 import { useReaderLoaded } from "@/components/exams/sitting/document";
 import { startEntry, stepEntry } from "@/components/exams/sitting/entry";
 import { entersBySelf, pageRoomEntry } from "@/components/exams/sitting/join";
@@ -38,11 +37,6 @@ import {
   SittingTabHeld,
   SittingTabWaiting,
 } from "@/components/exams/sitting/tab";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-} from "@/components/shared/card/section";
 import { useTenant } from "@/components/tenant/context";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
@@ -202,40 +196,36 @@ function StudentEntry({
     >
       <SittingBody>
         <form onSubmit={entry.submit}>
-          <CardSection
+          <SittingNotice
             description={t("student-room-line", { room: sitting.room })}
-            title={t("student-enter")}
+            title={t("sitting")}
           >
-            <CardContent>
-              <Field>
-                <FieldLabel htmlFor={entry.tokenId}>{t("token")}</FieldLabel>
-                <Input
-                  autoComplete="off"
-                  id={entry.tokenId}
-                  onChange={(event) =>
-                    entry.setTokenText(event.currentTarget.value)
-                  }
-                  placeholder={t("student-token-placeholder")}
-                  value={entry.tokenText}
-                />
-              </Field>
-            </CardContent>
-            {/* A refused token takes the sentence's place, so the card holds its height. */}
-            <CardSectionFooter
-              hint={
-                entry.message === null
-                  ? t("student-enter-footer")
-                  : t(entry.message)
-              }
-              tone={entry.message === null ? "muted" : "destructive"}
-            >
-              <CardSectionActions>
-                <Button disabled={!isSettled || entry.entering} type="submit">
-                  {t("student-enter")}
-                </Button>
-              </CardSectionActions>
-            </CardSectionFooter>
-          </CardSection>
+            <Field>
+              <FieldLabel htmlFor={entry.tokenId}>{t("token")}</FieldLabel>
+              <Input
+                autoComplete="off"
+                id={entry.tokenId}
+                onChange={(event) =>
+                  entry.setTokenText(event.currentTarget.value)
+                }
+                placeholder={t("student-token-placeholder")}
+                value={entry.tokenText}
+              />
+            </Field>
+            <Button disabled={!isSettled || entry.entering} type="submit">
+              {t("student-enter")}
+            </Button>
+            {/* A refused token takes the sentence's place, so the screen holds its height. */}
+            {entry.message === null ? (
+              <p className="text-muted-foreground text-sm">
+                {t("student-enter-footer")}
+              </p>
+            ) : (
+              <p className="text-destructive text-sm" role="alert">
+                {t(entry.message)}
+              </p>
+            )}
+          </SittingNotice>
         </form>
       </SittingBody>
     </PaperFrame>
@@ -316,24 +306,24 @@ function StudentScheduled({
       bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
     >
       <SittingBody>
-        <CardSection
+        <SittingNotice
           description={t("student-room-line", { room: sitting.room })}
           title={t("sitting")}
         >
-          <CardContent>
-            <p>
-              {t("student-opens-at", {
-                time:
-                  schoolDateTimeText({
-                    at: sitting.opensAt,
-                    locale,
-                    timeZone: sitting.timeZone,
-                  }) ?? "",
-              })}
-            </p>
-          </CardContent>
-          <CardSectionFooter hint={t("student-scheduled-footer")} />
-        </CardSection>
+          <p>
+            {t("student-opens-at", {
+              time:
+                schoolDateTimeText({
+                  at: sitting.opensAt,
+                  locale,
+                  timeZone: sitting.timeZone,
+                }) ?? "",
+            })}
+          </p>
+          <p className="text-muted-foreground text-sm">
+            {t("student-scheduled-footer")}
+          </p>
+        </SittingNotice>
       </SittingBody>
     </PaperFrame>
   );

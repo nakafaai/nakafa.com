@@ -53,9 +53,7 @@ test("a student's sitting screen fills the page under its bar, with its card in 
   const page = await context.newPage();
 
   await page.goto(address(`/sittings/${sitting.sittingId}`));
-  const card = page.locator('[data-slot="card"]').filter({
-    has: page.getByRole("button", { name: "Enter sitting" }),
-  });
+  const card = page.locator('[data-slot="sitting-body"]');
   await expect(card).toBeVisible();
   const body = await page.locator('[data-slot="sidebar-inset"]').boundingBox();
   const box = await card.boundingBox();

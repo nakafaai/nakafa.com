@@ -25,6 +25,7 @@ import {
   TableHeader,
 } from "@repo/design-system/components/ui/table";
 import type { VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { type ReactElement, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
@@ -32,6 +33,7 @@ import {
   columnAlign,
   type HeadAlign,
   HeadMenuContext,
+  headWidth,
 } from "@/components/shared/table/align";
 import { boundOf } from "@/components/shared/table/filter";
 import { useTableFilters } from "@/components/shared/table/toolbar";
@@ -69,6 +71,7 @@ export function ColumnHead({
   menu = "center",
   place,
   sorted,
+  width,
 }: {
   children?: ReactNode;
   /** Where the head's menu opens under it. */
@@ -76,11 +79,13 @@ export function ColumnHead({
   place: VariantProps<typeof columnAlign>["align"];
   /** How the column sorts the rows, for a head that sorts them. */
   sorted?: keyof typeof sortNames | undefined;
+  /** What sets the column's width, for a table whose rows may arrive after its heads. */
+  width?: VariantProps<typeof headWidth>["width"];
 }) {
   return (
     <TableHead
       aria-sort={sorted === undefined ? undefined : sortNames[sorted]}
-      className={columnAlign({ align: place })}
+      className={cn(columnAlign({ align: place }), headWidth({ width }))}
       scope="col"
     >
       <HeadMenuContext value={menu}>{children}</HeadMenuContext>
