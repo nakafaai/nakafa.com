@@ -94,6 +94,9 @@ const TenantOwnedRows = Schema.fromJsonString(
   Schema.Array(Schema.Struct({ tenantId: Schema.String }))
 );
 
+/** A row the next tables point at by its name. */
+const NamedRow = Schema.Struct({ name: Schema.String });
+
 /** One table's newest rows, decoded by `rows`. */
 const readRows = <Rows>(
   runtime: LocalRuntime,
@@ -206,7 +209,7 @@ const makeWriter = (
   });
   const writeNamed = Effect.fn("contentAcceptance.full.named")(function* (
     table: string,
-    rows: readonly (object & { readonly name: string })[]
+    rows: readonly (typeof NamedRow.Type)[]
   ) {
     yield* write(table, rows);
     const stored = yield* readRows(runtime, table, NamedRows);

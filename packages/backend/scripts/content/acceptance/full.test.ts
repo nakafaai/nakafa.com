@@ -5,6 +5,7 @@ import {
   fillAcceptanceSchool,
   fullMode,
 } from "@repo/backend/scripts/content/acceptance/full";
+import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
   Duration,
@@ -13,6 +14,7 @@ import {
   FileSystem,
   MutableHashMap,
   Option,
+  Schema,
   String as Str,
 } from "effect";
 import { TestClock } from "effect/testing";
@@ -43,9 +45,15 @@ const COUNT = {
   teachers: 3,
 } as const;
 
+/** One imported row, as its JSON Lines file holds it. */
+const StoredRow = Schema.fromJsonString(
+  Schema.Record(Schema.String, Schema.Unknown)
+);
+
 const OWNER = {
   _id: "owner",
   account: { userId: "user" },
+  name: "Acceptance Owner",
   tenantId: "tenant",
 };
 const SEEDED = {
@@ -63,12 +71,14 @@ const stubBackend = (held: {
   readonly named?: boolean;
 }) => {
   const written = MutableHashMap.empty<string, readonly object[]>();
-  const printed = (table: string): readonly object[] =>
-    Option.getOrElse(MutableHashMap.get(written, table), () =>
-      table === "tenants" || table === "tenantUnits" || table === "tenantPeople"
-        ? held[table]
-        : []
-    );
+  const printed = (table: string): readonly object[] => [
+    ...(table === "tenants" ||
+    table === "tenantUnits" ||
+    table === "tenantPeople"
+      ? held[table]
+      : []),
+    ...Option.getOrElse(MutableHashMap.get(written, table), () => []),
+  ];
   mocks.read.mockReturnValue(Effect.succeed({ backend: "/runtime/backend" }));
   mocks.command.mockImplementation((spec: CommandSpec) =>
     Effect.gen(function* () {
@@ -78,7 +88,7 @@ const stubBackend = (held: {
         const table = rest[0] ?? "";
         yield* fs.writeFileString(
           spec.stdoutPath,
-          JSON.stringify(printed(table))
+          Schema.encodeSync(JsonTextSchema)(printed(table))
         );
         return;
       }
@@ -87,7 +97,7 @@ const stubBackend = (held: {
       const refused = Arr.contains(held.failImports ?? [], table);
       const rows = Arr.map(Str.split(text, "\n"), (line, index): object => ({
         _id: `${table}-${index}`,
-        ...JSON.parse(line),
+        ...Schema.decodeSync(StoredRow)(line),
       }));
       if (held.named !== false && !refused) {
         MutableHashMap.set(written, table, rows);
@@ -103,6 +113,13 @@ const stubBackend = (held: {
   return (table: string) =>
     Option.getOrElse(MutableHashMap.get(written, table), () => []);
 };
+
+/** Moves the test clock on until a run that reads files between its pauses ends. */
+const passTheClock = <A, E>(run: Fiber.Fiber<A, E>) =>
+  TestClock.adjust(Duration.seconds(30)).pipe(
+    Effect.andThen(Effect.yieldNow),
+    Effect.repeat({ until: () => run.pollUnsafe() !== undefined })
+  );
 
 describe("acceptance full school", () => {
   afterEach(() => {
@@ -233,7 +250,7 @@ describe("acceptance full school", () => {
       const run = yield* fillAcceptanceSchool("/root", "acc-1", COUNT).pipe(
         Effect.forkChild
       );
-      yield* TestClock.adjust(Duration.seconds(30));
+      yield* passTheClock(run);
       yield* Fiber.join(run);
 
       expect(written("exams")).toHaveLength(COUNT.exams);
@@ -253,7 +270,7 @@ describe("acceptance full school", () => {
         Effect.flip,
         Effect.forkChild
       );
-      yield* TestClock.adjust(Duration.seconds(30));
+      yield* passTheClock(run);
 
       expect(yield* Fiber.join(run)).toMatchObject({
         message: "The import of exams failed.",
@@ -266,15 +283,11 @@ describe("acceptance full school", () => {
       const written = stubBackend({ ...SEEDED, tenantPeople: [OWNER] });
 
       yield* fillAcceptanceSchool("/root", "acc-1", COUNT);
-      const imports = mocks.command.mock.calls.length;
+      const exams = written("exams");
       yield* fillAcceptanceSchool("/root", "acc-1", COUNT);
 
-      const repeated = Arr.filter(
-        Arr.drop(mocks.command.mock.calls, imports),
-        ([spec]) => (spec as CommandSpec).args[1] === "import"
-      );
-      expect(repeated).toEqual([]);
-      expect(written("exams")).toHaveLength(COUNT.exams);
+      // A second import would have replaced the stub's rows with new objects.
+      expect(written("exams")).toBe(exams);
     }).pipe(Effect.provide(nodeServicesLayer))
   );
 
