@@ -51,7 +51,7 @@ const TASK_PAGE_SIZE = 20;
 const taskColumns = createColumnHelper<typeof dataTableFeatures, ClassTask>();
 
 /** The icons of the categories in the category filter, each a kind of file or mark. */
-const CATEGORY_ICONS = [
+const CATEGORY_ICONS: readonly [IconSvgElement, ...IconSvgElement[]] = [
   Tag01Icon,
   Bookmark01Icon,
   Folder01Icon,
