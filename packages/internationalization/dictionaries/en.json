@@ -2648,6 +2648,10 @@
     "saved-description": "Search, edit or remove what Nina keeps."
   },
   "Toast": {
+    "offline-move": {
+      "title": "You are offline.",
+      "description": "Connect again to open this page."
+    },
     "chat-deleted": {
       "title": "This chat was deleted."
     },
