@@ -154,7 +154,7 @@ const courseColumns = tableColumns<Course>();
 
 /**
  * The courses of a preview in a table, or the empty state when it has none or the school has no class for them: each
- * course's name and section, its students, the class it fills, and its menu, which the caller composes. A course linked
+ * course's name and section, the class it fills, its students, and its menu, which the caller composes. A course linked
  * to a class the school archived names that, so a cell never shows the class's raw ID.
  */
 function CourseTable({
@@ -206,7 +206,11 @@ function CourseTable({
                   }),
             {
               cell: (info) => (
-                <span className="font-medium" dir="auto">
+                <span
+                  className="block max-w-40 truncate font-medium"
+                  dir="auto"
+                  title={info.getValue()}
+                >
                   {info.getValue()}
                 </span>
               ),
@@ -214,20 +218,29 @@ function CourseTable({
               id: "course",
             }
           ),
-          courseColumns.number((course) => course.students, {
-            cell: (info) => (
-              <span className="text-muted-foreground">{info.getValue()}</span>
-            ),
-            header: t("course-students"),
-            id: "students",
-          }),
           courseColumns.values(classOf, {
+            cell: (info) => (
+              <span
+                className="mx-auto block max-w-28 truncate"
+                dir="auto"
+                title={info.getValue()}
+              >
+                {info.getValue()}
+              </span>
+            ),
             header: t("course-class"),
             id: "class",
             options: namedOptions(
               Arr.dedupe(Arr.map(preview.courses, classOf)),
               GRADE_ICONS
             ),
+          }),
+          courseColumns.number((course) => course.students, {
+            cell: (info) => (
+              <span className="text-muted-foreground">{info.getValue()}</span>
+            ),
+            header: t("course-students"),
+            id: "students",
           }),
           courseColumns.menu((info) => menu(info.row.original)),
         ]}
