@@ -14,9 +14,10 @@ import { useTranslations } from "use-intl";
 import { usePaneMode, usePanes } from "@/components/shared/panes";
 
 /**
- * A detail's header: its title, and what it shows on a second line; both wrap rather than
- * cut off. Beside the list a row's detail holds the button that closes it; an always-on
- * detail has none. The phone's drawer holds the same button, for a reader who does not swipe.
+ * A detail's header: its title, and what it shows on a second line, so it holds two lines at most
+ * as every header does, and a long one cuts off with its whole text on hover. Beside the list a
+ * row's detail holds the button that closes it; an always-on detail has none. The phone's drawer
+ * holds the same button, for a reader who does not swipe.
  */
 export function PaneHeader({
   description,
@@ -30,10 +31,18 @@ export function PaneHeader({
 
   if (place === "sheet") {
     return (
-      <DrawerHeader className="relative px-10">
-        <DrawerTitle dir="auto">{title}</DrawerTitle>
+      <DrawerHeader className="relative px-10" data-pane-header="">
+        <DrawerTitle className="truncate" dir="auto" title={title}>
+          {title}
+        </DrawerTitle>
         {description === undefined ? null : (
-          <DrawerDescription dir="auto">{description}</DrawerDescription>
+          <DrawerDescription
+            className="truncate"
+            dir="auto"
+            title={description}
+          >
+            {description}
+          </DrawerDescription>
         )}
         <Button
           aria-label={t("close")}
@@ -52,14 +61,19 @@ export function PaneHeader({
   return (
     <header
       className="flex min-h-14 shrink-0 items-center gap-2 border-b px-4 py-2"
+      data-pane-header=""
       data-slot="pane-header"
     >
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <h2 className="text-sm font-medium wrap-anywhere" dir="auto">
+        <h2 className="truncate text-sm font-medium" dir="auto" title={title}>
           {title}
         </h2>
         {description === undefined ? null : (
-          <p className="text-muted-foreground text-sm wrap-anywhere" dir="auto">
+          <p
+            className="text-muted-foreground truncate text-sm"
+            dir="auto"
+            title={description}
+          >
             {description}
           </p>
         )}
