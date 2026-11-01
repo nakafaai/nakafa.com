@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { useNavigate } from "@tanstack/react-router";
-import { Effect, Fn, Schema, String as Str } from "effect";
+import { Effect, Function as Fn, Schema, String as Str } from "effect";
 import { use, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";

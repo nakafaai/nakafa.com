@@ -23,7 +23,7 @@ const decodeFrame = Schema.decodeOption(
 const Changes = Schema.Array(Schema.Record(Schema.String, Schema.Json));
 
 /** The same frame, with the change that answers one of `reads` turned into the failure a timed out read gets. */
-const failing = (frame: typeof Schema.Json.Type, reads: ReadonlySet<number>) =>
+const failing = (frame: Schema.Json, reads: ReadonlySet<number>) =>
   Option.map(Schema.decodeUnknownOption(Changes)(frame), (changes) => {
     const reading = (change: (typeof changes)[number]) =>
       change.type === "QueryUpdated" &&

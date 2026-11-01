@@ -23,7 +23,7 @@ const OPEN_RETRIES = 4;
  * snapshot becomes its starting state, and the steps after the snapshot follow. A read
  * that failed runs again, since one read that ran out of time would otherwise leave the
  * editor read-only until the page reloads. The editor's state is replaced only while it
- * still holds the state read before the document opened: an edit that landed in between
+ * still holds the document read before the document opened: an edit that landed in between
  * fails the start, so it is never lost.
  */
 export const startSync = Effect.fn("editor.sync.start")(function* (
