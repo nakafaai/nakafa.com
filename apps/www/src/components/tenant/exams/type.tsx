@@ -83,13 +83,13 @@ export function QuestionType({
     return (
       <span
         className={buttonVariants({
-          className: "text-muted-foreground pointer-events-none",
+          className: "text-muted-foreground pointer-events-none min-w-0",
           size: "sm",
           variant: "ghost",
         })}
       >
         <HugeIcons aria-hidden="true" icon={TEMPLATE_ICON[template]} />
-        <span>{name}</span>
+        <span className="truncate @max-xl/row:sr-only">{name}</span>
       </span>
     );
   }
@@ -100,14 +100,14 @@ export function QuestionType({
         render={
           <Button
             aria-label={t("template-label", { type: name })}
-            className="text-muted-foreground"
+            className="text-muted-foreground min-w-0"
             size="sm"
             variant="ghost"
           />
         }
       >
         <HugeIcons aria-hidden="true" icon={TEMPLATE_ICON[template]} />
-        <span>{name}</span>
+        <span className="truncate @max-xl/row:sr-only">{name}</span>
         <HugeIcons aria-hidden="true" icon={UnfoldMoreIcon} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">

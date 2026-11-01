@@ -1,13 +1,6 @@
-import { Alert02Icon } from "@hugeicons/core-free-icons";
-import { questionGap } from "@repo/backend/confect/exams/parts";
-import {
-  type QuestionTemplate,
-  takesRubric,
-} from "@repo/backend/confect/exams/question";
+import { takesRubric } from "@repo/backend/confect/exams/question";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { statusIconVariants } from "@repo/design-system/lib/status";
-import { Array as Arr, Match, Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -22,6 +15,7 @@ import {
   useQuestionEditing,
 } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { QuestionGapMark } from "@/components/tenant/exams/gap";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
 import { TableSheet } from "@/components/tenant/exams/matrix";
@@ -63,14 +57,6 @@ const ExamText = lazy(() =>
   }))
 );
 
-/** The mark of a question with a part that shows nothing, in the words of its template. */
-const emptyMark = (template: QuestionTemplate) =>
-  Match.value(template).pipe(
-    Match.when("match", () => "page-empty-match" as const),
-    Match.when("table", () => "page-empty-table" as const),
-    Match.orElse(() => "page-empty-choice" as const)
-  );
-
 /** The props of one page of the canvas. */
 interface ExamPageProps {
   /** The canvas that scrolls the pages, which decides how far a page is from the view. */
@@ -94,7 +80,8 @@ interface PageRowProps {
 
 /**
  * The row above a page's paper: the grip that moves the page, its number, its type, a mark while it needs a
- * key, and its actions, which keep the row's end while the rest wraps on a narrow screen. The type and the mark follow the edit on screen, so a key the teacher just set clears the
+ * key, and its actions. It stays one line at every width: the type and the mark fold to their icons by the row's
+ * own width, which `row` names. The type and the mark follow the edit on screen, so a key the teacher just set clears the
  * mark at once, before the server answers. A page the server has not saved yet, or a page of a locked exam, shows its number and
  * its type alone, and the type takes a change only once Convex holds the session.
  */
@@ -106,8 +93,8 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
   const number = index + 1;
 
   return (
-    <div className="flex min-h-9 items-center justify-between gap-2">
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
+    <div className="@container/row flex min-h-9 items-center justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         {editable ? (
           <QuestionGrip number={number} questionId={question.id} />
         ) : (
@@ -121,27 +108,7 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
           onChange={editing.setTemplate}
           template={editing.displayed.template}
         />
-        {/* What keeps the question from being scheduled, as the schedule names it: an empty part, or no key. */}
-        {Option.match(questionGap(editing.displayed), {
-          onNone: () => null,
-          onSome: (gap) => (
-            <span className="text-muted-foreground flex items-center gap-1 text-xs">
-              <HugeIcons
-                aria-hidden="true"
-                className={statusIconVariants({
-                  className: "size-3.5",
-                  tone: "warning",
-                })}
-                icon={Alert02Icon}
-              />
-              {t(
-                gap === "empty"
-                  ? emptyMark(editing.displayed.template)
-                  : "page-no-key"
-              )}
-            </span>
-          ),
-        })}
+        <QuestionGapMark question={editing.displayed} />
       </div>
       {editable ? <PageActions index={index} question={question} /> : null}
     </div>
