@@ -48,10 +48,12 @@ export function BreadcrumbHeaderFrame({
           "@container/header flex min-w-0 items-center gap-2"
         )}
       >
-        <SidebarScopeStart
-          className="group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden lg:hidden"
-          label={tCommon("toggle-sidebar")}
-        />
+        <div className="[display:var(--app-shell-locked,contents)]">
+          <SidebarScopeStart
+            className="group-data-locked/sidebar-wrapper:hidden lg:hidden"
+            label={tCommon("toggle-sidebar")}
+          />
+        </div>
         <div
           className={cn(
             "flex min-w-0 flex-1 items-center justify-between gap-3 py-3",
