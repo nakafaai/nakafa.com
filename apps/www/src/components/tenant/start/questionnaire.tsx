@@ -221,8 +221,9 @@ function SchoolStartForm({ draft }: { draft: StartDraft }) {
         onSuccess: ({ address }) => {
           startOpening(() => setOpened(Option.some(school)));
           // The new school replaces this questionnaire in the history, so Back never
-          // returns to a blank questionnaire of a school that is already open.
-          window.location.replace(address);
+          // returns to a blank questionnaire of a school that is already open, and it
+          // opens on its setup, because a new school has nothing else to show yet.
+          window.location.replace(new URL("/setup", address).href);
         },
       });
     });
