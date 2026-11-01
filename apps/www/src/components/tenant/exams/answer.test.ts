@@ -354,7 +354,7 @@ describe("a question of two choices", () => {
 
     expect(answer).toEqual(answers[0]);
     expect(reason?.kind === "choice" ? reason.options.length : 0).toBe(2);
-    expect(keyWithoutOption(both, "reason-1")).toEqual([both[0]]);
+    expect(keyWithoutOption(both, "reason-1")).toEqual([both?.[0]]);
   });
 });
 
@@ -459,7 +459,10 @@ describe("withOptionRemoved", () => {
     );
     expect(
       keyWithoutOption(key === null ? null : [math, ...key], "option-1")
-    ).toEqual([math, ...markedKey([choice], null, "option-3")]);
+    ).toEqual([
+      math,
+      { correct: ["option-3"], interaction: "choice", kind: "choice" },
+    ]);
   });
 
   it("leaves a choice of two options as it is", () => {

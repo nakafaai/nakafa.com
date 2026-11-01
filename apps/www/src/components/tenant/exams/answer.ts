@@ -139,9 +139,9 @@ const keyMarking = (
  */
 export const markedKey = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
-  key: readonly InteractionKey[] | null,
+  key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
   optionId: string
-): readonly InteractionKey[] | null =>
+): Arr.NonEmptyReadonlyArray<InteractionKey> | null =>
   Option.match(
     Arr.findFirst(
       answers,
