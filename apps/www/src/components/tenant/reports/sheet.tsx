@@ -194,7 +194,7 @@ function CohortReportsBody() {
   ];
 
   return (
-    <Panes>
+    <Panes id="reports">
       <PanesList>
         <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
           <DataTable

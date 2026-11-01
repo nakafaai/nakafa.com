@@ -206,7 +206,7 @@ export function ClassGradebook({
     <GradebookContext
       value={isRead ? { classId, scheme: scheme.value, slug } : undefined}
     >
-      <Panes>
+      <Panes id="grades">
         <PanesList>
           <TablePages pageSize={GRADEBOOK_PAGE_SIZE} pagination={pagination}>
             <DataTable

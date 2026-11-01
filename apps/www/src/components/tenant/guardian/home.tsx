@@ -140,7 +140,7 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
   ];
 
   return (
-    <Panes>
+    <Panes id="guardian">
       <PanesList>
         <DataTable
           columns={columns}
