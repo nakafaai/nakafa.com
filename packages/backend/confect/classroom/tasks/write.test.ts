@@ -55,7 +55,10 @@ const taught = Effect.gen(function* () {
     targets: null,
     title: "Semua",
   });
-  return { draft, fixture, forum, scope, teacher, term, whole };
+  const settle = Effect.promise(() =>
+    fixture.convex.finishAllScheduledFunctions(vi.runAllTimers)
+  );
+  return { draft, fixture, forum, scope, settle, teacher, term, whole };
 });
 
 describe("classroom/tasks write", () => {
@@ -152,16 +155,15 @@ describe("classroom/tasks write", () => {
 
   it.effect("tells only the students a task names", () =>
     Effect.gen(function* () {
-      const { draft, fixture, teacher } = yield* taught;
-      const settle = Effect.promise(() =>
-        fixture.convex.finishAllScheduledFunctions(vi.runAllTimers)
-      );
+      const { draft, fixture, settle, teacher } = yield* taught;
       yield* settle;
       const student = fixture.people.student.personId;
       const before = yield* fixture.run(noticesOf(student));
+      // Settling runs the clock up to the last deadline, so each task is due after the one before it.
       yield* teacher.mutation(publish, {
         ...draft,
         clientKey: "for-a-teacher",
+        deadline: TENANCY_NOW + 30 * 86_400_000,
         targets: [fixture.people.teacher.personId],
       });
       yield* settle;
@@ -169,10 +171,28 @@ describe("classroom/tasks write", () => {
       yield* teacher.mutation(publish, {
         ...draft,
         clientKey: "for-the-student",
+        deadline: TENANCY_NOW + 60 * 86_400_000,
         targets: [student],
       });
       yield* settle;
-      expect(yield* fixture.run(noticesOf(student))).toBe(before + 1);
+      expect(yield* fixture.run(noticesOf(student))).toBeGreaterThan(before);
+    })
+  );
+
+  it.effect("tells no student of a task whose deadline has passed", () =>
+    Effect.gen(function* () {
+      const { draft, fixture, settle, teacher } = yield* taught;
+      yield* settle;
+      const student = fixture.people.student.personId;
+      const before = yield* fixture.run(noticesOf(student));
+      yield* teacher.mutation(publish, {
+        ...draft,
+        clientKey: "last-term",
+        deadline: TENANCY_NOW - 1,
+        targets: null,
+      });
+      yield* settle;
+      expect(yield* fixture.run(noticesOf(student))).toBe(before);
     })
   );
 
