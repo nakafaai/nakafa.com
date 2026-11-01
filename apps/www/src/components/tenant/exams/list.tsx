@@ -161,7 +161,10 @@ function ExamListRows({
   const columns = [
     examColumns.text((exam) => exam.title, {
       cell: (info) => (
-        <TableTitle icon={TaskEdit01Icon}>
+        <TableTitle
+          icon={TaskEdit01Icon}
+          tone={info.row.original.questionCount === 0 ? "warning" : "neutral"}
+        >
           {Arr.contains(saving, info.row.original.id) ? (
             <span className="text-muted-foreground" dir="auto">
               {info.getValue()}
