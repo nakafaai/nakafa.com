@@ -130,10 +130,12 @@ export const DriveFileId = Schema.String.check(
  * How a connect ended and where its user goes back to: `connected`, `cancelled`
  * when the user stopped on Google's screen, `refused` when the user left a scope
  * unchecked, or `failed` when Google or this deployment could not finish it, which
- * no choice of the user's would change. The address is built on the server from
- * the callback's own site, the school's slug, and the path the start named.
+ * no choice of the user's would change. It names its connector, so only the card
+ * that tried says how it ended. The address is built on the server from the
+ * callback's own site, the school's slug, and the path the start named.
  */
 export const ConnectOutcome = Schema.Struct({
+  connector: GoogleConnector,
   location: Schema.String,
   outcome: Schema.Literals(["connected", "cancelled", "refused", "failed"]),
 });

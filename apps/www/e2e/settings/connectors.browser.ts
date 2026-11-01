@@ -4,10 +4,11 @@ import { signInLearner } from "@/e2e/support/learner";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The connectors page after a connect that Google refused. */
-const REFUSED = /\/en\/user\/settings\/connectors\?connect=refused$/u;
+const REFUSED =
+  /\/en\/user\/settings\/connectors\?connect=refused&connector=calendar$/u;
 
 /** The connectors page after a connect the learner stopped on Google's screen. */
-const CANCELLED = /\?connect=cancelled$/u;
+const CANCELLED = /\?connect=cancelled&connector=calendar$/u;
 
 /** Google's consent screen, which the test answers itself. */
 const CONSENT = "https://accounts.google.com/**";
@@ -59,7 +60,10 @@ for (const viewport of [
     await page.waitForURL(REFUSED, {
       timeout: readinessTimeoutMilliseconds,
     });
-    await expect(page.getByRole("alert")).toContainText("Not connected");
+    await expect(page.getByRole("alert")).toContainText(
+      "Tick every box on the Google screen."
+    );
+    await expect(page.getByRole("alert")).toHaveCount(1);
 
     await page.goto(`${site}/en/user/settings/connectors`);
     const second = await startConnect();

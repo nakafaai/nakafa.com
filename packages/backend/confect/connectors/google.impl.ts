@@ -301,7 +301,11 @@ const finish = FunctionImpl.make(
     }
     const ended = (
       outcome: (typeof ConnectOutcome.Type)["outcome"]
-    ): typeof ConnectOutcome.Type => ({ location: claimed.location, outcome });
+    ): typeof ConnectOutcome.Type => ({
+      connector: claimed.connector,
+      location: claimed.location,
+      outcome,
+    });
     if (code === null) {
       return ended("cancelled");
     }
