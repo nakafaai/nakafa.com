@@ -306,7 +306,7 @@ const recordActionNames = Effect.fn("NakafaE2E.recordActionNames")(function* (
 
 /**
  * No first paint knows a learner's attempt, and a set whose attempt runs resumes it, so its action must never
- * say Start: it waits with no name until the read answers, and then says Continue before any press.
+ * say Start: this browser read the attempt on the way here, so the set says Continue from its first frame.
  */
 test("a hard load of a set whose attempt runs never reads Start", async ({
   baseURL,
@@ -354,9 +354,7 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
           )
         );
         yield* Effect.sync(() => {
-          expect(Arr.filter(names, (name) => name !== "")).toEqual([
-            messages["continue-cta"],
-          ]);
+          expect(names).toEqual([messages["continue-cta"]]);
         });
       })
     )
