@@ -9,6 +9,7 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
+import { schoolViews } from "@repo/backend/test/inbox";
 import { journal, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
@@ -39,6 +40,7 @@ describe("classroom/tasks", () => {
             classId: forum.classId,
             clientKey,
             deadline,
+            category: null,
             latePolicy: "accept",
             points: 100,
             slug: nf,
@@ -100,7 +102,7 @@ describe("classroom/tasks", () => {
         expect(
           Arr.map(
             Arr.filter(
-              rows.page,
+              schoolViews(rows.page),
               (row) => row.changeType === "assignment.published"
             ),
             (row) => row.detail?.task
@@ -123,6 +125,7 @@ describe("classroom/tasks", () => {
           classId: forum.classId,
           clientKey: "open-task",
           deadline: TENANCY_NOW + DAY,
+          category: null,
           latePolicy: "accept",
           points: 50,
           slug: nf,
@@ -134,6 +137,7 @@ describe("classroom/tasks", () => {
           classId: forum.classId,
           clientKey: "closed-task",
           deadline: TENANCY_NOW + DAY,
+          category: null,
           latePolicy: "close",
           points: 10,
           slug: nf,
@@ -257,6 +261,7 @@ describe("classroom/tasks", () => {
           classId: other.classId,
           clientKey: "other-task",
           deadline: TENANCY_NOW + DAY,
+          category: null,
           latePolicy: "accept",
           points: 10,
           slug: nf,
@@ -271,6 +276,7 @@ describe("classroom/tasks", () => {
               classId: forum.classId,
               clientKey: "student-task",
               deadline: TENANCY_NOW + DAY,
+              category: null,
               latePolicy: "accept",
               points: 10,
               slug: nf,
@@ -305,6 +311,7 @@ describe("classroom/tasks", () => {
           classId: forum.classId,
           clientKey: "own-task",
           deadline: TENANCY_NOW + DAY,
+          category: null,
           latePolicy: "accept",
           points: 10,
           slug: nf,

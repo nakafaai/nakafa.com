@@ -24,6 +24,14 @@ export const TaskPoints = Schema.Int.check(
   Schema.isBetween({ maximum: 1000, minimum: 0 })
 );
 
+/** The category a teacher files a task under, such as Homework: one trimmed line of 1 to 40 characters. */
+export const TaskCategory = Schema.String.check(
+  Schema.isTrimmed(),
+  isSingleLine,
+  Schema.isMinLength(1),
+  Schema.isMaxLength(40)
+);
+
 /** The students a task goes to when it goes to part of its class: 1 to 200 of them. */
 export const TaskTargets = Schema.Array(Id("tenantPeople")).check(
   Schema.isMinLength(1),
@@ -46,12 +54,13 @@ export const TaskAddress = Schema.String.check(
  * One task of a class (ADR 0025): its title and its address, what it asks,
  * sealed with the school key and bound to the class and the client key of its
  * creation, its deadline in UTC, its points, its late policy, how many students
- * have handed work in, and the scheduled runs of its deadline's notices. `targets`
- * names the students it goes to when it goes to part of the class, and without it
- * the whole class is its target.
+ * have handed work in, and the scheduled runs of its deadline's notices. `category`
+ * files it among the class's tasks. `targets` names the students it goes to when it
+ * goes to part of the class, and without it the whole class is its target.
  */
 export const taskValidator = Schema.Struct({
   authorId: Id("tenantPeople"),
+  category: Schema.optionalKey(TaskCategory),
   classId: Id("classes"),
   clientKey: ClientKey,
   createdAt: Schema.Finite,
@@ -89,6 +98,7 @@ export const submissionValidator = Schema.Struct({
  * can read and change what they handed in, whether it came late, and its points.
  */
 export const TaskView = Schema.Struct({
+  category: Schema.NullOr(TaskCategory),
   deadline: Schema.Finite,
   handedIn: Schema.Int,
   id: Id("classroomTasks"),
