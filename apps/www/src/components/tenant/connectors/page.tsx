@@ -26,6 +26,7 @@ import {
   DIRECTORY_SERVICES,
   directoryEntries,
 } from "@/components/connectors/directory";
+import { ServiceFilter } from "@/components/connectors/filter";
 import { LibraryControls, ServiceList } from "@/components/connectors/library";
 import {
   CONNECTION_PAGE_SIZE,
@@ -72,7 +73,9 @@ export function SchoolConnectionsSettings() {
     <TableFiltersProvider>
       <PanesProvider opened={connectedService(tried)} wideFrom="lg">
         <SchoolSettingsHeader>
-          <LibraryControls services={DIRECTORY_SERVICES} />
+          <LibraryControls>
+            <ServiceFilter services={DIRECTORY_SERVICES} />
+          </LibraryControls>
         </SchoolSettingsHeader>
         <div className="flex w-full min-w-0 flex-1 flex-col">
           <SchoolDirectory />

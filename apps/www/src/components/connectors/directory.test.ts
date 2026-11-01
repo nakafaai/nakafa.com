@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   ACCOUNT_SERVICES,
   DIRECTORY_SERVICES,
@@ -114,7 +114,7 @@ describe("connector directory", () => {
   });
 
   it("lists on an account what a person holds, without the school's Classroom or its Forms", () => {
-    expect(ACCOUNT_SERVICES.map(({ key }) => key)).toEqual([
+    expect(Arr.map(ACCOUNT_SERVICES, ({ key }) => key)).toEqual([
       "drive",
       "calendar",
     ]);
@@ -134,10 +134,16 @@ describe("connector directory", () => {
     };
 
     expect(
-      directoryEntries({ ...read, hasRead: false }).map(({ state }) => state)
+      Arr.map(
+        directoryEntries({ ...read, hasRead: false }),
+        ({ state }) => state
+      )
     ).toEqual([Option.none(), Option.none(), Option.none(), Option.none()]);
     expect(
-      directoryEntries({ ...read, hasRead: true }).map(({ state }) => state)
+      Arr.map(
+        directoryEntries({ ...read, hasRead: true }),
+        ({ state }) => state
+      )
     ).toEqual([
       Option.some("locked"),
       Option.some("connected"),
@@ -145,11 +151,10 @@ describe("connector directory", () => {
       Option.some("refused"),
     ]);
     expect(
-      directoryEntries({
-        ...read,
-        hasRead: true,
-        mayConnectSchool: true,
-      }).map(({ state }) => state)[0]
+      Arr.map(
+        directoryEntries({ ...read, hasRead: true, mayConnectSchool: true }),
+        ({ state }) => state
+      )[0]
     ).toEqual(Option.some("open"));
   });
 });

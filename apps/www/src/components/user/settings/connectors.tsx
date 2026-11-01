@@ -2,7 +2,7 @@ import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
 import { Effect, Option } from "effect";
-import { use } from "react";
+import { type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
@@ -21,6 +21,7 @@ import {
   ACCOUNT_SERVICES,
   directoryEntries,
 } from "@/components/connectors/directory";
+import { ServiceFilter } from "@/components/connectors/filter";
 import { LibraryControls, ServiceList } from "@/components/connectors/library";
 import {
   CONNECTION_PAGE_SIZE,
@@ -54,20 +55,16 @@ import { usePreloadedQueryResult } from "@/lib/data/preloaded";
  * the search and the filter, the services in cards, and a press on one opens its detail beside them,
  * or in a sheet on a small screen. Nina reads Drive and Calendar for this account alone.
  */
-export function UserSettingsConnectors({
-  first,
-  initialOffered,
-}: {
-  first: PreloadedPage<Connection>;
-  initialOffered: readonly GoogleConnector[];
-}) {
+export function UserSettingsConnectors({ children }: { children: ReactNode }) {
   return (
     <TableFiltersProvider>
       <PanesProvider wideFrom="lg">
         <UserSettingsHeader>
-          <LibraryControls services={ACCOUNT_SERVICES} />
+          <LibraryControls>
+            <ServiceFilter services={ACCOUNT_SERVICES} />
+          </LibraryControls>
         </UserSettingsHeader>
-        <AccountDirectory first={first} initialOffered={initialOffered} />
+        {children}
       </PanesProvider>
     </TableFiltersProvider>
   );
@@ -77,7 +74,7 @@ export function UserSettingsConnectors({
  * The services of the account. Connecting sends the browser to Google and back to this page, and
  * disconnecting ends the connection at once.
  */
-function AccountDirectory({
+export function AccountDirectory({
   first,
   initialOffered,
 }: {

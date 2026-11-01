@@ -2,6 +2,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { ServiceCard } from "@/components/connectors/card";
 import {
@@ -10,7 +11,7 @@ import {
   holderOf,
   isShown,
 } from "@/components/connectors/directory";
-import { CATEGORY_FILTER, ServiceFilter } from "@/components/connectors/filter";
+import { CATEGORY_FILTER } from "@/components/connectors/filter";
 import { pageGutterVariants } from "@/components/shared/content/width";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -20,17 +21,13 @@ import {
 } from "@/components/shared/table/toolbar";
 
 /** The search and the filter of a connector page's header. */
-export function LibraryControls({
-  services,
-}: {
-  services: readonly (typeof DirectoryEntry.Type)["service"][];
-}) {
+export function LibraryControls({ children }: { children: ReactNode }) {
   const t = useTranslations("Connectors");
 
   return (
     <ButtonGroup>
       <TableSearch placeholder={t("search")} />
-      <ServiceFilter services={services} />
+      {children}
     </ButtonGroup>
   );
 }
