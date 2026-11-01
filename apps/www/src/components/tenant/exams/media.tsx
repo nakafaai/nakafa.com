@@ -27,7 +27,7 @@ import {
   Option,
   String as Str,
 } from "effect";
-import { useId, useState, useTransition } from "react";
+import { type ComponentProps, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { PaperMedia } from "@/components/exams/sitting/media";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
@@ -48,37 +48,47 @@ const AUDIO_FILES =
 /** The way a dialog adds media. */
 type MediaKind = QuestionMedia["kind"];
 
-/** Reads what a question's media plays. A question that holds none reads nothing. */
+/** A piece of media as a paper draws it before the server answers: a clip stands without its address. */
+const unanswered = (
+  item: QuestionMedia
+): ComponentProps<typeof PaperMedia>["items"][number] =>
+  item.kind === "audio" ? { alt: item.alt, kind: item.kind, url: "" } : item;
+
+/**
+ * Reads what a question's media plays. A question that holds none reads nothing. Its media stands from the first
+ * frame, with each clip's address to come, so the paper has its shape before the server answers and nothing moves.
+ */
 function useQuestionMedia(
   examId: GenericId.GenericId<"exams">,
   question: Question,
   slug: TenantSlug
 ) {
-  return useQuery(
+  const reply = useQuery(
     exams.assets.media,
     Arr.isReadonlyArrayEmpty(question.media)
       ? "skip"
       : { examId, questionId: question.id, slug }
   );
+
+  return QueryResult.isSuccess(reply)
+    ? reply.value
+    : Arr.map(question.media, unanswered);
 }
 
 /** The media of a question on the editor's paper, as the student meets it. */
 export function ExamPaperMedia({ question }: { readonly question: Question }) {
   const { exam, slug } = useExam();
-  const reply = useQuestionMedia(exam.id, question, slug);
 
-  return QueryResult.isSuccess(reply) ? (
-    <PaperMedia items={reply.value} />
-  ) : null;
+  return <PaperMedia items={useQuestionMedia(exam.id, question, slug)} />;
 }
 
 /** The media of a question on a teacher's try, which holds no editor around it. */
 export function TryPaperMedia({ question }: { readonly question: Question }) {
-  const reply = useQuestionMedia(useTryExamId(), question, useTrySlug());
-
-  return QueryResult.isSuccess(reply) ? (
-    <PaperMedia items={reply.value} />
-  ) : null;
+  return (
+    <PaperMedia
+      items={useQuestionMedia(useTryExamId(), question, useTrySlug())}
+    />
+  );
 }
 
 /** The dialog that adds one piece of media: a clip from the device, or a video by its link, and what it holds. */
