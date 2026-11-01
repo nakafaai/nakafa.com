@@ -1,13 +1,12 @@
 import { Array as Arr, Schema } from "effect";
 
 /**
- * A training-only crawler that Nakafa refuses. `sentAs` holds what its requests
- * carry in their user agent, in lowercase, and stays empty for a token that only
- * robots.txt names: Applebot-Extended is never sent in a request, because Apple
- * fetches the pages as Applebot.
+ * A training-only crawler that Nakafa refuses. `sentAsUserAgent` is false for a
+ * token that only robots.txt names: Applebot-Extended is never sent in a
+ * request, because Apple fetches the pages as Applebot.
  */
 const TrainingCrawler = Schema.Struct({
-  sentAs: Schema.Array(Schema.String),
+  sentAsUserAgent: Schema.Boolean,
   token: Schema.String,
 });
 
@@ -18,15 +17,13 @@ const TrainingCrawlers = Schema.Array(TrainingCrawler);
  * module lists these names.
  */
 export const TRAINING_CRAWLERS: typeof TrainingCrawlers.Type = [
-  { sentAs: ["gptbot"], token: "GPTBot" },
-  // Claude-User and Claude-SearchBot read and cite, and their user agents hold
-  // `claudebot@anthropic.com` as a contact, so only the name with its version is this crawler.
-  { sentAs: ["claudebot/"], token: "ClaudeBot" },
-  { sentAs: ["ccbot"], token: "CCBot" },
-  { sentAs: ["bytespider"], token: "Bytespider" },
-  { sentAs: ["meta-externalagent"], token: "meta-externalagent" },
-  { sentAs: ["amazonbot"], token: "Amazonbot" },
-  { sentAs: [], token: "Applebot-Extended" },
+  { sentAsUserAgent: true, token: "GPTBot" },
+  { sentAsUserAgent: true, token: "ClaudeBot" },
+  { sentAsUserAgent: true, token: "CCBot" },
+  { sentAsUserAgent: true, token: "Bytespider" },
+  { sentAsUserAgent: true, token: "meta-externalagent" },
+  { sentAsUserAgent: true, token: "Amazonbot" },
+  { sentAsUserAgent: false, token: "Applebot-Extended" },
 ];
 
 /**
@@ -37,8 +34,8 @@ export function renderTrainingCrawlerExpression(
   crawlers: typeof TrainingCrawlers.Type
 ) {
   const matches = Arr.map(
-    Arr.flatMap(crawlers, (crawler) => crawler.sentAs),
-    (text) => `lower(http.user_agent) contains "${text}"`
+    Arr.filter(crawlers, (crawler) => crawler.sentAsUserAgent),
+    ({ token }) => `lower(http.user_agent) contains "${token.toLowerCase()}"`
   );
   return `(${Arr.join(matches, " or ")})`;
 }
