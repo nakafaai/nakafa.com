@@ -5,7 +5,6 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
@@ -46,9 +45,7 @@ export function TenantClassesGroup() {
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <TenantSidebarGroup icon={UserMultiple02Icon} label={t("classes")}>
-          {failure}
-        </TenantSidebarGroup>
+        <TenantSidebarGroup label={t("classes")}>{failure}</TenantSidebarGroup>
       )}
       read={{ args: { slug }, ref: classroom.classes.mine }}
     >
@@ -71,7 +68,7 @@ function TenantClassesRows() {
   return (
     <>
       {Arr.isReadonlyArrayNonEmpty(rows) ? (
-        <TenantSidebarGroup icon={UserMultiple02Icon} label={t("classes")}>
+        <TenantSidebarGroup label={t("classes")}>
           {Arr.map(withMarks(rows), (klass) => (
             <TenantClassItem
               key={klass.id}
@@ -153,7 +150,7 @@ function TenantUnitClasses({
   }
 
   return (
-    <TenantSidebarGroup icon={UserMultiple02Icon} label={unit.name}>
+    <TenantSidebarGroup label={unit.name}>
       {Arr.map(rows, (klass) => (
         <TenantClassItem
           key={klass.id}

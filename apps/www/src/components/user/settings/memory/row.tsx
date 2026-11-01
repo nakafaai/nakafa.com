@@ -103,7 +103,7 @@ export const MemoryRow = memo(
             )}
           </span>
         </button>
-        <div className="flex shrink-0 items-center opacity-0 transition-opacity ease-out group-focus-within/row:opacity-100 group-hover/row:opacity-100 pointer-coarse:opacity-100">
+        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity ease-out group-focus-within/row:opacity-100 group-hover/row:opacity-100 pointer-coarse:opacity-100">
           <Button
             className="relative"
             disabled={waiting}

@@ -101,6 +101,15 @@ function SelectValue({
   );
 }
 
+/** The look of a select's button, which a picker with a search box of its own wears too. */
+const selectTriggerVariants = cva(
+  "border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground dark:aria-invalid:ring-destructive/40 flex max-w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] ease-out outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  {
+    defaultVariants: { width: "fit" },
+    variants: { width: { fit: "w-fit", full: "w-full" } },
+  }
+);
+
 function SelectTrigger({
   className,
   size = "default",
@@ -111,10 +120,7 @@ function SelectTrigger({
 }) {
   return (
     <SelectPrimitive.Trigger
-      className={cn(
-        "border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground dark:aria-invalid:ring-destructive/40 flex w-fit max-w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] ease-out outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
-      )}
+      className={cn(selectTriggerVariants(), className)}
       data-size={size}
       data-slot="select-trigger"
       {...props}
@@ -306,4 +312,5 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
+  selectTriggerVariants,
 };

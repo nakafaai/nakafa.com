@@ -151,7 +151,7 @@ export function PaneOpen({
 
   return (
     <button
-      className="font-medium underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
+      className="block max-w-52 min-w-36 text-start font-medium wrap-break-word whitespace-normal underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none sm:max-w-80"
       dir="auto"
       onClick={() => show(id)}
       type="button"

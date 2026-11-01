@@ -27,6 +27,24 @@ describe("classroom/people", () => {
       })
   );
 
+  it.effect(
+    "gives a Person's address and whether they joined to who keeps the class, never to a classmate",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-3");
+        const args = { classId: forum.classId, slug: nf };
+        const kept = yield* fixture.as("teacher").query(list, args);
+        expect(Arr.map(kept, (person) => person.joined)).toEqual([true, true]);
+        expect(
+          Arr.every(kept, (person) => person.email?.includes("@") === true)
+        ).toBe(true);
+        const seen = yield* fixture.as("student").query(list, args);
+        expect(Arr.map(seen, (person) => person.email)).toEqual([null, null]);
+      })
+  );
+
   it.effect("refuses a student of another class of the school", () =>
     Effect.gen(function* () {
       const fixture = yield* keyedFixture;

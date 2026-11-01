@@ -1,4 +1,5 @@
 import {
+  Copy01Icon,
   Delete02Icon,
   FileImportIcon,
   ViewIcon,
@@ -18,6 +19,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { SplitMenuTrigger } from "@/components/shared/split";
 import { DeleteExam } from "@/components/tenant/exams/delete";
+import { useDuplicateExam } from "@/components/tenant/exams/duplicate";
 import { ImportQuestions } from "@/components/tenant/exams/import/dialog";
 import { ExamLockMark } from "@/components/tenant/exams/lock";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
@@ -25,16 +27,17 @@ import { Link } from "@/lib/routing/link";
 
 /**
  * The editor's secondary action with the rest joined to it, as Google Docs and Canva show them: Try
- * as student as one button, and a menu beside it of what a teacher reaches less often, Import and
+ * as student as one button, and a menu beside it of what a teacher reaches less often, Import, Duplicate and
  * Delete exam, each opening its dialog. With Schedule, the main action, the header shows two buttons.
  * A locked exam takes neither change, so Try as student stands alone. On a phone the button keeps its
  * icon and its name for screen readers.
  */
 export function ExamMenu() {
   const t = useTranslations("Exams");
-  const { gone } = useExam();
+  const { exam, gone, slug } = useExam();
   const locked = useExamLocked();
   const [dialog, setDialog] = useState<"delete" | "import" | null>(null);
+  const { isPending, press } = useDuplicateExam(exam, slug);
 
   // A gone exam has no try to open.
   if (gone) {
@@ -60,6 +63,10 @@ export function ExamMenu() {
               <DropdownMenuItem onClick={() => setDialog("import")}>
                 <HugeIcons icon={FileImportIcon} />
                 {t("import-action")}
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={isPending} onClick={press}>
+                <HugeIcons icon={Copy01Icon} />
+                {t("duplicate-action")}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

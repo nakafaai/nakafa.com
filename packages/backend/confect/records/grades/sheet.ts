@@ -8,6 +8,7 @@ import {
   schemeForEntry,
   schemeOf,
 } from "@repo/backend/confect/records/version";
+import { listedPersonOf } from "@repo/backend/confect/tenancy/listed";
 import { Effect, Option, Struct } from "effect";
 
 /**
@@ -55,7 +56,7 @@ export const sheet = FunctionImpl.make(
           );
           const line: typeof GradeLine.Type = {
             grade: Option.getOrNull(view),
-            student: { id: person._id, name: person.name },
+            student: yield* listedPersonOf(person),
           };
           return line;
         }),

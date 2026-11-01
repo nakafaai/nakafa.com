@@ -5,6 +5,7 @@ import type records from "@repo/backend/confect/_generated/refs/records";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
 import {
+  correctChange,
   enterChange,
   releaseChange,
   type SheetLine,
@@ -22,7 +23,11 @@ const scheme = { bands: [{ label: "Baik", minimum: 80 }], kktp: 75 };
 /** A line of the gradebook with the grade it holds. */
 const line = (personId: typeof raka, grade: SheetLine["grade"]): SheetLine => ({
   grade,
-  student: { id: personId, name: personId === raka ? "Raka" : "Sari" },
+  student: {
+    email: null,
+    id: personId,
+    name: personId === raka ? "Raka" : "Sari",
+  },
 });
 
 /** A released grade of Sari, which no entry changes. */
@@ -131,6 +136,25 @@ describe("enterChange", () => {
       value: 70,
     });
     expect(writtenPage(setQuery, 1)[1]).toEqual(line(sari, released));
+  });
+});
+
+describe("correctChange", () => {
+  it("shows a released grade under its new value, and leaves a line without a grade as it is", () => {
+    const { localStore, setQuery } = storeOf([
+      {
+        args: pageArgs(classId),
+        value: Option.some({
+          isDone: true,
+          page: [line(raka, null), line(sari, released)],
+        }),
+      },
+    ]);
+    const gradeId = gradeOf("grade-sari");
+    correctChange(classId, sari)(localStore, { gradeId, slug, value: 90 });
+    correctChange(classId, raka)(localStore, { gradeId, slug, value: 90 });
+    expect(writtenPage(setQuery)[1]?.grade).toMatchObject({ value: 90 });
+    expect(writtenPage(setQuery, 1)[0]).toEqual(line(raka, null));
   });
 });
 

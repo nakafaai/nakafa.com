@@ -43,7 +43,7 @@ const siti: ReadinessRow = {
   },
   missing: [],
   nisn,
-  student: { id: personOf("siti"), name: "Siti" },
+  student: { email: null, id: personOf("siti"), name: "Siti" },
   transcript: {
     average: 85.5,
     subjects: [
@@ -59,7 +59,7 @@ const andi: ReadinessRow = {
   letter: null,
   missing: ["npsn", "decision", "nisn", "report"],
   nisn: null,
-  student: { id: personOf("andi"), name: "andi" },
+  student: { email: null, id: personOf("andi"), name: "andi" },
   transcript: null,
 };
 

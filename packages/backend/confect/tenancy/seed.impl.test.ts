@@ -57,13 +57,18 @@ describe("tenancy/seed teacher", () => {
             paginationOpts: { cursor: null, numItems: 100 },
             slug: slugOf("nf"),
           });
-        expect(Arr.map(grants.page, (row) => row.person)).toContainEqual({
-          id: seeded.person,
-          name: "Guru Acceptance",
-        });
+        expect(Arr.map(grants.page, (row) => row.person)).toContainEqual(
+          expect.objectContaining({
+            id: seeded.person,
+            name: "Guru Acceptance",
+          })
+        );
         expect(grants.page).toContainEqual(
           expect.objectContaining({
-            person: { id: seeded.person, name: "Guru Acceptance" },
+            person: expect.objectContaining({
+              id: seeded.person,
+              name: "Guru Acceptance",
+            }),
             role: { key: "teacher", kind: "builtin" },
             scope: { kind: "tenant" },
           })
@@ -137,7 +142,7 @@ describe("tenancy/seed student", () => {
           });
         expect(grants.page).toContainEqual(
           expect.objectContaining({
-            person: { id: expect.any(String), name: "Member 0" },
+            person: expect.objectContaining({ name: "Member 0" }),
             role: { key: "student", kind: "builtin" },
             scope: { kind: "unit", unitId: expect.any(String) },
           })

@@ -11,7 +11,7 @@ import { SHELL_PATH } from "@/lib/routing/shell";
  */
 export const answerShell = Effect.fn("www.routing.shell")(function* (
   request: Request,
-  status: 200 | 404,
+  status: 200 | 404 | 503,
   path: string = SHELL_PATH
 ) {
   const shell = yield* Effect.promise(() =>

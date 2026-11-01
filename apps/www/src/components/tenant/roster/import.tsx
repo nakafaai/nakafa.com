@@ -8,6 +8,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -100,6 +101,7 @@ function RosterImportContent() {
 function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
   const t = useTranslations("SchoolRoster");
   const { slug } = useTenant();
+  const navigate = useNavigate();
   const apply = useMutation(roster.imports.apply);
   const applySourced = useMutation(roster.imports.applySourced);
   const [preview, setPreview] = useState<
@@ -149,7 +151,22 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
         () => applyBatches(rows),
         SOURCE,
         () => {
-          toast.success({ title: "school-roster-imported.title" });
+          toast.success(
+            {
+              description: "school-roster-imported.description",
+              title: "school-roster-imported.title",
+            },
+            {
+              action: {
+                label: "open",
+                onClick: () =>
+                  navigate({
+                    params: { slug },
+                    to: "/school/$slug/settings/members",
+                  }),
+              },
+            }
+          );
           setPreview(undefined);
         }
       )

@@ -1,6 +1,7 @@
 import type {
   AnswerRow,
   AttemptResult,
+  StudentRow,
 } from "@repo/backend/confect/exams/results/contract";
 import { gradeVerdict } from "@repo/backend/confect/exams/results/schema";
 import { Array as Arr, Number as Num, Option, String as Str } from "effect";
@@ -40,6 +41,33 @@ export const gradedPage = (
           verdict: gradeVerdict(grade.points, grade.weight),
         }
       : answer
+  );
+
+/**
+ * The students of a page once the teacher grades one answer: that student's score moves by the change, and an answer
+ * that waited for its grade no longer waits. A student with no score yet and every other student stay as they were.
+ */
+export const gradedStudents = (
+  page: readonly (typeof StudentRow.Type)[],
+  grade: {
+    readonly attemptId: (typeof StudentRow.Type)["attemptId"];
+    /** The points the answer held before this grade. */
+    readonly before: number;
+    /** Whether the answer waited for a grade. */
+    readonly pending: boolean;
+    readonly points: number;
+  }
+): (typeof StudentRow.Type)[] =>
+  Arr.map(page, (row) =>
+    row.attemptId === grade.attemptId &&
+    row.points !== null &&
+    row.pending !== null
+      ? {
+          ...row,
+          pending: grade.pending ? row.pending - 1 : row.pending,
+          points: row.points + grade.points - grade.before,
+        }
+      : row
   );
 
 /**

@@ -88,6 +88,24 @@ export const usePaperDrawable = () =>
   useStore(use(PaperHoldContext), (state) => state.drawable);
 
 /**
+ * Whether a text of the paper may read now: a long paper reads its texts a few at a time. A text the reader stands on
+ * reads next, and the texts after it follow, so a jump down the paper never waits for the pages it passed. Outside a
+ * held paper every text reads at once.
+ */
+export function usePaperTurn(key: string, wanted: boolean) {
+  const store = use(PaperHoldContext);
+  const turn = useStore(store, (state) => !Arr.contains(state.queued, key));
+
+  useLayoutEffect(() => {
+    if (wanted && !turn) {
+      store.getState().hurry(key);
+    }
+  }, [key, store, turn, wanted]);
+
+  return turn;
+}
+
+/**
  * Tells the paper that one of its texts can draw, before the browser paints, so a text that is known at once never
  * shows an empty frame.
  */

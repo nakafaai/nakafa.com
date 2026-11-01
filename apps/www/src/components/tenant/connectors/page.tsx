@@ -181,7 +181,7 @@ function SchoolDirectory() {
           ),
       }}
     >
-      <Panes>
+      <Panes id="connectors">
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>

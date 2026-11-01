@@ -45,6 +45,7 @@ const line = (
           state,
         },
   student: {
+    email: null,
     id: Schema.decodeUnknownSync(Id("tenantPeople"))("raka"),
     name: "Raka",
   },

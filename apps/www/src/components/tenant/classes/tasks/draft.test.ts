@@ -9,10 +9,13 @@ import {
 } from "@/components/tenant/classes/tasks/draft";
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 
+/** The school's clock in these tests. */
+const ZONE = "Asia/Jakarta";
+
 /** A task due at a whole minute, as its page reads it. */
 const task: ClassTask = {
   category: "Latihan",
-  deadline: Option.getOrThrow(deadlineOf("2026-11-02T23:59")),
+  deadline: Option.getOrThrow(deadlineOf("2026-11-02T23:59", ZONE)),
   handedIn: 0,
   id: Schema.decodeUnknownSync(Id("classroomTasks"))("task-1"),
   latePolicy: "close",
@@ -26,7 +29,7 @@ const task: ClassTask = {
 
 describe("task drafts", () => {
   it("fills a task's form as the task stands, and checks it back to the same task", () => {
-    expect(draftOf(task)).toEqual({
+    expect(draftOf(task, ZONE)).toEqual({
       category: "Latihan",
       deadline: "2026-11-02T23:59",
       latePolicy: "close",
@@ -35,7 +38,7 @@ describe("task drafts", () => {
       text: "Kerjakan soal 1.",
       title: "Ringkasan",
     });
-    expect(checkedDraft(draftOf(task))).toEqual(
+    expect(checkedDraft(draftOf(task, ZONE), ZONE)).toEqual(
       Option.some({
         category: "Latihan",
         deadline: task.deadline,
@@ -49,36 +52,41 @@ describe("task drafts", () => {
   });
 
   it("reads a task without a category as an empty field, which saves no category", () => {
-    const plain = draftOf({ ...task, category: null });
+    const plain = draftOf({ ...task, category: null }, ZONE);
     expect(plain.category).toBe("");
-    expect(checkedDraft(plain)).toMatchObject(Option.some({ category: null }));
+    expect(checkedDraft(plain, ZONE)).toMatchObject(
+      Option.some({ category: null })
+    );
   });
 
   it("trims the title and the text, and names no task while a field holds what the server refuses", () => {
     expect(
-      checkedDraft({ ...draftOf(task), text: "  Soal 2.  ", title: " Baru " })
+      checkedDraft(
+        { ...draftOf(task, ZONE), text: "  Soal 2.  ", title: " Baru " },
+        ZONE
+      )
     ).toMatchObject(Option.some({ text: "Soal 2.", title: "Baru" }));
-    expect(checkedDraft(EMPTY_DRAFT)).toEqual(Option.none());
-    expect(checkedDraft({ ...draftOf(task), targets: [] })).toEqual(
+    expect(checkedDraft(EMPTY_DRAFT, ZONE)).toEqual(Option.none());
+    expect(checkedDraft({ ...draftOf(task, ZONE), targets: [] }, ZONE)).toEqual(
       Option.none()
     );
     expect(
-      checkedDraft({ ...draftOf(task), category: "x".repeat(41) })
+      checkedDraft({ ...draftOf(task, ZONE), category: "x".repeat(41) }, ZONE)
     ).toEqual(Option.none());
     expect(
       Option.map(
-        checkedDraft({ ...draftOf(task), category: "  " }),
+        checkedDraft({ ...draftOf(task, ZONE), category: "  " }, ZONE),
         (next) => next.category
       )
     ).toEqual(Option.some(null));
-    expect(checkedDraft({ ...draftOf(task), points: null })).toEqual(
+    expect(
+      checkedDraft({ ...draftOf(task, ZONE), points: null }, ZONE)
+    ).toEqual(Option.none());
+    expect(checkedDraft({ ...draftOf(task, ZONE), points: 1.5 }, ZONE)).toEqual(
       Option.none()
     );
-    expect(checkedDraft({ ...draftOf(task), points: 1.5 })).toEqual(
-      Option.none()
-    );
-    expect(checkedDraft({ ...draftOf(task), title: "   " })).toEqual(
-      Option.none()
-    );
+    expect(
+      checkedDraft({ ...draftOf(task, ZONE), title: "   " }, ZONE)
+    ).toEqual(Option.none());
   });
 });

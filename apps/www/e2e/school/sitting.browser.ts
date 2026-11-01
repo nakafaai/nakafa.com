@@ -67,9 +67,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })
@@ -287,9 +285,7 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })

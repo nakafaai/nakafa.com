@@ -108,13 +108,6 @@ const state = FunctionImpl.make(
       )
       .first()
       .pipe(Effect.orDie);
-    const invite = yield* reader
-      .table("tenantInvites")
-      .index("by_tenantId_and_state_status", (query) =>
-        query.eq("tenantId", tenant._id).eq("state.status", "pending")
-      )
-      .first()
-      .pipe(Effect.orDie);
     const links = yield* reader
       .table("guardianLinks")
       .index("by_tenantId", (query) => query.eq("tenantId", tenant._id), "desc")
@@ -129,7 +122,7 @@ const state = FunctionImpl.make(
       period: Arr.isArrayNonEmpty(periods),
       placed: Option.isSome(placed),
       student: Option.isSome(student),
-      teacher: Option.isSome(teacher) || Option.isSome(invite),
+      teacher: Option.isSome(teacher),
     };
   })
 );

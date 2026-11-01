@@ -1,6 +1,6 @@
 import {
   buildContentSearchExcerpt,
-  textAfterTitle,
+  textAfterHead,
 } from "@repo/backend/confect/contents/search/excerpt";
 import type { ContentSearchDocument } from "@repo/backend/confect/contents/search/groups";
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/search/schema";
@@ -29,7 +29,11 @@ export function buildContentSearchResult(
       excerpt: buildContentSearchExcerpt(
         {
           description: document.description,
-          text: textAfterTitle(document.text, document.title),
+          text: textAfterHead(document.text, [
+            document.title,
+            document.description,
+            document.route,
+          ]),
         },
         queryTexts
       ),

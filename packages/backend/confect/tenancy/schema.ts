@@ -230,6 +230,13 @@ export const tenantPersonValidator = Schema.Struct({
   status: PersonStatus,
   tenantId: Id("tenants"),
 });
+/** A Person as a school's table lists them: who they are, and the address they answer at, when they have one. */
+export const ListedPerson = Schema.Struct({
+  email: Schema.NullOr(Schema.String),
+  id: Id("tenantPeople"),
+  name: PersonName,
+});
+
 /** How long an invite waits to be claimed, counted from the moment it is written. */
 export const INVITE_TERM = Duration.days(14);
 

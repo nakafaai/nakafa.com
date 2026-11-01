@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   createSchool,
   hostAddress,
@@ -14,6 +14,49 @@ const EXAM_EDITOR = /\/exams\/[^/]+\/edit$/u;
 
 /** The most a row's menu may stand from its line: the cell's padding on both sides. */
 const MENU_PADDING = 16;
+
+/** The width every column's panel keeps, the gap between its parts, and what a sub-pixel may move an edge. */
+const PANEL_WIDTH = 288;
+const PANEL_GAP = 8;
+const EDGE_SLACK = 1;
+
+/**
+ * Opens a head's panel and holds it to the rule the owner gave with photos of production: one width, every
+ * part flush with the same four edges, the same gap between parts, so nothing touches, and every control
+ * of one height.
+ */
+async function expectEvenPanel(page: Page, card: Locator, head: string) {
+  await card.getByRole("button", { exact: true, name: head }).click();
+  const panel = page.locator('[data-slot="popover-content"]');
+  await expect(panel).toBeVisible();
+  const layout = await panel.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const parts = Array.from(element.children, (part) =>
+      part.getBoundingClientRect()
+    );
+    return {
+      bottom: box.bottom - (parts.at(-1)?.bottom ?? 0),
+      gaps: parts.slice(1).map((part, i) => part.top - parts[i].bottom),
+      heights: Array.from(
+        element.querySelectorAll('[data-slot="button-group"] button, fieldset'),
+        (control) => control.getBoundingClientRect().height
+      ),
+      lefts: parts.map((part) => part.left - box.left),
+      rights: parts.map((part) => box.right - part.right),
+      top: (parts[0]?.top ?? 0) - box.top,
+      width: box.width,
+    };
+  });
+  expect(layout.width, head).toBe(PANEL_WIDTH);
+  for (const gap of layout.gaps) {
+    expect(gap, head).toBeCloseTo(PANEL_GAP, 0);
+  }
+  for (const edge of [...layout.lefts, ...layout.rights, layout.bottom]) {
+    expect(Math.abs(edge - layout.top), head).toBeLessThanOrEqual(EDGE_SLACK);
+  }
+  expect(Arr.dedupe(layout.heights), head).toHaveLength(1);
+  await page.keyboard.press("Escape");
+}
 
 /** Every column head with a name holds the button that filters it; only the row's menu has none. */
 async function expectEveryHeadFilters(card: Locator) {
@@ -136,6 +179,9 @@ test("every column of the School's tables filters from its head, and the row's m
     page.getByRole("textbox", { name: "Questions, Minimum" }),
     "99999"
   );
+  await expectEvenPanel(page, card, "Exam title");
+  await expectEvenPanel(page, card, "Questions");
+  await expectEvenPanel(page, card, "Created");
   await card.getByRole("button", { exact: true, name: "Created" }).click();
   await expect(page.getByRole("grid")).toBeVisible();
   await expect(page.getByRole("button", { name: "Oldest" })).toBeVisible();

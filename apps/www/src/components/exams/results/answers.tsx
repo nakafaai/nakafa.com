@@ -49,7 +49,12 @@ function AnswerItem({
         <span className="text-muted-foreground">{t("results-points")}</span>
         {canGrade ? (
           <GradeField
-            answer={{ attemptId, name, points: question.earned }}
+            answer={{
+              attemptId,
+              name,
+              points: question.earned,
+              verdict: question.verdict,
+            }}
             question={question}
           />
         ) : (

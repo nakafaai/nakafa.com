@@ -40,8 +40,8 @@ function useReleaseResults() {
 /**
  * Release results, the results page's main action, in its header row: it opens the confirmation, and the
  * release shows at once. Once the results are released the button says so and stays still, and while the
- * viewer may not release them yet it stays disabled. On a phone it shows its icon alone, as the header's
- * other actions do, so the header keeps one row.
+ * viewer may not release them yet it stays disabled. In a narrow header it shows its icon alone, as the
+ * header's other actions do, so the page's path keeps its room.
  */
 export function ReleaseAction({
   canRelease,
@@ -59,7 +59,7 @@ export function ReleaseAction({
     return (
       <Button disabled type="button" variant="outline">
         <HugeIcons icon={CheckmarkCircle02Icon} />
-        <span className="max-sm:sr-only">{t("released")}</span>
+        <span className="@max-3xl/header:sr-only">{t("released")}</span>
       </Button>
     );
   }
@@ -67,7 +67,7 @@ export function ReleaseAction({
     return (
       <Button disabled type="button">
         <HugeIcons icon={LockKeyholeOpenIcon} />
-        <span className="max-sm:sr-only">{t("release-action")}</span>
+        <span className="@max-3xl/header:sr-only">{t("release-action")}</span>
       </Button>
     );
   }
@@ -75,7 +75,7 @@ export function ReleaseAction({
     <>
       <Button onClick={() => setOpen(true)} type="button">
         <HugeIcons icon={LockKeyholeOpenIcon} />
-        <span className="max-sm:sr-only">{t("release-action")}</span>
+        <span className="@max-3xl/header:sr-only">{t("release-action")}</span>
       </Button>
       <ResponsiveDialog
         description={t("release-description")}

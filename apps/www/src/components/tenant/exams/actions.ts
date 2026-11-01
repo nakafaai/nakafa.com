@@ -1,11 +1,13 @@
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { newChoiceAnswers } from "@repo/backend/confect/exams/blank";
+import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
 import {
   NEW_QUESTION_POINTS,
   NEW_QUESTION_TEMPLATE,
 } from "@repo/backend/confect/exams/question";
 import { ALL_OR_NOTHING } from "@repo/backend/confect/exams/scoring";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Function as Fn, Option } from "effect";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
@@ -33,6 +35,18 @@ const act = <A, E>(action: Effect.Effect<A, E>) =>
   runExamAction(action, {
     onFailure: Fn.constVoid,
     onSuccess: Fn.constVoid,
+  });
+
+/**
+ * Says so when the exam filled up under the teacher, as a second teacher's question fills it. The screen keeps the
+ * control away once it knows, so this answers a press that raced it, and it is no failure to report.
+ */
+const sayFull = () =>
+  Effect.sync(() => {
+    toast.error({
+      description: "exam-full.description",
+      title: "exam-full.title",
+    });
   });
 
 /**
@@ -68,7 +82,8 @@ const placeholderDraft = (
  * question, a move to an index, and a removal. Each shows its change at once, and each rolls it
  * back when the server refuses it. A question the server has not saved yet is shown from its
  * placeholder, which the saved question replaces, and the chosen question moves with it. The
- * chosen question is read when an action runs, so no page renders again for a change of the choice.
+ * chosen question is read when an action runs, so no page renders again for a change of the choice. `room` is how many
+ * questions the exam still takes, so a control that adds one stands disabled once it takes none.
  */
 export function useQuestionActions() {
   const { exam, slug } = useExam();
@@ -129,7 +144,8 @@ export function useQuestionActions() {
         ),
         Effect.tap((saved) =>
           Effect.sync(() => selection.getState().write(saved.id))
-        )
+        ),
+        Effect.catchTag("ExamFull", sayFull)
       )
     );
 
@@ -147,7 +163,8 @@ export function useQuestionActions() {
               })
             )
           )
-        )
+        ),
+        Effect.catchTag("ExamFull", sayFull)
       )
     );
 
@@ -183,5 +200,11 @@ export function useQuestionActions() {
     );
   };
 
-  return { addQuestion, copyQuestion, moveQuestion, removeQuestion };
+  return {
+    addQuestion,
+    copyQuestion,
+    moveQuestion,
+    removeQuestion,
+    room: MAX_EXAM_QUESTIONS - exam.questions.length,
+  };
 }

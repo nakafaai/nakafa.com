@@ -1,6 +1,7 @@
 import { useMutation } from "@confect/react";
 import {
   Calendar03Icon,
+  Copy01Icon,
   Delete02Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
@@ -23,13 +24,14 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
+import { useDuplicateExam } from "@/components/tenant/exams/duplicate";
 import type { ListedExam } from "@/components/tenant/exams/optimistic";
 import { removeExamUpdate } from "@/components/tenant/exams/removal";
 import { Link } from "@/lib/routing/link";
 
 /**
- * The row menu of one exam in the list: its editor, its rooms, the exam as a student sees it, and Delete, which asks
- * first. A deleted exam leaves the list at once, and a refusal puts it back with the action-error toast.
+ * The row menu of one exam in the list: its editor, its rooms, the exam as a student sees it, a copy of it, and Delete,
+ * which asks first. A deleted exam leaves the list at once, and a refusal puts it back with the action-error toast.
  */
 export function ExamRowMenu({ exam }: { exam: ListedExam }) {
   const t = useTranslations("Exams");
@@ -39,6 +41,7 @@ export function ExamRowMenu({ exam }: { exam: ListedExam }) {
     removeExamUpdate
   );
   const [isDeleting, setIsDeleting] = useState(false);
+  const { isPending, press } = useDuplicateExam(exam, slug);
   const params = { exam: exam.id, slug };
 
   const deleteExam = () => {
@@ -89,6 +92,10 @@ export function ExamRowMenu({ exam }: { exam: ListedExam }) {
                 </Link>
               }
             />
+            <DropdownMenuItem disabled={isPending} onClick={press}>
+              <HugeIcons icon={Copy01Icon} />
+              {t("duplicate-action")}
+            </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>

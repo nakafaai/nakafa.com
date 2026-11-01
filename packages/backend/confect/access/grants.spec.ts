@@ -14,7 +14,7 @@ import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { PersonAccess } from "@repo/backend/confect/tenancy/access";
-import { PersonName } from "@repo/backend/confect/tenancy/schema";
+import { ListedPerson, PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
@@ -25,7 +25,7 @@ import { Schema } from "effect";
  */
 const GrantRow = Schema.Struct({
   id: Id("tenantGrants"),
-  person: Schema.Struct({ id: Id("tenantPeople"), name: PersonName }),
+  person: ListedPerson,
   revocable: Schema.Boolean,
   role: RoleRef,
   scope: GrantScope,

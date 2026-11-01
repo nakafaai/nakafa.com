@@ -31,6 +31,7 @@ import {
   matchesFilter,
   type SeatFrame,
   seatFrame,
+  seatTimeKey,
   seenOffline,
 } from "@/components/exams/sitting/seat";
 import { useSittingClock } from "@/components/exams/sitting/timer";
@@ -150,8 +151,8 @@ export function SittingSeats() {
 }
 
 /**
- * The seat of a student who has not entered the sitting yet: the animal and the name, in a muted
- * frame, with no action, because the student has no attempt to open.
+ * The seat of a student who has not entered the sitting yet: the animal, the name and the line that says so, in a
+ * muted frame of one height with every other seat, with no action, because the student has no attempt to open.
  */
 function ExpectedSeatCard({
   mascot,
@@ -172,8 +173,12 @@ function ExpectedSeatCard({
       })}
     >
       <PersonAvatar className="size-6" mascot={mascot ?? undefined} />
-      <span className="min-w-0 truncate">{name}</span>
-      <span className="sr-only">{t("seat-waiting")}</span>
+      <span className="grid min-w-0 gap-0.5">
+        <span className={rowLineVariants()}>{name}</span>
+        <span className={rowLineVariants({ line: "fact" })}>
+          {t("seat-waiting")}
+        </span>
+      </span>
     </div>
   );
 }
@@ -316,7 +321,7 @@ function SeatLink({
         <span className={rowLineVariants({ line: "fact" })}>
           {Option.match(awaySince(attempt), {
             onNone: () =>
-              t("seat-last-activity", {
+              t(seatTimeKey(attempt), {
                 time:
                   schoolTimeText({
                     at: lastActivityOf(

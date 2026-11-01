@@ -85,7 +85,10 @@ describe("guardians/family children and confirm", () => {
             linkId: link.id,
             staffCheck: true,
             status: "pending",
-            student: { id: fixture.people.student.personId, name: "Student" },
+            student: expect.objectContaining({
+              id: fixture.people.student.personId,
+              name: "Student",
+            }),
           },
         ]);
         yield* setRoster(fixture, NISN);
@@ -145,6 +148,10 @@ describe("guardians/family children and confirm", () => {
             slug: nf,
           })
         ).toBe("refused");
+        // With every try spent the parent waits for staff, instead of a form that can only refuse.
+        expect(
+          (yield* guardian.query(children, { slug: nf }))[0]?.staffCheck
+        ).toBe(true);
         const listed = yield* fixture
           .as("counselor")
           .query(refs.public.guardians.links.list, { ...firstPage, slug: nf });

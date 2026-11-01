@@ -48,4 +48,22 @@ describe("posts draft", () => {
     draft.getState().refuseSaving(first, "Tulisan yang ditolak");
     expect(draft.getState().text).toBe("Tulisan yang ditolak");
   });
+
+  it("holds what sends the words only while the client is there, and says when the list is ready", () => {
+    const draft = createPostDraft();
+    const send = vi.fn();
+
+    expect(draft.getState().send).toBeNull();
+    expect(draft.getState().ready).toBe(false);
+
+    draft.getState().setSend(send);
+    draft.getState().setReady(true);
+
+    expect(draft.getState().send).toBe(send);
+    expect(draft.getState().ready).toBe(true);
+
+    draft.getState().setSend(null);
+
+    expect(draft.getState().send).toBeNull();
+  });
 });

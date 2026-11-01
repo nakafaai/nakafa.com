@@ -156,7 +156,7 @@ function GuardianLinksBody() {
 
   return (
     <LinksContext value={kept.value}>
-      <Panes>
+      <Panes id="links">
         <PanesList>
           {failed ? <DataFailure onRetry={reloadPage} /> : null}
           <WaitingRequests requests={waiting.results} />

@@ -11,8 +11,9 @@ import { LOCALES } from "@repo/internationalization/src/locale";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Option, Schema } from "effect";
-import { type ReactNode, useEffect, useEffectEvent } from "react";
+import { type ReactNode, useEffect, useEffectEvent, useState } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
+import { keptStorage } from "@/components/player/storage";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
 import { TryoutPageLink } from "@/components/tryout/route/link";
@@ -33,11 +34,9 @@ import {
 } from "@/components/tryout/runtime/start";
 import { START_ERROR, START_PART_ERROR } from "@/components/tryout/set/copy";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
+import { readKeptName, tryoutActionNameOf } from "@/components/tryout/set/kept";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
-import {
-  TryoutActionName,
-  type TryoutActionNameKey,
-} from "@/components/tryout/set/name";
+import { TryoutActionName } from "@/components/tryout/set/name";
 import {
   startAttemptProgram,
   startEntrySectionProgram,
@@ -88,7 +87,7 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
     <ConvexIsland
       fallback={
         <TryoutStartSignInButton request={props.request}>
-          <TryoutActionName name={startNameOf(props.attempt)} pending />
+          <TryoutActionName name={tryoutActionNameOf(props.attempt)} pending />
         </TryoutStartSignInButton>
       }
       keepsPress
@@ -99,17 +98,17 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
 }
 
 /**
- * The name of a set's start action for its attempt: continue a running one, restart a finished one, and
- * start one otherwise. The button the page shows before its client and the live action read it alike, so the
- * name never changes when the client arrives.
+ * The name this browser last read for the page it is on, for the moment the live action mounts and its
+ * read has not answered. It reads the document, so only the live action asks, and storage the page
+ * cannot read keeps nothing.
  */
-function startNameOf(
-  attempt: StartTryoutButtonProps["attempt"]
-): TryoutActionNameKey {
-  if (attempt?.status === "in-progress") {
-    return "continue-cta";
-  }
-  return attempt ? "restart-cta" : "start-cta";
+function readPageName() {
+  return Effect.runSync(
+    readKeptName(window.location.pathname).pipe(
+      Effect.provide(keptStorage),
+      Effect.orElseSucceed(() => Option.none())
+    )
+  );
 }
 
 /**
@@ -198,6 +197,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const convex = useConvex();
   const now = useTryoutClock(false);
   const [dialogOpen, dialog] = useDisclosure(false);
+  const [keptName] = useState(readPageName);
   const activeAttempt = attempt?.status === "in-progress";
   const finishedAttempt = Boolean(attempt && !activeAttempt);
   const directEntry = Boolean(request.entrySectionKey);
@@ -340,8 +340,12 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       <Button inert={started} onClick={answerStart}>
         <Spinner icon={Rocket01Icon} isLoading={started || pressed} />
         <TryoutActionName
-          name={startNameOf(attempt)}
-          pending={attempt === undefined}
+          name={
+            attempt === undefined
+              ? Option.getOrElse(keptName, () => tryoutActionNameOf(attempt))
+              : tryoutActionNameOf(attempt)
+          }
+          pending={attempt === undefined && Option.isNone(keptName)}
         />
       </Button>
       <TryoutStartDialog

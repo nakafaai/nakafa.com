@@ -143,9 +143,7 @@ test("a device the proctor retired says so and offers no Finish, while the attem
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })
