@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactNode, useState, useTransition } from "react";
@@ -37,6 +38,7 @@ import {
 } from "@/components/tenant/classes/forum/call";
 import { useTenant } from "@/components/tenant/context";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { Link } from "@/lib/routing/link";
 
 const SOURCE = "components/tenant/connectors/classroom";
 
@@ -77,16 +79,22 @@ export function ClassroomImport() {
       {Option.match(shown, {
         onNone: () => null,
         onSome: (found) => (
-          <CourseTable empty={Arr.isReadonlyArrayEmpty(found.courses)}>
-            {Arr.map(found.courses, (course) => (
-              <CourseRow
-                course={course}
-                key={course.courseId}
-                preview={found}
-                setPreview={setShown}
-              />
-            ))}
-          </CourseTable>
+          <>
+            {Arr.isReadonlyArrayEmpty(found.classes) &&
+            Arr.isReadonlyArrayNonEmpty(found.courses) ? (
+              <NoClassToFill />
+            ) : null}
+            <CourseTable empty={Arr.isReadonlyArrayEmpty(found.courses)}>
+              {Arr.map(found.courses, (course) => (
+                <CourseRow
+                  course={course}
+                  key={course.courseId}
+                  preview={found}
+                  setPreview={setShown}
+                />
+              ))}
+            </CourseTable>
+          </>
         ),
       })}
       <CardSectionFooter hint={t("courses-hint")}>
@@ -95,6 +103,25 @@ export function ClassroomImport() {
         </Button>
       </CardSectionFooter>
     </CardSection>
+  );
+}
+
+/** What a school with no class does first, because a course only fills a class that exists. */
+function NoClassToFill() {
+  const t = useTranslations("Connectors");
+  const { slug } = useTenant();
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 px-6">
+      <p className="text-muted-foreground text-sm">{t("courses-no-class")}</p>
+      <Link
+        className={buttonVariants({ variant: "outline" })}
+        params={{ slug }}
+        to="/school/$slug/settings/classes"
+      >
+        {t("courses-no-class-action")}
+      </Link>
+    </div>
   );
 }
 
@@ -215,6 +242,7 @@ function CourseRow({
       </TableCell>
       <TableCell className={columnAlign()}>
         <Select
+          disabled={Arr.isReadonlyArrayEmpty(preview.classes)}
           items={items}
           onValueChange={pick}
           value={course.classId ?? UNLINKED}

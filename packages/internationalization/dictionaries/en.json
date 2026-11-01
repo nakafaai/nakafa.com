@@ -3821,7 +3821,9 @@
     "course-students": "Students",
     "course-class": "Class",
     "course-unlinked": "Not imported",
-    "course-name": "{name} {section}"
+    "course-name": "{name} {section}",
+    "courses-no-class": "Add a classroom first, so a course has a class to fill.",
+    "courses-no-class-action": "Open classrooms"
   },
   "ReportCheck": {
     "locked-report": "This report card is on record.",

@@ -3821,7 +3821,9 @@
     "course-students": "Schüler",
     "course-class": "Klasse",
     "course-unlinked": "Nicht importiert",
-    "course-name": "{name} {section}"
+    "course-name": "{name} {section}",
+    "courses-no-class": "Füge zuerst einen Klassenraum hinzu, damit ein Kurs eine Klasse füllen kann.",
+    "courses-no-class-action": "Klassenräume öffnen"
   },
   "ReportCheck": {
     "locked-report": "Dieses Zeugnis ist erfasst.",
