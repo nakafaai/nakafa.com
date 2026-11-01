@@ -21,7 +21,7 @@ export const readCommentAddress = Effect.fn("www.comments.address")(function* (
   const place = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(comments.queries.getCommentPlace, {
       appLocale: AppLocaleSchema.make(locale),
-      commentId: Schema.decodeSync(Id("comments"))(commentId),
+      commentId: Schema.decodeUnknownSync(Id("comments"))(commentId),
     })
   ).pipe(Effect.provide(httpLayer()));
   return Option.map(Option.fromNullOr(place), ({ appLocale, publicPath }) =>

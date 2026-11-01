@@ -10,7 +10,7 @@ import {
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const now = Date.UTC(2026, 8, 1);
 const KEY = makeMaterialProjection("en", 1).contentKey;
@@ -45,7 +45,7 @@ async function commentOn(
 const activate = (appLocales: readonly ("en" | "id")[]) => (ctx: MutationCtx) =>
   Effect.runPromise(
     activateMaterialCatalog(
-      appLocales.map((appLocale) => makeMaterialProjection(appLocale, 1))
+      Arr.map(appLocales, (appLocale) => makeMaterialProjection(appLocale, 1))
     ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
   );
 

@@ -19,6 +19,9 @@ import { Array as Arr, Effect } from "effect";
 const { list, read, readAll } = refs.public.notifications.inbox;
 const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
 const ANA = "ana@harapan.example.test";
+const subjectsOf = <Row extends Parameters<typeof schoolViews>[0][number]>(
+  rows: readonly Row[]
+) => Arr.map(schoolViews(rows), (item) => item.subject);
 
 /** Fake timers keep the clock where each test sets it. */
 beforeEach(() => {
@@ -80,9 +83,7 @@ describe("notifications/inbox list", () => {
         expect(page.page[0]?.createdAt).toBeGreaterThan(
           page.page[1]?.createdAt ?? Number.NaN
         );
-        expect(
-          Arr.map(schoolViews(page.page), (item) => item.subject)
-        ).not.toContainEqual({
+        expect(subjectsOf(page.page)).not.toContainEqual({
           id: budiNf,
           kind: "person",
         });
@@ -188,10 +189,7 @@ describe("notifications/inbox list", () => {
           paginationOpts: { cursor: first.continueCursor, numItems: 1 },
         });
         expect(second.isDone).toBe(true);
-        const subjects = Arr.map(
-          schoolViews(Arr.appendAll(first.page, second.page)),
-          (item) => item.subject
-        );
+        const subjects = subjectsOf(Arr.appendAll(first.page, second.page));
         expect(subjects).toHaveLength(2);
         expect(subjects).toEqual(
           expect.arrayContaining([
