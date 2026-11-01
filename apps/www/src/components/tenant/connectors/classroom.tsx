@@ -1,9 +1,10 @@
 import type { Ref } from "@confect/core";
 import { useAction, useMutation } from "@confect/react";
-import { RefreshIcon } from "@hugeicons/core-free-icons";
+import { Download04Icon, RefreshIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
