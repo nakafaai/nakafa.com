@@ -67,7 +67,7 @@ describe("tenant/landing", () => {
   it("reads a member's rights from the frame the school layout drew", () => {
     expect(
       memberLandingOf({
-        home: NO_EXAMS,
+        home: { ...NO_EXAMS, choices: [] },
         viewer: { can: ["tenant.manage"], grants: [], units: [] },
       })
     ).toBe("/school/$slug/settings/profile");
