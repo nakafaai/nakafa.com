@@ -14,8 +14,8 @@ import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type * as React from "react";
-import { useTranslations } from "use-intl";
 import { use } from "react";
+import { useTranslations } from "use-intl";
 
 const Select = SelectPrimitive.Root;
 
