@@ -54,14 +54,7 @@ import {
   useResultsPaper,
   useResultsScope,
   useSessionSettled,
-import
-{
-  TableEnd;
-}
-from;
-("@/components/shared/table/pages");
-} from "@/components/exams/results/context"
-
+} from "@/components/exams/results/context";
 import { GradeField } from "@/components/exams/results/grade";
 import {
   correctShare,
@@ -74,6 +67,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
