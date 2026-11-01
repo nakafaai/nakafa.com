@@ -17,7 +17,7 @@ const WriteAnswer = Schema.Union([
 ]);
 
 /** What a grade entry answers: its draft, a refusal of what the client may not do, or what the grade's state refuses. */
-export const GradeAnswer = Schema.Union([
+const GradeAnswer = Schema.Union([
   Schema.Struct({
     grade: Schema.Struct({ id: Schema.String, value: GradeValue }),
     outcome: Schema.Literal("entered"),

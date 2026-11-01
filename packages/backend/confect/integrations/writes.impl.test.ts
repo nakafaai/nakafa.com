@@ -46,6 +46,9 @@ const seeded = Effect.fn("test.writes.seeded")(function* (fixture: Fixture) {
   };
 });
 
+const NO_CLASS = Schema.decodeUnknownSync(Id("classes"))("not-an-id");
+const NO_PERSON = Schema.decodeUnknownSync(Id("tenantPeople"))("not-an-id");
+
 describe("integrations/writes enterGrade", () => {
   /** A class with the school's student placed in it, and a client that enters its grades. */
   const graded = Effect.fn("test.writes.graded")(function* (fixture: Fixture) {
@@ -135,12 +138,12 @@ describe("integrations/writes enterGrade", () => {
         expect(yield* write({ clientId: without.id })).toEqual(refused);
         expect(
           yield* write({
-            classId: Schema.decodeUnknownSync(Id("classes"))("not-an-id"),
+            classId: NO_CLASS,
           })
         ).toEqual(refused);
         expect(
           yield* write({
-            personId: Schema.decodeUnknownSync(Id("tenantPeople"))("not-an-id"),
+            personId: NO_PERSON,
           })
         ).toEqual(refused);
       })
