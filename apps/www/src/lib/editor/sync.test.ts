@@ -20,6 +20,7 @@ import {
   tickThroughFold,
 } from "@/lib/editor/sync";
 import {
+  failingOpen,
   foldingServer,
   makePort,
   makeServer,
@@ -340,6 +341,37 @@ describe("editor/sync failures", () => {
         expect(failure).toMatchObject({ _tag: "SyncFailed" });
         expect(textOf((yield* Ref.get(state)).doc)).toBe("a");
       })
+  );
+
+  it.effect(
+    "reads a document again after a read that failed, so one timeout leaves no text read-only",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const { port } = yield* makePort();
+        const { reads, transport } = yield* failingOpen(server.transport, 1);
+        const start = yield* startSync(port, transport).pipe(Effect.forkChild);
+        yield* TestClock.adjust("2999 millis");
+        expect(yield* Ref.get(reads)).toBe(1);
+        yield* TestClock.adjust("1 millis");
+        yield* Fiber.join(start);
+        expect(yield* Ref.get(reads)).toBe(2);
+      })
+  );
+
+  it.effect("gives up on a document that keeps failing, with the failure", () =>
+    Effect.gen(function* () {
+      const server = yield* makeServer();
+      const { port } = yield* makePort();
+      const { reads, transport } = yield* failingOpen(server.transport, 5);
+      const start = yield* startSync(port, transport).pipe(
+        Effect.flip,
+        Effect.forkChild
+      );
+      yield* TestClock.adjust("12 seconds");
+      expect(yield* Fiber.join(start)).toMatchObject({ _tag: "SyncFailed" });
+      expect(yield* Ref.get(reads)).toBe(5);
+    })
   );
 });
 

@@ -1,4 +1,4 @@
-import { Effect, FileSystem, Path } from "effect";
+import { Effect, FileSystem, Option, Path, String as Str } from "effect";
 import { HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** The path of one entry: the digest that the content store keys it by. */
@@ -13,12 +13,13 @@ const ENTRY_PATH = /^\/[0-9a-f]{64}$/u;
 export const answerShelfRequest = Effect.fn("www.static.answerShelfRequest")(
   function* (directory: string) {
     const request = yield* HttpServerRequest.HttpServerRequest;
-    if (!ENTRY_PATH.test(request.url)) {
+    const entry = Str.match(ENTRY_PATH)(request.url);
+    if (Option.isNone(entry)) {
       return HttpServerResponse.empty({ status: 400 });
     }
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const file = path.join(directory, request.url);
+    const file = path.join(directory, entry.value[0]);
     if (request.method === "PUT") {
       yield* fs.writeFileString(file, yield* request.text);
       return HttpServerResponse.empty({ status: 204 });

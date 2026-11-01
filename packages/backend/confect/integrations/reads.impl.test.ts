@@ -263,4 +263,34 @@ describe("integrations/reads records", () => {
         expect(Arr.dedupe(types)).toEqual(["grade.released"]);
       })
   );
+
+  it.effect("reads a grant with its role, scope, and term", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const client = yield* createClient(fixture);
+      yield* fixture.as("owner").mutation(refs.public.access.grants.assign, {
+        personId: fixture.people.counselor.personId,
+        role: "staff",
+        scope: { kind: "tenant" },
+        slug: nf,
+      });
+
+      const page = yield* fixture.internal.query(reads.changes, {
+        clientId: client.id,
+        cursor: null,
+        numItems: 100,
+      });
+
+      expect(page.outcome === "page" ? page.data : []).toContainEqual(
+        expect.objectContaining({
+          change: expect.objectContaining({
+            role: { key: "staff", kind: "builtin" },
+            scope: { kind: "tenant" },
+            term: { kind: "standing" },
+          }),
+          type: "grant.created",
+        })
+      );
+    })
+  );
 });

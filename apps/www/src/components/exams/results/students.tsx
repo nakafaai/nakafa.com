@@ -21,14 +21,6 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
@@ -37,10 +29,10 @@ import {
   useSessionSettled,
 } from "@/components/exams/results/context";
 import { DataFailure } from "@/components/shared/failure";
-import { PaneTableRow } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnChoice } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -126,10 +118,7 @@ function NotYet() {
  * scores stand in the middle in figures of one width, so the eye runs down each column, and a value not there yet
  * says so.
  */
-function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
-  const t = useTranslations("Exams");
-  const { timeZone, total } = useResultsPaper();
-  const format = useFormatter();
+function StudentName({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const chosen = usePanes((state) =>
     Option.exists(state.open, (open) => open === row.attemptId)
   );
@@ -137,55 +126,15 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const close = usePanes((state) => state.close);
 
   return (
-    <PaneTableRow id={row.attemptId}>
-      <TableCell className="px-2 sm:px-4">
-        <Button
-          aria-pressed={chosen}
-          className="h-auto px-0"
-          onClick={() => (chosen ? close() : show(row.attemptId))}
-          type="button"
-          variant="link"
-        >
-          {row.name}
-        </Button>
-      </TableCell>
-      <TableCell className="px-2 text-center sm:px-4">
-        <TableStatus
-          icon={STATE_LOOKS[row.state].icon}
-          label={t(stateKeys[row.state])}
-          tone={STATE_LOOKS[row.state].tone}
-        />
-      </TableCell>
-      <TableCell className="px-2 text-center tabular-nums sm:px-4">
-        {row.points === null ? <NotYet /> : `${row.points} / ${total}`}
-      </TableCell>
-      <TableCell className="px-2 text-center tabular-nums sm:px-4">
-        {row.answered ?? <NotYet />}
-      </TableCell>
-      <TableCell className="px-2 text-center tabular-nums sm:px-4">
-        {row.pending ?? <NotYet />}
-      </TableCell>
-      <TableCell className="px-2 text-center tabular-nums sm:px-4">
-        <AwayCell awaySeconds={row.awaySeconds} exits={row.exits} />
-      </TableCell>
-      <TableCell className="px-2 text-center tabular-nums sm:px-4">
-        {row.submittedAt === null ? (
-          <NotYet />
-        ) : (
-          format.dateTime(
-            DateTime.toDateUtc(DateTime.makeUnsafe(row.submittedAt)),
-            {
-              dateStyle: "medium",
-              timeStyle: "short",
-              timeZone,
-            }
-          )
-        )}
-      </TableCell>
-      <TableCell className="px-2 text-end sm:px-4">
-        <StudentRowMenu attemptId={row.attemptId} />
-      </TableCell>
-    </PaneTableRow>
+    <Button
+      aria-pressed={chosen}
+      className="h-auto px-0"
+      onClick={() => (chosen ? close() : show(row.attemptId))}
+      type="button"
+      variant="link"
+    >
+      {row.name}
+    </Button>
   );
 }
 
@@ -224,6 +173,9 @@ function StudentRowMenu({
   );
 }
 
+/** The columns of the students' table. */
+const studentColumns = tableColumns<typeof StudentRowSchema.Type>();
+
 /**
  * The values of the students' status column, which chooses the attempts the server reads: every attempt, or only the
  * attempts in one state. Each value carries the icon of its state.
@@ -241,52 +193,80 @@ function useStatusChoices() {
   ];
 }
 
-/** The table of the given students, with its head and one row for each. */
-function StudentTable({
-  rows,
-}: {
-  readonly rows: readonly (typeof StudentRowSchema.Type)[];
-}) {
+/** The columns of the students' table: each student's state, score, counts and the time they finished. */
+function useStudentColumns() {
   const t = useTranslations("Exams");
+  const { timeZone, total } = useResultsPaper();
+  const format = useFormatter();
   const statusChoices = useStatusChoices();
 
-  return (
-    <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
-      <TableHeader>
-        <TableRow>
-          <TableHead className="px-2 sm:px-4">{t("results-name")}</TableHead>
-          <TableHead className="w-40 px-2 text-center sm:px-4">
-            <ColumnChoice
-              column="status"
-              options={statusChoices}
-              title={t("results-status")}
-            />
-          </TableHead>
-          <TableHead className="w-28 px-2 text-center sm:px-4">
-            {t("results-score")}
-          </TableHead>
-          <TableHead className="w-28 px-2 text-center sm:px-4">
-            {t("results-answered")}
-          </TableHead>
-          <TableHead className="w-28 px-2 text-center sm:px-4">
-            {t("results-pending")}
-          </TableHead>
-          <TableHead className="w-36 px-2 text-center sm:px-4">
-            {t("results-away")}
-          </TableHead>
-          <TableHead className="w-44 px-2 text-center sm:px-4">
-            {t("results-finished")}
-          </TableHead>
-          <TableHead className="w-12 px-2 sm:px-4" />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {Arr.map(rows, (row) => (
-          <StudentRow key={row.attemptId} row={row} />
-        ))}
-      </TableBody>
-    </Table>
-  );
+  return [
+    studentColumns.text((row) => row.name, {
+      cell: (info) => <StudentName row={info.row.original} />,
+      header: t("results-name"),
+      id: "name",
+    }),
+    studentColumns.choice((row) => row.state, {
+      cell: (info) => (
+        <TableStatus
+          icon={STATE_LOOKS[info.getValue()].icon}
+          label={t(stateKeys[info.getValue()])}
+          tone={STATE_LOOKS[info.getValue()].tone}
+        />
+      ),
+      header: t("results-status"),
+      id: "status",
+      options: statusChoices,
+    }),
+    studentColumns.number((row) => row.points, {
+      cell: (info) => {
+        const points = info.getValue();
+        return points === null ? <NotYet /> : `${points} / ${total}`;
+      },
+      header: t("results-score"),
+      id: "score",
+    }),
+    studentColumns.number((row) => row.answered, {
+      cell: (info) => info.getValue() ?? <NotYet />,
+      header: t("results-answered"),
+      id: "answered",
+    }),
+    studentColumns.number((row) => row.pending, {
+      cell: (info) => info.getValue() ?? <NotYet />,
+      header: t("results-pending"),
+      id: "pending",
+    }),
+    studentColumns.number((row) => row.awaySeconds, {
+      cell: (info) => (
+        <AwayCell
+          awaySeconds={info.getValue()}
+          exits={info.row.original.exits}
+        />
+      ),
+      header: t("results-away"),
+      id: "away",
+    }),
+    studentColumns.days((row) => row.submittedAt, {
+      cell: (info) => {
+        const at = info.getValue();
+        return at === null ? (
+          <NotYet />
+        ) : (
+          format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(at)), {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone,
+          })
+        );
+      },
+      header: t("results-finished"),
+      id: "finished",
+      timeZone: () => timeZone,
+    }),
+    studentColumns.menu((info) => (
+      <StudentRowMenu attemptId={info.row.original.attemptId} />
+    )),
+  ];
 }
 
 /**
@@ -367,11 +347,20 @@ function StudentRowsSection({
   rows: readonly (typeof StudentRowSchema.Type)[];
 }) {
   const t = useTranslations("Exams");
+  const columns = useStudentColumns();
+
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {/* While a filter or a search narrows the list, the table keeps its head, so the status choice stays in reach. */}
-      {rows.length > 0 || filtering ? <StudentTable rows={rows} /> : null}
+      {rows.length > 0 || filtering ? (
+        <DataTable
+          columns={columns}
+          data={rows}
+          loading={loadMore !== null || rows.length === 0}
+          rowId={(row) => row.attemptId}
+        />
+      ) : null}
       {/* A page of a search can hold no match while later pages still load, so the empty state
           waits for the last page, and the table shows nothing in the meantime. */}
       {exhausted && rows.length === 0 ? (

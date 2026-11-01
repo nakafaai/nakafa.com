@@ -27,7 +27,7 @@ export const Route = createFileRoute("/$locale/_main/try-out/")({
           indexable: true,
           jsonLd: makeBreadcrumbNodes(loaderData.breadcrumbs),
           locale: params.locale,
-          title: loaderData.labels.tryOut,
+          title: loaderData.title,
         }),
   headers: readTryoutCatalogHeaders,
   component: TryoutHubPage,

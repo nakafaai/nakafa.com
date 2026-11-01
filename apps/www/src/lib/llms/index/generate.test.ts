@@ -99,6 +99,7 @@ describe("llms indexes", () => {
       const text = yield* getLlmsSectionIndexText("llms/en");
 
       expect(text).toContain("# Nakafa English Content");
+      expect(text).toContain("Free lessons from K-12 to university");
       expect(text).toContain("## Sections");
       expect(text).toContain("## Starter Pages");
       for (const prefix of [

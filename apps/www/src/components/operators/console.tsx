@@ -8,24 +8,26 @@ import operators from "@repo/backend/confect/_generated/refs/operators";
 import { TenantStatus } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { OpenSchoolDialog } from "@/components/operators/open";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
+import { PageFrame } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { HOME_TARGET } from "@/lib/routing/target";
 
 /** How many schools one page of the list loads, and each page after it. */
@@ -35,7 +37,7 @@ const PAGE_SIZE = 50;
 type SchoolRow = PaginatedQueryItem<typeof operators.tenants.list>;
 
 /** The columns of the schools table. */
-const schoolColumns = createColumnHelper<typeof dataTableFeatures, SchoolRow>();
+const schoolColumns = tableColumns<SchoolRow>();
 
 /** The look of each school status, in its cell and in its column's filter. */
 const STATUS_LOOKS = {
@@ -54,28 +56,30 @@ export function OperatorConsole() {
   const [isOpening, setIsOpening] = useState(false);
 
   return (
-    <TableFiltersProvider>
-      <BreadcrumbHeader
-        value={{
-          action: (
-            <>
-              <TableSearch placeholder={t("search")} />
-              <Button onClick={() => setIsOpening(true)} type="button">
-                {t("open")}
-              </Button>
-            </>
-          ),
-          home: HOME_TARGET,
-          homeLabel: common("home"),
-          items: [{ label: t("title") }],
-          title: t("title"),
-        }}
-      />
-      <TablePageBody width="page">
-        <OperatorSchools />
-      </TablePageBody>
-      <OpenSchoolDialog open={isOpening} setOpen={setIsOpening} />
-    </TableFiltersProvider>
+    <PageFrame width="page">
+      <TableFiltersProvider>
+        <BreadcrumbHeader
+          value={{
+            action: (
+              <>
+                <TableSearch placeholder={t("search")} />
+                <Button onClick={() => setIsOpening(true)} type="button">
+                  {t("open")}
+                </Button>
+              </>
+            ),
+            home: HOME_TARGET,
+            homeLabel: common("home"),
+            items: [{ label: t("title") }],
+            title: t("title"),
+          }}
+        />
+        <TablePageBody>
+          <OperatorSchools />
+        </TablePageBody>
+        <OpenSchoolDialog open={isOpening} setOpen={setIsOpening} />
+      </TableFiltersProvider>
+    </PageFrame>
   );
 }
 
@@ -107,7 +111,7 @@ function OperatorSchools() {
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     if (failed) {
-      return <DataFailure onRetry={reloadPage} />;
+      return <LoadFailure onRetry={reloadPage} />;
     }
     return (
       <TableEmpty
@@ -118,30 +122,39 @@ function OperatorSchools() {
     );
   }
 
-  const columns = schoolColumns.columns([
-    schoolColumns.accessor((school) => school.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-      filterFn: "includesString",
+  const columns = [
+    schoolColumns.text((school) => school.name, {
+      cell: (info) => (
+        <TableTitle
+          icon={School01Icon}
+          tone={STATUS_LOOKS[info.row.original.status].tone}
+        >
+          {info.getValue()}
+        </TableTitle>
+      ),
       header: t("name"),
       id: "name",
-      sortFn: "text",
     }),
-    schoolColumns.accessor((school) => school.slug, {
+    schoolColumns.text((school) => school.slug, {
       header: t("address"),
       id: "slug",
-      sortFn: "text",
     }),
-    schoolColumns.accessor((school) => t(`kind.${school.kind}`), {
-      enableSorting: false,
+    schoolColumns.values((school) => t(`kind.${school.kind}`), {
       header: t("kind-label"),
       id: "kind",
+      options: namedOptions(
+        Arr.dedupe(
+          Arr.map(pagination.results, (school) => t(`kind.${school.kind}`))
+        ),
+        [School01Icon]
+      ),
     }),
-    schoolColumns.accessor((school) => school.unitCount, {
+    schoolColumns.number((school) => school.unitCount, {
+      align: "end",
       header: t("units"),
       id: "units",
-      meta: { align: "end" },
     }),
-    schoolColumns.accessor((school) => school.status, {
+    schoolColumns.values((school) => school.status, {
       cell: (info) => (
         <TableStatus
           icon={STATUS_LOOKS[info.getValue()].icon}
@@ -149,22 +162,15 @@ function OperatorSchools() {
           tone={STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(TenantStatus.literals, (status) => ({
-            icon: STATUS_LOOKS[status].icon,
-            label: t(`status.${status}`),
-            value: status,
-          }))}
-          title={t("status-label")}
-        />
-      ),
+      header: t("status-label"),
       id: "status",
+      options: Arr.map(TenantStatus.literals, (status) => ({
+        icon: STATUS_LOOKS[status].icon,
+        label: t(`status.${status}`),
+        value: status,
+      })),
     }),
-  ]);
+  ];
 
   return (
     <>

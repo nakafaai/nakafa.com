@@ -9,6 +9,7 @@ import {
   Calendar03Icon,
   CheckmarkCircle02Icon,
   Clock01Icon,
+  Door01Icon,
   PencilEdit02Icon,
   PlayIcon,
   SchoolIcon,
@@ -19,14 +20,6 @@ import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "use-intl";
@@ -34,22 +27,25 @@ import { useConvexAuth } from "@/components/auth/convex";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnChoice } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
   useServerSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import {
   RoomStateFilter,
+  roomGroupKey,
   roomGroups,
   roomsArgs,
-  roomsOfGroup,
 } from "@/components/tenant/exams/filter";
 import { RoomMenu } from "@/components/tenant/exams/move";
 import { RoomSeats } from "@/components/tenant/exams/seats";
@@ -218,6 +214,9 @@ function ExamRoomsContent({
   );
 }
 
+/** The columns of the rooms table. */
+const roomColumns = tableColumns<Room>();
+
 /**
  * The rooms in a table that loads more rows as its end comes into view, its state column choosing the state the server
  * reads and the header's search the room names it reads (`useServerSearch`). The table waits for its first page, so no
@@ -236,14 +235,11 @@ function RoomsTable({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
+  const locale = useLocale();
   const chosen = useTableFilters((state) => state.chosen);
   const filter = Option.getOrElse(
     chosenOne(chosen, "state", Schema.is(RoomStateFilter)),
     (): StateFilter => "all"
-  );
-  const group = Option.getOrElse(
-    chosenOne(chosen, "group", Schema.is(Schema.String)),
-    () => "all"
   );
   const search = useServerSearch();
   const pagination = usePaginatedQuery(
@@ -271,7 +267,7 @@ function RoomsTable({
     : null;
   const empty = Arr.isReadonlyArrayEmpty(rooms);
   if (empty && failed) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
   if (empty && pagination._tag !== "Exhausted") {
     return <RoomsMore loadMore={loadMore} />;
@@ -289,59 +285,102 @@ function RoomsTable({
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <Table
-        aria-busy={loading}
-        containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap"
-      >
-        <TableHeader>
-          <TableRow>
-            <TableHead className="px-2 sm:px-4">{t("room")}</TableHead>
-            <TableHead className="px-2 text-center sm:px-4">
-              <ColumnChoice
-                column="group"
-                options={[
-                  { icon: UserGroupIcon, label: t("group-all"), value: "all" },
-                  ...Arr.map(roomGroups(rooms), (option) => ({
-                    icon: option.kind === "cohort" ? UserGroupIcon : SchoolIcon,
-                    label: option.name,
-                    value: option.key,
-                  })),
-                ]}
-                title={t("rooms-group")}
-              />
-            </TableHead>
-            <TableHead className="px-2 text-center sm:px-4">
-              {t("rooms-opens")}
-            </TableHead>
-            <TableHead className="px-2 text-center sm:px-4">
-              {t("rooms-closes")}
-            </TableHead>
-            <TableHead className="px-2 text-center sm:px-4">
-              <ColumnChoice
-                column="state"
-                options={[
-                  { icon: Calendar03Icon, label: t("state-all"), value: "all" },
-                  ...Arr.map(ROOM_STATES, (state) => ({
-                    icon: ROOM_STATE_LOOKS[state].icon,
-                    label: t(`room-state-${state}`),
-                    value: state,
-                  })),
-                ]}
-                title={t("rooms-state")}
-              />
-            </TableHead>
-            <TableHead className="px-2 text-center sm:px-4">
-              {t("rooms-seats")}
-            </TableHead>
-            <TableHead className="px-2 sm:px-4" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(roomsOfGroup(rooms, group), (room) => (
-            <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable
+        columns={[
+          roomColumns.text((room) => room.room, {
+            cell: (info) => (
+              <TableTitle
+                icon={Door01Icon}
+                tone={ROOM_STATE_LOOKS[info.row.original.state].tone}
+              >
+                <Link
+                  className="underline-offset-4 hover:underline"
+                  dir="auto"
+                  params={{ exam: examId, slug, sitting: info.row.original.id }}
+                  to="/school/$slug/exams/$exam/sittings/$sitting"
+                >
+                  {info.getValue()}
+                </Link>
+              </TableTitle>
+            ),
+            header: t("room"),
+            id: "room",
+          }),
+          roomColumns.choice((room) => roomGroupKey(room.group), {
+            cell: (info) => (
+              <span dir="auto">{info.row.original.groupName}</span>
+            ),
+            header: t("rooms-group"),
+            id: "group",
+            options: [
+              { icon: UserGroupIcon, label: t("group-all"), value: "all" },
+              ...Arr.map(roomGroups(rooms), (option) => ({
+                icon: option.kind === "cohort" ? UserGroupIcon : SchoolIcon,
+                label: option.name,
+                value: option.key,
+              })),
+            ],
+          }),
+          roomColumns.days((room) => room.opensAt, {
+            cell: (info) => (
+              <span className="text-muted-foreground tabular-nums">
+                {schoolDateTimeText({
+                  at: info.getValue(),
+                  locale,
+                  timeZone: info.row.original.timeZone,
+                })}
+              </span>
+            ),
+            header: t("rooms-opens"),
+            id: "opens",
+            timeZone: (room) => room.timeZone,
+          }),
+          roomColumns.days((room) => room.closesAt, {
+            cell: (info) => (
+              <span className="text-muted-foreground tabular-nums">
+                {schoolDateTimeText({
+                  at: info.getValue(),
+                  locale,
+                  timeZone: info.row.original.timeZone,
+                })}
+              </span>
+            ),
+            header: t("rooms-closes"),
+            id: "closes",
+            timeZone: (room) => room.timeZone,
+          }),
+          roomColumns.choice((room) => room.state, {
+            cell: (info) => (
+              <span className="inline-flex items-center gap-2">
+                <TableStatus
+                  icon={ROOM_STATE_LOOKS[info.getValue()].icon}
+                  label={t(`room-state-${info.getValue()}`)}
+                  tone={ROOM_STATE_LOOKS[info.getValue()].tone}
+                />
+                {info.getValue() === "open" ? (
+                  <RoomSeats sittingId={info.row.original.id} slug={slug} />
+                ) : null}
+              </span>
+            ),
+            header: t("rooms-state"),
+            id: "state",
+            options: [
+              { icon: Calendar03Icon, label: t("state-all"), value: "all" },
+              ...Arr.map(ROOM_STATES, (state) => ({
+                icon: ROOM_STATE_LOOKS[state].icon,
+                label: t(`room-state-${state}`),
+                value: state,
+              })),
+            ],
+          }),
+          roomColumns.menu((info) => (
+            <RoomMenu examId={examId} room={info.row.original} slug={slug} />
+          )),
+        ]}
+        data={rooms}
+        loading={loading || loadMore !== null || empty}
+        rowId={(room) => room.id}
+      />
       {empty ? (
         <TableEmpty
           act="searching"
@@ -357,69 +396,4 @@ function RoomsTable({
 /** The sentinel that reads the next page of rooms as it comes into view, while the list has more. */
 function RoomsMore({ loadMore }: { loadMore: (() => void) | null }) {
   return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
-}
-
-/**
- * One room of the table: its name, which opens its proctor dashboard, its group, its opening and
- * closing in the time zone of its unit, its state, and the menu that opens it, shows its results, and
- * moves or cancels a room that has not opened yet.
- */
-function RoomItem({
-  examId,
-  room,
-  slug,
-}: {
-  examId: GenericId.GenericId<"exams">;
-  room: Room;
-  slug: TenantSlug;
-}) {
-  const t = useTranslations("Exams");
-  const locale = useLocale();
-
-  return (
-    <TableRow>
-      <TableCell className="px-2 font-medium sm:px-4">
-        <Link
-          className="underline-offset-4 hover:underline"
-          dir="auto"
-          params={{ exam: examId, slug, sitting: room.id }}
-          to="/school/$slug/exams/$exam/sittings/$sitting"
-        >
-          {room.room}
-        </Link>
-      </TableCell>
-      <TableCell className="px-2 text-center sm:px-4" dir="auto">
-        {room.groupName}
-      </TableCell>
-      <TableCell className="text-muted-foreground px-2 text-center tabular-nums sm:px-4">
-        {schoolDateTimeText({
-          at: room.opensAt,
-          locale,
-          timeZone: room.timeZone,
-        })}
-      </TableCell>
-      <TableCell className="text-muted-foreground px-2 text-center tabular-nums sm:px-4">
-        {schoolDateTimeText({
-          at: room.closesAt,
-          locale,
-          timeZone: room.timeZone,
-        })}
-      </TableCell>
-      <TableCell className="px-2 text-center sm:px-4">
-        <TableStatus
-          icon={ROOM_STATE_LOOKS[room.state].icon}
-          label={t(`room-state-${room.state}`)}
-          tone={ROOM_STATE_LOOKS[room.state].tone}
-        />
-      </TableCell>
-      <TableCell className="px-2 text-center sm:px-4">
-        {room.state === "open" ? (
-          <RoomSeats sittingId={room.id} slug={slug} />
-        ) : null}
-      </TableCell>
-      <TableCell className="px-2 text-end sm:px-4">
-        <RoomMenu examId={examId} room={room} slug={slug} />
-      </TableCell>
-    </TableRow>
-  );
 }

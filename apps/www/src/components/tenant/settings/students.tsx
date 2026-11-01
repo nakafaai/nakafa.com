@@ -22,8 +22,6 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
-  FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -31,16 +29,15 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { useFormatTimeZone } from "@/components/shared/table/calendar";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { daysColumn } from "@/components/shared/table/days";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
@@ -57,7 +54,10 @@ import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
-import { LoginRenameDialog } from "@/components/tenant/settings/login";
+import {
+  LoginNameField,
+  LoginRenameDialog,
+} from "@/components/tenant/settings/login";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
@@ -75,7 +75,7 @@ const PAGE_SIZE = 25;
 type LoginItem = PaginatedQueryItem<typeof identity.logins.list>;
 
 /** The columns of the logins table. */
-const loginColumns = createColumnHelper<typeof dataTableFeatures, LoginItem>();
+const loginColumns = tableColumns<LoginItem>();
 
 /** Opens a card the server issued in the page's card dialog. */
 const CardIssueContext = createContext<((card: CardView) => void) | null>(null);
@@ -161,6 +161,7 @@ function SchoolLoginsBody() {
  */
 function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
   const t = useTranslations("SchoolSettings");
+  const formatZone = useFormatTimeZone();
   const timeZone = useSchoolTimeZone();
 
   if (Arr.isReadonlyArrayEmpty(logins)) {
@@ -173,39 +174,28 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
     );
   }
 
-  const columns = loginColumns.columns([
+  const columns = [
     // The login name with the student's name after it, so the header's search finds a login by either; the cell
     // shows the login name.
-    loginColumns.accessor(
-      (login) => `${login.loginName} ${login.person.name}`,
-      {
-        cell: (info) => (
-          <span className="font-medium">{info.row.original.loginName}</span>
-        ),
-        filterFn: "includesString",
-        header: t("login-name"),
-        id: "login",
-        sortFn: "text",
-      }
-    ),
-    loginColumns.accessor((login) => login.person.name, {
+    loginColumns.text((login) => `${login.loginName} ${login.person.name}`, {
+      cell: (info) => (
+        <span className="font-medium">{info.row.original.loginName}</span>
+      ),
+      header: t("login-name"),
+      id: "login",
+    }),
+    loginColumns.text((login) => login.person.name, {
       header: t("login-person"),
       id: "person",
-      sortFn: "text",
     }),
-    loginColumns.accessor((login) => login.issuedAt, {
+    loginColumns.days((login) => login.issuedAt, {
       cell: (info) => <SchoolDateTime at={info.getValue()} />,
       header: t("login-issued"),
       id: "issued",
-      sortFn: "basic",
-      ...daysColumn(timeZone),
+      timeZone: () => Option.getOrElse(timeZone, formatZone),
     }),
-    loginColumns.display({
-      cell: (info) => <SchoolLoginMenu login={info.row.original} />,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    loginColumns.menu((info) => <SchoolLoginMenu login={info.row.original} />),
+  ];
 
   return (
     <DataTable
@@ -391,22 +381,11 @@ function SchoolStudentDialog({
             value={name}
           />
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-login`}>
-            {t("card-login-name")}
-          </FieldLabel>
-          <Input
-            aria-invalid={loginProblem}
-            id={`${id}-login`}
-            onChange={(event) => setLoginName(event.target.value)}
-            placeholder={t("card-login-name-placeholder")}
-            value={loginName}
-          />
-          <FieldDescription>{t("student-login-rule")}</FieldDescription>
-          <FieldError>
-            {loginProblem ? t("student-login-rule") : null}
-          </FieldError>
-        </Field>
+        <LoginNameField
+          onChange={setLoginName}
+          problem={loginProblem}
+          value={loginName}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );

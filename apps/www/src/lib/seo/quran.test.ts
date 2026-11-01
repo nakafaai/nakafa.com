@@ -60,7 +60,7 @@ describe("generateQuranMetadata", () => {
         const translation = getValue(values, "translation");
         const translationSuffix =
           translation === "__EMPTY__" ? "" : ` - ${translation}`;
-        return `Surah ${getValue(values, "number")}. ${getValue(values, "name")}${translationSuffix} | Nakafa`;
+        return `Surah ${getValue(values, "number")}. ${getValue(values, "name")}${translationSuffix} - Nakafa`;
       }
     );
   });
@@ -69,8 +69,25 @@ describe("generateQuranMetadata", () => {
     Effect.gen(function* () {
       const result = yield* generateQuranMetadata(surah, "en");
 
-      expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening | Nakafa");
+      expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening - Nakafa");
       expect(result.description).toBe("Read Surah Al-Fatihah with 7 verses.");
+    })
+  );
+
+  it.effect("names a surah once when its name means itself", () =>
+    Effect.gen(function* () {
+      const result = yield* generateQuranMetadata(
+        {
+          ...surah,
+          name: {
+            ...surah.name,
+            meaning: { ...surah.name.meaning, en: surah.name.transliteration },
+          },
+        },
+        "en"
+      );
+
+      expect(result.title).toBe("Surah 1. Al-Fatihah - Nakafa");
     })
   );
 
@@ -80,7 +97,7 @@ describe("generateQuranMetadata", () => {
       Effect.gen(function* () {
         const result = yield* generateQuranMetadata(surah, "id");
 
-        expect(result.title).toBe("Surah 1. Al-Fatihah - Pembuka | Nakafa");
+        expect(result.title).toBe("Surah 1. Al-Fatihah - Pembuka - Nakafa");
         expect(result.keywords).toEqual(["Al-Fatihah", "Pembuka", "Meccan"]);
       })
   );

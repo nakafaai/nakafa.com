@@ -15,8 +15,25 @@ import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type * as React from "react";
 import { use } from "react";
+import { useTranslations } from "use-intl";
 
-const Select = SelectPrimitive.Root;
+/**
+ * A select. One with nothing to choose from stays shut, since it would open on an empty line: its caller says what
+ * must happen first.
+ */
+function Select<Value, Multiple extends boolean | undefined = false>({
+  disabled,
+  items,
+  ...props
+}: SelectPrimitive.Root.Props<Value, Multiple>) {
+  return (
+    <SelectPrimitive.Root
+      disabled={disabled || (Arr.Array.isArray(items) && items.length === 0)}
+      items={items}
+      {...props}
+    />
+  );
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
@@ -148,10 +165,42 @@ function SelectContent({
         >
           <SelectScrollUpButton />
           <SelectPrimitive.List>{children}</SelectPrimitive.List>
+          <SelectNothing />
           <SelectScrollDownButton />
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>
     </SelectPrimitive.Portal>
+  );
+}
+
+/**
+ * What a list says with nothing to choose, in the words of the caller who knows what to do first. A
+ * list that holds none of these says so by itself (`SelectNothing`).
+ */
+function SelectEmpty({ className, ...props }: React.ComponentProps<"p">) {
+  return (
+    <p
+      className={cn(
+        "text-muted-foreground max-w-xs px-2 py-1.5 text-sm",
+        className
+      )}
+      data-slot="select-empty"
+      {...props}
+    />
+  );
+}
+
+/**
+ * The sentence of a list with no item and no `SelectEmpty`, so a select never opens on a thin
+ * empty line, however its caller fills it.
+ */
+function SelectNothing() {
+  const t = useTranslations("Common");
+
+  return (
+    <p className="text-muted-foreground hidden max-w-xs px-2 py-1.5 text-sm [[data-slot=select-content]:not(:has([data-slot=select-item],[data-slot=select-empty]))_&]:block">
+      {t("popup-empty")}
+    </p>
   );
 }
 
@@ -248,6 +297,7 @@ function SelectScrollDownButton({
 export {
   Select,
   SelectContent,
+  SelectEmpty,
   SelectGroup,
   SelectItem,
   SelectLabel,

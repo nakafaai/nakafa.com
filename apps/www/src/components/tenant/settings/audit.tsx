@@ -32,27 +32,30 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Effect, Option } from "effect";
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { useFormatTimeZone } from "@/components/shared/table/calendar";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { PERSON_ICONS } from "@/components/tenant/settings/choices";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
-import { SchoolDateTime } from "@/components/tenant/settings/time";
+import {
+  SchoolDateTime,
+  useSchoolTimeZone,
+} from "@/components/tenant/settings/time";
 
 /** How many entries one page of the journal loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -61,7 +64,7 @@ const PAGE_SIZE = 25;
 type EntryItem = PaginatedQueryItem<typeof journal.audit.list>;
 
 /** The columns of the audit table. */
-const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
+const entryColumns = tableColumns<EntryItem>();
 
 /**
  * The audit trail as the page's table. The header row searches the changes and exports the
@@ -89,29 +92,25 @@ export function SchoolAuditSettings() {
 }
 
 /**
- * The head of the audit's Who column, which filters the changes by who made them. It lists every active member of the
+ * The values of the audit's Who column, which filters the changes by who made them. It lists every active member of the
  * school, so an actor on a later page is offered before that page loads, beside the staff and the system that the
  * journal also records.
  */
-function AuditWhoFilter() {
+function useAuditActors() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const people = useQuery(journal.audit.actors, { slug });
-  const actors = Arr.dedupe([
-    ...(QueryResult.isSuccess(people)
-      ? Arr.map(people.value, (person) => person.name)
-      : []),
-    t("audit-actor.client"),
-    t("audit-actor.operator"),
-    t("audit-actor.system"),
-  ]);
 
-  return (
-    <ColumnFilter
-      column="who"
-      options={namedOptions(actors, PERSON_ICONS)}
-      title={t("audit-who")}
-    />
+  return namedOptions(
+    Arr.dedupe([
+      ...(QueryResult.isSuccess(people)
+        ? Arr.map(people.value, (person) => person.name)
+        : []),
+      t("audit-actor.client"),
+      t("audit-actor.operator"),
+      t("audit-actor.system"),
+    ]),
+    PERSON_ICONS
   );
 }
 
@@ -124,8 +123,11 @@ function AuditWhoFilter() {
 function SchoolAuditBody() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const formatZone = useFormatTimeZone();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const words = useEntryWords();
+  const actors = useAuditActors();
+  const timeZone = useSchoolTimeZone();
   const pagination = usePaginatedQuery(
     journal.audit.list,
     isSettled ? { slug } : "skip",
@@ -138,7 +140,7 @@ function SchoolAuditBody() {
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     if (failed) {
-      return <DataFailure onRetry={reloadPage} />;
+      return <LoadFailure onRetry={reloadPage} />;
     }
     return (
       <>
@@ -152,31 +154,24 @@ function SchoolAuditBody() {
     );
   }
 
-  const columns = entryColumns.columns([
-    entryColumns.accessor((entry) => entry.at, {
+  const columns = [
+    entryColumns.days((entry) => entry.at, {
       cell: (info) => <SchoolDateTime at={info.getValue()} />,
       header: t("audit-when"),
       id: "when",
-      sortFn: "basic",
+      timeZone: () => Option.getOrElse(timeZone, formatZone),
     }),
-    entryColumns.accessor(words.actor, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => <AuditWhoFilter />,
+    entryColumns.values(words.actor, {
+      header: t("audit-who"),
       id: "who",
+      options: actors,
     }),
-    entryColumns.accessor(words.change, {
-      filterFn: "includesString",
+    entryColumns.text(words.change, {
       header: t("audit-change"),
       id: "change",
-      sortFn: "text",
     }),
-    entryColumns.display({
-      cell: (info) => <AuditEntryMenu entry={info.row.original} />,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    entryColumns.menu((info) => <AuditEntryMenu entry={info.row.original} />),
+  ];
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}

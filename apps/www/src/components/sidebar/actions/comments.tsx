@@ -10,7 +10,7 @@ export function CommentsButton() {
   const t = useTranslations("Common");
 
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem className="in-data-[signed-in=no]:hidden">
       <SidebarMenuButton
         render={<a href="#comments" title={t("comments")} />}
         tooltip={t("comments")}

@@ -2,11 +2,13 @@ import { describe, expect, it } from "@effect/vitest";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { FOUNDER, ORGANIZATION_ID } from "@repo/seo/json-ld/constants";
 import {
-  makeBookNode,
   makeBreadcrumbNodes,
   makeCollectionPageNode,
+  makeContributorsNode,
   makeEducationalOrganizationNode,
   makeFaqPageNode,
+  makeProductNode,
+  makeSurahNode,
   makeWebsiteNode,
 } from "@repo/seo/json-ld/node";
 
@@ -91,23 +93,90 @@ describe("makeCollectionPageNode", () => {
   });
 });
 
-describe("makeBookNode", () => {
-  it("describes one Quran surah as a free EBook", () => {
-    expect(
-      makeBookNode({
-        description: "The Opening",
-        inLanguage: "en",
-        name: "Al-Fatihah",
-        position: 1,
-        totalPages: 7,
-        url: "https://nakafa.com/en/quran/1",
-      })
-    ).toMatchObject({
-      "@type": "Book",
-      bookFormat: "EBook",
-      isAccessibleForFree: true,
-      numberOfPages: 7,
+describe("makeSurahNode", () => {
+  it("describes one surah as a free chapter of the book, with no page count", () => {
+    const node = makeSurahNode({
+      bookName: "Quran",
+      bookUrl: "https://nakafa.com/en/quran",
+      description: "Read Surah Al-Fatihah with 7 verses.",
+      inLanguage: "en",
+      meaning: "The Opening",
+      name: "Al-Fatihah",
       position: 1,
+      url: "https://nakafa.com/en/quran/1",
+    });
+
+    expect(node).toMatchObject({
+      "@type": "Chapter",
+      alternateName: "The Opening",
+      isAccessibleForFree: true,
+      isPartOf: {
+        "@type": "Book",
+        name: "Quran",
+        url: "https://nakafa.com/en/quran",
+      },
+      position: 1,
+    });
+    expect(node).not.toHaveProperty("numberOfPages");
+  });
+});
+
+describe("makeContributorsNode", () => {
+  it("lists each person in order, with the profiles they have", () => {
+    const node = makeContributorsNode({
+      description: "The people who build Nakafa.",
+      inLanguage: "en",
+      name: "Contributor",
+      people: [
+        { name: "Nabil", profiles: ["https://github.com/nabilfatih"] },
+        { name: "Sita", profiles: [] },
+      ],
+      url: "https://nakafa.com/en/contributor",
+    });
+
+    expect(node.mainEntity.itemListElement).toStrictEqual([
+      {
+        "@type": "ListItem",
+        item: {
+          "@type": "Person",
+          name: "Nabil",
+          sameAs: ["https://github.com/nabilfatih"],
+        },
+        position: 1,
+      },
+      {
+        "@type": "ListItem",
+        item: { "@type": "Person", name: "Sita" },
+        position: 2,
+      },
+    ]);
+  });
+});
+
+describe("makeProductNode", () => {
+  it("offers the plan in each currency, by the month and before tax", () => {
+    const node = makeProductNode({
+      description: "Compare the plans.",
+      image: "https://nakafa.com/og.png",
+      name: "Nakafa Pro",
+      offers: [
+        { amount: 79_000, currency: "IDR" },
+        { amount: 8.99, currency: "USD" },
+      ],
+      url: "https://nakafa.com/en/pricing",
+    });
+
+    expect(node).toMatchObject({
+      "@type": "Product",
+      brand: { name: "Nakafa" },
+      name: "Nakafa Pro",
+    });
+    expect(node.offers).toHaveLength(2);
+    expect(node.offers[0]).toMatchObject({
+      price: 79_000,
+      priceCurrency: "IDR",
+      priceSpecification: { unitCode: "MON", valueAddedTaxIncluded: false },
+      url: "https://nakafa.com/en/pricing",
     });
   });
 });

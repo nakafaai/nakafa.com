@@ -1,5 +1,4 @@
 @import "@repo/design-system/styles/globals.css";
-@import "@repo/design-system/styles/theme.css";
 @import "@repo/design-system/styles/katex.css";
 
 /*
@@ -107,6 +106,8 @@
  * which the landing test checks.
  */
 :root {
+  /* The widest a page may be. A page's frame sets it, and every row of the page reads it (`shared/content/width.ts`). */
+  --page-width: var(--container-7xl);
   --surah-header-height: 4rem;
 }
 
@@ -193,16 +194,15 @@
  * (`components/sidebar/user/kept.tsx`): the pre-paint script
  * (`src/lib/identity/prepaint.ts`) names its plan in `data-kept-plan` and its
  * name in `--kept-account-name`, and the parts of the other plan stay hidden.
- * Without a kept row the row stays hidden, and so does the sidebar's member
- * footer while it holds nothing else, as it holds no room until its live row
- * arrives. Other member-only parts, such as a plan card's link, are not footers.
+ * Without a kept row the row is unseen and holds the room of a free account,
+ * which is what a browser's first signed-in page usually shows, so the sidebar
+ * toggle above the footer stands still when the live row arrives.
  */
-:root:not([data-kept-plan]) [data-kept-account],
-:root:not([data-kept-plan])
-  [data-slot="sidebar-footer"][data-account="member"]:not(
-    :has(li:not([data-kept-account], [data-kept-account] li))
-  ),
-:root:not([data-kept-plan="free"]) [data-kept-plan-part="free"],
+:root:not([data-kept-plan]) [data-kept-account] {
+  visibility: hidden;
+}
+
+:root[data-kept-plan="pro"] [data-kept-plan-part="free"],
 :root:not([data-kept-plan="pro"]) [data-kept-plan-part="pro"] {
   display: none;
 }

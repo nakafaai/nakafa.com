@@ -2,6 +2,7 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/ex
 
 export const cohorts = registeredFunctions.cohorts;
 export const create = registeredFunctions.create;
+export const duplicate = registeredFunctions.duplicate;
 export const list = registeredFunctions.list;
 export const open = registeredFunctions.open;
 export const remove = registeredFunctions.remove;

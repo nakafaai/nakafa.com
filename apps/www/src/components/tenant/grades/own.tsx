@@ -9,20 +9,20 @@ import {
   CheckmarkCircle02Icon,
   InformationCircleIcon,
   MedalFirstPlaceIcon,
+  MortarboardIcon,
   StarIcon,
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { KktpStatus } from "@repo/backend/confect/records/grade";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -52,7 +52,7 @@ const BAND_ICONS = [Award01Icon, MedalFirstPlaceIcon, StarIcon] as const;
 const NO_BAND = "none";
 
 /** The columns of the grades table. */
-const gradeColumns = createColumnHelper<typeof dataTableFeatures, OwnGrade>();
+const gradeColumns = tableColumns<OwnGrade>();
 
 /**
  * The viewer's own released grades in the school, of every class and period, newest period first: a table that
@@ -67,9 +67,9 @@ export function SchoolOwnGrades() {
       <SchoolHeader items={[{ label: t("own-title") }]} title={t("own-title")}>
         <TableSearch placeholder={t("own-search")} />
       </SchoolHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">
+      <TablePageBody>
         <OwnGradeTable />
-      </div>
+      </TablePageBody>
     </TableFiltersProvider>
   );
 }
@@ -100,55 +100,38 @@ function OwnGradeTable() {
   const bands = Arr.dedupe(
     Arr.map(grades.value, (grade) => grade.band ?? NO_BAND)
   );
-  const columns = gradeColumns.columns([
-    gradeColumns.accessor((grade) => grade.className, {
+  const columns = [
+    gradeColumns.text((grade) => grade.className, {
       cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.getValue()}
-        </span>
+        <TableTitle icon={MortarboardIcon}>
+          <span dir="auto">{info.getValue()}</span>
+        </TableTitle>
       ),
-      filterFn: "includesString",
       header: t("own-class"),
       id: "class",
-      sortFn: "text",
     }),
-    gradeColumns.accessor((grade) => grade.period, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="period"
-          options={namedOptions(periods, PERIOD_ICONS)}
-          title={t("own-period")}
-        />
-      ),
+    gradeColumns.values((grade) => grade.period, {
+      header: t("own-period"),
       id: "period",
+      options: namedOptions(periods, PERIOD_ICONS),
     }),
-    gradeColumns.accessor((grade) => grade.value, {
+    gradeColumns.number((grade) => grade.value, {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
       header: t("value"),
       id: "value",
-      sortFn: "basic",
     }),
-    gradeColumns.accessor((grade) => grade.band ?? NO_BAND, {
+    gradeColumns.values((grade) => grade.band ?? NO_BAND, {
       cell: (info) =>
         info.getValue() === NO_BAND ? null : <span>{info.getValue()}</span>,
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="band"
-          options={Arr.map(namedOptions(bands, BAND_ICONS), (option) =>
-            option.value === NO_BAND
-              ? { ...option, label: t("own-band-none") }
-              : option
-          )}
-          title={t("own-band")}
-        />
-      ),
+      header: t("own-band"),
       id: "band",
+      options: Arr.map(namedOptions(bands, BAND_ICONS), (option) =>
+        option.value === NO_BAND
+          ? { ...option, label: t("own-band-none") }
+          : option
+      ),
     }),
-    gradeColumns.accessor((grade) => grade.kktp, {
+    gradeColumns.values((grade) => grade.kktp, {
       cell: (info) => (
         <TableStatus
           icon={KKTP_LOOKS[info.getValue()].icon}
@@ -156,22 +139,15 @@ function OwnGradeTable() {
           tone={KKTP_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="kktp"
-          options={Arr.map(KktpStatus.literals, (kktp) => ({
-            icon: KKTP_LOOKS[kktp].icon,
-            label: t(`kktp-${kktp}`),
-            value: kktp,
-          }))}
-          title={t("kktp")}
-        />
-      ),
+      header: t("kktp"),
       id: "kktp",
+      options: Arr.map(KktpStatus.literals, (kktp) => ({
+        icon: KKTP_LOOKS[kktp].icon,
+        label: t(`kktp-${kktp}`),
+        value: kktp,
+      })),
     }),
-  ]);
+  ];
 
   return (
     <DataTable

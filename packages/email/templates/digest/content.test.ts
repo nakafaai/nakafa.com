@@ -58,4 +58,26 @@ describe("digest content", () => {
       })
     );
   });
+
+  it("names the comment as the reason of a mail of replies, and the school as any other's", () => {
+    const replies = getDigestEmailCopy({
+      counts: [{ change: "comment.replied", count: 2 }],
+      locale: "en",
+    });
+    assert.strictEqual(
+      replies.subject,
+      "There are 2 replies to your comments."
+    );
+    assert.strictEqual(
+      replies.footerReason,
+      "We sent this email because you commented on Nakafa."
+    );
+    assert.strictEqual(
+      getDigestEmailCopy({
+        counts: [{ change: "grade.released", count: 1 }],
+        locale: "en",
+      }).footerReason,
+      "We sent this email because you belong to a school on Nakafa."
+    );
+  });
 });

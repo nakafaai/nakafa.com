@@ -11,6 +11,7 @@ import {
   examAccess,
   examAuthority,
 } from "@repo/backend/confect/exams/authority";
+import { duplicateExam } from "@repo/backend/confect/exams/duplicate";
 import { examListed } from "@repo/backend/confect/exams/exam";
 import spec from "@repo/backend/confect/exams/exams.spec";
 import { addQuestion } from "@repo/backend/confect/exams/questions/place";
@@ -160,6 +161,21 @@ const rename = FunctionImpl.make(
   })
 );
 
+/** Copies an exam for a new use, however the exam it came from is locked (`duplicateExam`). */
+const duplicate = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "duplicate",
+  Effect.fn("exams.duplicate")(function* ({ title }) {
+    const examId = yield* duplicateExam(yield* Exam, title);
+    const copied = yield* (yield* DatabaseReader)
+      .table("exams")
+      .get(examId)
+      .pipe(Effect.orDie);
+    return yield* viewOf(copied);
+  })
+);
+
 /** Deletes an exam that has no sitting, with its questions, their documents, and its images (`removeExam`). */
 const remove = FunctionImpl.make(
   databaseSchema,
@@ -198,12 +214,13 @@ const cohorts = FunctionImpl.make(
   })
 );
 
-/** Implements the exams group of `exams.spec.ts`: create, list, open, rename, remove, schedule, and cohorts. */
+/** Implements the exams group of `exams.spec.ts`: create, list, open, rename, duplicate, remove, schedule, and cohorts. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(create),
   Layer.provide(list),
   Layer.provide(open),
   Layer.provide(rename),
+  Layer.provide(duplicate),
   Layer.provide(remove),
   Layer.provide(schedule),
   Layer.provide(cohorts),

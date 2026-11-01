@@ -28,7 +28,6 @@ import { useTranslations } from "use-intl";
 
 interface Props {
   references: readonly Reference[];
-  title: string;
 }
 
 /**
@@ -41,7 +40,7 @@ interface Props {
  * - Mantine `useDisclosure`:
  *   https://mantine.dev/hooks/use-disclosure/
  */
-export function ReferenceButton({ references, title }: Props) {
+export function ReferenceButton({ references }: Props) {
   const t = useTranslations("Common");
   const [open, { set, toggle }] = useDisclosure(false);
 
@@ -61,7 +60,7 @@ export function ReferenceButton({ references, title }: Props) {
               <SheetTitle className="text-xl">
                 {references.length} {t("references")}
               </SheetTitle>
-              <SheetDescription>{title}</SheetDescription>
+              <SheetDescription>{t("references-description")}</SheetDescription>
             </SheetHeader>
 
             <div className="flex flex-1 flex-col overflow-hidden">

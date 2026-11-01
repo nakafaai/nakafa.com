@@ -4,7 +4,6 @@ import {
   chosenDays,
   dayOfMoment,
   dayRangeOf,
-  daysColumn,
   fallsOnDaysIn,
   holdsNoDays,
   withinDays,
@@ -44,7 +43,8 @@ describe("a date column's chosen days", () => {
 });
 
 describe("the filter of a date column", () => {
-  const onJakartaDays = fallsOnDaysIn("Asia/Jakarta");
+  const onJakartaDays = (value: unknown, chosen: unknown) =>
+    fallsOnDaysIn(() => "Asia/Jakarta")(value, chosen, { original: {} });
 
   it("keeps a moment whose day in the school's time zone is one of the chosen days, its first and last included", () => {
     expect(onJakartaDays(EVENING, ["2026-10-31", "2026-11-02"])).toBe(true);
@@ -60,17 +60,20 @@ describe("the filter of a date column", () => {
   });
 
   it("is a table filter that drops a column choosing no days", () => {
-    const filter = withinDays("Asia/Jakarta");
+    const filter = withinDays(() => "Asia/Jakarta");
     expect(filter.autoRemove?.(["2026-10-31"])).toBe(true);
     expect(filter.autoRemove?.(["2026-10-31", "2026-10-31"])).toBe(false);
   });
-});
 
-describe("a column of moments", () => {
-  it("chooses days in its head once the school's time zone is known, and only sorts before", () => {
-    expect(daysColumn(Option.none())).toEqual({});
-    expect(daysColumn(Option.some("Asia/Jakarta"))).toMatchObject({
-      meta: { filter: "days" },
-    });
+  it("reads each row's moment on the clock of that row", () => {
+    const onDay = (zone: string) =>
+      fallsOnDaysIn(({ clock }: { clock: string }) => clock)(
+        EVENING,
+        ["2026-10-31", "2026-10-31"],
+        { original: { clock: zone } }
+      );
+
+    expect(onDay("Asia/Jakarta")).toBe(true);
+    expect(onDay("Europe/London")).toBe(false);
   });
 });

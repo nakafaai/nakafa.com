@@ -26,6 +26,7 @@ import { PROMPT_CASES } from "@repo/backend/test/mcp/prompts";
 import { PROTOCOL_CASES } from "@repo/backend/test/mcp/protocol";
 import { REFUSED_TOOL_CALL_CASES } from "@repo/backend/test/mcp/refusals";
 import { RESOURCE_CASES } from "@repo/backend/test/mcp/resources";
+import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import { Effect } from "effect";
 
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
@@ -116,6 +117,25 @@ describe("Nakafa MCP transport", () => {
         expect(response.status).toBe(400);
         expect(answer).toMatchObject({ error: { code: -32_020 } });
         expect(answer).not.toHaveProperty("result");
+      })
+  );
+  it.effect(
+    "names the supported version to a client that opens with initialize",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* send(
+          createConvexTestWithBetterAuth(),
+          withHeaders(modernPost(79, "initialize"), {
+            "mcp-protocol-version": null,
+          })
+        );
+        expect(response.status).toBe(400);
+        expect(yield* json(response)).toMatchObject({
+          error: {
+            code: -32_020,
+            message: expect.stringContaining(NAKAFA_MCP_PROTOCOL_VERSION),
+          },
+        });
       })
   );
   it.effect("answers a modern POST that sends no Accept header", () =>

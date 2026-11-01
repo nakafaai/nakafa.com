@@ -6,9 +6,13 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Array as Arr, Option, Schema } from "effect";
 import {
+  boundOf,
   choosesNothing,
   chosenOne,
+  columnFiltersOf,
   holdsChosen,
+  holdsText,
+  inRange,
   isChosen,
   namedOptions,
 } from "@/components/shared/table/filter";
@@ -41,6 +45,68 @@ describe("a facet filter over cells that hold a list", () => {
   it("keeps nothing for a cell or a choice that is not a list of text", () => {
     expect(holdsChosen("owner", ["owner"])).toBe(false);
     expect(holdsChosen(["owner"], "owner")).toBe(false);
+  });
+});
+
+describe("a text column's filter", () => {
+  it("keeps a cell that holds every chosen text, whatever the case", () => {
+    expect(holdsText("Nabil Akbar", ["nabil"])).toBe(true);
+    expect(holdsText("Nabil Akbar", ["nabil", "AKBAR"])).toBe(true);
+    expect(holdsText("Nabil Akbar", ["nabil", "fatih"])).toBe(false);
+  });
+
+  it("keeps nothing for a cell or a choice that is not text", () => {
+    expect(holdsText(3, ["3"])).toBe(false);
+    expect(holdsText("3", "3")).toBe(false);
+  });
+});
+
+describe("a number column's filter", () => {
+  it("keeps a number on or between the chosen bounds", () => {
+    expect(inRange(10, ["10", "20"])).toBe(true);
+    expect(inRange(20, ["10", "20"])).toBe(true);
+    expect(inRange(9, ["10", "20"])).toBe(false);
+    expect(inRange(21, ["10", "20"])).toBe(false);
+  });
+
+  it("holds no bound on a blank side", () => {
+    expect(inRange(1000, ["10", ""])).toBe(true);
+    expect(inRange(-5, ["", "20"])).toBe(true);
+    expect(inRange(0, ["10", ""])).toBe(false);
+  });
+
+  it("keeps nothing for a cell without a number, or a choice that is no range", () => {
+    expect(inRange(null, ["10", "20"])).toBe(false);
+    expect(inRange(10, ["10"])).toBe(false);
+  });
+
+  it("reads a field as a number only while it holds one", () => {
+    expect(boundOf("12.5")).toEqual(Option.some(12.5));
+    expect(boundOf("")).toEqual(Option.none());
+    expect(boundOf(" ")).toEqual(Option.none());
+    expect(boundOf("x")).toEqual(Option.none());
+  });
+});
+
+describe("the filters a table reads", () => {
+  it("drops a column that chose nothing", () => {
+    expect(
+      columnFiltersOf({ name: [], status: ["open"] }, undefined, "")
+    ).toEqual([{ id: "status", value: ["open"] }]);
+  });
+
+  it("joins the page's search to what its column chose", () => {
+    expect(columnFiltersOf({ name: ["nab"] }, "name", "akb")).toEqual([
+      { id: "name", value: ["nab", "akb"] },
+    ]);
+    expect(columnFiltersOf({}, "name", "akb")).toEqual([
+      { id: "name", value: ["akb"] },
+    ]);
+  });
+
+  it("leaves the search out when the page searches no column or holds no text", () => {
+    expect(columnFiltersOf({}, undefined, "akb")).toEqual([]);
+    expect(columnFiltersOf({}, "name", "")).toEqual([]);
   });
 });
 

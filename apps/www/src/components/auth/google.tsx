@@ -1,6 +1,7 @@
 import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { useEarlyPress } from "@repo/design-system/hooks/use-press";
 import { ClientOnly, useLocation } from "@tanstack/react-router";
 import { Effect } from "effect";
 import { type ComponentProps, useState, useTransition } from "react";
@@ -42,6 +43,7 @@ export function AuthGoogle({ returnPath, variant }: Props) {
   const [hasClientError, setHasClientError] = useState(false);
   const [isPending, startTransition] = useTransition();
   const authNavigation = useCurrentAuthNavigation();
+  const press = useEarlyPress<HTMLButtonElement>(handleGoogleSignIn);
   const hasProviderError =
     hasClientError || isPostAuthProviderError(errorQuery);
 
@@ -85,8 +87,8 @@ export function AuthGoogle({ returnPath, variant }: Props) {
       <Button
         aria-busy={isPending || undefined}
         disabled={isPending}
-        onClick={handleGoogleSignIn}
         variant={variant}
+        {...press}
       >
         {isPending ? <Spinner /> : <BrandLogo name="google" />}
         {t("continue-with-google")}

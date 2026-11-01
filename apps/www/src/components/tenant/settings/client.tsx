@@ -2,6 +2,7 @@ import { QueryResult, useMutation } from "@confect/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
+import type { IssuedClient } from "@repo/backend/confect/integrations/clients.spec";
 import { IntegrationName } from "@repo/backend/confect/integrations/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
@@ -15,14 +16,6 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState, useTransition } from "react";
@@ -34,6 +27,7 @@ import {
 } from "@/components/tenant/settings/actions";
 import { updateClientChange } from "@/components/tenant/settings/edits";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { SelectField } from "@/components/tenant/settings/select";
 import type { Client } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/client";
@@ -49,7 +43,7 @@ export function SchoolClientCreateDialog({
   open,
   setOpen,
 }: {
-  onIssued: (secret: string) => void;
+  onIssued: (issued: typeof IssuedClient.Type) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
@@ -106,7 +100,7 @@ export function SchoolClientCreateDialog({
         SOURCE,
         (issued) => {
           setOpen(false);
-          onIssued(issued.secret);
+          onIssued(issued);
         }
       )
     );
@@ -150,31 +144,12 @@ export function SchoolClientCreateDialog({
             value={name}
           />
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-scope`}>{t("client-scope")}</FieldLabel>
-          <Select
-            items={scopeItems}
-            onValueChange={(value) => {
-              if (typeof value === "string") {
-                setScope(value);
-              }
-            }}
-            value={scope}
-          >
-            <SelectTrigger className="w-full" id={`${id}-scope`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {Arr.map(scopeItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
+        <SelectField
+          items={scopeItems}
+          label={t("client-scope")}
+          onChoose={setScope}
+          value={scope}
+        />
         <ClientActionsField actions={actions} setActions={setActions} />
       </FieldGroup>
     </ResponsiveDialog>
@@ -245,10 +220,14 @@ export function SchoolClientEditDialog({
   const update = useMutation(integrations.clients.update).withOptimisticUpdate(
     updateClientChange
   );
-  const [name, setName] = useState(client.name);
-  const [actions, setActions] = useState<readonly IntegrationAction[]>(() =>
-    Arr.filter(client.actions, Schema.is(IntegrationAction))
-  );
+  // The fields hold what the admin chose, and the client's own values until they choose.
+  const [typedName, setName] = useState<string | null>(null);
+  const [chosenActions, setActions] = useState<
+    readonly IntegrationAction[] | null
+  >(null);
+  const name = typedName ?? client.name;
+  const actions =
+    chosenActions ?? Arr.filter(client.actions, Schema.is(IntegrationAction));
   const clientName = Schema.decodeOption(IntegrationName)(name.trim());
 
   const save = () => {
@@ -307,7 +286,10 @@ export function SchoolClientEditDialog({
             value={name}
           />
         </Field>
-        <ClientActionsField actions={actions} setActions={setActions} />
+        <ClientActionsField
+          actions={actions}
+          setActions={(change) => setActions(change(actions))}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );

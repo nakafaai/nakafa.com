@@ -1,4 +1,4 @@
-import { ReportHash } from "@repo/backend/confect/records/report";
+import { ReportHash } from "@repo/backend/confect/records/hash";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import type { ReactElement } from "react";

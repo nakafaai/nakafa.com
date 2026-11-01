@@ -237,33 +237,35 @@ export function MediaField({
   return (
     <Field>
       <FieldTitle>{t("media")}</FieldTitle>
-      <ul className="grid gap-1">
-        {Arr.map(question.media, (item, index) => (
-          <li
-            className="flex items-center justify-between gap-2 text-sm"
-            key={item.kind === "audio" ? item.asset : item.video}
-          >
-            <span className="min-w-0 truncate" dir="auto">
-              {item.alt}
-            </span>
-            <Button
-              aria-label={t("media-remove", { name: item.alt })}
-              disabled={!editable}
-              onClick={() =>
-                runExamAction(saveMedia(Arr.remove(question.media, index)), {
-                  onFailure: Fn.constVoid,
-                  onSuccess: Fn.constVoid,
-                })
-              }
-              size="icon-sm"
-              type="button"
-              variant="ghost"
+      {Arr.isReadonlyArrayEmpty(question.media) ? null : (
+        <ul className="grid gap-1">
+          {Arr.map(question.media, (item, index) => (
+            <li
+              className="flex items-center justify-between gap-2 text-sm"
+              key={item.kind === "audio" ? item.asset : item.video}
             >
-              <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
-            </Button>
-          </li>
-        ))}
-      </ul>
+              <span className="min-w-0 truncate" dir="auto">
+                {item.alt}
+              </span>
+              <Button
+                aria-label={t("media-remove", { name: item.alt })}
+                disabled={!editable}
+                onClick={() =>
+                  runExamAction(saveMedia(Arr.remove(question.media, index)), {
+                    onFailure: Fn.constVoid,
+                    onSuccess: Fn.constVoid,
+                  })
+                }
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              >
+                <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
       {question.media.length < MEDIA_MAX ? (
         <div className="flex gap-2">
           <Button

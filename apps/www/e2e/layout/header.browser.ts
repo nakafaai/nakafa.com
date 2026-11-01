@@ -6,6 +6,7 @@ import {
   expectGroupsKeepShape,
   readControlProblems,
 } from "@/e2e/support/controls";
+import { readFrameProblems } from "@/e2e/support/frame";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { readHeaderLineProblems } from "@/e2e/support/lines";
@@ -32,8 +33,8 @@ import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
  */
 const ONE_ROW_PX = 64.5;
 
-/** The widths the window narrows through: a desktop, a tablet, and two phones. */
-const widths = [desktopViewport.width, 768, 390, 320];
+/** The widths the window narrows through: two desktops, a laptop, a tablet, and two phones. */
+const widths = [1920, desktopViewport.width, 1024, 768, 390, 320];
 
 /** Below this width the app's sidebar folds away, so every page shows a header row. */
 const DESKTOP_PX = 1024;
@@ -63,6 +64,7 @@ const learnerRoutes = ["/en/chat", "/en/user/settings", "/en/notifications"];
 
 /** The pages of a school host that an Owner sees without an exam: the exams and every setting. */
 const schoolPaths = [
+  "/notifications",
   "/exams",
   "/settings/profile",
   "/settings/units",
@@ -108,6 +110,11 @@ function readHeaders() {
       const outside = Array.from(header.querySelectorAll("*"))
         .filter((element) => {
           if (element instanceof SVGElement && element.ownerSVGElement) {
+            return false;
+          }
+          // Text kept for a screen reader keeps its width inside the clipped box that holds it.
+          const holder = element.parentElement?.getBoundingClientRect();
+          if (holder !== undefined && holder.width <= 1) {
             return false;
           }
           const box = element.getBoundingClientRect();
@@ -165,7 +172,12 @@ const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
           const lines = yield* Effect.promise(() =>
             readHeaderLineProblems(page)
           );
+          const frame = yield* Effect.promise(() => readFrameProblems(page));
           yield* Effect.sync(() => {
+            expect(
+              frame,
+              `${label} at ${width}px: the page has more than one frame`
+            ).toEqual([]);
             expect(
               lines,
               `${label} at ${width}px: a header holds more than two lines, or a label that names the obvious`

@@ -7,7 +7,7 @@ import {
   IssuePlace,
   Nip,
 } from "@repo/backend/confect/records/graduation";
-import { ReportHash } from "@repo/backend/confect/records/report";
+import { ReportHash } from "@repo/backend/confect/records/hash";
 import { GradeValue } from "@repo/backend/confect/records/scheme";
 import { Nisn } from "@repo/backend/confect/roster/schema";
 import { Npsn, PersonName } from "@repo/backend/confect/tenancy/schema";

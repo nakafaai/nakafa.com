@@ -7,6 +7,7 @@ import {
   CalendarsIcon,
   Certificate01Icon,
   MoreHorizontalIcon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -19,15 +20,14 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -47,10 +47,7 @@ const PERIOD_ICONS = [
 ] as const;
 
 /** The columns of the class group list. */
-const cohortColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  CohortItem
->();
+const cohortColumns = tableColumns<CohortItem>();
 
 /**
  * The report cards of the school (ADR 0033, S4): the class groups whose reports the viewer
@@ -68,57 +65,46 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
     throw cohorts.error;
   }
 
-  const columns = cohortColumns.columns([
-    cohortColumns.accessor((cohort) => cohort.name, {
+  const columns = [
+    cohortColumns.text((cohort) => cohort.name, {
       cell: (info) => (
-        <Link
-          className="font-medium hover:underline"
-          params={{ cohortId: info.row.original.id, slug }}
-          to="/school/$slug/reports/$cohortId"
-        >
-          {info.getValue()}
-        </Link>
+        <TableTitle icon={UserGroupIcon}>
+          <Link
+            className="hover:underline"
+            params={{ cohortId: info.row.original.id, slug }}
+            to="/school/$slug/reports/$cohortId"
+          >
+            {info.getValue()}
+          </Link>
+        </TableTitle>
       ),
-      filterFn: "includesString",
       header: t("cohort"),
       id: "cohort",
-      sortFn: "text",
     }),
-    cohortColumns.accessor((cohort) => cohort.period, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="period"
-          options={namedOptions(
-            Arr.dedupe(
-              Arr.map(
-                QueryResult.isSuccess(cohorts) ? cohorts.value : [],
-                (cohort) => cohort.period
-              )
-            ),
-            PERIOD_ICONS
-          )}
-          title={t("period")}
-        />
-      ),
+    cohortColumns.values((cohort) => cohort.period, {
+      header: t("period"),
       id: "period",
-    }),
-    cohortColumns.display({
-      cell: (info) => (
-        <ReportCohortMenu cohortId={info.row.original.id} slug={slug} />
+      options: namedOptions(
+        Arr.dedupe(
+          Arr.map(
+            QueryResult.isSuccess(cohorts) ? cohorts.value : [],
+            (cohort) => cohort.period
+          )
+        ),
+        PERIOD_ICONS
       ),
-      id: "actions",
-      meta: { align: "menu" },
     }),
-  ]);
+    cohortColumns.menu((info) => (
+      <ReportCohortMenu cohortId={info.row.original.id} slug={slug} />
+    )),
+  ];
 
   return (
     <TableFiltersProvider>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         <TableSearch placeholder={t("search-cohorts")} />
       </SchoolHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">
+      <TablePageBody>
         {QueryResult.isSuccess(cohorts) &&
         Arr.isReadonlyArrayEmpty(cohorts.value) ? (
           <TableEmpty
@@ -136,7 +122,7 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
             search="cohort"
           />
         ) : null}
-      </div>
+      </TablePageBody>
     </TableFiltersProvider>
   );
 }

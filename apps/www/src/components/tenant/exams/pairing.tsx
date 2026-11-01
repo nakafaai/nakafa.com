@@ -5,6 +5,7 @@ import {
   optionLetter,
 } from "@repo/backend/confect/exams/letters";
 import {
+  Field,
   FieldDescription,
   FieldTitle,
 } from "@repo/design-system/components/ui/field";
@@ -83,7 +84,7 @@ export function MatchKey({
   };
 
   return (
-    <div className="grid gap-2">
+    <Field>
       <FieldTitle>{t("answer-key")}</FieldTitle>
       <ol className="grid gap-2">
         {Arr.map(match.sources, (source, index) => (
@@ -130,6 +131,6 @@ export function MatchKey({
         ))}
       </ol>
       <FieldDescription>{t("pair-hint")}</FieldDescription>
-    </div>
+    </Field>
   );
 }

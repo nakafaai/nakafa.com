@@ -15,14 +15,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { Array as Arr, Result } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
@@ -30,7 +22,10 @@ import {
   useSessionSettled,
 } from "@/components/exams/results/context";
 import { AwayCell } from "@/components/exams/results/students";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
+import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /** The signals a report counts beside the exits, in the order a row names them. */
@@ -43,20 +38,26 @@ const SIGNALS = [
   "paste",
 ] as const;
 
+/** The columns of the report. */
+const integrityColumns = tableColumns<typeof IntegrityRow.Type>();
+
 /**
  * The signals of one student beside their exits, as one sentence: only the ones they showed, with how many of
  * each, and nothing when they showed none.
  */
-function OtherSignals({ row }: { readonly row: typeof IntegrityRow.Type }) {
+function useOtherSignals() {
   const t = useTranslations("Exams");
   const format = useFormatter();
-  const named = Arr.filterMap(SIGNALS, (kind) =>
-    row[kind] === 0
-      ? Result.failVoid
-      : Result.succeed(t(`integrity-${kind}`, { count: row[kind] }))
-  );
 
-  return format.list(named, { type: "conjunction" });
+  return (row: typeof IntegrityRow.Type) =>
+    format.list(
+      Arr.filterMap(SIGNALS, (kind) =>
+        row[kind] === 0
+          ? Result.failVoid
+          : Result.succeed(t(`integrity-${kind}`, { count: row[kind] }))
+      ),
+      { type: "conjunction" }
+    );
 }
 
 /** The report once its read is in: who showed a signal, most time away first, and how many showed none. */
@@ -64,6 +65,7 @@ function IntegrityRows() {
   const t = useTranslations("Exams");
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
+  const signalsOf = useOtherSignals();
   const report = useQuery(
     exams.results.results.integrity,
     settled ? { sittingId, slug } : "skip"
@@ -94,32 +96,35 @@ function IntegrityRows() {
           students,
         })}
       </p>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="px-2 sm:px-4">{t("results-name")}</TableHead>
-            <TableHead className="px-2 sm:px-4">{t("results-away")}</TableHead>
-            <TableHead className="px-2 sm:px-4">
-              {t("integrity-signals")}
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(rows, (row) => (
-            <TableRow key={row.attemptId}>
-              <TableCell className="px-2 sm:px-4" dir="auto">
-                {row.name}
-              </TableCell>
-              <TableCell className="px-2 tabular-nums sm:px-4">
-                <AwayCell awaySeconds={row.awaySeconds} exits={row.exits} />
-              </TableCell>
-              <TableCell className="px-2 whitespace-normal sm:px-4">
-                <OtherSignals row={row} />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <TableFiltersProvider>
+        <TableFrame>
+          <DataTable
+            columns={[
+              integrityColumns.text((row) => row.name, {
+                header: t("results-name"),
+                id: "name",
+              }),
+              integrityColumns.number((row) => row.awaySeconds, {
+                cell: (info) => (
+                  <AwayCell
+                    awaySeconds={info.row.original.awaySeconds}
+                    exits={info.row.original.exits}
+                  />
+                ),
+                header: t("results-away"),
+                id: "away",
+              }),
+              integrityColumns.text(signalsOf, {
+                header: t("integrity-signals"),
+                id: "signals",
+              }),
+            ]}
+            data={rows}
+            plain
+            rowId={(row) => row.attemptId}
+          />
+        </TableFrame>
+      </TableFiltersProvider>
     </div>
   );
 }

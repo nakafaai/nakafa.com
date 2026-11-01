@@ -1,9 +1,10 @@
+import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
-import { TryoutAttemptReview } from "@/components/tryout/review/screen";
+import { TryoutAttemptReview } from "@/components/tryout/review/deferred";
 import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import {
@@ -56,7 +57,7 @@ export const Route = createFileRoute(
             loaderData.head.indexable &&
             match.search.attemptId === undefined &&
             match.search.view === undefined,
-          jsonLd: [],
+          jsonLd: makeBreadcrumbNodes(loaderData.head.breadcrumbs),
           locale: params.locale,
           title: loaderData.head.title,
         }),

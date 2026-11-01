@@ -60,18 +60,6 @@ export const roomGroups = (rooms: readonly (typeof RoomRow.Type)[]) =>
   );
 
 /**
- * The loaded rooms that the group filter keeps: every room while it keeps every group, or the rooms of the chosen
- * group. The table reads more pages as its end comes into view, so the filter reaches every room of the exam.
- */
-export const roomsOfGroup = (
-  rooms: readonly (typeof RoomRow.Type)[],
-  key: string
-) =>
-  key === "all"
-    ? rooms
-    : Arr.filter(rooms, (room) => roomGroupKey(room.group) === key);
-
-/**
  * Takes a cancelled room off every loaded page of the exam rooms of the school, at once. A
  * refused cancel is undone by Confect when the server answers.
  */

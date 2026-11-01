@@ -28,7 +28,7 @@ const ClientView = Schema.Struct({
 });
 
 /** A client's secret, returned once to the caller that created or rotated it. */
-const IssuedClient = Schema.Struct({
+export const IssuedClient = Schema.Struct({
   id: Id("integrationClients"),
   secret: Schema.String,
 });

@@ -10,7 +10,6 @@ import {
   roomGroupKey,
   roomGroups,
   roomsArgs,
-  roomsOfGroup,
 } from "@/components/tenant/exams/filter";
 import { createLocalStore } from "@/test/optimistic";
 
@@ -56,15 +55,6 @@ describe("the rooms table's group filter", () => {
       { key: "unit:unit-smp", kind: "unit", name: "SMP Nakafa" },
       { key: "cohort:cohort-7a", kind: "cohort", name: "7A" },
     ]);
-  });
-
-  it("keeps every room for every group, and the rooms of one group when it is chosen", () => {
-    expect(roomsOfGroup([lab, hall, lab2], "all")).toEqual([lab, hall, lab2]);
-    expect(roomsOfGroup([lab, hall, lab2], "unit:unit-smp")).toEqual([
-      lab,
-      lab2,
-    ]);
-    expect(roomsOfGroup([lab, hall, lab2], "cohort:cohort-7a")).toEqual([hall]);
   });
 });
 

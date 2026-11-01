@@ -1,8 +1,8 @@
 import type { Page } from "@playwright/test";
 
-/** A label that names a timer or the question the navigator shows, in each language, and any text that ends as a label. */
+/** A label that names a timer or the question the navigator shows, in each language, and any word that ends as a label. */
 const OBVIOUS_LABEL =
-  /^(?:time left|time remaining|timer|sisa waktu|waktu tersisa|verbleibende zeit|restzeit|(?:question|pertanyaan|soal|frage) \d+ (?:of|dari|von) \d+)\b|:$/iu;
+  /^(?:time left|time remaining|timer|sisa waktu|waktu tersisa|verbleibende zeit|restzeit|(?:question|pertanyaan|soal|frage) \d+ (?:of|dari|von) \d+)\b|\p{L}:$/iu;
 
 /**
  * The owner's rule K21 (16 Oct): a header holds at most two lines in each of its zones, and no label names what the

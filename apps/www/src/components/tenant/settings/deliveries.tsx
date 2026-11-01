@@ -26,9 +26,9 @@ import {
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { resendDeliveryChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -141,7 +141,7 @@ function DeliveryList({ webhook }: { webhook: Webhook }) {
     return null;
   }
   if (PaginatedQueryResult.isFailure(pagination)) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return (

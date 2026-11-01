@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "use-intl";
 
@@ -63,7 +64,8 @@ const TEMPLATE_NAME = {
  * The type of one question, in the row above its page, as Google Forms names a question's type on its
  * card: its icon and its name, and a menu of the types the question can take. Choosing another type
  * converts the question at once. A question that cannot change now, because the exam is locked, the
- * server has not saved it, or Convex does not hold the session yet, shows its type without the menu.
+ * server has not saved it, or Convex does not hold the session yet, shows its type without the menu, in the same
+ * size and place, so the row reads the same and nothing in it moves when the menu arrives.
  */
 export function QuestionType({
   editable,
@@ -79,9 +81,15 @@ export function QuestionType({
 
   if (!editable) {
     return (
-      <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+      <span
+        className={buttonVariants({
+          className: "text-muted-foreground pointer-events-none min-w-0",
+          size: "sm",
+          variant: "ghost",
+        })}
+      >
         <HugeIcons aria-hidden="true" icon={TEMPLATE_ICON[template]} />
-        <span>{name}</span>
+        <span className="truncate @max-xl/row:sr-only">{name}</span>
       </span>
     );
   }
@@ -92,14 +100,14 @@ export function QuestionType({
         render={
           <Button
             aria-label={t("template-label", { type: name })}
-            className="text-muted-foreground"
+            className="text-muted-foreground min-w-0"
             size="sm"
             variant="ghost"
           />
         }
       >
         <HugeIcons aria-hidden="true" icon={TEMPLATE_ICON[template]} />
-        <span>{name}</span>
+        <span className="truncate @max-xl/row:sr-only">{name}</span>
         <HugeIcons aria-hidden="true" icon={UnfoldMoreIcon} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">

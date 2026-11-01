@@ -1,6 +1,6 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { makeBookNode, makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { makeBreadcrumbNodes, makeSurahNode } from "@repo/seo/json-ld/node";
+import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { OpenContent } from "@/components/shared/content/actions";
@@ -50,10 +50,19 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
     if (loaderData === undefined) {
       return {};
     }
-    const { book, breadcrumbs, description, locale, meaning, surah, title } =
-      loaderData;
+    const {
+      book,
+      breadcrumbs,
+      description,
+      locale,
+      meaning,
+      searchTitle,
+      surah,
+      title,
+    } = loaderData;
     return toRouterHead(
       createSeoHead({
+        absoluteTitle: searchTitle,
         canonicalPath: `/${locale}/quran/${surah}`,
         description,
         image: getAppSocialArtwork({
@@ -64,19 +73,19 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
         indexable: true,
         jsonLd: [
           ...makeBreadcrumbNodes(breadcrumbs),
-          makeBookNode({
-            description: book.description,
+          makeSurahNode({
+            bookName: book.name,
+            bookUrl: `${COMPANY_IDENTITY.url}/${locale}/quran`,
+            description,
             inLanguage: locale,
-            name: book.name,
+            meaning: meaning.text,
+            name: title,
             position: book.position,
-            totalPages: book.numberOfVerses,
             url: `${COMPANY_IDENTITY.url}/${locale}/quran/${surah}`,
           }),
         ],
         locale,
-        // The name is the same in every language, and its meaning tells them apart.
-        // Hud and Luqman mean themselves, so they name it once.
-        parts: title === meaning.text ? [title] : [title, meaning.text],
+        parts: [],
         type: "book",
       })
     );
@@ -88,10 +97,13 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
 
 function QuranSurahPage() {
   const page = Route.useLoaderData();
+  const router = useRouter();
   const { labels } = page;
 
+  /** Recovers a stale snapshot and reads the page again, so the next press names the snapshot that stands now. */
   async function recoverSnapshot() {
     await recoverQuranSnapshotFn({ data: { snapshotId: page.snapshotId } });
+    await router.invalidate();
   }
 
   return (
@@ -153,10 +165,7 @@ function QuranSurahPage() {
         <SidebarRightPanel
           footer={
             <SidebarRightFooter>
-              <ReferenceButton
-                references={page.references}
-                title={page.title}
-              />
+              <ReferenceButton references={page.references} />
               <ReportButton />
               <ShareButton />
             </SidebarRightFooter>

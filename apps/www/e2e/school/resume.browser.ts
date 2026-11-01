@@ -95,7 +95,8 @@ test("a student who reloads a running paper meets the paper and never the token 
 async function studentAtEntry(
   baseURL: string | undefined,
   browser: Browser,
-  name: string
+  name: string,
+  paper?: "essay"
 ) {
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
@@ -114,7 +115,9 @@ async function studentAtEntry(
   const ownerContext = await browser.newContext();
   await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
   await ownerContext.close();
-  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  const sitting = await Effect.runPromise(
+    seedSitting(school.slug, learner, 0, paper)
+  );
 
   const student = await studentContext.newPage();
   const changes = await Effect.runPromise(trackChanges(student, []));
@@ -127,6 +130,37 @@ async function studentAtEntry(
     .fill(sitting.token);
   return { changes, student, studentContext };
 }
+
+test("words saved in a second tab reach the first tab's field, so a later key never writes over them", async ({
+  baseURL,
+  browser,
+}) => {
+  const { student, studentContext } = await studentAtEntry(
+    baseURL,
+    browser,
+    "tabs",
+    "essay"
+  );
+  await student.getByRole("button", { name: "Enter sitting" }).click();
+  const essayOf = (page: Page) =>
+    page
+      .getByRole("article", { name: "Question 3" })
+      .getByRole("textbox", { name: "Question 3" });
+  await expect(essayOf(student)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  const second = await studentContext.newPage();
+  await second.goto(student.url());
+  await expect(essayOf(second)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await essayOf(second).fill(ESSAY);
+  await essayOf(second).blur();
+  await expect(essayOf(student)).toHaveValue(ESSAY, {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await studentContext.close();
+});
 
 test("an entry that the server failed goes again by itself, so the student reaches the paper with one press", async ({
   baseURL,

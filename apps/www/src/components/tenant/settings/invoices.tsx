@@ -19,26 +19,21 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
-import { Array as Arr } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { RowAction, useInvoiceDownload } from "@/components/billing/invoice";
 import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { columnAlign } from "@/components/shared/table/align";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
+  BILLING_TIME_ZONE,
   formatBillingDate,
   formatCount,
   formatMinorAmount,
@@ -57,6 +52,9 @@ const INVOICE_LOOKS = {
   StatusLook
 >;
 
+/** The columns of the school's invoices. */
+const invoiceColumns = tableColumns<SchoolBilling["invoices"][number]>();
+
 /** The invoices of the school, newest first, each with the way it is paid while it is open. */
 export function SchoolInvoicesCard({
   billing: overview,
@@ -73,70 +71,74 @@ export function SchoolInvoicesCard({
     >
       {Arr.isReadonlyArrayNonEmpty(overview.invoices) ? (
         <CardContent>
-          <TableFrame>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className={columnAlign({ align: "start" })}>
-                    {t("invoice-number")}
-                  </TableHead>
-                  <TableHead className={columnAlign()}>
-                    {t("invoice-term")}
-                  </TableHead>
-                  <TableHead className={columnAlign()}>
-                    {t("invoice-students")}
-                  </TableHead>
-                  <TableHead className={columnAlign()}>
-                    {t("invoice-total")}
-                  </TableHead>
-                  <TableHead className={columnAlign()}>
-                    {t("invoice-status")}
-                  </TableHead>
-                  <TableHead className={columnAlign({ align: "menu" })}>
-                    <span className="sr-only">{t("invoice-pay")}</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Arr.map(overview.invoices, (invoice) => (
-                  <TableRow key={`${invoice.number}-${invoice.periodStart}`}>
-                    <TableCell
-                      className={columnAlign({
-                        align: "start",
-                        className: "font-medium",
-                      })}
-                    >
-                      {invoice.number}
-                    </TableCell>
-                    <TableCell className={columnAlign()}>
-                      {t("billing-term-dates", {
-                        end: formatBillingDate(invoice.periodEnd - 1, locale),
-                        start: formatBillingDate(invoice.periodStart, locale),
-                      })}
-                    </TableCell>
-                    <TableCell className={columnAlign()}>
-                      {formatCount(invoice.seats, locale)}
-                    </TableCell>
-                    <TableCell className={columnAlign()}>
-                      {formatMinorAmount(invoice.total, invoice.currency)}
-                    </TableCell>
-                    <TableCell className={columnAlign()}>
+          <TableFiltersProvider>
+            <TableFrame>
+              <DataTable
+                columns={[
+                  invoiceColumns.text((invoice) => invoice.number, {
+                    cell: (info) => (
+                      <span className="font-medium">{info.getValue()}</span>
+                    ),
+                    header: t("invoice-number"),
+                    id: "number",
+                  }),
+                  invoiceColumns.days((invoice) => invoice.periodStart, {
+                    cell: (info) =>
+                      t("billing-term-dates", {
+                        end: formatBillingDate(
+                          info.row.original.periodEnd - 1,
+                          locale
+                        ),
+                        start: formatBillingDate(info.getValue(), locale),
+                      }),
+                    header: t("invoice-term"),
+                    id: "term",
+                    timeZone: () => BILLING_TIME_ZONE,
+                  }),
+                  invoiceColumns.number((invoice) => invoice.seats, {
+                    cell: (info) => formatCount(info.getValue(), locale),
+                    header: t("invoice-students"),
+                    id: "students",
+                  }),
+                  invoiceColumns.number((invoice) => invoice.total, {
+                    cell: (info) =>
+                      formatMinorAmount(
+                        info.getValue(),
+                        info.row.original.currency
+                      ),
+                    header: t("invoice-total"),
+                    id: "total",
+                  }),
+                  invoiceColumns.values((invoice) => invoice.status, {
+                    cell: (info) => (
                       <TableStatus
-                        {...INVOICE_LOOKS[invoice.status]}
-                        label={t(`invoice-${invoice.status}`)}
+                        {...INVOICE_LOOKS[info.getValue()]}
+                        label={t(`invoice-${info.getValue()}`)}
                       />
-                    </TableCell>
-                    <TableCell className={columnAlign({ align: "menu" })}>
-                      <div className="flex items-center justify-end gap-1">
-                        <SchoolInvoiceDownload invoice={invoice} />
-                        <SchoolInvoiceAction invoice={invoice} />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableFrame>
+                    ),
+                    header: t("invoice-status"),
+                    id: "status",
+                    options: Arr.map(
+                      Rec.toEntries(INVOICE_LOOKS),
+                      ([status, look]) => ({
+                        icon: look.icon,
+                        label: t(`invoice-${status}`),
+                        value: status,
+                      })
+                    ),
+                  }),
+                  invoiceColumns.menu((info) => (
+                    <div className="flex items-center justify-end gap-1">
+                      <SchoolInvoiceDownload invoice={info.row.original} />
+                      <SchoolInvoiceAction invoice={info.row.original} />
+                    </div>
+                  )),
+                ]}
+                data={overview.invoices}
+                rowId={(invoice) => `${invoice.number}-${invoice.periodStart}`}
+              />
+            </TableFrame>
+          </TableFiltersProvider>
         </CardContent>
       ) : null}
       <CardSectionFooter
