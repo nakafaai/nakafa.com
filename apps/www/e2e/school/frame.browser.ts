@@ -96,9 +96,7 @@ test("a student's results start at the top of the sitting body, which caps at th
 
   await page.goto(address(`/sittings/${sitting.sittingId}`));
   // The entry renders in the browser (ADR 0038), so the student types and presses as soon as it shows.
-  await page
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await page.getByPlaceholder("Enter the token").fill(sitting.token);
   await page.getByRole("button", { name: "Enter sitting" }).click();
   await page.getByRole("radiogroup").first().getByRole("radio").first().click();
   await page.getByRole("button", { exact: true, name: "Finish" }).click();

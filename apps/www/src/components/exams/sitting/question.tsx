@@ -48,8 +48,13 @@ import {
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
-import { HeldPaper, usePaperText } from "@/components/player/held";
+import {
+  HeldPaper,
+  usePaperText,
+  usePaperTurn,
+} from "@/components/player/held";
 import { readQuestionIds } from "@/components/player/ids";
+import { usePlayer } from "@/components/player/provider";
 import {
   PlayerQuestion,
   PlayerQuestionAnswer,
@@ -141,13 +146,13 @@ export const SittingQuestion = memo(function SittingQuestion({
   readonly slug: TenantSlug;
 }) {
   const ids = readQuestionIds(question.number);
-  const prompt = useQuery(exams.sittings.prompt, {
-    deviceId,
-    questionId: question.id,
-    sittingId,
-    slug,
-  });
-  usePaperText(question.id, !QueryResult.isLoading(prompt));
+  const current = usePlayer((state) => state.current === question.id);
+  const turn = usePaperTurn(question.id, current);
+  const prompt = useQuery(
+    exams.sittings.prompt,
+    turn ? { deviceId, questionId: question.id, sittingId, slug } : "skip"
+  );
+  usePaperText(question.id, turn && !QueryResult.isLoading(prompt));
   const choose = useChooseAnswer();
   const flagQuestion = useFlagQuestion({ deviceId, sittingId, slug });
   const locked = usePaperLocked();

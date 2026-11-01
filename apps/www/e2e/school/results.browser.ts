@@ -48,9 +48,7 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await student
     .getByRole("radiogroup")

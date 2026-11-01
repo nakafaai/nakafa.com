@@ -327,8 +327,8 @@ function AnswerList({
  * Questions, in the results page's header row: it opens a sheet with the questions of the exam, one at a
  * time, however many there are. The header row of the sheet's body steps through them or picks one from a
  * list, and stays in place while the statistics and answers scroll under it. The selection lives in this
- * component, so nothing above it is re-rendered. On a phone the button keeps its icon, so the page's name
- * keeps its room.
+ * component, so nothing above it is re-rendered. In a narrow header the button keeps its icon, so the page's
+ * path keeps its room.
  */
 export function QuestionsAction({
   questions,
@@ -355,7 +355,7 @@ export function QuestionsAction({
         render={
           <Button type="button" variant="outline">
             <HugeIcons icon={ChartHistogramIcon} />
-            <span className="max-sm:sr-only">{t("questions")}</span>
+            <span className="@max-3xl/header:sr-only">{t("questions")}</span>
           </Button>
         }
       />

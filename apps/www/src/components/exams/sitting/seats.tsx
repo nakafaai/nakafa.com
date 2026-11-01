@@ -31,6 +31,7 @@ import {
   matchesFilter,
   type SeatFrame,
   seatFrame,
+  seatTimeKey,
   seenOffline,
 } from "@/components/exams/sitting/seat";
 import { useSittingClock } from "@/components/exams/sitting/timer";
@@ -316,7 +317,7 @@ function SeatLink({
         <span className={rowLineVariants({ line: "fact" })}>
           {Option.match(awaySince(attempt), {
             onNone: () =>
-              t("seat-last-activity", {
+              t(seatTimeKey(attempt), {
                 time:
                   schoolTimeText({
                     at: lastActivityOf(

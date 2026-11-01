@@ -84,9 +84,7 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })
@@ -245,9 +243,7 @@ test("a server failure of the room's read keeps the proctor on the room, and the
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
 
   // The entry changes the room, and the next read of it fails with a failure that names no refusal, as a function
   // that ran out of time does, so the seats leave and the proctor stays on the room's page.
@@ -295,9 +291,7 @@ test("a student whose connection drops shows on the seat with a clock that runs,
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })

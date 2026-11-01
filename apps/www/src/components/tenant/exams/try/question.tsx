@@ -31,8 +31,10 @@ import {
   HeldPaper,
   usePaperDrawable,
   usePaperText,
+  usePaperTurn,
 } from "@/components/player/held";
 import { readQuestionIds } from "@/components/player/ids";
+import { usePlayer } from "@/components/player/provider";
 import {
   PlayerQuestion,
   PlayerQuestionAnswer,
@@ -99,6 +101,7 @@ export function ExamTryQuestion({
   question: Question;
 }) {
   const ids = readQuestionIds(number);
+  const current = usePlayer((state) => state.current === question.id);
   const response = useExamTry((state) => state.responses[question.id]);
   const choose = useExamTry((state) => state.choose);
   const flag = useExamTry((state) => state.flag);
@@ -132,9 +135,9 @@ export function ExamTryQuestion({
         <div className="grid gap-6">
           <TryPaperMedia question={question} />
           {question.reading === null ? null : (
-            <ExamTryPrompt documentId={question.reading} />
+            <ExamTryPrompt current={current} documentId={question.reading} />
           )}
-          <ExamTryPrompt documentId={question.prompt} />
+          <ExamTryPrompt current={current} documentId={question.prompt} />
         </div>
       </PlayerQuestionPrompt>
       <TryPictures documents={labels}>
@@ -191,16 +194,23 @@ export function ExamTryQuestion({
  * space, and one whose exam goes while it is tried keeps the text it showed, as the paper keeps the exam's title and
  * questions.
  */
-function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
+function ExamTryPrompt({
+  current,
+  documentId,
+}: {
+  /** Whether the reader stands on this text's question, so it reads next. */
+  current: boolean;
+  documentId: Question["prompt"];
+}) {
   const slug = useTrySlug();
-  const reply = useQuery(editors.documents.open, {
-    clientId: TRY_CLIENT,
-    documentId,
-    slug,
-  });
+  const turn = usePaperTurn(documentId, current);
+  const reply = useQuery(
+    editors.documents.open,
+    turn ? { clientId: TRY_CLIENT, documentId, slug } : "skip"
+  );
   const opened = useLastValue(reply);
   const drawable = usePaperDrawable();
-  usePaperText(documentId, !QueryResult.isLoading(reply));
+  usePaperText(documentId, turn && !QueryResult.isLoading(reply));
 
   if (!drawable) {
     return null;

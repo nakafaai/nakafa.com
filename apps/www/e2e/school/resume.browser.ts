@@ -65,9 +65,7 @@ test("a student who reloads a running paper meets the paper and never the token 
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   const question = student.getByRole("article", { name: "Question 3" });
   const essay = question.getByRole("textbox", { name: "Question 3" });
@@ -125,9 +123,7 @@ async function studentAtEntry(
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   return { changes, student, studentContext };
 }
 

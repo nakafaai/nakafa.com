@@ -140,9 +140,7 @@ test("a student sits a question of every template, the server scores each one, t
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(question(student, 10)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,

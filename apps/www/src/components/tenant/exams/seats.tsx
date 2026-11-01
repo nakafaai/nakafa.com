@@ -79,7 +79,10 @@ function useRoomSeats(
 
 /**
  * One open room at a glance, on the exam's rooms: one dot for each student who entered, so a principal or a committee
- * sees which room needs a look across all of them (K25, K26), and a sentence for a screen reader.
+ * sees which room needs a look across all of them (K25, K26), and a sentence for a screen reader. The dots keep one
+ * width from the first draw: a table narrower than its columns gives a wrapping box only its widest child, one dot,
+ * which stacks a room's students in a column as tall as the room is full, and a box that came with its answer would
+ * move every column.
  */
 export function RoomSeats({
   sittingId,
@@ -91,23 +94,23 @@ export function RoomSeats({
   const t = useTranslations("Exams");
   const seats = useRoomSeats(sittingId, slug);
 
-  if (Option.isNone(seats)) {
-    return null;
-  }
-  const dots = seatDots(seats.value);
-  if (Arr.isReadonlyArrayEmpty(dots)) {
-    return null;
-  }
-
   return (
     <span
-      aria-label={t("rooms-seats-summary", seats.value)}
-      className="inline-flex max-w-36 flex-wrap justify-center gap-0.5"
-      role="img"
+      {...Option.match(seats, {
+        onNone: () => ({}),
+        onSome: (counts) => ({
+          "aria-label": t("rooms-seats-summary", counts),
+          role: "img",
+        }),
+      })}
+      className="flex w-36 flex-wrap gap-0.5"
     >
-      {Arr.map(dots, (dot) => (
-        <span className={seatDot({ kind: dot.kind })} key={dot.id} />
-      ))}
+      {Arr.map(
+        Option.match(seats, { onNone: Arr.empty, onSome: seatDots }),
+        (dot) => (
+          <span className={seatDot({ kind: dot.kind })} key={dot.id} />
+        )
+      )}
     </span>
   );
 }
