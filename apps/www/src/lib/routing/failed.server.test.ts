@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import { answerFailedDocument } from "@/lib/routing/failed.server";
 
 const assets = vi.hoisted(() => ({ fetch: vi.fn<typeof fetch>() }));
-const worker = vi.hoisted(() => ({ env: { ASSETS: assets as unknown } }));
+const worker = vi.hoisted(() => ({ env: { ASSETS: assets } }));
 
 vi.mock("cloudflare:workers", () => worker);
 
