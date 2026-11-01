@@ -36,7 +36,7 @@ const UPCOMING_ROW = /Lab 3/u;
 
 /** How a room reads its seats at a glance, and a seat its silence. */
 const SOME_WORKING = /^\d+ working/u;
-const ONE_OFFLINE = /1 offline/u;
+const ONE_GONE = /1 (?:away|offline)/u;
 const AWAY_FOR = /^.*Away for \d+/u;
 
 test("a person whose only role is Proctor runs a room end to end, and is refused moving or cancelling a room, the exam's editor, its list and its results", async ({
@@ -321,7 +321,9 @@ test("a student whose connection drops shows on the seat with a clock that runs,
     timeout: SILENCE_MILLISECONDS,
   });
   await expect(seat).toContainText(AWAY_FOR);
-  await expect(rooms.getByRole("img", { name: ONE_OFFLINE })).toBeVisible({
+  // A browser that opens the proctor's page in a window of its own takes the focus, so the student left before the
+  // connection went, and a student who left stays away.
+  await expect(rooms.getByRole("img", { name: ONE_GONE })).toBeVisible({
     timeout: ROOM_READ_MILLISECONDS,
   });
 
