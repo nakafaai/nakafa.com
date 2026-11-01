@@ -2276,6 +2276,7 @@
   },
   "Articles": {
     "description": "Lies Bildungsartikel mit verständlichem Kontext, Daten und überprüfbaren Quellen.",
+    "category-description": "Lies Artikel zu {category} mit verständlichem Kontext, Daten und überprüfbaren Quellen.",
     "politics": "Politik",
     "contributor": "Beitrag",
     "articles": "Artikel"
@@ -2302,8 +2303,9 @@
   },
   "Tryouts": {
     "title": "Welchen Probetest möchtest du heute bearbeiten?",
-    "hub-search-title": "Kostenlose Online-Probetests mit sofortiger Auswertung",
+    "hub-search-title": "Kostenlose Online-Probetests mit Auswertung",
     "metadata-description": "Probetests mit Zeitlimit und sofortiger Auswertung. Kostenlos und unbegrenzt auf Nakafa.",
+    "route-metadata-description": "Probetests für {name} mit Zeitlimit und sofortiger Auswertung. Kostenlos und unbegrenzt auf Nakafa.",
     "search-title": "Kostenloser Probetest {name}",
     "track-metadata-description": "Wähle auf Nakafa einen Probetest für {exam}: mit Zeitlimit und sofortiger Auswertung.",
     "set-metadata-description": "Mach {exam} {set} auf Nakafa: ein Probetest mit Zeitlimit und sofortiger Auswertung.",
