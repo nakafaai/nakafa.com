@@ -52,7 +52,10 @@ const section = import("@/components/shared/card/section");`),
         []
       );
       assert.deepStrictEqual(
-        yield* inspect(source, "apps/www/src/components/user/settings/name.tsx"),
+        yield* inspect(
+          source,
+          "apps/www/src/components/user/settings/name.tsx"
+        ),
         []
       );
     })
