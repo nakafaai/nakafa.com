@@ -16,10 +16,6 @@ import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
 import { HomeToys } from "@/components/marketing/about/toys/intent";
 import { PageField } from "@/components/marketing/shared/field";
 import { LaterSection } from "@/components/marketing/shared/later";
-import {
-  getSubjectMenuHref,
-  subjectMenu,
-} from "@/components/sidebar/data/subject";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 import {
@@ -38,7 +34,16 @@ import { readStaticData } from "@/lib/static/data";
  */
 export const Route = createFileRoute("/$locale/_marketing/")({
   loader: async ({ params }) => {
-    const [, curricula, featuredTryout, messages] = await Promise.all([
+    // The subject menu carries its icons, and this file's loader sits in the first
+    // bundle of every public page, so only this page's loader reads them.
+    const [
+      { getSubjectMenuHref, subjectMenu },
+      ,
+      curricula,
+      featuredTryout,
+      messages,
+    ] = await Promise.all([
+      import("@/components/sidebar/data/subject"),
       openHomeSections(),
       readStaticData(readHomeCurriculaFn, { locale: params.locale }),
       readStaticData(readHomeTryout, { locale: params.locale }),

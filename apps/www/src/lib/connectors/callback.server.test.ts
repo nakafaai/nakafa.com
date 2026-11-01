@@ -52,6 +52,7 @@ describe("serveConnectCallback", () => {
       Effect.gen(function* () {
         convex.token.mockReturnValue("token-1");
         convex.action.mockResolvedValueOnce({
+          connector: "classroom",
           location: "https://harapan.nakafa.com/settings/connections",
           outcome: "connected",
         });
@@ -60,7 +61,7 @@ describe("serveConnectCallback", () => {
         );
         expect(response.status).toBe(302);
         expect(response.headers.get("location")).toBe(
-          "https://harapan.nakafa.com/settings/connections?connect=connected"
+          "https://harapan.nakafa.com/settings/connections?connect=connected&connector=classroom"
         );
         expect(response.headers.get("cache-control")).toBe("private, no-store");
         expect(convex.setAuth).toHaveBeenCalledWith("token-1");

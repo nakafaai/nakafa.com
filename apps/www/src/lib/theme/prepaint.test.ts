@@ -16,6 +16,7 @@ const PaintCase = Schema.Struct({
 function runPrepaint({ prefersDark, stored }: typeof PaintCase.Type) {
   let classes: readonly string[] = [];
   let colorScheme: string | undefined;
+  let written = "";
   const fakeWindow = {
     localStorage: {
       getItem: () => {
@@ -28,6 +29,9 @@ function runPrepaint({ prefersDark, stored }: typeof PaintCase.Type) {
     matchMedia: () => ({ matches: prefersDark }),
   };
   const fakeDocument = {
+    write: (markup: string) => {
+      written = markup;
+    },
     documentElement: {
       classList: {
         add: (name: string) => {
@@ -45,19 +49,32 @@ function runPrepaint({ prefersDark, stored }: typeof PaintCase.Type) {
     fakeWindow,
     fakeDocument
   );
-  return { classes, colorScheme };
+  return { classes, colorScheme, written };
 }
+
+/** What a page that shows only a built-in theme asks for: no sheet. */
+const NO_SHEET = { written: "" };
 
 describe("THEME_PREPAINT_SCRIPT", () => {
   it("applies a stored concrete theme with its appearance", () => {
     expect(runPrepaint({ prefersDark: false, stored: "dark" })).toEqual({
+      ...NO_SHEET,
       classes: ["dark"],
       colorScheme: "dark",
     });
   });
 
+  it("writes the sheet of a named theme, which blocks the first paint for its reader alone", () => {
+    expect(runPrepaint({ prefersDark: false, stored: "tokyo" })).toEqual({
+      classes: ["tokyo"],
+      colorScheme: "light",
+      written: '<link rel="stylesheet" href="/themes.css">',
+    });
+  });
+
   it("keeps a light theme light when the system prefers dark", () => {
     expect(runPrepaint({ prefersDark: true, stored: "light" })).toEqual({
+      ...NO_SHEET,
       classes: ["light"],
       colorScheme: "light",
     });
@@ -65,10 +82,12 @@ describe("THEME_PREPAINT_SCRIPT", () => {
 
   it("resolves the system value and a missing value to the system appearance", () => {
     expect(runPrepaint({ prefersDark: true, stored: "system" })).toEqual({
+      ...NO_SHEET,
       classes: ["dark"],
       colorScheme: "dark",
     });
     expect(runPrepaint({ prefersDark: false, stored: null })).toEqual({
+      ...NO_SHEET,
       classes: ["light"],
       colorScheme: "light",
     });
@@ -76,6 +95,7 @@ describe("THEME_PREPAINT_SCRIPT", () => {
 
   it("falls back to the system appearance for an unknown value", () => {
     expect(runPrepaint({ prefersDark: true, stored: "unknown" })).toEqual({
+      ...NO_SHEET,
       classes: ["dark"],
       colorScheme: "dark",
     });
@@ -83,6 +103,7 @@ describe("THEME_PREPAINT_SCRIPT", () => {
 
   it("falls back to the system appearance when storage is blocked", () => {
     expect(runPrepaint({ prefersDark: true, stored: "blocked" })).toEqual({
+      ...NO_SHEET,
       classes: ["dark"],
       colorScheme: "dark",
     });
@@ -118,13 +139,18 @@ function readRoot() {
 
 /** Paints the page with the inline script, as the server's HTML does before hydration. */
 function paintWithScript() {
-  new Function("window", "document", THEME_PREPAINT_SCRIPT)(window, document);
+  // A finished document would restart at `write`, which a parsing document appends to.
+  new Function("window", "document", THEME_PREPAINT_SCRIPT)(window, {
+    documentElement: document.documentElement,
+    write: () => undefined,
+  });
   return readRoot();
 }
 
 /** Paints the page with the theme store, as the provider does once the page hydrates. */
 function paintWithStore() {
   const disconnect = connectThemeStore(createThemeStore());
+  document.head.querySelector("link")?.dispatchEvent(new Event("load"));
   const painted = readRoot();
   disconnect();
   return painted;

@@ -1,8 +1,4 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { canOpenExams } from "@/components/tenant/exams/access";
-import { canOpenReports } from "@/components/tenant/reports/access";
-import { canManageSchool, roleOf } from "@/lib/tenant/frame";
-import { landingOf } from "@/lib/tenant/landing";
 
 /**
  * The root of a school host, which holds no page of its own: a member lands on the page of their main work there
@@ -11,24 +7,12 @@ import { landingOf } from "@/lib/tenant/landing";
  * outsider page, which the layout draws in place of every page.
  */
 export const Route = createFileRoute("/school/$slug/")({
-  beforeLoad: ({ context, params }) => {
+  beforeLoad: async ({ context, params }) => {
     const { school } = context;
     if (school._tag !== "Member") {
       return;
     }
-    const { viewer } = school;
-    throw redirect({
-      params,
-      replace: true,
-      to: landingOf(
-        {
-          canManage: canManageSchool(viewer.can),
-          canOpenExams: canOpenExams(viewer),
-          canOpenReports: canOpenReports(viewer),
-          role: roleOf(viewer.grants),
-        },
-        school.home
-      ),
-    });
+    const { memberLandingOf } = await import("@/lib/tenant/landing");
+    throw redirect({ params, replace: true, to: memberLandingOf(school) });
   },
 });

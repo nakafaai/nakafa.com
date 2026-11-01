@@ -2322,7 +2322,11 @@ export declare const api: {
         "action",
         "public",
         { code: string | null; state: string },
-        { location: string; outcome: "connected" | "cancelled" | "refused" }
+        {
+          connector: "drive" | "calendar" | "classroom";
+          location: string;
+          outcome: "connected" | "cancelled" | "refused" | "failed";
+        }
       >;
       offered: FunctionReference<
         "query",
@@ -16100,6 +16104,14 @@ export declare const internal: {
           userId: Id<"users">;
         },
         Id<"connectorConnections">
+      >;
+    };
+    seed: {
+      connection: FunctionReference<
+        "mutation",
+        "internal",
+        { slug: string; status: "active" | "reconnect" },
+        null
       >;
     };
     sync: {
