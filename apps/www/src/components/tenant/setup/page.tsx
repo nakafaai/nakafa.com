@@ -28,6 +28,10 @@ import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 const SOURCE = "components/tenant/setup/page";
 
+/** A code's name in the reader's language. */
+const nameOf = (locale: string, type: Intl.DisplayNamesType, code: string) =>
+  new Intl.DisplayNames([locale], { type }).of(code);
+
 /**
  * The setup of a school, in the order a new Owner works: each first step with whether the
  * school's data shows it as done and the page that does it, then the defaults the school opened
@@ -261,7 +265,7 @@ function SetupCountry() {
       description={Option.match(held, {
         onNone: () => "",
         onSome: ({ country, currency }) =>
-          `${new Intl.DisplayNames([locale], { type: "region" }).of(country)}, ${new Intl.DisplayNames([locale], { type: "currency" }).of(currency)}`,
+          `${nameOf(locale, "region", country)}, ${nameOf(locale, "currency", currency)}`,
       })}
       title={t("setup-country")}
     />
@@ -282,7 +286,7 @@ function SetupClock() {
       description={Option.match(unit, {
         onNone: () => "",
         onSome: ({ contentLanguage, timeZone }) =>
-          `${timeZone}, ${new Intl.DisplayNames([locale], { type: "language" }).of(contentLanguage)}`,
+          `${timeZone}, ${nameOf(locale, "language", contentLanguage)}`,
       })}
       title={t("setup-clock")}
     />
