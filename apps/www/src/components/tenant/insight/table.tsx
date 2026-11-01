@@ -55,12 +55,6 @@ const studentColumns = tableColumns<ReturnType<typeof studentRowsOf>[number]>();
 /** The columns of a class's standing. */
 const skillColumns = tableColumns<ReturnType<typeof skillRowsOf>[number]>();
 
-/** The class the tabs show and what was read of it. */
-interface HeldInsight {
-  readonly classId: GenericId.GenericId<"classes">;
-  readonly read: Ref.Returns<typeof insight.reads.ofClass>;
-}
-
 /** The look of each state of a student's narrative. */
 const NARRATIVE_LOOKS = {
   none: { icon: NoteEditIcon, tone: "neutral" },
@@ -88,22 +82,23 @@ export function ClassInsightTabs({
     isSettled ? { classId, slug } : "skip"
   );
 
-  const [held, setHeld] = useState<HeldInsight | null>(null);
+  const [read, setRead] = useState<Ref.Returns<
+    typeof insight.reads.ofClass
+  > | null>(null);
+  const [readClass, setReadClass] = useState(classId);
 
   if (QueryResult.isFailure(found)) {
     throw found.error;
   }
-  if (QueryResult.isSuccess(found) && found.value !== held?.read) {
-    setHeld({ classId, read: found.value });
+  if (QueryResult.isSuccess(found) && found.value !== read) {
+    setRead(found.value);
+    setReadClass(classId);
   }
-  const isRead = held !== null;
-  const students = isRead ? held.read.students : [];
+  const isRead = read !== null;
+  const students = isRead ? read.students : [];
 
   return (
-    <NarrativeProvider
-      classId={isRead ? held.classId : classId}
-      students={students}
-    >
+    <NarrativeProvider classId={readClass} students={students}>
       <Tabs className="min-h-0 flex-1 shrink gap-0" defaultValue="students">
         <TabsList aria-label={t("tabs-label")} className={pageRowVariants()}>
           <TabsTab value="students">
@@ -158,13 +153,13 @@ export function ClassInsightTabs({
                     header: t("evidence"),
                     id: "evidence",
                   }),
-                  ...(isRead && held.read.forecasts
+                  ...(isRead && read.forecasts
                     ? [
                         skillColumns.number(
                           (row) =>
                             row.chance === null ? null : percentOf(row.chance),
                           {
-                            header: t("chance", { kktp: held.read.kktp }),
+                            header: t("chance", { kktp: read.kktp }),
                             id: "chance",
                           }
                         ),
@@ -194,10 +189,9 @@ export function ClassInsightTabs({
                 loading={!isRead}
                 rowId={(row) => row.key}
               />
-              {isRead &&
-              Arr.isReadonlyArrayNonEmpty(skillRowsOf(students)) ? (
+              {isRead && Arr.isReadonlyArrayNonEmpty(skillRowsOf(students)) ? (
                 <TableNote>
-                  {held.read.forecasts ? t("chance-note") : t("chance-held")}
+                  {read.forecasts ? t("chance-note") : t("chance-held")}
                 </TableNote>
               ) : null}
             </TablePageBody>

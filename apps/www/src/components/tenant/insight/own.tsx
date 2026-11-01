@@ -34,59 +34,59 @@ export function OwnMastery() {
 
   return (
     <>
-    <DataTable
-      columns={[
-        skillColumns.text((skill) => skill.competency, {
-          cell: (info) => (
-            <TableTitle icon={Target02Icon}>
-              <span dir="auto">{info.getValue()}</span>
-            </TableTitle>
-          ),
-          header: t("competency"),
-          id: "competency",
-        }),
-        skillColumns.number((skill) => percentOf(skill.rating), {
-          header: t("mastery"),
-          id: "mastery",
-        }),
-        skillColumns.number((skill) => skill.earned, {
-          cell: (info) =>
-            t("evidence-points", {
-              earned: info.getValue(),
-              possible: info.row.original.possible,
-            }),
-          header: t("evidence"),
-          id: "evidence",
-        }),
-        skillColumns.number((skill) => skill.observations, {
-          header: t("observations"),
-          id: "observations",
-        }),
-        skillColumns.menu(() => <OwnExamsLink />),
-      ]}
-      data={isRead ? mine.value : []}
-      empty={
-        <TableEmpty
-          act="waving"
-          action={
-            <Link
-              className={buttonVariants()}
-              params={{ slug }}
-              to="/school/$slug/exams"
-            >
-              {t("exams-action")}
-            </Link>
-          }
-          description={t("empty-description")}
-          title={t("empty")}
-        />
-      }
-      loading={!isRead}
-      rowId={(skill) => skill.competency}
-    />
-    {isRead && Arr.isReadonlyArrayNonEmpty(mine.value) ? (
-      <TableNote>{t("empty-description")}</TableNote>
-    ) : null}
+      <DataTable
+        columns={[
+          skillColumns.text((skill) => skill.competency, {
+            cell: (info) => (
+              <TableTitle icon={Target02Icon}>
+                <span dir="auto">{info.getValue()}</span>
+              </TableTitle>
+            ),
+            header: t("competency"),
+            id: "competency",
+          }),
+          skillColumns.number((skill) => percentOf(skill.rating), {
+            header: t("mastery"),
+            id: "mastery",
+          }),
+          skillColumns.number((skill) => skill.earned, {
+            cell: (info) =>
+              t("evidence-points", {
+                earned: info.getValue(),
+                possible: info.row.original.possible,
+              }),
+            header: t("evidence"),
+            id: "evidence",
+          }),
+          skillColumns.number((skill) => skill.observations, {
+            header: t("observations"),
+            id: "observations",
+          }),
+          skillColumns.menu(() => <OwnExamsLink />),
+        ]}
+        data={isRead ? mine.value : []}
+        empty={
+          <TableEmpty
+            act="waving"
+            action={
+              <Link
+                className={buttonVariants()}
+                params={{ slug }}
+                to="/school/$slug/exams"
+              >
+                {t("exams-action")}
+              </Link>
+            }
+            description={t("empty-description")}
+            title={t("empty")}
+          />
+        }
+        loading={!isRead}
+        rowId={(skill) => skill.competency}
+      />
+      {isRead && Arr.isReadonlyArrayNonEmpty(mine.value) ? (
+        <TableNote>{t("empty-description")}</TableNote>
+      ) : null}
     </>
   );
 }

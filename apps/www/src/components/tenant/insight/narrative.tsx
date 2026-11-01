@@ -46,20 +46,33 @@ const createNarrativeChoice = () =>
 
 const NarrativeContext = createContext<StoreApi<NarrativeChoice> | null>(null);
 
+/** The class whose narratives the page's one dialog writes. */
+const NarrativeClassContext =
+  createContext<GenericId.GenericId<"classes"> | null>(null);
+
 /** Reads one selected slice of the page's narrative choice. */
 function useNarrativeChoice<T>(selector: (state: NarrativeChoice) => T) {
   const store = use(NarrativeContext);
 
   if (store === null) {
-    throw new Error(
-      "useNarrativeChoice must be used within NarrativeProvider"
-    );
+    throw new Error("useNarrativeChoice must be used within NarrativeProvider");
   }
 
   return useStore(store, selector);
 }
 
-/** Gives a class's page its one narrative dialog, which any row of any of its tabs opens. */
+/** Reads the class of the page's narrative dialog. */
+function useNarrativeClass() {
+  const classId = use(NarrativeClassContext);
+
+  if (classId === null) {
+    throw new Error("useNarrativeClass must be used within NarrativeProvider");
+  }
+
+  return classId;
+}
+
+/** Gives a class's page its one narrative dialog, which any row of any of its tabs opens, so a long class draws one. */
 export function NarrativeProvider({
   children,
   classId,
@@ -70,11 +83,17 @@ export function NarrativeProvider({
   students: readonly InsightStudent[];
 }) {
   const [store] = useState(createNarrativeChoice);
+  const chosen = useStore(store, (state) => state.chosen);
+  const student = Arr.findFirst(students, ({ id }) => id === chosen);
 
   return (
     <NarrativeContext value={store}>
       {children}
-      <ChosenNarrative classId={classId} students={students} />
+      <NarrativeClassContext value={classId}>
+        {Option.isSome(student) ? (
+          <StudentNarrative key={student.value.id} student={student.value} />
+        ) : null}
+      </NarrativeClassContext>
     </NarrativeContext>
   );
 }
@@ -92,39 +111,14 @@ export function NarrativeButton({ id }: { id: InsightStudent["id"] }) {
   );
 }
 
-/** The dialog of the chosen student, one for the whole page, so a long class draws no dialog per row. */
-function ChosenNarrative({
-  classId,
-  students,
-}: {
-  classId: GenericId.GenericId<"classes">;
-  students: readonly InsightStudent[];
-}) {
-  const chosen = useNarrativeChoice((state) => state.chosen);
-  const student = Arr.findFirst(students, ({ id }) => id === chosen);
-
-  return Option.isSome(student) ? (
-    <StudentNarrative
-      classId={classId}
-      key={student.value.id}
-      student={student.value}
-    />
-  ) : null;
-}
-
 /**
  * One student's narrative: the teacher writes it, shares it with the guardians, and takes it back from the same place.
  * Nina can draft it from the student's numbers, and the teacher reads the draft and takes it into their own words.
  */
-function StudentNarrative({
-  classId,
-  student,
-}: {
-  classId: GenericId.GenericId<"classes">;
-  student: InsightStudent;
-}) {
+function StudentNarrative({ student }: { student: InsightStudent }) {
   const t = useTranslations("SchoolInsight");
   const common = useTranslations("Common");
+  const classId = useNarrativeClass();
   const { slug } = useTenant();
   const viewer = useViewerQuery();
   const open = useNarrativeChoice((state) => state.isOpen);
