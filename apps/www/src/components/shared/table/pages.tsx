@@ -4,9 +4,12 @@ import { Array as Arr } from "effect";
 import { type ReactNode, useEffect, useEffectEvent } from "react";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { useTableFilters } from "@/components/shared/table/toolbar";
+import { useNeedsEveryRow } from "@/components/shared/table/toolbar";
 import { TableWaitingContext } from "@/components/shared/table/waiting";
 import { LoadFailure } from "@/components/state/failure";
+
+/** How many rows a page of the rest of a list holds, once the page needs every row: a school's list holds thousands. */
+const REST_PAGE = 50;
 
 /**
  * A table read a page at a time, around the `DataTable` that draws it: the table stands from the first frame and its
@@ -36,21 +39,28 @@ export function TablePages<Item, Failure>({
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {children}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <TableEnd onLoad={() => pagination.loadMore(pageSize)} />
+        <TableEnd
+          onLoad={() => pagination.loadMore(pageSize)}
+          onLoadRest={() => pagination.loadMore(Math.max(pageSize, REST_PAGE))}
+        />
       ) : null}
     </TableWaitingContext>
   );
 }
 
 /**
- * The end of a paged table: the next page loads as this comes near, or at once while a column sorts the rows, because a
- * sort needs every row.
+ * The end of a paged table: the next page loads as this comes near, or at once while the page shows a choice that only
+ * every row can answer, in bigger pages where the table reads them by `onLoadRest`.
  */
-export function TableEnd({ onLoad }: { onLoad: () => void }) {
-  const sorted = useTableFilters((state) => state.sorted);
-
-  return sorted ? (
-    <NextPage onLoad={onLoad} />
+export function TableEnd({
+  onLoad,
+  onLoadRest = onLoad,
+}: {
+  onLoad: () => void;
+  onLoadRest?: () => void;
+}) {
+  return useNeedsEveryRow() ? (
+    <NextPage onLoad={onLoadRest} />
   ) : (
     <Intersection onIntersect={onLoad} />
   );

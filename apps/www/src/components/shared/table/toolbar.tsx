@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { Record as Rec, Schema } from "effect";
+import { Array as Arr, Record as Rec, Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { FacetValues } from "@/components/shared/table/filter";
@@ -76,6 +76,19 @@ export function useTableFilters<T>(selector: (state: TableFilters) => T) {
   }
 
   return useStore(store, selector);
+}
+
+/**
+ * Whether the page shows a choice that only every row can answer: a column sorts the rows or filters them, or the box
+ * searches them, so a paged list reads the rest of its pages. Rows it has not read yet could sort first or match.
+ */
+export function useNeedsEveryRow() {
+  return useTableFilters(
+    (state) =>
+      state.sorted ||
+      state.search.trim() !== "" ||
+      Arr.some(Rec.values(state.chosen), Arr.isReadonlyArrayNonEmpty)
+  );
 }
 
 /**

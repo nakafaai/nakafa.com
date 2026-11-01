@@ -49,7 +49,10 @@ import {
   HeadText,
   useIsFiltered,
 } from "@/components/shared/table/panel";
-import { useTableFilters } from "@/components/shared/table/toolbar";
+import {
+  useNeedsEveryRow,
+  useTableFilters,
+} from "@/components/shared/table/toolbar";
 import { TableWaitingContext } from "@/components/shared/table/waiting";
 import { EmptyNina } from "@/components/state/empty";
 
@@ -113,6 +116,7 @@ export function DataTable<TData extends RowData>({
   const [drawn, setDrawn] = useState(pageSize ?? rows.length);
   const shown = pageSize === undefined ? rows : Arr.take(rows, drawn);
   const waiting = use(TableWaitingContext) || loading;
+  const chooses = useNeedsEveryRow();
   const isBare = Arr.isReadonlyArrayEmpty(data);
   const showsEmpty = isBare && !waiting && empty !== undefined;
 
@@ -135,7 +139,9 @@ export function DataTable<TData extends RowData>({
           ))}
         </ColumnHeads>
         <TableBody>
-          {Arr.isReadonlyArrayNonEmpty(rows) || waiting || showsEmpty ? (
+          {Arr.isReadonlyArrayNonEmpty(rows) ||
+          (waiting && !chooses) ||
+          showsEmpty ? (
             Arr.map(shown, (row) => (
               <DataTableRow key={row.id} opens={hasPanes && !plain} row={row}>
                 {Arr.map(row.getAllCells(), (cell, index) => (
@@ -157,7 +163,7 @@ export function DataTable<TData extends RowData>({
                   <EmptyHeader>
                     <EmptyNina act="searching" />
                     <EmptyTitle className="text-base">
-                      {t("no-results")}
+                      {t(waiting ? "searching" : "no-results")}
                     </EmptyTitle>
                   </EmptyHeader>
                 </Empty>
