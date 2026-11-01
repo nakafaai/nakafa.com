@@ -1,4 +1,4 @@
-import { ReportHash } from "@repo/backend/confect/records/report";
+import { ReportHash } from "@repo/backend/confect/records/hash";
 import { Schema } from "effect";
 
 /** The hash a report card's QR code names, which the public check reads. */

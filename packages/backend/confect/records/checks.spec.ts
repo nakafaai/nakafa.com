@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReportHash, VerifyAnswer } from "@repo/backend/confect/records/report";
+import { ReportHash } from "@repo/backend/confect/records/hash";
+import { VerifyAnswer } from "@repo/backend/confect/records/report";
 
 /**
  * The public check of a report card's or an SKL's QR code (ADR 0033, S5 and S6): whether a

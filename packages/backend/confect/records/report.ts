@@ -1,6 +1,7 @@
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { ClassSubject } from "@repo/backend/confect/classroom/class";
+import { ReportHash } from "@repo/backend/confect/records/hash";
 import { GradeValue } from "@repo/backend/confect/records/scheme";
 import { Nisn } from "@repo/backend/confect/roster/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
@@ -113,11 +114,6 @@ export const VerifyAnswer = Schema.Union([
   }),
   Schema.Struct({ outcome: Schema.Literal("unknown") }),
 ]);
-
-/** A report hash as the verification address carries it: 64 lowercase hex digits. */
-export const ReportHash = Schema.String.check(
-  Schema.isPattern(/^[0-9a-f]{64}$/u)
-);
 
 /**
  * One locked report card of a student as their own page lists it: its class group, period and approval date, the
