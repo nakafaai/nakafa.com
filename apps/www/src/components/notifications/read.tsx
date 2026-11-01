@@ -16,7 +16,7 @@ import { hasUnread } from "@/components/notifications/state";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
- * The inbox's one action: it marks every row of its scope read, the loaded ones at
+ * The inbox's mark all read: it marks every row of its scope read, the loaded ones at
  * once. It is in the header from the first paint
  * and stays in its place, so the header never changes while the inbox loads, and it
  * is disabled while no row waits to be read. Its icon and its words show, or on a phone

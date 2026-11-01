@@ -1,6 +1,9 @@
 import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import type { NotificationsDoc } from "@repo/backend/confect/_generated/docs";
 
+/** The language of a notice with no school: an account keeps none, and Nakafa's learners are Indonesian. */
+export const ACCOUNT_LOCALE: typeof AppLocaleCodeSchema.Type = "id";
+
 /**
  * The general sentences a push shows on a lock screen, in each language a school
  * unit teaches in. They name no one and quote nothing (ADR 0027): the inbox,

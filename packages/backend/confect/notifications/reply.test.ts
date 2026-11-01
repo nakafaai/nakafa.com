@@ -24,6 +24,7 @@ const readAll = Ref.getFunctionReference(
 const notice = Ref.getFunctionReference(
   refs.internal.notifications.deliver.notice
 );
+const set = Ref.getFunctionReference(refs.public.notifications.personal.set);
 
 /** A learner who comments and one who replies, each with the client that acts as them. */
 async function createLearners() {
@@ -54,6 +55,17 @@ const rowsOf = (t: Learners["t"], userId: Id<"users">) =>
     ctx.db
       .query("notifications")
       .withIndex("by_recipientUserId_and_createdAt", (query) =>
+        query.eq("recipientUserId", userId)
+      )
+      .collect()
+  );
+
+/** The mail that waits for one account. */
+const mailsOf = (t: Learners["t"], userId: Id<"users">) =>
+  t.run((ctx) =>
+    ctx.db
+      .query("noticeMails")
+      .withIndex("by_recipientUserId_and_dueAt", (query) =>
         query.eq("recipientUserId", userId)
       )
       .collect()
@@ -314,6 +326,43 @@ describe("notifications/reply", () => {
 
     const sends = await scheduledSends(t);
     expect(sends[0]?.scheduledTime).toBe(Date.UTC(2026, 8, 1, 23));
+  });
+
+  it("queues a reply's mail for 17:00 on the clock of Indonesia", async () => {
+    const learners = await createLearners();
+    await reply(learners);
+
+    expect(await mailsOf(learners.t, learners.author.userId)).toMatchObject([
+      {
+        change: "comment.replied",
+        dueAt: Date.UTC(2026, 8, 1, 10),
+        expiresAt: NOON + 7 * 24 * 60 * 60 * 1000,
+        rank: 2,
+      },
+    ]);
+    expect(await mailsOf(learners.t, learners.reader.userId)).toEqual([]);
+  });
+
+  it("sends no push and no mail once the account switched them off, and the row still comes", async () => {
+    const learners = await createLearners();
+    const { author, t } = learners;
+    await subscribe(t, author.userId);
+    await author.client.mutation(set, {
+      channel: "email",
+      kind: "commentReply",
+      on: false,
+    });
+    await author.client.mutation(set, {
+      channel: "push",
+      kind: "commentReply",
+      on: false,
+    });
+
+    await reply(learners);
+
+    expect(await scheduledSends(t)).toEqual([]);
+    expect(await mailsOf(t, author.userId)).toEqual([]);
+    expect(await rowsOf(t, author.userId)).toHaveLength(1);
   });
 
   it("sends the general sentence in Indonesian, to the browsers of the account", async () => {

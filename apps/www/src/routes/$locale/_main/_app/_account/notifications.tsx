@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
+import { AccountPreferences } from "@/components/notifications/account";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsHeader } from "@/components/notifications/header";
 import { ACCOUNT_INBOX } from "@/components/notifications/inbox";
@@ -44,6 +45,7 @@ function NotificationsPage() {
       <LayoutMaterialContent>
         <NotificationsHeader>
           <MarkAllRead first={page} scope={ACCOUNT_INBOX} />
+          <AccountPreferences />
         </NotificationsHeader>
         <InboxTabs topics={InboxTopic.literals} width="column" />
         <LayoutContent className="flex flex-col gap-6 py-6">

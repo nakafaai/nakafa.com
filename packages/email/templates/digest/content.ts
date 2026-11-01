@@ -6,14 +6,20 @@ import { legalLabels } from "@repo/email/legal";
 import { EmailUrlSchema } from "@repo/email/url";
 import { Array as Arr, Schema, String as Str } from "effect";
 
-/** What a notice mail can tell, as the inbox row it follows. */
-export const DigestChange = Schema.Literals([
+/** What the notice mail of a school can tell, as the inbox row it follows. */
+export const SchoolChange = Schema.Literals([
   "exam.starting",
   "exam.reminder",
   "grade.released",
   "assignment.missed",
   "assignment.published",
   "forum.mentioned",
+]);
+
+/** What a notice mail can tell: a school's notices, and a reply to an account's comment, which no school holds. */
+export const DigestChange = Schema.Literals([
+  ...SchoolChange.literals,
+  "comment.replied",
 ]);
 
 /**
@@ -38,6 +44,7 @@ export type DigestEmailInput = typeof DigestEmailInputSchema.Type;
 const Sentence = Schema.Struct({ one: Schema.String, several: Schema.String });
 
 const DigestEmailCopySchema = Schema.Struct({
+  accountReason: Schema.String,
   cta: Schema.String,
   footerReason: Schema.String,
   sentences: Schema.Record(DigestChange, Sentence),
@@ -46,10 +53,16 @@ const DigestEmailCopySchema = Schema.Struct({
 
 const digestEmailCopy = {
   de: {
+    accountReason:
+      "Wir senden dir diese E-Mail, weil du auf Nakafa kommentiert hast.",
     cta: "Mitteilungen öffnen",
     footerReason:
       "Wir senden dir diese E-Mail, weil du zu einer Schule auf Nakafa gehörst.",
     sentences: {
+      "comment.replied": {
+        one: "Jemand hat auf deinen Kommentar geantwortet.",
+        several: "Es gibt {count} Antworten auf deine Kommentare.",
+      },
       "assignment.missed": {
         one: "Dein Kind hat eine Aufgabe nicht rechtzeitig abgegeben.",
         several: "Dein Kind hat {count} Aufgaben nicht rechtzeitig abgegeben.",
@@ -78,10 +91,15 @@ const digestEmailCopy = {
     subject: "Neues aus deiner Schule",
   },
   en: {
+    accountReason: "We sent this email because you commented on Nakafa.",
     cta: "Open your inbox",
     footerReason:
       "We sent this email because you belong to a school on Nakafa.",
     sentences: {
+      "comment.replied": {
+        one: "Someone replied to your comment.",
+        several: "There are {count} replies to your comments.",
+      },
       "assignment.missed": {
         one: "Your child did not hand in a task on time.",
         several: "Your child did not hand in {count} tasks on time.",
@@ -110,10 +128,15 @@ const digestEmailCopy = {
     subject: "What is new at your school",
   },
   id: {
+    accountReason: "Kami mengirim email ini karena kamu berkomentar di Nakafa.",
     cta: "Buka notifikasi",
     footerReason:
       "Kami mengirim email ini karena kamu terdaftar di sebuah sekolah di Nakafa.",
     sentences: {
+      "comment.replied": {
+        one: "Ada yang membalas komentarmu.",
+        several: "Ada {count} balasan untuk komentarmu.",
+      },
       "assignment.missed": {
         one: "Anakmu belum mengumpulkan tugas tepat waktu.",
         several: "Anakmu belum mengumpulkan {count} tugas tepat waktu.",
@@ -145,13 +168,15 @@ const digestEmailCopy = {
 
 /**
  * Returns the reviewed copy of one notice mail: one sentence for each kind that waits, and the sentence itself as the
- * subject when the mail tells one thing.
+ * subject when the mail tells one thing. A mail of replies names the comment as its reason, since its reader may belong
+ * to no school.
  */
 export function getDigestEmailCopy({
   counts,
   locale,
 }: Pick<DigestEmailInput, "counts" | "locale">) {
-  const { sentences, subject, ...copy } = digestEmailCopy[locale];
+  const { accountReason, footerReason, sentences, subject, ...copy } =
+    digestEmailCopy[locale];
   const lines = Arr.map(counts, ({ change, count }) =>
     count === 1
       ? sentences[change].one
@@ -161,6 +186,9 @@ export function getDigestEmailCopy({
     ...copy,
     ...legalLabels[locale],
     body: Arr.join(lines, " "),
+    footerReason: Arr.some(counts, ({ change }) => change === "comment.replied")
+      ? accountReason
+      : footerReason,
     subject: Arr.matchLeft(lines, {
       onEmpty: () => subject,
       onNonEmpty: (head, tail) => (Arr.isArrayEmpty(tail) ? head : subject),

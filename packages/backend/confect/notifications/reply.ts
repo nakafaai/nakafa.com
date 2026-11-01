@@ -4,6 +4,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { findComment } from "@repo/backend/confect/comments/rows";
+import { queueReplyMail } from "@repo/backend/confect/notifications/mail";
 import { scheduleAccountPush } from "@repo/backend/confect/notifications/schedule";
 import {
   type AccountRow,
@@ -17,7 +18,8 @@ const CLEANUP_PAGE_SIZE = 50;
 
 /**
  * Writes the inbox row of one reply, in the transaction of the reply, so a failed
- * reply leaves no row (ADR 0027), and schedules its push. One reply makes one row.
+ * reply leaves no row (ADR 0027), and schedules its push and queues its digest. One
+ * reply makes one row.
  */
 export const noticeReply = Effect.fn("notifications.reply.write")(function* (
   commentId: GenericId.GenericId<"comments">,
@@ -34,6 +36,7 @@ export const noticeReply = Effect.fn("notifications.reply.write")(function* (
     })
     .pipe(Effect.orDie);
   yield* scheduleAccountPush(notificationId, recipientUserId);
+  yield* queueReplyMail(recipientUserId);
 });
 
 /** The public face of a reply's author, read when the row is read, or null once either is gone. */
@@ -84,22 +87,55 @@ export const purgeReply = Effect.fn("notifications.reply.purge")(function* (
   }
 });
 
-/** Deletes one page of the rows of a deleted account, and says whether it deleted any. */
+/**
+ * Deletes one page of the inbox rows, the waiting mail, and the switches of a deleted account, and says whether it
+ * deleted any.
+ */
 export const cleanupReplyRows = Effect.fn("notifications.reply.cleanup")(
   function* (userId: GenericId.GenericId<"users">) {
-    const rows = yield* (yield* DatabaseReader)
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const rows = yield* reader
       .table("notifications")
       .index("by_recipientUserId_and_createdAt", (query) =>
         query.eq("recipientUserId", userId)
       )
       .take(CLEANUP_PAGE_SIZE)
       .pipe(Effect.orDie);
-    const writer = yield* DatabaseWriter;
+    const mails = yield* reader
+      .table("noticeMails")
+      .index("by_recipientUserId_and_dueAt", (query) =>
+        query.eq("recipientUserId", userId)
+      )
+      .take(CLEANUP_PAGE_SIZE)
+      .pipe(Effect.orDie);
+    const choices = yield* reader
+      .table("noticePreferences")
+      .index("by_userId_and_kind_and_channel", (query) =>
+        query.eq("userId", userId)
+      )
+      .take(CLEANUP_PAGE_SIZE)
+      .pipe(Effect.orDie);
     yield* Effect.forEach(
       rows,
       (row) => writer.table("notifications").delete(row._id).pipe(Effect.orDie),
       { discard: true }
     );
-    return Arr.isReadonlyArrayNonEmpty(rows);
+    yield* Effect.forEach(
+      mails,
+      (row) => writer.table("noticeMails").delete(row._id).pipe(Effect.orDie),
+      { discard: true }
+    );
+    yield* Effect.forEach(
+      choices,
+      (row) =>
+        writer.table("noticePreferences").delete(row._id).pipe(Effect.orDie),
+      { discard: true }
+    );
+    return !(
+      Arr.isReadonlyArrayEmpty(rows) &&
+      Arr.isReadonlyArrayEmpty(mails) &&
+      Arr.isReadonlyArrayEmpty(choices)
+    );
   }
 );
