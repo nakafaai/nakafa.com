@@ -67,10 +67,11 @@ const cardSectionActionsVariants = cva(
 );
 
 /**
- * A titled card that frames one self-contained section. It draws its own header, so every
+ * The settings card: a titled card that frames one setting. It draws its own header, so every
  * section says what it is: the title and the one concise description are required, and the
  * compiler refuses a section without them. Compose the content inside it, then end with
- * `CardSectionFooter`, its sentence and its actions.
+ * `CardSectionFooter`, its sentence and its actions. Only Settings draws it, which the source
+ * rule in `scripts/check/sections.ts` holds; every other screen uses a plain heading and body.
  */
 export function CardSection({
   children,

@@ -4,7 +4,59 @@ import {
   guardianCodeOf,
   guardianEmailOf,
   guardianSignInAnswerOf,
+  SIGN_IN_START,
+  stepSignIn,
 } from "@/components/tenant/guardian/code";
+
+describe("the sign-in's steps", () => {
+  const mailed = stepSignIn(SIGN_IN_START, {
+    _tag: "sent",
+    address: "ibu.siti@example.com",
+  });
+
+  it("writes the field of the step the parent is on", () => {
+    expect(stepSignIn(SIGN_IN_START, { _tag: "typed", text: "ibu" })).toEqual({
+      ...SIGN_IN_START,
+      email: "ibu",
+    });
+    expect(stepSignIn(mailed, { _tag: "typed", text: "042" })).toEqual({
+      ...mailed,
+      code: "042",
+    });
+  });
+
+  it("moves to an empty code of the mailed address, and drops the sentence", () => {
+    const refused = stepSignIn(SIGN_IN_START, {
+      _tag: "refused",
+      message: "Failed",
+    });
+
+    expect(
+      stepSignIn(refused, { _tag: "sent", address: "ibu.siti@example.com" })
+    ).toEqual({
+      _tag: "code",
+      code: "",
+      message: undefined,
+      sentTo: "ibu.siti@example.com",
+    });
+  });
+
+  it("empties the code on a resend, and keeps the code step", () => {
+    const typed = stepSignIn(mailed, { _tag: "typed", text: "042917" });
+
+    expect(
+      stepSignIn(typed, { _tag: "sent", address: "ibu.siti@example.com" })
+    ).toEqual(mailed);
+  });
+
+  it("keeps what was typed through a refusal, and clears the sentence when a request starts", () => {
+    const typed = stepSignIn(mailed, { _tag: "typed", text: "042917" });
+    const refused = stepSignIn(typed, { _tag: "refused", message: "Wrong" });
+
+    expect(refused).toEqual({ ...typed, message: "Wrong" });
+    expect(stepSignIn(refused, { _tag: "waiting" })).toEqual(typed);
+  });
+});
 
 describe("guardian sign-in", () => {
   it("reads an address as the link holds it, and refuses text that is no address", () => {

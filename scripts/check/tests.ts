@@ -40,6 +40,7 @@ import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
 import { inspectSdkReach } from "#scripts/check/sdk";
 import { inspectSealedSource } from "#scripts/check/sealed";
+import { inspectSectionSource } from "#scripts/check/sections";
 import { inspectCohortPins, inspectSharedFiles } from "#scripts/check/shared";
 import { inspectStylesheet } from "#scripts/check/sheets";
 import { inspectModuleSize } from "#scripts/check/size";
@@ -71,7 +72,7 @@ function lineReport(lines: readonly string[]) {
 
 /**
  * Applies the Effect-native, array, gateway, React, props drilling, state, refs,
- * sealed message, and class source policies to authored modules. The array rules read each module's types
+ * sealed message, settings card, and class source policies to authored modules. The array rules read each module's types
  * from its project on disk, and their findings join the Effect-native findings
  * before the list is sorted. Every finding is a violation: no baseline or
  * allowlist holds one back.
@@ -107,6 +108,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),
         inspectSealedSource(file, sourceFile),
+        inspectSectionSource(file, sourceFile),
         inspectModuleSize(file, sourceFile),
       ])
     ),

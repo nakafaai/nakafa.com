@@ -11,6 +11,12 @@ import { Schema } from "effect";
  */
 export const CLASS_LIMIT = 64;
 
+/** The most subject teachers a table reads of one class, past any class a school staffs. */
+export const CLASS_TEACHER_READ_LIMIT = 16;
+
+/** The most classes one table asks for the teachers of, a whole period's list at its longest. */
+export const CLASS_TEACHERS_ASK_LIMIT = 300;
+
 /**
  * The classes of one school that may hold one address, archived ones included. A
  * period holds at most one class at an address, so the school holds one per period

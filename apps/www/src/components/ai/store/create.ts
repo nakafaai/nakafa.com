@@ -1,6 +1,11 @@
-import { Array as Arr, DateTime, Option, Record as Rec } from "effect";
+import { Array as Arr, DateTime, Effect, Option, Record as Rec } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import {
+  resolveAiDraftText,
+  resolveAiOwnerChange,
+  saveAiDraftText,
+} from "@/components/ai/store/draft";
 import {
   holdOf,
   keptUpload,
@@ -23,6 +28,44 @@ export function createAiStore() {
           set((state) => ({
             chatDrafts: Arr.prepend(state.chatDrafts, key),
           })),
+        adoptDraftOwner: (ownerId) => {
+          if (ownerId === undefined) {
+            set({ draftOwner: undefined });
+            return;
+          }
+          const { endSession, lastDraftOwner, resetComposers, unownedText } =
+            get();
+          const { mustResetDraft, ownerChanged } = resolveAiOwnerChange(
+            lastDraftOwner,
+            ownerId
+          );
+          // Nothing the store holds for the previous owner is for this one. A
+          // pending ask must not open that owner's chat in this session. The
+          // uploads that owner held are forgotten, not given back: the server
+          // refuses to release another learner's upload, so their expiry frees them.
+          if (ownerChanged) {
+            endSession();
+          }
+          // The files of the draft go with its text, so every composer starts
+          // over, and the files it refused with them.
+          if (mustResetDraft) {
+            set({ text: "" });
+            resetComposers();
+          }
+          const draftText = Effect.runSync(
+            resolveAiDraftText({
+              ownerId,
+              pendingText: get().text,
+              pendingTextChanged: !mustResetDraft && unownedText,
+            })
+          );
+          set((state) => ({
+            draftOwner: ownerId,
+            lastDraftOwner: ownerId,
+            text: draftText ?? state.text,
+            unownedText: false,
+          }));
+        },
         clearUpload: (fileId) =>
           set((state) => ({ uploads: Rec.remove(state.uploads, fileId) })),
         // The text of the draft is not cleared here: a visitor who signs in
@@ -117,10 +160,18 @@ export function createAiStore() {
         // An open sheet shows its body, so opening also warms it.
         setOpen: (open) =>
           set((state) => ({ open, warmed: state.warmed || open })),
-        setText: (text) =>
-          set((state) => ({
-            text: typeof text === "function" ? text(state.text) : text,
-          })),
+        // Text written before the session answers waits for its owner.
+        setText: (text) => {
+          const state = get();
+          const next = typeof text === "function" ? text(state.text) : text;
+          if (next === state.text) {
+            return;
+          }
+          set({ text: next, unownedText: state.draftOwner === undefined });
+          if (state.draftOwner !== undefined) {
+            Effect.runSync(saveAiDraftText(next, state.draftOwner));
+          }
+        },
         strayFiles: (fileIds, now) => strayFiles(get().held, fileIds, now),
         // A hold is removed by its upload, so a file that got a new hold keeps
         // it. Nothing changes when no listed upload is held or refused, so nobody

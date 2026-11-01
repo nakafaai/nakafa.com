@@ -5,6 +5,7 @@ import {
   Book02Icon,
   Book03Icon,
   BookOpen01Icon,
+  Building03Icon,
   CalculatorIcon,
   CompassIcon,
   Globe02Icon,
@@ -13,6 +14,9 @@ import {
   NotebookIcon,
   PencilIcon,
   RulerIcon,
+  School01Icon,
+  SchoolIcon,
+  User02Icon,
   UserAccountIcon,
   UserCheck01Icon,
   UserCircleIcon,
@@ -95,3 +99,9 @@ export function chosenGrade(value: string | null) {
     ? Option.none()
     : Schema.decodeOption(CohortGrade)(Number(value));
 }
+
+/** The icons a filter of a school's units draws from. */
+export const UNIT_ICONS = [School01Icon, SchoolIcon, Building03Icon] as const;
+
+/** The icons a filter of teachers draws from. */
+export const TEACHER_ICONS = [UserIcon, User02Icon, UserCircleIcon] as const;

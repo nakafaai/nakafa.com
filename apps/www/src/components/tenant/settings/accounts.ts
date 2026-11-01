@@ -71,11 +71,13 @@ export const addMemberChange: OptimisticUpdate<typeof tenancy.roster.invite> = (
   };
   // Whoever may give the role may also end it, so the list answers the new row as removable.
   const member: Member = {
+    email,
     id: personId,
     name,
     removable: true,
     roles: [role],
     status: "invited",
+    units: [],
   };
   changeInviteLists(localStore, slug, isFirstPage, (page) =>
     Arr.prepend(page, invite)

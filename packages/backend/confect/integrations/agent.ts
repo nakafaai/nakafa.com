@@ -149,7 +149,7 @@ const entriesOfSpec = (spec: Spec.AnyWithProps) =>
 
 /**
  * Every public function, read from the whole generated spec. It loads on the first call that
- * needs it and not with the HTTP module, because every HTTP route evaluates that module.
+ * needs it and not with this module, because every call of the school routes evaluates this one.
  */
 const loadEntries = Effect.promise(
   () => import("@repo/backend/confect/_generated/spec")

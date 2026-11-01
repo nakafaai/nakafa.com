@@ -1,4 +1,5 @@
 import { Array as Arr, Option } from "effect";
+import type { ReactNode } from "react";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 import {
@@ -10,11 +11,14 @@ import {
 /** Renders one nested curriculum route with breadcrumb context only. */
 export function CurriculumNestedHeader({
   ancestors,
+  children,
   currentRoute,
   homeLabel,
   subjectLabel,
 }: {
   ancestors: readonly CurriculumViewRoute[];
+  /** What the header holds at its end, such as the toggle of a page's outline. */
+  children?: ReactNode;
   currentRoute: CurriculumViewRoute;
   homeLabel: string;
   subjectLabel: string;
@@ -22,6 +26,7 @@ export function CurriculumNestedHeader({
   return (
     <BreadcrumbHeader
       value={{
+        action: children,
         home: HOME_TARGET,
         homeLabel,
         items: [

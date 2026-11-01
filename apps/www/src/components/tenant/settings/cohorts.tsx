@@ -374,6 +374,10 @@ function SchoolCohortTable({
     tenancy.cohorts.list,
     isSettled ? { periodId, slug } : "skip"
   );
+  const overview = useQuery(
+    tenancy.cohorts.overview,
+    isSettled ? { periodId, slug } : "skip"
+  );
   if (QueryResult.isFailure(cohorts)) {
     throw cohorts.error;
   }
@@ -390,6 +394,10 @@ function SchoolCohortTable({
     );
   }
 
+  const overviewOf = (id: string) =>
+    QueryResult.isSuccess(overview)
+      ? Arr.findFirst(overview.value, (cohort) => cohort.id === id)
+      : Option.none();
   const columns = [
     cohortColumns.text((cohort) => cohort.name, {
       cell: (info) => (
@@ -413,6 +421,33 @@ function SchoolCohortTable({
         GRADE_ICONS
       ),
     }),
+    cohortColumns.text(
+      (cohort) =>
+        Option.getOrElse(
+          Option.flatMapNullishOr(
+            overviewOf(cohort.id),
+            (found) => found.homeroom
+          ),
+          () => ""
+        ),
+      { header: t("cohort-homeroom"), id: "homeroom" }
+    ),
+    cohortColumns.number(
+      (cohort) =>
+        Option.match(overviewOf(cohort.id), {
+          onNone: () => null,
+          onSome: (found) => found.students,
+        }),
+      { header: t("cohort-students"), id: "students" }
+    ),
+    cohortColumns.number(
+      (cohort) =>
+        Option.match(overviewOf(cohort.id), {
+          onNone: () => null,
+          onSome: (found) => found.classes,
+        }),
+      { header: t("cohort-classes"), id: "classes" }
+    ),
     cohortColumns.values((cohort) => cohort.status, {
       cell: (info) => (
         <TableStatus

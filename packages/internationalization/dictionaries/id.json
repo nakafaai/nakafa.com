@@ -150,7 +150,8 @@
     "expires": "Berakhir",
     "mismatches": "Cek NISN gagal",
     "child": "Anak",
-    "child-detail": "Anak"
+    "child-detail": "Anak",
+    "guardian-email": "Email orang tua"
   },
   "SchoolRoster": {
     "import": "Impor",
@@ -448,7 +449,6 @@
     "page-empty-part": "Bagian kosong",
     "page-gap-empty": "Isi dulu sebelum menjadwalkan ujian.",
     "page-gap-key": "Tentukan jawabannya sebelum menjadwalkan ujian.",
-    "offline-note": "Perubahanmu tersimpan saat kamu kembali online.",
     "add-below": "Tambah di bawah",
     "add-below-of": "Tambah soal di bawah soal {number}",
     "question-text": "Teks soal {number}",
@@ -1406,7 +1406,14 @@
     "homeroom-description": "Satu guru memimpin setiap rombel.",
     "webhook-changes-description": "Sistemmu diberi tahu setiap kali salah satunya terjadi.",
     "webhook-changes-none": "Klien ini tidak membaca apa pun yang dikirim webhook, jadi ubah aksinya dulu.",
-    "webhook-client-none": "Webhook milik sebuah klien API, jadi buat dulu kliennya."
+    "webhook-client-none": "Webhook milik sebuah klien API, jadi buat dulu kliennya.",
+    "class-students": "Siswa",
+    "cohort-homeroom": "Wali kelas",
+    "cohort-students": "Siswa",
+    "cohort-classes": "Kelas",
+    "member-login": "Akun masuk",
+    "member-email": "Email",
+    "member-units": "Unit"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -1705,7 +1712,8 @@
     "own-title": "Rapor saya",
     "own-search": "Cari rombel",
     "own-empty": "Belum ada rapor yang dikunci.",
-    "own-empty-description": "Rapor muncul di sini setelah kepala sekolah menyetujuinya."
+    "own-empty-description": "Rapor muncul di sini setelah kepala sekolah menyetujuinya.",
+    "unit": "Unit"
   },
   "SchoolGraduation": {
     "title": "Kelulusan",
@@ -1937,6 +1945,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "offline-note": "Perubahanmu tersimpan saat kamu kembali online.",
     "popup-empty": "Belum ada pilihan.",
     "page-navigation": "Navigasi halaman",
     "contributor-description": "Orang ini ikut membangun Nakafa.",
@@ -2352,7 +2361,6 @@
     "time-hours-short": "jam",
     "time-minutes-short": "menit",
     "time-seconds-short": "detik",
-    "start-part-cta": "Mulai",
     "complete-part-cta": "Selesaikan",
     "complete-part-title": "Selesaikan bagian ini?",
     "complete-part-description": "Kalau kamu selesaikan sekarang, jawaban di bagian ini langsung dikunci.",
@@ -3878,8 +3886,6 @@
     "disconnect-description": "Nakafa langsung berhenti membacanya, dan hapus juga Nakafa di akun Google-mu supaya aksesnya berakhir di sana.",
     "none": "Belum ada konektor",
     "none-description": "Konektor terbuka di sini setelah Google meninjaunya.",
-    "courses": "Kelas di Classroom",
-    "courses-refresh": "Baca lagi",
     "courses-none": "Tidak ada kursus aktif di akun Classroom ini.",
     "course": "Kursus",
     "course-students": "Siswa",
