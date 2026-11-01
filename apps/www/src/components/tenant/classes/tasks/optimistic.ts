@@ -79,6 +79,7 @@ export const editUpdate: OptimisticUpdate<typeof classroom.tasks.edit> = (
     deadline: args.deadline,
     latePolicy: args.latePolicy,
     points: args.points,
+    targets: args.targets,
     text: args.text,
     title: args.title,
   }));
