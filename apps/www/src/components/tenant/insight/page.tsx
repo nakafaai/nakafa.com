@@ -143,7 +143,7 @@ function TeacherInsight() {
               onValueChange={(value) => setPicked(value)}
               value={chosen.value.id}
             >
-              <SelectTrigger aria-label={t("class")} className="w-40 sm:w-56">
+              <SelectTrigger aria-label={t("class")} className="w-32 sm:w-56">
                 <SelectValue placeholder={t("class")} />
               </SelectTrigger>
               <SelectContent>

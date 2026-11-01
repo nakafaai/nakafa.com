@@ -17,6 +17,7 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { TableAction, TableActionName } from "@/components/shared/table/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import type { InsightStudent } from "@/components/tenant/insight/rows";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -84,17 +85,10 @@ export function NarrativeButton({ id }: { id: InsightStudent["id"] }) {
   const choose = useNarrativeChoice((state) => state.choose);
 
   return (
-    <div className="flex justify-end">
-      <Button
-        onClick={() => choose(id)}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        <HugeIcons icon={NoteEditIcon} />
-        {t("narrative-open")}
-      </Button>
-    </div>
+    <TableAction onClick={() => choose(id)} type="button">
+      <HugeIcons icon={NoteEditIcon} />
+      <TableActionName>{t("narrative-open")}</TableActionName>
+    </TableAction>
   );
 }
 

@@ -1,4 +1,4 @@
-import type { GenericId } from "@confect/core";
+import type { GenericId, Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import {
   CheckmarkCircle02Icon,
@@ -18,6 +18,8 @@ import {
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { Array as Arr } from "effect";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { pageRowVariants } from "@/components/shared/content/width";
@@ -29,6 +31,7 @@ import {
   TablePageBody,
 } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableText } from "@/components/shared/table/text";
 import { TableTitle } from "@/components/shared/table/title";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
@@ -52,6 +55,12 @@ const studentColumns = tableColumns<ReturnType<typeof studentRowsOf>[number]>();
 /** The columns of a class's standing. */
 const skillColumns = tableColumns<ReturnType<typeof skillRowsOf>[number]>();
 
+/** The class the tabs show and what was read of it. */
+interface HeldInsight {
+  readonly classId: GenericId.GenericId<"classes">;
+  readonly read: Ref.Returns<typeof insight.reads.ofClass>;
+}
+
 /** The look of each state of a student's narrative. */
 const NARRATIVE_LOOKS = {
   none: { icon: NoteEditIcon, tone: "neutral" },
@@ -62,8 +71,9 @@ const NARRATIVE_LOOKS = {
 /**
  * One class as its teacher reads it, in three tabs: the class's students, each student's competencies with the points
  * behind them, and the practice students share. The tabs and the table heads stand from the first frame and the rows
- * fill in under them. The chance of reaching the KKTP, which only a teacher sees and which never changes a grade, shows
- * while the forecast passes its monthly test (ADR 0035).
+ * fill in under them, and another class keeps the last one's rows until its own are read, so the body never blanks. The
+ * chance of reaching the KKTP, which only a teacher sees and which never changes a grade, shows while the forecast
+ * passes its monthly test (ADR 0035).
  */
 export function ClassInsightTabs({
   classId,
@@ -78,14 +88,22 @@ export function ClassInsightTabs({
     isSettled ? { classId, slug } : "skip"
   );
 
+  const [held, setHeld] = useState<HeldInsight | null>(null);
+
   if (QueryResult.isFailure(found)) {
     throw found.error;
   }
-  const isRead = QueryResult.isSuccess(found);
-  const students = isRead ? found.value.students : [];
+  if (QueryResult.isSuccess(found) && found.value !== held?.read) {
+    setHeld({ classId, read: found.value });
+  }
+  const isRead = held !== null;
+  const students = isRead ? held.read.students : [];
 
   return (
-    <NarrativeProvider classId={classId} students={students}>
+    <NarrativeProvider
+      classId={isRead ? held.classId : classId}
+      students={students}
+    >
       <Tabs className="min-h-0 flex-1 shrink gap-0" defaultValue="students">
         <TabsList aria-label={t("tabs-label")} className={pageRowVariants()}>
           <TabsTab value="students">
@@ -123,7 +141,7 @@ export function ClassInsightTabs({
                     id: "student",
                   }),
                   skillColumns.text((row) => row.competency, {
-                    cell: (info) => <span dir="auto">{info.getValue()}</span>,
+                    cell: (info) => <TableText>{info.getValue()}</TableText>,
                     header: t("competency"),
                     id: "competency",
                   }),
@@ -140,13 +158,13 @@ export function ClassInsightTabs({
                     header: t("evidence"),
                     id: "evidence",
                   }),
-                  ...(isRead && found.value.forecasts
+                  ...(isRead && held.read.forecasts
                     ? [
                         skillColumns.number(
                           (row) =>
                             row.chance === null ? null : percentOf(row.chance),
                           {
-                            header: t("chance", { kktp: found.value.kktp }),
+                            header: t("chance", { kktp: held.read.kktp }),
                             id: "chance",
                           }
                         ),
@@ -176,9 +194,10 @@ export function ClassInsightTabs({
                 loading={!isRead}
                 rowId={(row) => row.key}
               />
-              {isRead ? (
+              {isRead &&
+              Arr.isReadonlyArrayNonEmpty(skillRowsOf(students)) ? (
                 <TableNote>
-                  {found.value.forecasts ? t("chance-note") : t("chance-held")}
+                  {held.read.forecasts ? t("chance-note") : t("chance-held")}
                 </TableNote>
               ) : null}
             </TablePageBody>
@@ -224,6 +243,7 @@ function ClassStudents({
             id: "student",
           }),
           studentColumns.text((row) => row.email ?? "", {
+            cell: (info) => <TableText>{info.getValue()}</TableText>,
             header: t("email"),
             id: "email",
           }),
@@ -288,7 +308,9 @@ function ClassStudents({
         loading={!isRead}
         rowId={(row) => row.id}
       />
-      {isRead ? <TableNote>{t("narratives-note")}</TableNote> : null}
+      {Arr.isReadonlyArrayEmpty(students) ? null : (
+        <TableNote>{t("narratives-note")}</TableNote>
+      )}
     </>
   );
 }

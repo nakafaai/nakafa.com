@@ -2,14 +2,15 @@ import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { File02Icon, Target02Icon } from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { TableAction, TableActionName } from "@/components/shared/table/action";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TableNote } from "@/components/shared/table/frame";
 import { TableTitle } from "@/components/shared/table/title";
 import { useTenant } from "@/components/tenant/context";
 import { percentOf } from "@/components/tenant/insight/rows";
@@ -29,7 +30,10 @@ export function OwnMastery() {
   if (QueryResult.isFailure(mine)) {
     throw mine.error;
   }
+  const isRead = QueryResult.isSuccess(mine);
+
   return (
+    <>
     <DataTable
       columns={[
         skillColumns.text((skill) => skill.competency, {
@@ -60,7 +64,7 @@ export function OwnMastery() {
         }),
         skillColumns.menu(() => <OwnExamsLink />),
       ]}
-      data={QueryResult.isSuccess(mine) ? mine.value : []}
+      data={isRead ? mine.value : []}
       empty={
         <TableEmpty
           act="waving"
@@ -77,9 +81,13 @@ export function OwnMastery() {
           title={t("empty")}
         />
       }
-      loading={!QueryResult.isSuccess(mine)}
+      loading={!isRead}
       rowId={(skill) => skill.competency}
     />
+    {isRead && Arr.isReadonlyArrayNonEmpty(mine.value) ? (
+      <TableNote>{t("empty-description")}</TableNote>
+    ) : null}
+    </>
   );
 }
 
@@ -89,17 +97,14 @@ function OwnExamsLink() {
   const { slug } = useTenant();
 
   return (
-    <div className="flex justify-end">
-      <Button
-        render={
-          <Link params={{ slug }} to="/school/$slug/exams">
-            <HugeIcons icon={File02Icon} />
-            {t("exams-action")}
-          </Link>
-        }
-        size="sm"
-        variant="outline"
-      />
-    </div>
+    <TableAction
+      nativeButton={false}
+      render={
+        <Link params={{ slug }} to="/school/$slug/exams">
+          <HugeIcons icon={File02Icon} />
+          <TableActionName>{t("exams-action")}</TableActionName>
+        </Link>
+      }
+    />
   );
 }
