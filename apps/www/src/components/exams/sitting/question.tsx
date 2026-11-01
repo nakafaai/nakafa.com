@@ -7,6 +7,7 @@ import {
   madePairs,
   markedCells,
   NO_RESPONSE,
+  typedText,
 } from "@repo/backend/confect/assessment/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { JsonTextSchema } from "@repo/utilities/json";
@@ -260,6 +261,7 @@ export const SittingQuestion = memo(function SittingQuestion({
                 })
               }
               onType={(text) => onChoose({ text })}
+              saved={typedText(question.response ?? NO_RESPONSE)}
               text={keptText}
             />
           ) : null}

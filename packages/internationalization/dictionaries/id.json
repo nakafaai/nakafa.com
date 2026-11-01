@@ -77,6 +77,7 @@
     "request-state-approved": "Disetujui",
     "request-state-declined": "Ditolak",
     "family-title": "Orang tuaku",
+    "family-pending": "Orang tuamu menyelesaikan tautan dengan kode yang dikirim ke alamat ini.",
     "family-invite": "Undang orang tua",
     "family-empty-description": "Tambahkan email orang tuamu agar mereka bisa masuk dan melihat nilaimu.",
     "sign-in-action": "Masuk orang tua",
@@ -90,7 +91,7 @@
     "code-invalid": "Tulis enam angka dari email.",
     "code-refused": "Kode salah atau sudah kedaluwarsa.",
     "sign-in": "Masuk",
-    "resend-code": "Kirim ulang kode",
+    "resend-code": "Kirim ulang",
     "failed": "Tidak dapat terhubung. Coba lagi.",
     "home-title": "Anak saya",
     "home-empty": "Belum ada anak yang ditautkan.",
@@ -151,7 +152,6 @@
     "import": "Impor",
     "export": "Ekspor",
     "export-grades": "Nilai rapor",
-    "export-grades-label": "Nilai rapor satu rombel",
     "export-grades-loading": "Memuat rombel",
     "export-grades-no-period": "Belum ada periode aktif.",
     "export-grades-empty": "Belum ada rombel di periode ini.",
@@ -685,18 +685,18 @@
     "webhook-url-error": "Pakai alamat https publik.",
     "webhook-client": "Klien",
     "webhook-client-placeholder": "Pilih klien",
-    "webhook-changes": "Perubahan",
+    "webhook-changes": "Kirim saat",
     "webhook-change": {
       "grade": {
         "released": "Nilai dirilis"
       },
       "grant": {
-        "created": "Peran diberikan",
-        "ended": "Peran berakhir"
+        "created": "Seseorang diberi peran",
+        "ended": "Peran seseorang berakhir"
       },
       "guardian": {
-        "linked": "Orang tua tertaut",
-        "withdrawn": "Orang tua menarik diri"
+        "linked": "Orang tua ditautkan ke siswa",
+        "withdrawn": "Tautan orang tua ditarik"
       },
       "unit": {
         "created": "Unit dibuat"
@@ -1317,6 +1317,7 @@
     "roles-search": "Cari orang",
     "roles-empty": "Belum ada yang memegang peran.",
     "card-issue-title": "Kartu masuk",
+    "card-issue-action": "Terbitkan kartu masuk",
     "card-login-name": "Nama masuk",
     "card-login-name-placeholder": "Nama masuk",
     "card-reissue": "Terbitkan ulang kartu",
@@ -1389,7 +1390,10 @@
     "locale-country": "Negara",
     "locale-currency": "Mata uang",
     "locale-footer": "Setiap perubahan tercatat di jejak audit.",
-    "homeroom-description": "Satu guru memimpin setiap rombel."
+    "homeroom-description": "Satu guru memimpin setiap rombel.",
+    "webhook-changes-description": "Sistemmu diberi tahu setiap kali salah satunya terjadi.",
+    "webhook-changes-none": "Klien ini tidak membaca apa pun yang dikirim webhook, jadi ubah aksinya dulu.",
+    "webhook-client-none": "Webhook milik sebuah klien API, jadi buat dulu kliennya."
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -1433,6 +1437,8 @@
     "message-hidden": "Guru menyembunyikan pesan ini.",
     "message-edited": "Diedit",
     "message-edit": "Edit",
+    "post-waiting-edit": "Edit pengumuman",
+    "library-edit-title": "Edit item",
     "message-save": "Simpan",
     "message-hide": "Sembunyikan",
     "hide-title": "Sembunyikan pesan ini",
@@ -1725,7 +1731,7 @@
     "value": "Nilai",
     "open-letter": "Buka SKL",
     "open-check": "Buka halaman periksa",
-    "decide": "Keputusan kelulusan",
+    "decide": "Putuskan kelulusan",
     "decide-description": "Keputusan kepala satuan pendidikan untuk {period}, bagi semua rombel tingkat akhir.",
     "decision": "Nomor keputusan",
     "decision-placeholder": "421.3/045/SMP.1/2027",
@@ -1938,6 +1944,7 @@
     "arabic-fraction": "Garis miring pecahan",
     "arabic-minus": "Tanda minus",
     "load-error": "Data ini belum dapat dimuat.",
+    "load-error-title": "Terjadi kesalahan",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
     "month": "Bulan",
@@ -2273,7 +2280,9 @@
   },
   "Tryouts": {
     "title": "Mau coba try out apa hari ini?",
-    "metadata-description": "Pilih negara, ujian, dan set try out dari Nakafa.",
+    "hub-search-title": "Try Out Online Gratis dengan Skor Langsung",
+    "metadata-description": "Try out berwaktu dengan skor langsung setelah selesai. Gratis dan tanpa batas di Nakafa.",
+    "search-title": "Try Out {name} Gratis",
     "track-metadata-description": "Pilih set try out {exam} di Nakafa: berwaktu, dengan skor langsung setelah selesai.",
     "set-metadata-description": "Kerjakan {set} {exam} di Nakafa: try out berwaktu dengan skor langsung setelah selesai.",
     "section-metadata-description": "Latihan {section} dari {set} {exam} di Nakafa: try out berwaktu dengan skor langsung setelah selesai.",
@@ -2358,6 +2367,7 @@
   },
   "Player": {
     "navigator": "Soal",
+    "navigator-description": "Pilih nomor untuk membuka soal itu.",
     "navigator-open": "Buka navigasi soal, soal {number}",
     "controls": "Kontrol soal",
     "previous-question": "Soal sebelumnya",
@@ -3751,32 +3761,32 @@
   },
   "SEO": {
     "subject": {
-      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) | Nakafa",
+      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) - Nakafa",
       "description": "Pelajari {title} dalam {chapter, select, __EMPTY__ {} other {{chapter} }}{material} untuk {grade}. Halaman ini berisi konsep, contoh, dan latihan untuk mengecek pemahaman.",
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
     },
     "exercise": {
-      "title": "{number, select, 0 {} other {Soal {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
+      "title": "{number, select, 0 {} other {Soal {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) - Nakafa",
       "description": "Latihan {material} {exam}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} berisi {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} dengan pembahasan untuk memeriksa cara berpikir.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}latihan, soal, pembahasan, ujian"
     },
     "exercise-program": {
-      "title": "Latihan Soal {exam} | Nakafa",
+      "title": "Latihan Soal {exam} - Nakafa",
       "description": "Pilih domain latihan {exam} untuk {category}. Setiap domain mengarah ke set soal dengan pembahasan untuk mengecek pemahaman.",
       "keywords": "{exam}, {category}, latihan soal, set soal, pembahasan, persiapan ujian"
     },
     "curriculum": {
-      "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}} | Nakafa",
+      "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}} - Nakafa",
       "description": "Jelajahi {title}{parent, select, __EMPTY__ {} other { dalam {parent}}}{program, select, __EMPTY__ {} other { untuk {program}}}. Indeks kurikulum ini menghubungkan pelajar ke materi dan latihan yang relevan.",
       "keywords": "{title}, {parent, select, __EMPTY__ {} other {{parent}, }}{program, select, __EMPTY__ {} other {{program}, }}kurikulum, alur belajar, materi, latihan"
     },
     "article": {
-      "title": "{title} - {category} | Nakafa",
+      "title": "{title} - {category} - Nakafa",
       "description": "Baca {title} dalam topik {category}. Artikel ini menyajikan konteks, data, dan rujukan yang bisa diperiksa pembaca.",
       "keywords": "{title}, {category}, analisis, fakta, terkini, riset, informasi, berita"
     },
     "quran": {
-      "title": "Surat {number}. {name} ({transliteration}){translation, select, __EMPTY__ {} other { - {translation}}} | Nakafa",
+      "title": "Surah {transliteration}{translation, select, __EMPTY__ {} other { ({translation})}}: Arab, Latin dan Tafsir - Nakafa",
       "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Qur'an.",
       "keywords": "Surat {name}, Al-Qur'an{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}, tafsir"
     }
@@ -3832,8 +3842,6 @@
   "SchoolInsight": {
     "title": "Insight",
     "class": "Kelas",
-    "pick": "Pilih kelas",
-    "pick-description": "Capaian tiap siswa tampil di sini.",
     "competency": "Kompetensi",
     "mastery": "Penguasaan",
     "evidence": "Bukti",
@@ -3848,7 +3856,7 @@
     "narrative-description": "Tulisanmu tentang siswa ini. Orang tua hanya membacanya setelah kamu bagikan.",
     "narrative-placeholder": "Kekuatan siswa ini, dan yang membantunya berikutnya",
     "narrative-save": "Simpan",
-    "narrative-share": "Bagikan ke orang tua",
+    "narrative-share": "Bagikan ke wali",
     "narrative-withdraw": "Tarik kembali",
     "narrative-ask": "Minta Nina",
     "narrative-drafting": "Nina sedang menulis draf.",
@@ -3861,8 +3869,22 @@
     "practice-share": "Bagikan {topic} ke sekolah",
     "practice-note": "Hanya topik yang kamu aktifkan yang sampai ke gurumu, dan kamu bisa mematikannya kapan saja.",
     "tags": "Kompetensi",
-    "tags-description": "Sebutkan kompetensi tiap soal. Soal tanpa kompetensi dihitung untuk ujiannya.",
+    "tags-description": "Tulis yang diuji tiap soal sebelum hasil dirilis, dan soal yang kosong dihitung untuk ujiannya.",
     "exam": "Ujian",
-    "question": "Soal {number}"
+    "question": "Soal {number}",
+    "no-class": "Belum ada kelas",
+    "no-class-description": "Insight menampilkan capaian tiap siswa di sebuah kelas, jadi mulai dari satu kelas.",
+    "no-class-member": "Insight menampilkan capaian tiap siswa di kelas yang kamu ajar, jadi minta admin menambahkanmu ke satu kelas.",
+    "no-class-action": "Buka kelas",
+    "class-empty": "Belum ada ujian yang dirilis",
+    "class-empty-description": "Rilis hasil ujian yang diikuti kelas ini, dan capaian tiap siswa tampil di sini.",
+    "exams-action": "Buka ujian",
+    "tags-note": "Soal tanpa kompetensi dihitung atas nama ujiannya.",
+    "tags-empty": "Buat ujian dulu, lalu tulis yang diuji tiap soalnya.",
+    "tags-done": "Selesai",
+    "tags-none": "Ujian ini belum punya soal.",
+    "exam-placeholder": "Pilih ujian",
+    "question-placeholder": "Opsional, misalnya Pecahan",
+    "narratives-note": "Buka seorang siswa untuk menulis yang membantunya berikutnya."
   }
 }

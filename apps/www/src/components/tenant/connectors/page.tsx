@@ -16,8 +16,8 @@ import {
   currentConnection,
   disconnectSchoolUpdate,
 } from "@/components/connectors/optimistic";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { LoadFailure } from "@/components/state/failure";
 import {
   forumCall,
   runForumCall,
@@ -71,7 +71,7 @@ function SchoolConnections() {
     QueryResult.isFailure(offered) ||
     PaginatedQueryResult.isFailure(connections)
   ) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
   if (
     !QueryResult.isSuccess(offered) ||

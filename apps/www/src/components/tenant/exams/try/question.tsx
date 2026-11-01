@@ -159,6 +159,7 @@ export function ExamTryQuestion({
               entry={entry.value}
               labelledBy={ids.title}
               onType={(text) => choose(question.id, { text })}
+              saved={typedText(response ?? NO_RESPONSE)}
               text={typedText(response ?? NO_RESPONSE)}
             />
           ) : null}

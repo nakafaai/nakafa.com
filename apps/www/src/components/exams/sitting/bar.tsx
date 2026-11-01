@@ -12,6 +12,7 @@ import {
 } from "@/components/player/header";
 import { ShellLock } from "@/components/sidebar/lock";
 import { useTenant } from "@/components/tenant/context";
+import { ExamOffline } from "@/components/tenant/exams/offline";
 import { TargetLink } from "@/lib/routing/link";
 import {
   schoolExamEditTarget,
@@ -19,10 +20,11 @@ import {
 } from "@/lib/routing/school/target";
 
 /**
- * The header of a paper being answered, the try-out player's own: the way back and the exam's name at the
- * start, the time left in the centre when the paper has a deadline, and the view beside the one primary
- * action at the end. It locks the school's frame while the paper is on screen, so the paper takes the whole
- * screen and the school's navigation stays out of sight, as a running try-out does.
+ * The header of a paper being answered, the try-out player's own: the way back, the exam's name and, while
+ * the connection is gone, that the answers wait, at the start, the time left in the centre when the paper
+ * has a deadline, and the view beside the one primary action at the end. It locks the school's frame while
+ * the paper is on screen, so the paper takes the whole screen and the school's navigation stays out of
+ * sight, as a running try-out does.
  */
 export function PaperBar({
   back,
@@ -45,6 +47,7 @@ export function PaperBar({
         <PlayerHeaderStart>
           {back}
           <PlayerTitle>{title}</PlayerTitle>
+          <ExamOffline />
         </PlayerHeaderStart>
         {timer}
         <PlayerHeaderEnd>{children}</PlayerHeaderEnd>

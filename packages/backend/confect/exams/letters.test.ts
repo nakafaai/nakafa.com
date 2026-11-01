@@ -5,6 +5,7 @@ import {
   labelText,
   letterScript,
   optionLetter,
+  optionLetters,
   optionPlace,
 } from "@repo/backend/confect/exams/letters";
 import { Array as Arr } from "effect";
@@ -87,6 +88,13 @@ describe("the letter of an option", () => {
       "د",
       "هـ",
     ]);
+  });
+
+  it("names a set's options from its own labels, so every surface says the same letter", () => {
+    const arabic = optionLetters([label("القاهرة"), label("دمشق")]);
+    const latin = optionLetters([label("Jakarta"), label("Bandung")]);
+    expect([arabic(0), arabic(1)]).toEqual(["أ", "ب"]);
+    expect([latin(0), latin(1)]).toEqual(["A", "B"]);
   });
 
   it("names an option of an Arabic set past the abjad as a Latin set names its place", () => {

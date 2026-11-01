@@ -7,6 +7,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   letterScript,
   optionLetter,
+  optionLetters,
 } from "@repo/backend/confect/exams/letters";
 import {
   CHOICE_OPTIONS_MAX,
@@ -51,9 +52,11 @@ import {
   PaperPairs,
   PaperPart,
   PaperParts,
+  PaperPartText,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
 import { tableOf } from "@/components/tenant/exams/table";
+import { LetteredChoice } from "@/components/tryout/runtime/choice/surface";
 import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 import { useLastValue } from "@/lib/data/kept";
 import { assessmentSchema } from "@/lib/editor/assessment";
@@ -376,13 +379,21 @@ function ChoiceSketch({
   /** The question's template, which names its choices when it holds two. */
   readonly template: Question["template"];
 }) {
+  const letterOf = optionLetters(
+    Arr.map(choice.options, (option) => option.label)
+  );
+
   return (
     <>
       <ChoiceGroup title={choiceTitle(template, choice.id)}>
         <PaperOptions>
-          {Arr.map(choice.options, (option) => (
+          {Arr.map(choice.options, (option, index) => (
             <PaperOption key={option.id} multiple={choice.maxChoices !== 1}>
-              <OptionSketch label={option.label} />
+              <LetteredChoice letter={letterOf(index)}>
+                <PaperPartText>
+                  <OptionSketch label={option.label} />
+                </PaperPartText>
+              </LetteredChoice>
             </PaperOption>
           ))}
         </PaperOptions>

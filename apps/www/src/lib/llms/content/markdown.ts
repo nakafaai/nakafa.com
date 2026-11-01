@@ -13,6 +13,7 @@ import {
   readPublishedText,
 } from "@/lib/llms/published";
 import { getQuranLlmsText } from "@/lib/llms/quran";
+import { getTryoutLlmsText } from "@/lib/llms/tryout";
 
 const MATERIAL_ROUTE_SEGMENTS = HashSet.fromIterable(
   Arr.flatMap(PUBLIC_ROUTE_SURFACES, (surface) =>
@@ -53,8 +54,9 @@ const readSectionIndex = Effect.fn("www.llms.markdown.index")(function* ({
  * Resolves cached markdown for one agent-facing route.
  *
  * The source chain is ordered from concrete page owners to derived indexes:
- * Application pages, Quran, signed content, then sitemap-derived section or
- * listing indexes. A null result means the route has no markdown source.
+ * Application pages, Quran, the try-out catalog, signed content, then
+ * sitemap-derived section or listing indexes. A null result means the route has
+ * no markdown source.
  */
 export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
   function* ({ cleanSlug, locale }: LlmsMarkdownInput) {
@@ -65,6 +67,10 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
     const quranText = yield* getQuranLlmsText({ cleanSlug, locale });
     if (quranText) {
       return quranText;
+    }
+    const tryoutText = yield* getTryoutLlmsText({ cleanSlug, locale });
+    if (tryoutText) {
+      return tryoutText;
     }
     const published = yield* getPublishedMarkdownSource({ cleanSlug, locale });
     if (published) {

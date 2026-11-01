@@ -1,10 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  DatabaseWriter,
-  MutationCtx,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { resend } from "@repo/backend/confect/emails/client";
 import { loginAddress } from "@repo/backend/confect/identity/address";
 import {
@@ -13,8 +9,7 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import { insertTestPage } from "@repo/backend/test/content/page";
-import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
+import { signedPages } from "@repo/backend/test/mail";
 import { MASCOT } from "@repo/backend/test/mascot";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
@@ -61,18 +56,6 @@ const unreachable = (fixture: Effect.Success<typeof keyedFixture>) =>
       return [carded, unclaimed];
     })
   );
-
-/** The signed legal Pages of every language, as the production release holds them. */
-const signedPages = Effect.gen(function* () {
-  const ctx = yield* MutationCtx;
-  yield* Effect.promise(async () => {
-    await insertRuntimeRelease(ctx, ["page"]);
-    for (const locale of ACTIVE_APP_LOCALE_CODES) {
-      await insertTestPage(ctx, locale, "privacy-policy", `privacy-${locale}`);
-      await insertTestPage(ctx, locale, "terms-of-service", `terms-${locale}`);
-    }
-  });
-});
 
 describe("emails/notice/internal", () => {
   beforeEach(() => {

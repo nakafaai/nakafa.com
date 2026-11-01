@@ -1,38 +1,27 @@
 import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { resend } from "@repo/backend/confect/emails/client";
 import { loginAddress } from "@repo/backend/confect/identity/address";
-import { queueMail } from "@repo/backend/confect/notifications/mail";
+import {
+  queueMail,
+  queueReplyMail,
+} from "@repo/backend/confect/notifications/mail";
 import { keyedFixture } from "@repo/backend/test/classroom";
-import { insertTestPage } from "@repo/backend/test/content/page";
-import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
+import { signedPages } from "@repo/backend/test/mail";
 import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Option } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 type PersonId = GenericId.GenericId<"tenantPeople">;
+type UserId = GenericId.GenericId<"users">;
 
 const digest = refs.internal.emails.digest.internal;
 const DAY = Duration.toMillis(Duration.days(1));
-
-/** The signed legal Pages of every language, as the production release holds them. */
-const signedPages = Effect.gen(function* () {
-  const ctx = yield* MutationCtx;
-  yield* Effect.promise(async () => {
-    await insertRuntimeRelease(ctx, ["page"]);
-    for (const locale of ACTIVE_APP_LOCALE_CODES) {
-      await insertTestPage(ctx, locale, "privacy-policy", `privacy-${locale}`);
-      await insertTestPage(ctx, locale, "terms-of-service", `terms-${locale}`);
-    }
-  });
-});
 
 /** Queues one mail of a kind for one Person, as a notice does. */
 const queued = (
@@ -50,6 +39,10 @@ const queued = (
       yield* queueMail(kind, relation, person, fixture.units.smp, anchor);
     }).pipe(Effect.orDie)
   );
+
+/** Queues the digest of one reply for one account, as a reply does. */
+const replied = (fixture: Fixture, userId: UserId) =>
+  fixture.run(queueReplyMail(userId).pipe(Effect.orDie));
 
 /** The rows still on the queue. */
 const waiting = (fixture: Fixture) =>
@@ -155,6 +148,66 @@ describe("emails/digest/internal", () => {
           ).pipe(Effect.orDie)
         );
         expect(yield* fixture.internal.mutation(digest.claim, {})).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "counts an account's replies in one mail, and drops what expired or cannot be mailed",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        yield* fixture.run(signedPages);
+        const student = fixture.users.student.userId;
+        const teacher = fixture.users.teacher.userId;
+        yield* replied(fixture, student);
+        yield* replied(fixture, student);
+        // A reply waits for the digest.
+        expect(yield* fixture.internal.mutation(digest.claim, {})).toEqual([]);
+        vi.setSystemTime(TENANCY_NOW + DAY);
+        const mails = yield* fixture.internal.mutation(digest.claim, {});
+        expect(mails).toMatchObject([
+          {
+            input: {
+              counts: [{ change: "comment.replied", count: 2 }],
+              inboxUrl: "http://localhost:3000/id/notifications",
+              locale: "id",
+            },
+          },
+        ]);
+        expect(yield* waiting(fixture)).toEqual([]);
+
+        // A reply a week old tells nothing the inbox does not.
+        yield* replied(fixture, student);
+        vi.setSystemTime(TENANCY_NOW + 9 * DAY);
+        expect(yield* fixture.internal.mutation(digest.claim, {})).toEqual([]);
+
+        // A school login, an account being deleted, and an account that is gone get no mail.
+        yield* replied(fixture, student);
+        yield* replied(fixture, teacher);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("users")
+              .patch(student, { email: loginAddress("raka") })
+          ).pipe(Effect.orDie)
+        );
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("users").patch(teacher, { deletedAt: TENANCY_NOW })
+          ).pipe(Effect.orDie)
+        );
+        vi.setSystemTime(TENANCY_NOW + 10 * DAY);
+        expect(yield* fixture.internal.mutation(digest.claim, {})).toEqual([]);
+        expect(yield* waiting(fixture)).toEqual([]);
+        yield* replied(fixture, teacher);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("users").delete(teacher)
+          ).pipe(Effect.orDie)
+        );
+        vi.setSystemTime(TENANCY_NOW + 11 * DAY);
+        expect(yield* fixture.internal.mutation(digest.claim, {})).toEqual([]);
+        expect(yield* waiting(fixture)).toEqual([]);
       })
   );
 

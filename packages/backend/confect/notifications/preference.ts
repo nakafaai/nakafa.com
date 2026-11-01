@@ -5,15 +5,23 @@ import { Schema } from "effect";
 /** A channel a person can switch off. The inbox always keeps its row. */
 export const PreferenceChannel = Schema.Literals(["push", "email"]);
 
-/** One channel of one kind that a Person switched off. Every other channel stays on, so no row means on (ADR 0027). */
-export const noticePreferenceValidator = Schema.Struct({
-  channel: PreferenceChannel,
-  kind: NoticeKind,
-  personId: Id("tenantPeople"),
-  tenantId: Id("tenants"),
-});
+/** What every choice holds: the channel of the kind that was switched off. */
+const preferenceFields = { channel: PreferenceChannel, kind: NoticeKind };
 
-/** A channel of a kind that a Person switched off, as their settings read it. */
+/**
+ * One channel of one kind that someone switched off: a Person of a school, or an account for a notice no school holds.
+ * Every other channel stays on, so no row means on (ADR 0027).
+ */
+export const noticePreferenceValidator = Schema.Union([
+  Schema.Struct({
+    ...preferenceFields,
+    personId: Id("tenantPeople"),
+    tenantId: Id("tenants"),
+  }),
+  Schema.Struct({ ...preferenceFields, userId: Id("users") }),
+]);
+
+/** A channel of a kind that someone switched off, as their settings read it. */
 export const SwitchedOff = Schema.Struct({
   channel: PreferenceChannel,
   kind: NoticeKind,

@@ -15,6 +15,7 @@ const mockGetLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
 const mockClassifyQuranLlmsRoute = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
+const mockGetTryoutLlmsText = vi.hoisted(() => vi.fn());
 const mockIsPublicLlmsLocaleIndexRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockResolvePublicLlmsSectionIndex = vi.hoisted(() => vi.fn());
@@ -35,6 +36,10 @@ vi.mock("@/lib/llms/published", () => ({
 vi.mock("@/lib/llms/quran", () => ({
   classifyQuranLlmsRoute: mockClassifyQuranLlmsRoute,
   getQuranLlmsText: mockGetQuranLlmsText,
+}));
+
+vi.mock("@/lib/llms/tryout", () => ({
+  getTryoutLlmsText: mockGetTryoutLlmsText,
 }));
 
 vi.mock("@/lib/llms/index/public", () => ({
@@ -90,6 +95,7 @@ describe("llms markdown content resolver", () => {
       .mockReset()
       .mockReturnValue(Effect.succeed("Published markdown"));
     mockClassifyQuranLlmsRoute.mockReset().mockReturnValue(Option.none());
+    mockGetTryoutLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
     mockIsPublicLlmsLocaleIndexRoute.mockReset().mockReturnValue(false);
     mockReadActiveContentRoute.mockReset();
@@ -262,13 +268,16 @@ describe("llms markdown content resolver", () => {
   );
 
   it.effect(
-    "does not invent markdown for try-out catalog routes without a source document",
+    "reads a try-out route from its catalog, and no signed document",
     () =>
       Effect.gen(function* () {
-        yield* expectNoPublishedMarkdown("try-out/indonesia/snbt");
-        expect(
-          yield* readMarkdown("try-out/indonesia/snbt/2027/set-1")
-        ).toBeNull();
+        mockGetTryoutLlmsText.mockReturnValueOnce(
+          Effect.succeed("Try-out catalog markdown")
+        );
+
+        expect(yield* readMarkdown("try-out/indonesia/snbt")).toBe(
+          "Try-out catalog markdown"
+        );
         expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
       })
   );

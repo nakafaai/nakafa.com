@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, String as Str } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { expectNoOverflow } from "@/e2e/support/layout";
+import { optionNamed } from "@/e2e/support/player";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -53,7 +54,7 @@ async function expectTry(page: Page, editor: string, options: string[]) {
     });
     for (const text of options) {
       await expect(
-        page.getByRole("radio", { exact: true, name: text })
+        page.getByRole("radio", { name: optionNamed(text) })
       ).toBeVisible();
     }
     await Effect.runPromise(expectNoOverflow(page, `try ${size.width}`));

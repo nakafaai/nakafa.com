@@ -11029,6 +11029,47 @@ export declare const api: {
         null
       >;
     };
+    personal: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {},
+        Array<{
+          channel: "push" | "email";
+          kind:
+            | "forumMention"
+            | "classAnnouncement"
+            | "taskPublished"
+            | "taskDeadline"
+            | "gradeReleased"
+            | "taskMissed"
+            | "examStart"
+            | "examGuardianReminder"
+            | "invitation"
+            | "commentReply";
+        }>
+      >;
+      set: FunctionReference<
+        "mutation",
+        "public",
+        {
+          channel: "push" | "email";
+          kind:
+            | "forumMention"
+            | "classAnnouncement"
+            | "taskPublished"
+            | "taskDeadline"
+            | "gradeReleased"
+            | "taskMissed"
+            | "examStart"
+            | "examGuardianReminder"
+            | "invitation"
+            | "commentReply";
+          on: boolean;
+        },
+        null
+      >;
+    };
     preferences: {
       list: FunctionReference<
         "query",
@@ -17933,7 +17974,8 @@ export declare const internal: {
                 | "grade.released"
                 | "assignment.missed"
                 | "assignment.published"
-                | "forum.mentioned";
+                | "forum.mentioned"
+                | "comment.replied";
               count: number;
             }>;
             inboxUrl: string;
@@ -17959,7 +18001,8 @@ export declare const internal: {
                   | "grade.released"
                   | "assignment.missed"
                   | "assignment.published"
-                  | "forum.mentioned";
+                  | "forum.mentioned"
+                  | "comment.replied";
                 count: number;
               }>;
               inboxUrl: string;

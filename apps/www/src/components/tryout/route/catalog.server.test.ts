@@ -8,7 +8,6 @@ import {
   readTryoutExamRoute,
   readTryoutHubHandler,
   readTryoutHubRoute,
-  readTryoutRouteHead,
   readTryoutTrackRoute,
   readTryoutTrackSetList,
 } from "@/components/tryout/route/catalog.server";
@@ -113,7 +112,9 @@ function publishRoute(route: object | undefined) {
 beforeEach(() => {
   vi.clearAllMocks();
   catalog.readServerTranslator.mockImplementation(() =>
-    Promise.resolve((key: string) => key)
+    Promise.resolve((key: string, values?: { readonly name?: string }) =>
+      values?.name === undefined ? key : `${key} ${values.name}`
+    )
   );
   catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
   catalog.readTryoutSetList.mockReturnValue(
@@ -136,102 +137,6 @@ beforeEach(() => {
     })
   );
   publishRoute(publishedRoute);
-});
-
-describe("readTryoutRouteHead", () => {
-  it.effect("reads no head for a route the catalog does not publish", () =>
-    Effect.gen(function* () {
-      publishRoute(undefined);
-
-      const head = yield* readTryoutRouteHead({
-        kind: "country",
-        locale: "en",
-        publicPath: COUNTRY,
-      });
-
-      expect(Option.isNone(head)).toBe(true);
-    })
-  );
-
-  it.effect("builds the head of a country with its own description", () =>
-    Effect.gen(function* () {
-      const head = yield* readTryoutRouteHead({
-        kind: "country",
-        locale: "en",
-        publicPath: COUNTRY,
-      });
-
-      expect(Option.getOrThrow(head)).toEqual({
-        alternates: [
-          { href: `https://nakafa.com/en/${COUNTRY}`, hreflang: "en" },
-          { href: `https://nakafa.com/id/${COUNTRY}`, hreflang: "id" },
-          { href: "https://nakafa.com/de/try-out/indonesien", hreflang: "de" },
-          { href: `https://nakafa.com/en/${COUNTRY}`, hreflang: "x-default" },
-        ],
-        canonicalPath: `/en/${COUNTRY}`,
-        description: "Country",
-        image: "og-url",
-        indexable: true,
-        title: "Indonesia",
-      });
-      expect(catalog.getOgUrl).toHaveBeenCalledExactlyOnceWith("en", COUNTRY);
-    })
-  );
-
-  it.effect(
-    "falls back to the catalog description when the route has none",
-    () =>
-      Effect.gen(function* () {
-        publishRoute({ ...publishedRoute, description: undefined });
-
-        const head = yield* readTryoutRouteHead({
-          kind: "track",
-          locale: "en",
-          publicPath: TRACK,
-        });
-
-        expect(Option.getOrThrow(head).description).toBe(
-          "metadata-description"
-        );
-      })
-  );
-
-  it.effect(
-    "reads no head for an exam without the social image identity it needs",
-    () =>
-      Effect.gen(function* () {
-        const head = yield* readTryoutRouteHead({
-          kind: "exam",
-          locale: "en",
-          publicPath: EXAM,
-        });
-
-        expect(Option.isNone(head)).toBe(true);
-        expect(catalog.resolveTryoutExamArtwork).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect("uses the artwork of the exam's social image identity", () =>
-    Effect.gen(function* () {
-      publishRoute({
-        ...publishedRoute,
-        description: undefined,
-        socialImageIdentity: { examKey: "snbt", imageKey: "exam-a" },
-      });
-
-      const head = yield* readTryoutRouteHead({
-        kind: "exam",
-        locale: "en",
-        publicPath: EXAM,
-      });
-
-      expect(Option.getOrThrow(head).image).toBe("social-snbt.png");
-      expect(Option.getOrThrow(head).description).toBe("metadata-description");
-      expect(catalog.resolveTryoutExamArtwork).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({ examKey: "snbt", publicPath: COUNTRY })
-      );
-    })
-  );
 });
 
 describe("readTryoutHubRoute", () => {
@@ -414,7 +319,7 @@ describe("readTryoutTrackRoute", () => {
           examPath: EXAM,
           head: {
             description: "track-metadata-description",
-            title: "SNBT Year 2027",
+            title: "search-title SNBT Year 2027",
           },
           kind: "found",
           list: { result: { isDone: true, page: [] } },

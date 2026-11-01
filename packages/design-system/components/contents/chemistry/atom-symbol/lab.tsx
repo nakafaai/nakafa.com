@@ -61,7 +61,7 @@ export function AtomSymbolLab({
   const selectedSample = ATOM_SYMBOL_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
   const neutronCount = selectedSample.massNumber - selectedSample.atomicNumber;
-  const notation = `{}^{${selectedSample.massNumber}}_{${selectedSample.atomicNumber}}\\mathrm{${selectedSample.symbol}}`;
+  const notation = `\\vphantom{X}^{${selectedSample.massNumber}}_{${selectedSample.atomicNumber}}\\mathrm{${selectedSample.symbol}}`;
 
   /**
    * Keeps one atom selected when ToggleGroup emits an empty value.

@@ -9,7 +9,6 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
@@ -20,6 +19,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -80,7 +80,7 @@ function PeopleBody() {
           />
         ) : null}
         {QueryResult.isFailure(read) ? (
-          <DataFailure onRetry={reloadPage} />
+          <LoadFailure onRetry={reloadPage} />
         ) : null}
         {QueryResult.isSuccess(read) && !empty ? (
           <DataTable

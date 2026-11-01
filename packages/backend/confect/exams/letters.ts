@@ -105,6 +105,16 @@ export const optionLetter = (
       )
     : String.fromCharCode(LETTER_A + index);
 
+/**
+ * The letters of one set of options, by place, in the one script their labels call for. Every place that
+ * draws the options of a set takes its letters here, so a paper, a review and a key cannot name an option
+ * apart.
+ */
+export const optionLetters = (labels: readonly PartLabel[]) => {
+  const script = letterScript(labels);
+  return (index: number) => optionLetter(index, script);
+};
+
 /** Whether an option is one of a two-tier question's reasons. */
 export const isReasonOption = (optionId: string) =>
   optionId.startsWith(`${REASON_ID}-`);

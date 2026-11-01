@@ -71,7 +71,7 @@ export function PaperOptions({ children }: { children: ReactNode }) {
 
 /**
  * One option of the paper, as the player draws it: the student's own control, unmarked and out of reach, a
- * radio for one answer and a check box for several, then its rich text, in the player's choice frame. Only the
+ * radio for one answer and a check box for several, then its letter and rich text, in the player's choice frame. Only the
  * cursor differs, since the text is edited here. The key is marked by letter in the teacher's layer, and the
  * letters run in the paper's reading order.
  */
@@ -98,7 +98,7 @@ export function PaperOption({
           <Radio className="mt-1 shrink-0" value="unmarked" />
         )}
       </span>
-      <PaperPartText>{children}</PaperPartText>
+      {children}
     </div>
   );
 }
@@ -177,6 +177,7 @@ export function PaperField({ answers }: { answers: readonly Interaction[] }) {
         entry={entry.value}
         labelledBy=""
         onType={Fn.constVoid}
+        saved=""
         text=""
       />
     </div>

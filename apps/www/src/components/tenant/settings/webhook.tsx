@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -41,6 +42,7 @@ import {
 } from "@/components/tenant/settings/changes";
 import { changeWebhookChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { Link } from "@/lib/routing/link";
 
 const SOURCE = "components/tenant/settings/webhook";
 
@@ -61,8 +63,8 @@ const decodeChanges = Schema.decodeUnknownOption(WebhookChanges);
 
 /**
  * The fields of a webhook: where it posts, and the changes it carries, from those its
- * client's actions open. A list keeps at least one change, and an address shows its error
- * in the place of its description once it holds text.
+ * client's actions open. A list keeps at least one change, a client that opens none says
+ * so, and an address shows its error in the place of its description once it holds text.
  */
 function WebhookFields({
   offered,
@@ -98,6 +100,11 @@ function WebhookFields({
       </Field>
       <FieldSet>
         <FieldLegend variant="label">{t("webhook-changes")}</FieldLegend>
+        <FieldDescription>
+          {Arr.isReadonlyArrayEmpty(offered)
+            ? t("webhook-changes-none")
+            : t("webhook-changes-description")}
+        </FieldDescription>
         <FieldGroup data-slot="checkbox-group">
           {Arr.map(offered, (change) => {
             const checked = Arr.contains(changes, change);
@@ -124,9 +131,10 @@ function WebhookFields({
 }
 
 /**
- * The dialog that creates a webhook: the client it belongs to, where it posts, and what it
- * carries, every change the client's actions open at first. The secret the server answers
- * goes to `onIssued`, and the dialog closes.
+ * The dialog that creates a webhook: the client it belongs to, the first one from the start,
+ * where it posts, and what it carries, every change the client's actions open at first. A
+ * school with no client gets the field disabled, the sentence that says why, and the way to
+ * create one. The secret the server answers goes to `onIssued`, and the dialog closes.
  */
 export function SchoolWebhookCreateDialog({
   onIssued,
@@ -158,7 +166,14 @@ export function SchoolWebhookCreateDialog({
   const active = PaginatedQueryResult.isFailure(clients)
     ? []
     : Arr.filter(clients.results, (client) => client.status === "active");
-  const client = Arr.findFirst(active, (each) => each.id === clientId);
+  const client = Option.orElse(
+    Arr.findFirst(active, (each) => each.id === clientId),
+    () => Arr.head(active)
+  );
+  const hasNoClient =
+    (PaginatedQueryResult.isCanLoadMore(clients) ||
+      PaginatedQueryResult.isExhausted(clients)) &&
+    Arr.isReadonlyArrayEmpty(active);
   const held = Option.match(client, {
     onNone: () => [],
     onSome: (each) => offeredChanges(each.actions),
@@ -230,6 +245,7 @@ export function SchoolWebhookCreateDialog({
             {t("webhook-client")}
           </FieldLabel>
           <Select
+            disabled={Arr.isReadonlyArrayEmpty(active)}
             items={Arr.map(active, (each) => ({
               label: each.name,
               value: each.id,
@@ -240,7 +256,7 @@ export function SchoolWebhookCreateDialog({
                 setChosen(undefined);
               }
             }}
-            value={clientId ?? null}
+            value={Option.getOrNull(Option.map(client, (each) => each.id))}
           >
             <SelectTrigger className="w-full" id={`${id}-client`}>
               <SelectValue placeholder={t("webhook-client-placeholder")} />
@@ -255,14 +271,28 @@ export function SchoolWebhookCreateDialog({
               </SelectGroup>
             </SelectContent>
           </Select>
+          {hasNoClient ? (
+            <>
+              <FieldDescription>{t("webhook-client-none")}</FieldDescription>
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                params={{ slug }}
+                to="/school/$slug/settings/clients"
+              >
+                {t("client-add")}
+              </Link>
+            </>
+          ) : null}
         </Field>
-        <WebhookFields
-          changes={changes}
-          offered={held}
-          setChanges={setChosen}
-          setUrl={setUrl}
-          url={url}
-        />
+        {Option.isSome(client) ? (
+          <WebhookFields
+            changes={changes}
+            offered={held}
+            setChanges={setChosen}
+            setUrl={setUrl}
+            url={url}
+          />
+        ) : null}
       </FieldGroup>
     </ResponsiveDialog>
   );
