@@ -36,6 +36,8 @@
   "SchoolEntry": {
     "username-placeholder": "ayu.lestari",
     "password-placeholder": "Dein Passwort",
+    "password-new-placeholder": "Wähle ein Passwort",
+    "card-password-missing": "Wähle ein Passwort, um deine erste Anmeldung abzuschließen.",
     "card-code-label": "Kartencode, optional",
     "card-hint": "Melde dich mit Benutzername und Karte von deinem Admin an.",
     "card-code-placeholder": "Erste Anmeldung oder neue Karte",
@@ -270,6 +272,7 @@
     "student-enter": "Sitzung betreten",
     "student-enter-footer": "Die Aufsicht gibt dir den Token.",
     "student-token-placeholder": "Token von der Aufsicht eingeben",
+    "student-token-hint": "Die Aufsicht zeigt dir den Token.",
     "student-token-refused": "Das Token passt nicht, daher prüfe es und versuche es erneut.",
     "student-too-many-tries": "Zu viele Versuche, daher warte eine Minute und versuche es erneut.",
     "student-not-in-sitting": "Du bist nicht in dieser Sitzung, daher frag deine Aufsicht, wenn du meinst, dass das falsch ist.",

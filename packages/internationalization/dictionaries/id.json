@@ -36,6 +36,8 @@
   "SchoolEntry": {
     "username-placeholder": "ayu.lestari",
     "password-placeholder": "Kata sandimu",
+    "password-new-placeholder": "Buat kata sandi",
+    "card-password-missing": "Buat kata sandi untuk menyelesaikan masuk pertamamu.",
     "card-code-label": "Kode kartu, opsional",
     "card-hint": "Masuk dengan username dan kartu dari admin.",
     "card-code-placeholder": "Masuk pertama atau kartu baru",
@@ -270,6 +272,7 @@
     "student-enter": "Masuk ke sesi",
     "student-enter-footer": "Pengawas memberikan tokennya.",
     "student-token-placeholder": "Masukkan token dari pengawas",
+    "student-token-hint": "Pengawas menunjukkan tokennya.",
     "student-token-refused": "Token tidak cocok, jadi periksa lagi lalu coba kembali.",
     "student-too-many-tries": "Terlalu banyak percobaan, jadi tunggu satu menit lalu coba lagi.",
     "student-not-in-sitting": "Kamu tidak ada di sesi ini, jadi tanyakan pengawasmu jika kamu merasa ini keliru.",

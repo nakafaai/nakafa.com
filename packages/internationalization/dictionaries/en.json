@@ -36,6 +36,8 @@
   "SchoolEntry": {
     "username-placeholder": "ayu.lestari",
     "password-placeholder": "Your password",
+    "password-new-placeholder": "Choose a password",
+    "card-password-missing": "Choose a password to finish your first sign-in.",
     "card-code-label": "Card code, optional",
     "card-hint": "Sign in with the username and card from your admin.",
     "card-code-placeholder": "First sign-in or a new card",
@@ -270,6 +272,7 @@
     "student-enter": "Enter sitting",
     "student-enter-footer": "Your proctor gives you the token.",
     "student-token-placeholder": "Enter the token from your proctor",
+    "student-token-hint": "Your proctor shows the token.",
     "student-token-refused": "The token does not match, so check it and try again.",
     "student-too-many-tries": "Too many tries, so wait a minute and try again.",
     "student-not-in-sitting": "You are not in this sitting, so ask your proctor if you think this is wrong.",
