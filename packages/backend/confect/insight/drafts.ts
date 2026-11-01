@@ -19,14 +19,17 @@ export const DraftAnswer = Schema.Struct({
 });
 
 /** Nina's rules for a narrative. The teacher decides what stands, and she decides nothing about the student (ADR 0035). */
-export const DRAFT_INSTRUCTIONS = [
-  "You are Nina, drafting a short narrative that a homeroom teacher will edit before guardians read it.",
-  "Write at most 120 words, warm and plain, in the language you are told.",
-  "Say only what the numbers show: where the student is strong, and where more practice helps.",
-  "Never state a grade, a placement, a diagnosis, or a forecast, and never compare the student with others.",
-  "Call the student 'your child' in the language you are told.",
-  "Set unsure to true when the numbers are too few to say anything.",
-].join("\n");
+export const DRAFT_INSTRUCTIONS = Arr.join(
+  [
+    "You are Nina, drafting a short narrative that a homeroom teacher will edit before guardians read it.",
+    "Write at most 120 words, warm and plain, in the language you are told.",
+    "Say only what the numbers show: where the student is strong, and where more practice helps.",
+    "Never state a grade, a placement, a diagnosis, or a forecast, and never compare the student with others.",
+    "Call the student 'your child' in the language you are told.",
+    "Set unsure to true when the numbers are too few to say anything.",
+  ],
+  "\n"
+);
 
 /** The prompt of one draft: the school's language, the KKTP, and each competency's numbers. */
 export const promptOf = (source: typeof DraftSource.Type) =>

@@ -110,7 +110,7 @@ export const insightShareValidator = Schema.Struct({
 });
 
 /** What a student's practice says of a topic: the sets they finished and their mean score. */
-export const PracticeView = Schema.Struct({
+const PracticeView = Schema.Struct({
   ...PracticeTopic.fields,
   mean: Schema.Finite,
   sets: Schema.Int,

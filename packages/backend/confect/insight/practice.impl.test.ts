@@ -5,6 +5,9 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { practiceOf } from "@repo/backend/confect/insight/practice";
+import { PracticeTopic } from "@repo/backend/confect/insight/schema";
+import tryoutAttempts from "@repo/backend/confect/tables/tryoutAttempts";
+import tryoutSetProgress from "@repo/backend/confect/tables/tryoutSetProgress";
 import {
   forumClass,
   keyedFixture,
@@ -12,14 +15,18 @@ import {
   period,
 } from "@repo/backend/test/classroom";
 import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
 const { share, stop, topics } = refs.public.insight.practice;
 const { ofClass } = refs.public.insight.reads;
 
-const TOPIC = { countryKey: "indonesia", examKey: "snbt", trackKey: "2027" };
+const TOPIC = Schema.decodeUnknownSync(PracticeTopic)({
+  countryKey: "indonesia",
+  examKey: "snbt",
+  trackKey: "2027",
+});
 
 /** What a finished attempt stores, apart from its learner and its set. */
 const ATTEMPT = {
@@ -46,7 +53,37 @@ const ATTEMPT = {
   status: "completed",
   totalCorrect: 8,
   totalQuestions: 10,
-} as const;
+};
+
+/** A finished attempt of one set, as the try-out writes it. */
+const attemptOf = (setKey: string, userId: string) =>
+  Schema.decodeUnknownSync(tryoutAttempts.Fields)({
+    ...ATTEMPT,
+    setIdentity: setKey,
+    setKey,
+    userId,
+  });
+
+/** The progress of one set, as the try-out keeps it. */
+const progressOf = (
+  setKey: string,
+  userId: string,
+  latestAttemptId: string,
+  publishedScore: number | null
+) =>
+  Schema.decodeUnknownSync(tryoutSetProgress.Fields)({
+    ...TOPIC,
+    appLocale: "id",
+    attemptNumber: 1,
+    latestAttemptId,
+    publishedScore,
+    setIdentity: setKey,
+    setKey,
+    status: "completed",
+    statusRank: 3,
+    updatedAt: TENANCY_NOW,
+    userId,
+  });
 
 /** Stores one set of the student's private practice. */
 const practiced = (
@@ -63,25 +100,13 @@ const practiced = (
         return yield* Effect.die("The student has an account.");
       }
       const writer = yield* DatabaseWriter;
-      const attempt = yield* writer.table("tryoutAttempts").insert({
-        ...ATTEMPT,
-        setIdentity: setKey,
-        setKey,
-        userId: student.account.userId,
-      });
-      yield* writer.table("tryoutSetProgress").insert({
-        ...TOPIC,
-        appLocale: "id",
-        attemptNumber: 1,
-        latestAttemptId: attempt,
-        publishedScore,
-        setIdentity: setKey,
-        setKey,
-        status: "completed",
-        statusRank: 3,
-        updatedAt: TENANCY_NOW,
-        userId: student.account.userId,
-      });
+      const { userId } = student.account;
+      const attempt = yield* writer
+        .table("tryoutAttempts")
+        .insert(attemptOf(setKey, userId));
+      yield* writer
+        .table("tryoutSetProgress")
+        .insert(progressOf(setKey, userId, attempt, publishedScore));
     }).pipe(Effect.orDie)
   );
 

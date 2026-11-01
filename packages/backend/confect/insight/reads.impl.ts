@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { InsightMasteryDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
@@ -26,13 +27,14 @@ const STUDENT_PAGE = 100;
 const SKILL_PAGE = 50;
 
 /** What a reader sees of one standing. */
-const skillOf = Struct.pick([
-  "competency",
-  "earned",
-  "observations",
-  "possible",
-  "rating",
-]);
+const skillOf = (row: InsightMasteryDoc) =>
+  Struct.pick(row, [
+    "competency",
+    "earned",
+    "observations",
+    "possible",
+    "rating",
+  ]);
 
 /** A student's standing in every competency of one period. */
 const skillsOf = Effect.fn("insight.reads.skills")(function* (
