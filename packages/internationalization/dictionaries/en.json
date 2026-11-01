@@ -646,9 +646,6 @@
     "room-move": "Reschedule",
     "room-move-description": "Its students and token stay, and its notices go out again.",
     "room-move-save": "Save",
-    "results-question-description": "How the class answered this question.",
-    "student-finished-description": "Your score shows here once it is released.",
-    "student-results-description": "Your score and your answers.",
     "student-closed-description": "It takes no more answers.",
     "student-locked-description": "It takes no answers for now."
   },
