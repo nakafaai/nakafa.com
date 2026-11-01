@@ -120,7 +120,12 @@ export const fakeServer = (
       }),
     "exams/sittings:lastAnswer": () => null,
     "exams/sittings:paper": paper,
-    "exams/sittings:prompt": () => ({ prompt: "{}" }),
+    "exams/sittings:prompt": () =>
+      Ref.encodeReturnsSync(sittings.prompt, {
+        media: [],
+        prompt: "{}",
+        reading: null,
+      }),
     "exams/sittings:saved": savedView,
     "exams/sittings:student": () =>
       Ref.encodeReturnsSync(sittings.student, {
