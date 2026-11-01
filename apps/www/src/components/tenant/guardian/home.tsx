@@ -41,6 +41,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
+import { TableText } from "@/components/shared/table/text";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
@@ -113,7 +114,9 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
   const columns = [
     childColumns.text((child) => child.student.name, {
       cell: (info) => (
-        <PaneOpen id={info.row.original.linkId}>{info.getValue()}</PaneOpen>
+        <PaneOpen id={info.row.original.linkId}>
+          <TableText>{info.getValue()}</TableText>
+        </PaneOpen>
       ),
       header: t("child"),
       id: "child",
