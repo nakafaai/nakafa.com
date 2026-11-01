@@ -34,7 +34,7 @@ const NumberRange = Schema.Tuple([Schema.String, Schema.String]);
 /** The number a field of a range holds, or none while it is blank or holds no number. */
 export const boundOf = (text: string) =>
   Option.filter(
-    Schema.decodeUnknownOption(Schema.FiniteFromString)(text),
+    Schema.decodeOption(Schema.FiniteFromString)(text),
     () => text.trim() !== ""
   );
 
