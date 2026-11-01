@@ -121,6 +121,15 @@ const ArticleJsonLdInputSchema = Schema.Struct({
 /** Signed content fields that describe one published article page. */
 export type ArticleJsonLdInput = typeof ArticleJsonLdInputSchema.Type;
 
+/** One curriculum place that a lesson teaches, addressed by its localized site path. */
+const LessonAlignmentSchema = Schema.Struct({
+  /** The curriculum, such as Kurikulum Merdeka. */
+  framework: Schema.String,
+  path: Schema.String,
+  /** The unit of the curriculum that holds the lesson. */
+  target: Schema.String,
+});
+
 /** Resolves one localized site path against the canonical origin. */
 function toSiteUrl(path: string) {
   return new URL(path, COMPANY_IDENTITY.url).href;
@@ -185,11 +194,16 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
 /**
  * The lesson as a learning resource, a node of its own at the Article's address:
  * Google reads the Article, and an answer service reads what a lesson teaches and
- * in which language, who wrote it, and that it is free to read and cite.
+ * in which language, which curricula it belongs to, who wrote it, and that it is
+ * free to read and cite.
  *
  * @see https://schema.org/LearningResource
+ * @see https://schema.org/AlignmentObject
  */
-export function makeLearningResourceNode(input: ArticleJsonLdInput) {
+export function makeLearningResourceNode(
+  input: ArticleJsonLdInput,
+  alignments: readonly (typeof LessonAlignmentSchema.Type)[]
+) {
   return {
     "@context": SCHEMA_ORG,
     "@type": "LearningResource",
@@ -210,6 +224,20 @@ export function makeLearningResourceNode(input: ArticleJsonLdInput) {
       "@type": "Person",
       name,
     })),
+    ...(alignments.length === 0
+      ? {}
+      : {
+          educationalAlignment: Arr.map(
+            alignments,
+            ({ framework, path, target }) => ({
+              "@type": "AlignmentObject",
+              alignmentType: "teaches",
+              educationalFramework: framework,
+              targetName: target,
+              targetUrl: toSiteUrl(path),
+            })
+          ),
+        }),
     provider: { "@id": ORGANIZATION_ID },
   };
 }

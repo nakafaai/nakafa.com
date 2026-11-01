@@ -264,7 +264,7 @@ describe("article JSON-LD", () => {
 
 describe("makeLearningResourceNode", () => {
   it("names the lesson, its authors, its dates and its license at the article's address", () => {
-    expect(makeLearningResourceNode(lesson)).toMatchObject({
+    expect(makeLearningResourceNode(lesson, [])).toMatchObject({
       "@type": "LearningResource",
       author: [{ "@type": "Person", name: "Nabil Akbarazzima Fatih" }],
       dateModified: "2026-09-23",
@@ -282,12 +282,37 @@ describe("makeLearningResourceNode", () => {
 
   it("leaves out what the lesson does not state", () => {
     const { description: _description, ...undescribed } = lesson;
-    const node = makeLearningResourceNode({
-      ...undescribed,
-      dates: { datePublished: "2025-05-26" },
-    });
+    const node = makeLearningResourceNode(
+      {
+        ...undescribed,
+        dates: { datePublished: "2025-05-26" },
+      },
+      []
+    );
 
     expect(node).not.toHaveProperty("description");
     expect(node).not.toHaveProperty("dateModified");
+    expect(node).not.toHaveProperty("educationalAlignment");
+  });
+
+  it("names each curriculum place that the lesson teaches, with its address", () => {
+    const node = makeLearningResourceNode(lesson, [
+      {
+        framework: "Kurikulum Merdeka",
+        path: "/id/kurikulum/merdeka/kelas-11/fisika#kinematika",
+        target: "Kinematika",
+      },
+    ]);
+
+    expect(node.educationalAlignment).toStrictEqual([
+      {
+        "@type": "AlignmentObject",
+        alignmentType: "teaches",
+        educationalFramework: "Kurikulum Merdeka",
+        targetName: "Kinematika",
+        targetUrl:
+          "https://nakafa.com/id/kurikulum/merdeka/kelas-11/fisika#kinematika",
+      },
+    ]);
   });
 });
