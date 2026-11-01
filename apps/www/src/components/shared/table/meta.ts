@@ -11,7 +11,7 @@ declare module "@tanstack/react-table" {
     in out TData extends RowData,
     TValue extends CellData = CellData,
   > {
-    readonly align?: "end" | "menu";
+    readonly align?: "end" | "figure" | "menu";
     /** A column of moments whose head also chooses the days to keep (`DaysHead`), as well as sorting. */
     readonly filter?: "days";
   }

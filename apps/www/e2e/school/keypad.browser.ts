@@ -189,7 +189,7 @@ test("every key of the Arabic keypad holds its glyph inside its border near its 
         page.evaluate(() =>
           Array.from(document.fonts).some(
             (face) =>
-              face.family === "Amiri Quran Keys" && face.status === "loaded"
+              face.family === "Amiri Quran Line" && face.status === "loaded"
           )
         )
       )

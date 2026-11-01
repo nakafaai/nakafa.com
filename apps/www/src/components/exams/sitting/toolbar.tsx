@@ -5,20 +5,19 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@repo/design-system/components/ui/toggle-group";
+  Tabs,
+  TabsList,
+  TabsTab,
+} from "@repo/design-system/components/ui/tabs";
 import { Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { useSittingStore } from "@/components/exams/sitting/context";
 import { SittingFilter } from "@/components/exams/sitting/seat";
 
 /**
- * The seats' filters, as the row under the room's header: all students, the ones that need
+ * The seats' filters, in the tab bar under the room's header: all students, the ones that need
  * attention, and the finished ones, each with its icon and always in view, so a proctor sees and
- * switches the view of a live sitting in one press. On a phone the row spans the width with its words
- * alone, each as wide as it needs, so "Needs attention" stays inside its border. Pressing the chosen
- * filter again keeps it.
+ * switches the view of a live sitting in one press.
  */
 export function SittingFilterRow() {
   const t = useTranslations("Exams");
@@ -26,45 +25,29 @@ export function SittingFilterRow() {
   const chooseFilter = useSittingStore((state) => state.chooseFilter);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2 md:px-6">
-      <ToggleGroup
-        aria-label={t("filter-label")}
-        className="max-sm:w-full max-sm:auto-cols-auto"
-        onValueChange={(value) =>
-          Option.match(Schema.decodeUnknownOption(SittingFilter)(value), {
-            onNone: () => undefined,
-            onSome: chooseFilter,
-          })
-        }
-        size="sm"
-        value={filter}
-        variant="outline"
-      >
-        <ToggleGroupItem value="all">
-          <HugeIcons
-            aria-hidden="true"
-            className="max-sm:hidden"
-            icon={UserGroupIcon}
-          />
+    <Tabs
+      onValueChange={(value) =>
+        Option.match(Schema.decodeUnknownOption(SittingFilter)(value), {
+          onNone: () => undefined,
+          onSome: chooseFilter,
+        })
+      }
+      value={filter}
+    >
+      <TabsList aria-label={t("filter-label")} className="px-1 md:px-3">
+        <TabsTab value="all">
+          <HugeIcons aria-hidden="true" icon={UserGroupIcon} />
           {t("filter-all")}
-        </ToggleGroupItem>
-        <ToggleGroupItem value="needsAttention">
-          <HugeIcons
-            aria-hidden="true"
-            className="max-sm:hidden"
-            icon={Alert02Icon}
-          />
+        </TabsTab>
+        <TabsTab value="needsAttention">
+          <HugeIcons aria-hidden="true" icon={Alert02Icon} />
           {t("filter-needs-attention")}
-        </ToggleGroupItem>
-        <ToggleGroupItem value="finished">
-          <HugeIcons
-            aria-hidden="true"
-            className="max-sm:hidden"
-            icon={CheckmarkCircle02Icon}
-          />
+        </TabsTab>
+        <TabsTab value="finished">
+          <HugeIcons aria-hidden="true" icon={CheckmarkCircle02Icon} />
           {t("filter-finished")}
-        </ToggleGroupItem>
-      </ToggleGroup>
-    </div>
+        </TabsTab>
+      </TabsList>
+    </Tabs>
   );
 }

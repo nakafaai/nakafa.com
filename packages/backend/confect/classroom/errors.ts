@@ -49,6 +49,12 @@ export class FolderLimit extends Schema.TaggedError<FolderLimit>()(
   refusal("FOLDER_LIMIT", "This library holds the most folders it can.")
 ) {}
 
+/** Pinning an announcement to a class home that already keeps the most it can. */
+export class PinLimit extends Schema.TaggedError<PinLimit>()(
+  "PinLimit",
+  refusal("PIN_LIMIT", "This class keeps the most pinned announcements it can.")
+) {}
+
 /** Teaching a class to a Person who already teaches the most classes of its period. */
 export class PersonClassLimit extends Schema.TaggedError<PersonClassLimit>()(
   "PersonClassLimit",

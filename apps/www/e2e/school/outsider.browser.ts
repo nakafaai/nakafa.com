@@ -27,7 +27,7 @@ test("a signed-in learner who is not a member gets the card form at once, while 
     )
   );
   await page.goto(schoolHome);
-  const card = page.getByRole("button", { name: "Sign in with a card" });
+  const card = page.getByRole("button", { name: "Use a card" });
   await waitUntilTakenOver(card);
 
   await card.click();
@@ -71,7 +71,7 @@ test("a sign-out that fails returns the outsider to the not-member page with its
   await context.close();
 });
 
-test("the not-member page leads with Sign in with a card, keeps Check again for an invite in its menu, and the card form says who signs in with one", async ({
+test("the not-member page leads with Use a card, keeps Check again for an invite in its menu, and the card form says who signs in with one", async ({
   browser,
   baseURL,
 }) => {
@@ -82,7 +82,7 @@ test("the not-member page leads with Sign in with a card, keeps Check again for 
   const page = await context.newPage();
   await page.goto(schoolHome);
 
-  const card = page.getByRole("button", { name: "Sign in with a card" });
+  const card = page.getByRole("button", { name: "Use a card" });
   const switchAccount = page.getByRole("button", { name: "Switch account" });
   await waitUntilTakenOver(card);
   // The card is the main action; switching account is the one outlined secondary.
@@ -90,7 +90,7 @@ test("the not-member page leads with Sign in with a card, keeps Check again for 
   await expect(switchAccount).not.toHaveClass(PRIMARY);
   await page.getByRole("button", { name: "More actions" }).click();
   await expect(
-    page.getByRole("menuitem", { name: "Check again for my invite" })
+    page.getByRole("menuitem", { name: "Check again" })
   ).toBeVisible();
   await page.keyboard.press("Escape");
 
