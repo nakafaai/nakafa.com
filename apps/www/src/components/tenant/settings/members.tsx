@@ -31,7 +31,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ComponentProps, startTransition } from "react";
+import { type ComponentProps, startTransition, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
@@ -53,10 +53,16 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleLooks } from "@/components/tenant/roles";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
+import {
+  type CardView,
+  SchoolCardDialog,
+} from "@/components/tenant/settings/card";
 import { UNIT_ICONS } from "@/components/tenant/settings/choices";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { inviteChange } from "@/components/tenant/settings/grants";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
+import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
+import { cardOffered } from "@/components/tenant/settings/offer";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
@@ -229,8 +235,8 @@ function SchoolMembersBody() {
 }
 
 /**
- * The row menu of a member: Rename, Give a role, which gives the member a role of the whole school, Invite for a member
- * nothing waits for yet, such as a student an import added, and Remove for a member whom the viewer may remove, one who
+ * The row menu of a member: Rename, Give a role, which gives the member a role of the whole school, Invite and a login
+ * card for a member nothing waits for yet, such as a student an import added, who may have no address, and Remove for a member whom the viewer may remove, one who
  * joined, one whose card waits, and one whose invite ended or card expired. Remove asks first, and the account of a member
  * who joined loses the school at once. An invited member is handled on the invitations page, and the list answers which
  * rows the viewer may remove.
@@ -248,7 +254,10 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const remove = useMutation(tenancy.people.remove).withOptimisticUpdate(
     removeMemberChange
   );
-  const dialogs = useDialogs<"give" | "invite" | "remove" | "rename">();
+  const dialogs = useDialogs<
+    "card" | "give" | "invite" | "remove" | "rename"
+  >();
+  const [issued, setIssued] = useState<CardView | undefined>(undefined);
   const removable = member.removable && member.status !== "invited";
 
   /** Invites the member at the address typed, in the viewer's language. */
@@ -311,6 +320,12 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
                 {t("invite-action")}
               </DropdownMenuItem>
             ) : null}
+            {member.status === "notInvited" && cardOffered(member.roles) ? (
+              <DropdownMenuItem onClick={() => dialogs.show("card")}>
+                <HugeIcons icon={IdCardIcon} />
+                {t("invite-card")}
+              </DropdownMenuItem>
+            ) : null}
             {removable ? (
               <DropdownMenuItem
                 onClick={() => dialogs.show("remove")}
@@ -352,6 +367,15 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
           type="email"
         />
       ) : null}
+      <SchoolIssueCardDialog
+        name={member.name}
+        onIssued={setIssued}
+        open={dialogs.isOpen("card")}
+        personId={member.id}
+        setOpen={dialogs.setOpen}
+        slug={slug}
+      />
+      <SchoolCardDialog card={issued} onClose={() => setIssued(undefined)} />
       <ResponsiveDialog
         description={t("member-remove-description")}
         footer={

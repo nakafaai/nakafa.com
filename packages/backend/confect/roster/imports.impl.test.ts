@@ -9,7 +9,7 @@ import {
   schoolKeys,
   writeRosterEntry,
 } from "@repo/backend/confect/roster/entry";
-import { Nisn } from "@repo/backend/confect/roster/schema";
+import { IMPORT_BATCH, Nisn } from "@repo/backend/confect/roster/schema";
 import { cohort, denied, nf, period } from "@repo/backend/test/classroom";
 import { asStaffSchool, NISN, setRoster } from "@repo/backend/test/guardians";
 import {
@@ -222,6 +222,31 @@ describe("roster/imports", () => {
             subject: { id: term.id, kind: "period" },
           },
         });
+      })
+  );
+
+  it.effect(
+    "refuses a batch past the free plan's students with the limit's own code, and writes none of it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* asStaffSchool(fixture);
+        const term = yield* period(fixture, fixture.units.smp);
+        const rows = Arr.makeBy(IMPORT_BATCH, (index) => ({
+          name: `Murid ${index}`,
+          nisn: Schema.decodeSync(Nisn)(String(index).padStart(10, "0")),
+        }));
+
+        const refusal = yield* fixture
+          .as("counselor")
+          .mutation(apply, { periodId: term.id, rows, slug: nf })
+          .pipe(Effect.flip);
+
+        expect(refusal).toMatchObject({
+          _tag: "GrantRejected",
+          code: "SEAT_LIMIT",
+        });
+        expect(yield* fixture.run(peopleNamed("Murid 0"))).toEqual([]);
       })
   );
 

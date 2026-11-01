@@ -30,7 +30,6 @@ import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
@@ -49,6 +48,7 @@ import { NewTask } from "@/components/tenant/classes/tasks/create";
 import { EditTaskDialog } from "@/components/tenant/classes/tasks/edit";
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { useClockZone } from "@/components/tenant/settings/time";
 import { useKeptRows } from "@/lib/data/kept";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolClassTaskTarget } from "@/lib/routing/school/target";
@@ -172,7 +172,7 @@ function TaskListBody() {
  */
 function useTaskColumns(categories: readonly string[]) {
   const t = useTranslations("Classroom");
-  const formatZone = useFormatTimeZone();
+  const timeZone = useClockZone();
   const format = useFormatter();
   const { can } = useClassScope();
   const standingChoices = useStandingChoices();
@@ -198,25 +198,16 @@ function useTaskColumns(categories: readonly string[]) {
         <span className="text-muted-foreground tabular-nums">
           {format.dateTime(
             DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium", timeStyle: "short" }
+            { dateStyle: "medium", timeStyle: "short", timeZone }
           )}
         </span>
       ),
       header: t("task-deadline"),
       id: "deadline",
-      timeZone: formatZone,
+      timeZone: () => timeZone,
     }),
-    Arr.contains(can, "task.manage")
-      ? taskColumns.number((task) => task.handedIn, {
-          cell: (info) => (
-            <span className="text-muted-foreground">
-              <TaskStanding task={info.row.original} />
-            </span>
-          ),
-          header: t("task-status"),
-          id: "handedIn",
-        })
-      : // A student's standing, which the server filters by; the same rule keeps the rows the table shows.
+    Arr.contains(can, "task.submit")
+      ? // A student's standing, which the server filters by; the same rule keeps the rows the table shows.
         taskColumns.choice((task) => standingOf(task.mine), {
           cell: (info) => (
             <span className="text-muted-foreground">
@@ -226,6 +217,15 @@ function useTaskColumns(categories: readonly string[]) {
           header: t("task-status"),
           id: "standing",
           options: standingChoices,
+        })
+      : taskColumns.number((task) => task.handedIn, {
+          cell: (info) => (
+            <span className="text-muted-foreground">
+              <TaskStanding task={info.row.original} />
+            </span>
+          ),
+          header: t("task-status"),
+          id: "handedIn",
         }),
     taskColumns.menu((info) => <TaskRowMenu task={info.row.original} />),
   ];
@@ -308,11 +308,11 @@ function TaskTitle({ task }: { task: ClassTask }) {
   );
 }
 
-/** Where a task stands: how many handed work in, for a teacher who keeps the class's tasks, or the viewer's own work. */
+/** Where a task stands: the viewer's own work for a student of the class, and how many handed work in for anyone else. */
 export function TaskStanding({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
   const { can } = useClassScope();
-  if (Arr.contains(can, "task.manage")) {
+  if (!Arr.contains(can, "task.submit")) {
     return t("task-handed-in-count", { count: task.handedIn });
   }
   if (task.mine !== null && task.mine.score !== null) {

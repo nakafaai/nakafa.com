@@ -17,7 +17,7 @@ import { Array as Arr, Effect, Option } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
-const { enter, release, sheet } = refs.public.records.grades;
+const { correct, enter, release, sheet } = refs.public.records.grades;
 const schemes = refs.public.records.schemes;
 const placements = refs.public.tenancy.placements;
 
@@ -278,6 +278,39 @@ describe("records/grades release", () => {
           _tag: "GradeReleased",
           code: "GRADE_RELEASED",
         });
+      })
+  );
+
+  it.effect(
+    "corrects a released grade under its own journal entry, tells the student again, and leaves a draft alone",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { classId } = yield* setup(fixture);
+        const student = fixture.people.student.personId;
+        const entered = yield* draft(fixture, classId, student, 60);
+        const correctBy = (value: number) =>
+          fixture
+            .as("teacher")
+            .mutation(correct, { gradeId: entered.id, slug: nf, value });
+
+        expect(yield* correctBy(90)).toMatchObject({
+          state: "draft",
+          value: 60,
+        });
+        yield* releaseBy(fixture, entered.id);
+        expect(yield* correctBy(90)).toMatchObject({
+          state: "released",
+          value: 90,
+        });
+        expect(yield* correctBy(90)).toMatchObject({ value: 90 });
+        const entries = yield* fixture.run(journal);
+        expect(
+          Arr.filter(
+            entries,
+            (entry) => entry.change.type === "grade.corrected"
+          )
+        ).toHaveLength(1);
       })
   );
 });

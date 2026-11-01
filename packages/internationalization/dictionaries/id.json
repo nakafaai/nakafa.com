@@ -1037,6 +1037,7 @@
         "restored": "Ruang kelas dipulihkan"
       },
       "grade": {
+        "corrected": "Nilai dikoreksi",
         "released": "Nilai dirilis"
       },
       "message": {
@@ -1580,6 +1581,8 @@
     "task-work": "Pekerjaanmu",
     "task-student": "Siswa",
     "task-hand-in": "Kumpulkan",
+    "task-closed": "Tugas ini ditutup saat tenggatnya.",
+    "task-missing": "Belum mengumpulkan",
     "task-work-empty": "Belum ada pekerjaan",
     "task-work-empty-description": "Pekerjaan yang dikumpulkan siswa tampil di sini.",
     "task-work-search": "Cari siswa",
@@ -1670,6 +1673,8 @@
     "kktp-notReached": "Di bawah KKTP",
     "search": "Cari siswa",
     "release": "Rilis",
+    "correct": "Koreksi nilai",
+    "correct-description": "Siswa dan orang tuanya diberi tahu nilai barunya.",
     "empty": "Belum ada siswa di kelas ini.",
     "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya.",
     "detail": "Nilai siswa",
@@ -3289,7 +3294,8 @@
       "description": "Pilih siswa aktif yang belum memakai email ini."
     },
     "school-roster-imported": {
-      "title": "Siswa sudah masuk ke daftar."
+      "title": "Siswa sudah masuk ke daftar.",
+      "description": "Buka Anggota untuk memberi tiap siswa kartu login."
     },
     "school-roster-export-failed": {
       "title": "File tidak tersimpan."

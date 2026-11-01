@@ -1037,6 +1037,7 @@
         "restored": "Classroom restored"
       },
       "grade": {
+        "corrected": "Grade corrected",
         "released": "Grade released"
       },
       "message": {
@@ -1580,6 +1581,8 @@
     "task-work": "Your work",
     "task-student": "Student",
     "task-hand-in": "Hand in",
+    "task-closed": "This task closed at its deadline.",
+    "task-missing": "Not handed in yet",
     "task-work-empty": "No work yet",
     "task-work-empty-description": "The work students hand in shows here.",
     "task-work-search": "Search students",
@@ -1670,6 +1673,8 @@
     "kktp-notReached": "Below KKTP",
     "search": "Search students",
     "release": "Release",
+    "correct": "Correct grade",
+    "correct-description": "The student and their parents are told the new grade.",
     "empty": "No student in this class yet.",
     "empty-description": "Students appear here once they are placed in the class group.",
     "detail": "Student's grade",
@@ -3289,7 +3294,8 @@
       "description": "Choose an active student without this email."
     },
     "school-roster-imported": {
-      "title": "The students are in the roster."
+      "title": "The students are in the roster.",
+      "description": "Open Members to give each one a login card."
     },
     "school-roster-export-failed": {
       "title": "The file was not saved."

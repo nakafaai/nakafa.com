@@ -24,7 +24,7 @@ import { Schema } from "effect";
 /**
  * The final grades of a class. A subject teacher of the class reads its gradebook,
  * each placed student with their grade, enters a draft for a student placed in its
- * cohort, and releases it; `scheme` is the scheme the next entry is judged by. A
+ * cohort, releases it, and corrects a released one; `scheme` is the scheme the next entry is judged by. A
  * student reads only their own released grades: one class's through `mine`, and
  * every class's of every period through `own`.
  */
@@ -48,6 +48,18 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "release",
       args: () => ({ gradeId: Id("classGrades"), slug: TenantSlug }),
+      returns: () => GradeView,
+      error: () => AccessDenied,
+    }).middleware(GradeAccess, { action: "grade.release", arg: "gradeId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "correct",
+      args: () => ({
+        gradeId: Id("classGrades"),
+        slug: TenantSlug,
+        value: GradeValue,
+      }),
       returns: () => GradeView,
       error: () => AccessDenied,
     }).middleware(GradeAccess, { action: "grade.release", arg: "gradeId" })

@@ -19,6 +19,7 @@ import {
   type LinkState,
   type LinkStatus,
   type LinkView,
+  NISN_TRIES,
 } from "@repo/backend/confect/guardians/schema";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { rosterEntryOf } from "@repo/backend/confect/roster/entry";
@@ -116,18 +117,22 @@ export const linkViewOf = Effect.fn("guardians.link.view")(function* (
 });
 
 /**
- * One link as its guardian sees it. `staffCheck` holds when the school keeps no
- * NISN for the child, so the guardian waits for staff to check the link.
+ * One link as its guardian sees it. `staffCheck` holds when the guardian cannot
+ * confirm the link: the school keeps no NISN for the child, as a OneRoster import
+ * does, or every try is spent, so the guardian waits for staff to check it.
  */
 export const childViewOf = Effect.fn("guardians.link.child")(function* (
   link: GuardianLinksDoc,
   now: number
 ) {
   const student = yield* readLinkedPerson(link.studentPersonId);
-  const entry = yield* rosterEntryOf(link.studentPersonId);
+  const nisn = Option.flatMap(
+    yield* rosterEntryOf(link.studentPersonId),
+    (row) => Option.fromNullishOr(row.nisn)
+  );
   const view: typeof ChildView.Type = {
     linkId: link._id,
-    staffCheck: Option.isNone(entry),
+    staffCheck: Option.isNone(nisn) || link.mismatches >= NISN_TRIES,
     status: linkStatusOf(link, now),
     student: { id: student._id, name: student.name },
   };

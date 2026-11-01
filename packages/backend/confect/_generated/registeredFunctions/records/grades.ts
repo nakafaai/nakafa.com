@@ -9,6 +9,7 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["enter"]: RegisteredConvexFunction.register({ ...definitions["enter"], handler: forward(definitions["enter"].handler) }),
 ["release"]: RegisteredConvexFunction.register({ ...definitions["release"], handler: forward(definitions["release"].handler) }),
+["correct"]: RegisteredConvexFunction.register({ ...definitions["correct"], handler: forward(definitions["correct"].handler) }),
 ["sheet"]: RegisteredConvexFunction.register({ ...definitions["sheet"], handler: forward(definitions["sheet"].handler) }),
 ["scheme"]: RegisteredConvexFunction.register({ ...definitions["scheme"], handler: forward(definitions["scheme"].handler) }),
 ["own"]: RegisteredConvexFunction.register({ ...definitions["own"], handler: forward(definitions["own"].handler) }),

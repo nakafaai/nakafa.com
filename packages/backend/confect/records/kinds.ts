@@ -42,6 +42,12 @@ export const gradeKind = Kind.make("grade", "classGrades", {
       state: Schema.Literal("released"),
       type: Schema.Literal("grade.released"),
     }),
+    Schema.Struct({
+      classId: Id("classes"),
+      periodId: Id("tenantPeriods"),
+      personId: Id("tenantPeople"),
+      type: Schema.Literal("grade.corrected"),
+    }),
   ],
   published: ["grade.released"],
   relations: ["classMember", "subjectTeacher"],
