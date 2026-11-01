@@ -1,4 +1,10 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Navigate,
+  Outlet,
+  redirect,
+} from "@tanstack/react-router";
+import { Unauthenticated } from "@/components/auth/gate";
 import { RouteConvexProvider } from "@/components/providers/route";
 import { isSignedIn } from "@/lib/auth/gate";
 
@@ -27,11 +33,17 @@ export const Route = createFileRoute("/$locale/_main/_app/_account")({
  * Mounts the one client that the account screens read. The gate above runs before
  * this layout loads: the router loads a route's component chunk, and the provider
  * with it, beside the loaders and after `beforeLoad`, so a visitor never loads the
- * client and a learner's page waits on no lazy chunk after its data.
+ * client and a learner's page waits on no lazy chunk after its data. The gate reads
+ * only on a move between pages, so a session that ends under an open screen, in
+ * another tab or on the server, sends the reader to sign-in from here.
  */
 function AccountLayout() {
+  const { locale } = Route.useParams();
   return (
     <RouteConvexProvider>
+      <Unauthenticated>
+        <Navigate params={{ locale }} replace to="/$locale/auth" />
+      </Unauthenticated>
       <Outlet />
     </RouteConvexProvider>
   );

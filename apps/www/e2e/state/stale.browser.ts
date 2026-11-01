@@ -3,6 +3,8 @@ import standalone from "@repo/internationalization/dictionaries/standalone/en.js
   type: "json",
 };
 import { HashSet } from "effect";
+import { LESSON_PATH } from "@/e2e/support/chat";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const SIGN_IN = "/en/auth";
 /** The sign-in page's title, in English. */
@@ -76,4 +78,33 @@ test("reloads once for a chunk of an earlier deploy instead of showing an error"
   expect(
     await page.evaluate((mark) => sessionStorage.getItem(mark), BROKE)
   ).toBeNull();
+});
+
+/**
+ * The network drops under an open page, and a press asks for a chunk the document
+ * did not load. The chunk is out of reach, not gone, so the page stays: a reload
+ * would swap the lesson for the browser's offline screen.
+ */
+test("keeps its page when a press asks for a chunk and the network is gone", async ({
+  context,
+  page,
+}) => {
+  await page.goto(LESSON_PATH);
+  const title = page.getByRole("heading", { level: 1 });
+  await waitUntilTakenOver(title);
+
+  await context.setOffline(true);
+  const failed = page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        window.addEventListener("vite:preloadError", () => resolve(), {
+          once: true,
+        });
+      })
+  );
+  await page.getByRole("button", { name: "Search content..." }).first().click();
+  await failed;
+
+  await expect(title).toBeVisible();
+  await context.setOffline(false);
 });

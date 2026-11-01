@@ -35,6 +35,10 @@ function tab() {
 }
 
 describe("stale chunks", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("recognizes the missing chunk of every browser and nothing else", () => {
     expect(isStaleChunkError(CHROMIUM)).toBe(true);
     expect(
@@ -61,6 +65,24 @@ describe("stale chunks", () => {
       expect(yield* reloadForStaleChunk("/en", storage, reload)).toBe(false);
       expect(reload).toHaveBeenCalledTimes(1);
     })
+  );
+
+  it.effect(
+    "keeps the page without a network, and reloads once the network is back",
+    () =>
+      Effect.gen(function* () {
+        const { reload, storage } = tab();
+        const onLine = vi.spyOn(navigator, "onLine", "get");
+        onLine.mockReturnValue(false);
+
+        expect(yield* reloadForStaleChunk("/en", storage, reload)).toBe(false);
+        expect(reload).not.toHaveBeenCalled();
+
+        onLine.mockReturnValue(true);
+
+        expect(yield* reloadForStaleChunk("/en", storage, reload)).toBe(true);
+        expect(reload).toHaveBeenCalledOnce();
+      })
   );
 
   it.effect("never reloads when the tab cannot keep the mark", () =>
@@ -110,14 +132,19 @@ describe("stale chunks", () => {
 });
 
 /** Runs the head script in a document of its own, over the tab's storage. */
-function openDocument(storage: Pick<Storage, "getItem" | "setItem">) {
+function openDocument(
+  storage: Pick<Storage, "getItem" | "setItem">,
+  onLine = true
+) {
   const target = new EventTarget();
   const reload = vi.fn<() => void>();
-  new Function("window", "sessionStorage", "location", STALE_CHUNK_SCRIPT)(
-    target,
-    storage,
-    { pathname: "/en/quran", reload }
-  );
+  new Function(
+    "window",
+    "sessionStorage",
+    "location",
+    "navigator",
+    STALE_CHUNK_SCRIPT
+  )(target, storage, { pathname: "/en/quran", reload }, { onLine });
   return { reload, target };
 }
 
@@ -160,6 +187,19 @@ describe("STALE_CHUNK_SCRIPT", () => {
         expect(reload).not.toHaveBeenCalled();
       })
   );
+
+  it("keeps the page without a network, and reloads once the network is back", () => {
+    const { storage } = tab();
+    const offline = openDocument(storage, false);
+
+    expect(reportMissingScript(offline.target)).toBe(false);
+    expect(offline.reload).not.toHaveBeenCalled();
+
+    const online = openDocument(storage);
+
+    expect(reportMissingScript(online.target)).toBe(true);
+    expect(online.reload).toHaveBeenCalledOnce();
+  });
 
   it("never reloads without storage, which could not stop a loop", () => {
     const refused = () => {

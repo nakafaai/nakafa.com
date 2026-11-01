@@ -16,6 +16,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const HOME = "/en";
 const ONBOARDING = "/en/onboarding";
+const SETTINGS = "/en/user/settings";
+const SIGN_IN = "/en/auth";
 const HINT_COOKIE = "nakafa-signed-in";
 const VISITOR_FOOTER = '[data-slot="sidebar-footer"][data-account="visitor"]';
 const MEMBER_FOOTER = '[data-slot="sidebar-footer"][data-account="member"]';
@@ -208,6 +210,66 @@ test("a hint that outlived its session shows the sign-in button with no reload",
             );
             yield* Effect.promise(async () =>
               expect(await readRootHint(page)).toBe("no")
+            );
+          })
+        );
+      })
+    )
+  );
+});
+
+/**
+ * The gate of the account screens reads on a move between pages, so a session
+ * that ends under an open screen has to send the reader away from there. Here
+ * another tab signs out, and a session that ends on the server takes the same
+ * path: the account screen goes to sign-in with no press and no reload.
+ */
+test("signing out in one tab sends an account screen in another to sign-in", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  const origin = baseURL ?? "";
+  await Effect.runPromise(
+    withBrowserContext(browser, contextOptions(origin), (context) =>
+      Effect.gen(function* () {
+        yield* signInLearner(context, origin);
+        const account = yield* Effect.promise(() => context.newPage());
+        const page = yield* Effect.promise(() => context.newPage());
+        yield* withObservedPageErrors(
+          page,
+          Effect.gen(function* () {
+            yield* Effect.promise(() =>
+              account.goto(SETTINGS, { waitUntil: "load" })
+            );
+            yield* Effect.promise(() =>
+              expect(
+                account.locator(MEMBER_FOOTER).getByRole("button").first()
+              ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+            );
+            yield* Effect.promise(() =>
+              page.goto(LESSON_PATH, { waitUntil: "load" })
+            );
+            const member = page.locator(MEMBER_FOOTER);
+            yield* Effect.promise(() =>
+              expect(member.getByRole("button").first()).toBeVisible({
+                timeout: readinessTimeoutMilliseconds,
+              })
+            );
+            yield* Effect.promise(() =>
+              member.getByRole("button").first().click()
+            );
+            yield* Effect.promise(() =>
+              page
+                .getByRole("menuitem", { name: app.Auth.logout, exact: true })
+                .click()
+            );
+            yield* Effect.promise(() =>
+              expect
+                .poll(() => new URL(account.url()).pathname, {
+                  timeout: readinessTimeoutMilliseconds,
+                })
+                .toBe(SIGN_IN)
             );
           })
         );
