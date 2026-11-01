@@ -16,6 +16,9 @@ const JSX_MODULE_PATTERN = /\.tsx$/u;
 /** The popups of a dropdown: a menu and a submenu, each of which names what it holds. */
 const MENU_TAGS = HashSet.make("DropdownMenuContent", "DropdownMenuSubContent");
 const LABEL_TAG = "DropdownMenuLabel";
+/** The label of a sidebar's group, and what draws an icon. */
+const SIDEBAR_LABEL_TAG = "SidebarGroupLabel";
+const ICON_TAG = "HugeIcons";
 /** The call that declares a table's columns, and its member that declares the row's menu. */
 const COLUMNS_CALL = "tableColumns";
 const MENU_MEMBER = "menu";
@@ -53,7 +56,8 @@ function drawsButton(node: Node) {
 }
 
 /**
- * Reports the three ways a menu falls short. A dropdown names what it holds in one word, so a
+ * Reports the ways a menu falls short. A sidebar group's label is text alone, so it never reads as
+ * one of the items under it. A dropdown names what it holds in one word, so a
  * popup written with items alone is refused; its label stands in the popup's own markup, where
  * this rule and a reader both find it. Every row of a table has one action, so a table's columns
  * declare the row's menu, and that menu column draws no button of its own beside it. The menu
@@ -78,6 +82,12 @@ export function inspectMenuSource(file: string, sourceFile: SourceFile) {
       !Arr.some(nodesBelow(node), (child) => elementTag(child) === LABEL_TAG)
     );
   });
+  const iconLabels = Arr.filter(
+    nodes,
+    (node) =>
+      elementTag(node) === SIDEBAR_LABEL_TAG &&
+      Arr.some(nodesBelow(node), (child) => elementTag(child) === ICON_TAG)
+  );
   const tables = Arr.filterMap(nodes, (node) =>
     isVariableDeclaration(node) &&
     isIdentifier(node.name) &&
@@ -89,6 +99,11 @@ export function inspectMenuSource(file: string, sourceFile: SourceFile) {
       : Result.failVoid
   );
   return Arr.flatten([
+    Arr.map(
+      iconLabels,
+      () =>
+        `${file}: a sidebar group label holds an icon. A group label is text alone: keep the icon on the items under it.`
+    ),
     Arr.map(
       unlabelled,
       () =>
