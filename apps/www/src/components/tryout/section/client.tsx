@@ -194,7 +194,8 @@ function LiveTryoutSectionPage({
  * rendered for a running attempt locks the app shell until the learner leaves
  * it, even once the attempt ends here, so the shell never changes under a page.
  * A running section is the player, a section the learner's press is opening is
- * the player's frame until it runs, and every other state is the section page.
+ * the player's frame until it runs and its bodies arrive, and every other state is
+ * the section page.
  */
 function ResolvedTryoutSectionPage({
   binding,
@@ -207,6 +208,7 @@ function ResolvedTryoutSectionPage({
   state: SectionState;
 }) {
   const { page, pending } = useTryoutSectionPage();
+  const bodies = use(TryoutContentContext)?.bodies ?? null;
   const opening = useTryoutStartPhase() === "opening";
   const attempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
@@ -230,7 +232,12 @@ function ResolvedTryoutSectionPage({
   }
 
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
-  if (finish && binding && isTryoutRuntimeRunning(runtimeState)) {
+  if (
+    bodies !== null &&
+    finish &&
+    binding &&
+    isTryoutRuntimeRunning(runtimeState)
+  ) {
     return (
       <TryoutPage>
         <SectionLock binding={binding} />
@@ -243,7 +250,9 @@ function ResolvedTryoutSectionPage({
       </TryoutPage>
     );
   }
-  if (opening) {
+  // The live state can say a section runs a commit before the page's read brings its
+  // bodies, which land before the browser paints, so the player waits in its frame.
+  if (opening || (finish && isTryoutRuntimeRunning(runtimeState))) {
     return (
       <TryoutPage>
         <SectionLock binding={binding} />
