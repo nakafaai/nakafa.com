@@ -277,7 +277,7 @@
     "sitting": "Sitting",
     "student-enter": "Enter sitting",
     "student-enter-footer": "Your proctor gives you the token.",
-    "student-token-placeholder": "Enter the token from your proctor",
+    "student-token-placeholder": "Enter the token",
     "student-token-hint": "Your proctor shows the token.",
     "student-token-refused": "The token does not match, so check it and try again.",
     "student-too-many-tries": "Too many tries, so wait a minute and try again.",
@@ -439,6 +439,7 @@
     "group-all": "All groups",
     "try-action": "Try as student",
     "exam-actions": "Exam actions",
+    "exam-full": "An exam holds {count} questions at most.",
     "delete-action": "Delete exam",
     "delete-title": "Delete this exam?",
     "delete-description": "Its questions and pictures are deleted for good.",
@@ -500,6 +501,8 @@
     "student-scheduled-footer": "The token field opens with the sitting.",
     "student-back-home": "Back to home",
     "seat-last-activity": "Active {time}.",
+    "seat-finished": "Finished {time}.",
+    "seat-locked": "Locked {time}.",
     "seat-away-seconds": "Away for {seconds} s.",
     "seat-away-minutes": "Away for {minutes} min {seconds} s.",
     "title-needed": "Every exam needs a title.",
@@ -2484,7 +2487,7 @@
     "agent-allow": "Allow",
     "agent-deny": "Deny",
     "agent-description": "This agent can read and change everything you can do in Nakafa. Allow only an agent you trust.",
-    "agent-failed": "Your answer was not saved. Try again.",
+    "agent-failed": "Your answer did not save, so try again.",
     "agent-title": "Let {name} use your account?",
     "agent-unnamed": "This agent",
     "back-to-nakafa": "Back to Nakafa",
@@ -2766,7 +2769,7 @@
       "description": "Sign in with an operator account."
     },
     "school-refusal-provision": {
-      "title": "This school can't open with these details.",
+      "title": "This school cannot open yet.",
       "description": "Check the address and the school's units."
     },
     "school-refusal-webhook-limit": {
@@ -2800,6 +2803,13 @@
     "school-refusal-cohort-has-homeroom": {
       "title": "This cohort already has a teacher.",
       "description": "Remove the current teacher to choose another."
+    },
+    "exam-copying": {
+      "title": "Copying this exam."
+    },
+    "exam-full": {
+      "title": "This exam is full.",
+      "description": "Remove a question to add another."
     },
     "action-error": {
       "title": "We could not complete this action.",
@@ -3043,7 +3053,7 @@
     },
     "sitting-answers-unsent": {
       "title": "Some answers may not have saved.",
-      "description": "Answers on this device may not have reached the exam before it closed, so tell your proctor."
+      "description": "Some may not have reached the exam, so tell your proctor."
     },
     "sitting-attempt-closed": {
       "title": "This attempt has closed.",
@@ -3231,7 +3241,7 @@
     },
     "import-no-drive": {
       "title": "Connect Google Drive first",
-      "description": "Forms are read through your Google Drive. Connect it in your account settings."
+      "description": "Forms are read through Google Drive, so connect it in settings."
     },
     "import-empty": {
       "title": "Nina found no question.",

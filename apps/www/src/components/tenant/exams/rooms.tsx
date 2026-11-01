@@ -97,6 +97,7 @@ export function ExamRooms({
   examId: GenericId.GenericId<"exams">;
   slug: TenantSlug;
 }) {
+  const t = useTranslations("Exams");
   const tenant = useTenant();
   // The exam list is for the exam editors only, so a viewer who reads rooms alone gets no link to it.
   const examsItems = useExamsItems(tenant.canOpenExams);
@@ -105,7 +106,10 @@ export function ExamRooms({
     <ReadBoundary
       fallback={(failure) => (
         <>
-          <SchoolHeader items={examsItems} />
+          <SchoolHeader
+            items={[...examsItems, { label: t("rooms-title") }]}
+            title={t("rooms-title")}
+          />
           <TablePageBody>{failure}</TablePageBody>
         </>
       )}
@@ -157,7 +161,10 @@ function ExamRoomsContent({
     return Option.match(kept, {
       onNone: () => (
         <>
-          <SchoolHeader items={examsItems} />
+          <SchoolHeader
+            items={[...examsItems, { label: t("rooms-title") }]}
+            title={t("rooms-title")}
+          />
           <TablePageBody>
             <p className="text-muted-foreground p-4 text-sm md:p-6">
               {t("rooms-unavailable")}

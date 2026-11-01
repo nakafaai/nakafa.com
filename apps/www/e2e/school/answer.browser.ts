@@ -43,9 +43,7 @@ test("a student writes an Arabic answer from the sitting's Arabic keypad, and th
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   const navigator = student.getByRole("complementary", { name: "Questions" });
   await navigator

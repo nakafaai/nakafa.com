@@ -331,7 +331,7 @@ const openPane = (page: Page) =>
 /** Enters a sitting with its token, so the page shows the running paper's header. */
 const startPaper = (token: string) => (page: Page) =>
   Effect.promise(async () => {
-    const field = page.getByPlaceholder("Enter the token from your proctor");
+    const field = page.getByPlaceholder("Enter the token");
     await field.fill(token);
     await page.getByRole("button", { name: "Enter sitting" }).click();
     await expect(field).toBeHidden();

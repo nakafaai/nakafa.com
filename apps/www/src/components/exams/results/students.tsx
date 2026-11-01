@@ -128,12 +128,12 @@ function StudentName({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   return (
     <Button
       aria-pressed={chosen}
-      className="h-auto px-0"
+      className="h-auto max-w-xs px-0 md:max-w-sm"
       onClick={() => (chosen ? close() : show(row.attemptId))}
       type="button"
       variant="link"
     >
-      {row.name}
+      <span className="truncate">{row.name}</span>
     </Button>
   );
 }

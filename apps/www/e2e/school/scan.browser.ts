@@ -42,9 +42,9 @@ test("a student who scans an old code sees it refused in the field, and the room
   await expect(
     student.getByText("The token does not match, so check it and try again.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(
-    student.getByPlaceholder("Enter the token from your proctor")
-  ).toHaveValue("ZZZZ22");
+  await expect(student.getByPlaceholder("Enter the token")).toHaveValue(
+    "ZZZZ22"
+  );
 
   // A scan of the room's own code opens a new tab, which enters at once with no press.
   const scanned = await studentContext.newPage();
@@ -145,7 +145,7 @@ test("a signed-in account that is not a member joins the room by its code as a s
   await expect(
     student.getByText("The token does not match, so check it and try again.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  const field = student.getByPlaceholder("Enter the token from your proctor");
+  const field = student.getByPlaceholder("Enter the token");
   await expect(field).toHaveValue("ZZZZ22");
 
   // The room's own code joins the school, and the room loads again as a member's and enters.
@@ -187,7 +187,7 @@ test("a student types the room's code alone at the school's join address and lan
   const join = student.getByRole("button", { name: "Join room" });
   await waitUntilTakenOver(join);
   await student
-    .getByPlaceholder("Enter the token from your proctor")
+    .getByPlaceholder("Enter the token")
     .fill(sitting.token.toLowerCase());
   await join.click();
   await expect(

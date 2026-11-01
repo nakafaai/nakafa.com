@@ -148,7 +148,7 @@ function SittingRefusal({
 
   return (
     <>
-      <SchoolHeader items={examsItems} />
+      <SchoolHeader items={[...examsItems, { label: t("sitting") }]} />
       <div className="grid justify-items-start gap-4 p-4 md:p-6">
         <p className="text-muted-foreground text-sm">{message}</p>
         {tenant.canOpenExams ? (
@@ -167,8 +167,9 @@ function SittingRefusal({
 
 /**
  * The page while the dashboard is read: the school's header with the path to the exams, which the address and the
- * viewer already know, so the page has its header from the first paint. The exam's crumb, the room and the proctor's
- * actions fill in at the header's end when the room is read, so nothing that shows moves.
+ * viewer already know, so the page has its header from the first paint. The page's own crumb stands empty, since a
+ * header's last crumb is the page it stands on, and the exam's crumb, the room and the proctor's actions fill in at the
+ * header's end when the room is read, so nothing that shows moves.
  */
 function SittingDashboardShell() {
   const t = useTranslations("Exams");
@@ -177,7 +178,7 @@ function SittingDashboardShell() {
     ? [{ label: t("title"), target: schoolExamsTarget(tenant.slug) }]
     : [];
 
-  return <SchoolHeader items={examsItems} />;
+  return <SchoolHeader items={[...examsItems, { label: "" }]} />;
 }
 
 /**

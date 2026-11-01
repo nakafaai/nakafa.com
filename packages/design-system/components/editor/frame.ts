@@ -69,10 +69,11 @@ export const editorPlaceholder = cva(
  * lesson's and a try-out question's start, in the editor's canvas, the sitting and
  * the preview alike. Only a plain page, which draws its own field, keeps room inside
  * it. A link and a highlight take the lesson's own classes on their elements
- * (`linkVariants`, `emphasisVariants`), in every text.
+ * (`linkVariants`, `emphasisVariants`), in every text. A word longer than the column breaks anywhere, and the text
+ * claims no room for it, so a grid or a flex row around it keeps its column on a phone.
  */
 export const editorDocument = cva(
-  "[&_pre]:bg-muted relative min-h-full [font-feature-settings:'liga'_0] wrap-break-word [white-space:break-spaces] outline-none [font-variant-ligatures:none] [&_hr]:my-3 [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:whitespace-pre-wrap",
+  "[&_pre]:bg-muted relative min-h-full [font-feature-settings:'liga'_0] wrap-anywhere [white-space:break-spaces] outline-none [font-variant-ligatures:none] [&_hr]:my-3 [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:whitespace-pre-wrap",
   {
     compoundVariants: [
       { class: "px-4 py-3 [&>*+*]:mt-2", size: "page", text: "plain" },

@@ -262,7 +262,10 @@ export function ExamGrid() {
           </span>
           <div className="ms-auto flex items-center gap-2">
             <Button
-              disabled={!Arr.isReadonlyArrayNonEmpty(chosen)}
+              disabled={
+                !Arr.isReadonlyArrayNonEmpty(chosen) ||
+                chosen.length > actions.room
+              }
               onClick={duplicate}
               size="sm"
               type="button"
@@ -310,7 +313,7 @@ export function ExamGrid() {
             selected={Arr.contains(selected, question.id)}
           />
         ))}
-        {editable ? (
+        {editable && actions.room > 0 ? (
           <li className="grid gap-2">
             <button
               aria-label={t("add-question")}

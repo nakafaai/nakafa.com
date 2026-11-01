@@ -277,7 +277,7 @@
     "sitting": "Prüfungstermin",
     "student-enter": "Sitzung betreten",
     "student-enter-footer": "Die Aufsicht gibt dir den Token.",
-    "student-token-placeholder": "Token von der Aufsicht eingeben",
+    "student-token-placeholder": "Token eingeben",
     "student-token-hint": "Die Aufsicht zeigt dir den Token.",
     "student-token-refused": "Das Token passt nicht, daher prüfe es und versuche es erneut.",
     "student-too-many-tries": "Zu viele Versuche, daher warte eine Minute und versuche es erneut.",
@@ -439,6 +439,7 @@
     "group-all": "Alle Gruppen",
     "try-action": "Als Schüler testen",
     "exam-actions": "Prüfungsaktionen",
+    "exam-full": "Eine Prüfung fasst höchstens {count} Fragen.",
     "delete-action": "Prüfung löschen",
     "delete-title": "Diese Prüfung löschen?",
     "delete-description": "Ihre Fragen und Bilder werden endgültig gelöscht.",
@@ -500,6 +501,8 @@
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
     "student-back-home": "Zur Startseite",
     "seat-last-activity": "Aktiv {time}.",
+    "seat-finished": "Fertig {time}.",
+    "seat-locked": "Gesperrt {time}.",
     "seat-away-seconds": "Seit {seconds} s weg.",
     "seat-away-minutes": "Seit {minutes} min {seconds} s weg.",
     "title-needed": "Jede Prüfung braucht einen Titel.",
@@ -2766,11 +2769,11 @@
       "description": "Melde dich mit einem Operator-Konto an."
     },
     "school-refusal-provision": {
-      "title": "Diese Schule lässt sich so nicht eröffnen.",
+      "title": "Die Schule lässt sich nicht öffnen.",
       "description": "Prüfe die Adresse und die Einheiten der Schule."
     },
     "school-refusal-webhook-limit": {
-      "title": "Ein Client hält höchstens zehn Webhooks.",
+      "title": "Höchstens 10 Webhooks je Client.",
       "description": "Widerrufe einen, den er nicht mehr braucht."
     },
     "school-refusal-unit-limit": {
@@ -2800,6 +2803,13 @@
     "school-refusal-cohort-has-homeroom": {
       "title": "Klasse hat schon eine Lehrkraft.",
       "description": "Die aktuelle Lehrkraft muss zuerst entfernt werden."
+    },
+    "exam-copying": {
+      "title": "Die Prüfung wird kopiert."
+    },
+    "exam-full": {
+      "title": "Diese Prüfung ist voll.",
+      "description": "Entferne eine Frage, um neue hinzuzufügen."
     },
     "action-error": {
       "title": "Aktion nicht abgeschlossen.",
@@ -2838,7 +2848,7 @@
       "description": "Versuche es erneut."
     },
     "invoice-error": {
-      "title": "Die Rechnung konnte nicht geladen werden.",
+      "title": "Die Rechnung lädt gerade nicht.",
       "description": "Bitte versuche es noch einmal."
     },
     "portal-error": {
@@ -3042,8 +3052,8 @@
       "description": "Frag deine Lehrkraft, was du als Nächstes tun sollst."
     },
     "sitting-answers-unsent": {
-      "title": "Einige Antworten wurden vielleicht nicht gespeichert.",
-      "description": "Antworten auf diesem Gerät kamen vielleicht nicht an, bevor die Prüfung schloss, also sag es deiner Aufsicht."
+      "title": "Vielleicht fehlen Antworten.",
+      "description": "Sie kamen vielleicht nicht mehr an, also sag es deiner Aufsicht."
     },
     "sitting-attempt-closed": {
       "title": "Dieser Versuch ist beendet.",
@@ -3134,8 +3144,8 @@
       "description": "Entferne sie vom Client und lege ihn dann neu an."
     },
     "school-refusal-draft-refused": {
-      "title": "Nina kann das gerade nicht entwerfen.",
-      "description": "Schalte Nina für die Schule ein, oder warte, bis die Credits der Schule erneuert werden."
+      "title": "Nina kann das jetzt nicht entwerfen.",
+      "description": "Schalte Nina ein, oder warte auf neue Credits der Schule."
     },
     "school-refusal-promotion-state": {
       "title": "Diese Periode öffnet noch nicht.",
@@ -3179,7 +3189,7 @@
     },
     "school-refusal-login-name-refused": {
       "title": "Dieser Anmeldename ist ungültig.",
-      "description": "Nutze 3 bis 32 Zeichen, a bis z, 0 bis 9, Punkt, Unterstrich oder Bindestrich."
+      "description": "Nutze 3 bis 32 Zeichen, nur a bis z, 0 bis 9, Punkt, _ und -."
     },
     "school-refusal-login-name-taken": {
       "title": "Diesen Anmeldenamen gibt es schon.",
@@ -3231,7 +3241,7 @@
     },
     "import-no-drive": {
       "title": "Verbinde zuerst Google Drive",
-      "description": "Formulare werden über dein Google Drive gelesen. Verbinde es in deinen Kontoeinstellungen."
+      "description": "Formulare laufen über Google Drive, verbinde es in den Einstellungen."
     },
     "import-empty": {
       "title": "Nina hat keine Frage gefunden.",
@@ -3373,7 +3383,7 @@
       "description": "Wähle für diese Klasse einen anderen Namen."
     },
     "school-refusal-channel-fixed": {
-      "title": "Der allgemeine Kanal behält seinen Namen.",
+      "title": "Der allgemeine Kanal heißt immer so.",
       "description": "Benenne stattdessen einen Themenkanal um."
     }
   },
