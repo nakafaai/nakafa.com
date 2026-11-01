@@ -162,7 +162,7 @@ describe("auth/grant", () => {
       const client = yield* Effect.promise(() =>
         t.fetch(`/api/auth/agent/client?client_id=${clientId}`)
       );
-      expect(yield* Effect.promise(() => client.json())).toEqual({
+      expect(yield* jsonOf(client)).toEqual({
         name: "Test agent",
         redirect: "agent.example",
       });
@@ -243,7 +243,7 @@ describe("auth/grant", () => {
       const client = yield* Effect.promise(() =>
         t.fetch("/api/auth/agent/client?client_id=unknown")
       );
-      expect(yield* Effect.promise(() => client.json())).toEqual({
+      expect(yield* jsonOf(client)).toEqual({
         name: null,
         redirect: null,
       });
