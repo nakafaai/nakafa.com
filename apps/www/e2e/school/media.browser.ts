@@ -63,6 +63,10 @@ test("a teacher gives a question a shared reading and a video, and the student m
   await expect(page.getByText("Pada suatu hari di pasar.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(page.getByTitle("Percakapan")).toBeVisible();
+  // The video waits for the student's press, and its player keeps them on the paper.
+  await page.getByRole("button", { name: "Percakapan" }).click();
+  const player = page.getByTitle("Percakapan");
+  await expect(player).toBeVisible();
+  expect(await player.getAttribute("sandbox")).not.toContain("allow-popups");
   await context.close();
 });
