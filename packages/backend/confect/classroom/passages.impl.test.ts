@@ -204,6 +204,9 @@ describe("classroom/passages", () => {
             const reader = yield* DatabaseReader;
             const writer = yield* DatabaseWriter;
             const item = yield* reader.table("classroomLibrary").get(itemId);
+            if (item.kind !== "file") {
+              return yield* Effect.die("The published item is a file.");
+            }
             const [row] = yield* reader
               .table("classroomPassages")
               .index("by_itemId", (query) => query.eq("itemId", itemId))
