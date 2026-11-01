@@ -57,7 +57,8 @@ vi.mock("@/lib/content/trending", () => ({
 }));
 
 vi.mock("@/lib/analytics/exception.server", () => ({
-  scheduleCurrentServerExceptionCapture: mocks.scheduleCurrentServerExceptionCapture,
+  scheduleCurrentServerExceptionCapture:
+    mocks.scheduleCurrentServerExceptionCapture,
 }));
 
 beforeEach(() => {
@@ -284,7 +285,9 @@ describe("chatScreenHandler", () => {
       data: { id: "chat-1", locale: "en" },
     });
     expect(screen.title).toBeUndefined();
-    expect(mocks.scheduleCurrentServerExceptionCapture).toHaveBeenCalledExactlyOnceWith(
+    expect(
+      mocks.scheduleCurrentServerExceptionCapture
+    ).toHaveBeenCalledExactlyOnceWith(
       { _tag: "PreloadFailed", cause: "unreachable" },
       {
         operation: chats.queries.getChatTitle.convexFunctionName,

@@ -39,7 +39,8 @@ const analytics = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/analytics/exception.server", () => ({
-  scheduleCurrentServerExceptionCapture: analytics.scheduleCurrentServerExceptionCapture,
+  scheduleCurrentServerExceptionCapture:
+    analytics.scheduleCurrentServerExceptionCapture,
 }));
 
 beforeEach(() => {

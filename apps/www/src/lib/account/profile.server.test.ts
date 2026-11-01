@@ -53,7 +53,8 @@ vi.mock("@/lib/data/preload.server", () => ({
   preloadConfectQuery: mocks.preloadConfectQuery,
 }));
 vi.mock("@/lib/analytics/exception.server", () => ({
-  scheduleCurrentServerExceptionCapture: mocks.scheduleCurrentServerExceptionCapture,
+  scheduleCurrentServerExceptionCapture:
+    mocks.scheduleCurrentServerExceptionCapture,
 }));
 
 beforeEach(() => {
@@ -166,13 +167,12 @@ describe("profilePostsHandler", () => {
       data: { locale: "en", username: "nabil" },
     });
     expect(screen.first).toBeUndefined();
-    expect(mocks.scheduleCurrentServerExceptionCapture).toHaveBeenCalledExactlyOnceWith(
-      failure,
-      {
-        operation: posts.queries.list.convexFunctionName,
-        source: "data.readOptional",
-      }
-    );
+    expect(
+      mocks.scheduleCurrentServerExceptionCapture
+    ).toHaveBeenCalledExactlyOnceWith(failure, {
+      operation: posts.queries.list.convexFunctionName,
+      source: "data.readOptional",
+    });
   });
 });
 
