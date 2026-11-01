@@ -6,18 +6,21 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
-import { createContext, use, useCallback, useState } from "react";
+import {
+  createContext,
+  use,
+  useCallback,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
+import { ConvexIsland } from "@/components/providers/island";
 import { DataFailure } from "@/components/shared/failure";
 import { useAgeClock } from "@/components/user/ages";
 import { FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { useVisitorList } from "@/components/user/paging";
-import {
-  PostComposer,
-  PostComposerFrame,
-} from "@/components/user/posts/composer";
+import { PostComposer } from "@/components/user/posts/composer";
 import {
   failedView,
   livePostsArgs,
@@ -27,6 +30,7 @@ import {
 import {
   PostDraftProvider,
   PostsProvider,
+  usePostDraft,
   usePostsContext,
 } from "@/components/user/posts/provider";
 import { PostRow } from "@/components/user/posts/row";
@@ -74,6 +78,7 @@ export function UserPosts({
         onRetry={onRetry}
         profile={profile}
       >
+        {isOwner ? <PostComposer profile={profile} /> : null}
         <ErrorBoundary
           fallbackRender={() => (
             <PostsPanel
@@ -170,10 +175,10 @@ function LivePostsFeed() {
 }
 
 /**
- * What the Posts tab shows, as its view decides it: the composer above for the
- * owner, the failure with its Retry, the rows, the empty sentence, and the next
- * page, which loads as the end of the rows comes near. The rows stay inert until
- * the list takes a change.
+ * What the Posts tab shows, as its view decides it: the failure with its Retry,
+ * the rows, the empty sentence, and the next page, which loads as the end of the
+ * rows comes near. The rows stay inert until the list takes a change, and the
+ * composer above learns the same, so Post waits for it.
  */
 function PostsPanel({
   onLoadMore,
@@ -183,15 +188,14 @@ function PostsPanel({
   view: PostsView;
 }) {
   const t = useTranslations("Posts");
-  const { isOwner, onRetry, profile } = usePostsContext();
+  const { onRetry } = usePostsContext();
+  const setReady = usePostDraft((draft) => draft.setReady);
+  useLayoutEffect(() => {
+    setReady(view.ready);
+  }, [setReady, view.ready]);
 
   return (
     <div className="flex flex-col">
-      {isOwner && (
-        <SignedInIsland fallback={<PostComposerFrame profile={profile} />}>
-          <PostComposer disabled={!view.ready} profile={profile} />
-        </SignedInIsland>
-      )}
       {view.failed && (
         <FeedNotice>
           <DataFailure onRetry={onRetry} />
