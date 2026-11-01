@@ -1,9 +1,4 @@
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import { QueryResult, usePaginatedQuery, useQuery } from "@confect/react";
 import {
   ArrowTurnBackwardIcon,
   CheckmarkBadge01Icon,
@@ -25,13 +20,11 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Record as Rec } from "effect";
 import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { PaneOpen } from "@/components/shared/pane";
 import {
   Panes,
@@ -39,16 +32,15 @@ import {
   PanesList,
   PanesProvider,
 } from "@/components/shared/panes";
-import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { menuOf } from "@/components/tenant/reports/access";
@@ -150,22 +142,6 @@ function CohortReportsBody() {
     { initialNumItems: PAGE_SIZE }
   );
 
-  if (pagination._tag === "LoadingFirstPage") {
-    return null;
-  }
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    return failed ? (
-      <LoadFailure onRetry={reloadPage} />
-    ) : (
-      <TableEmpty
-        act="reading"
-        description={t("students-empty-description")}
-        title={t("students-empty")}
-      />
-    );
-  }
-
   const columns = [
     lineColumns.text((line) => line.student.name, {
       cell: (info) => (
@@ -198,16 +174,21 @@ function CohortReportsBody() {
   return (
     <Panes>
       <PanesList>
-        {failed ? <DataFailure onRetry={reloadPage} /> : null}
-        <DataTable
-          columns={columns}
-          data={pagination.results}
-          rowId={(line) => line.student.id}
-          search="student"
-        />
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-        ) : null}
+        <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+          <DataTable
+            columns={columns}
+            data={pagination.results}
+            empty={
+              <TableEmpty
+                act="reading"
+                description={t("students-empty-description")}
+                title={t("students-empty")}
+              />
+            }
+            rowId={(line) => line.student.id}
+            search="student"
+          />
+        </TablePages>
       </PanesList>
       <PanesDetail label={t("detail")}>
         <ReportLineDetail lines={pagination.results} />

@@ -35,6 +35,7 @@ import { NewPostPoll } from "@/components/tenant/classes/home/poll";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { LibraryList } from "@/components/tenant/classes/library/list";
 import { LibraryScope } from "@/components/tenant/classes/library/scope";
+import { useMyClasses } from "@/components/tenant/classes/mine";
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { classPath } from "@/components/tenant/classes/path";
 import { PeopleList } from "@/components/tenant/classes/people";
@@ -119,7 +120,6 @@ function ClassPage({
   classSlug: string;
   slug: TenantSlug;
 }) {
-  const view = useClassView();
   // The class is read once the session settles, so the first draw never asks for it signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const resolved = useQuery(
@@ -137,14 +137,7 @@ function ClassPage({
     throw resolved.error;
   }
   if (!QueryResult.isSuccess(resolved)) {
-    // While the class is read: the school header and the class's tab row, with the current tab marked from the
-    // address. The Grades tab, which only a viewer who keeps the grades has, joins at the row's end.
-    return (
-      <>
-        <SchoolHeader items={[]} />
-        <ClassTabs canGrade={false} classSlug={classSlug} tab={view._tag} />
-      </>
-    );
+    return <ClassPendingHeader classSlug={classSlug} slug={slug} />;
   }
   return (
     <ClassScopeContext
@@ -159,6 +152,63 @@ function ClassPage({
       <ResolvedClass klass={resolved.value} />
     </ClassScopeContext>
   );
+}
+
+/**
+ * The header while the class is read, which stands from the first paint so the body keeps its place: the tabs come from
+ * the address, with the current tab marked, and a class the school sidebar lists draws its path and title from there, so
+ * a press on it shows the class at once. The Grades tab, which only a viewer who keeps the grades has, joins at the end
+ * of the row once the class arrives.
+ */
+function ClassPendingHeader({
+  classSlug,
+  slug,
+}: {
+  classSlug: string;
+  slug: TenantSlug;
+}) {
+  const view = useClassView();
+  const rootOf = useClassRoot(classSlug, slug);
+  const classes = useMyClasses();
+  const listed = QueryResult.isSuccess(classes)
+    ? Arr.findFirst(classes.value, (klass) => klass.slug === classSlug)
+    : Option.none();
+
+  return (
+    <>
+      {Option.match(listed, {
+        onNone: () => <SchoolHeader items={[]} />,
+        onSome: (klass) => (
+          <SchoolHeader
+            items={classPath(
+              view,
+              rootOf(klass.name),
+              Option.none(),
+              Option.none()
+            )}
+            title={klass.name}
+          />
+        ),
+      })}
+      <ClassTabs canGrade={false} classSlug={classSlug} tab={view._tag} />
+    </>
+  );
+}
+
+/** The first steps of a class's path, by the class's name. */
+function useClassRoot(classSlug: string, slug: TenantSlug) {
+  const t = useTranslations("Classroom");
+
+  return (name: string) => ({
+    classSlug,
+    forum: t("tabs-forum"),
+    grades: t("tabs-grades"),
+    library: t("tabs-library"),
+    name,
+    people: t("tabs-people"),
+    slug,
+    tasks: t("tabs-tasks"),
+  });
 }
 
 /**
@@ -196,6 +246,7 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
   const view = useClassView();
   const t = useTranslations("Classroom");
   const { classSlug, slug } = useClassScope();
+  const rootOf = useClassRoot(classSlug, slug);
   const thread = useQuery(
     classroom.forum.threads.get,
     view._tag === "discussion"
@@ -240,16 +291,7 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
   );
   const path = classPath(
     view,
-    {
-      classSlug,
-      forum: t("tabs-forum"),
-      grades: t("tabs-grades"),
-      library: t("tabs-library"),
-      name: klass.name,
-      people: t("tabs-people"),
-      slug,
-      tasks: t("tabs-tasks"),
-    },
+    rootOf(klass.name),
     Option.map(open, (channel) => ({
       id: channel.id,
       label: channelLabel(channel, t("general-channel")),

@@ -1,11 +1,8 @@
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { BookOpen01Icon } from "@hugeicons/core-free-icons";
-import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Sheet,
@@ -19,14 +16,10 @@ import {
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useTenant } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
@@ -35,7 +28,6 @@ import { SchoolGrantTable } from "@/components/tenant/settings/roles/grants";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 
 /** How many grants one page of the list loads, and each page after it. */
-const PAGE_SIZE = 25;
 
 /**
  * The roles of the school: Role guide in the header opens what each role may do, and
@@ -72,38 +64,12 @@ export function SchoolRolesSettings() {
         }
       >
         <ReadBoundary>
-          <SchoolGrantsBody />
+          <SchoolGrantTable />
         </ReadBoundary>
         <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
         <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} />
       </SettingsTablePage>
     </TableFiltersProvider>
-  );
-}
-
-/** The grants of the school, read a page at a time, with the table and its end. */
-function SchoolGrantsBody() {
-  const { slug } = useTenant();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
-    access.grants.list,
-    isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
-  );
-
-  const failed = PaginatedQueryResult.isFailure(pagination);
-
-  return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      {pagination._tag === "LoadingFirstPage" ||
-      (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-        <SchoolGrantTable grants={pagination.results} />
-      )}
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
-    </>
   );
 }
 

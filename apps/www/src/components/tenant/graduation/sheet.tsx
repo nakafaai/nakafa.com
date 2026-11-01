@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import { usePaginatedQuery } from "@confect/react";
 import {
   Certificate01Icon,
   CheckmarkBadge01Icon,
@@ -20,11 +20,9 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { PaneOpen } from "@/components/shared/pane";
 import {
   Panes,
@@ -32,13 +30,12 @@ import {
   PanesList,
   PanesProvider,
 } from "@/components/shared/panes";
-import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
-import { LoadFailure } from "@/components/state/failure";
 import { GraduationLineDetail } from "@/components/tenant/graduation/detail";
 import {
   CohortGraduationHeader,
@@ -121,21 +118,6 @@ function CohortGraduationBody() {
     { initialNumItems: PAGE_SIZE }
   );
 
-  if (pagination._tag === "LoadingFirstPage") {
-    return null;
-  }
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    return failed ? (
-      <LoadFailure onRetry={reloadPage} />
-    ) : (
-      <TableEmpty
-        act="reading"
-        description={t("students-empty-description")}
-        title={t("students-empty")}
-      />
-    );
-  }
   const twoDecimals = (value: number) =>
     format.number(value, {
       maximumFractionDigits: 2,
@@ -215,16 +197,21 @@ function CohortGraduationBody() {
   return (
     <Panes>
       <PanesList>
-        {failed ? <DataFailure onRetry={reloadPage} /> : null}
-        <DataTable
-          columns={columns}
-          data={pagination.results}
-          rowId={(line) => line.student.id}
-          search="student"
-        />
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-        ) : null}
+        <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+          <DataTable
+            columns={columns}
+            data={pagination.results}
+            empty={
+              <TableEmpty
+                act="reading"
+                description={t("students-empty-description")}
+                title={t("students-empty")}
+              />
+            }
+            rowId={(line) => line.student.id}
+            search="student"
+          />
+        </TablePages>
       </PanesList>
       <PanesDetail label={t("detail")}>
         <GraduationLineDetail lines={pagination.results} />

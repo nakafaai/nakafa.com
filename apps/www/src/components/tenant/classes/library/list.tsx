@@ -15,24 +15,22 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, DateTime, Match } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
-import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { LoadFailure } from "@/components/state/failure";
 import {
   forumCall,
   runForumCall,
@@ -162,10 +160,7 @@ export function LibraryList() {
     isSettled && held ? { classId, folderId, slug } : "skip",
     { initialNumItems: LIBRARY_PAGE_SIZE }
   );
-  const items = PaginatedQueryResult.isFailure(pagination)
-    ? []
-    : pagination.results;
-  const pending = useShownUploads(items);
+  const pending = useShownUploads(pagination.results);
 
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -173,35 +168,21 @@ export function LibraryList() {
   ) {
     throw pagination.error;
   }
-  const loadingFirst = pagination._tag === "LoadingFirstPage";
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  const empty =
-    !(loadingFirst || failed) &&
-    items.length + pending.length + shelved.length === 0;
 
   return (
     <TableFiltersProvider>
       <ClassHeader>
-        {empty ? null : <TableSearch placeholder={t("library-search")} />}
+        <TableSearch placeholder={t("library-search")} />
         {Arr.contains(can, "library.manage") ? <LibraryActions /> : null}
       </ClassHeader>
       <TablePageBody>
-        {empty ? (
-          <LibraryEmpty />
-        ) : (
+        <TablePages pageSize={LIBRARY_PAGE_SIZE} pagination={pagination}>
           <LibraryRows
-            failed={failed}
             folders={shelved}
-            items={items}
-            loadingFirst={loadingFirst}
+            items={pagination.results}
             pending={pending}
           />
-        )}
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection
-            onIntersect={() => pagination.loadMore(LIBRARY_PAGE_SIZE)}
-          />
-        ) : null}
+        </TablePages>
       </TablePageBody>
     </TableFiltersProvider>
   );
@@ -244,16 +225,12 @@ function LibraryActions() {
  * sentence and Try again in the table's place.
  */
 function LibraryRows({
-  failed,
   folders,
   items,
-  loadingFirst,
   pending,
 }: {
-  failed: boolean;
   folders: readonly LibraryFolder[];
   items: readonly LibraryItem[];
-  loadingFirst: boolean;
   pending: readonly LibraryUpload[];
 }) {
   const t = useTranslations("Classroom");
@@ -261,12 +238,6 @@ function LibraryRows({
   const format = useFormatter();
   const { can } = useClassScope();
 
-  if (failed) {
-    return <LoadFailure onRetry={reloadPage} />;
-  }
-  if (loadingFirst) {
-    return null;
-  }
   const rows: readonly LibraryRow[] = [
     ...Arr.map(folders, folderRow),
     ...Arr.map(pending, uploadRow),
@@ -314,7 +285,13 @@ function LibraryRows({
   ];
 
   return (
-    <DataTable columns={columns} data={rows} rowId={rowIdOf} search="title" />
+    <DataTable
+      columns={columns}
+      data={rows}
+      empty={<LibraryEmpty />}
+      rowId={rowIdOf}
+      search="title"
+    />
   );
 }
 

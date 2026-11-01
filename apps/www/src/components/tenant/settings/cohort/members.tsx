@@ -1,22 +1,18 @@
 import {
   type PaginatedQueryItem,
-  PaginatedQueryResult,
   QueryResult,
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
-import { LoadFailure } from "@/components/state/failure";
+import { TablePages } from "@/components/shared/table/pages";
 import { SchoolPlacementMove } from "@/components/tenant/settings/placement";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
 
@@ -58,23 +54,6 @@ export function SchoolCohortMembers({
     isSettled ? { periodId, slug } : "skip"
   );
 
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  if (pagination._tag === "LoadingFirstPage") {
-    return null;
-  }
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    if (failed) {
-      return <LoadFailure onRetry={reloadPage} />;
-    }
-    return (
-      <TableEmpty
-        act="reading"
-        description={t("cohort-members-description")}
-        title={t("cohort-members-empty")}
-      />
-    );
-  }
-
   const targets = QueryResult.isSuccess(cohorts)
     ? Arr.filter(
         cohorts.value,
@@ -101,17 +80,20 @@ export function SchoolCohortMembers({
   ];
 
   return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
       <DataTable
         columns={columns}
         data={pagination.results}
+        empty={
+          <TableEmpty
+            act="reading"
+            description={t("cohort-members-description")}
+            title={t("cohort-members-empty")}
+          />
+        }
         rowId={(member) => member.id}
         search="name"
       />
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
-    </>
+    </TablePages>
   );
 }

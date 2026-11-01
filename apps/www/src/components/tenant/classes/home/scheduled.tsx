@@ -1,4 +1,4 @@
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { useMutation } from "@confect/react";
 import {
   Cancel01Icon,
   Clock01Icon,
@@ -35,7 +35,6 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
 import { useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/auth/convex";
 import {
   forumCall,
   runForumCall,
@@ -57,25 +56,16 @@ import {
  * The announcements the viewer keeps for later, above the class's posts, the soonest first. Nobody else in the class
  * reads them until their time, and a viewer who posts in no class sees none of this.
  */
-export function WaitingPosts() {
+export function WaitingPosts({ posts }: { posts: readonly WaitingPost[] }) {
   const t = useTranslations("Classroom");
-  const { classId, slug } = useClassScope();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const waiting = useQuery(
-    classroom.scheduled.list,
-    isSettled ? { classId, slug } : "skip"
-  );
 
-  if (
-    !QueryResult.isSuccess(waiting) ||
-    Arr.isReadonlyArrayEmpty(waiting.value)
-  ) {
+  if (Arr.isReadonlyArrayEmpty(posts)) {
     return null;
   }
 
   return (
     <ItemGroup aria-label={t("post-scheduled")} className="mb-3">
-      {Arr.map(waiting.value, (post) => (
+      {Arr.map(posts, (post) => (
         <WaitingRow key={post.clientKey} post={post} />
       ))}
     </ItemGroup>
