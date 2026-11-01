@@ -1,3 +1,8 @@
+import { Id } from "@repo/backend/confect/_generated/id";
+import {
+  AttemptState,
+  DeviceId,
+} from "@repo/backend/confect/exams/sittings/schema";
 import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -43,6 +48,52 @@ export const EntryMessage = Schema.Literals([
   "student-token-refused",
   "student-too-many-tries",
 ]);
+
+/**
+ * What one entry with a token comes to: the attempt that admits the student, with the correction of
+ * the device's clock, the sentence that explains a refusal, or a failure that the screen reports in
+ * general terms.
+ */
+const Admission = Schema.Union([
+  Schema.TaggedStruct("admitted", {
+    attemptId: Id("examAttempts"),
+    clockOffset: Schema.Finite,
+    deviceId: DeviceId,
+    state: AttemptState,
+  }),
+  Schema.TaggedStruct("refused", { message: EntryMessage }),
+  Schema.TaggedStruct("failed", {}),
+]);
+export type Admission = typeof Admission.Type;
+
+/**
+ * Where a student's entry to one sitting stands: `joining` until the server answers the entry the page makes
+ * by itself, `waiting` for a token when the page makes none, and from then on the last answer.
+ */
+const SittingEntry = Schema.Union([
+  Schema.TaggedStruct("joining", {}),
+  Schema.TaggedStruct("waiting", {}),
+  Admission,
+]);
+type SittingEntry = typeof SittingEntry.Type;
+
+/** How a page starts: joining when it holds something to enter with by itself, waiting for a token when it does not. */
+export function startEntry(selfEntry: Option.Option<string>): SittingEntry {
+  return { _tag: Option.isSome(selfEntry) ? "joining" : "waiting" };
+}
+
+/**
+ * The entry once the server answers. An admission stands: the token field stays on screen until the sitting's read
+ * holds the attempt, so a second press there can be refused, and a refusal must not take the paper away.
+ */
+export function stepEntry(
+  entry: SittingEntry,
+  answer: Admission
+): SittingEntry {
+  return entry._tag === "admitted" && answer._tag !== "admitted"
+    ? entry
+    : answer;
+}
 
 /**
  * The sentence that an entry or a paper shows for each reason. Every reason has a line, so a new reason cannot
