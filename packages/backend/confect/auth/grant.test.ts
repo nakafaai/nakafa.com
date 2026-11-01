@@ -176,7 +176,7 @@ describe("auth/grant", () => {
       const { clientId, person, t, tokens } = yield* signIn;
       expect(tokens.expires_in).toBe(900);
       const [, payload = ""] = tokens.access_token.split(".");
-      const text = yield* Base64Url.decodeString(payload);
+      const text = yield* Effect.fromResult(Base64Url.decodeString(payload));
       const claims = yield* Schema.decodeEffect(
         Schema.fromJsonString(Schema.Struct({ sub: Schema.String }))
       )(text);
