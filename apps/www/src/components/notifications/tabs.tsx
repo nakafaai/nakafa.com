@@ -7,7 +7,7 @@ import { useSearch } from "@tanstack/react-router";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { InboxTopic } from "@/components/notifications/topic";
+import type { InboxTopic } from "@/components/notifications/topic";
 import { Link } from "@/lib/routing/link";
 
 /** The bar's column, so its first tab's text lines up with the header above it. */
@@ -28,7 +28,13 @@ export function useInboxTopic(): typeof InboxTopic.Type {
 }
 
 /** The inbox's second header row, its tabs alone. */
-export function InboxTabs({ width }: VariantProps<typeof inboxTabsVariants>) {
+export function InboxTabs({
+  topics,
+  width,
+}: {
+  /** The tabs this inbox has. */
+  topics: readonly (typeof InboxTopic.Type)[];
+} & VariantProps<typeof inboxTabsVariants>) {
   const t = useTranslations("Notifications");
   const topic = useInboxTopic();
 
@@ -38,7 +44,7 @@ export function InboxTabs({ width }: VariantProps<typeof inboxTabsVariants>) {
         aria-label={t("topic-label")}
         className={inboxTabsVariants({ width })}
       >
-        {Arr.map(InboxTopic.literals, (item) => (
+        {Arr.map(topics, (item) => (
           <TabsTab
             key={item}
             nativeButton={false}
