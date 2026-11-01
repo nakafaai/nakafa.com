@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { StudentScript } from "@repo/backend/scripts/load/plan";
-import { Recorder, recorderLayer } from "@repo/backend/scripts/load/recorder";
+import { Recorder } from "@repo/backend/scripts/load/recorder";
 import { runStudent } from "@repo/backend/scripts/load/student";
-import { fakeServer, idOf } from "@repo/backend/test/load";
+import { fakeServer, idOf, temporaryRecorder } from "@repo/backend/test/load";
 import {
   Array as Arr,
   Clock,
@@ -56,7 +56,7 @@ const run = (
       exit,
       samples: yield* recorder.samples,
     };
-  }).pipe(Effect.provide(recorderLayer));
+  }).pipe(Effect.provide(temporaryRecorder));
 
 describe("load student", () => {
   it.live(

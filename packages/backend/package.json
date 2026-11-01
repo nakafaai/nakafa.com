@@ -18,7 +18,7 @@
     "generate-schema": "JITI_FS_CACHE=false auth generate --config components/betterAuth/cli.config.ts --yes && mv schema.ts components/betterAuth/schema.ts && bunx --no-install --cwd ../.. ultracite fix packages/backend/components/betterAuth/schema.ts",
     "insights": "convex insights",
     "judgment:measure": "bun scripts/judgment/main.ts",
-    "load": "bun scripts/load/main.ts",
+    "load": "BUN_CONFIG_MAX_HTTP_REQUESTS=4096 bun scripts/load/main.ts",
     "nina:gate": "bun scripts/nina/main.ts",
     "setup": "bun run codegen && convex dev --once",
     "test": "bun run codegen && vitest run",
