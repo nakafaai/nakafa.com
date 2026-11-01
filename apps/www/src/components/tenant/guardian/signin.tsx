@@ -15,7 +15,7 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { getRouteApi } from "@tanstack/react-router";
 import { Effect, Option, Schema } from "effect";
-import { type FormEvent, useId, useState, useTransition } from "react";
+import { type FormEvent, useId, useReducer, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ConvexProvider } from "@/components/providers/convex";
 import {
@@ -23,6 +23,8 @@ import {
   guardianCodeOf,
   guardianEmailOf,
   guardianSignInAnswerOf,
+  SIGN_IN_START,
+  stepSignIn,
 } from "@/components/tenant/guardian/code";
 import { pageDeviceIdOf } from "@/components/tenant/signin";
 import { clientEnv } from "@/env.public";
@@ -53,20 +55,19 @@ function GuardianSignInForm() {
   const id = useId();
   const send = useMutation(guardians.codes.send);
   const [isPending, startTransition] = useTransition();
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [sentTo, setSentTo] = useState<string | undefined>(undefined);
-  const [message, setMessage] = useState<string | undefined>(undefined);
+  const [form, change] = useReducer(stepSignIn, SIGN_IN_START);
 
-  /** Asks the school to mail a code to the typed address, then shows the code step. */
+  /** Asks the school to mail a code to the typed address, then shows the code step. Resend asks for the same address. */
   function requestCode() {
-    const address = guardianEmailOf(email);
+    const address = guardianEmailOf(
+      form._tag === "email" ? form.email : form.sentTo
+    );
     if (Option.isNone(address) || Option.isNone(locale)) {
-      setMessage(t("email-invalid"));
+      change({ _tag: "refused", message: t("email-invalid") });
       return;
     }
     startTransition(async () => {
-      setMessage(undefined);
+      change({ _tag: "waiting" });
       const deviceId = await Effect.runPromise(pageDeviceIdOf());
       const answered = await Effect.runPromise(
         Effect.tryPromise(() =>
@@ -74,23 +75,22 @@ function GuardianSignInForm() {
         ).pipe(Effect.option)
       );
       if (Option.isNone(answered)) {
-        setMessage(t("failed"));
+        change({ _tag: "refused", message: t("failed") });
         return;
       }
-      setSentTo(address.value);
-      setCode("");
+      change({ _tag: "sent", address: address.value });
     });
   }
 
   /** Signs in with the typed code; a signed-in parent opens the parent home. */
-  function signIn() {
+  function signIn(code: string, sentTo: string) {
     const typed = guardianCodeOf(code);
-    if (Option.isNone(typed) || sentTo === undefined) {
-      setMessage(t("code-invalid"));
+    if (Option.isNone(typed)) {
+      change({ _tag: "refused", message: t("code-invalid") });
       return;
     }
     startTransition(async () => {
-      setMessage(undefined);
+      change({ _tag: "waiting" });
       const signedIn = await Effect.runPromise(
         Effect.tryPromise({
           try: () =>
@@ -107,11 +107,11 @@ function GuardianSignInForm() {
         )
       );
       if (Option.isNone(signedIn)) {
-        setMessage(t("failed"));
+        change({ _tag: "refused", message: t("failed") });
         return;
       }
       if (!signedIn.value) {
-        setMessage(t("code-refused"));
+        change({ _tag: "refused", message: t("code-refused") });
         return;
       }
       // The session changed, so the school loads again with the session this sign-in set.
@@ -121,11 +121,11 @@ function GuardianSignInForm() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (sentTo === undefined) {
+    if (form._tag === "email") {
       requestCode();
       return;
     }
-    signIn();
+    signIn(form.code, form.sentTo);
   }
 
   return (
@@ -135,20 +135,22 @@ function GuardianSignInForm() {
       onSubmit={handleSubmit}
     >
       <FieldGroup>
-        {sentTo === undefined ? (
+        {form._tag === "email" ? (
           <Field>
             <FieldLabel htmlFor={`${id}-email`}>{t("email-label")}</FieldLabel>
             <Input
               autoComplete="email"
               id={`${id}-email`}
               inputMode="email"
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) =>
+                change({ _tag: "typed", text: event.target.value })
+              }
               placeholder={t("email-placeholder")}
               type="email"
-              value={email}
+              value={form.email}
             />
             <FieldDescription>{t("email-description")}</FieldDescription>
-            <FieldError>{message}</FieldError>
+            <FieldError>{form.message}</FieldError>
           </Field>
         ) : (
           <Field>
@@ -158,15 +160,17 @@ function GuardianSignInForm() {
               id={`${id}-code`}
               inputMode="numeric"
               maxLength={7}
-              onChange={(event) => setCode(event.target.value)}
+              onChange={(event) =>
+                change({ _tag: "typed", text: event.target.value })
+              }
               placeholder="123456"
-              value={code}
+              value={form.code}
             />
             {/* A long address takes two lines, which the field keeps, so a one-line refusal never moves the button. */}
             <FieldDescription className="min-h-[2lh]">
-              {t("code-description", { email: sentTo })}
+              {t("code-description", { email: form.sentTo })}
             </FieldDescription>
-            <FieldError className="min-h-[2lh]">{message}</FieldError>
+            <FieldError className="min-h-[2lh]">{form.message}</FieldError>
           </Field>
         )}
       </FieldGroup>
@@ -178,12 +182,12 @@ function GuardianSignInForm() {
           type="submit"
         >
           <Spinner
-            icon={sentTo === undefined ? MailSend01Icon : Login03Icon}
+            icon={form._tag === "email" ? MailSend01Icon : Login03Icon}
             isLoading={isPending}
           />
-          {sentTo === undefined ? t("send-code") : t("sign-in")}
+          {form._tag === "email" ? t("send-code") : t("sign-in")}
         </Button>
-        {sentTo === undefined ? null : (
+        {form._tag === "email" ? null : (
           <Button
             disabled={isPending}
             onClick={requestCode}
