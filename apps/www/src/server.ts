@@ -7,6 +7,7 @@ import {
 import { Effect, Option } from "effect";
 import { answerStaleFunction } from "@/lib/chunks/stale.server";
 import { answerRequest } from "@/lib/routing/answer.server";
+import { answerFailedDocument } from "@/lib/routing/failed.server";
 import { logRouteFailures } from "@/lib/routing/failures.server";
 import "@/lib/server/runtime";
 import { attachStaticCalls } from "@/lib/static/record.server";
@@ -31,7 +32,8 @@ const startHandler = createStartHandler((context) => {
  * A request that a decision answers not found reaches the router with its
  * not-found page in the request context, which the root route reads.
  * Route errors are handled by the router. Only an error that escapes a decision
- * reaches the catch, which reports it and answers with Start's error response.
+ * reaches the catch, which reports it and answers with Start's error response,
+ * and a page that a browser navigates to takes the browser shell in its place.
  *
  * https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point
  */
@@ -55,6 +57,7 @@ export default createServerEntry({
           )
         ),
         Effect.flatMap((response) => answerStaleFunction(request, response)),
+        Effect.flatMap((response) => answerFailedDocument(request, response)),
         Effect.flatMap((response) => attachStaticCalls(request, response)),
         Effect.map((response) => withPageHeaders(request, response))
       )
