@@ -36,7 +36,7 @@ import {
 import { Array as Arr, Option, Record as Rec } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { PaneTableRow } from "@/components/shared/pane";
+import { PaneTableRow, ROW_CONTROLS } from "@/components/shared/pane";
 import { useHasPanes } from "@/components/shared/panes";
 import {
   columnAlign,
@@ -77,11 +77,14 @@ const sortNames = {
 export function DataTable<TData extends RowData>({
   columns,
   data,
+  linkedRows = false,
   rowId,
   search,
 }: {
   columns: readonly ColumnDef<typeof dataTableFeatures, TData>[];
   data: readonly TData[];
+  /** Whether a press anywhere on a row follows the link that names it, as a try-out table's row does. */
+  linkedRows?: boolean;
   rowId: (row: TData) => string;
   /** The column that the header's search box filters by its text, when the page has one. */
   search?: string;
@@ -126,7 +129,7 @@ export function DataTable<TData extends RowData>({
       <TableBody>
         {Arr.isReadonlyArrayNonEmpty(rows) ? (
           Arr.map(rows, (row) => (
-            <DataTableRow key={row.id} row={row}>
+            <DataTableRow key={row.id} linked={linkedRows} row={row}>
               {Arr.map(row.getAllCells(), (cell, index) => (
                 <TableCell
                   className={columnAlign({
@@ -161,15 +164,33 @@ export function DataTable<TData extends RowData>({
 /** One row of the table: a row that opens beside the list on a page with panes, else a plain row. */
 function DataTableRow({
   children,
+  linked,
   row,
 }: {
   children: ReactNode;
+  linked: boolean;
   row: { readonly id: string };
 }) {
   const hasPanes = useHasPanes();
 
-  return hasPanes ? (
-    <PaneTableRow id={row.id}>{children}</PaneTableRow>
+  if (hasPanes) {
+    return <PaneTableRow id={row.id}>{children}</PaneTableRow>;
+  }
+  return linked ? (
+    <TableRow
+      className="h-12"
+      onClick={(event) => {
+        if (
+          event.target instanceof Element &&
+          event.target.closest(ROW_CONTROLS) !== null
+        ) {
+          return;
+        }
+        event.currentTarget.querySelector("a")?.click();
+      }}
+    >
+      {children}
+    </TableRow>
   ) : (
     <TableRow className="h-12">{children}</TableRow>
   );

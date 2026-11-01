@@ -334,6 +334,7 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
       <DataTable
         columns={columns}
         data={pagination.results}
+        linkedRows
         rowId={(row) => row.id}
         search="name"
       />

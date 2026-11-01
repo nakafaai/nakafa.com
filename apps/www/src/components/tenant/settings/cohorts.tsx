@@ -442,6 +442,7 @@ function SchoolCohortTable({
     <DataTable
       columns={columns}
       data={cohorts.value}
+      linkedRows
       rowId={(cohort) => cohort.id}
       search="name"
     />

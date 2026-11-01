@@ -132,6 +132,7 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
           <DataTable
             columns={columns}
             data={cohorts.value}
+            linkedRows
             rowId={(cohort) => cohort.id}
             search="cohort"
           />

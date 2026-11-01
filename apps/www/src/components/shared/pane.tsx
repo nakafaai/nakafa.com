@@ -161,7 +161,7 @@ export function PaneOpen({
 }
 
 /** The elements of a row that do their own thing when pressed, so pressing them opens no row. */
-const ROW_CONTROLS =
+export const ROW_CONTROLS =
   "a, button, input, label, select, textarea, [role=menuitem]";
 
 /**

@@ -147,6 +147,7 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
           <DataTable
             columns={columns}
             data={loaded}
+            linkedRows
             rowId={(cohort) => cohort.id}
             search="cohort"
           />

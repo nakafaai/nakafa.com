@@ -152,6 +152,7 @@ function TaskListBody() {
           <DataTable
             columns={columns}
             data={kept.value}
+            linkedRows
             rowId={(task) => task.id}
             search="title"
           />

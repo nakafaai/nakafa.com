@@ -334,7 +334,13 @@ function LibraryRows({
   ]);
 
   return (
-    <DataTable columns={columns} data={rows} rowId={rowIdOf} search="title" />
+    <DataTable
+      columns={columns}
+      data={rows}
+      linkedRows
+      rowId={rowIdOf}
+      search="title"
+    />
   );
 }
 
