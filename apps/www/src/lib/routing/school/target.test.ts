@@ -5,6 +5,7 @@ import { Schema } from "effect";
 import {
   schoolClassChannelTarget,
   schoolClassDiscussionTarget,
+  schoolClassFolderTarget,
   schoolClassForumTarget,
   schoolClassLibraryTarget,
   schoolClassTarget,
@@ -104,6 +105,12 @@ describe("school targets", () => {
     expect(schoolClassLibraryTarget(slug, "7a")).toEqual(
       expect.objectContaining({
         to: "/school/$slug/classes/$classSlug/library",
+      })
+    );
+    expect(schoolClassFolderTarget(slug, "7a", "folder-1")).toEqual(
+      expect.objectContaining({
+        params: { classSlug: "7a", folder: "folder-1", slug },
+        to: "/school/$slug/classes/$classSlug/library/$folder",
       })
     );
     expect(schoolClassTasksTarget(slug, "7a")).toEqual(

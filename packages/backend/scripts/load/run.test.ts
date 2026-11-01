@@ -34,6 +34,7 @@ describe("load run", () => {
         const fs = yield* FileSystem.FileSystem;
         const directory = yield* fs.makeTempDirectoryScoped();
         const output = `${directory}/report.json`;
+        const ledger = `${output}.acknowledged.jsonl`;
         const report = yield* runLoad({
           capture: (path) =>
             fs.writeFileString(
@@ -90,7 +91,8 @@ describe("load run", () => {
               return "";
             }),
           school: () => Effect.succeed("sekolah"),
-        }).pipe(Effect.provide(recorderLayer));
+        }).pipe(Effect.provide(recorderLayer(ledger)));
+        expect(yield* fs.readFileString(ledger)).toContain('"attempt":"a1"');
         expect(report.audit).toMatchObject({
           acknowledged: 4,
           lost: 0,

@@ -1,4 +1,5 @@
 import { Ref } from "@confect/core";
+import { CONVEX_TOKEN_OPTIONS } from "@repo/backend/confect/auth/browser";
 import { ConvexClient } from "convex/browser";
 import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
 import { Deferred, Effect, Schema } from "effect";
@@ -38,8 +39,9 @@ export interface Wire {
 }
 
 /**
- * Opens one WebSocket connection to the deployment at `address`, signed in through `token`,
- * which Convex asks again before the token expires. A token of `null` leaves the connection
+ * Opens one WebSocket connection to the deployment at `address`, signed in through `token` with
+ * the browser's token options, so Convex asks again only before the token expires, as a tab does.
+ * A token of `null` leaves the connection
  * signed out, as a browser's failed token request does. The connection closes with its scope.
  */
 export const openWire = Effect.fn("load.wire.open")(function* <R>(
@@ -50,6 +52,7 @@ export const openWire = Effect.fn("load.wire.open")(function* <R>(
   return yield* Effect.acquireRelease(
     Effect.sync(() => {
       const client = new ConvexClient(address, {
+        ...CONVEX_TOKEN_OPTIONS,
         skipConvexDeploymentUrlCheck: true,
         unsavedChangesWarning: false,
       });

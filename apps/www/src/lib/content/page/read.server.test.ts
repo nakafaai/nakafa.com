@@ -45,7 +45,7 @@ describe("legal page head facts", () => {
     expect(readPublishedPageCatalog).not.toHaveBeenCalled();
   });
 
-  it("returns the title, the description and the alternates of a signed page", async () => {
+  it("returns the metadata and the alternates of a signed page", async () => {
     currentPage = Option.some(signedPage(testPageProjection));
     const facts = await readLegalPageHandler({
       data: { locale: "en", publicPath: "privacy-policy" },
@@ -53,8 +53,7 @@ describe("legal page head facts", () => {
     expect(facts._tag).toBe("Legal");
     expect(facts).toMatchObject({
       body: "rendered legal body",
-      description: testPageProjection.metadata.description,
-      title: testPageProjection.metadata.title,
+      metadata: testPageProjection.metadata,
     });
   });
 });

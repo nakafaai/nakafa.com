@@ -57,6 +57,21 @@ describe("load plan", () => {
       }).pipe(Random.withSeed("plan"))
   );
 
+  it.effect("opens each room after the one before it", () =>
+    Effect.gen(function* () {
+      const plan = LoadPlan.make({
+        ...small,
+        entrySeconds: 60,
+        staggerSeconds: 12,
+      });
+      const first = yield* scriptOf(plan, 0);
+      const third = yield* scriptOf(plan, 2);
+      expect(first.enterAt).toBeLessThanOrEqual(60_000);
+      expect(third.enterAt).toBeGreaterThanOrEqual(24_000);
+      expect(third.enterAt).toBeLessThanOrEqual(84_000);
+    }).pipe(Random.withSeed("stagger"))
+  );
+
   it.effect("draws no change, cut, or second tab at a share of none", () =>
     Effect.gen(function* () {
       const plan = LoadPlan.make({

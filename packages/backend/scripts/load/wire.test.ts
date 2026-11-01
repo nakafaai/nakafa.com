@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { CONVEX_TOKEN_OPTIONS } from "@repo/backend/confect/auth/browser";
 import {
   NotInSitting,
   StaleAnswer,
@@ -177,7 +178,11 @@ describe("load wire", () => {
         );
         expect(mocks.created).toHaveBeenCalledExactlyOnceWith(
           "http://127.0.0.1:3210",
-          { skipConvexDeploymentUrlCheck: true, unsavedChangesWarning: false }
+          {
+            ...CONVEX_TOKEN_OPTIONS,
+            skipConvexDeploymentUrlCheck: true,
+            unsavedChangesWarning: false,
+          }
         );
         const [fetchToken] = mocks.setAuth.mock.calls[0] ?? [];
         expect(yield* Effect.promise(() => fetchToken())).toBe("jwt");
