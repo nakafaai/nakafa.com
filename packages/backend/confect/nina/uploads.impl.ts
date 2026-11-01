@@ -41,6 +41,13 @@ const uploadFailure = () =>
     message: "Unable to save this attachment.",
   });
 
+/** Answers a defect with the one upload error, and keeps what failed in the log. */
+const uploadDefect = (defect: unknown) =>
+  Effect.andThen(
+    Effect.logError("Nina upload failed", defect),
+    uploadFailure()
+  );
+
 /** Reads one upload row, or null once it is gone. */
 const readUpload = Effect.fn("nina.uploads.read")(function* (
   uploadId: Docs["ninaUploads"]["_id"]
@@ -79,16 +86,14 @@ const save = FunctionImpl.make(
       const ctx = yield* ActionCtx;
       yield* Effect.gen(function* () {
         // The Agent SDK owns storage, hashing, deduplication and file references.
-        const { file } = yield* Effect.tryPromise({
-          try: () =>
-            storeFile(
-              ctx,
-              components.nina,
-              new Blob([args.bytes], { type: args.mediaType }),
-              { filename: storedFilename }
-            ),
-          catch: uploadFailure,
-        });
+        const { file } = yield* Effect.promise(() =>
+          storeFile(
+            ctx,
+            components.nina,
+            new Blob([args.bytes], { type: args.mediaType }),
+            { filename: storedFilename }
+          )
+        );
         yield* mutate(ninaInternal.uploads.complete, {
           uploadId,
           fileId: file.fileId,
@@ -105,7 +110,7 @@ const save = FunctionImpl.make(
       return uploadId;
     },
     Effect.catchTag("SchemaError", uploadFailure),
-    Effect.catchDefect(uploadFailure)
+    Effect.catchDefect(uploadDefect)
   )
 );
 
@@ -131,10 +136,9 @@ const reserve = FunctionImpl.make(
       });
     }
     const ctx = yield* MutationCtx;
-    const quota = yield* Effect.tryPromise({
-      try: () => uploadQuota.limit(ctx, "ninaUpload", { key: appUser._id }),
-      catch: uploadFailure,
-    });
+    const quota = yield* Effect.promise(() =>
+      uploadQuota.limit(ctx, "ninaUpload", { key: appUser._id })
+    );
     if (!quota.ok) {
       return yield* new NinaUploadError({
         code: "NINA_UPLOAD_LIMIT",
@@ -160,7 +164,7 @@ const reserve = FunctionImpl.make(
       { uploadId }
     );
     return { storedFilename, uploadId };
-  }, Effect.catchDefect(uploadFailure))
+  }, Effect.catchDefect(uploadDefect))
 );
 
 const complete = FunctionImpl.make(
@@ -189,7 +193,7 @@ const complete = FunctionImpl.make(
       })
       .pipe(Effect.orDie);
     return null;
-  }, Effect.catchDefect(uploadFailure))
+  }, Effect.catchDefect(uploadDefect))
 );
 
 const discard = FunctionImpl.make(
@@ -234,7 +238,7 @@ const release = FunctionImpl.make(
       .delete(upload._id)
       .pipe(Effect.orDie);
     return null;
-  }, Effect.catchDefect(uploadFailure))
+  }, Effect.catchDefect(uploadDefect))
 );
 
 export default GroupImpl.make(schema, spec).pipe(

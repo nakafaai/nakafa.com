@@ -10,7 +10,11 @@ import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { PlayerFlag } from "@/components/player/flag";
-import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
+import {
+  PlayerFooter,
+  PlayerNote,
+  PlayerOpener,
+} from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
 import { PlayerKeys } from "@/components/player/keys";
 import { PlayerGrid } from "@/components/player/navigator/grid";
@@ -20,6 +24,7 @@ import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import {
+  TryExamIdContext,
   TrySlugContext,
   TryStoreContext,
 } from "@/components/tenant/exams/try/context";
@@ -62,7 +67,7 @@ export function ExamTryPaper({
   const [store] = useState(createExamTry);
   // The navigator, the flag and the keys mark the try's own answers and flags.
   const answers = useStore(store);
-  // An exam that goes while it is tried keeps its paper and its title, and says so in place of the note.
+  // An exam that goes while it is tried keeps its paper and its title, and says so in the note, which opens by itself.
   const kept = useLastValue(result);
 
   if (Option.isNone(kept)) {
@@ -79,52 +84,57 @@ export function ExamTryPaper({
 
   return (
     <TrySlugContext value={slug}>
-      <TryStoreContext value={store}>
-        <PlayerProvider
-          keys={Arr.map(exam.questions, (question) => question.id)}
-          mode="list"
-        >
-          <PlayerKeys locked={false} questions={models} />
-          <PaperBar
-            back={<PaperBack examId={examId} />}
-            title={exam.title || t("untitled")}
+      <TryExamIdContext value={examId}>
+        <TryStoreContext value={store}>
+          <PlayerProvider
+            keys={Arr.map(exam.questions, (question) => question.id)}
+            mode="list"
           >
-            {gone ? null : (
-              <TargetLink className={buttonVariants()} target={editor}>
-                {t("try-finish")}
-              </TargetLink>
-            )}
-          </PaperBar>
-          <PlayerMain
-            navigator={
-              <PlayerSidebar>
-                <PlayerGrid questions={models} />
-                <PlayerLegend />
-              </PlayerSidebar>
-            }
-          >
-            <TryReveal documentId={exam.questions[0]?.prompt}>
-              <PlayerQuestions>
-                {Arr.map(exam.questions, (question, index) => (
-                  <ExamTryQuestion
-                    key={question.id}
-                    number={index + 1}
-                    question={question}
-                  />
-                ))}
-              </PlayerQuestions>
-            </TryReveal>
-          </PlayerMain>
-          <PlayerFooter note={gone ? <ExamGone /> : t("try-note")}>
-            <PlayerFlag beforeNote locked={false} questions={models} />
-            <PlayerOpener />
-          </PlayerFooter>
-          <PlayerSheet>
-            <PlayerGrid questions={models} />
-            <PlayerLegend />
-          </PlayerSheet>
-        </PlayerProvider>
-      </TryStoreContext>
+            <PlayerKeys locked={false} questions={models} />
+            <PaperBar
+              back={<PaperBack examId={examId} />}
+              title={exam.title || t("untitled")}
+            >
+              {gone ? null : (
+                <TargetLink className={buttonVariants()} target={editor}>
+                  {t("try-finish")}
+                </TargetLink>
+              )}
+            </PaperBar>
+            <PlayerMain
+              navigator={
+                <PlayerSidebar>
+                  <PlayerGrid questions={models} />
+                  <PlayerLegend />
+                </PlayerSidebar>
+              }
+            >
+              <TryReveal questions={exam.questions}>
+                <PlayerQuestions>
+                  {Arr.map(exam.questions, (question, index) => (
+                    <ExamTryQuestion
+                      key={question.id}
+                      number={index + 1}
+                      question={question}
+                    />
+                  ))}
+                </PlayerQuestions>
+              </TryReveal>
+            </PlayerMain>
+            <PlayerFooter>
+              <PlayerFlag beforeNote locked={false} questions={models} />
+              <PlayerOpener />
+              <PlayerNote defaultOpen={gone} key={String(gone)}>
+                {gone ? <ExamGone /> : t("try-note")}
+              </PlayerNote>
+            </PlayerFooter>
+            <PlayerSheet>
+              <PlayerGrid questions={models} />
+              <PlayerLegend />
+            </PlayerSheet>
+          </PlayerProvider>
+        </TryStoreContext>
+      </TryExamIdContext>
     </TrySlugContext>
   );
 }

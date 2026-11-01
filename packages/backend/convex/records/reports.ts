@@ -8,3 +8,4 @@ export const own = registeredFunctions.own;
 export const reopen = registeredFunctions.reopen;
 export const sheet = registeredFunctions.sheet;
 export const write = registeredFunctions.write;
+export const experimental_reuseContext = true;

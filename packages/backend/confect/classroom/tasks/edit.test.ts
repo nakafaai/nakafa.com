@@ -18,6 +18,7 @@ const DAY = 86_400_000;
 /** The task the tests publish, as its teacher wrote it first. */
 const DRAFT = {
   deadline: TENANCY_NOW + DAY,
+  category: null,
   latePolicy: "accept",
   points: 100,
   text: "Kerjakan soal 1 sampai 10.",
@@ -40,13 +41,16 @@ describe("classroom/tasks edit", () => {
         const teacher = fixture.as("teacher");
         const classArgs = { classId: forum.classId, slug: nf };
         const published = yield* teacher.mutation(tasks.publish, {
+          targets: null,
           ...classArgs,
           ...DRAFT,
           clientKey: "edit-task",
         });
         const edited = yield* teacher.mutation(tasks.edit, {
+          targets: null,
           ...classArgs,
           deadline: TENANCY_NOW + 3 * DAY,
+          category: null,
           latePolicy: "close",
           points: 50,
           task: published.slug,
@@ -56,6 +60,7 @@ describe("classroom/tasks edit", () => {
         expect(edited).toMatchObject({
           deadline: TENANCY_NOW + 3 * DAY,
           id: published.id,
+          category: null,
           latePolicy: "close",
           points: 50,
           slug: published.slug,
@@ -69,8 +74,10 @@ describe("classroom/tasks edit", () => {
         ).toMatchObject({ text: "Kerjakan soal 1 sampai 5." });
         // The same fields again change nothing, so nothing more is recorded.
         yield* teacher.mutation(tasks.edit, {
+          targets: null,
           ...classArgs,
           deadline: TENANCY_NOW + 3 * DAY,
+          category: null,
           latePolicy: "close",
           points: 50,
           task: published.slug,
@@ -93,8 +100,10 @@ describe("classroom/tasks edit", () => {
         });
         const fixed = yield* teacher
           .mutation(tasks.edit, {
+            targets: null,
             ...classArgs,
             deadline: TENANCY_NOW + 3 * DAY,
+            category: null,
             latePolicy: "close",
             points: 80,
             task: published.slug,
@@ -105,13 +114,19 @@ describe("classroom/tasks edit", () => {
         const student = yield* fixture
           .as("student")
           .mutation(tasks.edit, {
+            targets: null,
             ...classArgs,
             ...DRAFT,
             task: published.slug,
           })
           .pipe(Effect.flip);
         const missing = yield* teacher
-          .mutation(tasks.edit, { ...classArgs, ...DRAFT, task: "tidak-ada" })
+          .mutation(tasks.edit, {
+            targets: null,
+            ...classArgs,
+            ...DRAFT,
+            task: "tidak-ada",
+          })
           .pipe(Effect.flip);
         expect([fixed, student, missing]).toMatchObject([
           { _tag: "TaskPointsFixed" },

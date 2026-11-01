@@ -23,6 +23,7 @@ export const Rule = Schema.Literals([
   "fetch",
   "json",
   "map-set",
+  "module-state",
   "new-promise",
   "node-module",
   "object-helper",
@@ -124,6 +125,11 @@ export const RULES = {
     message:
       "use HashMap or HashSet from effect, or MutableHashMap or MutableHashSet for local mutation, instead of a native Map or Set.",
     scope: "code",
+  },
+  "module-state": {
+    message:
+      "keep state inside the call instead of in a top-level binding: Convex keeps a module's context between calls, so one caller's value would reach the next (ADR 0040).",
+    scope: "domain",
   },
   "node-module": {
     message:

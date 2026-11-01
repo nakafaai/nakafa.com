@@ -14,8 +14,15 @@ import { NotificationView } from "@repo/backend/confect/notifications/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
-/** The school whose rows a call reads or marks; without it, every school the account holds. */
-const scope = () => ({ slug: Schema.optionalKey(TenantSlug) });
+/**
+ * What a call reads or marks: the one school a slug names, or every school the
+ * account holds, and with `personal` the rows addressed to the account itself,
+ * which only the Nakafa inbox asks for, because they never show inside a school.
+ */
+const scope = () => ({
+  personal: Schema.optionalKey(Schema.Boolean),
+  slug: Schema.optionalKey(TenantSlug),
+});
 
 /**
  * The inbox of the signed-in account: the rows of every school whose Person the

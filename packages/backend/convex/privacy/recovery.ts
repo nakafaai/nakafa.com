@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/pr
 export const cleanupWorkflowStorage = registeredFunctions.cleanupWorkflowStorage;
 export const handleCleanupComplete = registeredFunctions.handleCleanupComplete;
 export const retryCleanupWorkflow = registeredFunctions.retryCleanupWorkflow;
+export const experimental_reuseContext = true;

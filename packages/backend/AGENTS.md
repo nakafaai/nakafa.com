@@ -30,7 +30,9 @@ Run `bun run --cwd packages/backend codegen` before a Convex binding refresh. Co
 owns the authored contract generation; Convex owns `convex/_generated`, including
 the static client API. `bun --filter @repo/backend codegen` also writes the
 per-domain refs under `confect/_generated/refs`, and the web app imports only
-those. `bun run acceptance:prepare` and `bun run acceptance:build`
+those. It then marks each module the Convex runtime runs for context reuse, so
+no module keeps state between calls (ADR 0040).
+`bun run acceptance:prepare` and `bun run acceptance:build`
 refresh these bindings against the owned local backend. After
 `bun run --cwd packages/backend codegen` and the Convex binding refresh, commit
 every change under `confect/_generated` and `convex/_generated`; a branch whose

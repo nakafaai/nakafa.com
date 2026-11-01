@@ -10,6 +10,7 @@ import type { VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { contentWidthVariants } from "@/components/shared/content/width";
+import { tableCardVariants } from "@/components/shared/table/card";
 import { EmptyNina } from "@/components/state/empty";
 
 /**
@@ -33,7 +34,8 @@ export function TableFrame({ children }: { children: ReactNode }) {
  * try-out catalog draws its lists. A settings section's table takes the column width of its cards;
  * a working table, such as the exams, rooms or results, takes the page width. The data table fills
  * the card, its rows divided and running the card's width, and so does the empty state in its
- * place; a table taller than the card scrolls inside it with its column heads in view.
+ * place; a table taller than the card scrolls inside it with its column heads in view. The table
+ * closes on its last row (`tableCardVariants`).
  */
 export function TablePageBody({
   children,
@@ -52,7 +54,10 @@ export function TablePageBody({
       data-slot="table-page-body"
     >
       <div
-        className="bg-card text-card-foreground flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-sm"
+        className={cn(
+          tableCardVariants(),
+          "bg-card text-card-foreground flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-sm"
+        )}
         data-slot="table-card"
       >
         {children}

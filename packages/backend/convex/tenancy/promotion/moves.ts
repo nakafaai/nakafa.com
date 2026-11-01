@@ -2,3 +2,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 
 export const moves = registeredFunctions.moves;
 export const setMove = registeredFunctions.setMove;
+export const experimental_reuseContext = true;

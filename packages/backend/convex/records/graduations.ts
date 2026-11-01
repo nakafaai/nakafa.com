@@ -6,3 +6,4 @@ export const get = registeredFunctions.get;
 export const issue = registeredFunctions.issue;
 export const readiness = registeredFunctions.readiness;
 export const sheet = registeredFunctions.sheet;
+export const experimental_reuseContext = true;

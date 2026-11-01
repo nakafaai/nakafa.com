@@ -4,3 +4,4 @@ export const children = registeredFunctions.children;
 export const confirm = registeredFunctions.confirm;
 export const grades = registeredFunctions.grades;
 export const withdraw = registeredFunctions.withdraw;
+export const experimental_reuseContext = true;

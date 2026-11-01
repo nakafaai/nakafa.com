@@ -26,10 +26,12 @@ export type ClassTeachersDoc = Document.Document<typeof schemaDefinition, "class
 export type ClassesDoc = Document.Document<typeof schemaDefinition, "classes">;
 export type ClassroomChannelsDoc = Document.Document<typeof schemaDefinition, "classroomChannels">;
 export type ClassroomFileUseDoc = Document.Document<typeof schemaDefinition, "classroomFileUse">;
+export type ClassroomFoldersDoc = Document.Document<typeof schemaDefinition, "classroomFolders">;
 export type ClassroomLibraryDoc = Document.Document<typeof schemaDefinition, "classroomLibrary">;
 export type ClassroomMessagesDoc = Document.Document<typeof schemaDefinition, "classroomMessages">;
 export type ClassroomPostsDoc = Document.Document<typeof schemaDefinition, "classroomPosts">;
 export type ClassroomReadsDoc = Document.Document<typeof schemaDefinition, "classroomReads">;
+export type ClassroomScheduledDoc = Document.Document<typeof schemaDefinition, "classroomScheduled">;
 export type ClassroomSubmissionsDoc = Document.Document<typeof schemaDefinition, "classroomSubmissions">;
 export type ClassroomTalliesDoc = Document.Document<typeof schemaDefinition, "classroomTallies">;
 export type ClassroomTasksDoc = Document.Document<typeof schemaDefinition, "classroomTasks">;
@@ -177,10 +179,12 @@ export interface Docs {
   classes: ClassesDoc;
   classroomChannels: ClassroomChannelsDoc;
   classroomFileUse: ClassroomFileUseDoc;
+  classroomFolders: ClassroomFoldersDoc;
   classroomLibrary: ClassroomLibraryDoc;
   classroomMessages: ClassroomMessagesDoc;
   classroomPosts: ClassroomPostsDoc;
   classroomReads: ClassroomReadsDoc;
+  classroomScheduled: ClassroomScheduledDoc;
   classroomSubmissions: ClassroomSubmissionsDoc;
   classroomTallies: ClassroomTalliesDoc;
   classroomTasks: ClassroomTasksDoc;

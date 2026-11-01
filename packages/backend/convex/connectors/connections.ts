@@ -4,3 +4,4 @@ export const disconnectOwn = registeredFunctions.disconnectOwn;
 export const disconnectSchool = registeredFunctions.disconnectSchool;
 export const listOwn = registeredFunctions.listOwn;
 export const listSchool = registeredFunctions.listSchool;
+export const experimental_reuseContext = true;

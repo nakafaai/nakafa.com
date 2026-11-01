@@ -45,18 +45,19 @@ for (const viewport of [
 
     // The forum opens on its list of chats, each with the start of its newest message and an unread dot.
     const rail = page.getByRole("complementary", { name: "Chats" });
-    const general = rail.getByRole("link", { exact: true, name: "General" });
+    // The link of a chat with unread messages also says so to a screen reader.
+    const general = rail.getByRole("link", { name: "General" });
     await waitUntilTakenOver(general);
     await expect(
       page.getByRole("textbox", { name: "Write a message" })
     ).toHaveCount(0);
 
     // The filters keep the unread chats, then the class's threads.
-    await rail.getByText("Unread", { exact: true }).click();
+    await rail.getByRole("tab", { name: "Unread" }).click();
     await expect(general).toBeVisible();
-    await rail.getByText("Threads", { exact: true }).click();
+    await rail.getByRole("tab", { name: "Threads" }).click();
     await expect(rail.getByText("No results")).toBeVisible();
-    await rail.getByText("All", { exact: true }).click();
+    await rail.getByRole("tab", { name: "All" }).click();
     await general.click();
     const field = page.getByRole("textbox", { name: "Write a message" });
     await waitUntilTakenOver(field);
@@ -78,13 +79,15 @@ for (const viewport of [
       page.getByRole("button", { name: "Remove papan.png" })
     ).toBeVisible();
     await field.fill("Foto papan tulis");
-    const send = page.getByRole("button", { name: "Send message" });
+    const send = page.getByRole("button", { exact: true, name: "Send" });
     await expect(send).toBeEnabled({ timeout: readinessTimeoutMilliseconds });
     await send.click();
     await expect(
       page.getByRole("button", { name: "Open papan.png" })
     ).toBeVisible();
-    await expect(page.getByText("Foto papan tulis")).toBeVisible();
+    await expect(
+      page.getByText("Foto papan tulis", { exact: true })
+    ).toBeVisible();
 
     // A document goes out alone, and shows as a row that opens it.
     const chooseDocument = page.waitForEvent("filechooser");
@@ -164,12 +167,14 @@ test("a teacher archives a chat, which keeps its messages and takes no new one, 
     .getByRole("textbox", { name: "Chat name" })
     .fill("Tugas");
   await page.getByRole("dialog").getByRole("button", { name: "Add" }).click();
-  const chat = page.getByRole("link", { exact: true, name: "Tugas" });
+  const rail = page.getByRole("complementary", { name: "Chats" });
+  const named = page.getByRole("link", { exact: true, name: "Tugas" });
+  const chat = rail.getByRole("link", { exact: true, name: "Tugas" });
   await expect(chat).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   const menu = () =>
-    page
+    rail
       .getByRole("listitem")
-      .filter({ has: chat })
+      .filter({ has: named })
       .getByRole("button", { name: "More actions" });
 
   // Archived, the chat leaves the list for its own filter and takes no message.
@@ -188,13 +193,13 @@ test("a teacher archives a chat, which keeps its messages and takes no new one, 
   await expect(
     page.getByRole("textbox", { name: "Write a message" })
   ).toHaveCount(0);
-  await page.getByRole("radio", { name: "Archived" }).click();
+  await page.getByRole("tab", { name: "Archived" }).click();
   await expect(chat).toBeVisible();
 
   // Restored, it is back in the list, and the filter that showed it leaves.
   await menu().click();
   await page.getByRole("menuitem", { name: "Restore chat" }).click();
-  await expect(page.getByRole("radio", { name: "Archived" })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "Archived" })).toHaveCount(0);
   await expect(chat).toBeVisible();
   await expect(
     page.getByRole("textbox", { name: "Write a message" })
@@ -211,9 +216,9 @@ test("a teacher archives a chat, which keeps its messages and takes no new one, 
   await expect(chat).toBeHidden();
   await page.waitForURL(FORUM_PATH);
   await page.reload();
-  await expect(
-    page.getByRole("link", { exact: true, name: "General" })
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(rail.getByRole("link", { name: "General" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(chat).toHaveCount(0);
   await context.close();
 });

@@ -18,12 +18,14 @@ const isInside = (entries: readonly IntersectionObserverEntry[]) =>
  * Where a page sits against the canvas. `mounted` turns on when the page comes within a viewport
  * of the canvas, and turns off only when it leaves the three-viewport margin, so a page at the edge
  * keeps its editors. `reached` tells whether the page is within the three-viewport margin, where its
- * text may be read. The observers report each change, and the state changes only in their callbacks.
+ * text may be read, and `measured` that the observers have reported once, so `reached` can be trusted.
+ * The observers report each change, and the state changes only in their callbacks.
  */
 export function usePageWindow(
   page: RefObject<HTMLElement | null>,
   canvas: RefObject<HTMLElement | null>
 ) {
+  const [measured, setMeasured] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [reached, setReached] = useState(false);
 
@@ -45,6 +47,7 @@ export function usePageWindow(
     const far = new IntersectionObserver(
       (entries) => {
         const inside = isInside(entries);
+        setMeasured(true);
         setReached(inside);
         if (!inside) {
           setMounted(false);
@@ -61,5 +64,5 @@ export function usePageWindow(
     };
   }, [canvas, page]);
 
-  return { mounted, reached };
+  return { measured, mounted, reached };
 }

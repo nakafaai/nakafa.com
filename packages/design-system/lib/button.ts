@@ -26,6 +26,9 @@ export const buttonVariants = cva(
         // Nina's light face color with her ink, so it reads in every theme.
         inverse:
           "bg-nina-face text-nina-ink shadow-xs hover:bg-[color-mix(in_oklch,var(--color-nina-face)_90%,var(--color-nina-ink))] hover:shadow-md",
+        // The quieter action beside `inverse`, on the same dark band.
+        "inverse-outline":
+          "border-nina-face text-nina-face hover:bg-nina-face hover:text-nina-ink border shadow-xs",
         ghost:
           "hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted hover:[&_svg]:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",

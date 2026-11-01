@@ -2,3 +2,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 
 export const enqueueRenderedWelcome = registeredFunctions.enqueueRenderedWelcome;
 export const readIntentInput = registeredFunctions.readIntentInput;
+export const experimental_reuseContext = true;

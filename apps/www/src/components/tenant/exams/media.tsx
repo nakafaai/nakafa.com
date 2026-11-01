@@ -1,3 +1,4 @@
+import type { GenericId } from "@confect/core";
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
@@ -7,6 +8,7 @@ import {
   type QuestionMedia,
   videoIdOf,
 } from "@repo/backend/confect/exams/media";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -25,7 +27,7 @@ import {
   Option,
   String as Str,
 } from "effect";
-import { useId, useState, useTransition } from "react";
+import { type ComponentProps, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { PaperMedia } from "@/components/exams/sitting/media";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
@@ -34,6 +36,10 @@ import { sendStorageFile } from "@/components/tenant/exams/image";
 import { ImportFileField } from "@/components/tenant/exams/import/field";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
+import {
+  useTryExamId,
+  useTrySlug,
+} from "@/components/tenant/exams/try/context";
 
 /** The audio files a teacher picks from. */
 const AUDIO_FILES =
@@ -42,19 +48,47 @@ const AUDIO_FILES =
 /** The way a dialog adds media. */
 type MediaKind = QuestionMedia["kind"];
 
-/** The media of a question on its paper, as the student meets it, read for the editor and the try. */
-export function ExamPaperMedia({ question }: { readonly question: Question }) {
-  const { exam, slug } = useExam();
+/** A piece of media as a paper draws it before the server answers: a clip stands without its address. */
+const unanswered = (
+  item: QuestionMedia
+): ComponentProps<typeof PaperMedia>["items"][number] =>
+  item.kind === "audio" ? { alt: item.alt, kind: item.kind, url: "" } : item;
+
+/**
+ * Reads what a question's media plays. A question that holds none reads nothing. Its media stands from the first
+ * frame, with each clip's address to come, so the paper has its shape before the server answers and nothing moves.
+ */
+function useQuestionMedia(
+  examId: GenericId.GenericId<"exams">,
+  question: Question,
+  slug: TenantSlug
+) {
   const reply = useQuery(
     exams.assets.media,
     Arr.isReadonlyArrayEmpty(question.media)
       ? "skip"
-      : { examId: exam.id, questionId: question.id, slug }
+      : { examId, questionId: question.id, slug }
   );
 
-  return QueryResult.isSuccess(reply) ? (
-    <PaperMedia items={reply.value} />
-  ) : null;
+  return QueryResult.isSuccess(reply)
+    ? reply.value
+    : Arr.map(question.media, unanswered);
+}
+
+/** The media of a question on the editor's paper, as the student meets it. */
+export function ExamPaperMedia({ question }: { readonly question: Question }) {
+  const { exam, slug } = useExam();
+
+  return <PaperMedia items={useQuestionMedia(exam.id, question, slug)} />;
+}
+
+/** The media of a question on a teacher's try, which holds no editor around it. */
+export function TryPaperMedia({ question }: { readonly question: Question }) {
+  return (
+    <PaperMedia
+      items={useQuestionMedia(useTryExamId(), question, useTrySlug())}
+    />
+  );
 }
 
 /** The dialog that adds one piece of media: a clip from the device, or a video by its link, and what it holds. */

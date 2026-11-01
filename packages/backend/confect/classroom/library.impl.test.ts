@@ -117,6 +117,7 @@ describe("classroom/library", () => {
         const teacher = fixture.as("teacher");
         const add = (clientKey: string, address: string) =>
           teacher.mutation(library.addLink, {
+            folderId: null,
             address,
             classId,
             clientKey,
@@ -136,13 +137,17 @@ describe("classroom/library", () => {
         const stored = yield* fixture.run(libraryRows);
         expect(stored).toHaveLength(1);
         expect(encodeJsonText(stored)).not.toContain("gerak");
-        const listed = yield* fixture
-          .as("student")
-          .query(library.list, { ...firstPage, classId, slug: nf });
+        const listed = yield* fixture.as("student").query(library.list, {
+          folderId: null,
+          ...firstPage,
+          classId,
+          slug: nf,
+        });
         expect(listed.page).toEqual([added]);
         const byStudent = yield* fixture
           .as("student")
           .mutation(library.addLink, {
+            folderId: null,
             address: "https://example.com",
             classId,
             clientKey: "student-link",
@@ -177,6 +182,7 @@ describe("classroom/library", () => {
           Effect.gen(function* () {
             const storageId = yield* storeFile(fixture.convex, file);
             const registered = yield* teacher.action(library.register, {
+              folderId: null,
               classId,
               clientKey,
               slug: nf,
@@ -195,9 +201,12 @@ describe("classroom/library", () => {
         const repeat = yield* register("photo-file", png(), "Foto lagi");
         expect(repeat.id).toBe(photo.id);
         expect(yield* storageUrl(fixture.convex, repeat.storageId)).toBeNull();
-        const listed = yield* fixture
-          .as("student")
-          .query(library.list, { ...firstPage, classId, slug: nf });
+        const listed = yield* fixture.as("student").query(library.list, {
+          folderId: null,
+          ...firstPage,
+          classId,
+          slug: nf,
+        });
         expect(
           Arr.map(listed.page, (item) => [item.kind, item.title, item.byteSize])
         ).toEqual([
@@ -210,9 +219,12 @@ describe("classroom/library", () => {
         yield* Effect.promise(() =>
           fixture.convex.run((ctx) => ctx.storage.delete(module.storageId))
         );
-        const after = yield* fixture
-          .as("student")
-          .query(library.list, { ...firstPage, classId, slug: nf });
+        const after = yield* fixture.as("student").query(library.list, {
+          folderId: null,
+          ...firstPage,
+          classId,
+          slug: nf,
+        });
         expect(after.page[1]).toMatchObject({ address: null, kind: "pdf" });
       })
   );
@@ -228,6 +240,7 @@ describe("classroom/library", () => {
             const storageId = yield* storeFile(fixture.convex, file);
             const failure = yield* teacher
               .action(library.register, {
+                folderId: null,
                 classId,
                 clientKey: "refused-file",
                 slug: nf,
@@ -267,6 +280,7 @@ describe("classroom/library", () => {
         const args = {
           classId,
           clientKey: "outside-file",
+          folderId: null,
           slug: nf,
           storageId,
           title: "Modul",
@@ -290,6 +304,7 @@ describe("classroom/library", () => {
         const other = yield* forumClass(fixture, term.id, "X-2", false);
         const teacher = fixture.as("teacher");
         const link = yield* teacher.mutation(library.addLink, {
+          folderId: null,
           address: "https://nakafa.com/id/subject/high-school/10/physics",
           classId,
           clientKey: "material-link",
@@ -298,6 +313,7 @@ describe("classroom/library", () => {
         });
         const storageId = yield* storeFile(fixture.convex, pdf());
         const file = yield* teacher.action(library.register, {
+          folderId: null,
           classId,
           clientKey: "module-file",
           slug: nf,
@@ -345,6 +361,7 @@ describe("classroom/library", () => {
         );
         const importDrive = (clientKey: string) =>
           fixture.as("teacher").action(library.importDrive, {
+            folderId: null,
             classId,
             clientKey,
             fileId: "drive-file-1",
@@ -354,9 +371,12 @@ describe("classroom/library", () => {
         const imported = yield* importDrive("drive-module");
         expect((yield* importDrive("drive-module")).id).toBe(imported.id);
         expect(driveReads()).toHaveLength(4);
-        const listed = yield* fixture
-          .as("student")
-          .query(library.list, { ...firstPage, classId, slug: nf });
+        const listed = yield* fixture.as("student").query(library.list, {
+          folderId: null,
+          ...firstPage,
+          classId,
+          slug: nf,
+        });
         expect(listed.page).toMatchObject([
           {
             byteSize: bytes.length,
@@ -380,6 +400,7 @@ describe("classroom/library", () => {
           return fixture
             .as("teacher")
             .action(library.importDrive, {
+              folderId: null,
               classId,
               clientKey: "drive-refused",
               fileId: "drive-file-2",
@@ -421,6 +442,7 @@ describe("classroom/library", () => {
         const args = {
           classId,
           clientKey: "drive-outside",
+          folderId: null,
           fileId: "drive-file-3",
           slug: nf,
           title: "Modul",

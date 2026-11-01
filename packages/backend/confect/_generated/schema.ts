@@ -25,10 +25,12 @@ import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
 import classroomFileUse from "./tables/classroomFileUse";
+import classroomFolders from "./tables/classroomFolders";
 import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
 import classroomPosts from "./tables/classroomPosts";
 import classroomReads from "./tables/classroomReads";
+import classroomScheduled from "./tables/classroomScheduled";
 import classroomSubmissions from "./tables/classroomSubmissions";
 import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
@@ -176,10 +178,12 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly classes: typeof classes;
   readonly classroomChannels: typeof classroomChannels;
   readonly classroomFileUse: typeof classroomFileUse;
+  readonly classroomFolders: typeof classroomFolders;
   readonly classroomLibrary: typeof classroomLibrary;
   readonly classroomMessages: typeof classroomMessages;
   readonly classroomPosts: typeof classroomPosts;
   readonly classroomReads: typeof classroomReads;
+  readonly classroomScheduled: typeof classroomScheduled;
   readonly classroomSubmissions: typeof classroomSubmissions;
   readonly classroomTallies: typeof classroomTallies;
   readonly classroomTasks: typeof classroomTasks;
@@ -326,10 +330,12 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   classes,
   classroomChannels,
   classroomFileUse,
+  classroomFolders,
   classroomLibrary,
   classroomMessages,
   classroomPosts,
   classroomReads,
+  classroomScheduled,
   classroomSubmissions,
   classroomTallies,
   classroomTasks,

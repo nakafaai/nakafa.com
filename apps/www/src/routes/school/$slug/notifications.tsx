@@ -1,11 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Schema } from "effect";
 import type { ReactElement } from "react";
+import { SchoolInboxTopic } from "@/components/notifications/topic";
 import { SchoolNotifications } from "@/components/tenant/inbox/page";
 
-/** Which schools' rows the page shows: this school's unless the filter asks for every school's. */
+/**
+ * Which schools' rows the page shows, this school's unless the filter asks for every school's, and which tab, All
+ * unless the address names another.
+ */
 const NotificationsSearch = Schema.Struct({
   schools: Schema.optionalKey(Schema.Literal("all")),
+  topic: Schema.optionalKey(SchoolInboxTopic),
 });
 
 /** The account's notifications on the school's host. */

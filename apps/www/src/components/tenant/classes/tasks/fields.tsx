@@ -1,4 +1,7 @@
+import { QueryResult, useQuery } from "@confect/react";
+import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { LatePolicy } from "@repo/backend/confect/classroom/tasks/task";
+import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { DateTimePicker } from "@repo/design-system/components/ui/date";
 import {
   Field,
@@ -25,11 +28,15 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Array as Arr, Option, Schema } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
+import { useClassScope } from "@/components/tenant/classes/scope";
 import type { TaskDraft } from "@/components/tenant/classes/tasks/draft";
+
+/** Who a task can go to. */
+const REACHES = ["class", "some"] as const;
 
 /**
  * The fields of a task's form, the same when a teacher publishes a task and when they edit it: its title, what it
- * asks, its deadline in the browser's own time, its points, and what late work gets. Each change hands the whole
+ * asks, its deadline in the browser's own time, its points, what late work gets, and who it goes to. Each change hands the whole
  * form back. Points that are fixed, once work is handed in, show disabled with the sentence that says why.
  */
 export function TaskFields({
@@ -129,6 +136,95 @@ export function TaskFields({
           </Select>
         </Field>
       </div>
+      <Field>
+        <FieldLabel htmlFor={`${id}-category`}>{t("task-category")}</FieldLabel>
+        <Input
+          dir="auto"
+          id={`${id}-category`}
+          maxLength={40}
+          onChange={(event) =>
+            onChange({ ...draft, category: event.target.value })
+          }
+          placeholder={t("task-category-placeholder")}
+          value={draft.category}
+        />
+        <FieldDescription>{t("task-category-description")}</FieldDescription>
+      </Field>
+      <TaskReachField draft={draft} onChange={onChange} />
     </FieldGroup>
+  );
+}
+
+/** Who a task goes to: the whole class, or the students the teacher ticks, read once the teacher asks for them. */
+function TaskReachField({
+  draft,
+  onChange,
+}: {
+  draft: typeof TaskDraft.Type;
+  onChange: (draft: typeof TaskDraft.Type) => void;
+}) {
+  const t = useTranslations("Classroom");
+  const id = useId();
+  const { classId, slug } = useClassScope();
+  const people = useQuery(
+    classroom.people.list,
+    draft.targets === null ? "skip" : { classId, slug }
+  );
+  const students = QueryResult.isSuccess(people)
+    ? Arr.filter(people.value, (person) => person.kind === "student")
+    : [];
+  const reaches = Arr.map(REACHES, (value) => ({
+    label: t(`task-reach-${value}`),
+    value,
+  }));
+  const chosen = draft.targets ?? [];
+
+  return (
+    <>
+      <Field>
+        <FieldLabel htmlFor={`${id}-reach`}>{t("task-reach")}</FieldLabel>
+        <Select
+          items={reaches}
+          onValueChange={(value) =>
+            onChange({ ...draft, targets: value === "some" ? [] : null })
+          }
+          value={draft.targets === null ? "class" : "some"}
+        >
+          <SelectTrigger className="w-full" id={`${id}-reach`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Arr.map(reaches, (reach) => (
+              <SelectItem key={reach.value} value={reach.value}>
+                {reach.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      {draft.targets === null ? null : (
+        <FieldGroup className="max-h-48 gap-3 overflow-y-auto rounded-md border p-3">
+          {Arr.map(students, (student) => (
+            <Field key={student.id} orientation="horizontal">
+              <Checkbox
+                checked={Arr.contains(chosen, student.id)}
+                id={`${id}-${student.id}`}
+                onCheckedChange={(next) =>
+                  onChange({
+                    ...draft,
+                    targets: next
+                      ? Arr.append(chosen, student.id)
+                      : Arr.filter(chosen, (found) => found !== student.id),
+                  })
+                }
+              />
+              <FieldLabel dir="auto" htmlFor={`${id}-${student.id}`}>
+                {student.name}
+              </FieldLabel>
+            </Field>
+          ))}
+        </FieldGroup>
+      )}
+    </>
   );
 }

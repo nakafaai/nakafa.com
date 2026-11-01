@@ -9,10 +9,10 @@ import {
 } from "@repo/backend/confect/assessment/response";
 import { paperAnswers } from "@repo/backend/confect/exams/parts";
 import { ClientOnly } from "@tanstack/react-router";
-import { Option, Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import { lazy, type ReactNode, Suspense } from "react";
 import { SittingChoice } from "@/components/exams/sitting/choice";
-import { useReaderLoaded } from "@/components/exams/sitting/document";
+import { ReaderPrimer } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import { SittingReason } from "@/components/exams/sitting/reason";
@@ -25,6 +25,11 @@ import {
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
+import {
+  HeldPaper,
+  usePaperDrawable,
+  usePaperText,
+} from "@/components/player/held";
 import { readQuestionIds } from "@/components/player/ids";
 import {
   PlayerQuestion,
@@ -32,7 +37,7 @@ import {
   PlayerQuestionHeader,
   PlayerQuestionPrompt,
 } from "@/components/player/question";
-import { ExamPaperMedia } from "@/components/tenant/exams/media";
+import { TryPaperMedia } from "@/components/tenant/exams/media";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
 import { useLastValue } from "@/lib/data/kept";
@@ -40,10 +45,7 @@ import { useLastValue } from "@/lib/data/kept";
 /** The session name the try reads prompts under. It never writes, so the server records nothing. */
 const TRY_CLIENT = "try";
 
-/**
- * The prompt loads once its document has opened, with the editor's schema and the fold that
- * applies the steps, so the try's first page carries neither (the editor's prompt does the same).
- */
+/** The prompt's code, with the editor's schema and the fold, which the try's first page carries neither of. */
 const TryPrompt = lazy(() =>
   import("@/components/tenant/exams/try/prompt").then((module) => ({
     default: module.TryPrompt,
@@ -51,29 +53,34 @@ const TryPrompt = lazy(() =>
 );
 
 /**
- * Keeps the paper out of sight until it can draw its first question, as a sitting's paper does: the reader
- * has loaded, and the first prompt has answered, so no option moves when its prompt arrives.
+ * Keeps the paper out of sight until it can draw its first screen, as a sitting's paper does: the reader and the
+ * prompt's code stand ready, and the texts of its first questions have opened, so no option moves when its prompt
+ * arrives.
  */
 export function TryReveal({
   children,
-  documentId,
+  questions,
 }: {
   children: ReactNode;
-  /** The prompt of the first question. */
-  documentId: Question["prompt"] | undefined;
+  questions: readonly Question[];
 }) {
-  const slug = useTrySlug();
-  const loaded = useReaderLoaded(true);
-  const reply = useQuery(
-    editors.documents.open,
-    documentId === undefined
-      ? "skip"
-      : { clientId: TRY_CLIENT, documentId, slug }
+  return (
+    <HeldPaper
+      keys={Arr.flatMap(questions, (question) =>
+        question.reading === null
+          ? [question.prompt]
+          : [question.reading, question.prompt]
+      )}
+      primer={
+        <>
+          <ReaderPrimer />
+          <TryPrompt opened={undefined} />
+        </>
+      }
+    >
+      {children}
+    </HeldPaper>
   );
-  const waiting =
-    !loaded || (documentId !== undefined && QueryResult.isLoading(reply));
-
-  return <div className={waiting ? "invisible" : undefined}>{children}</div>;
 }
 
 /**
@@ -116,7 +123,7 @@ export function ExamTryQuestion({
       <PlayerQuestionHeader number={number} />
       <PlayerQuestionPrompt>
         <div className="grid gap-6">
-          <ExamPaperMedia question={question} />
+          <TryPaperMedia question={question} />
           {question.reading === null ? null : (
             <ExamTryPrompt documentId={question.reading} />
           )}
@@ -169,10 +176,10 @@ export function ExamTryQuestion({
 }
 
 /**
- * The prompt of one question. The paper shows once its first prompt can draw, as a sitting's paper
- * does, so the options below it do not move while the document opens and the reader loads. A prompt
- * that does not open leaves no space, and one whose exam goes while it is tried keeps the text it
- * showed, as the paper keeps the exam's title and questions.
+ * The prompt of one question. The paper shows once its first screen can draw, as a sitting's paper does, so the
+ * options below it do not move while the document opens and the reader loads. A prompt that does not open leaves no
+ * space, and one whose exam goes while it is tried keeps the text it showed, as the paper keeps the exam's title and
+ * questions.
  */
 function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
   const slug = useTrySlug();
@@ -182,14 +189,16 @@ function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
     slug,
   });
   const opened = useLastValue(reply);
+  const drawable = usePaperDrawable();
+  usePaperText(documentId, !QueryResult.isLoading(reply));
 
-  if (Option.isNone(opened)) {
+  if (!drawable) {
     return null;
   }
   return (
     <Suspense fallback={null}>
       <ClientOnly fallback={null}>
-        <TryPrompt key={documentId} opened={opened.value} />
+        <TryPrompt key={documentId} opened={Option.getOrUndefined(opened)} />
       </ClientOnly>
     </Suspense>
   );

@@ -23,3 +23,4 @@ export const signal = registeredFunctions.signal;
 export const signals = registeredFunctions.signals;
 export const student = registeredFunctions.student;
 export const unlock = registeredFunctions.unlock;
+export const experimental_reuseContext = true;

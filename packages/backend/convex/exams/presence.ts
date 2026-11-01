@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/ex
 export const join = registeredFunctions.join;
 export const leave = registeredFunctions.leave;
 export const list = registeredFunctions.list;
+export const experimental_reuseContext = true;

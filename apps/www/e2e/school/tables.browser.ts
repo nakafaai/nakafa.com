@@ -57,7 +57,9 @@ for (const viewport of [
 
       await page.goto(address("/settings/members"));
       const card = page.locator('[data-slot="table-card"]');
-      await expect(card).toHaveCount(1);
+      await expect(card).toHaveCount(1, {
+        timeout: readinessTimeoutMilliseconds,
+      });
       await expect(card.locator("table")).toBeVisible({
         timeout: readinessTimeoutMilliseconds,
       });
@@ -187,5 +189,54 @@ test("the exam list, its rooms and a room's results fill the page card, with sta
       .locator('[data-slot="page-header"]')
       .getByRole("button", { exact: true, name: "Release results" })
   ).toBeDisabled();
+  await context.close();
+});
+
+test("a table closes on its last row with few rows, and a list that fills its card draws no double line at the frame", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/settings/members"));
+  const card = page.locator('[data-slot="table-card"]');
+  const last = card.locator("tbody tr").last();
+  await expect(last).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  // A few rows: the last row draws its line in the open card.
+  await expect(last).toHaveCSS("border-bottom-width", "1px");
+
+  // A list that fills the card: the same line reaches the frame, and the table's last pixel covers it.
+  await page.setViewportSize({ height: 170, width: 1440 });
+  const edge = await card.evaluate((element) => {
+    const container = element.querySelector('[data-slot="table-container"]');
+    const scroller = container?.querySelector(
+      '[data-slot="scroll-area-viewport"]'
+    );
+    if (!(container && scroller)) {
+      return null;
+    }
+    scroller.scrollTop = scroller.scrollHeight;
+    const cover = getComputedStyle(container, "::after");
+    return {
+      background: cover.backgroundColor,
+      card: getComputedStyle(element).backgroundColor,
+      coverHeight: cover.height,
+      gap:
+        element.getBoundingClientRect().bottom -
+        container.getBoundingClientRect().bottom,
+      fills: scroller.scrollHeight >= scroller.clientHeight,
+    };
+  });
+  expect(edge?.fills).toBe(true);
+  expect(edge?.coverHeight).toBe("1px");
+  expect(edge?.background).toBe(edge?.card);
+  expect(edge?.gap).toBe(1);
   await context.close();
 });

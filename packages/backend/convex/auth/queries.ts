@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/au
 
 export const getCurrentUser = registeredFunctions.getCurrentUser;
 export const getUserById = registeredFunctions.getUserById;
+export const experimental_reuseContext = true;

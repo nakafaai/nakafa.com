@@ -11,6 +11,12 @@ only after its gate in Gates passes.
 
 Supersedes the request-time content path of ADR 0037. Its Markdown twin and CDN statements are corrected under Corrections.
 
+Amended on 1 November 2026: a lesson's static page holds every curriculum place that
+shows it, each with its breadcrumb path. A reader's `ctx` picks one before the first
+paint, through the root's prepaint script, and the browser reads nothing. Waiting for
+a read showed an empty row for 11.8 seconds on Slow 4G with a 4x slower processor,
+because the read could only start after hydration.
+
 ## Context
 
 Measured on origin/main 2359c75ad0, before origin/main e4776b377e. The research was pinned at 1d8184be9a; #1207 changed the Bun toolchain and the deploy.yml node version only.

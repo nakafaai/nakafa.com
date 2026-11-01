@@ -12,9 +12,17 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Schema } from "effect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
+import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { useFolderList } from "@/components/tenant/classes/library/folders";
 import {
   editItemUpdate,
   type LibraryItem,
@@ -24,10 +32,14 @@ import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/classes/library/edit";
 
+/** The choice that takes an item out of its folder, to the top of the library. */
+const NO_FOLDER = "none";
+
 /**
- * The dialog that changes a library item from its row: its title, and a link's address. The row
- * shows the change at once and a refusal takes it back. Save waits for a change that holds, and a
- * file, whose address the server draws for each reader, has no address to change.
+ * The dialog that changes a library item from its row: its title, its folder, and a link's address.
+ * The row shows the change at once and a refusal takes it back. Save waits for a change that holds, and
+ * a file, whose address the server draws for each reader, has no address to change. A library with no
+ * folder asks for none.
  */
 export function LibraryEditDialog({
   item,
@@ -47,13 +59,30 @@ export function LibraryEditDialog({
     editItemUpdate
   );
   const isLink = item.kind === "link";
-  const [title, setTitle] = useState(item.title);
-  const [address, setAddress] = useState(item.address ?? "");
+  const [editedTitle, setTitle] = useState<string | null>(null);
+  const [editedAddress, setAddress] = useState<string | null>(null);
+  const title = editedTitle ?? item.title;
+  const address = editedAddress ?? item.address ?? "";
+  const folders = useFolderList();
+  const [chosen, setChosen] = useState<string | null>(null);
+  const folder = chosen ?? item.folderId ?? NO_FOLDER;
+  const nextFolder = Option.getOrNull(
+    Option.map(
+      Arr.findFirst(folders, (found) => found.id === folder),
+      (found) => found.id
+    )
+  );
+  const folderItems = [
+    { label: t("library-no-folder"), value: NO_FOLDER },
+    ...Arr.map(folders, (found) => ({ label: found.name, value: found.id })),
+  ];
   const nextTitle = title.trim();
   const nextAddress = address.trim();
   const canSave =
     Schema.is(LibraryTitle)(nextTitle) &&
-    (nextTitle !== item.title || (isLink && nextAddress !== item.address)) &&
+    (nextTitle !== item.title ||
+      nextFolder !== item.folderId ||
+      (isLink && nextAddress !== item.address)) &&
     (!isLink || Schema.is(LinkAddress)(nextAddress));
 
   const save = () => {
@@ -67,6 +96,7 @@ export function LibraryEditDialog({
           edit({
             address: isLink ? nextAddress : null,
             classId,
+            folderId: nextFolder,
             itemId: item.id,
             slug,
             title: nextTitle,
@@ -124,6 +154,29 @@ export function LibraryEditDialog({
             value={title}
           />
         </Field>
+        {Arr.isReadonlyArrayEmpty(folders) ? null : (
+          <Field>
+            <FieldLabel htmlFor={`${id}-folder`}>
+              {t("library-folder")}
+            </FieldLabel>
+            <Select
+              items={folderItems}
+              onValueChange={setChosen}
+              value={folder}
+            >
+              <SelectTrigger className="w-full" id={`${id}-folder`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Arr.map(folderItems, (choice) => (
+                  <SelectItem key={choice.value} value={choice.value}>
+                    {choice.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        )}
       </FieldGroup>
     </ResponsiveDialog>
   );

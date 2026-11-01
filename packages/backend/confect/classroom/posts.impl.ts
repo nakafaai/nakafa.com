@@ -1,36 +1,27 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { ClassroomPostsDoc } from "@repo/backend/confect/_generated/docs";
-import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
-import {
-  classAccess,
-  classAuthority,
-} from "@repo/backend/confect/classroom/authority";
+import { classAccess } from "@repo/backend/confect/classroom/authority";
+import { PinLimit } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
-import { postField } from "@repo/backend/confect/classroom/posts/post";
+import { announce } from "@repo/backend/confect/classroom/posts/announce";
+import {
+  PIN_LIMIT,
+  postField,
+} from "@repo/backend/confect/classroom/posts/post";
 import spec from "@repo/backend/confect/classroom/posts.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
-import {
-  Array as Arr,
-  Clock,
-  Duration,
-  Effect,
-  Layer,
-  Option,
-  Struct,
-} from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /** An announcement that is not the allowed class's own, or not the caller's, refused as a missing object. */
 const missing = () =>
@@ -83,6 +74,7 @@ const postViews = Effect.fn("classroom.posts.views")(function* (
         email: post.email,
         id: post._id,
         mine: post.authorId === person._id,
+        pinned: post.pinnedAt !== undefined,
         text: yield* openText(keys, postField(post), post.sealedText),
       };
     }).pipe(Effect.orDie)
@@ -109,11 +101,65 @@ const list = FunctionImpl.make(
   })
 );
 
+/** The class's pinned announcements, most lately pinned first, bounded by how many a class keeps. */
+const pinnedPosts = Effect.fn("classroom.posts.pinnedPosts")(function* () {
+  const row = yield* Class;
+  return yield* (yield* DatabaseReader)
+    .table("classroomPosts")
+    .index(
+      "by_classId_and_pinnedAt",
+      (query) => query.eq("classId", row._id).gt("pinnedAt", 0),
+      "desc"
+    )
+    .take(PIN_LIMIT)
+    .pipe(Effect.orDie);
+});
+
+/** What the class home keeps at its top. */
+const pinned = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "pinned",
+  Effect.fn("classroom.posts.pinned")(function* () {
+    return yield* postViews(yield* pinnedPosts());
+  })
+);
+
 /**
- * Posts an announcement to the class, sealed with the school key, records
- * `announcement.posted`, the published change, and schedules the fan-out that
- * writes the inbox row of every member of the class in batches (ADR 0027); Convex
- * schedules it only if the post commits. A repeat of a client key of the class answers that announcement and
+ * Pins an announcement of the class to the top of its home, whoever wrote it, or takes it down. A class that keeps the
+ * most it can refuses another, and pinning one that stands changes nothing.
+ */
+const pin = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "pin",
+  Effect.fn("classroom.posts.pin")(function* ({ pinned: wanted, postId }) {
+    const row = yield* Class;
+    const post = yield* (yield* DatabaseReader)
+      .table("classroomPosts")
+      .get(postId)
+      .pipe(Effect.option);
+    if (Option.isNone(post) || post.value.classId !== row._id) {
+      return yield* missing();
+    }
+    if (wanted === (post.value.pinnedAt !== undefined)) {
+      return null;
+    }
+    if (wanted && (yield* pinnedPosts()).length >= PIN_LIMIT) {
+      return yield* new PinLimit();
+    }
+    yield* (yield* DatabaseWriter)
+      .table("classroomPosts")
+      .patch(postId, {
+        pinnedAt: wanted ? yield* Clock.currentTimeMillis : undefined,
+      })
+      .pipe(Effect.orDie);
+    return null;
+  })
+);
+
+/**
+ * Posts an announcement to the class, sealed with the school key (`announce`). A repeat of a client key of the class answers that announcement and
  * writes nothing; whoever posts in the class may read it anyway.
  */
 const publish = FunctionImpl.make(
@@ -135,30 +181,15 @@ const publish = FunctionImpl.make(
       return yield* postView(sent.value);
     }
     const fields = { classId: row._id, clientKey };
-    const postId = yield* (yield* DatabaseWriter)
-      .table("classroomPosts")
-      .insert({
-        ...fields,
-        authorId: person._id,
-        createdAt: yield* Clock.currentTimeMillis,
-        email,
-        sealedText: yield* sealText(
-          yield* schoolKeys(row.tenantId),
-          postField(fields),
-          text
-        ).pipe(Effect.orDie),
-        tenantId: row.tenantId,
-      })
-      .pipe(Effect.orDie);
-    yield* classAuthority.record(personActor(person), row, {
-      post: postId,
-      type: "announcement.posted",
+    const postId = yield* announce(row, person, {
+      clientKey,
+      email,
+      sealedText: yield* sealText(
+        yield* schoolKeys(row.tenantId),
+        postField(fields),
+        text
+      ).pipe(Effect.orDie),
     });
-    yield* (yield* Scheduler).runAfter(
-      Duration.zero,
-      notificationsInternal.fanout.run,
-      { cursor: null, phase: "students", source: { _tag: "post", postId } }
-    );
     return yield* postView(
       yield* reader.table("classroomPosts").get(postId).pipe(Effect.orDie)
     );
@@ -206,6 +237,8 @@ const remove = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
+  Layer.provide(pinned),
+  Layer.provide(pin),
   Layer.provide(publish),
   Layer.provide(edit),
   Layer.provide(remove),

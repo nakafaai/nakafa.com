@@ -4,6 +4,7 @@ import { NotificationView } from "@repo/backend/confect/notifications/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 import {
+  hasUnread,
   type ListNotification,
   markPageRead,
   markRowRead,
@@ -33,6 +34,12 @@ function row(id: string, readAt?: number): ListNotification {
 }
 
 describe("inbox list state", () => {
+  it("finds an unread row, and none in a read or empty inbox", () => {
+    expect(hasUnread([row("first", 3), row("second")])).toBe(true);
+    expect(hasUnread([row("first", 3)])).toBe(false);
+    expect(hasUnread([])).toBe(false);
+  });
+
   it("marks only the row with the given id read at the given moment", () => {
     expect(
       markRowRead([row("first"), row("second")], notificationId("first"), 5)
@@ -59,11 +66,27 @@ describe("inbox list state", () => {
 
   it("marks only the rows of the school a slug names", () => {
     const page = [row("first")];
-    expect(markPageRead(page, 9, page[0]?.tenant.slug)).toEqual([
-      row("first", 9),
-    ]);
+    expect(
+      markPageRead(page, 9, Schema.decodeSync(TenantSlug)("harapan"))
+    ).toEqual([row("first", 9)]);
     expect(
       markPageRead(page, 9, Schema.decodeSync(TenantSlug)("lain"))
     ).toEqual(page);
+  });
+
+  it("leaves a row of the account itself out of a school's read, and marks it in the Nakafa inbox", () => {
+    const reply = Schema.decodeUnknownSync(NotificationView)({
+      actor: null,
+      changeType: "comment.replied",
+      commentId: "comment-1",
+      createdAt: 1,
+      id: "reply",
+    });
+    expect(
+      markPageRead([reply], 9, Schema.decodeSync(TenantSlug)("harapan"))
+    ).toEqual([reply]);
+    expect(markPageRead([reply], 9, undefined)).toEqual([
+      { ...reply, readAt: 9 },
+    ]);
   });
 });

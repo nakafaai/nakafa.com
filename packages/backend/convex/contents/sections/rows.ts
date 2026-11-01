@@ -6,3 +6,4 @@ export const prune = registeredFunctions.prune;
 export const save = registeredFunctions.save;
 export const stored = registeredFunctions.stored;
 export const surah = registeredFunctions.surah;
+export const experimental_reuseContext = true;

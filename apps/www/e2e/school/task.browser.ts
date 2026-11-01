@@ -164,10 +164,40 @@ test("a student's work stays in the field after a hand-in, and Hand in keeps its
     timeout: readinessTimeoutMilliseconds,
   });
   await publishTask(tasks);
+
+  // A task for part of the class waits for a student, and goes to the one the teacher ticks.
+  await tasks.getByRole("button", { name: "New task" }).click();
+  const part = tasks.getByRole("dialog");
+  await part.getByRole("textbox", { name: "Title" }).fill("Remedial");
+  await part.getByRole("textbox", { name: "Category" }).fill("Remedial bab 1");
+  await part
+    .getByRole("textbox", { name: "What to do" })
+    .fill("Kerjakan soal 1 lagi.");
+  await chooseDay(tasks, part.getByLabel("Deadline"), "2027-10-30");
+  await part.getByRole("combobox", { name: "Time" }).click();
+  await tasks.getByRole("option", { name: LATE_EVENING }).click();
+  await part.getByRole("combobox", { name: "Who gets it" }).click();
+  await tasks.getByRole("option", { name: "Some students" }).click();
+  const publish = part.getByRole("button", { name: "Publish" });
+  await expect(publish).toBeDisabled();
+  await part.getByRole("checkbox", { name: "Acceptance Learner" }).click();
+  await publish.click();
+  await expect(
+    tasks.getByRole("link", { exact: true, name: "Remedial" })
+  ).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(
+    tasks.getByRole("cell", { name: "Remedial bab 1" })
+  ).toBeVisible();
   await teacher.close();
 
   const taskAddress = address("/classes/fisika-x-1/tasks/latihan-gerak-lurus");
   const page = await learner.newPage();
+  await page.goto(address("/classes/fisika-x-1/tasks"));
+  await expect(page.getByRole("link", { name: "Remedial" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await page.goto(taskAddress);
   const field = page.getByRole("textbox", { name: "Your work" });
   await waitUntilTakenOver(field);
