@@ -50,7 +50,7 @@ export function SchoolUnitChoice({
     >
       <SelectTrigger
         aria-label={t("unit-choice")}
-        className="w-auto max-w-28 sm:max-w-xs"
+        className="w-auto max-w-28 @max-sm/header:max-w-16 @max-xs/header:max-w-10 sm:max-w-xs"
       >
         <SelectValue />
       </SelectTrigger>
