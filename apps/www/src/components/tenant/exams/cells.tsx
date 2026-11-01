@@ -1,6 +1,7 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import {
+  Field,
   FieldDescription,
   FieldTitle,
 } from "@repo/design-system/components/ui/field";
@@ -67,7 +68,7 @@ export function TableKey({
   };
 
   return (
-    <div className="grid gap-2">
+    <Field>
       <FieldTitle>{t("answer-key")}</FieldTitle>
       <ol className="grid gap-2">
         {Arr.map(table.statements, (statement, index) => (
@@ -108,6 +109,6 @@ export function TableKey({
         ))}
       </ol>
       <FieldDescription>{t("cell-hint")}</FieldDescription>
-    </div>
+    </Field>
   );
 }

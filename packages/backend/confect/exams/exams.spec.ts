@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { GrantScope } from "@repo/backend/confect/access/schema";
 import { DocumentTooLarge } from "@repo/backend/confect/editor/document";
+import { FoldPending } from "@repo/backend/confect/editor/errors";
 import { ExamAccess } from "@repo/backend/confect/exams/access";
 import { ExamInUse } from "@repo/backend/confect/exams/errors";
 import {
@@ -74,6 +75,18 @@ export default GroupSpec.make()
       }),
       returns: () => ExamSummary,
       error: () => AccessDenied,
+    }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "duplicate",
+      args: () => ({
+        examId: Id("exams"),
+        slug: TenantSlug,
+        title: ExamTitle,
+      }),
+      returns: () => ExamView,
+      error: () => Schema.Union([AccessDenied, DocumentTooLarge, FoldPending]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(

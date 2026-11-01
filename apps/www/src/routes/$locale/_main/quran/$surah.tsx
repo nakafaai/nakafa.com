@@ -1,6 +1,6 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { makeBreadcrumbNodes, makeSurahNode } from "@repo/seo/json-ld/node";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { OpenContent } from "@/components/shared/content/actions";
@@ -97,10 +97,13 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
 
 function QuranSurahPage() {
   const page = Route.useLoaderData();
+  const router = useRouter();
   const { labels } = page;
 
+  /** Recovers a stale snapshot and reads the page again, so the next press names the snapshot that stands now. */
   async function recoverSnapshot() {
     await recoverQuranSnapshotFn({ data: { snapshotId: page.snapshotId } });
+    await router.invalidate();
   }
 
   return (
@@ -162,10 +165,7 @@ function QuranSurahPage() {
         <SidebarRightPanel
           footer={
             <SidebarRightFooter>
-              <ReferenceButton
-                references={page.references}
-                title={page.title}
-              />
+              <ReferenceButton references={page.references} />
               <ReportButton />
               <ShareButton />
             </SidebarRightFooter>

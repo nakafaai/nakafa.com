@@ -1,21 +1,23 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { UserGroupIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { CohortName } from "@repo/backend/confect/tenancy/cohort";
+import { CohortName, CohortStatus } from "@repo/backend/confect/tenancy/cohort";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -25,15 +27,15 @@ import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
-import { chosenGrade } from "@/components/tenant/settings/choices";
+import {
+  chosenGrade,
+  GRADE_ICONS,
+  gradeItems,
+} from "@/components/tenant/settings/choices";
 import {
   CohortGradeField,
   CohortNameField,
 } from "@/components/tenant/settings/cohort/fields";
-import {
-  CohortGradeFilter,
-  CohortStatusFilter,
-} from "@/components/tenant/settings/cohort/filter";
 import {
   SchoolCohortMenu,
   SchoolCohortRestore,
@@ -53,7 +55,7 @@ import { Link } from "@/lib/routing/link";
 const SOURCE = "components/tenant/settings/cohorts";
 
 /** The columns of the cohorts table. */
-const cohortColumns = createColumnHelper<typeof dataTableFeatures, Cohort>();
+const cohortColumns = tableColumns<Cohort>();
 
 /** The unit whose cohorts the tab shows, the school's units, and the choice of another one. */
 const CohortsUnitContext = createContext<{
@@ -388,29 +390,30 @@ function SchoolCohortTable({
     );
   }
 
-  const columns = cohortColumns.columns([
-    cohortColumns.accessor((cohort) => cohort.name, {
+  const columns = [
+    cohortColumns.text((cohort) => cohort.name, {
       cell: (info) => (
-        <Link
-          className="font-medium"
-          params={{ cohort: info.row.original.id, slug }}
-          to="/school/$slug/settings/cohorts/$cohort"
-        >
-          {info.getValue()}
-        </Link>
+        <TableTitle icon={UserGroupIcon}>
+          <Link
+            params={{ cohort: info.row.original.id, slug }}
+            to="/school/$slug/settings/cohorts/$cohort"
+          >
+            {info.getValue()}
+          </Link>
+        </TableTitle>
       ),
-      filterFn: "includesString",
       header: t("cohort-name"),
       id: "name",
-      sortFn: "text",
     }),
-    cohortColumns.accessor((cohort) => String(cohort.grade), {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => <CohortGradeFilter />,
+    cohortColumns.values((cohort) => String(cohort.grade), {
+      header: t("cohort-grade"),
       id: "grade",
+      options: namedOptions(
+        Arr.map(gradeItems, ({ value }) => value),
+        GRADE_ICONS
+      ),
     }),
-    cohortColumns.accessor((cohort) => cohort.status, {
+    cohortColumns.values((cohort) => cohort.status, {
       cell: (info) => (
         <TableStatus
           icon={COHORT_STATUS_LOOKS[info.getValue()].icon}
@@ -418,25 +421,24 @@ function SchoolCohortTable({
           tone={COHORT_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => <CohortStatusFilter />,
+      header: t("cohort-status"),
       id: "status",
+      options: Arr.map(CohortStatus.literals, (status) => ({
+        icon: COHORT_STATUS_LOOKS[status].icon,
+        label: t(`cohort-${status}`),
+        value: status,
+      })),
     }),
-    cohortColumns.display({
-      cell: (info) => (
-        <WithAction action="cohort.manage">
-          {info.row.original.status === "archived" ? (
-            <SchoolCohortRestore cohort={info.row.original} slug={slug} />
-          ) : (
-            <SchoolCohortMenu cohort={info.row.original} slug={slug} />
-          )}
-        </WithAction>
-      ),
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    cohortColumns.menu((info) => (
+      <WithAction action="cohort.manage">
+        {info.row.original.status === "archived" ? (
+          <SchoolCohortRestore cohort={info.row.original} slug={slug} />
+        ) : (
+          <SchoolCohortMenu cohort={info.row.original} slug={slug} />
+        )}
+      </WithAction>
+    )),
+  ];
 
   return (
     <DataTable

@@ -45,9 +45,11 @@ const whileOpen = (
   );
 
 /**
- * The sync loop's port over a ProseMirror view of the document. A change applies only
- * while the view still holds the state the change was built from, so an edit that landed
- * in between is never overwritten. A change to a destroyed view fails with `EditorClosed`.
+ * The sync loop's port over a ProseMirror view of the document. A transaction applies only
+ * while the view still holds the state it was built from. A replacement applies while the
+ * view still holds that state's document, so an edit that landed in between is never
+ * overwritten, and a change that leaves the text alone, such as a plugin the view took on
+ * or the focus moving, stops nothing. A change to a destroyed view fails with `EditorClosed`.
  */
 export const viewPort = (view: EditorView): EditorPort => ({
   dispatch: (from, transaction) =>
@@ -61,7 +63,7 @@ export const viewPort = (view: EditorView): EditorPort => ({
   fresh: (input) => freshState(view.state, input),
   replace: (from, next) =>
     whileOpen(view, () => {
-      if (view.state !== from) {
+      if (view.state.doc !== from.doc) {
         return false;
       }
       view.updateState(next);
@@ -87,7 +89,7 @@ export const statePort = (initial: EditorState) =>
       fresh: (input) => freshState(initial, input),
       replace: (from, next) =>
         Ref.modify(current, (state) =>
-          state === from ? [true, next] : [false, state]
+          state.doc === from.doc ? [true, next] : [false, state]
         ),
       schema: initial.schema,
       state: Ref.get(current),

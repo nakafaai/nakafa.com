@@ -12,6 +12,7 @@ import {
   Plug01Icon,
   TaskDaily01Icon,
   Unlink01Icon,
+  WebhookIcon,
 } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
@@ -26,18 +27,17 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -71,10 +71,7 @@ const WEBHOOK_STATUS_LOOKS = {
 type WebhookItem = PaginatedQueryItem<typeof integrations.webhooks.list>;
 
 /** The columns of the webhooks table. */
-const webhookColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  WebhookItem
->();
+const webhookColumns = tableColumns<WebhookItem>();
 
 /** Shows a secret the server issued once, which the page's secret dialog holds. */
 const SecretIssueContext = createContext<((secret: string) => void) | null>(
@@ -166,29 +163,26 @@ function SchoolWebhookTable() {
     );
   }
 
-  const columns = webhookColumns.columns([
-    webhookColumns.accessor((webhook) => webhook.url, {
+  const columns = [
+    webhookColumns.text((webhook) => webhook.url, {
       cell: (info) => (
-        <span className="font-medium" dir="ltr">
-          {info.getValue()}
-        </span>
+        <TableTitle icon={WebhookIcon}>
+          <span dir="ltr">{info.getValue()}</span>
+        </TableTitle>
       ),
-      filterFn: "includesString",
       header: t("webhook-url"),
       id: "url",
-      sortFn: "text",
     }),
-    webhookColumns.accessor((webhook) => webhook.clientName, {
+    webhookColumns.text((webhook) => webhook.clientName, {
       header: t("webhook-client"),
       id: "client",
-      sortFn: "text",
     }),
-    webhookColumns.accessor((webhook) => webhook.changes.length, {
+    webhookColumns.number((webhook) => webhook.changes.length, {
+      align: "end",
       header: t("webhook-changes"),
       id: "changes",
-      meta: { align: "end" },
     }),
-    webhookColumns.accessor((webhook) => webhook.status, {
+    webhookColumns.values((webhook) => webhook.status, {
       cell: (info) => (
         <TableStatus
           icon={WEBHOOK_STATUS_LOOKS[info.getValue()].icon}
@@ -196,27 +190,18 @@ function SchoolWebhookTable() {
           tone={WEBHOOK_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(IntegrationStatus.literals, (status) => ({
-            icon: WEBHOOK_STATUS_LOOKS[status].icon,
-            label: t(`client-${status}`),
-            value: status,
-          }))}
-          title={t("client-status")}
-        />
-      ),
+      header: t("client-status"),
       id: "status",
+      options: Arr.map(IntegrationStatus.literals, (status) => ({
+        icon: WEBHOOK_STATUS_LOOKS[status].icon,
+        label: t(`client-${status}`),
+        value: status,
+      })),
     }),
-    webhookColumns.display({
-      cell: (info) => <SchoolWebhookMenu webhook={info.row.original} />,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    webhookColumns.menu((info) => (
+      <SchoolWebhookMenu webhook={info.row.original} />
+    )),
+  ];
 
   return (
     <>

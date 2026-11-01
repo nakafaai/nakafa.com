@@ -65,6 +65,19 @@ const SurahInput = Schema.Struct({
   url: Schema.String,
 });
 
+const ContributorsInput = Schema.Struct({
+  description: Schema.String,
+  inLanguage: Schema.String,
+  name: Schema.String,
+  people: Schema.Array(
+    Schema.Struct({
+      name: Schema.String,
+      profiles: Schema.Array(Schema.String),
+    })
+  ),
+  url: Schema.String,
+});
+
 /** One monthly price of a plan, in a currency's major units, before tax. */
 const ProductOffer = Schema.Struct({
   amount: Schema.Finite,
@@ -181,6 +194,34 @@ export function makeSurahNode(input: typeof SurahInput.Type) {
       "@type": "Book",
       name: input.bookName,
       url: input.bookUrl,
+    },
+  };
+}
+
+/**
+ * The people who write and build the site, by name and with their public profiles,
+ * so an answer service can tell who stands behind a lesson. The page draws them as
+ * avatars, whose names are not text.
+ */
+export function makeContributorsNode(input: typeof ContributorsInput.Type) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: input.name,
+    description: input.description,
+    url: input.url,
+    inLanguage: input.inLanguage,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: Arr.map(input.people, (person, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Person",
+          name: person.name,
+          ...(person.profiles.length === 0 ? {} : { sameAs: person.profiles }),
+        },
+      })),
     },
   };
 }

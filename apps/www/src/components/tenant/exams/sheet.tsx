@@ -95,7 +95,7 @@ export function PaperOption({
         {multiple ? (
           <Checkbox className="mt-1 shrink-0" />
         ) : (
-          <Radio className="mt-1 shrink-0" value="" />
+          <Radio className="mt-1 shrink-0" value="unmarked" />
         )}
       </span>
       {children}

@@ -1,3 +1,4 @@
+import type { Ref } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   ArrowTurnBackwardIcon,
@@ -14,14 +15,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Option, Record as Rec } from "effect";
@@ -35,8 +28,10 @@ import {
   PaneHeader,
 } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
-import { columnAlign } from "@/components/shared/table/align";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { menuOf } from "@/components/tenant/reports/access";
 import { useReportActions } from "@/components/tenant/reports/actions";
@@ -87,6 +82,10 @@ export function ReportLineDetail({ lines }: { lines: readonly ReportLine[] }) {
   );
 }
 
+/** The columns of a report's subjects. */
+const subjectColumns =
+  tableColumns<Ref.Returns<typeof records.reports.get>["subjects"][number]>();
+
 /** The body of a started report: its state and dates, the note, and the subjects it copies. */
 function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
   const t = useTranslations("SchoolReports");
@@ -119,37 +118,30 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
         {Arr.isReadonlyArrayEmpty(report.subjects) ? (
           <p className="text-muted-foreground text-sm">{t("subjects-empty")}</p>
         ) : (
-          <TableFrame>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className={columnAlign({ align: "start" })}>
-                    {t("subject")}
-                  </TableHead>
-                  <TableHead className={columnAlign()}>{t("grade")}</TableHead>
-                  <TableHead className={columnAlign()}>{t("result")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Arr.map(report.subjects, (subject) => (
-                  <TableRow key={subject.className}>
-                    <TableCell
-                      className={columnAlign({ align: "start" })}
-                      dir="auto"
-                    >
-                      {subject.className}
-                    </TableCell>
-                    <TableCell className={columnAlign()}>
-                      {subject.value}
-                    </TableCell>
-                    <TableCell className={columnAlign()}>
-                      {subject.band ?? t(`kktp-${subject.kktp}`)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableFrame>
+          <TableFiltersProvider>
+            <TableFrame>
+              <DataTable
+                columns={[
+                  subjectColumns.text((subject) => subject.className, {
+                    cell: (info) => <span dir="auto">{info.getValue()}</span>,
+                    header: t("subject"),
+                    id: "subject",
+                  }),
+                  subjectColumns.number((subject) => subject.value, {
+                    header: t("grade"),
+                    id: "grade",
+                  }),
+                  subjectColumns.text(
+                    (subject) => subject.band ?? t(`kktp-${subject.kktp}`),
+                    { header: t("result"), id: "result" }
+                  ),
+                ]}
+                data={report.subjects}
+                plain
+                rowId={(subject) => subject.className}
+              />
+            </TableFrame>
+          </TableFiltersProvider>
         )}
       </div>
     </PaneBody>

@@ -3,6 +3,7 @@ import { Effect, Option } from "effect";
 import { useMemo } from "react";
 import { SittingDocument } from "@/components/exams/sitting/document";
 import { tryPrompt } from "@/components/tenant/exams/try/fold";
+import { TryPictures } from "@/components/tenant/exams/try/pictures";
 
 /**
  * The prompt of one question, read-only, as a student reads it, and nothing until its document opens. The fold
@@ -20,6 +21,8 @@ export function TryPrompt({
   );
 
   return Option.isSome(prompt) ? (
-    <SittingDocument document={prompt.value} />
+    <TryPictures documents={[prompt.value]}>
+      <SittingDocument document={prompt.value} />
+    </TryPictures>
   ) : null;
 }

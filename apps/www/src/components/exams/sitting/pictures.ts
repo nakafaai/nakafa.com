@@ -1,6 +1,10 @@
-import { MAX_ASSET_READS } from "@repo/backend/confect/exams/asset";
+import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import {
+  type AssetAddress,
+  MAX_ASSET_READS,
+} from "@repo/backend/confect/exams/asset";
 import { Node } from "@tiptap/pm/model";
-import { Array as Arr } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import { createContext } from "react";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { assetIdsOf, type ExamAssetIdValue } from "@/lib/editor/pictures";
@@ -30,3 +34,28 @@ export function pictureIdsOfDocuments(
     )
   );
 }
+
+/** The addresses that one read of a question's images answers, by image ID, as `SittingPictures` holds them. */
+export const addressesOf = (assets: readonly (typeof AssetAddress.Type)[]) =>
+  Rec.fromEntries(Arr.map(assets, (asset) => [asset.id, asset.url] as const));
+
+/** The labels of an answer's parts, which hold images as a prompt does: options, statements, and their answers. */
+export const partLabels = (interactions: readonly Interaction[]) =>
+  Arr.flatMap(interactions, (interaction): readonly unknown[] => {
+    if (interaction.kind === "choice") {
+      return Arr.map(interaction.options, (option) => option.label);
+    }
+    if (interaction.kind === "match") {
+      return Arr.map(
+        Arr.appendAll(interaction.sources, interaction.targets),
+        (part) => part.label
+      );
+    }
+    if (interaction.kind === "matrix") {
+      return Arr.map(
+        Arr.appendAll(interaction.statements, interaction.columns),
+        (part) => part.label
+      );
+    }
+    return [];
+  });

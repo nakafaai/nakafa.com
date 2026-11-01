@@ -16,7 +16,7 @@ import { LayoutContent } from "@/components/shared/content/frame";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
 import { useAgeClock } from "@/components/user/ages";
-import { signedInHead } from "@/lib/account/head";
+import { privateHead } from "@/lib/account/head";
 import { notificationsScreenFn } from "@/lib/account/home.functions";
 
 /** The tab the address names, All without one. */
@@ -31,7 +31,7 @@ export const Route = createFileRoute(
   loader: ({ params }) =>
     notificationsScreenFn({ data: { locale: params.locale } }),
   head: ({ loaderData }) =>
-    loaderData === undefined ? {} : signedInHead(loaderData.seo),
+    loaderData === undefined ? {} : privateHead(loaderData.seo),
   component: NotificationsPage,
 });
 

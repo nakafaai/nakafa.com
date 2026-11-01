@@ -24,8 +24,9 @@ import { isLocked } from "@/components/tenant/exams/freeze";
 import { refusePaste } from "@/components/tenant/exams/picture";
 import { usePageDocument } from "@/components/tenant/exams/preview";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
+import { ExamReadBoundary } from "@/components/tenant/exams/read";
 import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
-import { ExamSteps, ExamStepsBoundary } from "@/components/tenant/exams/steps";
+import { ExamSteps } from "@/components/tenant/exams/steps";
 import {
   createPromptSync,
   type PromptSync,
@@ -190,10 +191,13 @@ export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
       return;
     }
     held.current?.setEditable(false, false);
-    const round = waiting.current;
-    if (round !== null) {
-      Effect.runFork(Fiber.interrupt(round));
-    }
+    Effect.runFork(
+      Effect.forEach(
+        [opening.current, waiting.current],
+        (fiber) => (fiber === null ? Effect.void : Fiber.interrupt(fiber)),
+        { discard: true }
+      )
+    );
   }, [gone]);
 
   // A page that closes sends what the editor holds at once, and asks first while the server does not hold it yet,
@@ -324,7 +328,7 @@ export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
       stored={stored}
     >
       {children}
-      <ExamStepsBoundary>
+      <ExamReadBoundary>
         <ExamSteps
           documentId={documentId}
           onSteps={() =>
@@ -335,7 +339,7 @@ export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
           }
           sync={sync}
         />
-      </ExamStepsBoundary>
+      </ExamReadBoundary>
     </ExamDocumentWiringProvider>
   );
 }

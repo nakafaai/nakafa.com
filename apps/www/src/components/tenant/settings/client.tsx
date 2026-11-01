@@ -2,6 +2,7 @@ import { QueryResult, useMutation } from "@confect/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
+import type { IssuedClient } from "@repo/backend/confect/integrations/clients.spec";
 import { IntegrationName } from "@repo/backend/confect/integrations/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
@@ -42,7 +43,7 @@ export function SchoolClientCreateDialog({
   open,
   setOpen,
 }: {
-  onIssued: (secret: string) => void;
+  onIssued: (issued: typeof IssuedClient.Type) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
@@ -99,7 +100,7 @@ export function SchoolClientCreateDialog({
         SOURCE,
         (issued) => {
           setOpen(false);
-          onIssued(issued.secret);
+          onIssued(issued);
         }
       )
     );

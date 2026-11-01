@@ -367,7 +367,7 @@ export function TeacherLayer({
         <NoteField title={t("rubric")}>
           {live ? (
             <Suspense
-              fallback={<PreviewProse article doc={notes.rubric} size="line" />}
+              fallback={<PreviewProse doc={notes.rubric} size="line" />}
             >
               <ExamText
                 documentId={question.rubric}
@@ -381,16 +381,14 @@ export function TeacherLayer({
               </ExamText>
             </Suspense>
           ) : (
-            <PreviewProse article doc={notes.rubric} size="line" />
+            <PreviewProse doc={notes.rubric} size="line" />
           )}
         </NoteField>
       ) : null}
       <NoteField title={t("explanation")}>
         {live ? (
           <Suspense
-            fallback={
-              <PreviewProse article doc={notes.explanation} size="line" />
-            }
+            fallback={<PreviewProse doc={notes.explanation} size="line" />}
           >
             <ExamText
               documentId={question.explanation}
@@ -404,7 +402,7 @@ export function TeacherLayer({
             </ExamText>
           </Suspense>
         ) : (
-          <PreviewProse article doc={notes.explanation} size="line" />
+          <PreviewProse doc={notes.explanation} size="line" />
         )}
       </NoteField>
     </FieldGroup>

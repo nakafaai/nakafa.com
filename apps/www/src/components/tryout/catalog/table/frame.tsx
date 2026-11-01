@@ -11,7 +11,9 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { pageRowVariants } from "@/components/shared/content/width";
 import { tableCardVariants } from "@/components/shared/table/card";
+import { useTableFilters } from "@/components/shared/table/toolbar";
 import { TryoutTableHeader } from "@/components/tryout/catalog/table/header";
+import { keptSets } from "@/components/tryout/catalog/table/keep";
 import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
 import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
 import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
@@ -19,14 +21,20 @@ import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
 /**
  * The frame of the discovery table: its header, its rows, the trigger that loads
  * the next window and the status line. A visitor's and a learner's table render
- * this same frame, so the two variants keep one layout.
+ * this same frame, so the two variants keep one layout. The heads keep the loaded
+ * rows that match, and the next window loads as the short list's end comes into
+ * view, so a filter reaches the whole track.
  */
 export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
   const { filter, sort, title } = useTryoutSetTable();
   const t = useTranslations("Tryouts");
+  const tTable = useTranslations("DataTable");
+  const chosen = useTableFilters((state) => state.chosen);
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
+  const rows = keptSets(data.rows, chosen);
+  const filtered = rows.length < data.rows.length;
   let status = "";
-  let emptyLabel = t("list-empty");
+  let emptyLabel = filtered ? tTable("no-results") : t("list-empty");
   if (data.busy) {
     status = t("set-updating");
     emptyLabel = status;
@@ -71,7 +79,7 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
           </colgroup>
           <TryoutTableHeader />
           <TableBody>
-            <TryoutTableRows emptyLabel={emptyLabel} rows={data.rows} />
+            <TryoutTableRows emptyLabel={emptyLabel} rows={rows} />
             {canLoadMore && (
               <TableRow aria-hidden="true" className="h-px">
                 <TableCell className="p-0" colSpan={5}>
