@@ -22,6 +22,7 @@ import {
   getLlmsSectionPages,
 } from "@/lib/llms/section";
 import { readSiteLlmsEntries } from "@/lib/llms/site";
+import { fetchSEOTranslationsNamespace } from "@/lib/seo/translations";
 
 const LOCALE_INDEX_ENTRY_LIMIT = 60;
 /** Builds a locale or section llms index from a cleaned llms route. */
@@ -37,7 +38,12 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
 
     if (prefixParts.length === 0) {
       const entries = yield* getLocaleIndexEntries(locale);
-      return buildLocaleLlmsIndexText({ entries, locale });
+      const t = yield* fetchSEOTranslationsNamespace(locale, "Metadata");
+      return buildLocaleLlmsIndexText({
+        description: t("description"),
+        entries,
+        locale,
+      });
     }
 
     const section = prefixParts[0];
@@ -147,11 +153,16 @@ function buildLlmsSiteIndexText({
   });
 }
 
-/** Builds the locale-level index that links to sections and starter page URLs. */
+/**
+ * Builds the locale-level index that links to sections and starter page URLs. It is
+ * the home page's Markdown too, so it opens by saying what Nakafa is.
+ */
 function buildLocaleLlmsIndexText({
+  description,
   entries,
   locale,
 }: {
+  description: string;
   entries: LlmsEntry[];
   locale: Locale;
 }) {
@@ -164,6 +175,8 @@ function buildLocaleLlmsIndexText({
   return Arr.join(
     [
       `# Nakafa ${localeLabel} Content`,
+      "",
+      description,
       "",
       `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). Start with the direct ${localeLabel} page links below or open a public section index for bounded route-catalog pages.`,
       "",
