@@ -5,10 +5,7 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer, Schema } from "effect";
-import {
-  readPublishedMaterialContext,
-  readPublishedMaterialPlacement,
-} from "@/lib/content/material/context";
+import { readPublishedMaterialPlacements } from "@/lib/content/material/context";
 import { makeProgramContextRuntimeSource } from "@/test/content/program-context";
 import { previewProjection } from "@/test/content-preview";
 import {
@@ -31,16 +28,15 @@ const context = {
 const [mapping] = Schema.decodeUnknownSync(
   Schema.Tuple([CurriculumRouteSchema])
 )(testProgramContexts);
-const publishedContext = {
+const place = {
   ancestorJson: [
     testCurriculumRowJson(testProgramRoot),
     testCurriculumRowJson(testProgramClass),
   ],
   groupJson: testCurriculumRowJson(group),
-  managed: true,
   mappingJson: testCurriculumRowJson(mapping),
   parentJson: testCurriculumRowJson(testProgramSubject),
-  resolvedCanonicalPath: mapping.canonicalPath ?? null,
+  resolvedCanonicalPath: mapping.canonicalPath ?? "",
 };
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
@@ -64,151 +60,103 @@ vi.mock("@confect/js", async (importOriginal) => {
 beforeEach(() => {
   runtimeQueryMock.mockReset();
 });
-describe("published material context", () => {
+describe("published material places", () => {
   it.effect(
-    "resolves signed curriculum context and preserves a missing optional hint",
+    "reads the verified places of a lesson from its signed curriculum",
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeProgramContextRuntimeSource();
         const snapshot = yield* createTestPublication(fixture.source);
         runtimeQueryMock.mockImplementation(snapshot.query);
-        expect(
-          yield* readPublishedMaterialContext("en", previewProjection, context)
-        ).toMatchObject({
-          context,
-          group,
-          label: "Function Composition and Inverses",
-          mapping,
-          parent: testProgramSubject,
-        });
-        expect(
-          yield* readPublishedMaterialContext("en", previewProjection, {
-            ...context,
-            nodeKey: `${context.nodeKey}-missing`,
-          })
-        ).toBeNull();
-      })
-  );
-  it.effect("resolves a material identity without a global release pin", () =>
-    Effect.gen(function* () {
-      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
-      expect(
-        yield* readPublishedMaterialContext("en", previewProjection, context)
-      ).toMatchObject({
-        context,
-        group,
-        mapping,
-      });
-      expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-        appLocale: "en",
-        contentKey: previewProjection.contentKey,
-        materialKey: previewProjection.materialKey,
-        nodeKey: context.nodeKey,
-        parentPath: previewProjection.parentPath,
-        programKey: context.programKey,
-        publicPath: previewProjection.publicPath,
-      });
-    })
-  );
-  it.effect(
-    "pins sequential uncached context reads when their caller requires it",
-    () =>
-      Effect.gen(function* () {
-        const activeReleaseId = ReleaseIdSchema.make("release-material");
-        runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
-        yield* readPublishedMaterialContext(
-          "en",
-          previewProjection,
-          context,
-          activeReleaseId
-        );
-        expect(runtimeQueryMock).toHaveBeenCalledWith(
-          expect.anything(),
-          expect.objectContaining({
-            contentKey: previewProjection.contentKey,
-            expectedActiveReleaseId: activeReleaseId,
-          })
-        );
-      })
-  );
-  it.effect(
-    "preserves invalid projection failures at the server boundary",
-    () =>
-      Effect.gen(function* () {
-        runtimeQueryMock.mockReturnValueOnce(
-          Effect.succeed({
-            ...publishedContext,
-            managed: false,
-          })
-        );
-        expect(
-          yield* readPublishedMaterialContext(
-            "en",
-            previewProjection,
-            context
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "PublishedProjectionError",
-        });
-      })
-  );
-  it.effect(
-    "answers the part of a verified placement that a lesson's links read",
-    () =>
-      Effect.gen(function* () {
-        runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
-        const published = yield* readPublishedMaterialContext(
-          "en",
-          previewProjection,
-          context
-        );
-        runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
 
         expect(
-          yield* readPublishedMaterialPlacement(
-            "en",
-            previewProjection,
-            context
-          )
-        ).toStrictEqual({
-          context,
-          hash: published?.hash,
-          label: published?.label,
-          parent: { publicPath: testProgramSubject.publicPath },
-          resolvedCanonicalPath: publishedContext.resolvedCanonicalPath,
-          trail: [
-            {
-              label: testProgramRoot.title,
-              publicPath: testProgramRoot.publicPath,
-            },
-            {
-              label: testProgramClass.title,
-              publicPath: testProgramClass.publicPath,
-            },
-            {
-              label: testProgramSubject.title,
-              publicPath: testProgramSubject.publicPath,
-            },
-          ],
+          yield* readPublishedMaterialPlacements("en", previewProjection)
+        ).toMatchObject([
+          { context, label: "Function Composition and Inverses" },
+        ]);
+      })
+  );
+
+  it.effect(
+    "asks for a material's places by its identity, and keeps what a lesson's links read",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockReturnValueOnce(Effect.succeed([place]));
+
+        expect(
+          yield* readPublishedMaterialPlacements("en", previewProjection)
+        ).toStrictEqual([
+          {
+            context,
+            hash: expect.any(String),
+            label: "Function Composition and Inverses",
+            parent: { publicPath: testProgramSubject.publicPath },
+            resolvedCanonicalPath: place.resolvedCanonicalPath,
+            trail: [
+              {
+                label: testProgramRoot.title,
+                publicPath: testProgramRoot.publicPath,
+              },
+              {
+                label: testProgramClass.title,
+                publicPath: testProgramClass.publicPath,
+              },
+              {
+                label: testProgramSubject.title,
+                publicPath: testProgramSubject.publicPath,
+              },
+            ],
+          },
+        ]);
+        expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+          appLocale: "en",
+          contentKey: previewProjection.contentKey,
+          materialKey: previewProjection.materialKey,
+          parentPath: previewProjection.parentPath,
+          publicPath: previewProjection.publicPath,
         });
       })
   );
-  it.effect("answers no placement when the release verifies none", () =>
+
+  it.effect("pins the read when its caller reads several in one release", () =>
+    Effect.gen(function* () {
+      const activeReleaseId = ReleaseIdSchema.make("release-material");
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed([]));
+
+      yield* readPublishedMaterialPlacements(
+        "en",
+        previewProjection,
+        activeReleaseId
+      );
+
+      expect(runtimeQueryMock).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
+      );
+    })
+  );
+
+  it.effect("answers no place for a material that no curriculum shows", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed([]));
+
+      expect(
+        yield* readPublishedMaterialPlacements("en", previewProjection)
+      ).toStrictEqual([]);
+    })
+  );
+
+  it.effect("preserves an invalid place as a typed failure", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(
-        Effect.succeed({
-          ancestorJson: [],
-          groupJson: null,
-          managed: true,
-          mappingJson: null,
-          parentJson: null,
-          resolvedCanonicalPath: null,
-        })
+        Effect.succeed([{ ...place, resolvedCanonicalPath: "elsewhere" }])
       );
 
       expect(
-        yield* readPublishedMaterialPlacement("en", previewProjection, context)
-      ).toBeNull();
+        yield* readPublishedMaterialPlacements("en", previewProjection).pipe(
+          Effect.flip
+        )
+      ).toMatchObject({ _tag: "PublishedProjectionError" });
     })
   );
 });

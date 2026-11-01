@@ -2661,7 +2661,13 @@ export declare const api: {
           sourceRevision: string | null;
         }
       >;
-      context: FunctionReference<
+      path: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; publicPath: string },
+        { managed: boolean; routeJson: string | null }
+      >;
+      placements: FunctionReference<
         "query",
         "public",
         {
@@ -2669,25 +2675,16 @@ export declare const api: {
           contentKey: string;
           expectedActiveReleaseId?: string | null;
           materialKey: string;
-          nodeKey: string;
           parentPath: string;
-          programKey: string;
           publicPath: string;
         },
-        {
+        Array<{
           ancestorJson: Array<string>;
-          groupJson: string | null;
-          managed: boolean;
-          mappingJson: string | null;
-          parentJson: string | null;
-          resolvedCanonicalPath: string | null;
-        }
-      >;
-      path: FunctionReference<
-        "query",
-        "public",
-        { appLocale: "en" | "id" | "de"; publicPath: string },
-        { managed: boolean; routeJson: string | null }
+          groupJson: string;
+          mappingJson: string;
+          parentJson: string;
+          resolvedCanonicalPath: string;
+        }>
       >;
       route: FunctionReference<
         "query",
