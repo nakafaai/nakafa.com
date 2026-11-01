@@ -16,7 +16,23 @@ import { Array as Arr } from "effect";
 import type * as React from "react";
 import { use } from "react";
 
-const Select = SelectPrimitive.Root;
+/**
+ * A select. One with nothing to choose from stays shut, since it would open on an empty line: its caller says what
+ * must happen first.
+ */
+function Select<Value, Multiple extends boolean | undefined = false>({
+  disabled,
+  items,
+  ...props
+}: SelectPrimitive.Root.Props<Value, Multiple>) {
+  return (
+    <SelectPrimitive.Root
+      disabled={disabled || (Arr.Array.isArray(items) && items.length === 0)}
+      items={items}
+      {...props}
+    />
+  );
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (

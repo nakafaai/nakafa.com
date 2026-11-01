@@ -13,7 +13,7 @@ import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { Array as Arr, Effect, Exit } from "effect";
 
-const { create, open } = refs.public.exams.exams;
+const { create, duplicate, open } = refs.public.exams.exams;
 const questions = refs.public.exams.questions;
 const { canAdd, media, register, registerAudio, uploadUrl, urls } =
   refs.public.exams.assets;
@@ -446,5 +446,63 @@ describe("exams/assets", () => {
         .pipe(Effect.flip);
       expect(refused).toMatchObject({ _tag: "AccessDenied" });
     })
+  );
+
+  it.effect(
+    "gives a duplicate its own rows of the exam's files, and keeps a file while another exam names it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const made = yield* teacher.mutation(create, {
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+          title: "PTS Bahasa",
+        });
+        const picture = yield* storeFile(fixture.convex, png());
+        const clip = yield* storeFile(fixture.convex, mp3());
+        yield* teacher.action(register, {
+          examId: made.id,
+          height: 1,
+          slug: nf,
+          storageId: picture,
+          width: 1,
+        });
+        const { id } = yield* teacher.action(registerAudio, {
+          examId: made.id,
+          slug: nf,
+          storageId: clip,
+        });
+        const [question] = made.questions;
+        yield* teacher.mutation(questions.media, {
+          examId: made.id,
+          media: [{ alt: "Percakapan", asset: id, kind: "audio" }],
+          questionId: question.id,
+          slug: nf,
+        });
+
+        const copied = yield* teacher.mutation(duplicate, {
+          examId: made.id,
+          slug: nf,
+          title: "PTS Bahasa (salinan)",
+        });
+
+        expect(yield* fixture.run(assetRows)).toHaveLength(2);
+        expect(yield* fixture.run(audioRows)).toHaveLength(2);
+        const [held] = copied.questions[0].media;
+        expect(held).toMatchObject({ alt: "Percakapan", kind: "audio" });
+        expect(held).not.toEqual({
+          alt: "Percakapan",
+          asset: id,
+          kind: "audio",
+        });
+
+        // The copy goes, and the exam it came from keeps its files.
+        yield* fixture.internal.mutation(sweep, { examId: copied.id });
+        expect(yield* fixture.run(assetRows)).toHaveLength(1);
+        expect(yield* fixture.run(audioRows)).toHaveLength(1);
+        expect(yield* storageUrl(fixture.convex, picture)).not.toBeNull();
+        expect(yield* storageUrl(fixture.convex, clip)).not.toBeNull();
+      })
   );
 });

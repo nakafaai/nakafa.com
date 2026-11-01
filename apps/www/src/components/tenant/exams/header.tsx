@@ -40,7 +40,7 @@ import { Link } from "@/lib/routing/link";
  * in the exam (ExamPresence) and two buttons at most: Try as student with a menu of the rarer actions
  * joined to it (ExamMenu), and Schedule, the main action. The title takes the room left between
  * them, truncated while the field is not focused. On a phone the buttons keep their icons and their
- * names for screen readers, so the title keeps room to read at 375 pixels. An exam of an archived unit says why it is locked in a line under the header
+ * names for screen readers, so the title keeps room to read at 375 pixels. A locked exam says why it is locked in a line under the header
  * (ExamLockedNote), and a gone exam keeps its title with neither button.
  */
 export function ExamHeader() {
@@ -201,32 +201,19 @@ function ExamTitleField(
 }
 
 /**
- * The sentence the editor shows under its header, across the page: that the unit holding the exam is
- * archived, which locks it, or that the exam is gone, with the way back to the exams. A scheduled or
- * running exam takes changes, and a finished one reads as fixed without a sentence. It wraps on a phone instead of being cut short
- * beside the title.
+ * The sentence the editor shows under its header, across the page, when the exam is gone, with the way back to the
+ * exams. It wraps on a phone instead of crowding the title. A locked exam says so in the header (`ExamLockMark`).
  */
 export function ExamLockedNote() {
-  const t = useTranslations("Exams");
-  const { exam, gone } = useExam();
-  if (gone) {
-    return (
-      <div className="border-b">
-        <p className="text-muted-foreground px-4 py-2 text-sm">
-          <ExamGone />
-        </p>
-      </div>
-    );
-  }
-  // A finished exam reads as fixed on its own; only an archived unit says why its exam is locked.
-  if (!exam.archived) {
+  const { gone } = useExam();
+  if (!gone) {
     return null;
   }
 
   return (
     <div className="border-b">
       <p className="text-muted-foreground px-4 py-2 text-sm">
-        {t("archived-note")}
+        <ExamGone />
       </p>
     </div>
   );
