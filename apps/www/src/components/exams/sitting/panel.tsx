@@ -3,6 +3,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { awayFor } from "@repo/backend/confect/exams/sittings/away";
 import type { examSignalValidator } from "@repo/backend/confect/exams/sittings/schema";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
@@ -313,7 +314,7 @@ function SignalList({
     throw signals.error;
   }
   if (PaginatedQueryResult.isLoadingFirstPage(signals)) {
-    return null;
+    return <PopupHold />;
   }
   const failed = PaginatedQueryResult.isFailure(signals);
 

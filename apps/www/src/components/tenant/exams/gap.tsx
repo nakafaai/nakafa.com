@@ -8,7 +8,6 @@ import {
   PopoverContent,
   PopoverDescription,
   PopoverHeader,
-  PopoverTitle,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { statusIconVariants } from "@repo/design-system/lib/status";
@@ -63,7 +62,6 @@ export function QuestionGapMark({
           </PopoverTrigger>
           <PopoverContent align="start">
             <PopoverHeader>
-              <PopoverTitle>{mark}</PopoverTitle>
               <PopoverDescription>
                 {t(gap === "empty" ? "page-gap-empty" : "page-gap-key")}
               </PopoverDescription>

@@ -13,6 +13,7 @@ import records from "@repo/backend/confect/_generated/refs/records";
 import { NOTE_LIMIT } from "@repo/backend/confect/records/report";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
@@ -93,7 +94,11 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
   const detail = useQuery(records.reports.get, { reportId, slug });
 
   if (!QueryResult.isSuccess(detail)) {
-    return <PaneBody>{null}</PaneBody>;
+    return (
+      <PaneBody>
+        <PopupHold />
+      </PaneBody>
+    );
   }
   const report = detail.value;
 

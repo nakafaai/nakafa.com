@@ -54,37 +54,18 @@ describe("tableOf and withCellLabel", () => {
 });
 
 describe("withStatementAdded and withStatementRemoved", () => {
-  it("adds an empty statement numbered after the largest, up to five", () => {
-    const [added] = withStatementAdded(answers);
+  it("adds an empty statement under the ID the press drew, up to five", () => {
+    const [added] = withStatementAdded(answers, "fresh");
     expect(added).toMatchObject({
       statements: [
         { id: "statement-1" },
         { id: "statement-2" },
         { id: "statement-3" },
-        { id: "statement-4", label: emptyLabel() },
+        { id: "statement-fresh", label: emptyLabel() },
       ],
     });
-    const five = withStatementAdded(withStatementAdded(answers));
-    expect(withStatementAdded(five)).toEqual(five);
-  });
-
-  it("numbers a new statement from one when no statement ID holds a number", () => {
-    const named = [
-      {
-        ...table,
-        statements: [
-          { id: "first", label: emptyLabel() },
-          { id: "second", label: emptyLabel() },
-        ],
-      },
-    ] as const;
-    const [added] = withStatementAdded(named);
-    expect(
-      Arr.map(
-        added.kind === "matrix" ? added.statements : [],
-        (part) => part.id
-      )
-    ).toEqual(["first", "second", "statement-1"]);
+    const five = withStatementAdded(withStatementAdded(answers, "one"), "two");
+    expect(withStatementAdded(five, "three")).toEqual(five);
   });
 
   it("removes a statement down to two, and leaves other interactions", () => {

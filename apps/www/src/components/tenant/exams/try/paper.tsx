@@ -2,13 +2,14 @@ import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { buttonVariants } from "@repo/design-system/lib/button";
+import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
+import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
 import {
   PlayerFooter,
@@ -39,7 +40,6 @@ import {
   ExamUnavailable,
 } from "@/components/tenant/exams/unavailable";
 import { useLastValue } from "@/lib/data/kept";
-import { TargetLink } from "@/lib/routing/link";
 import { schoolExamEditTarget } from "@/lib/routing/school/target";
 
 /**
@@ -47,8 +47,9 @@ import { schoolExamEditTarget } from "@/lib/routing/school/target";
  * with the player's header, the navigator and its legend, the flag and the keys, and the same questions
  * in the same order with the same controls. The answers and the flags stay in this page's store and are
  * never sent, so a try leaves no attempt and no score behind, as the footer says once for the whole paper.
- * The header holds the way back, the view and its one action, which both return to the editor. Its links
- * are plain ones, because a school host has no locale in its paths.
+ * The header holds the way back, the view and its one action, the player's own finish, so a teacher meets the
+ * review a student meets. Nothing was saved, so finishing only returns to the editor. Its links are plain
+ * ones, because a school host has no locale in its paths.
  */
 export function ExamTryPaper({
   examId,
@@ -58,6 +59,7 @@ export function ExamTryPaper({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
+  const navigate = useNavigate();
   // The exam needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const result = useQuery(
@@ -75,7 +77,6 @@ export function ExamTryPaper({
   }
   const exam = kept.value;
   const gone = QueryResult.isFailure(result);
-  const editor = schoolExamEditTarget(slug, examId);
 
   const models = projectTryQuestions({
     questions: exam.questions,
@@ -96,9 +97,17 @@ export function ExamTryPaper({
               title={exam.title || t("untitled")}
             >
               {gone ? null : (
-                <TargetLink className={buttonVariants()} target={editor}>
-                  {t("try-finish")}
-                </TargetLink>
+                <PlayerFinish
+                  description={t("try-note")}
+                  label={t("try-finish")}
+                  locked={false}
+                  onFinish={() => {
+                    navigate(schoolExamEditTarget(slug, examId));
+                  }}
+                  pending={false}
+                  questions={models}
+                  title={t("try-finish")}
+                />
               )}
             </PaperBar>
             <PlayerMain

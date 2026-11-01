@@ -25,6 +25,9 @@ const FORWARDS = [
   { convex: SCHOOL_MCP_PATH, host: SCHOOL_HOST_MCP_PATH },
 ];
 
+/** The one path of the main site that forwards: the MCP server a person's agent signs in to. */
+const MAIN_FORWARDS = [{ convex: SCHOOL_MCP_PATH, host: SCHOOL_HOST_MCP_PATH }];
+
 /** The methods a forward sends on: the reads, the token request and the MCP posts, and a preflight. */
 export const ForwardedMethod = Schema.Literals(["GET", "POST", "OPTIONS"]);
 
@@ -50,31 +53,31 @@ const RESPONSE_HEADERS = [
 ];
 
 /**
- * The Convex address that one school host request forwards to: the same path under the
- * Convex path of its forward, with its query, on the cell's own Convex site. A host that
- * names no school, or a path no forward serves, forwards nowhere, so the main site never
- * serves a school path (ADR 0026).
+ * The Convex address that one request forwards to: the same path under the Convex path of its
+ * forward, with its query, on the cell's own Convex site. A school host forwards its API and
+ * its MCP server. Any other host forwards only the MCP server, because an agent acts as a
+ * person, who may belong to no school, and no other school path (ADR 0026).
  */
 export function schoolApiTarget(
   request: Request,
   convexSiteUrl: string
 ): Option.Option<URL> {
   const url = new URL(request.url);
-  return Option.flatMap(
-    Option.flatMap(readRequestHostname(request.headers), readSchoolSlug),
-    () =>
-      Option.map(
-        Arr.findFirst(
-          FORWARDS,
-          (forward) =>
-            url.pathname === forward.host ||
-            Str.startsWith(`${forward.host}/`)(url.pathname)
-        ),
-        (forward) =>
-          new URL(
-            `${forward.convex}${url.pathname.slice(forward.host.length)}${url.search}`,
-            convexSiteUrl
-          )
+  const school = Option.flatMap(
+    readRequestHostname(request.headers),
+    readSchoolSlug
+  );
+  return Option.map(
+    Arr.findFirst(
+      Option.isSome(school) ? FORWARDS : MAIN_FORWARDS,
+      (forward) =>
+        url.pathname === forward.host ||
+        Str.startsWith(`${forward.host}/`)(url.pathname)
+    ),
+    (forward) =>
+      new URL(
+        `${forward.convex}${url.pathname.slice(forward.host.length)}${url.search}`,
+        convexSiteUrl
       )
   );
 }

@@ -51,15 +51,15 @@ interface PanesActions {
 /** The panes of one page, with their actions. */
 type PanesStore = typeof PanesState.Type & PanesActions;
 
-/** Creates the panes of one page, with no row open and the sheet closed. */
-const createPanes = () =>
+/** Creates the panes of one page, with `opened` open, or no row and the sheet closed. */
+const createPanes = (opened: Option.Option<string>) =>
   createStore<PanesStore>()((set) => ({
     aside: null,
     close: () => set({ open: Option.none(), sheet: false }),
-    open: Option.none(),
+    open: opened,
     setAside: (aside) => set({ aside }),
     setSheetBody: (sheetBody) => set({ sheetBody }),
-    sheet: false,
+    sheet: Option.isSome(opened),
     sheetBody: null,
     show: (id) => set({ open: Option.some(id), sheet: true }),
     showSheet: () => set({ sheet: true }),
@@ -93,15 +93,18 @@ export function usePaneMode() {
 /**
  * Gives a page its two panes, created once for the page: the list or the canvas in the first,
  * and the open row or the panel in the second, beside it from `wideFrom` and in a sheet below it.
+ * A page that comes back to a row names it in `opened`, which opens it once.
  */
 export function PanesProvider({
   children,
+  opened = Option.none(),
   wideFrom = "md",
 }: {
   children: ReactNode;
+  opened?: Option.Option<string>;
   wideFrom?: typeof PanesWidth.Type;
 }) {
-  const [store] = useState(createPanes);
+  const [store] = useState(() => createPanes(opened));
 
   return (
     <PanesContext value={store}>
@@ -273,11 +276,9 @@ export function PanesDetail({
         showSwipeHandle
       >
         <DrawerContent>
-          {!wide && sheet ? (
-            <PaneModeContext value={{ close, place: "sheet" }}>
-              {children}
-            </PaneModeContext>
-          ) : null}
+          <PaneModeContext value={{ close, place: "sheet" }}>
+            {children}
+          </PaneModeContext>
         </DrawerContent>
       </Drawer>
     </>

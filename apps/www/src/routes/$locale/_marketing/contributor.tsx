@@ -66,8 +66,9 @@ export const Route = createFileRoute("/$locale/_marketing/contributor")({
                 description: loaderData.description,
                 inLanguage: params.locale,
                 name: loaderData.name,
-                people: Arr.map(contributors, ({ name, social }) => ({
+                people: Arr.map(contributors, ({ name, social, username }) => ({
                   name,
+                  username,
                   profiles: Arr.filter(
                     [social?.twitter, social?.github, social?.linkedin],
                     Predicate.isNotUndefined

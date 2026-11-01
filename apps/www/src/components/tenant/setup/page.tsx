@@ -49,6 +49,7 @@ export function SchoolSetup() {
     : Option.none();
   const cohorts = Option.exists(done, (found) => found.period && found.cohort);
   const students = Option.exists(done, (found) => found.student);
+  const placed = Option.exists(done, (found) => found.placed);
   const classrooms = Option.exists(done, (found) => found.classroom);
   const teachers = Option.exists(done, (found) => found.teacher);
   const parents = Option.exists(done, (found) => found.parent);
@@ -65,7 +66,7 @@ export function SchoolSetup() {
           type="button"
           variant={
             Arr.every(
-              [cohorts, students, classrooms, teachers, parents, exam],
+              [cohorts, students, placed, classrooms, teachers, parents, exam],
               (step) => step
             )
               ? "default"
@@ -90,6 +91,13 @@ export function SchoolSetup() {
               title={t("setup-students")}
             />
             <SetupOpen to="/school/$slug/settings/students" />
+          </SetupStep>
+          <SetupStep done={placed}>
+            <SetupText
+              description={t("setup-placed-description")}
+              title={t("setup-placed")}
+            />
+            <SetupOpen to="/school/$slug/settings/cohorts" />
           </SetupStep>
           <SetupStep done={classrooms}>
             <SetupText

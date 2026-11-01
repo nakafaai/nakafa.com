@@ -2,4 +2,4 @@
 "@repo/design-system": patch
 ---
 
-Draw a learner's text at its final size before its Markdown arrives, so a post, a comment or a bio stops growing a moment after it shows.
+Keep a learner's Markdown and the plain text that stands in for it on one set of boxes, so the two cannot drift apart.
