@@ -21,6 +21,7 @@ import { NotificationsList } from "@/components/notifications/list";
 import { MarkAllRead } from "@/components/notifications/read";
 import { NoticePreferences } from "@/components/notifications/settings";
 import { InboxTabs } from "@/components/notifications/tabs";
+import { SchoolInboxTopic } from "@/components/notifications/topic";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -45,7 +46,7 @@ export function SchoolNotifications({ all }: { all: boolean }) {
         <NoticePreferences />
         <InboxFilter all={all} />
       </SchoolHeader>
-      <InboxTabs width="page" />
+      <InboxTabs topics={SchoolInboxTopic.literals} width="page" />
       <LayoutContent className="flex w-full flex-col py-6">
         <NotificationsClockContext value={clock}>
           <NotificationsList first={Option.none()} scope={scope} />

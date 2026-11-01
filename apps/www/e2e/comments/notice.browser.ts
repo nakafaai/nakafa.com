@@ -92,7 +92,7 @@ test("a reply to a comment reaches its author's inbox and opens the reply", asyn
           yield* Effect.promise(async () => {
             await author.goto(INBOX);
             await author
-              .getByRole("button", {
+              .getByRole("tab", {
                 name: app.Notifications["topic-comments"],
               })
               .click();
