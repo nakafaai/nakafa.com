@@ -1287,6 +1287,7 @@
       }
     },
     "person-placeholder": "Person wählen",
+    "student-picker-empty": "Füge zuerst einen Schüler unter Schülerkonten hinzu.",
     "roles-grants-description": "Jede Rolle, die eine Person dieser Schule hat, und wofür sie gilt.",
     "grant-role": "Rolle",
     "grant-scope": "Gilt für",

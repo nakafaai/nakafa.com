@@ -1287,6 +1287,7 @@
       }
     },
     "person-placeholder": "Choose a person",
+    "student-picker-empty": "Add a student in Student accounts first.",
     "roles-grants-description": "Every role that a person of this school holds, and what it covers.",
     "grant-role": "Role",
     "grant-scope": "Covers",

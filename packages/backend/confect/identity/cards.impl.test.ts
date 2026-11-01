@@ -365,6 +365,7 @@ describe("identity/cards enroll", () => {
         const entries = yield* fixture.run(journal);
         expect(Arr.map(entries, (entry) => entry.change.type)).toEqual([
           "person.created",
+          "grant.created",
           "card.issued",
         ]);
         const listed = yield* fixture
@@ -374,9 +375,18 @@ describe("identity/cards enroll", () => {
           id: expect.any(String),
           name: "Siswa Baru",
           removable: true,
-          roles: [],
+          roles: ["student"],
           status: "cardIssued",
         });
+        const students = yield* fixture
+          .as("admin")
+          .query(refs.public.tenancy.people.students, {
+            ...everyone,
+            slug: nf,
+          });
+        expect(Arr.map(students.page, (student) => student.name)).toContain(
+          "Siswa Baru"
+        );
       })
   );
 
@@ -398,7 +408,7 @@ describe("identity/cards enroll", () => {
           { _tag: "LoginNameTaken", code: "LOGIN_NAME_TAKEN" },
           { _tag: "LoginNameRefused", reason: "characters" },
         ]);
-        expect(yield* fixture.run(journal)).toHaveLength(2);
+        expect(yield* fixture.run(journal)).toHaveLength(3);
         const listed = yield* fixture
           .as("admin")
           .query(members, { ...everyone, slug: nf });
