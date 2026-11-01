@@ -1,5 +1,4 @@
 import { untilPageSettled } from "@repo/design-system/lib/settle";
-import type { AnyRouter } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 import { PRERENDERED_ROUTE_TEMPLATES } from "@/lib/routing/prerendered";
 import { namesFile, readPathSegments } from "@/lib/routing/template";
@@ -18,6 +17,20 @@ const Connection = Schema.Struct({
   effectiveType: Schema.optionalKey(Schema.String),
   saveData: Schema.optionalKey(Schema.Boolean),
 });
+
+/** The part of the router that warming reads, so a look at a link holds no more of it than it needs. */
+interface WarmRouter {
+  readonly buildLocation: (options: { readonly href: string }) => {
+    readonly pathname: string;
+  };
+  readonly getMatchedRoutes: (pathname: string) => {
+    readonly foundRoute?: { readonly fullPath: string } | undefined;
+  };
+  readonly preloadRoute: (options: {
+    readonly href: string;
+  }) => Promise<unknown>;
+  readonly state: { readonly location: { readonly publicHref: string } };
+}
 
 /** The connections that cannot spare a page the reader did not ask for. */
 const THIN_CONNECTIONS = ["slow-2g", "2g"];
@@ -58,7 +71,7 @@ function spell(template: string) {
  * Whether a link leads to a page the build wrote, whose loaders read static files.
  * Any other page asks the Worker or Convex, which a look at a link must not spend.
  */
-function isStaticLink(router: AnyRouter, href: string) {
+function isStaticLink(router: WarmRouter, href: string) {
   const { pathname } = router.buildLocation({ href });
   const { foundRoute } = router.getMatchedRoutes(pathname);
   return (
@@ -78,7 +91,7 @@ function isStaticLink(router: AnyRouter, href: string) {
  * press may take. A link that cannot load stays cold, and its press reads as before.
  */
 export const warmLinks = Effect.fn("www.routing.warmLinks")(function* (
-  router: AnyRouter
+  router: WarmRouter
 ) {
   yield* untilPageSettled;
   if (!canWarm(Reflect.get(navigator, "connection"))) {

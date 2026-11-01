@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { AnyRouter } from "@tanstack/react-router";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Record as Rec, String as Str } from "effect";
 import { canWarm, readPressableLinks, warmLinks } from "@/lib/routing/warm";
 
 vi.mock("@repo/design-system/lib/settle", async () => {
@@ -11,7 +10,7 @@ vi.mock("@repo/design-system/lib/settle", async () => {
 /** Draws links at the heights given, each a line tall, as the browser would lay them out. */
 function drawLinks(links: readonly { href: string; top: number }[]) {
   document.body.replaceChildren(
-    ...links.map(({ href, top }) => {
+    ...Arr.map(links, ({ href, top }) => {
       const link = document.createElement("a");
       link.setAttribute("href", href);
       link.getBoundingClientRect = () =>
@@ -27,20 +26,22 @@ function routerOf(routes: Record<string, string>) {
   const preloadRoute = vi.fn<(options: { href: string }) => Promise<void>>(() =>
     Promise.resolve()
   );
-  const router = {
-    buildLocation: ({ href }: { href: string }) => ({
-      pathname: href.split("?")[0],
-    }),
-    getMatchedRoutes: (pathname: string) => ({
-      foundRoute:
-        routes[pathname] === undefined
-          ? undefined
-          : { fullPath: routes[pathname] },
-    }),
+  return {
     preloadRoute,
-    state: { location: { publicHref: "/en" } },
+    router: {
+      buildLocation: ({ href }: { readonly href: string }) => ({
+        pathname: Str.split("?")(href)[0],
+      }),
+      getMatchedRoutes: (pathname: string) => ({
+        foundRoute:
+          routes[pathname] === undefined
+            ? undefined
+            : { fullPath: routes[pathname] },
+      }),
+      preloadRoute,
+      state: { location: { publicHref: "/en" } },
+    },
   };
-  return { preloadRoute, router: router as unknown as AnyRouter };
 }
 
 describe("warm links", () => {
@@ -96,22 +97,20 @@ describe("warm links", () => {
 
       yield* warmLinks(router);
 
-      expect(preloadRoute.mock.calls.map(([{ href }]) => href)).toStrictEqual([
-        "/en/pricing",
-        "/en/quran/1?x=1",
-      ]);
+      expect(
+        Arr.map(preloadRoute.mock.calls, ([{ href }]) => href)
+      ).toStrictEqual(["/en/pricing", "/en/quran/1?x=1"]);
     })
   );
 
   it.effect("warms at most six links, and a failed one stays cold", () =>
     Effect.gen(function* () {
-      const hrefs = Array.from(
-        { length: 9 },
-        (_, index) => `/en/quran/${index}`
-      );
-      drawLinks(hrefs.map((href, top) => ({ href, top })));
+      const hrefs = Arr.makeBy(9, (index) => `/en/quran/${index}`);
+      drawLinks(Arr.map(hrefs, (href, top) => ({ href, top })));
       const { preloadRoute, router } = routerOf(
-        Object.fromEntries(hrefs.map((href) => [href, "/$locale/quran/$surah"]))
+        Rec.fromEntries(
+          Arr.map(hrefs, (href) => [href, "/$locale/quran/$surah"] as const)
+        )
       );
       preloadRoute.mockRejectedValueOnce(new Error("offline"));
 
