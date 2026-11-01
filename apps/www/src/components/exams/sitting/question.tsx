@@ -119,6 +119,50 @@ function useQuestionPictures({
   );
 }
 
+/** The prompt and the reading of a question as documents, or null while the prompt is not ready. */
+function usePromptDocuments(prompt: ReturnType<typeof usePromptRead>) {
+  const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
+  const readingText = QueryResult.isSuccess(prompt)
+    ? prompt.value.reading
+    : null;
+  const readingDocument = useMemo(
+    () =>
+      readingText === null
+        ? null
+        : Schema.decodeSync(JsonTextSchema)(readingText),
+    [readingText]
+  );
+  const promptDocument = useMemo(
+    () =>
+      promptText === null
+        ? null
+        : Schema.decodeSync(JsonTextSchema)(promptText),
+    [promptText]
+  );
+
+  return { promptDocument, readingDocument };
+}
+
+/** The read of one question's prompt for this student's device. */
+function usePromptRead({
+  deviceId,
+  questionId,
+  sittingId,
+  slug,
+}: {
+  readonly deviceId: string;
+  readonly questionId: PaperQuestion["id"];
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+  readonly slug: TenantSlug;
+}) {
+  return useQuery(exams.sittings.prompt, {
+    deviceId,
+    questionId,
+    sittingId,
+    slug,
+  });
+}
+
 /**
  * One question of the paper: its number, its prompt as the editor holds it now, and its options or its
  * answer line. The player's footer flags the current question. A choice or a typed answer is kept in the
@@ -141,7 +185,7 @@ export const SittingQuestion = memo(function SittingQuestion({
   readonly slug: TenantSlug;
 }) {
   const ids = readQuestionIds(question.number);
-  const prompt = useQuery(exams.sittings.prompt, {
+  const prompt = usePromptRead({
     deviceId,
     questionId: question.id,
     sittingId,
@@ -172,24 +216,7 @@ export const SittingQuestion = memo(function SittingQuestion({
     () => tableOf(question.interactions),
     [question.interactions]
   );
-  const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
-  const readingText = QueryResult.isSuccess(prompt)
-    ? prompt.value.reading
-    : null;
-  const readingDocument = useMemo(
-    () =>
-      readingText === null
-        ? null
-        : Schema.decodeSync(JsonTextSchema)(readingText),
-    [readingText]
-  );
-  const promptDocument = useMemo(
-    () =>
-      promptText === null
-        ? null
-        : Schema.decodeSync(JsonTextSchema)(promptText),
-    [promptText]
-  );
+  const { promptDocument, readingDocument } = usePromptDocuments(prompt);
   const addresses = useQuestionPictures({
     deviceId,
     interactions: question.interactions,

@@ -21,6 +21,30 @@ import { isLostAccess } from "@/components/tenant/refusal";
 /** How many announcements the home reads each time the end of its list comes into view. */
 const POST_PAGE_SIZE = 20;
 
+/** The reads of a class's home, which wait for the session and, for what is scheduled, for the right to publish. */
+function useClassPosts() {
+  const { can, classId, slug } = useClassScope();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const publishes = Arr.contains(can, "post.publish");
+
+  return {
+    pagination: usePaginatedQuery(
+      classroom.posts.list,
+      isSettled ? { classId, slug } : "skip",
+      { initialNumItems: POST_PAGE_SIZE }
+    ),
+    pinned: useQuery(
+      classroom.posts.pinned,
+      isSettled ? { classId, slug } : "skip"
+    ),
+    publishes,
+    scheduled: useQuery(
+      classroom.scheduled.list,
+      isSettled && publishes ? { classId, slug } : "skip"
+    ),
+  };
+}
+
 /**
  * The home of a class: what a teacher keeps for later, its pinned announcements, then the others, newest first
  * (ADR 0025). The next page loads when the end of the list comes into view, so the list has no button. A class with no announcement shows
@@ -29,21 +53,7 @@ const POST_PAGE_SIZE = 20;
  */
 export function ClassHome() {
   const t = useTranslations("Classroom");
-  const { can, classId, slug } = useClassScope();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
-    classroom.posts.list,
-    isSettled ? { classId, slug } : "skip",
-    { initialNumItems: POST_PAGE_SIZE }
-  );
-  const pinned = useQuery(
-    classroom.posts.pinned,
-    isSettled ? { classId, slug } : "skip"
-  );
-  const scheduled = useQuery(
-    classroom.scheduled.list,
-    isSettled && Arr.contains(can, "post.publish") ? { classId, slug } : "skip"
-  );
+  const { pagination, pinned, publishes, scheduled } = useClassPosts();
   if (
     PaginatedQueryResult.isFailure(pagination) &&
     isLostAccess(pagination.error)
@@ -61,7 +71,7 @@ export function ClassHome() {
   if (
     pagination._tag === "LoadingFirstPage" ||
     !QueryResult.isSuccess(pinned) ||
-    (Arr.contains(can, "post.publish") && QueryResult.isLoading(scheduled))
+    (publishes && QueryResult.isLoading(scheduled))
   ) {
     return null;
   }

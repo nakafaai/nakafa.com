@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { type Browser, expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   createSchool,
@@ -29,10 +29,8 @@ function keptAnswerCount(page: Page, sittingId: string) {
   }, `nakafa-sitting-kept:${sittingId}:`);
 }
 
-test("a student who answers while the connection is lost keeps the answer, and the server takes it once the connection is back", async ({
-  baseURL,
-  browser,
-}) => {
+/** Seeds a school with an open sitting and opens its page as a learner who has not entered it. */
+async function openSitting(baseURL: string | undefined, browser: Browser) {
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
@@ -54,6 +52,17 @@ test("a student who answers while the connection is lost keeps the answer, and t
 
   const student = await studentContext.newPage();
   await student.goto(address(`/sittings/${sitting.sittingId}`));
+  return { sitting, student, studentContext };
+}
+
+test("a student who answers while the connection is lost keeps the answer, and the server takes it once the connection is back", async ({
+  baseURL,
+  browser,
+}) => {
+  const { sitting, student, studentContext } = await openSitting(
+    baseURL,
+    browser
+  );
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
@@ -100,5 +109,33 @@ test("a student who answers while the connection is lost keeps the answer, and t
       .getByRole("radio")
       .first()
   ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
+  await studentContext.close();
+});
+
+test("a student who presses enter with no connection is told it waits, and reaches the paper once the connection is back", async ({
+  baseURL,
+  browser,
+}) => {
+  const { sitting, student, studentContext } = await openSitting(
+    baseURL,
+    browser
+  );
+  const enter = student.getByRole("button", { name: "Enter sitting" });
+  await waitUntilTakenOver(enter);
+  await student
+    .getByPlaceholder("Enter the token from your proctor")
+    .fill(sitting.token);
+
+  // The browser knows at once that the network is gone, long before the client's socket goes quiet.
+  await studentContext.setOffline(true);
+  await enter.click();
+  await expect(
+    student.getByText("You will enter once you are back online.")
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  await studentContext.setOffline(false);
+  await expect(
+    student.getByRole("article", { name: "Question 1" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await studentContext.close();
 });

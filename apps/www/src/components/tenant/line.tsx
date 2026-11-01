@@ -85,14 +85,6 @@ export function LineDialog({
             dir="auto"
             id={`${id}-value`}
             onChange={(event) => setTyped(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.nativeEvent.isComposing) {
-                return;
-              }
-              if (event.key === "Enter") {
-                save();
-              }
-            }}
             placeholder={placeholder}
             type={type}
             value={typed ?? initial}

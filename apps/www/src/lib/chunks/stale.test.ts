@@ -201,6 +201,25 @@ describe("STALE_CHUNK_SCRIPT", () => {
     expect(online.reload).toHaveBeenCalledOnce();
   });
 
+  it("keeps a tab that is leaving from cancelling its navigation with a reload", () => {
+    const { reload, target } = openDocument(tab().storage);
+
+    target.dispatchEvent(new Event("beforeunload"));
+
+    expect(reportMissingScript(target)).toBe(true);
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it("reloads again once the page comes back from the back-forward cache", () => {
+    const { reload, target } = openDocument(tab().storage);
+
+    target.dispatchEvent(new Event("beforeunload"));
+    target.dispatchEvent(new Event("pageshow"));
+
+    expect(reportMissingScript(target)).toBe(true);
+    expect(reload).toHaveBeenCalledOnce();
+  });
+
   it("never reloads without storage, which could not stop a loop", () => {
     const refused = () => {
       throw new Error("Storage is off.");

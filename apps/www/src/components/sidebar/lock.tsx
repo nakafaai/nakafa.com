@@ -79,7 +79,7 @@ export function LockableShell({
     <ShellLocksContext value={setLocks}>
       <ShellTitlesContext value={setTitles}>
         <SidebarProvider
-          className="[--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0rem] has-[[data-shell-title]]:[--app-header-top:0rem] data-locked:[--app-header-top:0rem] data-titled:[--app-header-top:0rem]"
+          className="[--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0rem] has-[[data-shell-lock]]:[--app-shell-locked-inset:0rem] has-[[data-shell-lock]]:[--app-shell-locked:none] has-[[data-shell-title]]:[--app-header-top:0rem] has-[[data-shell-title]]:[--app-shell-titled:none] has-[[data-side=left][data-collapsible=icon]]:[--app-sidebar-open:--spacing(12)] has-[[data-side=left][data-sidebar-state=expanded]]:[--app-sidebar-open:--spacing(64)] data-locked:[--app-header-top:0rem] data-locked:[--app-shell-locked-inset:0rem] data-locked:[--app-shell-locked:none] data-titled:[--app-header-top:0rem] data-titled:[--app-shell-titled:none]"
           data-locked={locked ? "" : undefined}
           data-titled={titles > 0 ? "" : undefined}
           locked={locked}
@@ -97,18 +97,21 @@ export function LockableShell({
             unchanged when the lock ends. It comes before the page in the
             document: main's padding reads the expanded sidebar through :has(),
             and a long page paints before the browser has parsed all of it, so
-            a sidebar after the page would arrive late and move the page. */}
-          <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden">
+            a sidebar after the page would arrive late and move the page. Only
+            the wrapper reads :has(), and the parts read the values it sets: a
+            rule that styles the wrapper's descendants from :has() makes the
+            browser style the whole page again at every inserted element. */}
+          <div className="[display:var(--app-shell-locked,contents)]">
             {sidebar}
           </div>
           {/* Pages lay out in normal flow directly inside main: a flex column
             would shrink every centered page column to its content, and a
             wrapper of their own would move when a lock change drops the
             header. */}
-          <SidebarInset className="duration-surface block transition-[--app-sidebar-offset] [--app-shell-inset:var(--app-sidebar-offset)] [--app-sidebar-offset:0rem] group-has-[[data-shell-lock]]/sidebar-wrapper:[--app-shell-inset:0rem] group-has-[[data-side=left][data-collapsible=icon]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(12)] group-has-[[data-side=left][data-sidebar-state=expanded]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(64)] group-data-locked/sidebar-wrapper:[--app-shell-inset:0rem] lg:pl-(--app-shell-inset)">
+          <SidebarInset className="duration-surface block transition-[--app-sidebar-offset] [--app-shell-inset:var(--app-shell-locked-inset,var(--app-sidebar-offset))] [--app-sidebar-offset:var(--app-sidebar-open,0rem)] lg:pl-(--app-shell-inset)">
             <SidebarScope>
               {locked ? null : (
-                <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden">
+                <div className="[display:var(--app-shell-locked,contents)]">
                   {header}
                 </div>
               )}

@@ -16,6 +16,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -43,6 +44,7 @@ import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
+  useServerSearch,
 } from "@/components/shared/table/toolbar";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
@@ -58,6 +60,7 @@ import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { useKeptRows } from "@/lib/data/kept";
 
 const SOURCE = "components/tenant/settings/members";
 
@@ -116,27 +119,24 @@ export function SchoolMembersSettings() {
   );
 }
 
-/** The members of the school, read a page at a time, with the table and its end. */
+/** The members of the school, read a page at a time, in a data table, or its empty state when the school has none. */
 function SchoolMembersBody() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
-    tenancy.roster.members,
-    isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
-  );
-
-  return (
-    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
-      <SchoolMemberTable members={pagination.results} />
-    </TablePages>
-  );
-}
-
-/** The members in a data table, or the table's empty state when the school has none. */
-function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
+  const search = useServerSearch();
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
+  const pagination = usePaginatedQuery(
+    tenancy.roster.members,
+    isSettled ? { slug, ...(search === "" ? {} : { search }) } : "skip",
+    { initialNumItems: PAGE_SIZE }
+  );
+  // A new search's first page loads behind the rows the table shows, so the table never blanks.
+  const kept = useKeptRows(
+    pagination._tag === "LoadingFirstPage",
+    pagination.results
+  );
+  const members = Option.getOrElse(kept, () => []);
   const viewer = useViewerQuery();
 
   const unitsOf = (member: MemberItem) =>
@@ -197,14 +197,11 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
       ),
       header: t("member-roles"),
       id: "roles",
-      options: Arr.map(
-        Arr.dedupe(Arr.flatMap(members, (member) => member.roles)),
-        (role) => ({
-          icon: roleLooks[role].icon,
-          label: tSchool(`role.${role}`),
-          value: role,
-        })
-      ),
+      options: Arr.map(BuiltinRole.literals, (role) => ({
+        icon: roleLooks[role].icon,
+        label: tSchool(`role.${role}`),
+        value: role,
+      })),
     }),
     memberColumns.menu((info) => (
       <WithAction action="person.manage">
@@ -214,19 +211,20 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={members}
-      empty={
-        <TableEmpty
-          act="waving"
-          description={t("members-empty-description")}
-          title={t("members-empty")}
-        />
-      }
-      rowId={(member) => member.id}
-      search="name"
-    />
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+      <DataTable
+        columns={columns}
+        data={members}
+        empty={
+          <TableEmpty
+            act="waving"
+            description={t("members-empty-description")}
+            title={t("members-empty")}
+          />
+        }
+        rowId={(member) => member.id}
+      />
+    </TablePages>
   );
 }
 

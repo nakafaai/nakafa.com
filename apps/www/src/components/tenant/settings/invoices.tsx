@@ -1,5 +1,6 @@
 import { useAction } from "@confect/react";
 import {
+  Alert02Icon,
   Cancel01Icon,
   CheckmarkBadge01Icon,
   CreditCardIcon,
@@ -19,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, DateTime, Record as Rec } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { RowAction, useInvoiceDownload } from "@/components/billing/invoice";
 import {
@@ -38,19 +39,21 @@ import {
   formatCount,
   formatMinorAmount,
 } from "@/lib/billing/plan";
-import { type SchoolBilling, transferMailto } from "@/lib/billing/school";
+import {
+  invoiceStanding,
+  type SchoolBilling,
+  transferMailto,
+} from "@/lib/billing/school";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-/** The look of each state of an invoice in its table. */
+/** The look of each standing of an invoice in its table. */
 const INVOICE_LOOKS = {
   draft: { icon: Edit02Icon, tone: "neutral" },
   open: { icon: Invoice01Icon, tone: "warning" },
+  overdue: { icon: Alert02Icon, tone: "destructive" },
   paid: { icon: CheckmarkBadge01Icon, tone: "success" },
   void: { icon: Cancel01Icon, tone: "neutral" },
-} as const satisfies Record<
-  SchoolBilling["invoices"][number]["status"],
-  StatusLook
->;
+} as const satisfies Record<ReturnType<typeof invoiceStanding>, StatusLook>;
 
 /** The columns of the school's invoices. */
 const invoiceColumns = tableColumns<SchoolBilling["invoices"][number]>();
@@ -63,6 +66,7 @@ export function SchoolInvoicesCard({
 }) {
   const t = useTranslations("SchoolSettings");
   const locale = useLocale();
+  const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
 
   return (
     <CardSection
@@ -109,28 +113,40 @@ export function SchoolInvoicesCard({
                     header: t("invoice-total"),
                     id: "total",
                   }),
-                  invoiceColumns.values((invoice) => invoice.status, {
-                    cell: (info) => (
-                      <TableStatus
-                        {...INVOICE_LOOKS[info.getValue()]}
-                        label={t(`invoice-${info.getValue()}`)}
-                      />
-                    ),
-                    header: t("invoice-status"),
-                    id: "status",
-                    options: Arr.map(
-                      Rec.toEntries(INVOICE_LOOKS),
-                      ([status, look]) => ({
-                        icon: look.icon,
-                        label: t(`invoice-${status}`),
-                        value: status,
-                      })
-                    ),
+                  invoiceColumns.days((invoice) => invoice.dueAt, {
+                    cell: (info) => formatBillingDate(info.getValue(), locale),
+                    header: t("invoice-due"),
+                    id: "due",
+                    timeZone: () => BILLING_TIME_ZONE,
                   }),
+                  invoiceColumns.values(
+                    (invoice) => invoiceStanding(invoice, now),
+                    {
+                      cell: (info) => (
+                        <TableStatus
+                          {...INVOICE_LOOKS[info.getValue()]}
+                          label={t(`invoice-${info.getValue()}`)}
+                        />
+                      ),
+                      header: t("invoice-status"),
+                      id: "status",
+                      options: Arr.map(
+                        Rec.toEntries(INVOICE_LOOKS),
+                        ([status, look]) => ({
+                          icon: look.icon,
+                          label: t(`invoice-${status}`),
+                          value: status,
+                        })
+                      ),
+                    }
+                  ),
                   invoiceColumns.menu((info) => (
                     <div className="flex items-center justify-end gap-1">
                       <SchoolInvoiceDownload invoice={info.row.original} />
-                      <SchoolInvoiceAction invoice={info.row.original} />
+                      <SchoolInvoiceAction
+                        invoice={info.row.original}
+                        now={now}
+                      />
                     </div>
                   )),
                 ]}
@@ -181,14 +197,16 @@ function SchoolInvoiceDownload({
 
 /**
  * How an open invoice is paid, behind the row's menu: on its hosted payment page
- * while it holds one, or by bank transfer to Nakafa, which an operator records. A
- * paid or void invoice needs nothing, and an invoice still being issued has no
- * number to quote yet.
+ * while it holds one and its due day has not passed, since the page closes on that
+ * day, or by bank transfer to Nakafa, which an operator records. A paid or void
+ * invoice needs nothing, and an invoice still being issued has no number to quote yet.
  */
 function SchoolInvoiceAction({
   invoice,
+  now,
 }: {
   invoice: SchoolBilling["invoices"][number];
+  now: number;
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
@@ -210,7 +228,8 @@ function SchoolInvoiceAction({
         }
       />
       <DropdownMenuContent align="end" className="w-48">
-        {invoice.paymentLink === null ? (
+        {invoice.paymentLink === null ||
+        invoiceStanding(invoice, now) === "overdue" ? (
           <DropdownMenuItem
             render={
               <a

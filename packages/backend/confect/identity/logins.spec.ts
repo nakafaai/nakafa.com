@@ -38,7 +38,10 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "list",
-      args: () => ({ slug: TenantSlug }),
+      args: () => ({
+        search: Schema.optionalKey(PersonName),
+        slug: TenantSlug,
+      }),
       item: () => LoginView,
       error: () => AccessDenied,
     })

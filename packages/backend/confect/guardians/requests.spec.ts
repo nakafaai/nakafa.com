@@ -50,10 +50,10 @@ export default GroupSpec.make()
     })
   )
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "waiting",
       args: () => ({ slug: TenantSlug }),
-      returns: () => Schema.Array(WaitingRequest),
+      item: () => WaitingRequest,
       error: () => AccessDenied,
     }).middleware(TenantAccess, { action: "guardian.list" })
   )

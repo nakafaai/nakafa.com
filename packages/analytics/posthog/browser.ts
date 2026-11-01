@@ -67,9 +67,11 @@ const loadBrowserAnalyticsSdk: Effect.Effect<
   BrowserAnalyticsClient,
   BrowserAnalyticsLoadFailed
 > = Effect.tryPromise({
-  try: () => import("posthog-js"),
+  // The SDK loads no script of its own here, so its web vitals come from the same load.
+  try: () =>
+    Promise.all([import("posthog-js"), import("posthog-js/dist/web-vitals")]),
   catch: browserAnalyticsLoadFailure,
-}).pipe(Effect.map((module) => module.default));
+}).pipe(Effect.map(([module]) => module.default));
 
 /** Returns the gate to baseline and revokes identity without SDK calls. */
 function revokeGate() {
@@ -145,7 +147,8 @@ export const enableBaselineAnalytics = Effect.fn(
           capture_exceptions: false,
           capture_heatmaps: false,
           capture_pageleave: false,
-          capture_performance: false,
+          // Real readers' LCP, INP, CLS and FCP, which no lab run on this Mac can stand in for.
+          capture_performance: { network_timing: false, web_vitals: true },
           capture_pageview: false,
           cookieless_mode: "on_reject",
           defaults: "2026-01-30",

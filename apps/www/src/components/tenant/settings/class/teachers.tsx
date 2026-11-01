@@ -13,7 +13,6 @@ import {
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Item,
   ItemActions,
@@ -27,6 +26,7 @@ import { startTransition, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { reloadPage } from "@/components/shared/reload";
+import { TableEnd } from "@/components/shared/table/pages";
 import { LoadFailure } from "@/components/state/failure";
 import {
   assignTeacherChange,
@@ -147,7 +147,7 @@ export function ClassTeachersDialog({
           />
         )}
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+          <TableEnd onLoad={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </FieldGroup>
     </ResponsiveDialog>

@@ -181,6 +181,64 @@ describe("billing/school invoices", () => {
     ]);
   });
 
+  it("bills a student added after an invoice on an invoice of their own, and never bills one student twice", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const tenantId = await insertSchool(ctx);
+      await enrollStudents(ctx, tenantId, 2);
+      const issue = (offer: "school.seat.semester" | "school.seat.year") =>
+        runInMutation(
+          ctx,
+          Effect.flatMap(readTenant(tenantId), (tenant) =>
+            issueSchoolInvoice(systemActor, tenant, offer)
+          )
+        );
+      await issue("school.seat.semester");
+      const overlapping = await exitInMutation(
+        ctx,
+        Effect.flatMap(readTenant(tenantId), (tenant) =>
+          issueSchoolInvoice(systemActor, tenant, "school.seat.year")
+        )
+      );
+      await enrollStudents(ctx, tenantId, 1);
+      await issue("school.seat.semester");
+      const invoices = await ctx.db.query("billingInvoices").collect();
+      return {
+        overlapping: Exit.match(overlapping, {
+          onFailure: (cause) => String(Cause.squash(cause)),
+          onSuccess: () => "issued",
+        }),
+        seats: Arr.map(invoices, ({ lines }) => lines[0]?.quantity),
+      };
+    });
+    expect(result.overlapping).toContain("SchoolSeatsPaid");
+    expect(result.seats).toEqual([2, 1]);
+  });
+
+  it("lets an open invoice whose term has ended hold nobody back from the next term", async () => {
+    const t = createBillingTestConvex();
+    const seats = await t.run(async (ctx) => {
+      const tenantId = await insertSchool(ctx);
+      await enrollStudents(ctx, tenantId, 2);
+      const old = await runInMutation(
+        ctx,
+        Effect.flatMap(readTenant(tenantId), (tenant) =>
+          issueSchoolInvoice(systemActor, tenant, "school.seat.semester")
+        )
+      );
+      await ctx.db.patch(old.invoiceId, { periodEnd: NOW - 1 });
+      await runInMutation(
+        ctx,
+        Effect.flatMap(readTenant(tenantId), (tenant) =>
+          issueSchoolInvoice(systemActor, tenant, "school.seat.year")
+        )
+      );
+      const invoices = await ctx.db.query("billingInvoices").collect();
+      return Arr.map(invoices, ({ lines }) => lines[0]?.quantity);
+    });
+    expect(seats).toEqual([2, 2]);
+  });
+
   it("issues nothing to a school whose students are all paid for", async () => {
     const t = createBillingTestConvex();
     const failure = await t.run(async (ctx) => {

@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { ConnectOutcomeContext } from "@/components/connectors/actions";
 import { ConnectSearch } from "@/components/connectors/outcome";
-import { UserSettingsConnectors } from "@/components/user/settings/connectors";
+import {
+  AccountDirectory,
+  UserSettingsConnectors,
+} from "@/components/user/settings/connectors";
 import { privateHead } from "@/lib/account/head";
 import { connectorsScreenFn } from "@/lib/account/settings.functions";
 
@@ -23,7 +26,9 @@ function ConnectorsPage() {
   const { first, offered } = Route.useLoaderData();
   return (
     <ConnectOutcomeContext value={search}>
-      <UserSettingsConnectors first={first} initialOffered={offered} />
+      <UserSettingsConnectors>
+        <AccountDirectory first={first} initialOffered={offered} />
+      </UserSettingsConnectors>
     </ConnectOutcomeContext>
   );
 }

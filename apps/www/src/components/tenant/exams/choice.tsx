@@ -1,6 +1,7 @@
 import { ListPlusIcon } from "@hugeicons/core-free-icons";
 import {
   letterScript,
+  optionDirection,
   optionLetter,
 } from "@repo/backend/confect/exams/letters";
 import {
@@ -35,7 +36,6 @@ import {
   PaperPartText,
 } from "@/components/tenant/exams/sheet";
 import type { Unstored } from "@/components/tenant/exams/writer";
-import { LetteredChoice } from "@/components/tryout/runtime/choice/surface";
 
 /**
  * One choice of a question on its paper, as the student meets it: its options, each written in its row, and the
@@ -89,7 +89,11 @@ export function ChoiceSheet({
   return (
     <>
       <ChoiceGroup title={choiceTitle(displayed.template, choice.id)}>
-        <PaperOptions>
+        <PaperOptions
+          dir={optionDirection(
+            Arr.map(choice.options, (option) => option.label)
+          )}
+        >
           {Arr.map(choice.options, (option, index) => {
             const letter = optionLetter(index, script);
 
@@ -119,21 +123,19 @@ export function ChoiceSheet({
                 }
                 removeName={t("option-remove-of", { letter, number })}
               >
-                <PaperOption multiple={choice.maxChoices !== 1}>
-                  <LetteredChoice letter={letter}>
-                    <PaperPartText>
-                      <ExamDocument
-                        label={t(reason ? "reason-of" : "option-of", {
-                          letter,
-                          number,
-                        })}
-                        placeholder={t(
-                          reason ? "reason-placeholder" : "option-placeholder"
-                        )}
-                        size="line"
-                      />
-                    </PaperPartText>
-                  </LetteredChoice>
+                <PaperOption letter={letter} multiple={choice.maxChoices !== 1}>
+                  <PaperPartText>
+                    <ExamDocument
+                      label={t(reason ? "reason-of" : "option-of", {
+                        letter,
+                        number,
+                      })}
+                      placeholder={t(
+                        reason ? "reason-placeholder" : "option-placeholder"
+                      )}
+                      size="line"
+                    />
+                  </PaperPartText>
                 </PaperOption>
               </OptionRow>
             );
