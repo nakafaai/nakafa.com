@@ -31,6 +31,15 @@ export function readHeaderLineProblems(page: Page) {
     };
 
     const drawnLines = (node: Text) => {
+      const parent = node.parentElement;
+      // Text for screen readers stands in a clipped box, while its own rectangles keep their full width.
+      if (
+        parent === null ||
+        parent.getBoundingClientRect().width <= 1 ||
+        getComputedStyle(parent).visibility === "hidden"
+      ) {
+        return [];
+      }
       const range = document.createRange();
       range.selectNodeContents(node);
       const text = node.textContent?.trim() ?? "";
