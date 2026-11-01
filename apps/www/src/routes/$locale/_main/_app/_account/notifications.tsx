@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsHeader } from "@/components/notifications/header";
+import { ACCOUNT_INBOX } from "@/components/notifications/inbox";
 import { NotificationsList } from "@/components/notifications/list";
 import { MarkAllRead } from "@/components/notifications/read";
 import { InboxTabs } from "@/components/notifications/tabs";
@@ -42,12 +43,12 @@ function NotificationsPage() {
     <LayoutMaterial>
       <LayoutMaterialContent>
         <NotificationsHeader>
-          <MarkAllRead first={page} slug={undefined} />
+          <MarkAllRead first={page} scope={ACCOUNT_INBOX} />
         </NotificationsHeader>
         <InboxTabs width="column" />
         <LayoutContent className="flex flex-col gap-6 py-6">
           <NotificationsClockContext value={clock}>
-            <NotificationsList first={page} slug={undefined} />
+            <NotificationsList first={page} scope={ACCOUNT_INBOX} />
           </NotificationsClockContext>
         </LayoutContent>
       </LayoutMaterialContent>

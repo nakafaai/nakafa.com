@@ -1,11 +1,11 @@
 import { useMutation } from "@confect/react";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { DateTime, Effect, Match, Option } from "effect";
+import { DateTime, Effect, Match } from "effect";
 import { type MouseEvent, use } from "react";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { NotificationsClockContext } from "@/components/notifications/clock";
-import { pageOf } from "@/components/notifications/destination";
+import { addressOf } from "@/components/notifications/destination";
 import { markReadInLists } from "@/components/notifications/mutation";
 import { navigationOf } from "@/components/notifications/press";
 import type { ListNotification } from "@/components/notifications/state";
@@ -25,23 +25,16 @@ export function useNotificationsNow() {
   return useAgeNow(clock);
 }
 
-/**
- * What a row of the inbox says and does, wherever the row is drawn: the sentence that says what happened, the page it
- * opens, whether it is read, and its presses. Pressing the row marks it read at once. A plain press on a row with a
- * page moves to that page once the server has taken the read, because a full move would cut off a read that is still
- * on its way; a refused read stays where it is, rolled back, with its toast. Any other press leaves the link to the
- * browser, so a modifier click or a middle click opens it in a new tab.
- */
-export function useNotificationAction(notification: ListNotification) {
+/** The sentence of a row: who did what, in the words of the reader's language. */
+function useNotificationSentence(notification: ListNotification) {
   const t = useTranslations("Notifications");
-  const readOne = useMutation(notifications.inbox.read).withOptimisticUpdate(
-    markReadInLists
-  );
-  const { detail, exam, grade, missed, readAt } = notification;
-  const href = Option.getOrUndefined(
-    Option.map(pageOf(notification), (url) => url.href)
-  );
-  const sentence = Match.value(notification.changeType).pipe(
+  if (notification.changeType === "comment.replied") {
+    return notification.actor === null
+      ? t("comment-replied-gone")
+      : t("comment-replied");
+  }
+  const { detail, exam, grade, missed } = notification;
+  return Match.value(notification.changeType).pipe(
     Match.when("person.invited", () => t("person-invited")),
     Match.when("forum.mentioned", () =>
       detail === null
@@ -112,6 +105,23 @@ export function useNotificationAction(notification: ListNotification) {
     }),
     Match.exhaustive
   );
+}
+
+/**
+ * What a row of the inbox says and does, wherever the row is drawn: the sentence that says what happened, the page it
+ * opens, whether it is read, and its presses. Pressing the row marks it read at once. A plain press on a row with a
+ * page moves to that page once the server has taken the read, because a full move would cut off a read that is still
+ * on its way; a refused read stays where it is, rolled back, with its toast. Any other press leaves the link to the
+ * browser, so a modifier click or a middle click opens it in a new tab.
+ */
+export function useNotificationAction(notification: ListNotification) {
+  const locale = useLocale();
+  const readOne = useMutation(notifications.inbox.read).withOptimisticUpdate(
+    markReadInLists
+  );
+  const { readAt } = notification;
+  const href = addressOf(notification, locale);
+  const sentence = useNotificationSentence(notification);
   // The change shows at once. The server's answer ends the effect: a refusal is reported
   // with the shared error toast, and the effect resolves to whether the server took the
   // read. The effect never fails.
@@ -152,7 +162,7 @@ export function useNotificationAction(notification: ListNotification) {
       return;
     }
     event.preventDefault();
-    // A row's page is on the school's own host, which the browser opens.
+    // A row's page is on the school's own host, or found by its address, so the browser opens it.
     Effect.runPromise(
       markRead.pipe(
         Effect.flatMap((taken) =>

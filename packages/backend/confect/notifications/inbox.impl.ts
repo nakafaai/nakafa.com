@@ -17,7 +17,11 @@ import {
 } from "@repo/backend/confect/notifications/feed";
 import { heldSchools, holds } from "@repo/backend/confect/notifications/held";
 import spec from "@repo/backend/confect/notifications/inbox.spec";
-import { notificationView } from "@repo/backend/confect/notifications/schema";
+import { replyNotice } from "@repo/backend/confect/notifications/reply";
+import {
+  type AccountRow,
+  notificationView,
+} from "@repo/backend/confect/notifications/schema";
 import { tenantProfile } from "@repo/backend/confect/tenancy/profile";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
@@ -27,6 +31,7 @@ import {
   Effect,
   Layer,
   Number as Num,
+  Option,
 } from "effect";
 
 /**
@@ -46,6 +51,25 @@ const scopedSchools = Effect.fn("notifications.inbox.scoped")(function* (
     : Arr.filter(schools, ({ tenant }) => tenant.slug === slug);
 });
 
+/** Marks one reply row read for the account it is addressed to. Any other account is refused. */
+const readReply = Effect.fn("notifications.inbox.readReply")(function* (
+  row: AccountRow,
+  userId: GenericId.GenericId<"users">
+) {
+  if (row.recipientUserId !== userId) {
+    return yield* new NotificationNotFound();
+  }
+  if (row.readAt !== undefined) {
+    return yield* replyNotice(row);
+  }
+  const readAt = yield* Clock.currentTimeMillis;
+  yield* (yield* DatabaseWriter)
+    .table("notifications")
+    .patch(row._id, { readAt })
+    .pipe(Effect.orDie);
+  return yield* replyNotice({ ...row, readAt });
+});
+
 /** Marks one row read. A row of an unheld Person is refused like a missing row. */
 const read = FunctionImpl.make(
   databaseSchema,
@@ -63,6 +87,9 @@ const read = FunctionImpl.make(
           GetByIdFailure: () => new NotificationNotFound(),
         })
       );
+    if (row.changeType === "comment.replied") {
+      return yield* readReply(row, appUser._id);
+    }
     const person = yield* reader
       .table("tenantPeople")
       .get(row.recipientPersonId)
@@ -90,19 +117,25 @@ const read = FunctionImpl.make(
 
 /**
  * The rows of the signed-in account's schools, or of the one school a slug
- * names, newest first, one page at a time. Only the Persons the account holds
- * are read, so a row of another Person never shows.
+ * names, newest first, one page at a time, with the account's own rows when the
+ * call asks for them. Only the Persons the account holds are read, so a row of
+ * another Person never shows.
  */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("notifications.inbox.list")(function* ({ paginationOpts, slug }) {
+  Effect.fn("notifications.inbox.list")(function* ({
+    paginationOpts,
+    personal,
+    slug,
+  }) {
     const { appUser } = yield* requireAuth();
     const cursor = yield* decodeFeedCursor(paginationOpts.cursor);
     const schools = yield* scopedSchools(appUser._id, slug);
     return yield* feedPage(
       schools,
+      personal === true ? Option.some(appUser._id) : Option.none(),
       cursor,
       Num.min(paginationOpts.numItems, LIST_PAGE_LIMIT)
     );
@@ -111,7 +144,8 @@ const list = FunctionImpl.make(
 
 /**
  * Marks the unread rows of every Person the account holds, or of its Person in
- * the one school a slug names. Each Person's rows
+ * the one school a slug names, and the account's own rows when the call asks for
+ * them. Each Person's rows
  * are marked by a scheduled run that reads one page, so a request reads no rows
  * itself and no run reads more than one page. The rows of a read request share
  * one moment, the request's.
@@ -120,7 +154,7 @@ const readAll = FunctionImpl.make(
   databaseSchema,
   spec,
   "readAll",
-  Effect.fn("notifications.inbox.readAll")(function* ({ slug }) {
+  Effect.fn("notifications.inbox.readAll")(function* ({ personal, slug }) {
     const { appUser } = yield* requireAuth();
     const readAt = yield* Clock.currentTimeMillis;
     const schools = yield* scopedSchools(appUser._id, slug);
@@ -135,6 +169,13 @@ const readAll = FunctionImpl.make(
         }),
       { discard: true }
     );
+    if (personal === true) {
+      yield* scheduler.runAfter(
+        Duration.zero,
+        notificationsInternal.read.runAccount,
+        { cursor: null, readAt, userId: appUser._id }
+      );
+    }
     return null;
   })
 );

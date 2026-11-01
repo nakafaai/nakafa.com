@@ -12,6 +12,7 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
+import { schoolViews } from "@repo/backend/test/inbox";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
@@ -111,7 +112,9 @@ describe("notifications/fanout", () => {
         const removed = yield* fixture
           .as("student")
           .query(inbox.list, firstPage);
-        expect(Arr.map(removed.page, (row) => row.detail)).toEqual([null]);
+        expect(Arr.map(schoolViews(removed.page), (row) => row.detail)).toEqual(
+          [null]
+        );
         expect(
           yield* fixture.internal.mutation(fanout.run, {
             cursor: null,

@@ -1,5 +1,8 @@
 import { Option } from "effect";
-import type { ListNotification } from "@/components/notifications/state";
+import type {
+  ListNotification,
+  SchoolNotification,
+} from "@/components/notifications/state";
 import { schoolOrigin } from "@/lib/routing/school/host";
 
 /**
@@ -10,7 +13,7 @@ import { schoolOrigin } from "@/lib/routing/school/host";
  * reminder of a child's sitting, a child's missed task, and a child's released grade open the parent home. Any other row,
  * a student's own released grade among them, has no page, so it only marks itself read.
  */
-export function pageOf(notification: ListNotification): Option.Option<URL> {
+function pageOf(notification: SchoolNotification): Option.Option<URL> {
   const origin = schoolOrigin(notification.tenant.slug);
   if (notification.subject.kind === "person") {
     return Option.some(origin);
@@ -46,4 +49,20 @@ export function pageOf(notification: ListNotification): Option.Option<URL> {
     page.searchParams.set("message", detail.messageId);
     return page;
   });
+}
+
+/**
+ * The address a row opens: a reply opens its comment on the page that shows it, in
+ * the reader's language, through the address that finds that page, and a school's
+ * row opens its page on the school's own host. A reply that is gone opens nothing.
+ */
+export function addressOf(notification: ListNotification, locale: string) {
+  if (notification.changeType === "comment.replied") {
+    return notification.actor === null
+      ? undefined
+      : `/${locale}/comment/${notification.commentId}`;
+  }
+  return Option.getOrUndefined(
+    Option.map(pageOf(notification), (url) => url.href)
+  );
 }

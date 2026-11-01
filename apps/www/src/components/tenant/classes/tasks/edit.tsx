@@ -80,6 +80,7 @@ function EditTaskDialog({ task }: { task: ClassTask }) {
   const changed = Option.exists(
     checked,
     (next) =>
+      next.category !== task.category ||
       next.title !== task.title ||
       next.text !== task.text ||
       next.deadline !== task.deadline ||
