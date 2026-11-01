@@ -232,7 +232,6 @@ export function ExamCanvas({
           ),
           (question) => question.id
         )}
-        ready
       >
         <div
           className="mx-auto flex w-full max-w-212 flex-col gap-8 px-4 py-6 md:px-6"
