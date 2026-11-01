@@ -1287,6 +1287,7 @@
       }
     },
     "person-placeholder": "Pilih orang",
+    "student-picker-empty": "Tambahkan siswa di Akun siswa dulu.",
     "roles-grants-description": "Setiap peran yang dimiliki orang di sekolah ini, dan wilayah yang dicakupnya.",
     "grant-role": "Peran",
     "grant-scope": "Berlaku untuk",
