@@ -11,11 +11,13 @@ import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { cn } from "cn";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { PanesProvider } from "@/components/shared/panes";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
@@ -87,10 +89,10 @@ export function ClassShell({
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <>
+        <PageFrame width="column">
           <SchoolHeader items={[]} />
           <LayoutContent className="py-6">{failure}</LayoutContent>
-        </>
+        </PageFrame>
       )}
       read={{ args: { classSlug, slug }, ref: classroom.classes.resolve }}
     >
@@ -422,13 +424,13 @@ function ClassBody({
 }
 
 /**
- * A body that scrolls within itself under the tabs, at the app's page width within the page's
- * margin, so the header and the tabs stay.
+ * A body that scrolls within itself under the tabs, in one row of the page, so the header and
+ * the tabs stay.
  */
 function ClassScroll({ children }: { children: ReactNode }) {
   return (
     <ScrollArea className="flex-1" viewportClassName="flex flex-col">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6">
+      <div className={cn(pageRowVariants(), "flex flex-1 flex-col gap-6 py-6")}>
         {children}
       </div>
     </ScrollArea>
@@ -438,11 +440,11 @@ function ClassScroll({ children }: { children: ReactNode }) {
 /** The state of a class that the viewer may not read, with one way back to the school's home. */
 function ClassMissing() {
   return (
-    <>
+    <PageFrame width="column">
       <SchoolHeader items={[]} />
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
         <ClassMissingBody />
       </LayoutContent>
-    </>
+    </PageFrame>
   );
 }

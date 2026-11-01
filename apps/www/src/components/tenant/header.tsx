@@ -19,7 +19,7 @@ import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
-import { contentWidthVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { useTenant } from "@/components/tenant/context";
 import { schoolHomeTarget } from "@/lib/routing/school/target";
 
@@ -30,9 +30,9 @@ import { schoolHomeTarget } from "@/lib/routing/school/target";
  * path's last item passes its title, which only assistive technology reads, because the path already shows
  * it; a page whose body draws its own heading, such as the not-found page, passes no title.
  * On a phone the path folds into one menu beside the page's name, so the page's actions
- * have their room. The bar and its border run the page's full width, and its row keeps the
- * page width and gutter of the bodies under it, so on a wide screen the path and actions
- * line up with the body's edges. The shell draws no header of its own.
+ * have their room. The bar and its border run the screen's full width, and its row is one
+ * row of the page (`pageRowVariants`), so the path and actions line up with the body's edges
+ * at every width. The shell draws no header of its own.
  */
 export function SchoolHeader({
   children,
@@ -56,8 +56,8 @@ export function SchoolHeader({
     >
       <div
         className={cn(
-          contentWidthVariants({ width: "page" }),
-          "@container/header flex h-full w-full items-center gap-2 px-4"
+          pageRowVariants(),
+          "@container/header flex h-full items-center gap-2"
         )}
       >
         {/* The exam editor draws no sidebar, so a page that shows in its place, such as its not-found page, has none to toggle. */}

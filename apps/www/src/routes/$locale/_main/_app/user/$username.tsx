@@ -1,5 +1,7 @@
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { cn } from "cn";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
 import { profileScreenFn } from "@/lib/account/profile.functions";
@@ -24,7 +26,12 @@ function UserLayout() {
   const { isOwner, profile } = Route.useLoaderData();
   return (
     <ErrorBoundary fallback={null}>
-      <main className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-3xl flex-col px-6 pt-6 pb-24 lg:min-h-svh lg:pt-12">
+      <main
+        className={cn(
+          pageRowVariants(),
+          "relative flex min-h-[calc(100svh-4rem)] flex-col pt-6 pb-24 lg:min-h-svh lg:pt-12"
+        )}
+      >
         <UserHeader isOwner={isOwner} profile={profile} />
         <UserTabs isOwner={isOwner} username={profile.username} />
         <Outlet />

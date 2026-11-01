@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { readFormProblems } from "@/e2e/support/form";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -37,3 +38,28 @@ test("the exam import offers a Google Form where the deployment offers Drive", a
   ).toBeVisible();
   await context.close();
 });
+
+for (const viewport of [
+  { height: 900, name: "dialog", width: 1440 },
+  { height: 844, name: "drawer", width: 390 },
+]) {
+  test(`a form in a ${viewport.name} reads by its gaps, and keeps its edges`, async ({
+    baseURL,
+    browser,
+  }) => {
+    const school = await Effect.runPromise(createSchool());
+    const host = `${school.slug}.localhost`;
+    const context = await browser.newContext({ viewport });
+    await Effect.runPromise(
+      signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+    );
+    const page = await context.newPage();
+    await page.goto(hostAddress(baseURL, host, "/settings/invites"));
+    const invite = page.getByRole("button", { name: "Invite" }).first();
+    await waitUntilTakenOver(invite);
+    await invite.click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect.poll(() => readFormProblems(page)).toEqual([]);
+    await context.close();
+  });
+}

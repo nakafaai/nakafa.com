@@ -19,6 +19,7 @@ import { Option, Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { createPortal } from "react-dom";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { pageBoxVariants } from "@/components/shared/content/width";
 
 /** From which width the open row stands beside the list: tablet for a list, laptop for the exam editor. */
 const PanesWidth = Schema.Literals(["md", "lg"]);
@@ -143,13 +144,13 @@ function useWide() {
 }
 
 /**
- * The group's width, height, and where its second pane steps aside. A page's panes fill it up to the
- * app's widest content, `max-w-7xl`, and no further; the exam editor's fill the screen's width, since its
- * canvas is the surface its papers lie on, edge to edge. A list's panes run from under its
+ * The group's width, height, and where its second pane steps aside. A page's panes fill the page's frame
+ * and no further; the exam editor's fill the screen's width, since its canvas is the surface its papers
+ * lie on, edge to edge. A list's panes run from under its
  * header to the bottom of the screen, and a page whose header is taller than the school header's
  * 4rem sets `--panes-offset` to its height; the exam editor's panes fill the room its shell leaves.
  */
-const panesVariants = cva("min-h-0 w-full", {
+const panesVariants = cva("min-h-0", {
   variants: {
     fill: {
       parent: "flex-1",
@@ -160,8 +161,8 @@ const panesVariants = cva("min-h-0 w-full", {
       md: "max-md:[&>[data-separator]]:hidden! max-md:[&>[data-separator]~[data-panel]]:hidden!",
     },
     width: {
-      full: "",
-      page: "mx-auto max-w-7xl",
+      full: "w-full",
+      page: pageBoxVariants(),
     },
   },
 });

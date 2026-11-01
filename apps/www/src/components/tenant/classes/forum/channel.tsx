@@ -6,9 +6,11 @@ import {
 } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { readingMeasureVariants } from "@/components/shared/content/width";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -75,7 +77,9 @@ export function ForumChannel({
     >
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
         <ChannelMessages key={channelId} />
-        <footer className="mx-auto w-full max-w-3xl shrink-0 px-4 pt-2 pb-4">
+        <footer
+          className={cn(readingMeasureVariants(), "shrink-0 px-4 pt-2 pb-4")}
+        >
           {canPost ? (
             <ForumComposer />
           ) : (
