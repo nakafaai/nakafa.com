@@ -1,7 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { markModules } from "@repo/backend/scripts/reuse/mark";
-import { Effect, FileSystem, Path } from "effect";
+import { Effect, FileSystem, Path, Record as Rec } from "effect";
 
 const CONFECT_SOURCE = `import registeredFunctions from "../confect/_generated/registeredFunctions/notes";
 
@@ -18,11 +18,11 @@ const markFiles = (files: Readonly<Record<string, string>>) =>
     const path = yield* Path.Path;
     const directory = yield* fs.makeTempDirectoryScoped();
     yield* fs.makeDirectory(path.join(directory, "_generated"));
-    yield* Effect.forEach(Object.entries(files), ([name, source]) =>
+    yield* Effect.forEach(Rec.toEntries(files), ([name, source]) =>
       fs.writeFileString(path.join(directory, name), source)
     );
     yield* markModules(directory);
-    return yield* Effect.forEach(Object.keys(files), (name) =>
+    return yield* Effect.forEach(Rec.keys(files), (name) =>
       fs.readFileString(path.join(directory, name))
     );
   });
@@ -53,7 +53,7 @@ describe("markModules", () => {
           "render.ts": NODE_SOURCE,
         };
         const marked = yield* markFiles(sources);
-        expect(marked).toEqual(Object.values(sources));
+        expect(marked).toEqual(Rec.values(sources));
       }).pipe(Effect.provide(nodeServicesLayer))
   );
 });

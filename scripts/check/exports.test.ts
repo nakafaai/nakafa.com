@@ -205,6 +205,7 @@ export const { tax } = source;
             "apps/www/src/routes/lesson.tsx": text,
             "apps/www/src/routes/api/health.ts": text,
             "apps/www/src/start.ts": text,
+            "packages/backend/convex/notes/list.ts": text,
             "packages/design-system/components/ui/table.tsx": text,
             "packages/design-system/components/evilcharts/charts/area.tsx":
               text,
@@ -219,10 +220,17 @@ export const { tax } = source;
       assert.deepStrictEqual(
         yield* inspect({
           "apps/www/src/components/app/lesson.tsx": text,
+          "packages/backend/confect/notes/list.ts":
+            "export const experimental_reuseContext = true;\n",
           "packages/shop/start.ts": "export const started = 1;\n",
         }),
         [
           report(1, "maxDuration", "apps/www/src/components/app/lesson.tsx"),
+          report(
+            1,
+            "experimental_reuseContext",
+            "packages/backend/confect/notes/list.ts"
+          ),
           report(1, "started", "packages/shop/start.ts"),
         ]
       );
