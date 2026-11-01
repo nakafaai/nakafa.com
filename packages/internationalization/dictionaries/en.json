@@ -3005,7 +3005,7 @@
     },
     "sitting-answers-unsent": {
       "title": "Some answers may not have saved.",
-      "description": "Answers kept on this device did not reach the exam before it closed, so tell your proctor."
+      "description": "Answers on this device may not have reached the exam before it closed, so tell your proctor."
     },
     "sitting-attempt-closed": {
       "title": "This attempt has closed.",

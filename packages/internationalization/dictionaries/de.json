@@ -3005,7 +3005,7 @@
     },
     "sitting-answers-unsent": {
       "title": "Einige Antworten wurden vielleicht nicht gespeichert.",
-      "description": "Antworten auf diesem Gerät kamen nicht an, bevor die Prüfung schloss, also sag es deiner Aufsicht."
+      "description": "Antworten auf diesem Gerät kamen vielleicht nicht an, bevor die Prüfung schloss, also sag es deiner Aufsicht."
     },
     "sitting-attempt-closed": {
       "title": "Dieser Versuch ist beendet.",

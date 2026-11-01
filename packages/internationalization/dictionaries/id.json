@@ -3005,7 +3005,7 @@
     },
     "sitting-answers-unsent": {
       "title": "Sebagian jawaban mungkin belum tersimpan.",
-      "description": "Jawaban di perangkat ini belum masuk sebelum ujian ditutup, jadi beri tahu pengawas."
+      "description": "Jawaban di perangkat ini mungkin belum masuk sebelum ujian ditutup, jadi beri tahu pengawas."
     },
     "sitting-attempt-closed": {
       "title": "Percobaan ini sudah ditutup.",

@@ -162,7 +162,9 @@ export function useSendClosedKept({
               {
                 attemptId,
                 deviceId: device.value,
-                questionId: Schema.decodeSync(Id("examQuestions"))(questionId),
+                questionId: Schema.decodeUnknownSync(Id("examQuestions"))(
+                  questionId
+                ),
                 response: answer.response,
                 sittingId,
                 slug,
