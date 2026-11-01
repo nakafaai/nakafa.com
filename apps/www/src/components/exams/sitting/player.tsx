@@ -315,12 +315,7 @@ function RunningPaper({
       >
         {locked ? <p>{t("student-locked")}</p> : null}
         <PaperLockProvider locked={locked}>
-          <PaperReveal
-            deviceId={deviceId}
-            paper={paper}
-            sittingId={sittingId}
-            slug={slug}
-          >
+          <PaperReveal paper={paper}>
             <PlayerQuestions>
               {Arr.map(paper.questions, (question) => (
                 <SittingQuestion

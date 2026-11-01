@@ -25,6 +25,12 @@ const OPTIONS = [
   { letter: "D", text: "7" },
 ];
 
+/** The footer's height holds one row of 64 pixels, so a second line reaches this. */
+const FOOTER_ONE_LINE = 65;
+
+/** The screen the suite runs on, which the try returns to after a phone's width. */
+const SCREEN = { height: 720, width: 1280 };
+
 test("a teacher tries an exam as a student, picks an answer, and the answer is never sent", async ({
   baseURL,
   browser,
@@ -88,7 +94,22 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   await expect(trying.getByRole("heading", { name: "Question 1" })).toBeVisible(
     { timeout: readinessTimeoutMilliseconds }
   );
+  // The footer keeps one line on the narrowest phone, so the words stand behind the control beside its centre.
+  const note = trying.getByRole("button", { name: "About this paper" });
+  await trying.setViewportSize({ height: 720, width: 320 });
+  const footer = trying.locator("[data-player-footer]");
+  await expect
+    .poll(() => footer.evaluate((node) => node.clientHeight))
+    .toBeLessThan(FOOTER_ONE_LINE);
+  await note.focus();
+  await trying.keyboard.press("Enter");
   await expect(trying.getByText("Answers here are not saved.")).toBeVisible();
+  await trying.keyboard.press("Escape");
+  await expect(trying.getByText("Answers here are not saved.")).toBeHidden();
+  await trying.setViewportSize(SCREEN);
+  await note.hover();
+  await expect(trying.getByText("Answers here are not saved.")).toBeVisible();
+  await trying.mouse.move(0, 0);
   await expect(trying.getByText(PROMPT)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });

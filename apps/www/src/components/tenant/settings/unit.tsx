@@ -6,6 +6,7 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -55,6 +56,7 @@ export function SchoolUnitChoice({
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
+          <SelectLabel>{t("unit-choice")}</SelectLabel>
           {Arr.map(items, (item) => (
             <SelectItem key={item.value} value={item.value}>
               {item.label}

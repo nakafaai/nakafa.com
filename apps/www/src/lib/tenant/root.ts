@@ -10,6 +10,7 @@ import { Array as Arr, DateTime, Effect, Schema } from "effect";
  * namespace and key that a module a school route reaches renders.
  */
 const SCHOOL_NAMESPACES = [
+  "Ai",
   "AnalyticsConsent",
   "Auth",
   "Classroom",

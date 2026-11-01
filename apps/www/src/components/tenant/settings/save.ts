@@ -134,6 +134,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-scheme-not-later.description",
     title: "school-refusal-scheme-not-later.title",
   },
+  SchemeUsed: {
+    description: "school-refusal-scheme-used.description",
+    title: "school-refusal-scheme-used.title",
+  },
   CohortHasHomeroom: {
     description: "school-refusal-cohort-has-homeroom.description",
     title: "school-refusal-cohort-has-homeroom.title",
