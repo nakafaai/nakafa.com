@@ -111,7 +111,7 @@ describe("rss feed text", () => {
 
         expect(titles(xml)).toEqual(["Geometri", "Integral", "Aljabar"]);
         expect(xml).toContain(`${BASE}/en/articles/aljabar`);
-        expect(xml).toContain(`${BASE}/en/og/articles/aljabar/image.png`);
+        expect(xml).toContain(`${BASE}/en/og/articles/image.png`);
         expect(xml).toContain("Metadata.title");
       })
   );
