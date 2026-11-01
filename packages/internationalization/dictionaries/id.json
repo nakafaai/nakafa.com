@@ -3852,7 +3852,9 @@
     "course-students": "Siswa",
     "course-class": "Kelas",
     "course-unlinked": "Tidak diimpor",
-    "course-name": "{name} {section}"
+    "course-name": "{name} {section}",
+    "courses-no-class": "Tambahkan kelas dulu, supaya kursus punya kelas untuk diisi.",
+    "courses-no-class-action": "Buka kelas"
   },
   "ReportCheck": {
     "locked-report": "Rapor ini tercatat.",
