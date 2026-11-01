@@ -27,6 +27,9 @@ const FiltersState = Schema.Struct({
   sorted: Schema.Boolean,
 });
 
+/** The longest search a box takes: the longest name a person may have, which a search of the server accepts. */
+const SEARCH_LIMIT = 120;
+
 /** How long the typing in a paged list's search pauses before the server reads the text it holds. */
 const SEARCH_DELAY_MILLISECONDS = 300;
 
@@ -119,6 +122,7 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
         </InputGroupAddon>
         <InputGroupInput
           aria-label={placeholder}
+          maxLength={SEARCH_LIMIT}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={placeholder}
           value={search}
@@ -146,6 +150,7 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
             <InputGroupInput
               aria-label={placeholder}
               autoFocus
+              maxLength={SEARCH_LIMIT}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={placeholder}
               value={search}
