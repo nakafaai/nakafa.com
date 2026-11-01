@@ -1,6 +1,19 @@
-import type { Acknowledged } from "@repo/backend/scripts/load/ledger";
+import { Acknowledged } from "@repo/backend/scripts/load/ledger";
 import type { Sample } from "@repo/backend/scripts/load/stats";
-import { Clock, Context, Effect, Exit, Layer, MutableList } from "effect";
+import {
+  Clock,
+  Context,
+  Effect,
+  Exit,
+  FileSystem,
+  Layer,
+  MutableList,
+  Schema,
+  Stream,
+} from "effect";
+
+/** One line of the file that holds a run's acknowledgements. */
+const AcknowledgedLine = Schema.fromJsonString(Acknowledged);
 
 /**
  * Collects what a run measures: every timed call, and every answer whose write the server
@@ -17,18 +30,41 @@ export class Recorder extends Context.Service<
   }
 >()("@repo/backend/scripts/load/recorder") {}
 
-/** A recorder that keeps everything in memory for the run that it belongs to. */
-export const recorderLayer = Layer.sync(Recorder, () => {
-  const samples = MutableList.make<Sample>();
-  const answers = MutableList.make<Acknowledged>();
-  return Recorder.of({
-    acknowledge: (answer) =>
-      Effect.sync(() => MutableList.append(answers, answer)),
-    acknowledged: Effect.sync(() => MutableList.toArray(answers)),
-    sample: (sample) => Effect.sync(() => MutableList.append(samples, sample)),
-    samples: Effect.sync(() => MutableList.toArray(samples)),
-  });
-});
+/**
+ * A recorder that keeps its timings in memory and appends each acknowledgement to the file at
+ * `path`, which the audit reads back, so a run that is stopped keeps every answer it was told
+ * about. The file starts empty, because a report file named again is a new run.
+ */
+export const recorderLayer = (path: string) =>
+  Layer.effect(
+    Recorder,
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.writeFileString(path, "");
+      const samples = MutableList.make<Sample>();
+      return Recorder.of({
+        acknowledge: (answer) =>
+          Schema.encodeEffect(AcknowledgedLine)(answer).pipe(
+            Effect.flatMap((line) =>
+              fs.writeFileString(path, `${line}\n`, { flag: "a" })
+            ),
+            Effect.orDie
+          ),
+        acknowledged: fs
+          .stream(path)
+          .pipe(
+            Stream.decodeText(),
+            Stream.splitLines,
+            Stream.mapEffect(Schema.decodeEffect(AcknowledgedLine)),
+            Stream.runCollect,
+            Effect.orDie
+          ),
+        sample: (sample) =>
+          Effect.sync(() => MutableList.append(samples, sample)),
+        samples: Effect.sync(() => MutableList.toArray(samples)),
+      });
+    }).pipe(Effect.orDie)
+  );
 
 /**
  * Runs one call and records how long it took under `name`, and whether it failed. The call's

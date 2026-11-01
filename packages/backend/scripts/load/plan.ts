@@ -8,10 +8,11 @@ const Count = Schema.Int.check(Schema.isGreaterThan(0));
 
 /**
  * The parameters of one load test run (K26). The students sit one exam of `questions`
- * questions in `rooms` rooms at once, each room watched by `proctors` proctors. They enter
- * within `entrySeconds`, answer at the pace of `minutes` for the whole paper, change a share
- * of their answers later, and a share of them lose the connection once for `offlineSeconds`
- * or open a second tab.
+ * questions in `rooms` rooms, each room watched by `proctors` proctors. Each room opens
+ * `staggerSeconds` after the one before it and its students enter within `entrySeconds` of
+ * that. They answer at the pace of `minutes` for the whole paper, change a share of their
+ * answers later, and a share of them lose the connection once for `offlineSeconds` or open a
+ * second tab.
  */
 export const LoadPlan = Schema.Struct({
   changeShare: Share,
@@ -23,6 +24,7 @@ export const LoadPlan = Schema.Struct({
   questions: Count,
   rooms: Count,
   secondTabShare: Share,
+  staggerSeconds: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
   students: Count,
 });
 export type LoadPlan = typeof LoadPlan.Type;
@@ -32,6 +34,8 @@ export type LoadPlan = typeof LoadPlan.Type;
  * two proctors a room, a paper of forty questions, five percent of the students cut off once
  * mid-session and ten percent with a second tab. The paper is answered in twenty minutes, four
  * and a half times the pace of a ninety-minute exam, so the run is a stress of the real rate.
+ * The rooms open twelve seconds apart, five students a second for ten minutes, as a school
+ * fills its rooms: every student at once in one minute is fifty new sessions a second.
  */
 export const BLUEPRINT_PLAN = LoadPlan.make({
   changeShare: 0.1,
@@ -43,6 +47,7 @@ export const BLUEPRINT_PLAN = LoadPlan.make({
   questions: 40,
   rooms: 50,
   secondTabShare: 0.1,
+  staggerSeconds: 12,
   students: 3000,
 });
 
@@ -108,13 +113,14 @@ const stepsOf = Effect.fn("load.plan.steps")(function* (plan: LoadPlan) {
 
 /**
  * The script of the student with this index. Students fill the rooms in turn, so every room
- * holds the same number, give or take one. The draws come from `Random`, so a seeded run
- * repeats its scripts.
+ * holds the same number, give or take one, and each enters within its room's own window. The
+ * draws come from `Random`, so a seeded run repeats its scripts.
  */
 export const scriptOf = Effect.fn("load.plan.script")(function* (
   plan: LoadPlan,
   index: number
 ) {
+  const room = index % plan.rooms;
   const steps = yield* stepsOf(plan);
   const cut = (yield* drawn(plan.disconnectShare))
     ? {
@@ -127,9 +133,11 @@ export const scriptOf = Effect.fn("load.plan.script")(function* (
     : null;
   return {
     cut,
-    enterAt: yield* Random.nextBetween(0, plan.entrySeconds * 1000),
+    enterAt:
+      room * plan.staggerSeconds * 1000 +
+      (yield* Random.nextBetween(0, plan.entrySeconds * 1000)),
     index,
-    room: index % plan.rooms,
+    room,
     secondTab: yield* drawn(plan.secondTabShare),
     steps,
   } satisfies StudentScript;

@@ -125,11 +125,14 @@ describe("load command", () => {
         mocks.school.mockImplementation((_root: string, path: string) =>
           fs.writeFileString(path, '{"name":"Sekolah 1","slug":"acc-1"}')
         );
-        yield* runLoadCommand("/root", ["report.json", "300", "10"]);
+        const output = `${directory}/report.json`;
+        const ledger = `${output}.acknowledged.jsonl`;
+        yield* runLoadCommand("/root", [output, "300", "10"]);
         expect(mocks.backend).toHaveBeenCalledWith(PRODUCTION_CONCURRENCY);
         const [input] = mocks.run.mock.calls[0] ?? [];
         const load: LoadInput<AcceptanceModeError, never> = input;
-        expect(load.output).toBe("report.json");
+        expect(load.output).toBe(output);
+        expect(yield* fs.exists(ledger)).toBe(true);
         expect(load.plan).toEqual({
           ...BLUEPRINT_PLAN,
           minutes: 10,
@@ -143,7 +146,8 @@ describe("load command", () => {
         const token: Effect.Effect<string | null, never, Recorder> =
           mocks.open.mock.calls[0]?.[1];
         expect(address).toBe(runtime.query);
-        expect(yield* token.pipe(Effect.provide(recorderLayer))).toBe("jwt");
+        const recording = Effect.provide(recorderLayer(ledger));
+        expect(yield* token.pipe(recording)).toBe("jwt");
         expect(mocks.issue).toHaveBeenCalledWith(
           runtime.site,
           yield* sessionCookie("session-1")
@@ -176,9 +180,12 @@ describe("load command", () => {
     "leaves a tab signed out once the backend still refuses its token after the retries, and records the request",
     () =>
       Effect.gen(function* () {
+        const directory =
+          yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+        const output = `${directory}/report.json`;
         mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
         mocks.run.mockReturnValue(Effect.void);
-        yield* runLoadCommand("/root", ["report.json"]);
+        yield* runLoadCommand("/root", [output]);
         const load: LoadInput<AcceptanceModeError, never> =
           mocks.run.mock.calls[0]?.[0];
         const attempts = MutableRef.make(0);
@@ -203,7 +210,7 @@ describe("load command", () => {
           );
           const settled = yield* Fiber.join(fiber);
           return { samples: yield* (yield* Recorder).samples, token: settled };
-        }).pipe(Effect.provide(recorderLayer));
+        }).pipe(Effect.provide(recorderLayer(`${output}.acknowledged.jsonl`)));
         expect(signedOut.token).toBeNull();
         expect(signedOut.samples).toEqual([
           expect.objectContaining({ failed: true, name: "auth:token" }),
@@ -218,7 +225,9 @@ describe("load command", () => {
       Effect.gen(function* () {
         mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
         mocks.run.mockReturnValue(Effect.void);
-        yield* runLoadCommand("/root", ["report.json"]);
+        const directory =
+          yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+        yield* runLoadCommand("/root", [`${directory}/report.json`]);
         expect(mocks.run.mock.calls[0]?.[0].plan).toEqual(BLUEPRINT_PLAN);
       }).pipe(Effect.scoped, Effect.provide(services))
   );
