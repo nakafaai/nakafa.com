@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { Deferred, Effect, MutableRef, Option } from "effect";
+import { Data, Deferred, Effect, MutableRef, Option } from "effect";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { useLongAction } from "@/components/shared/pending";
+
+/** The failure an action ends in. */
+class LostAnswer extends Data.TaggedError("LostAnswer") {}
 
 /** The hook as the page's last render left it. */
 const latest = MutableRef.make<Option.Option<ReturnType<typeof useLongAction>>>(
@@ -36,7 +39,7 @@ const settle = () => act(() => Effect.runPromise(Effect.sleep("1 millis")));
 
 describe("useLongAction", () => {
   it("is pending from the press until the action answers", async () => {
-    const answer = Deferred.makeUnsafe<void, Error>();
+    const answer = Deferred.makeUnsafe<void, LostAnswer>();
     expect(hook()[0]).toBe(false);
 
     act(() => hook()[1](() => Effect.runPromise(Deferred.await(answer))));
@@ -48,17 +51,17 @@ describe("useLongAction", () => {
   });
 
   it("ends pending when the action rejects, so the button comes back", async () => {
-    const answer = Deferred.makeUnsafe<void, Error>();
+    const answer = Deferred.makeUnsafe<void, LostAnswer>();
     act(() => hook()[1](() => Effect.runPromise(Deferred.await(answer))));
 
-    Deferred.doneUnsafe(answer, Effect.fail(new Error("lost")));
+    Deferred.doneUnsafe(answer, Effect.fail(new LostAnswer()));
     await settle();
 
     expect(hook()[0]).toBe(false);
   });
 
   it("leaves the action running after the page has gone", async () => {
-    const answer = Deferred.makeUnsafe<void, Error>();
+    const answer = Deferred.makeUnsafe<void, LostAnswer>();
     const finished = vi.fn();
     act(() =>
       hook()[1](() => Effect.runPromise(Deferred.await(answer)).then(finished))
