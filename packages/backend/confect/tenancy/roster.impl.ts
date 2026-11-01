@@ -27,6 +27,7 @@ import {
   tenantAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
+import { emailOf } from "@repo/backend/confect/tenancy/email";
 import {
   AddressInvited,
   AddressMember,
@@ -80,28 +81,6 @@ const holdsLiveCard = Effect.fn("tenancy.roster.liveCard")(function* (
     card,
     (stored) => stored.expiresAt > now && stored.redeemedAt === undefined
   );
-});
-
-/**
- * The address of one member: their account's, or the one their pending invite waits on, and none
- * for a Person with neither, such as a student on a login card.
- */
-const emailOf = Effect.fn("tenancy.roster.email")(function* (
-  person: TenantPeopleDoc
-) {
-  if (person.account.state === "claimed") {
-    const user = yield* (yield* DatabaseReader)
-      .table("users")
-      .get(person.account.userId)
-      .pipe(
-        Effect.asSome,
-        Effect.catchTag("GetByIdFailure", () => Effect.succeedNone),
-        Effect.orDie
-      );
-    return Option.getOrNull(Option.map(user, (found) => found.email));
-  }
-  const invite = yield* pendingInviteOf(person._id);
-  return Option.getOrNull(Option.map(invite, (found) => found.channel.email));
 });
 
 /**

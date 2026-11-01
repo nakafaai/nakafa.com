@@ -1,30 +1,71 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
+import {
+  CheckmarkCircle02Icon,
+  Note01Icon,
+  NoteEditIcon,
+  Share08Icon,
+  StudentIcon,
+  Target02Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Tabs,
+  TabsList,
+  TabsPanel,
+  TabsTab,
+} from "@repo/design-system/components/ui/tabs";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import {
+  TableEmpty,
+  TableNote,
+  TablePageBody,
+} from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
-import { StudentNarrative } from "@/components/tenant/insight/narrative";
+import {
+  NarrativeButton,
+  NarrativeProvider,
+} from "@/components/tenant/insight/narrative";
 import { SharedPractice } from "@/components/tenant/insight/practice";
-import { percentOf, skillRowsOf } from "@/components/tenant/insight/rows";
-import { QuestionTags } from "@/components/tenant/insight/tags";
+import {
+  type InsightStudent,
+  type NarrativeState,
+  percentOf,
+  skillRowsOf,
+  studentRowsOf,
+} from "@/components/tenant/insight/rows";
 import { Link } from "@/lib/routing/link";
+
+/** The columns of a class's students. */
+const studentColumns = tableColumns<ReturnType<typeof studentRowsOf>[number]>();
 
 /** The columns of a class's standing. */
 const skillColumns = tableColumns<ReturnType<typeof skillRowsOf>[number]>();
 
+/** The look of each state of a student's narrative. */
+const NARRATIVE_LOOKS = {
+  none: { icon: NoteEditIcon, tone: "neutral" },
+  saved: { icon: Note01Icon, tone: "info" },
+  shared: { icon: CheckmarkCircle02Icon, tone: "success" },
+} as const satisfies Record<typeof NarrativeState.Type, StatusLook>;
+
 /**
- * One class as its teacher reads it: each student's competencies with the points behind them and, while the forecast
- * passes its monthly test, the chance of reaching the KKTP, which only a teacher sees and which never changes a grade
- * (ADR 0035). Below them come the practice students share, and each student's narrative.
+ * One class as its teacher reads it, in three tabs: the class's students, each student's competencies with the points
+ * behind them, and the practice students share. The tabs and the table heads stand from the first frame and the rows
+ * fill in under them. The chance of reaching the KKTP, which only a teacher sees and which never changes a grade, shows
+ * while the forecast passes its monthly test (ADR 0035).
  */
-export function ClassInsightTable({
+export function ClassInsightTabs({
   classId,
 }: {
   classId: GenericId.GenericId<"classes">;
@@ -40,100 +81,214 @@ export function ClassInsightTable({
   if (QueryResult.isFailure(found)) {
     throw found.error;
   }
-  if (!QueryResult.isSuccess(found)) {
-    return null;
-  }
-  const rows = skillRowsOf(found.value.students);
+  const isRead = QueryResult.isSuccess(found);
+  const students = isRead ? found.value.students : [];
+
+  return (
+    <NarrativeProvider classId={classId} students={students}>
+      <Tabs className="min-h-0 flex-1 shrink gap-0" defaultValue="students">
+        <TabsList aria-label={t("tabs-label")} className={pageRowVariants()}>
+          <TabsTab value="students">
+            <HugeIcons icon={UserGroupIcon} />
+            {t("tab-students")}
+          </TabsTab>
+          <TabsTab value="mastery">
+            <HugeIcons icon={Target02Icon} />
+            {t("mastery")}
+          </TabsTab>
+          <TabsTab value="practice">
+            <HugeIcons icon={Share08Icon} />
+            {t("tab-practice")}
+          </TabsTab>
+        </TabsList>
+        <TabsPanel className="flex min-h-0 flex-col" value="students">
+          <TableFiltersProvider>
+            <TablePageBody>
+              <ClassStudents isRead={isRead} students={students} />
+            </TablePageBody>
+          </TableFiltersProvider>
+        </TabsPanel>
+        <TabsPanel className="flex min-h-0 flex-col" value="mastery">
+          <TableFiltersProvider>
+            <TablePageBody>
+              <DataTable
+                columns={[
+                  skillColumns.text((row) => row.student, {
+                    cell: (info) => (
+                      <TableTitle icon={StudentIcon}>
+                        <span dir="auto">{info.getValue()}</span>
+                      </TableTitle>
+                    ),
+                    header: t("student"),
+                    id: "student",
+                  }),
+                  skillColumns.text((row) => row.competency, {
+                    cell: (info) => <span dir="auto">{info.getValue()}</span>,
+                    header: t("competency"),
+                    id: "competency",
+                  }),
+                  skillColumns.number((row) => percentOf(row.rating), {
+                    header: t("mastery"),
+                    id: "mastery",
+                  }),
+                  skillColumns.number((row) => row.earned, {
+                    cell: (info) =>
+                      t("evidence-points", {
+                        earned: info.getValue(),
+                        possible: info.row.original.possible,
+                      }),
+                    header: t("evidence"),
+                    id: "evidence",
+                  }),
+                  ...(isRead && found.value.forecasts
+                    ? [
+                        skillColumns.number(
+                          (row) =>
+                            row.chance === null ? null : percentOf(row.chance),
+                          {
+                            header: t("chance", { kktp: found.value.kktp }),
+                            id: "chance",
+                          }
+                        ),
+                      ]
+                    : []),
+                  skillColumns.menu((info) => (
+                    <NarrativeButton id={info.row.original.studentId} />
+                  )),
+                ]}
+                data={skillRowsOf(students)}
+                empty={
+                  <TableEmpty
+                    act="pointing"
+                    action={
+                      <Link
+                        className={buttonVariants()}
+                        params={{ slug }}
+                        to="/school/$slug/exams"
+                      >
+                        {t("exams-action")}
+                      </Link>
+                    }
+                    description={t("class-empty-description")}
+                    title={t("class-empty")}
+                  />
+                }
+                loading={!isRead}
+                rowId={(row) => row.key}
+              />
+              {isRead ? (
+                <TableNote>
+                  {found.value.forecasts ? t("chance-note") : t("chance-held")}
+                </TableNote>
+              ) : null}
+            </TablePageBody>
+          </TableFiltersProvider>
+        </TabsPanel>
+        <TabsPanel className="flex min-h-0 flex-col" value="practice">
+          <TableFiltersProvider>
+            <TablePageBody>
+              <SharedPractice isRead={isRead} students={students} />
+            </TablePageBody>
+          </TableFiltersProvider>
+        </TabsPanel>
+      </Tabs>
+    </NarrativeProvider>
+  );
+}
+
+/**
+ * The class's students, one row each: their email, how many competencies they have points in, their mean mastery, and
+ * where their narrative stands, with the narrative one press from the row.
+ */
+function ClassStudents({
+  isRead,
+  students,
+}: {
+  isRead: boolean;
+  students: readonly InsightStudent[];
+}) {
+  const t = useTranslations("SchoolInsight");
+  const { canManage, slug } = useTenant();
 
   return (
     <>
-      {Arr.isReadonlyArrayEmpty(rows) ? (
-        <TableEmpty
-          act="pointing"
-          action={
-            <>
-              <Link
-                className={buttonVariants()}
-                params={{ slug }}
-                to="/school/$slug/exams"
-              >
-                {t("exams-action")}
-              </Link>
-              <QuestionTags />
-            </>
-          }
-          description={t("class-empty-description")}
-          title={t("class-empty")}
-        />
-      ) : (
-        <TableFiltersProvider>
-          <TableFrame>
-            <DataTable
-              columns={[
-                skillColumns.text((row) => row.student, {
-                  cell: (info) => <span dir="auto">{info.getValue()}</span>,
-                  header: t("student"),
-                  id: "student",
-                }),
-                skillColumns.text((row) => row.competency, {
-                  cell: (info) => <span dir="auto">{info.getValue()}</span>,
-                  header: t("competency"),
-                  id: "competency",
-                }),
-                skillColumns.number((row) => percentOf(row.rating), {
-                  header: t("mastery"),
-                  id: "mastery",
-                }),
-                skillColumns.number((row) => row.earned, {
-                  cell: (info) =>
-                    t("evidence-points", {
-                      earned: info.getValue(),
-                      possible: info.row.original.possible,
-                    }),
-                  header: t("evidence"),
-                  id: "evidence",
-                }),
-                ...(found.value.forecasts
-                  ? [
-                      skillColumns.number(
-                        (row) =>
-                          row.chance === null ? null : percentOf(row.chance),
-                        {
-                          header: t("chance", { kktp: found.value.kktp }),
-                          id: "chance",
-                        }
-                      ),
-                    ]
-                  : []),
-              ]}
-              data={rows}
-              rowId={(row) => row.key}
-            />
-          </TableFrame>
-        </TableFiltersProvider>
-      )}
-      {Arr.isReadonlyArrayEmpty(rows) ? null : (
-        <>
-          <p className="text-muted-foreground text-sm">
-            {found.value.forecasts ? t("chance-note") : t("chance-held")}
-          </p>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-muted-foreground text-sm">{t("tags-note")}</p>
-            <QuestionTags />
-          </div>
-        </>
-      )}
-      <SharedPractice students={found.value.students} />
-      <p className="text-muted-foreground text-sm">{t("narratives-note")}</p>
-      <div className="flex flex-wrap gap-2">
-        {Arr.map(found.value.students, (student) => (
-          <StudentNarrative
-            classId={classId}
-            key={student.id}
-            student={student}
+      <DataTable
+        columns={[
+          studentColumns.text((row) => row.name, {
+            cell: (info) => (
+              <TableTitle icon={StudentIcon}>
+                <span dir="auto">{info.getValue()}</span>
+              </TableTitle>
+            ),
+            header: t("student"),
+            id: "student",
+          }),
+          studentColumns.text((row) => row.email ?? "", {
+            header: t("email"),
+            id: "email",
+          }),
+          studentColumns.number((row) => row.competencies, {
+            header: t("competencies-count"),
+            id: "competencies",
+          }),
+          studentColumns.number((row) => row.mastery, {
+            header: t("mastery"),
+            id: "mastery",
+          }),
+          studentColumns.values((row) => row.state, {
+            cell: (info) => (
+              <TableStatus
+                {...NARRATIVE_LOOKS[info.row.original.state]}
+                label={t(`narrative-${info.row.original.state}`)}
+              />
+            ),
+            header: t("narrative"),
+            id: "narrative",
+            options: [
+              {
+                icon: NoteEditIcon,
+                label: t("narrative-none"),
+                value: "none",
+              },
+              {
+                icon: Note01Icon,
+                label: t("narrative-saved"),
+                value: "saved",
+              },
+              {
+                icon: CheckmarkCircle02Icon,
+                label: t("narrative-shared"),
+                value: "shared",
+              },
+            ],
+          }),
+          studentColumns.menu((info) => (
+            <NarrativeButton id={info.row.original.id} />
+          )),
+        ]}
+        data={studentRowsOf(students)}
+        empty={
+          <TableEmpty
+            act="pointing"
+            action={
+              canManage ? (
+                <Link
+                  className={buttonVariants()}
+                  params={{ slug }}
+                  to="/school/$slug/settings/classes"
+                >
+                  {t("no-class-action")}
+                </Link>
+              ) : undefined
+            }
+            description={t("students-empty-description")}
+            title={t("students-empty")}
           />
-        ))}
-      </div>
+        }
+        loading={!isRead}
+        rowId={(row) => row.id}
+      />
+      {isRead ? <TableNote>{t("narratives-note")}</TableNote> : null}
     </>
   );
 }

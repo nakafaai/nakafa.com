@@ -6,6 +6,7 @@ import {
   practiceRowsOf,
   scoreOf,
   skillRowsOf,
+  studentRowsOf,
   topicNameOf,
 } from "@/components/tenant/insight/rows";
 
@@ -14,6 +15,7 @@ const student = Schema.decodeUnknownSync(Id("tenantPeople"))("person-1");
 /** A student with nothing on record. */
 const person = {
   draft: null,
+  email: null,
   id: student,
   name: "",
   narrative: null,
@@ -49,7 +51,70 @@ describe("practiceRowsOf", () => {
         { ...person, name: "Raka", practice: [topic] },
         { ...person, name: "Nadia" },
       ])
-    ).toEqual([{ ...topic, key: "person-1/snbt 2027", student: "Raka" }]);
+    ).toEqual([
+      {
+        ...topic,
+        key: "person-1/snbt 2027",
+        student: "Raka",
+        studentId: student,
+      },
+    ]);
+  });
+});
+
+describe("studentRowsOf", () => {
+  const skill = {
+    chance: null,
+    competency: "Trigonometri",
+    earned: 3,
+    observations: 9,
+    possible: 9,
+    rating: 0.5,
+  };
+
+  it("reads a student with no points as no mastery and no narrative", () => {
+    expect(studentRowsOf([person])).toEqual([
+      {
+        competencies: 0,
+        email: null,
+        id: student,
+        mastery: null,
+        name: "",
+        state: "none",
+      },
+    ]);
+  });
+
+  it("means a student's competencies and tells a saved narrative from a shared one", () => {
+    const saved = { shared: false, text: "Bagus" };
+    expect(
+      studentRowsOf([
+        {
+          ...person,
+          email: "raka@sekolah.sch.id",
+          narrative: saved,
+          skills: [skill, { ...skill, competency: "Aljabar", rating: 1 }],
+        },
+        { ...person, narrative: { ...saved, shared: true } },
+      ])
+    ).toEqual([
+      {
+        competencies: 2,
+        email: "raka@sekolah.sch.id",
+        id: student,
+        mastery: 75,
+        name: "",
+        state: "saved",
+      },
+      {
+        competencies: 0,
+        email: null,
+        id: student,
+        mastery: null,
+        name: "",
+        state: "shared",
+      },
+    ]);
   });
 });
 
@@ -68,6 +133,13 @@ describe("skillRowsOf", () => {
         { ...person, name: "Raka", skills: [skill] },
         { ...person, name: "Nadia" },
       ])
-    ).toEqual([{ ...skill, key: "person-1/Trigonometri", student: "Raka" }]);
+    ).toEqual([
+      {
+        ...skill,
+        key: "person-1/Trigonometri",
+        student: "Raka",
+        studentId: student,
+      },
+    ]);
   });
 });

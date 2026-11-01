@@ -22,6 +22,7 @@ import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { schemeForEntry } from "@repo/backend/confect/records/version";
+import { emailOf } from "@repo/backend/confect/tenancy/email";
 import { openText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
@@ -121,6 +122,7 @@ const ofClass = FunctionImpl.make(
                       ).pipe(Effect.orDie),
               }
             : null,
+          email: yield* emailOf(person),
           id: personId,
           name: person.name,
           narrative: Option.isSome(narrative)

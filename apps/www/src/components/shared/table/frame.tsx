@@ -56,6 +56,18 @@ export function TablePageBody({ children }: { children: ReactNode }) {
 }
 
 /**
+ * The footer of a table's card, under its rows: one sentence about the whole list. It keeps the inset of the table's
+ * first column, so its first letter stands on the same line as the rows above it.
+ */
+export function TableNote({ children }: { children: ReactNode }) {
+  return (
+    <p className="text-muted-foreground shrink-0 border-t px-4 py-3 text-sm text-pretty">
+      {children}
+    </p>
+  );
+}
+
+/**
  * The body of a list that holds no record yet: what the list will hold, in one
  * sentence, with Nina doing what fits the list, in the middle of the body. A table
  * draws it under its column heads (`empty` on `DataTable`), which stand from the first
