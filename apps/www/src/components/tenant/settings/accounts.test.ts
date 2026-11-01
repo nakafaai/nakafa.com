@@ -245,6 +245,27 @@ describe("components/tenant/settings/accounts", () => {
     expect(namesOf(paging, otherSlug)).toEqual(["Lama"]);
   });
 
+  it("leaves the guardian links of another school, and a list still loading", () => {
+    const local = createLocalStore();
+    const lama = member("p-lama", "Lama");
+    local.seed(
+      guardians.links.list,
+      { paginationOpts: paging, slug: otherSlug },
+      pageOf([parentLink(lama.id, "Lama")])
+    );
+    local.seed(
+      guardians.links.list,
+      { paginationOpts: later, slug },
+      undefined
+    );
+    renamePersonChange(local.store, {
+      name: "Lama Sekali",
+      personId: lama.id,
+      slug,
+    });
+    expect(local.written()).toEqual([]);
+  });
+
   it("shows a renamed person under the new name on the school's members and logins, and keeps the others", () => {
     const local = createLocalStore();
     const lama = member("p-lama", "Lama");

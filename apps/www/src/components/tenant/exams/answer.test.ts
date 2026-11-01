@@ -204,6 +204,13 @@ describe("markedKey", () => {
       { correct: ["option-3"], interaction: "choice", kind: "choice" },
     ]);
   });
+
+  it("leaves the key as it stands for an option that no choice holds", () => {
+    const key = markedKey([choice], null, "option-2");
+
+    expect(markedKey([choice], key, "removed")).toBe(key);
+    expect(markedKey([choice], null, "removed")).toBeNull();
+  });
 });
 
 describe("markedOptions", () => {
