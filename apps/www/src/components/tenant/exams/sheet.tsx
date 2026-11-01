@@ -87,7 +87,7 @@ export function PaperOption({
       className={cn(
         "flex items-center gap-2 text-sm leading-none font-medium",
         choiceFrame(getTryoutSelectableChoiceVariant({ checked: false })),
-        "cursor-text select-text"
+        "w-full cursor-text select-text"
       )}
     >
       <span className="contents" inert>
