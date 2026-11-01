@@ -69,7 +69,11 @@ const PREVIEW_CLIENT = "preview";
  * editors load, the server's document is still read until the text's editor holds it, so the drawn
  * paper that stands in for the loading editor shows the text instead of an empty page.
  */
-export function usePageDocument({
+export const usePageDocument = (page: Parameters<typeof usePageRead>[0]) =>
+  usePageRead(page).doc;
+
+/** `usePageDocument`, with whether the text has answered, so a page knows when its shape is final. */
+export function usePageRead({
   documentId,
   editing,
   open,
@@ -86,7 +90,7 @@ export function usePageDocument({
   read: boolean;
   /** Whether the server has saved the question. */
   saved: boolean;
-}): Option.Option<Node> {
+}) {
   const { slug } = useExam();
   // Each text follows its own document alone: the selector keeps the document's reference, so
   // typing in one text redraws that text alone.
@@ -123,9 +127,10 @@ export function usePageDocument({
           ),
     [stored]
   );
-  return open
+  const doc = open
     ? Option.orElse(live, () => served)
     : Option.orElse(served, () => live);
+  return { answered: Option.isSome(doc) || !QueryResult.isLoading(reply), doc };
 }
 
 /** A question's shared reading drawn without an editor, over its prompt. */

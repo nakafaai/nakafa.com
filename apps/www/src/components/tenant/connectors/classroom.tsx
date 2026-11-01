@@ -6,7 +6,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -219,11 +221,14 @@ function CourseRow({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              <SelectLabel>{t("course-class")}</SelectLabel>
+              {Arr.map(items, (item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
       </TableCell>

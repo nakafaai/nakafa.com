@@ -83,6 +83,7 @@ export const ProHolding = Schema.Literals(["none", "pass", "plan"]);
 
 /** What the billing settings show for a viewer: the plan, the subscription that bills it, the passes, and the Nina credits. */
 export const billingOverviewValidator = Schema.Struct({
+  hasPayments: Schema.Boolean,
   plan: userPlanValidator,
   subscription: Schema.NullOr(billingSubscriptionSummaryValidator),
   /** The Pro passes a viewer holds while only passes give them Pro: the moment the last of them ends, which another pass extends. */

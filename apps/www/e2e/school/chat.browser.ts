@@ -188,13 +188,13 @@ test("a teacher archives a chat, which keeps its messages and takes no new one, 
   await expect(
     page.getByRole("textbox", { name: "Write a message" })
   ).toHaveCount(0);
-  await page.getByText("Archived", { exact: true }).click();
+  await page.getByRole("tab", { name: "Archived" }).click();
   await expect(chat).toBeVisible();
 
   // Restored, it is back in the list, and the filter that showed it leaves.
   await menu().click();
   await page.getByRole("menuitem", { name: "Restore chat" }).click();
-  await expect(page.getByText("Archived", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "Archived" })).toHaveCount(0);
   await expect(chat).toBeVisible();
   await expect(
     page.getByRole("textbox", { name: "Write a message" })

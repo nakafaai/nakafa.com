@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   type ClassPost,
   editPostUpdate,
@@ -147,14 +147,16 @@ describe("class home optimistic updates", () => {
       postId: first.id,
       slug,
     });
-    expect(pinning.setQuery.mock.calls.at(-1)).toEqual([
-      classroom.posts.pinned,
-      pinnedArgs,
+    expect(Arr.last(pinning.setQuery.mock.calls)).toEqual(
       Option.some([
-        { ...first, pinned: true },
-        { ...held, pinned: true },
-      ]),
-    ]);
+        classroom.posts.pinned,
+        pinnedArgs,
+        Option.some([
+          { ...first, pinned: true },
+          { ...held, pinned: true },
+        ]),
+      ])
+    );
 
     const unpinning = homeStore();
     pinPostUpdate(held)(unpinning.localStore, {
@@ -163,10 +165,8 @@ describe("class home optimistic updates", () => {
       postId: held.id,
       slug,
     });
-    expect(unpinning.setQuery.mock.calls.at(-1)).toEqual([
-      classroom.posts.pinned,
-      pinnedArgs,
-      Option.some([]),
-    ]);
+    expect(Arr.last(unpinning.setQuery.mock.calls)).toEqual(
+      Option.some([classroom.posts.pinned, pinnedArgs, Option.some([])])
+    );
   });
 });
