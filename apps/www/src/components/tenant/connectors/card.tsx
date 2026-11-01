@@ -204,7 +204,7 @@ function StateMark({ state }: { state: keyof typeof MARKS }) {
   return (
     <Badge
       aria-label={t(`status-${state}`)}
-      className="size-8 p-0"
+      className="size-8 p-0 [&>svg]:size-4"
       role="img"
       variant={STATUS_BADGES[tone]}
     >

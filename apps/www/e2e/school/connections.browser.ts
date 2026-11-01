@@ -191,7 +191,9 @@ test("a connected school sees the check, finds its courses in the detail, and di
   await expect(
     classroom.getByRole("button", { name: "Connect Google Classroom" })
   ).toBeVisible();
-  await expect(detail.getByRole("button", { name: "Connect" })).toBeVisible();
+  await expect(
+    detail.getByRole("button", { exact: true, name: "Connect" })
+  ).toBeVisible();
   expect(await classroom.boundingBox()).toEqual(before);
   await context.close();
 });
