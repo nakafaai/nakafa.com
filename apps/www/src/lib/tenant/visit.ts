@@ -2,9 +2,25 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { Duration, Effect, Option, Schedule } from "effect";
 import { readTokenClaims } from "@/lib/auth/claims";
-import type { AuthLegalLinks } from "@/lib/auth/legal";
+import { hasSignedInHint } from "@/lib/auth/hint";
+import { loadKnownSession } from "@/lib/auth/known";
+import { type AuthLegalLinks, authLegalLinks } from "@/lib/auth/legal";
 import { readBrowserSessionToken } from "@/lib/auth/token";
-import { readSchoolFrame, SchoolReadFailed } from "@/lib/tenant/read";
+import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
+import { readStaticData } from "@/lib/static/data";
+import type { SchoolRead } from "@/lib/tenant/frame";
+import {
+  dropKeptFrame,
+  keptFrameFor,
+  loadKeptFrameText,
+  saveKeptFrame,
+} from "@/lib/tenant/kept";
+import {
+  readSchoolFrame,
+  SchoolReadFailed,
+  SchoolReadsLive,
+} from "@/lib/tenant/read";
+import { readSchoolLocale } from "@/lib/tenant/root";
 
 /** What the router says caused a school navigation: a visit that enters the school, a preload, or a stay in it. */
 type NavigationCause = "enter" | "preload" | "stay";
@@ -14,7 +30,7 @@ type NavigationCause = "enter" | "preload" | "stay";
  * the school reads the frame, and so does a match that a refresh invalidated, because the refresh asks
  * for the membership again. Every other navigation reuses the frame.
  */
-export function reusesVisitFrame(navigation: {
+function reusesVisitFrame(navigation: {
   readonly cause: NavigationCause;
   readonly invalid: boolean;
 }): boolean {
@@ -105,3 +121,104 @@ export const retryVisitRead = <A, R>(
       times: READ_RETRIES,
     })
   );
+
+/** The frame of one school visit and the legal notice of its sign-in sentence. */
+type VisitFrame = Record<"legal", AuthLegalLinks | null> &
+  Record<"school", SchoolRead>;
+
+/**
+ * The memo of one school visit: the frame it drew, the live read that checks a kept frame it drew at once, and the
+ * live frame that replaces the kept one where they differ.
+ */
+export type SchoolVisit = Partial<
+  Record<"confirmed" | "frame", VisitFrame | undefined> &
+    Record<"live", Promise<VisitFrame> | undefined>
+>;
+
+/**
+ * Reads the frame of a school in the browser, and keeps it for the host's next visit with the session it was read
+ * for; a refused school forgets the kept frame. A visitor's entry page names the privacy and terms pages from the
+ * static answer that the build writes for every locale, which a read with no session takes beside the school's own
+ * reads.
+ */
+function readVisitFrame(
+  slug: TenantSlug,
+  locale: Locale,
+  signedIn: boolean
+): Promise<VisitFrame> {
+  const legal = Effect.tryPromise({
+    catch: (cause) => new SchoolReadFailed({ cause }),
+    try: () => readStaticData(readMarketingShellFn, { locale }),
+  }).pipe(
+    Effect.map((shell) =>
+      Option.getOrNull(authLegalLinks(locale, shell.pageNavigation))
+    )
+  );
+  return Effect.runPromise(
+    readBrowserVisit({ legal, locale, signedIn, slug }).pipe(
+      retryVisitRead,
+      Effect.tap(({ legal: links, school, sessionId }) =>
+        school._tag === "Refused"
+          ? dropKeptFrame()
+          : saveKeptFrame({ legal: links, school, sessionId })
+      ),
+      Effect.map(({ legal: links, school }) => ({ legal: links, school })),
+      Effect.provide(SchoolReadsLive)
+    )
+  );
+}
+
+/**
+ * Enters a school visit. The frame the host kept for the browser's session, in the page's locale, draws at once, and
+ * the live read checks it (`useLiveVisit`); a visit with no such frame waits for the live read. The sign-in hint
+ * says, before any read, whether the browser holds a session.
+ */
+function enterVisit(slug: TenantSlug, visit: SchoolVisit) {
+  const locale = readSchoolLocale();
+  const signedIn = hasSignedInHint(document.cookie);
+  const live = readVisitFrame(slug, locale, signedIn);
+  const kept = Effect.runSync(
+    Effect.all([loadKeptFrameText(), loadKnownSession()]).pipe(
+      Effect.map(([text, known]) =>
+        keptFrameFor(text, { known, locale, signedIn })
+      )
+    )
+  );
+  if (Option.isNone(kept)) {
+    return live;
+  }
+  visit.live = live;
+  return Promise.resolve({
+    legal: kept.value.legal,
+    school: kept.value.school,
+  });
+}
+
+/** Takes the live read that checks the visit's kept frame, once, so one layout checks it. */
+export function takeLiveRead(visit: SchoolVisit) {
+  const live = visit.live;
+  visit.live = undefined;
+  return live;
+}
+
+/** Hands the gate's next run the live frame that replaces the kept one. */
+export function confirmFrame(visit: SchoolVisit, next: VisitFrame) {
+  visit.confirmed = next;
+}
+
+/** The frame a navigation into the school commits: the live one that replaced a kept frame, the visit's, or a new visit's. */
+export function frameOfNavigation(
+  visit: SchoolVisit,
+  slug: TenantSlug,
+  navigation: Parameters<typeof reusesVisitFrame>[0]
+): Promise<VisitFrame> {
+  if (visit.confirmed !== undefined) {
+    const confirmed = visit.confirmed;
+    visit.confirmed = undefined;
+    return Promise.resolve(confirmed);
+  }
+  if (reusesVisitFrame(navigation) && visit.frame !== undefined) {
+    return Promise.resolve(visit.frame);
+  }
+  return enterVisit(slug, visit);
+}

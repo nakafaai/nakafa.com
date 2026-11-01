@@ -1,5 +1,4 @@
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import type { Locale } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
   createFileRoute,
@@ -22,29 +21,14 @@ import { SchoolPending } from "@/components/tenant/pending";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { reportClientException } from "@/lib/analytics/client";
 import { hasSignedInHint } from "@/lib/auth/hint";
-import { loadKnownSession } from "@/lib/auth/known";
-import { type AuthLegalLinks, authLegalLinks } from "@/lib/auth/legal";
-import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
-import { readStaticData } from "@/lib/static/data";
-import {
-  outsiderOf,
-  type SchoolFrame,
-  type SchoolRead,
-} from "@/lib/tenant/frame";
+import type { AuthLegalLinks } from "@/lib/auth/legal";
+import { outsiderOf, type SchoolFrame } from "@/lib/tenant/frame";
 import { schoolHead } from "@/lib/tenant/head";
+import { isSameFrame } from "@/lib/tenant/kept";
 import {
-  dropKeptFrame,
-  isSameFrame,
-  keptFrameFor,
-  loadKeptFrameText,
-  saveKeptFrame,
-} from "@/lib/tenant/kept";
-import { SchoolReadFailed, SchoolReadsLive } from "@/lib/tenant/read";
-import { readSchoolLocale } from "@/lib/tenant/root";
-import {
-  readBrowserVisit,
-  retryVisitRead,
-  reusesVisitFrame,
+  confirmFrame,
+  type SchoolVisit,
+  takeLiveRead,
 } from "@/lib/tenant/visit";
 
 /**
@@ -81,19 +65,6 @@ function readSlug(slug: string): TenantSlug {
   return school.value;
 }
 
-/** The frame of one school visit and the legal notice of its sign-in sentence. */
-type VisitFrame = Record<"legal", AuthLegalLinks | null> &
-  Record<"school", SchoolRead>;
-
-/**
- * The memo of one school visit: the frame it drew, the live read that checks a kept frame it drew at once, and the
- * live frame that replaces the kept one where they differ.
- */
-type SchoolVisit = Partial<
-  Record<"confirmed" | "frame", VisitFrame | undefined> &
-    Record<"live", Promise<VisitFrame> | undefined>
->;
-
 /**
  * What the layout gives every page of the school: the visit's frame, which a refused
  * school never reaches, and the school's address. The layout's `beforeLoad` names it, because the router's types are built
@@ -103,94 +74,6 @@ type SchoolVisit = Partial<
 type SchoolContext = Record<"legal", AuthLegalLinks | null> &
   Record<"school", SchoolFrame> &
   Record<"slug", TenantSlug>;
-
-/**
- * Reads the frame of a school in the browser, and keeps it for the host's next visit with the session it was read
- * for; a refused school forgets the kept frame. A visitor's entry page names the privacy and terms pages from the
- * static answer that the build writes for every locale, which a read with no session takes beside the school's own
- * reads.
- */
-function readVisitFrame(
-  slug: TenantSlug,
-  locale: Locale,
-  signedIn: boolean
-): Promise<VisitFrame> {
-  const legal = Effect.tryPromise({
-    catch: (cause) => new SchoolReadFailed({ cause }),
-    try: () => readStaticData(readMarketingShellFn, { locale }),
-  }).pipe(
-    Effect.map((shell) =>
-      Option.getOrNull(authLegalLinks(locale, shell.pageNavigation))
-    )
-  );
-  return Effect.runPromise(
-    readBrowserVisit({ legal, locale, signedIn, slug }).pipe(
-      retryVisitRead,
-      Effect.tap(({ legal: links, school, sessionId }) =>
-        school._tag === "Refused"
-          ? dropKeptFrame()
-          : saveKeptFrame({ legal: links, school, sessionId })
-      ),
-      Effect.map(({ legal: links, school }) => ({ legal: links, school })),
-      Effect.provide(SchoolReadsLive)
-    )
-  );
-}
-
-/**
- * Enters a school visit. The frame the host kept for the browser's session, in the page's locale, draws at once, and
- * the live read checks it (`useLiveVisit`); a visit with no such frame waits for the live read. The sign-in hint
- * says, before any read, whether the browser holds a session.
- */
-function enterVisit(slug: TenantSlug, visit: SchoolVisit) {
-  const locale = readSchoolLocale();
-  const signedIn = hasSignedInHint(document.cookie);
-  const live = readVisitFrame(slug, locale, signedIn);
-  const kept = Effect.runSync(
-    Effect.all([loadKeptFrameText(), loadKnownSession()]).pipe(
-      Effect.map(([text, known]) =>
-        keptFrameFor(text, { known, locale, signedIn })
-      )
-    )
-  );
-  if (Option.isNone(kept)) {
-    return live;
-  }
-  visit.live = live;
-  return Promise.resolve({
-    legal: kept.value.legal,
-    school: kept.value.school,
-  });
-}
-
-/** Takes the live read that checks the visit's kept frame, once, so one layout checks it. */
-function takeLiveRead(visit: SchoolVisit) {
-  const live = visit.live;
-  visit.live = undefined;
-  return live;
-}
-
-/** Hands the gate's next run the live frame that replaces the kept one. */
-function confirmFrame(visit: SchoolVisit, next: VisitFrame) {
-  visit.confirmed = next;
-}
-
-/** The frame a navigation into the school commits: the live one that replaced a kept frame, the visit's, or a new visit's. */
-function frameOfNavigation(
-  visit: SchoolVisit,
-  slug: TenantSlug,
-  reuses: boolean
-): Promise<VisitFrame> {
-  if (visit.confirmed !== undefined) {
-    const confirmed = visit.confirmed;
-    visit.confirmed = undefined;
-    return Promise.resolve(confirmed);
-  }
-  if (reuses && visit.frame !== undefined) {
-    return Promise.resolve(visit.frame);
-  }
-  return enterVisit(slug, visit);
-}
 
 /**
  * Starts the memo of one school visit. TanStack keeps the layout's context object
@@ -209,7 +92,9 @@ function startVisit() {
  * is not a member sees the outsider page. A member gets the shell, and every page
  * of the school renders inside it. The layout's beforeLoad runs on every
  * navigation into the school. A child navigation reuses the visit's frame, so a
- * click reads nothing before it commits, and a refresh reads it again.
+ * click reads nothing before it commits, and a refresh reads it again. The gate's
+ * code, with Convex and every school schema, is imported here and not above: this
+ * file's non-component code sits in the first bundle of every public page.
  */
 export const Route = createFileRoute("/school/$slug")({
   // Leaving the school drops its memo at once, so a return to it reads the frame again.
@@ -247,11 +132,11 @@ export const Route = createFileRoute("/school/$slug")({
       matches,
       (match) => match.routeId === routeId && match.invalid
     );
-    const frame = await frameOfNavigation(
-      visit,
-      params.slug,
-      reusesVisitFrame({ cause, invalid })
-    );
+    const { frameOfNavigation } = await import("@/lib/tenant/visit");
+    const frame = await frameOfNavigation(visit, params.slug, {
+      cause,
+      invalid,
+    });
     visit.frame = frame;
     if (frame.school._tag === "Refused") {
       throw notFound();
