@@ -3,7 +3,7 @@ import {
   proMonthlyPrices,
   proYearlyPrices,
 } from "@repo/backend/confect/billing/catalog";
-import { Array as Arr, HashSet, Schema } from "effect";
+import { Array as Arr, Function as Fn, HashSet, Schema } from "effect";
 
 /** The currencies that the monthly pro price is shown in, as the Polar catalog names them. */
 export const PricingCurrencySchema = Schema.Literals(["EUR", "IDR", "USD"]);
@@ -74,18 +74,29 @@ function symbolOf(formatter: Intl.NumberFormat) {
   );
 }
 
+/** Builds the formatter of one price, which loads its locale's data. */
+const buildFormatter = (price: MonthlyPrice) =>
+  new Intl.NumberFormat(price.locale, getPriceFormat(price));
+
+/**
+ * The formatter of one price, built at its first read. The root's currency script
+ * brings this module to every page, and a page that shows no price pays nothing.
+ */
+const formatterOf = Fn.memoize(buildFormatter);
+
 /** The price of one currency with its formatting, as the pages read it. */
 function makePricing<Currency extends PricingCurrency>(
   currency: Currency,
   price: MonthlyPrice
 ) {
-  const formatter = new Intl.NumberFormat(price.locale, getPriceFormat(price));
-
   return {
     currency,
-    format: (amount: number) => spaceLetterSymbol(formatter.format(amount)),
+    format: (amount: number) =>
+      spaceLetterSymbol(formatterOf(price).format(amount)),
     price,
-    symbol: symbolOf(formatter),
+    get symbol() {
+      return symbolOf(formatterOf(price));
+    },
   };
 }
 
