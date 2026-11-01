@@ -92,17 +92,18 @@ describe("kept names", () => {
   );
 });
 
+/** What the browser holds after it kept the set's name. */
+const storedNames = `{"${SET}":"continue-cta"}`;
+
 describe("KEPT_NAME_SCRIPT", () => {
   it("names the cell with what the browser kept for this address", () => {
-    expect(runScript(JSON.stringify({ [SET]: "continue-cta" }))).toStrictEqual({
+    expect(runScript(storedNames)).toStrictEqual({
       "data-kept-name": "continue-cta",
     });
   });
 
   it("leaves the cell alone for an address it kept nothing for", () => {
-    expect(
-      runScript(JSON.stringify({ [SET]: "continue-cta" }), "/en/try-out")
-    ).toStrictEqual({});
+    expect(runScript(storedNames, "/en/try-out")).toStrictEqual({});
   });
 
   it("leaves the cell alone without storage or with storage it cannot read", () => {

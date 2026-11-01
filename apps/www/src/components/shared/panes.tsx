@@ -1,8 +1,4 @@
-import {
-  useLocalStorage,
-  useMediaQuery,
-  useWindowEvent,
-} from "@mantine/hooks";
+import { useLocalStorage, useMediaQuery, useWindowEvent } from "@mantine/hooks";
 import {
   Drawer,
   DrawerContent,
