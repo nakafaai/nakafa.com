@@ -35,7 +35,7 @@ const mocks = vi.hoisted(() => ({
         request: Request
       ) => Effect.Effect<Effect.Effect<unknown, unknown>, unknown>
     >(),
-  captureServerExceptionSafely:
+  scheduleCurrentServerExceptionCapture:
     vi.fn<(error: unknown, properties: unknown) => Effect.Effect<void>>(),
   setResponseHeader: vi.fn<(name: string, value: string) => void>(),
 }));
@@ -53,12 +53,12 @@ vi.mock("@/lib/data/preload.server", () => ({
   preloadConfectQuery: mocks.preloadConfectQuery,
 }));
 vi.mock("@/lib/analytics/exception.server", () => ({
-  captureServerExceptionSafely: mocks.captureServerExceptionSafely,
+  scheduleCurrentServerExceptionCapture: mocks.scheduleCurrentServerExceptionCapture,
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.captureServerExceptionSafely.mockReturnValue(Effect.void);
+  mocks.scheduleCurrentServerExceptionCapture.mockReturnValue(Effect.void);
 });
 
 const profile = { _id: "users-owner", username: "nabil" };
@@ -166,7 +166,7 @@ describe("profilePostsHandler", () => {
       data: { locale: "en", username: "nabil" },
     });
     expect(screen.first).toBeUndefined();
-    expect(mocks.captureServerExceptionSafely).toHaveBeenCalledExactlyOnceWith(
+    expect(mocks.scheduleCurrentServerExceptionCapture).toHaveBeenCalledExactlyOnceWith(
       failure,
       {
         operation: posts.queries.list.convexFunctionName,

@@ -32,7 +32,7 @@ const mocks = vi.hoisted(() => ({
         request: Request
       ) => Effect.Effect<Effect.Effect<unknown, unknown>, unknown>
     >(),
-  captureServerExceptionSafely:
+  scheduleCurrentServerExceptionCapture:
     vi.fn<(error: unknown, properties: unknown) => Effect.Effect<void>>(),
   readHomeTrendingSubjects:
     vi.fn<(locale: string) => Effect.Effect<readonly []>>(),
@@ -57,13 +57,13 @@ vi.mock("@/lib/content/trending", () => ({
 }));
 
 vi.mock("@/lib/analytics/exception.server", () => ({
-  captureServerExceptionSafely: mocks.captureServerExceptionSafely,
+  scheduleCurrentServerExceptionCapture: mocks.scheduleCurrentServerExceptionCapture,
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.readHomeTrendingSubjects.mockReturnValue(Effect.succeed([]));
-  mocks.captureServerExceptionSafely.mockReturnValue(Effect.void);
+  mocks.scheduleCurrentServerExceptionCapture.mockReturnValue(Effect.void);
 });
 
 const account = {
@@ -251,7 +251,7 @@ describe("chatSidebarScreenHandler", () => {
 describe("chatScreenHandler", () => {
   it("answers the title of a chat that the visitor may read", async () => {
     sessionWith(Option.some("token"));
-    answerQueries([[chats.queries.getChatTitle, "Algebra"]]);
+    answerQueries([[chats.queries.getChatTitle, { title: "Algebra" }]]);
     const screen = await chatScreenHandler({
       data: { id: "chat-1", locale: "en" },
     });
@@ -260,11 +260,19 @@ describe("chatScreenHandler", () => {
 
   it("answers no title when the chat has none", async () => {
     sessionWith(Option.none());
-    answerQueries([[chats.queries.getChatTitle, null]]);
+    answerQueries([[chats.queries.getChatTitle, { title: null }]]);
     const screen = await chatScreenHandler({
       data: { id: "chat-1", locale: "en" },
     });
     expect(screen.title).toBeUndefined();
+  });
+
+  it("answers not found for an address that names no chat", async () => {
+    sessionWith(Option.none());
+    answerQueries([[chats.queries.getChatTitle, null]]);
+    await expect(
+      chatScreenHandler({ data: { id: "abc", locale: "en" } })
+    ).rejects.toMatchObject({ isNotFound: true });
   });
 
   it("reports a title that cannot be read to PostHog and answers without it", async () => {
@@ -276,7 +284,7 @@ describe("chatScreenHandler", () => {
       data: { id: "chat-1", locale: "en" },
     });
     expect(screen.title).toBeUndefined();
-    expect(mocks.captureServerExceptionSafely).toHaveBeenCalledExactlyOnceWith(
+    expect(mocks.scheduleCurrentServerExceptionCapture).toHaveBeenCalledExactlyOnceWith(
       { _tag: "PreloadFailed", cause: "unreachable" },
       {
         operation: chats.queries.getChatTitle.convexFunctionName,
@@ -294,7 +302,7 @@ describe("chatScreenHandler", () => {
       data: { id: "chat-1", locale: "en" },
     });
     expect(screen.title).toBeUndefined();
-    expect(mocks.captureServerExceptionSafely).not.toHaveBeenCalled();
+    expect(mocks.scheduleCurrentServerExceptionCapture).not.toHaveBeenCalled();
   });
 });
 
