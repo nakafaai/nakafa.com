@@ -232,11 +232,64 @@ describe("createAuthProxy", () => {
     })
   );
 
+  it.effect.each([
+    ["no length", {}],
+    ["a length of zero", { "content-length": "0" }],
+  ] as const)(
+    "gives a session refresh with %s the JSON body Better Auth takes",
+    ([, headers]) =>
+      Effect.gen(function* () {
+        const proxy = createAuthProxy(handler);
+        handler.POST.mockResolvedValueOnce(new Response(null));
+
+        yield* Effect.promise(() =>
+          proxy.POST(
+            new Request(GET_URL, {
+              headers: { ...SESSION_COOKIE, ...headers },
+              method: "POST",
+            })
+          )
+        );
+
+        const forwarded = handler.POST.mock.calls[0]?.[0];
+        expect(forwarded?.headers.get("content-type")).toBe("application/json");
+        expect(forwarded?.headers.get("cookie")).toBe(SESSION_COOKIE.cookie);
+        expect(
+          yield* Effect.promise(() => forwarded?.text() ?? Promise.resolve(""))
+        ).toBe("{}");
+      })
+  );
+
+  it.effect.each([
+    ["names its media type", { "content-type": "text/plain" }],
+    ["declares a length", { "content-length": "4" }],
+  ] as const)("keeps the body of a write that %s", ([, headers]) =>
+    Effect.gen(function* () {
+      const proxy = createAuthProxy(handler);
+      handler.POST.mockResolvedValueOnce(new Response(null));
+
+      yield* Effect.promise(() =>
+        proxy.POST(
+          new Request(POST_URL, { body: "body", headers, method: "POST" })
+        )
+      );
+
+      const forwarded = handler.POST.mock.calls[0]?.[0];
+      expect(
+        yield* Effect.promise(() => forwarded?.text() ?? Promise.resolve(""))
+      ).toBe("body");
+    })
+  );
+
   it.effect("forwards a request that names no host with its own URL", () =>
     Effect.gen(function* () {
       const proxy = createAuthProxy(handler);
       handler.POST.mockResolvedValueOnce(new Response("signed in"));
-      const request = new Request(POST_URL, { method: "POST" });
+      const request = new Request(POST_URL, {
+        body: "{}",
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      });
 
       yield* Effect.promise(() => proxy.POST(request));
 
