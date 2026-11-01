@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 export function TableText({ children }: { children: ReactNode }) {
   return (
     <span
-      className="block max-w-64 min-w-48 wrap-anywhere whitespace-normal"
+      className="block max-w-64 min-w-56 wrap-anywhere whitespace-normal"
       dir="auto"
     >
       {children}
