@@ -3,11 +3,9 @@ import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
+  MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { practiceOf } from "@repo/backend/confect/insight/practice";
-import { PracticeTopic } from "@repo/backend/confect/insight/schema";
-import tryoutAttempts from "@repo/backend/confect/tables/tryoutAttempts";
-import tryoutSetProgress from "@repo/backend/confect/tables/tryoutSetProgress";
 import {
   forumClass,
   keyedFixture,
@@ -15,18 +13,14 @@ import {
   period,
 } from "@repo/backend/test/classroom";
 import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
 const { share, stop, topics } = refs.public.insight.practice;
 const { ofClass } = refs.public.insight.reads;
 
-const TOPIC = Schema.decodeUnknownSync(PracticeTopic)({
-  countryKey: "indonesia",
-  examKey: "snbt",
-  trackKey: "2027",
-});
+const TOPIC = { countryKey: "indonesia", examKey: "snbt", trackKey: "2027" };
 
 /** What a finished attempt stores, apart from its learner and its set. */
 const ATTEMPT = {
@@ -53,37 +47,7 @@ const ATTEMPT = {
   status: "completed",
   totalCorrect: 8,
   totalQuestions: 10,
-};
-
-/** A finished attempt of one set, as the try-out writes it. */
-const attemptOf = (setKey: string, userId: string) =>
-  Schema.decodeUnknownSync(tryoutAttempts.Fields)({
-    ...ATTEMPT,
-    setIdentity: setKey,
-    setKey,
-    userId,
-  });
-
-/** The progress of one set, as the try-out keeps it. */
-const progressOf = (
-  setKey: string,
-  userId: string,
-  latestAttemptId: string,
-  publishedScore: number | null
-) =>
-  Schema.decodeUnknownSync(tryoutSetProgress.Fields)({
-    ...TOPIC,
-    appLocale: "id",
-    attemptNumber: 1,
-    latestAttemptId,
-    publishedScore,
-    setIdentity: setKey,
-    setKey,
-    status: "completed",
-    statusRank: 3,
-    updatedAt: TENANCY_NOW,
-    userId,
-  });
+} as const;
 
 /** Stores one set of the student's private practice. */
 const practiced = (
@@ -99,14 +63,33 @@ const practiced = (
       if (student.account.state !== "claimed") {
         return yield* Effect.die("The student has an account.");
       }
-      const writer = yield* DatabaseWriter;
       const { userId } = student.account;
-      const attempt = yield* writer
-        .table("tryoutAttempts")
-        .insert(attemptOf(setKey, userId));
-      yield* writer
-        .table("tryoutSetProgress")
-        .insert(progressOf(setKey, userId, attempt, publishedScore));
+      const ctx = yield* MutationCtx;
+      const latestAttemptId = yield* Effect.promise(() =>
+        ctx.db.insert("tryoutAttempts", {
+          ...ATTEMPT,
+          sections: [],
+          completedSectionKeys: [],
+          setIdentity: setKey,
+          setKey,
+          userId,
+        })
+      );
+      yield* Effect.promise(() =>
+        ctx.db.insert("tryoutSetProgress", {
+          ...TOPIC,
+          appLocale: "id",
+          attemptNumber: 1,
+          latestAttemptId,
+          publishedScore,
+          setIdentity: setKey,
+          setKey,
+          status: "completed",
+          statusRank: 3,
+          updatedAt: TENANCY_NOW,
+          userId,
+        })
+      );
     }).pipe(Effect.orDie)
   );
 
