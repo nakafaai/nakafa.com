@@ -211,7 +211,7 @@ describe("connectors/google", () => {
             state: yield* start(),
           })
         ).toEqual({
-          connector: "drive",
+          connector: "calendar",
           location: `http://localhost:3000${OWN_PAGE}`,
           outcome: "cancelled",
         });
