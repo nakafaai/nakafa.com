@@ -244,6 +244,7 @@ describe("access/catalog", () => {
           "sitting.schedule",
           "sitting.lock",
           "sitting.unlock",
+          "tenant.dpa.accepted",
           "sitting.addMinutes",
           "sitting.changeToken",
           "sitting.allowDevice",
