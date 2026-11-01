@@ -1,6 +1,5 @@
 import {
   type PaginatedQueryItem,
-  PaginatedQueryResult,
   QueryResult,
   useMutation,
   usePaginatedQuery,
@@ -28,25 +27,22 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { LoadFailure } from "@/components/state/failure";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -159,23 +155,6 @@ function SchoolClientTable() {
   );
   const viewer = useViewerQuery();
 
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  if (pagination._tag === "LoadingFirstPage") {
-    return null;
-  }
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    if (failed) {
-      return <LoadFailure onRetry={reloadPage} />;
-    }
-    return (
-      <TableEmpty
-        act="typing"
-        description={t("client-add-description")}
-        title={t("clients-empty")}
-      />
-    );
-  }
-
   /** What a client covers, by name: the whole school or one unit. */
   const scopeName = (client: ClientItem) =>
     QueryResult.isSuccess(viewer)
@@ -220,18 +199,21 @@ function SchoolClientTable() {
   ];
 
   return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
       <DataTable
         columns={columns}
         data={pagination.results}
+        empty={
+          <TableEmpty
+            act="typing"
+            description={t("client-add-description")}
+            title={t("clients-empty")}
+          />
+        }
         rowId={(client) => client.id}
         search="name"
       />
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
-    </>
+    </TablePages>
   );
 }
 

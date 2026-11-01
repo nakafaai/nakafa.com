@@ -25,7 +25,11 @@ export type TenantValue = Pick<
   Record<"logo", string | undefined> &
   Record<"role", Option.Option<BuiltinRole>> &
   Record<
-    "canManage" | "canOpenExams" | "canOpenGraduation" | "canOpenReports",
+    | "canManage"
+    | "canOpenExams"
+    | "canOpenGraduation"
+    | "canOpenInsight"
+    | "canOpenReports",
     boolean
   > &
   Record<"home", HomeAccess> &

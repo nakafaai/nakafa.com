@@ -31,28 +31,28 @@ import {
  * active period, so each unit is one indexed read, and an archived unit or period is
  * left out. The units are bounded by UNIT_LIMIT.
  */
-const activePeriodsOf = Effect.fn("classroom.classes.activePeriods")(function* (
-  tenantId: GenericId.GenericId<"tenants">
-) {
-  const reader = yield* DatabaseReader;
-  const units = yield* reader
-    .table("tenantUnits")
-    .index("by_tenantId_and_status", (query) =>
-      query.eq("tenantId", tenantId).eq("status", "active")
-    )
-    .take(UNIT_LIMIT)
-    .pipe(Effect.orDie);
-  const periods = yield* Effect.forEach(units, (unit) =>
-    reader
-      .table("tenantPeriods")
-      .index("by_unitId_and_status", (query) =>
-        query.eq("unitId", unit._id).eq("status", "active")
+export const activePeriodsOf = Effect.fn("classroom.classes.activePeriods")(
+  function* (tenantId: GenericId.GenericId<"tenants">) {
+    const reader = yield* DatabaseReader;
+    const units = yield* reader
+      .table("tenantUnits")
+      .index("by_tenantId_and_status", (query) =>
+        query.eq("tenantId", tenantId).eq("status", "active")
       )
-      .first()
-      .pipe(Effect.orDie)
-  );
-  return Arr.getSomes(periods);
-});
+      .take(UNIT_LIMIT)
+      .pipe(Effect.orDie);
+    const periods = yield* Effect.forEach(units, (unit) =>
+      reader
+        .table("tenantPeriods")
+        .index("by_unitId_and_status", (query) =>
+          query.eq("unitId", unit._id).eq("status", "active")
+        )
+        .first()
+        .pipe(Effect.orDie)
+    );
+    return Arr.getSomes(periods);
+  }
+);
 
 /** The active classes of one cohort, at most CLASS_LIMIT of them. */
 const activeIn = Effect.fnUntraced(function* (

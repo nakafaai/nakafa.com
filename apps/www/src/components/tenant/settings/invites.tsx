@@ -1,6 +1,5 @@
 import {
   type PaginatedQueryItem,
-  PaginatedQueryResult,
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
@@ -24,19 +23,17 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -112,19 +109,10 @@ function SchoolInvitesBody() {
     { initialNumItems: PAGE_SIZE }
   );
 
-  const failed = PaginatedQueryResult.isFailure(pagination);
-
   return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      {pagination._tag === "LoadingFirstPage" ||
-      (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-        <SchoolInviteTable invites={pagination.results} />
-      )}
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
-    </>
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+      <SchoolInviteTable invites={pagination.results} />
+    </TablePages>
   );
 }
 
@@ -134,16 +122,6 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
   const formatZone = useFormatTimeZone();
   const tSchool = useTranslations("School");
   const timeZone = useSchoolTimeZone();
-
-  if (Arr.isReadonlyArrayEmpty(invites)) {
-    return (
-      <TableEmpty
-        act="waving"
-        description={t("invites-footer")}
-        title={t("invites-empty")}
-      />
-    );
-  }
 
   const columns = [
     // The name with the address after it, so the header's search finds an invitee by either; the cell shows the name.
@@ -203,6 +181,13 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     <DataTable
       columns={columns}
       data={invites}
+      empty={
+        <TableEmpty
+          act="waving"
+          description={t("invites-footer")}
+          title={t("invites-empty")}
+        />
+      }
       rowId={(invite) => invite.id}
       search="name"
     />

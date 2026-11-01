@@ -6,26 +6,23 @@ import {
 import { TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, DateTime, Option } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { LoadFailure } from "@/components/state/failure";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   CreateExam,
@@ -67,9 +64,6 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   );
   const [drafts] = useState(createExamDrafts);
   const saving = useStore(drafts, (state) => state.ids);
-  const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
-    ? pagination.loadMore
-    : null;
 
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -77,12 +71,6 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   ) {
     throw pagination.error;
   }
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  const loadingFirst = pagination._tag === "LoadingFirstPage";
-  // A school whose only exams are still saving has none yet: the empty state keeps its action.
-  const empty =
-    !(loadingFirst || failed) &&
-    Arr.every(pagination.results, (exam) => Arr.contains(saving, exam.id));
   return (
     <ExamDraftsProvider drafts={drafts}>
       <TableFiltersProvider>
@@ -92,24 +80,14 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
             <CreateExam
               choices={tenant.home.choices}
               slug={slug}
-              waiting={loadingFirst}
+              waiting={PaginatedQueryResult.isLoadingFirstPage(pagination)}
             />
           ) : null}
         </SchoolHeader>
         <TablePageBody>
-          {empty ? (
-            <NoExamEmpty />
-          ) : (
-            <ExamListRows
-              exams={pagination.results}
-              failed={failed}
-              loadingFirst={loadingFirst}
-              saving={saving}
-            />
-          )}
-          {loadMore !== null && (
-            <Intersection onIntersect={() => loadMore(EXAM_PAGE_SIZE)} />
-          )}
+          <TablePages pageSize={EXAM_PAGE_SIZE} pagination={pagination}>
+            <ExamListRows exams={pagination.results} saving={saving} />
+          </TablePages>
         </TablePageBody>
       </TableFiltersProvider>
     </ExamDraftsProvider>
@@ -120,18 +98,15 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
  * The rows of the exam list: the failure of its read above the rows it already holds, and the exams in a
  * data table, or nothing while the first page loads. A first page that failed shows the failure alone. Each
  * row shows where the exam belongs, how many questions it holds and when it was created. The title links to its
- * editor, and the row menu opens its editor, its rooms, the exam as a student sees it, and Delete. An exam that
- * the server is still saving shows its title without a link and no menu, so it is inert.
+ * editor, and the row menu opens its editor, its rooms, the exam as a student sees it, and Delete. A viewer who may
+ * only open the exam's rooms, such as a Proctor, follows the title to the rooms and has no menu. An exam that the
+ * server is still saving shows its title without a link and no menu, so it is inert.
  */
 function ExamListRows({
   exams: rows,
-  failed,
-  loadingFirst,
   saving,
 }: {
   exams: readonly ListedExam[];
-  failed: boolean;
-  loadingFirst: boolean;
   saving: readonly ListedExam["id"][];
 }) {
   const t = useTranslations("Exams");
@@ -140,9 +115,6 @@ function ExamListRows({
   const tenant = useTenant();
   const viewer = useViewerQuery();
 
-  if (loadingFirst) {
-    return null;
-  }
   const units = QueryResult.isSuccess(viewer) ? viewer.value.units : [];
   // The place of an exam, as its column filters it: the whole school, or the unit by its ID.
   const placeOf = (scope: ListedExam["scope"]) =>
@@ -155,9 +127,6 @@ function ExamListRows({
           { onNone: () => "", onSome: (unit) => unit.name }
         );
   const places = Arr.dedupe(Arr.map(rows, (exam) => placeOf(exam.scope)));
-  if (failed && Arr.isReadonlyArrayEmpty(rows)) {
-    return <LoadFailure onRetry={reloadPage} />;
-  }
 
   const columns = [
     examColumns.text((exam) => exam.title, {
@@ -175,7 +144,11 @@ function ExamListRows({
               className="underline-offset-4 hover:underline"
               dir="auto"
               params={{ exam: info.row.original.id, slug: tenant.slug }}
-              to="/school/$slug/exams/$exam/edit"
+              to={
+                info.row.original.canEdit
+                  ? "/school/$slug/exams/$exam/edit"
+                  : "/school/$slug/exams/$exam"
+              }
             >
               {info.getValue()}
             </Link>
@@ -218,27 +191,29 @@ function ExamListRows({
       timeZone: formatZone,
     }),
     examColumns.menu((info) =>
-      Arr.contains(saving, info.row.original.id) ? null : (
+      Arr.contains(saving, info.row.original.id) ||
+      !info.row.original.canEdit ? null : (
         <ExamRowMenu exam={info.row.original} />
       )
     ),
   ];
 
   return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <DataTable
-        columns={columns}
-        data={rows}
-        rowId={(exam) => exam.id}
-        search="title"
-      />
-    </>
+    <DataTable
+      columns={columns}
+      // A school whose only exams are still saving has none yet: the empty state keeps its action.
+      data={
+        Arr.every(rows, (exam) => Arr.contains(saving, exam.id)) ? [] : rows
+      }
+      empty={<NoExamEmpty />}
+      rowId={(exam) => exam.id}
+      search="title"
+    />
   );
 }
 
 /**
- * The empty state of the exam list. A viewer who can create an exam reads that there is none yet, with Nina writing,
+ * The empty state of the exam list. A viewer who only opens rooms reads where exams come in. A viewer who can create an exam reads that there is none yet, with Nina writing,
  * under the header's Create exam. A viewer with no unit to create an exam in is told why and where it is fixed: a
  * manager goes to the units, and anyone else is told to ask an admin.
  */
@@ -246,6 +221,15 @@ function NoExamEmpty() {
   const tenant = useTenant();
   const t = useTranslations("Exams");
 
+  if (!tenant.canOpenExams) {
+    return (
+      <TableEmpty
+        act="waving"
+        description={t("rooms-list-description")}
+        title={t("empty")}
+      />
+    );
+  }
   if (tenant.home.canCreate) {
     return (
       <TableEmpty

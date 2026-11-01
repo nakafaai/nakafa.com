@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
+import { ClassView } from "@repo/backend/confect/classroom/classes.spec";
 import { ClassInsight, SkillView } from "@repo/backend/confect/insight/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -22,6 +23,13 @@ export default GroupSpec.make()
       returns: () => ClassInsight,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "insight.view", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicPaginatedQuery({
+      name: "classes",
+      args: () => ({ slug: TenantSlug }),
+      item: () => ClassView,
+    })
   )
   .addFunction(
     FunctionSpec.publicQuery({

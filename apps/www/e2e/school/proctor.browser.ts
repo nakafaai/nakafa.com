@@ -13,6 +13,9 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** The address of the exam list, where a Proctor lands. */
+const EXAM_LIST = /\/exams$/u;
+
 /** The name that the acceptance runtime gives every learner it invites. */
 const LEARNER_NAME = "Acceptance Learner";
 
@@ -174,15 +177,29 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await studentContext.close();
 
-  // The role writes no exam and reads no result: the editor and the exam list are not found, and the results refuse.
+  // The role writes no exam and reads no result: the editor is not found, and the results refuse.
   await proctor.goto(address(`/exams/${sitting.examId}/edit`));
   await expect(
     proctor.getByRole("heading", { level: 1, name: NOT_FOUND })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await proctor.goto(address("/exams"));
+  // It lands on the exam list, whose title opens the rooms, and creates and edits nothing there.
+  await proctor.goto(address("/"));
+  await expect(proctor).toHaveURL(EXAM_LIST, {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  const listed = proctor
+    .getByRole("table")
+    .getByRole("link", { name: sitting.title });
+  await expect(listed).toHaveAttribute(
+    "href",
+    new RegExp(`/exams/${sitting.examId}$`, "u")
+  );
   await expect(
-    proctor.getByRole("heading", { level: 1, name: NOT_FOUND })
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    proctor.getByRole("button", { name: "Create exam" })
+  ).toHaveCount(0);
+  await expect(
+    proctor.getByRole("button", { name: "More actions" })
+  ).toHaveCount(0);
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}/results`)
   );

@@ -1,4 +1,5 @@
 import { CURRICULUM_NAMESPACES } from "@nakafa/aksara-contracts/program/curriculum";
+import { MATERIAL_CONTEXT_QUERY_PARAM } from "@repo/contents/route/material/context";
 import { PATHNAMES } from "@repo/internationalization/src/pathnames";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 
@@ -163,7 +164,8 @@ function materialPublicPathTarget(
   if (!(subject && topic)) {
     return Option.none();
   }
-  const search = context === undefined ? {} : { ctx: context };
+  const search =
+    context === undefined ? {} : { [MATERIAL_CONTEXT_QUERY_PARAM]: context };
   return Option.some({
     from: LOCALE_ROUTE,
     params: { _splat: Arr.join(lesson, "/"), subject, topic },
@@ -228,8 +230,27 @@ export function publicPathTarget(
  */
 export function addressTarget(address: string): Option.Option<LinkTarget> {
   const url = new URL(address, SITE_ORIGIN);
-  const context = url.searchParams.get("ctx") ?? undefined;
+  const context =
+    url.searchParams.get(MATERIAL_CONTEXT_QUERY_PARAM) ?? undefined;
   return publicPathTarget(url.pathname.slice(1), context);
+}
+
+/**
+ * The address a link shows, without a lesson's context hint. The hint names the
+ * reader's way in and changes no content, so a crawler follows the canonical
+ * lesson and a copied link opens it, while a press still navigates with the hint,
+ * which the router reads from the link's target and not from this address.
+ */
+export function canonicalHref(href: string | undefined) {
+  if (
+    href === undefined ||
+    !href.includes(`${MATERIAL_CONTEXT_QUERY_PARAM}=`)
+  ) {
+    return href;
+  }
+  const url = new URL(href, SITE_ORIGIN);
+  url.searchParams.delete(MATERIAL_CONTEXT_QUERY_PARAM);
+  return `${url.pathname}${url.search}${url.hash}`;
 }
 
 /**

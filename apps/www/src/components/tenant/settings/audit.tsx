@@ -21,7 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Sheet,
   SheetClose,
@@ -36,18 +35,16 @@ import { Array as Arr, Effect, Option } from "effect";
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { PERSON_ICONS } from "@/components/tenant/settings/choices";
@@ -134,26 +131,6 @@ function SchoolAuditBody() {
     { initialNumItems: PAGE_SIZE }
   );
 
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  if (pagination._tag === "LoadingFirstPage") {
-    return null;
-  }
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    if (failed) {
-      return <LoadFailure onRetry={reloadPage} />;
-    }
-    return (
-      <>
-        <TableEmpty
-          act="reading"
-          description={t("audit-description")}
-          title={t("audit-empty")}
-        />
-        <AuditFooter />
-      </>
-    );
-  }
-
   const columns = [
     entryColumns.days((entry) => entry.at, {
       cell: (info) => <SchoolDateTime at={info.getValue()} />,
@@ -173,19 +150,22 @@ function SchoolAuditBody() {
     entryColumns.menu((info) => <AuditEntryMenu entry={info.row.original} />),
   ];
   return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
       <DataTable
         columns={columns}
         data={pagination.results}
+        empty={
+          <TableEmpty
+            act="reading"
+            description={t("audit-description")}
+            title={t("audit-empty")}
+          />
+        }
         rowId={(entry) => entry.id}
         search="change"
       />
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
       {PaginatedQueryResult.isExhausted(pagination) ? <AuditFooter /> : null}
-    </>
+    </TablePages>
   );
 }
 

@@ -65,14 +65,16 @@ export const examSummary = (row: ExamsDoc) => ({
  */
 export const ExamListed = Schema.Struct({
   ...ExamSummary.fields,
+  canEdit: Schema.Boolean,
   createdAt: Schema.Finite,
   questionCount: Schema.Int,
   scope: GrantScope,
 });
 
-/** A stored exam as the exam list shows it. */
-export const examListed = (row: ExamsDoc) => ({
+/** A stored exam as the exam list shows it, with whether the caller may edit it. */
+export const examListed = (row: ExamsDoc, canEdit: boolean) => ({
   ...examSummary(row),
+  canEdit,
   createdAt: row.createdAt,
   questionCount: row.questions.length,
   scope: row.scope,

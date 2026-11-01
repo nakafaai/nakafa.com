@@ -306,7 +306,10 @@ export function ReportNoteDialog({
       footer={
         <>
           <Button
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              setNote(line.report?.note ?? "");
+              setOpen(false);
+            }}
             type="button"
             variant="outline"
           >

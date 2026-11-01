@@ -6,8 +6,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Duration, Effect, Schema } from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
-import { SittingBody } from "@/components/exams/sitting/body";
-import { CardSection } from "@/components/shared/card/section";
+import { SittingBody, SittingNotice } from "@/components/exams/sitting/body";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** Where a tab stands with its attempt's paper: still asking, holding it, or second to another tab. */
@@ -136,7 +135,7 @@ export function SittingTabElsewhere() {
 
   return (
     <SittingBody>
-      <CardSection
+      <SittingNotice
         description={t("student-second-tab-description")}
         title={t("student-second-tab-title")}
       />
