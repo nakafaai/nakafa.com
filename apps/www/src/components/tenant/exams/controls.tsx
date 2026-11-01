@@ -71,7 +71,7 @@ export function PageActions({
 
   return (
     <>
-      <div className="hidden items-center gap-0.5 md:flex">
+      <div className="hidden shrink-0 items-center gap-0.5 md:flex">
         <PageAction
           disabled={index === 0}
           hint={t("move-up")}
@@ -107,7 +107,7 @@ export function PageActions({
           />
         ) : null}
       </div>
-      <div className="md:hidden">
+      <div className="shrink-0 md:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

@@ -6,12 +6,16 @@ import {
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Option } from "effect";
-import { useState, useTransition } from "react";
+import { use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { useConnectorActions } from "@/components/connectors/actions";
+import {
+  ConnectOutcomeContext,
+  useConnectorActions,
+} from "@/components/connectors/actions";
+import { DisconnectDialog } from "@/components/connectors/disconnect";
 import type { Connection } from "@/components/connectors/optimistic";
+import { connectFailure } from "@/components/connectors/outcome";
 import {
   CardSection,
   CardSectionFooter,
@@ -28,7 +32,8 @@ const CONNECTOR_ICONS = {
  * One Google connector: what it reads, and where its connection stands. Connect
  * sends the browser to Google's consent screen and stays pending until the page
  * leaves; a connection that Google stopped accepting asks to connect again;
- * Disconnect asks first, then ends the connection at once.
+ * a connect that just ended badly says so here; Disconnect asks first, then ends
+ * the connection at once.
  */
 export function ConnectorCard({
   connection,
@@ -38,12 +43,14 @@ export function ConnectorCard({
   connector: GoogleConnector;
 }) {
   const t = useTranslations("Connectors");
-  const { disconnect } = useConnectorActions();
-  const common = useTranslations("Common");
   const [confirming, setConfirming] = useState(false);
   const reconnect = Option.exists(
     connection,
     (found) => found.status === "reconnect"
+  );
+  const failure = Option.filter(
+    connectFailure(use(ConnectOutcomeContext), connector),
+    () => Option.isNone(connection)
   );
 
   return (
@@ -58,10 +65,14 @@ export function ConnectorCard({
     >
       <CardSectionFooter
         hint={Option.match(connection, {
-          onNone: () => t("not-connected"),
+          onNone: () =>
+            Option.match(failure, {
+              onNone: () => t("not-connected"),
+              onSome: (ended) => t(`status-${ended}`),
+            }),
           onSome: () => (reconnect ? t("reconnect-hint") : t("connected")),
         })}
-        tone={reconnect ? "destructive" : "muted"}
+        tone={reconnect || Option.isSome(failure) ? "destructive" : "muted"}
       >
         {Option.isNone(connection) ? (
           <ConnectButton connector={connector} reconnect={false} />
@@ -73,30 +84,11 @@ export function ConnectorCard({
             <Button onClick={() => setConfirming(true)} variant="destructive">
               {t("disconnect")}
             </Button>
-            <ResponsiveDialog
-              description={t("disconnect-description")}
-              footer={
-                <>
-                  <Button
-                    onClick={() => setConfirming(false)}
-                    variant="outline"
-                  >
-                    {common("cancel")}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setConfirming(false);
-                      disconnect(connection.value);
-                    }}
-                    variant="destructive"
-                  >
-                    {t("disconnect")}
-                  </Button>
-                </>
-              }
+            <DisconnectDialog
+              connection={connection.value}
+              name={t(connector)}
               open={confirming}
               setOpen={setConfirming}
-              title={t("disconnect-title", { name: t(connector) })}
             />
           </>
         )}

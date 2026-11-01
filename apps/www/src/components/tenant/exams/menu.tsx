@@ -19,6 +19,7 @@ import { useTranslations } from "use-intl";
 import { SplitMenuTrigger } from "@/components/shared/split";
 import { DeleteExam } from "@/components/tenant/exams/delete";
 import { ImportQuestions } from "@/components/tenant/exams/import/dialog";
+import { ExamLockMark } from "@/components/tenant/exams/lock";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
 import { Link } from "@/lib/routing/link";
 
@@ -40,7 +41,12 @@ export function ExamMenu() {
     return null;
   }
   if (locked) {
-    return <TryAsStudent />;
+    return (
+      <ButtonGroup aria-label={t("exam-actions")}>
+        <TryAsStudent />
+        <ExamLockMark />
+      </ButtonGroup>
+    );
   }
 
   return (

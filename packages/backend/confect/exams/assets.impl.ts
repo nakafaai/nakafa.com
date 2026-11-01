@@ -34,7 +34,7 @@ import { playableMedia } from "@repo/backend/confect/exams/questions/media";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
-import { Clock, Duration, Effect, Layer, Option } from "effect";
+import { Array as Arr, Clock, Duration, Effect, Layer, Option } from "effect";
 
 /** The ID of an uploaded file in Convex storage. */
 const storageIdSchema = Id("_storage");
@@ -306,6 +306,26 @@ const urls = FunctionImpl.make(
   })
 );
 
+/** Deletes a stored file that no row names any more: a duplicate's rows name the files of the exam it came from. */
+const deleteUnsharedFile = Effect.fn("exams.assets.deleteUnshared")(function* (
+  storageId: StorageId
+) {
+  const reader = yield* DatabaseReader;
+  const pictures = yield* reader
+    .table("examAssets")
+    .index("by_storageId", (query) => query.eq("storageId", storageId))
+    .take(1)
+    .pipe(Effect.orDie);
+  const clips = yield* reader
+    .table("examAudio")
+    .index("by_storageId", (query) => query.eq("storageId", storageId))
+    .take(1)
+    .pipe(Effect.orDie);
+  if (Arr.isReadonlyArrayEmpty(pictures) && Arr.isReadonlyArrayEmpty(clips)) {
+    yield* (yield* StorageWriter).delete(storageId).pipe(Effect.orDie);
+  }
+});
+
 /**
  * Deletes the images and the audio clips of a deleted exam a page at a time: each file, then its row. A call that
  * fills a page starts the next one, so no call deletes more than `MAX_ASSET_READS` images.
@@ -320,16 +340,16 @@ const sweep = FunctionImpl.make(
       .index("by_examId", (query) => query.eq("examId", examId))
       .take(MAX_ASSET_READS)
       .pipe(Effect.orDie);
-    const storage = yield* StorageWriter;
     const writer = yield* DatabaseWriter;
     yield* Effect.forEach(
       assets,
       (asset) =>
-        storage
-          .delete(asset.storageId)
+        writer
+          .table("examAssets")
+          .delete(asset._id)
           .pipe(
-            Effect.andThen(writer.table("examAssets").delete(asset._id)),
-            Effect.orDie
+            Effect.orDie,
+            Effect.andThen(deleteUnsharedFile(asset.storageId))
           ),
       { discard: true }
     );
@@ -341,11 +361,12 @@ const sweep = FunctionImpl.make(
     yield* Effect.forEach(
       clips,
       (clip) =>
-        storage
-          .delete(clip.storageId)
+        writer
+          .table("examAudio")
+          .delete(clip._id)
           .pipe(
-            Effect.andThen(writer.table("examAudio").delete(clip._id)),
-            Effect.orDie
+            Effect.orDie,
+            Effect.andThen(deleteUnsharedFile(clip.storageId))
           ),
       { discard: true }
     );

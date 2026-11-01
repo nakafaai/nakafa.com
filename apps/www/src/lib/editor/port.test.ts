@@ -121,6 +121,44 @@ describe("viewPort", () => {
       })
   );
 
+  it.effect(
+    "replaces the state after a change that left the text alone, so a plugin or the focus stops no text from opening",
+    () =>
+      Effect.gen(function* () {
+        const view = makeView();
+        const port = viewPort(view);
+        const built = view.state;
+        view.updateState(
+          built.reconfigure({
+            plugins: [
+              ...built.plugins,
+              new Plugin({ key: new PluginKey("late") }),
+            ],
+          })
+        );
+        view.dispatch(view.state.tr.setMeta("focus", true));
+        const next = port.fresh({ clientId: "a", doc: emptyDoc(), version: 2 });
+
+        expect(yield* port.replace(built, next)).toBe(true);
+        expect(view.state).toBe(next);
+      })
+  );
+
+  it.effect(
+    "refuses a replacement after an edit, so the edit is not lost",
+    () =>
+      Effect.gen(function* () {
+        const view = makeView();
+        const port = viewPort(view);
+        const built = view.state;
+        view.dispatch(view.state.tr.insertText("a", 1));
+        const next = port.fresh({ clientId: "a", doc: emptyDoc(), version: 2 });
+
+        expect(yield* port.replace(built, next)).toBe(false);
+        expect(view.state.doc.textContent).toBe("a");
+      })
+  );
+
   it.effect("reads the state the view holds now", () =>
     Effect.gen(function* () {
       const view = makeView();
