@@ -600,10 +600,7 @@ export declare const api: {
             | "task.manage"
             | "task.submit"
             | "grade.enter"
-            | "grade.import"
             | "grade.list"
-            | "insight.teach"
-            | "insight.view"
           >;
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
@@ -834,7 +831,7 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
             discussion: {
@@ -849,7 +846,6 @@ export declare const api: {
             mentions: Array<
               | { _tag: "person"; id: Id<"tenantPeople">; name: string }
               | { _tag: "everyone" }
-              | { _tag: "nina" }
             >;
             mine: boolean;
             poll: {
@@ -878,7 +874,7 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
             discussion: {
@@ -893,7 +889,6 @@ export declare const api: {
             mentions: Array<
               | { _tag: "person"; id: Id<"tenantPeople">; name: string }
               | { _tag: "everyone" }
-              | { _tag: "nina" }
             >;
             mine: boolean;
             poll: {
@@ -933,7 +928,7 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: { id: Id<"tenantPeople">; name: string };
               clientKey: string;
               createdAt: number;
               discussion: {
@@ -948,7 +943,6 @@ export declare const api: {
               mentions: Array<
                 | { _tag: "person"; id: Id<"tenantPeople">; name: string }
                 | { _tag: "everyone" }
-                | { _tag: "nina" }
               >;
               mine: boolean;
               poll: {
@@ -971,9 +965,7 @@ export declare const api: {
             classId: Id<"classes">;
             clientKey: string;
             mentions: Array<
-              | { _tag: "person"; id: Id<"tenantPeople"> }
-              | { _tag: "everyone" }
-              | { _tag: "nina" }
+              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
             >;
             poll: {
               multiple: boolean;
@@ -993,7 +985,7 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
             discussion: {
@@ -1008,7 +1000,6 @@ export declare const api: {
             mentions: Array<
               | { _tag: "person"; id: Id<"tenantPeople">; name: string }
               | { _tag: "everyone" }
-              | { _tag: "nina" }
             >;
             mine: boolean;
             poll: {
@@ -1121,7 +1112,7 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: { id: Id<"tenantPeople">; name: string };
               clientKey: string;
               createdAt: number;
               discussion: {
@@ -1136,7 +1127,6 @@ export declare const api: {
               mentions: Array<
                 | { _tag: "person"; id: Id<"tenantPeople">; name: string }
                 | { _tag: "everyone" }
-                | { _tag: "nina" }
               >;
               mine: boolean;
               poll: {
@@ -1188,9 +1178,7 @@ export declare const api: {
             classId: Id<"classes">;
             clientKey: string;
             mentions: Array<
-              | { _tag: "person"; id: Id<"tenantPeople"> }
-              | { _tag: "everyone" }
-              | { _tag: "nina" }
+              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
             >;
             slug: string;
             text: string;
@@ -1216,7 +1204,7 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: { id: Id<"tenantPeople">; name: string };
               clientKey: string;
               createdAt: number;
               discussion: {
@@ -1231,7 +1219,6 @@ export declare const api: {
               mentions: Array<
                 | { _tag: "person"; id: Id<"tenantPeople">; name: string }
                 | { _tag: "everyone" }
-                | { _tag: "nina" }
               >;
               mine: boolean;
               poll: {
@@ -1283,7 +1270,7 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: { id: Id<"tenantPeople">; name: string };
               clientKey: string;
               createdAt: number;
               discussion: {
@@ -1298,7 +1285,6 @@ export declare const api: {
               mentions: Array<
                 | { _tag: "person"; id: Id<"tenantPeople">; name: string }
                 | { _tag: "everyone" }
-                | { _tag: "nina" }
               >;
               mine: boolean;
               poll: {
@@ -1320,9 +1306,7 @@ export declare const api: {
             classId: Id<"classes">;
             clientKey: string;
             mentions: Array<
-              | { _tag: "person"; id: Id<"tenantPeople"> }
-              | { _tag: "everyone" }
-              | { _tag: "nina" }
+              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
             >;
             number: number;
             slug: string;
@@ -1338,7 +1322,7 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
             discussion: {
@@ -1353,7 +1337,6 @@ export declare const api: {
             mentions: Array<
               | { _tag: "person"; id: Id<"tenantPeople">; name: string }
               | { _tag: "everyone" }
-              | { _tag: "nina" }
             >;
             mine: boolean;
             poll: {
@@ -1527,11 +1510,6 @@ export declare const api: {
           id: Id<"classroomPosts">;
           mine: boolean;
           pinned: boolean;
-          poll: {
-            multiple: boolean;
-            options: Array<string>;
-            question: string;
-          } | null;
           text: string;
         }
       >;
@@ -1562,11 +1540,6 @@ export declare const api: {
             id: Id<"classroomPosts">;
             mine: boolean;
             pinned: boolean;
-            poll: {
-              multiple: boolean;
-              options: Array<string>;
-              question: string;
-            } | null;
             text: string;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -1597,11 +1570,6 @@ export declare const api: {
           id: Id<"classroomPosts">;
           mine: boolean;
           pinned: boolean;
-          poll: {
-            multiple: boolean;
-            options: Array<string>;
-            question: string;
-          } | null;
           text: string;
         }>
       >;
@@ -1612,11 +1580,6 @@ export declare const api: {
           classId: Id<"classes">;
           clientKey: string;
           email: boolean;
-          poll: {
-            multiple: boolean;
-            options: Array<string>;
-            question: string;
-          } | null;
           slug: string;
           text: string;
         },
@@ -1629,11 +1592,6 @@ export declare const api: {
           id: Id<"classroomPosts">;
           mine: boolean;
           pinned: boolean;
-          poll: {
-            multiple: boolean;
-            options: Array<string>;
-            question: string;
-          } | null;
           text: string;
         }
       >;
@@ -1642,30 +1600,6 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
         null
-      >;
-      vote: FunctionReference<
-        "mutation",
-        "public",
-        {
-          classId: Id<"classes">;
-          options: Array<number>;
-          postId: Id<"classroomPosts">;
-          slug: string;
-        },
-        null
-      >;
-      votes: FunctionReference<
-        "query",
-        "public",
-        {
-          classId: Id<"classes">;
-          postIds: Array<Id<"classroomPosts">>;
-          slug: string;
-        },
-        Array<{
-          postId: Id<"classroomPosts">;
-          votes: Array<{ count: number; mine: boolean; option: number }>;
-        }>
       >;
     };
     scheduled: {
@@ -2175,12 +2109,6 @@ export declare const api: {
   connectors: {
     classroom: {
       canImport: FunctionReference<"query", "public", { slug: string }, {}>;
-      importRoster: FunctionReference<
-        "action",
-        "public",
-        { courseId: string; slug: string },
-        { added: number; changed: number; skipped: number }
-      >;
       link: FunctionReference<
         "mutation",
         "public",
@@ -2300,21 +2228,6 @@ export declare const api: {
         "public",
         {},
         { accessToken: string; apiKey: string; appId: string } | null
-      >;
-    };
-    forms: {
-      questions: FunctionReference<
-        "action",
-        "public",
-        { formId: string },
-        Array<{
-          answer: number | null;
-          explanation: string;
-          figures: Array<{ alt: string; asset: Id<"examAssets"> }>;
-          number: number | null;
-          options: Array<string>;
-          prompt: string;
-        }> | null
       >;
     };
     google: {
@@ -8464,12 +8377,6 @@ export declare const api: {
           value: number;
         }>
       >;
-      narratives: FunctionReference<
-        "query",
-        "public",
-        { linkId: Id<"guardianLinks">; slug: string },
-        Array<{ className: string; id: Id<"insightNarratives">; text: string }>
-      >;
       withdraw: FunctionReference<
         "mutation",
         "public",
@@ -8513,17 +8420,6 @@ export declare const api: {
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
-      >;
-      mine: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        Array<{
-          email: string;
-          guardianName: string;
-          id: Id<"guardianLinks">;
-          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
-        }>
       >;
       readdress: FunctionReference<
         "mutation",
@@ -8585,56 +8481,6 @@ export declare const api: {
           status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
           student: { id: Id<"tenantPeople">; name: string };
         }
-      >;
-    };
-    requests: {
-      answer: FunctionReference<
-        "mutation",
-        "public",
-        {
-          decision: "approved" | "declined";
-          linkId: Id<"guardianLinks">;
-          requestId: Id<"guardianRequests">;
-          slug: string;
-        },
-        null
-      >;
-      ask: FunctionReference<
-        "mutation",
-        "public",
-        {
-          kind: "reportCopy" | "dataCorrection";
-          linkId: Id<"guardianLinks">;
-          slug: string;
-          text: string;
-        },
-        null
-      >;
-      ofLink: FunctionReference<
-        "query",
-        "public",
-        { linkId: Id<"guardianLinks">; slug: string },
-        Array<{
-          createdAt: number;
-          id: Id<"guardianRequests">;
-          kind: "reportCopy" | "dataCorrection";
-          state: "waiting" | "approved" | "declined";
-          text: string;
-        }>
-      >;
-      waiting: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        Array<{
-          createdAt: number;
-          id: Id<"guardianRequests">;
-          kind: "reportCopy" | "dataCorrection";
-          linkId: Id<"guardianLinks">;
-          state: "waiting" | "approved" | "declined";
-          student: string;
-          text: string;
-        }>
       >;
     };
   };
@@ -8737,135 +8583,6 @@ export declare const api: {
       >;
     };
   };
-  insight: {
-    drafts: {
-      ask: FunctionReference<
-        "mutation",
-        "public",
-        { classId: Id<"classes">; personId: Id<"tenantPeople">; slug: string },
-        null
-      >;
-    };
-    narratives: {
-      share: FunctionReference<
-        "mutation",
-        "public",
-        { classId: Id<"classes">; personId: Id<"tenantPeople">; slug: string },
-        null
-      >;
-      withdraw: FunctionReference<
-        "mutation",
-        "public",
-        { classId: Id<"classes">; personId: Id<"tenantPeople">; slug: string },
-        null
-      >;
-      write: FunctionReference<
-        "mutation",
-        "public",
-        {
-          classId: Id<"classes">;
-          personId: Id<"tenantPeople">;
-          slug: string;
-          text: string;
-        },
-        null
-      >;
-    };
-    practice: {
-      share: FunctionReference<
-        "mutation",
-        "public",
-        { countryKey: string; examKey: string; slug: string; trackKey: string },
-        null
-      >;
-      stop: FunctionReference<
-        "mutation",
-        "public",
-        { countryKey: string; examKey: string; slug: string; trackKey: string },
-        null
-      >;
-      topics: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        Array<{
-          countryKey: string;
-          examKey: string;
-          mean: number;
-          sets: number;
-          shared: boolean;
-          trackKey: string;
-        }>
-      >;
-    };
-    reads: {
-      mine: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        Array<{
-          competency: string;
-          earned: number;
-          observations: number;
-          possible: number;
-          rating: number;
-        }>
-      >;
-      ofClass: FunctionReference<
-        "query",
-        "public",
-        { classId: Id<"classes">; slug: string },
-        {
-          forecasts: boolean;
-          kktp: number;
-          students: Array<{
-            draft: { text: string | null } | null;
-            id: Id<"tenantPeople">;
-            name: string;
-            narrative: { shared: boolean; text: string } | null;
-            practice: Array<{
-              countryKey: string;
-              examKey: string;
-              mean: number;
-              sets: number;
-              trackKey: string;
-            }>;
-            skills: Array<{
-              chance: number | null;
-              competency: string;
-              earned: number;
-              observations: number;
-              possible: number;
-              rating: number;
-            }>;
-          }>;
-        }
-      >;
-    };
-    tags: {
-      list: FunctionReference<
-        "query",
-        "public",
-        { examId: Id<"exams">; slug: string },
-        Array<{
-          competency: string | null;
-          id: Id<"examQuestions">;
-          number: number;
-        }>
-      >;
-      set: FunctionReference<
-        "mutation",
-        "public",
-        {
-          competency: string | null;
-          examId: Id<"exams">;
-          questionId: Id<"examQuestions">;
-          slug: string;
-        },
-        null
-      >;
-    };
-  };
   integrations: {
     clients: {
       create: FunctionReference<
@@ -8905,7 +8622,6 @@ export declare const api: {
             | "post.publish"
             | "task.manage"
             | "task.submit"
-            | "grade.export"
             | "grade.release"
             | "grade.view"
             | "report.approve"
@@ -8923,10 +8639,8 @@ export declare const api: {
             | "result.grade"
             | "result.release"
             | "result.view"
-            | "guardian.answer"
             | "guardian.child"
             | "guardian.confirm"
-            | "guardian.request"
             | "guardian.readdress"
             | "guardian.revoke"
             | "guardian.verify"
@@ -8949,7 +8663,6 @@ export declare const api: {
             | "class.create"
             | "class.list"
             | "grade.enter"
-            | "grade.import"
             | "grade.list"
             | "scheme.manage"
             | "scheme.view"
@@ -8974,8 +8687,6 @@ export declare const api: {
             | "billing.view"
             | "guardian.link"
             | "guardian.list"
-            | "insight.teach"
-            | "insight.view"
             | "roster.manage"
             | "roster.view"
             | "roster.import"
@@ -9038,7 +8749,6 @@ export declare const api: {
               | "post.publish"
               | "task.manage"
               | "task.submit"
-              | "grade.export"
               | "grade.release"
               | "grade.view"
               | "report.approve"
@@ -9056,10 +8766,8 @@ export declare const api: {
               | "result.grade"
               | "result.release"
               | "result.view"
-              | "guardian.answer"
               | "guardian.child"
               | "guardian.confirm"
-              | "guardian.request"
               | "guardian.readdress"
               | "guardian.revoke"
               | "guardian.verify"
@@ -9082,7 +8790,6 @@ export declare const api: {
               | "class.create"
               | "class.list"
               | "grade.enter"
-              | "grade.import"
               | "grade.list"
               | "scheme.manage"
               | "scheme.view"
@@ -9107,8 +8814,6 @@ export declare const api: {
               | "billing.view"
               | "guardian.link"
               | "guardian.list"
-              | "insight.teach"
-              | "insight.view"
               | "roster.manage"
               | "roster.view"
               | "roster.import"
@@ -9175,7 +8880,6 @@ export declare const api: {
             | "post.publish"
             | "task.manage"
             | "task.submit"
-            | "grade.export"
             | "grade.release"
             | "grade.view"
             | "report.approve"
@@ -9193,10 +8897,8 @@ export declare const api: {
             | "result.grade"
             | "result.release"
             | "result.view"
-            | "guardian.answer"
             | "guardian.child"
             | "guardian.confirm"
-            | "guardian.request"
             | "guardian.readdress"
             | "guardian.revoke"
             | "guardian.verify"
@@ -9219,7 +8921,6 @@ export declare const api: {
             | "class.create"
             | "class.list"
             | "grade.enter"
-            | "grade.import"
             | "grade.list"
             | "scheme.manage"
             | "scheme.view"
@@ -9244,8 +8945,6 @@ export declare const api: {
             | "billing.view"
             | "guardian.link"
             | "guardian.list"
-            | "insight.teach"
-            | "insight.view"
             | "roster.manage"
             | "roster.view"
             | "roster.import"
@@ -9288,7 +8987,6 @@ export declare const api: {
             | "post.publish"
             | "task.manage"
             | "task.submit"
-            | "grade.export"
             | "grade.release"
             | "grade.view"
             | "report.approve"
@@ -9306,10 +9004,8 @@ export declare const api: {
             | "result.grade"
             | "result.release"
             | "result.view"
-            | "guardian.answer"
             | "guardian.child"
             | "guardian.confirm"
-            | "guardian.request"
             | "guardian.readdress"
             | "guardian.revoke"
             | "guardian.verify"
@@ -9332,7 +9028,6 @@ export declare const api: {
             | "class.create"
             | "class.list"
             | "grade.enter"
-            | "grade.import"
             | "grade.list"
             | "scheme.manage"
             | "scheme.view"
@@ -9357,8 +9052,6 @@ export declare const api: {
             | "billing.view"
             | "guardian.link"
             | "guardian.list"
-            | "insight.teach"
-            | "insight.view"
             | "roster.manage"
             | "roster.view"
             | "roster.import"
@@ -9386,270 +9079,6 @@ export declare const api: {
         "public",
         { slug: string; userCode: string },
         {}
-      >;
-    };
-    webhooks: {
-      change: FunctionReference<
-        "mutation",
-        "public",
-        {
-          changes: Array<
-            | "grade.released"
-            | "grant.created"
-            | "grant.ended"
-            | "guardian.linked"
-            | "guardian.withdrawn"
-            | "unit.created"
-          >;
-          clientId: Id<"integrationClients">;
-          slug: string;
-          url: string;
-          webhookId: Id<"integrationWebhooks">;
-        },
-        null
-      >;
-      create: FunctionReference<
-        "mutation",
-        "public",
-        {
-          changes: Array<
-            | "grade.released"
-            | "grant.created"
-            | "grant.ended"
-            | "guardian.linked"
-            | "guardian.withdrawn"
-            | "unit.created"
-          >;
-          clientId: Id<"integrationClients">;
-          slug: string;
-          url: string;
-        },
-        { id: Id<"integrationWebhooks">; secret: string }
-      >;
-      deliveries: FunctionReference<
-        "query",
-        "public",
-        {
-          clientId: Id<"integrationClients">;
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          slug: string;
-          webhookId: Id<"integrationWebhooks">;
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            attempt: number;
-            change:
-              | "grade.released"
-              | "grant.created"
-              | "grant.ended"
-              | "guardian.linked"
-              | "guardian.withdrawn"
-              | "unit.created";
-            createdAt: number;
-            dueAt: number;
-            entryId: Id<"journalEntries">;
-            id: Id<"integrationDeliveries">;
-            state:
-              | { status: "due" }
-              | { at: number; code: number; ms: number; status: "delivered" }
-              | {
-                  at: number;
-                  code: number | null;
-                  ms: number;
-                  reason: "address" | "deadline" | "network" | "status";
-                  status: "failed";
-                }
-              | { at: number; reason: "access" | "revoked"; status: "dropped" };
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
-      list: FunctionReference<
-        "query",
-        "public",
-        {
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          slug: string;
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            changes: Array<
-              | "grade.released"
-              | "grant.created"
-              | "grant.ended"
-              | "guardian.linked"
-              | "guardian.withdrawn"
-              | "unit.created"
-            >;
-            clientActions: Array<
-              | "audit.view"
-              | "tenant.manage"
-              | "tenant.view"
-              | "unit.manage"
-              | "unit.view"
-              | "card.issue"
-              | "person.invite"
-              | "person.manage"
-              | "person.view"
-              | "period.manage"
-              | "period.view"
-              | "cohort.manage"
-              | "cohort.view"
-              | "promotion.apply"
-              | "promotion.approve"
-              | "promotion.prepare"
-              | "promotion.view"
-              | "grant.revoke"
-              | "grant.view"
-              | "integration.manage"
-              | "integration.view"
-              | "connection.manage"
-              | "connection.view"
-              | "class.manage"
-              | "class.view"
-              | "forum.manage"
-              | "forum.post"
-              | "forum.read"
-              | "library.manage"
-              | "post.publish"
-              | "task.manage"
-              | "task.submit"
-              | "grade.export"
-              | "grade.release"
-              | "grade.view"
-              | "report.approve"
-              | "report.complete"
-              | "report.view"
-              | "visit.end"
-              | "document.edit"
-              | "document.view"
-              | "exam.edit"
-              | "exam.rooms"
-              | "exam.view"
-              | "sitting.proctor"
-              | "sitting.schedule"
-              | "sitting.view"
-              | "result.grade"
-              | "result.release"
-              | "result.view"
-              | "guardian.answer"
-              | "guardian.child"
-              | "guardian.confirm"
-              | "guardian.request"
-              | "guardian.readdress"
-              | "guardian.revoke"
-              | "guardian.verify"
-              | "guardian.view"
-              | "guardian.withdraw"
-              | "invite.view"
-              | "person.manage"
-              | "person.view"
-              | "period.manage"
-              | "period.view"
-              | "cohort.manage"
-              | "grant.manage"
-              | "owner.manage"
-              | "grant.manage"
-              | "integration.manage"
-              | "integration.view"
-              | "integration.manage"
-              | "connection.create"
-              | "connection.view"
-              | "class.create"
-              | "class.list"
-              | "grade.enter"
-              | "grade.import"
-              | "grade.list"
-              | "scheme.manage"
-              | "scheme.view"
-              | "report.list"
-              | "report.write"
-              | "graduation.issue"
-              | "graduation.view"
-              | "report.export"
-              | "graduation.decide"
-              | "report.open"
-              | "graduation.open"
-              | "visit.approve"
-              | "document.edit"
-              | "document.edit"
-              | "exam.edit"
-              | "exam.rooms"
-              | "exam.view"
-              | "exam.edit"
-              | "exam.rooms"
-              | "exam.view"
-              | "billing.manage"
-              | "billing.view"
-              | "guardian.link"
-              | "guardian.list"
-              | "insight.teach"
-              | "insight.view"
-              | "roster.manage"
-              | "roster.view"
-              | "roster.import"
-            >;
-            clientId: Id<"integrationClients">;
-            clientName: string;
-            createdAt: number;
-            id: Id<"integrationWebhooks">;
-            rotatedAt: number;
-            status: "active" | "revoked";
-            url: string;
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
-      resend: FunctionReference<
-        "mutation",
-        "public",
-        {
-          clientId: Id<"integrationClients">;
-          deliveryId: Id<"integrationDeliveries">;
-          slug: string;
-          webhookId: Id<"integrationWebhooks">;
-        },
-        null
-      >;
-      revoke: FunctionReference<
-        "mutation",
-        "public",
-        {
-          clientId: Id<"integrationClients">;
-          slug: string;
-          webhookId: Id<"integrationWebhooks">;
-        },
-        null
-      >;
-      rotate: FunctionReference<
-        "mutation",
-        "public",
-        {
-          clientId: Id<"integrationClients">;
-          slug: string;
-          webhookId: Id<"integrationWebhooks">;
-        },
-        { id: Id<"integrationWebhooks">; secret: string }
       >;
     };
   };
@@ -9681,7 +9110,6 @@ export declare const api: {
           page: Array<{
             actor:
               | { id: Id<"tenantPeople">; kind: "person"; name: string }
-              | { kind: "client" }
               | { kind: "operator" }
               | { kind: "system" };
             at: number;
@@ -9700,8 +9128,6 @@ export declare const api: {
                   type: "assignment.deadlineChanged";
                 }
               | { task: Id<"classroomTasks">; type: "assignment.edited" }
-              | { type: "insight.narrative.shared" }
-              | { type: "insight.narrative.withdrawn" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { grade: number; type: "cohort.grade.set" }
@@ -9780,11 +9206,6 @@ export declare const api: {
                   type: "guardian.readdressed";
                 }
               | {
-                  decision: "approved" | "declined";
-                  student: Id<"tenantPeople">;
-                  type: "guardian.request.answered";
-                }
-              | {
                   client: Id<"integrationClients">;
                   scope:
                     | { kind: "tenant" }
@@ -9807,26 +9228,6 @@ export declare const api: {
                   client: Id<"integrationClients">;
                   type: "integration.authorized";
                 }
-              | {
-                  client: Id<"integrationClients">;
-                  type: "integration.webhook.created";
-                  webhook: Id<"integrationWebhooks">;
-                }
-              | {
-                  client: Id<"integrationClients">;
-                  type: "integration.webhook.changed";
-                  webhook: Id<"integrationWebhooks">;
-                }
-              | {
-                  client: Id<"integrationClients">;
-                  type: "integration.webhook.rotated";
-                  webhook: Id<"integrationWebhooks">;
-                }
-              | {
-                  client: Id<"integrationClients">;
-                  type: "integration.webhook.revoked";
-                  webhook: Id<"integrationWebhooks">;
-                }
               | { type: "period.created" }
               | { type: "period.opened" }
               | { type: "period.archived" }
@@ -9838,7 +9239,7 @@ export declare const api: {
                   added: number;
                   changed: number;
                   skipped: number;
-                  source: "classroom" | "dapodik" | "oneroster";
+                  source: "dapodik";
                   type: "roster.imported";
                 }
               | { type: "person.created" }
@@ -10000,9 +9401,6 @@ export declare const api: {
                   type: "tenant.policy.set";
                 }
               | { name: string; type: "tenant.name.set" }
-              | { type: "tenant.setup.finished" }
-              | { scheme: Id<"gradingSchemes">; type: "scheme.amended" }
-              | { scheme: Id<"gradingSchemes">; type: "scheme.removed" }
               | { scheme: Id<"gradingSchemes">; type: "scheme.stored" }
               | { type: "tenant.suspended" }
               | { type: "tenant.reactivated" }
@@ -10552,8 +9950,6 @@ export declare const api: {
                   | "forum.mentioned"
                   | "announcement.posted"
                   | "assignment.published"
-                  | "assignment.deadline"
-                  | "assignment.missed"
                   | "exam.starting"
                   | "exam.reminder"
                   | "grade.released";
@@ -10576,7 +9972,6 @@ export declare const api: {
                 } | null;
                 grade: { className: string; student: string | null } | null;
                 id: Id<"notifications">;
-                missed: { className: string; student: string } | null;
                 readAt?: number;
                 subject:
                   | { id: Id<"tenants">; kind: "tenant" }
@@ -10635,8 +10030,6 @@ export declare const api: {
               | "forum.mentioned"
               | "announcement.posted"
               | "assignment.published"
-              | "assignment.deadline"
-              | "assignment.missed"
               | "exam.starting"
               | "exam.reminder"
               | "grade.released";
@@ -10659,7 +10052,6 @@ export declare const api: {
             } | null;
             grade: { className: string; student: string | null } | null;
             id: Id<"notifications">;
-            missed: { className: string; student: string } | null;
             readAt?: number;
             subject:
               | { id: Id<"tenants">; kind: "tenant" }
@@ -10710,48 +10102,7 @@ export declare const api: {
         { personal?: boolean; slug?: string },
         null
       >;
-    };
-    preferences: {
-      list: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        Array<{
-          channel: "push" | "email";
-          kind:
-            | "forumMention"
-            | "classAnnouncement"
-            | "taskPublished"
-            | "taskDeadline"
-            | "gradeReleased"
-            | "taskMissed"
-            | "examStart"
-            | "examGuardianReminder"
-            | "invitation"
-            | "commentReply";
-        }>
-      >;
-      set: FunctionReference<
-        "mutation",
-        "public",
-        {
-          channel: "push" | "email";
-          kind:
-            | "forumMention"
-            | "classAnnouncement"
-            | "taskPublished"
-            | "taskDeadline"
-            | "gradeReleased"
-            | "taskMissed"
-            | "examStart"
-            | "examGuardianReminder"
-            | "invitation"
-            | "commentReply";
-          on: boolean;
-          slug: string;
-        },
-        null
-      >;
+      readAll: FunctionReference<"mutation", "public", { slug?: string }, null>;
     };
     push: {
       publicKey: FunctionReference<"query", "public", {}, string | null>;
@@ -11757,17 +11108,6 @@ export declare const api: {
           periodId: Id<"tenantPeriods">;
           rows: Array<{ cohortName?: string; name: string; nisn: string }>;
           slug: string;
-        },
-        { added: number; changed: number; skipped: number }
-      >;
-      applySourced: FunctionReference<
-        "mutation",
-        "public",
-        {
-          periodId: Id<"tenantPeriods">;
-          rows: Array<{ cohortName?: string; name: string; sourcedId: string }>;
-          slug: string;
-          source: "classroom" | "oneroster";
         },
         { added: number; changed: number; skipped: number }
       >;
@@ -13049,15 +12389,6 @@ export declare const api: {
         }
       >;
     };
-    setup: {
-      finish: FunctionReference<"mutation", "public", { slug: string }, null>;
-      state: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        { cohort: boolean; exam: boolean; period: boolean; student: boolean }
-      >;
-    };
     start: {
       address: FunctionReference<
         "query",
@@ -13352,7 +12683,6 @@ export declare const api: {
               ninaDailyCredits?: number;
               studentThreads: boolean;
             };
-            setupDone: boolean;
             slug: string;
             status: "active" | "suspended";
           };
@@ -15170,28 +14500,6 @@ export declare const internal: {
         null
       >;
     };
-    receipts: {
-      read: FunctionReference<
-        "query",
-        "internal",
-        {
-          locale: "en" | "id" | "de";
-          paymentId: Id<"billingPayments">;
-          userId: Id<"users">;
-        },
-        {
-          buyer: { email: string | null; name: string };
-          dueOn: string | null;
-          issuedOn: string;
-          lines: Array<{ amount: string; description: string }>;
-          locale: "en" | "id" | "de";
-          number: string;
-          paidWith: string | null;
-          status: "open" | "paid" | "void";
-          total: string;
-        } | null
-      >;
-    };
     reconcile: {
       applySubscription: FunctionReference<
         "mutation",
@@ -15239,6 +14547,28 @@ export declare const internal: {
           } | null
         >;
       };
+    };
+    receipts: {
+      read: FunctionReference<
+        "query",
+        "internal",
+        {
+          locale: "en" | "id" | "de";
+          paymentId: Id<"billingPayments">;
+          userId: Id<"users">;
+        },
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        } | null
+      >;
     };
     topup: {
       refundWithoutPro: FunctionReference<
@@ -15506,32 +14836,6 @@ export declare const internal: {
           { deleted: number }
         >;
       };
-      nina: {
-        begin: FunctionReference<
-          "mutation",
-          "internal",
-          { messageId: Id<"classroomMessages"> },
-          {
-            classId: Id<"classes">;
-            className: string;
-            history: Array<{ author: string; text: string }>;
-            locale: "en" | "id" | "de";
-            question: string;
-          } | null
-        >;
-        finish: FunctionReference<
-          "mutation",
-          "internal",
-          { answer: string | null; messageId: Id<"classroomMessages"> },
-          null
-        >;
-        reply: FunctionReference<
-          "action",
-          "internal",
-          { messageId: Id<"classroomMessages"> },
-          null
-        >;
-      };
       seed: {
         history: FunctionReference<
           "mutation",
@@ -15565,47 +14869,6 @@ export declare const internal: {
           title: string;
         },
         { id: Id<"classroomLibrary"> }
-      >;
-    };
-    passages: {
-      build: FunctionReference<
-        "action",
-        "internal",
-        { itemId: Id<"classroomLibrary"> },
-        null
-      >;
-      clear: FunctionReference<
-        "mutation",
-        "internal",
-        { tenantId: Id<"tenants"> },
-        null
-      >;
-      open: FunctionReference<
-        "query",
-        "internal",
-        { ids: Array<Id<"classroomPassages">> },
-        Array<{ text: string; title: string }>
-      >;
-      rebuild: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null; tenantId: Id<"tenants"> },
-        null
-      >;
-      source: FunctionReference<
-        "query",
-        "internal",
-        { itemId: Id<"classroomLibrary"> },
-        { contentType: string; storageId: Id<"_storage"> } | null
-      >;
-      store: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          itemId: Id<"classroomLibrary">;
-          passages: Array<{ embedding: Array<number>; text: string }>;
-        },
-        null
       >;
     };
     scheduled: {
@@ -15643,12 +14906,6 @@ export declare const internal: {
         "internal",
         { connectionId: Id<"connectorConnections"> },
         Array<{ courseId: string }>
-      >;
-      place: FunctionReference<
-        "query",
-        "internal",
-        { classId: Id<"classes"> },
-        { cohortName: string; periodId: Id<"tenantPeriods"> }
       >;
       storeWork: FunctionReference<
         "mutation",
@@ -17589,73 +16846,6 @@ export declare const internal: {
     };
   };
   emails: {
-    digest: {
-      delivery: {
-        render: FunctionReference<
-          "action",
-          "internal",
-          {
-            counts: Array<{
-              change:
-                | "exam.starting"
-                | "exam.reminder"
-                | "grade.released"
-                | "assignment.missed"
-                | "assignment.published"
-                | "forum.mentioned";
-              count: number;
-            }>;
-            inboxUrl: string;
-            locale: "en" | "id" | "de";
-            privacyPolicyUrl: string;
-            termsOfServiceUrl: string;
-          },
-          { html: string; subject: string; text: string }
-        >;
-      };
-      internal: {
-        claim: FunctionReference<
-          "mutation",
-          "internal",
-          {},
-          Array<{
-            address: string;
-            input: {
-              counts: Array<{
-                change:
-                  | "exam.starting"
-                  | "exam.reminder"
-                  | "grade.released"
-                  | "assignment.missed"
-                  | "assignment.published"
-                  | "forum.mentioned";
-                count: number;
-              }>;
-              inboxUrl: string;
-              locale: "en" | "id" | "de";
-              privacyPolicyUrl: string;
-              termsOfServiceUrl: string;
-            };
-            key: string;
-          }>
-        >;
-        enqueue: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            messages: Array<{
-              address: string;
-              html: string;
-              key: string;
-              subject: string;
-              text: string;
-            }>;
-          },
-          null
-        >;
-        send: FunctionReference<"action", "internal", {}, null>;
-      };
-    };
     invite: {
       delivery: {
         render: FunctionReference<
@@ -17883,18 +17073,6 @@ export declare const internal: {
         },
         { id: Id<"examAssets"> }
       >;
-      commitAudio: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          byteSize: number;
-          contentType: "audio/mp4" | "audio/mpeg" | "audio/ogg" | "audio/wav";
-          examId: Id<"exams">;
-          storageId: Id<"_storage">;
-          userId: Id<"users">;
-        },
-        { id: Id<"examAudio"> }
-      >;
       discard: FunctionReference<
         "mutation",
         "internal",
@@ -18069,67 +17247,6 @@ export declare const internal: {
       >;
     };
   };
-  insight: {
-    calibration: {
-      run: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          count: number;
-          cursor: string | null;
-          errors: number;
-          reached: number;
-        },
-        null
-      >;
-    };
-    drafts: {
-      finish: FunctionReference<
-        "mutation",
-        "internal",
-        { draftId: Id<"insightDrafts">; text: string | null },
-        null
-      >;
-      source: FunctionReference<
-        "query",
-        "internal",
-        { draftId: Id<"insightDrafts"> },
-        {
-          kktp: number;
-          locale: "en" | "id" | "de";
-          skills: Array<{
-            competency: string;
-            earned: number;
-            observations: number;
-            possible: number;
-            rating: number;
-          }>;
-        }
-      >;
-      write: FunctionReference<
-        "action",
-        "internal",
-        { draftId: Id<"insightDrafts"> },
-        null
-      >;
-    };
-    observe: {
-      run: FunctionReference<
-        "mutation",
-        "internal",
-        { after: Id<"tenantPeople"> | null; sittingId: Id<"examSittings"> },
-        null
-      >;
-    };
-    retention: {
-      run: FunctionReference<
-        "mutation",
-        "internal",
-        { periodId: Id<"tenantPeriods"> },
-        null
-      >;
-    };
-  };
   integrations: {
     devices: {
       poll: FunctionReference<
@@ -18155,82 +17272,7 @@ export declare const internal: {
       >;
       sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
-    hooks: {
-      deliver: FunctionReference<
-        "action",
-        "internal",
-        { deliveryId: Id<"integrationDeliveries"> },
-        null
-      >;
-      prepare: FunctionReference<
-        "query",
-        "internal",
-        { deliveryId: Id<"integrationDeliveries"> },
-        | {
-            attempt: number;
-            body: string;
-            event: Id<"journalEntries">;
-            outcome: "send";
-            secret: string;
-            type: string;
-            url: string;
-          }
-        | { outcome: "drop"; reason: "access" | "revoked" }
-        | { outcome: "settled" }
-      >;
-      prune: FunctionReference<"mutation", "internal", {}, null>;
-      run: FunctionReference<
-        "mutation",
-        "internal",
-        { webhookId: Id<"integrationWebhooks"> },
-        null
-      >;
-      settle: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          deliveryId: Id<"integrationDeliveries">;
-          outcome:
-            | { code: number; ms: number; status: "delivered" }
-            | {
-                code: number | null;
-                ms: number;
-                reason: "address" | "deadline" | "network" | "status";
-                status: "failed";
-              }
-            | { reason: "access" | "revoked"; status: "dropped" };
-        },
-        null
-      >;
-      sweep: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null },
-        null
-      >;
-    };
     reads: {
-      changes: FunctionReference<
-        "query",
-        "internal",
-        {
-          clientId: Id<"integrationClients">;
-          cursor: string | null;
-          numItems: number;
-        },
-        | {
-            data: Array<{
-              change: Record<string, boolean | number | null | string>;
-              id: string;
-              occurredAt: string;
-              subject: { id: string; kind: string };
-              type: string;
-            }>;
-            next: string | null;
-            outcome: "page";
-          }
-        | { outcome: "forbidden" }
-      >;
       cohorts: FunctionReference<
         "query",
         "internal",
@@ -18247,29 +17289,6 @@ export declare const internal: {
               name: string;
               periodId: string;
               status: string;
-            }>;
-            next: string | null;
-            outcome: "page";
-          }
-        | { outcome: "forbidden" }
-      >;
-      grades: FunctionReference<
-        "query",
-        "internal",
-        {
-          clientId: Id<"integrationClients">;
-          cursor: string | null;
-          numItems: number;
-          period: string;
-        },
-        | {
-            data: Array<{
-              classId: string;
-              id: string;
-              periodId: string;
-              personId: string;
-              releasedAt: number;
-              value: number;
             }>;
             next: string | null;
             outcome: "page";
@@ -18351,40 +17370,6 @@ export declare const internal: {
         { clientId: string; resource?: string; secret: string },
         | { expiresIn: number; outcome: "issued"; token: string }
         | { error: "invalid_client" | "invalid_target"; outcome: "refused" }
-      >;
-      sweep: FunctionReference<"mutation", "internal", {}, null>;
-    };
-    writes: {
-      enterGrade: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          classId: string;
-          clientId: Id<"integrationClients">;
-          personId: string;
-          value: number;
-        },
-        | { grade: { id: string; value: number }; outcome: "entered" }
-        | { outcome: "forbidden" }
-        | { outcome: "notPlaced" }
-        | { outcome: "released" }
-      >;
-      importRoster: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          clientId: Id<"integrationClients">;
-          digest: string;
-          key: string;
-          period: string;
-          rows: Array<{ cohortName?: string; name: string; nisn: string }>;
-        },
-        | {
-            outcome: "applied";
-            summary: { added: number; changed: number; skipped: number };
-          }
-        | { outcome: "forbidden" }
-        | { outcome: "conflict" }
       >;
       sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
@@ -19389,18 +18374,6 @@ export declare const internal: {
           cursor: string | null;
           notice: "examStart" | "examGuardianReminder";
           sittingId: Id<"examSittings">;
-        },
-        null
-      >;
-    };
-    tasks: {
-      run: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          cursor: string | null;
-          notice: "taskDeadline" | "taskMissed";
-          taskId: Id<"classroomTasks">;
         },
         null
       >;
