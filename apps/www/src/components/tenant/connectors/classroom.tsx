@@ -98,6 +98,7 @@ export function ClassroomImport() {
         size="sm"
         type="button"
       >
+        <HugeIcons icon={Download04Icon} />
         {t("courses-import")}
       </Button>
       <Sheet onOpenChange={setIsOpen} open={isOpen}>

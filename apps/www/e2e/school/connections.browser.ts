@@ -133,13 +133,16 @@ test("a connected school imports next and disconnects at once, and no state move
   const { page, slug } = await openDirectory(context, baseURL, signInOwner);
   const classroom = cardOf(page, "Google Classroom");
 
+  await page.setViewportSize({ height: 900, width: 1440 });
   await expect(classroom.getByText("Not connected.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   const before = await classroom.boundingBox();
 
   await Effect.runPromise(runAcceptanceCommand("connection", slug, "active"));
-  await expect(classroom.getByText("Connected.")).toBeVisible();
+  await expect(
+    classroom.getByText("Connected.", { exact: true })
+  ).toBeVisible();
   expect(await classroom.boundingBox()).toEqual(before);
   await picture(page, "connected");
 

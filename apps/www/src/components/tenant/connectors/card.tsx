@@ -1,4 +1,10 @@
-import { Add01Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import {
+  Add01Icon,
+  ArrowRight01Icon,
+  MoreHorizontalIcon,
+  RefreshIcon,
+  Unlink02Icon,
+} from "@hugeicons/core-free-icons";
 import { GoogleProductLogo } from "@repo/design-system/components/logos/google";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -182,6 +188,7 @@ function ConnectionMenu({
             onClick={() => setConfirming(true)}
             variant="destructive"
           >
+            <HugeIcons icon={Unlink02Icon} />
             {t("disconnect-service", { name })}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -247,6 +254,7 @@ function NextStep({
         type="button"
         variant="outline"
       >
+        <Spinner icon={RefreshIcon} isLoading={isConnecting} />
         {t("reconnect")}
       </Button>
     );
@@ -266,6 +274,7 @@ function NextStep({
         variant="outline"
       >
         {t("open-exams")}
+        <HugeIcons icon={ArrowRight01Icon} />
       </Button>
     );
   }
