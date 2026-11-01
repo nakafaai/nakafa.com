@@ -239,6 +239,7 @@ describe("classroom/forum nina", () => {
         address: "https://nakafa.com",
         classId: forum.classId,
         clientKey: "modul-gerak",
+        folderId: null,
         slug: nf,
         title: "Modul Gerak",
       });

@@ -59,6 +59,7 @@ const published = Effect.fn("test.passages.published")(function* (
   const { id } = yield* fixture.as("teacher").action(library.register, {
     classId,
     clientKey: "modul-newton",
+    folderId: null,
     slug: nf,
     storageId,
     title: "Modul Newton",
@@ -146,6 +147,7 @@ describe("classroom/passages", () => {
         address: "https://nakafa.com",
         classId,
         clientKey: "tautan-nakafa",
+        folderId: null,
         slug: nf,
         title: "Tautan",
       });
