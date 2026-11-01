@@ -98,4 +98,42 @@ describe("load seed", () => {
         expect(seeded.students[0]?.token).toBe(batches[0]?.seats[0]?.token);
       }).pipe(Effect.provide(nodePlatform))
   );
+
+  it.effect(
+    "sends a seats call again when it fails, and fails the run once it keeps failing",
+    () =>
+      Effect.gen(function* () {
+        const seedWith = (failures: number) =>
+          Effect.gen(function* () {
+            const attempts = MutableList.make<string>();
+            const exit = yield* seedRun(
+              (_operation, args) => {
+                if (args[1] === "exams/seed:load") {
+                  return Effect.succeed(
+                    encodeJson({
+                      examId: "e1",
+                      sittings: [{ id: "s1", room: "Ruang 01", token: "A" }],
+                    })
+                  );
+                }
+                MutableList.append(attempts, args[1] ?? "");
+                return MutableList.toArray(attempts).length <= failures
+                  ? Effect.fail("timed out")
+                  : Effect.succeed("");
+              },
+              LoadPlan.make({ ...plan, proctors: 1, rooms: 1, students: 1 }),
+              "sekolah"
+            ).pipe(Effect.exit);
+            return { calls: MutableList.toArray(attempts).length, exit };
+          });
+
+        const recovered = yield* seedWith(3);
+        expect(recovered.exit._tag).toBe("Success");
+        // Three failures, the student's fourth try, and the proctor's one.
+        expect(recovered.calls).toBe(5);
+
+        const failed = yield* seedWith(4);
+        expect(failed.exit._tag).toBe("Failure");
+      }).pipe(Effect.provide(nodePlatform))
+  );
 });

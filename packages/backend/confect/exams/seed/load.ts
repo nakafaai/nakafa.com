@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/acceptance/lookup";
 import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
+import { recordSchoolContract } from "@repo/backend/confect/billing/contracts";
 import { paragraphsDocument } from "@repo/backend/confect/exams/seed/prompt";
 import {
   ownerUserId,
@@ -25,6 +26,12 @@ const EXAM_TITLE = "Ujian Beban";
 /** Two hours, the length of each room of the load test: longer than any run of it. */
 const ROOM_LENGTH_MS = 2 * 60 * 60 * 1000;
 
+/**
+ * The seats of the contract the run's school takes. A running School grant lifts the free plan's limit whatever
+ * its seats say (K45), so this only has to be true of the run: more than the blueprint's 3,000 students and staff.
+ */
+const CONTRACT_SEATS = 10_000;
+
 /** The room name of one room of the load test, by its number from one. */
 const roomName = (room: number) => `Ruang ${String(room).padStart(2, "0")}`;
 
@@ -33,7 +40,9 @@ const roomName = (room: number) => `Ruang ${String(room).padStart(2, "0")}`;
  * `questions` choice questions, each keyed to its first option, and `rooms` sittings of it in the
  * school's first active unit, which open now and close two hours later. It returns the exam and
  * every room with its token, which the load test's students enter with. The journal records each
- * schedule as the system (ADR 0013).
+ * schedule as the system (ADR 0013). The school takes the contract an operator would record: a free school
+ * holds 100 students, and a running grant also spares each seated student the read of every student in the
+ * school, which concurrent seats would conflict on.
  */
 export const seedLoad = Effect.fn("exams.seed.load")(function* (args: {
   readonly questions: number;
@@ -44,6 +53,13 @@ export const seedLoad = Effect.fn("exams.seed.load")(function* (args: {
   const tenant = yield* tenantOf(args.slug);
   const unit = yield* firstActiveUnit(tenant._id);
   const now = yield* Clock.currentTimeMillis;
+  yield* recordSchoolContract({
+    contractId: `load-${args.slug}-${now}`,
+    seats: CONTRACT_SEATS,
+    tenantSlug: args.slug,
+    validFrom: now,
+    validTo: now + ROOM_LENGTH_MS,
+  }).pipe(Effect.orDie);
   const scope: GrantScope = { kind: "unit", unitId: unit._id };
   const examId = yield* (yield* DatabaseWriter)
     .table("exams")
