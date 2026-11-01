@@ -129,7 +129,9 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   expect(sentByTry()).toBe(sentOnEntering);
 
   // Finish trying returns to the editor, and the try sent nothing before the page was left.
-  await trying.getByRole("link", { name: "Finish trying" }).click();
+  await trying.getByRole("button", { name: "Review" }).click();
+  const review = trying.getByRole("dialog", { name: "Finish trying" });
+  await review.getByRole("button", { name: "Finish trying" }).click();
   await trying.waitForURL(EDITOR_PATH);
   await expect(trying.getByRole("textbox", { name: "Exam title" })).toHaveValue(
     "PTS Biologi"
