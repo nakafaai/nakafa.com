@@ -65,6 +65,8 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   await expect(
     navigator.getByRole("button", { exact: true, name: "Question 3, answered" })
   ).toBeVisible();
+  // The student copies from the paper, a signal the integrity report counts.
+  await student.evaluate(() => document.dispatchEvent(new Event("copy")));
   await student.getByRole("button", { name: "Finish", exact: true }).click();
   await student
     .getByRole("dialog")
@@ -79,6 +81,21 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   );
   await closeSitting(teacher);
   await teacher.getByRole("link", { name: "Results", exact: true }).click();
+  // The integrity report says what it is, and names the signal the student showed.
+  await teacher.getByRole("button", { name: "Integrity", exact: true }).click();
+  const integrity = teacher.getByRole("dialog", { name: "Integrity report" });
+  await expect(
+    integrity.getByText(
+      "These are indications for a teacher to weigh, never findings."
+    )
+  ).toBeVisible();
+  await expect(
+    integrity.getByRole("row", { name: LEARNER_NAME })
+  ).toContainText("copied text once", {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await teacher.keyboard.press("Escape");
+  await expect(integrity).toBeHidden();
   // The results list each question's answers in the Questions sheet of the header.
   await teacher.getByRole("button", { name: "Questions", exact: true }).click();
   const questions = teacher.getByRole("dialog", { name: "Questions" });

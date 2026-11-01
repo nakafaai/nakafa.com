@@ -134,3 +134,23 @@ export const AttemptResult = Schema.Struct({
   points: Schema.Int,
   questions: StudentResult.fields.questions,
 });
+
+/** One finished student who showed a signal, with how many of each, an indication only (K25). */
+export const IntegrityRow = Schema.Struct({
+  attemptId: Id("examAttempts"),
+  awaySeconds: Schema.Int,
+  blur: Schema.Int,
+  copy: Schema.Int,
+  disconnect: Schema.Int,
+  exits: Schema.Int,
+  fullscreenExit: Schema.Int,
+  name: PersonName,
+  paste: Schema.Int,
+  secondTab: Schema.Int,
+});
+
+/** The integrity report of a sitting: who showed a signal, and how many students finished in all. */
+export const IntegrityReport = Schema.Struct({
+  rows: Schema.Array(IntegrityRow),
+  students: Schema.Int,
+});
