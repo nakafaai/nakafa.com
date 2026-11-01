@@ -4,6 +4,7 @@ import type { LinkTarget } from "@/lib/routing/link";
 import {
   addressTarget,
   articleCategoryTarget,
+  canonicalHref,
   curriculumPublicPathTarget,
   curriculumTarget,
   publicPathTarget,
@@ -171,5 +172,28 @@ describe("typed target builders", () => {
         to: "/$locale/quran/$surah",
       })
     );
+  });
+});
+
+describe("canonicalHref", () => {
+  it("drops a lesson's context hint from the address a link shows", () => {
+    expect(
+      canonicalHref(
+        "/id/materi/fisika/kinematika/percepatan?ctx=singapore-moe%7Esecondary-science-physics"
+      )
+    ).toBe("/id/materi/fisika/kinematika/percepatan");
+  });
+
+  it("keeps the fragment and every other query of the address", () => {
+    expect(canonicalHref("/en/subjects/a/b/c?ctx=hint&page=2#part")).toBe(
+      "/en/subjects/a/b/c?page=2#part"
+    );
+  });
+
+  it("leaves an address with no hint as it is, and a link with no address", () => {
+    expect(canonicalHref("/en/auth?redirect=%2Fen%3Fctx%3Dhint")).toBe(
+      "/en/auth?redirect=%2Fen%3Fctx%3Dhint"
+    );
+    expect(canonicalHref(undefined)).toBeUndefined();
   });
 });

@@ -20,6 +20,7 @@ import {
 } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
+import { canonicalHref } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS, type LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /**
@@ -115,9 +116,12 @@ export function useLeafRoutePath() {
   });
 }
 
-/** The anchor that every app link renders. The router sets its href, active state and preload handlers. */
-function LinkAnchor(props: ComponentProps<"a">) {
-  return <a {...props} />;
+/**
+ * The anchor that every app link renders. The router sets its href, active state and
+ * preload handlers, and the address it shows is the canonical one (`canonicalHref`).
+ */
+function LinkAnchor({ href, ...props }: ComponentProps<"a">) {
+  return <a {...props} href={canonicalHref(href)} />;
 }
 
 const RouterLink = createLink(LinkAnchor);
