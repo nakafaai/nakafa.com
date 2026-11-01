@@ -192,7 +192,7 @@ function ChatFilters({
       }}
       value={filter}
     >
-      <TabsList aria-label={t("chat-filter")} className="px-1">
+      <TabsList aria-label={t("chat-filter")} className="px-4">
         {Arr.map(
           Arr.filter(
             ChatFilter.literals,

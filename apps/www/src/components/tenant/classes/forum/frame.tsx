@@ -1,6 +1,8 @@
 import { cva } from "class-variance-authority";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { pageBoxVariants } from "@/components/shared/content/width";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ChatRail } from "@/components/tenant/classes/forum/rail";
 
@@ -35,7 +37,7 @@ export function ForumFrame({
   const t = useTranslations("Classroom");
 
   return (
-    <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1">
+    <div className={cn(pageBoxVariants(), "flex min-h-0 flex-1")}>
       <aside aria-label={t("channels-title")} className={railPlace({ shown })}>
         <ChatRail />
       </aside>

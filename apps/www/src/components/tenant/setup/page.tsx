@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { finishSetupChange } from "@/components/tenant/settings/mutation";
@@ -46,7 +46,7 @@ export function SchoolSetup() {
   ): LinkTarget => ({ from: LOCALE_ROUTE, params: { slug }, to });
 
   return (
-    <>
+    <PageFrame width="column">
       <SchoolHeader items={[{ label: t("setup-title") }]}>
         <Button
           disabled={isFinishing}
@@ -140,7 +140,7 @@ export function SchoolSetup() {
           </TargetLink>
         </SetupStep>
       </LayoutContent>
-    </>
+    </PageFrame>
   );
 }
 
