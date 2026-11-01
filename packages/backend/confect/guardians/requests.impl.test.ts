@@ -13,6 +13,7 @@ import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
 const { answer, ask, ofLink, waiting } = refs.public.guardians.requests;
+const firstPage = { paginationOpts: { cursor: null, numItems: 50 } };
 const { confirm } = refs.public.guardians.family;
 
 /** A parent with a verified link to the student. */
@@ -47,7 +48,8 @@ describe("guardians/requests", () => {
           slug: nf,
           text: "Salinan rapor semester lalu.",
         });
-        const listed = yield* staff.query(waiting, { slug: nf });
+        const listed = (yield* staff.query(waiting, { ...firstPage, slug: nf }))
+          .page;
         expect(listed).toMatchObject([
           {
             kind: "reportCopy",
@@ -65,7 +67,9 @@ describe("guardians/requests", () => {
         yield* staff.mutation(answer, { ...names, decision: "approved" });
         yield* staff.mutation(answer, { ...names, decision: "declined" });
 
-        expect(yield* staff.query(waiting, { slug: nf })).toEqual([]);
+        expect(
+          (yield* staff.query(waiting, { ...firstPage, slug: nf })).page
+        ).toEqual([]);
         expect(
           yield* guardian.query(ofLink, { linkId, slug: nf })
         ).toMatchObject([{ state: "approved" }]);
@@ -82,7 +86,9 @@ describe("guardians/requests", () => {
         slug: nf,
         text: "Nama ejaannya salah.",
       });
-      const listed = yield* fixture.as("admin").query(waiting, { slug: nf });
+      const listed = (yield* fixture
+        .as("admin")
+        .query(waiting, { ...firstPage, slug: nf })).page;
       const requestId = listed[0]?.id;
       if (requestId === undefined) {
         return yield* Effect.die("The request is listed.");

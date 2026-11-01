@@ -1,5 +1,10 @@
 import type { GenericId, Ref } from "@confect/core";
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import {
+  type PaginatedQueryItem,
+  QueryResult,
+  useMutation,
+  useQuery,
+} from "@confect/react";
 import {
   Cancel01Icon,
   CheckmarkCircle02Icon,
@@ -40,7 +45,7 @@ const REQUEST_LIMIT = 500;
 type ParentRequest = Ref.Returns<typeof guardians.requests.ofLink>[number];
 
 /** One request that waits for the school office. */
-type WaitingRequest = Ref.Returns<typeof guardians.requests.waiting>[number];
+type WaitingRequest = PaginatedQueryItem<typeof guardians.requests.waiting>;
 
 /** The columns of a parent's requests. */
 const parentColumns = tableColumns<ParentRequest>();

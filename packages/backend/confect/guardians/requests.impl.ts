@@ -18,7 +18,7 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
-import { Clock, Effect, Layer, Struct } from "effect";
+import { Clock, Effect, Layer, Number as Num, Struct } from "effect";
 
 /** Requests one list shows: the office answers them as they arrive. */
 const REQUEST_PAGE = 50;
@@ -73,6 +73,7 @@ const ofLink = FunctionImpl.make(
         };
       }).pipe(Effect.orDie)
     );
+    return Struct.assign(rows, { page });
   })
 );
 
@@ -81,7 +82,7 @@ const waiting = FunctionImpl.make(
   databaseSchema,
   spec,
   "waiting",
-  Effect.fn("guardians.requests.waiting")(function* () {
+  Effect.fn("guardians.requests.waiting")(function* ({ paginationOpts }) {
     const { tenant } = yield* Member;
     const reader = yield* DatabaseReader;
     const rows = yield* reader
@@ -89,10 +90,14 @@ const waiting = FunctionImpl.make(
       .index("by_tenantId_and_state", (query) =>
         query.eq("tenantId", tenant._id).eq("state", "waiting")
       )
-      .take(REQUEST_PAGE)
+      .paginate(
+        Struct.assign(paginationOpts, {
+          numItems: Num.min(paginationOpts.numItems, REQUEST_PAGE),
+        })
+      )
       .pipe(Effect.orDie);
     const keys = yield* schoolKeys(tenant._id);
-    return yield* Effect.forEach(rows, (row) =>
+    const page = yield* Effect.forEach(rows.page, (row) =>
       Effect.gen(function* () {
         const student = yield* reader
           .table("tenantPeople")
@@ -105,6 +110,7 @@ const waiting = FunctionImpl.make(
         };
       }).pipe(Effect.orDie)
     );
+    return Struct.assign(rows, { page });
   })
 );
 

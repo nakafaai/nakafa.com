@@ -1,9 +1,4 @@
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { Link01Icon } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { LinkStatus } from "@repo/backend/confect/guardians/schema";
@@ -132,17 +127,18 @@ function GuardianLinksBody() {
     pagination._tag === "LoadingFirstPage",
     pagination.results
   );
-  const waiting = useQuery(
+  const waiting = usePaginatedQuery(
     guardians.requests.waiting,
-    isSettled ? { slug } : "skip"
+    isSettled ? { slug } : "skip",
+    { initialNumItems: PAGE_SIZE }
   );
 
-  if (QueryResult.isFailure(waiting)) {
+  if (PaginatedQueryResult.isFailure(waiting)) {
     throw waiting.error;
   }
   const failed = PaginatedQueryResult.isFailure(pagination);
   // Both reads arrive before the list draws, so a waiting request never pushes the table down.
-  if (Option.isNone(kept) || !QueryResult.isSuccess(waiting)) {
+  if (Option.isNone(kept) || PaginatedQueryResult.isLoadingFirstPage(waiting)) {
     return null;
   }
   if (Arr.isReadonlyArrayEmpty(kept.value) && search === "") {
@@ -163,7 +159,10 @@ function GuardianLinksBody() {
       <Panes>
         <PanesList>
           {failed ? <DataFailure onRetry={reloadPage} /> : null}
-          <WaitingRequests requests={waiting.value} />
+          <WaitingRequests requests={waiting.results} />
+          {PaginatedQueryResult.isCanLoadMore(waiting) ? (
+            <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
+          ) : null}
           <GuardianLinkTable />
           {PaginatedQueryResult.isCanLoadMore(pagination) ? (
             <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
@@ -231,13 +230,7 @@ function GuardianLinkTable() {
     )),
   ];
 
-  return (
-    <DataTable
-      columns={columns}
-      data={links}
-      rowId={(link) => link.id}
-    />
-  );
+  return <DataTable columns={columns} data={links} rowId={(link) => link.id} />;
 }
 
 /**
