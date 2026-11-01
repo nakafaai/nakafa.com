@@ -16,18 +16,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
-import { startTransition, useId, useState } from "react";
+import { startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
+import { useDialogs } from "@/components/shared/dialogs";
 import { LineDialog } from "@/components/tenant/line";
 import {
   archiveClassChange,
@@ -87,7 +81,6 @@ export function SchoolClassMenu({
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
-  const id = useId();
   const archive = useMutation(classroom.classes.archive).withOptimisticUpdate(
     archiveClassChange
   );
@@ -101,13 +94,7 @@ export function SchoolClassMenu({
     classroom.classes.changeSubject
   ).withOptimisticUpdate(changeClassSubject);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isTeaching, setIsTeaching] = useState(false);
-  const [subjecting, setSubjecting] = useState(0);
-  const [isSubjecting, setIsSubjecting] = useState(false);
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [name, setName] = useState(row.name);
-  const next = name.trim();
-  const canSave = next !== row.name && Schema.is(ClassName)(next);
+  const dialogs = useDialogs<"rename" | "subject" | "teach">();
 
   return (
     <div className="flex justify-end">
@@ -125,26 +112,16 @@ export function SchoolClassMenu({
           }
         />
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => setIsTeaching(true)}>
+          <DropdownMenuItem onClick={() => dialogs.show("teach")}>
             <HugeIcons icon={UserStar01Icon} />
             {t("class-teachers")}
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              setName(row.name);
-              setIsRenaming(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => dialogs.show("rename")}>
             <HugeIcons icon={PencilEdit02Icon} />
             {t("class-rename")}
           </DropdownMenuItem>
           {row.subject === undefined ? null : (
-            <DropdownMenuItem
-              onClick={() => {
-                setSubjecting((count) => count + 1);
-                setIsSubjecting(true);
-              }}
-            >
+            <DropdownMenuItem onClick={() => dialogs.show("subject")}>
               <HugeIcons icon={Edit02Icon} />
               {t("class-subject-change")}
             </DropdownMenuItem>
@@ -180,12 +157,12 @@ export function SchoolClassMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      {subjecting === 0 ? null : (
+      {dialogs.kind === "subject" ? (
         <LineDialog
           description={t("class-subject-change-description")}
           initial={row.subject ?? ""}
           isValid={Schema.is(ClassSubject)}
-          key={subjecting}
+          key={dialogs.key}
           label={t("class-subject")}
           onSave={(subject) =>
             startTransition(() =>
@@ -195,63 +172,38 @@ export function SchoolClassMenu({
               )
             )
           }
-          open={isSubjecting}
+          open={dialogs.isOpen("subject")}
           placeholder={t("class-subject-placeholder")}
-          setOpen={setIsSubjecting}
+          setOpen={dialogs.setOpen}
           title={t("class-subject-change")}
         />
-      )}
+      ) : null}
       <ClassTeachersDialog
-        isRead={isMenuOpen || isTeaching}
-        open={isTeaching}
+        isRead={isMenuOpen || dialogs.isOpen("teach")}
+        open={dialogs.isOpen("teach")}
         row={row}
-        setOpen={setIsTeaching}
+        setOpen={dialogs.setOpen}
         slug={slug}
       />
-      <ResponsiveDialog
-        description={t("class-rename-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsRenaming(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={!canSave}
-              onClick={() => {
-                setIsRenaming(false);
-                startTransition(() =>
-                  saveSchool(
-                    () => rename({ classId: row.id, name: next, slug }),
-                    SOURCE
-                  )
-                );
-              }}
-              type="button"
-            >
-              {t("class-rename-save")}
-            </Button>
-          </>
-        }
-        open={isRenaming}
-        setOpen={setIsRenaming}
-        title={t("class-rename")}
-      >
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor={`${id}-name`}>{t("class-name")}</FieldLabel>
-            <Input
-              id={`${id}-name`}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={t("class-name-placeholder")}
-              value={name}
-            />
-          </Field>
-        </FieldGroup>
-      </ResponsiveDialog>
+      {dialogs.kind === "rename" ? (
+        <LineDialog
+          action={t("class-rename-save")}
+          description={t("class-rename-description")}
+          initial={row.name}
+          isValid={Schema.is(ClassName)}
+          key={dialogs.key}
+          label={t("class-name")}
+          onSave={(name) =>
+            startTransition(() =>
+              saveSchool(() => rename({ classId: row.id, name, slug }), SOURCE)
+            )
+          }
+          open={dialogs.isOpen("rename")}
+          placeholder={t("class-name-placeholder")}
+          setOpen={dialogs.setOpen}
+          title={t("class-rename")}
+        />
+      ) : null}
     </div>
   );
 }

@@ -26,8 +26,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Clock, Effect, Function as Fn, Schema } from "effect";
-import { startTransition, useState } from "react";
+import { startTransition } from "react";
 import { useTranslations } from "use-intl";
+import { useDialogs } from "@/components/shared/dialogs";
 import {
   archiveChannelUpdate,
   removeChannelUpdate,
@@ -72,9 +73,7 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
   const remove = useMutation(
     classroom.forum.channels.remove
   ).withOptimisticUpdate(removeChannelUpdate);
-  const [renaming, setRenaming] = useState(0);
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
+  const dialogs = useDialogs<"remove" | "rename">();
   const managed = channel.kind === "topic" && Arr.contains(can, "forum.manage");
 
   return (
@@ -128,12 +127,7 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
             </DropdownMenuItem>
             {managed ? (
               <>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setRenaming((count) => count + 1);
-                    setIsRenaming(true);
-                  }}
-                >
+                <DropdownMenuItem onClick={() => dialogs.show("rename")}>
                   <HugeIcons icon={PencilEdit02Icon} />
                   {t("channel-rename")}
                 </DropdownMenuItem>
@@ -167,7 +161,7 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem
-                  onClick={() => setIsRemoving(true)}
+                  onClick={() => dialogs.show("remove")}
                   variant="destructive"
                 >
                   <HugeIcons icon={Delete02Icon} />
@@ -178,12 +172,12 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
-      {renaming === 0 ? null : (
+      {dialogs.kind === "rename" ? (
         <LineDialog
           description={t("channel-rename-description")}
           initial={channel.name}
           isValid={Schema.is(ChannelName)}
-          key={renaming}
+          key={dialogs.key}
           label={t("channel-name")}
           onSave={(name) =>
             startTransition(() =>
@@ -193,26 +187,22 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
               )
             )
           }
-          open={isRenaming}
+          open={dialogs.isOpen("rename")}
           placeholder={t("channel-name-placeholder")}
-          setOpen={setIsRenaming}
+          setOpen={dialogs.setOpen}
           title={t("channel-rename")}
         />
-      )}
+      ) : null}
       <ResponsiveDialog
         description={t("channel-remove-description")}
         footer={
           <>
-            <Button
-              onClick={() => setIsRemoving(false)}
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={dialogs.close} type="button" variant="outline">
               {common("cancel")}
             </Button>
             <Button
               onClick={() => {
-                setIsRemoving(false);
+                dialogs.close();
                 navigate(schoolClassForumTarget(slug, classSlug));
                 runForumCall(
                   forumCall(() =>
@@ -228,8 +218,8 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
             </Button>
           </>
         }
-        open={isRemoving}
-        setOpen={setIsRemoving}
+        open={dialogs.isOpen("remove")}
+        setOpen={dialogs.setOpen}
         title={t("channel-remove-title")}
       />
     </>
