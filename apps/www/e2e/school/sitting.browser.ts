@@ -30,6 +30,9 @@ const LEARNER_NAME = "Acceptance Learner";
 /** The row of the first room of the seeded exam, which is open, in the rooms list. */
 const OPEN_ROOM_ROW = /Lab 2/u;
 
+/** The state of an open room, which its seats' counts follow in the same cell. */
+const OPEN_ROOM_STATE = /^Open\b/u;
+
 /** Students seated before the learner, more than one dashboard page of 100 holds. */
 const CROWD = 101;
 
@@ -64,7 +67,9 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student.getByPlaceholder("Enter the token").fill(sitting.token);
+  await student
+    .getByPlaceholder("Enter the token")
+    .fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })
@@ -216,7 +221,7 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
   await expect(
     rooms
       .getByRole("row", { name: OPEN_ROOM_ROW })
-      .getByRole("cell", { name: /^Open\b/u })
+      .getByRole("cell", { name: OPEN_ROOM_STATE })
   ).toBeVisible();
 
   await rooms.getByRole("link", { name: "Lab 2" }).click();
@@ -282,7 +287,9 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student.getByPlaceholder("Enter the token").fill(sitting.token);
+  await student
+    .getByPlaceholder("Enter the token")
+    .fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })

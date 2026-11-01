@@ -81,7 +81,7 @@ function useSettingsReturn(): Option.Option<string> {
 }
 
 /** Whether a key press belongs to a field the viewer is typing in. */
-function isTyping(target: EventTarget | null) {
+export function isTyping(target: EventTarget | null) {
   return (
     target instanceof HTMLElement &&
     (target.isContentEditable ||
@@ -94,8 +94,9 @@ function isTyping(target: EventTarget | null) {
 /**
  * The way out of a settings sidebar, above its first group: back to the page
  * read before settings, or to `home` when settings was the first page. Escape
- * leaves the same way, unless a field holds the key or an open popup closed
- * with it, which marks the press as handled before it reaches the window.
+ * leaves the same way, unless a field holds the key, an open popup closed with
+ * it, which marks the press as handled before it reaches the window, or a row
+ * stands open beside the list, which closes first (`PanesDetail`).
  */
 export function SettingsBack({
   home,
@@ -112,7 +113,8 @@ export function SettingsBack({
       event.key !== "Escape" ||
       event.defaultPrevented ||
       event.isComposing ||
-      isTyping(event.target)
+      isTyping(event.target) ||
+      document.querySelector("[data-pane-row]") !== null
     ) {
       return;
     }

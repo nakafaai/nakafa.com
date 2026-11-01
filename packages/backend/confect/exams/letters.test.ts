@@ -4,6 +4,7 @@ import {
   isReasonOption,
   labelText,
   letterScript,
+  optionDirection,
   optionLetter,
   optionLetters,
   optionPlace,
@@ -95,6 +96,11 @@ describe("the letter of an option", () => {
     const latin = optionLetters([label("Jakarta"), label("Bandung")]);
     expect([arabic(0), arabic(1)]).toEqual(["أ", "ب"]);
     expect([latin(0), latin(1)]).toEqual(["A", "B"]);
+  });
+
+  it("reads a set the way its letters run, so an Arabic set starts from the right", () => {
+    expect(optionDirection([label("القاهرة"), label("دمشق")])).toBe("rtl");
+    expect(optionDirection([label("Benar"), label("نعم")])).toBe("ltr");
   });
 
   it("names an option of an Arabic set past the abjad as a Latin set names its place", () => {

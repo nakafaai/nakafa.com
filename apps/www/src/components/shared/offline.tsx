@@ -12,19 +12,27 @@ import { useTranslations } from "use-intl";
 import { isConvexOffline } from "@/lib/convex/online";
 
 /**
+ * Whether the page has no connection. The browser knows at once when the device leaves its network, and the
+ * client notices a connection that went quiet about a minute later, so each answers for the other.
+ */
+export function useOffline() {
+  const { online } = useNetwork();
+  const connection = useConvexConnectionState();
+
+  return !online || isConvexOffline(connection);
+}
+
+/**
  * What a page that saves as the person works says while the connection is gone: the exam editor's
  * header, the paper's bar and the try-out player's header. The person keeps working, and every change
- * waits on the page and saves once the connection is back. The browser's word comes first, since a
- * socket on a lost network can stand open for a while, and Convex's own state covers a network that
- * stays up with no way to the server. A phone shows the icon, which names it in its tooltip. A page on
- * a good connection says nothing.
+ * waits on the page and saves once the connection is back. A phone shows the icon, which names it in
+ * its tooltip. A page on a good connection says nothing.
  */
 export function OfflineNote() {
   const t = useTranslations("Common");
-  const connection = useConvexConnectionState();
-  const { online } = useNetwork();
+  const offline = useOffline();
 
-  if (online && !isConvexOffline(connection)) {
+  if (!offline) {
     return null;
   }
 

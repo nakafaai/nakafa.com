@@ -14,7 +14,6 @@ import {
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { Button } from "@repo/design-system/components/ui/button";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Sheet,
   SheetClose,
@@ -28,6 +27,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { reloadPage } from "@/components/shared/reload";
+import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
@@ -163,7 +163,7 @@ function DeliveryList({ webhook }: { webhook: Webhook }) {
         ))}
       </ul>
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+        <TableEnd onLoad={() => pagination.loadMore(PAGE_SIZE)} />
       ) : null}
     </>
   );

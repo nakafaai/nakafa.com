@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
@@ -35,6 +34,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   useServerSearch,
@@ -331,9 +331,7 @@ export function StudentsTable() {
         rowId={(row) => row.attemptId}
       />
       {PaginatedQueryResult.isCanLoadMore(students) ? (
-        <Intersection
-          onIntersect={() => students.loadMore(STUDENT_PAGE_SIZE)}
-        />
+        <TableEnd onLoad={() => students.loadMore(STUDENT_PAGE_SIZE)} />
       ) : null}
     </>
   );

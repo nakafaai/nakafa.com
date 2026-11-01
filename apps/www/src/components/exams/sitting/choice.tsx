@@ -1,4 +1,7 @@
-import { optionLetters } from "@repo/backend/confect/exams/letters";
+import {
+  optionDirection,
+  optionLetters,
+} from "@repo/backend/confect/exams/letters";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Option } from "effect";
 import { useId } from "react";
@@ -6,7 +9,6 @@ import { SittingDocument } from "@/components/exams/sitting/document";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
 import { type Choice, toggleOption } from "@/components/exams/sitting/response";
 import {
-  LetteredChoice,
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,
 } from "@/components/tryout/runtime/choice/surface";
@@ -30,15 +32,16 @@ export function SittingChoice({
 }) {
   const disabled = usePaperLocked();
   const id = useId();
-  const letterOf = optionLetters(
-    Arr.map(choice.options, (option) => option.label)
-  );
+  const labels = Arr.map(choice.options, (option) => option.label);
+  const letterOf = optionLetters(labels);
+  const direction = optionDirection(labels);
 
   if (choice.maxChoices === 1) {
     return (
       <RadioGroup
         aria-labelledby={labelledBy}
         className="grid grid-cols-1 gap-2 md:grid-cols-2"
+        dir={direction}
         onValueChange={(optionId) => onChoose([optionId])}
         value={Option.getOrElse(Arr.head(response), () => "")}
       >
@@ -48,14 +51,10 @@ export function SittingChoice({
             disabled={disabled}
             id={`${id}-${option.id}`}
             key={option.id}
+            letter={letterOf(index)}
             value={option.id}
           >
-            <LetteredChoice
-              id={`${id}-${option.id}-label`}
-              letter={letterOf(index)}
-            >
-              <SittingDocument document={option.label} size="line" />
-            </LetteredChoice>
+            <SittingDocument document={option.label} size="line" />
           </TryoutSelectableRadioOption>
         ))}
       </RadioGroup>
@@ -66,6 +65,7 @@ export function SittingChoice({
     <fieldset
       aria-labelledby={labelledBy}
       className="grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2"
+      dir={direction}
     >
       {Arr.map(choice.options, (option, index) => (
         <TryoutSelectableMultipleChoice
@@ -73,18 +73,14 @@ export function SittingChoice({
           disabled={disabled}
           id={`${id}-${option.id}`}
           key={option.id}
+          letter={letterOf(index)}
           onCheckedChange={(checked) =>
             onChoose(
               toggleOption(response, option.id, checked, choice.maxChoices)
             )
           }
         >
-          <LetteredChoice
-            id={`${id}-${option.id}-label`}
-            letter={letterOf(index)}
-          >
-            <SittingDocument document={option.label} size="line" />
-          </LetteredChoice>
+          <SittingDocument document={option.label} size="line" />
         </TryoutSelectableMultipleChoice>
       ))}
     </fieldset>

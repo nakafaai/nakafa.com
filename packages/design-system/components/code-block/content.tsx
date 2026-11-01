@@ -83,6 +83,10 @@ export function CodeBlockContent({
             transparentBackground: request.transparentBackground,
           })
         ),
+        // A fence names no language, or one Shiki does not bundle: the block reads as plain text.
+        Effect.catchTag("UnsupportedCodeLanguageError", () =>
+          Effect.succeed("")
+        ),
         Effect.matchEffect({
           onFailure: (error) =>
             Effect.sync(() => {

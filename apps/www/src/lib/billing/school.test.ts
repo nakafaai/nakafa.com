@@ -6,6 +6,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Option, Schema } from "effect";
 import {
+  invoiceStanding,
   planHintKey,
   purchaseOf,
   type SchoolBilling,
@@ -75,6 +76,34 @@ describe("school billing copy", () => {
         })
       )
     ).toBe("billing-school-footer");
+    expect(
+      planHintKey(
+        overview({
+          invoices: [
+            {
+              currency: "IDR",
+              dueAt: 2000,
+              number: "NKF-2026-000001",
+              paymentLink: null,
+              periodEnd: 2000,
+              periodStart: 1000,
+              seats: 120,
+              status: "open",
+              total: 8_400_000,
+            },
+          ],
+          quotes: [],
+        })
+      )
+    ).toBe("billing-open-footer");
+  });
+
+  it("reads an open invoice past its due day as overdue, and no other", () => {
+    expect(invoiceStanding({ dueAt: 2000, status: "open" }, 1999)).toBe("open");
+    expect(invoiceStanding({ dueAt: 2000, status: "open" }, 2001)).toBe(
+      "overdue"
+    );
+    expect(invoiceStanding({ dueAt: 2000, status: "paid" }, 2001)).toBe("paid");
   });
 
   it("issues an invoice in Indonesia and buys Polar seats elsewhere, and nothing a rail does not sell", () => {
@@ -108,6 +137,7 @@ describe("school billing optimistic invoice", () => {
         total: 8_400_000,
       },
     ]);
+    expect(shown.quotes).toEqual([]);
     schoolPayChange(local.store, { offer: "school.seat.year", slug });
     expect(
       Option.getOrThrow(local.store.getQuery(billing.school.overview, { slug }))

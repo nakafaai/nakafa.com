@@ -58,7 +58,7 @@ export function QuranTranslation({
                 key={note.number}
               >
                 <a
-                  aria-label={`${subjectLabel}: ${label} ${note.number}`}
+                  aria-label={`${note.number}. ${subjectLabel}: ${label}`}
                   className="text-primary decoration-primary/40 hover:decoration-primary focus-visible:ring-ring -mx-1.5 -my-0.5 px-1.5 py-0.5 font-mono underline underline-offset-2 focus-visible:ring-2 focus-visible:outline-none"
                   href={`#${id}-translation-note-reference-${note.number}-${note.referenceOffset}`}
                   role="doc-backlink"
