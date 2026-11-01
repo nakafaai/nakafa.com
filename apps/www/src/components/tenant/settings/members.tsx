@@ -14,8 +14,10 @@ import {
   UserRemove01Icon,
   UserStar01Icon,
 } from "@hugeicons/core-free-icons";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
+import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -28,9 +30,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { type ComponentProps, startTransition, useState } from "react";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
@@ -44,11 +46,13 @@ import {
 } from "@/components/shared/table/toolbar";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
+import { LineDialog } from "@/components/tenant/line";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleLooks } from "@/components/tenant/roles";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
+import { inviteChange } from "@/components/tenant/settings/grants";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -215,23 +219,52 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
 }
 
 /**
- * The row menu of a member: Rename, Give a role, which gives the member a role of the whole school, and Remove for a member
- * whom the viewer may remove, one who joined, one whose card waits, and one whose invite ended or card expired. Remove
- * asks first, and the account of a member who joined loses the school at once. An invited member is handled on the
- * invitations page, and the list answers which rows the viewer may remove.
+ * The row menu of a member: Rename, Give a role, which gives the member a role of the whole school, Invite for a member
+ * nothing waits for yet, such as a student an import added, and Remove for a member whom the viewer may remove, one who
+ * joined, one whose card waits, and one whose invite ended or card expired. Remove asks first, and the account of a member
+ * who joined loses the school at once. An invited member is handled on the invitations page, and the list answers which
+ * rows the viewer may remove.
  */
 function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
+  const sendLocale = Option.getOrUndefined(
+    Schema.decodeOption(ActiveAppLocaleCodeSchema)(useLocale())
+  );
+  const invite = useMutation(tenancy.invites.invite).withOptimisticUpdate(
+    inviteChange
+  );
   const remove = useMutation(tenancy.people.remove).withOptimisticUpdate(
     removeMemberChange
   );
   const [isGiving, setIsGiving] = useState(false);
+  const [inviting, setInviting] = useState(0);
+  const [isInviting, setIsInviting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renaming, setRenaming] = useState(0);
   const [isRemoving, setIsRemoving] = useState(false);
   const removable = member.removable && member.status !== "invited";
+
+  /** Invites the member at the address typed, in the viewer's language. */
+  const inviteAt = (value: string) => {
+    const email = Schema.decodeOption(Email)(value);
+    if (sendLocale === undefined || Option.isNone(email)) {
+      return;
+    }
+    startTransition(() =>
+      saveSchool(
+        () =>
+          invite({
+            email: email.value,
+            locale: sendLocale,
+            personId: member.id,
+            slug,
+          }),
+        SOURCE
+      )
+    );
+  };
 
   const removeMember = () => {
     setIsRemoving(false);
@@ -269,6 +302,18 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
               <HugeIcons icon={UserStar01Icon} />
               {t("roles-assign-dialog")}
             </DropdownMenuItem>
+            {member.status === "notInvited" ? (
+              <DropdownMenuItem
+                disabled={sendLocale === undefined}
+                onClick={() => {
+                  setInviting((count) => count + 1);
+                  setIsInviting(true);
+                }}
+              >
+                <HugeIcons icon={MailSend01Icon} />
+                {t("invite-action")}
+              </DropdownMenuItem>
+            ) : null}
             {removable ? (
               <DropdownMenuItem
                 onClick={() => setIsRemoving(true)}
@@ -292,6 +337,22 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
         person={{ id: member.id, name: member.name }}
         setOpen={setIsGiving}
       />
+      {inviting === 0 ? null : (
+        <LineDialog
+          action={t("invite-submit")}
+          description={t("invite-dialog-description")}
+          initial=""
+          isValid={Schema.is(Email)}
+          key={inviting}
+          label={t("invite-email")}
+          onSave={inviteAt}
+          open={isInviting}
+          placeholder={t("invite-email-placeholder")}
+          setOpen={setIsInviting}
+          title={t("invite-dialog-title")}
+          type="email"
+        />
+      )}
       <ResponsiveDialog
         description={t("member-remove-description")}
         footer={
