@@ -6,6 +6,7 @@ import { Kind } from "@repo/backend/confect/access/kind";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import {
+  CLASS_TEACHERS_ASK_LIMIT,
   ClassAddress,
   ClassName,
   ClassStatus,
@@ -26,6 +27,7 @@ import {
   CohortAccess,
   PeriodAccess,
 } from "@repo/backend/confect/tenancy/access";
+import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
@@ -150,6 +152,26 @@ export default GroupSpec.make()
       name: "list",
       args: () => ({ periodId: Id("tenantPeriods"), slug: TenantSlug }),
       item: () => ClassView,
+      error: () => AccessDenied,
+    }).middleware(PeriodAccess, { action: "class.list", arg: "periodId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "teachers",
+      args: () => ({
+        classIds: Schema.Array(Id("classes")).check(
+          Schema.isMaxLength(CLASS_TEACHERS_ASK_LIMIT)
+        ),
+        periodId: Id("tenantPeriods"),
+        slug: TenantSlug,
+      }),
+      returns: () =>
+        Schema.Array(
+          Schema.Struct({
+            classId: Id("classes"),
+            names: Schema.Array(PersonName),
+          })
+        ),
       error: () => AccessDenied,
     }).middleware(PeriodAccess, { action: "class.list", arg: "periodId" })
   )

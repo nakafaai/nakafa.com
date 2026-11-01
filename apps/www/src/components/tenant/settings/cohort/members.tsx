@@ -88,6 +88,10 @@ export function SchoolCohortMembers({
       header: t("member-name"),
       id: "name",
     }),
+    memberColumns.text((member) => member.login ?? "", {
+      header: t("member-login"),
+      id: "login",
+    }),
     memberColumns.menu((info) =>
       canMove ? (
         <SchoolPlacementMove

@@ -16,6 +16,7 @@ const cohortOf = (id: string) =>
   Schema.decodeUnknownSync(Id("tenantCohorts"))(id);
 const personOf = (id: string, name: string) => ({
   id: Schema.decodeUnknownSync(Id("tenantPeople"))(id),
+  login: null,
   name,
 });
 

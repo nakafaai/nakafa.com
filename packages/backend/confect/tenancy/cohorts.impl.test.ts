@@ -12,10 +12,11 @@ import {
 import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
-const { activePeriod, create, edit, get, list, archive } =
+const { activePeriod, create, edit, get, list, archive, members, overview } =
   refs.public.tenancy.cohorts;
 const assignments = refs.public.tenancy.assignments;
 const periods = refs.public.tenancy.periods;
+const placements = refs.public.tenancy.placements;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
@@ -201,6 +202,59 @@ describe("tenancy/cohorts active period", () => {
           denied("role"),
           denied("resource"),
         ]);
+      })
+  );
+});
+
+describe("tenancy/cohorts overview", () => {
+  it.effect(
+    "counts a cohort's students and classes, and names its homeroom teacher once it has one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* fixture.as("admin").mutation(periods.create, {
+          end: "2026-12-19",
+          name: "Ganjil 2026/2027",
+          slug: nf,
+          start: "2026-07-13",
+          unitId: fixture.units.smp,
+        });
+        const made = yield* cohort(fixture, term.id, "7A", 7);
+        const read = fixture
+          .as("admin")
+          .query(overview, { periodId: term.id, slug: nf });
+        expect(yield* read).toEqual([
+          { classes: 0, homeroom: null, id: made.id, name: "7A", students: 0 },
+        ]);
+        yield* fixture.as("admin").mutation(assignments.assign, {
+          cohortId: made.id,
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        yield* fixture.as("admin").mutation(placements.place, {
+          cohortId: made.id,
+          personId: fixture.people.student.personId,
+          slug: nf,
+        });
+        expect(yield* read).toMatchObject([
+          { homeroom: expect.any(String), students: 1 },
+        ]);
+        const placed = fixture.as("admin").query(members, {
+          cohortId: made.id,
+          paginationOpts: { cursor: null, numItems: 10 },
+          slug: nf,
+        });
+        expect((yield* placed).page).toMatchObject([{ login: null }]);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("schoolLogins").insert({
+              name: "siswa-7a",
+              personId: fixture.people.student.personId,
+              tenantId: fixture.tenants.nf,
+            })
+          )
+        );
+        expect((yield* placed).page).toMatchObject([{ login: "siswa-7a" }]);
       })
   );
 });

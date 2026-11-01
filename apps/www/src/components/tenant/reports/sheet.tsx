@@ -27,7 +27,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { getRouteApi } from "@tanstack/react-router";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -40,6 +40,7 @@ import {
   PanesProvider,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
+import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -59,6 +60,10 @@ import {
   ReportLineDetail,
   ReportNoteDialog,
 } from "@/components/tenant/reports/detail";
+import {
+  SchoolDateTime,
+  useSchoolTimeZone,
+} from "@/components/tenant/settings/time";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /** How many students one page of the list loads, and each page after it. */
@@ -142,6 +147,8 @@ function CohortReportsHeader() {
 /** The students of the class group, read a page at a time, beside the open report; or the empty state. */
 function CohortReportsBody() {
   const t = useTranslations("SchoolReports");
+  const formatZone = useFormatTimeZone();
+  const timeZone = useSchoolTimeZone();
   const args = useCohortArgs();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
@@ -191,6 +198,15 @@ function CohortReportsBody() {
           value: state,
         })
       ),
+    }),
+    lineColumns.days((line) => line.report?.approvedAt ?? null, {
+      cell: (info) => {
+        const at = info.getValue();
+        return at === null ? null : <SchoolDateTime at={at} />;
+      },
+      header: t("approved-at"),
+      id: "approved",
+      timeZone: () => Option.getOrElse(timeZone, formatZone),
     }),
     lineColumns.menu((info) => <ReportLineMenu line={info.row.original} />),
   ];

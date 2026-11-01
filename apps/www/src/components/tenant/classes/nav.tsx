@@ -129,7 +129,7 @@ function TenantUnitClasses({
     return null;
   }
 
-  return <TenantPeriodClasses label={name} periodId={period.value.id} />;
+  return <TenantPeriodClasses label={name} periodId={period.value} />;
 }
 
 /**

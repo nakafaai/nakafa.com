@@ -1,6 +1,7 @@
 import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
+  QueryResult,
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
@@ -36,6 +37,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
 import {
@@ -43,11 +45,12 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { WithAction } from "@/components/tenant/action";
-import { useTenant } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleLooks } from "@/components/tenant/roles";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
+import { UNIT_ICONS } from "@/components/tenant/settings/choices";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
@@ -141,6 +144,7 @@ function SchoolMembersBody() {
 function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
+  const viewer = useViewerQuery();
 
   if (Arr.isReadonlyArrayEmpty(members)) {
     return (
@@ -152,6 +156,15 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
     );
   }
 
+  const unitsOf = (member: MemberItem) =>
+    QueryResult.isSuccess(viewer)
+      ? Arr.map(
+          Arr.filter(viewer.value.units, (unit) =>
+            Arr.contains(member.units, unit.id)
+          ),
+          (unit) => unit.name
+        )
+      : [];
   const columns = [
     memberColumns.text((member) => member.name, {
       cell: (info) => (
@@ -161,6 +174,19 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
       ),
       header: t("member-name"),
       id: "name",
+    }),
+    memberColumns.text((member) => member.email ?? "", {
+      header: t("member-email"),
+      id: "email",
+    }),
+    memberColumns.list(unitsOf, {
+      cell: (info) => <span dir="auto">{Arr.join(info.getValue(), ", ")}</span>,
+      header: t("member-units"),
+      id: "units",
+      options: namedOptions(
+        Arr.dedupe(Arr.flatMap(members, unitsOf)),
+        UNIT_ICONS
+      ),
     }),
     memberColumns.values((member) => member.status, {
       cell: (info) => (

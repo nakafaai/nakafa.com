@@ -208,7 +208,11 @@ function SchoolDirectory() {
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail empty={t("detail-empty")} label={t("detail")}>
+        <PanesDetail
+          defaultSize="45%"
+          empty={t("detail-empty")}
+          label={t("detail")}
+        >
           <ServiceDetail entries={entries} />
         </PanesDetail>
       </Panes>

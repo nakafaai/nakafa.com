@@ -13,12 +13,43 @@ import {
 import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { archive, get, list, mine, rename, resolve } =
+const { archive, get, list, mine, rename, resolve, teachers } =
   refs.public.classroom.classes;
 const cohorts = refs.public.tenancy.cohorts;
 const periods = refs.public.tenancy.periods;
 const placements = refs.public.tenancy.placements;
 const grants = refs.public.access.grants;
+
+describe("classroom/classes teachers", () => {
+  it.effect(
+    "names the teachers of the classes a table asks for, and nobody under another period",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const other = yield* period(fixture, fixture.units.sma);
+        const x1 = yield* cohort(fixture, term.id, "VII-1");
+        const made = yield* classOf(fixture, x1.id, "Fisika");
+        const empty = yield* classOf(fixture, x1.id, "Kimia");
+        yield* teach(fixture, made.id, fixture.people.teacher.personId);
+        const admin = fixture.as("admin");
+        const asked = { classIds: [made.id, empty.id], slug: nf };
+
+        expect(
+          yield* admin.query(teachers, { ...asked, periodId: term.id })
+        ).toEqual([
+          { classId: made.id, names: [expect.any(String)] },
+          { classId: empty.id, names: [] },
+        ]);
+        expect(
+          yield* admin.query(teachers, { ...asked, periodId: other.id })
+        ).toEqual([
+          { classId: made.id, names: [] },
+          { classId: empty.id, names: [] },
+        ]);
+      })
+  );
+});
 
 describe("classroom/classes read and roles", () => {
   it.effect("lets a school leader read a class, and refuses a counselor", () =>

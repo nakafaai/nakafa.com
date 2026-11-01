@@ -27,6 +27,7 @@ import { restoreCohort } from "@repo/backend/confect/tenancy/cohort.restore";
 import { edit } from "@repo/backend/confect/tenancy/cohorts.edit";
 import spec from "@repo/backend/confect/tenancy/cohorts.spec";
 import { cohortMembers } from "@repo/backend/confect/tenancy/members";
+import { overview } from "@repo/backend/confect/tenancy/overview";
 import {
   checkCohorts,
   insertCohort,
@@ -115,12 +116,25 @@ const members = FunctionImpl.make(
   Effect.fn("tenancy.cohorts.members")(function* ({ paginationOpts }) {
     const cohort = yield* Cohort;
     const placed = yield* cohortMembers(cohort._id, paginationOpts);
-    return Struct.assign(placed, {
-      page: Arr.map(placed.page, (person) => ({
-        id: person._id,
-        name: person.name,
-      })),
-    });
+    const reader = yield* DatabaseReader;
+    const page = yield* Effect.forEach(
+      placed.page,
+      (person) =>
+        reader
+          .table("schoolLogins")
+          .index("by_personId", (query) => query.eq("personId", person._id))
+          .first()
+          .pipe(
+            Effect.orDie,
+            Effect.map((login) => ({
+              id: person._id,
+              login: Option.isSome(login) ? login.value.name : null,
+              name: person.name,
+            }))
+          ),
+      { concurrency: "unbounded" }
+    );
+    return Struct.assign(placed, { page });
   })
 );
 
@@ -179,6 +193,7 @@ const restore = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(overview),
   Layer.provide(list),
   Layer.provide(detail),
   Layer.provide(activePeriod),

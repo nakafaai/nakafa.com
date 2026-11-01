@@ -152,7 +152,8 @@
     "mismatches": "Cek NISN gagal",
     "child": "Anak",
     "child-detail": "Anak",
-    "child-detail-empty": "Pilih anak untuk melihat rinciannya."
+    "child-detail-empty": "Pilih anak untuk melihat rinciannya.",
+    "guardian-email": "Email orang tua"
   },
   "SchoolRoster": {
     "import": "Impor",
@@ -1402,7 +1403,14 @@
     "homeroom-description": "Satu guru memimpin setiap rombel.",
     "webhook-changes-description": "Sistemmu diberi tahu setiap kali salah satunya terjadi.",
     "webhook-changes-none": "Klien ini tidak membaca apa pun yang dikirim webhook, jadi ubah aksinya dulu.",
-    "webhook-client-none": "Webhook milik sebuah klien API, jadi buat dulu kliennya."
+    "webhook-client-none": "Webhook milik sebuah klien API, jadi buat dulu kliennya.",
+    "class-students": "Siswa",
+    "cohort-homeroom": "Wali kelas",
+    "cohort-students": "Siswa",
+    "cohort-classes": "Kelas",
+    "member-login": "Akun masuk",
+    "member-email": "Email",
+    "member-units": "Unit"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -1703,7 +1711,8 @@
     "own-title": "Rapor saya",
     "own-search": "Cari rombel",
     "own-empty": "Belum ada rapor yang dikunci.",
-    "own-empty-description": "Rapor muncul di sini setelah kepala sekolah menyetujuinya."
+    "own-empty-description": "Rapor muncul di sini setelah kepala sekolah menyetujuinya.",
+    "unit": "Unit"
   },
   "SchoolGraduation": {
     "title": "Kelulusan",

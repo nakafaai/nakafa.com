@@ -31,11 +31,13 @@ const address = Schema.decodeSync(Email)("guru.baru@example.com");
 /** One active member of the school as the members list shows it. */
 function member(id: string, name: string): Member {
   return {
+    email: null,
     id: Schema.decodeUnknownSync(Id("tenantPeople"))(id),
     name,
     removable: true,
     roles: ["teacher"],
     status: "joined",
+    units: [],
   };
 }
 

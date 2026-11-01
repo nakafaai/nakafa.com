@@ -152,7 +152,8 @@
     "mismatches": "Failed NISN checks",
     "child": "Child",
     "child-detail": "Child",
-    "child-detail-empty": "Choose a child to see the details."
+    "child-detail-empty": "Choose a child to see the details.",
+    "guardian-email": "Parent email"
   },
   "SchoolRoster": {
     "import": "Import",
@@ -1402,7 +1403,14 @@
     "homeroom-description": "One teacher leads each cohort.",
     "webhook-changes-description": "Your system is told each time one of these happens.",
     "webhook-changes-none": "This client reads nothing a webhook sends, so edit its actions first.",
-    "webhook-client-none": "A webhook belongs to an API client, so create one first."
+    "webhook-client-none": "A webhook belongs to an API client, so create one first.",
+    "class-students": "Students",
+    "cohort-homeroom": "Homeroom teacher",
+    "cohort-students": "Students",
+    "cohort-classes": "Classes",
+    "member-login": "Login",
+    "member-email": "Email",
+    "member-units": "Units"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1703,7 +1711,8 @@
     "own-title": "My report cards",
     "own-search": "Find a class group",
     "own-empty": "No report card is locked yet.",
-    "own-empty-description": "Your report card shows here once the principal approves it."
+    "own-empty-description": "Your report card shows here once the principal approves it.",
+    "unit": "Unit"
   },
   "SchoolGraduation": {
     "title": "Graduation",
