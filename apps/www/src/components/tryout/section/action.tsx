@@ -37,6 +37,7 @@ interface TryoutSummaryActionProps {
     set: {
       countryKey: string;
       examKey: string;
+      publicPath: string;
       setKey: string;
       trackKey: string;
     };
@@ -101,6 +102,7 @@ export function TryoutSummaryAction({ value }: TryoutSummaryActionProps) {
     examKey: value.set.examKey,
     locale: value.locale,
     setKey: value.set.setKey,
+    setPath: value.set.publicPath,
     successNavigation: startDestination.successNavigation,
     trackKey: value.set.trackKey,
   };
