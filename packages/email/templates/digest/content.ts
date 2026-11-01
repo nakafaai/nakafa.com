@@ -17,7 +17,7 @@ export const SchoolChange = Schema.Literals([
 ]);
 
 /** What a notice mail can tell: a school's notices, and a reply to an account's comment, which no school holds. */
-export const DigestChange = Schema.Literals([
+const DigestChange = Schema.Literals([
   ...SchoolChange.literals,
   "comment.replied",
 ]);
