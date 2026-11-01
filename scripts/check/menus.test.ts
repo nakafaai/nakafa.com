@@ -18,6 +18,25 @@ function inspect(sourceText: string, file = VIEW) {
 }
 
 describe("Menu source policy", () => {
+  it.effect(
+    "rejects an icon on a sidebar group label and leaves a label of text alone",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+export function Group() {
+  return <SidebarGroupLabel><HugeIcons icon={Icon} />Units</SidebarGroupLabel>;
+}
+export function Plain() {
+  return <SidebarGroupLabel>Units</SidebarGroupLabel>;
+}`),
+          [
+            `${VIEW}: a sidebar group label holds an icon. A group label is text alone: keep the icon on the items under it.`,
+          ]
+        );
+      })
+  );
+
   it.effect("rejects a dropdown or a submenu of items alone", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
