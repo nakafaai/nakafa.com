@@ -1,7 +1,7 @@
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { ConnectorCard } from "@/components/connectors/card";
+import { ConnectorCard } from "@/components/user/settings/connector";
 import {
   type Connection,
   currentConnection,
