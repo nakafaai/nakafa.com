@@ -120,9 +120,7 @@ test("a student who presses enter with no connection is told it waits, and reach
   );
   const enter = student.getByRole("button", { name: "Enter sitting" });
   await waitUntilTakenOver(enter);
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
 
   // The browser knows at once that the network is gone, long before the client's socket goes quiet.
   await studentContext.setOffline(true);
