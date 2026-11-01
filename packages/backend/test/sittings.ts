@@ -12,7 +12,7 @@ import { encodeAnswers, encodeKey } from "@repo/backend/confect/exams/question";
 import type { EnterOutcome } from "@repo/backend/confect/exams/sittings/contract";
 import {
   RoomName,
-  SignalKind,
+  type SignalKind,
   SittingGroup,
 } from "@repo/backend/confect/exams/sittings/schema";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
