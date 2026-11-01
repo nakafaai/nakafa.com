@@ -5,6 +5,7 @@ import { TaskPointsFixed } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import {
   type LatePolicy,
+  type TaskCategory,
   type TaskTargets,
   taskField,
 } from "@repo/backend/confect/classroom/tasks/task";
@@ -23,6 +24,7 @@ import { Array as Arr, Effect, Struct } from "effect";
  * records `assignment.deadlineChanged`, which the class sees, and any other change records `assignment.edited`.
  */
 export const editTask = Effect.fn("classroom.tasks.edit")(function* (args: {
+  readonly category: typeof TaskCategory.Type | null;
   readonly deadline: number;
   readonly latePolicy: typeof LatePolicy.Type;
   readonly points: number;
@@ -51,9 +53,10 @@ export const editTask = Effect.fn("classroom.tasks.edit")(function* (args: {
           ),
         };
   const reach = yield* classTargets(args.targets);
-  const edited = Struct.assign(Struct.omit(found, ["targets"]), {
+  const edited = Struct.assign(Struct.omit(found, ["category", "targets"]), {
     ...moved,
     ...reach,
+    ...(args.category === null ? {} : { category: args.category }),
     deadline: args.deadline,
     latePolicy: args.latePolicy,
     points: args.points,
@@ -74,6 +77,7 @@ export const editTask = Effect.fn("classroom.tasks.edit")(function* (args: {
     });
   }
   const content =
+    args.category !== (found.category ?? null) ||
     args.title !== found.title ||
     args.text !== before ||
     args.points !== found.points ||

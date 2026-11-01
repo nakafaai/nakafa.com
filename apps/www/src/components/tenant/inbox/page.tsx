@@ -33,20 +33,20 @@ import { useAgeClock } from "@/components/user/ages";
 export function SchoolNotifications({ all }: { all: boolean }) {
   const t = useTranslations("Notifications");
   const { slug } = useTenant();
-  const scope = all ? undefined : slug;
+  const scope = all ? {} : { slug };
   const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
 
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {/* Mark all read stands before the filter from the first paint, ready and final. */}
-        <MarkAllRead first={Option.none()} slug={scope} />
+        <MarkAllRead first={Option.none()} scope={scope} />
         <InboxFilter all={all} />
       </SchoolHeader>
       <InboxTabs width="page" />
       <LayoutContent className="flex w-full flex-col py-6">
         <NotificationsClockContext value={clock}>
-          <NotificationsList first={Option.none()} slug={scope} />
+          <NotificationsList first={Option.none()} scope={scope} />
         </NotificationsClockContext>
       </LayoutContent>
     </>

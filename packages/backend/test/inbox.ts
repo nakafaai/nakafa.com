@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { noteInvite } from "@repo/backend/confect/notifications/inbox";
+import { isSchoolRow } from "@repo/backend/confect/notifications/schema";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
@@ -158,9 +159,19 @@ export const storedRows = Effect.fn("test.inbox.storedRows")(
     fixture.run(
       Effect.flatMap(DatabaseReader, (reader) =>
         reader.table("notifications").index("by_creation_time").take(200)
-      )
+      ).pipe(Effect.map(Arr.filter(isSchoolRow)))
     )
 );
+
+/** The rows of an inbox page that a school holds, which is every row of a school's test. */
+export const schoolViews = <Row extends { readonly changeType: string }>(
+  rows: readonly Row[]
+) =>
+  Arr.filter(
+    rows,
+    (row): row is Exclude<Row, { readonly changeType: "comment.replied" }> =>
+      row.changeType !== "comment.replied"
+  );
 
 /** Every journal cursor of the inbox, oldest first. */
 export const cursors = Effect.fn("test.inbox.cursors")((fixture: Fixture) =>

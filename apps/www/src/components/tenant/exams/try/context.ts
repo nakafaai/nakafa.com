@@ -1,13 +1,27 @@
+import type { GenericId } from "@confect/core";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { createContext, use } from "react";
 import { type StoreApi, useStore } from "zustand";
 import type { ExamTry } from "@/components/tenant/exams/try/store";
+
+/** The exam of the try, which the try page provides. */
+export const TryExamIdContext =
+  createContext<GenericId.GenericId<"exams"> | null>(null);
 
 /** The school of the try, which the try page provides. */
 export const TrySlugContext = createContext<TenantSlug | null>(null);
 
 /** The try's own answers, which the try page creates once for its instance. */
 export const TryStoreContext = createContext<StoreApi<ExamTry> | null>(null);
+
+/** Reads the exam of the try. It throws outside the try page, which always provides it. */
+export function useTryExamId() {
+  const examId = use(TryExamIdContext);
+  if (examId === null) {
+    throw new TypeError("useTryExamId must be used within ExamTryPaper");
+  }
+  return examId;
+}
 
 /** Reads the school of the try. It throws outside the try page, which always provides it. */
 export function useTrySlug() {

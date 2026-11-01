@@ -14,6 +14,7 @@ import {
   period,
 } from "@repo/backend/test/classroom";
 import { IBU } from "@repo/backend/test/guardians";
+import { schoolViews } from "@repo/backend/test/inbox";
 import {
   scheduledJobs,
   TENANCY_NOW,
@@ -43,6 +44,7 @@ const published = Effect.fn("test.notifications.tasks")(function* (
   const term = yield* period(fixture, fixture.units.smp);
   const forum = yield* forumClass(fixture, term.id, "X-1");
   const task = yield* fixture.as("teacher").mutation(tasks.publish, {
+    category: null,
     classId: forum.classId,
     clientKey: "task-notices",
     deadline,
@@ -133,6 +135,7 @@ describe("notifications/tasks schedule", () => {
         const before = yield* taskRow(fixture, made.taskId);
         expect(before.jobs).toHaveLength(3);
         yield* fixture.as("teacher").mutation(tasks.edit, {
+          category: null,
           classId: made.classId,
           deadline: TENANCY_NOW + 4 * DAY,
           latePolicy: "accept",
@@ -150,6 +153,7 @@ describe("notifications/tasks schedule", () => {
           Arr.filter(jobs, (job) => job.state.kind === "canceled").length
         ).toBe(3);
         yield* fixture.as("teacher").mutation(tasks.edit, {
+          category: null,
           classId: made.classId,
           deadline: TENANCY_NOW + 4 * DAY,
           latePolicy: "close",
@@ -318,7 +322,7 @@ describe("notifications/tasks run", () => {
               .table("tenants")
               .get(fixture.tenants.nf);
             const seen = yield* partsOf(
-              Arr.getUnsafe(told.rows, 0),
+              Arr.getUnsafe(schoolViews(told.rows), 0),
               person,
               tenant
             );
@@ -326,7 +330,7 @@ describe("notifications/tasks run", () => {
               .table("classroomTasks")
               .delete(made.taskId);
             const gone = yield* partsOf(
-              Arr.getUnsafe(told.rows, 0),
+              Arr.getUnsafe(schoolViews(told.rows), 0),
               person,
               tenant
             );

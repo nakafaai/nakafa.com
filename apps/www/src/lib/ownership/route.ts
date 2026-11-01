@@ -85,7 +85,14 @@ export function isApplicationRoutePath(
 
   if (
     Arr.contains(
-      ["contributor", "home", "notifications", "pricing", "search"],
+      [
+        "contributor",
+        "home",
+        "notifications",
+        "operators",
+        "pricing",
+        "search",
+      ],
       root
     )
   ) {
@@ -98,6 +105,10 @@ export function isApplicationRoutePath(
 
   if (root === "chat") {
     return segments.length <= 1;
+  }
+
+  if (root === "comment") {
+    return segments.length === 1;
   }
 
   if (root === "og") {
