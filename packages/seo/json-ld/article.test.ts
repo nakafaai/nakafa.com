@@ -145,9 +145,14 @@ describe("article JSON-LD", () => {
       })
     );
 
-    expect(article).not.toHaveProperty("author");
     expect(article).not.toHaveProperty("dateModified");
     expect(article).not.toHaveProperty("description");
+  });
+
+  it("names the organization as the author of a page that names no person", () => {
+    const [article] = makeArticleJsonLd({ ...lesson, authors: [] });
+
+    expect(article.author).toStrictEqual([article.publisher]);
   });
 
   it("gives every author a node of their own", () => {
@@ -159,11 +164,10 @@ describe("article JSON-LD", () => {
       ],
     });
 
-    expect(
-      article.author === undefined
-        ? undefined
-        : Arr.map(article.author, (author) => author.name)
-    ).toStrictEqual(["Nabil Akbarazzima Fatih", "Nur Sita Utami"]);
+    expect(Arr.map(article.author, (author) => author.name)).toStrictEqual([
+      "Nabil Akbarazzima Fatih",
+      "Nur Sita Utami",
+    ]);
   });
 
   it.each<

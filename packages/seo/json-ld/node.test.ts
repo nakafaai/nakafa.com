@@ -128,8 +128,12 @@ describe("makeContributorsNode", () => {
       inLanguage: "en",
       name: "Contributor",
       people: [
-        { name: "Nabil", profiles: ["https://github.com/nabilfatih"] },
-        { name: "Sita", profiles: [] },
+        {
+          name: "Nabil",
+          profiles: ["https://github.com/nabilfatih"],
+          username: "nabilfatih",
+        },
+        { name: "Sita", profiles: [], username: "sita" },
       ],
       url: "https://nakafa.com/en/contributor",
     });
@@ -139,14 +143,21 @@ describe("makeContributorsNode", () => {
         "@type": "ListItem",
         item: {
           "@type": "Person",
+          "@id": "https://nakafa.com/#person-nabilfatih",
           name: "Nabil",
+          url: "https://nakafa.com/en/contributor",
           sameAs: ["https://github.com/nabilfatih"],
         },
         position: 1,
       },
       {
         "@type": "ListItem",
-        item: { "@type": "Person", name: "Sita" },
+        item: {
+          "@type": "Person",
+          "@id": "https://nakafa.com/#person-sita",
+          name: "Sita",
+          url: "https://nakafa.com/en/contributor",
+        },
         position: 2,
       },
     ]);
