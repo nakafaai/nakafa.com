@@ -27,13 +27,24 @@ import {
   clearInvoiceLink,
 } from "@repo/backend/confect/billing/xendit/invoice";
 import { renewalAnchor } from "@repo/backend/confect/billing/xendit/renewal";
-import { Clock, DateTime, Duration, Effect, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  DateTime,
+  Duration,
+  Effect,
+  Option,
+  Schema,
+} from "effect";
 
 const decodeSession = Schema.decodeUnknownOption(XenditSessionEvent);
 
-/** The checkout a Xendit session belongs to, while it is still open. */
-const readOpenCheckout = Effect.fn("billing.xendit.session.readCheckout")(
-  function* (sessionId: string) {
+/** The checkout a Xendit session belongs to, while it stands in one of `statuses`. */
+const readCheckout = Effect.fn("billing.xendit.session.readCheckout")(
+  function* (
+    sessionId: string,
+    statuses: readonly Docs["billingCheckouts"]["status"][]
+  ) {
     const checkout = yield* (yield* DatabaseReader)
       .table("billingCheckouts")
       .index("by_rail_and_sessionId", (query) =>
@@ -41,7 +52,7 @@ const readOpenCheckout = Effect.fn("billing.xendit.session.readCheckout")(
       )
       .first()
       .pipe(Effect.orDie);
-    return Option.filter(checkout, (row) => row.status === "open");
+    return Option.filter(checkout, (row) => Arr.contains(statuses, row.status));
   }
 );
 
@@ -249,7 +260,8 @@ const closeCheckout = Effect.fn("billing.xendit.session.close")(function* (
  * invoice, and its School grant is written. A credit pack and a pass are recorded
  * and granted. The monthly plan's first month starts its subscription: the
  * payment, Pro until the first renewal, and the recurring plan that charges the
- * channel the session saved.
+ * channel the session saved. A session whose expiry reached Nakafa first is still
+ * paid: the money moved, so its checkout completes all the same.
  */
 export const applySessionCompleted = Effect.fn(
   "billing.xendit.session.completed"
@@ -258,7 +270,10 @@ export const applySessionCompleted = Effect.fn(
   if (Option.isNone(session)) {
     return "invalid" as const;
   }
-  const checkout = yield* readOpenCheckout(session.value.payment_session_id);
+  const checkout = yield* readCheckout(session.value.payment_session_id, [
+    "open",
+    "expired",
+  ]);
   if (Option.isNone(checkout)) {
     return "unknownSession" as const;
   }
@@ -291,7 +306,9 @@ export const applySessionExpired = Effect.fn("billing.xendit.session.expired")(
     if (Option.isNone(session)) {
       return "invalid" as const;
     }
-    const checkout = yield* readOpenCheckout(session.value.payment_session_id);
+    const checkout = yield* readCheckout(session.value.payment_session_id, [
+      "open",
+    ]);
     if (Option.isNone(checkout)) {
       return "unknownSession" as const;
     }

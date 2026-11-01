@@ -18,6 +18,7 @@ export const XenditWebhookEnvelope = Schema.Struct({
   created: Schema.DateTimeUtcFromString,
   data: Schema.Struct({
     id: Schema.optionalKey(Schema.String),
+    refund_id: Schema.optionalKey(Schema.String),
     payment_session_id: Schema.optionalKey(Schema.NullOr(Schema.String)),
     status: Schema.optionalKey(Schema.String),
     updated: Schema.optionalKey(Schema.String),
@@ -30,9 +31,10 @@ export type XenditWebhookEnvelope = typeof XenditWebhookEnvelope.Type;
  * its update time. A retry of the same change repeats the key; a new change does
  * not. A payment session carries no update time and reaches each status once, so
  * its event, session and status are its key: Xendit stamps `created` anew on each
- * retry, and a body digest would store every retry. Any other delivery that names
- * no object or no update time is keyed by the SHA-256 of its body instead, so two
- * different deliveries of one event never share a key.
+ * retry, and a body digest would store every retry. A refund names its object as
+ * `refund_id`. Any other delivery that names no object or no update time is keyed by
+ * the SHA-256 of its body instead, so two different deliveries of one event never
+ * share a key.
  */
 export const xenditDeliveryKey = Effect.fn("billing.xendit.deliveryKey")(
   function* (envelope: XenditWebhookEnvelope, body: string) {
@@ -46,12 +48,13 @@ export const xenditDeliveryKey = Effect.fn("billing.xendit.deliveryKey")(
         ":"
       );
     }
-    if (data.id === undefined || data.updated === undefined) {
+    const object = data.id ?? data.refund_id;
+    if (object === undefined || data.updated === undefined) {
       const digest = yield* sha256Hex(body);
       return `${envelope.event}:body:${digest}`;
     }
     return Arr.join(
-      [envelope.event, data.id, data.status ?? "", data.updated],
+      [envelope.event, object, data.status ?? "", data.updated],
       ":"
     );
   }

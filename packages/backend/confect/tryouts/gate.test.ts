@@ -223,6 +223,7 @@ describe("tryouts/gate", () => {
         const world = yield* seedTryoutGate;
         yield* world.answer("learner", "running", "correct", 1);
         yield* setClock(9000);
+        const before = yield* stored(world);
         yield* world.answer("learner", "running", "correct", 2);
         const rows = yield* stored(world);
         expect(rows.responses).toMatchObject([
@@ -236,7 +237,8 @@ describe("tryouts/gate", () => {
           },
         ]);
         expect(rows.section?.lastActivityAt).toBe(TRYOUT_NOW + 9000);
-        expect(rows.attempt?.lastActivityAt).toBe(TRYOUT_NOW + 9000);
+        // Every query of the attempt reads its row, so an answer leaves it alone.
+        expect(rows.attempt).toEqual(before.attempt);
       })
   );
 
@@ -366,16 +368,16 @@ describe("tryouts/gate", () => {
         ]);
         const cleared = yield* measure(3, false);
         // A write reads the question, its attempt, and its section, and the
-        // stored answer once there is one. It replaces the section and attempt
-        // rows it loaded, and the answer too once there is one. Convex reads a
-        // replaced document once more. A clear deletes the answer and replaces
-        // the question, which keeps the version, instead of the answer.
-        expect(inserted.documentsRead.used).toBe(5);
-        expect(inserted.documentsWritten.used).toBe(3);
-        expect(replaced.documentsRead.used).toBe(7);
-        expect(replaced.documentsWritten.used).toBe(3);
-        expect(cleared.documentsRead.used).toBe(8);
-        expect(cleared.documentsWritten.used).toBe(4);
+        // stored answer once there is one. It replaces the section row it
+        // loaded, and the answer too once there is one. Convex reads a replaced
+        // document once more. A clear deletes the answer and replaces the
+        // question, which keeps the version, instead of the answer.
+        expect(inserted.documentsRead.used).toBe(4);
+        expect(inserted.documentsWritten.used).toBe(2);
+        expect(replaced.documentsRead.used).toBe(6);
+        expect(replaced.documentsWritten.used).toBe(2);
+        expect(cleared.documentsRead.used).toBe(7);
+        expect(cleared.documentsWritten.used).toBe(3);
       })
   );
 

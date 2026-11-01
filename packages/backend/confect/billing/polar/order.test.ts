@@ -139,6 +139,42 @@ describe("billing/polar/order", () => {
     ]);
   });
 
+  it("keeps the pack of an order refunded in part, and takes it back once the order is refunded in full", async () => {
+    const t = createBillingTestConvex();
+    await t.mutation((ctx) => seedProLearner(ctx));
+    await t.mutation((ctx) =>
+      runInMutation(ctx, processPolarEvent(orderEvent("order.paid")))
+    );
+    const refund = (refundable: number, refunded: number, at: string) =>
+      t.mutation((ctx) =>
+        runInMutation(
+          ctx,
+          processPolarEvent(
+            orderEvent("order.refunded", {
+              modified_at: at,
+              refundable_amount: refundable,
+              refunded_amount: refunded,
+            })
+          )
+        )
+      );
+    const read = () =>
+      t.run(async (ctx) => ({
+        lots: await ctx.db.query("creditLots").collect(),
+        payments: await ctx.db.query("billingPayments").collect(),
+      }));
+    expect(await refund(299, 200, "2026-10-25T13:00:00.000Z")).toBe("ignored");
+    expect(await read()).toMatchObject({
+      lots: [{ remaining: 1000, state: "active" }],
+      payments: [{ status: "succeeded" }],
+    });
+    expect(await refund(0, 499, "2026-10-25T14:00:00.000Z")).toBe("applied");
+    expect(await read()).toMatchObject({
+      lots: [{ state: "refunded" }],
+      payments: [{ status: "refunded" }],
+    });
+  });
+
   it("reports an order it cannot place: an unknown customer, a school owner, an unknown currency, and a body that does not decode", async () => {
     const t = createBillingTestConvex();
     await t.mutation(async (ctx) => {

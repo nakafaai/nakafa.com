@@ -61,6 +61,20 @@ const BookInput = Schema.Struct({
   url: Schema.String,
 });
 
+/** One monthly price of a plan, in a currency's major units, before tax. */
+const ProductOffer = Schema.Struct({
+  amount: Schema.Finite,
+  currency: Schema.String,
+});
+
+const ProductInput = Schema.Struct({
+  description: Schema.String,
+  image: Schema.String,
+  name: Schema.String,
+  offers: Schema.Array(ProductOffer),
+  url: Schema.String,
+});
+
 /**
  * The breadcrumb node of a page's visible hierarchy, as plain data for the head
  * seam. An empty hierarchy has no node, because an empty list is invalid JSON-LD.
@@ -106,6 +120,38 @@ export function makeFaqPageNode(input: typeof FaqPageInput.Type) {
       "@type": "Question",
       name: item.question,
       acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
+  };
+}
+
+/**
+ * One paid plan as a product with its monthly price in each currency, so an answer
+ * service can quote what it costs. Every price excludes tax.
+ *
+ * @see https://developers.google.com/search/docs/appearance/structured-data/product-snippet
+ */
+export function makeProductNode(input: typeof ProductInput.Type) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: input.name,
+    description: input.description,
+    image: input.image,
+    url: input.url,
+    brand: { "@type": "Brand", name: COMPANY_IDENTITY.brandName },
+    offers: Arr.map(input.offers, ({ amount, currency }) => ({
+      "@type": "Offer",
+      availability: "https://schema.org/InStock",
+      price: amount,
+      priceCurrency: currency,
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: amount,
+        priceCurrency: currency,
+        unitCode: "MON",
+        valueAddedTaxIncluded: false,
+      },
+      url: input.url,
     })),
   };
 }

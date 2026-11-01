@@ -202,6 +202,22 @@ function MessageTime({ message }: { message: ForumMessage }) {
 }
 
 /**
+ * What the viewer may do with a message. A message of a thread takes no thread of its own, and one that stands
+ * opens from its link.
+ */
+function useMessageRights({ discussion, mine, poll }: ForumMessage) {
+  const scope = useChannelScope();
+  const { opens } = useClassScope();
+  const editable = mine && poll === null;
+
+  return {
+    editable,
+    hasMenu: editable || scope.canManage || discussion !== null,
+    threads: opens && scope.discussion === undefined && discussion === null,
+  };
+}
+
+/**
  * The menu of a message: Edit on the viewer's own message, Hide for whoever manages the forum, and
  * Rename on the message that opens a discussion, for whoever opened it or a teacher who writes in
  * the class, as the server allows.
@@ -215,7 +231,8 @@ function MessageActions({
 }) {
   const t = useTranslations("Classroom");
   const scope = useChannelScope();
-  const { classSlug, opens } = useClassScope();
+  const { classSlug } = useClassScope();
+  const { editable, hasMenu, threads } = useMessageRights(message);
   const common = useTranslations("Common");
   const navigate = useNavigate();
   const [hiding, setHiding] = useState(false);
@@ -246,11 +263,6 @@ function MessageActions({
       toastForumFailure
     );
 
-  // A message of a thread takes no thread of its own, and one that stands opens from its link.
-  const threads =
-    opens && scope.discussion === undefined && discussion === null;
-  const editable = message.mine && message.poll === null;
-
   if (!(scope.canPost || scope.canManage)) {
     return null;
   }
@@ -269,7 +281,7 @@ function MessageActions({
           <HugeIcons icon={BubbleChatIcon} />
         </Button>
       ) : null}
-      {editable || scope.canManage || discussion !== null ? (
+      {hasMenu ? (
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
