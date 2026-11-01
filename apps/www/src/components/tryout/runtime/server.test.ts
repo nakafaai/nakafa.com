@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Fiber } from "effect";
+import { DateTime, Effect, Fiber } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import { readServerClockOffset } from "@/components/tryout/runtime/server";
@@ -12,7 +12,9 @@ const DEVICE_NOW = Date.UTC(2026, 10, 1, 12, 0, 0);
 /** An answer whose Date header names the moment `serverAt` in whole seconds. */
 function answerAt(serverAt: number) {
   return new Response(null, {
-    headers: { date: new Date(serverAt).toUTCString() },
+    headers: {
+      date: DateTime.toDateUtc(DateTime.makeUnsafe(serverAt)).toUTCString(),
+    },
   });
 }
 

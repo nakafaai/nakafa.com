@@ -61,7 +61,7 @@ export const readServerClockOffset = Effect.fn("tryout.clock.read")(
         duration: CLOCK_DEADLINE,
         orElse: () => Effect.succeed(0),
       }),
-      Effect.catch(() => Effect.succeed(0)),
+      Effect.orElseSucceed(() => 0),
       Effect.provide(ClockClient)
     )
 );
