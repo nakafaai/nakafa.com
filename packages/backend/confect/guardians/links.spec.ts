@@ -1,6 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
+import {
+  AccessDenied,
+  GrantRejected,
+} from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import { GuardianLinkAccess } from "@repo/backend/confect/guardians/access";
 import {
@@ -35,7 +38,7 @@ export default GroupSpec.make()
         studentId: Id("tenantPeople"),
       }),
       returns: () => LinkView,
-      error: () => Schema.Union([AccessDenied, LinkRefused]),
+      error: () => Schema.Union([AccessDenied, GrantRejected, LinkRefused]),
     }).middleware(PersonAccess, { action: "guardian.link", arg: "studentId" })
   )
   .addFunction(
