@@ -1342,7 +1342,6 @@
     "card-qr-label": "QR-Code mit dem Kartencode",
     "card-copy": "Code kopieren",
     "card-print": "Karte drucken",
-    "card-print-footer": "Drucken sendet die Karte an deinen Drucker.",
     "student-add": "Schüler hinzufügen",
     "student-add-title": "Schüler hinzufügen",
     "student-add-description": "Der Schüler erhält einen Anmeldenamen und eine erste Anmeldekarte, beides in einem Schritt.",
