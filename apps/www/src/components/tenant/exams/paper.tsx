@@ -11,6 +11,7 @@ import { Array as Arr, Match, Option } from "effect";
 import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { usePaperText } from "@/components/player/held";
 import { PanePortal } from "@/components/shared/panes";
 import { isChoice } from "@/components/tenant/exams/answer";
 import { ChoiceSheet } from "@/components/tenant/exams/choice";
@@ -32,6 +33,7 @@ import {
   PreviewProse,
   ReadingSketch,
   usePageDocument,
+  usePageRead,
 } from "@/components/tenant/exams/preview";
 import {
   useExam,
@@ -176,7 +178,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
   const saved = !(awaiting || isPlaceholderId(question.prompt));
   const number = index + 1;
   const page = useRef<HTMLElement>(null);
-  const { mounted, reached } = usePageWindow(page, canvas);
+  const { measured, mounted, reached } = usePageWindow(page, canvas);
   const editing = useQuestionEditing(question);
   // A question the teacher just added or copied, which the server has not saved yet, comes into view.
   useEffect(() => {
@@ -199,13 +201,15 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
   const read = reached && isSettled;
   // The notes are drawn only in the chosen page's panel, so a live page that is not chosen reads none.
   const readNotes = read && (chosen || !live);
-  const prompt = usePageDocument({
+  const { answered, doc: prompt } = usePageRead({
     documentId: question.prompt,
     editing: live,
     open: chosen,
     read,
     saved,
   });
+  // A page far from the view moves nothing on screen when its text arrives, so the canvas waits only for the near ones.
+  usePaperText(question.id, !saved || answered || (measured && !reached));
   const rubric = usePageDocument({
     documentId: question.rubric,
     editing: live,

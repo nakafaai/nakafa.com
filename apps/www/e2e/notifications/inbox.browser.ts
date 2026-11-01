@@ -131,7 +131,7 @@ test("an empty inbox shows Nina asleep beside its sentence and offers no action"
         ).toBeVisible();
         await expect(
           page.getByRole("button", { name: "Mark all read" })
-        ).toHaveCount(0);
+        ).toBeDisabled();
       });
     })
   );

@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
@@ -14,6 +15,7 @@ import {
 import { SchoolOffer, TermOffer } from "@repo/backend/confect/billing/term";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema, Struct } from "effect";
 
@@ -89,6 +91,18 @@ export default GroupSpec.make()
       name: "overview",
       args: () => ({ slug: TenantSlug }),
       returns: () => SchoolBilling,
+      error: () => AccessDenied,
+    }).middleware(TenantAccess, { action: "billing.view" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "invoice",
+      args: () => ({
+        locale: ActiveAppLocaleCodeSchema,
+        number: Schema.String,
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.NullOr(InvoiceInput),
       error: () => AccessDenied,
     }).middleware(TenantAccess, { action: "billing.view" })
   )

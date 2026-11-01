@@ -4,6 +4,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -20,27 +21,36 @@ const COPIED_MILLISECONDS = 1500;
 
 /**
  * Copies the one link a new school opens from, its full address on the main site,
- * so it can be sent to anyone who runs a school (K43).
+ * so it can be sent to anyone who runs a school (K43). Its icon says it, its name
+ * says it to a screen reader, and both turn to the copied state for a moment.
  */
 function SchoolLinkCopy() {
   const t = useTranslations("SchoolStart");
   const locale = useLocale();
   const clipboard = useClipboard({ timeout: COPIED_MILLISECONDS });
 
+  const label = t(clipboard.copied ? "link-copied" : "link-copy");
+
   return (
-    <button
-      className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium underline-offset-4 hover:underline"
-      onClick={() =>
-        clipboard.copy(new URL(`/${locale}/school/new`, SITE_ORIGIN).href)
-      }
-      type="button"
-    >
-      <HugeIcons
-        className="size-4"
-        icon={clipboard.copied ? Tick01Icon : Copy01Icon}
-      />
-      {t(clipboard.copied ? "link-copied" : "link-copy")}
-    </button>
+    <>
+      <button
+        aria-label={label}
+        className={buttonVariants({
+          size: "icon",
+          variant: "inverse-outline",
+        })}
+        onClick={() =>
+          clipboard.copy(new URL(`/${locale}/school/new`, SITE_ORIGIN).href)
+        }
+        title={label}
+        type="button"
+      >
+        <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
+      </button>
+      <span className="sr-only" role="status">
+        {clipboard.copied ? label : ""}
+      </span>
+    </>
   );
 }
 
@@ -69,7 +79,7 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
                 {t("school-lead")}
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Link
                 className={buttonVariants({ variant: "inverse" })}
                 to="/$locale/school/new"
@@ -77,15 +87,17 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
                 <HugeIcons icon={School01Icon} />
                 {tCommon("open-school")}
               </Link>
-              <a
-                className="text-sm font-medium underline-offset-4 hover:underline"
-                href={`mailto:${COMPANY_IDENTITY.email}`}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                {tStart("founder-link")}
-              </a>
-              <SchoolLinkCopy />
+              <ButtonGroup aria-label={tStart("contact-label")}>
+                <a
+                  className={buttonVariants({ variant: "inverse-outline" })}
+                  href={`mailto:${COMPANY_IDENTITY.email}`}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {tStart("founder-link")}
+                </a>
+                <SchoolLinkCopy />
+              </ButtonGroup>
             </div>
           </div>
           <ul

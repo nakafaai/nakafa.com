@@ -81,6 +81,35 @@ export const recordPayment = Effect.fn("billing.payments.record")(function* (
 /** The most payments the history lists: ten years of monthly renewals, the newest of a learner's personal accounts. */
 const PAYMENT_HISTORY_LIMIT = 120;
 
+/** The learner's personal billing accounts, on every rail that holds one. */
+const personalAccounts = Effect.fn("billing.payments.personalAccounts")(
+  function* (userId: Docs["users"]["_id"]) {
+    const accounts = yield* Effect.forEach(BillingRail.literals, (rail) =>
+      findAccount({ kind: "personal", userId }, rail)
+    );
+    return Arr.getSomes(accounts);
+  }
+);
+
+/** Whether the learner ever paid on a personal account, so the settings hold their payments. */
+export const hasPersonalPayment = Effect.fn("billing.payments.hasPersonal")(
+  function* (userId: Docs["users"]["_id"]) {
+    const reader = yield* DatabaseReader;
+    const firsts = yield* Effect.forEach(
+      yield* personalAccounts(userId),
+      (account) =>
+        reader
+          .table("billingPayments")
+          .index("by_accountId_and_paidAt", (query) =>
+            query.eq("accountId", account._id)
+          )
+          .first()
+          .pipe(Effect.orDie)
+    );
+    return Arr.some(firsts, Option.isSome);
+  }
+);
+
 /**
  * The newest payments a learner made on their personal accounts that went
  * through, newest first: what each paid for, how much in which currency, when,
@@ -89,19 +118,18 @@ const PAYMENT_HISTORY_LIMIT = 120;
 export const readRecentPayments = Effect.fn("billing.payments.readRecent")(
   function* (userId: Docs["users"]["_id"]) {
     const reader = yield* DatabaseReader;
-    const accounts = yield* Effect.forEach(BillingRail.literals, (rail) =>
-      findAccount({ kind: "personal", userId }, rail)
-    );
-    const payments = yield* Effect.forEach(Arr.getSomes(accounts), (account) =>
-      reader
-        .table("billingPayments")
-        .index(
-          "by_accountId_and_paidAt",
-          (query) => query.eq("accountId", account._id),
-          "desc"
-        )
-        .take(PAYMENT_HISTORY_LIMIT)
-        .pipe(Effect.orDie)
+    const payments = yield* Effect.forEach(
+      yield* personalAccounts(userId),
+      (account) =>
+        reader
+          .table("billingPayments")
+          .index(
+            "by_accountId_and_paidAt",
+            (query) => query.eq("accountId", account._id),
+            "desc"
+          )
+          .take(PAYMENT_HISTORY_LIMIT)
+          .pipe(Effect.orDie)
     );
     const succeeded = Arr.filter(
       Arr.flatten(payments),
@@ -117,6 +145,7 @@ export const readRecentPayments = Effect.fn("billing.payments.readRecent")(
     return Arr.map(Arr.take(newest, PAYMENT_HISTORY_LIMIT), (payment) => ({
       amount: payment.amount,
       currency: payment.currency,
+      id: payment._id,
       kind: payment.kind,
       paidAt: payment.paidAt,
       rail: payment.rail,
