@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/build";
 import { cardMode } from "@repo/backend/scripts/content/acceptance/card";
 import { classTeacherMode } from "@repo/backend/scripts/content/acceptance/classes";
+import { connectionMode } from "@repo/backend/scripts/content/acceptance/connection";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { forumMode } from "@repo/backend/scripts/content/acceptance/forum";
 import { graduationMode } from "@repo/backend/scripts/content/acceptance/graduation";
@@ -57,6 +58,7 @@ export const acceptanceModes: readonly AcceptanceMode[] = [
   sittingMode,
   graduationMode,
   cardMode,
+  connectionMode,
   guardianMode,
   studentMode,
   importMode,

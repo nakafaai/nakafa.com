@@ -15760,6 +15760,14 @@ export declare const internal: {
         Id<"connectorConnections">
       >;
     };
+    seed: {
+      connection: FunctionReference<
+        "mutation",
+        "internal",
+        { slug: string; status: "active" | "reconnect" },
+        null
+      >;
+    };
     sync: {
       destroy: FunctionReference<
         "mutation",

@@ -6,11 +6,11 @@ import {
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Option } from "effect";
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConnectorActions } from "@/components/connectors/actions";
+import { DisconnectDialog } from "@/components/connectors/disconnect";
 import type { Connection } from "@/components/connectors/optimistic";
 import {
   CardSection,
@@ -38,8 +38,6 @@ export function ConnectorCard({
   connector: GoogleConnector;
 }) {
   const t = useTranslations("Connectors");
-  const { disconnect } = useConnectorActions();
-  const common = useTranslations("Common");
   const [confirming, setConfirming] = useState(false);
   const reconnect = Option.exists(
     connection,
@@ -73,30 +71,11 @@ export function ConnectorCard({
             <Button onClick={() => setConfirming(true)} variant="destructive">
               {t("disconnect")}
             </Button>
-            <ResponsiveDialog
-              description={t("disconnect-description")}
-              footer={
-                <>
-                  <Button
-                    onClick={() => setConfirming(false)}
-                    variant="outline"
-                  >
-                    {common("cancel")}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setConfirming(false);
-                      disconnect(connection.value);
-                    }}
-                    variant="destructive"
-                  >
-                    {t("disconnect")}
-                  </Button>
-                </>
-              }
+            <DisconnectDialog
+              connection={connection.value}
+              name={t(connector)}
               open={confirming}
               setOpen={setConfirming}
-              title={t("disconnect-title", { name: t(connector) })}
             />
           </>
         )}

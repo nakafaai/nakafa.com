@@ -1,5 +1,6 @@
 import type { Ref } from "@confect/core";
 import { useAction, useMutation } from "@confect/react";
+import { RefreshIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -13,6 +14,16 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@repo/design-system/components/ui/sheet";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
+import {
   Table,
   TableBody,
   TableCell,
@@ -24,10 +35,6 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactNode, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import {
-  CardSection,
-  CardSectionFooter,
-} from "@/components/shared/card/section";
 import { columnAlign } from "@/components/shared/table/align";
 import { TableFrame } from "@/components/shared/table/frame";
 import {
@@ -47,17 +54,19 @@ type Preview = NonNullable<Ref.Returns<typeof connectors.classroom.preview>>;
 const UNLINKED = "none";
 
 /**
- * The Classroom import of the school (journey J7): the courses that the school's
- * Classroom connection teaches, each with its students, and the class it fills.
- * Picking a class links the course at once, and its coursework arrives as the
- * class's tasks; picking none removes the link. The courses load when asked, so
- * the page calls Google only on intent.
+ * The next step of a connected Classroom (journey J7): a sheet of the courses that the school's
+ * connection teaches, each with its students and the class it fills. Picking a class links the
+ * course at once, and its coursework arrives as the class's tasks; picking none removes the link.
+ * The courses load when the viewer points at the button, so the sheet opens ready and the page
+ * calls Google only on intent.
  */
 export function ClassroomImport() {
   const t = useTranslations("Connectors");
+  const common = useTranslations("Common");
   const { slug } = useTenant();
   const preview = useAction(connectors.classroom.preview);
   const [isLoading, startLoading] = useTransition();
+  const [isOpen, setIsOpen] = useState(false);
   const [shown, setShown] = useState<Option.Option<Preview>>(Option.none);
 
   const load = () =>
@@ -71,30 +80,68 @@ export function ClassroomImport() {
         toastForumFailure
       )
     );
+  const loadOnce = () => {
+    if (Option.isNone(shown) && !isLoading) {
+      load();
+    }
+  };
 
   return (
-    <CardSection description={t("courses-description")} title={t("courses")}>
-      {Option.match(shown, {
-        onNone: () => null,
-        onSome: (found) => (
-          <CourseTable empty={Arr.isReadonlyArrayEmpty(found.courses)}>
-            {Arr.map(found.courses, (course) => (
-              <CourseRow
-                course={course}
-                key={course.courseId}
-                preview={found}
-                setPreview={setShown}
-              />
-            ))}
-          </CourseTable>
-        ),
-      })}
-      <CardSectionFooter hint={t("courses-hint")}>
-        <Button disabled={isLoading} onClick={load} variant="outline">
-          {Option.isSome(shown) ? t("courses-refresh") : t("courses-show")}
-        </Button>
-      </CardSectionFooter>
-    </CardSection>
+    <>
+      <Button
+        onClick={() => {
+          loadOnce();
+          setIsOpen(true);
+        }}
+        onFocus={loadOnce}
+        onPointerEnter={loadOnce}
+        size="sm"
+        type="button"
+      >
+        {t("courses-import")}
+      </Button>
+      <Sheet onOpenChange={setIsOpen} open={isOpen}>
+        <SheetContent className="w-full max-w-none sm:max-w-2xl">
+          <SheetHeader>
+            <SheetTitle>{t("courses")}</SheetTitle>
+            <SheetDescription>{t("courses-description")}</SheetDescription>
+          </SheetHeader>
+          {Option.match(shown, {
+            onNone: () => null,
+            onSome: (found) => (
+              <CourseTable empty={Arr.isReadonlyArrayEmpty(found.courses)}>
+                {Arr.map(found.courses, (course) => (
+                  <CourseRow
+                    course={course}
+                    key={course.courseId}
+                    preview={found}
+                    setPreview={setShown}
+                  />
+                ))}
+              </CourseTable>
+            ),
+          })}
+          <SheetFooter>
+            <Button
+              disabled={isLoading}
+              onClick={load}
+              type="button"
+              variant="outline"
+            >
+              <Spinner icon={RefreshIcon} isLoading={isLoading} />
+              {t("courses-refresh")}
+            </Button>
+            <SheetClose
+              render={
+                <Button type="button" variant="outline">
+                  {common("close")}
+                </Button>
+              }
+            />
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
 
