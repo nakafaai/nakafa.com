@@ -1,4 +1,6 @@
 import {
+  type GenericActionCtx,
+  type GenericDataModel,
   type HttpRouter,
   httpActionGeneric,
   httpRouter,
@@ -6,7 +8,7 @@ import {
   ROUTABLE_HTTP_METHODS,
   type RoutableMethod,
 } from "convex/server";
-import { Array as Arr, Effect, Option, Predicate } from "effect";
+import { Array as Arr, Option, Predicate } from "effect";
 
 /** A family's router, which its module builds as it evaluates. */
 type LoadRouter = () => Promise<{ readonly default: HttpRouter }>;
@@ -46,31 +48,29 @@ const FAMILIES = [
   },
 ];
 
-/** A route as Convex itself runs one: its router makes this call, which its published types leave out. */
-const isInvokable = (
+/** A route's own handler, which Convex and `convex-test` both run and the published types leave out. */
+const hasHandler = (
   route: PublicHttpAction
 ): route is PublicHttpAction & {
-  readonly invokeHttpAction: (request: Request) => Promise<Response>;
-} => Predicate.hasProperty(route, "invokeHttpAction");
+  readonly _handler: (
+    ctx: GenericActionCtx<GenericDataModel>,
+    request: Request
+  ) => Promise<Response>;
+} => Predicate.hasProperty(route, "_handler");
 
 /** One path's action here: it evaluates the family's router and runs that router's own route. */
 const forwardTo = (load: LoadRouter, method: RoutableMethod) =>
-  httpActionGeneric((_ctx, request) =>
-    Effect.runPromise(
-      Effect.promise(load).pipe(
-        Effect.flatMap(({ default: router }) =>
-          Option.fromNullOr(
-            router.lookup(new URL(request.url).pathname, method)
-          ).pipe(
-            Option.map(([route]) => route),
-            Option.filter(isInvokable),
-            Option.match({
-              onNone: () => Effect.succeed(new Response(null, { status: 404 })),
-              onSome: (route) =>
-                Effect.promise(() => route.invokeHttpAction(request)),
-            })
-          )
-        )
+  httpActionGeneric((ctx, request) =>
+    load().then(({ default: router }) =>
+      Option.fromNullOr(
+        router.lookup(new URL(request.url).pathname, method)
+      ).pipe(
+        Option.map(([route]) => route),
+        Option.filter(hasHandler),
+        Option.match({
+          onNone: () => Promise.resolve(new Response(null, { status: 404 })),
+          onSome: (route) => route._handler(ctx, request),
+        })
       )
     )
   );
