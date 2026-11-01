@@ -71,8 +71,10 @@ const ACCOUNT_PERMISSION_GROUPS = [
 
 /**
  * The zone permissions of the deploy token, for nakafa.com and nakafa.id: zone
- * reads and settings, DNS records, Worker routes, Access, and the Dynamic URL
- * Redirects that the nakafa.id rule uses.
+ * reads and settings, DNS records, Worker routes, Access, the Dynamic URL
+ * Redirects that the nakafa.id rule uses, and the WAF, which the crawler rule of
+ * `deploy/bots.ts` needs for a change: a plan reads that rule with Zone Read, and
+ * the first change of its text failed the deploy without this.
  */
 const ZONE_PERMISSION_GROUPS = [
   "Zone Read",
@@ -80,6 +82,7 @@ const ZONE_PERMISSION_GROUPS = [
   "Workers Routes Write",
   "Zone Settings Write",
   "Dynamic URL Redirects Write",
+  "Zone WAF Write",
   ACCESS_ZONE_PERMISSION,
 ] as const;
 
