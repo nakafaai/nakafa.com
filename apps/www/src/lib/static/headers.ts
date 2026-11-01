@@ -4,7 +4,7 @@ import { Array as Arr } from "effect";
 // The Vite config imports this module, and only package imports resolve there.
 import { LLMS_CACHE_CONTROL } from "#www/src/lib/llms/cache";
 import { LLMS_MARKDOWN_MEDIA_TYPE } from "#www/src/lib/llms/routes";
-import { SHELL_PATH } from "#www/src/lib/routing/shell";
+import { SHELL_PATH, schoolEntryPath } from "#www/src/lib/routing/shell";
 import type { HeaderRule, WwwHeader } from "#www/src/lib/security/headers";
 
 /** A sitemap and a feed may live on a CDN for a day, and a stale copy is served while the next one renders. */
@@ -126,5 +126,6 @@ export const STATIC_HEADER_RULES: readonly HeaderRule[] = [
   { path: "/manifest.webmanifest", headers: MANIFEST_HEADERS },
   { path: "/_data/*", headers: STATIC_ANSWER_HEADERS },
   { path: SHELL_PATH, headers: SHELL_HEADERS },
+  { path: `${schoolEntryPath("")}*`, headers: SHELL_HEADERS },
   ...SOCIAL_IMAGE_RULES,
 ];

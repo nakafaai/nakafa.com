@@ -14,9 +14,9 @@ import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import {
   deferStaticPageScripts,
-  notFoundPages,
+  standalonePages,
   verifyPrerenderedPages,
-  writeNotFoundPages,
+  writeStandalonePages,
   writeStaticAnswers,
 } from "#www/prerender.config";
 import { staticPagePath } from "#www/src/lib/routing/prerendered";
@@ -436,7 +436,7 @@ export default defineConfig(async ({ command, isPreview }) => {
                   path,
                   prerender: { outputPath: staticPagePath(path) },
                 })),
-                ...notFoundPages,
+                ...standalonePages,
               ],
         // A school page and a learner's signed-in screen render only in the
         // browser (ADR 0038 D2). The build prerenders the root document once as
@@ -486,7 +486,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       writeStaticArtifacts,
       writeStaticAnswers(prerenderedPages),
       deferStaticPageScripts(prerenderedPages),
-      writeNotFoundPages(prerenderedPages),
+      writeStandalonePages(prerenderedPages),
       verifyPrerenderedPages(prerenderedPages),
       // `vite dev` runs the Worker as Node runs a development server. `vite build`
       // and `vite preview`, the acceptance server and the prerender included, run
