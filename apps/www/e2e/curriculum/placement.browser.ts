@@ -168,7 +168,7 @@ for (const viewport of VIEWPORTS) {
     await context.addInitScript(SAMPLER);
     const page = await context.newPage();
     await page.goto(CURRICULUM_PATH);
-    const link = page.locator('a[href*="/function-concept?ctx="]').first();
+    const link = page.locator('a[href$="/function-concept"]').first();
     await link.scrollIntoViewIfNeeded();
     await link.click();
     await expect(page).toHaveURL(new RegExp(MATERIAL_PATH, "u"));
@@ -257,7 +257,7 @@ test("the breadcrumb of a lesson whose match the router already holds paints onc
   await page.evaluate(() => {
     Reflect.get(window, "__placementPaint").samples.length = 0;
   });
-  const link = page.locator('a[href*="/function-concept?ctx="]').first();
+  const link = page.locator('a[href$="/function-concept"]').first();
   await link.scrollIntoViewIfNeeded();
   await link.click();
   await expect(page).toHaveURL(new RegExp(MATERIAL_PATH, "u"));
