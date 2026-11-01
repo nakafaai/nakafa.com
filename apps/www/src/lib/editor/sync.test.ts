@@ -341,6 +341,57 @@ describe("editor/sync failures", () => {
         expect(textOf((yield* Ref.get(state)).doc)).toBe("a");
       })
   );
+
+  it.effect(
+    "reads a document again after a read that failed, so one timeout leaves no text read-only",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const { port } = yield* makePort();
+        const reads = yield* Ref.make(0);
+        const failsOnce: SyncTransport = {
+          ...server.transport,
+          open: (clientId) =>
+            Ref.getAndUpdate(reads, (count) => count + 1).pipe(
+              Effect.flatMap((count) =>
+                count === 0
+                  ? Effect.fail(new SyncFailed({ reason: "ran out of time" }))
+                  : server.transport.open(clientId)
+              )
+            ),
+        };
+        const start = yield* startSync(port, failsOnce).pipe(Effect.forkChild);
+        yield* TestClock.adjust("2999 millis");
+        expect(yield* Ref.get(reads)).toBe(1);
+        yield* TestClock.adjust("1 millis");
+        yield* Fiber.join(start);
+        expect(yield* Ref.get(reads)).toBe(2);
+      })
+  );
+
+  it.effect("gives up on a document that keeps failing, with the failure", () =>
+    Effect.gen(function* () {
+      const server = yield* makeServer();
+      const { port } = yield* makePort();
+      const reads = yield* Ref.make(0);
+      const fails: SyncTransport = {
+        ...server.transport,
+        open: () =>
+          Ref.update(reads, (count) => count + 1).pipe(
+            Effect.andThen(
+              Effect.fail(new SyncFailed({ reason: "ran out of time" }))
+            )
+          ),
+      };
+      const start = yield* startSync(port, fails).pipe(
+        Effect.flip,
+        Effect.forkChild
+      );
+      yield* TestClock.adjust("12 seconds");
+      expect(yield* Fiber.join(start)).toMatchObject({ _tag: "SyncFailed" });
+      expect(yield* Ref.get(reads)).toBe(5);
+    })
+  );
 });
 
 describe("editor/sync waits for a fold", () => {

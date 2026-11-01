@@ -12,11 +12,19 @@ import {
 } from "@/lib/editor/session";
 import { readDocument, receiveOnto, settleSteps } from "@/lib/editor/settle";
 
+/** How long a document that could not be read waits before the editor reads it again. */
+const OPEN_AGAIN = Schedule.spaced("3 seconds");
+
+/** The most times an editor reads a document again, after its first read. */
+const OPEN_RETRIES = 4;
+
 /**
  * Opens the document for an editor. The editor gets a session ID of its own, the
- * snapshot becomes its starting state, and the steps after the snapshot follow. The
- * editor's state is replaced only while it still holds the state read before the
- * document opened: an edit that landed in between fails the start, so it is never lost.
+ * snapshot becomes its starting state, and the steps after the snapshot follow. A read
+ * that failed runs again, since one read that ran out of time would otherwise leave the
+ * editor read-only until the page reloads. The editor's state is replaced only while it
+ * still holds the state read before the document opened: an edit that landed in between
+ * fails the start, so it is never lost.
  */
 export const startSync = Effect.fn("editor.sync.start")(function* (
   port: EditorPort,
@@ -24,7 +32,9 @@ export const startSync = Effect.fn("editor.sync.start")(function* (
 ) {
   const clientId = yield* randomUuid;
   const from = yield* port.state;
-  const opened = yield* transport.open(clientId);
+  const opened = yield* transport
+    .open(clientId)
+    .pipe(Effect.retry({ schedule: OPEN_AGAIN, times: OPEN_RETRIES }));
   const doc = yield* readDocument(port.schema, opened.snapshot.content);
   const settled = yield* settleSteps(port.schema, doc, opened.steps);
   const fresh = port.fresh({

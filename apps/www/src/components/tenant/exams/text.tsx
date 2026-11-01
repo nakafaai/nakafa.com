@@ -191,10 +191,13 @@ export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
       return;
     }
     held.current?.setEditable(false, false);
-    const round = waiting.current;
-    if (round !== null) {
-      Effect.runFork(Fiber.interrupt(round));
-    }
+    Effect.runFork(
+      Effect.forEach(
+        [opening.current, waiting.current],
+        (fiber) => (fiber === null ? Effect.void : Fiber.interrupt(fiber)),
+        { discard: true }
+      )
+    );
   }, [gone]);
 
   // A page that closes sends what the editor holds at once, and asks first while the server does not hold it yet,
