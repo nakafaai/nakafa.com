@@ -14,9 +14,12 @@ import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { Class } from "@repo/backend/confect/classroom/access";
-import { TaskTitle } from "@repo/backend/confect/classroom/tasks/task";
 import { writeTask } from "@repo/backend/confect/classroom/tasks/write";
 import spec from "@repo/backend/confect/connectors/classroom.spec";
+import {
+  taskTitleOf,
+  workKeyOf,
+} from "@repo/backend/confect/connectors/coursework";
 import {
   courseRoster,
   courseStudents,
@@ -39,7 +42,6 @@ import {
   Number as Num,
   Option,
   pipe,
-  Schema,
   String as Str,
 } from "effect";
 
@@ -51,12 +53,6 @@ const CLASS_LIMIT = 300;
 
 /** How many courses a preview counts the students of at once. */
 const PREVIEW_CONCURRENCY = 5;
-
-/** Characters that a task title keeps on one line: line breaks and controls become a space. */
-const LINE_BREAKS = /[\p{Cc}\p{Zl}\p{Zp}]+/gu;
-
-/** Characters that a client key does not hold. */
-const KEY_UNSAFE = /[^A-Za-z0-9-]/gu;
 
 /** The refusal of a connection or a class that is not the school's own, as a missing object. */
 const missing = () =>
@@ -392,12 +388,6 @@ const links = FunctionImpl.make(
   })
 );
 
-/** A Classroom title as a task title: one trimmed line of at most 120 characters, or none when nothing is left. */
-const taskTitleOf = (title: string) =>
-  Schema.decodeOption(TaskTitle)(
-    pipe(title.replace(LINE_BREAKS, " "), Str.trim, Str.slice(0, 120), Str.trim)
-  );
-
 /**
  * Imports the coursework of one linked course into its class's tasks, each once
  * under a client key made from its Classroom ID, written by the member who linked
@@ -440,10 +430,7 @@ const storeWork = FunctionImpl.make(
         if (Option.isNone(title)) {
           return false;
         }
-        const clientKey = pipe(
-          `classroom-${work.workId.replace(KEY_UNSAFE, "-")}`,
-          Str.slice(0, 64)
-        );
+        const clientKey = workKeyOf(work.workId);
         const stored = yield* reader
           .table("classroomTasks")
           .index("by_classId_and_clientKey", (query) =>
