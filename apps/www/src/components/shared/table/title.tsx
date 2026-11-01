@@ -13,7 +13,7 @@ import type { ComponentProps, ReactNode } from "react";
 export function TableName({ children }: { children: ReactNode }) {
   return (
     <span
-      className="block max-w-80 min-w-40 font-medium wrap-break-word whitespace-normal"
+      className="block max-w-52 min-w-36 font-medium wrap-break-word whitespace-normal sm:max-w-80"
       dir="auto"
     >
       {children}
