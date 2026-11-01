@@ -1032,6 +1032,7 @@
         "restored": "Classroom restored"
       },
       "grade": {
+        "corrected": "Grade corrected",
         "released": "Grade released"
       },
       "message": {
