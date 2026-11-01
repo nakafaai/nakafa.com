@@ -64,7 +64,9 @@ test("an exam a finished sitting locked says so in its header, and its copy take
     0
   );
   await locked.click();
-  await expect(page.getByText("This exam is locked")).toBeVisible();
+  await expect(
+    page.getByText("A sitting of this exam has finished")
+  ).toBeVisible();
 
   // The copy stands apart from the exam, with its questions, and takes changes.
   await page.getByRole("button", { name: "Duplicate exam" }).click();
