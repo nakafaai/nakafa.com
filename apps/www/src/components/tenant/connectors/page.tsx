@@ -49,8 +49,10 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { CoursesProvider } from "@/components/tenant/connectors/courses";
 import {
   SchoolHolder,
+  SchoolServiceAction,
   SchoolServiceWork,
   ServiceExams,
 } from "@/components/tenant/connectors/work";
@@ -188,16 +190,19 @@ function SchoolDirectory() {
         <PanesDetail defaultSize="50%" label={t("detail")}>
           <ServiceDetail entries={entries}>
             <ServiceHeader />
-            <PaneFill>
-              <SchoolServiceWork />
-            </PaneFill>
-            <PaneFooter>
-              <ServiceStatus>
-                <SchoolHolder />
-              </ServiceStatus>
-              <ServiceActions />
-              <ServiceExams />
-            </PaneFooter>
+            <CoursesProvider>
+              <PaneFill>
+                <SchoolServiceWork />
+              </PaneFill>
+              <PaneFooter>
+                <ServiceStatus>
+                  <SchoolHolder />
+                </ServiceStatus>
+                <ServiceActions />
+                <SchoolServiceAction />
+                <ServiceExams />
+              </PaneFooter>
+            </CoursesProvider>
           </ServiceDetail>
         </PanesDetail>
       </Panes>

@@ -142,11 +142,11 @@ export function AccountDirectory({
           ),
       }}
     >
-      <Panes>
+      <Panes id="connectors">
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail label={t("detail")}>
+        <PanesDetail defaultSize="50%" label={t("detail")}>
           <ServiceDetail entries={entries}>
             <ServiceHeader />
             <PaneFill>

@@ -1,16 +1,13 @@
-import type { Ref } from "@confect/core";
 import { useAction, useMutation } from "@confect/react";
 import {
   Mortarboard01Icon,
-  MoreHorizontalIcon,
+  Refresh03Icon,
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -19,20 +16,20 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Array as Arr, Effect, Option, Schema } from "effect";
-import { type ReactNode, useState, useTransition } from "react";
+import { Array as Arr, Option, Schema } from "effect";
+import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { RowMenu } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import {
@@ -40,6 +37,12 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import {
+  type Course,
+  type Preview,
+  useCourses,
+  useLoadCourses,
+} from "@/components/tenant/connectors/courses";
 import { useTenant } from "@/components/tenant/context";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -47,14 +50,12 @@ import { Link } from "@/lib/routing/link";
 
 const SOURCE = "components/tenant/connectors/classroom";
 
-/** What a preview answers: the school's classes, its connection, and the courses it teaches. */
-type Preview = NonNullable<Ref.Returns<typeof connectors.classroom.preview>>;
-
-/** One course of a preview. */
-type Course = Preview["courses"][number];
-
 /** The value of the class picker that leaves a course unlinked. */
 const UNLINKED = "none";
+
+/** Whether a preview's courses wait for a class, because the school has none for them to fill. */
+const needsClass = ({ classes, courses }: Preview) =>
+  Arr.isReadonlyArrayNonEmpty(courses) && Arr.isReadonlyArrayEmpty(classes);
 
 /**
  * The work a connected Classroom opens (journey J7): the courses that the school's connection
@@ -64,56 +65,59 @@ const UNLINKED = "none";
  * only when a reader opened it, and opening it again reads Google again.
  */
 export function ClassroomCourses() {
-  const { slug } = useTenant();
-  const preview = useAction(connectors.classroom.preview);
-  const [isLoading, startLoading] = useTransition();
-  const [hasFailed, setHasFailed] = useState(false);
-  const [shown, setShown] = useState<Option.Option<Preview>>(Option.none);
-
-  const load = () =>
-    startLoading(() =>
-      runForumCall(
-        forumCall(() => preview({ slug })).pipe(
-          Effect.tap((answer) =>
-            Effect.sync(() => {
-              setHasFailed(answer === null);
-              setShown(Option.fromNullOr(answer));
-            })
-          )
-        ),
-        () => setHasFailed(true)
-      )
-    );
+  const { load } = useLoadCourses();
+  const hasFailed = useCourses((state) => state.hasFailed);
+  const preview = useCourses((state) => state.preview);
 
   return (
     <>
       <Intersection once onIntersect={load} />
-      {Option.match(shown, {
-        onNone: () =>
-          hasFailed ? (
-            <LoadFailure isPending={isLoading} onRetry={load} />
-          ) : (
-            <CoursesLoading />
-          ),
-        onSome: (found) => (
-          <CourseTable
-            menu={(course) => (
-              <CourseMenu>
-                <CourseClass
-                  course={course}
-                  preview={found}
-                  setPreview={setShown}
-                />
-                {course.classId === null ? null : (
-                  <CourseRosterImport courseId={course.courseId} />
-                )}
-              </CourseMenu>
-            )}
-            preview={found}
-          />
-        ),
+      {Option.match(preview, {
+        onNone: () => (hasFailed ? <LoadFailure /> : <CoursesLoading />),
+        onSome: (found) => <CourseTable preview={found} />,
       })}
     </>
+  );
+}
+
+/** What the courses ask for next, in the footer as every button of a pane: the classes they wait for, or a new read. */
+export function CoursesAction() {
+  const hasFailed = useCourses((state) => state.hasFailed);
+  const preview = useCourses((state) => state.preview);
+
+  if (Option.exists(preview, needsClass)) {
+    return <OpenClasses />;
+  }
+
+  return hasFailed && Option.isNone(preview) ? <RetryCourses /> : null;
+}
+
+/** Reads the courses again after a read that failed. */
+function RetryCourses() {
+  const t = useTranslations("Common");
+  const { isLoading, load } = useLoadCourses();
+
+  return (
+    <Button disabled={isLoading} onClick={load} type="button">
+      <Spinner icon={Refresh03Icon} isLoading={isLoading} />
+      {t("retry")}
+    </Button>
+  );
+}
+
+/** Opens the school's classes, because a course only fills a class that exists. */
+function OpenClasses() {
+  const t = useTranslations("Connectors");
+  const { slug } = useTenant();
+
+  return (
+    <Link
+      className={buttonVariants()}
+      params={{ slug }}
+      to="/school/$slug/settings/classes"
+    >
+      {t("courses-no-class-action")}
+    </Link>
   );
 }
 
@@ -126,44 +130,15 @@ function CoursesLoading() {
   );
 }
 
-/** What a school with no class does first, because a course only fills a class that exists. */
-function NoClassToFill() {
-  const t = useTranslations("Connectors");
-  const { slug } = useTenant();
-
-  return (
-    <TableEmpty
-      act="pointing"
-      action={
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          params={{ slug }}
-          to="/school/$slug/settings/classes"
-        >
-          {t("courses-no-class-action")}
-        </Link>
-      }
-      description={t("courses-no-class")}
-      title={t("courses-no-class-title")}
-    />
-  );
-}
-
 /** The columns of the courses. */
 const courseColumns = tableColumns<Course>();
 
 /**
  * The courses of a preview in a table, or the empty state when it has none or the school has no class for them: each
- * course's name and section, the class it fills, its students, and its menu, which the caller composes. A course linked
- * to a class the school archived names that, so a cell never shows the class's raw ID.
+ * course's name and section, the class it fills, its students, and its menu. A course linked to a class the school
+ * archived names that, so a cell never shows the class's raw ID.
  */
-function CourseTable({
-  menu,
-  preview,
-}: {
-  menu: (course: Course) => ReactNode;
-  preview: Preview;
-}) {
+function CourseTable({ preview }: { preview: Preview }) {
   const t = useTranslations("Connectors");
   const classOf = (course: Course) =>
     course.classId === null
@@ -188,8 +163,14 @@ function CourseTable({
       />
     );
   }
-  if (Arr.isReadonlyArrayEmpty(preview.classes)) {
-    return <NoClassToFill />;
+  if (needsClass(preview)) {
+    return (
+      <TableEmpty
+        act="pointing"
+        description={t("courses-no-class")}
+        title={t("courses-no-class-title")}
+      />
+    );
   }
 
   return (
@@ -242,7 +223,17 @@ function CourseTable({
             header: t("course-students"),
             id: "students",
           }),
-          courseColumns.menu((info) => menu(info.row.original)),
+          courseColumns.menu(({ row: { original: course } }) => (
+            <RowMenu>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>{t("course")}</DropdownMenuLabel>
+                <CourseClass course={course} preview={preview} />
+                {course.classId === null ? null : (
+                  <CourseRosterImport courseId={course.courseId} />
+                )}
+              </DropdownMenuGroup>
+            </RowMenu>
+          )),
         ]}
         data={preview.courses}
         plain
@@ -252,56 +243,18 @@ function CourseTable({
   );
 }
 
-/** A course's one action: the ghost three dots, opening what it can do, which the caller composes. */
-function CourseMenu({ children }: { children: ReactNode }) {
-  const t = useTranslations("Connectors");
-  const common = useTranslations("Common");
-
-  return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{t("course")}</DropdownMenuLabel>
-            {children}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-}
-
 /** The class a course fills. A new pick shows at once and goes back to the previous one when the server refuses it. */
 function CourseClass({
   course,
   preview,
-  setPreview,
 }: {
   course: Course;
   preview: Preview;
-  setPreview: (preview: Option.Option<Preview>) => void;
 }) {
   const t = useTranslations("Connectors");
   const { slug } = useTenant();
   const link = useMutation(connectors.classroom.link);
-  const withClass = (classId: Course["classId"]) =>
-    Option.some({
-      ...preview,
-      courses: Arr.map(preview.courses, (row) =>
-        row.courseId === course.courseId ? { ...row, classId } : row
-      ),
-    });
+  const place = useCourses((state) => state.place);
 
   const pick = (value: unknown) => {
     const picked =
@@ -309,7 +262,7 @@ function CourseClass({
         ? Option.some(null)
         : Schema.decodeUnknownOption(Id("classes"))(value);
     Option.map(picked, (classId) => {
-      setPreview(withClass(classId));
+      place(course.courseId, classId);
       runForumCall(
         forumCall(() =>
           link({
@@ -320,7 +273,7 @@ function CourseClass({
           })
         ),
         () => {
-          setPreview(withClass(course.classId));
+          place(course.courseId, course.classId);
           toastForumFailure();
         }
       );
