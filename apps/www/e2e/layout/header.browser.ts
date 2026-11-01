@@ -77,6 +77,7 @@ const schoolPaths = [
   "/settings/policies",
   "/settings/clients",
   "/settings/audit",
+  "/settings/connections",
 ];
 
 /** The pages of one exam that its Owner sees: its rooms, its editor, its try, and one sitting with its results. */

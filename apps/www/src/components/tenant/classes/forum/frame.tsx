@@ -2,16 +2,25 @@ import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { pageBoxVariants } from "@/components/shared/content/width";
+import {
+  pageBoxVariants,
+  pageGutterVariants,
+} from "@/components/shared/content/width";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ChatRail } from "@/components/tenant/classes/forum/rail";
 
-/** The class's chats, which stand beside the open chat on a laptop and fill a phone until one opens. */
-const railPlace = cva("min-h-0 w-full shrink-0 flex-col border-e lg:w-72", {
-  variants: {
-    shown: { chat: "hidden lg:flex", rail: "flex", thread: "hidden xl:flex" },
-  },
-});
+/**
+ * The class's chats, which stand beside the open chat on a laptop and fill a phone until one opens. The rail keeps
+ * the page's gutter, so its search, its tabs and its rows stand on the header's first letter.
+ */
+const railPlace = cva(
+  `min-h-0 w-full shrink-0 flex-col ${pageGutterVariants()} lg:w-80 lg:border-e lg:pe-0`,
+  {
+    variants: {
+      shown: { chat: "hidden lg:flex", rail: "flex", thread: "hidden xl:flex" },
+    },
+  }
+);
 
 /** The open chat, which takes the room the list leaves. On a phone the list alone stands until a chat opens. */
 const chatPlace = cva("min-h-0 min-w-0 flex-1 flex-col", {

@@ -61,7 +61,10 @@ export function ThreadRows() {
       {table("no-results")}
     </p>
   ) : (
-    <ItemGroup aria-label={t("chat-filter-threads")} className="gap-0.5 p-2">
+    <ItemGroup
+      aria-label={t("chat-filter-threads")}
+      className="gap-0.5 py-2 lg:pe-2"
+    >
       {Arr.map(rows, (row) => (
         <ThreadItem key={row.discussion.number} row={row} />
       ))}

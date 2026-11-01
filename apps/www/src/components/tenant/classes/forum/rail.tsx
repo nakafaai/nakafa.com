@@ -106,7 +106,7 @@ function ChatList() {
 
   return (
     <>
-      <div className="flex shrink-0 items-center gap-2 p-2">
+      <div className="flex shrink-0 items-center gap-2 py-2 lg:pe-2">
         <ChatSearch />
         {Arr.contains(can, "forum.manage") ? (
           <AddChannel classId={classId} drafts={drafts} slug={slug} />
@@ -199,7 +199,7 @@ function ChatFilters({
       }}
       value={filter}
     >
-      <TabsList aria-label={t("chat-filter")} className="px-4">
+      <TabsList aria-label={t("chat-filter")} className="lg:pe-2">
         {Arr.map(
           Arr.filter(
             ChatFilter.literals,

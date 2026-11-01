@@ -23,7 +23,10 @@ import { cn } from "cn";
 import { Array as Arr, DateTime, Option } from "effect";
 import { useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
-import { readingMeasureVariants } from "@/components/shared/content/width";
+import {
+  pageGutterVariants,
+  readingMeasureVariants,
+} from "@/components/shared/content/width";
 import {
   forumCall,
   runForumCall,
@@ -117,7 +120,11 @@ export function MessageStream({
             preserveScrollOnPrepend
           >
             <MessageScrollerContent
-              className={cn(readingMeasureVariants(), "gap-4 p-4")}
+              className={cn(
+                readingMeasureVariants(),
+                pageGutterVariants(),
+                "gap-4 py-4"
+              )}
             >
               {loadOlder === undefined && Option.isSome(opening) ? (
                 <MessageScrollerItem>

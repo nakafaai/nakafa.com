@@ -165,7 +165,8 @@ const panesVariants = cva("min-h-0", {
     },
     width: {
       full: "w-full",
-      page: pageBoxVariants(),
+      // The second pane stands on the line the header's row mirrors, and the first draws its own gutter.
+      page: `${pageBoxVariants()} md:pe-6`,
     },
   },
 });

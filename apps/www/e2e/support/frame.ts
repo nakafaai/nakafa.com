@@ -3,7 +3,8 @@ import type { Page } from "@playwright/test";
 /**
  * The owner's rule (1 Nov): a page has one frame. Its header row sets the frame's edges, up to the app's widest
  * content, and no tab row or body reaches past them. The tab row keeps the header's gutter, so the first tab's text
- * and underline stand on the x of the header's first letter. A header holds at most two controls, a ButtonGroup
+ * and underline stand on the x of the header's first letter, and so does every column of the body: a rail's search,
+ * its tabs and its rows, and a table's card, with the right edge mirroring it. A header holds at most two controls, a ButtonGroup
  * counting as one, and its actions never cut its path. Reads all of it from what is drawn, so a page cannot pass by
  * its class names: a text clipped by a scroller counts only as far as the scroller shows it.
  */
@@ -13,6 +14,9 @@ export function readFrameProblems(page: Page) {
     const tolerance = 1;
     const desktop = 1024;
     const mostControls = 2;
+    const near = 12;
+    const edges =
+      '[data-slot="input-group"],[data-slot="tabs-tab"],[data-slot="item"],[data-slot="card"],[data-slot="table-card"]';
     const body =
       "h1,h2,h3,p,li,td,th,button,a,input,textarea,img,[data-slot=card],[data-slot=table-card],[data-slot=tabs-tab]";
 
@@ -115,6 +119,33 @@ export function readFrameProblems(page: Page) {
       ].filter((problem) => typeof problem === "string");
     };
 
+    /**
+     * What should stand on the line the header's first letter draws, and on the edge that mirrors it: a search
+     * bar, a tab, a list row, a card. Their own edge counts, filled or bordered, not only their text, so a rail
+     * that starts a few pixels off reads as a body wider than its header. What stands well inside, such as a
+     * card in a card, is left alone.
+     */
+    const edgeProblems = (header: Element, start: number, end: number) => {
+      const path = header.querySelector('[data-slot="breadcrumb"]');
+      const letter = path === null ? null : firstLetter(path);
+      const line = innerWidth >= desktop && letter !== null ? letter : start;
+      return Array.from(document.querySelectorAll(edges))
+        .filter((element) => isDrawn(element) && !standsApart(element))
+        .map((element) => ({ element, reach: reachOf(element) }))
+        .filter(({ reach }) => reach.right > reach.left)
+        .flatMap(({ element, reach }) => {
+          const left = reach.left - line;
+          const right = reach.right - end;
+          return [
+            (left < -tolerance || (left > tolerance && left < near)) &&
+              `${name(element)} starts ${Math.round(left)} px off the header's first letter`,
+            (right > tolerance || (right < -tolerance && right > -near)) &&
+              `${name(element)} ends ${Math.round(right)} px off the header's right edge`,
+          ].filter((problem) => typeof problem === "string");
+        })
+        .slice(0, 4);
+    };
+
     /** The header's controls, a ButtonGroup counting as one, past what a header may hold. */
     const controlProblems = (header: Element) => {
       const groups = new Set(
@@ -165,12 +196,15 @@ export function readFrameProblems(page: Page) {
     const edge = row.getBoundingClientRect();
     const start =
       edge.left + Number.parseFloat(getComputedStyle(row).paddingLeft);
+    const end =
+      edge.right - Number.parseFloat(getComputedStyle(row).paddingRight);
     return [
       ...(edge.width > widest + tolerance
         ? [`the header row is ${Math.round(edge.width)} px wide`]
         : []),
       ...bodyProblems(edge),
       ...tabProblems(header, start),
+      ...edgeProblems(header, start, end),
       ...controlProblems(header),
       ...pathProblems(header),
     ];

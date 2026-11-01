@@ -90,7 +90,10 @@ export function ChannelRows({
           </EmptyHeader>
         </Empty>
       ) : (
-        <ItemGroup aria-label={t("channels-title")} className="gap-0.5 p-2">
+        <ItemGroup
+          aria-label={t("channels-title")}
+          className="gap-0.5 py-2 lg:pe-2"
+        >
           {Arr.map(rows, (row) =>
             row._tag === "channel" ? (
               <ChannelItem channel={row.channel} key={row.channel.id} />
