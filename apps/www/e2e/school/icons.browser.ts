@@ -21,7 +21,7 @@ const iconOf = (control: Locator) =>
     .last()
     .evaluate((icon) => icon.innerHTML);
 
-test("a class in the school sidebar carries its animal, and only the Classes label carries an icon", async ({
+test("a class in the school sidebar carries its animal, and no group label carries an icon", async ({
   baseURL,
   browser,
 }) => {
@@ -36,11 +36,8 @@ test("a class in the school sidebar carries its animal, and only the Classes lab
   const entry = sidebar.getByRole("link", { exact: true, name: "Fisika X-1" });
   await expect(entry.locator('[data-slot="avatar"]')).toHaveCount(1);
   await expect(
-    sidebar
-      .locator('[data-slot="sidebar-group-label"]')
-      .filter({ hasText: "Classes" })
-      .locator("svg")
-  ).toHaveCount(1);
+    sidebar.locator('[data-slot="sidebar-group-label"] svg')
+  ).toHaveCount(0);
   await context.close();
 });
 
