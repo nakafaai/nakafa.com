@@ -57,7 +57,9 @@ for (const viewport of [
 
       await page.goto(address("/settings/members"));
       const card = page.locator('[data-slot="table-card"]');
-      await expect(card).toHaveCount(1);
+      await expect(card).toHaveCount(1, {
+        timeout: readinessTimeoutMilliseconds,
+      });
       await expect(card.locator("table")).toBeVisible({
         timeout: readinessTimeoutMilliseconds,
       });
