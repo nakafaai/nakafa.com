@@ -6,6 +6,7 @@ import {
   CheckmarkCircle02Icon,
   Download04Icon,
   PencilEdit02Icon,
+  RefreshIcon,
   SentIcon,
 } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
@@ -226,6 +227,12 @@ function ReportStateButtons({
         <Button onClick={() => actions.approve(report.id)} type="button">
           <HugeIcons icon={CheckmarkCircle02Icon} />
           {t("approve")}
+        </Button>
+      ) : null}
+      {menu.lock ? (
+        <Button onClick={() => actions.approve(report.id)} type="button">
+          <HugeIcons icon={RefreshIcon} />
+          {t("lock-again")}
         </Button>
       ) : null}
       {menu.open && report.hash !== null ? (

@@ -210,6 +210,13 @@ describe("records/reports", () => {
           .as("principal")
           .mutation(reports.approve, { reportId: draft.id, slug: nf });
         expect(approved.state).toBe("approved");
+        // A report whose PDF has not arrived asks for it again, as it stands.
+        expect(
+          yield* fixture
+            .as("principal")
+            .mutation(reports.approve, { reportId: draft.id, slug: nf })
+        ).toEqual(approved);
+        yield* fixture.finishScheduled();
         expect(
           yield* Effect.flip(
             fixture
@@ -217,7 +224,6 @@ describe("records/reports", () => {
               .mutation(reports.approve, { reportId: draft.id, slug: nf })
           )
         ).toMatchObject({ _tag: "ReportClosed" });
-        yield* fixture.finishScheduled();
         const row = yield* reportRow(fixture, draft.id);
         expect(row).toMatchObject({
           approvedBy: fixture.people.principal.personId,
