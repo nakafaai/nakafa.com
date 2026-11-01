@@ -1569,6 +1569,7 @@ export declare const api: {
           latePolicy: "accept" | "close";
           points: number;
           slug: string;
+          targets: Array<Id<"tenantPeople">> | null;
           task: string;
           text: string;
           title: string;
@@ -1586,6 +1587,7 @@ export declare const api: {
           } | null;
           points: number;
           slug: string;
+          targets: Array<Id<"tenantPeople">> | null;
           text: string;
           title: string;
         }
@@ -1607,6 +1609,7 @@ export declare const api: {
           } | null;
           points: number;
           slug: string;
+          targets: Array<Id<"tenantPeople">> | null;
           text: string;
           title: string;
         }
@@ -1643,6 +1646,7 @@ export declare const api: {
             } | null;
             points: number;
             slug: string;
+            targets: Array<Id<"tenantPeople">> | null;
             text: string;
             title: string;
           }>;
@@ -1660,6 +1664,7 @@ export declare const api: {
           latePolicy: "accept" | "close";
           points: number;
           slug: string;
+          targets: Array<Id<"tenantPeople">> | null;
           text: string;
           title: string;
         },
@@ -1676,6 +1681,7 @@ export declare const api: {
           } | null;
           points: number;
           slug: string;
+          targets: Array<Id<"tenantPeople">> | null;
           text: string;
           title: string;
         }
@@ -1747,6 +1753,7 @@ export declare const api: {
           } | null;
           points: number;
           slug: string;
+          targets: Array<Id<"tenantPeople">> | null;
           text: string;
           title: string;
         }
