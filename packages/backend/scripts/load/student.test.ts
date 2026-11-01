@@ -72,7 +72,9 @@ describe("load student", () => {
       expect(result.exit._tag).toBe("Success");
       const beats = Arr.filter(server.calls(), (call) => call.name === BEAT);
       expect(beats).toHaveLength(2);
-      expect(new Set(Arr.map(beats, (call) => call.args.session)).size).toBe(2);
+      expect(
+        Arr.dedupe(Arr.map(beats, (call) => call.args.session))
+      ).toHaveLength(2);
       expect(beats[0]?.args).toMatchObject({
         attemptId: "a1",
         slug: "sekolah",
