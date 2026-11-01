@@ -36,7 +36,7 @@ const LockReason = Schema.Literals(["AttemptLocked", "SittingLocked"]);
 const EntryRefusal = Schema.Literals(["TokenRefused", "TooManyTries"]);
 
 /** The copy key of one sentence that the student's screen shows when the entry does not admit them. */
-export const EntryMessage = Schema.Literals([
+const EntryMessage = Schema.Literals([
   "student-attempt-closed",
   "student-closed",
   "student-device-retired",
