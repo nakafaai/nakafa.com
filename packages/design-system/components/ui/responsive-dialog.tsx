@@ -18,7 +18,7 @@ import {
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type ReactNode, useRef } from "react";
 
 interface Props {
   children?: ReactNode;
@@ -62,14 +62,28 @@ export function ResponsiveDialog({
   // A footer holds the dialog's own way out, Close or Cancel, so the corner's close button shows only on a
   // dialog without one, and no dialog offers two.
   const cornerClose = !footer;
+  const opened = useRef(false);
+
+  // A press on the backdrop before the dialog has finished opening is the second press of the double press
+  // that opened it, so the dialog stays.
+  const change = (
+    next: boolean,
+    details: { readonly cancel: () => void; readonly reason: string }
+  ) => {
+    if (details.reason === "outside-press" && !opened.current) {
+      details.cancel();
+      return;
+    }
+    setOpen(next);
+  };
+  const complete = (next: boolean) => {
+    opened.current = next;
+    onOpenChangeComplete?.(next);
+  };
 
   if (isDesktop) {
     return (
-      <Dialog
-        onOpenChange={setOpen}
-        onOpenChangeComplete={onOpenChangeComplete}
-        open={open}
-      >
+      <Dialog onOpenChange={change} onOpenChangeComplete={complete} open={open}>
         <DialogContent
           finalFocus={finalFocus}
           showCloseButton={cornerClose}
@@ -88,8 +102,8 @@ export function ResponsiveDialog({
 
   return (
     <Drawer
-      onOpenChange={setOpen}
-      onOpenChangeComplete={onOpenChangeComplete}
+      onOpenChange={change}
+      onOpenChangeComplete={complete}
       open={open}
       showSwipeHandle
     >
