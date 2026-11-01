@@ -57,26 +57,30 @@ export function TryoutActionName({
 }
 
 /**
- * Keeps the name a page's read answered with, so this browser's next hard load paints it. A browser that
- * refuses its storage paints the page as a first visit does.
+ * Keeps a set's name for this browser's next hard load. A browser that refuses its storage paints the
+ * page as a first visit does.
  */
+export function keepActionName(address: string, name: TryoutActionNameKey) {
+  Effect.runFork(
+    keepName(address, name).pipe(
+      Effect.provide(keptStorage),
+      Effect.catchTag("KeyValueStoreError", (error) =>
+        reportClientException(error, {
+          source: "components/tryout/set/name",
+        })
+      )
+    )
+  );
+}
+
+/** Keeps the name a page's read answered with, once it has answered. */
 export function useKeepActionName(
   address: string,
   name: TryoutActionNameKey | null
 ) {
   useEffect(() => {
-    if (name === null) {
-      return;
+    if (name !== null) {
+      keepActionName(address, name);
     }
-    Effect.runFork(
-      keepName(address, name).pipe(
-        Effect.provide(keptStorage),
-        Effect.catchTag("KeyValueStoreError", (error) =>
-          reportClientException(error, {
-            source: "components/tryout/set/name",
-          })
-        )
-      )
-    );
   }, [address, name]);
 }
