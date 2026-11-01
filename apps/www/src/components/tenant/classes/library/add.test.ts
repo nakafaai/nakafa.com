@@ -23,6 +23,7 @@ const args = {
   address: "https://youtu.be/gerak-lurus",
   classId,
   clientKey: "0b5c9d1e-4f3a-4c2b-9a8d-7e6f5a4b3c2d",
+  folderId: null,
   slug,
   title: "Video gerak lurus",
 };
@@ -34,6 +35,7 @@ const stored: LibraryItem = {
   byteSize: null,
   clientKey: args.clientKey,
   createdAt: 1000,
+  folderId: null,
   id: Schema.decodeUnknownSync(Id("classroomLibrary"))("item-1"),
   kind: "link",
   title: args.title,
@@ -62,7 +64,11 @@ describe("addLibraryLink", () => {
             {
               getAllQueries: () => [
                 {
-                  args: { classId, paginationOpts: { cursor: null } },
+                  args: {
+                    classId,
+                    folderId: null,
+                    paginationOpts: { cursor: null },
+                  },
                   value: Option.some({ isDone: true, page: [] }),
                 },
               ],

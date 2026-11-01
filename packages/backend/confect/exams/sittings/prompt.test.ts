@@ -85,6 +85,7 @@ describe("exams/sittings prompt", () => {
           sittingId: made.id,
         });
         expect(reply).toEqual({
+          media: [],
           prompt: yield* storedDocument(paragraphText("Soal")).pipe(
             Effect.orDie
           ),
@@ -143,6 +144,7 @@ describe("exams/sittings prompt", () => {
           sittingId: made.id,
         });
         expect(reply).toEqual({
+          media: [],
           prompt: yield* storedDocument(paragraphText("EditedSoal")).pipe(
             Effect.orDie
           ),
