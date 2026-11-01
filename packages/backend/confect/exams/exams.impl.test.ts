@@ -7,7 +7,9 @@ import { archiveUnit, examRows } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { cohorts, create, list, open, rename } = refs.public.exams.exams;
+const { cohorts, create, duplicate, list, open, rename } =
+  refs.public.exams.exams;
+const { copy, reading, scoring, template } = refs.public.exams.questions;
 
 /** One minute, so two exams made in turn have different creation times. */
 const LATER = TENANCY_NOW + 60_000;
@@ -363,6 +365,96 @@ describe("exams/exams cohorts", () => {
           .query(cohorts, { slug: nf, unitId: fixture.units.smp })
           .pipe(Effect.flip);
         expect(refused).toMatchObject({ _tag: "AccessDenied" });
+      })
+  );
+
+  it.effect(
+    "copies an exam with its answers, its keys and one shared reading, in new documents, and refuses a student",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const made = yield* teacher.mutation(create, {
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+          title: "PTS Matematika",
+        });
+        const [first] = made.questions;
+        yield* teacher.mutation(reading, {
+          examId: made.id,
+          questionId: first.id,
+          slug: nf,
+          source: "new",
+        });
+        yield* teacher.mutation(copy, {
+          examId: made.id,
+          questionId: first.id,
+          slug: nf,
+        });
+        const original = yield* teacher.query(open, {
+          examId: made.id,
+          slug: nf,
+        });
+
+        const copied = yield* teacher.mutation(duplicate, {
+          examId: made.id,
+          slug: nf,
+          title: "PTS Matematika (salinan)",
+        });
+
+        expect(copied.title).toBe("PTS Matematika (salinan)");
+        expect(copied.frozenAt).toBeUndefined();
+        expect(copied.questions).toHaveLength(2);
+        const [one, two] = copied.questions;
+        expect(one.answers).toEqual(original.questions[0].answers);
+        expect(one.prompt).not.toBe(original.questions[0].prompt);
+        expect(one.reading).not.toBe(original.questions[0].reading);
+        expect(one.reading).not.toBeNull();
+        expect(two.reading).toBe(one.reading);
+        const refused = yield* fixture
+          .as("student")
+          .mutation(duplicate, {
+            examId: made.id,
+            slug: nf,
+            title: "Salinan",
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "AccessDenied" });
+      })
+  );
+
+  it.effect(
+    "copies a question that holds no reading with none, and keeps how it scores",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const made = yield* teacher.mutation(create, {
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+          title: "PTS IPA",
+        });
+        const [first] = made.questions;
+        const ids = { examId: made.id, questionId: first.id, slug: nf };
+        yield* teacher.mutation(template, {
+          ...ids,
+          labels: [],
+          revision: first.revision,
+          template: "choices",
+        });
+        const scored = yield* teacher.mutation(scoring, {
+          ...ids,
+          scoring: "perPart",
+        });
+
+        const copied = yield* teacher.mutation(duplicate, {
+          examId: made.id,
+          slug: nf,
+          title: "PTS IPA (salinan)",
+        });
+
+        expect(copied.questions[0].reading).toBeNull();
+        expect(copied.questions[0].scoring).toEqual(scored.scoring);
       })
   );
 });

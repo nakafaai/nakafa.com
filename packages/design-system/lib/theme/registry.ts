@@ -215,6 +215,14 @@ export const concreteThemeValues = Arr.flatMap(themes, (theme) =>
 /** A theme shown as itself: every choice except system. */
 export type ConcreteTheme = (typeof concreteThemeValues)[number];
 
+/** The stylesheet of the named themes. Few people pick one, so it stays out of the stylesheet every page blocks on. */
+export const THEME_SHEET_PATH = "/themes.css";
+
+/** Whether a concrete theme is a named one, whose colors live in that stylesheet. */
+export function isNamedTheme(theme: string) {
+  return theme !== "light" && theme !== "dark";
+}
+
 const decodeThemeChoice = Schema.decodeUnknownOption(ThemeChoiceSchema);
 
 /**

@@ -3,6 +3,7 @@ import { useInViewport } from "@mantine/hooks";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
+import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   letterScript,
   optionLetter,
@@ -17,13 +18,16 @@ import {
   editorDocument,
   editorPlaceholder,
 } from "@repo/design-system/components/editor/frame";
-import { drawDocument } from "@repo/design-system/components/editor/prose";
 import { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
-import { useCallback, useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useMemo } from "react";
 import { useTranslations } from "use-intl";
-import { DrawnFigures, figurePlaces } from "@/components/assessment/drawn";
+import { DrawnDocument } from "@/components/assessment/drawn";
+import {
+  addressesOf,
+  SittingPictures,
+} from "@/components/exams/sitting/pictures";
 import { ChoiceGroup } from "@/components/exams/sitting/reason";
 import {
   type Choice,
@@ -57,6 +61,7 @@ import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 import { useLastValue } from "@/lib/data/kept";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { foldedDocument } from "@/lib/editor/fold";
+import { assetIdsOf } from "@/lib/editor/pictures";
 
 /**
  * The session name the editor reads a prompt under to draw it without an editor. It never writes, so the
@@ -153,7 +158,7 @@ export function ReadingSketch({
     saved: true,
   });
 
-  return <PreviewProse article doc={doc} size="paper" />;
+  return <PreviewProse doc={doc} size="paper" />;
 }
 
 /** The document a text draws while its document is not known: one empty paragraph, as an editor holds one. */
@@ -162,19 +167,33 @@ const EMPTY_TEXT = Node.fromJSON(assessmentSchema, {
   type: "doc",
 });
 
+/** The addresses of the images a drawn text holds, in one read, by image ID. */
+function useDrawnPictures(doc: Node) {
+  const { exam, slug } = useExam();
+  const assets = useMemo(() => assetIdsOf(doc), [doc]);
+  const reply = useQuery(
+    exams.assets.urls,
+    Arr.isReadonlyArrayEmpty(assets)
+      ? "skip"
+      : { assets, examId: exam.id, slug }
+  );
+
+  return useMemo(
+    () => (QueryResult.isSuccess(reply) ? addressesOf(reply.value) : {}),
+    [reply]
+  );
+}
+
 /**
- * A rich text drawn without an editor (`drawDocument`), in the wrapper and the document classes the editor
- * gives its text, so the text takes the same box and spacing as it does once the editor mounts. A text
- * that changes while the teacher types is drawn when the browser has time. `article` gives each paragraph
- * the classes the article's paragraphs take, which the prompt and the notes of a question take in their
- * editors, and an option does not.
+ * A rich text drawn with the student's own nodes (`DrawnDocument`), in the wrapper the editor gives its text, so
+ * the text takes the same box and spacing as it does once the editor mounts, and as the student reads it. A text
+ * that changes while the teacher types is drawn when the browser has time. Its paragraphs take the classes the
+ * article's paragraphs take, as the prompt and the notes of a question do in their editors.
  */
 export function PreviewProse({
-  article,
   doc,
   size,
 }: {
-  article: boolean;
   doc: Option.Option<Node>;
   size: "line" | "page" | "paper";
 }) {
@@ -182,40 +201,43 @@ export function PreviewProse({
   const deferred = useDeferredValue(latest);
   // A text that just arrived draws at once, so the page takes its shape in one frame, and nothing below it moves.
   const shown = deferred === EMPTY_TEXT ? latest : deferred;
-  const [figures, setFigures] = useState<readonly HTMLElement[]>([]);
-  // The text is drawn again only when it changes, not on every redraw of the page.
-  const draw = useCallback(
-    (element: HTMLDivElement | null) => {
-      if (element !== null) {
-        drawDocument(element, shown, article);
-        setFigures(figurePlaces(element));
-      }
-    },
-    [article, shown]
-  );
+  const urls = useDrawnPictures(shown);
 
   return (
     <div className={editorContent({ size })}>
-      <div
-        className={cn(
-          editorPlaceholder(),
-          editorDocument({ size, text: "article" })
-        )}
-        ref={draw}
-      />
-      <DrawnFigures doc={shown} places={figures} />
+      <SittingPictures value={urls}>
+        <DrawnDocument
+          className={cn(
+            editorPlaceholder(),
+            editorDocument({ size, text: "article" })
+          )}
+          doc={shown}
+          paragraphs
+        />
+      </SittingPictures>
     </div>
   );
 }
 
 /** The label of one option drawn without an editor, at the size an option's editor takes. */
 export function OptionSketch({ label }: { label: OptionLabel }) {
-  const doc = useMemo(
-    () => Option.some(Node.fromJSON(assessmentSchema, label)),
-    [label]
-  );
+  const doc = useMemo(() => Node.fromJSON(assessmentSchema, label), [label]);
+  const urls = useDrawnPictures(doc);
 
-  return <PreviewProse article={false} doc={doc} size="line" />;
+  return (
+    <div className={editorContent({ size: "line" })}>
+      <SittingPictures value={urls}>
+        <DrawnDocument
+          className={cn(
+            editorPlaceholder(),
+            editorDocument({ size: "line", text: "article" })
+          )}
+          doc={doc}
+          paragraphs={false}
+        />
+      </SittingPictures>
+    </div>
+  );
 }
 
 /**
@@ -421,7 +443,7 @@ export function QuestionPreview({
         inert
       >
         <QuestionPaper>
-          <PreviewProse article doc={doc} size="paper" />
+          <PreviewProse doc={doc} size="paper" />
           <PaperSketch question={question} />
         </QuestionPaper>
       </div>

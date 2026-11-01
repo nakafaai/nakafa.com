@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
-import { landingOf } from "@/lib/tenant/landing";
+import { landingOf, memberLandingOf } from "@/lib/tenant/landing";
 
 /** A viewer's rights in the school, with none unless a test gives them. */
 const rights = (
@@ -62,5 +62,14 @@ describe("tenant/landing", () => {
     expect(
       landingOf({ ...rights(), role: Option.some("teacher") }, NO_EXAMS)
     ).toBe("/school/$slug/notifications");
+  });
+
+  it("reads a member's rights from the frame the school layout drew", () => {
+    expect(
+      memberLandingOf({
+        home: { ...NO_EXAMS, choices: [] },
+        viewer: { can: ["tenant.manage"], grants: [], units: [] },
+      })
+    ).toBe("/school/$slug/settings/profile");
   });
 });

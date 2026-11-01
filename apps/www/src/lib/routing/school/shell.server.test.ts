@@ -23,6 +23,9 @@ vi.mock("cloudflare:workers", () => ({
   },
 }));
 
+/** The session cookie of a browser that is signed in. */
+const SESSION_COOKIE = "__Secure-better-auth.session_token";
+
 /** The answer of every request that the shell does not answer. */
 const OTHERWISE = new Response("<html>page</html>");
 
@@ -67,6 +70,46 @@ describe("answerSchoolPage", () => {
         expect(yield* Effect.promise(() => response.text())).toBe(
           "<html>shell</html>"
         );
+      })
+  );
+
+  it.effect(
+    "answers a visitor at a school's root with the sign-in in their language",
+    () =>
+      Effect.gen(function* () {
+        const visit = new Request("https://harapan.nakafa.com/", {
+          headers: {
+            "accept-language": "de",
+            host: "harapan.nakafa.com",
+          },
+        });
+
+        yield* answerSchoolPage(visit, 200, Effect.succeed(OTHERWISE));
+
+        const [shell] = assets.fetch.mock.calls[0] ?? [];
+        expect(shell?.url).toBe("https://harapan.nakafa.com/_entry/school/de");
+      })
+  );
+
+  it.effect.each([
+    { address: "https://harapan.nakafa.com/?sign-in=username", cookie: "" },
+    { address: "https://harapan.nakafa.com/parents", cookie: "" },
+    {
+      address: "https://harapan.nakafa.com/",
+      cookie: `${SESSION_COOKIE}=session`,
+    },
+  ])(
+    "keeps the plain shell for what is not a visitor's sign-in: $address $cookie",
+    ({ address, cookie }) =>
+      Effect.gen(function* () {
+        const visit = new Request(address, {
+          headers: { cookie, host: "harapan.nakafa.com" },
+        });
+
+        yield* answerSchoolPage(visit, 200, Effect.succeed(OTHERWISE));
+
+        const [shell] = assets.fetch.mock.calls[0] ?? [];
+        expect(new URL(shell?.url ?? "").pathname).toBe("/_shell");
       })
   );
 

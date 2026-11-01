@@ -36,6 +36,9 @@ const SAVED_MILLISECONDS = 60_000;
 /** How long a page may take on a cold cache at a sixth of the speed, at this load. */
 const COLD_MILLISECONDS = 60_000;
 
+/** How long one test may take, with an exam to write first. */
+const TEST_MILLISECONDS = 240_000;
+
 /** The screens a teacher works on: a phone, and a laptop. */
 const SCREENS = [
   { height: 844, width: 390 },
@@ -104,6 +107,9 @@ const stillness = async (page: Page) => {
   );
   return Arr.filter(shifts, (shift) => !shift.hadRecentInput);
 };
+
+// A cold page at a sixth of the speed takes a long time on top of the exam the test writes first.
+test.describe.configure({ timeout: TEST_MILLISECONDS });
 
 for (const screen of SCREENS) {
   test(`the editor and the try move nothing on a cold load at ${screen.width}, at a sixth of the speed`, async ({

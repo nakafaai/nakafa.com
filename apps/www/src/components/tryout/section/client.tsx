@@ -2,7 +2,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Option } from "effect";
-import { createContext, type ReactNode, Suspense, use, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
@@ -10,12 +10,14 @@ import { PlayerTimer } from "@/components/player/timer";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
-import { TryoutPlayer } from "@/components/tryout/player/client";
 import {
   type TryoutFinish,
   useTryoutFinish,
 } from "@/components/tryout/player/finish";
-import { TryoutPlayerOpening } from "@/components/tryout/player/opening";
+import {
+  TryoutPlayerOpening,
+  TryoutRunningPlayer,
+} from "@/components/tryout/player/opening";
 import {
   getTryoutAttemptLock,
   getTryoutPublicPath,
@@ -32,9 +34,7 @@ import {
   isTryoutRuntimeRunning,
   isTryoutStateLive,
   selectActionAttempt,
-  type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
-import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 import {
   type TryoutStartDestination,
   TryoutSummaryAction,
@@ -236,7 +236,7 @@ function ResolvedTryoutSectionPage({
       <TryoutPage>
         <SectionLock binding={binding} />
         <TryoutSectionBodies>
-          <TryoutPlayer
+          <TryoutRunningPlayer
             finish={finish}
             mode={binding.mode}
             state={runtimeState}
@@ -271,9 +271,7 @@ function ResolvedTryoutSectionPage({
             section: page.section,
           }}
         />
-        <TryoutSectionReview runtimeState={runtimeState}>
-          {children}
-        </TryoutSectionReview>
+        {runtimeState.kind === "review" ? children : null}
       </TryoutPageBody>
     </TryoutPage>
   );
@@ -374,20 +372,6 @@ function TryoutSectionHeader({
       />
     </TryoutSectionPageHeader>
   );
-}
-
-/** Renders the signed review of a finished section, and nothing for any other state. */
-function TryoutSectionReview({
-  children,
-  runtimeState,
-}: {
-  children: ReactNode;
-  runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
-}) {
-  if (runtimeState.kind !== "review") {
-    return null;
-  }
-  return <Suspense fallback={null}>{children}</Suspense>;
 }
 
 /** Selects how a start action leaves a public or retained section route: it lands on this section. */

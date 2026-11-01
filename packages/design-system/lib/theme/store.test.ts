@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { THEME_SHEET_PATH } from "@repo/design-system/lib/theme/registry";
 import {
   connectThemeStore,
   createThemeStore,
@@ -73,6 +74,10 @@ describe("createThemeStore", () => {
 describe("connectThemeStore", () => {
   it("reads the stored choice and the system appearance, then applies them to the root", () => {
     localStorage.setItem("theme", "darkmatter");
+    // The pre-paint script writes a stored named theme's sheet into the head.
+    const sheet = document.createElement("link");
+    sheet.setAttribute("href", THEME_SHEET_PATH);
+    document.head.append(sheet);
 
     const { store } = connectStore(true);
 
@@ -149,6 +154,36 @@ describe("connectThemeStore", () => {
 
     expect(localStorage.getItem("theme")).toBe("system");
     expect(store.getState().resolvedTheme).toBe("dark");
+  });
+
+  it("loads a named theme's sheet once, and shows the theme when it has loaded", () => {
+    const { store } = connectStore(false);
+
+    store.getState().setTheme("tokyo");
+
+    const sheet = document.head.querySelector("link");
+    expect(sheet?.getAttribute("href")).toBe(THEME_SHEET_PATH);
+    expect(document.documentElement.classList.contains("tokyo")).toBe(false);
+
+    sheet?.dispatchEvent(new Event("load"));
+
+    expect(document.documentElement.classList.contains("tokyo")).toBe(true);
+
+    store.getState().setTheme("bean");
+
+    expect(document.head.querySelectorAll("link")).toHaveLength(1);
+    expect(document.documentElement.classList.contains("bean")).toBe(true);
+  });
+
+  it("shows the latest choice when a sheet fails, so a choice still takes effect", () => {
+    const { store } = connectStore(false);
+
+    store.getState().setTheme("tokyo");
+    store.getState().setTheme("bean");
+    document.head.querySelector("link")?.dispatchEvent(new Event("error"));
+
+    expect(document.documentElement.classList.contains("bean")).toBe(true);
+    expect(document.documentElement.classList.contains("tokyo")).toBe(false);
   });
 
   it("keeps a switch for this page when storage refuses reads and writes", () => {

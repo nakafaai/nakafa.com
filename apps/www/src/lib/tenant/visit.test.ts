@@ -1,16 +1,21 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { TenantProfile } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Exit, Fiber, Layer, Option, Schema } from "effect";
 import { Base64Url } from "effect/encoding";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
+import { KEPT_SCHOOL_KEY } from "@/lib/auth/keys";
 import { SchoolReadFailed, SchoolReads } from "@/lib/tenant/read";
 import {
+  confirmFrame,
+  frameOfNavigation,
   readBrowserVisit,
   retryVisitRead,
-  reusesVisitFrame,
+  type SchoolVisit,
+  takeLiveRead,
 } from "@/lib/tenant/visit";
 
 /** One fetch double for the whole file: the browser's request to the token route. */
@@ -21,6 +26,13 @@ const frame = vi.hoisted(() => ({ read: vi.fn() }));
 vi.mock("@/lib/tenant/read", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/tenant/read")>()),
   readSchoolFrame: frame.read,
+}));
+
+/** The static answer of the shell, which names the legal pages of a visitor's entry page. */
+const staticData = vi.hoisted(() => ({ read: vi.fn() }));
+vi.mock("@/lib/static/data", () => ({ readStaticData: staticData.read }));
+vi.mock("@/lib/marketing/shell.functions", () => ({
+  readMarketingShellFn: vi.fn(),
 }));
 
 const SLUG = Schema.decodeSync(TenantSlug)("harapan");
@@ -73,24 +85,6 @@ function decide(locale: "en" | "id", signedIn = true) {
     Effect.provide(UNUSED_READS)
   );
 }
-
-describe("reusesVisitFrame", () => {
-  it("reads the frame when a visit enters the school", () => {
-    expect(reusesVisitFrame({ cause: "enter", invalid: false })).toBe(false);
-  });
-
-  it("reuses the frame of a child navigation within the visit", () => {
-    expect(reusesVisitFrame({ cause: "stay", invalid: false })).toBe(true);
-  });
-
-  it("reads the frame again after a refresh invalidates the school", () => {
-    expect(reusesVisitFrame({ cause: "stay", invalid: true })).toBe(false);
-  });
-
-  it("reuses the frame that a preload of the school read", () => {
-    expect(reusesVisitFrame({ cause: "preload", invalid: false })).toBe(true);
-  });
-});
 
 describe("readBrowserSchoolFrame", () => {
   beforeEach(() => {
@@ -278,4 +272,123 @@ describe("retryVisitRead", () => {
       expect(tried()).toBe(3);
     })
   );
+});
+
+describe("frameOfNavigation", () => {
+  /** A navigation that stays in the visit, and one that enters it. */
+  const STAY = { cause: "stay", invalid: false } as const;
+  const ENTER = { cause: "enter", invalid: false } as const;
+
+  const PROFILE = {
+    kind: "school",
+    mascot: "cat.0.243e66.right.open",
+    name: "Harapan",
+    slug: "harapan",
+    status: "active",
+  } as const;
+
+  const VISITOR = {
+    _tag: "Visitor",
+    locale: "en",
+    profile: Schema.decodeSync(TenantProfile)(PROFILE),
+    title: "Sign in to Harapan",
+  } as const;
+
+  /** The frame a visitor's entry page drew, and the text a browser keeps of it. */
+  const DRAWN = { legal: LINKS, school: VISITOR };
+  const KEPT_TEXT = jsonOf({
+    legal: LINKS,
+    school: { ...VISITOR, profile: PROFILE },
+    sessionId: null,
+  });
+
+  /** The browser's storage, which holds the kept frame a test gives it. */
+  const storage = { getItem: vi.fn(), removeItem: vi.fn(), setItem: vi.fn() };
+
+  beforeEach(() => {
+    fetcher
+      .mockReset()
+      .mockImplementation(() =>
+        Promise.resolve(new Response(null, { status: 401 }))
+      );
+    frame.read.mockReset().mockReturnValue(Effect.succeed(VISITOR));
+    staticData.read.mockReset().mockResolvedValue({
+      pageNavigation: {
+        dataProcessingPath: "data-processing-agreement",
+        privacyPolicyPath: "privacy",
+        termsOfServicePath: "terms",
+      },
+    });
+    storage.getItem.mockReset().mockReturnValue(null);
+    storage.removeItem.mockReset();
+    storage.setItem.mockReset();
+    vi.stubGlobal("document", { cookie: "" });
+    vi.stubGlobal("fetch", fetcher);
+    vi.stubGlobal("navigator", { languages: ["en"] });
+    vi.stubGlobal("window", {
+      localStorage: storage,
+      location: { origin: "https://harapan.nakafa.com" },
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it("answers the live frame that replaced a kept one, once, then the visit's own", async () => {
+    const live = { legal: null, school: { _tag: "Refused" } } as const;
+    const visit: SchoolVisit = { frame: DRAWN };
+
+    confirmFrame(visit, live);
+
+    await expect(frameOfNavigation(visit, SLUG, STAY)).resolves.toBe(live);
+    await expect(frameOfNavigation(visit, SLUG, STAY)).resolves.toBe(DRAWN);
+    expect(frame.read).not.toHaveBeenCalled();
+  });
+
+  it("reads the frame of a visit that enters the school, and keeps it for the next visit", async () => {
+    const visit: SchoolVisit = { frame: DRAWN };
+
+    await expect(frameOfNavigation(visit, SLUG, ENTER)).resolves.toEqual(DRAWN);
+
+    expect(takeLiveRead(visit)).toBeUndefined();
+    expect(storage.setItem).toHaveBeenCalledWith(
+      KEPT_SCHOOL_KEY,
+      expect.stringContaining('"sessionId":null')
+    );
+  });
+
+  it("reads the frame again after a refresh invalidates the school", async () => {
+    frame.read.mockReturnValueOnce(Effect.succeed({ _tag: "Refused" }));
+
+    await expect(
+      frameOfNavigation({ frame: DRAWN }, SLUG, { ...STAY, invalid: true })
+    ).resolves.toEqual({ legal: null, school: { _tag: "Refused" } });
+
+    expect(storage.removeItem).toHaveBeenCalledWith(KEPT_SCHOOL_KEY);
+  });
+
+  it("draws a kept frame at once, and hands its live read to one layout", async () => {
+    storage.getItem.mockImplementation((key) =>
+      key === KEPT_SCHOOL_KEY ? KEPT_TEXT : null
+    );
+    const visit: SchoolVisit = {};
+
+    await expect(frameOfNavigation(visit, SLUG, STAY)).resolves.toEqual(DRAWN);
+
+    await expect(takeLiveRead(visit)).resolves.toEqual(DRAWN);
+    expect(takeLiveRead(visit)).toBeUndefined();
+  });
+
+  it("fails the visit once the legal links fail every try", async () => {
+    vi.useFakeTimers();
+    staticData.read.mockRejectedValue("offline");
+
+    const read = expect(frameOfNavigation({}, SLUG, ENTER)).rejects.toThrow();
+    await vi.advanceTimersByTimeAsync(2000);
+
+    await read;
+    expect(staticData.read).toHaveBeenCalledTimes(3);
+  });
 });

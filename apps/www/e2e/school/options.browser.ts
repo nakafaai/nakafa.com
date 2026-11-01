@@ -36,6 +36,12 @@ const WIDTHS = [
   { height: 900, width: 1302 },
 ] as const;
 
+/** The widths the row above a question holds one line at. */
+const ROW_WIDTHS = [320, 390, 768, 1440] as const;
+
+/** The tallest the row above a question stands on one line, in pixels. */
+const ROW_HEIGHT = 40;
+
 /** The option field of the first question that `letter` names. */
 const optionField = (page: Page, letter: string) =>
   page.getByRole("textbox", { name: `Question 1, option ${letter}` });
@@ -109,6 +115,17 @@ test("a teacher's empty options never reach a student, the schedule names them, 
   await saved(changes, sentBefore);
   await expect(question).toContainText("Empty option");
   await expect(question).not.toContainText("No key yet");
+
+  // The row above the page holds its number, its type, its mark and its actions on one line at every width.
+  const row = question.locator(":scope > div").first();
+  for (const width of ROW_WIDTHS) {
+    await page.setViewportSize({ height: 844, width });
+    await expect
+      .poll(async () => (await row.boundingBox())?.height)
+      .toBeLessThanOrEqual(ROW_HEIGHT);
+    await Effect.runPromise(expectNoOverflow(page, `row ${width}`));
+  }
+  await page.setViewportSize(WIDTHS[1]);
 
   // The schedule names the empty options before the teacher asks, and its submit stays off.
   await page.getByRole("button", { name: "Schedule" }).click();

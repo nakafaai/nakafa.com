@@ -110,7 +110,7 @@ export interface EditorPort {
     readonly doc: Node;
     readonly version: number;
   }) => EditorState;
-  /** Replaces the editor's state with `next` when the editor still holds `from`. Says whether it replaced it, and fails with `EditorClosed` once the editor is closed. */
+  /** Replaces the editor's state with `next` when the editor still holds the document of `from`. Says whether it replaced it, and fails with `EditorClosed` once the editor is closed. */
   readonly replace: (
     from: EditorState,
     next: EditorState

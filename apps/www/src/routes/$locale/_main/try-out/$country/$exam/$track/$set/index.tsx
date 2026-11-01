@@ -6,7 +6,7 @@ import { useStore } from "zustand";
 import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
-import { TryoutAttemptReview } from "@/components/tryout/review/screen";
+import { TryoutAttemptReview } from "@/components/tryout/review/deferred";
 import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { TryoutAttemptIsland } from "@/components/tryout/route/island";

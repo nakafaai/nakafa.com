@@ -7,10 +7,8 @@ import {
   StorageReader,
 } from "@repo/backend/confect/_generated/services";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import {
-  type OwnReport,
-  ReportHash,
-} from "@repo/backend/confect/records/report";
+import { ReportHash } from "@repo/backend/confect/records/hash";
+import type { OwnReport } from "@repo/backend/confect/records/report";
 import spec from "@repo/backend/confect/records/reports.spec";
 import { Array as Arr, Effect, Schema } from "effect";
 

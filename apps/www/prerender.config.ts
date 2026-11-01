@@ -12,12 +12,14 @@ import { Effect, Option, Result, Schema } from "effect";
 import { HttpClient } from "effect/http";
 import { toJSONAsync } from "seroval";
 import type { Plugin } from "vite";
+import { SHELL_PATH, schoolEntryPath } from "#www/src/lib/routing/shell";
 import {
   readStaticCalls,
   type StaticCall,
   staticDataPath,
   toStaticFile,
 } from "#www/src/lib/static/calls";
+import { composeSchoolEntry, readSchoolEntry } from "#www/src/lib/static/entry";
 import {
   notFoundOutputPath,
   notFoundPagePath,
@@ -278,14 +280,15 @@ export const verifyPrerenderedPages = (pages: readonly string[]): Plugin => ({
 });
 
 /**
- * The not-found pages of each locale, as TanStack prerenders them. The
- * `/_notfound/$locale` route writes that locale's `404.html`: the assets answer a
- * missing address with the nearest `404.html` and a 404 status, so a missing
+ * The pages of each locale that stand without the router, as TanStack prerenders
+ * them. The `/_notfound/$locale` route writes that locale's `404.html`: the assets
+ * answer a missing address with the nearest `404.html` and a 404 status, so a missing
  * address shows the app's own page in the language of its path. The
  * `/_notfound/school/$locale` route writes the page that the Worker answers a
- * refused school page with, at its own address.
+ * refused school page with, at its own address, and `/_entry/school/$locale` the
+ * sign-in that a school's first HTML paints.
  */
-export const notFoundPages = LOCALES.flatMap((locale) => [
+export const standalonePages = LOCALES.flatMap((locale) => [
   {
     path: notFoundPagePath(locale),
     prerender: {
@@ -300,16 +303,24 @@ export const notFoundPages = LOCALES.flatMap((locale) => [
       outputPath: schoolNotFoundPath(locale),
     },
   },
+  {
+    path: schoolEntryPath(locale),
+    prerender: {
+      autoSubfolderIndex: false,
+      outputPath: schoolEntryPath(locale),
+    },
+  },
 ]);
 
 /**
- * Turns each prerendered not-found page into a static document: it keeps the markup,
+ * Turns each prerendered standalone page into a static document: it keeps the markup,
  * the stylesheets and the theme script, and loses the app's scripts and the list of
  * server calls, so the page never starts the router on an address it does not own.
  * The default locale's page also answers at the root, for a missing address that
- * names no locale.
+ * names no locale. A school's sign-in leaves its page for a copy of the browser
+ * shell, which the Worker answers a visitor with (ADR 0038 D2).
  */
-export const writeNotFoundPages = (pages: readonly string[]): Plugin => ({
+export const writeStandalonePages = (pages: readonly string[]): Plugin => ({
   apply: "build",
   enforce: "post",
   buildApp: {
@@ -331,15 +342,24 @@ export const writeNotFoundPages = (pages: readonly string[]): Plugin => ({
         writeFileSync(file, document);
         return document;
       };
+      const shell = readFileSync(join(outDir, `${SHELL_PATH}.html`), "utf8");
       for (const locale of LOCALES) {
         const document = writeStatic(notFoundOutputPath(locale));
         writeStatic(schoolNotFoundPath(locale));
         if (locale === DEFAULT_LOCALE) {
           writeFileSync(join(outDir, "404.html"), document);
         }
+        const entry = Option.getOrThrowWith(
+          readSchoolEntry(writeStatic(schoolEntryPath(locale))),
+          () => new Error(`The ${locale} school entry drew no sign-in.`)
+        );
+        writeFileSync(
+          join(outDir, `${schoolEntryPath(locale)}.html`),
+          composeSchoolEntry(shell, entry, locale)
+        );
       }
       return Promise.resolve();
     },
   },
-  name: "www:write-not-found-pages",
+  name: "www:write-standalone-pages",
 });

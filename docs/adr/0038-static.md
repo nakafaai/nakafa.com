@@ -35,7 +35,7 @@ Measured on origin/main 2359c75ad0, before origin/main e4776b377e. The research 
 
 D1. Public pages are prerendered HTML in assets-only Workers. A Node renderer runs once per release against one bulk read of the active release, and writes every public URL. Each shard holds at most 18,000 files, and today one shard holds every public page. An unmatched path answers the static 404 page (not_found_handling 404-page), never a render.
 
-D2. Signed-in and School surfaces render only in the browser. School hosts (*.nakafa.com) get a static single-page-application shell. Its school gate and refusal run in the browser against Convex. Signed-in apex screens are client routes of a static shell that owns their route prefixes. No server function runs for them. (Amended 26 Oct 2026 for School, see "Phase B for School as implemented": the web Worker answers the shell from its own assets instead of a second, assets-only Worker.)
+D2. Signed-in and School surfaces render only in the browser. School hosts (*.nakafa.com) get a static single-page-application shell. Its school gate and refusal run in the browser against Convex. Signed-in apex screens are client routes of a static shell that owns their route prefixes. No server function runs for them. (Amended 26 Oct 2026 for School, see "Phase B for School as implemented": the web Worker answers the shell from its own assets instead of a second, assets-only Worker.) (Amended 1 Nov 2026 for the sign-in only: a visitor with no session at a school's root reads a copy of the shell that paints the sign-in, see "The sign-in in a school's first HTML". Private screens stay in the browser.)
 
 D3. One small dynamic Worker, with its own bundle and no TanStack or SSR code, serves nakafa.com/api/*. It answers the Better Auth relay, weather from request.cf coordinates, the pricing currency from CF-IPCountry, and the Aksara renderer manifest. Its CPU per request is measured in Workers Logs; on 30 Oct 2026 the auth relay and the session read reached 61 to 63 ms on a cold isolate. The Convex token is fetched per document load and held in memory only.
 
@@ -269,6 +269,15 @@ Negative: the pricing currency of a static page is the default currency until th
 ## Gates
 
 S1: route precedence, 404 behavior and zero Worker invocations for content URLs on a scratch zone that is not nakafa.com, and on the probe: zero Worker invocations for content URLs and a scanner CPU p90 measured by `ops/cpuroutes.mjs`. The Worker answers a scanner's locale path with the static page, so a scanner costs no render. S2: Node render cost and HTML parity against the current Worker on 100 URLs. S3: relay CPU at p99, measured in Workers Logs. S5: the Single Redirect field for Accept-Language and the zone plan's rule quota (10 on the Free website plan). S7: upload and deploy time for an 18,000-file shard. S8: the shell build. S9: bulk read cost against the Convex plan and the spending limit. S6: a stable loader prototype before 20,000 URLs.
+
+## The sign-in in a school's first HTML
+
+A school's first HTML held no page, so its first load painted a mark and its largest paint was the sign-in sentence: LCP 5.7 s on production and a Lighthouse score of 79. A visitor's sign-in holds nothing private, so its first HTML can hold it.
+
+- The build prerenders `/_entry/school/$locale` once per locale, and pastes the page's sign-in at the end of a copy of the shell's body, at `/_entry/school/<locale>` in the assets. Hydration leaves a node after its own in the body alone, as it does with one that a browser extension adds, so the shell hydrates as it always did.
+- The Worker answers that copy for a visitor with no session at a school's root with no query, in the locale the page will read in. Every other address and every session keeps the plain shell. The Worker renders nothing and reads nothing more.
+- The school's name and mark are not known at the build, so their places stand empty at their own size until the page draws. Everything else in it holds for every school.
+- The page removes the copy once the router has drawn, in one commit with the page that replaces it. Its username and parent links are plain links. A press on Google passes to the real button, which replays it (`useEarlyPress`).
 
 ## Corrections to earlier documents
 

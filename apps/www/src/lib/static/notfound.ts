@@ -18,7 +18,11 @@ const DIV_OPENING = "<div";
 const DIV_CLOSING = "</div>";
 
 /** The index just past the `</div>` that closes the `div` open at `from`, counting the `div` elements nested in it. */
-function closingDivEnd(html: string, from: number, depth: number): number {
+export function closingDivEnd(
+  html: string,
+  from: number,
+  depth: number
+): number {
   const next = html.slice(from).search(DIV_TAG);
   if (next === -1) {
     return html.length;

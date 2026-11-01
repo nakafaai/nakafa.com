@@ -29,11 +29,11 @@ const OPEN_TILE = /^Open question/u;
 /** The first page of the canvas, whose name starts with its number. */
 const FIRST_PAGE = /^Question 1\b/u;
 
-/** The zoom the column of pages is drawn at, read from its style: the one child of the canvas's scroll viewport. */
+/** The zoom the column of pages is drawn at, read from its style: the one child of the canvas's held paper. */
 const columnZoom = (page: Page) =>
   page
     .getByRole("region", { name: "Exam pages" })
-    .locator('[data-slot="scroll-area-viewport"] > div')
+    .locator('[data-slot="scroll-area-viewport"] > div > div')
     .evaluate((column) => Number(getComputedStyle(column).zoom));
 
 /** Creates an exam of three questions with their prompts, and waits until the server holds them. */

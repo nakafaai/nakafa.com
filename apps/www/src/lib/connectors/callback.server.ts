@@ -19,7 +19,7 @@ const redirectTo = (location: URL) =>
  * Finishes a Google connect at the one callback of the site (ADR 0015). The
  * server takes the code and the state with the visitor's own Convex token, and
  * redirects to the address it answers, the page the connect started from, with
- * the outcome in `connect`. The address comes from the server, never from a
+ * the outcome in `connect` and the service in `connector`. The address comes from the server, never from a
  * parameter, so the callback redirects nowhere else. A callback without a state,
  * without a session, whose connect expired, or whose finish Convex did not
  * answer goes to the site's home.
@@ -48,6 +48,7 @@ export const serveConnectCallback = Effect.fn("www.connectors.callback")(
       onSome: (answer) => {
         const location = new URL(answer.location);
         location.searchParams.set("connect", answer.outcome);
+        location.searchParams.set("connector", answer.connector);
         return redirectTo(location);
       },
     });
