@@ -29,9 +29,13 @@ interface WarmRouter {
   ];
   readonly preloadRoute: (options: {
     readonly href: string;
+    readonly to: string;
   }) => Promise<unknown>;
   readonly state: { readonly location: { readonly publicHref: string } };
 }
+
+/** Where a link's path ends. */
+const QUERY_OR_HASH = /[?#]/u;
 
 /** The connections that cannot spare a page the reader did not ask for. */
 const THIN_CONNECTIONS = ["slow-2g", "2g"];
@@ -63,6 +67,9 @@ export function readPressableLinks(root: ParentNode, height: number) {
   );
 }
 
+/** The path of a link's address. */
+const pathOf = (href: string) => Str.split(QUERY_OR_HASH)(href)[0];
+
 /** A route's full path in one spelling, as the prerendered templates write it. */
 function spell(template: string) {
   return `/${Arr.join(readPathSegments(template), "/")}`;
@@ -73,7 +80,7 @@ function spell(template: string) {
  * Any other page asks the Worker or Convex, which a look at a link must not spend.
  */
 function isStaticLink(router: WarmRouter, href: string) {
-  const pathname = Str.split(/[?#]/u)(href)[0];
+  const pathname = pathOf(href);
   const [, , foundRoute] = router.getMatchedRoutes(pathname);
   return (
     !namesFile(pathname) &&
@@ -109,9 +116,9 @@ export const warmLinks = Effect.fn("www.routing.warmLinks")(function* (
   yield* Effect.forEach(
     links,
     (href) =>
-      Effect.tryPromise(() => router.preloadRoute({ href })).pipe(
-        Effect.ignore
-      ),
+      Effect.tryPromise(() =>
+        router.preloadRoute({ href, to: pathOf(href) })
+      ).pipe(Effect.ignore),
     { concurrency: WARMED_AT_ONCE }
   );
 });
