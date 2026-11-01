@@ -24,6 +24,12 @@ export const TaskPoints = Schema.Int.check(
   Schema.isBetween({ maximum: 1000, minimum: 0 })
 );
 
+/** The students a task goes to when it goes to part of its class: 1 to 200 of them. */
+export const TaskTargets = Schema.Array(Id("tenantPeople")).check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(200)
+);
+
 /**
  * What happens to work handed in after the deadline: it is taken and marked
  * late, or the task closes at its deadline and takes no more work.
@@ -39,9 +45,10 @@ export const TaskAddress = Schema.String.check(
 /**
  * One task of a class (ADR 0025): its title and its address, what it asks,
  * sealed with the school key and bound to the class and the client key of its
- * creation, its deadline in UTC, its points, its late policy, how many
- * students have handed work in, and the scheduled runs of its deadline's notices.
- * The whole class is its target.
+ * creation, its deadline in UTC, its points, its late policy, how many students
+ * have handed work in, and the scheduled runs of its deadline's notices. `targets`
+ * names the students it goes to when it goes to part of the class, and without it
+ * the whole class is its target.
  */
 export const taskValidator = Schema.Struct({
   authorId: Id("tenantPeople"),
@@ -55,6 +62,7 @@ export const taskValidator = Schema.Struct({
   points: TaskPoints,
   sealedText: Sealed,
   slug: TaskAddress,
+  targets: Schema.optionalKey(TaskTargets),
   tenantId: Id("tenants"),
   title: TaskTitle,
 });
@@ -95,6 +103,7 @@ export const TaskView = Schema.Struct({
   ),
   points: TaskPoints,
   slug: TaskAddress,
+  targets: Schema.NullOr(TaskTargets),
   text: Schema.String,
   title: TaskTitle,
 });
