@@ -13424,6 +13424,7 @@ export declare const api: {
           exam: boolean;
           parent: boolean;
           period: boolean;
+          placed: boolean;
           student: boolean;
           teacher: boolean;
         }
