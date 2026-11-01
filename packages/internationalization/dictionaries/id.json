@@ -420,6 +420,7 @@
     "questions-column": "Soal",
     "created-column": "Dibuat",
     "rooms-title": "Ruang",
+    "rooms-list-description": "Tiap ujian muncul di sini bersama ruangnya.",
     "edit-action": "Ubah ujian",
     "rooms-empty": "Belum ada ruang",
     "rooms-empty-description": "Setiap ruang muncul di sini setelah ujian dijadwalkan.",

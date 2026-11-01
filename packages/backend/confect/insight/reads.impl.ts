@@ -4,7 +4,12 @@ import type { InsightMasteryDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
-import { classAccess } from "@repo/backend/confect/classroom/authority";
+import {
+  classAccess,
+  classAuthority,
+} from "@repo/backend/confect/classroom/authority";
+import { classView } from "@repo/backend/confect/classroom/class";
+import { activePeriodsOf } from "@repo/backend/confect/classroom/classes/mine";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { chanceOf } from "@repo/backend/confect/insight/mastery";
 import { sharedPracticeOf } from "@repo/backend/confect/insight/practice";
@@ -142,6 +147,43 @@ const ofClass = FunctionImpl.make(
   })
 );
 
+/**
+ * One page of the active classes of the school's running periods whose Insight the caller reads:
+ * the way in for the school's leaders, who read the classes of their scope and teach none of them.
+ * The classes are paged on the school's index and kept only if the caller may read them, so a page
+ * may come back short while more follow.
+ */
+const classes = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "classes",
+  Effect.fn("insight.reads.classes")(function* ({ paginationOpts }) {
+    const { tenant } = yield* Member;
+    const running = Arr.map(
+      yield* activePeriodsOf(tenant._id),
+      (period) => period._id
+    );
+    const page = yield* (yield* DatabaseReader)
+      .table("classes")
+      .index("by_tenantId_and_slug", (query) =>
+        query.eq("tenantId", tenant._id)
+      )
+      .paginate(paginationOpts)
+      .pipe(Effect.orDie);
+    const readable = yield* Effect.filter(
+      Arr.filter(
+        page.page,
+        (row) => row.status === "active" && Arr.contains(running, row.periodId)
+      ),
+      (row) =>
+        classAuthority
+          .allowed(row)
+          .pipe(Effect.map((actions) => Arr.contains(actions, "insight.view")))
+    );
+    return Struct.assign(page, { page: Arr.map(readable, classView) });
+  })
+);
+
 /** The viewer's own standing in every competency of their newest period, without a chance. */
 const mine = FunctionImpl.make(
   databaseSchema,
@@ -175,6 +217,7 @@ const mine = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(ofClass),
+  Layer.provide(classes),
   Layer.provide(mine),
   Layer.provide(session),
   Layer.provide(member),

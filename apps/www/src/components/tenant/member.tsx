@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 import { AppProviders } from "@/components/providers/app";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { canOpenGraduation } from "@/components/tenant/graduation/access";
+import { canOpenInsight } from "@/components/tenant/insight/access";
 import { PageRecovery } from "@/components/tenant/read/recovery";
 import { canOpenReports } from "@/components/tenant/reports/access";
 import { TenantShell } from "@/components/tenant/shell";
@@ -27,6 +28,7 @@ export function SchoolMember({
         canManage={canManageSchool(viewer.can)}
         canOpenExams={canOpenExams(viewer)}
         canOpenGraduation={canOpenGraduation(viewer)}
+        canOpenInsight={canOpenInsight(viewer)}
         canOpenReports={canOpenReports(viewer)}
         home={school.home}
         personName={viewer.person.name}

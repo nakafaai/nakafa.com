@@ -120,8 +120,9 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
  * The rows of the exam list: the failure of its read above the rows it already holds, and the exams in a
  * data table, or nothing while the first page loads. A first page that failed shows the failure alone. Each
  * row shows where the exam belongs, how many questions it holds and when it was created. The title links to its
- * editor, and the row menu opens its editor, its rooms, the exam as a student sees it, and Delete. An exam that
- * the server is still saving shows its title without a link and no menu, so it is inert.
+ * editor, and the row menu opens its editor, its rooms, the exam as a student sees it, and Delete. A viewer who may
+ * only open the exam's rooms, such as a Proctor, follows the title to the rooms and has no menu. An exam that the
+ * server is still saving shows its title without a link and no menu, so it is inert.
  */
 function ExamListRows({
   exams: rows,
@@ -175,7 +176,11 @@ function ExamListRows({
               className="underline-offset-4 hover:underline"
               dir="auto"
               params={{ exam: info.row.original.id, slug: tenant.slug }}
-              to="/school/$slug/exams/$exam/edit"
+              to={
+                info.row.original.canEdit
+                  ? "/school/$slug/exams/$exam/edit"
+                  : "/school/$slug/exams/$exam"
+              }
             >
               {info.getValue()}
             </Link>
@@ -218,7 +223,8 @@ function ExamListRows({
       timeZone: formatZone,
     }),
     examColumns.menu((info) =>
-      Arr.contains(saving, info.row.original.id) ? null : (
+      Arr.contains(saving, info.row.original.id) ||
+      !info.row.original.canEdit ? null : (
         <ExamRowMenu exam={info.row.original} />
       )
     ),
@@ -238,7 +244,7 @@ function ExamListRows({
 }
 
 /**
- * The empty state of the exam list. A viewer who can create an exam reads that there is none yet, with Nina writing,
+ * The empty state of the exam list. A viewer who only opens rooms reads where exams come in. A viewer who can create an exam reads that there is none yet, with Nina writing,
  * under the header's Create exam. A viewer with no unit to create an exam in is told why and where it is fixed: a
  * manager goes to the units, and anyone else is told to ask an admin.
  */
@@ -246,6 +252,15 @@ function NoExamEmpty() {
   const tenant = useTenant();
   const t = useTranslations("Exams");
 
+  if (!tenant.canOpenExams) {
+    return (
+      <TableEmpty
+        act="waving"
+        description={t("rooms-list-description")}
+        title={t("empty")}
+      />
+    );
+  }
   if (tenant.home.canCreate) {
     return (
       <TableEmpty
