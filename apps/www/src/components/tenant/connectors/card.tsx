@@ -12,7 +12,6 @@ import {
   Card,
   CardAction,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
@@ -47,7 +46,7 @@ const MARKS = {
 /** The states a card says in words in place of its maker, as its corner alone cannot tell them. */
 const SPOKEN = ["failed", "locked", "reconnect", "refused", "soon"] as const;
 
-const footerVariants = cva("text-sm", {
+const makerVariants = cva("col-start-1 text-xs", {
   defaultVariants: { tone: "muted" },
   variants: {
     tone: { destructive: "text-destructive", muted: "text-muted-foreground" },
@@ -55,10 +54,10 @@ const footerVariants = cva("text-sm", {
 });
 
 /**
- * One service of the directory: its logo in a tile, its name and one line, and a footer that names
- * its maker, or says a state that asks for the reader. A press on the card opens the service's
- * detail beside the list. The corner connects with one press, or marks where the service stands,
- * so a state that changes moves nothing.
+ * One service of the directory on one surface: its logo in a tile, its name, one line, and a third
+ * line that names its maker, or says a state that asks for the reader. A press on the card opens the
+ * service's detail beside the list. The corner connects with one press, or marks where the service
+ * stands, so a state that changes moves nothing.
  */
 export function ServiceCard({ entry }: { entry: typeof DirectoryEntry.Type }) {
   const t = useTranslations("Connectors");
@@ -66,7 +65,7 @@ export function ServiceCard({ entry }: { entry: typeof DirectoryEntry.Type }) {
   return (
     <ServiceContext value={entry}>
       <Card
-        className="has-data-open:bg-muted hover:bg-muted relative pb-0"
+        className="has-data-open:bg-muted hover:bg-muted/50 relative transition-colors"
         size="sm"
       >
         <div className="flex flex-1 items-start gap-3 px-(--card-spacing)">
@@ -81,11 +80,9 @@ export function ServiceCard({ entry }: { entry: typeof DirectoryEntry.Type }) {
             <CardAction className="relative">
               <CornerAction />
             </CardAction>
+            <ServiceMaker />
           </CardHeader>
         </div>
-        <CardFooter className="bg-muted/50 border-t p-(--card-spacing)">
-          <ServiceFooter />
-        </CardFooter>
       </Card>
     </ServiceContext>
   );
@@ -122,14 +119,14 @@ function ServiceOpen() {
 }
 
 /** Who makes a service, or the words of a state that asks for the reader. */
-function ServiceFooter() {
+function ServiceMaker() {
   const t = useTranslations("Connectors");
   const { service, state } = useService();
   const spoken = Option.filter(state, (now) => Arr.contains(SPOKEN, now));
 
   if (Option.isNone(spoken)) {
     return (
-      <p className={footerVariants()}>
+      <p className={makerVariants()}>
         {t("by", { provider: service.provider })}
       </p>
     );
@@ -138,7 +135,7 @@ function ServiceFooter() {
 
   return (
     <p
-      className={footerVariants({ tone: lost ? "destructive" : "muted" })}
+      className={makerVariants({ tone: lost ? "destructive" : "muted" })}
       role={lost ? "alert" : undefined}
     >
       {t(`status-${spoken.value}`)}

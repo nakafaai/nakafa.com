@@ -230,7 +230,7 @@ export function ClassGradebook({
             />
           ) : null}
         </PanesList>
-        <PanesDetail empty={t("detail-empty")} label={t("detail")}>
+        <PanesDetail label={t("detail")}>
           <GradeLineDetail lines={pagination.results} />
         </PanesDetail>
       </Panes>
