@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The connectors page after a connect that Google refused. */
 const REFUSED =
@@ -32,13 +33,18 @@ for (const viewport of [
     const calendar = page
       .locator("[data-slot=card]")
       .filter({ hasText: "Google Calendar" });
-    await expect(calendar.getByText("Not connected.")).toBeVisible({
+    const plus = calendar.getByRole("button", {
+      exact: true,
+      name: "Connect Google Calendar",
+    });
+    await expect(plus).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
 
     const startConnect = async () => {
       const consent = page.waitForURL(CONSENT);
-      await calendar.getByRole("button", { name: "Connect" }).click();
+      await waitUntilTakenOver(plus);
+      await plus.click();
       await consent;
       return new URL(page.url());
     };
@@ -72,7 +78,7 @@ for (const viewport of [
     );
     await page.waitForURL(CANCELLED);
     await expect(page.getByRole("alert")).toHaveCount(0);
-    await expect(calendar.getByText("Not connected.")).toBeVisible();
+    await expect(plus).toBeVisible();
 
     // A replayed code goes home, and the root answers in the reader's language, English here.
     await page.goto(
@@ -82,3 +88,38 @@ for (const viewport of [
     await context.close();
   });
 }
+
+test("the account lists a person's services like a school's library, and a pane opens only on a press", async ({
+  browser,
+  baseURL,
+}) => {
+  const site = baseURL ?? "";
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(signInLearner(context, site));
+  const page = await context.newPage();
+  await page.goto(`${site}/en/user/settings/connectors`);
+  const cards = page.locator("[data-slot=card]");
+  await expect(cards).toHaveCount(2, {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  const drive = cards.filter({ hasText: "Google Drive" });
+  const pane = page.getByRole("complementary", { name: "Connector detail" });
+  await expect(pane).toHaveCount(0);
+
+  const open = drive.getByRole("button", { exact: true, name: "Google Drive" });
+  await waitUntilTakenOver(open);
+  await open.click();
+  await expect(pane.getByText("Not connected", { exact: true })).toBeVisible();
+  await expect(pane.getByRole("button", { name: "Connect" })).toBeVisible();
+  await pane.getByRole("button", { name: "Close" }).click();
+  await expect(pane).toHaveCount(0);
+
+  const search = page.getByPlaceholder("Search connectors");
+  await search.fill("calendar");
+  await expect(cards).toHaveCount(1);
+  await search.fill("zzz");
+  await expect(page.getByText("No connector found")).toBeVisible();
+  await context.close();
+});
