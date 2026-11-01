@@ -17,12 +17,15 @@ import { readStaticData } from "@/lib/static/data";
  * does not carry. The Common, State and Toast messages come from the locale route.
  * Pricing is here because a finished try-out set offers Pro, and the signed-in
  * screens read it from here too. ComingSoon is the body of a lesson, an article,
- * a curriculum page or a try-out catalog that has no content yet.
+ * a curriculum page or a try-out catalog that has no content yet. DataTable is the
+ * try-out catalog's table, and Error is a 3D visual that fails to draw.
  */
 const MAIN_NAMESPACES = [
   ...SHELL_MESSAGE_NAMESPACES,
   "ComingSoon",
   "Comments",
+  "DataTable",
+  "Error",
   "Player",
   "Posts",
   "Pricing",
