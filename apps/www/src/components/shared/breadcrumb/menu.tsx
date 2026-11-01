@@ -50,7 +50,10 @@ export function BreadcrumbMenu({
             </button>
           }
         />
-        <DropdownMenuContent align="start" className="w-48">
+        <DropdownMenuContent
+          align="start"
+          className="w-auto max-w-[calc(100vw-2rem)] min-w-48"
+        >
           <DropdownMenuGroup>
             {Arr.map(items, (item) => (
               <BreadcrumbMenuItem
@@ -90,7 +93,9 @@ function BreadcrumbMenuItem({
       render={
         <BreadcrumbAnchor target={item.target}>
           <HugeIcons icon={Folder02Icon} />
-          {label}
+          <span className="min-w-0 truncate" title={label}>
+            {label}
+          </span>
         </BreadcrumbAnchor>
       }
     />

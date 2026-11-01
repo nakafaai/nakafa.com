@@ -31,6 +31,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
+import { TableName } from "@/components/shared/table/title";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
@@ -76,7 +77,7 @@ export function SchoolGrantTable() {
       : "";
   const columns = [
     grantColumns.text((grant) => grant.person.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => <TableName>{info.getValue()}</TableName>,
       header: t("grant-person"),
       id: "person",
     }),

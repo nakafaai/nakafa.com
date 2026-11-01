@@ -13,6 +13,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
+import { TableName } from "@/components/shared/table/title";
 import { SchoolPlacementMove } from "@/components/tenant/settings/placement";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
 
@@ -63,7 +64,7 @@ export function SchoolCohortMembers({
   const canMove = !isArchived && Arr.isReadonlyArrayNonEmpty(targets);
   const columns = [
     memberColumns.text((member) => member.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => <TableName>{info.getValue()}</TableName>,
       header: t("member-name"),
       id: "name",
     }),
