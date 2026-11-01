@@ -1,15 +1,12 @@
 import { Array as Arr, Number as Num } from "effect";
 import { createStore } from "zustand";
 
-/** The texts a paper waits for: more than the tallest screen shows at once, so what comes later lands below it. */
-const HELD_TEXTS = 8;
-
 /**
- * The texts a paper reads at one time. The server answers every read of one request in one message, so a long paper
- * that asked for all its texts at once would wait for its last page to show its first, and every student of a room
- * would ask at the same moment.
+ * The texts a paper waits for, and reads at one time: more than the tallest screen shows at once, so what comes later
+ * lands below it. The server answers every read of one request in one message, so a long paper that asked for all its
+ * texts at once would wait for its last page to show its first, and every student of a room would ask at one moment.
  */
-const READING_TEXTS = 8;
+const HELD_TEXTS = 8;
 
 /** What a paper still waits for, and the actions that end the wait, which never starts again. */
 interface PaperHold {
@@ -35,7 +32,7 @@ interface PaperHold {
 const nextTurns = (reading: readonly string[], queued: readonly string[]) => {
   const [turns, rest] = Arr.splitAt(
     queued,
-    Num.max(0, READING_TEXTS - reading.length)
+    Num.max(0, HELD_TEXTS - reading.length)
   );
   return { queued: rest, reading: Arr.appendAll(reading, turns) };
 };
