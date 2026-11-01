@@ -172,7 +172,6 @@ export function AcceptedAnswers({
         <Button
           className="self-start"
           onClick={() => setAdding(true)}
-          size="sm"
           type="button"
           variant="outline"
         >
