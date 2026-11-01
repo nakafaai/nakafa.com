@@ -43,10 +43,11 @@ D2. A module holds no state between calls, because one caller's value would reac
 
 D3. Reuse is an optimization, never a contract. A failed call saves no context, a module that is not in an isolate's one saved context evaluates as it did before, and a later Convex release that drops the export only returns a call to today's cost. No code depends on a hit.
 
-D4. Leaf table schemas and lazy registration stay undone. Their ceilings above are smaller than what reuse gives, and each would need a change that this repository cannot make alone.
+D4. Leaf table schemas and lazy registration stay undone, and a cold call keeps paying for evaluation. The table above says why: the first ceiling cannot be reached while a table declares real fields, and the second needs a change inside Confect.
 
 ## Consequences
 
-- A call that hits a saved context skips evaluation. The first call on an isolate still evaluates the module, so a module that is called rarely gains little.
+- A call that hits a saved context skips evaluation, and only such a call gains. The scheduler can hand an idle worker to another client, which drops its saved context, so a context does not wait long for its next call. On staging the deploy's reads went from a median of 235 ms to 9 ms over 2,646 executions, while a cron that runs once a minute stayed at 240 ms.
+- What gains is a burst on one module: a static build, a class in an exam, a subscription that many clients share. A lone call to a cold module costs what it cost before.
 - `confect dev` rewrites the modules without the export. That is harmless, and `bun run codegen` restores it before a commit.
 - A top-level cache becomes visible across callers, so the only allowed one is a constant derived from code. A `Schema` memo qualifies. A per-user value never does.
