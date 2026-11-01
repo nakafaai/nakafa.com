@@ -19,8 +19,9 @@ import { type Header, type RowData, useTable } from "@tanstack/react-table";
 import { Array as Arr, Match, Option } from "effect";
 import { type ComponentProps, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
-import { PaneTableRow, pressesRow } from "@/components/shared/pane";
+import { PaneTableRow } from "@/components/shared/pane";
 import { useHasPanes } from "@/components/shared/panes";
+import { pressesRow } from "@/components/shared/row";
 import {
   columnAlign,
   HeadAlignContext,

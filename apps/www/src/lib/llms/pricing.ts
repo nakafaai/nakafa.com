@@ -16,6 +16,10 @@ export function isPricingLlmsRoute(cleanSlug: string) {
   return cleanSlug === "pricing";
 }
 
+/** Joins a plan's prices as alternatives, in the reader's language. */
+const joinPrices = (locale: Locale, prices: readonly string[]) =>
+  new Intl.ListFormat(locale, { type: "disjunction" }).format(prices);
+
 /** Renders the localized pricing page as agent-readable Markdown. */
 export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
   locale: Locale
@@ -38,7 +42,6 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
   );
   const url = `${BASE_URL}/${locale}/pricing`;
   const credits = getPlanCreditConfig("pro").amount;
-  const prices = new Intl.ListFormat(locale, { type: "disjunction" });
 
   return Arr.join(
     [
@@ -58,11 +61,13 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
       ...Arr.map(proPlanFeatures, (key) => `- ${plans(key, { credits })}`),
       page("price-line", {
         free: plans("free-title"),
-        monthly: prices.format(
+        monthly: joinPrices(
+          locale,
           Arr.map(proPricing, ({ format, price }) => format(price.amount))
         ),
         pro: plans("pro-title"),
-        yearly: prices.format(
+        yearly: joinPrices(
+          locale,
           Arr.map(proPricing, ({ format, price }) => format(price.yearlyAmount))
         ),
       }),

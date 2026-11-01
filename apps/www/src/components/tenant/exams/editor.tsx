@@ -3,8 +3,15 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option } from "effect";
-import { use, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useStore } from "zustand";
+import {
+  createContext,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { createStore, useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
@@ -34,6 +41,17 @@ import { readPreloadedResult } from "@/lib/data/preloaded";
 /** What the editor's read of its exam answers. */
 type ExamResult = ReturnType<typeof useQuery<typeof exams.exams.open>>;
 
+/** Creates the store of one editor's read, which the read writes and the editor draws in the same frame. */
+const createExamRead = () =>
+  createStore<{ readonly result: ExamResult }>()(() => ({
+    result: QueryResult.load(false),
+  }));
+
+/** The store of this editor's read. */
+const ExamReadContext = createContext<ReturnType<typeof createExamRead> | null>(
+  null
+);
+
 /**
  * The editor of one exam, as a design tool lays out its document: a header with the title and the
  * actions, a toolbar row under it that acts on the text the teacher is writing, the canvas of the
@@ -49,7 +67,8 @@ export function ExamEditor({
   examId: Id<"exams">;
   slug: TenantSlug;
 }) {
-  const [live, setLive] = useState<ExamResult>(() => QueryResult.load(false));
+  const [read] = useState(createExamRead);
+  const live = useStore(read, (state) => state.result);
   // An exam this visit just created draws whole at once, from what the create answered, until the read answers.
   const created = useCreatedExam(examId);
   const result = readPreloadedResult(live, created);
@@ -60,7 +79,9 @@ export function ExamEditor({
     <>
       {/* The read stands apart from the workspace, so a read that fails takes no editor off the screen. */}
       <ExamReadBoundary>
-        <ExamRead examId={examId} onResult={setLive} slug={slug} />
+        <ExamReadContext value={read}>
+          <ExamRead examId={examId} slug={slug} />
+        </ExamReadContext>
       </ExamReadBoundary>
       {Option.match(kept, {
         onNone: () =>
@@ -84,15 +105,11 @@ export function ExamEditor({
 }
 
 /** Reads the exam for the editor, before the browser paints, so an edit shows in the frame it is made. */
-function ExamRead({
-  examId,
-  onResult,
-  slug,
-}: {
-  examId: Id<"exams">;
-  onResult: (result: ExamResult) => void;
-  slug: TenantSlug;
-}) {
+function ExamRead({ examId, slug }: { examId: Id<"exams">; slug: TenantSlug }) {
+  const read = use(ExamReadContext);
+  if (read === null) {
+    throw new Error("ExamRead must be used within the exam editor");
+  }
   // The exam needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const result = useQuery(
@@ -101,8 +118,8 @@ function ExamRead({
   );
 
   useLayoutEffect(() => {
-    onResult(result);
-  }, [onResult, result]);
+    read.setState({ result });
+  }, [read, result]);
 
   return null;
 }

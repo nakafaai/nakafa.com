@@ -37,8 +37,6 @@ import { SittingRetry } from "@/components/exams/sitting/retry";
 import {
   SittingTabElsewhere,
   SittingTabGuard,
-  SittingTabHeld,
-  SittingTabWaiting,
 } from "@/components/exams/sitting/tab";
 import { useTenant } from "@/components/tenant/context";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
@@ -138,22 +136,20 @@ export function StudentSitting({
         attemptId={attempt.id}
         deviceId={admitted.deviceId}
         slug={slug}
-      >
-        <SittingTabHeld>
-          <StudentPlayer
-            admission={admitted}
-            attempt={attempt}
-            sitting={sitting}
-            slug={slug}
-          />
-        </SittingTabHeld>
-        <SittingTabWaiting>
+        waiting={
           <PaperFrame
             bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
           >
             <SittingTabElsewhere />
           </PaperFrame>
-        </SittingTabWaiting>
+        }
+      >
+        <StudentPlayer
+          admission={admitted}
+          attempt={attempt}
+          sitting={sitting}
+          slug={slug}
+        />
       </SittingTabGuard>
     );
   }
