@@ -7,6 +7,11 @@ const SPLAT_SEGMENT = "$";
 /** The first path segment of Start's server functions, which no route template names. */
 const SERVER_FUNCTION_SEGMENT = "_serverFn";
 
+/** Whether a path is a call to one of Start's server functions. */
+export function isServerFunctionPath(pathname: string) {
+  return pathname.startsWith(`/${SERVER_FUNCTION_SEGMENT}/`);
+}
+
 /** An address whose last segment names a file, such as `/assets/old.js`. */
 const FILE_ADDRESS = /\.[^/]*$/u;
 
