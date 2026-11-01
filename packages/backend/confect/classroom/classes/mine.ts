@@ -99,10 +99,20 @@ const mineIn = Effect.fn("classroom.classes.mineIn")(function* (
 });
 
 /**
+ * The order of the sidebar: the homeroom classes, which have no subject, first, then
+ * by name, then by address, so the order is total.
+ */
+export const sidebarOrder = Arr.sortBy(
+  Order.mapInput(Order.Number, (row: ClassesDoc) =>
+    row.subject === undefined ? 0 : 1
+  ),
+  Order.mapInput(Order.String, (row: ClassesDoc) => row.nameKey),
+  Order.mapInput(Order.String, (row: ClassesDoc) => row._id)
+);
+
+/**
  * The active classes the caller attends or teaches in the active period of each
- * active unit of the school, one entry per class, in the order of the sidebar: the
- * homeroom classes, which have no subject, first, then by name, then by address, so
- * the order is total.
+ * active unit of the school, one entry per class, in the order of the sidebar.
  */
 export const mine = FunctionImpl.make(
   databaseSchema,
@@ -121,13 +131,7 @@ export const mine = FunctionImpl.make(
     );
     return pipe(
       Arr.fromIterable(HashMap.values(byId)),
-      Arr.sortBy(
-        Order.mapInput(Order.Number, (row: ClassesDoc) =>
-          row.subject === undefined ? 0 : 1
-        ),
-        Order.mapInput(Order.String, (row) => row.nameKey),
-        Order.mapInput(Order.String, (row) => row._id)
-      ),
+      sidebarOrder,
       Arr.map(classView)
     );
   })

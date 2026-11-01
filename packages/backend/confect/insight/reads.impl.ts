@@ -4,13 +4,14 @@ import type { InsightMasteryDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
+import { classAccess } from "@repo/backend/confect/classroom/authority";
+import { CLASS_LIMIT, classView } from "@repo/backend/confect/classroom/class";
 import {
-  classAccess,
-  classAuthority,
-} from "@repo/backend/confect/classroom/authority";
-import { classView } from "@repo/backend/confect/classroom/class";
-import { activePeriodsOf } from "@repo/backend/confect/classroom/classes/mine";
+  activePeriodsOf,
+  sidebarOrder,
+} from "@repo/backend/confect/classroom/classes/mine";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { mayIn } from "@repo/backend/confect/classroom/roster";
 import { chanceOf } from "@repo/backend/confect/insight/mastery";
 import { sharedPracticeOf } from "@repo/backend/confect/insight/practice";
 import spec from "@repo/backend/confect/insight/reads.spec";
@@ -23,7 +24,7 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { schemeForEntry } from "@repo/backend/confect/records/version";
 import { openText } from "@repo/backend/confect/vault/text";
-import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
+import { Array as Arr, Effect, Layer, Option, pipe, Struct } from "effect";
 
 /** The students one class view reads: more than a cohort holds. */
 const STUDENT_PAGE = 100;
@@ -148,39 +149,32 @@ const ofClass = FunctionImpl.make(
 );
 
 /**
- * One page of the active classes of the school's running periods whose Insight the caller reads:
- * the way in for the school's leaders, who read the classes of their scope and teach none of them.
- * The classes are paged on the school's index and kept only if the caller may read them, so a page
- * may come back short while more follow.
+ * The active classes of the school's active periods whose Insight the viewer reads, in the sidebar's order. A leader
+ * reads every one and a teacher their own, so the page offers exactly what `ofClass` answers.
  */
 const classes = FunctionImpl.make(
   databaseSchema,
   spec,
   "classes",
-  Effect.fn("insight.reads.classes")(function* ({ paginationOpts }) {
-    const { tenant } = yield* Member;
-    const running = Arr.map(
-      yield* activePeriodsOf(tenant._id),
-      (period) => period._id
+  Effect.fn("insight.reads.classes")(function* () {
+    const principal = yield* Member;
+    const reader = yield* DatabaseReader;
+    const held = yield* Effect.forEach(
+      yield* activePeriodsOf(principal.tenant._id),
+      (period) =>
+        reader
+          .table("classes")
+          .index("by_periodId_and_slug", (query) =>
+            query.eq("periodId", period._id)
+          )
+          .take(CLASS_LIMIT)
+          .pipe(Effect.orDie)
     );
-    const page = yield* (yield* DatabaseReader)
-      .table("classes")
-      .index("by_tenantId_and_slug", (query) =>
-        query.eq("tenantId", tenant._id)
-      )
-      .paginate(paginationOpts)
-      .pipe(Effect.orDie);
     const readable = yield* Effect.filter(
-      Arr.filter(
-        page.page,
-        (row) => row.status === "active" && Arr.contains(running, row.periodId)
-      ),
-      (row) =>
-        classAuthority
-          .allowed(row)
-          .pipe(Effect.map((actions) => Arr.contains(actions, "insight.view")))
+      Arr.filter(Arr.flatten(held), (row) => row.status === "active"),
+      (row) => mayIn("insight.view", row, principal)
     );
-    return Struct.assign(page, { page: Arr.map(readable, classView) });
+    return pipe(readable, sidebarOrder, Arr.map(classView));
   })
 );
 
@@ -216,8 +210,8 @@ const mine = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(ofClass),
   Layer.provide(classes),
+  Layer.provide(ofClass),
   Layer.provide(mine),
   Layer.provide(session),
   Layer.provide(member),

@@ -18,18 +18,18 @@ export default GroupSpec.make()
   .middleware(RequireMember)
   .addFunction(
     FunctionSpec.publicQuery({
+      name: "classes",
+      args: () => ({ slug: TenantSlug }),
+      returns: () => Schema.Array(ClassView),
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
       name: "ofClass",
       args: () => ({ classId: Id("classes"), slug: TenantSlug }),
       returns: () => ClassInsight,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "insight.view", arg: "classId" })
-  )
-  .addFunction(
-    FunctionSpec.publicPaginatedQuery({
-      name: "classes",
-      args: () => ({ slug: TenantSlug }),
-      item: () => ClassView,
-    })
   )
   .addFunction(
     FunctionSpec.publicQuery({
