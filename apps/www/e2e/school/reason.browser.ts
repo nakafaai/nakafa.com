@@ -47,7 +47,7 @@ test("a teacher writes an answer and its reason, marks both keys one at a time, 
     page.getByRole("textbox", { name: "Question 1, option A" })
   ).toHaveText("Benar");
   const panel = page.getByRole("complementary", { name: "For teachers" });
-  await expect(panel.getByRole("spinbutton")).toHaveValue("2");
+  await expect(panel.getByRole("textbox", { name: "Points" })).toHaveValue("2");
   await page
     .getByRole("textbox", { name: "Question 1, option B" })
     .fill("Salah");
