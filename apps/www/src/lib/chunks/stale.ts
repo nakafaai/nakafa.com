@@ -43,9 +43,6 @@ function markOf(address: string) {
   return `${RELOAD_MARK}${address}`;
 }
 
-/** How long a tab keeps a page whose chunk still exists, so a navigation under way can finish first. */
-const LEAVING_MILLIS = 5000;
-
 /**
  * Reloads a tab that outlived a deploy, from the head, before any script can
  * fail. A press that loads a module on intent reaches no error boundary, so
@@ -55,18 +52,23 @@ const LEAVING_MILLIS = 5000;
  * It holds back every failure while the page goes, so none of them draws an error
  * for a moment, and a tab without storage never reloads. A browser without a
  * network keeps its page: the chunk is out of reach, not gone, and a reload would
- * swap the page for the browser's offline screen.
- *
- * Firefox fails a page's running imports the moment the tab starts to leave it,
- * and a reload then cancels the navigation, so the learner stays on the old page.
- * So where the failure names its file, the file decides: a chunk a deploy removed
- * answers 404 and reloads at once, and any other answer waits, because a tab that
- * is leaving never gets there. Safari names no file, so it reloads as before.
+ * swap the page for the browser's offline screen. Firefox and Safari also fail a
+ * page's running imports the moment the tab starts to leave it, and a reload then
+ * would cancel the navigation and keep the reader where they were, so a tab that
+ * is leaving never reloads. `beforeunload` is the only signal that comes before
+ * those failures, and it costs a page Firefox's back-forward cache.
  */
 export const STALE_CHUNK_SCRIPT = `(function () {
+  var leaving = false;
   var reloading = false;
+  window.addEventListener("beforeunload", function () {
+    leaving = true;
+  });
+  window.addEventListener("pageshow", function () {
+    leaving = false;
+  });
   window.addEventListener("vite:preloadError", function (event) {
-    if (!reloading) {
+    if (!leaving && !reloading) {
       if (navigator.onLine === false) {
         return;
       }
@@ -75,31 +77,12 @@ export const STALE_CHUNK_SCRIPT = `(function () {
         if (sessionStorage.getItem(mark) !== null) {
           return;
         }
+        sessionStorage.setItem(mark, "1");
       } catch (error) {
         return;
       }
       reloading = true;
-      var reload = function () {
-        try {
-          sessionStorage.setItem(mark, "1");
-        } catch (error) {
-          return;
-        }
-        location.reload();
-      };
-      var file = /https?:\\S+/.exec(String(event.payload));
-      if (file === null) {
-        reload();
-      } else {
-        fetch(file[0], { cache: "no-store", method: "HEAD" }).then(
-          function (answer) {
-            setTimeout(reload, answer.status === 404 ? 0 : ${LEAVING_MILLIS});
-          },
-          function () {
-            setTimeout(reload, ${LEAVING_MILLIS});
-          }
-        );
-      }
+      location.reload();
     }
     event.preventDefault();
   });
