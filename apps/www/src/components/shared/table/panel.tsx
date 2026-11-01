@@ -203,7 +203,7 @@ function RangeField({
 }) {
   return (
     <NumberField
-      className="not-first:border-input min-w-0 flex-1 not-first:border-s"
+      className="not-first:border-input h-full min-w-0 flex-1 not-first:border-s"
       onValueChange={(value) => onChange(value === null ? "" : String(value))}
       value={Option.getOrNull(boundOf(text))}
     >
