@@ -21,9 +21,15 @@ import {
 import {
   classTask,
   ownSubmission,
+  reaches,
+  readsAsStudent,
+  taskForViewer,
   taskView,
 } from "@repo/backend/confect/classroom/tasks/views";
-import { writeTask } from "@repo/backend/confect/classroom/tasks/write";
+import {
+  classTargets,
+  writeTask,
+} from "@repo/backend/confect/classroom/tasks/write";
 import spec from "@repo/backend/confect/classroom/tasks.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -33,7 +39,8 @@ import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /**
- * One page of the class's tasks by deadline, the soonest first. A `standing` keeps the tasks where the reader's own
+ * One page of the class's tasks by deadline, the soonest first, leaving out for a student the tasks that go to other
+ * students of the class, so a page can hold fewer tasks than it read. A `standing` keeps the tasks where the reader's own
  * work stands so (`standingOf`), so a page can hold fewer tasks than it read.
  */
 const list = FunctionImpl.make(
@@ -41,13 +48,19 @@ const list = FunctionImpl.make(
   spec,
   "list",
   Effect.fn("classroom.tasks.list")(function* ({ paginationOpts, standing }) {
+    const { person } = yield* Member;
     const row = yield* Class;
     const found = yield* (yield* DatabaseReader)
       .table("classroomTasks")
       .index("by_classId_and_deadline", (query) => query.eq("classId", row._id))
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
-    const views = yield* Effect.forEach(found.page, taskView);
+    const narrowed = Arr.some(found.page, (task) => !reaches(task, person._id));
+    const reached =
+      narrowed && (yield* readsAsStudent())
+        ? Arr.filter(found.page, (task) => reaches(task, person._id))
+        : found.page;
+    const views = yield* Effect.forEach(reached, taskView);
     return Struct.assign(found, {
       page:
         standing === undefined
@@ -63,7 +76,7 @@ const get = FunctionImpl.make(
   spec,
   "get",
   Effect.fn("classroom.tasks.get")(function* ({ task }) {
-    return yield* taskView(yield* classTask(task, "forum.read"));
+    return yield* taskView(yield* taskForViewer(task, "forum.read"));
   })
 );
 
@@ -78,7 +91,11 @@ const publish = FunctionImpl.make(
   Effect.fn("classroom.tasks.publish")(function* (args) {
     const { person } = yield* Member;
     return yield* taskView(
-      yield* writeTask(person, Struct.omit(args, ["classId", "slug"]))
+      yield* writeTask(
+        person,
+        Struct.omit(args, ["classId", "slug", "targets"]),
+        yield* classTargets(args.targets)
+      )
     );
   })
 );
@@ -108,7 +125,7 @@ const submit = FunctionImpl.make(
   Effect.fn("classroom.tasks.submit")(function* ({ task, text }) {
     const { person } = yield* Member;
     const row = yield* Class;
-    const found = yield* classTask(task, "task.submit");
+    const found = yield* taskForViewer(task, "task.submit");
     const now = yield* Clock.currentTimeMillis;
     const late = now > found.deadline;
     if (late && found.latePolicy === "close") {

@@ -3,13 +3,14 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { mayIn } from "@repo/backend/confect/classroom/roster";
 import {
   submissionField,
   taskField,
 } from "@repo/backend/confect/classroom/tasks/task";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { openText } from "@repo/backend/confect/vault/text";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** The task of the allowed class at `slug`, refused as a missing object when the class holds none. */
 export const classTask = Effect.fn("classroom.tasks.lookup")(function* (
@@ -28,6 +29,35 @@ export const classTask = Effect.fn("classroom.tasks.lookup")(function* (
     return yield* new AccessDenied({ action, reason: "resource" });
   }
   return task.value;
+});
+
+/**
+ * Whether the viewer is a student of the class, who reads only the tasks that reach them. Whoever teaches or leads the
+ * class reads every task.
+ */
+export const readsAsStudent = Effect.fn("classroom.tasks.asStudent")(
+  function* () {
+    return yield* mayIn("task.submit", yield* Class, yield* Member);
+  }
+);
+
+/** Whether a task goes to a Person: to the whole class, or to the students that name them. */
+export const reaches = (
+  task: Pick<ClassroomTasksDoc, "targets">,
+  personId: ClassroomTasksDoc["authorId"]
+) => task.targets === undefined || Arr.contains(task.targets, personId);
+
+/** The task at `slug` as `classTask` finds it, refused as a missing object for a student it does not reach. */
+export const taskForViewer = Effect.fn("classroom.tasks.forViewer")(function* (
+  slug: string,
+  action: "forum.read" | "task.submit"
+) {
+  const task = yield* classTask(slug, action);
+  const { person } = yield* Member;
+  if (reaches(task, person._id) || !(yield* readsAsStudent())) {
+    return task;
+  }
+  return yield* new AccessDenied({ action, reason: "resource" });
 });
 
 /** The work the viewer handed in for a task, if any. */
@@ -70,6 +100,7 @@ export const taskView = Effect.fn("classroom.tasks.view")(function* (
     }).pipe(Effect.orDie),
     points: task.points,
     slug: task.slug,
+    targets: task.targets ?? null,
     text: yield* openText(keys, taskField(task), task.sealedText).pipe(
       Effect.orDie
     ),

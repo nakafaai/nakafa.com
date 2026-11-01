@@ -244,26 +244,41 @@ test("a server failure of one read keeps a teacher in the school, and the page c
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `learner-${school.slug}@acceptance.example.test`;
+  const learnerContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: learnerContext,
+      slug: school.slug,
+    })
+  );
+  await learnerContext.close();
   const ownerContext = await browser.newContext();
   await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+
   const teacher = await ownerContext.newPage();
   const changes = await Effect.runPromise(trackChanges(teacher, []));
-  await teacher.goto(address("/exams"));
-  const create = teacher.getByRole("button", { name: "Create exam" });
-  await expect(create).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await teacher.goto(address(`/exams/${sitting.examId}/edit`));
+  const paper = teacher.getByRole("textbox", { name: "Question 1 text" });
+  await expect(paper).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
-  // The list's read fails with a failure that names no refusal, as a function that ran out of time does, so the page
+  // The exam's read fails with a failure that names no refusal, as a function that ran out of time does, so the page
   // leaves and the school's shell stays around it.
-  changes.failQuery("exams/exams:list", "ServerBroke");
+  changes.failQuery("exams/exams:open", "ServerBroke");
   await teacher.reload();
-  const shell = teacher.getByRole("link", { exact: true, name: "Exams" });
-  await expect(shell).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(
+    teacher.getByRole("link", { exact: true, name: "Exams" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(paper).toHaveCount(0);
   await expect(
     teacher.getByRole("heading", { name: "Something broke" })
   ).toHaveCount(0);
 
   // The server answers again, and the page is back with no press.
   changes.recoverQuery();
-  await expect(create).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(paper).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await ownerContext.close();
 });
