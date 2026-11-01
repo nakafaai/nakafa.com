@@ -12,6 +12,7 @@ import { Option } from "effect";
 import type { MouseEvent, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { usePaneMode, usePanes } from "@/components/shared/panes";
+import { TableAction, TableActionName } from "@/components/shared/table/action";
 
 /**
  * A detail's header: its title, and what it shows on a second line, so it holds two lines at most
@@ -166,17 +167,10 @@ export function PaneOpenButton({ id }: { id: string }) {
   const show = usePanes((state) => state.show);
 
   return (
-    <div className="flex justify-end">
-      <Button
-        onClick={() => show(id)}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        <HugeIcons icon={ArrowRight01Icon} />
-        {common("open")}
-      </Button>
-    </div>
+    <TableAction onClick={() => show(id)} type="button">
+      <HugeIcons icon={ArrowRight01Icon} />
+      <TableActionName>{common("open")}</TableActionName>
+    </TableAction>
   );
 }
 

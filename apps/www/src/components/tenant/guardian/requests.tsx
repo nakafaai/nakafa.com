@@ -26,6 +26,7 @@ import { Array as Arr, Record as Rec, Schema } from "effect";
 import { useOptimistic, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { TableAction, TableActionName } from "@/components/shared/table/action";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
@@ -81,16 +82,11 @@ function RequestReader({ request }: { request: ParentRequest }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex justify-end">
-      <Button
-        onClick={() => setOpen(true)}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
+    <>
+      <TableAction onClick={() => setOpen(true)} type="button">
         <HugeIcons icon={ViewIcon} />
-        {t("request-read")}
-      </Button>
+        <TableActionName>{t("request-read")}</TableActionName>
+      </TableAction>
       <ResponsiveDialog
         description={t(`request-state-${request.state}`)}
         footer={
@@ -106,7 +102,7 @@ function RequestReader({ request }: { request: ParentRequest }) {
           {request.text}
         </p>
       </ResponsiveDialog>
-    </div>
+    </>
   );
 }
 

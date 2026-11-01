@@ -15,11 +15,11 @@ import {
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { KktpStatus } from "@repo/backend/confect/records/grade";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { TableAction, TableActionName } from "@/components/shared/table/action";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
@@ -139,18 +139,15 @@ function OwnGradeTable() {
       })),
     }),
     gradeColumns.menu(() => (
-      <div className="flex justify-end">
-        <Button
-          render={
-            <Link params={{ slug }} to="/school/$slug/cards">
-              <HugeIcons icon={Certificate01Icon} />
-              {t("own-open-cards")}
-            </Link>
-          }
-          size="sm"
-          variant="outline"
-        />
-      </div>
+      <TableAction
+        nativeButton={false}
+        render={
+          <Link params={{ slug }} to="/school/$slug/cards">
+            <HugeIcons icon={Certificate01Icon} />
+            <TableActionName>{t("own-open-cards")}</TableActionName>
+          </Link>
+        }
+      />
     )),
   ];
 
