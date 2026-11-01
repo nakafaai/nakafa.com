@@ -115,6 +115,13 @@ export const optionLetters = (labels: readonly PartLabel[]) => {
   return (index: number) => optionLetter(index, script);
 };
 
+/**
+ * The way a set of options reads: an Arabic set runs from the right, so its first circle stands at the top
+ * right, and any other set from the left.
+ */
+export const optionDirection = (labels: readonly PartLabel[]) =>
+  letterScript(labels) === "arabic" ? "rtl" : "ltr";
+
 /** Whether an option is one of a two-tier question's reasons. */
 export const isReasonOption = (optionId: string) =>
   optionId.startsWith(`${REASON_ID}-`);

@@ -30,6 +30,9 @@ const LEARNER_NAME = "Acceptance Learner";
 /** The row of the first room of the seeded exam, which is open, in the rooms list. */
 const OPEN_ROOM_ROW = /Lab 2/u;
 
+/** The state of an open room, which its seats' counts follow in the same cell. */
+const OPEN_ROOM_STATE = /^Open\b/u;
+
 /** Students seated before the learner, more than one dashboard page of 100 holds. */
 const CROWD = 101;
 
@@ -142,7 +145,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   // The panel says when a lost connection shows: only once the student is back online.
   await expect(
     proctor.getByText(
-      "A lost connection shows here, with how long it lasted, once the student is back online."
+      "A lost connection shows on the seat while it lasts, and here once the student is back online."
     )
   ).toBeVisible();
   // The student's device loses the network and finds it again. Its disconnect reaches the server once it is back,
@@ -218,7 +221,7 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
   await expect(
     rooms
       .getByRole("row", { name: OPEN_ROOM_ROW })
-      .getByRole("cell", { exact: true, name: "Open" })
+      .getByRole("cell", { name: OPEN_ROOM_STATE })
   ).toBeVisible();
 
   await rooms.getByRole("link", { name: "Lab 2" }).click();
