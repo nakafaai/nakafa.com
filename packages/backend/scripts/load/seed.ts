@@ -15,8 +15,14 @@ import { Base64Url, Hex } from "effect/encoding";
  */
 const SEATS_PER_CALL = 10;
 
-/** How many seed calls run at once: each is a Convex CLI process of its own. */
+/**
+ * How many seed calls run at once: each is a Convex CLI process of its own. Seats do not conflict, because the run's
+ * school holds a contract, so no seat reads the school's student grants that another seat writes into.
+ */
 const SEED_CONCURRENCY = 4;
+
+/** How many times a seed call goes again. A call that fails writes nothing, so a batch can go twice. */
+const SEED_RETRIES = 3;
 
 /** One room of the run as the load seed opened it, with its token. */
 const Room = Schema.Struct({
@@ -74,7 +80,8 @@ const seatAll = Effect.fn("load.seed.seats")(function* <E, R>(
             ["run", "exams/seed:seats", args],
             Arr.map(batch, (seat) => seat.token)
           )
-        )
+        ),
+        Effect.retry({ times: SEED_RETRIES })
       ),
     { concurrency: SEED_CONCURRENCY, discard: true }
   );

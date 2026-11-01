@@ -1,8 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { runProctor } from "@repo/backend/scripts/load/proctor";
-import { Recorder, recorderLayer } from "@repo/backend/scripts/load/recorder";
-import { fakeServer, idOf, SEATS } from "@repo/backend/test/load";
+import { Recorder } from "@repo/backend/scripts/load/recorder";
+import {
+  fakeServer,
+  idOf,
+  SEATS,
+  temporaryRecorder,
+} from "@repo/backend/test/load";
 import { Array as Arr, Deferred, Effect, Fiber, Schema } from "effect";
 
 const seating = {
@@ -51,6 +56,6 @@ describe("load proctor", () => {
           "query:lastAnswer",
           "query:lastAnswer",
         ]);
-      }).pipe(Effect.provide(recorderLayer))
+      }).pipe(Effect.provide(temporaryRecorder))
   );
 });

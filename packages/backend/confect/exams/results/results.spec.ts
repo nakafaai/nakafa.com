@@ -5,6 +5,7 @@ import { ResultAccess } from "@repo/backend/confect/exams/results/access";
 import {
   AnswerRow,
   AttemptResult,
+  IntegrityReport,
   Overview,
   QuestionStats,
   StudentResult,
@@ -45,6 +46,14 @@ export default GroupSpec.make()
       name: "overview",
       args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
       returns: () => Overview,
+      error: () => AccessDenied,
+    }).middleware(ResultAccess, { action: "result.view", arg: "sittingId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "integrity",
+      args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
+      returns: () => IntegrityReport,
       error: () => AccessDenied,
     }).middleware(ResultAccess, { action: "result.view", arg: "sittingId" })
   )

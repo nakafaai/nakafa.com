@@ -4,7 +4,9 @@ import {
   Outlet,
   redirect,
 } from "@tanstack/react-router";
+import { Option } from "effect";
 import { Unauthenticated } from "@/components/auth/gate";
+import { useLiveSession } from "@/components/providers/live";
 import { RouteConvexProvider } from "@/components/providers/route";
 import { isSignedIn } from "@/lib/auth/gate";
 
@@ -33,18 +35,31 @@ export const Route = createFileRoute("/$locale/_main/_app/_account")({
  * Mounts the one client that the account screens read. The gate above runs before
  * this layout loads: the router loads a route's component chunk, and the provider
  * with it, beside the loaders and after `beforeLoad`, so a visitor never loads the
- * client and a learner's page waits on no lazy chunk after its data. The gate reads
- * only on a move between pages, so a session that ends under an open screen, in
- * another tab or on the server, sends the reader to sign-in from here.
+ * client and a learner's page waits on no lazy chunk after its data.
  */
 function AccountLayout() {
-  const { locale } = Route.useParams();
   return (
     <RouteConvexProvider>
-      <Unauthenticated>
-        <Navigate params={{ locale }} replace to="/$locale/auth" />
-      </Unauthenticated>
+      <SessionEnd />
       <Outlet />
     </RouteConvexProvider>
   );
+}
+
+/**
+ * Sends the reader to sign-in once Better Auth answers that no session stands under
+ * an open screen: one that ended in another tab or on the server, or a hint that
+ * outlived its session. The gate above reads only on a move between pages. The live
+ * session reads signed out until the page starts it after hydration, so that state
+ * means nothing here: an answer counts only once the page holds its client, which
+ * the start sets with the session pending.
+ */
+function SessionEnd() {
+  const { locale } = Route.useParams();
+  const started = useLiveSession((state) => Option.isSome(state.client));
+  return started ? (
+    <Unauthenticated>
+      <Navigate params={{ locale }} replace to="/$locale/auth" />
+    </Unauthenticated>
+  ) : null;
 }

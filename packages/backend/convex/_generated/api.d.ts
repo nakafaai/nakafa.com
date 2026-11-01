@@ -3901,6 +3901,16 @@ export declare const api: {
     };
     runtime: {
       active: {
+        dates: FunctionReference<
+          "query",
+          "public",
+          {},
+          {
+            assessment: string | null;
+            program: string | null;
+            quran: string | null;
+          }
+        >;
         read: FunctionReference<
           "query",
           "public",
@@ -7481,6 +7491,26 @@ export declare const api: {
             slug: string;
           },
           null
+        >;
+        integrity: FunctionReference<
+          "query",
+          "public",
+          { sittingId: Id<"examSittings">; slug: string },
+          {
+            rows: Array<{
+              attemptId: Id<"examAttempts">;
+              awaySeconds: number;
+              blur: number;
+              copy: number;
+              disconnect: number;
+              exits: number;
+              fullscreenExit: number;
+              name: string;
+              paste: number;
+              secondTab: number;
+            }>;
+            students: number;
+          }
         >;
         mine: FunctionReference<
           "query",

@@ -203,19 +203,18 @@ function DrawerHeader({ className, ...props }: ComponentProps<"div">) {
 
 /**
  * The body between the header and the footer, which scrolls on its own and fades at its edges. Its height
- * comes from what it holds, up to what the drawer leaves for it.
+ * comes from what it holds, up to what the drawer leaves for it. The scroller is the flex item itself, because a
+ * drawer only caps its height: a percentage inside a wrapper resolves to nothing, and the form then runs under the footer.
  */
 function DrawerPanel({ className, ...props }: ComponentProps<"div">) {
   return (
-    <div className="min-h-0 flex-1">
-      <ScrollArea className="touch-auto" scrollFade>
-        <div
-          className={cn("p-4", className)}
-          data-slot="drawer-panel"
-          {...props}
-        />
-      </ScrollArea>
-    </div>
+    <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade>
+      <div
+        className={cn("p-4", className)}
+        data-slot="drawer-panel"
+        {...props}
+      />
+    </ScrollArea>
   );
 }
 

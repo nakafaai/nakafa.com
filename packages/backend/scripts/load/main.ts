@@ -9,7 +9,9 @@ import { Array as Arr, Effect, FileSystem, Layer } from "effect";
 /**
  * Runs the load test that the command line names (`bun run load <report-file> [students]
  * [minutes]`) from the repository root. Bun runs it, because the students call the sittings
- * through the Confect contracts, whose generated modules Node cannot resolve.
+ * through the Confect contracts, whose generated modules Node cannot resolve. The `load` script
+ * raises Bun's 256 connections at once, which every student here shares where each real one has
+ * a browser of their own.
  */
 const main = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;

@@ -117,7 +117,7 @@ export const runLoadCommand = Effect.fn("load.command")(function* (
       run: (operation, commandArgs, sensitiveValues) =>
         runLocalConvex(runtime, operation, commandArgs, sensitiveValues),
       school: (directory) => openSchool(root, directory),
-    }).pipe(Effect.provide(recorderLayer)),
+    }).pipe(Effect.provide(recorderLayer(`${output}.acknowledged.jsonl`))),
     PRODUCTION_CONCURRENCY
   );
 }, Effect.scoped);

@@ -16,6 +16,7 @@ import {
   use,
 } from "react";
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
+import { toCardArtwork } from "@/lib/og/artwork";
 
 interface CatalogCardProps {
   /**
@@ -99,7 +100,7 @@ export function CatalogCardVisual({
         height={630}
         preload={preload}
         sizes="(min-width: 640px) 384px, calc(100vw - 48px)"
-        src={visual}
+        src={toCardArtwork(visual)}
         width={1200}
       />
     );

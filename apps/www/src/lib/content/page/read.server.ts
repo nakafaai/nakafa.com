@@ -15,7 +15,7 @@ import { serverHandler } from "@/lib/server/fn";
 const MISSING_LEGAL_PAGE = { _tag: "Missing" } as const;
 
 /**
- * The head facts of one reviewed legal page: its title, its description and the
+ * The head facts of one reviewed legal page: its signed metadata and the
  * alternates of its counterparts in every locale. A path that no signed page
  * answers reads as missing.
  */
@@ -43,8 +43,7 @@ const readLegalPage = Effect.fn("www.pages.readLegal")(function* ({
     alternates: createResolvedRouteAlternates(projection, counterparts),
     body: page.value.body,
     canonicalPath,
-    description: projection.metadata.description,
-    title: projection.metadata.title,
+    metadata: projection.metadata,
   };
 });
 
