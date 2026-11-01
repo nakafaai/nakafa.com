@@ -1,9 +1,11 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { Tag01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import insight from "@repo/backend/confect/_generated/refs/insight";
 import { Competency } from "@repo/backend/confect/insight/schema";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -17,6 +19,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { useTenant } from "@/components/tenant/context";
 import { saveSchool } from "@/components/tenant/settings/save";
 
@@ -55,7 +58,8 @@ export function QuestionTags() {
   return (
     <>
       <Button onClick={() => setOpen(true)} type="button" variant="outline">
-        {t("tags")}
+        <HugeIcons icon={Tag01Icon} />
+        <HeaderLabel>{t("tags")}</HeaderLabel>
       </Button>
       <ResponsiveDialog
         description={t("tags-description")}

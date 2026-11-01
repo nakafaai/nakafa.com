@@ -37,6 +37,19 @@ describe("billing/xendit/webhook", () => {
   );
 
   it.effect(
+    "keys a refund by its refund ID, which it names in place of an ID",
+    () =>
+      Effect.gen(function* () {
+        const body =
+          '{"business_id":"biz_1","created":"2026-11-01T08:17:17Z","data":{"refund_id":"rfd-1","status":"SUCCEEDED","updated":"2026-11-01T08:17:16.930Z"},"event":"refund.succeeded"}';
+        const key = yield* xenditDeliveryKey(yield* envelopeOf(body), body);
+        expect(key).toBe(
+          "refund.succeeded:rfd-1:SUCCEEDED:2026-11-01T08:17:16.930Z"
+        );
+      })
+  );
+
+  it.effect(
     "accepts a plan event, which Xendit sends with an empty payment session, and keys it by the plan",
     () =>
       Effect.gen(function* () {

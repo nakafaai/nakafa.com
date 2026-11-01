@@ -89,6 +89,7 @@ export const signInAnswerOf = Effect.fn("www.tenant.login.signInAnswer")(
 /** The copy key of a submission that does not sign the student in. */
 type SubmitMessage =
   | "card-invalid"
+  | "card-password-missing"
   | "card-used"
   | "failed"
   | "sign-in-missing"
@@ -134,7 +135,8 @@ const passwordSignIn = (
 
 /**
  * Decides one submission of the login form (ADR 0009). A form without the username or the
- * password answers at once, without a request, because every way in needs both. With no card
+ * password answers at once, without a request, because every way in needs both, and a card has
+ * no password yet, so a form with a card code asks the student to choose one. With no card
  * code, the form signs the student in with the typed name and password. With a card code, it
  * redeems the card first, and a redeemed card signs the student in. A card that answers `used`
  * may be the retry of a redemption whose reply was lost, so the password sign-in decides: it
@@ -147,7 +149,9 @@ export const submitLogin = Effect.fn("www.tenant.login.submit")(function* (
   ports: SubmitPorts
 ): Effect.fn.Return<SubmitStep, never> {
   if (values.loginName.trim() === "" || values.password === "") {
-    return "sign-in-missing";
+    return values.code.trim() === ""
+      ? "sign-in-missing"
+      : "card-password-missing";
   }
   const credentials = {
     password: values.password,

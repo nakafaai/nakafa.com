@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { useTranslations } from "use-intl";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { ActionLink } from "@/components/state/action";
 import { SchoolHeader } from "@/components/tenant/header";
 import { TenantMissing } from "@/components/tenant/missing";
@@ -8,7 +9,8 @@ import { TenantMissing } from "@/components/tenant/missing";
  * The not-found page of an address below a school that no page of the school
  * answers. It shows inside the school shell under the school's one header, whose
  * path names the page while the body draws its heading, and its one way on leads
- * to the school's home, which is the root of the school host.
+ * to the school's home, which is the root of the school host. The shell has no gutter of its
+ * own, so the page keeps its button off the edges of a phone.
  */
 export function SchoolPageNotFound(): ReactElement {
   const t = useTranslations("NotFound");
@@ -16,9 +18,15 @@ export function SchoolPageNotFound(): ReactElement {
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} />
-      <TenantMissing>
-        <ActionLink href="/" label={tState("home-button")} variant="default" />
-      </TenantMissing>
+      <LayoutContent className="flex flex-1 items-center py-6">
+        <TenantMissing>
+          <ActionLink
+            href="/"
+            label={tState("home-button")}
+            variant="default"
+          />
+        </TenantMissing>
+      </LayoutContent>
     </>
   );
 }

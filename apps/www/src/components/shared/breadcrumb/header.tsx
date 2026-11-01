@@ -71,8 +71,8 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
  * and shadcn's responsive breadcrumb fold a long path. From the small breakpoint up it
  * shows Home, a menu of the middle items, and the nearest `visibleItemCount` items. On a
  * phone a path of two items or more keeps only its last item beside one menu that holds
- * Home and every item before it, so the page's name stays readable next to the page's
- * actions. A path that `unfolds` shows every item in a frame row of 42rem or wider, whose
+ * Home and every item before it, and a path of one item keeps that item alone, so the
+ * page's name stays whole next to the page's actions. A path that `unfolds` shows every item in a frame row of 42rem or wider, whose
  * `@container` the header sets, and only its last item truncates. CSS alone folds it, so
  * the first paint already has its final shape.
  */
@@ -103,7 +103,7 @@ export function BreadcrumbHeaderPath({
           />
         ) : null}
         <BreadcrumbItem
-          className={cn("shrink-0", foldsOnPhone && "max-sm:hidden")}
+          className={cn("shrink-0", items.length > 0 && "max-sm:hidden")}
         >
           <BreadcrumbLink
             render={
@@ -140,6 +140,7 @@ export function BreadcrumbHeaderPath({
             )}
             item={item}
             key={`${item.label}:${item.target === undefined ? "current" : "link"}`}
+            separatorClassName={cn(items.length === 1 && "max-sm:hidden")}
           />
         ))}
       </BreadcrumbList>
@@ -186,14 +187,19 @@ export function BreadcrumbHeaderFold({
 function BreadcrumbHeaderSegment({
   className,
   item,
+  separatorClassName,
 }: {
   className?: string;
   item: BreadcrumbHeaderItem;
+  /** Hides the separator alone, as a phone does before the one item of a path. */
+  separatorClassName?: string;
 }) {
   if (item.target === undefined) {
     return (
       <>
-        <BreadcrumbSeparator className={cn("shrink-0", className)} />
+        <BreadcrumbSeparator
+          className={cn("shrink-0", className, separatorClassName)}
+        />
         <BreadcrumbItem className={cn("min-w-0", className)} dir="auto">
           <BreadcrumbLink
             aria-current="page"
@@ -210,7 +216,9 @@ function BreadcrumbHeaderSegment({
 
   return (
     <>
-      <BreadcrumbSeparator className={cn("shrink-0", className)} />
+      <BreadcrumbSeparator
+        className={cn("shrink-0", className, separatorClassName)}
+      />
       <BreadcrumbItem className={cn("min-w-0", className)} dir="auto">
         <BreadcrumbLink
           className="truncate"

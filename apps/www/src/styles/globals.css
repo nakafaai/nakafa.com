@@ -107,6 +107,8 @@
  * which the landing test checks.
  */
 :root {
+  /* The widest a page may be. A page's frame sets it, and every row of the page reads it (`shared/content/width.ts`). */
+  --page-width: var(--container-7xl);
   --surah-header-height: 4rem;
 }
 

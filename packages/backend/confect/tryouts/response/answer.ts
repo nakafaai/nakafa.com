@@ -72,8 +72,9 @@ function timeSpentOf(section: Docs["tryoutSectionAttempts"], now: number) {
  * Writes one admitted answer and its section counters in the admitting
  * transaction. The stored response, read and checked when the answer was
  * admitted, is replaced (keeping its first answer time) or deleted for none,
- * and the section and attempt rows are replaced as loaded, so no row is read
- * again. Deleting a response deletes the version it carried, so a clear
+ * and the section row is replaced as loaded, so no row is read again. The
+ * attempt row stays as it is: every query of the attempt reads it, so a write
+ * here would run them all again on each answer. Deleting a response deletes the version it carried, so a clear
  * replaces the placement with the clear's version, which orders the writes
  * that follow it. A clear with nothing stored changes nothing else.
  * @see https://docs.convex.dev/functions/mutation-functions#transactions
@@ -81,14 +82,13 @@ function timeSpentOf(section: Docs["tryoutSectionAttempts"], now: number) {
 export const writeAnswer = Effect.fn("tryouts.response.writeAnswer")(
   function* (input: {
     readonly answer: Option.Option<GradedAnswer>;
-    readonly attempt: Docs["tryoutAttempts"];
     readonly now: number;
     readonly placement: Docs["tryoutAttemptPlacements"];
     readonly section: Docs["tryoutSectionAttempts"];
     readonly stored: Option.Option<Docs["tryoutResponses"]>;
     readonly version: Version;
   }) {
-    const { answer, attempt, now, placement, section, stored, version } = input;
+    const { answer, now, placement, section, stored, version } = input;
     const writer = yield* DatabaseWriter;
     const responses = writer.table("tryoutResponses");
     if (Option.isNone(answer)) {
@@ -119,7 +119,7 @@ export const writeAnswer = Effect.fn("tryouts.response.writeAnswer")(
             Struct.assign(fields, {
               answeredAt: now,
               placementId: placement._id,
-              tryoutAttemptId: attempt._id,
+              tryoutAttemptId: placement.tryoutAttemptId,
               tryoutSectionAttemptId: section._id,
             })
           ),
@@ -150,15 +150,6 @@ export const writeAnswer = Effect.fn("tryouts.response.writeAnswer")(
             section.answeredCount + after.answered - before.answered,
           correctAnswers:
             section.correctAnswers + after.correct - before.correct,
-          lastActivityAt: now,
-        })
-      )
-      .pipe(Effect.orDie);
-    yield* writer
-      .table("tryoutAttempts")
-      .replace(
-        attempt._id,
-        Struct.assign(Struct.omit(attempt, ["_creationTime", "_id"]), {
           lastActivityAt: now,
         })
       )

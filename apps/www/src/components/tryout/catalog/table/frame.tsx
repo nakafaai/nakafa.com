@@ -9,6 +9,7 @@ import {
 import { cn } from "cn";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { tableCardVariants } from "@/components/shared/table/card";
 import { TryoutTableHeader } from "@/components/tryout/catalog/table/header";
 import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
@@ -41,7 +42,12 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
   const canLoadMore =
     data.hasMore && !data.busy && !data.error && !data.offline;
   return (
-    <div className="mx-auto flex min-h-0 w-full max-w-3xl min-w-0 flex-1 flex-col px-6 py-4">
+    <div
+      className={cn(
+        pageRowVariants(),
+        "flex min-h-0 min-w-0 flex-1 flex-col py-4"
+      )}
+    >
       <div
         aria-busy={data.busy}
         className={cn(

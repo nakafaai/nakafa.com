@@ -24,6 +24,13 @@ const TryoutReactiveStateSchema = Schema.Struct({
 
 type TryoutReactiveState = typeof TryoutReactiveStateSchema.Type;
 
+const TryoutQuestionStateSchema = Schema.Struct({
+  ...TryoutReactiveStateSchema.fields,
+  runtime: Schema.Unknown,
+});
+
+type TryoutQuestionState = typeof TryoutQuestionStateSchema.Type;
+
 /** Render state for a Convex section runtime around its local timer boundary. */
 export type TryoutRuntimeState<Runtime> =
   | { kind: "none" }
@@ -44,6 +51,14 @@ export function isTryoutRuntimeRunning<Runtime>(
 /** Subscribes only while one exact attempt can still mutate. */
 export function isTryoutStateLive(state: TryoutReactiveState | null) {
   return state?.attempt.status === "in-progress";
+}
+
+/**
+ * Whether a state holds a running attempt's questions. From then on an answer changes nothing the page's
+ * own read carries: the live state repeats alone, until it stops holding them.
+ */
+export function holdsTryoutQuestions(state: TryoutQuestionState | null) {
+  return state !== null && state.runtime !== null && isTryoutStateLive(state);
 }
 
 /** Returns an in-progress attempt only before its overall deadline. */

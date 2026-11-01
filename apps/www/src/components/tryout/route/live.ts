@@ -1,6 +1,10 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import type { redirectResultValidator } from "@repo/backend/confect/tryouts/attemptPage/spec";
+import type {
+  redirectResultValidator,
+  retainedSectionResultValidator,
+  retainedSetResultValidator,
+} from "@repo/backend/confect/tryouts/attemptPage/spec";
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
@@ -26,6 +30,7 @@ import {
   getTryoutAttemptHref,
 } from "@/components/tryout/route/path";
 import type { TryoutAttemptSearch } from "@/components/tryout/route/search";
+import { holdsTryoutQuestions } from "@/components/tryout/runtime/state";
 import type { TryoutSectionPage } from "@/components/tryout/section/model";
 import type { SetPage } from "@/components/tryout/set/model";
 import { hasSignedInHint } from "@/lib/auth/hint";
@@ -180,6 +185,36 @@ function useAttemptRedirect(
 }
 
 /**
+ * Keeps the answer that first showed a running attempt's questions, for one address. The page's query reads
+ * every row an answer writes, so left open it would read the whole page again on each answer, while nothing
+ * it carries changes before the questions end. The page closes that read while the attempt's live state holds
+ * the questions, and shows this answer until it stops.
+ */
+function useHeldAnswer<Answer>(address: string) {
+  const [held, setHeld] = useState<{
+    readonly address: string;
+    readonly answer: Answer;
+  }>();
+  const current = held?.address === address;
+  return {
+    answer: current ? held.answer : undefined,
+    hold: (answer: Answer) => {
+      if (!current) {
+        setHeld({ address, answer });
+      }
+    },
+  };
+}
+
+/** The answer of a page's read, or the one it keeps while that read stays closed. */
+function answerOf<Answer, Failure>(
+  read: QueryResult.QueryResult<Answer, Failure>,
+  kept: Answer | undefined
+) {
+  return QueryResult.isSuccess(read) ? read.value : kept;
+}
+
+/**
  * Reads a learner's set page in the browser: their attempt through the URL's attempt, or else their
  * current attempt on the set. A current attempt that runs elsewhere moves the URL to that attempt's
  * address, so every URL that shows a running attempt names it.
@@ -189,9 +224,20 @@ export function useLearnerSet(input: {
   readonly search: TryoutAttemptSearch;
 }) {
   const gate = useLearnerGate(input.search);
+  const held = useHeldAnswer<typeof retainedSetResultValidator.Type>(
+    `${gate.attemptId}:${input.page.set.publicPath}`
+  );
+  const live = useQuery(
+    tryouts.queries.runtime.getSetAttemptState,
+    gate.readable && held.answer !== undefined
+      ? { attemptId: held.answer.attemptId, locale: gate.locale }
+      : "skip"
+  );
+  const closed =
+    QueryResult.isSuccess(live) && holdsTryoutQuestions(live.value);
   const read = useQuery(
     tryouts.queries.attemptPage.getSet,
-    gate.readable
+    gate.readable && !closed
       ? {
           request: setAttemptRequest({
             attemptId: gate.attemptId,
@@ -202,8 +248,14 @@ export function useLearnerSet(input: {
         }
       : "skip"
   );
-  const answer = QueryResult.isSuccess(read) ? read.value : undefined;
+  const answer = answerOf(read, closed ? held.answer : undefined);
   useAttemptRedirect(answer?.kind === "redirect" ? answer : undefined);
+  if (
+    answer?.kind === "retained" &&
+    holdsTryoutQuestions(answer.initialState)
+  ) {
+    held.hold(answer);
+  }
 
   const projected = useMemo(
     () =>
@@ -245,9 +297,24 @@ export function useLearnerSection(input: {
   readonly setPath: string;
 }) {
   const gate = useLearnerGate(input.search);
+  const held = useHeldAnswer<typeof retainedSectionResultValidator.Type>(
+    `${gate.attemptId}:${input.publicPath}`
+  );
+  const live = useQuery(
+    tryouts.queries.runtime.getSectionAttemptState,
+    gate.readable && held.answer !== undefined
+      ? {
+          attemptId: held.answer.attemptId,
+          sectionKey: input.page.section.sectionKey,
+          locale: gate.locale,
+        }
+      : "skip"
+  );
+  const closed =
+    QueryResult.isSuccess(live) && holdsTryoutQuestions(live.value);
   const read = useQuery(
     tryouts.queries.attemptPage.getSection,
-    gate.readable
+    gate.readable && !closed
       ? {
           request: sectionAttemptRequest({
             attemptId: gate.attemptId,
@@ -259,8 +326,14 @@ export function useLearnerSection(input: {
         }
       : "skip"
   );
-  const answer = QueryResult.isSuccess(read) ? read.value : undefined;
+  const answer = answerOf(read, closed ? held.answer : undefined);
   useAttemptRedirect(answer?.kind === "redirect" ? answer : undefined);
+  if (
+    answer?.kind === "retained" &&
+    holdsTryoutQuestions(answer.initialState)
+  ) {
+    held.hold(answer);
+  }
 
   const projected = useMemo(
     () =>

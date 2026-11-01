@@ -6,6 +6,7 @@ import { DiscussionTitle } from "@repo/backend/confect/classroom/forum/thread";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -146,6 +147,7 @@ export function StartDiscussion({
               placeholder={t("discussion-title-placeholder")}
               value={title}
             />
+            <FieldDescription>{t("discussion-title-hint")}</FieldDescription>
             <FieldError>{Option.getOrNull(refusal)}</FieldError>
           </Field>
           <Field>

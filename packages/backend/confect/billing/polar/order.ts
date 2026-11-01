@@ -22,7 +22,8 @@ function isTopUpOrderProduct(productId: string | null): boolean {
  * Applies one Polar order that is a top-up pack, paid or refunded. An order that
  * renews a subscription belongs to that subscription, and an order for any other
  * product sells nothing here, so both are ignored. A top-up order of a customer
- * Nakafa holds no personal account for is reported and changes nothing.
+ * Nakafa holds no personal account for is reported and changes nothing. A partial
+ * refund leaves the pack: only an order refunded in full takes its credits back.
  */
 export const applyPolarOrder = Effect.fn("billing.polar.applyOrder")(function* (
   data: unknown,
@@ -36,7 +37,10 @@ export const applyPolarOrder = Effect.fn("billing.polar.applyOrder")(function* (
   if (order.subscriptionId !== null || !isTopUpOrderProduct(order.productId)) {
     return "ignored" as const;
   }
-  if (change === "refunded" && order.refundedAmount <= 0) {
+  if (
+    change === "refunded" &&
+    (order.refundedAmount <= 0 || order.refundableAmount > 0)
+  ) {
     return "ignored" as const;
   }
   const currency = decodeOrderCurrency(order.currency.toUpperCase());
