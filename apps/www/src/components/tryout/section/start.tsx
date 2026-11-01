@@ -9,6 +9,7 @@ import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { ConvexIsland } from "@/components/providers/island";
 import {
+  useAnswerPress,
   useSetTryoutStartPhase,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
@@ -70,6 +71,8 @@ function StartSectionLive({ attemptId, sectionKey }: StartSectionButtonProps) {
       )
     );
   }
+
+  useAnswerPress(onStart);
 
   return <StartSectionControl inert={phase !== "idle"} onStart={onStart} />;
 }

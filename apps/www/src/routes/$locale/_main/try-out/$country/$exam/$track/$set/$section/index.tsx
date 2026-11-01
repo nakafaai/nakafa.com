@@ -12,6 +12,7 @@ import {
 } from "@/components/tryout/route/live";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
+import { TryoutPressProvider } from "@/components/tryout/runtime/start";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
 import { readStaticData } from "@/lib/static/data";
 
@@ -68,9 +69,11 @@ function TryoutSectionPage() {
   return (
     // A visitor's page holds no Convex client, so it draws the section as every visitor sees it, which the
     // build prerenders; a learner's page reads their attempt once it holds the client.
-    <ConvexIsland fallback={<TryoutSectionVisitor />}>
-      <TryoutSectionLearner />
-    </ConvexIsland>
+    <TryoutPressProvider>
+      <ConvexIsland fallback={<TryoutSectionVisitor />}>
+        <TryoutSectionLearner />
+      </ConvexIsland>
+    </TryoutPressProvider>
   );
 }
 

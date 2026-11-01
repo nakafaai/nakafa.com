@@ -25,7 +25,10 @@ import {
 } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
+  useAnswerPress,
+  useSetTryoutPressed,
   useSetTryoutStartPhase,
+  useTryoutPressed,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
 import { START_ERROR, START_PART_ERROR } from "@/components/tryout/set/copy";
@@ -125,8 +128,8 @@ function TryoutStartSignInButton({
 }) {
   const navigate = useNavigate();
   const hasError = useLiveSession((state) => state.hasError);
-  const phase = useTryoutStartPhase();
-  const setPhase = useSetTryoutStartPhase();
+  const pressed = useTryoutPressed();
+  const setPressed = useSetTryoutPressed();
   const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
   /** Sends a visitor to sign in before any attempt starts. */
@@ -140,25 +143,25 @@ function TryoutStartSignInButton({
   /** Answers a press: at once for a visitor, and once the session is known for a learner. */
   function onStart() {
     if (hasSignedInHint(document.cookie) && !hasError) {
-      setPhase("pressed");
+      setPressed(true);
       return;
     }
     signIn();
   }
   const press = useEarlyPress<HTMLButtonElement>(onStart);
   const answerPress = useEffectEvent(() => {
-    setPhase("idle");
+    setPressed(false);
     signIn();
   });
   useEffect(() => {
-    if (phase === "pressed" && hasError) {
+    if (pressed && hasError) {
       answerPress();
     }
-  }, [hasError, phase]);
+  }, [hasError, pressed]);
 
   return (
     <Button {...press}>
-      <Spinner icon={Rocket01Icon} isLoading={phase === "pressed"} />
+      <Spinner icon={Rocket01Icon} isLoading={pressed} />
       {children}
     </Button>
   );
@@ -175,6 +178,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const navigate = useNavigate();
   const phase = useTryoutStartPhase();
   const setPhase = useSetTryoutStartPhase();
+  const pressed = useTryoutPressed();
+  const setPressed = useSetTryoutPressed();
   /** Navigates to one try-out page. A page that names no route leaves the page on screen, and its start idle. */
   function navigateTo(
     address: TryoutPageAddress,
@@ -216,8 +221,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     isAuthenticated && !activeAttempt && !QueryResult.isSuccess(access);
   const attemptLoading = isAuthenticated && attempt === undefined;
   const resolvingAccess = isLoading || accessLoading || attemptLoading;
-  const pressed = phase === "pressed";
-  const started = phase === "starting" || phase === "opening";
+  const started = phase !== "idle";
   const dialogKind = QueryResult.isSuccess(access)
     ? access.value.kind
     : "free-attempt";
@@ -229,11 +233,11 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       return;
     }
     if (resolvingAccess) {
-      setPhase("pressed");
+      setPressed(true);
       return;
     }
     if (pressed) {
-      setPhase("idle");
+      setPressed(false);
     }
     if (!isAuthenticated) {
       navigate({
@@ -365,7 +369,13 @@ function ResumeTryoutLink({
 }: {
   readonly request: StartTryoutRequest;
 }) {
+  const navigate = useNavigate();
   const pathname = `/${request.locale}${getTryoutPublicPathHref(request.destination.publicPath)}`;
+  useAnswerPress(() => {
+    Option.map(getTryoutPageTarget(request.destination), (target) =>
+      navigate(target)
+    );
+  });
   // The section loads on the server before it shows, so the link shows its loader while it does.
   const navigating = useRouterState({
     select: (state) =>
