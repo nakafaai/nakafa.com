@@ -34,8 +34,9 @@ describe("tenancy/setup state", () => {
       const group = yield* cohort(fixture, term.id, "VII-A");
       yield* classOf(fixture, group.id, "Fisika");
       yield* examBy(fixture, "admin", "Ulangan Harian");
+      const email = yield* Schema.decodeEffect(Email)("ibu@example.com");
       yield* fixture.as("admin").mutation(refs.public.guardians.links.start, {
-        email: Schema.decodeSync(Email)("ibu@example.com"),
+        email,
         guardianName: "Ibu Siti",
         slug: nf,
         studentId: fixture.people.student.personId,
