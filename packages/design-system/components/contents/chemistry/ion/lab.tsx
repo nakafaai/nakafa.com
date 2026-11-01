@@ -65,7 +65,7 @@ export function IonLab({ title, description, labels }: IonLabProps) {
   const chargeMath = getChargeMath(selectedSample.charge);
   const electronFlowMath = `${neutralElectrons} \\rightarrow ${ionElectrons}`;
   const signedChargeMath = getSignedChargeMath(selectedSample.charge);
-  const neutralNotation = `{}^{${selectedSample.massNumber}}_{${selectedSample.atomicNumber}}\\mathrm{${selectedSample.symbol}}`;
+  const neutralNotation = `\\vphantom{X}^{${selectedSample.massNumber}}_{${selectedSample.atomicNumber}}\\mathrm{${selectedSample.symbol}}`;
   const ionNotation = `${neutralNotation}^{${chargeMath}}`;
 
   /**
