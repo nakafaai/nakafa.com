@@ -31,6 +31,13 @@ const promptAttributes = { [PROMPT_ATTRIBUTE]: "", "data-nosnippet": "" };
 const HIDE_PROMPT_WHILE_MARKED = `:root[${ANALYTICS_CONSENT_ROOT_ATTRIBUTE}] [${PROMPT_ATTRIBUTE}]{display:none}`;
 
 /**
+ * Hides the prompt while a page holds the shell locked, as a running try-out section and a School
+ * sitting do. It stands over the question and the next button of a timed paper, and it returns
+ * once the learner leaves the paper.
+ */
+const HIDE_PROMPT_WHILE_LOCKED = `:root:has([data-slot="sidebar-wrapper"][data-locked],[data-shell-lock]) [${PROMPT_ATTRIBUTE}]{display:none}`;
+
+/**
  * Hides the prompt where scripts are off. Nothing runs there to record a choice,
  * so the buttons could never work.
  */
@@ -72,7 +79,7 @@ export function AnalyticsConsentControls({
 
   return (
     <>
-      <style>{HIDE_PROMPT_WHILE_MARKED}</style>
+      <style>{`${HIDE_PROMPT_WHILE_MARKED}${HIDE_PROMPT_WHILE_LOCKED}`}</style>
       <noscript>
         <style>{HIDE_PROMPT_WITHOUT_SCRIPTS}</style>
       </noscript>
