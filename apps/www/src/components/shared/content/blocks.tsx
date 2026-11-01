@@ -9,8 +9,6 @@ import {
 import { Array as Arr } from "effect";
 import {
   Children,
-  Fragment,
-  isValidElement,
   type ReactNode,
   startTransition,
   useEffect,
@@ -24,14 +22,11 @@ const FIRST_BLOCKS = 12;
 /** The blocks each later frame adds, so no one frame styles and lays out a whole lesson. */
 const NEXT_BLOCKS = 16;
 
-/** The top-level blocks of a body or a list, a server tree having a fragment for its root. */
+/** The top-level blocks of a body or a list. A body's source holds a line break between its blocks, which draws nothing. */
 function blocksOf(body: ReactNode) {
-  const [root] = Children.toArray(body);
-  return Children.toArray(
-    isValidElement<{ readonly children?: ReactNode }>(root) &&
-      root.type === Fragment
-      ? root.props.children
-      : body
+  return Arr.filter(
+    Children.toArray(body),
+    (block) => typeof block !== "string" || block.trim() !== ""
   );
 }
 
