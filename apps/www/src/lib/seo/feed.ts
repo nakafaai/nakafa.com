@@ -16,6 +16,7 @@ import {
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
 import { readCopy } from "@/lib/i18n/copy.server";
+import { getOgUrl } from "@/lib/seo/social";
 
 const baseUrl = COMPANY_IDENTITY.url;
 const RSS_CONTENT_ROUTE_LIMIT = 100;
@@ -55,7 +56,7 @@ export const readRssText = Effect.fn("www.rss.readText")(function* () {
     link: `${baseUrl}`,
     language: DEFAULT_LOCALE,
     image: `${baseUrl}/og.png`,
-    favicon: `${baseUrl}/icon.png`,
+    favicon: `${baseUrl}/favicon.ico`,
     copyright: tCommon("copyright", {
       year: DateTime.toDate(DateTime.nowUnsafe()).getFullYear(),
       companyName: COMPANY_IDENTITY.legalName,
@@ -71,7 +72,7 @@ export const readRssText = Effect.fn("www.rss.readText")(function* () {
       date: DateTime.toDateUtc(DateTime.makeUnsafe(route.datePublished)),
       id: link,
       author: [...route.authors],
-      image: `${baseUrl}/${route.appLocale}/og/${route.route}/image.png`,
+      image: new URL(getOgUrl(route.appLocale, route.route), baseUrl).href,
     };
   });
 

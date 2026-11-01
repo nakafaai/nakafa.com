@@ -113,7 +113,7 @@ describe("inbox row destinations", () => {
       Option.some("https://harapan.nakafa.com/classes/fisika-x-1/tasks/latihan")
     );
     expect(href(row("assignment.missed", klass))).toEqual(
-      Option.some("https://harapan.nakafa.com/orang-tua")
+      Option.some("https://harapan.nakafa.com/parents")
     );
   });
 
@@ -130,12 +130,12 @@ describe("inbox row destinations", () => {
       Option.some("https://harapan.nakafa.com/sittings/sitting-1")
     );
     expect(href(row("exam.reminder", sitting, null, exam("Raka")))).toEqual(
-      Option.some("https://harapan.nakafa.com/orang-tua")
+      Option.some("https://harapan.nakafa.com/parents")
     );
     // A sitting that no longer waits gives its student's row no page; a guardian still opens the parent home.
     expect(href(row("exam.starting", sitting))).toEqual(Option.none());
     expect(href(row("exam.reminder", sitting))).toEqual(
-      Option.some("https://harapan.nakafa.com/orang-tua")
+      Option.some("https://harapan.nakafa.com/parents")
     );
   });
 
@@ -148,7 +148,7 @@ describe("inbox row destinations", () => {
           student: "Raka",
         })
       )
-    ).toEqual(Option.some("https://harapan.nakafa.com/orang-tua"));
+    ).toEqual(Option.some("https://harapan.nakafa.com/parents"));
     expect(
       href(
         row("grade.released", grade, null, null, {

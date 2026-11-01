@@ -23,7 +23,7 @@ function pageOf(notification: SchoolNotification): Option.Option<URL> {
     notification.changeType === "assignment.missed" ||
     (notification.grade !== null && notification.grade.student !== null)
   ) {
-    return Option.some(new URL("/orang-tua", origin));
+    return Option.some(new URL("/parents", origin));
   }
   if (notification.exam !== null) {
     return Option.some(
