@@ -6,7 +6,7 @@ import { Cause, Clock, Duration, Effect, Option, Schema } from "effect";
 import { readBuildEntry, writeBuildEntry } from "@/lib/content/store/build";
 import { makeMemoryStore } from "@/lib/content/store/memory";
 
-/** A value could not be encoded, so the store cannot keep it. */
+/** The digest of a key failed, or a value could not be encoded, so the store cannot answer. */
 class ContentStoreUnavailableError extends Schema.TaggedError<ContentStoreUnavailableError>()(
   "ContentStoreUnavailableError",
   {
@@ -43,11 +43,12 @@ const CONTENT_STORE_VERSION = "1";
 const runtimeCache = makeMemoryStore();
 
 /** Digests one key into the opaque text that the store keeps it under. */
-const makeStoreKey = Effect.fn("www.content.store.key")(function* (
-  parts: readonly string[]
-) {
-  return yield* sha256Hex(encodeJsonText([CONTENT_STORE_VERSION, ...parts]));
-});
+const makeStoreKey = Effect.fn("www.content.store.key")(
+  function* (parts: readonly string[]) {
+    return yield* sha256Hex(encodeJsonText([CONTENT_STORE_VERSION, ...parts]));
+  },
+  Effect.catchDefect((cause) => new ContentStoreUnavailableError({ cause }))
+);
 
 /**
  * Wraps one value in a JSON codec derived from its schema. The wrapper keeps a
@@ -64,10 +65,10 @@ const warnLimit = (error: ContentStoreLimitError) =>
     error.limit
   );
 
-/** Reports a value that the store could not encode, which the caller already holds. */
+/** Reports a store failure that the caller survives by going to the source. */
 const warnUnavailable = (error: ContentStoreUnavailableError) =>
   Effect.logWarning(
-    "The content store could not encode a value.",
+    "The content store is unavailable.",
     Cause.fail(error.cause)
   );
 
@@ -97,11 +98,21 @@ export const readStoreEntry = Effect.fn("www.content.store.readEntry")(
     readonly parts: readonly string[];
     readonly schema: Schema.Codec<A, I, never, never>;
   }) {
-    const key = yield* makeStoreKey(input.parts);
+    const key = yield* makeStoreKey(input.parts).pipe(
+      Effect.asSome,
+      Effect.catchTag("ContentStoreUnavailableError", (error) =>
+        warnUnavailable(error).pipe(Effect.as(Option.none<string>()))
+      )
+    );
+    if (Option.isNone(key)) {
+      return Option.none<A>();
+    }
     const now = yield* Clock.currentTimeMillis;
-    const kept = runtimeCache.get(key, now);
+    const kept = runtimeCache.get(key.value, now);
     const stored =
-      Option.isNone(kept) && input.lasting ? yield* readBuildEntry(key) : kept;
+      Option.isNone(kept) && input.lasting
+        ? yield* readBuildEntry(key.value)
+        : kept;
     return Option.flatMap(stored, (value) =>
       Schema.decodeUnknownOption(makeEntryCodec(input.schema))(value)
     ).pipe(Option.map(({ value }) => value));

@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Data, Effect, Option, Schema } from "effect";
 import {
   expireStoreTag,
   readStoreEntry,
@@ -12,6 +12,26 @@ import {
   STORE_KEY_PATTERN,
   testRuntimeCache,
 } from "@/test/store";
+
+/** The digest of a key failed, as Effect's digest does: it dies. */
+class DigestUnavailableError extends Data.TaggedError(
+  "DigestUnavailableError"
+) {}
+
+/** Makes the digest of a key fail on demand. */
+const digest = vi.hoisted(() => ({ fails: false }));
+
+vi.mock("@repo/utilities/digest", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@repo/utilities/digest")>();
+  return {
+    ...actual,
+    sha256Hex: (text: string) =>
+      digest.fails
+        ? Effect.die(new DigestUnavailableError())
+        : actual.sha256Hex(text),
+  };
+});
 
 vi.mock("@/lib/content/store/memory", async () => {
   const { testRuntimeCacheModule } = await import("@/test/store");
@@ -196,6 +216,25 @@ describe("content store entries", () => {
         value: "x".repeat(2_000_001),
       });
 
+      expect(testRuntimeCache.set).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("treats a key that cannot be digested as a miss and no write", () =>
+    Effect.gen(function* () {
+      digest.fails = true;
+      const read = yield* readStoreEntry({ parts, schema: TextSchema });
+      yield* writeStoreEntry({
+        parts,
+        schema: TextSchema,
+        tags: [],
+        ttl: "1 minute",
+        value: "kept",
+      });
+      digest.fails = false;
+
+      expect(read).toStrictEqual(Option.none());
+      expect(testRuntimeCache.get).not.toHaveBeenCalled();
       expect(testRuntimeCache.set).not.toHaveBeenCalled();
     })
   );
