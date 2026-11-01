@@ -10,7 +10,8 @@ import {
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, Option } from "effect";
+import { randomUuid } from "@repo/utilities/uuid";
+import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "use-intl";
 import type { OptionLabel } from "@/components/tenant/exams/answer";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
@@ -93,15 +94,17 @@ export function TableSheet({
     });
 
   /** Adds an empty statement at the end, which the key waits on. */
-  const addStatement = () =>
+  const addStatement = () => {
+    const unique = Effect.runSync(randomUuid);
     editing.saveAnswers((current) => {
-      const answers = withStatementAdded(current.answers);
+      const answers = withStatementAdded(current.answers, unique);
       return {
         ...current,
         answers,
         key: cellsKey(answers, keyCells(current.key)),
       };
     });
+  };
 
   return (
     <div className="grid min-w-0 gap-3">

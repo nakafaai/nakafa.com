@@ -23,6 +23,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import type { CohortDetail } from "@/components/tenant/settings/state";
 
 /** How many people one page of the picker loads, and each page after it. */
 const PICKER_SIZE = 100;
@@ -46,6 +47,9 @@ interface PickerField {
 
 /** The field of the picker that renders the select, which its list reads. */
 const PickerFieldContext = createContext<PickerField | null>(null);
+
+/** The cohort a teacher picker reads the teachers of. */
+const PickerCohortContext = createContext<CohortDetail["id"] | null>(null);
 
 /** Reads the field of the picker. It throws outside a picker, which always provides it. */
 function usePickerField() {
@@ -107,6 +111,63 @@ export function SchoolStudentPicker(field: PickerField) {
       </ReadBoundary>
     </PickerFieldContext>
   );
+}
+
+/**
+ * Renders the picker of the teachers of a cohort's unit, the only people its homeroom and its
+ * classes accept. A teacher is chosen by ID, and the list loads more as its end comes into view.
+ */
+export function SchoolTeacherPicker({
+  cohortId,
+  ...field
+}: PickerField & { cohortId: CohortDetail["id"] }) {
+  return (
+    <PickerFieldContext value={field}>
+      <PickerCohortContext value={cohortId}>
+        <ReadBoundary>
+          <SchoolTeacherSelect />
+        </ReadBoundary>
+      </PickerCohortContext>
+    </PickerFieldContext>
+  );
+}
+
+/** The picker's list of teachers, read a page at a time. */
+function SchoolTeacherSelect() {
+  const { slug } = useTenant();
+  const cohortId = use(PickerCohortContext);
+  if (cohortId === null) {
+    throw new Error("SchoolTeacherSelect must be used within a teacher picker");
+  }
+  const pagination = usePaginatedQuery(
+    tenancy.people.teachers,
+    { cohortId, slug },
+    { initialNumItems: PICKER_SIZE }
+  );
+
+  return (
+    <>
+      {PaginatedQueryResult.isFailure(pagination) ? (
+        <LoadFailure onRetry={reloadPage} />
+      ) : null}
+      <PersonSelect people={pagination.results}>
+        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+          <Intersection onIntersect={() => pagination.loadMore(PICKER_SIZE)} />
+        ) : null}
+        {PaginatedQueryResult.isExhausted(pagination) &&
+        !Arr.isReadonlyArrayNonEmpty(pagination.results) ? (
+          <NoTeachers />
+        ) : null}
+      </PersonSelect>
+    </>
+  );
+}
+
+/** What a teacher picker says with nobody to choose: where teachers come from. */
+function NoTeachers() {
+  const t = useTranslations("SchoolSettings");
+
+  return <SelectEmpty>{t("teacher-picker-empty")}</SelectEmpty>;
 }
 
 /** The picker's list of students, read a page at a time. */

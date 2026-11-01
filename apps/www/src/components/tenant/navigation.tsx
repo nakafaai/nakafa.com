@@ -1,9 +1,7 @@
-import { QueryResult } from "@confect/react";
 import {
   Analytics01Icon,
   Certificate01Icon,
   ChartBarLineIcon,
-  CheckListIcon,
   MortarboardIcon,
   Notification01Icon,
   Settings01Icon,
@@ -20,10 +18,11 @@ import { Option } from "effect";
 import { useTranslations } from "use-intl";
 import { SettingsReturnProvider } from "@/components/shared/settings/return";
 import { TenantClassesGroup } from "@/components/tenant/classes/nav";
-import { useTenant, useViewerQuery } from "@/components/tenant/context";
+import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { showsStudentHome } from "@/components/tenant/home/access";
 import { SchoolSettingsNav } from "@/components/tenant/settings/nav";
+import { TenantSetupItem } from "@/components/tenant/setup/item";
 import { Link, TargetLink, useRouteMatched } from "@/lib/routing/link";
 import { firstSettingsTarget } from "@/lib/settings/school";
 
@@ -49,35 +48,6 @@ export function TenantNavigation() {
         <TenantSchoolGroups />
       )}
     </SettingsReturnProvider>
-  );
-}
-
-/**
- * The entry of the school's setup, which stays until the Owner or an Admin finishes it. It
- * waits for the viewer, so a finished school never shows it for a moment.
- */
-function TenantSetupItem() {
-  const { slug } = useTenant();
-  const viewer = useViewerQuery();
-  const matchRoute = useMatchRoute();
-  const t = useTranslations("SchoolSettings");
-
-  if (!QueryResult.isSuccess(viewer) || viewer.value.tenant.setupDone) {
-    return null;
-  }
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        isActive={
-          matchRoute({ params: { slug }, to: "/school/$slug/setup" }) !== false
-        }
-        render={<Link params={{ slug }} to="/school/$slug/setup" />}
-        tooltip={t("setup-title")}
-      >
-        <HugeIcons icon={CheckListIcon} />
-        <span className="truncate">{t("setup-title")}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
   );
 }
 

@@ -20,7 +20,7 @@ import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 import { SettingsBack } from "@/components/shared/settings/return";
-import { Link, type LinkTarget, useRouteMatched } from "@/lib/routing/link";
+import { Link, type LinkTarget, useLeafRoutePath } from "@/lib/routing/link";
 import { HOME_TARGET } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import {
@@ -94,7 +94,7 @@ function UserSettingsNavItem({
   labelKey: UserSettingsLabelKey;
   target: LinkTarget;
 }) {
-  const isActive = useRouteMatched(target.to, { exact: true });
+  const isActive = useLeafRoutePath() === target.to;
 
   return (
     <SidebarMenuItem>
@@ -103,6 +103,7 @@ function UserSettingsNavItem({
         render={
           <Link
             activeOptions={EXACT_ACTIVE_OPTIONS}
+            data-warm=""
             {...target}
             title={label}
           />

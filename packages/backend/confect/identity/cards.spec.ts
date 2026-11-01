@@ -41,6 +41,7 @@ export default GroupSpec.make()
         loginName: Schema.String,
         name: PersonName,
         slug: TenantSlug,
+        unitId: Id("tenantUnits"),
       }),
       returns: () => IssuedCard,
       error: () =>

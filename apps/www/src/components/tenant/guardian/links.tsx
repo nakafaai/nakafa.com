@@ -148,7 +148,7 @@ function GuardianLinksBody() {
             <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
           ) : null}
         </PanesList>
-        <PanesDetail empty={t("link-detail-empty")} label={t("link-detail")}>
+        <PanesDetail label={t("link-detail")}>
           <GuardianLinkDetail />
         </PanesDetail>
       </Panes>

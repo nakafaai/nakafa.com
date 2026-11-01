@@ -253,6 +253,18 @@ export function canonicalHref(href: string | undefined) {
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
+/**
+ * The typed target of one comment's own address, which reads the page that shows the comment. A comment stores a
+ * lesson's content key, not its path, so this is the one way to link to a comment from outside its page.
+ */
+export function commentTarget(commentId: string) {
+  return {
+    from: LOCALE_ROUTE,
+    params: { commentId },
+    to: "/$locale/comment/$commentId",
+  } satisfies LinkTarget;
+}
+
 /** The typed target of one Quran surah, which the Quran route names by its number. */
 export function quranSurahTarget(surah: number) {
   return {

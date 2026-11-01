@@ -8,6 +8,7 @@ import { CardContent } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { useConvexConnectionState } from "convex/react";
 import { Option } from "effect";
 import {
   type FormEvent,
@@ -35,6 +36,12 @@ import { StudentPlayer } from "@/components/exams/sitting/player";
 import { PaperFrame } from "@/components/exams/sitting/recovery";
 import { SittingRetry } from "@/components/exams/sitting/retry";
 import {
+  SittingTabElsewhere,
+  SittingTabGuard,
+  SittingTabHeld,
+  SittingTabWaiting,
+} from "@/components/exams/sitting/tab";
+import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
@@ -42,11 +49,33 @@ import {
 import { useTenant } from "@/components/tenant/context";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
+import { isConvexOffline } from "@/lib/convex/online";
 import { useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
 
 /** An admission that lets the student into the sitting, with the attempt it opened. */
 type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
+
+/**
+ * What a page that enters by itself says while the connection is gone. The entry waits in the client and goes
+ * once the connection is back. A page on a good connection says nothing, so nothing flashes on the way in.
+ */
+function EntryWaiting() {
+  const t = useTranslations("Exams");
+  const connection = useConvexConnectionState();
+
+  if (!isConvexOffline(connection)) {
+    return null;
+  }
+
+  return (
+    <SittingBody>
+      <p className="text-muted-foreground text-sm">
+        {t("student-entry-waiting")}
+      </p>
+    </SittingBody>
+  );
+}
 
 /**
  * The student's screen of one sitting, read from the sitting and the attempt the student holds in it. A
@@ -111,23 +140,47 @@ export function StudentSitting({
   const { attempt, sitting } = kept.value;
   if (attempt !== null && admitted !== null && isActive(attempt.state)) {
     return (
-      <StudentPlayer
-        admission={admitted}
-        attempt={attempt}
-        sitting={sitting}
+      <SittingTabGuard
+        attemptId={attempt.id}
+        deviceId={admitted.deviceId}
         slug={slug}
-      />
+      >
+        <SittingTabHeld>
+          <StudentPlayer
+            admission={admitted}
+            attempt={attempt}
+            sitting={sitting}
+            slug={slug}
+          />
+        </SittingTabHeld>
+        <SittingTabWaiting>
+          <PaperFrame
+            bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
+          >
+            <SittingTabElsewhere />
+          </PaperFrame>
+        </SittingTabWaiting>
+      </SittingTabGuard>
     );
   }
   if (joining && enterable) {
     return (
       <PaperFrame
         bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
-      />
+      >
+        <EntryWaiting />
+      </PaperFrame>
     );
   }
   if (attempt !== null && !takesAnswers(attempt.state)) {
-    return <StudentOutcome attempt={attempt} sitting={sitting} />;
+    return (
+      <StudentOutcome
+        arrived={admitted === null}
+        attempt={attempt}
+        sitting={sitting}
+        slug={slug}
+      />
+    );
   }
   if (attempt === null && sitting.state === "scheduled") {
     return <StudentScheduled sitting={sitting} />;

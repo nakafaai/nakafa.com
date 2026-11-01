@@ -70,6 +70,10 @@ type PeriodItem = PaginatedQueryItem<typeof tenancy.periods.list>;
 /** The columns of the periods table. */
 const periodColumns = tableColumns<PeriodItem>();
 
+/** The moment a period's calendar date starts in UTC, the clock its cells print it by, so its column filters by calendar. */
+const dayMoment = (day: string) =>
+  DateTime.toEpochMillis(DateTime.makeUnsafe(day));
+
 /**
  * Renders the periods of the school's unit as the page's table, with their row menus. The
  * header row holds the unit choice when the school has more than one unit, the search, the
@@ -146,8 +150,8 @@ function SchoolPeriodsContent() {
 }
 
 /**
- * Renders the periods of one unit in a data table that finds a name, filters by status in its
- * column, sorts by dates in the reader's own date format, and loads more rows as its end comes into view, or the table's empty
+ * Renders the periods of one unit in a data table that finds a name, filters by status and by
+ * a calendar in its columns, sorts by dates in the reader's own date format, and loads more rows as its end comes into view, or the table's empty
  * state while the unit has no period. The table waits for its first page, so no empty state shows before the
  * rows arrive.
  */
@@ -179,6 +183,12 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
     );
   }
 
+  const printDay = (moment: number) =>
+    format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(moment)), {
+      dateStyle: "medium",
+      timeZone: "UTC",
+    });
+
   const columns = [
     periodColumns.text((period) => period.name, {
       cell: (info) => (
@@ -187,15 +197,17 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
       header: t("period-name"),
       id: "name",
     }),
-    periodColumns.text((period) => period.start, {
-      cell: (info) =>
-        format.dateTimeRange(
-          DateTime.toDateUtc(DateTime.makeUnsafe(info.row.original.start)),
-          DateTime.toDateUtc(DateTime.makeUnsafe(info.row.original.end)),
-          { dateStyle: "medium", timeZone: "UTC" }
-        ),
-      header: t("period-dates"),
-      id: "dates",
+    periodColumns.days((period) => dayMoment(period.start), {
+      cell: (info) => printDay(info.getValue()),
+      header: t("period-start"),
+      id: "start",
+      timeZone: () => "UTC",
+    }),
+    periodColumns.days((period) => dayMoment(period.end), {
+      cell: (info) => printDay(info.getValue()),
+      header: t("period-end"),
+      id: "end",
+      timeZone: () => "UTC",
     }),
     periodColumns.values((period) => period.status, {
       cell: (info) => (

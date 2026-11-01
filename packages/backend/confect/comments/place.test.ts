@@ -97,6 +97,13 @@ describe("comments/place", () => {
     ).toBeNull();
   });
 
+  it("finds no page for an address that names no comment", async () => {
+    const { t } = await commentOn("articles/politics/a");
+    await expect(
+      t.query(place, { appLocale: "en", commentId: "abc" })
+    ).resolves.toBeNull();
+  });
+
   it("finds no page for a deleted comment", async () => {
     const { commentId, t } = await commentOn("articles/politics/example");
     await t.run((ctx) => ctx.db.delete(commentId));

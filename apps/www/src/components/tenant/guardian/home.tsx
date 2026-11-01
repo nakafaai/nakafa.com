@@ -13,6 +13,7 @@ import {
   FieldError,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -141,7 +142,7 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
           rowId={(child) => child.linkId}
         />
       </PanesList>
-      <PanesDetail empty={t("child-detail-empty")} label={t("child-detail")}>
+      <PanesDetail label={t("child-detail")}>
         <GuardianChild items={items} />
       </PanesDetail>
     </Panes>
@@ -285,6 +286,7 @@ function GuardianGrades({ child }: { child: ChildItem }) {
         {QueryResult.isSuccess(grades) ? (
           <GuardianGradeTable grades={grades.value} />
         ) : null}
+        {QueryResult.isLoading(grades) ? <PopupHold /> : null}
         {QueryResult.isSuccess(narratives)
           ? Arr.map(narratives.value, (narrative) => (
               <div className="flex flex-col gap-1" key={narrative.id}>

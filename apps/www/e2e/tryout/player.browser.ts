@@ -225,6 +225,16 @@ const verifyKeys = Effect.fn("NakafaE2E.verifyPlayerKeys")(function* (
   yield* Effect.promise(() => page.keyboard.press("ArrowLeft"));
   yield* Effect.promise(() => expect(current).toHaveText("1"));
 
+  // An option keeps focus after its press, and an arrow still steps and leaves the answer as it is.
+  const firstOptions = questionArticle(page, 1).getByRole("radio");
+  yield* Effect.promise(() => firstOptions.nth(1).click());
+  yield* Effect.promise(() => expect(firstOptions.nth(1)).toBeChecked());
+  yield* Effect.promise(() => page.keyboard.press("ArrowRight"));
+  yield* Effect.promise(() => expect(current).toHaveText("2"));
+  yield* Effect.promise(() => expect(firstOptions.nth(1)).toBeChecked());
+  yield* Effect.promise(() => page.keyboard.press("ArrowLeft"));
+  yield* Effect.promise(() => expect(current).toHaveText("1"));
+
   // G opens the sheet below the large breakpoint, and moves focus into the
   // column from it, and the same key leaves again.
   if (hasTouch) {

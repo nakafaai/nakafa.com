@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { UserSettingsBio } from "@/components/user/settings/bio";
 import { UserSettingsDeleteAccount } from "@/components/user/settings/deletion";
@@ -15,8 +16,10 @@ import { type CurrentUser, useViewer } from "@/lib/identity/client";
  * another one.
  */
 export function UserSettingsProfilePage({
+  children,
   initialAccount,
 }: {
+  children: ReactNode;
   initialAccount: CurrentUser;
 }) {
   const account = useViewer((state) => state.account);
@@ -32,6 +35,7 @@ export function UserSettingsProfilePage({
       <UserSettingsName user={user} />
       <UserSettingsUsername user={user} />
       <UserSettingsBio user={user} />
+      {children}
       <UserSettingsDeleteAccount userId={user.appUser._id} />
     </>
   );

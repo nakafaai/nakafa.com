@@ -56,34 +56,22 @@ describe("matchOf and withPartLabel", () => {
 });
 
 describe("withPartAdded and withPartRemoved", () => {
-  it("adds an empty statement or answer numbered after the largest, up to five on a side", () => {
-    const [added] = withPartAdded(answers, "targets");
+  it("adds an empty statement or answer under the ID the press drew, up to five on a side", () => {
+    const [added] = withPartAdded(answers, "targets", "fresh");
     expect(added).toMatchObject({
       targets: [
         { id: "target-1" },
         { id: "target-2" },
         { id: "target-3" },
-        { id: "target-4", label: emptyLabel(), maxMatches: 1 },
+        { id: "target-fresh", label: emptyLabel(), maxMatches: 1 },
       ],
     });
-    const five = withPartAdded(withPartAdded(answers, "sources"), "sources");
-    expect(withPartAdded(five, "sources")).toEqual(five);
-  });
-
-  it("numbers a new part from one when no part ID holds a number", () => {
-    const named = [
-      {
-        ...match,
-        sources: [
-          { id: "first", label: emptyLabel(), maxMatches: 1 },
-          { id: "second", label: emptyLabel(), maxMatches: 1 },
-        ],
-      },
-    ] as const;
-    const [added] = withPartAdded(named, "sources");
-    expect(
-      Arr.map(added.kind === "match" ? added.sources : [], (part) => part.id)
-    ).toEqual(["first", "second", "source-1"]);
+    const five = withPartAdded(
+      withPartAdded(answers, "sources", "one"),
+      "sources",
+      "two"
+    );
+    expect(withPartAdded(five, "sources", "three")).toEqual(five);
   });
 
   it("removes a part down to two on its side, and leaves other interactions", () => {

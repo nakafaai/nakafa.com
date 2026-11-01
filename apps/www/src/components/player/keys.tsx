@@ -38,7 +38,8 @@ function useNavigatorToggle() {
  * Binds the player keys to the window: the arrows step, `1` to `5` pick an
  * option of a single-choice question, `F` flags the current question or takes
  * its flag off, and `G` opens and closes the navigator. A key that the current
- * question takes is prevented, so the page never acts on it as well.
+ * question takes is prevented, so the page never acts on it as well. The keys bind on
+ * the capture phase, so they run before the focused option can take an arrow.
  */
 export function PlayerKeys({
   locked,
@@ -53,40 +54,46 @@ export function PlayerKeys({
   const step = usePlayer((state) => state.step);
   const toggleNavigator = useNavigatorToggle();
 
-  useWindowEvent("keydown", (event) => {
-    const intent = readPlayerKey(event, {
-      ...readKeyTarget(event.target),
-      locked,
-      overlay,
-    });
-    if (Option.isNone(intent)) {
-      return;
-    }
-    const action = intent.value;
-    if (action.kind === "step") {
-      event.preventDefault();
-      step(action.delta);
-      return;
-    }
-    if (action.kind === "navigator") {
-      event.preventDefault();
-      toggleNavigator();
-      return;
-    }
-    const picked = Arr.findFirst(
-      questions,
-      (question) => question.key === current
-    );
-    if (Option.isNone(picked)) {
-      return;
-    }
-    if (action.kind === "flag") {
-      event.preventDefault();
-      picked.value.flag();
-    } else if (picked.value.pick(action.index)) {
-      event.preventDefault();
-    }
-  });
+  useWindowEvent(
+    "keydown",
+    (event) => {
+      const intent = readPlayerKey(event, {
+        ...readKeyTarget(event.target),
+        locked,
+        overlay,
+      });
+      if (Option.isNone(intent)) {
+        return;
+      }
+      const action = intent.value;
+      if (action.kind === "step") {
+        // The focused option never hears this arrow, which would change the answer instead.
+        event.preventDefault();
+        event.stopPropagation();
+        step(action.delta);
+        return;
+      }
+      if (action.kind === "navigator") {
+        event.preventDefault();
+        toggleNavigator();
+        return;
+      }
+      const picked = Arr.findFirst(
+        questions,
+        (question) => question.key === current
+      );
+      if (Option.isNone(picked)) {
+        return;
+      }
+      if (action.kind === "flag") {
+        event.preventDefault();
+        picked.value.flag();
+      } else if (picked.value.pick(action.index)) {
+        event.preventDefault();
+      }
+    },
+    { capture: true }
+  );
 
   return null;
 }

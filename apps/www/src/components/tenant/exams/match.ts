@@ -29,21 +29,6 @@ const PART_PREFIX = { sources: "source", targets: "target" } as const;
 /** One side of a match: its statements or its answers. */
 export type MatchSide = keyof typeof PART_PREFIX;
 
-/** The number that a part ID holds after its side's prefix, when it holds one. */
-const PART_NUMBER = /^(?:source|target)-(?<digits>\d+)$/u;
-
-/**
- * The ID of a new part on one side: the side's prefix and the number after the largest one its parts
- * hold, so a new part never shares an ID with a part the match still holds.
- */
-const nextPartId = (match: Match, side: MatchSide) => {
-  const largest = Arr.reduce(match[side], 0, (most, part) => {
-    const digits = PART_NUMBER.exec(part.id)?.[1];
-    return digits === undefined ? most : Math.max(most, Number(digits));
-  });
-  return `${PART_PREFIX[side]}-${largest + 1}`;
-};
-
 /** The answers with one match changed by `change`, and every other interaction as it was. */
 const changeMatch = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
@@ -69,10 +54,15 @@ export const withPartLabel = (
     ),
   }));
 
-/** The answers with one empty part added at the end of a side, unless that side holds the most it may. */
+/**
+ * The answers with one empty part added at the end of a side, unless that side holds the most it may. The
+ * part's ID ends in `unique`, which no part has held, so a pair a student saved never lands on a new part
+ * of an exam that takes edits while its sitting runs (ADR 0031).
+ */
 export const withPartAdded = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
-  side: MatchSide
+  side: MatchSide,
+  unique: string
 ) =>
   changeMatch(answers, (match) =>
     match[side].length < CHOICE_OPTIONS_MAX
@@ -80,7 +70,11 @@ export const withPartAdded = (
           ...match,
           [side]: [
             ...match[side],
-            { id: nextPartId(match, side), label: emptyLabel(), maxMatches: 1 },
+            {
+              id: `${PART_PREFIX[side]}-${unique}`,
+              label: emptyLabel(),
+              maxMatches: 1,
+            },
           ],
         }
       : match

@@ -273,6 +273,7 @@ describe("identity/logins rename", () => {
           loginName: "siswa.lain",
           name: "Siswa Lain",
           slug: nf,
+          unitId: fixture.units.smp,
         });
         const admin = fixture.as("admin");
         const taken = yield* admin

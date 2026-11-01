@@ -48,7 +48,7 @@ const PublisherSchema = Schema.Struct({
 const ArticleSchema = withPublicationDates({
   "@context": Schema.Literal(SCHEMA_ORG),
   "@type": Schema.Literal("Article"),
-  author: Schema.optionalKey(Schema.NonEmptyArray(PersonSchema)),
+  author: Schema.NonEmptyArray(Schema.Union([PersonSchema, PublisherSchema])),
   description: Schema.optionalKey(TextSchema),
   headline: TextSchema,
   image: SiteUrlSchema,
@@ -150,6 +150,12 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
     url: authorUrl,
   }));
   const crumbs = [...input.trail, { name: input.headline, path: input.path }];
+  const publisher = {
+    "@type": "EducationalOrganization" as const,
+    "@id": ORGANIZATION_ID,
+    name: COMPANY_IDENTITY.brandName,
+    url: COMPANY_IDENTITY.url,
+  };
 
   return [
     {
@@ -168,15 +174,12 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
       ...(input.dates.dateModified === undefined
         ? {}
         : { dateModified: input.dates.dateModified }),
-      ...(firstAuthor === undefined
-        ? {}
-        : { author: [firstAuthor, ...otherAuthors] }),
-      publisher: {
-        "@type": "EducationalOrganization",
-        "@id": ORGANIZATION_ID,
-        name: COMPANY_IDENTITY.brandName,
-        url: COMPANY_IDENTITY.url,
-      },
+      // A page that names no person, such as a policy, is the organization's own.
+      author:
+        firstAuthor === undefined
+          ? [publisher]
+          : [firstAuthor, ...otherAuthors],
+      publisher,
     },
     {
       "@context": SCHEMA_ORG,

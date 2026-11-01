@@ -19,7 +19,11 @@ const PICK_KEYS = ["1", "2", "3", "4", "5"];
 const EDITABLE_SELECTOR =
   "input, textarea, select, [contenteditable]:not([contenteditable='false'])";
 
-/** Roles of widgets that move their own selection or value with the arrow keys. */
+/**
+ * Roles of widgets that move their own selection or value with the arrow keys. A radio is left out on purpose: an
+ * option keeps focus after its press, and an arrow there would change the learner's answer without a word. In a paper
+ * the arrows step the questions and `1` to `5` pick, as the player's own key list says.
+ */
 const COMPOSITE_ROLES = [
   "application",
   "combobox",
@@ -29,8 +33,6 @@ const COMPOSITE_ROLES = [
   "menubar",
   "menuitem",
   "option",
-  "radio",
-  "radiogroup",
   "slider",
   "spinbutton",
   "tab",

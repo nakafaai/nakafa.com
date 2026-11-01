@@ -89,8 +89,8 @@ const since = FunctionImpl.make(
  * Accepts a batch of steps made on the document's head. A batch the session has
  * had accepted before is answered without a write, so a retried batch is idempotent.
  * A session id that belongs to another author is refused with `ClientTaken`. A batch on the
- * prompt of a question whose exam a sitting has scheduled is refused with `ExamFrozen`, after a
- * retried batch is answered (ADR 0031). Any other batch is checked against the bounds, the
+ * prompt of a question whose exam froze at its first sitting's close is refused with `ExamFrozen`,
+ * after a retried batch is answered (ADR 0031). Any other batch is checked against the bounds, the
  * content the contract accepts, and the head.
  * The batch is then applied to the document as the server knows it, the snapshot with
  * the steps it lacks, with the model and the contract check that the fold uses. A result

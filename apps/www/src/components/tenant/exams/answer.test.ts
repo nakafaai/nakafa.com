@@ -335,13 +335,13 @@ describe("a question of two choices", () => {
   });
 
   it("adds an option to the named choice under its own prefix", () => {
-    const [, reason] = withOptionAdded(answers, "reason");
+    const [, reason] = withOptionAdded(answers, "reason", "fresh");
 
     expect(
       reason?.kind === "choice"
         ? Option.map(Arr.last(reason.options), (option) => option.id)
         : Option.none()
-    ).toEqual(Option.some("reason-4"));
+    ).toEqual(Option.some("reason-fresh"));
   });
 
   it("removes an option from its own choice, and only its mark from the key", () => {
@@ -359,42 +359,37 @@ describe("a question of two choices", () => {
 });
 
 describe("withOptionAdded", () => {
-  it("adds an empty option after the last one, numbered after the largest option ID the choice holds", () => {
-    const sparse = {
-      ...choice,
-      options: [choice.options[0], choice.options[2]],
-    };
-    expect(withOptionAdded([sparse], sparse.id)).toEqual([
+  it("adds an empty option after the last one, under the ID the press drew", () => {
+    expect(withOptionAdded([choice], choice.id, "fresh")).toEqual([
       {
-        ...sparse,
-        options: [...sparse.options, { id: "option-4", label: emptyLabel() }],
+        ...choice,
+        options: [
+          ...choice.options,
+          { id: "option-fresh", label: emptyLabel() },
+        ],
       },
     ]);
   });
 
-  it("numbers the new option from one when no option ID holds a number", () => {
-    const named = {
-      ...choice,
-      options: [
-        { id: "first", label: emptyLabel() },
-        { id: "second", label: emptyLabel() },
-      ],
-    };
-    expect(withOptionAdded([named], named.id)).toEqual([
-      {
-        ...named,
-        options: [...named.options, { id: "option-1", label: emptyLabel() }],
-      },
-    ]);
+  it("never brings back the ID of an option the teacher removed", () => {
+    const sparse = { ...choice, options: Arr.take(choice.options, 3) };
+    const [added] = withOptionAdded([sparse], sparse.id, "fresh");
+    expect(added).toEqual({
+      ...sparse,
+      options: [...sparse.options, { id: "option-fresh", label: emptyLabel() }],
+    });
   });
 
   it("lets a complex choice take the new option too", () => {
     const choices = { ...choice, maxChoices: 4 };
-    expect(withOptionAdded([choices], choices.id)).toEqual([
+    expect(withOptionAdded([choices], choices.id, "fresh")).toEqual([
       {
         ...choices,
         maxChoices: 5,
-        options: [...choices.options, { id: "option-5", label: emptyLabel() }],
+        options: [
+          ...choices.options,
+          { id: "option-fresh", label: emptyLabel() },
+        ],
       },
     ]);
   });
@@ -404,7 +399,10 @@ describe("withOptionAdded", () => {
       ...choice,
       options: [...choice.options, { id: "option-5", label: emptyLabel() }],
     };
-    expect(withOptionAdded([full, entry], full.id)).toEqual([full, entry]);
+    expect(withOptionAdded([full, entry], full.id, "fresh")).toEqual([
+      full,
+      entry,
+    ]);
   });
 });
 

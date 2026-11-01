@@ -5,20 +5,26 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
+import { isLive } from "@repo/backend/confect/guardians/link";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
+import { COHORT_LIMIT } from "@repo/backend/confect/tenancy/cohort";
 import { UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
 import spec from "@repo/backend/confect/tenancy/setup.spec";
 import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
+/** The newest parent links read for a live one: a school past this many has finished its setup. */
+const LINK_SCAN = 20;
+
 /**
- * Which steps of the setup the school's data shows as done: a period running in a unit, a
- * cohort in one of them, a student, a classroom, a teacher who holds the role or an invite still
- * open, a parent, and an exam. Each step reads one row, so the read stays bounded however large
- * the school grows.
+ * Which steps of the setup the school's data shows as done: a period running in a unit, an
+ * active cohort in one of them, a student, a student placed in such a cohort, an active classroom
+ * of one, a teacher who holds the role or an invite still open, a live parent link, and an exam.
+ * An archived cohort or class and an ended link count for nothing. Every read is bounded, however
+ * large the school grows: a step stops at its first row, and the cohorts stop at their limit.
  */
 const state = FunctionImpl.make(
   databaseSchema,
@@ -45,16 +51,37 @@ const state = FunctionImpl.make(
           .pipe(Effect.orDie)
       )
     );
-    const cohorts = Arr.getSomes(
-      yield* Effect.forEach(periods, (period) =>
-        reader
-          .table("tenantCohorts")
-          .index("by_periodId_and_nameKey", (query) =>
-            query.eq("periodId", period._id)
-          )
-          .first()
-          .pipe(Effect.orDie)
-      )
+    const cohorts = Arr.filter(
+      Arr.flatten(
+        yield* Effect.forEach(periods, (period) =>
+          reader
+            .table("tenantCohorts")
+            .index("by_periodId_and_nameKey", (query) =>
+              query.eq("periodId", period._id)
+            )
+            .take(COHORT_LIMIT)
+            .pipe(Effect.orDie)
+        )
+      ),
+      (cohort) => cohort.status === "active"
+    );
+    const placed = yield* Effect.findFirst(cohorts, (cohort) =>
+      reader
+        .table("tenantCohortMembers")
+        .index("by_cohortId_and_personId", (query) =>
+          query.eq("cohortId", cohort._id)
+        )
+        .first()
+        .pipe(Effect.map(Option.isSome), Effect.orDie)
+    );
+    const classroom = yield* Effect.findFirst(cohorts, (cohort) =>
+      reader
+        .table("classes")
+        .index("by_cohortId_and_status_and_nameKey", (query) =>
+          query.eq("cohortId", cohort._id).eq("status", "active")
+        )
+        .first()
+        .pipe(Effect.map(Option.isSome), Effect.orDie)
     );
     const student = yield* reader
       .table("tenantGrants")
@@ -69,13 +96,6 @@ const state = FunctionImpl.make(
     const exam = yield* reader
       .table("exams")
       .index("by_tenantId", (query) => query.eq("tenantId", tenant._id))
-      .first()
-      .pipe(Effect.orDie);
-    const classroom = yield* reader
-      .table("classes")
-      .index("by_tenantId_and_slug", (query) =>
-        query.eq("tenantId", tenant._id)
-      )
       .first()
       .pipe(Effect.orDie);
     const teacher = yield* reader
@@ -95,17 +115,19 @@ const state = FunctionImpl.make(
       )
       .first()
       .pipe(Effect.orDie);
-    const parent = yield* reader
+    const links = yield* reader
       .table("guardianLinks")
-      .index("by_tenantId", (query) => query.eq("tenantId", tenant._id))
-      .first()
+      .index("by_tenantId", (query) => query.eq("tenantId", tenant._id), "desc")
+      .take(LINK_SCAN)
       .pipe(Effect.orDie);
+    const now = yield* Clock.currentTimeMillis;
     return {
       classroom: Option.isSome(classroom),
       cohort: Arr.isArrayNonEmpty(cohorts),
       exam: Option.isSome(exam),
-      parent: Option.isSome(parent),
+      parent: Arr.some(links, (link) => isLive(link, now)),
       period: Arr.isArrayNonEmpty(periods),
+      placed: Option.isSome(placed),
       student: Option.isSome(student),
       teacher: Option.isSome(teacher) || Option.isSome(invite),
     };

@@ -34,7 +34,7 @@ import {
 } from "@/components/tenant/settings/class/changes";
 import {
   type PersonId,
-  SchoolPersonPicker,
+  SchoolTeacherPicker,
 } from "@/components/tenant/settings/people";
 import { saveSchool } from "@/components/tenant/settings/save";
 
@@ -47,25 +47,26 @@ const PAGE_SIZE = 25;
 type ClassTeacher = PaginatedQueryItem<typeof classroom.teachers.list>;
 
 /**
- * The dialog of a classroom's subject teachers, which the row menu's Teachers item opens: the picker of a person of
- * the school that Add teacher assigns, and the teachers the classroom has, each with Remove. The dialog stays open
+ * The dialog of a classroom's subject teachers, which the row menu's Teachers item opens: the picker of a teacher of
+ * the classroom's unit that Add teacher assigns, and the teachers the classroom has, each with Remove. The dialog stays open
  * while the admin assigns and removes, and the picker clears once the server accepts a teacher. The list is read
  * from the moment the row menu opens, so it is in when the dialog opens.
  */
 export function ClassTeachersDialog({
-  classId,
   isRead,
   open,
+  row,
   setOpen,
   slug,
 }: {
-  classId: SchoolClass["id"];
   /** Whether the list is read: while the row menu or the dialog is open. */
   isRead: boolean;
   open: boolean;
+  row: SchoolClass;
   setOpen: (open: boolean) => void;
   slug: TenantSlug;
 }) {
+  const classId = row.id;
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const id = useId();
@@ -125,7 +126,8 @@ export function ClassTeachersDialog({
           <FieldLabel htmlFor={`${id}-teacher`}>
             {t("class-teacher")}
           </FieldLabel>
-          <SchoolPersonPicker
+          <SchoolTeacherPicker
+            cohortId={row.cohortId}
             id={`${id}-teacher`}
             onChoose={setPersonId}
             personId={personId}

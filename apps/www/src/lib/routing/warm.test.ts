@@ -105,6 +105,32 @@ describe("warm links", () => {
     })
   );
 
+  it.effect("warms a page's tabs first, though they ask the Worker", () =>
+    Effect.gen(function* () {
+      const hrefs = Arr.makeBy(7, (index) => `/en/quran/${index}`);
+      drawLinks([
+        ...Arr.map(hrefs, (href, top) => ({ href, top })),
+        { href: "/en/@nina", top: 20 },
+        { href: "/en/@nina/comments", top: 20 },
+      ]);
+      for (const link of document.querySelectorAll('a[href^="/en/@nina"]')) {
+        link.setAttribute("data-warm", "");
+      }
+      const { preloadRoute, router } = routerOf(
+        Rec.fromEntries(
+          Arr.map(hrefs, (href) => [href, "/$locale/quran/$surah"] as const)
+        )
+      );
+      router.state.location.publicHref = "/en/@nina";
+
+      yield* warmLinks(router);
+
+      expect(
+        Arr.map(preloadRoute.mock.calls, ([{ href }]) => href)
+      ).toStrictEqual(["/en/@nina/comments", ...Arr.take(hrefs, 5)]);
+    })
+  );
+
   it.effect("warms at most six links, and a failed one stays cold", () =>
     Effect.gen(function* () {
       const hrefs = Arr.makeBy(9, (index) => `/en/quran/${index}`);

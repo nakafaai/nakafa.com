@@ -209,7 +209,7 @@ function CohortReportsBody() {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </PanesList>
-      <PanesDetail empty={t("detail-empty")} label={t("detail")}>
+      <PanesDetail label={t("detail")}>
         <ReportLineDetail lines={pagination.results} />
       </PanesDetail>
     </Panes>
