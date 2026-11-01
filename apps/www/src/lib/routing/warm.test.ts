@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, Record as Rec, String as Str } from "effect";
+import { Array as Arr, Effect, Record as Rec } from "effect";
 import { canWarm, readPressableLinks, warmLinks } from "@/lib/routing/warm";
 
 vi.mock("@repo/design-system/lib/settle", async () => {
@@ -29,9 +29,6 @@ function routerOf(routes: Record<string, string>) {
   return {
     preloadRoute,
     router: {
-      buildLocation: ({ href }: { readonly href: string }) => ({
-        pathname: Str.split("?")(href)[0],
-      }),
       getMatchedRoutes: (pathname: string) => ({
         foundRoute:
           routes[pathname] === undefined

@@ -20,9 +20,6 @@ const Connection = Schema.Struct({
 
 /** The part of the router that warming reads, so a look at a link holds no more of it than it needs. */
 interface WarmRouter {
-  readonly buildLocation: (options: { readonly href: string }) => {
-    readonly pathname: string;
-  };
   readonly getMatchedRoutes: (pathname: string) => {
     readonly foundRoute?: { readonly fullPath: string } | undefined;
   };
@@ -72,10 +69,10 @@ function spell(template: string) {
  * Any other page asks the Worker or Convex, which a look at a link must not spend.
  */
 function isStaticLink(router: WarmRouter, href: string) {
-  const { pathname } = router.buildLocation({ href });
+  const pathname = Str.split(/[?#]/u)(href)[0];
   const { foundRoute } = router.getMatchedRoutes(pathname);
   return (
-    !namesFile(Str.split("?")(href)[0]) &&
+    !namesFile(pathname) &&
     foundRoute !== undefined &&
     Arr.contains(
       Arr.map(PRERENDERED_ROUTE_TEMPLATES, spell),
