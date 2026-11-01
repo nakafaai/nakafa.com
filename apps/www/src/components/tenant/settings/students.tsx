@@ -423,7 +423,7 @@ function SchoolStudentDialog({
         />
         {units.length > 1 ? (
           <Field>
-            <FieldLabel htmlFor={`${id}-unit`}>{t("unit")}</FieldLabel>
+            <FieldLabel htmlFor={`${id}-unit`}>{t("unit-choice")}</FieldLabel>
             <Select
               items={unitItems}
               onValueChange={setPickedUnit}

@@ -26,6 +26,8 @@ import {
   slug,
 } from "@/test/settings";
 
+const unitId = Schema.decodeUnknownSync(Id("tenantUnits"))("unit-1");
+
 const address = Schema.decodeSync(Email)("guru.baru@example.com");
 
 /** One active member of the school as the members list shows it. */
@@ -155,6 +157,7 @@ describe("components/tenant/settings/accounts", () => {
       loginName: "siswa.baru",
       name: "Siswa Baru",
       slug,
+      unitId,
     });
     const logins = Option.getOrThrow(
       local.store.getQuery(identity.logins.list, {
@@ -190,6 +193,7 @@ describe("components/tenant/settings/accounts", () => {
       loginName: "siswa.baru",
       name: "Siswa Baru",
       slug,
+      unitId,
     });
     const loginsOf = (
       pagination: typeof paging | typeof later,
