@@ -312,7 +312,6 @@
     "unavailable": "Diese Prüfung ist nicht verfügbar.",
     "archived-note": "Diese Schule ist archiviert, daher sind ihre Prüfungen nur lesbar, bis sie wiederhergestellt wird.",
     "locked": "Gesperrt",
-    "locked-title": "Diese Prüfung ist gesperrt",
     "locked-frozen": "Eine Sitzung dieser Prüfung ist beendet, deshalb bleiben ihre Fragen, wie die Lernenden sie beantwortet haben. Dupliziere sie, um sie wiederzuverwenden.",
     "duplicate-action": "Prüfung duplizieren",
     "duplicate-suffix": "(Kopie)",

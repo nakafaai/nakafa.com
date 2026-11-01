@@ -9,7 +9,6 @@ import {
   PopoverContent,
   PopoverDescription,
   PopoverHeader,
-  PopoverTitle,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { useNavigate } from "@tanstack/react-router";
@@ -48,7 +47,6 @@ export function ExamLockMark() {
       </PopoverTrigger>
       <PopoverContent align="end">
         <PopoverHeader>
-          <PopoverTitle>{t("locked-title")}</PopoverTitle>
           <PopoverDescription>
             {t(frozen ? "locked-frozen" : "archived-note")}
           </PopoverDescription>
