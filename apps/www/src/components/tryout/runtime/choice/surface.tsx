@@ -15,11 +15,9 @@ import {
 interface TryoutSelectableRadioOptionProps {
   readonly appearance?: TryoutPreviewChoiceAppearance;
   checked: boolean;
+  children: ReactNode;
   disabled: boolean;
   id: string;
-  label: ReactNode;
-  /** The letter that names the option in its set (`optionLetters`). */
-  letter: string;
   value: string;
 }
 
@@ -27,10 +25,9 @@ interface TryoutSelectableRadioOptionProps {
 export function TryoutSelectableRadioOption({
   appearance = { kind: "selectable" },
   checked,
+  children,
   disabled,
   id,
-  label,
-  letter,
   value,
 }: TryoutSelectableRadioOptionProps) {
   return (
@@ -43,9 +40,7 @@ export function TryoutSelectableRadioOption({
         disabled={disabled}
         value={value}
       />
-      <LetteredChoice id={`${id}-label`} letter={letter}>
-        {label}
-      </LetteredChoice>
+      {children}
     </TryoutChoiceFrame>
   );
 }
@@ -53,11 +48,9 @@ export function TryoutSelectableRadioOption({
 interface TryoutSelectableMultipleChoiceProps {
   readonly appearance?: TryoutPreviewChoiceAppearance;
   checked: boolean;
+  children: ReactNode;
   disabled: boolean;
   id: string;
-  label: ReactNode;
-  /** The letter that names the option in its set (`optionLetters`). */
-  letter: string;
   onCheckedChange: (checked: boolean) => void;
 }
 
@@ -65,10 +58,9 @@ interface TryoutSelectableMultipleChoiceProps {
 export function TryoutSelectableMultipleChoice({
   appearance = { kind: "selectable" },
   checked,
+  children,
   disabled,
   id,
-  label,
-  letter,
   onCheckedChange,
 }: TryoutSelectableMultipleChoiceProps) {
   return (
@@ -82,29 +74,24 @@ export function TryoutSelectableMultipleChoice({
         disabled={disabled}
         onCheckedChange={onCheckedChange}
       />
-      <LetteredChoice id={`${id}-label`} letter={letter}>
-        {label}
-      </LetteredChoice>
+      {children}
     </TryoutChoiceFrame>
   );
 }
 
 interface TryoutReviewedChoiceProps {
   checked: boolean;
+  children: ReactNode;
   id: string;
   isCorrect: boolean | undefined;
-  label: ReactNode;
-  /** The letter that names the option in its set (`optionLetters`). */
-  letter: string;
 }
 
 /** Renders one locked terminal choice without a mutation Interface. */
 export function TryoutReviewedChoice({
   checked,
+  children,
   id,
   isCorrect,
-  label,
-  letter,
 }: TryoutReviewedChoiceProps) {
   return (
     <TryoutChoiceFrame
@@ -116,9 +103,7 @@ export function TryoutReviewedChoice({
         className="mt-1 shrink-0"
         disabled
       />
-      <LetteredChoice id={`${id}-label`} letter={letter}>
-        {label}
-      </LetteredChoice>
+      {children}
     </TryoutChoiceFrame>
   );
 }

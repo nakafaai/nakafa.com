@@ -6,6 +6,7 @@ import { SittingDocument } from "@/components/exams/sitting/document";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
 import { type Choice, toggleOption } from "@/components/exams/sitting/response";
 import {
+  LetteredChoice,
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,
 } from "@/components/tryout/runtime/choice/surface";
@@ -47,10 +48,15 @@ export function SittingChoice({
             disabled={disabled}
             id={`${id}-${option.id}`}
             key={option.id}
-            label={<SittingDocument document={option.label} size="line" />}
-            letter={letterOf(index)}
             value={option.id}
-          />
+          >
+            <LetteredChoice
+              id={`${`${id}-${option.id}`}-label`}
+              letter={letterOf(index)}
+            >
+              <SittingDocument document={option.label} size="line" />
+            </LetteredChoice>
+          </TryoutSelectableRadioOption>
         ))}
       </RadioGroup>
     );
@@ -67,14 +73,19 @@ export function SittingChoice({
           disabled={disabled}
           id={`${id}-${option.id}`}
           key={option.id}
-          label={<SittingDocument document={option.label} size="line" />}
-          letter={letterOf(index)}
           onCheckedChange={(checked) =>
             onChoose(
               toggleOption(response, option.id, checked, choice.maxChoices)
             )
           }
-        />
+        >
+          <LetteredChoice
+            id={`${`${id}-${option.id}`}-label`}
+            letter={letterOf(index)}
+          >
+            <SittingDocument document={option.label} size="line" />
+          </LetteredChoice>
+        </TryoutSelectableMultipleChoice>
       ))}
     </fieldset>
   );

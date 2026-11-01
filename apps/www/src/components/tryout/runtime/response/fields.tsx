@@ -16,6 +16,7 @@ import {
   toggleOption,
 } from "@/components/exams/sitting/response";
 import {
+  LetteredChoice,
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,
 } from "@/components/tryout/runtime/choice/surface";
@@ -92,15 +93,18 @@ function SingleChoiceFields({
             disabled={locked}
             id={optionLabelId(id, option.id)}
             key={option.id}
-            label={
+            value={option.id}
+          >
+            <LetteredChoice
+              id={`${optionLabelId(id, option.id)}-label`}
+              letter={letterOf(index)}
+            >
               <TryoutResponseLabel
                 correctness={revealedCorrectness(value.answer, option.id)}
                 document={option.label}
               />
-            }
-            letter={letterOf(index)}
-            value={option.id}
-          />
+            </LetteredChoice>
+          </TryoutSelectableRadioOption>
         ))}
       </RadioGroup>
     </fieldset>
@@ -130,13 +134,6 @@ function MultipleChoiceFields({
           disabled={locked}
           id={optionLabelId(id, option.id)}
           key={option.id}
-          label={
-            <TryoutResponseLabel
-              correctness={revealedCorrectness(value.answer, option.id)}
-              document={option.label}
-            />
-          }
-          letter={letterOf(index)}
           onCheckedChange={(checked) => {
             const next = toggleOption(
               chosen,
@@ -147,7 +144,17 @@ function MultipleChoiceFields({
             // A choice with no option checked holds no answer, so it clears.
             onChange(Arr.isReadonlyArrayNonEmpty(next) ? next : null);
           }}
-        />
+        >
+          <LetteredChoice
+            id={`${optionLabelId(id, option.id)}-label`}
+            letter={letterOf(index)}
+          >
+            <TryoutResponseLabel
+              correctness={revealedCorrectness(value.answer, option.id)}
+              document={option.label}
+            />
+          </LetteredChoice>
+        </TryoutSelectableMultipleChoice>
       ))}
     </fieldset>
   );

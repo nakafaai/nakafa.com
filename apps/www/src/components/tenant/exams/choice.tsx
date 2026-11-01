@@ -113,17 +113,21 @@ export function ChoiceSheet({
                 }
                 removeName={t("option-remove-of", { letter, number })}
               >
-                <PaperOption letter={letter} multiple={choice.maxChoices !== 1}>
-                  <ExamDocument
-                    label={t(reason ? "reason-of" : "option-of", {
-                      letter,
-                      number,
-                    })}
-                    placeholder={t(
-                      reason ? "reason-placeholder" : "option-placeholder"
-                    )}
-                    size="line"
-                  />
+                <PaperOption multiple={choice.maxChoices !== 1}>
+                  <LetteredChoice letter={letter}>
+                    <PaperPartText>
+                      <ExamDocument
+                        label={t(reason ? "reason-of" : "option-of", {
+                          letter,
+                          number,
+                        })}
+                        placeholder={t(
+                          reason ? "reason-placeholder" : "option-placeholder"
+                        )}
+                        size="line"
+                      />
+                    </PaperPartText>
+                  </LetteredChoice>
                 </PaperOption>
               </OptionRow>
             );

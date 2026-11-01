@@ -48,9 +48,11 @@ import {
   PaperPairs,
   PaperPart,
   PaperParts,
+  PaperPartText,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
 import { tableOf } from "@/components/tenant/exams/table";
+import { LetteredChoice } from "@/components/tryout/runtime/choice/surface";
 import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 import { useLastValue } from "@/lib/data/kept";
 import { assessmentSchema } from "@/lib/editor/assessment";
@@ -372,12 +374,12 @@ function ChoiceSketch({
       <ChoiceGroup title={choiceTitle(template, choice.id)}>
         <PaperOptions>
           {Arr.map(choice.options, (option, index) => (
-            <PaperOption
-              key={option.id}
-              letter={letterOf(index)}
-              multiple={choice.maxChoices !== 1}
-            >
-              <OptionSketch label={option.label} />
+            <PaperOption key={option.id} multiple={choice.maxChoices !== 1}>
+              <LetteredChoice letter={letterOf(index)}>
+                <PaperPartText>
+                  <OptionSketch label={option.label} />
+                </PaperPartText>
+              </LetteredChoice>
             </PaperOption>
           ))}
         </PaperOptions>

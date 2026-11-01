@@ -14,7 +14,6 @@ import { useTranslations } from "use-intl";
 import { SittingField } from "@/components/exams/sitting/field";
 import { writtenOf } from "@/components/exams/sitting/response";
 import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
-import { LetteredChoice } from "@/components/tryout/runtime/choice/surface";
 import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
 
 /**
@@ -78,12 +77,9 @@ export function PaperOptions({ children }: { children: ReactNode }) {
  */
 export function PaperOption({
   children,
-  letter,
   multiple,
 }: {
   children: ReactNode;
-  /** The letter that names the option in its set, the one the student's paper shows. */
-  letter: string;
   /** Whether the question takes several answers, so the student meets check boxes. */
   multiple: boolean;
 }) {
@@ -102,9 +98,7 @@ export function PaperOption({
           <Radio className="mt-1 shrink-0" value="" />
         )}
       </span>
-      <LetteredChoice letter={letter}>
-        <PaperPartText>{children}</PaperPartText>
-      </LetteredChoice>
+      {children}
     </div>
   );
 }

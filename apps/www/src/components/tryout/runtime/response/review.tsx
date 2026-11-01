@@ -7,7 +7,10 @@ import {
 } from "@repo/backend/confect/assessment/response";
 import { optionLetters } from "@repo/backend/confect/exams/letters";
 import { Array as Arr, Option } from "effect";
-import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface";
+import {
+  LetteredChoice,
+  TryoutReviewedChoice,
+} from "@/components/tryout/runtime/choice/surface";
 import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 import { optionLabelId } from "@/components/tryout/runtime/response/id";
 import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label";
@@ -76,14 +79,17 @@ export function TryoutReviewedFields({
             id={optionLabelId(id, option.id)}
             isCorrect={isCorrect}
             key={option.id}
-            label={
+          >
+            <LetteredChoice
+              id={`${optionLabelId(id, option.id)}-label`}
+              letter={letterOf(index)}
+            >
               <TryoutResponseLabel
                 correctness={isCorrect}
                 document={option.label}
               />
-            }
-            letter={letterOf(index)}
-          />
+            </LetteredChoice>
+          </TryoutReviewedChoice>
         );
       })}
     </div>
