@@ -137,9 +137,9 @@ export function StudentSitting({
     return (
       <SittingTabGuard
         attemptId={attempt.id}
+        bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
         deviceId={admitted.deviceId}
         slug={slug}
-        title={sitting.examTitle}
       >
         <StudentPlayer
           admission={admitted}

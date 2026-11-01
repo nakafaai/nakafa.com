@@ -6,7 +6,6 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Duration, Effect, Schema } from "effect";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
-import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
 import { PaperFrame } from "@/components/exams/sitting/recovery";
 import { CardSection } from "@/components/shared/card/section";
@@ -35,9 +34,11 @@ function usePaperTab(attemptId: GenericId.GenericId<"examAttempts">) {
     }
     const name = `nakafa-sitting-paper:${attemptId}`;
     const leaving = new AbortController();
-    const left = new Promise<void>((resolve) => {
-      leaving.signal.addEventListener("abort", () => resolve());
-    });
+    const left = Effect.runPromise(
+      Effect.callback<void>((resume) => {
+        leaving.signal.addEventListener("abort", () => resume(Effect.void));
+      })
+    );
     const hold = () => {
       setTab("held");
       return left;
@@ -78,17 +79,17 @@ function usePaperTab(attemptId: GenericId.GenericId<"examAttempts">) {
  */
 export function SittingTabGuard({
   attemptId,
+  bar,
   children,
   deviceId,
   slug,
-  title,
 }: {
   readonly attemptId: GenericId.GenericId<"examAttempts">;
+  /** The paper's bar, composed by the caller, while this tab holds no paper. */
+  readonly bar: ReactNode;
   readonly children: ReactNode;
   readonly deviceId: typeof DeviceId.Type;
   readonly slug: TenantSlug;
-  /** The exam's name, for the paper's bar while this tab holds no paper. */
-  readonly title: string;
 }) {
   const tab = usePaperTab(attemptId);
   const signal = useMutation(exams.sittings.signal);
@@ -117,7 +118,7 @@ export function SittingTabGuard({
   }
 
   return (
-    <PaperFrame bar={<PaperBar back={<PaperBack />} title={title} />}>
+    <PaperFrame bar={bar}>
       {tab === "elsewhere" ? <SecondTab /> : null}
     </PaperFrame>
   );

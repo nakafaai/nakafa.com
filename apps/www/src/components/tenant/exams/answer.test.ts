@@ -372,7 +372,7 @@ describe("withOptionAdded", () => {
   });
 
   it("never brings back the ID of an option the teacher removed", () => {
-    const sparse = { ...choice, options: choice.options.slice(0, 3) };
+    const sparse = { ...choice, options: Arr.take(choice.options, 3) };
     const [added] = withOptionAdded([sparse], sparse.id, "fresh");
     expect(added).toEqual({
       ...sparse,
