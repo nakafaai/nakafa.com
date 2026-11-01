@@ -22,13 +22,13 @@ export const DirectoryCategory = Schema.Literals([
  * its own, because a picked form is read through Drive (ADR 0015). `provider` is the maker's name,
  * which no language translates.
  */
-export const DirectoryService = Schema.Struct({
+const DirectoryService = Schema.Struct({
   category: DirectoryCategory,
   connector: GoogleConnector,
   key: Schema.Literals(["calendar", "classroom", "drive", "forms"]),
   provider: Schema.Literals(["Google"]),
 });
-export type DirectoryService = typeof DirectoryService.Type;
+type DirectoryService = typeof DirectoryService.Type;
 
 /** The services a school's directory lists, in the order they show. A new one joins by one line. */
 export const DIRECTORY_SERVICES = [
@@ -54,7 +54,7 @@ export const DIRECTORY_CATEGORIES = Arr.dedupe(
 );
 
 /** Where a service stands for the viewer. */
-export const ServiceState = Schema.Literals([
+const ServiceState = Schema.Literals([
   "connected",
   "failed",
   "locked",
