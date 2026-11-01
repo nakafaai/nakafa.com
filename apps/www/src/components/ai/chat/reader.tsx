@@ -2,6 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { useNavigate } from "@tanstack/react-router";
+import { cn } from "cn";
 import { Effect, Fiber, Option, Result } from "effect";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -22,6 +23,7 @@ import { createChatStore } from "@/components/ai/chat/store";
 import { turnOf, turnsByOrder } from "@/components/ai/chat/turns";
 import { AiChat } from "@/components/ai/chat/view";
 import { useLiveSession } from "@/components/providers/live";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { getPostAuthSignInTarget } from "@/lib/auth/admission";
 import type { ReaderRead } from "@/lib/chat/reader";
 import { readReaderFn, readReaderOlderFn } from "@/lib/chat/reader.functions";
@@ -239,7 +241,7 @@ function ReaderAction() {
   const navigate = useNavigate();
   return (
     <div
-      className="mx-auto flex w-full max-w-3xl justify-center px-4 pb-4"
+      className={cn(pageRowVariants(), "flex justify-center pb-4")}
       data-slot="reader-action"
     >
       <Button

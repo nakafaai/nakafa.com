@@ -94,10 +94,11 @@ export function AssessmentFigure({ attrs }: { readonly attrs: FigureAttrs }) {
 
 /** A figure read from the attributes of a document's node. What the contract refuses draws nothing. */
 export function DocumentFigure({ attrs }: { readonly attrs: unknown }) {
-  return Option.match(Schema.decodeUnknownOption(FigureAttrsSchema)(attrs), {
-    onNone: () => null,
-    onSome: (figure) => <AssessmentFigure attrs={figure} />,
-  });
+  const figure = Schema.decodeUnknownOption(FigureAttrsSchema)(attrs);
+  if (Option.isNone(figure)) {
+    return null;
+  }
+  return <AssessmentFigure attrs={figure.value} />;
 }
 
 /** A data chart: categories and the named series of bars or lines over them. */

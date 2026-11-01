@@ -49,9 +49,10 @@ function readNothing() {
  * draws the row with no account in it, and the pre-paint script
  * (`lib/identity/prepaint.ts`) shows it with the kept plan and name before the
  * first paint, so the footer stands at its final size from the start. It holds
- * the footer while the live session and the account load. Once the session has
- * settled, a row kept for another session or for none is gone, and so is the
- * row of a page whose session failed to load.
+ * the footer while the live session and the account load. A browser that kept
+ * no row holds the same room with the row unseen until the live row arrives.
+ * Once the session has settled, a row kept for another session is gone, and so
+ * is the row of a page with no session or a session that failed to load.
  */
 export function KeptAccount() {
   const hasError = useLiveSession((state) => state.hasError);
@@ -64,7 +65,12 @@ export function KeptAccount() {
   if (hasError) {
     return null;
   }
-  if (settled && Option.isNone(readKnownAccount(text, sessionId))) {
+  const holdsRoomOnly = text === null && sessionId !== null;
+  if (
+    settled &&
+    !holdsRoomOnly &&
+    Option.isNone(readKnownAccount(text, sessionId))
+  ) {
     return null;
   }
   return <KeptAccountRow />;

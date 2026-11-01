@@ -7,14 +7,11 @@ import { getSitemapEntries } from "@/lib/sitemap/entries";
 /** The segments that name the search screen, which the build never renders. */
 const SEARCH_SEGMENT = "search";
 
-/** The try-out family segment, which every locale spells the same way. */
-const TRYOUT_SEGMENT = "try-out";
-
-/** The articles index, which no sitemap page lists as one URL. */
-const ARTICLES_SEGMENT = "articles";
-
 /** The sign-in page, which the sitemap leaves out because it is no content. */
 const SIGN_IN_SEGMENT = "auth";
+
+/** The try-out family segment, which every locale spells the same way. */
+const TRYOUT_SEGMENT = "try-out";
 
 /**
  * Whether a path is left out of the static build: the search screen, whose answer
@@ -26,12 +23,26 @@ export function isExcludedPath(path: string): boolean {
   return family === SEARCH_SEGMENT;
 }
 
+/** The segments of a try-out section's path: `/<locale>/try-out/<country>/<exam>/<track>/<set>/<section>`. */
+const TRYOUT_SECTION_SEGMENTS = 8;
+
+/**
+ * Whether the sitemap leaves a page out that the build still writes: a try-out
+ * section, which the head marks as not indexed, so its set stands for it in search.
+ */
+export function isUnlistedPath(path: string): boolean {
+  const segments = path.split("/");
+  return (
+    segments[2] === TRYOUT_SEGMENT &&
+    segments.length === TRYOUT_SECTION_SEGMENTS
+  );
+}
+
 /**
  * Selects the public paths that the build prerenders: the sitemap's URLs without
- * the search screen, try-out tracks, sets and sections included, plus the articles
- * index, the try-out hub and the sign-in page of every locale, which no sitemap
- * page lists. The result is unique and sorted, so the build and its verifier
- * compare the same list.
+ * the search screen, try-out tracks, sets and sections included, plus the sign-in
+ * page of every locale, which no sitemap page lists. The result is unique and
+ * sorted, so the build and its verifier compare the same list.
  */
 export function selectStaticPagePaths({
   locales,
@@ -41,12 +52,8 @@ export function selectStaticPagePaths({
   readonly sitemapPaths: readonly string[];
 }): string[] {
   const listed = Arr.filter(sitemapPaths, (path) => !isExcludedPath(path));
-  const indexes = Arr.flatMap(locales, (locale) => [
-    `/${locale}/${ARTICLES_SEGMENT}`,
-    `/${locale}/${TRYOUT_SEGMENT}`,
-    `/${locale}/${SIGN_IN_SEGMENT}`,
-  ]);
-  return Arr.sort(Arr.dedupe(Arr.appendAll(listed, indexes)), Order.String);
+  const signIns = Arr.map(locales, (locale) => `/${locale}/${SIGN_IN_SEGMENT}`);
+  return Arr.sort(Arr.dedupe(Arr.appendAll(listed, signIns)), Order.String);
 }
 
 /** Reads the public paths of the active release that the build prerenders, in a stable order. */

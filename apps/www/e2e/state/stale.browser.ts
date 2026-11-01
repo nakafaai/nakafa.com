@@ -66,7 +66,9 @@ test("reloads once for a chunk of an earlier deploy instead of showing an error"
     removed.active = false;
   });
 
+  const reloaded = page.waitForEvent("load");
   await theme.click();
+  await reloaded;
 
   await expect
     .poll(() =>

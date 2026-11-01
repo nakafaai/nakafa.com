@@ -6,6 +6,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
+import { assignRole } from "@repo/backend/confect/access/grant";
 import { activeGrants } from "@repo/backend/confect/access/policy";
 import { GuardianLink } from "@repo/backend/confect/guardians/access";
 import {
@@ -123,6 +124,9 @@ const start = FunctionImpl.make(
           .table("tenantPeople")
           .get(link.guardianPersonId)
           .pipe(Effect.orDie),
+    });
+    yield* assignRole(personActor(actor), guardian, "guardian", {
+      kind: "tenant",
     });
     const linkId = yield* (yield* DatabaseWriter)
       .table("guardianLinks")

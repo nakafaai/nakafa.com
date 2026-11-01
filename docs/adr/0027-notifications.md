@@ -49,8 +49,18 @@ deletes the row. An account keeps no zone or language, so its push speaks Indone
 and a student's quiet hours run on the clock of `Asia/Jakarta`. A row opens the
 comment through `/{locale}/comment/{id}`, because a lesson's comments carry its
 content key, which only the active release turns into a path, and the inbox reads no
-release for each row. The email of the channel table waits for the notice mail queue
-and the preferences, which are keyed by Person.
+release for each row.
+
+Amended on 1 November 2026: a reply's digest and its switches are built. `noticeMails`
+and `noticePreferences` each hold two shapes, as `notifications` does: a row of a
+Person of a school, or a row of an account (`recipientUserId`, `userId`) for a notice
+no school holds. A reply queues its mail in the transaction of the reply, due at the
+next 17:00 in `Asia/Jakarta` and in Indonesian, because an account keeps no zone or
+language, and it leaves through the same sweep, limit, and rank as a school's digest.
+The mail opens `/{locale}/notifications` and gives the comment as its reason, since its
+reader may belong to no school. The Nakafa inbox holds the account's switches
+(`notifications.personal`), the push and the mail queue read them, and deleting the
+account deletes its waiting mail and its switches.
 
 ## Context
 
@@ -425,10 +435,10 @@ sitting does not show.
 | The bounds of the inbox: one request reads at most `HELD_SCHOOL_LIMIT`, 100 schools, and is refused past it with `NotificationScopeTooLarge`; each page of the consumer, the read-all, and the purge holds 50, half of the 100-entry list page of ADR 0016; a page cursor that names more than `HELD_SCHOOL_LIMIT` rows is refused with `NotificationCursorInvalid` | Live |
 | The minute sweep that starts a run for each pending journal cursor | Built |
 | `pushSubscriptions`, subscribe and unsubscribe, the push sender, and the push of mention and announcement rows held by quiet hours | Built; live once the operator sets the VAPID keys |
-| `noticePreferences`, read by the push and the mail queue, and the switches on the School inbox | Built |
+| `noticePreferences`, read by the push and the mail queue, and the switches on the School inbox and the Nakafa inbox | Built |
 | Task reminders and late-task notices from the scheduler, `confect/notifications/tasks.ts` | Built |
 | The notice mail queue, `noticeMails`, its daily limit, and the sweep in `confect/emails/digest` | Built |
-| The reply row of an account, its push, its read and its deletion, `confect/notifications/reply.ts` | Built; its digest email and its preference wait for the notice mail queue |
+| The reply row of an account, its push, its digest email, its switches, its read and its deletion, `confect/notifications/reply.ts` and `personal` | Built |
 | The notify consumer for the change types other than `person.invited` | Planned, program wave B |
 | The channel table as data, `confect/notifications/rules.ts`: the routes of each kind and relation | Called: the inbox consumer asks `deliveriesOf`, which reads `routeOf`, for the invitee's inbox row. `recipientsOf` and `canSwitchOff` wait for the preferences (program wave B) |
 | The sends of a notice, `confect/notifications/delivery.ts`: `deliveriesOf` and `deliveryInstant` | `deliveriesOf` is called by the inbox consumer. `deliveryInstant` waits for the reminders, which need the zone of their school (program wave B) |

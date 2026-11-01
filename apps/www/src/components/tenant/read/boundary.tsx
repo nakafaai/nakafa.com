@@ -4,8 +4,8 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { Function as Fn } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { LoadFailure } from "@/components/state/failure";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { useAnswerRetry } from "@/lib/convex/requery";
 
@@ -87,7 +87,7 @@ function ReadFailure<Query extends Ref.AnyPublicQuery>({
   if (isDenied(error)) {
     return <DeniedPart />;
   }
-  return <DataFailure isPending={waiting} onRetry={retry} />;
+  return <LoadFailure isPending={waiting} onRetry={retry} />;
 }
 
 /** The failure part of a paginated read, whose Try again loads the page again. */
@@ -98,7 +98,7 @@ function PageFailure({ error }: { error: unknown }) {
   if (isDenied(error)) {
     return <DeniedPart />;
   }
-  return <DataFailure onRetry={reloadPage} />;
+  return <LoadFailure onRetry={reloadPage} />;
 }
 
 /**

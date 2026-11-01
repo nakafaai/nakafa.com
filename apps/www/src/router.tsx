@@ -1,5 +1,7 @@
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { createRouter } from "@tanstack/react-router";
 import type { NotFoundPage } from "@/lib/routing/not-found";
+import { holdsOffline } from "@/lib/routing/offline";
 import { routeRewrite } from "@/lib/routing/rewrite";
 import { makeScrollRestoration } from "@/lib/routing/scroll";
 import { routeTree } from "@/routeTree.gen";
@@ -14,7 +16,7 @@ function remountByParams({ params }: { readonly params: object }) {
 }
 
 export function getRouter() {
-  return createRouter({
+  const router = createRouter({
     defaultPendingMinMs: 300,
     defaultPendingMs: 200,
     defaultPreload: "intent",
@@ -24,6 +26,26 @@ export function getRouter() {
     routeTree,
     scrollRestoration: makeScrollRestoration(),
   });
+  if (typeof document !== "undefined") {
+    router.history.block({
+      blockerFn: ({ currentLocation, nextLocation }) => {
+        const held = holdsOffline(
+          navigator.onLine,
+          currentLocation.pathname,
+          nextLocation.pathname
+        );
+        if (held) {
+          toast.error({
+            description: "offline-move.description",
+            title: "offline-move.title",
+          });
+        }
+        return held;
+      },
+      enableBeforeUnload: false,
+    });
+  }
+  return router;
 }
 
 /**

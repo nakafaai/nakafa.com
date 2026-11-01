@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { LIBRARY_BYTE_LIMIT } from "@repo/backend/confect/classroom/library/file";
-import { Effect, Result, Schema } from "effect";
+import { Effect, Option, Result, Schema } from "effect";
 import {
   FileTooLarge,
   fitted,
   isPhoto,
+  shownFile,
   shrinkPhoto,
   uploadAttachment,
 } from "@/components/tenant/classes/forum/upload";
@@ -47,6 +48,39 @@ const paintable = (webp: boolean) => {
 afterEach(() => {
   vi.unstubAllGlobals();
   sendStorageFile.mockReset();
+});
+
+describe("shownFile", () => {
+  const file = {
+    byteSize: 12,
+    height: 40,
+    key: "key",
+    kind: "image",
+    name: "photo.png",
+    upload: Option.none(),
+    width: 80,
+  } as const;
+
+  it("shows a picture from this device's address", () => {
+    expect(
+      shownFile({ ...file, preview: Option.some("blob:photo") })
+    ).toStrictEqual({
+      address: "blob:photo",
+      byteSize: 12,
+      height: 40,
+      kind: "image",
+      name: "photo.png",
+      thumbnail: "blob:photo",
+      width: 80,
+    });
+  });
+
+  it("holds no address for a file without a preview", () => {
+    const shown = shownFile({ ...file, preview: Option.none() });
+
+    expect(shown.address).toBeNull();
+    expect(shown.thumbnail).toBeNull();
+  });
 });
 
 describe("fitted", () => {

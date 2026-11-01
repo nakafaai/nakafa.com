@@ -3,9 +3,18 @@ import { Image } from "@repo/design-system/components/image";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useLayoutEffect, useState } from "react";
 
+/**
+ * What the player may do. It runs its own scripts on its own origin, and its
+ * title and logo open YouTube in a new tab, unless it is sealed.
+ */
+const PLAYER_SANDBOX = "allow-scripts allow-same-origin allow-presentation";
+const LINKS_SANDBOX = "allow-popups allow-popups-to-escape-sandbox";
+
 interface Props {
   /** The accessible name of the play button, and the title of the player once it loads. */
   readonly label: string;
+  /** Keeps the viewer on the page, as an exam's paper does: the player opens no new tab. */
+  readonly sealed?: boolean;
   readonly videoId: string;
 }
 
@@ -15,7 +24,7 @@ interface Props {
  * returns the video to its poster, so no playback continues inside preserved
  * hidden DOM.
  */
-export function YoutubePlayer({ label, videoId }: Props) {
+export function YoutubePlayer({ label, sealed = false, videoId }: Props) {
   const [isPlaying, setIsPlaying] = useState(false);
 
   useLayoutEffect(
@@ -31,9 +40,7 @@ export function YoutubePlayer({ label, videoId }: Props) {
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
         className="size-full border-0"
-        // The player runs its own scripts on its own origin, and its title and
-        // logo open YouTube in a new tab.
-        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
+        sandbox={sealed ? PLAYER_SANDBOX : `${PLAYER_SANDBOX} ${LINKS_SANDBOX}`}
         src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`}
         title={label}
       />

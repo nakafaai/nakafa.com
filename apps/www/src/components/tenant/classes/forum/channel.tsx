@@ -6,12 +6,14 @@ import {
 } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
+import { readingMeasureVariants } from "@/components/shared/content/width";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { LoadFailure } from "@/components/state/failure";
 import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ForumComposer } from "@/components/tenant/classes/forum/composer";
 import {
@@ -75,7 +77,9 @@ export function ForumChannel({
     >
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
         <ChannelMessages key={channelId} />
-        <footer className="mx-auto w-full max-w-3xl shrink-0 px-4 pt-2 pb-4">
+        <footer
+          className={cn(readingMeasureVariants(), "shrink-0 px-4 pt-2 pb-4")}
+        >
           {canPost ? (
             <ForumComposer />
           ) : (
@@ -122,7 +126,7 @@ function ChannelMessages() {
   ) {
     return (
       <div className="flex-1 p-4">
-        <DataFailure onRetry={reloadPage} />
+        <LoadFailure onRetry={reloadPage} />
       </div>
     );
   }

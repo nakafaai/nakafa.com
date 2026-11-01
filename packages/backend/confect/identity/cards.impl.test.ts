@@ -26,10 +26,7 @@ beforeEach(() => {
   vi.setSystemTime(CARD_NOW);
 });
 
-/**
- * An unclaimed Person of the fixture's school who holds the Owner role, so that
- * no card may be printed for it.
- */
+/** An unclaimed Owner of the fixture's school, for whom no card may be printed. */
 const unclaimedOwner = (fixture: Effect.Success<typeof tenancyFixture>) =>
   fixture.run(
     Effect.gen(function* () {
@@ -365,6 +362,7 @@ describe("identity/cards enroll", () => {
         const entries = yield* fixture.run(journal);
         expect(Arr.map(entries, (entry) => entry.change.type)).toEqual([
           "person.created",
+          "grant.created",
           "card.issued",
         ]);
         const listed = yield* fixture
@@ -374,9 +372,18 @@ describe("identity/cards enroll", () => {
           id: expect.any(String),
           name: "Siswa Baru",
           removable: true,
-          roles: [],
+          roles: ["student"],
           status: "cardIssued",
         });
+        const students = yield* fixture
+          .as("admin")
+          .query(refs.public.tenancy.people.students, {
+            ...everyone,
+            slug: nf,
+          });
+        expect(Arr.map(students.page, (student) => student.name)).toContain(
+          "Siswa Baru"
+        );
       })
   );
 
@@ -398,7 +405,7 @@ describe("identity/cards enroll", () => {
           { _tag: "LoginNameTaken", code: "LOGIN_NAME_TAKEN" },
           { _tag: "LoginNameRefused", reason: "characters" },
         ]);
-        expect(yield* fixture.run(journal)).toHaveLength(2);
+        expect(yield* fixture.run(journal)).toHaveLength(3);
         const listed = yield* fixture
           .as("admin")
           .query(members, { ...everyone, slug: nf });
@@ -440,12 +447,11 @@ describe("identity/cards print", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       yield* issueFirst(fixture);
-      yield* fixture
+      const printed = fixture
         .as("admin")
         .mutation(print, { personId: fixture.invited, slug: nf });
-      yield* fixture
-        .as("admin")
-        .mutation(print, { personId: fixture.invited, slug: nf });
+      yield* printed;
+      yield* printed;
       const entries = yield* fixture.run(journal);
       expect(Arr.map(entries, (entry) => entry.change.type)).toEqual([
         "card.issued",

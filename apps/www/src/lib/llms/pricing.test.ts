@@ -6,6 +6,7 @@ import { Effect } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
 import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
 import { getPricingLlmsText, isPricingLlmsRoute } from "@/lib/llms/pricing";
+import { proPricing } from "@/lib/pricing/monthly";
 
 describe("pricing Markdown", () => {
   it("owns only the pricing route", () => {
@@ -58,5 +59,18 @@ describe("pricing Markdown", () => {
         `Current price and checkout: ${BASE_URL}/en/pricing`
       );
     })
+  );
+
+  it.effect.each(["de", "en", "id"] as const)(
+    "states every price, so an answer can quote it, for %s",
+    (locale) =>
+      Effect.gen(function* () {
+        const text = yield* getPricingLlmsText(locale);
+
+        for (const { format, price } of proPricing) {
+          expect(text).toContain(format(price.amount));
+          expect(text).toContain(format(price.yearlyAmount));
+        }
+      })
   );
 });

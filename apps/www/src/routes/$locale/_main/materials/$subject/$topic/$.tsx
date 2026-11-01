@@ -47,8 +47,14 @@ import {
   toMaterialHref,
   toMaterialNavigationPage,
 } from "@/lib/content/material/navigation";
+import {
+  orderPlacements,
+  readPlacementAlignments,
+  readPlacementTrail,
+} from "@/lib/content/material/placement";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { outcome } from "@/lib/content/outcome";
+import { readPublishedProgramCatalog } from "@/lib/content/program/catalog";
 import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
@@ -112,6 +118,10 @@ const readMaterial = createServerFn({ method: "GET" })
           messages,
           namespace: "Common",
         });
+        const [placements, catalog] = yield* Effect.all([
+          readPublishedMaterialPlacements(locale, route),
+          readPublishedProgramCatalog(locale),
+        ]);
         return outcome("Found", {
           page: {
             alternates: toHeadAlternates(
@@ -135,7 +145,10 @@ const readMaterial = createServerFn({ method: "GET" })
             },
             locale,
             metadata: published.metadata,
-            placements: yield* readPublishedMaterialPlacements(locale, route),
+            placements: orderPlacements(
+              placements,
+              Arr.map(catalog.entries, ({ program }) => program.key)
+            ),
             navigation: toMaterialNavigationPage({
               kind: "published",
               route,
@@ -192,8 +205,14 @@ export const Route = createFileRoute(
     if (loaderData === undefined) {
       return {};
     }
-    const { alternates, canonicalPath, headMetadata, locale, route } =
-      loaderData;
+    const {
+      alternates,
+      canonicalPath,
+      headMetadata,
+      locale,
+      placements,
+      route,
+    } = loaderData;
     const metadata = loaderData.metadata;
     const article = {
       authors: metadata.authors,
@@ -203,7 +222,7 @@ export const Route = createFileRoute(
       image: getOgUrl(route.appLocale, route.publicPath),
       locale,
       path: route.href,
-      trail: [{ name: loaderData.labels.home, path: `/${locale}` }],
+      trail: readPlacementTrail(locale, loaderData.labels.home, placements),
     };
     return toRouterHead(
       createSeoHead({
@@ -212,7 +231,13 @@ export const Route = createFileRoute(
         description: headMetadata.description,
         image: getOgUrl(route.appLocale, route.publicPath),
         indexable: true,
-        jsonLd: [makeArticleJsonLd(article), makeLearningResourceNode(article)],
+        jsonLd: [
+          makeArticleJsonLd(article),
+          makeLearningResourceNode(
+            article,
+            readPlacementAlignments(locale, placements)
+          ),
+        ],
         locale,
         // Many lessons share a short name, such as Numbers: the topic tells them apart.
         parts: [headMetadata.title, route.topicTitle],

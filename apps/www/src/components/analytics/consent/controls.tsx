@@ -16,7 +16,12 @@ import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/conte
 
 /** Names the prompt section, so the hide rules below can match it. */
 const PROMPT_ATTRIBUTE = "data-analytics-consent-prompt";
-const promptAttributes = { [PROMPT_ATTRIBUTE]: "" };
+
+/**
+ * The prompt's attributes. The prompt is in the first HTML of every page, so a search
+ * engine quoted it as the snippet of a thin page until it was marked as no snippet.
+ */
+const promptAttributes = { [PROMPT_ATTRIBUTE]: "", "data-nosnippet": "" };
 
 /**
  * Hides the prompt while the document root carries the mark that the bootstrap

@@ -1,5 +1,6 @@
 import { cn } from "cn";
 import type { ReactNode } from "react";
+import { pageRowVariants } from "@/components/shared/content/width";
 
 interface Props {
   children: ReactNode;
@@ -22,7 +23,7 @@ export function FooterContent({
     <footer
       className={cn("relative py-20 [article:empty~&]:hidden", className)}
     >
-      <div className={cn("z-10 mx-auto max-w-3xl px-6", childrenClassName)}>
+      <div className={cn(pageRowVariants(), "z-10", childrenClassName)}>
         {children}
       </div>
     </footer>

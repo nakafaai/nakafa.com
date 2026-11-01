@@ -1,68 +1,75 @@
 import { PaintBoardIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { lazy } from "@repo/design-system/lib/lazy";
-import { ClientOnly } from "@tanstack/react-router";
+import { Effect } from "effect";
 import { type ComponentProps, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 
+const loadThemeMenu = () => import("@/components/shared/theme/menu");
+
 /**
- * Loads the theme list on first intent. It carries one icon for each theme,
- * which no page needs before a visitor reaches for the selector.
+ * Loads the selector on first intent. It carries the menu and one icon for each
+ * theme, which no page needs before a visitor reaches for the button.
  */
-const ThemeMenuContent = lazy(() =>
-  import("@/components/shared/theme/menu").then((module) => ({
-    default: module.ThemeMenuContent,
-  }))
+const ThemeMenu = lazy(() =>
+  loadThemeMenu().then((module) => ({ default: module.ThemeMenu }))
 );
 
-/** Renders the theme selector. The selected theme lives in the theme store. */
+/** Starts the load on intent. A load that fails here is the press's to meet, through the lazy menu. */
+const warmThemeMenu = () =>
+  Effect.runPromise(Effect.ignore(Effect.tryPromise(loadThemeMenu)));
+
+/** What the button shows before and after the selector loads. */
+function ThemeLabel() {
+  const t = useTranslations("Common");
+  return (
+    <>
+      <HugeIcons icon={PaintBoardIcon} />
+      {t("theme")}
+    </>
+  );
+}
+
+/**
+ * Renders the theme selector. Until the first press it is a plain button, so the
+ * menu stays out of a page's first JavaScript. The selected theme lives in the
+ * theme store.
+ */
 export function ThemePicker({
   variant = "outline",
 }: {
   variant?: ComponentProps<typeof Button>["variant"];
 }) {
-  const t = useTranslations("Common");
-  const [isRequested, setIsRequested] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
 
-  /** Starts loading the list as soon as the visitor reaches for the button. */
-  function request() {
-    setIsRequested(true);
+  if (!isPressed) {
+    return (
+      <Button
+        aria-haspopup="menu"
+        onClick={() => setIsPressed(true)}
+        onFocus={warmThemeMenu}
+        onPointerEnter={warmThemeMenu}
+        variant={variant}
+      >
+        <ThemeLabel />
+      </Button>
+    );
   }
 
   return (
-    <DropdownMenu
-      onOpenChange={(open) => {
-        if (open) {
-          request();
-        }
-      }}
+    <Suspense
+      fallback={
+        <Button variant={variant}>
+          <ThemeLabel />
+        </Button>
+      }
     >
-      <DropdownMenuTrigger
-        render={
-          <Button
-            onFocus={request}
-            onMouseEnter={request}
-            onTouchStart={request}
-            variant={variant}
-          >
-            <HugeIcons icon={PaintBoardIcon} />
-            {t("theme")}
-          </Button>
-        }
-      />
-
-      {isRequested ? (
-        <Suspense fallback={null}>
-          <ClientOnly fallback={null}>
-            <ThemeMenuContent />
-          </ClientOnly>
-        </Suspense>
-      ) : null}
-    </DropdownMenu>
+      <ThemeMenu>
+        <Button variant={variant}>
+          <ThemeLabel />
+        </Button>
+      </ThemeMenu>
+    </Suspense>
   );
 }
