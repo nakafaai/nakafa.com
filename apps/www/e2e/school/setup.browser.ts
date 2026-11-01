@@ -25,6 +25,7 @@ test("an owner reads each step of the setup, opens one, and finishing takes it o
   for (const step of [
     "Cohorts",
     "Students",
+    "Students in cohorts",
     "Classrooms",
     "Teachers",
     "Parents",

@@ -104,14 +104,20 @@ export function useSectionMatched(target: LinkTarget) {
   });
 }
 
-/** The full path of the leaf route on screen, as the router spells it without a trailing slash. */
+/**
+ * The full path of the leaf route the address names, as the router spells it
+ * without a trailing slash. A press changes the address at once, so a tab bar that
+ * reads this moves with the press, before the next page's loaders resolve.
+ */
 export function useLeafRoutePath() {
-  return useMatches({
-    select: (matches) =>
-      Option.match(Arr.last(matches), {
-        onNone: () => "/",
-        onSome: (match) => withoutTrailingSlash(match.fullPath),
-      }),
+  const router = useRouter();
+  return useLocation({
+    select: (location) => {
+      const [, , foundRoute] = router.getMatchedRoutes(location.pathname);
+      return foundRoute === undefined
+        ? "/"
+        : withoutTrailingSlash(foundRoute.fullPath);
+    },
   });
 }
 

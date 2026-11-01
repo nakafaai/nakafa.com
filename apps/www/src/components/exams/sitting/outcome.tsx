@@ -1,9 +1,11 @@
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useTranslations } from "use-intl";
 import { StudentResults } from "@/components/exams/results/student";
 import type { AttemptValue } from "@/components/exams/sitting/attempt";
 import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
+import { useSendClosedKept } from "@/components/exams/sitting/kept";
 import { PaperFrame } from "@/components/exams/sitting/recovery";
 import {
   CardSection,
@@ -32,13 +34,24 @@ const stoppedCards = {
  * that rolls back would otherwise lose the answers that the student has not sent yet.
  */
 export function StudentOutcome({
+  arrived,
   attempt,
   sitting,
+  slug,
 }: {
+  /** Whether this visit arrived at a closed attempt, rather than watching it close. */
+  readonly arrived: boolean;
   readonly attempt: AttemptValue;
   readonly sitting: typeof SittingView.Type;
+  readonly slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
+  useSendClosedKept({
+    attemptId: attempt.id,
+    enabled: arrived,
+    sittingId: sitting.id,
+    slug,
+  });
 
   return (
     <PaperFrame

@@ -11,7 +11,8 @@ import {
 import { REASON_ID } from "@repo/backend/confect/exams/scoring";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, Option } from "effect";
+import { randomUuid } from "@repo/utilities/uuid";
+import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { ChoiceGroup } from "@/components/exams/sitting/reason";
 import {
@@ -142,12 +143,13 @@ export function ChoiceSheet({
       {canAdd ? (
         <div className={chosen ? undefined : "invisible"}>
           <Button
-            onClick={() =>
+            onClick={() => {
+              const unique = Effect.runSync(randomUuid);
               saveAnswers((draft) => ({
                 ...draft,
-                answers: withOptionAdded(draft.answers, choice.id),
-              }))
-            }
+                answers: withOptionAdded(draft.answers, choice.id, unique),
+              }));
+            }}
             size="sm"
             type="button"
             variant="outline"

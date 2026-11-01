@@ -12,6 +12,7 @@ const SetupState = Schema.Struct({
   exam: Schema.Boolean,
   parent: Schema.Boolean,
   period: Schema.Boolean,
+  placed: Schema.Boolean,
   student: Schema.Boolean,
   teacher: Schema.Boolean,
 });

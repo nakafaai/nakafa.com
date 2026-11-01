@@ -8975,7 +8975,12 @@ export declare const api: {
       enroll: FunctionReference<
         "mutation",
         "public",
-        { loginName: string; name: string; slug: string },
+        {
+          loginName: string;
+          name: string;
+          slug: string;
+          unitId: Id<"tenantUnits">;
+        },
         {
           code: string;
           expiresAt: number;
@@ -12626,6 +12631,35 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      teachers: FunctionReference<
+        "query",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            account: "claimed" | "unclaimed";
+            id: Id<"tenantPeople">;
+            kind: "member" | "operator";
+            name: string;
+            status: "active" | "suspended" | "removed";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
     };
     periods: {
       archive: FunctionReference<
@@ -13457,6 +13491,7 @@ export declare const api: {
           exam: boolean;
           parent: boolean;
           period: boolean;
+          placed: boolean;
           student: boolean;
           teacher: boolean;
         }

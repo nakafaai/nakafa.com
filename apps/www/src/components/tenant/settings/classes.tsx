@@ -245,6 +245,33 @@ function SchoolClassesOfPeriod() {
   );
 }
 
+/** The way on from an empty classrooms page whose period has no active cohort to place one in. */
+function ClassesCohortLink({ periodId }: { periodId: Period["id"] }) {
+  const t = useTranslations("SchoolSettings");
+  const { slug } = useTenant();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const cohorts = useQuery(
+    tenancy.cohorts.list,
+    isSettled ? { periodId, slug } : "skip"
+  );
+
+  if (
+    !QueryResult.isSuccess(cohorts) ||
+    Arr.some(cohorts.value, (cohort) => cohort.status === "active")
+  ) {
+    return null;
+  }
+  return (
+    <Link
+      className={buttonVariants({ variant: "outline" })}
+      params={{ slug }}
+      to="/school/$slug/settings/cohorts"
+    >
+      {t("cohorts")}
+    </Link>
+  );
+}
+
 /**
  * Renders the classrooms of one period in a data table that finds a name, filters by status in its column, sorts,
  * and loads more rows as its end comes into view, or the table's empty state while the period has none. The table
@@ -285,6 +312,7 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
     return (
       <TableEmpty
         act="writing"
+        action={<ClassesCohortLink periodId={periodId} />}
         description={t("classes-description")}
         title={t("classes-empty")}
       />

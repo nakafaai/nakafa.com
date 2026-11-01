@@ -111,18 +111,23 @@ export const profileCommentsHandler = accountHandler(
     Effect.gen(function* () {
       const token = yield* readToken();
       const { profile } = yield* readProfileOrNotFound(username, token);
-      const author = yield* readRequired(
-        auth.queries.getUserById,
-        { userId: profile._id },
-        token
-      );
-      const first = yield* readOptional(
-        comments.queries.getCommentsByUserId,
-        {
-          paginationOpts: { cursor: null, numItems: COMMENT_PAGE_SIZE },
-          userId: profile._id,
-        },
-        token
+      const [author, first] = yield* Effect.all(
+        [
+          readRequired(
+            auth.queries.getUserById,
+            { userId: profile._id },
+            token
+          ),
+          readOptional(
+            comments.queries.getCommentsByUserId,
+            {
+              paginationOpts: { cursor: null, numItems: COMMENT_PAGE_SIZE },
+              userId: profile._id,
+            },
+            token
+          ),
+        ],
+        { concurrency: "unbounded" }
       );
       const t = createTranslator({
         locale,

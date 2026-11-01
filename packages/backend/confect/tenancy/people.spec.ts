@@ -7,7 +7,10 @@ import {
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { PersonAccess } from "@repo/backend/confect/tenancy/access";
+import {
+  CohortAccess,
+  PersonAccess,
+} from "@repo/backend/confect/tenancy/access";
 import {
   PersonKind,
   PersonName,
@@ -53,6 +56,14 @@ export default GroupSpec.make()
       item: () => PersonView,
       error: () => AccessDenied,
     }).middleware(TenantAccess, { action: "person.view" })
+  )
+  .addFunction(
+    FunctionSpec.publicPaginatedQuery({
+      name: "teachers",
+      args: () => ({ cohortId: Id("tenantCohorts"), slug: TenantSlug }),
+      item: () => PersonView,
+      error: () => AccessDenied,
+    }).middleware(CohortAccess, { action: "cohort.manage", arg: "cohortId" })
   )
   .addFunction(
     FunctionSpec.publicMutation({

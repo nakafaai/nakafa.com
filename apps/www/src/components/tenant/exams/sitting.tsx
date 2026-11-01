@@ -262,6 +262,7 @@ export function ScheduleSitting({
                 )
               )
             )}
+            roomMissing={!Schema.is(RoomName)(roomName)}
           />
           <Button onClick={() => setOpen(false)} variant="outline">
             {common("cancel")}
@@ -324,6 +325,9 @@ export function ScheduleSitting({
               ))}
             </SelectContent>
           </Select>
+          {Arr.isReadonlyArrayNonEmpty(cohorts) ? null : (
+            <FieldDescription>{t("audience-no-cohort")}</FieldDescription>
+          )}
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-room`}>{t("room")}</FieldLabel>
@@ -393,17 +397,25 @@ export function ScheduleSitting({
  */
 function ScheduleNotices({
   missing,
+  roomMissing,
 }: {
   readonly missing: Option.Option<{
     readonly gap: ScheduleGap;
     readonly number: number;
     readonly template: QuestionTemplate;
   }>;
+  /** Whether Schedule waits on the room's name, which an untouched form also does, so it reads as a hint. */
+  readonly roomMissing: boolean;
 }) {
   const t = useTranslations("Exams");
 
   return Option.match(missing, {
-    onNone: () => null,
+    onNone: () =>
+      roomMissing ? (
+        <p className="text-muted-foreground me-auto text-sm">
+          {t("schedule-room")}
+        </p>
+      ) : null,
     onSome: (entry) => (
       <p className="text-destructive me-auto text-sm">
         {t(gapNotice(entry.gap, entry.template), { number: entry.number })}

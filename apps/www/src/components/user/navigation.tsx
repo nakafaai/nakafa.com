@@ -18,6 +18,7 @@ interface Props {
 /**
  * The tabs of a profile, in the one tab bar, of equal width across the column as in
  * Threads. They stay right under the app's header while the rows scroll beneath them.
+ * Each tab is warmed, so a press finds its page in hand.
  */
 export function SharedTabs({ tabs, value }: Props) {
   return (
@@ -29,7 +30,11 @@ export function SharedTabs({ tabs, value }: Props) {
               className="flex-1 justify-center"
               key={tab.key}
               nativeButton={false}
-              render={<Link {...tab.target}>{tab.label}</Link>}
+              render={
+                <Link data-warm="" {...tab.target}>
+                  {tab.label}
+                </Link>
+              }
               value={tab.key}
             />
           ))}

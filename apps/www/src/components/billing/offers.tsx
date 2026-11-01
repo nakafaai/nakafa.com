@@ -33,14 +33,16 @@ export function ProOfferDialog({
   const t = useTranslations("Pricing");
   const common = useTranslations("Common");
   const [picked, setPicked] = useState<ProOffer["offer"] | null>(null);
-  const sellsPlan = Arr.some(
-    offers ?? [],
-    ({ interval }) => interval !== "pass"
-  );
+  // The list stays while the dialog animates out, so its body never empties in the last frames.
+  const [listed, setListed] = useState<readonly ProOffer[]>(offers ?? []);
+  if (offers !== null && offers !== listed) {
+    setListed(offers);
+  }
+  const sellsPlan = Arr.some(listed, ({ interval }) => interval !== "pass");
   const chosen = Option.getOrNull(
     Option.orElse(
-      Arr.findFirst(offers ?? [], ({ offer }) => offer === picked),
-      () => Arr.head(offers ?? [])
+      Arr.findFirst(listed, ({ offer }) => offer === picked),
+      () => Arr.head(listed)
     )
   );
 
@@ -80,14 +82,14 @@ export function ProOfferDialog({
         aria-label={t("offer-title")}
         onValueChange={(value) => {
           const offer = Arr.findFirst(
-            offers ?? [],
+            listed,
             (candidate) => candidate.offer === value
           );
           setPicked(Option.getOrNull(Option.map(offer, ({ offer }) => offer)));
         }}
         value={chosen?.offer ?? ""}
       >
-        {Arr.map(offers ?? [], (offer) => (
+        {Arr.map(listed, (offer) => (
           <ProOfferOption key={offer.offer} offer={offer} />
         ))}
       </RadioGroup>

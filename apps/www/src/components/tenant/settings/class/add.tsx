@@ -7,6 +7,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -28,6 +29,7 @@ import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { createClassChange } from "@/components/tenant/settings/class/changes";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
+import { Link } from "@/lib/routing/link";
 
 const SOURCE = "components/tenant/settings/class/add";
 
@@ -185,35 +187,48 @@ function ClassCohortSelect({
   const isEmpty = QueryResult.isSuccess(cohorts) && Arr.isArrayEmpty(items);
 
   return (
-    <Select
-      disabled={Arr.isArrayEmpty(items)}
-      items={items}
-      onValueChange={(value) =>
-        onChoose(
-          Option.getOrElse(
-            Schema.decodeUnknownOption(Id("tenantCohorts"))(value),
-            () => null
+    <>
+      <Select
+        disabled={Arr.isArrayEmpty(items)}
+        items={items}
+        onValueChange={(value) =>
+          onChoose(
+            Option.getOrElse(
+              Schema.decodeUnknownOption(Id("tenantCohorts"))(value),
+              () => null
+            )
           )
-        )
-      }
-      value={cohortId}
-    >
-      <SelectTrigger className="w-full" id={id}>
-        <SelectValue
-          placeholder={
-            isEmpty ? t("class-cohort-none") : t("class-cohort-placeholder")
-          }
-        />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          {Arr.map(items, (item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      </SelectContent>
-    </Select>
+        }
+        value={cohortId}
+      >
+        <SelectTrigger className="w-full" id={id}>
+          <SelectValue
+            placeholder={
+              isEmpty ? t("class-cohort-none") : t("class-cohort-placeholder")
+            }
+          />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {Arr.map(items, (item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+      {isEmpty ? (
+        <FieldDescription>
+          <Link
+            className="underline underline-offset-4"
+            params={{ slug }}
+            to="/school/$slug/settings/cohorts"
+          >
+            {t("cohorts")}
+          </Link>
+        </FieldDescription>
+      ) : null}
+    </>
   );
 }

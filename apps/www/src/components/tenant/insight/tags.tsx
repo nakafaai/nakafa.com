@@ -10,6 +10,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -94,6 +95,7 @@ export function QuestionTags() {
         setOpen={setOpen}
         title={t("tags")}
       >
+        {QueryResult.isLoading(list) ? <PopupHold /> : null}
         {hasNoExam ? (
           <p className="text-muted-foreground text-sm">{t("tags-empty")}</p>
         ) : (
