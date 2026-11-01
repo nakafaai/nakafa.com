@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 
 /** The path of the one callback of the connectors project on each site (ADR 0015). */
 export const CALLBACK_PATH = "/api/connectors/callback";
@@ -63,3 +63,27 @@ export const requestedScopes = (connector: GoogleConnector) => [
   "openid",
   ...GOOGLE_MANIFEST[connector].scopes,
 ];
+
+/**
+ * The Classroom API documents two names for the access to students' course work, and Google may
+ * answer a grant under either, so a grant reads as the name the manifest asks for.
+ */
+const SCOPE_TWINS: Readonly<Record<string, string>> = {
+  [`${SCOPE_ROOT}classroom.student-submissions.students.readonly`]: `${SCOPE_ROOT}classroom.coursework.students.readonly`,
+};
+
+/**
+ * Whether Google granted every scope of a connector. `openid` is left out, because the ID token
+ * in the same answer already proves it.
+ */
+export const grantsConnector = (
+  connector: GoogleConnector,
+  granted: readonly string[]
+) => {
+  const names = Arr.map(granted, (scope) =>
+    Option.getOrElse(Rec.get(SCOPE_TWINS, scope), () => scope)
+  );
+  return Arr.every(GOOGLE_MANIFEST[connector].scopes, (scope) =>
+    Arr.contains(names, scope)
+  );
+};
