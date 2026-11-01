@@ -8,3 +8,12 @@ import { cva } from "class-variance-authority";
 export const tableCardVariants = cva(
   "[&_[data-slot=table-container]]:after:bg-card [&_[data-slot=table-body]_tr:last-child]:border-b [&_[data-slot=table-container]]:relative [&_[data-slot=table-container]]:after:pointer-events-none [&_[data-slot=table-container]]:after:absolute [&_[data-slot=table-container]]:after:inset-x-0 [&_[data-slot=table-container]]:after:bottom-0 [&_[data-slot=table-container]]:after:z-20 [&_[data-slot=table-container]]:after:h-px"
 );
+
+/**
+ * The box of a data table, whose cells keep their words on one line. It fills the card, except over a list's empty
+ * state, which fills the card under the column heads instead.
+ */
+export const tableBoxVariants = cva(
+  "[&_[data-slot=table-cell]]:whitespace-nowrap",
+  { variants: { fills: { false: "", true: "flex-1" } } }
+);

@@ -35,8 +35,11 @@ export function landingOf(
   if (viewer.canManage) {
     return "/school/$slug/settings/profile" as const;
   }
-  return viewer.canOpenReports
-    ? ("/school/$slug/reports" as const)
+  if (viewer.canOpenReports) {
+    return "/school/$slug/reports" as const;
+  }
+  return access.canWatch
+    ? ("/school/$slug/exams" as const)
     : ("/school/$slug/notifications" as const);
 }
 

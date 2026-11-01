@@ -332,7 +332,7 @@ export const insertDraftExam =
           Option.some({
             ...query.value.value,
             page: [
-              { ...draft, questionCount: 1, scope: args.scope },
+              { ...draft, canEdit: true, questionCount: 1, scope: args.scope },
               ...query.value.value.page,
             ],
           })

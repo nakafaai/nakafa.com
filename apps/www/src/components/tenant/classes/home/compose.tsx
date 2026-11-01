@@ -60,6 +60,8 @@ export function NewAnnouncement() {
     setOpen(false);
     setText("");
     setEmail(false);
+    setLater(false);
+    setWhen("");
     runForumCall(
       Effect.flatMap(randomUuid, (clientKey) =>
         later && Option.isSome(publishAt)
@@ -83,6 +85,8 @@ export function NewAnnouncement() {
       () => {
         setText((current) => (current === "" ? body : current));
         setEmail(email);
+        setLater(later);
+        setWhen(when);
         setOpen(true);
         toastForumFailure();
       }

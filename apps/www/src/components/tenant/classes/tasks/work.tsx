@@ -85,21 +85,9 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
   if (PaginatedQueryResult.isFailure(pagination)) {
     return <LoadFailure onRetry={reloadPage} />;
   }
-  if (Option.isNone(kept)) {
-    return null;
-  }
   const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
     ? () => pagination.loadMore(WORK_PAGE_SIZE)
     : null;
-  if (Arr.isReadonlyArrayEmpty(kept.value)) {
-    return (
-      <WorkEmpty
-        exhausted={PaginatedQueryResult.isExhausted(pagination)}
-        loadMore={loadMore}
-        searched={search !== ""}
-      />
-    );
-  }
 
   return (
     <>
@@ -139,8 +127,9 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
               id: "points",
             }),
           ]}
-          data={kept.value}
-          loading={loadMore !== null}
+          data={Option.getOrElse(kept, Arr.empty)}
+          empty={<WorkEmpty searched={search !== ""} />}
+          loading={!PaginatedQueryResult.isExhausted(pagination)}
           rowId={(work) => work.id}
         />
       </TableFrame>
@@ -149,25 +138,9 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
   );
 }
 
-/**
- * The work table without a row: while a search's later pages may still hold a match, only the sentinel that reads
- * the next one; then the empty state, of a task with no work yet or of a search that matches none.
- */
-function WorkEmpty({
-  exhausted,
-  loadMore,
-  searched,
-}: {
-  /** Whether the list has no more pages, so an empty list is its end and not a wait. */
-  readonly exhausted: boolean;
-  /** Loads the next page, or `null` while one loads or once the list ends. */
-  readonly loadMore: (() => void) | null;
-  readonly searched: boolean;
-}) {
+/** The work table once it is read without a row: a task with no work yet, or a search that matches none. */
+function WorkEmpty({ searched }: { readonly searched: boolean }) {
   const t = useTranslations("Classroom");
-  if (searched && !exhausted) {
-    return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
-  }
   return (
     <TableEmpty
       act="reading"

@@ -1,4 +1,8 @@
 import { lazy } from "@repo/design-system/lib/lazy";
+import {
+  learnerParagraphVariants,
+  learnerTextVariants,
+} from "@repo/design-system/lib/prose";
 import { cn } from "cn";
 import { Array as Arr, String as Str } from "effect";
 import { Suspense } from "react";
@@ -27,7 +31,9 @@ function readBlocks(text: string) {
 function PlainBlock({ children }: { readonly children: string }) {
   return (
     <p
-      className="max-w-xl leading-relaxed text-pretty whitespace-pre-wrap"
+      className={learnerParagraphVariants({
+        className: "whitespace-pre-wrap",
+      })}
       dir="auto"
     >
       {children}
@@ -53,7 +59,7 @@ export function DeferredLearnerText({
   return (
     <Suspense
       fallback={
-        <div className={cn("wrap-anywhere *:mt-3 *:first:mt-0", className)}>
+        <div className={cn(learnerTextVariants(), className)}>
           {Arr.map(readBlocks(children), ({ start, text }) => (
             <PlainBlock key={start}>{text}</PlainBlock>
           ))}

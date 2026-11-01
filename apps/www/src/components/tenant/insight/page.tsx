@@ -1,6 +1,12 @@
 import type { Ref } from "@confect/core";
-import { QueryResult, useQuery } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import insight from "@repo/backend/confect/_generated/refs/insight";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Select,
   SelectContent,
@@ -19,8 +25,9 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useMyClasses } from "@/components/tenant/classes/mine";
-import { useTenant } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import { readsEveryClass } from "@/components/tenant/insight/access";
 import { OwnPractice } from "@/components/tenant/insight/practice";
 import { percentOf } from "@/components/tenant/insight/rows";
 import { ClassInsightTable } from "@/components/tenant/insight/table";
@@ -55,15 +62,39 @@ function StudentInsight() {
   );
 }
 
+/** How many classes one page of a leader's class choice loads, and each page after it. */
+const CLASS_PAGE_SIZE = 50;
+
+/** Whether the viewer reads the classes of the school, once the viewer is read. */
+function useLeadsSchool() {
+  const viewer = useViewerQuery();
+  return QueryResult.isSuccess(viewer) && readsEveryClass(viewer.value);
+}
+
 /**
- * A teacher's page: the header chooses the class, the first one from the start, so the page opens on a real reading. With
+ * A teacher's page: the header chooses the class, the first one from the start, so the page opens on a real reading. A
+ * leader also chooses among the classes of the school they read, which load as the choice nears its end. With
  * no class, the page says what must happen first instead of offering an empty list.
  */
 function TeacherInsight() {
   const t = useTranslations("SchoolInsight");
+  const { slug } = useTenant();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const leads = useLeadsSchool();
   const classes = useMyClasses();
+  const school = usePaginatedQuery(
+    insight.reads.classes,
+    isSettled && leads ? { slug } : "skip",
+    { initialNumItems: CLASS_PAGE_SIZE }
+  );
   const [picked, setPicked] = useState<string | null>(null);
-  const held = QueryResult.isSuccess(classes) ? classes.value : [];
+  const held = Arr.dedupeWith(
+    [
+      ...(QueryResult.isSuccess(classes) ? classes.value : []),
+      ...school.results,
+    ],
+    (first, second) => first.id === second.id
+  );
   const items = Arr.map(held, (klass) => ({
     label: klass.name,
     value: klass.id,
@@ -91,6 +122,11 @@ function TeacherInsight() {
                   {item.label}
                 </SelectItem>
               ))}
+              {PaginatedQueryResult.isCanLoadMore(school) ? (
+                <Intersection
+                  onIntersect={() => school.loadMore(CLASS_PAGE_SIZE)}
+                />
+              ) : null}
             </SelectContent>
           </Select>
         ) : null}
@@ -99,7 +135,12 @@ function TeacherInsight() {
         {Option.isSome(chosen) ? (
           <ClassInsightTable classId={chosen.value.id} />
         ) : null}
-        {QueryResult.isSuccess(classes) && Arr.isReadonlyArrayEmpty(held) ? (
+        {PaginatedQueryResult.isCanLoadMore(school) && Option.isNone(chosen) ? (
+          <Intersection onIntersect={() => school.loadMore(CLASS_PAGE_SIZE)} />
+        ) : null}
+        {QueryResult.isSuccess(classes) &&
+        Arr.isReadonlyArrayEmpty(held) &&
+        (!leads || PaginatedQueryResult.isExhausted(school)) ? (
           <NoClass />
         ) : null}
       </LayoutContent>
@@ -111,6 +152,7 @@ function TeacherInsight() {
 function NoClass() {
   const t = useTranslations("SchoolInsight");
   const { canManage, slug } = useTenant();
+  const leads = useLeadsSchool();
 
   return (
     <TableEmpty
@@ -126,7 +168,7 @@ function NoClass() {
           </Link>
         ) : undefined
       }
-      description={canManage ? t("no-class-description") : t("no-class-member")}
+      description={leads ? t("no-class-description") : t("no-class-member")}
       title={t("no-class")}
     />
   );

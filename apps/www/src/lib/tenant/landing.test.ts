@@ -64,6 +64,15 @@ describe("tenant/landing", () => {
     ).toBe("/school/$slug/notifications");
   });
 
+  it("opens the exams for a Proctor, whose work is their rooms", () => {
+    expect(
+      landingOf(
+        { ...rights(), role: Option.some("proctor") },
+        { ...NO_EXAMS, canWatch: true }
+      )
+    ).toBe("/school/$slug/exams");
+  });
+
   it("reads a member's rights from the frame the school layout drew", () => {
     expect(
       memberLandingOf({

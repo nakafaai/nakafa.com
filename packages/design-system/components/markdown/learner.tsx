@@ -2,7 +2,11 @@ import { MarkdownBlock } from "@repo/design-system/components/markdown/content";
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react/mdx";
 import type { ReactMarkdownComponents } from "@repo/design-system/components/markdown/react/node";
 import { rehypeLearnerText } from "@repo/design-system/lib/markdown/learner";
-import { linkVariants } from "@repo/design-system/lib/prose";
+import {
+  learnerParagraphVariants,
+  learnerTextVariants,
+  linkVariants,
+} from "@repo/design-system/lib/prose";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
@@ -98,7 +102,7 @@ const learnerComponents: ReactMarkdownComponents = {
   ),
   p: ({ node: _node, ...props }) => (
     <p
-      className="max-w-xl leading-relaxed text-pretty"
+      className={learnerParagraphVariants()}
       data-nakafa="paragraph"
       {...props}
     />
@@ -130,7 +134,7 @@ export function LearnerText({
   readonly className?: string | undefined;
 }) {
   return (
-    <div className={cn("wrap-anywhere *:mt-3 *:mb-0 *:first:mt-0", className)}>
+    <div className={cn(learnerTextVariants(), className)}>
       <MarkdownBlock
         components={learnerComponents}
         rehypePlugins={LEARNER_PLUGINS}

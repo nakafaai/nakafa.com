@@ -64,9 +64,9 @@ async function openDirectory(
     route.fulfill({ body: "consent", contentType: "text/plain" })
   );
   await page.goto(address(`/settings/connections${search}`));
-  await expect(page.getByText("Google Classroom", { exact: true })).toBeVisible(
-    { timeout: readinessTimeoutMilliseconds }
-  );
+  await expect(
+    page.getByRole("button", { exact: true, name: "Google Classroom" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   return { page, slug: school.slug };
 }
 
