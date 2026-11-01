@@ -1,10 +1,10 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { BLUEPRINT_PLAN, LoadPlan } from "@repo/backend/scripts/load/plan";
 import { recorderLayer } from "@repo/backend/scripts/load/recorder";
 import { LoadReport } from "@repo/backend/scripts/load/report";
 import { runLoad } from "@repo/backend/scripts/load/run";
 import { fakeServer } from "@repo/backend/test/load";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 
 const encodeJson = Schema.encodeUnknownSync(
@@ -114,7 +114,7 @@ describe("load run", () => {
         expect(yield* fs.readFileString(`${output}.md`)).toContain(
           "Verdict: pass."
         );
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform)),
     30_000
   );
 });

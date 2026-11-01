@@ -20,5 +20,5 @@ export const isInternalContentAuthorized = Effect.fn(
     return false;
   }
 
-  return yield* matchesSecret(providedToken, expectedToken).pipe(Effect.orDie);
+  return yield* matchesSecret(providedToken, expectedToken);
 });

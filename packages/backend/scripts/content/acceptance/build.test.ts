@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, expect, layer } from "@effect/vitest";
 import { TrustedKeySchema } from "@nakafa/aksara-contracts/signature/trusted";
 import type { withAnalyticsSink } from "@repo/backend/scripts/content/acceptance/analytics";
@@ -12,6 +11,7 @@ import {
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import type { withLocalBackend } from "@repo/backend/scripts/content/acceptance/process";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
 import { ConfigProvider, Effect, Exit, Layer, MutableList } from "effect";
 
@@ -84,7 +84,7 @@ const reservation = {
 
 // No test reads the shell's ACCEPTANCE_PORT: each one names the port it runs with.
 const services = Layer.mergeAll(
-  nodeServicesLayer,
+  nodePlatform,
   FetchClient,
   ConfigProvider.layer(ConfigProvider.fromEnvRecord({}))
 );

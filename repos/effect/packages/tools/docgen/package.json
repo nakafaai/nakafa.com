@@ -1,11 +1,11 @@
 {
   "name": "@effect/docgen",
-  "version": "4.0.5",
+  "version": "4.1.0",
   "type": "module",
   "license": "MIT",
   "description": "An opinionated documentation generator for Effect projects",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.19.0"
   },
   "homepage": "https://effect.website",
   "repository": {
@@ -79,6 +79,6 @@
     "@types/node": "^26.6.5",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.5"
   }
 }

@@ -3,6 +3,7 @@ import {
   Effect,
   Array as EffectArray,
   MutableList,
+  Option,
   Schema,
   Stream,
 } from "effect";
@@ -95,6 +96,24 @@ export const parseContentLength = Effect.fn("Utilities.parseContentLength")(
     return byteLength;
   }
 );
+const isBodyLimit = Schema.is(BodyLimitError);
+/**
+ * Keeps the limit failure when a stream also fails to close. Effect dies when a web stream's
+ * cancel hook rejects, and that turns the failure which ended the stream into a defect too.
+ * Only the limit cuts a live stream short, so no other failure meets a rejected cancel.
+ */
+const keepLimitFailure = <Failure>(cause: Cause.Cause<Failure>) =>
+  Option.match(
+    EffectArray.findFirst(cause.reasons, (reason) =>
+      Cause.isDieReason(reason) && isBodyLimit(reason.defect)
+        ? Option.some(reason.defect)
+        : Option.none()
+    ),
+    {
+      onNone: () => Effect.failCause(cause),
+      onSome: (limit) => Effect.fail(limit),
+    }
+  );
 /** Collects a byte stream into one array and fails once it crosses its ceiling. */
 export const readBoundedStream = Effect.fn("Utilities.readBoundedStream")(
   function* <Failure, Requirements>(
@@ -116,7 +135,8 @@ export const readBoundedStream = Effect.fn("Utilities.readBoundedStream")(
           MutableList.append(chunks, chunk);
           return Effect.succeed(nextTotal);
         }
-      )
+      ),
+      Effect.catchCause(keepLimitFailure)
     );
     return concatenateChunks(MutableList.toArray(chunks), totalBytes);
   }

@@ -62,9 +62,9 @@ describe("public agent quota", () => {
           Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
         )
       );
-      expect(response.status).toBe(503);
+      expect(response.status).toBe(500);
       expect(await response.json()).toMatchObject({
-        code: "SERVICE_UNAVAILABLE",
+        code: "INTERNAL_ERROR",
       });
     });
   });

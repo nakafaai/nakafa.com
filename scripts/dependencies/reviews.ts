@@ -7,44 +7,44 @@ import { AI_SDK_COHORT } from "#scripts/dependencies/policy";
  */
 export const REGISTRY_REVIEWS = [
   [
-    "effect@latest",
-    "4.1.1",
-    "Effect 4.1.1 is the latest release and is reviewed here, but the cohort stays on 4.0.5 (EFFECT_COHORT_VERSION). 4.1 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. alchemy 2.0.0-beta.84, the latest Alchemy release, imports the removed effect/Crypto in its OAuthFlow, so @alchemy.run/cloudflare cannot load and alchemy deploy fails on 4.1; the fix is merged upstream (alchemy-run/alchemy#2754) and unreleased. #1524 moves the cohort with contracts 3.x and Confect 10.5.0 once Alchemy releases it. Checked 31 October 2026.",
+    "alchemy@latest",
+    "2.0.0-beta.84",
+    "Alchemy's latest release does not run on Effect 4.1, so ALCHEMY_COHORT pins the preview build of the fix. The first release past this one replaces the pins.",
   ],
   [
-    "@effect/platform-browser@latest",
+    "effect@latest",
     "4.1.1",
-    "@effect/platform-browser follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "Effect 4.1.1 is the latest release and is reviewed here, but the cohort stays on 4.1.0 (EFFECT_COHORT_VERSION), the exact peer of the contracts. 4.1 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. alchemy 2.0.0-beta.84, the latest Alchemy release, imports the removed effect/Crypto in its OAuthFlow, so @alchemy.run/cloudflare cannot load and alchemy deploy fails on 4.1; the fix is merged upstream (alchemy-run/alchemy#2754) and unreleased. #1524 moves the cohort with contracts 3.x and Confect 10.5.0 once Alchemy releases it. Checked 31 October 2026.",
   ],
   [
     "@effect/platform-node@latest",
     "4.1.1",
-    "@effect/platform-node follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/platform-node follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
   ],
   [
     "@effect/platform-node-shared@latest",
     "4.1.1",
-    "@effect/platform-node-shared follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/platform-node-shared follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
   ],
   [
     "@effect/vitest@latest",
     "4.1.1",
-    "@effect/vitest follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/vitest follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
   ],
   [
     "@effect/ai-openai-compat@latest",
     "4.1.1",
-    "@effect/ai-openai-compat follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/ai-openai-compat follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
   ],
   [
     "@effect/ai-openrouter@latest",
     "4.1.1",
-    "@effect/ai-openrouter follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/ai-openrouter follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
   ],
   [
     "@effect/platform-bun@latest",
     "4.1.1",
-    "@effect/platform-bun follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/platform-bun follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
   ],
   [
     "@confect/core@latest",
@@ -69,8 +69,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "3.0.1",
-    "nakafa.com declares 2.0.0, the first release with the assessment snapshot, which peers effect 4.0.5 exactly. 3.0.0 (30 October 2026) builds the contracts on effect/crypto and peers effect exactly 4.1.0, and 3.0.1 republishes the same wire format (nakafaai/aksara#500), so the contracts move with the Effect cohort in #1524.",
+    "4.1.0",
+    "nakafa.com declares 4.1.0, the newest release, which peers effect 4.1.0 exactly: 3.0.0 moved the contracts onto effect/crypto, and 4.0.0 reads a typed number with any decimal separator and Arabic-Indic digits.",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [

@@ -52,12 +52,8 @@ describe("content proof streams", () => {
           },
         })
       );
-      const itemDigest = yield* digestItems(
-        releaseId,
-        Stream.fromIterable(items)
-      );
+      const itemDigest = yield* digestItems(Stream.fromIterable(items));
       const rollbackDigest = yield* digestRollbackSnapshot(
-        releaseId,
         Stream.fromIterable(rollbacks)
       );
       const emptyManifest = yield* testEmptyManifest(releaseId);

@@ -78,9 +78,9 @@ export const TEST_PUBLIC_KEY = keys.publicKey
   .toString();
 
 /**
- * Signs one canonical message with the technical test key. Web Crypto signs
- * only asynchronously and Effect's `Crypto` has no signing, so Node's
- * synchronous Ed25519 signs, which the fixtures built at module load need.
+ * Signs one canonical message with the technical test key. Web Crypto and
+ * Effect's `Signature` sign only asynchronously, so Node's synchronous Ed25519
+ * signs, which the fixtures built at module load need.
  */
 function signTestMessage(message: string) {
   return Ed25519SignatureSchema.make(
@@ -168,10 +168,10 @@ export function insertProofRoute(ctx: MutationCtx, index: number) {
 /** Creates an authenticated empty manifest with every catalog proof bound. */
 export const testEmptyManifest = Effect.fn("test.content.emptyManifest")(
   function* (releaseId: ReleaseId) {
-    const items = yield* digestItems(releaseId, Stream.empty);
-    const projections = yield* digestProjections(releaseId, Stream.empty);
-    const rollback = yield* digestRollbackSnapshot(releaseId, Stream.empty);
-    const routes = yield* digestRoutes(releaseId, Stream.empty);
+    const items = yield* digestItems(Stream.empty);
+    const projections = yield* digestProjections(Stream.empty);
+    const rollback = yield* digestRollbackSnapshot(Stream.empty);
+    const routes = yield* digestRoutes(Stream.empty);
     const snapshots = inheritContentSnapshots(null);
     return ContentReleaseManifestSchema.make({
       activeAppLocales: ACTIVE_APP_LOCALES,

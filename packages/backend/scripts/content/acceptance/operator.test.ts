@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
@@ -6,6 +5,7 @@ import {
   createAcceptanceOperator,
   operatorMode,
 } from "@repo/backend/scripts/content/acceptance/operator";
+import { nodePlatform } from "@repo/backend/test/platform";
 import {
   Array as Arr,
   Effect,
@@ -83,7 +83,7 @@ describe("synthetic acceptance operator", () => {
           .readFileString(`${root}/cookie.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect("refuses without a prepared runtime", () =>
@@ -98,7 +98,7 @@ describe("synthetic acceptance operator", () => {
 
       expect(error).toMatchObject({ _tag: "AcceptanceRuntimeError" });
       expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect("writes no cookie when the account has no app user", () =>
@@ -116,6 +116,6 @@ describe("synthetic acceptance operator", () => {
         message: "The new account has no app user.",
       });
       expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 });

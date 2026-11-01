@@ -260,6 +260,45 @@ describe("contentRelease/runtime/publication/batch", () => {
       status: 500,
     });
   });
+  it("returns an internal failure when a read row does not match its stored hash", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedPublicRuntime(t);
+    const source = encodeBatchBody({
+      requests: [foundRequest],
+    });
+    const result = await t.action(async (ctx) => {
+      const rows = await ctx.runQuery(
+        internal.contentRelease.runtime.publication.internal.readBatch,
+        {
+          requests: [
+            {
+              appLocale: "en",
+              publicPath: TEST_RUNTIME_PATH,
+            },
+          ],
+        }
+      );
+      vi.spyOn(ctx, "runQuery").mockResolvedValueOnce(
+        Arr.map(rows, (row) =>
+          row === null
+            ? row
+            : { ...row, projectionHash: `sha256:${"f".repeat(64)}` }
+        )
+      );
+      return Effect.runPromise(
+        dispatchBatchProgram(
+          source,
+          new TextEncoder().encode(source).byteLength
+        ).pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+        )
+      );
+    });
+    expect(result).toEqual({
+      body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+      status: 500,
+    });
+  });
   it("returns an internal failure when Node cannot hash an authenticated query result", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedPublicRuntime(t);

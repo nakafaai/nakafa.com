@@ -1,8 +1,23 @@
 import { assert, describe, it, vi } from "@effect/vitest"
 import { strictEqual } from "@effect/vitest/utils"
-import { Clock, Deferred, Duration, Effect, Fiber, Layer, Redacted, Ref, Schedule, Schema, Stream } from "effect"
+import {
+  Cause,
+  Clock,
+  Deferred,
+  Duration,
+  Effect,
+  Exit,
+  Fiber,
+  Layer,
+  Option,
+  Redacted,
+  Ref,
+  Schedule,
+  Schema,
+  Stream
+} from "effect"
 import { Cookies, HttpClient, HttpClientError, HttpClientRequest, HttpClientResponse, UrlParams } from "effect/http"
-import { RateLimiter } from "effect/persistence"
+import { CircuitBreaker, RateLimiter } from "effect/persistence"
 import { TestClock } from "effect/testing"
 import * as Tracer from "effect/Tracer"
 import { inspect } from "node:util"
@@ -52,7 +67,103 @@ const makeRedirectClient = Effect.fnUntraced(function*(status: number, location:
 
 const RateLimiterTestLayer = RateLimiter.layer.pipe(Layer.provide(RateLimiter.layerStoreMemory))
 
+const classifiedRequest = HttpClientRequest.get("http://test/")
+const classifiedResponse = (status: number, headers: Record<string, string> = {}) =>
+  HttpClientResponse.fromWeb(classifiedRequest, new Response(null, { status, headers }))
+const statusCodeError = (status: number, headers?: Record<string, string>) =>
+  new HttpClientError.HttpClientError({
+    reason: new HttpClientError.StatusCodeError({
+      request: classifiedRequest,
+      response: classifiedResponse(status, headers)
+    })
+  })
+const transportError = new HttpClientError.HttpClientError({
+  reason: new HttpClientError.TransportError({ request: classifiedRequest })
+})
+const encodeError = new HttpClientError.HttpClientError({
+  reason: new HttpClientError.EncodeError({ request: classifiedRequest })
+})
+const failures = (...errors: ReadonlyArray<unknown>) =>
+  Exit.failCause(Cause.fromReasons(errors.map((error) => Cause.makeFailReason(error))))
+
+const circuitOpenKey = (error: unknown) =>
+  error instanceof CircuitBreaker.CircuitBreakerError && error.reason._tag === "CircuitOpen"
+    ? error.reason.key
+    : undefined
+
+const classifierCases: ReadonlyArray<{
+  readonly name: string
+  readonly exit: (nowMillis: number) => Exit.Exit<HttpClientResponse.HttpClientResponse, unknown>
+  readonly outcome: CircuitBreaker.Outcome["_tag"]
+  readonly retryAfterMillis?: number
+}> = [
+  {
+    name: "a returned 503 with Retry-After seconds",
+    exit: () => Exit.succeed(classifiedResponse(503, { "retry-after": "5" })),
+    outcome: "Failure",
+    retryAfterMillis: 5_000
+  },
+  {
+    name: "a wrapped 503 with a Retry-After HTTP date",
+    exit: (nowMillis) => Exit.fail(statusCodeError(503, { "retry-after": new Date(nowMillis + 30_000).toUTCString() })),
+    outcome: "Failure",
+    retryAfterMillis: 30_000
+  },
+  { name: "a TransportError", exit: () => Exit.fail(transportError), outcome: "Failure" },
+  { name: "a TimeoutError", exit: () => Exit.fail(new Cause.TimeoutError()), outcome: "Failure" },
+  { name: "a wrapped 404", exit: () => Exit.fail(statusCodeError(404)), outcome: "Success" },
+  {
+    name: "a returned 429",
+    exit: () => Exit.succeed(classifiedResponse(429, { "retry-after": "5" })),
+    outcome: "Ignored"
+  },
+  { name: "an EncodeError", exit: () => Exit.fail(encodeError), outcome: "Ignored" },
+  { name: "a defect", exit: () => Exit.die(new Error("caller bug")), outcome: "Ignored" },
+  {
+    name: "an unknown typed error",
+    exit: () =>
+      Exit.fail(
+        new RateLimiter.RateLimiterError({
+          reason: new RateLimiter.RateLimitStoreError({ message: "store unavailable" })
+        })
+      ),
+    outcome: "Ignored"
+  },
+  {
+    name: "a success beside an ignored error",
+    exit: () => failures(encodeError, statusCodeError(404)),
+    outcome: "Success"
+  },
+  {
+    name: "failures beside a success and an ignored error",
+    exit: () =>
+      failures(
+        statusCodeError(404),
+        statusCodeError(503, { "retry-after": "5" }),
+        statusCodeError(429, { "retry-after": "60" }),
+        statusCodeError(502, { "retry-after": "10" })
+      ),
+    outcome: "Failure",
+    retryAfterMillis: 10_000
+  }
+]
+
 describe("HttpClient", () => {
+  it.effect("preserves the response stream after JSON serialization", () =>
+    Effect.gen(function*() {
+      const response = HttpClientResponse.fromWeb(
+        HttpClientRequest.get("https://example.com"),
+        new Response("data: hello\n\n", { headers: { "content-type": "text/event-stream" } })
+      )
+
+      JSON.stringify(response)
+
+      const bytes = yield* Stream.runFold(response.stream, () =>
+        Array<number>(), (bytes, chunk) =>
+        bytes.concat(Array.from(chunk)))
+      assert.deepStrictEqual(bytes, Array.from(new TextEncoder().encode("data: hello\n\n")))
+    }))
+
   it.skipIf(process.versions.bun !== undefined || process.versions.deno !== undefined)(
     "does not retain unread responses without FinalizationRegistry",
     async () => {
@@ -82,6 +193,93 @@ describe("HttpClient", () => {
       }
     }
   )
+
+  it("does not throw when unread response cleanup runs outside a Cloudflare request", async () => {
+    const cleanups: Array<() => void> = []
+    vi.stubGlobal("navigator", { userAgent: "Cloudflare-Workers" })
+    vi.stubGlobal(
+      "FinalizationRegistry",
+      class<T> {
+        constructor(readonly cleanup: (value: T) => void) {}
+        register(_target: object, value: T) {
+          cleanups.push(() => this.cleanup(value))
+        }
+        unregister(_token: object) {
+          return true
+        }
+      }
+    )
+    let abort: ReturnType<typeof vi.spyOn> | undefined
+    try {
+      // Select the runtime registry on import, then drive GC cleanup deterministically.
+      vi.resetModules()
+      const { Effect } = await import("effect")
+      const { FetchHttpClient, HttpClient } = await import("effect/http")
+      const status = await Effect.runPromise(
+        HttpClient.get("https://example.test/").pipe(
+          Effect.map((response) => response.status),
+          Effect.provide(FetchHttpClient.layer),
+          Effect.provideService(
+            FetchHttpClient.Fetch,
+            Object.assign(async () => new Response("unread"), { preconnect: () => {} })
+          )
+        )
+      )
+      assert.strictEqual(status, 200)
+
+      // workerd disallows aborting request I/O from a finalizer outside its request.
+      abort = vi.spyOn(AbortController.prototype, "abort").mockImplementation(() => {
+        throw new Error("Disallowed operation called within global scope")
+      })
+      assert.doesNotThrow(() => {
+        for (const cleanup of cleanups) cleanup()
+      })
+    } finally {
+      abort?.mockRestore()
+      vi.unstubAllGlobals()
+      vi.resetModules()
+    }
+  })
+
+  // Stubbing globals and resetting modules would race with the concurrent tests.
+  describe("toWeb", { concurrent: false }, () => {
+    it("keeps unread response cleanup when toWeb finds no Web response", async () => {
+      const cleanups = new Map<object, () => void>()
+      vi.stubGlobal(
+        "FinalizationRegistry",
+        class<T> {
+          constructor(readonly cleanup: (value: T) => void) {}
+          register(_target: object, value: T, token: object) {
+            cleanups.set(token, () => this.cleanup(value))
+          }
+          unregister(token: object) {
+            return cleanups.delete(token)
+          }
+        }
+      )
+      try {
+        // Select the runtime registry on import, then drive GC cleanup deterministically.
+        vi.resetModules()
+        const { Effect, Option } = await import("effect")
+        const { HttpClient, HttpClientResponse, HttpServerResponse } = await import("effect/http")
+        let signal: AbortSignal | undefined
+        const client = HttpClient.make((request, _url, requestSignal) =>
+          Effect.sync(() => {
+            signal = requestSignal
+            return HttpServerResponse.toClientResponse(HttpServerResponse.text("unread"), { request })
+          })
+        )
+        const response = await Effect.runPromise(client.get("https://example.test/"))
+
+        assert.isTrue(Option.isNone(HttpClientResponse.toWeb(response)))
+        for (const cleanup of cleanups.values()) cleanup()
+        assert.isTrue(signal!.aborted)
+      } finally {
+        vi.unstubAllGlobals()
+        vi.resetModules()
+      }
+    })
+  })
 
   it.effect("applies JSON revivers to response schema decoders", () =>
     Effect.gen(function*() {
@@ -434,7 +632,27 @@ Missing key
         for (const output of [JSON.stringify(error), String(error), inspect(error, { depth: 10 })]) {
           assert.notInclude(output, "param-secret")
         }
-        assert.include(JSON.stringify(error), "visible")
+        assert.include(JSON.stringify(error), "http://test/path")
+      }))
+
+    it.effect("does not expose request headers, query params or body in toJSON", () =>
+      Effect.gen(function*() {
+        const client = HttpClient.make((request) =>
+          Effect.fail(new HttpClientError.HttpClientError({ reason: new HttpClientError.TransportError({ request }) }))
+        )
+        const request = HttpClientRequest.post("http://test/join").pipe(
+          HttpClientRequest.setHeader("x-token", "header-secret"),
+          HttpClientRequest.setUrlParam("token", "query-secret"),
+          HttpClientRequest.bodyJsonUnsafe({ JoinToken: "body-secret" })
+        )
+
+        const error = yield* client.execute(request).pipe(Effect.flip)
+
+        const json = JSON.stringify(error.toJSON())
+        for (const secret of ["header-secret", "query-secret", "body-secret"]) {
+          assert.notInclude(json, secret)
+        }
+        strictEqual(error.message, "Transport error (POST http://test/join)")
       }))
 
     it.effect("redacts query params in messages using the current redacted names", () =>
@@ -529,11 +747,40 @@ Missing key
         assert.strictEqual(redirected.headers.authorization, "Bearer secret")
       }))
 
+    it.effect("follows the location without re-encoding its query", () =>
+      Effect.gen(function*() {
+        const { client, requests } = yield* makeRedirectClient(
+          302,
+          "https://origin.test/dest?q=caf%E9&sig=a%20b&flag#new"
+        )
+        yield* client.get("https://origin.test/start", { urlParams: { old: "1" }, hash: "old" })
+
+        const redirected = (yield* Ref.get(requests))[1]
+        assert.strictEqual(redirected.url, "https://origin.test/dest?q=caf%E9&sig=a%20b&flag")
+        assert.strictEqual(UrlParams.toString(redirected.urlParams), "")
+        assert.deepStrictEqual(redirected.hash, Option.some("new"))
+      }))
+
+    it.effect("returns the redirect response when the location is invalid", () =>
+      Effect.gen(function*() {
+        const { client, requests } = yield* makeRedirectClient(302, "http://exa mple.com/")
+        const response = yield* client.get("https://origin.test/start")
+
+        assert.strictEqual(response.status, 302)
+        assert.strictEqual(response.headers.location, "http://exa mple.com/")
+        assert.strictEqual((yield* Ref.get(requests)).length, 1)
+      }))
+
     it.effect("switches 303 requests to GET and drops the body", () =>
       Effect.gen(function*() {
         const { client, requests } = yield* makeRedirectClient(303, "/destination")
         yield* HttpClientRequest.post("https://origin.test/start").pipe(
           HttpClientRequest.bodyText("payload"),
+          HttpClientRequest.setHeaders({
+            "content-encoding": "identity",
+            "content-language": "en",
+            "content-location": "/original"
+          }),
           client.execute
         )
 
@@ -542,6 +789,9 @@ Missing key
         assert.strictEqual(redirected.body._tag, "Empty")
         assert.isUndefined(redirected.headers["content-type"])
         assert.isUndefined(redirected.headers["content-length"])
+        assert.isUndefined(redirected.headers["content-encoding"])
+        assert.isUndefined(redirected.headers["content-language"])
+        assert.isUndefined(redirected.headers["content-location"])
       }))
 
     it.effect.each([301, 302])("switches POST to GET on %s redirects", (status) =>
@@ -571,6 +821,28 @@ Missing key
       }))
   })
 
+  it("classifies transient responses and errors", () => {
+    const request = HttpClientRequest.get("http://test/")
+    const responses = [200, 404, 408, 429, 500, 501, 502, 503, 504].map((status) =>
+      HttpClientResponse.fromWeb(request, new Response(null, { status }))
+    )
+    const statusErrors = responses.map((response) =>
+      new HttpClientError.HttpClientError({ reason: new HttpClientError.StatusCodeError({ request, response }) })
+    )
+    const expected = [false, false, true, true, true, false, true, true, true]
+    assert.deepStrictEqual(responses.map(HttpClient.isTransientResponse), expected)
+    assert.deepStrictEqual(statusErrors.map(HttpClient.isTransientError), expected)
+    assert.deepStrictEqual(
+      [
+        new Cause.TimeoutError(),
+        new HttpClientError.HttpClientError({ reason: new HttpClientError.TransportError({ request }) }),
+        new HttpClientError.HttpClientError({ reason: new HttpClientError.EncodeError({ request }) }),
+        new Error("boom")
+      ].map(HttpClient.isTransientError),
+      [true, true, false, false]
+    )
+  })
+
   describe("retryTransient", () => {
     it.effect("retries transient responses with retryOn errors-and-responses", () =>
       Effect.gen(function*() {
@@ -593,7 +865,10 @@ Missing key
       { name: "a five-minute Retry-After", header: "300", status: 429, delay: 300_000 },
       { name: "HTTP date on an errors-only retry", header: "date", status: 429, delay: 30_000 },
       { name: "a longer schedule", header: "5", status: 503, delay: 60_000, scheduled: true },
-      { name: "no header", status: 503, delay: 0 }
+      { name: "no header", status: 503, delay: 0 },
+      // invalid values are ignored rather than parsed as dates or fractions
+      { name: "a negative Retry-After", header: "-5", status: 503, delay: 0 },
+      { name: "a fractional Retry-After", header: "1.5", status: 503, delay: 0 }
     ])(
       "honors the retry delay for $name",
       ({ delay, header, scheduled, status }) =>
@@ -1866,6 +2141,126 @@ Missing key
         strictEqual(yield* Ref.get(attempts), 3)
       }).pipe(Effect.provide(RateLimiter.layerStoreMemory)))
   })
+
+  describe("withCircuitBreaker", () => {
+    it.effect.each(classifierCases)(
+      "circuitBreakerClassifier classifies $name as $outcome",
+      ({ exit, outcome, retryAfterMillis }) =>
+        Effect.gen(function*() {
+          const classified = yield* HttpClient.circuitBreakerClassifier(exit(yield* Clock.currentTimeMillis))
+          assert.deepStrictEqual(
+            {
+              _tag: classified._tag,
+              retryAfterMillis: classified._tag === "Failure" && classified.retryAfter !== undefined
+                ? Duration.toMillis(classified.retryAfter)
+                : undefined
+            },
+            { _tag: outcome, retryAfterMillis }
+          )
+        })
+    )
+
+    it.effect("retryTransient never retries a CircuitBreakerError", () =>
+      Effect.gen(function*() {
+        const reasons = [
+          new CircuitBreaker.CircuitOpen({ key: "test", retryAfter: Duration.zero }),
+          new CircuitBreaker.CircuitHalfOpen({ key: "test" }),
+          new CircuitBreaker.CircuitBreakerStoreError({ message: "store unavailable", cause: transportError })
+        ]
+        for (const reason of reasons) {
+          const attempts = yield* Ref.make(0)
+          const client = HttpClient.make(() => Effect.die("unreachable")).pipe(
+            HttpClient.transform(() =>
+              Ref.update(attempts, (n) => n + 1).pipe(
+                Effect.andThen(Effect.fail(new CircuitBreaker.CircuitBreakerError({ reason })))
+              )
+            ),
+            HttpClient.retryTransient({ times: 2 })
+          )
+          const error = yield* Effect.flip(client.get("http://test/"))
+          strictEqual(error._tag, "CircuitBreakerError")
+          strictEqual(yield* Ref.get(attempts), 1)
+        }
+      }))
+
+    it.effect("keys circuits by request origin by default", () =>
+      Effect.gen(function*() {
+        const hosts = yield* Ref.make<Array<string>>([])
+        const client = HttpClient.make((request, url) =>
+          Effect.as(
+            Ref.update(hosts, (hosts) => [...hosts, url.host]),
+            HttpClientResponse.fromWeb(
+              request,
+              new Response(null, { status: url.hostname === "down.test" ? 503 : 200 })
+            )
+          )
+        ).pipe(
+          HttpClient.withCircuitBreaker({
+            breaker: yield* CircuitBreaker.make({
+              tripPolicy: CircuitBreaker.consecutive(1),
+              openDuration: "1 minute"
+            })
+          })
+        )
+
+        strictEqual((yield* client.get("http://down.test:8080/a")).status, 503)
+        const error = yield* Effect.flip(client.get("http://down.test:8080/b?q=1"))
+        strictEqual(circuitOpenKey(error), "http://down.test:8080")
+        strictEqual((yield* client.get("http://up.test/")).status, 200)
+        assert.deepStrictEqual(yield* Ref.get(hosts), ["down.test:8080", "up.test"])
+      }).pipe(Effect.provide(CircuitBreaker.layerStoreMemory())))
+  })
+
+  it.effect("sends stored response cookies only to the matching host", () =>
+    Effect.gen(function*() {
+      const jar = yield* Ref.make<ReadonlyArray<Cookies.Cookie>>([])
+      const seen: Array<string | undefined> = []
+      const client = HttpClient.withCookiesRef(
+        HttpClient.make((request) => {
+          seen.push(request.headers.cookie)
+          const host = new URL(request.url).hostname
+          const setCookie = host === "api.example.com"
+            ? "session=secret"
+            : "session=attacker"
+          return Effect.succeed(HttpClientResponse.fromWeb(
+            request,
+            new Response(null, { status: 200, headers: { "set-cookie": setCookie } })
+          ))
+        }),
+        jar
+      )
+
+      yield* client.get("https://api.example.com/account")
+      yield* client.get("https://evil.example/hook")
+      yield* client.get("https://api.example.com/account")
+      yield* client.get("https://evil.example/hook")
+
+      assert.deepStrictEqual(seen, [undefined, undefined, "session=secret", "session=attacker"])
+    }))
+
+  it.effect("stores cookies using the final response host and default path", () =>
+    Effect.gen(function*() {
+      const jar = yield* Ref.make<ReadonlyArray<Cookies.Cookie>>([])
+      const client = HttpClient.withCookiesRef(
+        HttpClient.make((request) => {
+          const source = new Response(null, { headers: { "set-cookie": "session=final" } })
+          Object.defineProperty(source, "url", { value: "https://login.example.com/auth/callback" })
+          return Effect.succeed(HttpClientResponse.fromWeb(request, source))
+        }),
+        jar
+      )
+
+      yield* client.get("https://api.example.com/start")
+
+      const stored = yield* Ref.get(jar)
+      const now = yield* Clock.currentTimeMillis
+      assert.strictEqual(
+        Cookies.toRequestCookieHeader(stored, "https://login.example.com/auth/next", now),
+        "session=final"
+      )
+      assert.strictEqual(Cookies.toRequestCookieHeader(stored, "https://api.example.com/start", now), undefined)
+      assert.strictEqual(Cookies.toRequestCookieHeader(stored, "https://login.example.com/other", now), undefined)
+    }))
 
   it("reads cookies when Headers has no getSetCookie", () => {
     // React Native's Headers implementation does not provide getSetCookie.

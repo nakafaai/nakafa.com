@@ -1,7 +1,8 @@
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { symmetricEncrypt } from "better-auth/crypto";
-import { Clock, Crypto, Effect, Schema } from "effect";
+import { Clock, Effect, Schema } from "effect";
+import { SecureRandom } from "effect/crypto";
 
 /**
  * Signs the local backend's Better Auth cookies and encrypts its token signing
@@ -58,16 +59,16 @@ const encodeJwk = Schema.encodeEffect(JsonTextSchema);
  * the static JWKS that Convex Better Auth reads from `JWKS`: the auth config
  * verifies tokens with its public half, and Better Auth decrypts its private
  * half with the runtime's secret before signing. Every runtime gets its own
- * key, so no key material is kept anywhere else. Effect's `Crypto` has no RSA
- * key generation, so Web Crypto creates the pair.
+ * key, so no key material is kept anywhere else. Web Crypto creates the pair and
+ * exports both halves as the JSON Web Keys that Better Auth reads.
  *
  * @see https://labs.convex.dev/better-auth/experimental#static-jwks
  */
 export const createLocalJwks = Effect.fn("contentAcceptance.createLocalJwks")(
   function* () {
     const createdAt = yield* Clock.currentTimeMillis;
-    const random = yield* Crypto.Crypto;
-    const id = yield* random.randomUUIDv4();
+    const random = yield* SecureRandom.SecureRandom;
+    const id = yield* random.uuidV4();
     const [privateJwk, publicJwk] = yield* Effect.tryPromise({
       catch: () =>
         acceptanceRuntimeError(

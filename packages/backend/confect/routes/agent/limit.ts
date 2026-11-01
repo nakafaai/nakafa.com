@@ -47,13 +47,5 @@ const readClientKey = Effect.fn("agent.readClientKey")(function* (
       message: "The public API quota identity is unavailable.",
     });
   }
-  return yield* sha256Hex(address).pipe(
-    Effect.mapError(
-      (error) =>
-        new NakafaAgentDataReadError({
-          cause: getUnknownErrorMessage(error.reason.cause),
-          message: "The public API quota identity is unavailable.",
-        })
-    )
-  );
+  return yield* sha256Hex(address);
 });

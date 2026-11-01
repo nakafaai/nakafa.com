@@ -9,7 +9,7 @@ import {
   RuntimeHttpResultSchema,
 } from "@repo/backend/confect/contentRelease/runtime/result";
 import { CONTENT_TOKEN_HEADER } from "@repo/backend/content/endpoint";
-import { Effect, Result, Schema } from "effect";
+import { Effect, Exit, Result, Schema } from "effect";
 
 const AcceptedRuntimeRequestSchema = Schema.Struct({
   body: dispatchInputValidator,
@@ -42,14 +42,14 @@ export const readRuntimeRequest = Effect.fn(
   const trustedServer = yield* matchesHttpSecret(
     request.headers.get(CONTENT_TOKEN_HEADER) ?? "",
     secret
-  ).pipe(Effect.result);
-  if (Result.isFailure(trustedServer)) {
+  ).pipe(Effect.exit);
+  if (Exit.isFailure(trustedServer)) {
     return {
       kind: "rejected",
       result: failureResult("CONTENT_RUNTIME_INTERNAL", 500),
     } satisfies RuntimeRequestResult;
   }
-  if (!trustedServer.success) {
+  if (!trustedServer.value) {
     return {
       kind: "rejected",
       result: failureResult("CONTENT_RUNTIME_UNAUTHORIZED", 401),

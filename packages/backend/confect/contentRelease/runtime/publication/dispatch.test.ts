@@ -299,6 +299,37 @@ describe("contentRelease/runtime/publication/dispatch", () => {
       status: 400,
     });
   });
+  it("returns an internal failure when the runtime cannot hash a read row", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedSigned(t, "public");
+    const source = encodePublicRequestBody({
+      delivery: "public",
+      appLocale: "en",
+      publicPath: TEST_RUNTIME_PATH,
+    });
+    const result = await t.action(async (ctx) => {
+      const row = await ctx.runQuery(
+        internal.contentRelease.runtime.publication.internal.read,
+        { appLocale: "en", publicPath: TEST_RUNTIME_PATH }
+      );
+      vi.spyOn(ctx, "runQuery").mockResolvedValueOnce(row);
+      vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(
+        new Error("Hash service unavailable.")
+      );
+      return Effect.runPromise(
+        dispatchProgram(
+          source,
+          new TextEncoder().encode(source).byteLength
+        ).pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+        )
+      );
+    });
+    expect(result).toEqual({
+      body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+      status: 500,
+    });
+  });
   it("fails closed when authenticated stored evidence is tampered", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedSigned(t, "public");

@@ -31,11 +31,11 @@ import { MASCOT } from "@repo/backend/test/mascot";
 import { seedSchools } from "@repo/backend/test/school";
 import {
   Array as Arr,
-  Cause,
   DateTime,
   Duration,
   Effect,
   Exit,
+  Result,
   Schema,
   Struct,
 } from "effect";
@@ -61,7 +61,10 @@ export const slugOf = Schema.decodeSync(TenantSlug);
 
 /** The defect an exit died with, as text, so a test can name the wiring fault it expects. */
 export const defectOf = <A, E>(exit: Exit.Exit<A, E>) =>
-  Exit.hasDies(exit) ? String(Cause.squash(exit.cause)) : "no defect";
+  Exit.findDefect(exit).pipe(
+    Result.map(String),
+    Result.getOrElse(() => "no defect")
+  );
 
 /**
  * The principal `RequireMember` provides for one seeded Person: its tenant,

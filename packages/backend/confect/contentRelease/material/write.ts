@@ -74,10 +74,7 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
       );
     }
     const projectionJson = canonicalizeMaterialProjection(projection);
-    const projectionHash = yield* hashText(
-      "the active material projection",
-      projectionJson
-    );
+    const projectionHash = yield* hashText(projectionJson);
     if (
       head.projectionHash !== projectionHash ||
       head.projectionJson !== projectionJson

@@ -88,6 +88,18 @@ afterEach(() => {
   delete process.env[polarName];
 });
 describe("public content runtime HTTP route", () => {
+  it("answers the internal failure when the runtime cannot hash the token", async () => {
+    const digest = vi
+      .spyOn(crypto.subtle, "digest")
+      .mockRejectedValueOnce(new Error("Hash service unavailable."));
+    const response = await post(createConvexTestWithBetterAuth(), "{}");
+    digest.mockRestore();
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      code: "CONTENT_RUNTIME_INTERNAL",
+      kind: "failure",
+    });
+  });
   it("returns the current publication contract on the canonical path", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedRuntime(t, "public");

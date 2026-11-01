@@ -112,16 +112,11 @@ export const makeIngressFixture = Effect.fn(
     sitemap: true,
     topicTitle: "Technical Head",
   });
-  const itemDigest = yield* digestItems(
-    ingressReleaseId,
-    Stream.make(ingressItem)
-  );
+  const itemDigest = yield* digestItems(Stream.make(ingressItem));
   const projectionDigest = yield* digestProjections(
-    ingressReleaseId,
     Stream.make(ingressProjection)
   );
   const rollbackDigest = yield* digestRollbackSnapshot(
-    ingressReleaseId,
     Stream.make(
       RollbackSnapshotEntrySchema.make({
         index: 0,
@@ -135,10 +130,7 @@ export const makeIngressFixture = Effect.fn(
       })
     )
   );
-  const routeDigest = yield* digestRoutes(
-    ingressReleaseId,
-    Stream.make(ingressRoute)
-  );
+  const routeDigest = yield* digestRoutes(Stream.make(ingressRoute));
   const ingressHead = MaterialHeadSchema.make({
     artifactHash: ingressArtifact.artifactHash,
     compilerConfigHash: ingressArtifact.payload.compilerConfigHash,
@@ -211,16 +203,9 @@ export const makeIngressFixture = Effect.fn(
     index: 0,
     releaseId: ingressRecoveryId,
   });
-  const recoveryItems = yield* digestItems(
-    ingressRecoveryId,
-    Stream.make(ingressRecoveryItem)
-  );
-  const recoveryProjections = yield* digestProjections(
-    ingressRecoveryId,
-    Stream.empty
-  );
+  const recoveryItems = yield* digestItems(Stream.make(ingressRecoveryItem));
+  const recoveryProjections = yield* digestProjections(Stream.empty);
   const recoveryRollback = yield* digestRollbackSnapshot(
-    ingressRecoveryId,
     Stream.make(
       RollbackSnapshotEntrySchema.make({
         index: 0,
@@ -229,10 +214,7 @@ export const makeIngressFixture = Effect.fn(
       })
     )
   );
-  const recoveryRoutes = yield* digestRoutes(
-    ingressRecoveryId,
-    Stream.make(ingressRecoveryRoute)
-  );
+  const recoveryRoutes = yield* digestRoutes(Stream.make(ingressRecoveryRoute));
 
   const ingressRecovery = yield* testSignedRelease(
     ContentReleaseManifestSchema.make({

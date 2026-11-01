@@ -50,7 +50,7 @@ function isAllowedCall(use: Node, imported: string) {
 
 /**
  * Returns the import declarations of the Node crypto module that a fixture
- * keeps to sign synchronously with Ed25519. Neither Effect's `Crypto` nor Web
+ * keeps to sign synchronously with Ed25519. Neither Effect's `Signature` nor Web
  * Crypto signs synchronously, and a fixture built when its module loads cannot
  * wait for a Promise. All of these hold:
  * - The import declaration binds `generateKeyPairSync` and `sign`, under any

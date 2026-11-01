@@ -23,7 +23,7 @@ export const hashBatch = Effect.fn("contentRelease.hashBatch")(function* (
     batchIndex,
     values,
   ]).pipe(Effect.orDie);
-  return yield* hashText("the immutable publication batch", text);
+  return yield* hashText(text);
 });
 /** Rejects one immutable batch index reused with different exact bytes. */
 export function validateStoredBatch(

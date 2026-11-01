@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { ConvexCli } from "@repo/backend/scripts/development/cli";
@@ -7,6 +6,7 @@ import {
   type Question,
 } from "@repo/backend/scripts/nina/deployment";
 import { DeploymentLive } from "@repo/backend/scripts/nina/live";
+import { nodePlatform } from "@repo/backend/test/platform";
 import {
   Array as Arr,
   ConfigProvider,
@@ -158,7 +158,7 @@ describe("the deployment of the release gate over the Convex CLI", () => {
         "chats/mutations:deleteChat",
         "auth/deletion:claimAccountDeletion",
       ]);
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.live(
@@ -195,7 +195,7 @@ describe("the deployment of the release gate over the Convex CLI", () => {
             CONVEX_DEPLOY_KEY: "",
           },
         ]);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.live("refuses production before it runs a single command", () =>
@@ -214,7 +214,7 @@ describe("the deployment of the release gate over the Convex CLI", () => {
         "Refusing to run against a deployment that is not a dev deployment"
       );
       expect(yield* fs.exists(log)).toBe(false);
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.live(
@@ -240,6 +240,6 @@ describe("the deployment of the release gate over the Convex CLI", () => {
           _tag: "NinaGateError",
           message: "Learner account failed: boom",
         });
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 });

@@ -13,6 +13,26 @@ import {
   testRuntimeCache,
 } from "@/test/store";
 
+/** The digest of a key failed, as Effect's digest does: it dies. */
+class DigestUnavailableError extends Data.TaggedError(
+  "DigestUnavailableError"
+) {}
+
+/** Makes the digest of a key fail on demand. */
+const digest = vi.hoisted(() => ({ fails: false }));
+
+vi.mock("@repo/utilities/digest", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@repo/utilities/digest")>();
+  return {
+    ...actual,
+    sha256Hex: (text: string) =>
+      digest.fails
+        ? Effect.die(new DigestUnavailableError())
+        : actual.sha256Hex(text),
+  };
+});
+
 vi.mock("@/lib/content/store/memory", async () => {
   const { testRuntimeCacheModule } = await import("@/test/store");
   return testRuntimeCacheModule;
@@ -27,26 +47,6 @@ vi.mock("@/lib/content/store/build", () => ({
   readBuildEntry,
   writeBuildEntry,
 }));
-
-/** The digest of a key failed, as the platform digest can. */
-class DigestUnavailableError extends Data.TaggedError(
-  "DigestUnavailableError"
-) {}
-
-/** Makes the digest of a key fail on demand, as the platform digest can. */
-const digest = vi.hoisted(() => ({ fails: false }));
-
-vi.mock("@repo/utilities/digest", async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import("@repo/utilities/digest")>();
-  return {
-    ...actual,
-    sha256Hex: (text: string) =>
-      digest.fails
-        ? Effect.fail(new DigestUnavailableError())
-        : actual.sha256Hex(text),
-  };
-});
 
 const TextSchema = Schema.String;
 const parts = ["page.catalog", "en"];
@@ -224,10 +224,18 @@ describe("content store entries", () => {
     Effect.gen(function* () {
       digest.fails = true;
       const read = yield* readStoreEntry({ parts, schema: TextSchema });
+      yield* writeStoreEntry({
+        parts,
+        schema: TextSchema,
+        tags: [],
+        ttl: "1 minute",
+        value: "kept",
+      });
       digest.fails = false;
 
       expect(read).toStrictEqual(Option.none());
       expect(testRuntimeCache.get).not.toHaveBeenCalled();
+      expect(testRuntimeCache.set).not.toHaveBeenCalled();
     })
   );
 

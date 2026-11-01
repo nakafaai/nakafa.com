@@ -11,7 +11,6 @@ class ContentStoreUnavailableError extends Schema.TaggedError<ContentStoreUnavai
   "ContentStoreUnavailableError",
   {
     cause: Schema.Unknown,
-    operation: Schema.Literals(["digest", "write"]),
   }
 ) {}
 
@@ -44,18 +43,12 @@ const CONTENT_STORE_VERSION = "1";
 const runtimeCache = makeMemoryStore();
 
 /** Digests one key into the opaque text that the store keeps it under. */
-const makeStoreKey = Effect.fn("www.content.store.key")(function* (
-  parts: readonly string[]
-) {
-  return yield* sha256Hex(
-    encodeJsonText([CONTENT_STORE_VERSION, ...parts])
-  ).pipe(
-    Effect.mapError(
-      (cause) =>
-        new ContentStoreUnavailableError({ cause, operation: "digest" })
-    )
-  );
-});
+const makeStoreKey = Effect.fn("www.content.store.key")(
+  function* (parts: readonly string[]) {
+    return yield* sha256Hex(encodeJsonText([CONTENT_STORE_VERSION, ...parts]));
+  },
+  Effect.catchDefect((cause) => new ContentStoreUnavailableError({ cause }))
+);
 
 /**
  * Wraps one value in a JSON codec derived from its schema. The wrapper keeps a
@@ -76,7 +69,6 @@ const warnLimit = (error: ContentStoreLimitError) =>
 const warnUnavailable = (error: ContentStoreUnavailableError) =>
   Effect.logWarning(
     "The content store is unavailable.",
-    error.operation,
     Cause.fail(error.cause)
   );
 
@@ -146,10 +138,7 @@ export const writeStoreEntry = Effect.fn("www.content.store.writeEntry")(
       const entry = yield* Schema.encodeEffect(makeEntryCodec(input.schema))({
         value: input.value,
       }).pipe(
-        Effect.mapError(
-          (cause) =>
-            new ContentStoreUnavailableError({ cause, operation: "write" })
-        )
+        Effect.mapError((cause) => new ContentStoreUnavailableError({ cause }))
       );
       yield* checkStoreLimit(entry);
       const now = yield* Clock.currentTimeMillis;

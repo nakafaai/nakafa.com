@@ -1,10 +1,10 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   createLocalSigningIdentity,
   LocalSigningIdentitySchema,
   verifyLocalSigningIdentity,
 } from "@repo/backend/scripts/content/acceptance/signing";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { Effect, FileSystem, Option, Schema } from "effect";
 
 const message = new TextEncoder().encode("technical acceptance message");
@@ -104,7 +104,7 @@ describe("isolated acceptance signing identity", () => {
             "The isolated acceptance signing identity could not be generated.",
         });
         expect(yield* fs.readDirectory(directory)).toEqual([]);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   it.live(
@@ -137,7 +137,7 @@ describe("isolated acceptance signing identity", () => {
         ).toBe(0o600);
         yield* verifyLocalSigningIdentity(first.directory, first.signing);
         yield* verifyLocalSigningIdentity(second.directory, second.signing);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   it.live(
@@ -182,7 +182,7 @@ describe("isolated acceptance signing identity", () => {
         );
 
         expect(valid).toBe(true);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   for (const { change, message: expected } of CHANGES) {
@@ -228,7 +228,7 @@ describe("isolated acceptance signing identity", () => {
           message: expected,
         });
         expect(yield* fs.exists(signing.privateKeyPath)).toBe(true);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
     );
   }
 
@@ -257,6 +257,6 @@ describe("isolated acceptance signing identity", () => {
           Effect.flip
         )
       ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(nodePlatform))
   );
 });

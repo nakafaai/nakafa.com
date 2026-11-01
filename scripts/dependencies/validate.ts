@@ -8,6 +8,7 @@ import {
 } from "effect";
 import {
   AI_SDK_COHORT,
+  ALCHEMY_COHORT,
   DEPENDENCY_HOLDS,
   EFFECT_COHORT_OVERRIDES,
   EFFECT_COHORT_VERSION,
@@ -117,11 +118,13 @@ function cohortProblems(workspace: WorkspaceManifest) {
           `${dependency} must match the supported Vitest ${VITEST_COHORT_VERSION} cohort.`
         )
     ),
-    Arr.flatMap(Rec.toEntries(AI_SDK_COHORT), ([dependency, version]) =>
-      problemWhen(
-        workspace.catalog?.[dependency] !== version,
-        `The ${dependency} catalog must be exactly ${version}.`
-      )
+    Arr.flatMap(
+      Rec.toEntries({ ...AI_SDK_COHORT, ...ALCHEMY_COHORT }),
+      ([dependency, version]) =>
+        problemWhen(
+          workspace.catalog?.[dependency] !== version,
+          `The ${dependency} catalog must be exactly ${version}.`
+        )
     ),
   ]);
 }

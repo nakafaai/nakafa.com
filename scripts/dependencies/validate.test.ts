@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import {
   AI_SDK_COHORT,
+  ALCHEMY_COHORT,
   DEPENDENCY_HOLDS,
   EFFECT_COHORT_OVERRIDES,
   EFFECT_COHORT_VERSION,
@@ -80,6 +81,7 @@ function validInput(): PolicyInput {
     workspace: {
       catalog: {
         ...AI_SDK_COHORT,
+        ...ALCHEMY_COHORT,
         "@effect/platform-node": EFFECT_COHORT_VERSION,
         "@effect/vitest": EFFECT_COHORT_VERSION,
         "@vitest/coverage-istanbul": VITEST_COHORT_VERSION,

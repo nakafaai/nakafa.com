@@ -26,9 +26,9 @@ export const PACKAGE_MANAGER = "bun@1.4.4";
  * release and the workflow checks compare it with this value.
  */
 export const NODE_RUNTIME_VERSION = "26.13.0";
-const CONTRACT_PACKAGE_VERSION = "2.0.0";
+const CONTRACT_PACKAGE_VERSION = "4.1.0";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.0.5";
+export const EFFECT_COHORT_VERSION = "4.1.0";
 /**
  * Effect packages that only dependencies declare: the Confect CLI's platform
  * packages and the Confect server's AI providers. An override keeps each one
@@ -52,6 +52,23 @@ export const VITEST_COHORT_VERSION = "5.0.5";
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
   ai: "7.0.159",
+} as const;
+/**
+ * Alchemy's packages, pinned by content-addressed tarball to the preview build of
+ * commit 9d0709d22a. Its npm release 2.0.0-beta.84 imports `effect/Crypto`, which
+ * Effect 4.1 deletes, and the fix (alchemy-run/alchemy#2754) is in no release yet.
+ * The first release past beta.84 replaces these pins: `bun run bump-deps` reports
+ * it through the `alchemy@latest` review.
+ */
+export const ALCHEMY_COHORT = {
+  "@alchemy.run/cloudflare":
+    "https://pkg.alchemy.run/@alchemy.run/cloudflare/-/7ab6a6e898217421d56affee30688194eb4a9ce22abc21660634c8afe977eebf.tgz",
+  "@alchemy.run/cloudflare-runtime":
+    "https://pkg.alchemy.run/@alchemy.run/cloudflare-runtime/-/1476c7860e9faaf0d7e0363d7e182a4268e09ae4fed607acf43dcc32ff9e28b9.tgz",
+  "@alchemy.run/github":
+    "https://pkg.alchemy.run/@alchemy.run/github/-/36f7e327dbfc312bb76540bd5b32eeb8410dc87e741000caa69423afe350565c.tgz",
+  alchemy:
+    "https://pkg.alchemy.run/alchemy/-/e7670ec4be7543453ff4dfb68321d9a4a1bb4450a5608fb20731df35d0523bfa.tgz",
 } as const;
 /**
  * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
@@ -124,7 +141,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
  * Confect package stays on 10.4.1 until the cohort reaches 4.1 (#1524). The catalog
  * holds `@confect/core`, and each manifest pins the rest exactly.
  */
-const CONFECT_COHORT_VERSION = "10.4.1";
+const CONFECT_COHORT_VERSION = "10.5.0";
 /** The Confect packages each manifest pins: the web app's client and the backend's server, CLI and tests. */
 const CONFECT_DECLARATIONS: readonly (readonly [string, readonly string[]])[] =
   [
@@ -184,11 +201,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     approved: "catalog:",
     dependency: "effect",
-    minimumDeclarations: 1,
-  },
-  {
-    approved: "catalog:",
-    dependency: "@effect/platform-browser",
     minimumDeclarations: 1,
   },
   {

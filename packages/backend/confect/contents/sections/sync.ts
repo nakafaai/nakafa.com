@@ -43,7 +43,6 @@ function rowKeyOf({ appLocale, contentKey, ordinal }: SectionDraft) {
 /** Gives a section the hash of its text. */
 const withHash = (section: SectionFields) =>
   sha256Hex(section.text).pipe(
-    Effect.orDie,
     Effect.map((hash): SectionDraft => ({ ...section, hash }))
   );
 

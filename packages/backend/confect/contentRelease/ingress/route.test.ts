@@ -65,6 +65,17 @@ describe("content publication HTTP route", () => {
     });
   });
 
+  it("refuses a request when the runtime cannot hash its token", async () => {
+    process.env[tokenName] = "technical-token";
+    const digest = vi
+      .spyOn(crypto.subtle, "digest")
+      .mockRejectedValueOnce(new Error("Hash service unavailable."));
+    const response = await post('{"operation":"current"}');
+    digest.mockRestore();
+    expect(response.status).toBe(401);
+    expectPrivate(response);
+  });
+
   it("authenticates before decoding or dispatching operations", async () => {
     process.env[tokenName] = "technical-token";
     const response = await post("{", { authorization: "Bearer wrong-token" });
