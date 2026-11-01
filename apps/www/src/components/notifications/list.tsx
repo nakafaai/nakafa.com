@@ -42,7 +42,7 @@ export function NotificationsList({
         </FeedNotice>
       )}
       {empty && <FeedEmpty>{t("empty")}</FeedEmpty>}
-      {!empty && Arr.isReadonlyArrayEmpty(shown) && (
+      {!empty && ready && Arr.isReadonlyArrayEmpty(shown) && (
         <FeedEmpty>{t("topic-empty")}</FeedEmpty>
       )}
       {Arr.isReadonlyArrayNonEmpty(shown) ? (
