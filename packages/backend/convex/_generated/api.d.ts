@@ -4773,6 +4773,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
+            canEdit: boolean;
             createdAt: number;
             id: Id<"exams">;
             questionCount: number;
@@ -9136,6 +9137,36 @@ export declare const api: {
       >;
     };
     reads: {
+      classes: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+              cohortId: Id<"tenantCohorts">;
+              id: Id<"classes">;
+              name: string;
+              periodId: Id<"tenantPeriods">;
+              slug: string;
+              status: "active" | "archived";
+              subject?: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
       mine: FunctionReference<
         "query",
         "public",

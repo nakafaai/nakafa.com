@@ -35,7 +35,7 @@ import { Schema } from "effect";
  * One class as the wire shows it. `subject` is absent for the homeroom class of a
  * cohort, which is named for the cohort alone.
  */
-const ClassView = Schema.Struct({
+export const ClassView = Schema.Struct({
   cohortId: Id("tenantCohorts"),
   id: Id("classes"),
   name: ClassName,

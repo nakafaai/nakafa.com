@@ -14,6 +14,20 @@ export const paragraphVariants = cva(
   "my-4 me-auto max-w-xl leading-relaxed text-pretty tabular-nums first:mt-0 last:mb-0"
 );
 
+/**
+ * A learner's text: one gap of `mt-3` between its blocks, with none above the first or below the last. Its Markdown and
+ * the plain text that stands in until the Markdown arrives both draw with this and with `learnerParagraphVariants`, so
+ * the arrival moves nothing.
+ */
+export const learnerTextVariants = cva(
+  "wrap-anywhere *:mt-3 *:mb-0 *:first:mt-0"
+);
+
+/** A paragraph of a learner's text. */
+export const learnerParagraphVariants = cva(
+  "max-w-xl leading-relaxed text-pretty"
+);
+
 /** A heading's box: its room above and below, and the size of its level. */
 export const headingVariants = cva(
   "mt-10 mb-6 leading-tight font-medium tracking-tight first:mt-0 last:mb-0",

@@ -19,17 +19,15 @@ import {
   TaskStanding as Standing,
   standingOf,
 } from "@repo/backend/confect/classroom/tasks/task";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
@@ -127,41 +125,32 @@ function TaskListBody() {
   ) {
     throw pagination.error;
   }
-  const failed = PaginatedQueryResult.isFailure(pagination);
   // A class with no task at all shows the empty state; a standing that holds no task keeps the table and its head.
-  const empty =
-    !failed &&
-    standing === "all" &&
-    Option.exists(kept, Arr.isReadonlyArrayEmpty);
 
   return (
     <>
       <ClassHeader>
-        {empty ? null : <TableSearch placeholder={t("tasks-search")} />}
+        <TableSearch placeholder={t("tasks-search")} />
         {Arr.contains(can, "task.manage") ? <NewTask /> : null}
       </ClassHeader>
       <TablePageBody>
-        {empty ? (
-          <TableEmpty
-            act="writing"
-            description={t("tasks-empty-description")}
-            title={t("tasks-empty")}
-          />
-        ) : null}
-        {failed ? <DataFailure onRetry={reloadPage} /> : null}
-        {failed || empty || Option.isNone(kept) ? null : (
+        <TablePages pageSize={TASK_PAGE_SIZE} pagination={pagination}>
           <DataTable
             columns={columns}
-            data={kept.value}
+            data={Option.getOrElse(kept, Arr.empty)}
+            empty={
+              standing === "all" ? (
+                <TableEmpty
+                  act="writing"
+                  description={t("tasks-empty-description")}
+                  title={t("tasks-empty")}
+                />
+              ) : undefined
+            }
             rowId={(task) => task.id}
             search="title"
           />
-        )}
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection
-            onIntersect={() => pagination.loadMore(TASK_PAGE_SIZE)}
-          />
-        ) : null}
+        </TablePages>
       </TablePageBody>
     </>
   );

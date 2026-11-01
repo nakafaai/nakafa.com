@@ -1,6 +1,5 @@
 import {
   type PaginatedQueryItem,
-  PaginatedQueryResult,
   QueryResult,
   useMutation,
   usePaginatedQuery,
@@ -28,19 +27,17 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
 import { Array as Arr, Option, Schema } from "effect";
 import { type ComponentProps, startTransition, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -128,19 +125,10 @@ function SchoolMembersBody() {
     { initialNumItems: PAGE_SIZE }
   );
 
-  const failed = PaginatedQueryResult.isFailure(pagination);
-
   return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      {pagination._tag === "LoadingFirstPage" ||
-      (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-        <SchoolMemberTable members={pagination.results} />
-      )}
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
-    </>
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+      <SchoolMemberTable members={pagination.results} />
+    </TablePages>
   );
 }
 
@@ -149,16 +137,6 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
   const viewer = useViewerQuery();
-
-  if (Arr.isReadonlyArrayEmpty(members)) {
-    return (
-      <TableEmpty
-        act="waving"
-        description={t("members-empty-description")}
-        title={t("members-empty")}
-      />
-    );
-  }
 
   const unitsOf = (member: MemberItem) =>
     QueryResult.isSuccess(viewer)
@@ -238,6 +216,13 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
     <DataTable
       columns={columns}
       data={members}
+      empty={
+        <TableEmpty
+          act="waving"
+          description={t("members-empty-description")}
+          title={t("members-empty")}
+        />
+      }
       rowId={(member) => member.id}
       search="name"
     />

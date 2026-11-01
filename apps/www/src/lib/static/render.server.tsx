@@ -9,15 +9,15 @@ import { Effect } from "effect";
 import { renderToReadableStream } from "react-dom/server";
 
 /**
- * Renders a page that the build prerenders whole: React draws every boundary
- * before the first byte is read, so a part that finishes after the shell, such
- * as a chart, stays inside its article instead of landing at the page's end for
- * the browser's script to move. Start's own handler waits for every boundary
+ * Renders a page whole: React draws every boundary before the first byte is
+ * read, so the browser never paints half a document, and a part that finishes
+ * after the shell, such as a chart, stays inside its article instead of landing
+ * at the page's end for the browser's script to move. Start's own handler waits for every boundary
  * only for a crawler, and only after its transform has begun to read the page,
  * which flushes the shell first (`renderRouterToStream` in
  * `@tanstack/react-router` 1.170.46).
  */
-export const renderStaticPage = defineHandlerCallback(
+export const renderWholePage = defineHandlerCallback(
   ({ request, responseHeaders, router }) =>
     Effect.runPromise(
       Effect.gen(function* () {

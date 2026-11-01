@@ -4,7 +4,11 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { denied, nf, otherSchoolTeacher } from "@repo/backend/test/editor";
 import { archiveUnit, examRows } from "@repo/backend/test/exams";
-import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  grantRole,
+  TENANCY_NOW,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { cohorts, create, duplicate, list, open, rename } =
@@ -161,6 +165,30 @@ describe("exams/exams", () => {
         ]);
         const student = yield* fixture.as("student").query(list, page);
         expect(student.page).toEqual([]);
+        expect(Arr.map(admin.page, (exam) => exam.canEdit)).toEqual([
+          true,
+          true,
+          true,
+        ]);
+        const proctor = yield* fixture
+          .run(
+            grantRole(
+              fixture.tenants.nf,
+              fixture.people.teacher.personId,
+              "proctor",
+              {
+                kind: "unit",
+                unitId: fixture.units.sma,
+              }
+            )
+          )
+          .pipe(Effect.andThen(fixture.as("teacher").query(list, page)));
+        expect(
+          Arr.map(proctor.page, ({ canEdit, title }) => ({ canEdit, title }))
+        ).toEqual([
+          { canEdit: false, title: "Kelas SMA" },
+          { canEdit: true, title: "Kelas SMP" },
+        ]);
       })
   );
 

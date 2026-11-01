@@ -258,41 +258,13 @@ function RoomsTable({
   ) {
     throw pagination.error;
   }
-  if (Option.isNone(kept)) {
-    return null;
-  }
-  const rooms = kept.value;
+  const rooms = Option.getOrElse(kept, Arr.empty);
   const failed = PaginatedQueryResult.isFailure(pagination);
   const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
     ? () => pagination.loadMore(ROOM_PAGE_SIZE)
     : null;
-  const empty = Arr.isReadonlyArrayEmpty(rooms);
-  if (empty && failed) {
+  if (Arr.isReadonlyArrayEmpty(rooms) && failed) {
     return <LoadFailure onRetry={reloadPage} />;
-  }
-  if (empty && pagination._tag !== "Exhausted") {
-    return <RoomsMore loadMore={loadMore} />;
-  }
-  if (empty && filter === "all" && search === "") {
-    return (
-      <TableEmpty
-        act="pointing"
-        action={
-          tenant.canOpenExams ? (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              params={{ exam: examId, slug }}
-              to="/school/$slug/exams/$exam/edit"
-            >
-              <HugeIcons icon={PencilEdit02Icon} />
-              {t("edit-action")}
-            </Link>
-          ) : undefined
-        }
-        description={t("rooms-empty-description")}
-        title={t("rooms-empty")}
-      />
-    );
   }
 
   return (
@@ -391,22 +363,37 @@ function RoomsTable({
           )),
         ]}
         data={rooms}
-        loading={loading || loadMore !== null || empty}
+        empty={
+          filter === "all" && search === "" ? (
+            <TableEmpty
+              act="pointing"
+              action={
+                tenant.canOpenExams ? (
+                  <Link
+                    className={buttonVariants({ variant: "outline" })}
+                    params={{ exam: examId, slug }}
+                    to="/school/$slug/exams/$exam/edit"
+                  >
+                    <HugeIcons icon={PencilEdit02Icon} />
+                    {t("edit-action")}
+                  </Link>
+                ) : undefined
+              }
+              description={t("rooms-empty-description")}
+              title={t("rooms-empty")}
+            />
+          ) : (
+            <TableEmpty
+              act="searching"
+              description={t("rooms-filter-empty-description")}
+              title={t("rooms-filter-empty")}
+            />
+          )
+        }
+        loading={!PaginatedQueryResult.isExhausted(pagination)}
         rowId={(room) => room.id}
       />
-      {empty ? (
-        <TableEmpty
-          act="searching"
-          description={t("rooms-filter-empty-description")}
-          title={t("rooms-filter-empty")}
-        />
-      ) : null}
-      <RoomsMore loadMore={loadMore} />
+      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
     </>
   );
-}
-
-/** The sentinel that reads the next page of rooms as it comes into view, while the list has more. */
-function RoomsMore({ loadMore }: { loadMore: (() => void) | null }) {
-  return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
 }

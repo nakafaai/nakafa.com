@@ -61,8 +61,16 @@ export function TenantNavigation() {
  */
 function TenantSchoolGroups() {
   const tenant = useTenant();
-  const { canOpenExams, canOpenGraduation, canOpenReports, reach, role, slug } =
-    tenant;
+  const {
+    canOpenExams,
+    canOpenGraduation,
+    canOpenInsight,
+    canOpenReports,
+    home,
+    reach,
+    role,
+    slug,
+  } = tenant;
   const settings = firstSettingsTarget(slug, reach);
   const matchRoute = useMatchRoute();
   const tExams = useTranslations("Exams");
@@ -176,7 +184,7 @@ function TenantSchoolGroups() {
             </SidebarMenuItem>
           </>
         ) : null}
-        {Option.contains(role, "guardian") ? null : (
+        {canOpenInsight ? (
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={
@@ -192,8 +200,8 @@ function TenantSchoolGroups() {
               <span className="truncate">{tInsight("title")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        )}
-        {canOpenExams ? (
+        ) : null}
+        {canOpenExams || home.canWatch ? (
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={

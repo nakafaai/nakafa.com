@@ -83,23 +83,10 @@ function OwnGradeTable() {
   if (QueryResult.isFailure(grades)) {
     throw grades.error;
   }
-  if (!QueryResult.isSuccess(grades)) {
-    return null;
-  }
-  if (Arr.isReadonlyArrayEmpty(grades.value)) {
-    return (
-      <TableEmpty
-        act="writing"
-        description={t("own-empty-description")}
-        title={t("own-empty")}
-      />
-    );
-  }
+  const rows = QueryResult.isSuccess(grades) ? grades.value : [];
 
-  const periods = Arr.dedupe(Arr.map(grades.value, (grade) => grade.period));
-  const bands = Arr.dedupe(
-    Arr.map(grades.value, (grade) => grade.band ?? NO_BAND)
-  );
+  const periods = Arr.dedupe(Arr.map(rows, (grade) => grade.period));
+  const bands = Arr.dedupe(Arr.map(rows, (grade) => grade.band ?? NO_BAND));
   const columns = [
     gradeColumns.text((grade) => grade.className, {
       cell: (info) => (
@@ -152,7 +139,15 @@ function OwnGradeTable() {
   return (
     <DataTable
       columns={columns}
-      data={grades.value}
+      data={rows}
+      empty={
+        <TableEmpty
+          act="writing"
+          description={t("own-empty-description")}
+          title={t("own-empty")}
+        />
+      }
+      loading={!QueryResult.isSuccess(grades)}
       rowId={(grade) => grade.id}
       search="class"
     />
