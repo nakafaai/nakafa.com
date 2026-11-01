@@ -1,38 +1,48 @@
-import { Effect, Fiber } from "effect";
+import { ClientOnly } from "@tanstack/react-router";
+import { Array as Arr, Effect, Fiber } from "effect";
 import {
   createContext,
   type ReactNode,
+  Suspense,
   use,
   useEffect,
   useLayoutEffect,
   useState,
 } from "react";
-import { type StoreApi, useStore } from "zustand";
-import { createPaperHold, type PaperHold } from "@/components/player/hold";
+import { useStore } from "zustand";
+import { createPaperHold } from "@/components/player/hold";
 
-/** How long a paper waits for its texts, so a lost connection never leaves it out of sight. */
+/** How long a paper waits, so a lost connection never leaves it out of sight. */
 const HOLD_LIMIT = "10 seconds";
 
-const PaperHoldContext = createContext<StoreApi<PaperHold> | null>(null);
+/** Outside a held paper, as on a proctor's view of a student's screen, a text draws as soon as it can. */
+const PaperHoldContext = createContext(createPaperHold([], true));
 
 /**
- * Keeps a paper out of sight until the texts of its first screen can draw. A text arrives apart from the paper
- * around it, and a line of it moves everything below, so the paper shows whole and nothing moves: the sitting, the
- * try and the editor all wait this way. The paper keeps its place in the layout while it waits.
+ * Keeps a paper out of sight until its first screen can draw. A text arrives apart from the paper around it, and a
+ * line of it moves everything below, so the paper shows whole and nothing moves: the sitting, the try and the editor
+ * all wait this way. The paper keeps its place in the layout while it waits.
+ *
+ * A `primer` is the lazy code the paper's texts need, drawn once out of sight. Lazy code suspends on its first use,
+ * and React holds a boundary's reveal for a moment after its fallback, so a text that used it first would stand empty
+ * on a paper already shown. Texts wait for the primer instead (`usePaperDrawable`), and then draw in one frame.
  */
 export function HeldPaper({
   children,
   keys,
-  ready,
+  primer,
 }: {
   readonly children: ReactNode;
   /** The texts of the paper, in reading order. */
   readonly keys: readonly string[];
-  /** Whether the code that draws the texts has loaded. */
-  readonly ready: boolean;
+  /** The lazy code the texts need; a paper with none draws them at once. */
+  readonly primer?: ReactNode;
 }) {
-  const [store] = useState(() => createPaperHold(keys));
-  const waiting = useStore(store, (state) => state.waiting.length > 0);
+  const [store] = useState(() => createPaperHold(keys, primer === undefined));
+  const shown = useStore(
+    store,
+    (state) => state.drawable && Arr.isReadonlyArrayEmpty(state.waiting)
+  );
 
   useEffect(() => {
     const limit = Effect.runFork(
@@ -47,12 +57,35 @@ export function HeldPaper({
 
   return (
     <PaperHoldContext value={store}>
-      <div className={ready && !waiting ? undefined : "invisible"}>
-        {children}
-      </div>
+      {primer === undefined ? null : (
+        <div hidden>
+          <ClientOnly fallback={null}>
+            <Suspense fallback={null}>
+              {primer}
+              <PrimerDone />
+            </Suspense>
+          </ClientOnly>
+        </div>
+      )}
+      <div className={shown ? undefined : "invisible"}>{children}</div>
     </PaperHoldContext>
   );
 }
+
+/** Stands after the primer in its boundary, so it mounts in the commit that shows the primer's code has loaded. */
+function PrimerDone() {
+  const store = use(PaperHoldContext);
+
+  useLayoutEffect(() => {
+    store.getState().prime();
+  }, [store]);
+
+  return null;
+}
+
+/** Whether a text may draw now: its code stands ready, so it draws in the frame it arrives. */
+export const usePaperDrawable = () =>
+  useStore(use(PaperHoldContext), (state) => state.drawable);
 
 /**
  * Tells the paper that one of its texts can draw, before the browser paints, so a text that is known at once never
@@ -63,7 +96,7 @@ export function usePaperText(key: string, settled: boolean) {
 
   useLayoutEffect(() => {
     if (settled) {
-      store?.getState().settle(key);
+      store.getState().settle(key);
     }
   }, [key, settled, store]);
 }

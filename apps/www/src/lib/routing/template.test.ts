@@ -2,9 +2,18 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   isBarePath,
   isRenderedPath,
+  isServerFunctionPath,
   matchesRouteTemplate,
   namesFile,
 } from "@/lib/routing/template";
+
+describe("isServerFunctionPath", () => {
+  it("names a server function call and nothing else", () => {
+    expect(isServerFunctionPath("/_serverFn/abc")).toBe(true);
+    expect(isServerFunctionPath("/_serverFn")).toBe(false);
+    expect(isServerFunctionPath("/en/_serverFn/abc")).toBe(false);
+  });
+});
 
 describe("route templates", () => {
   it("matches static segments, parameters and a trailing slash", () => {

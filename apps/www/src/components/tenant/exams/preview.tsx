@@ -175,7 +175,10 @@ export function PreviewProse({
   doc: Option.Option<Node>;
   size: "line" | "page" | "paper";
 }) {
-  const shown = useDeferredValue(Option.getOrElse(doc, () => EMPTY_TEXT));
+  const latest = Option.getOrElse(doc, () => EMPTY_TEXT);
+  const deferred = useDeferredValue(latest);
+  // A text that just arrived draws at once, so the page takes its shape in one frame, and nothing below it moves.
+  const shown = deferred === EMPTY_TEXT ? latest : deferred;
   const [figures, setFigures] = useState<readonly HTMLElement[]>([]);
   // The text is drawn again only when it changes, not on every redraw of the page.
   const draw = useCallback(

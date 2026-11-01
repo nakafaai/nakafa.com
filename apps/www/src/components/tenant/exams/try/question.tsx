@@ -12,11 +12,7 @@ import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { lazy, type ReactNode, Suspense } from "react";
 import { SittingChoice } from "@/components/exams/sitting/choice";
-import {
-  ReaderPrimer,
-  useCodeLoaded,
-  useReaderLoaded,
-} from "@/components/exams/sitting/document";
+import { ReaderPrimer } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import { SittingReason } from "@/components/exams/sitting/reason";
@@ -29,7 +25,11 @@ import {
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
-import { HeldPaper, usePaperText } from "@/components/player/held";
+import {
+  HeldPaper,
+  usePaperDrawable,
+  usePaperText,
+} from "@/components/player/held";
 import { readQuestionIds } from "@/components/player/ids";
 import {
   PlayerQuestion,
@@ -46,15 +46,15 @@ import { useLastValue } from "@/lib/data/kept";
 const TRY_CLIENT = "try";
 
 /** The prompt's code, with the editor's schema and the fold, which the try's first page carries neither of. */
-const loadPrompt = () => import("@/components/tenant/exams/try/prompt");
-
 const TryPrompt = lazy(() =>
-  loadPrompt().then((module) => ({ default: module.TryPrompt }))
+  import("@/components/tenant/exams/try/prompt").then((module) => ({
+    default: module.TryPrompt,
+  }))
 );
 
 /**
  * Keeps the paper out of sight until it can draw its first screen, as a sitting's paper does: the reader and the
- * prompt's code have loaded, and the texts of its first questions have opened, so no option moves when its prompt
+ * prompt's code stand ready, and the texts of its first questions have opened, so no option moves when its prompt
  * arrives.
  */
 export function TryReveal({
@@ -64,9 +64,6 @@ export function TryReveal({
   children: ReactNode;
   questions: readonly Question[];
 }) {
-  const reader = useReaderLoaded(true);
-  const prompt = useCodeLoaded(loadPrompt, true);
-
   return (
     <HeldPaper
       keys={Arr.flatMap(questions, (question) =>
@@ -74,9 +71,13 @@ export function TryReveal({
           ? [question.prompt]
           : [question.reading, question.prompt]
       )}
-      ready={reader && prompt}
+      primer={
+        <>
+          <ReaderPrimer />
+          <TryPrompt opened={undefined} />
+        </>
+      }
     >
-      <ReaderPrimer />
       {children}
     </HeldPaper>
   );
@@ -176,9 +177,9 @@ export function ExamTryQuestion({
 
 /**
  * The prompt of one question. The paper shows once its first screen can draw, as a sitting's paper does, so the
- * options below it do not move while the document opens and the reader loads. The prompt stands before its document
- * opens, so its code never waits at the moment the text arrives. A prompt that does not open leaves no space, and
- * one whose exam goes while it is tried keeps the text it showed, as the paper keeps the exam's title and questions.
+ * options below it do not move while the document opens and the reader loads. A prompt that does not open leaves no
+ * space, and one whose exam goes while it is tried keeps the text it showed, as the paper keeps the exam's title and
+ * questions.
  */
 function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
   const slug = useTrySlug();
@@ -188,8 +189,12 @@ function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
     slug,
   });
   const opened = useLastValue(reply);
+  const drawable = usePaperDrawable();
   usePaperText(documentId, !QueryResult.isLoading(reply));
 
+  if (!drawable) {
+    return null;
+  }
   return (
     <Suspense fallback={null}>
       <ClientOnly fallback={null}>

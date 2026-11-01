@@ -6,6 +6,7 @@ import {
   handleStartError,
 } from "@tanstack/react-start/server";
 import { Effect, Option } from "effect";
+import { answerStaleFunction } from "@/lib/chunks/stale.server";
 import { answerRequest } from "@/lib/routing/answer.server";
 import { logRouteFailures } from "@/lib/routing/failures.server";
 import "@/lib/server/runtime";
@@ -56,6 +57,7 @@ export default createServerEntry({
             Effect.as(handleStartError(error.cause))
           )
         ),
+        Effect.flatMap((response) => answerStaleFunction(request, response)),
         Effect.flatMap((response) => attachStaticCalls(request, response)),
         Effect.map((response) => withPageHeaders(request, response))
       )

@@ -1,6 +1,21 @@
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, MutableHashMap, Option } from "effect";
-import { isStaleChunkError, reloadForStaleChunk } from "@/lib/chunks/stale";
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import {
+  Cause,
+  Deferred,
+  Effect,
+  Exit,
+  Fiber,
+  MutableHashMap,
+  Option,
+} from "effect";
+import {
+  isStaleChunkError,
+  readTab,
+  recoverStaleFunction,
+  reloadForStaleChunk,
+  STALE_CHUNK_SCRIPT,
+  STALE_FUNCTION_MESSAGE,
+} from "@/lib/chunks/stale";
 
 const CHROMIUM = new TypeError(
   "Failed to fetch dynamically imported module: https://nakafa.com/assets/schools-DhyL3sKZ.js"
@@ -91,5 +106,217 @@ describe("stale chunks", () => {
         );
         expect(reload).toHaveBeenCalledTimes(2);
       })
+  );
+});
+
+/** Runs the head script in a document of its own, over the tab's storage. */
+function openDocument(storage: Pick<Storage, "getItem" | "setItem">) {
+  const target = new EventTarget();
+  const reload = vi.fn<() => void>();
+  new Function("window", "sessionStorage", "location", STALE_CHUNK_SCRIPT)(
+    target,
+    storage,
+    { pathname: "/en/quran", reload }
+  );
+  return { reload, target };
+}
+
+/** Reports a missing script and says whether the failure was taken over. */
+function reportMissingScript(target: EventTarget) {
+  const event = new Event("vite:preloadError", { cancelable: true });
+  target.dispatchEvent(event);
+  return event.defaultPrevented;
+}
+
+describe("STALE_CHUNK_SCRIPT", () => {
+  it("reloads once and holds back every failure until the page goes", () => {
+    const { reload, target } = openDocument(tab().storage);
+
+    expect(reportMissingScript(target)).toBe(true);
+    expect(reportMissingScript(target)).toBe(true);
+    expect(reload).toHaveBeenCalledOnce();
+  });
+
+  it("lets the error boundary answer once the tab has reloaded, so it cannot loop", () => {
+    const { storage } = tab();
+    reportMissingScript(openDocument(storage).target);
+
+    const { reload, target } = openDocument(storage);
+
+    expect(reportMissingScript(target)).toBe(false);
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it.effect(
+    "shares its mark with the error boundary, so an address reloads once between them",
+    () =>
+      Effect.gen(function* () {
+        const { reload, storage } = tab();
+        reportMissingScript(openDocument(storage).target);
+
+        expect(yield* reloadForStaleChunk("/en/quran", storage, reload)).toBe(
+          false
+        );
+        expect(reload).not.toHaveBeenCalled();
+      })
+  );
+
+  it("never reloads without storage, which could not stop a loop", () => {
+    const refused = () => {
+      throw new Error("Storage is off.");
+    };
+    const { reload, target } = openDocument({
+      getItem: refused,
+      setItem: refused,
+    });
+
+    expect(reportMissingScript(target)).toBe(false);
+    expect(reload).not.toHaveBeenCalled();
+  });
+});
+
+describe("readTab", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("has no tab during server rendering", () => {
+    vi.stubGlobal("window", undefined);
+
+    expect(Option.isNone(readTab())).toBe(true);
+  });
+
+  it("reads the address in the browser, and storage only at its use", () => {
+    const reload = vi.fn();
+    const sessionStorage = { getItem: vi.fn(() => "1"), setItem: vi.fn() };
+    vi.stubGlobal("window", {
+      location: { pathname: "/en/quran", reload },
+      sessionStorage,
+    });
+
+    const tab = Option.getOrThrow(readTab());
+    tab.reload();
+    tab.storage.setItem("mark", "2");
+
+    expect(tab.address).toBe("/en/quran");
+    expect(reload).toHaveBeenCalledOnce();
+    expect(tab.storage.getItem("mark")).toBe("1");
+    expect(sessionStorage.setItem).toHaveBeenCalledWith("mark", "2");
+  });
+
+  it.effect("keeps a browser that refuses storage from reloading", () =>
+    Effect.gen(function* () {
+      const reload = vi.fn();
+      vi.stubGlobal("window", {
+        location: { pathname: "/en" },
+        get sessionStorage() {
+          throw new Error("Storage is off.");
+        },
+      });
+      const { storage } = Option.getOrThrow(readTab());
+
+      expect(yield* reloadForStaleChunk("/en", storage, reload)).toBe(false);
+      expect(reload).not.toHaveBeenCalled();
+    })
+  );
+});
+
+/** What a caller of the effect receives when it fails, as `Effect.runPromise` rejects with it. */
+const thrownBy = <A>(call: Effect.Effect<A>) =>
+  Effect.exit(call).pipe(
+    Effect.map((exit) =>
+      Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
+    )
+  );
+
+describe("recoverStaleFunction", () => {
+  const gone = new Error(STALE_FUNCTION_MESSAGE);
+  const failing = (cause: Error) => () => Promise.reject(cause);
+
+  it.effect("answers what the call answers", () =>
+    Effect.gen(function* () {
+      expect(yield* recoverStaleFunction(() => Promise.resolve("read"))).toBe(
+        "read"
+      );
+    })
+  );
+
+  it.effect(
+    "reloads for a function that a deploy removed, and holds the call",
+    () =>
+      Effect.gen(function* () {
+        const { storage } = tab();
+        const reloaded = yield* Deferred.make<void>();
+        const page = {
+          address: "/en",
+          reload: () => Deferred.doneUnsafe(reloaded, Exit.void),
+          storage,
+        };
+
+        const held = yield* Effect.forkChild(
+          recoverStaleFunction(failing(gone), () => Option.some(page))
+        );
+        yield* Deferred.await(reloaded);
+        yield* Effect.yieldNow;
+
+        expect(held.pollUnsafe()).toBeUndefined();
+        yield* Fiber.interrupt(held);
+      })
+  );
+
+  it.effect("gives the caller the failure once the address has reloaded", () =>
+    Effect.gen(function* () {
+      const { reload, storage } = tab();
+      yield* reloadForStaleChunk("/en", storage, reload);
+      reload.mockClear();
+
+      const thrown = yield* thrownBy(
+        recoverStaleFunction(failing(gone), () =>
+          Option.some({ address: "/en", reload, storage })
+        )
+      );
+
+      expect(thrown).toBe(gone);
+      expect(reload).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect(
+    "gives a loader's call on the server its failure, with no tab to reload",
+    () =>
+      Effect.gen(function* () {
+        const thrown = yield* thrownBy(
+          recoverStaleFunction(failing(gone), Option.none)
+        );
+
+        expect(thrown).toBe(gone);
+      })
+  );
+
+  it.effect("reads the tab only once a call has failed", () =>
+    Effect.gen(function* () {
+      const read = vi.fn<typeof readTab>(Option.none);
+
+      yield* recoverStaleFunction(() => Promise.resolve("read"), read);
+
+      expect(read).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("hands the caller every other failure as the call threw it", () =>
+    Effect.gen(function* () {
+      const { reload, storage } = tab();
+      const redirect = { to: "/en/auth" };
+
+      const thrown = yield* thrownBy(
+        recoverStaleFunction(
+          () => Promise.reject(redirect),
+          () => Option.some({ address: "/en", reload, storage })
+        )
+      );
+
+      expect(thrown).toBe(redirect);
+      expect(reload).not.toHaveBeenCalled();
+    })
   );
 });
