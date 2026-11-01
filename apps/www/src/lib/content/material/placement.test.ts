@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumNodeKeySchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { MaterialPlacement } from "@/lib/content/material/navigation";
 import {
   createPlacementStore,
@@ -58,7 +58,7 @@ describe("lesson places in search", () => {
       ["merdeka", "cambridge"]
     );
 
-    expect(ordered.map(({ context }) => context.programKey)).toStrictEqual([
+    expect(Arr.map(ordered, ({ context }) => context.programKey)).toStrictEqual([
       "merdeka",
       "cambridge",
       "unlisted",
