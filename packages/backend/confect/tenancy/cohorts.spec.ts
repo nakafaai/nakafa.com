@@ -29,9 +29,19 @@ const CohortView = Schema.Struct({
   status: CohortStatus,
 });
 
-/** One Person placed in a cohort, as the cohort's members list shows them. */
+/** What a settings table shows of one cohort beside its own fields. */
+const CohortOverview = Schema.Struct({
+  classes: Schema.Finite,
+  homeroom: Schema.NullOr(PersonName),
+  id: Id("tenantCohorts"),
+  name: CohortName,
+  students: Schema.Finite,
+});
+
+/** One Person placed in a cohort, as the cohort's members list shows them, with their school login. */
 const PlacedPersonView = Schema.Struct({
   id: Id("tenantPeople"),
+  login: Schema.NullOr(Schema.String),
   name: PersonName,
 });
 
@@ -60,6 +70,14 @@ export default GroupSpec.make()
       name: "list",
       args: () => ({ periodId: Id("tenantPeriods"), slug: TenantSlug }),
       returns: () => Schema.Array(CohortView),
+      error: () => AccessDenied,
+    }).middleware(PeriodAccess, { action: "period.view", arg: "periodId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "overview",
+      args: () => ({ periodId: Id("tenantPeriods"), slug: TenantSlug }),
+      returns: () => Schema.Array(CohortOverview),
       error: () => AccessDenied,
     }).middleware(PeriodAccess, { action: "period.view", arg: "periodId" })
   )

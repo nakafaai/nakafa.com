@@ -150,7 +150,8 @@
     "expires": "Läuft ab",
     "mismatches": "Fehlgeschlagene NISN-Prüfungen",
     "child": "Kind",
-    "child-detail": "Kind"
+    "child-detail": "Kind",
+    "guardian-email": "E-Mail der Eltern"
   },
   "SchoolRoster": {
     "import": "Importieren",
@@ -1403,7 +1404,14 @@
     "homeroom-description": "Eine Lehrkraft leitet jede Klasse.",
     "webhook-changes-description": "Dein System erfährt es jedes Mal, wenn eines davon geschieht.",
     "webhook-changes-none": "Dieser Client liest nichts, was ein Webhook sendet, also ändere zuerst seine Aktionen.",
-    "webhook-client-none": "Ein Webhook gehört zu einem API-Client, also erstelle zuerst einen."
+    "webhook-client-none": "Ein Webhook gehört zu einem API-Client, also erstelle zuerst einen.",
+    "class-students": "Lernende",
+    "cohort-homeroom": "Klassenleitung",
+    "cohort-students": "Lernende",
+    "cohort-classes": "Klassen",
+    "member-login": "Anmeldename",
+    "member-email": "E-Mail",
+    "member-units": "Einheiten"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1702,7 +1710,8 @@
     "own-title": "Meine Zeugnisse",
     "own-search": "Klasse suchen",
     "own-empty": "Noch kein Zeugnis abgeschlossen.",
-    "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt."
+    "own-empty-description": "Dein Zeugnis erscheint hier, sobald die Schulleitung es freigibt.",
+    "unit": "Einheit"
   },
   "SchoolGraduation": {
     "title": "Abschluss",
