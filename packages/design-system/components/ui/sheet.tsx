@@ -1,6 +1,7 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Activity, createContext, use } from "react";
@@ -29,7 +30,7 @@ function SheetClose(props: SheetPrimitive.Close.Props) {
 }
 
 const sheetPopupVariants = cva(
-  "bg-popover text-popover-foreground duration-surface fixed z-50 flex flex-col overflow-y-auto shadow-lg transition-[opacity,translate,width] will-change-transform [--sheet-inset:0px] data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
+  "bg-popover text-popover-foreground duration-surface fixed z-50 flex flex-col overflow-y-auto shadow-lg transition-[opacity,translate,width] will-change-transform [--sheet-inset:0px] has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
   {
     defaultVariants: {
       inset: false,
@@ -134,6 +135,19 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** The body of a sheet, which scrolls between its header and its footer. What it holds keeps its edges and stands apart. */
+function SheetPanel({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade>
+      <div
+        className={cn("flex min-w-0 flex-col gap-6 p-4", className)}
+        data-slot="sheet-panel"
+        {...props}
+      />
+    </ScrollArea>
+  );
+}
+
 function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
   return (
     <SheetPrimitive.Title
@@ -165,6 +179,7 @@ export {
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetPanel,
   SheetPopup,
   SheetPopup as SheetContent,
   SheetPortal,

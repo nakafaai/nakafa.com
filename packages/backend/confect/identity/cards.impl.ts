@@ -1,6 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { assignRole } from "@repo/backend/confect/access/grant";
 import {
   type CardRefusal,
@@ -83,8 +85,9 @@ const issue = FunctionImpl.make(
 );
 
 /**
- * Adds a student in one transaction: an unclaimed Person, the school login name, and
- * the first card. A login name the school cannot use refuses the step before anything
+ * Adds a student of one unit in one transaction: an unclaimed Person, the student role over
+ * that unit, the school login name, and the first card. The role names the unit, so the student
+ * sits only that unit's exams, as one who joins a room does. A login name the school cannot use refuses the step before anything
  * is written, and a name taken at the claim refuses the whole transaction, so no Person
  * is left without its card.
  */
@@ -92,8 +95,22 @@ const enroll = FunctionImpl.make(
   databaseSchema,
   spec,
   "enroll",
-  Effect.fn("identity.cards.enroll")(function* ({ loginName, name }) {
+  Effect.fn("identity.cards.enroll")(function* ({ loginName, name, unitId }) {
     const { person: issuer, tenant } = yield* Member;
+    const unit = yield* (yield* DatabaseReader)
+      .table("tenantUnits")
+      .get(unitId)
+      .pipe(Effect.option);
+    if (
+      Option.isNone(unit) ||
+      unit.value.tenantId !== tenant._id ||
+      unit.value.status !== "active"
+    ) {
+      return yield* new AccessDenied({
+        action: "person.manage",
+        reason: "resource",
+      });
+    }
     const login = readLoginName(loginName);
     if (Result.isFailure(login)) {
       return yield* new LoginNameRefused({ reason: login.failure });
@@ -102,7 +119,7 @@ const enroll = FunctionImpl.make(
     const person = yield* createPerson(by, tenant._id, name);
     yield* personAuthority.check("card.issue", person);
     yield* claimLoginName(person, login.success);
-    yield* assignRole(by, person, "student", { kind: "tenant" });
+    yield* assignRole(by, person, "student", { kind: "unit", unitId });
     const card = yield* writeCard(person, issuer, Option.none());
     yield* personAuthority.record(by, person, {
       card: card.cardId,

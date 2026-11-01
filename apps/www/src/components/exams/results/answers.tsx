@@ -2,6 +2,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { AttemptResult } from "@repo/backend/confect/exams/results/contract";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import {
@@ -89,7 +90,7 @@ function AttemptAnswers({
     );
   }
   if (!QueryResult.isSuccess(read)) {
-    return null;
+    return <PopupHold />;
   }
   const result = read.value;
   if (result === null) {

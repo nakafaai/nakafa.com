@@ -1,7 +1,9 @@
 import {
   type PaginatedQueryItem,
+  QueryResult,
   useMutation,
   usePaginatedQuery,
+  useQuery,
 } from "@confect/react";
 import {
   AtIcon,
@@ -9,6 +11,7 @@ import {
   PencilEdit02Icon,
   Refresh01Icon,
 } from "@hugeicons/core-free-icons";
+import billing from "@repo/backend/confect/_generated/refs/billing";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import { LoginName } from "@repo/backend/confect/identity/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
@@ -21,13 +24,21 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
+  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Option, Schema } from "effect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
+import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -40,7 +51,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useTenant } from "@/components/tenant/context";
+import { WithAction } from "@/components/tenant/action";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
@@ -270,9 +282,10 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
 }
 
 /**
- * The dialog that adds a student: the name and the login name. The student and the
- * first card are written together, and the dialog closes at once; the new card then
- * opens in the card dialog. The login name is lowercase, as the school stores it.
+ * The dialog that adds a student: the name, the login name, and for a school of more than one
+ * unit the unit the student belongs to. The student and the first card are written together,
+ * and the dialog closes at once; the new card then opens in the card dialog. The login name is
+ * lowercase, as the school stores it.
  */
 function SchoolStudentDialog({
   onAdded,
@@ -293,11 +306,27 @@ function SchoolStudentDialog({
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState("");
   const [loginName, setLoginName] = useState("");
+  const viewer = useViewerQuery();
+  const [pickedUnit, setPickedUnit] = useState<string | null>(null);
+  const units = QueryResult.isSuccess(viewer)
+    ? Arr.filter(viewer.value.units, (unit) => unit.status === "active")
+    : [];
+  const unit = Option.orElse(
+    Arr.findFirst(units, (current) => current.id === pickedUnit),
+    () => Arr.head(units)
+  );
+  const unitItems = Arr.map(units, (current) => ({
+    label: current.name,
+    value: current.id,
+  }));
   const parsedName = Schema.decodeOption(PersonName)(name.trim());
   const login = loginName.trim().toLowerCase();
   const parsedLogin = Schema.decodeOption(LoginName)(login);
   const loginProblem = login !== "" && Option.isNone(parsedLogin);
-  const submittable = Option.isSome(parsedName) && Option.isSome(parsedLogin);
+  const submittable =
+    Option.isSome(parsedName) &&
+    Option.isSome(parsedLogin) &&
+    Option.isSome(unit);
 
   return (
     <ResponsiveDialog
@@ -318,10 +347,15 @@ function SchoolStudentDialog({
             disabled={!submittable}
             inert={isPending}
             onClick={() => {
-              if (Option.isNone(parsedName) || Option.isNone(parsedLogin)) {
+              if (
+                Option.isNone(parsedName) ||
+                Option.isNone(parsedLogin) ||
+                Option.isNone(unit)
+              ) {
                 return;
               }
               const studentName = parsedName.value;
+              const unitId = unit.value.id;
               setOpen(false);
               startTransition(() =>
                 saveSchool(
@@ -330,6 +364,7 @@ function SchoolStudentDialog({
                       loginName: parsedLogin.value,
                       name: studentName,
                       slug,
+                      unitId,
                     }),
                   SOURCE,
                   (card) => onAdded({ ...card, name: studentName })
@@ -363,7 +398,52 @@ function SchoolStudentDialog({
           problem={loginProblem}
           value={loginName}
         />
+        {units.length > 1 ? (
+          <Field>
+            <FieldLabel htmlFor={`${id}-unit`}>{t("unit-choice")}</FieldLabel>
+            <Select
+              items={unitItems}
+              onValueChange={setPickedUnit}
+              value={Option.getOrNull(
+                Option.map(unit, (current) => current.id)
+              )}
+            >
+              <SelectTrigger className="w-full" id={`${id}-unit`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Arr.map(unitItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        ) : null}
+        <WithAction action="billing.view">
+          <StudentSeats />
+        </WithAction>
       </FieldGroup>
     </ResponsiveDialog>
+  );
+}
+
+/** How many of the free plan's students the school has used, so the limit is no surprise. */
+function StudentSeats() {
+  const { slug } = useTenant();
+  const t = useTranslations("SchoolSettings");
+  const overview = useQuery(billing.school.overview, { slug });
+
+  if (!QueryResult.isSuccess(overview) || overview.value.plan.kind !== "free") {
+    return null;
+  }
+  return (
+    <FieldDescription>
+      {t("student-add-seats", {
+        count: overview.value.students,
+        limit: overview.value.plan.limit,
+      })}
+    </FieldDescription>
   );
 }

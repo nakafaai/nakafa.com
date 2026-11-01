@@ -131,7 +131,7 @@ async function studentAtEntry(
   return { changes, student, studentContext };
 }
 
-test("words saved in a second tab reach the first tab's field, so a later key never writes over them", async ({
+test("a second tab says the exam is open elsewhere, and takes the paper over with its words when that tab closes", async ({
   baseURL,
   browser,
 }) => {
@@ -149,14 +149,18 @@ test("words saved in a second tab reach the first tab's field, so a later key ne
   await expect(essayOf(student)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
+  await essayOf(student).fill(ESSAY);
+  await essayOf(student).blur();
+
   const second = await studentContext.newPage();
   await second.goto(student.url());
-  await expect(essayOf(second)).toBeVisible({
-    timeout: readinessTimeoutMilliseconds,
-  });
-  await essayOf(second).fill(ESSAY);
-  await essayOf(second).blur();
-  await expect(essayOf(student)).toHaveValue(ESSAY, {
+  await expect(
+    second.getByText("This exam is open in another tab.")
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(essayOf(second)).toHaveCount(0);
+
+  await student.close();
+  await expect(essayOf(second)).toHaveValue(ESSAY, {
     timeout: readinessTimeoutMilliseconds,
   });
   await studentContext.close();

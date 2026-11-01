@@ -32,15 +32,24 @@ describe("tenancy/setup state", () => {
       const term = yield* period(fixture, fixture.units.smp);
       yield* openPeriod(fixture, term.id);
       const group = yield* cohort(fixture, term.id, "VII-A");
-      yield* classOf(fixture, group.id, "Fisika");
+      const taught = yield* classOf(fixture, group.id, "Fisika");
+      yield* fixture
+        .as("admin")
+        .mutation(refs.public.tenancy.placements.place, {
+          cohortId: group.id,
+          personId: fixture.people.student.personId,
+          slug: nf,
+        });
       yield* examBy(fixture, "admin", "Ulangan Harian");
       const email = yield* Schema.decodeEffect(Email)("ibu@example.com");
-      yield* fixture.as("admin").mutation(refs.public.guardians.links.start, {
-        email,
-        guardianName: "Ibu Siti",
-        slug: nf,
-        studentId: fixture.people.student.personId,
-      });
+      const link = yield* fixture
+        .as("admin")
+        .mutation(refs.public.guardians.links.start, {
+          email,
+          guardianName: "Ibu Siti",
+          slug: nf,
+          studentId: fixture.people.student.personId,
+        });
 
       expect(yield* owner.query(state, { slug: nf })).toEqual({
         classroom: true,
@@ -48,8 +57,35 @@ describe("tenancy/setup state", () => {
         exam: true,
         parent: true,
         period: true,
+        placed: true,
         student: true,
         teacher: true,
+      });
+
+      // An ended link and an archived class or cohort leave their steps to do again.
+      yield* fixture.as("admin").mutation(refs.public.guardians.links.revoke, {
+        linkId: link.id,
+        slug: nf,
+      });
+      yield* fixture
+        .as("admin")
+        .mutation(refs.public.classroom.classes.archive, {
+          classId: taught.id,
+          slug: nf,
+        });
+      expect(yield* owner.query(state, { slug: nf })).toMatchObject({
+        classroom: false,
+        cohort: true,
+        parent: false,
+        placed: true,
+      });
+      yield* fixture.as("admin").mutation(refs.public.tenancy.cohorts.archive, {
+        cohortId: group.id,
+        slug: nf,
+      });
+      expect(yield* owner.query(state, { slug: nf })).toMatchObject({
+        cohort: false,
+        placed: false,
       });
     })
   );

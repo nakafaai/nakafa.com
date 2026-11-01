@@ -73,6 +73,7 @@ const ContributorsInput = Schema.Struct({
     Schema.Struct({
       name: Schema.String,
       profiles: Schema.Array(Schema.String),
+      username: Schema.String,
     })
   ),
   url: Schema.String,
@@ -218,7 +219,9 @@ export function makeContributorsNode(input: typeof ContributorsInput.Type) {
         position: index + 1,
         item: {
           "@type": "Person",
+          "@id": `${COMPANY_IDENTITY.url}/#person-${person.username}`,
           name: person.name,
+          url: input.url,
           ...(person.profiles.length === 0 ? {} : { sameAs: person.profiles }),
         },
       })),

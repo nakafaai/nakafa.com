@@ -5,6 +5,12 @@ import {
 } from "@repo/site";
 import { Array as Arr, Option } from "effect";
 
+/** Matches the origin that serves Google's Picker script, inside the script sources. */
+const PICKER_SCRIPT_SOURCE = /script-src [^;]*https:\/\/apis\.google\.com/u;
+
+/** Matches the origin of the frame Google's Picker opens, inside the frame sources. */
+const PICKER_FRAME_SOURCE = /frame-src [^;]*https:\/\/docs\.google\.com/u;
+
 describe("createLoopbackConnectSources", () => {
   it("allows the exact HTTP and WebSocket origins for local Convex", () => {
     expect(
@@ -41,6 +47,18 @@ describe("createSecurityHeaders", () => {
     expect(csp?.value).not.toContain("https://raw.githubusercontent.com");
     expect(csp?.value).toContain("media-src 'self'");
     expect(csp?.value).not.toContain("posthog.com");
+  });
+
+  it("lets Google's Picker load its script and open its frame", () => {
+    const csp = Option.getOrUndefined(
+      Arr.findFirst(
+        createSecurityHeaders(),
+        (header) => header.key === "Content-Security-Policy"
+      )
+    );
+
+    expect(csp?.value).toMatch(PICKER_SCRIPT_SOURCE);
+    expect(csp?.value).toMatch(PICKER_FRAME_SOURCE);
   });
 
   it("adds app-owned connect sources without widening shared apps", () => {

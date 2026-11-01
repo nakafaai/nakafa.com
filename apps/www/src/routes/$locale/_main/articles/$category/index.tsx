@@ -136,7 +136,9 @@ const readArticleCategory = createServerFn({ method: "GET" })
             breadcrumbs,
             category: model.category,
             categoryPath,
-            description: tArticles("description"),
+            description: tArticles("category-description", {
+              category: model.title,
+            }),
             label: model.title,
             locale,
             nextSearch: Option.getOrNull(getArticleNextSearch(catalog)),

@@ -8,6 +8,7 @@ import {
   NoticePreferences,
   PreferenceTable,
 } from "@/components/notifications/settings";
+import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { saveSchool } from "@/components/tenant/settings/save";
 
@@ -33,20 +34,21 @@ function SchoolChoices() {
   const set = useMutation(notifications.preferences.set);
 
   if (QueryResult.isFailure(off)) {
-    throw off.error;
+    return <LoadFailure />;
   }
-  if (!QueryResult.isSuccess(off)) {
-    return null;
-  }
+  const isRead = QueryResult.isSuccess(off);
 
   return (
     <ChoiceContext
-      value={(channel, kind, on) =>
-        saveSchool(() => set({ channel, kind, on, slug }), SOURCE)
+      value={
+        isRead
+          ? (channel, kind, on) =>
+              saveSchool(() => set({ channel, kind, on, slug }), SOURCE)
+          : null
       }
     >
       <PreferenceTable
-        off={off.value}
+        off={isRead ? off.value : []}
         relation={relationOfRole(Option.getOrElse(role, () => "teacher"))}
       />
     </ChoiceContext>

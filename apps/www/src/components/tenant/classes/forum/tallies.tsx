@@ -191,7 +191,7 @@ export function ReactButton({ message }: { message: ForumMessage }) {
           </Button>
         }
       />
-      <PopoverContent align="center" className="w-auto gap-2 p-2">
+      <PopoverContent align="end" className="w-auto gap-2 p-2">
         <div className="flex justify-between gap-1 border-b pb-2">
           {Arr.map(QUICK_EMOJI, (emoji) => (
             <Button

@@ -1,5 +1,6 @@
 import { Invoice01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
@@ -65,7 +66,7 @@ export function UserSettingsPayments() {
             <SheetDescription>{t("payments-description")}</SheetDescription>
           </SheetHeader>
           {isActivated ? (
-            <Suspense fallback={null}>
+            <Suspense fallback={<PopupHold />}>
               <Receipts />
             </Suspense>
           ) : null}

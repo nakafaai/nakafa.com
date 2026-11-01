@@ -20,6 +20,7 @@ const BASE_CONTENT_SECURITY_POLICY = {
     "blob:",
     "https://unpkg.com",
     "https://accounts.google.com",
+    "https://apis.google.com",
     "https://cdn.jsdelivr.net",
   ],
 } as const;
@@ -87,7 +88,7 @@ export function createSecurityHeaders({
             ],
             " "
           )}`,
-          "frame-src 'self' https://accounts.google.com https://www.youtube-nocookie.com https://www.youtube.com",
+          "frame-src 'self' https://accounts.google.com https://docs.google.com https://www.youtube-nocookie.com https://www.youtube.com",
           `media-src ${Arr.join(BASE_CONTENT_SECURITY_POLICY.mediaSrc, " ")}`,
           "frame-ancestors 'none'",
           "base-uri 'self'",
