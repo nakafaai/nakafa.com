@@ -75,20 +75,9 @@ function OwnReportTable() {
   if (QueryResult.isFailure(cards)) {
     throw cards.error;
   }
-  if (!QueryResult.isSuccess(cards)) {
-    return null;
-  }
-  if (Arr.isReadonlyArrayEmpty(cards.value)) {
-    return (
-      <TableEmpty
-        act="relaxed"
-        description={t("own-empty-description")}
-        title={t("own-empty")}
-      />
-    );
-  }
+  const rows = QueryResult.isSuccess(cards) ? cards.value : [];
 
-  const periods = Arr.dedupe(Arr.map(cards.value, (card) => card.period));
+  const periods = Arr.dedupe(Arr.map(rows, (card) => card.period));
   const columns = [
     cardColumns.text((card) => card.cohort, {
       cell: (info) => (
@@ -148,7 +137,15 @@ function OwnReportTable() {
   return (
     <DataTable
       columns={columns}
-      data={cards.value}
+      data={rows}
+      empty={
+        <TableEmpty
+          act="relaxed"
+          description={t("own-empty-description")}
+          title={t("own-empty")}
+        />
+      }
+      loading={!QueryResult.isSuccess(cards)}
       rowId={(card) => card.id}
       search="cohort"
     />

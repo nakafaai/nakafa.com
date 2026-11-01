@@ -17,7 +17,7 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { type Header, type RowData, useTable } from "@tanstack/react-table";
 import { Array as Arr, Match, Option } from "effect";
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { PaneTableRow, pressesRow } from "@/components/shared/pane";
 import { useHasPanes } from "@/components/shared/panes";
@@ -29,6 +29,7 @@ import {
   placeOf,
 } from "@/components/shared/table/align";
 import { HeadDays } from "@/components/shared/table/calendar";
+import { tableBoxVariants } from "@/components/shared/table/card";
 import { ColumnChoice, ColumnFilter } from "@/components/shared/table/column";
 import type {
   HeadFilter,
@@ -48,6 +49,7 @@ import {
   useIsFiltered,
 } from "@/components/shared/table/panel";
 import { useTableFilters } from "@/components/shared/table/toolbar";
+import { TableWaitingContext } from "@/components/shared/table/waiting";
 import { EmptyNina } from "@/components/state/empty";
 
 /** The link of a row's first column, which is the row's primary action. */
@@ -62,15 +64,17 @@ const sortIcons = { asc: ArrowUp02Icon, desc: ArrowDown02Icon };
  * taller than the card scrolling inside it with its column heads in view, or as a part of a page (`TableFrame`). The
  * page's header row searches it: its search box keeps the rows whose `search` column holds the text. Every column
  * filters from its head by what it holds (`tableColumns`), and a column of text, numbers or moments sorts from there
- * too. Every row has the height of a row with its three-dot menu, so rows with and without one keep one rhythm. A
- * filter that leaves no row shows Nina searching in the table's place. On a page with panes, pressing a row opens it
- * beside the list. A column's meta places its head and cells: a column of badges in the middle, a column of numbers or
- * the row's menu at the end.
+ * too. Every row has the height of a row with its three-dot menu, so rows with and without one keep one rhythm. The
+ * heads are true before the rows are read, so they stand from the first frame and the rows fill in under them. A list
+ * that holds no record shows its `empty` state under the heads, and a filter that leaves no row shows Nina searching in
+ * the rows' place. On a page with panes, pressing a row opens it beside the list. A column's meta places its head and
+ * cells: a column of badges in the middle, a column of numbers or the row's menu at the end.
  */
 export function DataTable<TData extends RowData>({
   children,
   columns,
   data,
+  empty,
   loading = false,
   plain = false,
   rowId,
@@ -80,6 +84,8 @@ export function DataTable<TData extends RowData>({
   children?: ReactNode;
   columns: readonly TableColumn<TData>[];
   data: readonly TData[];
+  /** What the list says once it is read and holds no record. */
+  empty?: ReactNode;
   /** Whether more rows may still arrive, so a table with no row waits for them before it says it found none. */
   loading?: boolean;
   /** Whether a row stays a plain row on a page with panes, as a table inside an open pane's rows do. */
@@ -100,56 +106,63 @@ export function DataTable<TData extends RowData>({
     state: { columnFilters: columnFiltersOf(chosen, search, text) },
   });
   const rows = table.getRowModel().rows;
+  const waiting = use(TableWaitingContext) || loading;
+  const isBare = Arr.isReadonlyArrayEmpty(data);
+  const showsEmpty = isBare && !waiting && empty !== undefined;
 
   return (
-    <Table
-      aria-busy={loading}
-      containerClassName="flex-1 [&_[data-slot=table-cell]]:whitespace-nowrap"
-    >
-      <ColumnHeads>
-        {Arr.map(table.getHeaderGroups(), (group) => (
-          <TableRow key={group.id}>
-            {Arr.map(group.headers, (header, index) => (
-              <DataTableHead header={header} index={index} key={header.id}>
-                <table.FlexRender header={header} />
-              </DataTableHead>
-            ))}
-          </TableRow>
-        ))}
-      </ColumnHeads>
-      <TableBody>
-        {Arr.isReadonlyArrayNonEmpty(rows) || loading ? (
-          Arr.map(rows, (row) => (
-            <DataTableRow key={row.id} opens={hasPanes && !plain} row={row}>
-              {Arr.map(row.getAllCells(), (cell, index) => (
-                <TableCell
-                  className={columnAlign({
-                    align: placeOf(index, cell.column.columnDef.meta?.align),
-                  })}
-                  key={cell.id}
-                >
-                  <table.FlexRender cell={cell} />
-                </TableCell>
+    <>
+      <Table
+        aria-busy={waiting}
+        containerClassName={tableBoxVariants({ fills: !showsEmpty })}
+        data-bare={isBare ? "" : undefined}
+      >
+        <ColumnHeads>
+          {Arr.map(table.getHeaderGroups(), (group) => (
+            <TableRow key={group.id}>
+              {Arr.map(group.headers, (header, index) => (
+                <DataTableHead header={header} index={index} key={header.id}>
+                  <table.FlexRender header={header} />
+                </DataTableHead>
               ))}
-            </DataTableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell colSpan={columns.length}>
-              <Empty className="p-6 md:p-6">
-                <EmptyHeader>
-                  <EmptyNina act="searching" />
-                  <EmptyTitle className="text-base">
-                    {t("no-results")}
-                  </EmptyTitle>
-                </EmptyHeader>
-              </Empty>
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-      {children}
-    </Table>
+            </TableRow>
+          ))}
+        </ColumnHeads>
+        <TableBody>
+          {Arr.isReadonlyArrayNonEmpty(rows) || waiting || showsEmpty ? (
+            Arr.map(rows, (row) => (
+              <DataTableRow key={row.id} opens={hasPanes && !plain} row={row}>
+                {Arr.map(row.getAllCells(), (cell, index) => (
+                  <TableCell
+                    className={columnAlign({
+                      align: placeOf(index, cell.column.columnDef.meta?.align),
+                    })}
+                    key={cell.id}
+                  >
+                    <table.FlexRender cell={cell} />
+                  </TableCell>
+                ))}
+              </DataTableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length}>
+                <Empty className="p-6 md:p-6">
+                  <EmptyHeader>
+                    <EmptyNina act="searching" />
+                    <EmptyTitle className="text-base">
+                      {t("no-results")}
+                    </EmptyTitle>
+                  </EmptyHeader>
+                </Empty>
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+        {children}
+      </Table>
+      {showsEmpty ? empty : null}
+    </>
   );
 }
 
@@ -205,7 +218,7 @@ function DataTableHead<TData extends RowData>({
   const place = placeOf(index, align);
 
   if (header.isPlaceholder || filter === undefined) {
-    return <ColumnHead place={place} />;
+    return <ColumnHead place={place} width="menu" />;
   }
   return (
     <ColumnHead
@@ -221,6 +234,7 @@ function DataTableHead<TData extends RowData>({
       )}
       place={place}
       sorted={column.getCanSort() ? column.getIsSorted() || "none" : undefined}
+      width={filter.kind}
     >
       <HeadAlignContext value={headPlace[place]}>
         <HeadControl filter={filter} header={header} title={title}>

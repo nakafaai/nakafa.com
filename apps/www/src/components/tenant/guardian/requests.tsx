@@ -225,29 +225,8 @@ function AskDialog({
   );
 }
 
-/** What waits for the school office, above the links, and nothing while none does. */
-export function StaffRequests() {
-  const { slug } = useTenant();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const waiting = useQuery(
-    guardians.requests.waiting,
-    isSettled ? { slug } : "skip"
-  );
-
-  if (QueryResult.isFailure(waiting)) {
-    throw waiting.error;
-  }
-  if (
-    !QueryResult.isSuccess(waiting) ||
-    Arr.isReadonlyArrayEmpty(waiting.value)
-  ) {
-    return null;
-  }
-  return <WaitingRequests requests={waiting.value} />;
-}
-
 /** The waiting requests. An answer takes one off the list at once, and a refused one brings it back. */
-function WaitingRequests({
+export function WaitingRequests({
   requests,
 }: {
   requests: readonly WaitingRequest[];

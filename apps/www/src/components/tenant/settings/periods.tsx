@@ -1,6 +1,5 @@
 import {
   type PaginatedQueryItem,
-  PaginatedQueryResult,
   QueryResult,
   useMutation,
   usePaginatedQuery,
@@ -14,23 +13,20 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, DateTime, Option } from "effect";
 import { startTransition, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { LoadFailure } from "@/components/state/failure";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
@@ -162,23 +158,6 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
     { initialNumItems: PAGE_SIZE }
   );
 
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  if (pagination._tag === "LoadingFirstPage") {
-    return null;
-  }
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    if (failed) {
-      return <LoadFailure onRetry={reloadPage} />;
-    }
-    return (
-      <TableEmpty
-        act="thinking"
-        description={t("periods-description")}
-        title={t("periods-empty")}
-      />
-    );
-  }
-
   const columns = [
     periodColumns.text((period) => period.name, {
       cell: (info) => (
@@ -225,18 +204,21 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
   ];
 
   return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
       <DataTable
         columns={columns}
         data={pagination.results}
+        empty={
+          <TableEmpty
+            act="thinking"
+            description={t("periods-description")}
+            title={t("periods-empty")}
+          />
+        }
         rowId={(period) => period.id}
         search="name"
       />
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
-    </>
+    </TablePages>
   );
 }
 

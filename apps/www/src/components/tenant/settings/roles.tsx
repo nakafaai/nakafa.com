@@ -1,11 +1,10 @@
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import { usePaginatedQuery } from "@confect/react";
 import { BookOpen01Icon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Sheet,
@@ -20,8 +19,7 @@ import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
+import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -91,19 +89,10 @@ function SchoolGrantsBody() {
     { initialNumItems: PAGE_SIZE }
   );
 
-  const failed = PaginatedQueryResult.isFailure(pagination);
-
   return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      {pagination._tag === "LoadingFirstPage" ||
-      (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-        <SchoolGrantTable grants={pagination.results} />
-      )}
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
-    </>
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+      <SchoolGrantTable grants={pagination.results} />
+    </TablePages>
   );
 }
 

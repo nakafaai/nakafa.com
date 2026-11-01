@@ -23,6 +23,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { TableWaitingContext } from "@/components/shared/table/waiting";
 import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -78,15 +79,16 @@ export function StudentExams() {
   return (
     <TableFiltersProvider>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {sittings !== null && Arr.isReadonlyArrayNonEmpty(sittings) ? (
-          <TableSearch placeholder={t("exams-search")} />
-        ) : null}
+        <TableSearch placeholder={t("exams-search")} />
       </SchoolHeader>
       <TablePageBody>
         {QueryResult.isFailure(listed) ? (
           <LoadFailure onRetry={reloadPage} />
-        ) : null}
-        {sittings === null ? null : <StudentExamsTable sittings={sittings} />}
+        ) : (
+          <TableWaitingContext value={sittings === null}>
+            <StudentExamsTable sittings={sittings ?? []} />
+          </TableWaitingContext>
+        )}
       </TablePageBody>
     </TableFiltersProvider>
   );
@@ -101,16 +103,6 @@ function StudentExamsTable({
   const t = useTranslations("Exams");
   const locale = useLocale();
   const { slug } = useTenant();
-
-  if (Arr.isReadonlyArrayEmpty(sittings)) {
-    return (
-      <TableEmpty
-        act="sleeping"
-        description={t("mine-empty-description")}
-        title={t("mine-empty")}
-      />
-    );
-  }
 
   const columns = [
     sittingColumns.text((sitting) => sitting.examTitle, {
@@ -177,6 +169,13 @@ function StudentExamsTable({
     <DataTable
       columns={columns}
       data={sittings}
+      empty={
+        <TableEmpty
+          act="sleeping"
+          description={t("mine-empty-description")}
+          title={t("mine-empty")}
+        />
+      }
       rowId={(sitting) => sitting.id}
       search="exam"
     />

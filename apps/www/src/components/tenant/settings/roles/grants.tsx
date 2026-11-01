@@ -56,16 +56,6 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
   const tSchool = useTranslations("School");
   const viewer = useViewerQuery();
 
-  if (Arr.isReadonlyArrayEmpty(grants)) {
-    return (
-      <TableEmpty
-        act="juggling"
-        description={t("roles-grants-description")}
-        title={t("roles-empty")}
-      />
-    );
-  }
-
   /** What a grant covers, by name: the whole school or one unit. */
   const scopeName = (grant: GrantItem) =>
     QueryResult.isSuccess(viewer)
@@ -101,6 +91,13 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
     <DataTable
       columns={columns}
       data={grants}
+      empty={
+        <TableEmpty
+          act="juggling"
+          description={t("roles-grants-description")}
+          title={t("roles-empty")}
+        />
+      }
       rowId={(grant) => grant.id}
       search="person"
     />

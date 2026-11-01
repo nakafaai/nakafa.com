@@ -6,26 +6,23 @@ import {
 import { TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, DateTime, Option } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { LoadFailure } from "@/components/state/failure";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   CreateExam,
@@ -67,9 +64,6 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   );
   const [drafts] = useState(createExamDrafts);
   const saving = useStore(drafts, (state) => state.ids);
-  const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
-    ? pagination.loadMore
-    : null;
 
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -77,12 +71,6 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   ) {
     throw pagination.error;
   }
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  const loadingFirst = pagination._tag === "LoadingFirstPage";
-  // A school whose only exams are still saving has none yet: the empty state keeps its action.
-  const empty =
-    !(loadingFirst || failed) &&
-    Arr.every(pagination.results, (exam) => Arr.contains(saving, exam.id));
   return (
     <ExamDraftsProvider drafts={drafts}>
       <TableFiltersProvider>
@@ -92,24 +80,14 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
             <CreateExam
               choices={tenant.home.choices}
               slug={slug}
-              waiting={loadingFirst}
+              waiting={PaginatedQueryResult.isLoadingFirstPage(pagination)}
             />
           ) : null}
         </SchoolHeader>
         <TablePageBody>
-          {empty ? (
-            <NoExamEmpty />
-          ) : (
-            <ExamListRows
-              exams={pagination.results}
-              failed={failed}
-              loadingFirst={loadingFirst}
-              saving={saving}
-            />
-          )}
-          {loadMore !== null && (
-            <Intersection onIntersect={() => loadMore(EXAM_PAGE_SIZE)} />
-          )}
+          <TablePages pageSize={EXAM_PAGE_SIZE} pagination={pagination}>
+            <ExamListRows exams={pagination.results} saving={saving} />
+          </TablePages>
         </TablePageBody>
       </TableFiltersProvider>
     </ExamDraftsProvider>
@@ -125,13 +103,9 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
  */
 function ExamListRows({
   exams: rows,
-  failed,
-  loadingFirst,
   saving,
 }: {
   exams: readonly ListedExam[];
-  failed: boolean;
-  loadingFirst: boolean;
   saving: readonly ListedExam["id"][];
 }) {
   const t = useTranslations("Exams");
@@ -140,9 +114,6 @@ function ExamListRows({
   const tenant = useTenant();
   const viewer = useViewerQuery();
 
-  if (loadingFirst) {
-    return null;
-  }
   const units = QueryResult.isSuccess(viewer) ? viewer.value.units : [];
   // The place of an exam, as its column filters it: the whole school, or the unit by its ID.
   const placeOf = (scope: ListedExam["scope"]) =>
@@ -155,9 +126,6 @@ function ExamListRows({
           { onNone: () => "", onSome: (unit) => unit.name }
         );
   const places = Arr.dedupe(Arr.map(rows, (exam) => placeOf(exam.scope)));
-  if (failed && Arr.isReadonlyArrayEmpty(rows)) {
-    return <LoadFailure onRetry={reloadPage} />;
-  }
 
   const columns = [
     examColumns.text((exam) => exam.title, {
@@ -225,15 +193,16 @@ function ExamListRows({
   ];
 
   return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <DataTable
-        columns={columns}
-        data={rows}
-        rowId={(exam) => exam.id}
-        search="title"
-      />
-    </>
+    <DataTable
+      columns={columns}
+      // A school whose only exams are still saving has none yet: the empty state keeps its action.
+      data={
+        Arr.every(rows, (exam) => Arr.contains(saving, exam.id)) ? [] : rows
+      }
+      empty={<NoExamEmpty />}
+      rowId={(exam) => exam.id}
+      search="title"
+    />
   );
 }
 

@@ -308,9 +308,6 @@ export function StudentsTable() {
   ) {
     throw students.error;
   }
-  if (Option.isNone(kept)) {
-    return null;
-  }
   return (
     <StudentRowsSection
       exhausted={PaginatedQueryResult.isExhausted(students)}
@@ -321,7 +318,7 @@ export function StudentsTable() {
           ? () => students.loadMore(STUDENT_PAGE_SIZE)
           : null
       }
-      rows={kept.value}
+      rows={Option.getOrElse(kept, Arr.empty)}
     />
   );
 }
@@ -329,7 +326,8 @@ export function StudentsTable() {
 /**
  * The rows of the students' table below its filters: the failure of its read above the rows it holds,
  * the rows the server read for the filters, and the empty state once the list is exhausted with no
- * match, or with no student at all. A list that still loads, or that failed, shows no empty state.
+ * match, or with no student at all. A list that still loads, or that failed, shows no empty state. The table keeps its
+ * heads throughout, so the status choice stays in reach and nothing moves when the rows arrive.
  */
 function StudentRowsSection({
   exhausted,
@@ -352,24 +350,19 @@ function StudentRowsSection({
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      {/* While a filter or a search narrows the list, the table keeps its head, so the status choice stays in reach. */}
-      {rows.length > 0 || filtering ? (
-        <DataTable
-          columns={columns}
-          data={rows}
-          loading={loadMore !== null || rows.length === 0}
-          rowId={(row) => row.attemptId}
-        />
-      ) : null}
-      {/* A page of a search can hold no match while later pages still load, so the empty state
-          waits for the last page, and the table shows nothing in the meantime. */}
-      {exhausted && rows.length === 0 ? (
-        <TableEmpty
-          act="reading"
-          description={t(filtering ? "filter-empty" : "results-empty")}
-          title={t(filtering ? "results-no-match" : "results-empty-title")}
-        />
-      ) : null}
+      <DataTable
+        columns={columns}
+        data={rows}
+        empty={
+          <TableEmpty
+            act="reading"
+            description={t(filtering ? "filter-empty" : "results-empty")}
+            title={t(filtering ? "results-no-match" : "results-empty-title")}
+          />
+        }
+        loading={!exhausted}
+        rowId={(row) => row.attemptId}
+      />
       {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
     </>
   );

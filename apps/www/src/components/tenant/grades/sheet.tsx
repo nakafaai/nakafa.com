@@ -1,5 +1,4 @@
 import {
-  PaginatedQueryResult,
   QueryResult,
   useMutation,
   usePaginatedQuery,
@@ -27,12 +26,10 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import {
   PaneBody,
   PaneFact,
@@ -47,14 +44,13 @@ import {
   PanesList,
   usePanes,
 } from "@/components/shared/panes";
-import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableSearch } from "@/components/shared/table/toolbar";
-import { LoadFailure } from "@/components/state/failure";
 import {
   enterChange,
   releaseChange,
@@ -137,24 +133,8 @@ export function ClassGradebook({
   if (QueryResult.isFailure(scheme)) {
     throw scheme.error;
   }
-  if (
-    !QueryResult.isSuccess(scheme) ||
-    pagination._tag === "LoadingFirstPage"
-  ) {
-    return null;
-  }
-  const failed = PaginatedQueryResult.isFailure(pagination);
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    return failed ? (
-      <LoadFailure onRetry={reloadPage} />
-    ) : (
-      <TableEmpty
-        act="reading"
-        description={t("empty-description")}
-        title={t("empty")}
-      />
-    );
-  }
+  // The rows wait for the scheme that every cell reads, under heads that need neither.
+  const isRead = QueryResult.isSuccess(scheme);
 
   // The note of a line: the band its value reaches, or whether it reaches the KKTP, and none before a grade.
   const noteOf = (line: SheetLine) =>
@@ -169,7 +149,7 @@ export function ClassGradebook({
   );
   const notes = Arr.filter(
     Arr.dedupe([
-      ...Arr.map(scheme.value.bands, (band) => band.label),
+      ...Arr.map(isRead ? scheme.value.bands : [], (band) => band.label),
       t("kktp-reached"),
       t("kktp-notReached"),
       ...held,
@@ -214,24 +194,30 @@ export function ClassGradebook({
   ];
 
   return (
-    <GradebookContext value={{ classId, scheme: scheme.value, slug }}>
+    <GradebookContext
+      value={isRead ? { classId, scheme: scheme.value, slug } : undefined}
+    >
       <Panes>
         <PanesList>
-          {failed ? <DataFailure onRetry={reloadPage} /> : null}
-          <DataTable
-            columns={columns}
-            data={pagination.results}
-            rowId={(line) => line.student.id}
-            search="student"
-          />
-          {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-            <Intersection
-              onIntersect={() => pagination.loadMore(GRADEBOOK_PAGE_SIZE)}
+          <TablePages pageSize={GRADEBOOK_PAGE_SIZE} pagination={pagination}>
+            <DataTable
+              columns={columns}
+              data={isRead ? pagination.results : []}
+              empty={
+                <TableEmpty
+                  act="reading"
+                  description={t("empty-description")}
+                  title={t("empty")}
+                />
+              }
+              loading={!isRead}
+              rowId={(line) => line.student.id}
+              search="student"
             />
-          ) : null}
+          </TablePages>
         </PanesList>
         <PanesDetail empty={t("detail-empty")} label={t("detail")}>
-          <GradeLineDetail lines={pagination.results} />
+          {isRead ? <GradeLineDetail lines={pagination.results} /> : null}
         </PanesDetail>
       </Panes>
     </GradebookContext>
