@@ -673,18 +673,18 @@
     "webhook-url-error": "Use a public https address.",
     "webhook-client": "Client",
     "webhook-client-placeholder": "Choose a client",
-    "webhook-changes": "Changes",
+    "webhook-changes": "Send when",
     "webhook-change": {
       "grade": {
         "released": "Grade released"
       },
       "grant": {
-        "created": "Role given",
-        "ended": "Role ended"
+        "created": "Role given to a person",
+        "ended": "A person's role ended"
       },
       "guardian": {
-        "linked": "Parent linked",
-        "withdrawn": "Parent withdrew"
+        "linked": "Parent linked to a student",
+        "withdrawn": "Parent link withdrawn"
       },
       "unit": {
         "created": "Unit created"
@@ -1376,7 +1376,10 @@
     "locale-country": "Country",
     "locale-currency": "Currency",
     "locale-footer": "Every change is recorded in the audit trail.",
-    "homeroom-description": "One teacher leads each cohort."
+    "homeroom-description": "One teacher leads each cohort.",
+    "webhook-changes-description": "Your system is told each time one of these happens.",
+    "webhook-changes-none": "This client reads nothing a webhook sends, so edit its actions first.",
+    "webhook-client-none": "A webhook belongs to an API client, so create one first."
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -3815,8 +3818,6 @@
   "SchoolInsight": {
     "title": "Insight",
     "class": "Class",
-    "pick": "Pick a class",
-    "pick-description": "Each student's standing shows here.",
     "competency": "Competency",
     "mastery": "Mastery",
     "evidence": "Evidence",
@@ -3844,8 +3845,22 @@
     "practice-share": "Share {topic} with your school",
     "practice-note": "Only the topics you switch on reach your teachers, and you can switch one off at any time.",
     "tags": "Competencies",
-    "tags-description": "Name the competency of each question. A question with none counts for its exam.",
+    "tags-description": "Name what each question tests before results are released, and a question left empty counts under its exam.",
     "exam": "Exam",
-    "question": "Question {number}"
+    "question": "Question {number}",
+    "no-class": "No class yet",
+    "no-class-description": "Insight shows how each student stands in a class, so it starts with one.",
+    "no-class-member": "Insight shows how each student stands in the classes you teach, so ask your admin to add you to one.",
+    "no-class-action": "Open classrooms",
+    "class-empty": "No released exam yet",
+    "class-empty-description": "Release the results of an exam this class sat, and each student's standing shows here.",
+    "exams-action": "Open exams",
+    "tags-note": "A question with no competency counts under its exam's name.",
+    "tags-empty": "Create an exam first, then name what its questions test.",
+    "tags-done": "Done",
+    "tags-none": "This exam has no questions yet.",
+    "exam-placeholder": "Choose an exam",
+    "question-placeholder": "Optional, such as Fractions",
+    "narratives-note": "Open a student to write what helps them next."
   }
 }
