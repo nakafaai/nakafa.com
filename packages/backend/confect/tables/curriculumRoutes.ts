@@ -61,4 +61,9 @@ export default Table.make(() =>
     "appLocale",
     "programKey",
     "nodeKey",
+  ])
+  .index("by_snapshotId_and_appLocale_and_materialKey", [
+    "snapshotId",
+    "appLocale",
+    "materialKey",
   ]);

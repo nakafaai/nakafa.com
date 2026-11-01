@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
-  holdPlacementPaint,
-  PLACEMENT_PENDING_ATTRIBUTE,
   PLACEMENT_PREPAINT_SCRIPT,
-  settlePlacementPaint,
+  paintPlacement,
 } from "@/lib/content/material/prepaint";
 
-/** Runs the inline script against a fake address and returns the attribute it set, if any. */
+/** The style that shows a path, as this document holds it. */
+const paintStyle = () => document.querySelector("#placement-paint");
+
+/** Runs the inline script against a fake address, on this document. */
 function runPrepaint(search: string | (() => string)) {
-  let marked: string | undefined;
   const fakeWindow = {
     location: {
       get search() {
@@ -16,35 +16,31 @@ function runPrepaint(search: string | (() => string)) {
       },
     },
   };
-  const fakeDocument = {
-    documentElement: {
-      setAttribute: (name: string, value: string) => {
-        marked = `${name}=${value}`;
-      },
-    },
-  };
-  new Function("window", "document", PLACEMENT_PREPAINT_SCRIPT)(
-    fakeWindow,
-    fakeDocument
-  );
-  return marked;
+  new Function("window", PLACEMENT_PREPAINT_SCRIPT)(fakeWindow);
 }
 
 afterEach(() => {
-  document.documentElement.removeAttribute(PLACEMENT_PENDING_ATTRIBUTE);
+  paintPlacement(null);
 });
 
 describe("PLACEMENT_PREPAINT_SCRIPT", () => {
-  it("marks the placement pending for an address with a curriculum hint", () => {
+  it("shows the path of a curriculum hint, and hides the lesson's own", () => {
     for (const search of [
       "?ctx=merdeka~class-11-mathematics-functions",
       "?ctx=merdeka%7Eclass-11-mathematics-functions&ref=a",
     ]) {
-      expect(runPrepaint(search), search).toBe("data-placement=pending");
+      runPrepaint(search);
+      expect(paintStyle()?.textContent, search).toContain(
+        "merdeka\\~class-11-mathematics-functions"
+      );
+      expect(paintStyle()?.textContent, search).toContain(
+        '[data-placement-path=""]{display:none!important}'
+      );
+      paintPlacement(null);
     }
   });
 
-  it("leaves an address without a well-formed hint unmarked", () => {
+  it("leaves an address without a well-formed hint alone", () => {
     for (const search of [
       "",
       "?ctx=",
@@ -52,28 +48,28 @@ describe("PLACEMENT_PREPAINT_SCRIPT", () => {
       "?ctx=a~b~c",
       "?ctx=~b",
     ]) {
-      expect(runPrepaint(search), search).toBeUndefined();
+      runPrepaint(search);
+      expect(paintStyle(), search).toBeNull();
     }
   });
 
   it("never stops the page when the address cannot be read", () => {
-    expect(
-      runPrepaint(() => {
-        throw new Error("blocked");
-      })
-    ).toBeUndefined();
+    runPrepaint(() => {
+      throw new Error("blocked");
+    });
+    expect(paintStyle()).toBeNull();
   });
 });
 
-describe("settlePlacementPaint", () => {
-  it("shows the breadcrumb path again after a hold", () => {
-    holdPlacementPaint();
-    expect(
-      document.documentElement.getAttribute(PLACEMENT_PENDING_ATTRIBUTE)
-    ).toBe("pending");
-    settlePlacementPaint();
-    expect(
-      document.documentElement.hasAttribute(PLACEMENT_PENDING_ATTRIBUTE)
-    ).toBe(false);
+describe("paintPlacement", () => {
+  it("shows one path at a time, and the lesson's own with no hint", () => {
+    paintPlacement("merdeka~class-10");
+    paintPlacement("merdeka~class-11");
+
+    expect(document.querySelectorAll("#placement-paint")).toHaveLength(1);
+    expect(paintStyle()?.textContent).toContain("merdeka\\~class-11");
+
+    paintPlacement(null);
+    expect(paintStyle()).toBeNull();
   });
 });
