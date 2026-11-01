@@ -27,7 +27,7 @@ export function SchoolSecretDialog({
   title,
 }: {
   description: string;
-  identifier?: string;
+  identifier?: string | undefined;
   onClose: () => void;
   secret: string | undefined;
   title: string;
