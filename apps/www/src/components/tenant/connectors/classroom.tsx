@@ -105,27 +105,29 @@ export function ClassroomImport() {
             <SheetTitle>{t("courses")}</SheetTitle>
             <SheetDescription>{t("courses-description")}</SheetDescription>
           </SheetHeader>
-          {Option.match(shown, {
-            onNone: () => null,
-            onSome: (found) => (
-              <>
-                {Arr.isReadonlyArrayEmpty(found.classes) &&
-                Arr.isReadonlyArrayNonEmpty(found.courses) ? (
-                  <NoClassToFill />
-                ) : null}
-                <CourseTable
-                  classCell={(course) => (
-                    <CourseClass
-                      course={course}
-                      preview={found}
-                      setPreview={setShown}
-                    />
-                  )}
-                  preview={found}
-                />
-              </>
-            ),
-          })}
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+            {Option.match(shown, {
+              onNone: () => null,
+              onSome: (found) => (
+                <>
+                  {Arr.isReadonlyArrayEmpty(found.classes) &&
+                  Arr.isReadonlyArrayNonEmpty(found.courses) ? (
+                    <NoClassToFill />
+                  ) : null}
+                  <CourseTable
+                    classCell={(course) => (
+                      <CourseClass
+                        course={course}
+                        preview={found}
+                        setPreview={setShown}
+                      />
+                    )}
+                    preview={found}
+                  />
+                </>
+              ),
+            })}
+          </div>
           <SheetFooter>
             <Button
               disabled={isLoading}
@@ -156,7 +158,7 @@ function NoClassToFill() {
   const { slug } = useTenant();
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-6">
+    <div className="flex flex-wrap items-center justify-between gap-2">
       <p className="text-muted-foreground text-sm">{t("courses-no-class")}</p>
       <Link
         className={buttonVariants({ variant: "outline" })}
@@ -194,65 +196,59 @@ function CourseTable({
     );
 
   if (Arr.isReadonlyArrayEmpty(preview.courses)) {
-    return (
-      <p className="text-muted-foreground px-6 text-sm">{t("courses-none")}</p>
-    );
+    return <p className="text-muted-foreground text-sm">{t("courses-none")}</p>;
   }
 
   return (
-    <div className="px-6">
-      <TableFiltersProvider>
-        <TableFrame>
-          <DataTable
-            columns={[
-              courseColumns.text(
-                (course) =>
-                  course.section === null
-                    ? course.name
-                    : t("course-name", {
-                        name: course.name,
-                        section: course.section,
-                      }),
-                {
-                  cell: (info) => (
-                    <span className="font-medium" dir="auto">
-                      {info.getValue()}
-                    </span>
-                  ),
-                  header: t("course"),
-                  id: "course",
-                }
-              ),
-              courseColumns.number((course) => course.students, {
+    <TableFiltersProvider>
+      <TableFrame>
+        <DataTable
+          columns={[
+            courseColumns.text(
+              (course) =>
+                course.section === null
+                  ? course.name
+                  : t("course-name", {
+                      name: course.name,
+                      section: course.section,
+                    }),
+              {
                 cell: (info) => (
-                  <span className="text-muted-foreground">
+                  <span className="font-medium" dir="auto">
                     {info.getValue()}
                   </span>
                 ),
-                header: t("course-students"),
-                id: "students",
-              }),
-              courseColumns.values(classOf, {
-                cell: (info) => classCell(info.row.original),
-                header: t("course-class"),
-                id: "class",
-                options: namedOptions(
-                  Arr.dedupe(Arr.map(preview.courses, classOf)),
-                  GRADE_ICONS
-                ),
-              }),
-              courseColumns.menu((info) =>
-                info.row.original.classId === null ? null : (
-                  <CourseRosterImport courseId={info.row.original.courseId} />
-                )
+                header: t("course"),
+                id: "course",
+              }
+            ),
+            courseColumns.number((course) => course.students, {
+              cell: (info) => (
+                <span className="text-muted-foreground">{info.getValue()}</span>
               ),
-            ]}
-            data={preview.courses}
-            rowId={(course) => course.courseId}
-          />
-        </TableFrame>
-      </TableFiltersProvider>
-    </div>
+              header: t("course-students"),
+              id: "students",
+            }),
+            courseColumns.values(classOf, {
+              cell: (info) => classCell(info.row.original),
+              header: t("course-class"),
+              id: "class",
+              options: namedOptions(
+                Arr.dedupe(Arr.map(preview.courses, classOf)),
+                GRADE_ICONS
+              ),
+            }),
+            courseColumns.menu((info) =>
+              info.row.original.classId === null ? null : (
+                <CourseRosterImport courseId={info.row.original.courseId} />
+              )
+            ),
+          ]}
+          data={preview.courses}
+          rowId={(course) => course.courseId}
+        />
+      </TableFrame>
+    </TableFiltersProvider>
   );
 }
 
