@@ -33,6 +33,18 @@ export function seatFrame(attempt: DashboardAttempt): SeatFrame {
   return "plain";
 }
 
+/** What the time on a seat's second line means, by the attempt's state, so no state rests on the frame's colour. */
+const SEAT_TIME_KEYS = {
+  closing: "seat-last-activity",
+  inProgress: "seat-last-activity",
+  locked: "seat-locked",
+  submitted: "seat-finished",
+} as const satisfies Record<DashboardAttempt["state"], string>;
+
+/** The copy key of the sentence that a seat tells its last activity in. */
+export const seatTimeKey = (attempt: DashboardAttempt) =>
+  SEAT_TIME_KEYS[attempt.state];
+
 /**
  * The time of a seat's last activity: the newer of the page's time (the start or the latest signal)
  * and the latest answer, which the seat reads on its own. Until that answer arrives, the page's time shows.

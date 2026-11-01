@@ -143,7 +143,7 @@ export function IntegrityAction() {
         render={
           <Button type="button" variant="outline">
             <HugeIcons icon={SecurityCheckIcon} />
-            <span className="max-sm:sr-only">{t("integrity")}</span>
+            <span className="@max-3xl/header:sr-only">{t("integrity")}</span>
           </Button>
         }
       />

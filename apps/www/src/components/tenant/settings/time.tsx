@@ -1,5 +1,5 @@
 import { QueryResult } from "@confect/react";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
 import { useLocale } from "use-intl";
 import { useViewerQuery } from "@/components/tenant/context";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
@@ -13,6 +13,16 @@ export function useSchoolTimeZone() {
         (unit) => unit.timeZone
       )
     : Option.none<string>();
+}
+
+/**
+ * The zone a class reads and writes its moments in: the school's clock, or the device's until the
+ * school is read, which no dialog sees, since a dialog opens on a page that already read it.
+ */
+export function useClockZone() {
+  return Option.getOrElse(useSchoolTimeZone(), () =>
+    DateTime.zoneToString(DateTime.zoneMakeLocal())
+  );
 }
 
 /**

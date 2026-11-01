@@ -15,5 +15,5 @@ export const tableCardVariants = cva(
  */
 export const tableBoxVariants = cva(
   "[&_[data-slot=table-cell]]:whitespace-nowrap",
-  { variants: { fills: { false: "", true: "flex-1" } } }
+  { variants: { fills: { false: "h-auto", true: "flex-1" } } }
 );

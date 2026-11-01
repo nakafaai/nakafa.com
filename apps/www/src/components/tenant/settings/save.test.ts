@@ -15,6 +15,16 @@ const ACCESS_COPY = {
 };
 
 describe("saveSchool", () => {
+  it("starts the write after the caller's turn, so a transition holds no optimistic change back", async () => {
+    const write = vi.fn(() => Promise.resolve(Result.succeed("saved")));
+
+    const saving = saveSchool(write, "test");
+
+    expect(write).not.toHaveBeenCalled();
+    await saving;
+    expect(write).toHaveBeenCalledOnce();
+  });
+
   it("hands the answer of a saved change to the success handler", async () => {
     const onSaved = vi.fn();
 

@@ -178,9 +178,7 @@ for (const screen of SCREENS) {
     await page.goto(address(`/sittings/${sitting.sittingId}`));
     const enter = page.getByRole("button", { name: "Enter sitting" });
     await waitUntilTakenOver(enter);
-    await page
-      .getByPlaceholder("Enter the token from your proctor")
-      .fill(sitting.token);
+    await page.getByPlaceholder("Enter the token").fill(sitting.token);
     await enter.click();
     await expect(
       page.getByRole("heading", { exact: true, name: "Question 1" })

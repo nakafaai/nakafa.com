@@ -85,7 +85,8 @@ interface ExamFooterProps {
  * pages, the position of the page in view that jumps to a page, the grid of every page in place of the
  * canvas, and fullscreen where the browser allows it. In the grid the footer keeps only the grid and
  * fullscreen. Each icon names its action in a tooltip. The strip, the counter, and the grid go to a page,
- * and the page they choose becomes the one the teacher is on.
+ * and the page they choose becomes the one the teacher is on. The narrowest phones keep it to one row: the strip's button
+ * shows its icon alone, and fullscreen goes, since a phone's page already fills the screen.
  */
 export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   const t = useTranslations("Exams");
@@ -191,8 +192,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
           </ScrollArea>
         </div>
       ) : null}
-      {/* On the narrowest phones the controls wrap under the teacher layer's button rather than widen the page. */}
-      <div className="flex min-h-12 w-full flex-wrap items-center gap-2 px-3 py-1.5">
+      <div className="@container/bar flex min-h-12 w-full items-center gap-2 px-3 py-1.5">
         {grid ? null : <ExamPanelButton />}
         <div className="ms-auto flex items-center gap-1">
           {grid ? null : (
@@ -217,7 +217,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
                 variant="ghost"
               >
                 <HugeIcons aria-hidden="true" icon={Layout01Icon} />
-                {t("pages")}
+                <span className="@max-sm/bar:sr-only">{t("pages")}</span>
               </Button>
               <PageCounter
                 current={current}
@@ -254,6 +254,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
                 <Button
                   aria-label={t("fullscreen")}
                   aria-pressed={fullscreen}
+                  className="@max-sm/bar:hidden"
                   disabled={!canFullscreen}
                   onClick={toggleFullscreen}
                   size="icon-sm"

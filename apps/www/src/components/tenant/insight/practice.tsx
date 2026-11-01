@@ -1,5 +1,9 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { Share08Icon, SquareLock02Icon } from "@hugeicons/core-free-icons";
+import {
+  Share08Icon,
+  SquareLock02Icon,
+  StudentIcon,
+} from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
 import { Switch } from "@repo/design-system/components/ui/switch";
 import { Array as Arr } from "effect";
@@ -8,9 +12,10 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/frame";
-import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { TableEmpty, TableNote } from "@/components/shared/table/frame";
+import { TableTitle } from "@/components/shared/table/title";
 import { useTenant } from "@/components/tenant/context";
+import { NarrativeButton } from "@/components/tenant/insight/narrative";
 import {
   type InsightStudent,
   type OwnTopic,
@@ -28,53 +33,68 @@ const sharedColumns = tableColumns<ReturnType<typeof practiceRowsOf>[number]>();
 /** The columns of a student's own practice. */
 const topicColumns = tableColumns<OwnTopic>();
 
-/** The practice a class's students share with their teachers, and nothing where none does. */
+/** The practice a class's students share with their teachers, with each student's narrative one press from the row. */
 export function SharedPractice({
+  isRead,
   students,
 }: {
+  isRead: boolean;
   students: readonly InsightStudent[];
 }) {
   const t = useTranslations("SchoolInsight");
   const rows = practiceRowsOf(students);
 
-  if (Arr.isReadonlyArrayEmpty(rows)) {
-    return null;
-  }
   return (
-    <TableFiltersProvider>
-      <TableFrame>
-        <DataTable
-          columns={[
-            sharedColumns.text((row) => row.student, {
-              cell: (info) => <span dir="auto">{info.getValue()}</span>,
-              header: t("student"),
-              id: "student",
-            }),
-            sharedColumns.text(topicNameOf, {
-              cell: (info) => (
-                <span className="uppercase">{info.getValue()}</span>
-              ),
-              header: t("practice"),
-              id: "topic",
-            }),
-            sharedColumns.number((row) => row.sets, {
-              header: t("practice-sets"),
-              id: "sets",
-            }),
-            sharedColumns.number((row) => scoreOf(row.mean), {
-              header: t("practice-mean"),
-              id: "mean",
-            }),
-          ]}
-          data={rows}
-          rowId={(row) => row.key}
-        />
-      </TableFrame>
-    </TableFiltersProvider>
+    <>
+      <DataTable
+        columns={[
+          sharedColumns.text((row) => row.student, {
+            cell: (info) => (
+              <TableTitle icon={StudentIcon}>
+                <span dir="auto">{info.getValue()}</span>
+              </TableTitle>
+            ),
+            header: t("student"),
+            id: "student",
+          }),
+          sharedColumns.text(topicNameOf, {
+            cell: (info) => (
+              <span className="uppercase">{info.getValue()}</span>
+            ),
+            header: t("practice"),
+            id: "topic",
+          }),
+          sharedColumns.number((row) => row.sets, {
+            header: t("practice-sets"),
+            id: "sets",
+          }),
+          sharedColumns.number((row) => scoreOf(row.mean), {
+            header: t("practice-mean"),
+            id: "mean",
+          }),
+          sharedColumns.menu((info) => (
+            <NarrativeButton id={info.row.original.studentId} />
+          )),
+        ]}
+        data={rows}
+        empty={
+          <TableEmpty
+            act="relaxed"
+            description={t("practice-class-note")}
+            title={t("practice-empty")}
+          />
+        }
+        loading={!isRead}
+        rowId={(row) => row.key}
+      />
+      {Arr.isReadonlyArrayEmpty(rows) ? null : (
+        <TableNote>{t("practice-class-note")}</TableNote>
+      )}
+    </>
   );
 }
 
-/** A student's own practice by topic, each with a switch that shares it with their school, and nothing with no practice. */
+/** A student's own practice by topic, each with a switch that shares it with their school. */
 export function OwnPractice() {
   const t = useTranslations("SchoolInsight");
   const { slug } = useTenant();
@@ -87,57 +107,59 @@ export function OwnPractice() {
   if (QueryResult.isFailure(topics)) {
     throw topics.error;
   }
-  if (
-    !QueryResult.isSuccess(topics) ||
-    Arr.isReadonlyArrayEmpty(topics.value)
-  ) {
-    return null;
-  }
+  const isRead = QueryResult.isSuccess(topics);
+
   return (
     <>
-      <TableFiltersProvider>
-        <TableFrame>
-          <DataTable
-            columns={[
-              topicColumns.text(topicNameOf, {
-                cell: (info) => (
-                  <span className="uppercase">{info.getValue()}</span>
-                ),
-                header: t("practice"),
-                id: "topic",
-              }),
-              topicColumns.number((topic) => topic.sets, {
-                header: t("practice-sets"),
-                id: "sets",
-              }),
-              topicColumns.number((topic) => scoreOf(topic.mean), {
-                header: t("practice-mean"),
-                id: "mean",
-              }),
-              topicColumns.values((topic) => (topic.shared ? "on" : "off"), {
-                cell: (info) => <OwnTopicShare topic={info.row.original} />,
-                header: t("practice-shared"),
-                id: "shared",
-                options: [
-                  {
-                    icon: Share08Icon,
-                    label: t("practice-shared"),
-                    value: "on",
-                  },
-                  {
-                    icon: SquareLock02Icon,
-                    label: t("practice-unshared"),
-                    value: "off",
-                  },
-                ],
-              }),
-            ]}
-            data={topics.value}
-            rowId={topicNameOf}
+      <DataTable
+        columns={[
+          topicColumns.text(topicNameOf, {
+            cell: (info) => (
+              <span className="uppercase">{info.getValue()}</span>
+            ),
+            header: t("practice"),
+            id: "topic",
+          }),
+          topicColumns.number((topic) => topic.sets, {
+            header: t("practice-sets"),
+            id: "sets",
+          }),
+          topicColumns.number((topic) => scoreOf(topic.mean), {
+            header: t("practice-mean"),
+            id: "mean",
+          }),
+          topicColumns.values((topic) => (topic.shared ? "on" : "off"), {
+            cell: (info) => <OwnTopicShare topic={info.row.original} />,
+            header: t("practice-shared"),
+            id: "shared",
+            options: [
+              {
+                icon: Share08Icon,
+                label: t("practice-shared"),
+                value: "on",
+              },
+              {
+                icon: SquareLock02Icon,
+                label: t("practice-unshared"),
+                value: "off",
+              },
+            ],
+          }),
+        ]}
+        data={isRead ? topics.value : []}
+        empty={
+          <TableEmpty
+            act="relaxed"
+            description={t("practice-own-empty-description")}
+            title={t("practice-empty")}
           />
-        </TableFrame>
-      </TableFiltersProvider>
-      <p className="text-muted-foreground text-sm">{t("practice-note")}</p>
+        }
+        loading={!isRead}
+        rowId={topicNameOf}
+      />
+      {isRead && Arr.isReadonlyArrayNonEmpty(topics.value) ? (
+        <TableNote>{t("practice-note")}</TableNote>
+      ) : null}
     </>
   );
 }

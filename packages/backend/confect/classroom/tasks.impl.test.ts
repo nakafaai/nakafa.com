@@ -216,6 +216,17 @@ describe("classroom/tasks", () => {
           expect.objectContaining({ text: "Ringkasan kedua." }),
         ]);
         expect((yield* searched("Teacher")).page).toEqual([]);
+        const waiting = (task: string) =>
+          teacher.query(tasks.missing, {
+            ...firstPage,
+            classId: forum.classId,
+            slug: nf,
+            task,
+          });
+        expect((yield* waiting("ringkasan")).page).toEqual([]);
+        expect((yield* waiting("tertutup")).page).toEqual([
+          { id: fixture.people.student.personId, name: "Student" },
+        ]);
         const submissionId = Arr.getUnsafe(work.page, 0).id;
         const scored = yield* teacher.mutation(tasks.score, {
           classId: forum.classId,

@@ -196,9 +196,7 @@ async function documentLooks(browser: Browser, baseURL: string | undefined) {
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   const sittingPrompt = student
     .getByRole("article", { exact: true, name: "Question 3" })

@@ -10,8 +10,8 @@ import { schoolOrigin } from "@/lib/routing/school/host";
  * opens the home of the school. A mention opens its message, in its discussion when it is a reply
  * and in its channel otherwise, an announcement opens the class home, a new task opens its page, and
  * a coming sitting opens its entry, each while the server gives the row its detail. A guardian's
- * reminder of a child's sitting, a child's missed task, and a child's released grade open the parent home. Any other row,
- * a student's own released grade among them, has no page, so it only marks itself read.
+ * reminder of a child's sitting, a child's missed task, and a child's released grade open the parent home,
+ * and a student's own released grade opens their grades. Any other row has no page, so it only marks itself read.
  */
 function pageOf(notification: SchoolNotification): Option.Option<URL> {
   const origin = schoolOrigin(notification.tenant.slug);
@@ -24,6 +24,9 @@ function pageOf(notification: SchoolNotification): Option.Option<URL> {
     (notification.grade !== null && notification.grade.student !== null)
   ) {
     return Option.some(new URL("/parents", origin));
+  }
+  if (notification.grade !== null) {
+    return Option.some(new URL("/grades", origin));
   }
   if (notification.exam !== null) {
     return Option.some(

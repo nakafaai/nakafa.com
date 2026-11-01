@@ -9,6 +9,7 @@ import {
   lastActivityOf,
   matchesFilter,
   seatFrame,
+  seatTimeKey,
   seenOffline,
 } from "@/components/exams/sitting/seat";
 
@@ -82,6 +83,18 @@ describe("lastActivityOf", () => {
   it("shows the newer of the page's time and the latest answer", () => {
     expect(lastActivityOf(attempt("inProgress"), 5000)).toBe(5000);
     expect(lastActivityOf(attempt("inProgress"), 400)).toBe(1000);
+  });
+});
+
+describe("seatTimeKey", () => {
+  it("tells a finished or locked seat in words, so no state rests on its colour", () => {
+    expect(seatTimeKey(attempt("submitted"))).toBe("seat-finished");
+    expect(seatTimeKey(attempt("locked"))).toBe("seat-locked");
+  });
+
+  it("tells a running or closing seat by its last activity", () => {
+    expect(seatTimeKey(attempt("inProgress"))).toBe("seat-last-activity");
+    expect(seatTimeKey(attempt("closing"))).toBe("seat-last-activity");
   });
 });
 

@@ -150,7 +150,7 @@ const admitStudent = Effect.fn("roster.import.admit")(function* (
     yield* assignRole(actor, person, "student", {
       kind: "unit",
       unitId: period.unitId,
-    }).pipe(Effect.orDie);
+    });
   }
   return Option.some(person);
 });

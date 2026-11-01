@@ -65,9 +65,7 @@ test("a student who reloads a running paper meets the paper and never the token 
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
   const question = student.getByRole("article", { name: "Question 3" });
   const essay = question.getByRole("textbox", { name: "Question 3" });
@@ -125,9 +123,7 @@ async function studentAtEntry(
   await waitUntilTakenOver(
     student.getByRole("button", { name: "Enter sitting" })
   );
-  await student
-    .getByPlaceholder("Enter the token from your proctor")
-    .fill(sitting.token);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   return { changes, student, studentContext };
 }
 
@@ -261,7 +257,7 @@ test("a server failure of a paper's read keeps the student in the paper's frame,
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(
-    student.getByRole("heading", { name: "Something broke" })
+    student.getByRole("heading", { name: "Something went wrong" })
   ).toHaveCount(0);
 
   // The server answers again, and the paper is back with the student's answer, with no press.
@@ -312,7 +308,7 @@ test("a server failure of one read keeps a teacher in the school, and the page c
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(paper).toHaveCount(0);
   await expect(
-    teacher.getByRole("heading", { name: "Something broke" })
+    teacher.getByRole("heading", { name: "Something went wrong" })
   ).toHaveCount(0);
 
   // The server answers again, and the page is back with no press.

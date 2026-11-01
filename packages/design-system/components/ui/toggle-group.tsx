@@ -39,9 +39,9 @@ function ToggleGroupStyle({
 }
 
 /**
- * A group lays its items in equal columns, each as wide as the widest item's label and never narrower, so no label
- * runs into its neighbour. `auto-cols-[1fr]` keeps the track's content minimum that `auto-cols-fr` (a zero minimum)
- * drops.
+ * A group sets its items side by side, each as wide as its own label and its padding, and a wider group shares the room
+ * left over equally, so every label keeps the same distance from its lines however long it is. Equal columns would
+ * crowd the longest label against its lines while a short one floats. Preset `gridColumns` keep their columns.
  */
 const toggleGroupRootVariants = cva(
   "group/toggle-group w-fit rounded-md data-[variant=outline]:shadow-xs",
@@ -57,7 +57,7 @@ const toggleGroupRootVariants = cva(
       },
       layout: {
         default:
-          "inline-grid auto-cols-[1fr] grid-flow-col items-stretch data-[orientation=vertical]:w-full data-[orientation=vertical]:grid-flow-row",
+          "inline-flex items-stretch data-[orientation=vertical]:w-full data-[orientation=vertical]:flex-col",
         grid: "data-[variant=outline]:bg-border gap-px overflow-hidden rounded-md data-[variant=outline]:border",
       },
     },
@@ -73,7 +73,7 @@ const toggleGroupItemLayoutVariants = cva("", {
       // Only the outline variant draws a border on each item, so only it drops the border between
       // joined items and keeps the first one's; a default item has no border (as shadcn scopes it).
       default:
-        "group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:border-l-0 group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:border-t-0 group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:first:border-l group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:first:border-t",
+        "flex-auto group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:border-l-0 group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:border-t-0 group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:first:border-l group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:first:border-t",
       grid: "bg-background hover:bg-accent hover:text-accent-foreground data-pressed:bg-accent rounded-none border-0",
     },
   },
@@ -126,7 +126,7 @@ type ToggleGroupMultipleProps = ToggleGroupBaseProps & {
 type ToggleGroupProps = ToggleGroupSingleProps | ToggleGroupMultipleProps;
 
 /**
- * Renders a single-select or multi-select toggle group: joined outline segments of equal width, never ghost.
+ * Renders a single-select or multi-select toggle group: joined outline segments of equal inner spacing, never ghost.
  */
 function ToggleGroup(props: ToggleGroupProps) {
   if (isMultipleToggleGroupProps(props)) {

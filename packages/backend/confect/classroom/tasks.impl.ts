@@ -247,6 +247,48 @@ const submissions = FunctionImpl.make(
   })
 );
 
+/**
+ * One page of the students a task reaches who have handed nothing in, as its teacher reads them. It walks the
+ * students placed in the class's cohort, so a page can hold fewer students than it read.
+ */
+const missing = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "missing",
+  Effect.fn("classroom.tasks.missing")(function* ({ paginationOpts, task }) {
+    const found = yield* classTask(task, "task.manage");
+    const row = yield* Class;
+    const reader = yield* DatabaseReader;
+    const page = yield* reader
+      .table("tenantCohortMembers")
+      .index("by_cohortId_and_personId", (query) =>
+        query.eq("cohortId", row.cohortId)
+      )
+      .paginate(paginationOpts)
+      .pipe(Effect.orDie);
+    const students = yield* Effect.forEach(
+      Arr.dedupe(Arr.map(page.page, (member) => member.personId)),
+      (personId) =>
+        Effect.gen(function* () {
+          const person = yield* reader.table("tenantPeople").get(personId);
+          const handedIn = yield* reader
+            .table("classroomSubmissions")
+            .index("by_taskId_and_personId", (query) =>
+              query.eq("taskId", found._id).eq("personId", personId)
+            )
+            .first();
+          return person.status === "active" &&
+            reaches(found, personId) &&
+            Option.isNone(handedIn)
+            ? Option.some({ id: person._id, name: person.name })
+            : Option.none();
+        }).pipe(Effect.orDie),
+      { concurrency: "unbounded" }
+    );
+    return Struct.assign(page, { page: Arr.getSomes(students) });
+  })
+);
+
 /** Gives a student's work its points, at most the points its task is worth. */
 const score = FunctionImpl.make(
   databaseSchema,
@@ -288,6 +330,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(edit),
   Layer.provide(submit),
   Layer.provide(submissions),
+  Layer.provide(missing),
   Layer.provide(score),
   Layer.provide(session),
   Layer.provide(member),

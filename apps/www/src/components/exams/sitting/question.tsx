@@ -48,8 +48,13 @@ import {
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
-import { HeldPaper, usePaperText } from "@/components/player/held";
+import {
+  HeldPaper,
+  usePaperText,
+  usePaperTurn,
+} from "@/components/player/held";
 import { readQuestionIds } from "@/components/player/ids";
+import { usePlayer } from "@/components/player/provider";
 import {
   PlayerQuestion,
   PlayerQuestionAnswer,
@@ -143,7 +148,10 @@ function usePromptDocuments(prompt: ReturnType<typeof usePromptRead>) {
   return { promptDocument, readingDocument };
 }
 
-/** The read of one question's prompt for this student's device. */
+/**
+ * The read of one question's prompt for this student's device, once its turn comes, and at once for the question the
+ * student stands on. The paper hears when the prompt can draw.
+ */
 function usePromptRead({
   deviceId,
   questionId,
@@ -155,12 +163,15 @@ function usePromptRead({
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
-  return useQuery(exams.sittings.prompt, {
-    deviceId,
-    questionId,
-    sittingId,
-    slug,
-  });
+  const current = usePlayer((state) => state.current === questionId);
+  const turn = usePaperTurn(questionId, current);
+  const prompt = useQuery(
+    exams.sittings.prompt,
+    turn ? { deviceId, questionId, sittingId, slug } : "skip"
+  );
+  usePaperText(questionId, turn && !QueryResult.isLoading(prompt));
+
+  return prompt;
 }
 
 /**
@@ -191,7 +202,6 @@ export const SittingQuestion = memo(function SittingQuestion({
     sittingId,
     slug,
   });
-  usePaperText(question.id, !QueryResult.isLoading(prompt));
   const choose = useChooseAnswer();
   const flagQuestion = useFlagQuestion({ deviceId, sittingId, slug });
   const locked = usePaperLocked();

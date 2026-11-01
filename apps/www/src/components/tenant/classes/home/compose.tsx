@@ -25,6 +25,7 @@ import { useClassScope } from "@/components/tenant/classes/scope";
 import { deadlineOf } from "@/components/tenant/classes/tasks/deadline";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
+import { useClockZone } from "@/components/tenant/settings/time";
 
 /**
  * Posts an announcement to the class, or keeps it for a time the teacher chooses: its text, and whether it also goes
@@ -45,7 +46,7 @@ export function NewAnnouncement() {
   const [when, setWhen] = useState("");
   const id = useId();
   const body = Str.trim(text);
-  const publishAt = deadlineOf(when);
+  const publishAt = deadlineOf(when, useClockZone());
   const ready =
     Schema.is(PostText)(body) &&
     viewer._tag === "Success" &&

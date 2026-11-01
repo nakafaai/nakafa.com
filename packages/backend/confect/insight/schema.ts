@@ -149,6 +149,7 @@ const TeacherSkillView = Schema.Struct({
 /** One student of a class as a teacher sees it. */
 const StudentInsight = Schema.Struct({
   draft: Schema.NullOr(Schema.Struct({ text: Schema.NullOr(Schema.String) })),
+  email: Schema.NullOr(Schema.String),
   id: Id("tenantPeople"),
   name: Schema.String,
   narrative: Schema.NullOr(

@@ -27,6 +27,7 @@ import {
   tenantAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
+import { emailOf } from "@repo/backend/confect/tenancy/email";
 import {
   AddressInvited,
   AddressMember,
@@ -35,6 +36,7 @@ import {
 import {
   addressInvited,
   addressJoined,
+  addressOf,
   earlierInvitee,
   expireInvite,
   pendingInviteOf,
@@ -84,28 +86,6 @@ const holdsLiveCard = Effect.fn("tenancy.roster.liveCard")(function* (
 });
 
 /**
- * The address of one member: their account's, or the one their pending invite waits on, and none
- * for a Person with neither, such as a student on a login card.
- */
-const emailOf = Effect.fn("tenancy.roster.email")(function* (
-  person: TenantPeopleDoc
-) {
-  if (person.account.state === "claimed") {
-    const user = yield* (yield* DatabaseReader)
-      .table("users")
-      .get(person.account.userId)
-      .pipe(
-        Effect.asSome,
-        Effect.catchTag("GetByIdFailure", () => Effect.succeedNone),
-        Effect.orDie
-      );
-    return Option.getOrNull(Option.map(user, (found) => found.email));
-  }
-  const invite = yield* pendingInviteOf(person._id);
-  return Option.getOrNull(Option.map(invite, (found) => found.channel.email));
-});
-
-/**
  * One row of the members list: the Person, the address it answers at, the roles its active grants
  * give, the units those grants name, and its status. Only an unclaimed Person can wait on an invite
  * or hold a card. A grant over the whole school names no unit.
@@ -120,7 +100,7 @@ const memberRow = Effect.fn("tenancy.roster.member")(function* (
   const carded = claimed ? false : yield* holdsLiveCard(person);
   const grants = yield* activeGrants(person._id);
   return {
-    email: yield* emailOf(person),
+    email: yield* addressOf(person),
     id: person._id,
     name: person.name,
     removable: yield* removableBy(person, grants, caller, managesOwners),

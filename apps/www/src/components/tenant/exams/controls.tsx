@@ -87,12 +87,14 @@ export function PageActions({
           onClick={moveDown}
         />
         <PageAction
+          disabled={actions.room < 1}
           hint={t("copy")}
           icon={Copy01Icon}
           label={t("copy-of", { number })}
           onClick={copy}
         />
         <PageAction
+          disabled={actions.room < 1}
           hint={t("add-below")}
           icon={Add01Icon}
           label={t("add-below-of", { number })}
@@ -129,11 +131,11 @@ export function PageActions({
               <HugeIcons aria-hidden="true" icon={ArrowDown02Icon} />
               {t("move-down")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={copy}>
+            <DropdownMenuItem disabled={actions.room < 1} onClick={copy}>
               <HugeIcons aria-hidden="true" icon={Copy01Icon} />
               {t("copy")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={addBelow}>
+            <DropdownMenuItem disabled={actions.room < 1} onClick={addBelow}>
               <HugeIcons aria-hidden="true" icon={Add01Icon} />
               {t("add-below")}
             </DropdownMenuItem>

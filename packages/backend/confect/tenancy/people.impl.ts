@@ -15,6 +15,7 @@ import {
 } from "@repo/backend/confect/tenancy/authority";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
 import { studentsOf, teachersOf } from "@repo/backend/confect/tenancy/grantees";
+import { namedPeople } from "@repo/backend/confect/tenancy/named";
 import spec from "@repo/backend/confect/tenancy/people.spec";
 import { removePerson } from "@repo/backend/confect/tenancy/remove";
 import { renamePerson } from "@repo/backend/confect/tenancy/rename";
@@ -33,7 +34,8 @@ const view = (person: TenantPeopleDoc) => ({
  * The Persons of one status in the member's school, a page at a time, read on
  * the status index. With `account: "unclaimed"` the page is read on the index of
  * the status and the account state, so the Persons who hold no account are never
- * cut off by the Persons who hold one. A cohort's members are listed by
+ * cut off by the Persons who hold one. A search reads the people its words name, so it
+ * reaches every page, and keeps those of the status and the account. A cohort's members are listed by
  * `cohorts:members`: the placements of a cohort are not indexed by status, and a
  * page filtered after it is read would come back short.
  */
@@ -44,9 +46,20 @@ const list = FunctionImpl.make(
   Effect.fn("tenancy.people.list")(function* ({
     account,
     paginationOpts,
+    search,
     status,
   }) {
     const { tenant } = yield* Member;
+    if (search !== undefined) {
+      const found = yield* namedPeople(tenant._id, search, paginationOpts);
+      const kept = Arr.filter(
+        found.page,
+        (person) =>
+          person.status === status &&
+          (account === undefined || person.account.state === account)
+      );
+      return Struct.assign(found, { page: Arr.map(kept, view) });
+    }
     const people = (yield* DatabaseReader).table("tenantPeople");
     const page = yield* (
       account === undefined
@@ -74,9 +87,9 @@ const students = FunctionImpl.make(
   databaseSchema,
   spec,
   "students",
-  Effect.fn("tenancy.people.students")(function* ({ paginationOpts }) {
+  Effect.fn("tenancy.people.students")(function* ({ paginationOpts, search }) {
     const { tenant } = yield* Member;
-    const page = yield* studentsOf(tenant._id, paginationOpts);
+    const page = yield* studentsOf(tenant._id, paginationOpts, search);
     return Struct.assign(page, { page: Arr.map(page.page, view) });
   })
 );
@@ -89,10 +102,15 @@ const teachers = FunctionImpl.make(
   databaseSchema,
   spec,
   "teachers",
-  Effect.fn("tenancy.people.teachers")(function* ({ paginationOpts }) {
+  Effect.fn("tenancy.people.teachers")(function* ({ paginationOpts, search }) {
     const { tenant } = yield* Member;
     const cohort = yield* Cohort;
-    const page = yield* teachersOf(tenant._id, cohort.unitId, paginationOpts);
+    const page = yield* teachersOf(
+      tenant._id,
+      cohort.unitId,
+      paginationOpts,
+      search
+    );
     return Struct.assign(page, { page: Arr.map(page.page, view) });
   })
 );

@@ -39,6 +39,22 @@ describe("monthly pro price of a country", () => {
     expect(spaceLetterSymbol("Rp\u00a079.000")).toBe("Rp\u00a079.000");
   });
 
+  it("builds a price's formatter at its first read, and only once", async () => {
+    vi.resetModules();
+    const build = vi.spyOn(Intl, "NumberFormat");
+    const fresh = await import("@/lib/pricing/monthly");
+
+    expect(build).not.toHaveBeenCalled();
+
+    const pricing = fresh.getProMonthlyPricingFor("USD");
+    pricing.format(1);
+    pricing.format(2);
+
+    expect(pricing.symbol).toBe("$");
+    expect(build).toHaveBeenCalledOnce();
+    build.mockRestore();
+  });
+
   it("leaves a price whose symbol is no word as its locale writes it", () => {
     expect(spaceLetterSymbol("$8.99")).toBe("$8.99");
     expect(spaceLetterSymbol("8,99\u00a0€")).toBe("8,99\u00a0€");

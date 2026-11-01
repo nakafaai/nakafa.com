@@ -1,3 +1,4 @@
+import { useLocalStorage } from "@mantine/hooks";
 import { Number as Num, Schema } from "effect";
 import { useCallback, useEffect, useEffectEvent, useState } from "react";
 
@@ -5,6 +6,8 @@ const UseResizableOptionsSchema = Schema.Struct({
   initialWidth: Schema.Finite,
   maxWidth: Schema.Finite,
   minWidth: Schema.Finite,
+  /** The name the width stays under in this browser, so a width a person sets holds across a reload. */
+  storageKey: Schema.String,
 });
 
 type UseResizableOptions = typeof UseResizableOptionsSchema.Type;
@@ -20,22 +23,27 @@ const STEP = 10;
  * open, with the room a window leaves for it, and the width follows: it shrinks
  * with the room and comes back with it. A key moves the edge from the width the
  * panel has, so no press is lost beyond a bound the reader cannot see. The
- * values of the resizer say that width and those bounds.
+ * values of the resizer say that width and those bounds. The panel starts closed, so
+ * the kept width is read after the first render and nothing that shows moves.
  */
 export function useResizable({
   initialWidth,
   minWidth,
   maxWidth,
+  storageKey,
 }: UseResizableOptions) {
   const [isResizing, setIsResizing] = useState(false);
-  const [asked, setAsked] = useState(initialWidth);
+  const [asked, setAsked] = useLocalStorage({
+    defaultValue: initialWidth,
+    key: storageKey,
+  });
   const width = Num.clamp(asked, { maximum: maxWidth, minimum: minWidth });
 
   /** Asks for a width, which the panel has once it is within the bounds. */
   const setWidth = useCallback(
     (next: number) =>
       setAsked(Num.clamp(next, { maximum: maxWidth, minimum: minWidth })),
-    [minWidth, maxWidth]
+    [minWidth, maxWidth, setAsked]
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {

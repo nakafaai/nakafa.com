@@ -26,15 +26,15 @@ export function buildContentSearchExcerpt(
 }
 
 /**
- * A document's searched text without the title it opens with. A result shows its
- * title above its excerpt, so the excerpt starts where the title ends.
+ * A document's searched text without the head its row opens with: the title, which a result shows above
+ * its excerpt, then the description and the public path, which the row holds so that an address finds its
+ * page. The excerpt starts where the lesson does, so a learner never reads a raw path.
  */
-export function textAfterTitle(text: string, title: string) {
-  const body = normalizeText(text);
-  const heading = normalizeText(title);
-  return body.startsWith(heading)
-    ? body.slice(heading.length).trimStart()
-    : body;
+export function textAfterHead(text: string, head: readonly string[]) {
+  return Arr.reduce(head, normalizeText(text), (body, part) => {
+    const start = normalizeText(part);
+    return body.startsWith(start) ? body.slice(start.length).trimStart() : body;
+  });
 }
 
 /** Only the final term in each query variant may match a word prefix. */

@@ -69,9 +69,10 @@ const importRoster = FunctionImpl.make(
     }
     const actor = clientActor(read.client);
     const keys = yield* schoolKeys(read.tenant._id);
+    // A refused row ends the transaction, so the batch writes nothing.
     const outcomes = yield* Effect.forEach(rows, (row) =>
       applyRow(actor, found.value, keys, row)
-    );
+    ).pipe(Effect.catchTag("GrantRejected", Effect.die));
     const summary = importSummary(outcomes);
     yield* periodAuthority.record(actor, found.value, {
       ...summary,
