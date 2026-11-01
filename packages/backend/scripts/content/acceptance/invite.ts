@@ -31,9 +31,11 @@ const InvitedPerson = Schema.fromJsonString(
 const UserRows = Schema.fromJsonString(
   Schema.Array(Schema.Struct({ _id: Schema.String, authId: Schema.String }))
 );
-/** The inbox rows of the local runtime, as the Convex CLI prints them. */
+/** The inbox rows of the local runtime, as the Convex CLI prints them. A reply to a comment belongs to an account, so its row names no Person. */
 const InboxRows = Schema.fromJsonString(
-  Schema.Array(Schema.Struct({ recipientPersonId: Schema.String }))
+  Schema.Array(
+    Schema.Struct({ recipientPersonId: Schema.optionalKey(Schema.String) })
+  )
 );
 /** One Convex function's arguments as the CLI takes them, JSON text. */
 const encodeArguments = Schema.encodeEffect(JsonTextSchema);
