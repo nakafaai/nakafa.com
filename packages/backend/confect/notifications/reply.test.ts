@@ -213,6 +213,83 @@ describe("notifications/reply", () => {
     expect(answer.page).toMatchObject([{ actor: null }]);
   });
 
+  it("shows the author's photo only while the author shows it", async () => {
+    const learners = await createLearners();
+    await reply(learners);
+    const { author, reader, t } = learners;
+    await t.run((ctx) =>
+      ctx.db.patch(reader.userId, {
+        image: "https://example.test/photo.png",
+        picture: "photo",
+      })
+    );
+
+    const answer = await author.client.query(list, {
+      ...page,
+      personal: true,
+    });
+    expect(answer.page).toMatchObject([
+      { actor: { image: "https://example.test/photo.png" } },
+    ]);
+  });
+
+  it("shows no author for a row whose author is gone", async () => {
+    const learners = await createLearners();
+    await reply(learners);
+    const { author, reader, t } = learners;
+    await t.run((ctx) => ctx.db.delete(reader.userId));
+
+    const answer = await author.client.query(list, {
+      ...page,
+      personal: true,
+    });
+    expect(answer.page).toMatchObject([{ actor: null }]);
+  });
+
+  it("reads the account's rows a page at a time", async () => {
+    const learners = await createLearners();
+    await reply(learners);
+    vi.setSystemTime(NOON + 60_000);
+    await reply(learners);
+    const { author } = learners;
+    const first = await author.client.query(list, {
+      paginationOpts: { cursor: null, numItems: 1 },
+      personal: true,
+    });
+    const second = await author.client.query(list, {
+      paginationOpts: { cursor: first.continueCursor, numItems: 1 },
+      personal: true,
+    });
+
+    expect(first.page).toHaveLength(1);
+    expect(second.page).toHaveLength(1);
+    expect(second.page[0]?.id).not.toBe(first.page[0]?.id);
+  });
+
+  it("reads past one page of a read-all", async () => {
+    const learners = await createLearners();
+    const { author, reader, t } = learners;
+    const { replyId } = await reply(learners);
+    await t.run(async (ctx) => {
+      for (let index = 0; index < 60; index += 1) {
+        await ctx.db.insert("notifications", {
+          changeType: "comment.replied",
+          commentId: replyId,
+          createdAt: NOON,
+          recipientUserId: author.userId,
+        });
+      }
+    });
+    expect(reader.userId).not.toBe(author.userId);
+    vi.setSystemTime(NOON + 60_000);
+
+    await author.client.mutation(readAll, { personal: true });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const rows = await rowsOf(t, author.userId);
+    expect(Arr.filter(rows, (row) => row.readAt === undefined)).toEqual([]);
+  });
+
   it("pushes at once to a browser the account subscribed, and not to an account with none", async () => {
     const learners = await createLearners();
     await reply(learners);

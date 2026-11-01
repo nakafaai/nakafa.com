@@ -322,6 +322,9 @@ describe("comments/queries", () => {
       text: "One comment",
       user: { name: expect.any(String) },
     });
+    expect(await t.query(getComment, { commentId: reply })).toMatchObject({
+      liked: false,
+    });
     await t.run((ctx) => ctx.db.delete(reply));
     expect(await reader.query(getComment, { commentId: reply })).toBeNull();
   });
