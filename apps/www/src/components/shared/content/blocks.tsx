@@ -31,7 +31,7 @@ function blocksOf(body: ReactNode) {
 }
 
 /** Whether this move lands past the top of the page, which only a page that stands whole can give. */
-function landsInside(router: RegisteredRouter, savedScroll: number) {
+function landsInside(router: RegisteredRouter, savedScroll: number): boolean {
   return router.latestLocation.hash !== "" || savedScroll > 0;
 }
 
@@ -42,7 +42,11 @@ function landsInside(router: RegisteredRouter, savedScroll: number) {
  * the blocks keeps the page's foot off the screen until they all stand. A page's first load stays whole, because
  * its HTML is, and a move to a heading or back to a place in the page stays whole too, so the place exists.
  */
-export function ContentBlocks({ children }: { readonly children: ReactNode }) {
+export function ContentBlocks({
+  children,
+}: {
+  readonly children: ReactNode;
+}): ReactNode {
   const router = useRouter();
   const hydrated = useHydrated();
   const saved = useElementScrollRestoration({
