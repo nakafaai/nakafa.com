@@ -1,3 +1,4 @@
+import type { Id } from "@repo/backend/confect/_generated/id";
 import { createContext, type ReactNode, use, useState } from "react";
 import type { StoreApi } from "zustand";
 import {
@@ -8,10 +9,23 @@ import {
 /** The files a class page is adding, which the header's dialog and the library share. */
 const UploadsContext = createContext<StoreApi<LibraryUploads> | null>(null);
 
-/** Holds the uploads of one class page, created once with the page. */
-export function LibraryUploadsScope({ children }: { children: ReactNode }) {
+/** The folder the page shows, which is none at the top of the library. */
+const FolderContext = createContext<Id<"classroomFolders"> | null>(null);
+
+/** Holds the folder of one library page, and its uploads, created once with the page. */
+export function LibraryScope({
+  children,
+  folderId,
+}: {
+  children: ReactNode;
+  folderId: Id<"classroomFolders"> | null;
+}) {
   const [uploads] = useState(createLibraryUploads);
-  return <UploadsContext value={uploads}>{children}</UploadsContext>;
+  return (
+    <FolderContext value={folderId}>
+      <UploadsContext value={uploads}>{children}</UploadsContext>
+    </FolderContext>
+  );
 }
 
 /** Reads the uploads of the class page around the caller. */
@@ -22,4 +36,9 @@ export function useLibraryUploads() {
     throw new Error("useLibraryUploads must be used within a class page");
   }
   return uploads;
+}
+
+/** Reads the folder the page around the caller shows, which is none at the top of the library. */
+export function useLibraryFolder() {
+  return use(FolderContext);
 }

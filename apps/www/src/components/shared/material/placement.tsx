@@ -1,9 +1,8 @@
-import { Effect, Fiber, Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   createContext,
   type ReactNode,
   use,
-  useEffect,
   useLayoutEffect,
   useState,
 } from "react";
@@ -20,94 +19,79 @@ import {
 } from "@/lib/content/material/navigation";
 import {
   createPlacementStore,
+  findPlacement,
   keepPlacement,
   type PlacementStore,
-  readLessonPlacementOnce,
+  placementHint,
 } from "@/lib/content/material/placement";
 import {
-  holdPlacementPaint,
-  settlePlacementPaint,
+  PLACEMENT_PATH_ATTRIBUTE,
+  paintPlacement,
 } from "@/lib/content/material/prepaint";
 import { HOME_TARGET } from "@/lib/routing/target";
 
-/** One lesson page's navigation model and the store of its verified placement. */
+/** One lesson page's navigation, its curriculum places, and the store of the one its address names. */
 const PlacementContext = createContext<{
   readonly page: MaterialNavigationPage;
+  readonly placements: readonly MaterialPlacement[];
   readonly store: PlacementStore;
+  readonly title: string;
 } | null>(null);
 
 /**
- * Holds the curriculum placement that the `ctx` hint of the reader's address
- * names. The lesson's loader reads it in the browser before a client navigation
- * commits, so the first render is the final one. The router keys a lesson's
- * match by its path alone, because the static page must hydrate under any hint,
- * so the loader's placement counts only when it was read for this address's
- * hint. Otherwise, as after a hard load or when the router reuses a lesson's
- * match, the path stays hidden in its row from before the first paint (the
- * root's prepaint script on a hard load, this provider's layout effect after a
- * navigation) and shows once the placement of this hint is read. The loader
- * and the provider share one read per lesson and hint. The context value never
- * changes, so the streamed lesson keeps its HTML.
+ * Holds the curriculum place that the `ctx` hint of the reader's address names.
+ * The build writes every place of the lesson into its static page, so the browser
+ * reads nothing: the root's prepaint script shows the path of the hint before the
+ * first paint, and once React holds the page, the lesson's links take the place
+ * too. The store starts empty, as the static page renders it, and this effect runs
+ * before the browser paints, so a client navigation shows its path at once. The
+ * context value never changes, so the streamed lesson keeps its HTML.
  */
 export function MaterialPlacementProvider({
   children,
   hint,
-  locale,
   page,
-  placement,
-  placementHint,
+  placements,
+  title,
 }: {
   children: ReactNode;
   /** The `ctx` hint of the reader's address. */
   hint: string | undefined;
-  locale: string;
   page: MaterialNavigationPage;
-  placement: MaterialPlacement | null;
-  /** The hint that the loader read the placement for, `""` for none, or null when it ran on the server. */
-  placementHint: string | null;
+  placements: readonly MaterialPlacement[];
+  title: string;
 }) {
-  const known = placementHint === (hint ?? "");
   const [value] = useState(() => ({
     page,
-    store: createPlacementStore(known ? placement : null),
+    placements,
+    store: createPlacementStore(),
+    title,
   }));
 
   useLayoutEffect(() => {
-    if (known) {
-      keepPlacement(value.store, placement);
-      settlePlacementPaint();
-      return;
-    }
-    if (hint !== undefined) {
-      holdPlacementPaint();
-    }
-    const reading = Effect.runFork(
-      readLessonPlacementOnce({ ctx: hint, locale, page: value.page }).pipe(
-        Effect.tap((read) =>
-          Effect.sync(() => keepPlacement(value.store, read))
-        ),
-        Effect.ensuring(Effect.sync(settlePlacementPaint))
-      )
-    );
-    return () => {
-      Effect.runFork(Fiber.interrupt(reading));
-    };
-  }, [hint, known, locale, placement, value]);
-
-  // A lesson left before its placement arrived never keeps the next page's path hidden.
-  useEffect(() => settlePlacementPaint, []);
+    const placement = findPlacement(value.placements, hint);
+    keepPlacement(value.store, placement);
+    paintPlacement(Option.getOrNull(Option.map(placement, placementHint)));
+    return () => paintPlacement(null);
+  }, [hint, value]);
 
   return <PlacementContext value={value}>{children}</PlacementContext>;
 }
 
-/** The lesson's navigation under the placement the browser has verified so far. */
-function useMaterialNavigation() {
+/** Reads the provider's value and rejects a missing provider. */
+function usePlacementContext() {
   const value = use(PlacementContext);
   if (!value) {
     throw new Error(
       "useMaterialNavigation must be used within a MaterialPlacementProvider"
     );
   }
+  return value;
+}
+
+/** The lesson's navigation under the placement of the reader's address. */
+function useMaterialNavigation() {
+  const value = usePlacementContext();
   const placement = useStore(value.store, (state) => state.placement);
   return {
     navigation: readMaterialNavigation(value.page, Option.getOrNull(placement)),
@@ -115,17 +99,44 @@ function useMaterialNavigation() {
   };
 }
 
-/** Names the lesson, or walks back up the curriculum it was opened from. */
-export function MaterialBreadcrumb({ title }: { title: string }) {
+/**
+ * One path of the lesson in its HTML: the place's, walking from the curriculum down
+ * to its card, or with no place the lesson's own, which shows until the prepaint script
+ * names another.
+ */
+function PlacementPath({ placement }: { placement: MaterialPlacement | null }) {
   const t = useTranslations("Common");
-  const { navigation } = useMaterialNavigation();
+  const { page, title } = usePlacementContext();
+  const hint = placement === null ? "" : placementHint(placement);
   return (
-    <BreadcrumbHeaderPath
-      home={HOME_TARGET}
-      homeLabel={t("home")}
-      items={readMaterialPath(navigation, title)}
-      unfolds
-    />
+    <div
+      className={placement === null ? "contents" : "hidden"}
+      {...{ [PLACEMENT_PATH_ATTRIBUTE]: hint }}
+    >
+      <BreadcrumbHeaderPath
+        home={HOME_TARGET}
+        homeLabel={t("home")}
+        items={readMaterialPath(readMaterialNavigation(page, placement), title)}
+        unfolds
+      />
+    </div>
+  );
+}
+
+/**
+ * The lesson's path: its own, and one for each curriculum place that shows it. All of
+ * them stand in the static HTML, so a reader's `ctx` shows its path at the first
+ * paint, with no read and no shift.
+ */
+export function MaterialBreadcrumb() {
+  const { placements } = usePlacementContext();
+  return (
+    <>
+      <PlacementPath placement={null} />
+      {Arr.map(placements, (placement) => (
+        <PlacementPath key={placementHint(placement)} placement={placement} />
+      ))}
+    </>
   );
 }
 

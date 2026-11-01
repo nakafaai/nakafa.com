@@ -31,22 +31,16 @@ const result = {
     testCurriculumRowJson(testProgramClass),
   ],
   groupJson: testCurriculumRowJson(group),
-  managed: true,
   mappingJson: testCurriculumRowJson(mapping),
   parentJson: testCurriculumRowJson(testProgramSubject),
-  resolvedCanonicalPath: mapping.canonicalPath ?? null,
-} satisfies Ref.Returns<typeof contentRelease.program.context>;
+  resolvedCanonicalPath: mapping.canonicalPath ?? "",
+} satisfies Ref.Returns<typeof contentRelease.program.placements>[number];
 
 describe("published material context projection", () => {
   it.effect("builds the return link only from verified curriculum rows", () =>
     Effect.gen(function* () {
       expect(
-        yield* decodePublishedMaterialContext(
-          "en",
-          previewProjection,
-          context,
-          result
-        )
+        yield* decodePublishedMaterialContext("en", previewProjection, result)
       ).toMatchObject({
         context,
         group,
@@ -59,26 +53,6 @@ describe("published material context projection", () => {
     })
   );
 
-  it.effect("ignores a backend-verified missing optional context", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* decodePublishedMaterialContext(
-          "en",
-          previewProjection,
-          context,
-          {
-            ancestorJson: [],
-            groupJson: null,
-            managed: true,
-            mappingJson: null,
-            parentJson: null,
-            resolvedCanonicalPath: null,
-          }
-        )
-      ).toBeNull();
-    })
-  );
-
   it.effect(
     "accepts course parents and uses the authored title without a card title",
     () =>
@@ -86,7 +60,6 @@ describe("published material context projection", () => {
         const decoded = yield* decodePublishedMaterialContext(
           "en",
           previewProjection,
-          context,
           {
             ...result,
             groupJson: testCurriculumRowJson({
@@ -123,7 +96,7 @@ describe("published material context projection", () => {
         const resolvedCanonicalPath =
           scope === "parent" ? parentPath : material.publicPath;
         expect(
-          yield* decodePublishedMaterialContext("en", material, context, {
+          yield* decodePublishedMaterialContext("en", material, {
             ...result,
             resolvedCanonicalPath,
           })
@@ -132,11 +105,6 @@ describe("published material context projection", () => {
   );
 
   it.effect.each([
-    ["unmanaged context", { ...result, managed: false }],
-    ["missing canonical path", { ...result, resolvedCanonicalPath: null }],
-    ["missing group", { ...result, groupJson: null }],
-    ["missing mapping", { ...result, mappingJson: null }],
-    ["missing parent", { ...result, parentJson: null }],
     [
       "foreign group",
       {
@@ -198,18 +166,18 @@ describe("published material context projection", () => {
       },
     ],
     ["malformed row", { ...result, groupJson: "{" }],
-  ] satisfies [string, Ref.Returns<typeof contentRelease.program.context>][])(
-    "rejects %s with the typed projection error",
-    ([, input]) =>
-      Effect.gen(function* () {
-        expect(
-          yield* decodePublishedMaterialContext(
-            "en",
-            previewProjection,
-            context,
-            input
-          ).pipe(Effect.flip)
-        ).toMatchObject({ _tag: "PublishedProjectionError" });
-      })
+  ] satisfies [
+    string,
+    Ref.Returns<typeof contentRelease.program.placements>[number],
+  ][])("rejects %s with the typed projection error", ([, input]) =>
+    Effect.gen(function* () {
+      expect(
+        yield* decodePublishedMaterialContext(
+          "en",
+          previewProjection,
+          input
+        ).pipe(Effect.flip)
+      ).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
   );
 });
