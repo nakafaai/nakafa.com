@@ -1,5 +1,6 @@
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   AUDIO_BYTE_LIMIT,
@@ -7,6 +8,7 @@ import {
   type QuestionMedia,
   videoIdOf,
 } from "@repo/backend/confect/exams/media";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -42,19 +44,27 @@ const AUDIO_FILES =
 /** The way a dialog adds media. */
 type MediaKind = QuestionMedia["kind"];
 
-/** The media of a question on its paper, as the student meets it, read for the editor and the try. */
-export function ExamPaperMedia({ question }: { readonly question: Question }) {
-  const { exam, slug } = useExam();
+/** Reads the media of a question as a paper plays it. A question with none reads nothing. */
+export function useQuestionMedia(
+  examId: Id<"exams">,
+  question: Question,
+  slug: TenantSlug
+) {
   const reply = useQuery(
     exams.assets.media,
     Arr.isReadonlyArrayEmpty(question.media)
       ? "skip"
-      : { examId: exam.id, questionId: question.id, slug }
+      : { examId, questionId: question.id, slug }
   );
 
-  return QueryResult.isSuccess(reply) ? (
-    <PaperMedia items={reply.value} />
-  ) : null;
+  return QueryResult.isSuccess(reply) ? reply.value : [];
+}
+
+/** The media of a question on the editor's paper, as the student meets it. */
+export function ExamPaperMedia({ question }: { readonly question: Question }) {
+  const { exam, slug } = useExam();
+
+  return <PaperMedia items={useQuestionMedia(exam.id, question, slug)} />;
 }
 
 /** The dialog that adds one piece of media: a clip from the device, or a video by its link, and what it holds. */

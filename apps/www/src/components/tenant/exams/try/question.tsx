@@ -18,6 +18,7 @@ import {
   useReaderLoaded,
 } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
+import { PaperMedia } from "@/components/exams/sitting/media";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import { SittingReason } from "@/components/exams/sitting/reason";
 import {
@@ -37,9 +38,13 @@ import {
   PlayerQuestionHeader,
   PlayerQuestionPrompt,
 } from "@/components/player/question";
-import { ExamPaperMedia } from "@/components/tenant/exams/media";
+import { useQuestionMedia } from "@/components/tenant/exams/media";
 import type { Question } from "@/components/tenant/exams/optimistic";
-import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
+import {
+  useExamTry,
+  useTryExam,
+  useTrySlug,
+} from "@/components/tenant/exams/try/context";
 import { useLastValue } from "@/lib/data/kept";
 
 /** The session name the try reads prompts under. It never writes, so the server records nothing. */
@@ -122,7 +127,7 @@ export function ExamTryQuestion({
       <PlayerQuestionHeader number={number} />
       <PlayerQuestionPrompt>
         <div className="grid gap-6">
-          <ExamPaperMedia question={question} />
+          <TryMedia question={question} />
           {question.reading === null ? null : (
             <ExamTryPrompt documentId={question.reading} />
           )}
@@ -172,6 +177,14 @@ export function ExamTryQuestion({
       </PlayerQuestionAnswer>
     </PlayerQuestion>
   );
+}
+
+/** The media of a question on the try's paper, which stands outside the editor. */
+function TryMedia({ question }: { question: Question }) {
+  const examId = useTryExam();
+  const slug = useTrySlug();
+
+  return <PaperMedia items={useQuestionMedia(examId, question, slug)} />;
 }
 
 /**
