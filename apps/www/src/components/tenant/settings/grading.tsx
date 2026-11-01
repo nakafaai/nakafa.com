@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { startTransition, useState } from "react";
@@ -32,6 +31,7 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -234,7 +234,7 @@ function GradingTable({
         rowId={(row) => row.id}
         search="bands"
       />
-      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
+      {loadMore === null ? null : <TableEnd onLoad={loadMore} />}
     </>
   );
 }

@@ -17,10 +17,14 @@ import { createContext, type ReactNode, use, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { FacetValues } from "@/components/shared/table/filter";
 
-/** What a table page has chosen: the text of its header's search box, and the values each filtered column keeps. */
+/**
+ * What a table page has chosen: the text of its header's search box, the values each filtered column keeps, and whether
+ * a column sorts the rows, which only every row can answer, so a paged list reads the rest of its pages.
+ */
 const FiltersState = Schema.Struct({
   chosen: Schema.Record(Schema.String, FacetValues),
   search: Schema.String,
+  sorted: Schema.Boolean,
 });
 
 /** How long the typing in a paged list's search pauses before the server reads the text it holds. */
@@ -30,6 +34,8 @@ const SEARCH_DELAY_MILLISECONDS = 300;
 interface FiltersActions {
   /** Keeps the rows whose column holds one of the values, or every row when none is chosen. */
   readonly choose: (column: string, values: readonly string[]) => void;
+  /** Says that a column sorts the rows. */
+  readonly markSorted: () => void;
   /** Keeps the rows whose searched column holds the text. */
   readonly setSearch: (search: string) => void;
 }
@@ -43,8 +49,10 @@ const createTableFilters = () =>
     choose: (column, values) =>
       set((state) => ({ chosen: Rec.set(state.chosen, column, values) })),
     chosen: {},
+    markSorted: () => set({ sorted: true }),
     search: "",
     setSearch: (search) => set({ search }),
+    sorted: false,
   }));
 
 const FiltersContext = createContext<StoreApi<TableFilters> | null>(null);

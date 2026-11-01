@@ -316,6 +316,7 @@ function SortingHead<TData extends RowData>({
   const column = header.column;
   const sorted = column.getIsSorted() || "none";
   const filtered = useIsFiltered(column.id);
+  const markSorted = useTableFilters((state) => state.markSorted);
   const idle = kind === "days" ? Calendar03Icon : FilterIcon;
 
   return (
@@ -331,7 +332,10 @@ function SortingHead<TData extends RowData>({
     >
       <HeadSort
         kind={kind}
-        onSort={(descending) => column.toggleSorting(descending)}
+        onSort={(descending) => {
+          markSorted();
+          column.toggleSorting(descending);
+        }}
         sorted={sorted}
       />
       {children}

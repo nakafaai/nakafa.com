@@ -47,7 +47,12 @@ export function StudentNarrative({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} type="button" variant="outline">
+      <Button
+        className="h-auto min-h-9 max-w-full wrap-break-word whitespace-normal"
+        onClick={() => setOpen(true)}
+        type="button"
+        variant="outline"
+      >
         {student.name}
       </Button>
       <ResponsiveDialog

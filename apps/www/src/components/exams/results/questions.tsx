@@ -30,7 +30,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Select,
@@ -55,7 +54,14 @@ import {
   useResultsPaper,
   useResultsScope,
   useSessionSettled,
-} from "@/components/exams/results/context";
+import
+{
+  TableEnd;
+}
+from;
+("@/components/shared/table/pages");
+} from "@/components/exams/results/context"
+
 import { GradeField } from "@/components/exams/results/grade";
 import {
   correctShare,
@@ -318,7 +324,7 @@ function AnswerList({
           title={t("results-no-match")}
         />
       ) : null}
-      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
+      {loadMore === null ? null : <TableEnd onLoad={loadMore} />}
     </div>
   );
 }
