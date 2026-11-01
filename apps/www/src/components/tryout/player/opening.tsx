@@ -2,9 +2,14 @@ import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useLocation } from "@tanstack/react-router";
+import { lazyRouteComponent, useLocation } from "@tanstack/react-router";
 import { Array as Arr, Record as Rec } from "effect";
-import type { ReactNode } from "react";
+import {
+  type ComponentProps,
+  type ReactNode,
+  Suspense,
+  useEffect,
+} from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
@@ -25,6 +30,38 @@ import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
+import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
+
+/** The running player's code, which reaches KaTeX and the Markdown reader. */
+const LazyTryoutPlayer = lazyRouteComponent(
+  () => import("@/components/tryout/player/client"),
+  "TryoutPlayer"
+);
+
+/**
+ * The running player. A page without a running attempt never reads its code, so it stays out of the
+ * page's first JavaScript, loads with the opening frame, and that frame stands, at the time the attempt
+ * has left, for a learner who returns to a running attempt before the code arrives.
+ */
+export function TryoutRunningPlayer(
+  props: ComponentProps<typeof LazyTryoutPlayer>
+) {
+  const { runtime } = props.state;
+  return (
+    <Suspense
+      fallback={
+        <TryoutPlayerOpening
+          questionCount={runtime.questions.length}
+          title={props.title}
+        >
+          <TryoutPlayerTimer expiresAt={runtime.expiresAt} />
+        </TryoutPlayerOpening>
+      }
+    >
+      <LazyTryoutPlayer {...props} />
+    </Suspense>
+  );
+}
 
 /**
  * The player of a section that the learner's press is opening, drawn the moment they confirm. It is the
@@ -47,6 +84,9 @@ export function TryoutPlayerOpening({
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
   const searchStr = useLocation({ select: (location) => location.searchStr });
+  useEffect(() => {
+    LazyTryoutPlayer.preload?.();
+  }, []);
   const questions = Arr.makeBy(questionCount, (index) => ({
     answered: false,
     flagged: false,
