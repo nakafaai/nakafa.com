@@ -416,6 +416,7 @@
     "questions-column": "Questions",
     "created-column": "Created",
     "rooms-title": "Rooms",
+    "rooms-list-description": "Each exam shows here with its rooms.",
     "edit-action": "Edit exam",
     "rooms-empty": "No rooms yet",
     "rooms-empty-description": "Each room appears here once the exam is scheduled.",

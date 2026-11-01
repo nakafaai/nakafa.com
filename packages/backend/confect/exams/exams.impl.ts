@@ -103,9 +103,10 @@ const EXAM_PAGE_LIMIT = 20;
 
 /**
  * One page of the exams of the school, newest first. The index reads the school's
- * exams in order, and each one is kept only if the caller may view it, so a scoped
- * Teacher sees the tenant's exams of their unit and no other unit's. A page asks for at
- * most `EXAM_PAGE_LIMIT` exams, and a larger request is clamped to that size.
+ * exams in order, and each one is kept only if the caller may view it or open its rooms, so a
+ * scoped Teacher sees the tenant's exams of their unit and no other unit's, and a Proctor finds
+ * the rooms it runs. Each row says whether the caller may edit it. A page asks for at most
+ * `EXAM_PAGE_LIMIT` exams, and a larger request is clamped to that size.
  */
 const list = FunctionImpl.make(
   databaseSchema,
@@ -125,12 +126,22 @@ const list = FunctionImpl.make(
         })
       )
       .pipe(Effect.orDie);
-    const viewable = yield* Effect.filter(page.page, (row) =>
+    const allowed = yield* Effect.forEach(page.page, (row) =>
       examAuthority
         .allowed(row)
-        .pipe(Effect.map((actions) => Arr.contains(actions, "exam.view")))
+        .pipe(Effect.map((actions) => ({ actions, row })))
     );
-    return Struct.assign(page, { page: Arr.map(viewable, examListed) });
+    const listed = Arr.filter(
+      allowed,
+      ({ actions }) =>
+        Arr.contains(actions, "exam.view") ||
+        Arr.contains(actions, "exam.rooms")
+    );
+    return Struct.assign(page, {
+      page: Arr.map(listed, ({ actions, row }) =>
+        examListed(row, Arr.contains(actions, "exam.edit"))
+      ),
+    });
   })
 );
 

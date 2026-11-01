@@ -288,6 +288,7 @@ export function TenantShell({
   canManage,
   canOpenExams,
   canOpenGraduation,
+  canOpenInsight,
   canOpenReports,
   children,
   home,
@@ -301,6 +302,7 @@ export function TenantShell({
   canManage: boolean;
   canOpenExams: boolean;
   canOpenGraduation: boolean;
+  canOpenInsight: boolean;
   canOpenReports: boolean;
   children: ReactNode;
   home: HomeAccess;
@@ -317,6 +319,7 @@ export function TenantShell({
           canManage,
           canOpenExams,
           canOpenGraduation,
+          canOpenInsight,
           canOpenReports,
           logo: profile.logo,
           mascot: profile.mascot,

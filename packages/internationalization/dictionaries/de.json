@@ -416,6 +416,7 @@
     "questions-column": "Fragen",
     "created-column": "Erstellt",
     "rooms-title": "Räume",
+    "rooms-list-description": "Jede Prüfung erscheint hier mit ihren Räumen.",
     "edit-action": "Prüfung bearbeiten",
     "rooms-empty": "Noch keine Räume",
     "rooms-empty-description": "Jeder Raum erscheint hier, sobald die Prüfung geplant ist.",
