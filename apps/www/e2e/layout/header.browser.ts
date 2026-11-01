@@ -8,6 +8,7 @@ import {
 } from "@/e2e/support/controls";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
+import { readHeaderLineProblems } from "@/e2e/support/lines";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes, openRoute } from "@/e2e/support/route";
 import {
@@ -161,7 +162,14 @@ const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
           const controls = yield* Effect.promise(() =>
             readControlProblems(page)
           );
+          const lines = yield* Effect.promise(() =>
+            readHeaderLineProblems(page)
+          );
           yield* Effect.sync(() => {
+            expect(
+              lines,
+              `${label} at ${width}px: a header holds more than two lines, or a label that names the obvious`
+            ).toEqual([]);
             expect(
               controls,
               `${label} at ${width}px: a group is not one frame, or two controls stand too close`
