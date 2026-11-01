@@ -14,6 +14,7 @@ import {
 } from "@repo/design-system/components/ui/tabs";
 import { Match } from "effect";
 import { useTranslations } from "use-intl";
+import { pageRowVariants } from "@/components/shared/content/width";
 import type { ClassView } from "@/components/tenant/classes/view";
 import { useTenant } from "@/components/tenant/context";
 import { Link } from "@/lib/routing/link";
@@ -49,7 +50,7 @@ export function ClassTabs({
 
   return (
     <Tabs value={tabOfView(tab)}>
-      <TabsList aria-label={t("tabs-label")} className="mx-auto max-w-7xl px-1">
+      <TabsList aria-label={t("tabs-label")} className={pageRowVariants()}>
         <TabsTab
           nativeButton={false}
           render={

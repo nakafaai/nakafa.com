@@ -100,6 +100,9 @@ const pricingByCurrency = {
   USD: usdPricing,
 } satisfies Record<PricingCurrency, unknown>;
 
+/** The pro price in every currency, rupiah first, as a price list states them. */
+export const proPricing = [idrPricing, usdPricing, eurPricing] as const;
+
 /** The monthly pro price of one currency, with its formatting. */
 export function getProMonthlyPricingFor(currency: PricingCurrency) {
   return pricingByCurrency[currency];

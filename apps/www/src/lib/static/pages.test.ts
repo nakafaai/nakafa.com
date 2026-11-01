@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { readStaticPagePaths, selectStaticPagePaths } from "@/lib/static/pages";
+import {
+  isUnlistedPath,
+  readStaticPagePaths,
+  selectStaticPagePaths,
+} from "@/lib/static/pages";
 
 const sitemap = vi.hoisted(() => ({
   descriptors: vi.fn(),
@@ -17,19 +21,31 @@ vi.mock("@/lib/sitemap/entries", () => ({
   getSitemapEntries: sitemap.entries,
 }));
 
+describe("pages the sitemap leaves out", () => {
+  it("leaves out a try-out section, and no page above it or of another family", () => {
+    expect(
+      isUnlistedPath("/en/try-out/indonesia/snbt/2027/set-1/general-reasoning")
+    ).toBe(true);
+    expect(isUnlistedPath("/en/try-out/indonesia/snbt/2027/set-1")).toBe(false);
+    expect(isUnlistedPath("/en/subjects/a/b/c/d/e")).toBe(false);
+  });
+});
+
 describe("static page paths", () => {
-  it("keeps the sitemap's public URLs and adds the articles and try-out indexes and the sign-in page of every locale", () => {
+  it("keeps the sitemap's public URLs and adds the sign-in page of every locale", () => {
     const paths = selectStaticPagePaths({
       locales: ["en", "id"],
       sitemapPaths: [
         "/en/articles/politics/x",
         "/en/articles/politics",
+        "/en/articles",
         "/en/contributor",
         "/en/curriculum/merdeka",
         "/en/pricing",
         "/en/privacy-policy",
         "/en/quran/1",
         "/en/subjects/mathematics/algebra/linear",
+        "/en/try-out",
         "/en/try-out/indonesia",
         "/en/try-out/indonesia/snbt",
         "/id/kurikulum/merdeka",
@@ -50,10 +66,8 @@ describe("static page paths", () => {
       "/en/try-out",
       "/en/try-out/indonesia",
       "/en/try-out/indonesia/snbt",
-      "/id/articles",
       "/id/auth",
       "/id/kurikulum/merdeka",
-      "/id/try-out",
     ]);
   });
 
@@ -69,9 +83,7 @@ describe("static page paths", () => {
     });
 
     expect(paths).toEqual([
-      "/en/articles",
       "/en/auth",
-      "/en/try-out",
       "/en/try-out/indonesia/snbt/2027",
       "/en/try-out/indonesia/snbt/2027/set-1",
       "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
@@ -84,13 +96,7 @@ describe("static page paths", () => {
       sitemapPaths: ["/en/quran/2", "/en/quran/1", "/en/quran/1"],
     });
 
-    expect(paths).toEqual([
-      "/en/articles",
-      "/en/auth",
-      "/en/quran/1",
-      "/en/quran/2",
-      "/en/try-out",
-    ]);
+    expect(paths).toEqual(["/en/auth", "/en/quran/1", "/en/quran/2"]);
   });
 
   it.effect("reads the public paths of every sitemap page of the release", () =>
@@ -110,8 +116,8 @@ describe("static page paths", () => {
 
       expect(paths).toContain("/en/pricing");
       expect(paths).toContain("/en/quran/1");
-      expect(paths).toContain("/de/articles");
-      expect(paths).toContain("/id/try-out");
+      expect(paths).toContain("/de/auth");
+      expect(paths).toContain("/id/auth");
     })
   );
 });

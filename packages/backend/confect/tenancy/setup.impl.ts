@@ -16,8 +16,9 @@ import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /**
  * Which steps of the setup the school's data shows as done: a period running in a unit, a
- * class group in one of them, a student, and an exam. Each step reads one row, so the read
- * stays bounded however large the school grows.
+ * cohort in one of them, a student, a classroom, a teacher who holds the role or an invite still
+ * open, a parent, and an exam. Each step reads one row, so the read stays bounded however large
+ * the school grows.
  */
 const state = FunctionImpl.make(
   databaseSchema,
@@ -70,11 +71,43 @@ const state = FunctionImpl.make(
       .index("by_tenantId", (query) => query.eq("tenantId", tenant._id))
       .first()
       .pipe(Effect.orDie);
+    const classroom = yield* reader
+      .table("classes")
+      .index("by_tenantId_and_slug", (query) =>
+        query.eq("tenantId", tenant._id)
+      )
+      .first()
+      .pipe(Effect.orDie);
+    const teacher = yield* reader
+      .table("tenantGrants")
+      .index("by_tenantId_and_role_key_and_status", (query) =>
+        query
+          .eq("tenantId", tenant._id)
+          .eq("role.key", "teacher")
+          .eq("status", "active")
+      )
+      .first()
+      .pipe(Effect.orDie);
+    const invite = yield* reader
+      .table("tenantInvites")
+      .index("by_tenantId_and_state_status", (query) =>
+        query.eq("tenantId", tenant._id).eq("state.status", "pending")
+      )
+      .first()
+      .pipe(Effect.orDie);
+    const parent = yield* reader
+      .table("guardianLinks")
+      .index("by_tenantId", (query) => query.eq("tenantId", tenant._id))
+      .first()
+      .pipe(Effect.orDie);
     return {
+      classroom: Option.isSome(classroom),
       cohort: Arr.isArrayNonEmpty(cohorts),
       exam: Option.isSome(exam),
+      parent: Option.isSome(parent),
       period: Arr.isArrayNonEmpty(periods),
       student: Option.isSome(student),
+      teacher: Option.isSome(teacher) || Option.isSome(invite),
     };
   })
 );

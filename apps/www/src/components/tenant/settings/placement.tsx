@@ -21,14 +21,6 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -43,6 +35,7 @@ import {
   SchoolStudentPicker,
 } from "@/components/tenant/settings/people";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { SelectField } from "@/components/tenant/settings/select";
 import type { Cohort, CohortMember } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/placement";
@@ -165,7 +158,6 @@ export function SchoolPlacementMove({
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
-  const id = useId();
   const move = useMutation(tenancy.placements.move).withOptimisticUpdate(
     moveStudentChange(cohortId)
   );
@@ -249,36 +241,19 @@ export function SchoolPlacementMove({
         title={t("placement-move")}
       >
         <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor={`${id}-target`}>
-              {t("placement-move-to")}
-            </FieldLabel>
-            <Select
-              items={items}
-              onValueChange={(value) =>
-                setTarget(
-                  Option.getOrElse(
-                    Schema.decodeUnknownOption(Id("tenantCohorts"))(value),
-                    () => null
-                  )
+          <SelectField
+            items={items}
+            label={t("placement-move-to")}
+            onChoose={(value) =>
+              setTarget(
+                Option.getOrElse(
+                  Schema.decodeUnknownOption(Id("tenantCohorts"))(value),
+                  () => null
                 )
-              }
-              value={target}
-            >
-              <SelectTrigger className="w-full" id={`${id}-target`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {Arr.map(items, (item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </Field>
+              )
+            }
+            value={target}
+          />
         </FieldGroup>
       </ResponsiveDialog>
     </div>

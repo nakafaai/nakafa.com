@@ -10741,6 +10741,47 @@ export declare const api: {
         null
       >;
     };
+    personal: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {},
+        Array<{
+          channel: "push" | "email";
+          kind:
+            | "forumMention"
+            | "classAnnouncement"
+            | "taskPublished"
+            | "taskDeadline"
+            | "gradeReleased"
+            | "taskMissed"
+            | "examStart"
+            | "examGuardianReminder"
+            | "invitation"
+            | "commentReply";
+        }>
+      >;
+      set: FunctionReference<
+        "mutation",
+        "public",
+        {
+          channel: "push" | "email";
+          kind:
+            | "forumMention"
+            | "classAnnouncement"
+            | "taskPublished"
+            | "taskDeadline"
+            | "gradeReleased"
+            | "taskMissed"
+            | "examStart"
+            | "examGuardianReminder"
+            | "invitation"
+            | "commentReply";
+          on: boolean;
+        },
+        null
+      >;
+    };
     preferences: {
       list: FunctionReference<
         "query",
@@ -13085,7 +13126,15 @@ export declare const api: {
         "query",
         "public",
         { slug: string },
-        { cohort: boolean; exam: boolean; period: boolean; student: boolean }
+        {
+          classroom: boolean;
+          cohort: boolean;
+          exam: boolean;
+          parent: boolean;
+          period: boolean;
+          student: boolean;
+          teacher: boolean;
+        }
       >;
     };
     start: {
@@ -15274,7 +15323,12 @@ export declare const internal: {
       refundWithoutPro: FunctionReference<
         "action",
         "internal",
-        { orderId: string; refundableAmount: number },
+        {
+          currency: "EUR" | "IDR" | "USD";
+          orderId: string;
+          rail: "polar" | "xendit";
+          refundableAmount: number;
+        },
         null
       >;
     };
@@ -17632,7 +17686,8 @@ export declare const internal: {
                 | "grade.released"
                 | "assignment.missed"
                 | "assignment.published"
-                | "forum.mentioned";
+                | "forum.mentioned"
+                | "comment.replied";
               count: number;
             }>;
             inboxUrl: string;
@@ -17658,7 +17713,8 @@ export declare const internal: {
                   | "grade.released"
                   | "assignment.missed"
                   | "assignment.published"
-                  | "forum.mentioned";
+                  | "forum.mentioned"
+                  | "comment.replied";
                 count: number;
               }>;
               inboxUrl: string;

@@ -274,3 +274,10 @@ export const expectView = Effect.fn("NakafaE2E.expectPlayerView")(function* (
       .toBeGreaterThan(1)
   );
 });
+
+/**
+ * The name of a choice option by its text: a screen reader says the option's letter first, in the script
+ * its set chose, then its text.
+ */
+export const optionNamed = (text: string) =>
+  new RegExp(`^\\S+ ${text.replaceAll(/[.*+?^${}()|[\]\\]/gu, "\\$&")}$`, "u");

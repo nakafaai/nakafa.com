@@ -16,7 +16,7 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const SESSION_READ = "**/api/auth/get-session*";
-const CONVEX_AUTH_READ = "**/api/auth/convex/token*";
+const CONVEX_SIGN_IN_READ = "**/api/auth/convex/token*";
 
 /** The words of every state that says a read failed, was refused, or found nothing. */
 const ERROR_STATES = [
@@ -45,7 +45,7 @@ const UNAVAILABLE_SESSION = {
 /** Convex's first token request and the one it sends when that fails both get no answer. */
 const DROPPED_AUTH_READS = {
   answer: "none",
-  route: CONVEX_AUTH_READ,
+  route: CONVEX_SIGN_IN_READ,
   times: 2,
 } as const;
 

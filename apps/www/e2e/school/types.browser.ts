@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { expectNoOverflow } from "@/e2e/support/layout";
+import { optionNamed } from "@/e2e/support/player";
 import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
@@ -41,17 +42,16 @@ async function answerEveryTemplate(student: Page) {
   // Complex multiple choice: both even numbers.
   for (const text of ["2", "4"]) {
     await question(student, 3)
-      .getByRole("checkbox", { exact: true, name: text })
+      .getByRole("checkbox", { name: optionNamed(text) })
       .click();
   }
   // True or false, then cause and effect.
   await question(student, 4)
-    .getByRole("radio", { exact: true, name: "Benar" })
+    .getByRole("radio", { name: optionNamed("Benar") })
     .click();
   await question(student, 5)
     .getByRole("radio", {
-      exact: true,
-      name: "Pernyataan dan alasan benar serta berhubungan",
+      name: optionNamed("Pernyataan dan alasan benar serta berhubungan"),
     })
     .click();
   // A short answer, read without its case.

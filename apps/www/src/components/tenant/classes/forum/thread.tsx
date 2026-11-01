@@ -11,7 +11,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { PaneHeader } from "@/components/shared/pane";
 import {
   Panes,
@@ -20,6 +19,7 @@ import {
   PanesProvider,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
+import { LoadFailure } from "@/components/state/failure";
 import {
   ForumChannel,
   MESSAGE_PAGE_SIZE,
@@ -163,7 +163,7 @@ function DiscussionReplies({
   ) {
     return (
       <div className="flex-1 p-4">
-        <DataFailure onRetry={reloadPage} />
+        <LoadFailure onRetry={reloadPage} />
       </div>
     );
   }

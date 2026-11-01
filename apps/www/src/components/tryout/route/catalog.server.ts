@@ -1,9 +1,6 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
-import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option } from "effect";
 import {
   buildTryoutCountryOptions,
   buildTryoutExamOptions,
@@ -12,129 +9,23 @@ import {
   readTryoutCountryPage,
   readTryoutExamPage,
   readTryoutHubPage,
-  readTryoutMetadata,
   readTryoutSetList,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/source.server";
 import type { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
+import {
+  readTryoutRouteHead,
+  readTryoutRouteLabels,
+} from "@/components/tryout/route/metadata.server";
 import { getTryoutPublicPath } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import type { TrackListRequestSchema } from "@/components/tryout/route/search";
 import { readRequestToken } from "@/components/tryout/route/token.server";
 import { getAppSocialArtwork } from "@/lib/og/app";
-import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { HeadAlternate, toHeadAlternates } from "@/lib/seo/head";
-import { getOgUrl } from "@/lib/seo/social";
 import { serverHandler } from "@/lib/server/fn";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
-
-/** The catalog kinds whose published route carries its own title and social image. */
-type TryoutRouteKind = typeof tryoutMetadataArgsValidator.kind.Type;
-
-/**
- * The head facts of one published try-out route, as its page builds them. A route's slug can differ
- * from one locale to the next, as `general-reasoning` is `penalaran-umum` in Indonesian, so its
- * language links are the addresses the catalog holds for the same node in each locale.
- */
-const TryoutRouteHeadSchema = Schema.Struct({
-  alternates: Schema.Array(HeadAlternate),
-  canonicalPath: LocalizedPath,
-  description: Schema.String,
-  image: Schema.String,
-  indexable: Schema.Boolean,
-  title: Schema.String,
-});
-
-type TryoutRouteHead = typeof TryoutRouteHeadSchema.Type;
-
-/** The catalog labels that one try-out page names, read in its locale. */
-const TryoutRouteLabelsSchema = Schema.Struct({
-  home: Schema.String,
-  tryOut: Schema.String,
-  tryOutShort: Schema.String,
-});
-type TryoutRouteLabels = typeof TryoutRouteLabelsSchema.Type;
-
-/**
- * Reads the head facts of one published try-out route. The catalog decides the
- * title and the social image. A route the catalog does not publish, or an exam
- * without the social image identity it needs, has no page, so the reader says
- * so with none.
- */
-export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
-  function* (input: {
-    readonly kind: TryoutRouteKind;
-    readonly locale: Locale;
-    readonly publicPath: string;
-  }) {
-    const appLocale = AppLocaleSchema.make(input.locale);
-    const [published, tTryouts] = yield* Effect.all(
-      [
-        readTryoutMetadata({
-          appLocale,
-          kind: input.kind,
-          publicPath: input.publicPath,
-        }),
-        Effect.promise(() =>
-          readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
-        ),
-      ],
-      { concurrency: "unbounded" }
-    );
-    const source = published.route;
-    if (!source) {
-      return Option.none<TryoutRouteHead>();
-    }
-    const alternates = toHeadAlternates(
-      createResolvedRouteAlternates(
-        { appLocale, publicPath: source.publicPath },
-        source.alternates
-      )
-    );
-    if (input.kind !== "exam") {
-      return Option.some<TryoutRouteHead>({
-        alternates,
-        canonicalPath: `/${input.locale}/${source.publicPath}`,
-        description: source.description ?? tTryouts("metadata-description"),
-        image: getOgUrl(input.locale, source.publicPath),
-        indexable: true,
-        title: source.title,
-      });
-    }
-    if (!source.socialImageIdentity) {
-      return Option.none<TryoutRouteHead>();
-    }
-    const artwork = yield* resolveTryoutExamArtwork({
-      ...source.socialImageIdentity,
-      appLocale,
-      publicPath: source.publicPath,
-    });
-    return Option.some<TryoutRouteHead>({
-      alternates,
-      canonicalPath: `/${input.locale}/${source.publicPath}`,
-      description: source.description ?? tTryouts("metadata-description"),
-      image: artwork.socialImageSrc,
-      indexable: true,
-      title: source.title,
-    });
-  }
-);
-
-/** The labels of a catalog page, read once for its locale. */
-const readTryoutRouteLabels = Effect.fn("www.tryout.route.readLabels")(
-  function* (locale: Locale) {
-    const tCommon = yield* Effect.promise(() =>
-      readServerTranslator({ locale, namespace: "Common" })
-    );
-    return {
-      home: tCommon("home"),
-      tryOut: tCommon("try-out"),
-      tryOutShort: tCommon("try-out-short"),
-    } satisfies TryoutRouteLabels;
-  }
-);
 
 /**
  * The hub: the country-first catalog and its breadcrumbs. A try-out catalog's
@@ -165,6 +56,7 @@ export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
       }),
       labels,
       page,
+      title: tTryouts("hub-search-title"),
     };
   }
 );
@@ -322,7 +214,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
         description:
           page.track.description ??
           tTryouts("track-metadata-description", { exam }),
-        title: exam,
+        title: tTryouts("search-title", { name: exam }),
       },
       kind: "found" as const,
       labels,

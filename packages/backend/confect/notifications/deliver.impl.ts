@@ -1,5 +1,4 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -8,7 +7,10 @@ import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
-import { pushSentence } from "@repo/backend/confect/notifications/copy";
+import {
+  ACCOUNT_LOCALE,
+  pushSentence,
+} from "@repo/backend/confect/notifications/copy";
 import spec from "@repo/backend/confect/notifications/deliver.spec";
 import {
   isAccountRow,
@@ -20,9 +22,6 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { FetchClient } from "@repo/utilities/http/client";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Clock, Config, Effect, Layer, Option } from "effect";
-
-/** The language of a row with no school: an account keeps none, and Nakafa's learners are Indonesian. */
-const ACCOUNT_LOCALE: typeof AppLocaleCodeSchema.Type = "id";
 
 /** The account behind a school row's Person, once the Person has claimed one. */
 const claimedAccount = Effect.fn("notifications.deliver.account")(function* (

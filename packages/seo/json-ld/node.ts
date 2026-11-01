@@ -52,12 +52,30 @@ const FaqPageInput = Schema.Struct({
 });
 
 /** The Quran surah that one book page describes, with its size. */
-const BookInput = Schema.Struct({
+const SurahInput = Schema.Struct({
+  /** The name of the book in the page's language, such as Al-Qur'an. */
+  bookName: Schema.String,
+  bookUrl: Schema.String,
   description: Schema.String,
   inLanguage: Schema.String,
+  /** What the surah's name means, in the page's language. */
+  meaning: Schema.String,
   name: Schema.String,
   position: Schema.Finite,
-  totalPages: Schema.Finite,
+  url: Schema.String,
+});
+
+/** One monthly price of a plan, in a currency's major units, before tax. */
+const ProductOffer = Schema.Struct({
+  amount: Schema.Finite,
+  currency: Schema.String,
+});
+
+const ProductInput = Schema.Struct({
+  description: Schema.String,
+  image: Schema.String,
+  name: Schema.String,
+  offers: Schema.Array(ProductOffer),
   url: Schema.String,
 });
 
@@ -110,19 +128,60 @@ export function makeFaqPageNode(input: typeof FaqPageInput.Type) {
   };
 }
 
-/** The book node of one Quran surah, which is a free EBook. */
-export function makeBookNode(input: typeof BookInput.Type) {
+/**
+ * One paid plan as a product with its monthly price in each currency, so an answer
+ * service can quote what it costs. Every price excludes tax.
+ *
+ * @see https://developers.google.com/search/docs/appearance/structured-data/product-snippet
+ */
+export function makeProductNode(input: typeof ProductInput.Type) {
   return {
     "@context": "https://schema.org",
-    "@type": "Book",
+    "@type": "Product",
     name: input.name,
+    description: input.description,
+    image: input.image,
+    url: input.url,
+    brand: { "@type": "Brand", name: COMPANY_IDENTITY.brandName },
+    offers: Arr.map(input.offers, ({ amount, currency }) => ({
+      "@type": "Offer",
+      availability: "https://schema.org/InStock",
+      price: amount,
+      priceCurrency: currency,
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: amount,
+        priceCurrency: currency,
+        unitCode: "MON",
+        valueAddedTaxIncluded: false,
+      },
+      url: input.url,
+    })),
+  };
+}
+
+/**
+ * One surah as a chapter of the Quran, free to read. A surah has verses and no pages,
+ * so its length stands in its description.
+ *
+ * @see https://schema.org/Chapter
+ */
+export function makeSurahNode(input: typeof SurahInput.Type) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Chapter",
+    name: input.name,
+    alternateName: input.meaning,
     description: input.description,
     url: input.url,
     inLanguage: input.inLanguage,
-    bookFormat: "EBook",
     isAccessibleForFree: true,
     position: input.position,
-    numberOfPages: input.totalPages,
+    isPartOf: {
+      "@type": "Book",
+      name: input.bookName,
+      url: input.bookUrl,
+    },
   };
 }
 

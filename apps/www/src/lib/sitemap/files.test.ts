@@ -61,6 +61,9 @@ describe("sitemap files", () => {
             {
               url: `${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/set-1`,
             },
+            {
+              url: `${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/set-1/reading`,
+            },
           ])
         );
 
@@ -71,6 +74,7 @@ describe("sitemap files", () => {
           `<loc>${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/set-1</loc>`
         );
         expect(page?.text).not.toContain("/en/search");
+        expect(page?.text).not.toContain("set-1/reading");
       })
   );
 });

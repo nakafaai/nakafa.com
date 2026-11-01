@@ -14,10 +14,10 @@ import {
 } from "@repo/design-system/components/ui/item";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
 import { useTableFilters } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { ChannelUnread } from "@/components/tenant/classes/channels";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -47,7 +47,7 @@ export function ThreadRows() {
     if (isLostAccess(pagination.error)) {
       throw pagination.error;
     }
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
   if (pagination._tag === "LoadingFirstPage") {
     return null;

@@ -72,7 +72,7 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
   const selectedLabels = labels.samples[selectedSampleId];
   const neutronCount = selectedSample.massNumber - selectedSample.atomicNumber;
   const electronCount = selectedSample.atomicNumber;
-  const notation = `{}^{${selectedSample.massNumber}}_{${selectedSample.atomicNumber}}\\mathrm{${selectedSample.symbol}}`;
+  const notation = `\\vphantom{X}^{${selectedSample.massNumber}}_{${selectedSample.atomicNumber}}\\mathrm{${selectedSample.symbol}}`;
 
   /**
    * Keeps one isotope selected when ToggleGroup emits an empty value.

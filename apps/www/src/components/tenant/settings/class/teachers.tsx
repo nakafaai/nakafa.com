@@ -25,8 +25,8 @@ import { Array as Arr } from "effect";
 import { startTransition, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { LoadFailure } from "@/components/state/failure";
 import {
   assignTeacherChange,
   removeTeacherChange,
@@ -132,7 +132,7 @@ export function ClassTeachersDialog({
           />
         </Field>
         {PaginatedQueryResult.isFailure(pagination) ? (
-          <DataFailure onRetry={reloadPage} />
+          <LoadFailure onRetry={reloadPage} />
         ) : null}
         {pagination._tag === "LoadingFirstPage" ? null : (
           <ClassTeacherList

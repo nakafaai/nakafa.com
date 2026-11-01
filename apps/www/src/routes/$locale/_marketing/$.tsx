@@ -38,7 +38,6 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
     const { canonicalPath, metadata } = loaderData;
     return toRouterHead(
       createSeoHead({
-        absoluteTitle: metadata.title,
         alternates: toHeadAlternates(loaderData.alternates),
         canonicalPath,
         description: metadata.description,
@@ -59,7 +58,7 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
           }),
         ],
         locale: params.locale,
-        parts: [],
+        parts: [metadata.title],
         type: "website",
       })
     );

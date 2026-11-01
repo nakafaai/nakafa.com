@@ -1,4 +1,8 @@
-import { useDebouncedCallback, useWindowEvent } from "@mantine/hooks";
+import {
+  useDebouncedCallback,
+  useDidUpdate,
+  useWindowEvent,
+} from "@mantine/hooks";
 import {
   ESSAY_RESPONSE_MAX,
   TEXT_RESPONSE_MAX,
@@ -31,14 +35,17 @@ const ESSAY_ROWS = 8;
  * paper exam leaves room to write. The field shows each key at
  * once and keeps the text in the browser on every key, then sends it once the student pauses, leaves the
  * field, leaves the question, or the page hides or closes, so a typed answer is not one save per key and a
- * reload or a closed tab loses no key. The Arabic keypad beside the field types an Arabic answer with its
- * harakat, and the field follows the direction of the words the student writes.
+ * reload or a closed tab loses no key. Words saved from another tab take the field's place unless the
+ * student is typing here, so a later key never writes over words the field did not show. The Arabic keypad
+ * beside the field types an Arabic answer with its harakat, and the field follows the direction of the
+ * words the student writes.
  */
 export function SittingField({
   entry,
   labelledBy,
   onKeep,
   onType,
+  saved,
   text,
 }: {
   readonly entry: Written;
@@ -51,6 +58,8 @@ export function SittingField({
   readonly onKeep?: (text: string) => void;
   /** Sends the text. */
   readonly onType: (text: string) => void;
+  /** The text the server holds now, which a save from another tab changes. */
+  readonly saved: string;
   /** The text the field opens with: the kept text the server has not confirmed, else the saved text. */
   readonly text: string;
 }) {
@@ -70,6 +79,15 @@ export function SittingField({
       save.flush();
     }
   });
+
+  // The field takes its text once, so a save from elsewhere reaches it here. The page's own save only
+  // repeats what the field shows.
+  useDidUpdate(() => {
+    const field = area.current ?? line.current;
+    if (field !== null && field !== document.activeElement) {
+      field.value = saved;
+    }
+  }, [saved]);
 
   /** Keeps every key at once, and sends the text after a pause. */
   function write(value: string) {
