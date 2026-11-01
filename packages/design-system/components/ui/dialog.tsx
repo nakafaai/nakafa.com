@@ -148,6 +148,7 @@ function DialogFooter({
   );
 }
 
+/** The body of a dialog. What it holds keeps its edges and stands apart, as a form's fields do. */
 function DialogPanel({
   className,
   scrollFade = true,
@@ -158,7 +159,7 @@ function DialogPanel({
   return (
     <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade={scrollFade}>
       <div
-        className={cn("min-w-0 p-6", className)}
+        className={cn("flex min-w-0 flex-col gap-6 p-6", className)}
         data-slot="dialog-panel"
         {...props}
       />

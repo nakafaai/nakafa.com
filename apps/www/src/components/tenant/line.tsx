@@ -84,6 +84,9 @@ export function LineDialog({
             id={`${id}-value`}
             onChange={(event) => setTyped(event.target.value)}
             onKeyDown={(event) => {
+              if (event.nativeEvent.isComposing) {
+                return;
+              }
               if (event.key === "Enter") {
                 save();
               }
