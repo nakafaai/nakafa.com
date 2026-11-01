@@ -1,13 +1,16 @@
 import { ConvexConfigProvider } from "@confect/server";
-import type { GenericCtx } from "@convex-dev/better-auth";
+import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
+import { components } from "@repo/backend/confect/_generated/components";
 import { createAuth } from "@repo/backend/confect/auth/runtime";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import {
+  APIError,
   createAuthEndpoint,
   createAuthMiddleware,
   type DispatchContext,
 } from "better-auth/api";
 import type { BetterAuthOptions } from "better-auth/minimal";
+import type { GenericActionCtx } from "convex/server";
 import {
   Array as Arr,
   Clock,
@@ -23,8 +26,25 @@ const AUTHORIZE_PATH = "/mcp/authorize";
 /** The path where an agent trades a code or a refresh token. */
 const TOKEN_PATH = "/mcp/token";
 
+/** The path where an agent registers itself, which takes no credential. */
+const REGISTER_PATH = "/mcp/register";
+
 /** The path where the consent page reads which agent is asking. */
 const CLIENT_PATH = "/agent/client";
+
+/**
+ * The registrations all of Nakafa takes: twenty an hour. An agent registers once per install,
+ * and the route takes no credential, so without this anyone could grow the table without end.
+ * It is a design choice, not a measurement.
+ */
+const registrations = new RateLimiter(components.agentRateLimiter, {
+  agentRegistration: {
+    capacity: 20,
+    kind: "token bucket",
+    period: HOUR,
+    rate: 20,
+  },
+});
 
 /** The scope of every grant: the sign-in, and the refresh token that outlives a Convex token. */
 const AGENT_SCOPE = "openid offline_access";
@@ -37,6 +57,9 @@ const IssuedToken = Schema.StructWithRest(
   Schema.Struct({ access_token: Schema.String }),
   [Schema.Record(Schema.String, Schema.Unknown)]
 );
+
+/** A token request that spends a refresh token. */
+const RefreshRequest = Schema.Struct({ refresh_token: Schema.String });
 
 /** The grant behind an issued token. */
 const StoredGrant = Schema.Struct({
@@ -54,7 +77,7 @@ const StoredClient = Schema.Struct({
 });
 
 /** The part of the hook context that this module reads, as `DispatchContext` types it. */
-type TokenHook = Pick<DispatchContext, "context"> & {
+type TokenHook = Pick<DispatchContext, "body" | "context"> & {
   readonly json: (body: Readonly<Record<string, unknown>>) => unknown;
 };
 
@@ -90,13 +113,33 @@ const sessionOf = Effect.fn("auth.grant.session")(function* (
 });
 
 /**
+ * Deletes the row of a refresh token that a request just spent. The server writes a new row for
+ * each refresh and keeps the old one, which a token that lasts 15 minutes would grow without
+ * end, and a spent token that still works is one a thief can use.
+ */
+const spendRefreshToken = Effect.fn("auth.grant.spend")(function* (
+  hook: TokenHook
+) {
+  const spent = Schema.decodeUnknownOption(RefreshRequest)(hook.body);
+  if (Option.isNone(spent)) {
+    return;
+  }
+  yield* Effect.tryPromise(() =>
+    hook.context.adapter.delete({
+      model: "oauthAccessToken",
+      where: [{ field: "refreshToken", value: spent.value.refresh_token }],
+    })
+  );
+});
+
+/**
  * Answers a token request with a Convex token of the person, in place of the opaque token the
  * OAuth server stored. The server keeps the grant and its refresh token, and the person's own
  * functions verify the Convex token as they verify the web app's, so an agent can do what its
  * person can and nothing else. Anything but an issued token passes as it is.
  */
 const issueConvexToken = Effect.fn("auth.grant.issue")(function* (
-  ctx: GenericCtx<DataModel>,
+  ctx: GenericActionCtx<DataModel>,
   hook: TokenHook
 ) {
   const issued = Schema.decodeUnknownOption(IssuedToken)(hook.context.returned);
@@ -117,12 +160,30 @@ const issueConvexToken = Effect.fn("auth.grant.issue")(function* (
       headers: new Headers({ authorization: `Bearer ${session.token}` }),
     })
   );
+  yield* spendRefreshToken(hook);
   return hook.json({
     ...issued.value,
     access_token: token,
     expires_in: CONVEX_TOKEN_SECONDS,
   });
 }, Effect.provide(ConvexConfigProvider.layer));
+
+/** Takes one registration from the limit, or refuses the request. */
+const admitRegistration = Effect.fn("auth.grant.register")(function* (
+  ctx: GenericActionCtx<DataModel>
+) {
+  const { ok } = yield* Effect.tryPromise(() =>
+    registrations.limit(ctx, "agentRegistration")
+  ).pipe(Effect.orDie);
+  if (!ok) {
+    return yield* Effect.fail(
+      APIError.from("TOO_MANY_REQUESTS", {
+        code: "AGENT_REGISTRATION_LIMITED",
+        message: "Too many agents registered. Try again later.",
+      })
+    );
+  }
+});
 
 /** The name and the address an agent registered, for the person who answers it. */
 const readClient = Effect.fn("auth.grant.client")(function* (
@@ -156,7 +217,7 @@ const readClient = Effect.fn("auth.grant.client")(function* (
  * can sign a token.
  */
 export function agentGrants(
-  ctx: GenericCtx<DataModel>
+  ctx: GenericActionCtx<DataModel>
 ): NonNullable<BetterAuthOptions["plugins"]>[number] {
   return {
     id: "agent-grants",
@@ -180,6 +241,12 @@ export function agentGrants(
         },
       ],
       before: [
+        {
+          handler: createAuthMiddleware(() =>
+            Effect.runPromise(admitRegistration(ctx))
+          ),
+          matcher: (context) => context.path === REGISTER_PATH,
+        },
         {
           handler: createAuthMiddleware((hook) =>
             Promise.resolve({
