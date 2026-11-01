@@ -66,13 +66,13 @@ test("reloads once for a chunk of an earlier deploy instead of showing an error"
     removed.active = false;
   });
 
+  const reloaded = page.waitForEvent("load");
   await theme.click();
+  await reloaded;
 
-  await expect
-    .poll(() =>
-      page.evaluate((mark) => Reflect.get(window, mark), FIRST_DOCUMENT)
-    )
-    .not.toBe(true);
+  expect(
+    await page.evaluate((mark) => Reflect.get(window, mark), FIRST_DOCUMENT)
+  ).not.toBe(true);
   await expect(page).toHaveURL(new RegExp(`${SIGN_IN}$`, "u"));
   await expect(page.getByRole("heading", { name: TITLE })).toBeVisible();
   expect(

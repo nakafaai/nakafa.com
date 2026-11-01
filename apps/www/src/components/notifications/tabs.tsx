@@ -10,7 +10,7 @@ import type { InboxTopic } from "@/components/notifications/topic";
 import { pageRowVariants } from "@/components/shared/content/width";
 import { Link } from "@/lib/routing/link";
 
-/** The tab the address names, All without one, so back and a reload return to it. */
+/** The tab the address names, All without one, so a reload and a shared link return to it. */
 export function useInboxTopic(): typeof InboxTopic.Type {
   return (
     useSearch({ strict: false, select: (search) => search.topic }) ?? "all"
