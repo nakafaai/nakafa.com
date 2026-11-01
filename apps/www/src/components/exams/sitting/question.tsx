@@ -11,7 +11,7 @@ import {
 } from "@repo/backend/confect/assessment/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Option, Record as Rec, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { memo, type ReactNode, useMemo } from "react";
 import {
   keepResponse,
@@ -33,6 +33,8 @@ import type {
   PaperValue,
 } from "@/components/exams/sitting/paper";
 import {
+  addressesOf,
+  partLabels,
   pictureIdsOfDocuments,
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
@@ -82,68 +84,37 @@ export function PaperReveal({
 function useQuestionPictures({
   deviceId,
   interactions,
-  pairing,
   promptDocument,
   readingDocument,
   sittingId,
   slug,
-  table,
 }: {
   readonly deviceId: string;
   readonly interactions: PaperQuestion["interactions"];
-  readonly pairing: ReturnType<typeof pairingOf>;
   readonly promptDocument: unknown;
   readonly readingDocument: unknown;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
-  readonly table: ReturnType<typeof tableOf>;
 }) {
-  const pictureIds = useMemo(() => {
-    const labels = Arr.appendAll(
-      Arr.flatMap(interactions, (interaction) =>
-        interaction.kind === "choice"
-          ? Arr.map(interaction.options, (option) => option.label)
-          : []
+  const pictureIds = useMemo(
+    () =>
+      pictureIdsOfDocuments(
+        Arr.filter(
+          [promptDocument, readingDocument, ...partLabels(interactions)],
+          (document) => document !== null
+        )
       ),
-      Arr.appendAll(
-        Option.match(pairing, {
-          onNone: () => [],
-          onSome: (found) =>
-            Arr.map(
-              Arr.appendAll(found.sources, found.targets),
-              (part) => part.label
-            ),
-        }),
-        Option.match(table, {
-          onNone: () => [],
-          onSome: (found) =>
-            Arr.map(
-              Arr.appendAll(found.statements, found.columns),
-              (part) => part.label
-            ),
-        })
-      )
-    );
-    return pictureIdsOfDocuments(
-      Arr.filter(
-        [promptDocument, readingDocument, ...labels],
-        (document) => document !== null
-      )
-    );
-  }, [interactions, pairing, promptDocument, readingDocument, table]);
+    [interactions, promptDocument, readingDocument]
+  );
   const pictures = useQuery(
     exams.sittings.images,
     pictureIds.length === 0
       ? "skip"
       : { assets: pictureIds, deviceId, sittingId, slug }
   );
+
   return useMemo(
-    () =>
-      QueryResult.isSuccess(pictures)
-        ? Rec.fromEntries(
-            Arr.map(pictures.value, (asset) => [asset.id, asset.url] as const)
-          )
-        : {},
+    () => (QueryResult.isSuccess(pictures) ? addressesOf(pictures.value) : {}),
     [pictures]
   );
 }
@@ -222,12 +193,10 @@ export const SittingQuestion = memo(function SittingQuestion({
   const addresses = useQuestionPictures({
     deviceId,
     interactions: question.interactions,
-    pairing,
     promptDocument,
     readingDocument,
     sittingId,
     slug,
-    table,
   });
 
   /** Keeps the choice or the typed text in the browser, then sends it, numbered one above the saved version. */

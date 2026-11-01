@@ -14,6 +14,7 @@ import { useQuestionReorder } from "@/components/tenant/exams/drag";
 import { pageAt } from "@/components/tenant/exams/pages";
 import { ExamPage } from "@/components/tenant/exams/paper";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
+import { PaperSketch } from "@/components/tenant/exams/preview";
 import {
   useEditorView,
   useExam,
@@ -21,6 +22,8 @@ import {
   useExamSelectionStore,
   useExamZoom,
 } from "@/components/tenant/exams/provider";
+import { ExamReadBoundary } from "@/components/tenant/exams/read";
+import { QuestionPaper } from "@/components/tenant/exams/sheet";
 import { drawnZoom, ZOOM_DEFAULT } from "@/components/tenant/exams/zoom";
 
 /**
@@ -238,12 +241,16 @@ export function ExamCanvas({
           style={{ zoom: drawnPercent / 100 }}
         >
           {Arr.map(exam.questions, (question, index) => (
-            <ExamPage
-              canvas={canvas}
-              index={index}
+            <ExamReadBoundary
               key={question.id}
-              question={question}
-            />
+              stand={
+                <QuestionPaper>
+                  <PaperSketch question={question} withControls />
+                </QuestionPaper>
+              }
+            >
+              <ExamPage canvas={canvas} index={index} question={question} />
+            </ExamReadBoundary>
           ))}
           {frozen ? null : (
             <Button

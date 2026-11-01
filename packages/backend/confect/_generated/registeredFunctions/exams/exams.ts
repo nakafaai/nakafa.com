@@ -11,6 +11,7 @@ export default {
 ["list"]: RegisteredConvexFunction.register({ ...definitions["list"], handler: forward(definitions["list"].handler) }),
 ["open"]: RegisteredConvexFunction.register({ ...definitions["open"], handler: forward(definitions["open"].handler) }),
 ["rename"]: RegisteredConvexFunction.register({ ...definitions["rename"], handler: forward(definitions["rename"].handler) }),
+["duplicate"]: RegisteredConvexFunction.register({ ...definitions["duplicate"], handler: forward(definitions["duplicate"].handler) }),
 ["remove"]: RegisteredConvexFunction.register({ ...definitions["remove"], handler: forward(definitions["remove"].handler) }),
 ["schedule"]: RegisteredConvexFunction.register({ ...definitions["schedule"], handler: forward(definitions["schedule"].handler) }),
 ["cohorts"]: RegisteredConvexFunction.register({ ...definitions["cohorts"], handler: forward(definitions["cohorts"].handler) }),

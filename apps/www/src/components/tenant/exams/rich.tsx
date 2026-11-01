@@ -178,7 +178,7 @@ export function ExamDocument({
         urls={addresses}
       >
         <FiguresProvider view={ExamFigure}>
-          {opening ? <PreviewProse article doc={stored} size={size} /> : null}
+          {opening ? <PreviewProse doc={stored} size={size} /> : null}
           <div className={opening ? "hidden" : "contents"}>
             <DocumentEditor
               content={content}

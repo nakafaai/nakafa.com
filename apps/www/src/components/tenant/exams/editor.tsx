@@ -1,9 +1,9 @@
-import { QueryResult } from "@confect/react";
+import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option } from "effect";
-import { use, useEffect, useRef } from "react";
+import { use, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
@@ -22,13 +22,17 @@ import {
   useEditorView,
   useExamZoom,
 } from "@/components/tenant/exams/provider";
+import { ExamReadBoundary } from "@/components/tenant/exams/read";
 import {
   ExamToolbar,
   ExamToolbarFrame,
 } from "@/components/tenant/exams/toolbar";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
 import { useLastValue } from "@/lib/data/kept";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { readPreloadedResult } from "@/lib/data/preloaded";
+
+/** What the editor's read of its exam answers. */
+type ExamResult = ReturnType<typeof useQuery<typeof exams.exams.open>>;
 
 /**
  * The editor of one exam, as a design tool lays out its document: a header with the title and the
@@ -45,35 +49,62 @@ export function ExamEditor({
   examId: Id<"exams">;
   slug: TenantSlug;
 }) {
-  // The exam needs the session, which Convex learns a moment after the page draws.
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const [live, setLive] = useState<ExamResult>(() => QueryResult.load(false));
   // An exam this visit just created draws whole at once, from what the create answered, until the read answers.
   const created = useCreatedExam(examId);
-  const result = usePreloadedQueryResult(
-    exams.exams.open,
-    isSettled ? { examId, slug } : "skip",
-    created
-  );
+  const result = readPreloadedResult(live, created);
   // An exam deleted, or closed to the teacher, after the editor read it keeps its workspace on screen, locked.
   const kept = useLastValue(result);
 
-  if (Option.isNone(kept)) {
-    return QueryResult.isFailure(result) ? (
-      <ExamUnavailable />
-    ) : (
-      <ExamEditorFrame />
-    );
-  }
-
   return (
-    <ExamProvider
-      exam={kept.value}
-      gone={QueryResult.isFailure(result)}
-      slug={slug}
-    >
-      <ExamWorkspace />
-    </ExamProvider>
+    <>
+      {/* The read stands apart from the workspace, so a read that fails takes no editor off the screen. */}
+      <ExamReadBoundary>
+        <ExamRead examId={examId} onResult={setLive} slug={slug} />
+      </ExamReadBoundary>
+      {Option.match(kept, {
+        onNone: () =>
+          QueryResult.isFailure(result) ? (
+            <ExamUnavailable />
+          ) : (
+            <ExamEditorFrame />
+          ),
+        onSome: (exam) => (
+          <ExamProvider
+            exam={exam}
+            gone={QueryResult.isFailure(result)}
+            slug={slug}
+          >
+            <ExamWorkspace />
+          </ExamProvider>
+        ),
+      })}
+    </>
   );
+}
+
+/** Reads the exam for the editor, before the browser paints, so an edit shows in the frame it is made. */
+function ExamRead({
+  examId,
+  onResult,
+  slug,
+}: {
+  examId: Id<"exams">;
+  onResult: (result: ExamResult) => void;
+  slug: TenantSlug;
+}) {
+  // The exam needs the session, which Convex learns a moment after the page draws.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const result = useQuery(
+    exams.exams.open,
+    isSettled ? { examId, slug } : "skip"
+  );
+
+  useLayoutEffect(() => {
+    onResult(result);
+  }, [onResult, result]);
+
+  return null;
 }
 
 /**
