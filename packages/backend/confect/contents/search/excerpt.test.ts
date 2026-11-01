@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import {
   buildContentSearchExcerpt,
-  textAfterTitle,
+  textAfterHead,
 } from "@repo/backend/confect/contents/search/excerpt";
 
 it("selects complete terms and the last prefix instead of unrelated substrings", () => {
@@ -96,11 +96,32 @@ it("bounds excerpts even when a long word has no nearby space", () => {
   expect(unbroken).toBe(`線形${"式".repeat(218)}...`);
 });
 
-it("starts the text after the title it opens with, and keeps any other text whole", () => {
+it("starts the text after the head its row opens with, and keeps any other text whole", () => {
+  const head = [
+    "Konsep Fungsi",
+    "Memahami  relasi.",
+    "subjects/mathematics/functions/concept",
+  ];
+
   expect(
-    textAfterTitle(" Konsep  Fungsi Fungsi memasangkan.", "Konsep Fungsi")
+    textAfterHead(
+      " Konsep  Fungsi\nMemahami relasi.\nsubjects/mathematics/functions/concept\nFungsi memasangkan.",
+      head
+    )
   ).toBe("Fungsi memasangkan.");
-  expect(textAfterTitle("Fungsi memasangkan.", "Konsep Fungsi")).toBe(
+  expect(textAfterHead("Fungsi memasangkan.", head)).toBe(
     "Fungsi memasangkan."
   );
+});
+
+it("answers a query only the path holds with the description, never the path", () => {
+  const head = ["Fungi", "Fungi break matter down.", "subjects/biology/fungi"];
+  const text = `Fungi\nFungi break matter down.\nsubjects/biology/fungi\n${"Hyphae spread. ".repeat(30)}`;
+
+  expect(
+    buildContentSearchExcerpt(
+      { description: head[1] ?? "", text: textAfterHead(text, head) },
+      ["biology"]
+    )
+  ).toBe("Fungi break matter down.");
 });
