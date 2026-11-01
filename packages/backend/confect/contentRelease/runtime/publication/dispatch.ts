@@ -39,7 +39,10 @@ const decodePublicRequest = Effect.fn("contentRelease.decodePublicRequest")(
     }).pipe(Effect.mapError(() => new PublicRuntimeRequestError()));
   }
 );
-/** Reads one active public artifact for Nakafa verification. */
+/**
+ * Reads one active public artifact for Nakafa verification. A runtime that cannot read
+ * or hash answers the internal failure, because Effect's `Digest` dies when it fails.
+ */
 const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
   function* (request: PublicContentRuntimeRequest) {
     const { runQuery } = yield* QueryRunner;
@@ -49,12 +52,10 @@ const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
         appLocale: request.appLocale,
         publicPath: request.publicPath,
       }
-    ).pipe(
-      Effect.mapError(() => new PublicRuntimeReadError()),
-      Effect.catchDefect(flow(() => new PublicRuntimeReadError(), Effect.fail))
-    );
+    ).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
     return yield* decodePublicRuntimeRow(row);
-  }
+  },
+  Effect.catchDefect(flow(() => new PublicRuntimeReadError(), Effect.fail))
 );
 /** Decodes, resolves, and safely encodes one public runtime request. */
 export const dispatchProgram = Effect.fn(

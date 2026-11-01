@@ -13,7 +13,7 @@ import {
 import { predecodeFailure } from "@repo/backend/confect/contentRelease/ingress/failure";
 import { publicationFailure } from "@repo/backend/confect/contentRelease/ingress/response";
 import { getConvexSize } from "convex/values";
-import { Config, Effect, Result } from "effect";
+import { Config, Effect, Exit, Result } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 const NODE_ACTION_ARGUMENT_BYTES = 5 * 1024 * 1024;
@@ -57,8 +57,8 @@ const publicationRoute = Effect.fn("contentRelease.publicationRoute")(
     const authenticated = yield* matchesHttpSecret(
       bearerToken(request.headers.get("authorization") ?? ""),
       yield* Config.String("AKSARA_PUBLICATION_TOKEN").pipe(Effect.orDie)
-    );
-    if (!authenticated) {
+    ).pipe(Effect.exit);
+    if (Exit.isFailure(authenticated) || !authenticated.value) {
       return yield* publicationAuthFailure();
     }
     const body = yield* readJsonBody(

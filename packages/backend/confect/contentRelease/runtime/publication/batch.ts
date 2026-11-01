@@ -44,47 +44,48 @@ const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
     }).pipe(Effect.mapError(() => new PublicRuntimeBatchRequestError()));
   }
 );
-/** Reads and decodes one transactionally consistent public batch. */
+/**
+ * Reads and decodes one transactionally consistent public batch. A runtime that cannot
+ * read or hash answers the internal failure, because Effect's `Digest` dies when it fails.
+ */
 const resolvePublicRuntimeBatch = Effect.fn(
   "contentRelease.resolvePublicRuntimeBatch"
-)(function* (requests: readonly PublicContentRuntimeRequest[]) {
-  const { runQuery } = yield* QueryRunner;
-  const rows = yield* runQuery(
-    contentReleaseInternal.runtime.publication.internal.readBatch,
-    {
-      requests: Arr.map(requests, ({ appLocale, publicPath }) => ({
-        appLocale,
-        publicPath,
-      })),
+)(
+  function* (requests: readonly PublicContentRuntimeRequest[]) {
+    const { runQuery } = yield* QueryRunner;
+    const rows = yield* runQuery(
+      contentReleaseInternal.runtime.publication.internal.readBatch,
+      {
+        requests: Arr.map(requests, ({ appLocale, publicPath }) => ({
+          appLocale,
+          publicPath,
+        })),
+      }
+    ).pipe(Effect.mapError(() => new PublicRuntimeBatchReadError()));
+    if (rows.length !== requests.length) {
+      return yield* new PublicRuntimeBatchReadError();
     }
-  ).pipe(
-    Effect.mapError(() => new PublicRuntimeBatchReadError()),
-    Effect.catchDefect(
-      flow(() => new PublicRuntimeBatchReadError(), Effect.fail)
-    )
-  );
-  if (rows.length !== requests.length) {
-    return yield* new PublicRuntimeBatchReadError();
-  }
-  return yield* Effect.forEach(rows, (row) =>
-    decodePublicRuntimeRow(row).pipe(
-      Effect.map(
-        (
-          response
-        ): Exclude<
-          PublicContentRuntimeResponse,
-          {
-            readonly kind: "failure";
-          }
-        > =>
-          response ?? {
-            kind: "missing",
-          }
-      ),
-      Effect.mapError(() => new PublicRuntimeBatchReadError())
-    )
-  );
-});
+    return yield* Effect.forEach(rows, (row) =>
+      decodePublicRuntimeRow(row).pipe(
+        Effect.map(
+          (
+            response
+          ): Exclude<
+            PublicContentRuntimeResponse,
+            {
+              readonly kind: "failure";
+            }
+          > =>
+            response ?? {
+              kind: "missing",
+            }
+        ),
+        Effect.mapError(() => new PublicRuntimeBatchReadError())
+      )
+    );
+  },
+  Effect.catchDefect(flow(() => new PublicRuntimeBatchReadError(), Effect.fail))
+);
 /** Decodes, resolves, and safely encodes one public runtime batch. */
 export const dispatchBatchProgram = Effect.fn(
   "contentRelease.publicRuntimeBatchDispatch"
