@@ -8,7 +8,11 @@ import {
   MutableList,
   Schema,
 } from "effect";
-import { readSchoolRefusal } from "@/lib/routing/school/refusal";
+import { expireStoreTag } from "@/lib/content/store/entry";
+import {
+  readSchoolRefusal,
+  SCHOOL_REFUSAL_TAG,
+} from "@/lib/routing/school/refusal";
 
 /**
  * The fake backend of the school gate: one fetch double for the whole test file,
@@ -93,6 +97,7 @@ export function serve(routes: Partial<Record<ReadName, Route>>) {
 export function resetFakeBackend() {
   served = [];
   fetcher.mockReset();
+  Effect.runSync(expireStoreTag(SCHOOL_REFUSAL_TAG));
 }
 
 /** The school queries that the fake backend served, in order, with the session each carried. */

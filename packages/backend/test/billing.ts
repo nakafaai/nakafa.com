@@ -3,6 +3,7 @@ import {
   mutationLayer,
 } from "@confect/server/RegisteredConvexFunction";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { BillingOfferKey } from "@repo/backend/confect/billing/catalog";
 import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -194,6 +195,22 @@ export function xenditDelivery(event: string, data: unknown): string {
   });
 }
 
+/** One `payment_session.*` delivery for pay session `ps_1`, with the channel it saved when it saved one. */
+export function xenditSessionDelivery(
+  event: string,
+  paymentId: string | null,
+  tokenId?: string
+) {
+  return xenditDelivery(event, {
+    payment_id: paymentId,
+    payment_session_id: "ps_1",
+    ...(tokenId === undefined ? {} : { payment_token_id: tokenId }),
+    reference_id: "checkout-1",
+    session_type: "PAY",
+    status: event === "payment_session.completed" ? "COMPLETED" : "EXPIRED",
+  });
+}
+
 /** One recurring cycle, paid in its first attempt unless a test overrides a field. */
 export function xenditCycle(overrides: Record<string, unknown> = {}) {
   return {
@@ -256,6 +273,31 @@ export async function seedXenditSubscription(
     providerUpdatedAt: options.providerUpdatedAt ?? XENDIT_STORED_AT,
   });
   return { accountId, subscriptionId, userId };
+}
+
+/** Opens one Xendit checkout for a fresh Xendit payer, as checkout does before the buyer pays. */
+export async function seedXenditCheckout(
+  ctx: MutationCtx,
+  offer: BillingOfferKey,
+  rail: "polar" | "xendit" = "xendit"
+) {
+  const { accountId, subscriptionId, userId } = await seedXenditSubscription(
+    ctx,
+    { rail }
+  );
+  const checkoutId = await ctx.db.insert("billingCheckouts", {
+    accountId,
+    offer,
+    rail: "xendit",
+    sessionId: "ps_1",
+    url: "https://checkout-staging.xendit.co/sessions/ps_1",
+    status: "open",
+    openedAt: 0,
+    expiresAt: 1_800_000,
+    locale: "id",
+    invoiceId: null,
+  });
+  return { accountId, checkoutId, subscriptionId, userId };
 }
 
 /** The validTo of every billing grant stored now. */

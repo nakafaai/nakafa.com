@@ -33,6 +33,7 @@ import {
   readAuthoredTree,
   readOtherModules,
 } from "#scripts/check/files";
+import { inspectFrameSource } from "#scripts/check/frame";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
@@ -235,6 +236,11 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         lineReport(
           Arr.flatMap(sources, ({ file, sourceText }) =>
             inspectTailwindSource(file, sourceText)
+          )
+        ),
+        lineReport(
+          Arr.flatMap(sources, ({ file, sourceText }) =>
+            inspectFrameSource(file, sourceText)
           )
         ),
       ],

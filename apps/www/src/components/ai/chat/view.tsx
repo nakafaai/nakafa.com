@@ -1,7 +1,9 @@
+import { cn } from "cn";
 import type { ReactNode } from "react";
 import { ChatComposer } from "@/components/ai/chat/composer";
 import { AiChatHeader } from "@/components/ai/chat/header";
 import { NinaTranscript } from "@/components/ai/transcript";
+import { pageRowVariants } from "@/components/shared/content/width";
 
 /**
  * A chat's page: its header, its transcript, and the composer under them. A
@@ -15,9 +17,7 @@ export function AiChat({ footer }: { footer?: ReactNode }) {
 
       <NinaTranscript />
 
-      {footer ?? (
-        <ChatComposer className="mx-auto w-full max-w-3xl px-4 pb-4" />
-      )}
+      {footer ?? <ChatComposer className={cn(pageRowVariants(), "pb-4")} />}
     </div>
   );
 }

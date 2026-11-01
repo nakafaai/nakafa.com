@@ -9,6 +9,7 @@ import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 import { pricingFaqNumbers } from "@/lib/marketing/faq";
 import { freePlanFeatures, proPlanFeatures } from "@/lib/marketing/plan";
+import { proPricing } from "@/lib/pricing/monthly";
 
 /** Identifies the application-owned pricing document. */
 export function isPricingLlmsRoute(cleanSlug: string) {
@@ -37,6 +38,7 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
   );
   const url = `${BASE_URL}/${locale}/pricing`;
   const credits = getPlanCreditConfig("pro").amount;
+  const prices = new Intl.ListFormat(locale, { type: "disjunction" });
 
   return Arr.join(
     [
@@ -54,6 +56,16 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
       `## ${plans("pro-title")}`,
       plans("pro-description"),
       ...Arr.map(proPlanFeatures, (key) => `- ${plans(key, { credits })}`),
+      page("price-line", {
+        free: plans("free-title"),
+        monthly: prices.format(
+          Arr.map(proPricing, ({ format, price }) => format(price.amount))
+        ),
+        pro: plans("pro-title"),
+        yearly: prices.format(
+          Arr.map(proPricing, ({ format, price }) => format(price.yearlyAmount))
+        ),
+      }),
       page("checkout-line", { url }),
       `## ${landing("faq-title")}`,
       questions,

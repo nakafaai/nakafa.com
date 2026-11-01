@@ -96,10 +96,6 @@ describe("submitLogin", () => {
     ["an empty username", { loginName: "" }],
     ["a username of spaces", { loginName: "   " }],
     ["an empty password", { password: "" }],
-    [
-      "an empty password beside a card code",
-      { code: "ABCDE-FGHJK", password: "" },
-    ],
   ] as const)(
     "answers that the username and password are missing for %s, without a request",
     ([, missing]) =>
@@ -108,6 +104,21 @@ describe("submitLogin", () => {
         expect(
           yield* submitLogin({ ...valuesWith(""), ...missing }, ports)
         ).toBe("sign-in-missing");
+        expect(requests).toEqual({ redeems: 0, signIns: 0 });
+      })
+  );
+
+  it.effect(
+    "asks a student with a card to choose a password, without a request",
+    () =>
+      Effect.gen(function* () {
+        const { ports, requests } = portsOf(redeemed, true);
+        expect(
+          yield* submitLogin(
+            { ...valuesWith(""), code: "ABCDE-FGHJK", password: "" },
+            ports
+          )
+        ).toBe("card-password-missing");
         expect(requests).toEqual({ redeems: 0, signIns: 0 });
       })
   );

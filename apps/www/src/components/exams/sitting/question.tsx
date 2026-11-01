@@ -77,6 +77,76 @@ export function PaperReveal({
   );
 }
 
+/** The images of the prompt and of the options, resolved in one read by this student's device. */
+function useQuestionPictures({
+  deviceId,
+  interactions,
+  pairing,
+  promptDocument,
+  readingDocument,
+  sittingId,
+  slug,
+  table,
+}: {
+  readonly deviceId: string;
+  readonly interactions: PaperQuestion["interactions"];
+  readonly pairing: ReturnType<typeof pairingOf>;
+  readonly promptDocument: unknown;
+  readonly readingDocument: unknown;
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+  readonly slug: TenantSlug;
+  readonly table: ReturnType<typeof tableOf>;
+}) {
+  const pictureIds = useMemo(() => {
+    const labels = Arr.appendAll(
+      Arr.flatMap(interactions, (interaction) =>
+        interaction.kind === "choice"
+          ? Arr.map(interaction.options, (option) => option.label)
+          : []
+      ),
+      Arr.appendAll(
+        Option.match(pairing, {
+          onNone: () => [],
+          onSome: (found) =>
+            Arr.map(
+              Arr.appendAll(found.sources, found.targets),
+              (part) => part.label
+            ),
+        }),
+        Option.match(table, {
+          onNone: () => [],
+          onSome: (found) =>
+            Arr.map(
+              Arr.appendAll(found.statements, found.columns),
+              (part) => part.label
+            ),
+        })
+      )
+    );
+    return pictureIdsOfDocuments(
+      Arr.filter(
+        [promptDocument, readingDocument, ...labels],
+        (document) => document !== null
+      )
+    );
+  }, [interactions, pairing, promptDocument, readingDocument, table]);
+  const pictures = useQuery(
+    exams.sittings.images,
+    pictureIds.length === 0
+      ? "skip"
+      : { assets: pictureIds, deviceId, sittingId, slug }
+  );
+  return useMemo(
+    () =>
+      QueryResult.isSuccess(pictures)
+        ? Rec.fromEntries(
+            Arr.map(pictures.value, (asset) => [asset.id, asset.url] as const)
+          )
+        : {},
+    [pictures]
+  );
+}
+
 /**
  * One question of the paper: its number, its prompt as the editor holds it now, and its options or its
  * answer line. The player's footer flags the current question. A choice or a typed answer is kept in the
@@ -148,55 +218,16 @@ export const SittingQuestion = memo(function SittingQuestion({
         : Schema.decodeSync(JsonTextSchema)(promptText),
     [promptText]
   );
-  // The images of the prompt and of the options, resolved in one read by this student's device.
-  const pictureIds = useMemo(() => {
-    const labels = Arr.appendAll(
-      Arr.flatMap(question.interactions, (interaction) =>
-        interaction.kind === "choice"
-          ? Arr.map(interaction.options, (option) => option.label)
-          : []
-      ),
-      Arr.appendAll(
-        Option.match(pairing, {
-          onNone: () => [],
-          onSome: (found) =>
-            Arr.map(
-              Arr.appendAll(found.sources, found.targets),
-              (part) => part.label
-            ),
-        }),
-        Option.match(table, {
-          onNone: () => [],
-          onSome: (found) =>
-            Arr.map(
-              Arr.appendAll(found.statements, found.columns),
-              (part) => part.label
-            ),
-        })
-      )
-    );
-    return pictureIdsOfDocuments(
-      Arr.filter(
-        [promptDocument, readingDocument, ...labels],
-        (document) => document !== null
-      )
-    );
-  }, [question.interactions, pairing, promptDocument, readingDocument, table]);
-  const pictures = useQuery(
-    exams.sittings.images,
-    pictureIds.length === 0
-      ? "skip"
-      : { assets: pictureIds, deviceId, sittingId, slug }
-  );
-  const addresses = useMemo(
-    () =>
-      QueryResult.isSuccess(pictures)
-        ? Rec.fromEntries(
-            Arr.map(pictures.value, (asset) => [asset.id, asset.url] as const)
-          )
-        : {},
-    [pictures]
-  );
+  const addresses = useQuestionPictures({
+    deviceId,
+    interactions: question.interactions,
+    pairing,
+    promptDocument,
+    readingDocument,
+    sittingId,
+    slug,
+    table,
+  });
 
   /** Keeps the choice or the typed text in the browser, then sends it, numbered one above the saved version. */
   function onChoose(response: ExamResponse) {

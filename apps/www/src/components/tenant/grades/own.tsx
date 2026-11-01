@@ -21,7 +21,7 @@ import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
@@ -67,9 +67,9 @@ export function SchoolOwnGrades() {
       <SchoolHeader items={[{ label: t("own-title") }]} title={t("own-title")}>
         <TableSearch placeholder={t("own-search")} />
       </SchoolHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">
+      <TablePageBody>
         <OwnGradeTable />
-      </div>
+      </TablePageBody>
     </TableFiltersProvider>
   );
 }
