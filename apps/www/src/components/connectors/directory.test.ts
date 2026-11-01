@@ -2,8 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Option, Schema } from "effect";
 import {
-  DIRECTORY_CATEGORIES,
+  ACCOUNT_SERVICES,
   DIRECTORY_SERVICES,
+  directoryCategories,
+  directoryEntries,
   directoryState,
   holderOf,
   isShown,
@@ -104,6 +106,50 @@ describe("connector directory", () => {
     expect(
       isShown(classroom, Option.some("files"), "", ["Google Classroom"])
     ).toBe(false);
-    expect(DIRECTORY_CATEGORIES).toEqual(["learning", "files", "schedule"]);
+    expect(directoryCategories(DIRECTORY_SERVICES)).toEqual([
+      "learning",
+      "files",
+      "schedule",
+    ]);
+  });
+
+  it("lists on an account what a person holds, without the school's Classroom or its Forms", () => {
+    expect(ACCOUNT_SERVICES.map(({ key }) => key)).toEqual([
+      "drive",
+      "calendar",
+    ]);
+    expect(directoryCategories(ACCOUNT_SERVICES)).toEqual([
+      "files",
+      "schedule",
+    ]);
+  });
+
+  it("draws an entry before the reads answer, and gives it a state once they do", () => {
+    const read = {
+      held: { own: [connection("drive", "active")], school: [] },
+      mayConnectSchool: false,
+      offered: ["calendar", "classroom", "drive"] as const,
+      services: DIRECTORY_SERVICES,
+      tried: { connect: "refused", connector: "calendar" } as const,
+    };
+
+    expect(
+      directoryEntries({ ...read, hasRead: false }).map(({ state }) => state)
+    ).toEqual([Option.none(), Option.none(), Option.none(), Option.none()]);
+    expect(
+      directoryEntries({ ...read, hasRead: true }).map(({ state }) => state)
+    ).toEqual([
+      Option.some("locked"),
+      Option.some("connected"),
+      Option.some("connected"),
+      Option.some("refused"),
+    ]);
+    expect(
+      directoryEntries({
+        ...read,
+        hasRead: true,
+        mayConnectSchool: true,
+      }).map(({ state }) => state)[0]
+    ).toEqual(Option.some("open"));
   });
 });

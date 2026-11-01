@@ -7,10 +7,7 @@ import {
 } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { GOOGLE_MANIFEST } from "@repo/backend/confect/connectors/google/manifest";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
-import { cn } from "cn";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { use } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -20,24 +17,23 @@ import {
 } from "@/components/connectors/actions";
 import { connectCallback } from "@/components/connectors/address";
 import {
+  ServiceActions,
+  ServiceDetail,
+  ServiceHeader,
+  ServiceStatus,
+} from "@/components/connectors/detail";
+import {
   DIRECTORY_SERVICES,
-  DirectoryCategory,
-  type DirectoryEntry,
-  directoryState,
-  holderOf,
-  isShown,
-  serviceConnection,
+  directoryEntries,
 } from "@/components/connectors/directory";
+import { LibraryControls, ServiceList } from "@/components/connectors/library";
 import {
   CONNECTION_PAGE_SIZE,
   disconnectOwnUpdate,
   disconnectSchoolUpdate,
 } from "@/components/connectors/optimistic";
-import {
-  connectedService,
-  connectFailure,
-} from "@/components/connectors/outcome";
-import { pageGutterVariants } from "@/components/shared/content/width";
+import { connectedService } from "@/components/connectors/outcome";
+import { PaneBody, PaneFooter } from "@/components/shared/pane";
 import {
   Panes,
   PanesDetail,
@@ -45,25 +41,18 @@ import {
   PanesProvider,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
-import { chosenOne } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
-import {
-  TableFiltersProvider,
-  TableSearch,
-  useTableFilters,
-} from "@/components/shared/table/toolbar";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import {
   forumCall,
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
-import { ServiceCard } from "@/components/tenant/connectors/card";
-import { ServiceDetail } from "@/components/tenant/connectors/detail";
 import {
-  CATEGORY_FILTER,
-  ServiceFilter,
-} from "@/components/tenant/connectors/filter";
+  SchoolHolder,
+  SchoolServiceWork,
+  ServiceExams,
+} from "@/components/tenant/connectors/work";
 import { useTenant } from "@/components/tenant/context";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { SchoolSettingsHeader } from "@/components/tenant/settings/header";
@@ -77,17 +66,13 @@ const RETURN_PATH = "/settings/connections";
  * just finished opens its service, where the work it opens waits.
  */
 export function SchoolConnectionsSettings() {
-  const t = useTranslations("Connectors");
   const tried = use(ConnectOutcomeContext);
 
   return (
     <TableFiltersProvider>
       <PanesProvider opened={connectedService(tried)} wideFrom="lg">
         <SchoolSettingsHeader>
-          <ButtonGroup>
-            <TableSearch placeholder={t("search")} />
-            <ServiceFilter />
-          </ButtonGroup>
+          <LibraryControls services={DIRECTORY_SERVICES} />
         </SchoolSettingsHeader>
         <div className="flex w-full min-w-0 flex-1 flex-col">
           <SchoolDirectory />
@@ -142,26 +127,13 @@ function SchoolDirectory() {
     QueryResult.isSuccess(offered) &&
     own._tag !== "LoadingFirstPage" &&
     (!maySee || school._tag !== "LoadingFirstPage");
-  const held = { own: own.results, school: school.results };
-  const entries = Arr.map(DIRECTORY_SERVICES, (service) => {
-    const connection = serviceConnection(service, held);
-
-    return {
-      connection,
-      service,
-      state: hasRead
-        ? Option.some(
-            directoryState({
-              connection,
-              failure: connectFailure(tried, service.connector),
-              isOffered: Arr.contains(offered.value, service.connector),
-              mayConnect:
-                holderOf(service) === "personal" ||
-                Arr.contains(reach, "connection.create"),
-            })
-          )
-        : Option.none(),
-    };
+  const entries = directoryEntries({
+    hasRead,
+    held: { own: own.results, school: school.results },
+    mayConnectSchool: Arr.contains(reach, "connection.create"),
+    offered: QueryResult.isSuccess(offered) ? offered.value : [],
+    services: DIRECTORY_SERVICES,
+    tried,
   });
 
   return (
@@ -211,58 +183,21 @@ function SchoolDirectory() {
           <ServiceList entries={entries} />
         </PanesList>
         <PanesDetail defaultSize="45%" label={t("detail")}>
-          <ServiceDetail entries={entries} />
+          <ServiceDetail entries={entries}>
+            <ServiceHeader />
+            <PaneBody>
+              <SchoolServiceWork />
+            </PaneBody>
+            <PaneFooter>
+              <ServiceStatus>
+                <SchoolHolder />
+              </ServiceStatus>
+              <ServiceActions />
+              <ServiceExams />
+            </PaneFooter>
+          </ServiceDetail>
         </PanesDetail>
       </Panes>
     </ConnectorActionsContext>
-  );
-}
-
-/**
- * The services the search and the filter keep, in two columns of one card size while the pane has
- * the room, so a new connector only adds a card, and a pane that narrows only folds them into one.
- */
-function ServiceList({
-  entries,
-}: {
-  entries: readonly (typeof DirectoryEntry.Type)[];
-}) {
-  const t = useTranslations("Connectors");
-  const search = useTableFilters((state) => state.search);
-  const chosen = useTableFilters((state) => state.chosen);
-  const category = chosenOne(
-    chosen,
-    CATEGORY_FILTER,
-    Schema.is(DirectoryCategory)
-  );
-  const shown = Arr.filter(entries, ({ service }) =>
-    isShown(service, category, search, [
-      t(service.key),
-      t(`${service.key}-line`),
-      t(`holder-${holderOf(service)}`),
-      service.provider,
-    ])
-  );
-
-  if (Arr.isReadonlyArrayEmpty(shown)) {
-    return (
-      <TableEmpty
-        act="searching"
-        description={t("search-none-description")}
-        title={t("search-none")}
-      />
-    );
-  }
-
-  return (
-    <ScrollArea className="min-h-0 flex-1">
-      <div className={cn(pageGutterVariants(), "@container py-4")}>
-        <div className="grid auto-rows-fr gap-4 @xl:grid-cols-2">
-          {Arr.map(shown, (entry) => (
-            <ServiceCard entry={entry} key={entry.service.key} />
-          ))}
-        </div>
-      </div>
-    </ScrollArea>
   );
 }

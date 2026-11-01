@@ -8,6 +8,10 @@ import {
   type Connection,
   currentConnection,
 } from "@/components/connectors/optimistic";
+import {
+  type ConnectSearch,
+  connectFailure,
+} from "@/components/connectors/outcome";
 import { matchesSearch } from "@/components/shared/table/search";
 
 /** What a service is for, which the directory's filter reads. */
@@ -53,10 +57,23 @@ export const DIRECTORY_SERVICES = [
   },
 ] as const satisfies readonly DirectoryService[];
 
-/** The categories the filter offers, in the order their services first show. */
-export const DIRECTORY_CATEGORIES = Arr.dedupe(
-  Arr.map(DIRECTORY_SERVICES, (service) => service.category)
+/** Whether the school holds a service, or the person who connects it. */
+export const holderOf = (service: DirectoryService) =>
+  GOOGLE_MANIFEST[service.connector].owner;
+
+/**
+ * The services an account lists: those a person holds, each through a connection of its own. Forms
+ * reads through Drive to turn a form into an exam, so it stays with a school.
+ */
+export const ACCOUNT_SERVICES = Arr.filter(
+  DIRECTORY_SERVICES,
+  (service) =>
+    holderOf(service) === "personal" && service.key === service.connector
 );
+
+/** The categories a filter offers for `services`, in the order they first show. */
+export const directoryCategories = (services: readonly DirectoryService[]) =>
+  Arr.dedupe(Arr.map(services, (service) => service.category));
 
 /** Where a service stands for the viewer. */
 const ServiceState = Schema.Literals([
@@ -89,10 +106,6 @@ export const LOST = [
   "reconnect",
   "refused",
 ] as const satisfies readonly (typeof ServiceState.Type)[];
-
-/** Whether the school holds a service, or the person who connects it. */
-export const holderOf = (service: DirectoryService) =>
-  GOOGLE_MANIFEST[service.connector].owner;
 
 /**
  * Where a service stands for the viewer. A connection decides first, so a service the deployment
@@ -136,6 +149,45 @@ export const serviceConnection = (
     holderOf(service) === "school" ? held.school : held.own,
     service.connector
   );
+
+/**
+ * One entry for each of `services`, once `hasRead` says the reads answered: until then an entry has
+ * no state, so a card draws in the first frame and fills it in place. A service a person holds is
+ * theirs to connect, and `mayConnectSchool` says whether the viewer may connect the school's own.
+ */
+export const directoryEntries = ({
+  hasRead,
+  held,
+  mayConnectSchool,
+  offered,
+  services,
+  tried,
+}: {
+  hasRead: boolean;
+  held: Parameters<typeof serviceConnection>[1];
+  mayConnectSchool: boolean;
+  offered: readonly GoogleConnector[];
+  services: readonly DirectoryService[];
+  tried: typeof ConnectSearch.Type;
+}) =>
+  Arr.map(services, (service) => {
+    const connection = serviceConnection(service, held);
+
+    return {
+      connection,
+      service,
+      state: hasRead
+        ? Option.some(
+            directoryState({
+              connection,
+              failure: connectFailure(tried, service.connector),
+              isOffered: Arr.contains(offered, service.connector),
+              mayConnect: holderOf(service) === "personal" || mayConnectSchool,
+            })
+          )
+        : Option.none(),
+    };
+  });
 
 /** Whether any of a service's words holds what the viewer searched for, in the chosen category. */
 export const isShown = (

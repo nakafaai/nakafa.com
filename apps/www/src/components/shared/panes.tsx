@@ -126,8 +126,8 @@ export function useHasPanes() {
 
 /**
  * Whether the screen is wide enough for the second pane to stand beside the first. Every page with
- * panes is a School page, which renders only in the browser (ADR 0038), so the first render already
- * reads the screen and a detail that opens with the page never shows in a sheet on a wide screen.
+ * panes renders only in the browser (ADR 0038), so the first render already reads the screen and a
+ * detail that opens with the page never shows in a sheet on a wide screen.
  */
 function useWide() {
   const width = use(PanesWidthContext);
