@@ -6,6 +6,7 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import { Option } from "effect";
 import { useTranslations } from "use-intl";
+import { pageRowVariants } from "@/components/shared/content/width";
 import { TargetLink } from "@/lib/routing/link";
 import { publicPathTarget } from "@/lib/routing/target";
 
@@ -123,7 +124,7 @@ export function PaginationContent({ pagination, className }: Props) {
       aria-label={t("page-navigation")}
       className={cn("mt-10 pt-10 [article:empty~&]:hidden", className)}
     >
-      <div className="mx-auto grid max-w-3xl gap-6 px-6 sm:grid-cols-2">
+      <div className={cn(pageRowVariants(), "grid gap-6 sm:grid-cols-2")}>
         <PaginationItem
           className="items-start"
           context={pagination.prev.context}

@@ -227,7 +227,7 @@ describe("connectors/google", () => {
             .action(google.finish, { code: "code", state: late })
             .pipe(Effect.flip)
         ).toMatchObject({ _tag: "ConnectStateInvalid" });
-        const refusedBy = (answer: () => void) =>
+        const endedBy = (answer: () => void) =>
           Effect.gen(function* () {
             const state = yield* start();
             answer();
@@ -237,22 +237,22 @@ describe("connectors/google", () => {
             });
           });
         expect(
-          yield* refusedBy(() =>
+          yield* endedBy(() =>
             fetcher.mockResolvedValueOnce(granted("subject-2", []))
           )
         ).toMatchObject({ outcome: "refused" });
         expect(
-          yield* refusedBy(() =>
+          yield* endedBy(() =>
             fetcher.mockResolvedValueOnce(
-              new Response(encodeJsonText({ error: "invalid_grant" }), {
-                status: 400,
+              new Response(encodeJsonText({ error: "invalid_client" }), {
+                status: 401,
               })
             )
           )
-        ).toMatchObject({ outcome: "refused" });
+        ).toMatchObject({ outcome: "failed" });
         expect(
-          yield* refusedBy(() => vi.stubEnv("GOOGLE_CONNECTORS", "drive"))
-        ).toMatchObject({ outcome: "refused" });
+          yield* endedBy(() => vi.stubEnv("GOOGLE_CONNECTORS", "drive"))
+        ).toMatchObject({ outcome: "failed" });
         expect((yield* student.query(listOwn, firstPage)).page).toEqual([]);
       })
   );

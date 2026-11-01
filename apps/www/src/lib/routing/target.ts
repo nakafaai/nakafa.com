@@ -246,3 +246,9 @@ export const PRICING_TARGET = {
   from: LOCALE_ROUTE,
   to: "/$locale/pricing",
 } satisfies LinkTarget;
+
+/** The contributor page of the locale, which the footer links to. */
+export const CONTRIBUTOR_TARGET = {
+  from: LOCALE_ROUTE,
+  to: "/$locale/contributor",
+} satisfies LinkTarget;
