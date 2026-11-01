@@ -1916,6 +1916,7 @@
     "classification": "Education"
   },
   "Common": {
+    "popup-empty": "Nothing to choose yet.",
     "page-navigation": "Pagination navigation",
     "contributor-description": "This person helps build Nakafa.",
     "undo": "Undo",
