@@ -1936,6 +1936,7 @@
     "arabic-fraction": "Fraction slash",
     "arabic-minus": "Minus sign",
     "load-error": "We could not load this data.",
+    "load-error-title": "Something went wrong",
     "part-denied": "This part of the school is not open to you.",
     "loading": "Loading",
     "month": "Month",
@@ -2356,6 +2357,7 @@
   },
   "Player": {
     "navigator": "Questions",
+    "navigator-description": "Pick a number to open that question.",
     "navigator-open": "Open the question navigator, question {number}",
     "controls": "Question controls",
     "previous-question": "Previous question",

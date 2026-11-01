@@ -28,8 +28,13 @@ import { OptionRow } from "@/components/tenant/exams/option";
 import { useExamLocked } from "@/components/tenant/exams/provider";
 import { choiceTitle } from "@/components/tenant/exams/reason";
 import { ExamDocument } from "@/components/tenant/exams/rich";
-import { PaperOption, PaperOptions } from "@/components/tenant/exams/sheet";
+import {
+  PaperOption,
+  PaperOptions,
+  PaperPartText,
+} from "@/components/tenant/exams/sheet";
 import type { Unstored } from "@/components/tenant/exams/writer";
+import { LetteredChoice } from "@/components/tryout/runtime/choice/surface";
 
 /**
  * One choice of a question on its paper, as the student meets it: its options, each written in its row, and the
@@ -114,16 +119,20 @@ export function ChoiceSheet({
                 removeName={t("option-remove-of", { letter, number })}
               >
                 <PaperOption multiple={choice.maxChoices !== 1}>
-                  <ExamDocument
-                    label={t(reason ? "reason-of" : "option-of", {
-                      letter,
-                      number,
-                    })}
-                    placeholder={t(
-                      reason ? "reason-placeholder" : "option-placeholder"
-                    )}
-                    size="line"
-                  />
+                  <LetteredChoice letter={letter}>
+                    <PaperPartText>
+                      <ExamDocument
+                        label={t(reason ? "reason-of" : "option-of", {
+                          letter,
+                          number,
+                        })}
+                        placeholder={t(
+                          reason ? "reason-placeholder" : "option-placeholder"
+                        )}
+                        size="line"
+                      />
+                    </PaperPartText>
+                  </LetteredChoice>
                 </PaperOption>
               </OptionRow>
             );

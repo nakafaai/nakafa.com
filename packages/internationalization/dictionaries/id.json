@@ -1936,6 +1936,7 @@
     "arabic-fraction": "Garis miring pecahan",
     "arabic-minus": "Tanda minus",
     "load-error": "Data ini belum dapat dimuat.",
+    "load-error-title": "Terjadi kesalahan",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
     "month": "Bulan",
@@ -2356,6 +2357,7 @@
   },
   "Player": {
     "navigator": "Soal",
+    "navigator-description": "Pilih nomor untuk membuka soal itu.",
     "navigator-open": "Buka navigasi soal, soal {number}",
     "controls": "Kontrol soal",
     "previous-question": "Soal sebelumnya",

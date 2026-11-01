@@ -1936,6 +1936,7 @@
     "arabic-fraction": "Bruchstrich",
     "arabic-minus": "Minuszeichen",
     "load-error": "Diese Daten konnten nicht geladen werden.",
+    "load-error-title": "Etwas ist schiefgelaufen",
     "part-denied": "Dieser Teil der Schule ist nicht offen.",
     "loading": "Wird geladen",
     "month": "Monat",
@@ -2356,6 +2357,7 @@
   },
   "Player": {
     "navigator": "Aufgaben",
+    "navigator-description": "Wähle eine Nummer, um diese Frage zu öffnen.",
     "navigator-open": "Aufgabenübersicht öffnen, Aufgabe {number}",
     "controls": "Aufgabensteuerung",
     "previous-question": "Vorherige Aufgabe",

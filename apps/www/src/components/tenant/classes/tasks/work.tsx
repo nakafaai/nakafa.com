@@ -23,7 +23,6 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { columnAlign } from "@/components/shared/table/align";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
@@ -31,6 +30,7 @@ import {
   TableSearch,
   useServerSearch,
 } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import {
   forumCall,
   runForumCall,
@@ -87,7 +87,7 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
     throw pagination.error;
   }
   if (PaginatedQueryResult.isFailure(pagination)) {
-    return <DataFailure onRetry={reloadPage} />;
+    return <LoadFailure onRetry={reloadPage} />;
   }
   if (Option.isNone(kept)) {
     return null;
