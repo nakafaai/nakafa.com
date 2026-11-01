@@ -17,6 +17,7 @@ import { selectTryoutSetLinks } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptLock,
   getTryoutPublicPath,
+  getTryoutPublicPathHref,
   type TryoutPageAddress,
 } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
@@ -31,6 +32,7 @@ import {
   selectActionAttempt,
 } from "@/components/tryout/runtime/state";
 import { TryoutSetEntry } from "@/components/tryout/set/entry";
+import { tryoutActionNameOf } from "@/components/tryout/set/kept";
 import type {
   LoadedRuntime,
   SetEntrySection,
@@ -39,6 +41,7 @@ import type {
   TryoutSetRestartTarget,
   TryoutSetRoute,
 } from "@/components/tryout/set/model";
+import { useKeepActionName } from "@/components/tryout/set/name";
 import {
   TryoutSetOverview,
   type TryoutSetOverviewProps,
@@ -201,6 +204,13 @@ function ResolvedTryoutSetPage({
     currentAttempt,
     pending,
   });
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  useKeepActionName(
+    `/${route.locale}${getTryoutPublicPathHref(page.set.publicPath)}`,
+    isAuthenticated && actionAttempt !== undefined
+      ? tryoutActionNameOf(actionAttempt)
+      : null
+  );
 
   const startEntrySection = activeAttempt
     ? entrySection

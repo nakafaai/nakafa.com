@@ -21,6 +21,7 @@ import {
 import {
   getTryoutAttemptLock,
   getTryoutPublicPath,
+  getTryoutPublicPathHref,
   type TryoutPageAddress,
 } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
@@ -47,6 +48,8 @@ import type {
   TryoutSectionRoute,
 } from "@/components/tryout/section/model";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
+import { tryoutActionNameOf } from "@/components/tryout/set/kept";
+import { useKeepActionName } from "@/components/tryout/set/name";
 import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 import { useLastValue } from "@/lib/data/kept";
 
@@ -206,7 +209,7 @@ function ResolvedTryoutSectionPage({
   finish: TryoutFinish | null;
   state: SectionState;
 }) {
-  const { page, pending } = useTryoutSectionPage();
+  const { page, pending, route } = useTryoutSectionPage();
   const opening = useTryoutStartPhase() === "opening";
   const attempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
@@ -222,6 +225,11 @@ function ResolvedTryoutSectionPage({
     currentAttempt,
     pending,
   });
+  // The set's own action reads this attempt on the learner's next hard load of the set.
+  useKeepActionName(
+    `/${route.locale}${getTryoutPublicPathHref(page.set.publicPath)}`,
+    actionAttempt ? tryoutActionNameOf(actionAttempt) : null
+  );
   const sectionAttempt = actionAttempt?.section ?? null;
   const runtimeState = getTryoutRuntimeState({ activeAttempt, now, runtime });
   const hasActiveSection = currentAttempt?.section?.status === "in-progress";
