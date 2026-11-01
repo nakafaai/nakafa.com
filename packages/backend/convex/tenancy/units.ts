@@ -7,3 +7,4 @@ export const list = registeredFunctions.list;
 export const setLocale = registeredFunctions.setLocale;
 export const setNpsn = registeredFunctions.setNpsn;
 export const unarchive = registeredFunctions.unarchive;
+export const experimental_reuseContext = true;

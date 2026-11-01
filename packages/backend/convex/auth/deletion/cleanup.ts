@@ -4,3 +4,4 @@ export const cleanupDeletedUserAnalytics = registeredFunctions.cleanupDeletedUse
 export const cleanupDeletedUserAuth = registeredFunctions.cleanupDeletedUserAuth;
 export const cleanupDeletedUserBilling = registeredFunctions.cleanupDeletedUserBilling;
 export const cleanupDeletedUserData = registeredFunctions.cleanupDeletedUserData;
+export const experimental_reuseContext = true;

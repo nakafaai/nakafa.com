@@ -6,3 +6,4 @@ export const updateBio = registeredFunctions.updateBio;
 export const updateUserName = registeredFunctions.updateUserName;
 export const updateUserRole = registeredFunctions.updateUserRole;
 export const updateUsername = registeredFunctions.updateUsername;
+export const experimental_reuseContext = true;

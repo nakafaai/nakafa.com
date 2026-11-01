@@ -2,3 +2,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 
 export const enqueueRendered = registeredFunctions.enqueueRendered;
 export const readInput = registeredFunctions.readInput;
+export const experimental_reuseContext = true;

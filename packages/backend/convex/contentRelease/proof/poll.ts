@@ -2,3 +2,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 
 export const poll = registeredFunctions.poll;
 export const status = registeredFunctions.status;
+export const experimental_reuseContext = true;

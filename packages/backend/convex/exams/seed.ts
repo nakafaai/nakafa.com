@@ -4,3 +4,4 @@ export const answers = registeredFunctions.answers;
 export const load = registeredFunctions.load;
 export const seats = registeredFunctions.seats;
 export const sitting = registeredFunctions.sitting;
+export const experimental_reuseContext = true;

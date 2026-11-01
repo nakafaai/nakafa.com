@@ -9,3 +9,4 @@ export const list = registeredFunctions.list;
 export const register = registeredFunctions.register;
 export const remove = registeredFunctions.remove;
 export const uploadUrl = registeredFunctions.uploadUrl;
+export const experimental_reuseContext = true;

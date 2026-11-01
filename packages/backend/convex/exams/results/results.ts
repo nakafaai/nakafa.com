@@ -8,3 +8,4 @@ export const mine = registeredFunctions.mine;
 export const overview = registeredFunctions.overview;
 export const questionStats = registeredFunctions.questionStats;
 export const release = registeredFunctions.release;
+export const experimental_reuseContext = true;

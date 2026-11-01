@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/ch
 export const deleteChat = registeredFunctions.deleteChat;
 export const updateChatTitle = registeredFunctions.updateChatTitle;
 export const updateChatVisibility = registeredFunctions.updateChatVisibility;
+export const experimental_reuseContext = true;

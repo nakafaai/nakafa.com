@@ -33,6 +33,7 @@ import {
   type RepositorySource,
   TestCompilerError,
 } from "#scripts/check/source";
+import { stateCandidates } from "#scripts/check/state";
 
 /** One construct that breaks an Effect-native rule at a line of an authored module. */
 const Finding = Schema.Struct({
@@ -194,6 +195,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
                 inlineCandidates(file, sourceFile, runtime),
                 assertionCandidates(sourceFile, nodes),
                 dispatchCandidates(sourceFile, nodes),
+                stateCandidates(sourceFile),
                 failures,
               ]),
               (found) =>

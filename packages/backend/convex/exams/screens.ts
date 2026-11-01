@@ -5,3 +5,4 @@ export const look = registeredFunctions.look;
 export const offline = registeredFunctions.offline;
 export const screen = registeredFunctions.screen;
 export const seats = registeredFunctions.seats;
+export const experimental_reuseContext = true;

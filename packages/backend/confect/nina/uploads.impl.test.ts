@@ -187,12 +187,15 @@ describe("native Nina attachment ownership", () => {
 
   it("retires a failed upload reservation and bounds pending uploads per account", async () => {
     const { t, owner } = await uploadFixture();
-    vi.mocked(storeFile).mockRejectedValueOnce(
-      new Error("Storage unavailable")
-    );
+    const logged = vi.spyOn(console, "error").mockImplementation(() => 0);
+    const storage = new Error("Storage unavailable");
+    vi.mocked(storeFile).mockRejectedValueOnce(storage);
     await expect(owner.action(save, attachment)).rejects.toMatchObject({
       data: { code: "NINA_UPLOAD_FAILED" },
     });
+    expect(logged).toHaveBeenCalledWith(
+      expect.objectContaining({ message: ["Nina upload failed", storage] })
+    );
     expect(
       await t.query((ctx) => ctx.db.query("ninaUploads").collect())
     ).toEqual([]);

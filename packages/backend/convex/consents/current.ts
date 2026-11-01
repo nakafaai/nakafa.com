@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/co
 
 export const get = registeredFunctions.get;
 export const set = registeredFunctions.set;
+export const experimental_reuseContext = true;

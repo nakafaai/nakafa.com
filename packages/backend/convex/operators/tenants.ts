@@ -5,3 +5,4 @@ export const open = registeredFunctions.open;
 export const reactivate = registeredFunctions.reactivate;
 export const replaceOwner = registeredFunctions.replaceOwner;
 export const suspend = registeredFunctions.suspend;
+export const experimental_reuseContext = true;

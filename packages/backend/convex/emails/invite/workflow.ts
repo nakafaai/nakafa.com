@@ -2,3 +2,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 
 export const deliverInviteEmail = registeredFunctions.deliverInviteEmail;
 export const finishInviteEmail = registeredFunctions.finishInviteEmail;
+export const experimental_reuseContext = true;
