@@ -12,6 +12,7 @@ import {
   LiveSessionContext,
   useLiveSession,
 } from "@/components/providers/live";
+import { NavigationWarmth } from "@/components/shared/warm";
 import { clientEnv } from "@/env.public";
 import { ConvexAuthContext } from "@/lib/auth/convex";
 import { createLiveSessionStore, startLiveSession } from "@/lib/auth/live";
@@ -115,6 +116,7 @@ export function PageProviders({
             )}
           </PageNavigationProvider>
           <PageRelease />
+          <NavigationWarmth />
         </ConvexAuthContext>
       </AuthSessionContext>
     </LiveSessionContext>

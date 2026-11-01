@@ -1,12 +1,21 @@
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { Option } from "effect";
 import { ChatBoundary } from "@/components/ai/chat/boundary";
 import { AiChatSidebar } from "@/components/ai/chat/sidebar";
 import { chatSidebarScreenFn } from "@/lib/account/home.functions";
 
+/**
+ * The first page of the chat list on the server, where it draws the document. A move
+ * between pages in the browser reads the list live, so it waits on no Worker.
+ */
+const readChatSidebar = createIsomorphicFn()
+  .server(() => chatSidebarScreenFn())
+  .client(() => ({ first: undefined }));
+
 export const Route = createFileRoute("/$locale/_main/_app/chat")({
-  loader: () => chatSidebarScreenFn(),
+  loader: () => readChatSidebar(),
   component: ChatLayout,
 });
 
