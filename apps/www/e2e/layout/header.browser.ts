@@ -110,6 +110,11 @@ function readHeaders() {
           if (element instanceof SVGElement && element.ownerSVGElement) {
             return false;
           }
+          // Text kept for a screen reader keeps its width inside the clipped box that holds it.
+          const holder = element.parentElement?.getBoundingClientRect();
+          if (holder !== undefined && holder.width <= 1) {
+            return false;
+          }
           const box = element.getBoundingClientRect();
           return (
             box.width > 1 &&
