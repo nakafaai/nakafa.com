@@ -79,22 +79,19 @@ export function NewPostPoll() {
   );
 }
 
-/** The poll of an announcement with its votes, which whoever writes in the class takes once the server keeps it. */
-export function PostPoll({
-  poll,
-  post,
-}: {
-  poll: NonNullable<ClassPost["poll"]>;
-  post: ClassPost;
-}) {
+/** An announcement's poll with its votes, which whoever writes in the class takes once the server keeps it. */
+export function PostPoll({ post }: { post: ClassPost }) {
   const { can, classId, slug } = useClassScope();
   const saved = post.id !== post.clientKey;
   const read = useQuery(
     classroom.posts.votes,
-    saved ? { classId, postIds: [post.id], slug } : "skip"
+    saved && post.poll !== null ? { classId, postIds: [post.id], slug } : "skip"
   );
   const vote = useMutation(classroom.posts.vote);
 
+  if (post.poll === null) {
+    return null;
+  }
   return (
     <PollCard
       disabled={!(saved && Arr.contains(can, "forum.post"))}
@@ -111,7 +108,7 @@ export function PostPoll({
           toastForumFailure
         )
       }
-      poll={poll}
+      poll={post.poll}
       votes={
         QueryResult.isSuccess(read)
           ? Arr.flatMap(read.value, (found) => found.votes)

@@ -101,16 +101,18 @@ export function PostRow({ post }: { post: ClassPost }) {
 
 /** What an announcement says: its poll, whose question is its text, or its text, which may break anywhere. */
 function PostBody({ post }: { post: ClassPost }) {
-  if (post.poll !== null) {
-    return <PostPoll poll={post.poll} post={post} />;
-  }
   return (
-    <p
-      className="basis-full text-sm wrap-anywhere whitespace-pre-wrap"
-      dir="auto"
-    >
-      {post.text}
-    </p>
+    <>
+      <PostPoll post={post} />
+      {post.poll === null ? (
+        <p
+          className="basis-full text-sm wrap-anywhere whitespace-pre-wrap"
+          dir="auto"
+        >
+          {post.text}
+        </p>
+      ) : null}
+    </>
   );
 }
 

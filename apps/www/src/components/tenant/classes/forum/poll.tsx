@@ -64,19 +64,16 @@ const pollChoice = cva(
 );
 
 /**
- * A poll in its message, as WhatsApp shows one (`PollCard`). A leader who reads the class sees the votes and takes none.
+ * A message's poll, as WhatsApp shows one (`PollCard`). A leader who reads the class sees the votes and takes none.
  */
-export function MessagePoll({
-  message,
-  poll,
-}: {
-  message: ForumMessage;
-  poll: ForumPoll;
-}) {
+export function MessagePoll({ message }: { message: ForumMessage }) {
   const { canPost, classId, slug } = useChannelScope();
   const tally = useTally(message.id);
   const vote = useMutation(classroom.forum.tallies.vote);
 
+  if (message.poll === null) {
+    return null;
+  }
   return (
     <PollCard
       disabled={!canPost}
@@ -93,7 +90,7 @@ export function MessagePoll({
           toastForumFailure
         )
       }
-      poll={poll}
+      poll={message.poll}
       votes={Option.match(tally, {
         onNone: () => [],
         onSome: (found) => found.votes,
