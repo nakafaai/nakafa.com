@@ -22,8 +22,8 @@ import { EXPORT_HEADER } from "@/components/tenant/roster/dapodik";
 import {
   type GradeCohort,
   GradeDownloadContext,
-  RosterGradesExport,
-} from "@/components/tenant/roster/grades";
+} from "@/components/tenant/roster/download";
+import { RosterGradesExport } from "@/components/tenant/roster/grades";
 import { activePeriodOf } from "@/components/tenant/roster/period";
 import { useRosterUnit } from "@/components/tenant/roster/unit";
 import { saveSchool } from "@/components/tenant/settings/save";

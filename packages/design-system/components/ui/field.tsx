@@ -37,11 +37,15 @@ function FieldLegend({
   );
 }
 
+/**
+ * A form's rhythm, in one place: a label stands tight on its value (`gap-2`), fields stand wider apart (`gap-6`), and
+ * sections wider again (`gap-8`), so the eye reads what belongs together.
+ */
 function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "group/field-group @container/field-group flex w-full flex-col gap-6 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4",
+        "group/field-group @container/field-group flex w-full flex-col gap-6 has-[>[data-slot=field-set]]:gap-8 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4",
         className
       )}
       data-slot="field-group"
@@ -52,7 +56,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
 
 // The field is a fieldset, which keeps the browser's min-content floor; min-w-0 lets it narrow with its container.
 const fieldVariants = cva(
-  "group/field data-[invalid=true]:text-destructive flex w-full min-w-0 gap-3",
+  "group/field data-[invalid=true]:text-destructive flex w-full min-w-0 gap-2",
   {
     variants: {
       orientation: {

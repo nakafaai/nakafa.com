@@ -137,6 +137,24 @@ export const XenditPlanEvent = Schema.Struct({
   updated: Schema.DateTimeUtcFromString,
 });
 
+/** The refund a `refund.*` webhook carries. It names the payment it refunds, and no payment session. */
+export const XenditRefund = Schema.Struct({
+  refund_id: Schema.String,
+  payment_id: Schema.String,
+  amount: Schema.Finite,
+  updated: Schema.DateTimeUtcFromString,
+});
+
+/** A request to return one payment. Xendit requires the amount and its currency, though its reference marks them optional. */
+export const XenditRefundRequest = Schema.Struct({
+  reference_id: Schema.String,
+  payment_id: Schema.String,
+  amount: Schema.Finite,
+  currency: Schema.String,
+  reason: Schema.Literal("CANCELLATION"),
+});
+export type XenditRefundRequest = typeof XenditRefundRequest.Type;
+
 /** One attempt to charge a cycle. Only the fields the billing row reads are named. */
 const XenditCycleAttempt = Schema.Struct({
   status: Schema.Literals(["SUCCEEDED", "FAILED", "PENDING"]),

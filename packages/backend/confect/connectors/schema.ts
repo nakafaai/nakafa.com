@@ -128,13 +128,14 @@ export const DriveFileId = Schema.String.check(
 
 /**
  * How a connect ended and where its user goes back to: `connected`, `cancelled`
- * when the user stopped on Google's screen, or `refused` when Google or the
- * granted scopes did not allow it. The address is built on the server from the
- * callback's own site, the school's slug, and the path the start named.
+ * when the user stopped on Google's screen, `refused` when the user left a scope
+ * unchecked, or `failed` when Google or this deployment could not finish it, which
+ * no choice of the user's would change. The address is built on the server from
+ * the callback's own site, the school's slug, and the path the start named.
  */
 export const ConnectOutcome = Schema.Struct({
   location: Schema.String,
-  outcome: Schema.Literals(["connected", "cancelled", "refused"]),
+  outcome: Schema.Literals(["connected", "cancelled", "refused", "failed"]),
 });
 
 /**

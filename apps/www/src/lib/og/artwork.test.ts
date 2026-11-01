@@ -8,6 +8,7 @@ import {
   listStaticArtworkPaths,
   resolveSocialArtwork,
   resolveStaticArtwork,
+  toCardArtwork,
 } from "@/lib/og/artwork";
 
 const ARTWORK_FILENAME_PATTERN = /^(?:de|en|id)-[a-z0-9-]+\.png$/u;
@@ -48,6 +49,32 @@ describe("public artwork", () => {
       getAppSocialArtwork({ key: "home", locale: "en", publicPath: "" })
     ).toBe("/en/og/image.png");
   });
+
+  it("draws a card's artwork from its WebP, and leaves a generated image alone", () => {
+    expect(toCardArtwork("/open-graph/tryout/en-index.png")).toBe(
+      "/open-graph/tryout/en-index.webp"
+    );
+    expect(toCardArtwork("/en/og/subjects/math/image.png")).toBe(
+      "/en/og/subjects/math/image.png"
+    );
+  });
+
+  it.effect("holds a WebP beside every artwork a card can draw", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const artworkRoot = path.join(process.cwd(), "public");
+
+      const missing = yield* Effect.filter(listStaticArtworkPaths(), (file) =>
+        Effect.map(
+          fs.exists(path.join(artworkRoot, toCardArtwork(file))),
+          (exists) => !exists
+        )
+      );
+
+      expect(missing).toEqual([]);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
 
   it.effect("keeps the manifest and filesystem in exact agreement", () =>
     Effect.gen(function* () {

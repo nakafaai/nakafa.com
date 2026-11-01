@@ -6,6 +6,7 @@ import {
   readPublishedTryoutSitemap,
   readPublishedTryoutSitemapCount,
 } from "@/lib/content/tryout/sitemap";
+import { readSitemapDates, type SitemapDates } from "@/lib/sitemap/dates";
 import { readFamilyPartition, routeToPath } from "@/lib/sitemap/family";
 import {
   getSitemapPageDescriptor,
@@ -19,17 +20,45 @@ import {
 } from "@/lib/sitemap/identity";
 import { pinSitemapRelease } from "@/lib/sitemap/pin";
 
+const curriculaRoute = "/curricula";
 const quranRootRoute = "/quran";
+const tryoutRootRoute = "/try-out";
 
 /** Static top-level routes in canonical lexical order. */
 export const baseRoutes: readonly string[] = [
   "/",
+  "/articles",
   "/contributor",
-  "/curricula",
+  curriculaRoute,
   "/pricing",
   quranRootRoute,
   "/search",
+  tryoutRootRoute,
 ];
+
+/** Dates routes by their snapshot family, and leaves them undated when it has no date. */
+function dateRoutes<Route>(
+  routes: readonly Route[],
+  lastModified: string | null
+) {
+  return lastModified === null
+    ? routes
+    : Arr.map(routes, (route) => ({ ...route, lastModified }));
+}
+
+/**
+ * The date of a base route that lists one snapshot family. The other base routes
+ * are built with the code and hold no published content, so no date is true of them.
+ */
+function readBaseRouteDate(path: string, dates: SitemapDates) {
+  if (path === curriculaRoute) {
+    return dates.program;
+  }
+  if (path === tryoutRootRoute) {
+    return dates.assessment;
+  }
+  return path === quranRootRoute ? dates.quran : null;
+}
 
 /** Reads the bounded routes and shared metadata for one sitemap page. */
 export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
@@ -38,17 +67,24 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       getSitemapPageDescriptor(pageId)
     ).pipe(Effect.mapError(() => new SitemapPageNotFoundError({ pageId })));
 
-    if (
-      isArticleSitemapPage(page) ||
-      isMaterialSitemapPage(page) ||
-      isProgramSitemapPage(page)
-    ) {
+    if (isArticleSitemapPage(page) || isMaterialSitemapPage(page)) {
       return yield* readFamilyPartition(
         pageId,
         page.kind,
         page.locale,
         page.partition
       );
+    }
+
+    if (isProgramSitemapPage(page)) {
+      const { routes } = yield* readFamilyPartition(
+        pageId,
+        page.kind,
+        page.locale,
+        page.partition
+      );
+      const { program } = yield* readSitemapDates();
+      return { routes: dateRoutes(routes, program) };
     }
 
     if (isTryoutSitemapPage(page)) {
@@ -69,12 +105,16 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       const artifactRoutes = Arr.map(artifact.paths, (publicPath) => ({
         path: routeToPath(publicPath),
       }));
+      const { assessment } = yield* readSitemapDates();
       yield* verify;
       return {
-        routes: Arr.sortWith(
-          artifactRoutes,
-          (route) => route.path,
-          compareSitemapPaths
+        routes: dateRoutes(
+          Arr.sortWith(
+            artifactRoutes,
+            (route) => route.path,
+            compareSitemapPaths
+          ),
+          assessment
         ),
       };
     }
@@ -108,16 +148,23 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     if (isQuranSitemapPage(page)) {
       const { verify } = yield* pinSitemapRelease(pageId, page.locale);
       const { surahs } = yield* readPublishedQuranCatalog();
+      const { quran } = yield* readSitemapDates();
       yield* verify;
       return {
-        routes: Arr.map(surahs, (surah) => ({
-          path: `/quran/${surah.number}`,
-        })),
+        routes: dateRoutes(
+          Arr.map(surahs, (surah) => ({
+            path: `/quran/${surah.number}`,
+          })),
+          quran
+        ),
       };
     }
 
+    const dates = yield* readSitemapDates();
     return {
-      routes: Arr.map(baseRoutes, (path) => ({ path })),
+      routes: Arr.flatMap(baseRoutes, (path) =>
+        dateRoutes([{ path }], readBaseRouteDate(path, dates))
+      ),
     };
   }
 );

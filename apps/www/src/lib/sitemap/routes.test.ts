@@ -32,6 +32,16 @@ const activeMocks = vi.hoisted(() => ({
   loadActiveContentIdentity: vi.fn(),
   readActiveContentIdentity: vi.fn(),
 }));
+const storeMocks = vi.hoisted(() => ({
+  queryContentStore: vi.fn(),
+}));
+
+/** The day each snapshot family of the test release last changed. */
+const SNAPSHOT_DATES = {
+  assessment: "2026-10-01",
+  program: "2026-10-02",
+  quran: "2026-10-03",
+};
 
 vi.mock("@/lib/content/article/sitemap", () => articleMocks);
 vi.mock("@/lib/content/material/sitemap", () => materialMocks);
@@ -40,6 +50,7 @@ vi.mock("@/lib/content/program/sitemap", () => programMocks);
 vi.mock("@/lib/content/quran/publication", () => quranMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
 vi.mock("@/lib/content/published/active", () => activeMocks);
+vi.mock("@/lib/content/store/query", () => storeMocks);
 
 /** Makes the readers behind one non-partition sitemap page answer with routes. */
 function serveFoundPage(pageId: string) {
@@ -120,6 +131,7 @@ beforeEach(() => {
   quranMocks.readPublishedQuranCatalog.mockReturnValue(
     Effect.succeed({ surahs: [{ number: 1 }, { number: 2 }] })
   );
+  storeMocks.queryContentStore.mockReturnValue(Effect.succeed(SNAPSHOT_DATES));
 });
 
 describe("sitemap route pages", () => {
@@ -155,11 +167,13 @@ describe("sitemap route pages", () => {
     Effect.gen(function* () {
       expect(yield* readPaths("base")).toEqual([
         "/",
+        "/articles",
         "/contributor",
         "/curricula",
         "/pricing",
         "/quran",
         "/search",
+        "/try-out",
       ]);
       expect(yield* readPaths("quran_en")).toEqual(["/quran/1", "/quran/2"]);
     })
@@ -242,6 +256,58 @@ describe("sitemap route pages", () => {
         "/try-out/indonesia/snbt/2027/set-1",
       ]);
     })
+  );
+
+  it.effect("dates each snapshot family's pages by its snapshot", () =>
+    Effect.gen(function* () {
+      programMocks.readPublishedProgramBuckets.mockReturnValue(
+        Effect.succeed({ buckets: ["001"], managed: true, routeCount: 1 })
+      );
+      programMocks.readPublishedProgramSitemap.mockReturnValue(
+        Effect.succeed({ routes: [{ publicPath: "curricula/merdeka" }] })
+      );
+      serveFoundPage("tryout_en_0");
+
+      expect((yield* readSitemapRoutePage("program_en_p0")).routes).toEqual([
+        { lastModified: "2026-10-02", path: "/curricula/merdeka" },
+      ]);
+      expect((yield* readSitemapRoutePage("tryout_en_0")).routes).toEqual([
+        { lastModified: "2026-10-01", path: "/try-out/indonesia" },
+      ]);
+      expect((yield* readSitemapRoutePage("quran_en")).routes).toEqual([
+        { lastModified: "2026-10-03", path: "/quran/1" },
+        { lastModified: "2026-10-03", path: "/quran/2" },
+      ]);
+    })
+  );
+
+  it.effect("dates only the base routes that list a snapshot family", () =>
+    Effect.gen(function* () {
+      expect((yield* readSitemapRoutePage("base")).routes).toEqual([
+        { path: "/" },
+        { path: "/articles" },
+        { path: "/contributor" },
+        { lastModified: "2026-10-02", path: "/curricula" },
+        { path: "/pricing" },
+        { lastModified: "2026-10-03", path: "/quran" },
+        { path: "/search" },
+        { lastModified: "2026-10-01", path: "/try-out" },
+      ]);
+    })
+  );
+
+  it.effect(
+    "leaves a family undated when the release has no snapshot of it",
+    () =>
+      Effect.gen(function* () {
+        storeMocks.queryContentStore.mockReturnValue(
+          Effect.succeed({ assessment: null, program: null, quran: null })
+        );
+        expect((yield* readSitemapRoutePage("quran_en")).routes).toEqual([
+          { path: "/quran/1" },
+          { path: "/quran/2" },
+        ]);
+      })
   );
 
   it.effect("serves signed Page routes with source-owned dates", () =>
