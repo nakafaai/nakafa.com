@@ -10,9 +10,7 @@ import { TableEmpty } from "@/components/shared/table/frame";
 
 /**
  * The Google connectors an owner may connect, one card each, with the state of the
- * owner's connection. A connect that an unchecked scope refused, or that Google
- * could not finish, says which above the cards when the browser comes back. A
- * deployment that offers no connector shows that instead.
+ * owner's connection. A deployment that offers no connector shows that instead.
  */
 export function ConnectorList({
   connections,
