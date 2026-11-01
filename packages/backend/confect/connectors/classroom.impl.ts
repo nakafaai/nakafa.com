@@ -374,20 +374,25 @@ const storeWork = FunctionImpl.make(
             .pipe(Effect.orDie);
           return true;
         }
-        yield* writeTask(author, {
-          clientKey,
-          deadline: work.deadline,
-          latePolicy: "accept",
-          points: Num.clamp(Num.round(work.points, 0), {
-            maximum: 1000,
-            minimum: 0,
-          }),
-          text: pipe(
-            Str.trim(work.text) === "" ? title.value : Str.trim(work.text),
-            Str.slice(0, 8000)
-          ),
-          title: title.value,
-        }).pipe(Effect.provideService(Class, klass));
+        yield* writeTask(
+          author,
+          {
+            category: null,
+            clientKey,
+            deadline: work.deadline,
+            latePolicy: "accept",
+            points: Num.clamp(Num.round(work.points, 0), {
+              maximum: 1000,
+              minimum: 0,
+            }),
+            text: pipe(
+              Str.trim(work.text) === "" ? title.value : Str.trim(work.text),
+              Str.slice(0, 8000)
+            ),
+            title: title.value,
+          },
+          {}
+        ).pipe(Effect.provideService(Class, klass));
         return true;
       })
     );

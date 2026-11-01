@@ -240,7 +240,7 @@ export const chooseView = Effect.fn("NakafaE2E.chooseView")(function* (
   hasTouch: boolean,
   view: PlayerView
 ) {
-  const menu = viewOf(page).getByRole("button", { exact: true, name: "View" });
+  const menu = viewOf(page).getByRole("button");
   // A page that was just loaded may not be React's yet, and a press before then is lost.
   yield* Effect.promise(() => waitUntilTakenOver(menu));
   yield* activate(menu, hasTouch);

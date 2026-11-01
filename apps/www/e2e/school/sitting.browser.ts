@@ -384,17 +384,17 @@ test("a proctor sees the seat filters in a row under the header and switches the
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
 
-  const filters = page.getByRole("group", { name: "Filter students" });
-  const all = filters.getByRole("button", { name: "All" });
-  const attention = filters.getByRole("button", { name: "Needs attention" });
+  const filters = page.getByRole("tablist", { name: "Filter students" });
+  const all = filters.getByRole("tab", { name: "All" });
+  const attention = filters.getByRole("tab", { name: "Needs attention" });
   // The dashboard draws once Convex holds the session and its first read answers.
-  await expect(all).toHaveAttribute("aria-pressed", "true", {
+  await expect(all).toHaveAttribute("aria-selected", "true", {
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(attention).toBeVisible();
-  await expect(filters.getByRole("button", { name: "Finished" })).toBeVisible();
+  await expect(filters.getByRole("tab", { name: "Finished" })).toBeVisible();
   await attention.click();
-  await expect(attention).toHaveAttribute("aria-pressed", "true");
-  await expect(all).toHaveAttribute("aria-pressed", "false");
+  await expect(attention).toHaveAttribute("aria-selected", "true");
+  await expect(all).toHaveAttribute("aria-selected", "false");
   await context.close();
 });

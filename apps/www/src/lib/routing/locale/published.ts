@@ -12,7 +12,7 @@ import {
 } from "@/lib/content/article/category";
 import { stripArticlePagination } from "@/lib/content/article/query";
 import { readPublishedArticleRoute } from "@/lib/content/article/route";
-import { readPublishedMaterialContext } from "@/lib/content/material/context";
+import { readPublishedMaterialPlacements } from "@/lib/content/material/context";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { readPublishedPageLocalePath } from "@/lib/content/page/catalog";
 import { readPublishedProgramRoute } from "@/lib/content/program/route";
@@ -136,13 +136,19 @@ const readLocalizedMaterialSuffix = Effect.fn(
     return "";
   }
 
-  const published = yield* readPublishedMaterialContext(
+  const places = yield* readPublishedMaterialPlacements(
     locale,
     target,
-    context,
     expectedActiveReleaseId
   );
-  return published ? toMaterialContextQueryString(context) : "";
+  return Arr.some(
+    places,
+    (place) =>
+      place.context.nodeKey === context.nodeKey &&
+      place.context.programKey === context.programKey
+  )
+    ? toMaterialContextQueryString(context)
+    : "";
 });
 
 /** Resolves an Aksara-owned localized route counterpart. */

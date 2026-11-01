@@ -24,6 +24,20 @@ export const TaskPoints = Schema.Int.check(
   Schema.isBetween({ maximum: 1000, minimum: 0 })
 );
 
+/** The category a teacher files a task under, such as Homework: one trimmed line of 1 to 40 characters. */
+export const TaskCategory = Schema.String.check(
+  Schema.isTrimmed(),
+  isSingleLine,
+  Schema.isMinLength(1),
+  Schema.isMaxLength(40)
+);
+
+/** The students a task goes to when it goes to part of its class: 1 to 200 of them. */
+export const TaskTargets = Schema.Array(Id("tenantPeople")).check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(200)
+);
+
 /**
  * What happens to work handed in after the deadline: it is taken and marked
  * late, or the task closes at its deadline and takes no more work.
@@ -40,10 +54,12 @@ export const TaskAddress = Schema.String.check(
  * One task of a class (ADR 0025): its title and its address, what it asks,
  * sealed with the school key and bound to the class and the client key of its
  * creation, its deadline in UTC, its points, its late policy, and how many
- * students have handed work in. The whole class is its target.
+ * students have handed work in. `category` files it among the class's tasks. `targets` names the students it goes to when it
+ * goes to part of the class, and without it the whole class is its target.
  */
 export const taskValidator = Schema.Struct({
   authorId: Id("tenantPeople"),
+  category: Schema.optionalKey(TaskCategory),
   classId: Id("classes"),
   clientKey: ClientKey,
   createdAt: Schema.Finite,
@@ -53,6 +69,7 @@ export const taskValidator = Schema.Struct({
   points: TaskPoints,
   sealedText: Sealed,
   slug: TaskAddress,
+  targets: Schema.optionalKey(TaskTargets),
   tenantId: Id("tenants"),
   title: TaskTitle,
 });
@@ -79,6 +96,7 @@ export const submissionValidator = Schema.Struct({
  * can read and change what they handed in, whether it came late, and its points.
  */
 export const TaskView = Schema.Struct({
+  category: Schema.NullOr(TaskCategory),
   deadline: Schema.Finite,
   handedIn: Schema.Int,
   id: Id("classroomTasks"),
@@ -93,6 +111,7 @@ export const TaskView = Schema.Struct({
   ),
   points: TaskPoints,
   slug: TaskAddress,
+  targets: Schema.NullOr(TaskTargets),
   text: Schema.String,
   title: TaskTitle,
 });

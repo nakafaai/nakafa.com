@@ -1,11 +1,18 @@
 import type { Ref } from "@confect/core";
 import type notifications from "@repo/backend/confect/_generated/refs/notifications";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr } from "effect";
 
 /** One inbox row as the list of the signed-in account shows it. */
 export type ListNotification = Ref.Returns<
   typeof notifications.inbox.list
 >["page"][number];
+
+/** An inbox row that a school holds, not one of the account itself. */
+export type SchoolNotification = Exclude<
+  ListNotification,
+  { readonly changeType: "comment.replied" }
+>;
 
 /**
  * The row with this id, read at the given moment. A row that is read already keeps
@@ -31,11 +38,17 @@ export function markRowRead(
 export function markPageRead(
   page: readonly ListNotification[],
   readAt: number,
-  slug: ListNotification["tenant"]["slug"] | undefined
+  slug: TenantSlug | undefined
 ) {
   return Arr.map(page, (row) =>
-    row.readAt === undefined && (slug === undefined || row.tenant.slug === slug)
+    row.readAt === undefined &&
+    (slug === undefined ||
+      (row.changeType !== "comment.replied" && row.tenant.slug === slug))
       ? { ...row, readAt }
       : row
   );
 }
+
+/** Whether any row of the inbox waits to be read. */
+export const hasUnread = (rows: readonly ListNotification[]) =>
+  Arr.some(rows, (row) => row.readAt === undefined);

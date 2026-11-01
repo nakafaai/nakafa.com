@@ -27,7 +27,7 @@ import {
   storedRows,
 } from "@repo/backend/test/inbox";
 import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const ANA = "ana@harapan.example.test";
 /** Rows per page, half of the 100-row list page of ADR 0016. */
@@ -91,7 +91,7 @@ const pageOf = (
 ) =>
   Effect.gen(function* () {
     const position = yield* decodeFeedCursor(cursor);
-    return yield* fixture.run(feedPage(schools, position, PAGE));
+    return yield* fixture.run(feedPage(schools, Option.none(), position, PAGE));
   });
 
 describe("notifications inbox page size", () => {

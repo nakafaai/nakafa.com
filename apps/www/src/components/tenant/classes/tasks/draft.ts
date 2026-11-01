@@ -1,6 +1,9 @@
+import { Id } from "@repo/backend/confect/_generated/id";
 import {
   LatePolicy,
+  TaskCategory,
   TaskPoints,
+  TaskTargets,
   TaskText,
   TaskTitle,
 } from "@repo/backend/confect/classroom/tasks/task";
@@ -12,34 +15,48 @@ import {
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 
 /**
- * What a task's form holds while the teacher writes it: the title and the text as typed, the deadline as the
+ * What a task's form holds while the teacher writes it: who it goes to, none for the whole class, the title and the text as typed, the deadline as the
  * browser's date and time field holds it, the points as the number field holds them, and the late policy.
  */
 export const TaskDraft = Schema.Struct({
+  category: Schema.String,
   deadline: Schema.String,
   latePolicy: LatePolicy,
   points: Schema.NullOr(Schema.Finite),
+  targets: Schema.NullOr(Schema.Array(Id("tenantPeople"))),
   text: Schema.String,
   title: Schema.String,
 });
 
 /** The form of a new task: nothing written yet, worth 100 points, and late work accepted. */
 export const EMPTY_DRAFT: typeof TaskDraft.Type = {
+  category: "",
   deadline: "",
   latePolicy: "accept",
   points: 100,
+  targets: null,
   text: "",
   title: "",
 };
 
 /** The form of a task as it stands, its deadline in the browser's own time. */
 export const draftOf = (task: ClassTask): typeof TaskDraft.Type => ({
+  category: task.category ?? "",
   deadline: localDeadline(task.deadline),
   latePolicy: task.latePolicy,
   points: task.points,
+  targets: task.targets,
   text: task.text,
   title: task.title,
 });
+
+/** The category a field holds once trimmed: none for an empty field, and a value the server accepts. */
+const categoryOf = (category: string) => {
+  const trimmed = Str.trim(category);
+  return trimmed === ""
+    ? Option.some(null)
+    : Option.liftPredicate(trimmed, Schema.is(TaskCategory));
+};
 
 /**
  * The task a form names once every field holds what the server accepts: the trimmed title and text, the instant of
@@ -48,10 +65,15 @@ export const draftOf = (task: ClassTask): typeof TaskDraft.Type => ({
 export const checkedDraft = (draft: typeof TaskDraft.Type) =>
   Option.map(
     Option.all({
+      category: categoryOf(draft.category),
       deadline: deadlineOf(draft.deadline),
       points: Option.filter(
         Option.fromNullOr(draft.points),
         Schema.is(TaskPoints)
+      ),
+      targets: Option.liftPredicate(
+        draft.targets,
+        (targets) => targets === null || Schema.is(TaskTargets)(targets)
       ),
       text: Option.liftPredicate(Str.trim(draft.text), Schema.is(TaskText)),
       title: Option.liftPredicate(Str.trim(draft.title), Schema.is(TaskTitle)),

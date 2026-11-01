@@ -19,6 +19,7 @@ import { useTranslations } from "use-intl";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsList } from "@/components/notifications/list";
 import { MarkAllRead } from "@/components/notifications/read";
+import { InboxTabs } from "@/components/notifications/tabs";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -32,19 +33,20 @@ import { useAgeClock } from "@/components/user/ages";
 export function SchoolNotifications({ all }: { all: boolean }) {
   const t = useTranslations("Notifications");
   const { slug } = useTenant();
-  const scope = all ? undefined : slug;
+  const scope = all ? {} : { slug };
   const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
 
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {/* Mark all read stands before the filter from the first paint, ready and final. */}
-        <MarkAllRead slug={scope} />
+        <MarkAllRead first={Option.none()} scope={scope} />
         <InboxFilter all={all} />
       </SchoolHeader>
+      <InboxTabs width="page" />
       <LayoutContent className="flex w-full flex-col py-6">
         <NotificationsClockContext value={clock}>
-          <NotificationsList first={Option.none()} slug={scope} />
+          <NotificationsList first={Option.none()} scope={scope} />
         </NotificationsClockContext>
       </LayoutContent>
     </>

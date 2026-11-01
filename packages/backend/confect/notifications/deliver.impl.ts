@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -9,6 +10,10 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { pushSentence } from "@repo/backend/confect/notifications/copy";
 import spec from "@repo/backend/confect/notifications/deliver.spec";
+import {
+  isAccountRow,
+  type SchoolRow,
+} from "@repo/backend/confect/notifications/schema";
 import { SUBSCRIPTION_LIMIT } from "@repo/backend/confect/notifications/subscription";
 import { sendPush } from "@repo/backend/confect/notifications/webpush";
 import { SITE_ORIGIN } from "@repo/seo/origin";
@@ -16,12 +21,45 @@ import { FetchClient } from "@repo/utilities/http/client";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Clock, Config, Effect, Layer, Option } from "effect";
 
+/** The language of a row with no school: an account keeps none, and Nakafa's learners are Indonesian. */
+const ACCOUNT_LOCALE: typeof AppLocaleCodeSchema.Type = "id";
+
+/** The account behind a school row's Person, once the Person has claimed one. */
+const claimedAccount = Effect.fn("notifications.deliver.account")(function* (
+  row: SchoolRow
+) {
+  const person = yield* (yield* DatabaseReader)
+    .table("tenantPeople")
+    .get(row.recipientPersonId)
+    .pipe(Effect.orDie);
+  return person.account.state === "claimed"
+    ? Option.some(person.account.userId)
+    : Option.none();
+});
+
+/** The language of a school row's push: the language its school teaches in, or Indonesian. */
+const schoolLocale = Effect.fn("notifications.deliver.locale")(function* (
+  row: SchoolRow
+) {
+  const unit = yield* (yield* DatabaseReader)
+    .table("tenantUnits")
+    .index("by_tenantId_and_status", (query) =>
+      query.eq("tenantId", row.tenantId).eq("status", "active")
+    )
+    .first()
+    .pipe(Effect.orDie);
+  return Option.match(unit, {
+    onNone: () => ACCOUNT_LOCALE,
+    onSome: (found) => found.contentLanguage,
+  });
+});
+
 /**
  * What the push of one row sends, and to which browsers: none for a row that is
  * gone or read already, whose recipient holds no account, or whose account has
  * no browser subscribed. The payload carries the row's id, a general title and
- * sentence in the language of the row's school unit, and the inbox to open
- * (ADR 0026).
+ * sentence in the language of the row's school unit, or Indonesian for a row of
+ * the account itself, and the inbox to open (ADR 0026).
  */
 const notice = FunctionImpl.make(
   databaseSchema,
@@ -36,33 +74,23 @@ const notice = FunctionImpl.make(
     if (Option.isNone(row) || row.value.readAt !== undefined) {
       return null;
     }
-    const person = yield* reader
-      .table("tenantPeople")
-      .get(row.value.recipientPersonId)
-      .pipe(Effect.orDie);
-    if (person.account.state !== "claimed") {
+    const account = isAccountRow(row.value)
+      ? Option.some(row.value.recipientUserId)
+      : yield* claimedAccount(row.value);
+    if (Option.isNone(account)) {
       return null;
     }
-    const userId = person.account.userId;
     const targets = yield* reader
       .table("pushSubscriptions")
-      .index("by_userId", (query) => query.eq("userId", userId))
+      .index("by_userId", (query) => query.eq("userId", account.value))
       .take(SUBSCRIPTION_LIMIT)
       .pipe(Effect.orDie);
     if (Arr.isReadonlyArrayEmpty(targets)) {
       return null;
     }
-    const unit = yield* reader
-      .table("tenantUnits")
-      .index("by_tenantId_and_status", (query) =>
-        query.eq("tenantId", row.value.tenantId).eq("status", "active")
-      )
-      .first()
-      .pipe(Effect.orDie);
-    const locale = Option.match(unit, {
-      onNone: () => "id" as const,
-      onSome: (found) => found.contentLanguage,
-    });
+    const locale = isAccountRow(row.value)
+      ? ACCOUNT_LOCALE
+      : yield* schoolLocale(row.value);
     return {
       payload: encodeJsonText({
         body: pushSentence(row.value.changeType, locale),

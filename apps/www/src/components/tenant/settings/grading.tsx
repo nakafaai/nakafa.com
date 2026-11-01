@@ -1,10 +1,30 @@
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
-import { Archive02Icon, Target02Icon } from "@hugeicons/core-free-icons";
+import {
+  PaginatedQueryResult,
+  useMutation,
+  usePaginatedQuery,
+} from "@confect/react";
+import {
+  Archive02Icon,
+  Delete02Icon,
+  MoreHorizontalIcon,
+  PencilEdit02Icon,
+  Target02Icon,
+} from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { DEFAULT_GRADING_SCHEME } from "@repo/backend/confect/records/scheme";
+import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
+import { startTransition, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -20,12 +40,19 @@ import {
 } from "@/components/shared/table/toolbar";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
-import { SchemeVersionAdd } from "@/components/tenant/settings/scheme";
+import { saveSchool } from "@/components/tenant/settings/save";
+import {
+  SchemeVersionAdd,
+  SchemeVersionDialog,
+} from "@/components/tenant/settings/scheme";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import {
+  removeSchemeChange,
   type SchemeVersion,
   SchemeVersionsContext,
 } from "@/components/tenant/settings/versions";
+
+const SOURCE = "components/tenant/settings/grading";
 
 /** How many versions one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -205,6 +232,11 @@ function GradingTable({
         id: "status",
       }
     ),
+    versionColumns.display({
+      cell: (info) => <SchemeVersionMenu version={info.row.original} />,
+      id: "actions",
+      meta: { align: "menu" },
+    }),
   ]);
 
   return (
@@ -217,6 +249,86 @@ function GradingTable({
         search="bands"
       />
       {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
+    </>
+  );
+}
+
+/**
+ * A version's menu, for whoever manages the scheme: Edit and Delete, while the version has judged no
+ * grade. A version that has judged one stays as it is, because each grade keeps the version that
+ * judged it, so it has no menu. Delete asks first, and the version leaves the list at once.
+ */
+function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
+  const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
+  const { reach, slug } = useTenant();
+  const remove = useMutation(records.schemes.remove).withOptimisticUpdate(
+    removeSchemeChange
+  );
+  const [editing, setEditing] = useState(0);
+  const [isRemoving, setIsRemoving] = useState(false);
+
+  if (version.used || !Arr.contains(reach, "scheme.manage")) {
+    return null;
+  }
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem onClick={() => setEditing((count) => count + 1)}>
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("grading-edit")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setIsRemoving(true)}
+            variant="destructive"
+          >
+            <HugeIcons icon={Delete02Icon} />
+            {t("grading-remove")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {editing === 0 ? null : (
+        <SchemeVersionDialog editing={Option.some(version)} key={editing} />
+      )}
+      <ResponsiveDialog
+        description={t("grading-remove-description")}
+        footer={
+          <>
+            <Button onClick={() => setIsRemoving(false)} variant="outline">
+              {common("cancel")}
+            </Button>
+            <Button
+              onClick={() => {
+                setIsRemoving(false);
+                startTransition(() =>
+                  saveSchool(
+                    () => remove({ schemeId: version.id, slug }),
+                    SOURCE
+                  )
+                );
+              }}
+              variant="destructive"
+            >
+              {t("grading-remove")}
+            </Button>
+          </>
+        }
+        open={isRemoving}
+        setOpen={setIsRemoving}
+        title={t("grading-remove-title")}
+      />
     </>
   );
 }

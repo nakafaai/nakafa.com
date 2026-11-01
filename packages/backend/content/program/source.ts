@@ -43,6 +43,12 @@ export class ProgramSource extends Context.Service<
       publicPath: string | undefined,
       limit: number
     ) => Effect.Effect<readonly RouteRow[], ReleaseError>;
+    readonly mappings: (
+      snapshotId: string,
+      appLocale: AppLocale,
+      materialKey: string,
+      limit: number
+    ) => Effect.Effect<readonly RouteRow[], ReleaseError>;
     readonly page: (
       snapshotId: string,
       appLocale: AppLocale,

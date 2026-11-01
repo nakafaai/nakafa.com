@@ -55,12 +55,13 @@ export const gradingSchemeValidator = Schema.Struct({
   tenantId: Id("tenants"),
 });
 
-/** One stored version as the wire shows it, with its bands in order. */
+/** One stored version as the wire shows it, with its bands in order, and whether it has judged a grade. */
 export const SchemeView = Schema.Struct({
   bands: Schema.Array(Band),
   effectiveFrom: Schema.Finite,
   id: Id("gradingSchemes"),
   kktp: GradeValue,
+  used: Schema.Boolean,
 });
 
 /** The bands in ascending order of their minimum, the order a school reads them in. */
