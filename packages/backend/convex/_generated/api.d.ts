@@ -3901,6 +3901,16 @@ export declare const api: {
     };
     runtime: {
       active: {
+        dates: FunctionReference<
+          "query",
+          "public",
+          {},
+          {
+            assessment: string | null;
+            program: string | null;
+            quran: string | null;
+          }
+        >;
         read: FunctionReference<
           "query",
           "public",
