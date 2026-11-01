@@ -11,15 +11,20 @@ import {
   seedSignal,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const { integrity } = refs.public.exams.results.results;
+
+/** The exits and the time away that a submission stores. */
+const StoredIntegrity = Schema.NullOr(
+  Schema.Struct({ awaySeconds: Schema.Finite, exits: Schema.Finite })
+);
 
 /** A finished attempt, with the exits and the time away its submission stored. */
 const finishedAttempt = Effect.fn("test.integrity.finished")(function* (
   fixture: SittingFixture,
   sittingId: GenericId.GenericId<"examSittings">,
-  stored: { readonly awaySeconds: number; readonly exits: number } | null
+  stored: typeof StoredIntegrity.Type
 ) {
   const attempt = yield* seedAttempt(fixture, {
     deadline: CLOSES_AT,
@@ -92,7 +97,7 @@ describe("exams/results integrity", () => {
           .query(integrity, { sittingId: room.id, slug: nf });
 
         expect(report.students).toBe(6);
-        expect(report.rows.map((row) => row.attemptId)).toEqual([
+        expect(Arr.map(report.rows, (row) => row.attemptId)).toEqual([
           longest,
           often,
           briefly,
