@@ -2,7 +2,6 @@ import { reportUncaughtRequestError } from "@repo/analytics/server-reporting";
 import {
   createServerEntry,
   createStartHandler,
-  defaultStreamHandler,
   handleStartError,
 } from "@tanstack/react-start/server";
 import { Effect, Option } from "effect";
@@ -10,21 +9,19 @@ import { answerStaleFunction } from "@/lib/chunks/stale.server";
 import { answerRequest } from "@/lib/routing/answer.server";
 import { logRouteFailures } from "@/lib/routing/failures.server";
 import "@/lib/server/runtime";
-import { isPrerender, PRERENDER_HEADER } from "@/lib/static/calls";
 import { attachStaticCalls } from "@/lib/static/record.server";
-import { renderStaticPage } from "@/lib/static/render.server";
+import { renderWholePage } from "@/lib/static/render.server";
 import { withPageHeaders } from "@/lib/tenant/gate";
 
 /**
  * Renders the route tree after the router loads it. The router answers a failed
  * route with its own error page, so the log of each failed route is written here.
- * The build's prerender gets each page whole; a visitor gets it as it streams.
+ * Every page goes out whole, the build's prerender and a visitor's alike: a stream
+ * paints whatever has arrived, so a footer or a header fills in after the first frame.
  */
 const startHandler = createStartHandler((context) => {
   Effect.runSync(logRouteFailures(context.router.stores.matches.get()));
-  return isPrerender(context.request.headers.get(PRERENDER_HEADER))
-    ? renderStaticPage(context)
-    : defaultStreamHandler(context);
+  return renderWholePage(context);
 });
 
 /**
