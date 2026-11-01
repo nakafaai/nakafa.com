@@ -8,7 +8,7 @@ import { Option } from "effect";
 import { Unauthenticated } from "@/components/auth/gate";
 import { useLiveSession } from "@/components/providers/live";
 import { RouteConvexProvider } from "@/components/providers/route";
-import { getPostAuthSignInTarget } from "@/lib/auth/admission";
+import { resolvePostAuthIntent } from "@/lib/auth/admission";
 import { isSignedIn } from "@/lib/auth/gate";
 
 /**
@@ -22,9 +22,14 @@ export const Route = createFileRoute("/$locale/_main/_app/_account")({
   ssr: false,
   beforeLoad: async ({ location, params }) => {
     if (!(await isSignedIn())) {
+      const resolution = resolvePostAuthIntent(location.href, params.locale);
       throw redirect({
-        ...getPostAuthSignInTarget(location.href, params.locale),
+        params: { locale: params.locale },
         statusCode: 307,
+        to: "/$locale/auth",
+        ...(resolution.kind === "none"
+          ? {}
+          : { search: { redirect: resolution.intent } }),
       });
     }
   },
