@@ -26,10 +26,7 @@ beforeEach(() => {
   vi.setSystemTime(CARD_NOW);
 });
 
-/**
- * An unclaimed Person of the fixture's school who holds the Owner role, so that
- * no card may be printed for it.
- */
+/** An unclaimed Owner of the fixture's school, for whom no card may be printed. */
 const unclaimedOwner = (fixture: Effect.Success<typeof tenancyFixture>) =>
   fixture.run(
     Effect.gen(function* () {
@@ -450,12 +447,11 @@ describe("identity/cards print", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       yield* issueFirst(fixture);
-      yield* fixture
+      const printed = fixture
         .as("admin")
         .mutation(print, { personId: fixture.invited, slug: nf });
-      yield* fixture
-        .as("admin")
-        .mutation(print, { personId: fixture.invited, slug: nf });
+      yield* printed;
+      yield* printed;
       const entries = yield* fixture.run(journal);
       expect(Arr.map(entries, (entry) => entry.change.type)).toEqual([
         "card.issued",
