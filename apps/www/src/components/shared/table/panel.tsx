@@ -44,16 +44,16 @@ const sortNames = {
 export function ColumnHead({
   children,
   place,
-  sorted = "none",
+  sorted,
 }: {
   children?: ReactNode;
   place: VariantProps<typeof columnAlign>["align"];
   /** How the column sorts the rows, for a head that sorts them. */
-  sorted?: keyof typeof sortNames;
+  sorted?: keyof typeof sortNames | undefined;
 }) {
   return (
     <TableHead
-      aria-sort={sortNames[sorted]}
+      aria-sort={sorted === undefined ? undefined : sortNames[sorted]}
       className={columnAlign({ align: place })}
       scope="col"
     >

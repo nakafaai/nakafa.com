@@ -188,7 +188,10 @@ function DataTableHead<TData extends RowData>({
     return <ColumnHead place={place} />;
   }
   return (
-    <ColumnHead place={place} sorted={column.getIsSorted() || "none"}>
+    <ColumnHead
+      place={place}
+      sorted={column.getCanSort() ? column.getIsSorted() || "none" : undefined}
+    >
       <HeadAlignContext value={headPlace[place]}>
         <HeadControl filter={filter} header={header} title={title}>
           {children}

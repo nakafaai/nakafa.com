@@ -26,11 +26,11 @@ export interface ColumnOption {
  * number of them or, for a list the server filters by one value, a single one (`ColumnChoice`).
  */
 export type HeadFilter =
-  | { readonly kind: "days" | "number" | "text" }
-  | {
-      readonly kind: "choice" | "values";
-      readonly options: readonly ColumnOption[];
-    };
+  | { readonly kind: "days" }
+  | { readonly kind: "number" }
+  | { readonly kind: "text" }
+  | { readonly kind: "choice"; readonly options: readonly ColumnOption[] }
+  | { readonly kind: "values"; readonly options: readonly ColumnOption[] };
 
 /** What every column of data declares: its ID, its name in the head, how its cell draws, and where it stands. */
 interface ColumnSpec<TData extends RowData, TValue extends CellData> {
