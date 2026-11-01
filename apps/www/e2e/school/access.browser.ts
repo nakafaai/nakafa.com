@@ -60,3 +60,43 @@ for (const width of [390, 1440]) {
     await learnerContext.close();
   });
 }
+
+test("a role that may change nobody reads the members table with no empty menu column", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const viewport = { height: 844, width: 390 };
+
+  const learnerContext = await browser.newContext({ viewport });
+  await Effect.runPromise(
+    inviteLearner({
+      address: `reader-${school.slug}@acceptance.example.test`,
+      baseURL: address("/"),
+      context: learnerContext,
+      slug: school.slug,
+    })
+  );
+  const ownerContext = await browser.newContext({ viewport });
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const owner = await ownerContext.newPage();
+  await owner.goto(address("/settings/roles"));
+  await giveRole(owner, { person: ADMIN_GRANT.person, role: "Principal" });
+
+  const reader = await learnerContext.newPage();
+  await reader.goto(address("/settings/members"));
+  const table = reader.getByRole("main").getByRole("table");
+  await expect(
+    table.getByRole("row").filter({ hasText: ADMIN_GRANT.person }).first()
+  ).toBeVisible();
+  // The last column a reader sees has a heading, so no menu's empty frame stands on the edge.
+  await expect(table.getByRole("columnheader").last()).not.toHaveText("");
+  await expect(table.getByRole("button", { name: "More actions" })).toHaveCount(
+    0
+  );
+
+  await ownerContext.close();
+  await learnerContext.close();
+});
