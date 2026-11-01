@@ -48,6 +48,12 @@ describe("task drafts", () => {
     );
   });
 
+  it("reads a task without a category as an empty field, which saves no category", () => {
+    const plain = draftOf({ ...task, category: null });
+    expect(plain.category).toBe("");
+    expect(checkedDraft(plain)).toMatchObject(Option.some({ category: null }));
+  });
+
   it("trims the title and the text, and names no task while a field holds what the server refuses", () => {
     expect(
       checkedDraft({ ...draftOf(task), text: "  Soal 2.  ", title: " Baru " })

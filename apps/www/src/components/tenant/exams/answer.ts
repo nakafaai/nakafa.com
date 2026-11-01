@@ -134,27 +134,30 @@ const keyMarking = (
 
 /**
  * The key once one option is marked alone in its choice: the choice's answer takes the option, and the answer of
- * any other choice stays, so a question of two choices takes its marks one at a time.
+ * any other choice stays, so a question of two choices takes its marks one at a time. A save reads the question as
+ * it stands, so an option that an earlier save removed belongs to no choice, and the key stays as it is.
  */
 export const markedKey = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
-  key: readonly InteractionKey[] | null,
+  key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
   optionId: string
-): Arr.NonEmptyArray<InteractionKey> => {
-  const { id } = Option.getOrElse(
+): Arr.NonEmptyReadonlyArray<InteractionKey> | null =>
+  Option.match(
     Arr.findFirst(
       answers,
       (answer) =>
         isChoice(answer) &&
         Arr.some(answer.options, (option) => option.id === optionId)
     ),
-    () => Arr.headNonEmpty(answers)
+    {
+      onNone: () => key,
+      onSome: ({ id }) =>
+        Arr.append(
+          Arr.filter(key ?? [], (keyed) => keyed.interaction !== id),
+          { correct: [optionId], interaction: id, kind: "choice" }
+        ),
+    }
   );
-  return Arr.append(
-    Arr.filter(key ?? [], (keyed) => keyed.interaction !== id),
-    { correct: [optionId], interaction: id, kind: "choice" }
-  );
-};
 
 /** The options that a key marks correct in every choice, or none while the key is absent or marks no choice. */
 export const markedOptions = (

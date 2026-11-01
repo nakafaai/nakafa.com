@@ -3,6 +3,7 @@ import { DateTime } from "effect";
 import {
   type Cell,
   readDapodikSheet,
+  sourcedOf,
   studentsOf,
 } from "@/components/tenant/roster/dapodik";
 
@@ -257,5 +258,20 @@ describe("readDapodikSheet", () => {
       outcome: "read",
       rows: [{ line: 2, outcome: "problem", problem: "nisn" }],
     });
+  });
+});
+
+describe("sourcedOf", () => {
+  it("keeps the students of a read OneRoster file, without the rows that have a problem", () => {
+    expect(
+      sourcedOf([
+        {
+          line: 2,
+          outcome: "sourced",
+          row: { name: "Raka Pratama", sourcedId: "u1" },
+        },
+        { line: 3, outcome: "problem", problem: "name" },
+      ])
+    ).toEqual([{ name: "Raka Pratama", sourcedId: "u1" }]);
   });
 });
