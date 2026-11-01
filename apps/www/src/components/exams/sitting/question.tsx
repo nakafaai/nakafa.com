@@ -10,7 +10,7 @@ import {
 } from "@repo/backend/confect/assessment/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Option, Record as Rec, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { memo, type ReactNode, useMemo } from "react";
 import {
   keepResponse,
@@ -32,6 +32,8 @@ import type {
   PaperValue,
 } from "@/components/exams/sitting/paper";
 import {
+  addressesOf,
+  partLabels,
   pictureIdsOfDocuments,
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
@@ -149,39 +151,20 @@ export const SittingQuestion = memo(function SittingQuestion({
     [promptText]
   );
   // The images of the prompt and of the options, resolved in one read by this student's device.
-  const pictureIds = useMemo(() => {
-    const labels = Arr.appendAll(
-      Arr.flatMap(question.interactions, (interaction) =>
-        interaction.kind === "choice"
-          ? Arr.map(interaction.options, (option) => option.label)
-          : []
+  const pictureIds = useMemo(
+    () =>
+      pictureIdsOfDocuments(
+        Arr.filter(
+          [
+            promptDocument,
+            readingDocument,
+            ...partLabels(question.interactions),
+          ],
+          (document) => document !== null
+        )
       ),
-      Arr.appendAll(
-        Option.match(pairing, {
-          onNone: () => [],
-          onSome: (found) =>
-            Arr.map(
-              Arr.appendAll(found.sources, found.targets),
-              (part) => part.label
-            ),
-        }),
-        Option.match(table, {
-          onNone: () => [],
-          onSome: (found) =>
-            Arr.map(
-              Arr.appendAll(found.statements, found.columns),
-              (part) => part.label
-            ),
-        })
-      )
-    );
-    return pictureIdsOfDocuments(
-      Arr.filter(
-        [promptDocument, readingDocument, ...labels],
-        (document) => document !== null
-      )
-    );
-  }, [question.interactions, pairing, promptDocument, readingDocument, table]);
+    [question.interactions, promptDocument, readingDocument]
+  );
   const pictures = useQuery(
     exams.sittings.images,
     pictureIds.length === 0
@@ -189,12 +172,7 @@ export const SittingQuestion = memo(function SittingQuestion({
       : { assets: pictureIds, deviceId, sittingId, slug }
   );
   const addresses = useMemo(
-    () =>
-      QueryResult.isSuccess(pictures)
-        ? Rec.fromEntries(
-            Arr.map(pictures.value, (asset) => [asset.id, asset.url] as const)
-          )
-        : {},
+    () => (QueryResult.isSuccess(pictures) ? addressesOf(pictures.value) : {}),
     [pictures]
   );
 

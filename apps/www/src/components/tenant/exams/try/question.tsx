@@ -15,6 +15,7 @@ import { SittingChoice } from "@/components/exams/sitting/choice";
 import { ReaderPrimer } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
+import { partLabels } from "@/components/exams/sitting/pictures";
 import { SittingReason } from "@/components/exams/sitting/reason";
 import {
   choiceOf,
@@ -40,6 +41,7 @@ import {
 import { TryPaperMedia } from "@/components/tenant/exams/media";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
+import { TryPictures } from "@/components/tenant/exams/try/pictures";
 import { useLastValue } from "@/lib/data/kept";
 
 /** The session name the try reads prompts under. It never writes, so the server records nothing. */
@@ -130,47 +132,49 @@ export function ExamTryQuestion({
           <ExamTryPrompt documentId={question.prompt} />
         </div>
       </PlayerQuestionPrompt>
-      <PlayerQuestionAnswer>
-        {Option.isSome(choice) ? (
-          <SittingChoice
-            choice={choice.value}
-            labelledBy={ids.title}
-            onChoose={(next) => choose(question.id, next)}
-            response={chosenOptions(response ?? NO_RESPONSE)}
-          />
-        ) : null}
-        {Option.isSome(reasons) ? (
-          <SittingReason
-            answer={reasons.value[0]}
-            onChoose={(next) => choose(question.id, next)}
-            reason={reasons.value[1]}
-            response={chosenOptions(response ?? NO_RESPONSE)}
-          />
-        ) : null}
-        {Option.isSome(entry) ? (
-          <SittingField
-            entry={entry.value}
-            labelledBy={ids.title}
-            onType={(text) => choose(question.id, { text })}
-            text={typedText(response ?? NO_RESPONSE)}
-          />
-        ) : null}
-        {Option.isSome(pairing) ? (
-          <SittingPairs
-            labelledBy={ids.title}
-            match={pairing.value}
-            onPair={(pairs) => choose(question.id, { pairs })}
-            pairs={madePairs(response ?? NO_RESPONSE)}
-          />
-        ) : null}
-        {Option.isSome(table) ? (
-          <SittingTable
-            cells={markedCells(response ?? NO_RESPONSE)}
-            onMark={(cells) => choose(question.id, { cells })}
-            table={table.value}
-          />
-        ) : null}
-      </PlayerQuestionAnswer>
+      <TryPictures documents={partLabels(answers)}>
+        <PlayerQuestionAnswer>
+          {Option.isSome(choice) ? (
+            <SittingChoice
+              choice={choice.value}
+              labelledBy={ids.title}
+              onChoose={(next) => choose(question.id, next)}
+              response={chosenOptions(response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(reasons) ? (
+            <SittingReason
+              answer={reasons.value[0]}
+              onChoose={(next) => choose(question.id, next)}
+              reason={reasons.value[1]}
+              response={chosenOptions(response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(entry) ? (
+            <SittingField
+              entry={entry.value}
+              labelledBy={ids.title}
+              onType={(text) => choose(question.id, { text })}
+              text={typedText(response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(pairing) ? (
+            <SittingPairs
+              labelledBy={ids.title}
+              match={pairing.value}
+              onPair={(pairs) => choose(question.id, { pairs })}
+              pairs={madePairs(response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(table) ? (
+            <SittingTable
+              cells={markedCells(response ?? NO_RESPONSE)}
+              onMark={(cells) => choose(question.id, { cells })}
+              table={table.value}
+            />
+          ) : null}
+        </PlayerQuestionAnswer>
+      </TryPictures>
     </PlayerQuestion>
   );
 }

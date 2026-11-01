@@ -12,7 +12,7 @@ import { HeldPaper } from "@/components/player/held";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { useQuestionReorder } from "@/components/tenant/exams/drag";
 import { pageAt } from "@/components/tenant/exams/pages";
-import { ExamPage } from "@/components/tenant/exams/paper";
+import { ExamPage, ExamPageStand } from "@/components/tenant/exams/paper";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   useEditorView,
@@ -21,6 +21,7 @@ import {
   useExamSelectionStore,
   useExamZoom,
 } from "@/components/tenant/exams/provider";
+import { ExamReadBoundary } from "@/components/tenant/exams/read";
 import { drawnZoom, ZOOM_DEFAULT } from "@/components/tenant/exams/zoom";
 
 /**
@@ -238,12 +239,12 @@ export function ExamCanvas({
           style={{ zoom: drawnPercent / 100 }}
         >
           {Arr.map(exam.questions, (question, index) => (
-            <ExamPage
-              canvas={canvas}
-              index={index}
+            <ExamReadBoundary
               key={question.id}
-              question={question}
-            />
+              stand={<ExamPageStand question={question} />}
+            >
+              <ExamPage canvas={canvas} index={index} question={question} />
+            </ExamReadBoundary>
           ))}
           {frozen ? null : (
             <Button

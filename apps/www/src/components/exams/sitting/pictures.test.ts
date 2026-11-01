@@ -1,5 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
-import { pictureIdsOfDocuments } from "@/components/exams/sitting/pictures";
+import {
+  matchAnswers,
+  newChoiceAnswers,
+  shortAnswers,
+  tableAnswers,
+} from "@repo/backend/confect/exams/blank";
+import { Array as Arr } from "effect";
+import {
+  addressesOf,
+  partLabels,
+  pictureIdsOfDocuments,
+} from "@/components/exams/sitting/pictures";
 
 /** A document of the assessment editor that holds one image, which names its asset. */
 const withPicture = (asset: string) => ({
@@ -24,5 +35,25 @@ describe("pictureIdsOfDocuments", () => {
     expect(
       pictureIdsOfDocuments([{ content: [{ type: "paragraph" }], type: "doc" }])
     ).toEqual([]);
+  });
+});
+
+describe("addressesOf", () => {
+  it("names each address by its image", () => {
+    expect(
+      addressesOf([{ id: "first", url: "https://nakafa.test/a" }])
+    ).toEqual({ first: "https://nakafa.test/a" });
+  });
+});
+
+describe("partLabels", () => {
+  it("reads the labels of options, of a match's two sides and of a table's rows and columns", () => {
+    expect(partLabels(newChoiceAnswers())).toHaveLength(4);
+    expect(partLabels(matchAnswers())).toHaveLength(6);
+    expect(partLabels(tableAnswers(["Benar", "Salah"]))).toHaveLength(5);
+  });
+
+  it("reads nothing from an answer without labels", () => {
+    expect(Arr.isReadonlyArrayEmpty(partLabels(shortAnswers()))).toBe(true);
   });
 });

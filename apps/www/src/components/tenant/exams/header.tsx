@@ -21,6 +21,7 @@ import { ExamMenu, ExamMenuFrame } from "@/components/tenant/exams/menu";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { ExamPresence } from "@/components/tenant/exams/presence";
 import { useExam } from "@/components/tenant/exams/provider";
+import { ExamReadBoundary } from "@/components/tenant/exams/read";
 import {
   ScheduleExam,
   ScheduleExamFrame,
@@ -82,7 +83,9 @@ export function ExamHeader() {
         value={draft ?? exam.title}
       />
       <ExamOffline />
-      <ExamPresence />
+      <ExamReadBoundary>
+        <ExamPresence />
+      </ExamReadBoundary>
       <ExamMenu />
       {exam.archived || gone ? null : <ScheduleExam />}
     </ExamHeaderRow>

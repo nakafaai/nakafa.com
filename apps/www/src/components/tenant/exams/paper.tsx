@@ -283,6 +283,15 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
   );
 }
 
+/** A page whose read failed, in the shape it had, for the moment until it reads again. */
+export function ExamPageStand({ question }: { readonly question: Question }) {
+  return (
+    <QuestionPaper>
+      <PaperSketch question={question} withControls />
+    </QuestionPaper>
+  );
+}
+
 /**
  * The paper of a page with its editors: the prompt as an editor, then each option with its controls,
  * then the action that adds an option. The action shows on the chosen page alone, as a design tool

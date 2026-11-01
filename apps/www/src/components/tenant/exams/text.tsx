@@ -24,8 +24,9 @@ import { isLocked } from "@/components/tenant/exams/freeze";
 import { refusePaste } from "@/components/tenant/exams/picture";
 import { usePageDocument } from "@/components/tenant/exams/preview";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
+import { ExamReadBoundary } from "@/components/tenant/exams/read";
 import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
-import { ExamSteps, ExamStepsBoundary } from "@/components/tenant/exams/steps";
+import { ExamSteps } from "@/components/tenant/exams/steps";
 import {
   createPromptSync,
   type PromptSync,
@@ -324,7 +325,7 @@ export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
       stored={stored}
     >
       {children}
-      <ExamStepsBoundary>
+      <ExamReadBoundary>
         <ExamSteps
           documentId={documentId}
           onSteps={() =>
@@ -335,7 +336,7 @@ export function ExamText({ children, documentId, onOpen }: ExamTextProps) {
           }
           sync={sync}
         />
-      </ExamStepsBoundary>
+      </ExamReadBoundary>
     </ExamDocumentWiringProvider>
   );
 }
