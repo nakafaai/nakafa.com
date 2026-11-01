@@ -699,3 +699,14 @@ A client enters a student's draft grade through `POST /grades` on REST and
 integration role holds. It writes through the teacher's own path (`draftGrade`), so a
 teacher still reads and releases the grade, a released grade stays as it is, and the
 same value twice leaves one draft, which is why this write needs no idempotency key.
+
+## Amendment: A Person Signs Their Agent In, 1 November 2026
+
+The API and MCP exist so a person signs in with their own account and their agent does what the app does for them. A client credential cannot be that: it holds the Integration role, an Admin makes it, and no person's permissions decide its calls. The School UI runs on 462 public functions, and a client reaches ten of those actions.
+
+A person's agent signs in over OAuth, which is what an MCP client speaks. The server's 401 names its resource metadata (RFC 9728), that names the main site as the authorization server (RFC 8414), and Better Auth's `mcp` plugin serves registration (RFC 7591), the code flow with PKCE, and refresh tokens. A school host signs in on the main site, whose cookie it shares.
+
+- Every authorization asks the person. The plugin issues a code without asking unless the request says `prompt=consent`, and a client that registers itself is untrusted, so `auth/grant` sets it. The consent page shows the name and the address the agent gave, because both are unverified.
+- The access token is a Convex token of the person, with a session of its own. This replaces two rules above for this one caller: "A token issued for the school API is never accepted as a Convex session" and the CLI row's limit to the actions it needs. The agent is one more signed-in device of its person, so it holds the person's full power, and the consent says so. A refresh token renews it, ending its session ends it for writes at once and for reads within the token's 15 minutes.
+- Three tools reach every public function: list, describe, call. A call goes through Convex's HTTP API with the person's own token, which serves public functions alone and decides for its caller, so no surface keeps a list of what an agent may do and a new function needs no new tool. A tool per function would put 462 tools into every client's context.
+- A client credential stays what it is, for a system that acts as itself.

@@ -4,6 +4,7 @@ import {
 } from "@confect/server";
 import { isActionCtx } from "@convex-dev/better-auth/utils";
 import { authComponent } from "@repo/backend/confect/auth/client";
+import { agentGrants } from "@repo/backend/confect/auth/grant";
 import { guardianCodeSignIn } from "@repo/backend/confect/auth/guardian";
 import { schoolUsernameSignIn } from "@repo/backend/confect/auth/login";
 import { authDiscoveryRoutes } from "@repo/backend/confect/auth/route";
@@ -48,7 +49,7 @@ authComponent.registerRoutesLazy(http, (ctx) =>
     createAuth(
       ctx,
       isActionCtx(ctx)
-        ? [schoolUsernameSignIn(ctx), guardianCodeSignIn(ctx)]
+        ? [schoolUsernameSignIn(ctx), guardianCodeSignIn(ctx), agentGrants(ctx)]
         : []
     ).pipe(Effect.provide(ConvexConfigProvider.layer))
   )

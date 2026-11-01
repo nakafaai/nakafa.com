@@ -2444,6 +2444,18 @@
     "contribute": "Mitwirken"
   },
   "Auth": {
+    "agents": "Agenten",
+    "agents-description": "Agenten, die du erlaubt hast, können dein Konto nutzen.",
+    "agents-empty": "Noch kein Agent hat Zugriff.",
+    "agents-footer": "Das Entziehen beendet den Zugriff des Agenten.",
+    "agents-revoke": "Entziehen",
+    "agent-address": "Danach kommst du zurück zu {host}.",
+    "agent-allow": "Erlauben",
+    "agent-deny": "Ablehnen",
+    "agent-description": "Dieser Agent kann alles lesen und ändern, was du in Nakafa tun kannst. Erlaube nur einen Agenten, dem du vertraust.",
+    "agent-failed": "Deine Antwort wurde nicht gespeichert. Versuch es noch einmal.",
+    "agent-title": "{name} dein Konto nutzen lassen?",
+    "agent-unnamed": "Dieser Agent",
     "back-to-nakafa": "Zurück zu Nakafa",
     "continue-with-google": "Mit Google fortfahren",
     "sign-in-title": "Bei Nakafa anmelden",
