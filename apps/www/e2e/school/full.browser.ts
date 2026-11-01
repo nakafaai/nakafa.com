@@ -12,6 +12,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** A guardian the seed names far past the first page of every list. */
 const FAR_PERSON = "Galih Handayani";
 
+/** The address of the Parents page, which Escape leaves alone while a row is open. */
+const PARENTS_PATH = /\/settings\/guardians$/u;
+
 /** How long the seed may take, and a list may take to read a whole school. */
 const FULL_MILLISECONDS = 600_000;
 const EVERY_ROW_MILLISECONDS = 120_000;
@@ -69,6 +72,6 @@ test("a full school's lists answer a search, a filter, a sort and Escape", async
   await expect(page.locator("[data-pane-row]")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.locator("[data-pane-row]")).toHaveCount(0);
-  await expect(page).toHaveURL(/\/settings\/guardians$/u);
+  await expect(page).toHaveURL(PARENTS_PATH);
   await context.close();
 });
