@@ -367,7 +367,11 @@ function SchoolStudentDialog({
                       unitId,
                     }),
                   SOURCE,
-                  (card) => onAdded({ ...card, name: studentName })
+                  (card) => {
+                    setName("");
+                    setLoginName("");
+                    onAdded({ ...card, name: studentName });
+                  }
                 )
               );
             }}

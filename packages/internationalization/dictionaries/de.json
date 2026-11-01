@@ -1358,7 +1358,7 @@
     "no-unit-description": "Stelle zuerst eine Einheit wieder her oder lege eine an, denn Perioden und Kohorten gehören zu ihr.",
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
-    "student-login-rule": "Nutze 3 bis 32 Zeichen, a bis z, 0 bis 9, Punkt, Unterstrich oder Bindestrich.",
+    "student-login-rule": "3 bis 32 Buchstaben, Ziffern oder Striche.",
     "policy-domains-invalid": "Prüfe {domains}, und schreibe jede Domain in eine eigene Zeile.",
     "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile.",
     "device-title": "Gerät verbinden",
@@ -1885,7 +1885,7 @@
     "entry-parent": "Gib die Adresse der Schule deines Kindes ein.",
     "entry-field": "Schuladresse",
     "entry-hint": "Sie steht im Link der Schule, zum Beispiel harapan.nakafa.com.",
-    "entry-invalid": "Gib eine Schuladresse wie harapan.nakafa.com ein.",
+    "entry-invalid": "Zum Beispiel harapan.nakafa.com.",
     "entry-submit": "Weiter",
     "entry-open": "Schule eröffnen"
   },

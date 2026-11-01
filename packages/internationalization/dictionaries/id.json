@@ -1358,7 +1358,7 @@
     "no-unit-description": "Pulihkan atau tambahkan unit dulu, karena periode dan kelompok berada di dalam unit.",
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
-    "student-login-rule": "Pakai 3 sampai 32 karakter, a sampai z, 0 sampai 9, titik, garis bawah atau strip.",
+    "student-login-rule": "3 sampai 32 huruf, angka, titik atau strip.",
     "policy-domains-invalid": "Periksa {domains}, lalu tulis tiap domain di barisnya sendiri.",
     "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri.",
     "device-title": "Hubungkan perangkat",
@@ -1885,7 +1885,7 @@
     "entry-parent": "Tulis alamat sekolah anakmu untuk masuk.",
     "entry-field": "Alamat sekolah",
     "entry-hint": "Alamatnya ada di tautan dari sekolah, seperti harapan.nakafa.com.",
-    "entry-invalid": "Tulis alamat sekolah seperti harapan.nakafa.com.",
+    "entry-invalid": "Misalnya harapan.nakafa.com.",
     "entry-submit": "Masuk",
     "entry-open": "Buka sekolah"
   },
