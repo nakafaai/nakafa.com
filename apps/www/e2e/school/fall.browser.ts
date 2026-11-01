@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashSet,
+  Option,
+  Schema,
+} from "effect";
 import { CONVEX_SOCKET, decodeSent } from "@/e2e/support/frames";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -19,16 +25,24 @@ const decodeFrame = Schema.decodeOption(
   Schema.fromJsonString(Schema.Record(Schema.String, Schema.Json))
 );
 
+/** The text of a frame the page reads in place of the server's. */
+const encodeFrame = Schema.encodeUnknownSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
+
 /** What one change of a frame says, with every field it holds. */
 const Changes = Schema.Array(Schema.Record(Schema.String, Schema.Json));
 
 /** The same frame, with the change that answers one of `reads` turned into the failure a timed out read gets. */
-const failing = (frame: Schema.Json, reads: ReadonlySet<number>) =>
+const failing = (
+  frame: Schema.Json,
+  reads: MutableHashSet.MutableHashSet<number>
+) =>
   Option.map(Schema.decodeUnknownOption(Changes)(frame), (changes) => {
     const reading = (change: (typeof changes)[number]) =>
       change.type === "QueryUpdated" &&
       typeof change.queryId === "number" &&
-      reads.has(change.queryId);
+      MutableHashSet.has(reads, change.queryId);
     return {
       changes: Arr.map(changes, (change) =>
         reading(change)
@@ -56,7 +70,7 @@ test("a read of the exam that fails takes nothing off a teacher's screen", async
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
   const page = await context.newPage();
-  const reads = new Set<number>();
+  const reads = MutableHashSet.empty<number>();
   const armed = { failed: 0, now: false };
   await page.routeWebSocket(CONVEX_SOCKET, (socket) => {
     const server = socket.connectToServer();
@@ -65,7 +79,7 @@ test("a read of the exam that fails takes nothing off a teacher's screen", async
       if (Option.isSome(frame) && frame.value.type === "ModifyQuerySet") {
         for (const change of frame.value.modifications) {
           if (change.udfPath?.includes(EXAM_READ)) {
-            reads.add(change.queryId);
+            MutableHashSet.add(reads, change.queryId);
           }
         }
       }
@@ -88,7 +102,7 @@ test("a read of the exam that fails takes nothing off a teacher's screen", async
       armed.now = false;
       armed.failed += 1;
       socket.send(
-        JSON.stringify({
+        encodeFrame({
           ...frame.value,
           modifications: changed.value.changes,
         })
