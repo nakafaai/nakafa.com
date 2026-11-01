@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import type { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import {
   readTryoutCountryHandler,
@@ -14,7 +14,6 @@ const catalog = vi.hoisted(() => ({
   getAksaraTreeUrl: vi.fn(),
   getAppSocialArtwork: vi.fn(),
   getOgUrl: vi.fn(),
-  readRequestToken: vi.fn(),
   readServerTranslator: vi.fn(),
   readTryoutCountryPage: vi.fn(),
   readTryoutExamPage: vi.fn(),
@@ -22,13 +21,8 @@ const catalog = vi.hoisted(() => ({
   readTryoutMetadata: vi.fn(),
   readTryoutSetList: vi.fn(),
   readTryoutTrackPage: vi.fn(),
-  setResponseHeader: vi.fn(),
 }));
 
-vi.mock("@tanstack/react-start/server", () => ({
-  getRequest: () => new Request("https://nakafa.com/en/try-out"),
-  setResponseHeader: catalog.setResponseHeader,
-}));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutCountryPage: catalog.readTryoutCountryPage,
   readTryoutExamPage: catalog.readTryoutExamPage,
@@ -36,9 +30,6 @@ vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutMetadata: catalog.readTryoutMetadata,
   readTryoutSetList: catalog.readTryoutSetList,
   readTryoutTrackPage: catalog.readTryoutTrackPage,
-}));
-vi.mock("@/components/tryout/route/token.server", () => ({
-  readRequestToken: catalog.readRequestToken,
 }));
 vi.mock("@/lib/content/repository", () => ({
   getAksaraTreeUrl: catalog.getAksaraTreeUrl,
@@ -69,7 +60,6 @@ const track = { countryKey: "id", examKey: "snbt", trackKey: "2027" };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  catalog.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
   catalog.readServerTranslator.mockImplementation(() =>
     Promise.resolve((key: string) => key)
   );
@@ -127,7 +117,7 @@ describe("try-out catalog server functions", () => {
     );
   });
 
-  it("answers the learner's set list of one track with its query", async () => {
+  it("answers the set list of one track with its query", async () => {
     catalog.readTryoutSetList.mockReturnValue(
       Effect.succeed({ page: [], isDone: true })
     );
@@ -146,7 +136,6 @@ describe("try-out catalog server functions", () => {
       trackKey: "2027",
     });
     expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
-      Option.some("token-1"),
       answer.args
     );
   });

@@ -64,7 +64,7 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
             <col className="w-28" />
           </colgroup>
           <TryoutTableHeader />
-          <TableBody>
+          <TableBody data-rows={data.shared ? "shared" : undefined}>
             <TryoutTableRows emptyLabel={emptyLabel} rows={data.rows} />
             {canLoadMore && (
               <TableRow aria-hidden="true" className="h-px">

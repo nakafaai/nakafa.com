@@ -189,6 +189,15 @@
 }
 
 /*
+ * A try-out track's first rows are the ones every visitor reads, so they can hold
+ * no learner's progress. Under a signed-in hint their progress marks keep their
+ * room and stay hidden until the learner's own rows replace them.
+ */
+:root[data-signed-in="yes"] [data-rows="shared"] [data-progress] {
+  visibility: hidden;
+}
+
+/*
  * The account row the browser kept draws in the first frame
  * (`components/sidebar/user/kept.tsx`): the pre-paint script
  * (`src/lib/identity/prepaint.ts`) names its plan in `data-kept-plan` and its

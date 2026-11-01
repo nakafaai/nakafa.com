@@ -19,9 +19,7 @@ import {
 import type { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 import { getTryoutPublicPath } from "@/components/tryout/route/path";
-import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import type { TrackListRequestSchema } from "@/components/tryout/route/search";
-import { readRequestToken } from "@/components/tryout/route/token.server";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
@@ -334,15 +332,13 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
 );
 
 /**
- * The learner's own set list of one track, filtered and sorted by the catalog
- * query of the address. It is personal progress, so it is read per request and
- * never cached, and the track page streams it after its heading.
+ * The set list of one track as every visitor reads it, filtered and sorted by the
+ * catalog query of the address. A learner's table reads its own rows from Convex in
+ * the browser, so this answer holds no one's progress.
  */
 export const readTryoutTrackSetList = Effect.fn(
   "www.tryout.route.readTrackSetList"
 )(function* (input: typeof TrackListRequestSchema.Type) {
-  yield* keepPersonalResponse;
-  const token = yield* readRequestToken();
   const args = {
     countryKey: input.track.countryKey,
     examKey: input.track.examKey,
@@ -355,7 +351,7 @@ export const readTryoutTrackSetList = Effect.fn(
     sort: { direction: input.search.direction, field: input.search.sort },
     trackKey: input.track.trackKey,
   };
-  const result = yield* readTryoutSetList(token, args);
+  const result = yield* readTryoutSetList(args);
   return { args, result };
 });
 
@@ -373,5 +369,5 @@ export const readTryoutExamHandler = serverHandler(readTryoutExamRoute);
 /** One track page, or the not-found decision when the catalog has none. */
 export const readTryoutTrackHandler = serverHandler(readTryoutTrackRoute);
 
-/** The learner's set list of one track, read per request and never cached. */
+/** The set list of one track, as every visitor reads it. */
 export const readTryoutTrackListHandler = serverHandler(readTryoutTrackSetList);

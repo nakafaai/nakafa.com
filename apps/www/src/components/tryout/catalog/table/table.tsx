@@ -24,9 +24,9 @@ import {
 } from "@/components/tryout/catalog/table/visitor";
 import { readTryoutTrackListFn } from "@/components/tryout/route/catalog.functions";
 
-/** Props of the discovery table: its server payload and its title. */
+/** Props of the discovery table: the build's payload and its title. */
 export interface TryoutSetTableProps {
-  /** Server-to-client payload: the list request and the result it resolved to. */
+  /** The list request that the loader's answer holds and the result it resolved to. */
   bootstrap: {
     readonly args: TryoutSetListArgs;
     readonly result: TryoutSetPage;
@@ -41,9 +41,9 @@ const catalogRoute = getRouteApi(
 
 /**
  * Displays one complete discovery result with independent URL controls. A learner's
- * table reads the page's live query once its client exists. A visitor's table reads
- * the loader's first page, and each further window through the server function, so
- * no visitor opens a socket. A change of filter, sort or direction is a navigation
+ * table reads the page's live query once its client exists, and shows the build's
+ * rows until its own arrive. A visitor's table reads the loader's first page, and
+ * each further window through the server function, so no visitor opens a socket. A change of filter, sort or direction is a navigation
  * that adds a history entry and keeps the scroll position.
  */
 export function TryoutSetTable({ bootstrap, title }: TryoutSetTableProps) {
@@ -159,6 +159,7 @@ function TryoutSetVisitorCatalog({ bootstrap, request }: VariantProps) {
         loadMore: () => loadMore(view.nextSize),
         offline: view.offline,
         rows: view.rows,
+        shared: true,
         snapshotId: view.snapshotId,
       }}
     />

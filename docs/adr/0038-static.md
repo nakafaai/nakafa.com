@@ -47,9 +47,13 @@ D6. Content pages navigate in the browser, with no document load and no Worker r
 
 D7. Static pages set no cookies and no per-request headers. Security headers and the CSP come from _headers. The root path picks a locale with Single Redirect rules on the Accept-Language header (id, then de, otherwise en), declared in apps/www/deploy. Phase A does not declare them (see Not in Phase A).
 
-D8. A build reads the active release once in bulk, renders every public URL, writes the .md twins, the feeds and the OG images, and fails when a page fails or when the emitted files differ from the expected URL set. An Aksara activation starts deploy.yml with a workflow dispatch for stage prod and ref main, in place of the cache POST. The stack binds the active release id to the web Worker as `NAKAFA_CONTENT_RELEASE` (`apps/www/deploy/release.ts`), because Alchemy rebuilds a Vite Worker only when its files or its bindings change: without that binding, the dispatch after release legal-xendit-20261026 (26 Oct 2026, run 40418168284) planned no change on an unchanged commit and the site kept the previous release's pages. In the same change the replaced request-time paths are deleted: Accept negotiation, the nine-page prerender list, the per-page social images and their alias, and Set-Cookie on static pages. The content store, the request-time content readers and the server functions with callers stay for the learner routes that the Worker still renders (search, try-out tracks, sets and sections, and signed-in screens). Phase C deletes them, once Phase B moves those routes to the browser.
+D8. A build reads the active release once in bulk, renders every public URL, writes the .md twins, the feeds and the OG images, and fails when a page fails or when the emitted files differ from the expected URL set. An Aksara activation starts deploy.yml with a workflow dispatch for stage prod and ref main, in place of the cache POST. The stack binds the active release id to the web Worker as `NAKAFA_CONTENT_RELEASE` (`apps/www/deploy/release.ts`), because Alchemy rebuilds a Vite Worker only when its files or its bindings change: without that binding, the dispatch after release legal-xendit-20261026 (26 Oct 2026, run 40418168284) planned no change on an unchanged commit and the site kept the previous release's pages. In the same change the replaced request-time paths are deleted: Accept negotiation, the nine-page prerender list, the per-page social images and their alias, and Set-Cookie on static pages. The content store, the request-time content readers and the server functions with callers stay for what the Worker still renders (search). Phase C deletes them, once Phase B moves it to the browser.
 
 D9. Workers Free only (amended 30 Oct 2026: Workers Paid with a CPU cap on every Worker, ADR 0037 decision 10; static first stays because it is the faster design). No backward compatibility, no legacy path and no temporary function. Effect v4 and Confect v10 as AGENTS.md states. 100% per-file coverage. Browser suites run on a production build.
+
+Amended on 1 November 2026: every try-out track, set and section is a static page at
+its own address for every reader, signed in or not, and the attempt is read in the
+browser. See "Phase B for try-out, slice 2, as implemented".
 
 ## Reads across deploys
 
@@ -134,7 +138,7 @@ miss, so the build reads Convex.
   (`staticPagePath` in `apps/www/src/lib/routing/prerendered.ts`, each page's `prerender.outputPath`),
   so their own addresses have no asset and reach the Worker, as before. Their Markdown twins and social
   images stay at their own paths and are answered by the assets alone.
-- **Learner pages on the Worker.** A page request that sends a session cookie or binds an attempt
+- **Learner pages on the Worker (until slice 2).** A page request that sends a session cookie or binds an attempt
   renders on the Worker as before (`isLearnerPage` in `apps/www/src/lib/routing/learner.server.ts`),
   so the learner's attempt, the shell lock, the score card and the player's view are in the first
   HTML. A visitor's request takes the page under `/_tryout` (`readVisitorAsset`), after the redirect
@@ -152,6 +156,32 @@ miss, so the build reads Convex.
   render, which cost 40 to 333 ms of CPU for a missing set. A learner's view costs what it did. Slice
   2 moves the attempt into the browser, after which the pages return to their own paths and
   `isLearnerPage` is deleted.
+
+## Phase B for try-out, slice 2, as implemented
+
+- **Measured.** At 8fc01a2ae3 a fresh learner's request for a track and a set, compared tag by tag
+  with the static page: the body was identical, and the only difference was 376 and 441 extra
+  `modulepreload` links. The Worker answered in 155 ms to 2.3 s against 4 to 56 ms for the asset. A set
+  and a section could not differ, because `ConvexIsland` holds no client during a render, so the
+  fallback every visitor sees is all a render draws. A track could: its loader read the learner's set
+  list.
+- **Their own addresses.** The build writes the pages at their own paths, so the assets answer every
+  reader, query included, and no Worker runs. `isLearnerPage`, `readVisitorAsset`, `staticPagePath` and
+  the `/_tryout` folder are deleted. A missing page still reaches the Worker, whose decisions answer the
+  static not-found page.
+- **The read moves.** The try-out layout, its hint in route context and its Convex provider are deleted:
+  the context held the build's answer on a static page, and each page's island already mounts the
+  client. The hooks under an island hold a client, which only a signed-in hint starts, so they read
+  without asking for the hint. An address with `?attemptId` and no hint goes to sign-in, as before.
+- **A track's rows.** Every reader's first rows are the build's. A learner's table reads its own rows
+  live and keeps the build's on screen until they arrive, so the table never empties. Under a signed-in
+  hint the marks of those rows, status, score and the completion circle, are hidden with their room
+  kept, because "not started" on a finished set would be false. A learner's loader always reads the
+  default answer, so a change of filter asks no Worker. A visitor's further windows still read the
+  server function, now with no session.
+- **A URL bound to an attempt.** Its HTML is the bare page's, whose canonical link names the bare
+  address, so a crawler that finds one folds it there. The router drops the page from indexing after
+  hydration, as before.
 
 ## Phase B for School as implemented
 

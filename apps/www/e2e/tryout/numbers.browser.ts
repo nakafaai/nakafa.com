@@ -11,7 +11,7 @@ const DIGIT = /\d/u;
 
 /**
  * A try-out section's numbers, its question count and its time, are in the
- * Worker's HTML: NumberFlow draws each one in a declarative shadow root, which
+ * static HTML: NumberFlow draws each one in a declarative shadow root, which
  * the browser builds as it parses the page. A reader whose scripts arrive late
  * sees them at once, instead of empty places until the page hydrates.
  */

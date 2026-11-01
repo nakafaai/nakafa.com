@@ -77,7 +77,7 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
           row={row}
         />
       </TableCell>
-      <TableCell className="px-2 text-center sm:px-4">
+      <TableCell className="px-2 text-center sm:px-4" data-progress>
         <TryoutStatus status={row.attemptStatus} />
       </TableCell>
       <TableCell className="px-2 text-center tabular-nums sm:px-4">
@@ -86,7 +86,7 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
       <TableCell className="px-2 text-center sm:px-4">
         <TryoutSetDuration seconds={row.durationSeconds} />
       </TableCell>
-      <TableCell className="px-2 text-center tabular-nums sm:px-4">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4" data-progress>
         {row.publishedScore}
       </TableCell>
     </TableRow>
@@ -112,6 +112,7 @@ function TryoutSetName({
     >
       <span
         aria-hidden="true"
+        data-progress
         className={cn(
           "flex size-5 shrink-0 items-center justify-center rounded-full border",
           row.attemptStatus === "completed"

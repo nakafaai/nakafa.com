@@ -3,6 +3,7 @@ import {
   notFound,
   stripSearchParams,
 } from "@tanstack/react-router";
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { Option, Schema } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
@@ -16,16 +17,29 @@ import {
 import { TryoutSetTable } from "@/components/tryout/catalog/table/table";
 import { readTryoutTrackFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
-import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
+import { hasSignedInHint } from "@/lib/auth/hint";
 import { HOME_TARGET } from "@/lib/routing/target";
 import { readStaticData } from "@/lib/static/data";
 
 /**
+ * The catalog query that a loader reads. A learner's table reads its own selection
+ * live (`useTryoutSetData`), so their move between filters reads the answer the
+ * build kept and asks no Worker.
+ */
+const readLoaderQuery = createIsomorphicFn()
+  .server((query: CatalogQuery) => query)
+  .client((query: CatalogQuery) =>
+    hasSignedInHint(document.cookie)
+      ? catalogLoaderDeps(CATALOG_QUERY_DEFAULTS)
+      : query
+  );
+
+/**
  * One track of the try-out catalog: its heading, its exam selector and its set
- * list, read in one answer, so the page shows whole. The build prerenders a
- * visitor's answer and keeps it; a signed-in learner reads their own set list from
- * the server, which renders their page for their request (`isLearnerPage`).
+ * list, read in one answer, so the page shows whole. The build prerenders that
+ * answer and every reader gets it; a signed-in learner's table replaces its rows
+ * with their own, read from Convex in the browser.
  */
 export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$track/"
@@ -33,17 +47,14 @@ export const Route = createFileRoute(
   validateSearch: Schema.toStandardSchemaV1(CatalogQuery),
   search: { middlewares: [stripSearchParams(CATALOG_QUERY_DEFAULTS)] },
   loaderDeps: ({ search }) => catalogLoaderDeps(search),
-  loader: async ({ context, deps, params }) => {
-    const input = {
+  loader: async ({ deps, params }) => {
+    const route = await readStaticData(readTryoutTrackFn, {
       country: params.country,
       exam: params.exam,
       locale: params.locale,
-      search: deps,
+      search: readLoaderQuery(deps),
       track: params.track,
-    };
-    const route = await (context.signedIn
-      ? readTryoutTrackFn({ data: input })
-      : readStaticData(readTryoutTrackFn, input));
+    });
     if (route.kind === "notFound") {
       throw notFound();
     }
@@ -62,7 +73,6 @@ export const Route = createFileRoute(
           locale: params.locale,
           title: loaderData.head.title,
         }),
-  headers: readTryoutPersonalHeaders,
   component: TryoutTrackPage,
 });
 

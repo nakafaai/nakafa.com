@@ -6,7 +6,6 @@ import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { isRawProfileAddress } from "@/lib/profile/gate";
 import { readBrowserPage } from "@/lib/routing/browser.server";
-import { isLearnerPage, readVisitorAsset } from "@/lib/routing/learner.server";
 import { notFoundPageOf, withContentLanguage } from "@/lib/routing/not-found";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
@@ -63,14 +62,6 @@ const answerNotFound = Effect.fn("www.routing.answer.notFound")(function* (
 });
 
 /**
- * Whether the Worker renders a request: a path that a Worker route renders, or a
- * learner's own try-out page, which the build prerenders for a visitor.
- */
-function rendersRequest(request: Request) {
-  return isRenderedRoutePath(new URL(request.url)) || isLearnerPage(request);
-}
-
-/**
  * Answers a rejection that names no page the Worker renders with the static
  * not-found page, and any other rejection with the app's own not-found page.
  */
@@ -79,7 +70,7 @@ const answerRejection = Effect.fn("www.routing.answer.rejection")(function* (
   locale: Locale,
   route: RouterHandler
 ) {
-  if (!rendersRequest(request)) {
+  if (!isRenderedRoutePath(new URL(request.url))) {
     return yield* answerUnmatchedRequest(request);
   }
   return yield* answerNotFound(request, locale, route);
@@ -91,8 +82,9 @@ const answerRejection = Effect.fn("www.routing.answer.rejection")(function* (
  * the Worker names no page, and the content reads that could only say so are skipped.
  */
 function namesUnrenderedPage(request: Request) {
-  const [locale] = readPathSegments(new URL(request.url).pathname);
-  return Schema.is(LocaleSchema)(locale) && !rendersRequest(request);
+  const url = new URL(request.url);
+  const [locale] = readPathSegments(url.pathname);
+  return Schema.is(LocaleSchema)(locale) && !isRenderedRoutePath(url);
 }
 
 /**
@@ -195,11 +187,6 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   const browserPage = yield* readBrowserPage(request);
   if (Option.isSome(browserPage)) {
     return browserPage.value;
-  }
-
-  const visitorAsset = yield* readVisitorAsset(request);
-  if (Option.isSome(visitorAsset)) {
-    return visitorAsset.value;
   }
 
   const removed = yield* readRemovedAddressNotFound(request).pipe(

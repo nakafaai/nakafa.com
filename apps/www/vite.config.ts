@@ -19,7 +19,6 @@ import {
   writeNotFoundPages,
   writeStaticAnswers,
 } from "#www/prerender.config";
-import { staticPagePath } from "#www/src/lib/routing/prerendered";
 import { SHELL_PATH } from "#www/src/lib/routing/shell";
 import {
   createWwwHeaders,
@@ -434,7 +433,7 @@ export default defineConfig(async ({ command, isPreview }) => {
             : [
                 ...prerenderedPages.map((path) => ({
                   path,
-                  prerender: { outputPath: staticPagePath(path) },
+                  prerender: { outputPath: path },
                 })),
                 ...notFoundPages,
               ],

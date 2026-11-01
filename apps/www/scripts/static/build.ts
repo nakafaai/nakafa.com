@@ -16,7 +16,6 @@ import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 import { readTwinTitle } from "@/lib/llms/format";
 import { buildRootLlmsIndexText } from "@/lib/llms/index/public";
 import { readOgCopy } from "@/lib/og/copy.server";
-import { staticPagePath } from "@/lib/routing/prerendered";
 import {
   readSubjectMap,
   SubjectLocaleSchema,
@@ -121,11 +120,7 @@ const writeMarkdownTwin = Effect.fn("www.static.markdownTwin")(function* (
   }
   yield* writeArtifact(outDir, `${page.slice(1)}.md`, text.value);
 
-  const htmlFile = path.join(
-    outDir,
-    staticPagePath(page).slice(1),
-    "index.html"
-  );
+  const htmlFile = path.join(outDir, page.slice(1), "index.html");
   const html = yield* fs.readFileString(htmlFile);
   const parts = html.split("</head>");
   if (parts.length !== 2 || html.includes(MARKDOWN_TYPE)) {

@@ -17,10 +17,10 @@ import { readStaticData } from "@/lib/static/data";
 
 /**
  * One set of a track. Its catalog view is the same for every visitor, so the build
- * prerenders it and keeps its answer, and every URL of the set reads that answer:
- * the Worker renders nothing personal. A signed-in learner's attempt, and the one a
- * URL names with `?attemptId`, are read in the browser once the session is known
- * (`useLearnerSet`), and a URL bound to an attempt answers for that attempt alone.
+ * prerenders it and every URL of the set is that page: no Worker renders it. A
+ * signed-in learner's attempt, and the one a URL names with `?attemptId`, are read
+ * in the browser once the session is known (`useLearnerSet`), and a URL bound to an
+ * attempt answers for that attempt alone.
  */
 /** The read of a page without a Convex client: a visitor's. */
 const VISITOR = { kind: "visitor" } as const;
@@ -85,10 +85,7 @@ function TryoutSetVisitor() {
 function TryoutSetLearner() {
   const route = Route.useLoaderData();
   const search = Route.useSearch();
-  const signedIn = Route.useRouteContext({
-    select: (context) => context.signedIn,
-  });
-  const learner = useLearnerSet({ page: route.page, search, signedIn });
+  const learner = useLearnerSet({ page: route.page, search });
   return (
     <>
       <ShellLockCarry pending={learner.kind === "pending"} />

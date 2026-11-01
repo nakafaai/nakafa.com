@@ -17,10 +17,10 @@ import { readStaticData } from "@/lib/static/data";
 
 /**
  * One section of a set. Its catalog view is shared, so the build prerenders it and
- * keeps its answer, and every URL of the section reads that answer: the Worker
- * renders nothing personal. A signed-in learner's attempt through it, and the one a
- * URL names with `?attemptId`, are read in the browser once the session is known
- * (`useLearnerSection`), and a URL bound to an attempt answers for that attempt alone.
+ * every URL of the section is that page: no Worker renders it. A signed-in learner's
+ * attempt through it, and the one a URL names with `?attemptId`, are read in the
+ * browser once the session is known (`useLearnerSection`), and a URL bound to an
+ * attempt answers for that attempt alone.
  */
 /** The read of a page without a Convex client: a visitor's. */
 const VISITOR = { kind: "visitor" } as const;
@@ -86,15 +86,11 @@ function TryoutSectionVisitor() {
 function TryoutSectionLearner() {
   const route = Route.useLoaderData();
   const search = Route.useSearch();
-  const signedIn = Route.useRouteContext({
-    select: (context) => context.signedIn,
-  });
   const learner = useLearnerSection({
     page: route.page,
     publicPath: route.sectionPath,
     search,
     setPath: route.setPath,
-    signedIn,
   });
   return (
     <>
