@@ -13,6 +13,7 @@ import {
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTransition } from "react";
@@ -24,6 +25,7 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { finishSetupChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { TargetLink } from "@/lib/routing/link";
+import { schoolHomeTarget } from "@/lib/routing/school/target";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 const SOURCE = "components/tenant/setup/page";
@@ -32,8 +34,8 @@ const SOURCE = "components/tenant/setup/page";
  * The setup of a school, in the order a new Owner works: each first step with whether the
  * school's data shows it as done and the page that does it, then the defaults the school opened
  * with, which have no state because a default is already an answer. Nothing is copied here, so
- * a step changes in one place, and Finish takes the entry out of the sidebar. Finish is the main
- * action only once every first step is done.
+ * a step changes in one place, and Finish takes the entry out of the sidebar and lands on the
+ * school's home. Finish is the main action only once every first step is done.
  */
 export function SchoolSetup() {
   const { slug } = useTenant();
@@ -43,6 +45,7 @@ export function SchoolSetup() {
   const finish = useMutation(tenancy.setup.finish).withOptimisticUpdate(
     finishSetupChange
   );
+  const navigate = useNavigate();
   const [isFinishing, startFinishing] = useTransition();
   const done = QueryResult.isSuccess(state)
     ? Option.some(state.value)
@@ -61,7 +64,14 @@ export function SchoolSetup() {
         <Button
           disabled={isFinishing}
           onClick={() =>
-            startFinishing(() => saveSchool(() => finish({ slug }), SOURCE))
+            startFinishing(() =>
+              saveSchool(
+                () => finish({ slug }),
+                SOURCE,
+                // The finished setup has no page left to stay on, so the press lands on the school's home.
+                () => navigate(schoolHomeTarget(slug))
+              )
+            )
           }
           type="button"
           variant={
