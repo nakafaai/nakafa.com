@@ -18250,7 +18250,14 @@ export declare const internal: {
         },
         | {
             data: Array<{
-              change: Record<string, boolean | number | null | string>;
+              change: Record<
+                string,
+                | boolean
+                | number
+                | null
+                | string
+                | Record<string, boolean | number | null | string>
+              >;
               id: string;
               occurredAt: string;
               subject: { id: string; kind: string };

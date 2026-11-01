@@ -7,6 +7,7 @@ import {
 } from "@confect/react";
 import {
   CommandLineIcon,
+  Copy01Icon,
   Delete02Icon,
   Key01Icon,
   MoreHorizontalIcon,
@@ -14,7 +15,9 @@ import {
   Plug01Icon,
   Unlink01Icon,
 } from "@hugeicons/core-free-icons";
+import { useClipboard } from "@mantine/hooks";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
+import type { IssuedClient } from "@repo/backend/confect/integrations/clients.spec";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -81,9 +84,9 @@ const clientColumns = createColumnHelper<
 >();
 
 /** Shows a secret the server issued once, which the page's secret dialog holds. */
-const SecretIssueContext = createContext<((secret: string) => void) | null>(
-  null
-);
+const SecretIssueContext = createContext<
+  ((issued: typeof IssuedClient.Type) => void) | null
+>(null);
 
 /** Reads what shows an issued secret. It throws outside the clients page, which always provides it. */
 function useIssueSecret() {
@@ -101,7 +104,7 @@ function useIssueSecret() {
  */
 export function SchoolClientsSettings() {
   const t = useTranslations("SchoolSettings");
-  const [issuedSecret, setIssuedSecret] = useState<string | undefined>(
+  const [issued, setIssued] = useState<typeof IssuedClient.Type | undefined>(
     undefined
   );
   const [isCreating, setIsCreating] = useState(false);
@@ -120,19 +123,20 @@ export function SchoolClientsSettings() {
         }
       >
         <ReadBoundary>
-          <SecretIssueContext value={setIssuedSecret}>
+          <SecretIssueContext value={setIssued}>
             <SchoolClientTable />
           </SecretIssueContext>
         </ReadBoundary>
         <SchoolClientCreateDialog
-          onIssued={setIssuedSecret}
+          onIssued={setIssued}
           open={isCreating}
           setOpen={setIsCreating}
         />
         <SchoolSecretDialog
           description={t("client-secret-description")}
-          onClose={() => setIssuedSecret(undefined)}
-          secret={issuedSecret}
+          identifier={issued?.id}
+          onClose={() => setIssued(undefined)}
+          secret={issued?.secret}
           title={t("client-secret-title")}
         />
       </SettingsTablePage>
@@ -260,6 +264,7 @@ function SchoolClientTable() {
 function SchoolClientMenu({ client }: { client: ClientItem }) {
   const { slug } = useTenant();
   const issueSecret = useIssueSecret();
+  const clipboard = useClipboard({ timeout: 1500 });
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const rotate = useMutation(integrations.clients.rotate);
@@ -303,13 +308,17 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
                 saveSchool(
                   () => rotate({ clientId: client.id, slug }),
                   SOURCE,
-                  (issued) => issueSecret(issued.secret)
+                  (answer) => issueSecret(answer)
                 )
               )
             }
           >
             <HugeIcons icon={Key01Icon} />
             {t("client-rotate")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => clipboard.copy(client.id)}>
+            <HugeIcons icon={Copy01Icon} />
+            {t("client-id-copy")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setIsConnecting(true)}>
             <HugeIcons icon={CommandLineIcon} />
