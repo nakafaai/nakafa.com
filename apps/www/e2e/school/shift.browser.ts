@@ -1,10 +1,16 @@
-import { expect, type Page, test } from "@playwright/test";
+import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
 } from "@/e2e/support/layout";
-import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import {
+  createSchool,
+  hostAddress,
+  inviteLearner,
+  seedSitting,
+  signInOwner,
+} from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -24,11 +30,27 @@ const PROMPT =
 /** How long the page keeps still before its shifts are read: longer than any text takes to land at this load. */
 const SETTLE_MILLISECONDS = 3000;
 
+/** How long an exam's words may take to reach the server at this load. */
+const SAVED_MILLISECONDS = 60_000;
+
 /** The screens a teacher works on: a phone, and a laptop. */
 const SCREENS = [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
 ];
+
+/** Starts a page on a cold cache at a sixth of the speed, recording every shift. */
+const coldPage = async (context: BrowserContext) => {
+  const page = await context.newPage();
+  await page.addInitScript(recordLayoutShifts, {
+    key: SHIFTS_KEY,
+    overlay: "[data-sonner-toaster]",
+  });
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 6 });
+  return page;
+};
 
 /** Whether a text of the editor takes changes. */
 const textOf = (page: Page, number: number) =>
@@ -59,10 +81,12 @@ const writeExam = async (page: Page, address: string) => {
     await expect(prompt).toContainText(PROMPT.trim());
   }
   // The words reach the server a moment after the last key, and a reload reads what it holds.
-  await page.reload();
-  await expect(textOf(page, 3)).toContainText(PROMPT.trim(), {
-    timeout: readinessTimeoutMilliseconds,
-  });
+  await expect(async () => {
+    await page.reload();
+    await expect(textOf(page, 1)).toHaveText(PROMPT.repeat(3).trim(), {
+      timeout: readinessTimeoutMilliseconds,
+    });
+  }).toPass({ timeout: SAVED_MILLISECONDS });
 };
 
 /** The shifts the page recorded that nothing the teacher did caused, with what each moved. */
@@ -94,14 +118,7 @@ for (const screen of SCREENS) {
     await Effect.runPromise(
       signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
     );
-    const page = await context.newPage();
-    await page.addInitScript(recordLayoutShifts, {
-      key: SHIFTS_KEY,
-      overlay: "[data-sonner-toaster]",
-    });
-    const cdp = await context.newCDPSession(page);
-    await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
-    await cdp.send("Emulation.setCPUThrottlingRate", { rate: 6 });
+    const page = await coldPage(context);
 
     await page.goto(editor);
     await expect(textOf(page, 1)).toBeEditable({
@@ -111,12 +128,52 @@ for (const screen of SCREENS) {
 
     await page.getByRole("link", { name: "Try as student" }).click();
     await page.waitForURL(TRY_PATH);
-    await expect(page.getByRole("heading", { name: "Question 1" })).toBeVisible(
-      { timeout: readinessTimeoutMilliseconds }
-    );
+    await expect(
+      page.getByRole("heading", { exact: true, name: "Question 1" })
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await expect(page.getByText(PROMPT.trim()).first()).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
+    expect(await stillness(page)).toEqual([]);
+    await context.close();
+  });
+
+  test(`a student's paper moves nothing on a cold load at ${screen.width}, at a sixth of the speed`, async ({
+    baseURL,
+    browser,
+  }) => {
+    const school = await Effect.runPromise(createSchool());
+    const address = (path: string) =>
+      hostAddress(baseURL, `${school.slug}.localhost`, path);
+    const learner = `shift-${school.slug}@acceptance.example.test`;
+    const context = await browser.newContext({ viewport: screen });
+    await Effect.runPromise(
+      inviteLearner({
+        address: learner,
+        baseURL: address("/"),
+        context,
+        slug: school.slug,
+      })
+    );
+    // The seed records its exam as made by the school's Owner, who must have signed in first.
+    const owner = await browser.newContext();
+    await Effect.runPromise(signInOwner(owner, school.slug, address("/")));
+    await owner.close();
+    const sitting = await Effect.runPromise(
+      seedSitting(school.slug, learner, 0, "templates")
+    );
+    const page = await coldPage(context);
+
+    await page.goto(address(`/sittings/${sitting.sittingId}`));
+    const enter = page.getByRole("button", { name: "Enter sitting" });
+    await waitUntilTakenOver(enter);
+    await page
+      .getByPlaceholder("Enter the token from your proctor")
+      .fill(sitting.token);
+    await enter.click();
+    await expect(
+      page.getByRole("heading", { exact: true, name: "Question 1" })
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     expect(await stillness(page)).toEqual([]);
     await context.close();
   });

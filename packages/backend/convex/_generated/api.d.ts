@@ -1602,6 +1602,67 @@ export declare const api: {
         null
       >;
     };
+    scheduled: {
+      cancel: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          scheduledId: Id<"classroomScheduled">;
+          slug: string;
+        },
+        null
+      >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          publishAt: number;
+          scheduledId: Id<"classroomScheduled">;
+          slug: string;
+          text: string;
+        },
+        {
+          clientKey: string;
+          email: boolean;
+          id: Id<"classroomScheduled">;
+          publishAt: number;
+          text: string;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        Array<{
+          clientKey: string;
+          email: boolean;
+          id: Id<"classroomScheduled">;
+          publishAt: number;
+          text: string;
+        }>
+      >;
+      schedule: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          email: boolean;
+          publishAt: number;
+          slug: string;
+          text: string;
+        },
+        {
+          clientKey: string;
+          email: boolean;
+          id: Id<"classroomScheduled">;
+          publishAt: number;
+          text: string;
+        }
+      >;
+    };
     tasks: {
       edit: FunctionReference<
         "mutation",
@@ -14808,6 +14869,14 @@ export declare const internal: {
           title: string;
         },
         { id: Id<"classroomLibrary"> }
+      >;
+    };
+    scheduled: {
+      release: FunctionReference<
+        "mutation",
+        "internal",
+        { classId: Id<"classes">; clientKey: string },
+        null
       >;
     };
     seed: {

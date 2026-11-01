@@ -1,12 +1,7 @@
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect } from "effect";
-import {
-  type ComponentProps,
-  lazy,
-  Suspense,
-  useEffect,
-  useState,
-} from "react";
+import { type ComponentProps, lazy, Suspense, useEffect } from "react";
+import { usePaperDrawable } from "@/components/player/held";
 
 /**
  * One read-only assessment document. Its formulas are too heavy for the page's first JavaScript, so the
@@ -19,59 +14,36 @@ const LazySittingDocument = lazy(() =>
 );
 
 /**
- * Whether code a paper needs has loaded. It starts loading once the page is `wanted`. Code that fails to load
- * answers too, and the part that needs it reports it.
+ * Starts loading the reader once the page is `wanted`, as soon as a student can enter, so the paper never waits for
+ * it. A reader that fails to load is reported by the document that needs it.
  */
-export function useCodeLoaded(load: () => Promise<unknown>, wanted: boolean) {
-  const [loaded, setLoaded] = useState(false);
-
+export function useReaderLoaded(wanted: boolean) {
   useEffect(() => {
-    if (!wanted) {
-      return;
+    if (wanted) {
+      Effect.runPromise(Effect.tryPromise(loadReader).pipe(Effect.ignore));
     }
-    Effect.runPromise(
-      Effect.tryPromise(load).pipe(
-        Effect.ignore,
-        Effect.andThen(Effect.sync(() => setLoaded(true)))
-      )
-    );
-  }, [load, wanted]);
-
-  return loaded;
+  }, [wanted]);
 }
-
-/**
- * Whether a paper can draw its documents. The reader starts loading as soon as a student can enter, so the paper
- * never waits for it.
- */
-export const useReaderLoaded = (wanted: boolean) =>
-  useCodeLoaded(loadReader, wanted);
 
 /** A document with nothing in it, which `ReaderPrimer` draws. */
 const NOTHING = { content: [{ type: "paragraph" }], type: "doc" };
 
-/**
- * Asks for the reader once, out of sight, as a paper mounts. A lazy component waits once more on its first use even
- * when its code has loaded, so a first document that arrives after the paper shows would stand empty for a moment,
- * and whatever is below it would move when it draws.
- */
+/** The reader, asked for once out of sight, so a paper's documents draw in the frame they arrive (`HeldPaper`). */
 export function ReaderPrimer() {
-  return (
-    <div hidden>
-      <SittingDocument document={NOTHING} />
-    </div>
-  );
+  return <LazySittingDocument document={NOTHING} />;
 }
 
 /** A document takes no room before its reader is ready: the paper shows once it can draw its first question. */
 export function SittingDocument(
   props: ComponentProps<typeof LazySittingDocument>
 ) {
-  return (
+  const drawable = usePaperDrawable();
+
+  return drawable ? (
     <Suspense fallback={null}>
       <ClientOnly fallback={null}>
         <LazySittingDocument {...props} />
       </ClientOnly>
     </Suspense>
-  );
+  ) : null;
 }

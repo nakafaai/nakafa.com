@@ -20,7 +20,6 @@ import { SittingChoice } from "@/components/exams/sitting/choice";
 import {
   ReaderPrimer,
   SittingDocument,
-  useReaderLoaded,
 } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
 import { useKeptText } from "@/components/exams/sitting/kept";
@@ -68,14 +67,11 @@ export function PaperReveal({
   readonly children: ReactNode;
   readonly paper: PaperValue;
 }) {
-  const loaded = useReaderLoaded(true);
-
   return (
     <HeldPaper
       keys={Arr.map(paper.questions, (question) => question.id)}
-      ready={loaded}
+      primer={<ReaderPrimer />}
     >
-      <ReaderPrimer />
       {children}
     </HeldPaper>
   );

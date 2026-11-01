@@ -1,21 +1,17 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { ClassroomPostsDoc } from "@repo/backend/confect/_generated/docs";
-import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
-import {
-  classAccess,
-  classAuthority,
-} from "@repo/backend/confect/classroom/authority";
+import { classAccess } from "@repo/backend/confect/classroom/authority";
 import { PinLimit } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { announce } from "@repo/backend/confect/classroom/posts/announce";
 import {
   PIN_LIMIT,
   postField,
@@ -24,17 +20,8 @@ import spec from "@repo/backend/confect/classroom/posts.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
-import {
-  Array as Arr,
-  Clock,
-  Duration,
-  Effect,
-  Layer,
-  Option,
-  Struct,
-} from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /** An announcement that is not the allowed class's own, or not the caller's, refused as a missing object. */
 const missing = () =>
@@ -172,10 +159,7 @@ const pin = FunctionImpl.make(
 );
 
 /**
- * Posts an announcement to the class, sealed with the school key, records
- * `announcement.posted`, the published change, and schedules the fan-out that
- * writes the inbox row of every member of the class in batches (ADR 0027); Convex
- * schedules it only if the post commits. A repeat of a client key of the class answers that announcement and
+ * Posts an announcement to the class, sealed with the school key (`announce`). A repeat of a client key of the class answers that announcement and
  * writes nothing; whoever posts in the class may read it anyway.
  */
 const publish = FunctionImpl.make(
@@ -197,30 +181,15 @@ const publish = FunctionImpl.make(
       return yield* postView(sent.value);
     }
     const fields = { classId: row._id, clientKey };
-    const postId = yield* (yield* DatabaseWriter)
-      .table("classroomPosts")
-      .insert({
-        ...fields,
-        authorId: person._id,
-        createdAt: yield* Clock.currentTimeMillis,
-        email,
-        sealedText: yield* sealText(
-          yield* schoolKeys(row.tenantId),
-          postField(fields),
-          text
-        ).pipe(Effect.orDie),
-        tenantId: row.tenantId,
-      })
-      .pipe(Effect.orDie);
-    yield* classAuthority.record(personActor(person), row, {
-      post: postId,
-      type: "announcement.posted",
+    const postId = yield* announce(row, person, {
+      clientKey,
+      email,
+      sealedText: yield* sealText(
+        yield* schoolKeys(row.tenantId),
+        postField(fields),
+        text
+      ).pipe(Effect.orDie),
     });
-    yield* (yield* Scheduler).runAfter(
-      Duration.zero,
-      notificationsInternal.fanout.run,
-      { cursor: null, phase: "students", source: { _tag: "post", postId } }
-    );
     return yield* postView(
       yield* reader.table("classroomPosts").get(postId).pipe(Effect.orDie)
     );
