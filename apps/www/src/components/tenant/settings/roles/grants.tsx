@@ -2,6 +2,7 @@ import {
   type PaginatedQueryItem,
   QueryResult,
   useMutation,
+  usePaginatedQuery,
 } from "@confect/react";
 import {
   Delete02Icon,
@@ -25,9 +26,11 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TablePages } from "@/components/shared/table/pages";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
@@ -40,6 +43,9 @@ import { isDraft } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/roles/grants";
 
+/** How many grants the table reads each time its end comes near. */
+const PAGE_SIZE = 25;
+
 /** One active grant of the school as the grants list shows it. */
 type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
 
@@ -47,14 +53,21 @@ type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
 const grantColumns = tableColumns<GrantItem>();
 
 /**
- * The grants in a data table that finds a person, filters by role and by what a grant covers in
- * those columns, and gives each revocable grant its menu, or the table's empty state when no one
- * holds a role.
+ * The grants of the school, read a page at a time, in a data table that finds a person, filters by
+ * role and by what a grant covers in those columns, and gives each revocable grant its menu, or the
+ * table's empty state when no one holds a role.
  */
-export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
+export function SchoolGrantTable() {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
   const viewer = useViewerQuery();
+  const { slug } = useTenant();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const pagination = usePaginatedQuery(
+    access.grants.list,
+    isSettled ? { slug } : "skip",
+    { initialNumItems: PAGE_SIZE }
+  );
 
   /** What a grant covers, by name: the whole school or one unit. */
   const scopeName = (grant: GrantItem) =>
@@ -88,19 +101,21 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={grants}
-      empty={
-        <TableEmpty
-          act="juggling"
-          description={t("roles-grants-description")}
-          title={t("roles-empty")}
-        />
-      }
-      rowId={(grant) => grant.id}
-      search="person"
-    />
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+      <DataTable
+        columns={columns}
+        data={pagination.results}
+        empty={
+          <TableEmpty
+            act="juggling"
+            description={t("roles-grants-description")}
+            title={t("roles-empty")}
+          />
+        }
+        rowId={(grant) => grant.id}
+        search="person"
+      />
+    </TablePages>
   );
 }
 

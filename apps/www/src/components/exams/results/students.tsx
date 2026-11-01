@@ -274,9 +274,12 @@ function useStudentColumns() {
  * they finished. The server reads the filters: a status reads only the attempts in that state, and a name
  * search reads the students whose names match it, best match first. The list reads one page at a time
  * through an intersection sentinel, not a button, so a page of a search that holds no match keeps reading
- * the next page until one matches or the list ends.
+ * the next page until one matches or the list ends. The table keeps its heads throughout, so the status
+ * choice stays in reach and nothing moves when the rows arrive, and the empty state waits for the last page.
  */
 export function StudentsTable() {
+  const t = useTranslations("Exams");
+  const columns = useStudentColumns();
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
   const search = useServerSearch();
@@ -308,51 +311,15 @@ export function StudentsTable() {
   ) {
     throw students.error;
   }
-  return (
-    <StudentRowsSection
-      exhausted={PaginatedQueryResult.isExhausted(students)}
-      failed={PaginatedQueryResult.isFailure(students)}
-      filtering={status !== "all" || search !== ""}
-      loadMore={
-        PaginatedQueryResult.isCanLoadMore(students)
-          ? () => students.loadMore(STUDENT_PAGE_SIZE)
-          : null
-      }
-      rows={Option.getOrElse(kept, Arr.empty)}
-    />
-  );
-}
-
-/**
- * The rows of the students' table below its filters: the failure of its read above the rows it holds,
- * the rows the server read for the filters, and the empty state once the list is exhausted with no
- * match, or with no student at all. A list that still loads, or that failed, shows no empty state. The table keeps its
- * heads throughout, so the status choice stays in reach and nothing moves when the rows arrive.
- */
-function StudentRowsSection({
-  exhausted,
-  failed,
-  filtering,
-  loadMore,
-  rows,
-}: {
-  /** Whether the list has no more pages, so an empty table is the end of the list and not a wait. */
-  exhausted: boolean;
-  failed: boolean;
-  filtering: boolean;
-  /** Loads the next page of students, or none when the list has no more pages. */
-  loadMore: (() => void) | null;
-  rows: readonly (typeof StudentRowSchema.Type)[];
-}) {
-  const t = useTranslations("Exams");
-  const columns = useStudentColumns();
+  const failed = PaginatedQueryResult.isFailure(students);
+  const filtering = status !== "all" || search !== "";
 
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <DataTable
         columns={columns}
-        data={rows}
+        data={Option.getOrElse(kept, Arr.empty)}
         empty={
           <TableEmpty
             act="reading"
@@ -360,10 +327,14 @@ function StudentRowsSection({
             title={t(filtering ? "results-no-match" : "results-empty-title")}
           />
         }
-        loading={!exhausted}
+        loading={!PaginatedQueryResult.isExhausted(students)}
         rowId={(row) => row.attemptId}
       />
-      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
+      {PaginatedQueryResult.isCanLoadMore(students) ? (
+        <Intersection
+          onIntersect={() => students.loadMore(STUDENT_PAGE_SIZE)}
+        />
+      ) : null}
     </>
   );
 }

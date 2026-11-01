@@ -23,7 +23,6 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { TableWaitingContext } from "@/components/shared/table/waiting";
 import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -58,6 +57,23 @@ const STATUS_LOOKS = {
  */
 export function StudentExams() {
   const t = useTranslations("Exams");
+
+  return (
+    <TableFiltersProvider>
+      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
+        <TableSearch placeholder={t("exams-search")} />
+      </SchoolHeader>
+      <TablePageBody>
+        <StudentExamsTable />
+      </TablePageBody>
+    </TableFiltersProvider>
+  );
+}
+
+/** The student's sittings in the School table, or the empty state while the student has none. */
+function StudentExamsTable() {
+  const t = useTranslations("Exams");
+  const locale = useLocale();
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const listed = useQuery(exams.sittings.mine, isSettled ? { slug } : "skip");
@@ -69,40 +85,12 @@ export function StudentExams() {
     }
   }, [listed]);
 
-  if (QueryResult.isFailure(listed) && isLostAccess(listed.error)) {
-    throw listed.error;
+  if (QueryResult.isFailure(listed)) {
+    if (isLostAccess(listed.error)) {
+      throw listed.error;
+    }
+    return <LoadFailure onRetry={reloadPage} />;
   }
-  const sittings = QueryResult.isSuccess(listed)
-    ? orderSittings(listed.value)
-    : null;
-
-  return (
-    <TableFiltersProvider>
-      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        <TableSearch placeholder={t("exams-search")} />
-      </SchoolHeader>
-      <TablePageBody>
-        {QueryResult.isFailure(listed) ? (
-          <LoadFailure onRetry={reloadPage} />
-        ) : (
-          <TableWaitingContext value={sittings === null}>
-            <StudentExamsTable sittings={sittings ?? []} />
-          </TableWaitingContext>
-        )}
-      </TablePageBody>
-    </TableFiltersProvider>
-  );
-}
-
-/** The student's sittings in the School table, or the empty state while the student has none. */
-function StudentExamsTable({
-  sittings,
-}: {
-  readonly sittings: readonly Sitting[];
-}) {
-  const t = useTranslations("Exams");
-  const locale = useLocale();
-  const { slug } = useTenant();
 
   const columns = [
     sittingColumns.text((sitting) => sitting.examTitle, {
@@ -168,7 +156,7 @@ function StudentExamsTable({
   return (
     <DataTable
       columns={columns}
-      data={sittings}
+      data={QueryResult.isSuccess(listed) ? orderSittings(listed.value) : []}
       empty={
         <TableEmpty
           act="sleeping"
@@ -176,6 +164,7 @@ function StudentExamsTable({
           title={t("mine-empty")}
         />
       }
+      loading={!QueryResult.isSuccess(listed)}
       rowId={(sitting) => sitting.id}
       search="exam"
     />

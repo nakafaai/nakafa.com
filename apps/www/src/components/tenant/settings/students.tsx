@@ -112,7 +112,7 @@ export function SchoolStudentsSettings() {
       >
         <ReadBoundary>
           <CardIssueContext value={setIssued}>
-            <SchoolLoginsBody />
+            <SchoolLoginTable />
           </CardIssueContext>
         </ReadBoundary>
         <SchoolStudentDialog
@@ -126,31 +126,21 @@ export function SchoolStudentsSettings() {
   );
 }
 
-/** The school's logins, read a page at a time, with the table and its end. */
-function SchoolLoginsBody() {
+/**
+ * The school's login names, read a page at a time, in a data table that finds a login name and
+ * sorts by when each card was issued, or the table's empty state when no card is issued.
+ */
+function SchoolLoginTable() {
+  const t = useTranslations("SchoolSettings");
   const { slug } = useTenant();
+  const formatZone = useFormatTimeZone();
+  const timeZone = useSchoolTimeZone();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     identity.logins.list,
     isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
-
-  return (
-    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
-      <SchoolLoginTable logins={pagination.results} />
-    </TablePages>
-  );
-}
-
-/**
- * The login names in a data table that finds a login name and sorts by when each card was
- * issued, or the table's empty state when no card is issued.
- */
-function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
-  const t = useTranslations("SchoolSettings");
-  const formatZone = useFormatTimeZone();
-  const timeZone = useSchoolTimeZone();
 
   const columns = [
     // The login name with the student's name after it, so the header's search finds a login by either; the cell
@@ -176,19 +166,21 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={logins}
-      empty={
-        <TableEmpty
-          act="pointing"
-          description={t("logins-footer")}
-          title={t("logins-empty")}
-        />
-      }
-      rowId={(login) => login.person.id}
-      search="login"
-    />
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+      <DataTable
+        columns={columns}
+        data={pagination.results}
+        empty={
+          <TableEmpty
+            act="pointing"
+            description={t("logins-footer")}
+            title={t("logins-empty")}
+          />
+        }
+        rowId={(login) => login.person.id}
+        search="login"
+      />
+    </TablePages>
   );
 }
 

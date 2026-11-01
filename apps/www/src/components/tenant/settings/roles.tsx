@@ -1,6 +1,4 @@
-import { usePaginatedQuery } from "@confect/react";
 import { BookOpen01Icon } from "@hugeicons/core-free-icons";
-import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -18,13 +16,10 @@ import {
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/auth/convex";
-import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useTenant } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
@@ -33,7 +28,6 @@ import { SchoolGrantTable } from "@/components/tenant/settings/roles/grants";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 
 /** How many grants one page of the list loads, and each page after it. */
-const PAGE_SIZE = 25;
 
 /**
  * The roles of the school: Role guide in the header opens what each role may do, and
@@ -70,29 +64,12 @@ export function SchoolRolesSettings() {
         }
       >
         <ReadBoundary>
-          <SchoolGrantsBody />
+          <SchoolGrantTable />
         </ReadBoundary>
         <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
         <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} />
       </SettingsTablePage>
     </TableFiltersProvider>
-  );
-}
-
-/** The grants of the school, read a page at a time, with the table and its end. */
-function SchoolGrantsBody() {
-  const { slug } = useTenant();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
-    access.grants.list,
-    isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
-  );
-
-  return (
-    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
-      <SchoolGrantTable grants={pagination.results} />
-    </TablePages>
   );
 }
 
