@@ -1,4 +1,8 @@
-import { ImportRow, Nisn } from "@repo/backend/confect/roster/schema";
+import {
+  ImportRow,
+  Nisn,
+  SourcedRow,
+} from "@repo/backend/confect/roster/schema";
 import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Option, Predicate, Schema, String as Str } from "effect";
@@ -49,12 +53,20 @@ const columnsOf = (row: readonly Cell[]): Option.Option<Columns> => {
 /** Why one row of the sheet is not imported. */
 export const RowProblem = Schema.Literals(["name", "nisn", "cohort"]);
 
-/** One read row: the student it holds, or the problem that keeps it out, with its line in the sheet. */
+/**
+ * One read row: the student it holds, by a NISN from Dapodik or by the source's identity from
+ * OneRoster, or the problem that keeps it out, with its line in the file.
+ */
 export const ReadRow = Schema.Union([
   Schema.Struct({
     line: Schema.Finite,
     outcome: Schema.Literal("row"),
     row: ImportRow,
+  }),
+  Schema.Struct({
+    line: Schema.Finite,
+    outcome: Schema.Literal("sourced"),
+    row: SourcedRow,
   }),
   Schema.Struct({
     line: Schema.Finite,
@@ -128,10 +140,10 @@ const holdsStudent = (row: readonly Cell[], columns: Columns) =>
   );
 
 /** Why a sheet is not read as a Dapodik student list. */
-export const SheetProblem = Schema.Literals(["header", "empty"]);
+export const SheetProblem = Schema.Literals(["header", "empty", "size"]);
 
 /** The answer of reading one sheet: its rows, or the problem that refuses it. */
-const SheetRead = Schema.Union([
+export const SheetRead = Schema.Union([
   Schema.Struct({
     outcome: Schema.Literal("read"),
     rows: Schema.Array(ReadRow),
@@ -184,6 +196,16 @@ export const studentsOf = (
   Arr.getSomes(
     Arr.map(rows, (row) =>
       row.outcome === "row" ? Option.some(row.row) : Option.none()
+    )
+  );
+
+/** The students of a read OneRoster file, without the rows that have a problem. */
+export const sourcedOf = (
+  rows: readonly (typeof ReadRow.Type)[]
+): readonly (typeof SourcedRow.Type)[] =>
+  Arr.getSomes(
+    Arr.map(rows, (row) =>
+      row.outcome === "sourced" ? Option.some(row.row) : Option.none()
     )
   );
 

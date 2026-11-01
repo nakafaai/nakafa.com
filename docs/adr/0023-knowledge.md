@@ -147,6 +147,12 @@ school data in the school's own cell.
   citations, and passes the question to the teacher when she is unsure. The
   Agent thread of a class reads no personal memory and no learner profile
   (ADR 0022).
+- It is built (`classroom/passages`). A file enters when it is added: the model
+  reads it into text, which also serves a scanned PDF or a photo, and the text is
+  cut into at most 40 passages of 1,200 characters. A file over 20 MB stays out, and
+  so does a file the model cannot read, and Nina answers without it. Every library
+  file counts as published, because the library has no draft state. A row leaves with
+  its file, and the class archive keeps both.
 
 ## Cost
 

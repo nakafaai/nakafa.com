@@ -101,8 +101,9 @@ function AuditWhoFilter() {
     ...(QueryResult.isSuccess(people)
       ? Arr.map(people.value, (person) => person.name)
       : []),
-    t("audit-operator"),
-    t("audit-system"),
+    t("audit-actor.client"),
+    t("audit-actor.operator"),
+    t("audit-actor.system"),
   ]);
 
   return (
@@ -216,9 +217,7 @@ function useEntryWords() {
       if (entry.actor.kind === "person") {
         return entry.actor.name;
       }
-      return entry.actor.kind === "operator"
-        ? t("audit-operator")
-        : t("audit-system");
+      return t(`audit-actor.${entry.actor.kind}`);
     },
     change: (entry: EntryItem) => t(`audit-label.${entry.change.type}`),
   };

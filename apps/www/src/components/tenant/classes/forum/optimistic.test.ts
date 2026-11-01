@@ -24,7 +24,7 @@ const topic = channelOf("topic");
 /** A message of the channel, written by the viewer. */
 const message = (id: string, text: string): ForumMessage => ({
   attachments: [],
-  author: { id: personId, name: "Bu Rina" },
+  author: { id: personId, name: "Bu Rina", nina: false },
   clientKey: `key-${id}-0000`,
   createdAt: 1,
   discussion: null,

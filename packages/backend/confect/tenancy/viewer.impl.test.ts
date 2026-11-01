@@ -29,6 +29,7 @@ describe("tenancy/viewer", () => {
           mascot: schoolMascot("nf"),
           name: "Yayasan Nakafa",
           policies: { emailDomains: [], nina: false, studentThreads: false },
+          setupDone: false,
           slug: "nf",
           status: "active",
         });

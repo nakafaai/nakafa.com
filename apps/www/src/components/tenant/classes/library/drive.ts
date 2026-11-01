@@ -25,7 +25,7 @@ interface PickerBuilder {
   setOAuthToken: (token: string) => PickerBuilder;
 }
 
-/** The part of Google's Picker that the library uses. */
+/** The part of Google's Picker that the library and the exam import use. */
 interface GooglePicker {
   DocsView: new (viewId: string) => DocsView;
   PickerBuilder: new () => PickerBuilder;
@@ -99,18 +99,17 @@ const loadPicker = Effect.gen(function* () {
 
 /**
  * Shows Google's Picker over the page with the teacher's own Drive, offering the
- * PDFs and images the library keeps, in the page's language. It answers the
- * picked file, or none when the teacher closed it. The project's number lets the
- * Picker grant the picked file to Nakafa, which `drive.file` reads then.
+ * given file types, by default the PDFs and images the library keeps, in the
+ * page's language. It answers the picked file, or none when the teacher closed
+ * it. The project's number lets the Picker grant the picked file to Nakafa, which
+ * `drive.file` reads then.
  */
 export const pickDriveFile = Effect.fn("classroom.library.pickDrive")(
-  function* (keys: PickerKeys, locale: string) {
+  function* (keys: PickerKeys, locale: string, accept = LIBRARY_ACCEPT) {
     const picker = yield* loadPicker;
     return yield* Effect.callback<Option.Option<DriveFile>>((resume) => {
       const shown = new picker.PickerBuilder()
-        .addView(
-          new picker.DocsView(picker.ViewId.DOCS).setMimeTypes(LIBRARY_ACCEPT)
-        )
+        .addView(new picker.DocsView(picker.ViewId.DOCS).setMimeTypes(accept))
         .setAppId(keys.appId)
         .setDeveloperKey(keys.apiKey)
         .setOAuthToken(keys.accessToken)

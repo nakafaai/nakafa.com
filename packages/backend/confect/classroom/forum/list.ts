@@ -10,6 +10,7 @@ import { channelView } from "@repo/backend/confect/classroom/forum/channel";
 import spec from "@repo/backend/confect/classroom/forum/channels.spec";
 import { readMark } from "@repo/backend/confect/classroom/forum/mark";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
+import { NINA_NAME } from "@repo/backend/confect/classroom/forum/nina";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { openText } from "@repo/backend/confect/vault/text";
@@ -71,9 +72,9 @@ const latestIn = Effect.fn("classroom.forum.channels.latest")(function* (
   return {
     last: {
       at: message.createdAt,
-      author: author.name,
+      author: message.nina === true ? NINA_NAME : author.name,
       media: mediaOf(message),
-      mine: message.authorId === person._id,
+      mine: message.nina !== true && message.authorId === person._id,
       text: text === null ? null : Str.slice(0, PREVIEW_MAX_LENGTH)(text),
     },
     unread: Option.match(mark, {

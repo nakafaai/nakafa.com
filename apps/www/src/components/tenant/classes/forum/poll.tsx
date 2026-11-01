@@ -39,7 +39,11 @@ import {
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 import { useTally } from "@/components/tenant/classes/forum/tallies";
-import { shareOf, voteUpdate } from "@/components/tenant/classes/forum/tally";
+import {
+  type ForumTally,
+  shareOf,
+  voteUpdate,
+} from "@/components/tenant/classes/forum/tally";
 
 /** One choice while the poll is written: its text, and an ID that keeps its field as others leave. */
 const PollChoice = Schema.Struct({ id: Schema.Int, text: Schema.String });
@@ -60,25 +64,57 @@ const pollChoice = cva(
 );
 
 /**
- * A poll in its message, as WhatsApp shows one: its question, and its choices with their share of the
- * votes. A press takes a choice and shows at once, a second press takes it back, and a poll of several
- * choices keeps the others. A leader who reads the class sees the votes and takes none.
+ * A message's poll, as WhatsApp shows one (`PollCard`). A leader who reads the class sees the votes and takes none.
  */
-export function MessagePoll({
-  message,
-  poll,
-}: {
-  message: ForumMessage;
-  poll: ForumPoll;
-}) {
-  const t = useTranslations("Classroom");
+export function MessagePoll({ message }: { message: ForumMessage }) {
   const { canPost, classId, slug } = useChannelScope();
   const tally = useTally(message.id);
   const vote = useMutation(classroom.forum.tallies.vote);
-  const votes = Option.match(tally, {
-    onNone: () => [],
-    onSome: (found) => found.votes,
-  });
+
+  if (message.poll === null) {
+    return null;
+  }
+  return (
+    <PollCard
+      disabled={!canPost}
+      onChoose={(options) =>
+        runForumCall(
+          forumCall(() =>
+            vote.withOptimisticUpdate(voteUpdate)({
+              classId,
+              messageId: message.id,
+              options,
+              slug,
+            })
+          ),
+          toastForumFailure
+        )
+      }
+      poll={message.poll}
+      votes={Option.match(tally, {
+        onNone: () => [],
+        onSome: (found) => found.votes,
+      })}
+    />
+  );
+}
+
+/**
+ * A poll: its question, and its choices with their share of the votes. A press takes a choice and hands the viewer's
+ * new choices on, a second press takes it back, and a poll of several choices keeps the others.
+ */
+export function PollCard({
+  disabled,
+  onChoose,
+  poll,
+  votes,
+}: {
+  disabled: boolean;
+  onChoose: (options: readonly number[]) => void;
+  poll: ForumPoll;
+  votes: ForumTally["votes"];
+}) {
+  const t = useTranslations("Classroom");
   const total = Arr.reduce(votes, 0, (sum, row) => sum + row.count);
   const mine = Arr.map(
     Arr.filter(votes, (row) => row.mine),
@@ -113,21 +149,9 @@ export function MessagePoll({
           <button
             aria-pressed={chosen}
             className={pollChoice({ mine: chosen })}
-            disabled={!canPost}
+            disabled={disabled}
             key={option}
-            onClick={() =>
-              runForumCall(
-                forumCall(() =>
-                  vote.withOptimisticUpdate(voteUpdate)({
-                    classId,
-                    messageId: message.id,
-                    options: pressed(index),
-                    slug,
-                  })
-                ),
-                toastForumFailure
-              )
-            }
+            onClick={() => onChoose(pressed(index))}
             type="button"
           >
             <span

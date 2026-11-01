@@ -10,6 +10,7 @@ import {
   DatabaseWriter,
   MutationRunner,
   QueryRunner,
+  Scheduler,
   StorageActionWriter,
   StorageWriter,
 } from "@repo/backend/confect/_generated/services";
@@ -23,6 +24,7 @@ import {
 } from "@repo/backend/confect/classroom/errors";
 import type { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { dropPassages } from "@repo/backend/confect/classroom/library/drop";
 import { classItem, edit } from "@repo/backend/confect/classroom/library/edit";
 import {
   fileTypeOf,
@@ -48,6 +50,7 @@ import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
   Clock,
+  Duration,
   Effect,
   Layer,
   Match,
@@ -342,6 +345,11 @@ const commit = FunctionImpl.make(
         tenantId: row.tenantId,
       })
       .pipe(Effect.orDie);
+    yield* (yield* Scheduler).runAfter(
+      Duration.zero,
+      classroomInternal.passages.build,
+      { itemId: id }
+    );
     return { id };
   })
 );
@@ -364,6 +372,7 @@ const remove = FunctionImpl.make(
         link: () => Effect.void,
       })
     );
+    yield* dropPassages(itemId);
     yield* (yield* DatabaseWriter)
       .table("classroomLibrary")
       .delete(itemId)

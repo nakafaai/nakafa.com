@@ -1,6 +1,7 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Action } from "@repo/backend/confect/access/catalog";
 import { GrantScope } from "@repo/backend/confect/access/schema";
+import { ImportSummary } from "@repo/backend/confect/roster/schema";
 import { UnitName } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
@@ -102,6 +103,27 @@ export const TokenCheck = Schema.Union([
     retryAfter: Schema.Finite,
   }),
 ]);
+
+/** The longest `Idempotency-Key` a request may send. */
+const IDEMPOTENCY_KEY_LENGTH = 255;
+
+/** An `Idempotency-Key` as a request sends it (ADR 0029). */
+export const IdempotencyKey = Schema.NonEmptyString.check(
+  Schema.isMaxLength(IDEMPOTENCY_KEY_LENGTH)
+);
+
+/**
+ * One write of a client under its `Idempotency-Key`: the digest of the request, so a repeat
+ * with another request is told apart, and the first answer, which a repeat gets again. The
+ * mutation that makes the change writes the row, and a sweep deletes it after 24 hours.
+ */
+export const integrationRequestValidator = Schema.Struct({
+  clientId: Id("integrationClients"),
+  digest: SecretHash,
+  expiresAt: Schema.Finite,
+  key: IdempotencyKey,
+  summary: ImportSummary,
+});
 
 /** The seconds a device code lives, and the seconds a device waits between two polls (RFC 8628). */
 export const DEVICE_SECONDS = 600;

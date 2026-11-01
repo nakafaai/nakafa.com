@@ -43,7 +43,7 @@ process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
 
 /** One callback request of Google with its query. */
 const callback = (query: string) =>
-  new Request(`https://nakafa.com/api/connectors/google/callback${query}`);
+  new Request(`https://nakafa.com/api/connectors/callback${query}`);
 
 describe("serveConnectCallback", () => {
   it.effect(

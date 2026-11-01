@@ -93,6 +93,7 @@ const list = FunctionImpl.make(
           Effect.orDie,
           Effect.flatMap(
             TenantActor.match({
+              client: (actor) => Effect.succeed(Struct.pick(actor, ["kind"])),
               operator: (actor) => Effect.succeed(Struct.pick(actor, ["kind"])),
               person: (actor) =>
                 Effect.map(nameOf(actor.id), (name) =>

@@ -33,7 +33,7 @@ function useNotificationSentence(notification: ListNotification) {
       ? t("comment-replied-gone")
       : t("comment-replied");
   }
-  const { detail, exam, grade } = notification;
+  const { detail, exam, grade, missed } = notification;
   return Match.value(notification.changeType).pipe(
     Match.when("person.invited", () => t("person-invited")),
     Match.when("forum.mentioned", () =>
@@ -50,6 +50,19 @@ function useNotificationSentence(notification: ListNotification) {
         : t("assignment-published", {
             actor: detail.actor,
             className: detail.className,
+          })
+    ),
+    Match.when("assignment.deadline", () =>
+      detail === null
+        ? t("assignment-published-gone")
+        : t("assignment-deadline", { className: detail.className })
+    ),
+    Match.when("assignment.missed", () =>
+      missed === null
+        ? t("assignment-published-gone")
+        : t("assignment-missed", {
+            className: missed.className,
+            student: missed.student,
           })
     ),
     Match.when("announcement.posted", () =>

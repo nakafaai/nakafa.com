@@ -1,6 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -12,7 +16,7 @@ import {
   TenantPolicies,
 } from "@repo/backend/confect/tenancy/policy";
 import spec from "@repo/backend/confect/tenancy/settings.spec";
-import { Effect, Layer, Schema, Struct } from "effect";
+import { Duration, Effect, Layer, Schema, Struct } from "effect";
 
 /** Two policy sets are the same when every choice agrees and both allow the same domains, in any order. */
 const samePolicies = Schema.toEquivalence(TenantPolicies);
@@ -77,6 +81,18 @@ const setPolicy = FunctionImpl.make(
       key: policy.key,
       type: "tenant.policy.set",
     });
+    if (tenant.policies.nina !== policies.nina) {
+      const scheduler = yield* Scheduler;
+      yield* policies.nina
+        ? scheduler.runAfter(
+            Duration.zero,
+            classroomInternal.passages.rebuild,
+            { cursor: null, tenantId: tenant._id }
+          )
+        : scheduler.runAfter(Duration.zero, classroomInternal.passages.clear, {
+            tenantId: tenant._id,
+          });
+    }
     return policies;
   })
 );

@@ -57,7 +57,7 @@ describe("connectors/google/oauth", () => {
           authorizationUrl({
             challenge,
             clientId: client.id,
-            redirectUri: "https://nakafa.com/api/connectors/google/callback",
+            redirectUri: "https://nakafa.com/api/connectors/callback",
             scopes: ["openid", "https://www.googleapis.com/auth/drive.file"],
             state: "state-1",
           })
@@ -71,7 +71,7 @@ describe("connectors/google/oauth", () => {
           code_challenge: challenge,
           code_challenge_method: "S256",
           prompt: "consent",
-          redirect_uri: "https://nakafa.com/api/connectors/google/callback",
+          redirect_uri: "https://nakafa.com/api/connectors/callback",
           response_type: "code",
           scope: "openid https://www.googleapis.com/auth/drive.file",
           state: "state-1",
@@ -95,7 +95,7 @@ describe("connectors/google/oauth", () => {
         const grant = yield* google(
           exchangeCode(client, {
             code: "code-1",
-            redirectUri: "https://nakafa.com/api/connectors/google/callback",
+            redirectUri: "https://nakafa.com/api/connectors/callback",
             verifier: "verifier-1",
           })
         );
@@ -114,7 +114,7 @@ describe("connectors/google/oauth", () => {
           code: "code-1",
           code_verifier: "verifier-1",
           grant_type: "authorization_code",
-          redirect_uri: "https://nakafa.com/api/connectors/google/callback",
+          redirect_uri: "https://nakafa.com/api/connectors/callback",
         });
       })
   );

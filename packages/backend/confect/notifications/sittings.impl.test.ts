@@ -142,6 +142,7 @@ describe("notifications/sittings", () => {
             student: null,
           },
           grade: null,
+          missed: null,
         });
         // Once the sitting closes, its row shows no sitting.
         yield* fixture.run(

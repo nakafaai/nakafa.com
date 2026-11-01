@@ -1,5 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
+import type {
+  ClassesDoc,
+  TenantPeopleDoc,
+} from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
@@ -15,6 +18,7 @@ import spec, {
   FanoutPhase,
   type FanoutSource,
 } from "@repo/backend/confect/notifications/fanout.spec";
+import { queueMail } from "@repo/backend/confect/notifications/mail";
 import { schedulePush } from "@repo/backend/confect/notifications/schedule";
 import {
   Array as Arr,
@@ -155,6 +159,33 @@ const nextRun = (
     : Option.none();
 };
 
+/** The kind of notice each fan-out tells, which says whose push it may send. */
+const KIND_OF = {
+  "announcement.posted": "classAnnouncement",
+  "assignment.published": "taskPublished",
+  "forum.mentioned": "forumMention",
+} as const;
+
+/** Queues a row's place in the daily digest: a mention of everyone and a new task go there, an announcement does not. */
+const digestOf = Effect.fn("notifications.fanout.digest")(function* (
+  notice: typeof Notice.Type,
+  person: TenantPeopleDoc,
+  phase: typeof FanoutPhase.Type,
+  klass: ClassesDoc
+) {
+  const relation = phase === "students" ? "student" : "teacher";
+  yield* Match.value(notice.fields.changeType).pipe(
+    Match.when("forum.mentioned", () =>
+      queueMail("forumMention", relation, person, klass.unitId, Option.none())
+    ),
+    Match.when("assignment.published", () =>
+      queueMail("taskPublished", relation, person, klass.unitId, Option.none())
+    ),
+    Match.when("announcement.posted", () => Effect.void),
+    Match.exhaustive
+  );
+});
+
 /**
  * Writes one batch of a notice's rows: each Person of the page who reads the
  * class now, but the author and the Persons the source already notified, gets one
@@ -216,11 +247,13 @@ const run = FunctionImpl.make(
             })
             .pipe(Effect.orDie);
           yield* schedulePush(
+            KIND_OF[notice.value.fields.changeType],
             notificationId,
             person,
             principal.grants,
             klass.unitId
           );
+          yield* digestOf(notice.value, person, phase, klass);
           return Option.some(personId);
         })
     );

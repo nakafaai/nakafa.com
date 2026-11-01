@@ -85,6 +85,7 @@ export const opensRun = (
         Arr.get(messages, index),
         (message) =>
           previous.author.id !== message.author.id ||
+          previous.author.nina !== message.author.nina ||
           Arr.contains(kept, message.clientKey)
       ),
   });

@@ -9,6 +9,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ClassResolved } from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, type ReactNode, use } from "react";
@@ -28,6 +29,7 @@ import {
 } from "@/components/tenant/classes/header";
 import { NewAnnouncement } from "@/components/tenant/classes/home/compose";
 import { ClassHome } from "@/components/tenant/classes/home/home";
+import { NewPostPoll } from "@/components/tenant/classes/home/poll";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { LibraryList } from "@/components/tenant/classes/library/list";
 import { LibraryScope } from "@/components/tenant/classes/library/scope";
@@ -344,7 +346,12 @@ function ClassBody({
     return (
       <>
         <ClassHeader>
-          {Arr.contains(klass.can, "post.publish") ? <NewAnnouncement /> : null}
+          {Arr.contains(klass.can, "post.publish") ? (
+            <ButtonGroup>
+              <NewPostPoll />
+              <NewAnnouncement />
+            </ButtonGroup>
+          ) : null}
         </ClassHeader>
         <ClassScroll>
           <ClassHome />

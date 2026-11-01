@@ -1,13 +1,29 @@
+import { QueryResult, useQuery } from "@confect/react";
+import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Button } from "@repo/design-system/components/ui/button";
 import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Effect } from "effect";
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { Array as Arr, Effect } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { useImportFile } from "@/components/tenant/exams/import/calls";
+import {
+  useImportFile,
+  useImportForm,
+} from "@/components/tenant/exams/import/calls";
 import { ImportFileField } from "@/components/tenant/exams/import/field";
 import { IMPORT_ACCEPT } from "@/components/tenant/exams/import/file";
 import { useExam } from "@/components/tenant/exams/provider";
+import { reportClientException } from "@/lib/analytics/client";
+
+const SOURCE = "components/tenant/exams/import/dialog";
+
+/** Says that a form is read through a Google Drive connection this account does not have. */
+const toastNoDrive = () =>
+  toast.error({
+    description: "import-no-drive.description",
+    title: "import-no-drive.title",
+  });
 
 /**
  * The editor's Import, as Google Slides imports slides and Canva uploads files into an open
@@ -26,7 +42,11 @@ export function ImportQuestions({
   const common = useTranslations("Common");
   const { exam, slug } = useExam();
   const importFile = useImportFile(slug);
+  const importForm = useImportForm(slug);
+  const offered = useQuery(connectors.google.offered, {});
   const [file, setFile] = useState<File | null>(null);
+  const driveOn =
+    QueryResult.isSuccess(offered) && Arr.contains(offered.value, "drive");
 
   return (
     <ResponsiveDialog
@@ -70,6 +90,35 @@ export function ImportQuestions({
           label={t("import-label")}
           onFile={setFile}
         />
+        {driveOn ? (
+          <Button
+            onClick={() =>
+              Effect.runFork(
+                importForm(exam.id, () => onOpenChange(false)).pipe(
+                  Effect.catchTag(["DriveMissing", "FormDriveMissing"], () =>
+                    Effect.sync(toastNoDrive)
+                  ),
+                  Effect.catch((error) =>
+                    reportClientException(error, { source: SOURCE }).pipe(
+                      Effect.andThen(
+                        Effect.sync(() =>
+                          toast.error({
+                            description: "import-unread.description",
+                            title: "import-unread.title",
+                          })
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            }
+            type="button"
+            variant="outline"
+          >
+            {t("import-forms")}
+          </Button>
+        ) : null}
       </FieldGroup>
     </ResponsiveDialog>
   );

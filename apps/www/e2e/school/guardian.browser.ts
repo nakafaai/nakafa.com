@@ -118,10 +118,10 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   await expect(child.getByRole("alert")).toHaveText(
     "These details don't match."
   );
-  // The hint stays, and the refusal takes the line under it that the field kept from the start.
+  // The refusal takes the hint's line, so the field keeps its height.
   await expect(
     field.getByText("Enter your child's NISN to confirm this link.")
-  ).toBeVisible();
+  ).toBeHidden();
   expect((await field.boundingBox())?.height).toBe(typed?.height);
   // The refusal is one line, the one the field kept for it, so it never pushes the field taller.
   expect(await child.getByRole("alert").evaluate(lineCount)).toBe(1);

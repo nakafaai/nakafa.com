@@ -1,5 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
+import { RequestDecision } from "@repo/backend/confect/guardians/request";
 import { ConsentMethod } from "@repo/backend/confect/guardians/schema";
 import { person, tenant } from "@repo/backend/confect/tenancy/kinds";
 import { Schema } from "effect";
@@ -13,6 +14,12 @@ import { Schema } from "effect";
  */
 export const guardianLinkKind = Kind.make("guardianLink", "guardianLinks", {
   actions: {
+    "guardian.answer": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin", "staff"],
+    },
     "guardian.child": {
       access: "read",
       grantedBy: "relations",
@@ -22,6 +29,11 @@ export const guardianLinkKind = Kind.make("guardianLink", "guardianLinks", {
       access: "write",
       grantedBy: "relations",
       relations: ["guardian"],
+    },
+    "guardian.request": {
+      access: "write",
+      grantedBy: "relations",
+      relations: ["verifiedParent"],
     },
     "guardian.readdress": {
       access: "write",
@@ -45,7 +57,7 @@ export const guardianLinkKind = Kind.make("guardianLink", "guardianLinks", {
       access: "read",
       grantedBy: "roles",
       relations: ["guardian"],
-      roles: ["admin", "staff", "principal"],
+      roles: ["admin", "staff", "principal", "integration"],
     },
     "guardian.withdraw": {
       access: "transition",
@@ -77,18 +89,27 @@ export const guardianLinkKind = Kind.make("guardianLink", "guardianLinks", {
       student: Id("tenantPeople"),
       type: Schema.Literal("guardian.readdressed"),
     }),
+    Schema.Struct({
+      decision: RequestDecision,
+      student: Id("tenantPeople"),
+      type: Schema.Literal("guardian.request.answered"),
+    }),
   ],
   published: ["guardian.linked", "guardian.withdrawn"],
   relations: ["guardian", "verifiedParent"],
 });
 
-/** Staff starts a link for a student: the action is ruled on the student's Person. */
+/**
+ * Staff starts a link for a student, and a student for themself: the action is ruled on
+ * the student's Person, and `self` is the only relation that opens it. The link still
+ * waits for the guardian's code and the second check (ADR 0034).
+ */
 const guardianPerson = Kind.extend(person, {
   actions: {
     "guardian.link": {
       access: "write",
       grantedBy: "roles",
-      relations: [],
+      relations: ["self"],
       roles: ["admin", "staff"],
     },
   },

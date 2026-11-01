@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { GuardianLink } from "@repo/backend/confect/guardians/access";
 import {
   guardianLinkAccess,
@@ -15,6 +16,7 @@ import {
   linksOfGuardian,
 } from "@repo/backend/confect/guardians/link";
 import { NISN_TRIES } from "@repo/backend/confect/guardians/schema";
+import { narrativeField } from "@repo/backend/confect/insight/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -26,6 +28,7 @@ import {
 } from "@repo/backend/confect/roster/entry";
 import { Nisn } from "@repo/backend/confect/roster/schema";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
+import { openText } from "@repo/backend/confect/vault/text";
 import {
   Array as Arr,
   Clock,
@@ -35,6 +38,9 @@ import {
   Schema,
   String as Str,
 } from "effect";
+
+/** The narratives one child shows: one for each of their classes, and a child has few. */
+const NARRATIVE_PAGE = 30;
 
 /**
  * The children whose links name the caller, each as the guardian sees it. A link
@@ -77,9 +83,9 @@ const confirm = FunctionImpl.make(
       return "verified";
     }
     const typed = Schema.decodeOption(Nisn)(Str.trim(nisn));
-    const entry = Option.map(
+    const entry = Option.flatMap(
       yield* rosterEntryOf(link.studentPersonId),
-      (row) => row.nisn
+      (row) => Option.fromNullishOr(row.nisn)
     );
     if (
       !isLive(link, now) ||
@@ -142,7 +148,42 @@ const grades = FunctionImpl.make(
   })
 );
 
+/**
+ * What the child's teachers shared about the child, which a verified link opens (ADR 0035). A narrative a teacher
+ * has not shared, or took back, stays closed.
+ */
+const narratives = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "narratives",
+  Effect.fn("guardians.family.narratives")(function* () {
+    const link = yield* GuardianLink;
+    const reader = yield* DatabaseReader;
+    const rows = yield* reader
+      .table("insightNarratives")
+      .index("by_personId", (query) =>
+        query.eq("personId", link.studentPersonId)
+      )
+      .take(NARRATIVE_PAGE)
+      .pipe(Effect.orDie);
+    const keys = yield* schoolKeys(link.tenantId);
+    return yield* Effect.forEach(
+      Arr.filter(rows, (row) => row.sharedAt !== undefined),
+      (row) =>
+        Effect.gen(function* () {
+          const klass = yield* reader.table("classes").get(row.classId);
+          return {
+            className: klass.name,
+            id: row._id,
+            text: yield* openText(keys, narrativeField(row), row.sealedText),
+          };
+        }).pipe(Effect.orDie)
+    );
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(narratives),
   Layer.provide(children),
   Layer.provide(confirm),
   Layer.provide(withdraw),

@@ -71,7 +71,8 @@ export const DiscussionView = Schema.Struct({
  * `threadId`, and a reply carries the discussion it answers. A message that opens a
  * discussion stays in the channel and carries that discussion as `startsThreadId`.
  * A message may carry files and a poll, and then its text may be empty; a hide
- * deletes them with the text. `tenantId` is copied from the class for the tenant
+ * deletes them with the text. A reply of Nina is an ordinary message marked `nina`,
+ * under the Person who asked. `tenantId` is copied from the class for the tenant
  * check of every read.
  */
 export const messageValidator = Schema.Struct({
@@ -84,6 +85,7 @@ export const messageValidator = Schema.Struct({
   editedAt: Schema.optionalKey(Schema.Finite),
   hiddenAt: Schema.optionalKey(Schema.Finite),
   mentions: Schema.optionalKey(Schema.Array(Mention)),
+  nina: Schema.optionalKey(Schema.Literal(true)),
   poll: Schema.optionalKey(pollValidator),
   sealedText: Schema.NullOr(Sealed),
   startsThreadId: Schema.optionalKey(Id("classroomThreads")),
@@ -104,6 +106,7 @@ export const MessageView = Schema.Struct({
   author: Schema.Struct({
     id: Id("tenantPeople"),
     name: Schema.String,
+    nina: Schema.Boolean,
   }),
   clientKey: ClientKey,
   createdAt: Schema.Finite,

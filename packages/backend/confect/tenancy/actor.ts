@@ -1,4 +1,5 @@
 import type {
+  IntegrationClientsDoc,
   OperatorsDoc,
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
@@ -13,6 +14,11 @@ export const personActor = (
 export const operatorActor = (
   operator: OperatorsDoc
 ): typeof TenantActor.Type => ({ id: operator._id, kind: "operator" });
+
+/** The integration client that writes through the school API. */
+export const clientActor = (
+  client: IntegrationClientsDoc
+): typeof TenantActor.Type => ({ id: client._id, kind: "client" });
 
 /** Work the system does for no Person: a claim, an expiry, a release, or the opening of a school. */
 export const systemActor: typeof TenantActor.Type = { kind: "system" };

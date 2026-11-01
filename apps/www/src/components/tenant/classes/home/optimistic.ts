@@ -6,13 +6,14 @@ import type {
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Array as Arr, Option } from "effect";
+import { chosenVotes } from "@/components/tenant/classes/forum/tally";
 
 /** One announcement of a class, as its home shows it. */
 export type ClassPost = Ref.Returns<
   typeof classroom.posts.list
 >["page"][number];
 
-const { list, pinned } = classroom.posts;
+const { list, pinned, votes } = classroom.posts;
 
 /**
  * Writes what `change` makes of each page of the class's announcements that the store holds. A
@@ -115,3 +116,35 @@ export const pinPostUpdate =
       }
     }
   };
+
+/** Shows the viewer's choices in a poll at once, in every read that holds its post. */
+export const votePostUpdate: OptimisticUpdate<typeof classroom.posts.vote> = (
+  localStore,
+  args
+) => {
+  for (const query of localStore.getAllQueries(votes)) {
+    if (
+      Option.isSome(query.value) &&
+      Arr.contains(query.args.postIds, args.postId)
+    ) {
+      const held = Option.match(
+        Arr.findFirst(
+          query.value.value,
+          (found) => found.postId === args.postId
+        ),
+        { onNone: () => [], onSome: (found) => found.votes }
+      );
+      localStore.setQuery(
+        votes,
+        query.args,
+        Option.some([
+          ...Arr.filter(
+            query.value.value,
+            (found) => found.postId !== args.postId
+          ),
+          { postId: args.postId, votes: chosenVotes(held, args.options) },
+        ])
+      );
+    }
+  }
+};

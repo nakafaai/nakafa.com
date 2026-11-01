@@ -1,14 +1,15 @@
 import { Schema } from "effect";
 
 /** The path of the one callback of the connectors project on each site (ADR 0015). */
-export const CALLBACK_PATH = "/api/connectors/google/callback";
+export const CALLBACK_PATH = "/api/connectors/callback";
 
 /** The prefix of every Google scope that a connector asks for. */
 const SCOPE_ROOT = "https://www.googleapis.com/auth/";
 
 /**
- * The Google connectors that the connect flow serves (ADR 0015). Forms waits for
- * its Picker test and Gmail for its security assessment, so neither is here.
+ * The Google connectors that the connect flow serves (ADR 0015). Forms reads a picked
+ * form through the Drive connection, because `drive.file` covers it, so it has no
+ * connection of its own, and Gmail waits for its security assessment.
  */
 export const GoogleConnector = Schema.Literals([
   "drive",

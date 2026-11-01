@@ -5,16 +5,9 @@ import access from "@repo/backend/confect/_generated/refs/access";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { applyPolicy } from "@repo/backend/confect/tenancy/policy";
-import { INVITE_TERM, Npsn } from "@repo/backend/confect/tenancy/schema";
+import { Npsn } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import {
-  Array as Arr,
-  DateTime,
-  Duration,
-  Option,
-  Schema,
-  Struct,
-} from "effect";
+import { Array as Arr, DateTime, Option, Schema, Struct } from "effect";
 import {
   type Client,
   draftText,
@@ -22,7 +15,6 @@ import {
   type Invite,
   isFirstPage,
   mapUnit,
-  type Person,
   revokeClient,
   type Unit,
   withoutItem,
@@ -33,6 +25,9 @@ import {
  * result in every loaded query it touches, so each open list shows it at once.
  * A refused change is undone by Confect when the server answers.
  */
+
+/** One webhook as the school's list holds it. */
+type Webhook = Ref.Returns<typeof integrations.webhooks.list>["page"][number];
 
 /** The school as the settings pages read it: the viewer query of the tenant. */
 type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
@@ -162,22 +157,6 @@ export function changeGrantPages(
   }
 }
 
-/** The loaded Person with this ID, read from any loaded list of people, or none when no list holds it. */
-function nameOfPerson(
-  localStore: OptimisticLocalStore.OptimisticLocalStore,
-  personId: Person["id"]
-) {
-  return Arr.findFirst(
-    Arr.flatMap(localStore.getAllQueries(tenancy.people.list), (query) =>
-      Option.match(query.value, {
-        onNone: (): Person[] => [],
-        onSome: (result) => [...result.page],
-      })
-    ),
-    (person) => person.id === personId
-  );
-}
-
 /** Shows the policy the school chose at once. */
 export const setPolicyChange: OptimisticUpdate<
   typeof tenancy.settings.setPolicy
@@ -302,59 +281,90 @@ export const revokeClientChange: OptimisticUpdate<
   );
 };
 
-/** Lists a new grant at once, at the top of the school's grants, when its Person is loaded. */
-export const assignGrantChange: OptimisticUpdate<
-  typeof access.grants.assign
-> = (localStore, { personId, role, scope, slug }) => {
-  const person = nameOfPerson(localStore, personId);
-  if (Option.isNone(person)) {
-    return;
+/** Takes the setup out of the sidebar at once. */
+export const finishSetupChange: OptimisticUpdate<
+  typeof tenancy.setup.finish
+> = (localStore, { slug }) => {
+  patchViewer(localStore, slug, (viewer) => ({
+    ...viewer,
+    tenant: { ...viewer.tenant, setupDone: true },
+  }));
+};
+
+/** Changes the page of every loaded list of webhooks of one school. */
+function changeWebhookLists(
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
+  slug: TenantSlug,
+  change: (page: readonly Webhook[]) => Webhook[]
+) {
+  for (const query of localStore.getAllQueries(integrations.webhooks.list)) {
+    if (Option.isSome(query.value) && query.args.slug === slug) {
+      localStore.setQuery(
+        integrations.webhooks.list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: change(query.value.value.page),
+        })
+      );
+    }
   }
-  const draft: Grant = {
-    id: Schema.decodeUnknownSync(Id("tenantGrants"))(draftText()),
-    person: { id: person.value.id, name: person.value.name },
-    revocable: true,
-    role: { key: role, kind: "builtin" },
-    scope,
-  };
-  changeGrantPages(localStore, slug, isFirstPage, (page) =>
-    Arr.prepend(page, draft)
+}
+
+/** Shows a webhook's new receiver and changes at once. */
+export const changeWebhookChange: OptimisticUpdate<
+  typeof integrations.webhooks.change
+> = (localStore, { changes, slug, url, webhookId }) => {
+  changeWebhookLists(localStore, slug, (page) =>
+    Arr.map(page, (webhook) =>
+      webhook.id === webhookId
+        ? Struct.assign(webhook, { changes, url })
+        : webhook
+    )
   );
 };
 
-/** Takes a grant off every loaded list of the school's grants at once. */
-export const revokeGrantChange: OptimisticUpdate<
-  typeof access.grants.revoke
-> = (localStore, { grantId, slug }) => {
-  changeGrantPages(
-    localStore,
-    slug,
-    () => true,
-    (page) => withoutItem(page, grantId)
+/** Shows a webhook revoked at once. */
+export const revokeWebhookChange: OptimisticUpdate<
+  typeof integrations.webhooks.revoke
+> = (localStore, { slug, webhookId }) => {
+  changeWebhookLists(localStore, slug, (page) =>
+    Arr.map(page, (webhook) =>
+      webhook.id === webhookId
+        ? Struct.assign(webhook, { status: "revoked" as const })
+        : webhook
+    )
   );
 };
 
-/** Lists a new invite at once, at the top of the pending invites, when its Person is loaded. */
-export const inviteChange: OptimisticUpdate<typeof tenancy.invites.invite> = (
-  localStore,
-  { email, personId, slug }
-) => {
-  const person = nameOfPerson(localStore, personId);
-  if (Option.isNone(person)) {
-    return;
+/** Lists one more attempt of a change at the top of its webhook's log, waiting. */
+export const resendDeliveryChange: OptimisticUpdate<
+  typeof integrations.webhooks.resend
+> = (localStore, { deliveryId, webhookId }) => {
+  for (const query of localStore.getAllQueries(
+    integrations.webhooks.deliveries
+  )) {
+    if (
+      Option.isSome(query.value) &&
+      query.args.webhookId === webhookId &&
+      isFirstPage(query.args)
+    ) {
+      const { page } = query.value.value;
+      const resent = Arr.findFirst(page, (item) => item.id === deliveryId);
+      if (Option.isSome(resent)) {
+        const due: (typeof page)[number] = Struct.assign(resent.value, {
+          attempt: resent.value.attempt + 1,
+          id: Schema.decodeUnknownSync(Id("integrationDeliveries"))(
+            draftText()
+          ),
+          state: { status: "due" as const },
+        });
+        localStore.setQuery(
+          integrations.webhooks.deliveries,
+          query.args,
+          Option.some({ ...query.value.value, page: [due, ...page] })
+        );
+      }
+    }
   }
-  const draft: Invite = {
-    email,
-    expiresAt:
-      DateTime.toEpochMillis(DateTime.nowUnsafe()) +
-      Duration.toMillis(INVITE_TERM),
-    id: Schema.decodeUnknownSync(Id("tenantInvites"))(draftText()),
-    name: person.value.name,
-    personId,
-    roles: [],
-    status: "pending",
-  };
-  changeInviteLists(localStore, slug, isFirstPage, (page) =>
-    Arr.prepend(page, draft)
-  );
 };

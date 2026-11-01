@@ -94,6 +94,7 @@ const get = FunctionImpl.make(
       reach: reachOf(grants),
       tenant: Struct.assign(Struct.assign(profile, tenantSettings(tenant)), {
         id: tenant._id,
+        setupDone: tenant.setupDoneAt !== undefined,
       }),
       units,
     };

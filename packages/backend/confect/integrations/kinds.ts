@@ -46,6 +46,26 @@ export const integration = Kind.make("integration", "integrationClients", {
       client: Id("integrationClients"),
       type: Schema.Literal("integration.authorized"),
     }),
+    Schema.Struct({
+      client: Id("integrationClients"),
+      type: Schema.Literal("integration.webhook.created"),
+      webhook: Id("integrationWebhooks"),
+    }),
+    Schema.Struct({
+      client: Id("integrationClients"),
+      type: Schema.Literal("integration.webhook.changed"),
+      webhook: Id("integrationWebhooks"),
+    }),
+    Schema.Struct({
+      client: Id("integrationClients"),
+      type: Schema.Literal("integration.webhook.rotated"),
+      webhook: Id("integrationWebhooks"),
+    }),
+    Schema.Struct({
+      client: Id("integrationClients"),
+      type: Schema.Literal("integration.webhook.revoked"),
+      webhook: Id("integrationWebhooks"),
+    }),
   ],
   published: [],
   relations: [],

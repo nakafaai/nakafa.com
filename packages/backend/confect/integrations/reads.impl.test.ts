@@ -2,7 +2,14 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { createClient } from "@repo/backend/test/api";
-import { cohort, nf, period } from "@repo/backend/test/classroom";
+import {
+  classOf,
+  cohort,
+  nf,
+  period,
+  teach,
+} from "@repo/backend/test/classroom";
+import { release } from "@repo/backend/test/records";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
@@ -168,6 +175,92 @@ describe("integrations/reads", () => {
             })
           ).toEqual(forbidden);
         }
+      })
+  );
+});
+
+describe("integrations/reads records", () => {
+  /** A client of the school that reads released grades, and one grade released in a class. */
+  const released = Effect.gen(function* () {
+    const fixture = yield* tenancyFixture;
+    const term = yield* period(fixture, fixture.units.smp);
+    const group = yield* cohort(fixture, term.id, "X-1");
+    const fisika = yield* classOf(fixture, group.id, "Fisika");
+    const kimia = yield* classOf(fixture, group.id, "Kimia");
+    yield* teach(fixture, fisika.id, fixture.people.teacher.personId);
+    yield* teach(fixture, kimia.id, fixture.people.teacher.personId);
+    yield* fixture.as("admin").mutation(refs.public.tenancy.placements.place, {
+      cohortId: group.id,
+      personId: fixture.people.student.personId,
+      slug: nf,
+    });
+    yield* fixture.as("teacher").mutation(refs.public.records.grades.enter, {
+      classId: kimia.id,
+      personId: fixture.people.student.personId,
+      slug: nf,
+      value: 90,
+    });
+    yield* release(fixture, fisika.id, 88);
+    const client = yield* createClient(fixture, [
+      "grade.export",
+      "period.view",
+    ]);
+    return { client, fixture, term };
+  });
+
+  it.effect("reads the released grades of a period, and never a draft", () =>
+    Effect.gen(function* () {
+      const { client, fixture, term } = yield* released;
+
+      const page = yield* fixture.internal.query(reads.grades, {
+        clientId: client.id,
+        cursor: null,
+        numItems: 100,
+        period: term.id,
+      });
+
+      expect(page).toMatchObject({
+        data: [{ value: 88 }],
+        next: null,
+        outcome: "page",
+      });
+    })
+  );
+
+  it.effect("refuses a client whose action list opens no grade", () =>
+    Effect.gen(function* () {
+      const { fixture, term } = yield* released;
+      const client = yield* createClient(fixture, ["period.view"]);
+
+      expect(
+        yield* fixture.internal.query(reads.grades, {
+          clientId: client.id,
+          cursor: null,
+          numItems: 100,
+          period: term.id,
+        })
+      ).toEqual({ outcome: "forbidden" });
+    })
+  );
+
+  it.effect(
+    "reads the published changes the client may read, and no other",
+    () =>
+      Effect.gen(function* () {
+        const { client, fixture } = yield* released;
+
+        const page = yield* fixture.internal.query(reads.changes, {
+          clientId: client.id,
+          cursor: null,
+          numItems: 100,
+        });
+
+        expect(page.outcome).toBe("page");
+        const types =
+          page.outcome === "page"
+            ? Arr.map(page.data, (change) => change.type)
+            : [];
+        expect(Arr.dedupe(types)).toEqual(["grade.released"]);
       })
   );
 });
