@@ -121,15 +121,6 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
       header: t("child"),
       id: "child",
     }),
-    childColumns.values((child) => (child.staffCheck ? "school" : "nisn"), {
-      cell: (info) => t(`check-${info.getValue()}`),
-      header: t("check"),
-      id: "check",
-      options: [
-        { icon: IdentityCardIcon, label: t("check-nisn"), value: "nisn" },
-        { icon: Building03Icon, label: t("check-school"), value: "school" },
-      ],
-    }),
     childColumns.values((child) => child.status, {
       cell: (info) => (
         <TableStatus
@@ -145,6 +136,15 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
         label: t(`status-${status}`),
         value: status,
       })),
+    }),
+    childColumns.values((child) => (child.staffCheck ? "school" : "nisn"), {
+      cell: (info) => t(`check-${info.getValue()}`),
+      header: t("check"),
+      id: "check",
+      options: [
+        { icon: IdentityCardIcon, label: t("check-nisn"), value: "nisn" },
+        { icon: Building03Icon, label: t("check-school"), value: "school" },
+      ],
     }),
     childColumns.menu((info) => (
       <PaneOpenButton id={info.row.original.linkId} />
