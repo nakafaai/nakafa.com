@@ -9,16 +9,15 @@ import {
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { UnitStatus } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -41,7 +40,7 @@ const STATUS_LOOKS = {
 const TIME_ZONE_ICONS = [TimeZoneIcon, Globe02Icon, Clock01Icon] as const;
 
 /** The columns of the schools table. */
-const unitColumns = createColumnHelper<typeof dataTableFeatures, Unit>();
+const unitColumns = tableColumns<Unit>();
 
 /**
  * The schools of the organisation as the page's table, one row per school: its name, its level, its NPSN, its time
@@ -95,64 +94,47 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
     level === "other" ? t("level-other") : level.toUpperCase();
   const levels = Arr.dedupe(Arr.map(units.value, (unit) => unit.level));
   const zones = Arr.dedupe(Arr.map(units.value, (unit) => unit.timeZone));
-  const columns = unitColumns.columns([
+  const columns = [
     // The name with the NPSN after it, so the header's search finds a school by either; the cell shows the name.
-    unitColumns.accessor((unit) => `${unit.name} ${unit.npsn ?? ""}`, {
+    unitColumns.text((unit) => `${unit.name} ${unit.npsn ?? ""}`, {
       cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.row.original.name}
-        </span>
+        <TableTitle icon={SchoolIcon}>
+          <span dir="auto">{info.row.original.name}</span>
+        </TableTitle>
       ),
-      filterFn: "includesString",
       header: t("unit-add-name"),
       id: "name",
-      sortFn: "text",
     }),
-    unitColumns.accessor((unit) => unit.level, {
+    unitColumns.values((unit) => unit.level, {
       cell: (info) => levelName(info.getValue()),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="level"
-          options={Arr.zipWith(
-            levels,
-            namedOptions(levels, UNIT_ICONS),
-            (level, option) => ({
-              icon: option.icon,
-              label: levelName(level),
-              value: level,
-            })
-          )}
-          title={t("unit-add-level")}
-        />
-      ),
+      header: t("unit-add-level"),
       id: "level",
+      options: Arr.zipWith(
+        levels,
+        namedOptions(levels, UNIT_ICONS),
+        (level, option) => ({
+          icon: option.icon,
+          label: levelName(level),
+          value: level,
+        })
+      ),
     }),
-    unitColumns.accessor((unit) => unit.npsn, {
+    unitColumns.text((unit) => unit.npsn ?? "", {
       cell: (info) =>
-        info.getValue() === null ? (
+        info.getValue() === "" ? (
           <span className="text-muted-foreground">{t("unit-npsn-unset")}</span>
         ) : (
           <span className="tabular-nums">{info.getValue()}</span>
         ),
-      enableSorting: false,
       header: t("unit-npsn"),
       id: "npsn",
     }),
-    unitColumns.accessor((unit) => unit.timeZone, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="timeZone"
-          options={namedOptions(zones, TIME_ZONE_ICONS)}
-          title={t("unit-time-zone")}
-        />
-      ),
+    unitColumns.values((unit) => unit.timeZone, {
+      header: t("unit-time-zone"),
       id: "timeZone",
+      options: namedOptions(zones, TIME_ZONE_ICONS),
     }),
-    unitColumns.accessor((unit) => unit.status, {
+    unitColumns.values((unit) => unit.status, {
       cell: (info) => (
         <TableStatus
           icon={STATUS_LOOKS[info.getValue()].icon}
@@ -160,27 +142,16 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
           tone={STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(UnitStatus.literals, (status) => ({
-            icon: STATUS_LOOKS[status].icon,
-            label: t(`unit-status-label.${status}`),
-            value: status,
-          }))}
-          title={t("unit-status")}
-        />
-      ),
+      header: t("unit-status"),
       id: "status",
+      options: Arr.map(UnitStatus.literals, (status) => ({
+        icon: STATUS_LOOKS[status].icon,
+        label: t(`unit-status-label.${status}`),
+        value: status,
+      })),
     }),
-    unitColumns.display({
-      cell: (info) => <UnitMenu unit={info.row.original} />,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    unitColumns.menu((info) => <UnitMenu unit={info.row.original} />),
+  ];
 
   return (
     <DataTable

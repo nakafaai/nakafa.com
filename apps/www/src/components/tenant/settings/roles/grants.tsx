@@ -22,13 +22,11 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
@@ -46,7 +44,7 @@ const SOURCE = "components/tenant/settings/roles/grants";
 type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
 
 /** The columns of the grants table. */
-const grantColumns = createColumnHelper<typeof dataTableFeatures, GrantItem>();
+const grantColumns = tableColumns<GrantItem>();
 
 /**
  * The grants in a data table that finds a person, filters by role and by what a grant covers in
@@ -73,53 +71,31 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
     QueryResult.isSuccess(viewer)
       ? scopeNameOf(grant.scope, viewer.value.tenant.name, viewer.value.units)
       : "";
-  const columns = grantColumns.columns([
-    grantColumns.accessor((grant) => grant.person.name, {
+  const columns = [
+    grantColumns.text((grant) => grant.person.name, {
       cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-      filterFn: "includesString",
       header: t("grant-person"),
       id: "person",
-      sortFn: "text",
     }),
-    grantColumns.accessor((grant) => grant.role.key, {
+    grantColumns.values((grant) => grant.role.key, {
       cell: (info) => <RoleBadge role={info.getValue()} />,
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="role"
-          options={Arr.map(BuiltinRole.literals, (role) => ({
-            icon: roleIcon(role),
-            label: tSchool(`role.${role}`),
-            value: role,
-          }))}
-          title={t("grant-role")}
-        />
-      ),
+      header: t("grant-role"),
       id: "role",
+      options: Arr.map(BuiltinRole.literals, (role) => ({
+        icon: roleIcon(role),
+        label: tSchool(`role.${role}`),
+        value: role,
+      })),
     }),
-    grantColumns.accessor(scopeName, {
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="scope"
-          options={
-            QueryResult.isSuccess(viewer)
-              ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
-              : []
-          }
-          title={t("grant-scope")}
-        />
-      ),
+    grantColumns.values(scopeName, {
+      header: t("grant-scope"),
       id: "scope",
+      options: QueryResult.isSuccess(viewer)
+        ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
+        : [],
     }),
-    grantColumns.display({
-      cell: (info) => <SchoolGrantMenu grant={info.row.original} />,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    grantColumns.menu((info) => <SchoolGrantMenu grant={info.row.original} />),
+  ];
 
   return (
     <DataTable

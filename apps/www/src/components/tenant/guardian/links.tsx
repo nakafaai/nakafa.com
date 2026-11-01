@@ -5,7 +5,6 @@ import { LinkStatus } from "@repo/backend/confect/guardians/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -27,9 +26,8 @@ import {
   usePanes,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
 import {
@@ -55,7 +53,7 @@ import { SchoolDateTime } from "@/components/tenant/settings/time";
 const PAGE_SIZE = 25;
 
 /** The columns of the links table. */
-const linkColumns = createColumnHelper<typeof dataTableFeatures, LinkItem>();
+const linkColumns = tableColumns<LinkItem>();
 
 /** The links loaded so far, which the table lists and the open link is found in. */
 const LinksContext = createContext<readonly LinkItem[] | null>(null);
@@ -177,26 +175,23 @@ function GuardianLinkTable() {
   const links = useLinks();
   const statusText = useStatusText();
 
-  const columns = linkColumns.columns([
+  const columns = [
     // The student's name, with the parent's address after it, so the header's search finds a link by either; the
     // cell shows the name alone, and the name leads the sort.
-    linkColumns.accessor((link) => `${link.student.name} ${link.email}`, {
+    linkColumns.text((link) => `${link.student.name} ${link.email}`, {
       cell: (info) => (
         <PaneOpen id={info.row.original.id}>
           {info.row.original.student.name}
         </PaneOpen>
       ),
-      filterFn: "includesString",
       header: t("student"),
       id: "student",
-      sortFn: "text",
     }),
-    linkColumns.accessor((link) => link.guardian.name, {
+    linkColumns.text((link) => link.guardian.name, {
       header: t("guardian-name"),
       id: "guardian",
-      sortFn: "text",
     }),
-    linkColumns.accessor((link) => link.status, {
+    linkColumns.values((link) => link.status, {
       cell: (info) => (
         <TableStatus
           icon={LINK_STATUS_LOOKS[info.getValue()].icon}
@@ -204,31 +199,20 @@ function GuardianLinkTable() {
           tone={LINK_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(LinkStatus.literals, (status) => ({
-            icon: LINK_STATUS_LOOKS[status].icon,
-            label: t(`status-${status}`),
-            value: status,
-          }))}
-          title={t("status")}
-        />
-      ),
+      header: t("status"),
       id: "status",
+      options: Arr.map(LinkStatus.literals, (status) => ({
+        icon: LINK_STATUS_LOOKS[status].icon,
+        label: t(`status-${status}`),
+        value: status,
+      })),
     }),
-    linkColumns.display({
-      cell: (info) => (
-        <WithAction action="guardian.link">
-          <GuardianLinkMenu link={info.row.original} />
-        </WithAction>
-      ),
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    linkColumns.menu((info) => (
+      <WithAction action="guardian.link">
+        <GuardianLinkMenu link={info.row.original} />
+      </WithAction>
+    )),
+  ];
 
   return (
     <DataTable

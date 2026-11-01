@@ -138,7 +138,7 @@ function TryoutCountrySelect({
     <Select items={items} onValueChange={onValueChange} value={currentValue}>
       <SelectTrigger
         aria-label={label}
-        className="w-auto min-w-0 shrink-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
+        className="w-auto min-w-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
         disabled={disabled}
       >
         <span
@@ -215,7 +215,7 @@ export function TryoutExamSelector({
     <Select items={items} value={currentValue}>
       <SelectTrigger
         aria-label={label}
-        className="w-auto min-w-0 shrink-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
+        className="w-auto min-w-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
       >
         <span
           className="flex min-w-0 items-center gap-2"

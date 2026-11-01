@@ -11,14 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option, Schema } from "effect";
@@ -28,14 +20,18 @@ import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { columnAlign } from "@/components/shared/table/align";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableFrame } from "@/components/shared/table/frame";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import {
   forumCall,
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
 import { useTenant } from "@/components/tenant/context";
+import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { Link } from "@/lib/routing/link";
 
@@ -83,16 +79,16 @@ export function ClassroomImport() {
             Arr.isReadonlyArrayNonEmpty(found.courses) ? (
               <NoClassToFill />
             ) : null}
-            <CourseTable empty={Arr.isReadonlyArrayEmpty(found.courses)}>
-              {Arr.map(found.courses, (course) => (
-                <CourseRow
+            <CourseTable
+              classCell={(course) => (
+                <CourseClass
                   course={course}
-                  key={course.courseId}
                   preview={found}
                   setPreview={setShown}
                 />
-              ))}
-            </CourseTable>
+              )}
+              preview={found}
+            />
           </>
         ),
       })}
@@ -124,17 +120,31 @@ function NoClassToFill() {
   );
 }
 
-/** The courses of a preview in a table, each row composed by the import, or a sentence when it has none. */
+/** The columns of the courses. */
+const courseColumns = tableColumns<Preview["courses"][number]>();
+
+/**
+ * The courses of a preview in a table, or a sentence when it has none: each course's name and section, its students,
+ * the class it fills, which the caller composes, and the import of a linked course.
+ */
 function CourseTable({
-  children,
-  empty,
+  classCell,
+  preview,
 }: {
-  children: ReactNode;
-  empty: boolean;
+  classCell: (course: Preview["courses"][number]) => ReactNode;
+  preview: Preview;
 }) {
   const t = useTranslations("Connectors");
+  const classOf = (course: Preview["courses"][number]) =>
+    Option.getOrElse(
+      Option.map(
+        Arr.findFirst(preview.classes, (klass) => klass.id === course.classId),
+        (klass) => klass.name
+      ),
+      () => t("course-unlinked")
+    );
 
-  if (empty) {
+  if (Arr.isReadonlyArrayEmpty(preview.courses)) {
     return (
       <p className="text-muted-foreground px-6 text-sm">{t("courses-none")}</p>
     );
@@ -142,36 +152,63 @@ function CourseTable({
 
   return (
     <div className="px-6">
-      <TableFrame>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className={columnAlign({ align: "start" })}>
-                {t("course")}
-              </TableHead>
-              <TableHead
-                className={columnAlign({ className: "hidden sm:table-cell" })}
-              >
-                {t("course-students")}
-              </TableHead>
-              <TableHead className={columnAlign()}>
-                {t("course-class")}
-              </TableHead>
-              <TableHead className={columnAlign()} />
-            </TableRow>
-          </TableHeader>
-          <TableBody>{children}</TableBody>
-        </Table>
-      </TableFrame>
+      <TableFiltersProvider>
+        <TableFrame>
+          <DataTable
+            columns={[
+              courseColumns.text(
+                (course) =>
+                  course.section === null
+                    ? course.name
+                    : t("course-name", {
+                        name: course.name,
+                        section: course.section,
+                      }),
+                {
+                  cell: (info) => (
+                    <span className="font-medium" dir="auto">
+                      {info.getValue()}
+                    </span>
+                  ),
+                  header: t("course"),
+                  id: "course",
+                }
+              ),
+              courseColumns.number((course) => course.students, {
+                cell: (info) => (
+                  <span className="text-muted-foreground">
+                    {info.getValue()}
+                  </span>
+                ),
+                header: t("course-students"),
+                id: "students",
+              }),
+              courseColumns.values(classOf, {
+                cell: (info) => classCell(info.row.original),
+                header: t("course-class"),
+                id: "class",
+                options: namedOptions(
+                  Arr.dedupe(Arr.map(preview.courses, classOf)),
+                  GRADE_ICONS
+                ),
+              }),
+              courseColumns.menu((info) =>
+                info.row.original.classId === null ? null : (
+                  <CourseRosterImport courseId={info.row.original.courseId} />
+                )
+              ),
+            ]}
+            data={preview.courses}
+            rowId={(course) => course.courseId}
+          />
+        </TableFrame>
+      </TableFiltersProvider>
     </div>
   );
 }
 
-/**
- * One course: its name and section, its students, and the class it fills. A new
- * pick shows at once and goes back to the previous one when the server refuses it.
- */
-function CourseRow({
+/** The class a course fills. A new pick shows at once and goes back to the previous one when the server refuses it. */
+function CourseClass({
   course,
   preview,
   setPreview,
@@ -223,54 +260,27 @@ function CourseRow({
   };
 
   return (
-    <TableRow>
-      <TableCell
-        className={columnAlign({ align: "start", className: "font-medium" })}
-        dir="auto"
-      >
-        {course.section === null
-          ? course.name
-          : t("course-name", { name: course.name, section: course.section })}
-      </TableCell>
-      <TableCell
-        className={columnAlign({
-          className: "text-muted-foreground hidden sm:table-cell",
-        })}
-      >
-        {course.students}
-      </TableCell>
-      <TableCell className={columnAlign()}>
-        <Select
-          disabled={
-            course.classId === null && Arr.isReadonlyArrayEmpty(preview.classes)
-          }
-          items={items}
-          onValueChange={pick}
-          value={course.classId ?? UNLINKED}
-        >
-          <SelectTrigger
-            aria-label={t("course-class")}
-            className="w-full min-w-40"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {Arr.map(items, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </TableCell>
-      <TableCell className={columnAlign()}>
-        {course.classId === null ? null : (
-          <CourseRosterImport courseId={course.courseId} />
-        )}
-      </TableCell>
-    </TableRow>
+    <Select
+      disabled={
+        course.classId === null && Arr.isReadonlyArrayEmpty(preview.classes)
+      }
+      items={items}
+      onValueChange={pick}
+      value={course.classId ?? UNLINKED}
+    >
+      <SelectTrigger aria-label={t("course-class")} className="w-full min-w-40">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          {Arr.map(items, (item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }
 

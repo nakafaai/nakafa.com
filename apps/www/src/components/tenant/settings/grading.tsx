@@ -22,16 +22,15 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { startTransition, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { useFormatTimeZone } from "@/components/shared/table/calendar";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
@@ -68,10 +67,7 @@ const VERSION_LOOKS = {
 } as const satisfies Record<typeof VersionStatus.Type, StatusLook>;
 
 /** The columns of the versions table. */
-const versionColumns = createColumnHelper<
-  typeof dataTableFeatures,
-  SchemeVersion
->();
+const versionColumns = tableColumns<SchemeVersion>();
 
 /**
  * The versions of the school's grading scheme, the newest first, which is the version in force: when each took
@@ -138,6 +134,7 @@ function GradingTable({
   versions: readonly SchemeVersion[];
 }) {
   const t = useTranslations("SchoolSettings");
+  const formatZone = useFormatTimeZone();
   const format = useFormatter();
 
   if (Arr.isReadonlyArrayEmpty(versions)) {
@@ -155,8 +152,8 @@ function GradingTable({
   }
 
   const newest = Option.map(Arr.head(versions), (version) => version.id);
-  const columns = versionColumns.columns([
-    versionColumns.accessor((row) => row.effectiveFrom, {
+  const columns = [
+    versionColumns.days((row) => row.effectiveFrom, {
       cell: (info) => (
         <span className="font-medium tabular-nums">
           {format.dateTime(
@@ -167,15 +164,14 @@ function GradingTable({
       ),
       header: t("grading-effective"),
       id: "effective",
-      sortFn: "basic",
+      timeZone: formatZone,
     }),
-    versionColumns.accessor((row) => row.kktp, {
+    versionColumns.number((row) => row.kktp, {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
       header: t("grading-kktp"),
       id: "kktp",
-      sortFn: "basic",
     }),
-    versionColumns.accessor(
+    versionColumns.text(
       (row) =>
         Arr.join(
           Arr.map(row.bands, (band) => band.label),
@@ -200,13 +196,11 @@ function GradingTable({
               )}
             </span>
           ),
-        enableSorting: false,
-        filterFn: "includesString",
         header: t("grading-bands"),
         id: "bands",
       }
     ),
-    versionColumns.accessor(
+    versionColumns.values(
       (row): typeof VersionStatus.Type =>
         Option.contains(newest, row.id) ? "current" : "earlier",
       {
@@ -217,28 +211,19 @@ function GradingTable({
             tone={VERSION_LOOKS[info.getValue()].tone}
           />
         ),
-        enableSorting: false,
-        filterFn: "oneOf",
-        header: () => (
-          <ColumnFilter
-            column="status"
-            options={Arr.map(VersionStatus.literals, (status) => ({
-              icon: VERSION_LOOKS[status].icon,
-              label: t(`grading-${status}`),
-              value: status,
-            }))}
-            title={t("grading-status")}
-          />
-        ),
+        header: t("grading-status"),
         id: "status",
+        options: Arr.map(VersionStatus.literals, (status) => ({
+          icon: VERSION_LOOKS[status].icon,
+          label: t(`grading-${status}`),
+          value: status,
+        })),
       }
     ),
-    versionColumns.display({
-      cell: (info) => <SchemeVersionMenu version={info.row.original} />,
-      id: "actions",
-      meta: { align: "menu" },
-    }),
-  ]);
+    versionColumns.menu((info) => (
+      <SchemeVersionMenu version={info.row.original} />
+    )),
+  ];
 
   return (
     <>

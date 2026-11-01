@@ -3,22 +3,22 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   PlayIcon,
+  TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
 import { reloadPage } from "@/components/shared/reload";
-import { ColumnFilter } from "@/components/shared/table/column";
+import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -40,7 +40,7 @@ import { schoolSittingTarget } from "@/lib/routing/school/target";
 type Sitting = typeof StudentSittingRow.Type;
 
 /** The columns of the student's exams table. */
-const sittingColumns = createColumnHelper<typeof dataTableFeatures, Sitting>();
+const sittingColumns = tableColumns<Sitting>();
 
 /** The look of each status of a sitting: open to enter now, still to open, and finished. */
 const STATUS_LOOKS = {
@@ -112,30 +112,31 @@ function StudentExamsTable({
     );
   }
 
-  const columns = sittingColumns.columns([
-    sittingColumns.accessor((sitting) => sitting.examTitle, {
+  const columns = [
+    sittingColumns.text((sitting) => sitting.examTitle, {
       cell: (info) => (
-        <TargetLink
-          className="font-medium underline-offset-4 hover:underline"
-          dir="auto"
-          target={schoolSittingTarget(slug, info.row.original.id)}
+        <TableTitle
+          icon={TaskEdit01Icon}
+          tone={STATUS_LOOKS[sittingStatusOf(info.row.original)].tone}
         >
-          {info.getValue()}
-        </TargetLink>
+          <TargetLink
+            className="underline-offset-4 hover:underline"
+            dir="auto"
+            target={schoolSittingTarget(slug, info.row.original.id)}
+          >
+            {info.getValue()}
+          </TargetLink>
+        </TableTitle>
       ),
-      filterFn: "includesString",
       header: t("mine-exam"),
       id: "exam",
-      sortFn: "text",
     }),
-    sittingColumns.accessor((sitting) => sitting.room, {
+    sittingColumns.text((sitting) => sitting.room, {
       cell: (info) => <span dir="auto">{info.getValue()}</span>,
-      filterFn: "includesString",
       header: t("room"),
       id: "room",
-      sortFn: "text",
     }),
-    sittingColumns.accessor((sitting) => sitting.opensAt, {
+    sittingColumns.days((sitting) => sitting.opensAt, {
       cell: (info) =>
         schoolDayTimeText({
           at: info.getValue(),
@@ -144,9 +145,9 @@ function StudentExamsTable({
         }),
       header: t("mine-opens"),
       id: "opens",
-      sortFn: "basic",
+      timeZone: (sitting) => sitting.timeZone,
     }),
-    sittingColumns.accessor(sittingStatusOf, {
+    sittingColumns.values(sittingStatusOf, {
       cell: (info) => (
         <TableStatus
           icon={STATUS_LOOKS[info.getValue()].icon}
@@ -154,33 +155,23 @@ function StudentExamsTable({
           tone={STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      enableSorting: false,
-      filterFn: "oneOf",
-      header: () => (
-        <ColumnFilter
-          column="status"
-          options={Arr.map(SittingStatus.literals, (status) => ({
-            icon: STATUS_LOOKS[status].icon,
-            label: t(`mine-${status}`),
-            value: status,
-          }))}
-          title={t("mine-status")}
-        />
-      ),
+      header: t("mine-status"),
       id: "status",
+      options: Arr.map(SittingStatus.literals, (status) => ({
+        icon: STATUS_LOOKS[status].icon,
+        label: t(`mine-${status}`),
+        value: status,
+      })),
     }),
-    sittingColumns.display({
+    sittingColumns.number((sitting) => sitting.score?.points ?? null, {
       cell: (info) => <SittingScore sitting={info.row.original} />,
       header: t("mine-score"),
       id: "score",
     }),
-    sittingColumns.display({
-      cell: (info) => <SittingAction sitting={info.row.original} />,
-      id: "action",
-      // A student on a phone reaches Start at the row's edge, with the table scrolled anywhere.
-      meta: { align: "menu" },
-    }),
-  ]);
+    sittingColumns.menu((info) => (
+      <SittingAction sitting={info.row.original} />
+    )),
+  ];
 
   return (
     <DataTable

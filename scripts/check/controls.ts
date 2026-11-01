@@ -21,6 +21,10 @@ const INTRINSIC_TAG_PATTERN = /^[a-z]/u;
 /** A link: an anchor, or a component named for one, such as `Link` or `PublicPathLink`. */
 const LINK_TAG_PATTERN = /^a$|Link$/u;
 
+/** The application's code, where every table is a `DataTable`, and the one module set that may draw a head. */
+const APPLICATION_PATTERN = /^apps\/www\/src\//u;
+const TABLE_MODULE_PATTERN = /^apps\/www\/src\/components\/shared\/table\//u;
+
 /**
  * The input types whose control the browser draws itself, each with the design-system field that
  * replaces it: a picker, spin buttons, a slider, a swatch or a clear button that no theme reaches.
@@ -121,29 +125,50 @@ function linkButtonViolation(
 }
 
 /**
- * The violation of one element: a native select, an input whose type the browser draws, or a Button
- * that renders a link.
+ * The violation of a table head drawn outside the shared table. A head there holds what filters its
+ * column (`tableColumns`), so a table drawn by hand is how a column without a filter would reach a page.
+ */
+function tableHeadViolation(file: string, tag: JsxTagNameExpression) {
+  const drawsHead =
+    isIdentifier(tag) &&
+    tag.text === "TableHead" &&
+    APPLICATION_PATTERN.test(file) &&
+    !TABLE_MODULE_PATTERN.test(file);
+  return drawsHead
+    ? Option.some(
+        `${file}: declare the table with DataTable and tableColumns from components/shared/table, whose every column head holds a filter, instead of a <TableHead>.`
+      )
+    : Option.none();
+}
+
+/**
+ * The violation of one element: a native select, an input whose type the browser draws, a table head
+ * outside the shared table, or a Button that renders a link.
  */
 function elementViolation(file: string, node: Node) {
   return Option.flatMap(opening(node), ({ attributes, tag }) =>
-    Option.orElse(linkButtonViolation(file, attributes, tag), () =>
-      Option.flatMap(intrinsicName(tag), (name) => {
-        if (name === "select") {
-          return Option.some(
-            `${file}: use Select from @repo/design-system/components/ui/select instead of a native <select>, which the browser draws itself.`
+    Option.orElse(
+      Option.orElse(linkButtonViolation(file, attributes, tag), () =>
+        tableHeadViolation(file, tag)
+      ),
+      () =>
+        Option.flatMap(intrinsicName(tag), (name) => {
+          if (name === "select") {
+            return Option.some(
+              `${file}: use Select from @repo/design-system/components/ui/select instead of a native <select>, which the browser draws itself.`
+            );
+          }
+          if (name !== "input") {
+            return Option.none();
+          }
+          return Option.flatMap(literalType(attributes), (type) =>
+            Option.map(
+              HashMap.get(NATIVE_INPUTS, type),
+              (field) =>
+                `${file}: use ${field} instead of <input type="${type}">, whose control the browser draws itself.`
+            )
           );
-        }
-        if (name !== "input") {
-          return Option.none();
-        }
-        return Option.flatMap(literalType(attributes), (type) =>
-          Option.map(
-            HashMap.get(NATIVE_INPUTS, type),
-            (field) =>
-              `${file}: use ${field} instead of <input type="${type}">, whose control the browser draws itself.`
-          )
-        );
-      })
+        })
     )
   );
 }
