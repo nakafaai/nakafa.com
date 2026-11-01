@@ -65,7 +65,7 @@ export function ContentBlocks({
       return;
     }
     const frame = requestAnimationFrame(() => {
-      startTransition(() => setShown(shown + NEXT_BLOCKS));
+      startTransition(() => setShown((drawn) => drawn + NEXT_BLOCKS));
     });
     return () => cancelAnimationFrame(frame);
   }, [blocks.length, shown]);

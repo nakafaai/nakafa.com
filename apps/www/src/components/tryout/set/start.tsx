@@ -36,7 +36,7 @@ import { START_ERROR, START_PART_ERROR } from "@/components/tryout/set/copy";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
 import { readKeptName, tryoutActionNameOf } from "@/components/tryout/set/kept";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
-import { TryoutActionName } from "@/components/tryout/set/name";
+import { keepActionName, TryoutActionName } from "@/components/tryout/set/name";
 import {
   startAttemptProgram,
   startEntrySectionProgram,
@@ -59,6 +59,8 @@ const StartTryoutRequestSchema = Schema.Struct({
   examKey: Schema.String,
   locale: Schema.Literals(LOCALES),
   setKey: Schema.String,
+  /** The set's own page, whose action this start changes. */
+  setPath: Schema.String,
   successNavigation: Schema.Literals(["destination", "stay"]),
   trackKey: Schema.String,
 });
@@ -305,6 +307,11 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       onFailure: Effect.sync(() => setPhase("idle")),
       onSuccess: (result) =>
         Effect.sync(() => {
+          // The attempt runs from here on, whichever page the learner next loads the set from.
+          keepActionName(
+            `/${request.locale}${getTryoutPublicPathHref(request.setPath)}`,
+            "continue-cta"
+          );
           const destination = {
             attemptId: result.attemptId,
             publicPath: result.navigation.publicPath,

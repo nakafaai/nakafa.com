@@ -19,7 +19,10 @@ interface TryoutSetActionProps {
     destination: TryoutSetDestination | null;
     entrySection: SetEntrySection | null;
     locale: Locale;
-    set: Pick<SetPage["set"], "countryKey" | "examKey" | "setKey" | "trackKey">;
+    set: Pick<
+      SetPage["set"],
+      "countryKey" | "examKey" | "publicPath" | "setKey" | "trackKey"
+    >;
   };
 }
 
@@ -47,6 +50,7 @@ export function TryoutSetAction({ value }: TryoutSetActionProps) {
     examKey: value.set.examKey,
     locale: value.locale,
     setKey: value.set.setKey,
+    setPath: value.set.publicPath,
     successNavigation: "destination",
     trackKey: value.set.trackKey,
   };
