@@ -1,4 +1,4 @@
-import type { GenericId } from "@confect/core";
+import type { GenericId, Ref } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Tag01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
@@ -39,20 +39,31 @@ const EXAM_PAGE = 50;
 /** Decodes a typed competency, when it is one. */
 const decodeCompetency = Schema.decodeOption(Competency);
 
+/** The questions the dialog shows, with the exam they belong to. */
+interface ShownTags {
+  readonly examId: GenericId.GenericId<"exams">;
+  readonly tags: Ref.Returns<typeof insight.tags.list>;
+}
+
 /**
  * The button and the dialog that name what each question of an exam tests, the newest exam first. Each field saves when
- * it is left, so Done only closes. With no exam to name, the dialog says so and its footer goes to the exams.
+ * it is left, so Done only closes. With no exam to name, the dialog says so and its footer goes to the exams. The first
+ * sign of intent reads the exams and the first exam's questions, and those reads stay for the life of the page, so the
+ * dialog opens whole and leaves whole. A press that comes first holds the dialog unseen until they arrive. A chosen exam
+ * keeps the fields of the last one until its own are read, so the body never blanks.
  */
 export function QuestionTags() {
   const t = useTranslations("SchoolInsight");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const id = useId();
+  const [isWanted, setIsWanted] = useState(false);
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
+  const [shown, setShown] = useState<ShownTags | null>(null);
   const list = useQuery(
     exams.exams.list,
-    open && isSettled
+    isWanted && isSettled
       ? { paginationOpts: { cursor: null, numItems: EXAM_PAGE }, slug }
       : "skip"
   );
@@ -67,10 +78,29 @@ export function QuestionTags() {
   );
   const hasNoExam =
     QueryResult.isSuccess(list) && Arr.isReadonlyArrayEmpty(held);
+  const tags = useQuery(
+    insight.tags.list,
+    Option.isSome(chosen) ? { examId: chosen.value.id, slug } : "skip"
+  );
+  if (
+    Option.isSome(chosen) &&
+    QueryResult.isSuccess(tags) &&
+    tags.value !== shown?.tags
+  ) {
+    setShown({ examId: chosen.value.id, tags: tags.value });
+  }
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} type="button" variant="outline">
+      <Button
+        onClick={() => {
+          setIsWanted(true);
+          setOpen(true);
+        }}
+        onFocus={() => setIsWanted(true)}
+        onPointerEnter={() => setIsWanted(true)}
+        type="button"
+      >
         <HugeIcons icon={Tag01Icon} />
         <HeaderLabel>{t("tags")}</HeaderLabel>
       </Button>
@@ -95,15 +125,15 @@ export function QuestionTags() {
         setOpen={setOpen}
         title={t("tags")}
       >
-        {QueryResult.isLoading(list) ? <PopupHold /> : null}
         {hasNoExam ? (
           <p className="text-muted-foreground text-sm">{t("tags-empty")}</p>
-        ) : (
+        ) : null}
+        {!hasNoExam && shown === null ? <PopupHold /> : null}
+        {!hasNoExam && shown !== null ? (
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor={`${id}-exam`}>{t("exam")}</FieldLabel>
               <Select
-                disabled={!QueryResult.isSuccess(list)}
                 items={items}
                 onValueChange={(value) => setPicked(value)}
                 value={Option.getOrNull(Option.map(chosen, (exam) => exam.id))}
@@ -120,31 +150,18 @@ export function QuestionTags() {
                 </SelectContent>
               </Select>
             </Field>
-            {Option.isSome(chosen) ? (
-              <ExamTags examId={chosen.value.id} key={chosen.value.id} />
-            ) : null}
+            {Arr.isReadonlyArrayEmpty(shown.tags) ? (
+              <p className="text-muted-foreground text-sm">{t("tags-none")}</p>
+            ) : (
+              Arr.map(shown.tags, (tag) => (
+                <QuestionTag examId={shown.examId} key={tag.id} tag={tag} />
+              ))
+            )}
           </FieldGroup>
-        )}
+        ) : null}
       </ResponsiveDialog>
     </>
   );
-}
-
-/** One field for each question of the exam, or a sentence when it has none. */
-function ExamTags({ examId }: { examId: GenericId.GenericId<"exams"> }) {
-  const t = useTranslations("SchoolInsight");
-  const { slug } = useTenant();
-  const tags = useQuery(insight.tags.list, { examId, slug });
-
-  if (!QueryResult.isSuccess(tags)) {
-    return null;
-  }
-  if (Arr.isReadonlyArrayEmpty(tags.value)) {
-    return <p className="text-muted-foreground text-sm">{t("tags-none")}</p>;
-  }
-  return Arr.map(tags.value, (tag) => (
-    <QuestionTag examId={examId} key={tag.id} tag={tag} />
-  ));
 }
 
 /** The competency of one question, saved when the field is left. An emptied field takes it away. */
