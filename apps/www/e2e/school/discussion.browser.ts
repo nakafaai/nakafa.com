@@ -104,7 +104,10 @@ for (const viewport of [
       );
       const handle = Option.getOrThrow(
         Option.fromNullOr(
-          await page.locator("[data-slot=resizable-handle]").boundingBox()
+          await page
+            .locator("[data-slot=resizable-handle]")
+            .last()
+            .boundingBox()
         )
       );
       const middle = handle.y + handle.height / 2;

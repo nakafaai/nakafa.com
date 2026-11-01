@@ -195,7 +195,7 @@ function CohortGraduationBody() {
   ];
 
   return (
-    <Panes>
+    <Panes id="graduation">
       <PanesList>
         <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
           <DataTable

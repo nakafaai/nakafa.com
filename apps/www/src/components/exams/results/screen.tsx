@@ -144,7 +144,7 @@ function SittingResultsContent({
               </ButtonGroup>
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>
-            <Panes>
+            <Panes id="results">
               <PanesList>
                 <TablePageBody>
                   {canRelease || releasedAt !== null ? null : (

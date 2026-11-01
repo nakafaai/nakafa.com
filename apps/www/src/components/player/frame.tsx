@@ -1,7 +1,6 @@
 import {
   ResizableHandle,
   ResizablePanel,
-  ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
 import { cn } from "cn";
 import type { ReactNode } from "react";
@@ -10,6 +9,7 @@ import {
   pageGutterVariants,
   readingMeasureVariants,
 } from "@/components/shared/content/width";
+import { PanesGroup, SizedPane } from "@/components/shared/panes";
 
 /**
  * The questions beside the navigator across the page's frame,
@@ -29,12 +29,12 @@ export function PlayerMain({
   navigator: ReactNode;
 }) {
   return (
-    <ResizablePanelGroup
+    <PanesGroup
       className={cn(
         pageBoxVariants(),
         "h-auto! flex-1 overflow-visible! max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!"
       )}
-      orientation="horizontal"
+      id="player"
     >
       <ResizablePanel
         className="overflow-visible!"
@@ -58,7 +58,7 @@ export function PlayerMain({
             className="z-0 items-start [&>div]:sticky [&>div]:top-[50svh]"
             withHandle
           />
-          <ResizablePanel
+          <SizedPane
             className="overflow-visible!"
             defaultSize="25%"
             id="navigator"
@@ -66,9 +66,9 @@ export function PlayerMain({
             minSize="18%"
           >
             {navigator}
-          </ResizablePanel>
+          </SizedPane>
         </>
       )}
-    </ResizablePanelGroup>
+    </PanesGroup>
   );
 }

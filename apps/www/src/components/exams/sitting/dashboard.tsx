@@ -109,7 +109,7 @@ export function SittingDashboard({
           <SittingHeader examId={examId} />
           <SittingFilterRow />
           <SittingOfflineContext value={offline}>
-            <Panes>
+            <Panes id="sitting">
               <PanesList>
                 <div
                   className={cn(

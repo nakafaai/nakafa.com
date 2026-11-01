@@ -192,6 +192,7 @@ function MemoryEditorPanel({
       PANEL_WIDTH.minWidth,
       Math.min(PANEL_WIDTH.maxWidth, room)
     ),
+    storageKey: "nakafa-resize-memory",
   });
 
   useLayoutEffect(() => remember, [remember]);
