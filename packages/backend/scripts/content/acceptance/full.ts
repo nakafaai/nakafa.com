@@ -57,6 +57,9 @@ const PLANNED_PERIOD = {
 /** The rows of a table, newest first, up to the school's size and every other school a shared runtime holds. */
 const READ_LIMIT = "20000";
 
+/** A read of a whole table can time out on a busy local backend, so a failed one runs again. */
+const READ_RETRIES = 4;
+
 const encodeRow = Schema.encodeEffect(JsonTextSchema);
 
 /** The rows of the tables that the seed reads back, as much of each as it needs. */
@@ -98,7 +101,10 @@ const readRows = <Rows>(
     "jsonArray",
     "--limit",
     READ_LIMIT,
-  ]).pipe(Effect.flatMap(Schema.decodeEffect(rows)));
+  ]).pipe(
+    Effect.retry({ times: READ_RETRIES }),
+    Effect.flatMap(Schema.decodeEffect(rows))
+  );
 
 /** The school of a slug: its ID, its first unit, and its Owner, who must have signed in. */
 const schoolOf = Effect.fn("contentAcceptance.full.school")(function* (
