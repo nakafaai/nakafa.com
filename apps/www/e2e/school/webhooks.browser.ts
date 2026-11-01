@@ -43,7 +43,9 @@ test("an owner gives a client a webhook, reads its secret once, edits it, reads 
   await expect(create).toBeDisabled();
 
   await dialog.getByLabel("Receiver address").fill("https://93.184.216.34/a");
-  await expect(dialog.getByRole("checkbox", { name: "Unit created" })).toBeChecked();
+  await expect(
+    dialog.getByRole("checkbox", { name: "Unit created" })
+  ).toBeChecked();
   await create.click();
   await expect(
     page.getByRole("dialog", { name: "Signing secret" })

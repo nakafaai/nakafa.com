@@ -18,7 +18,7 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Option, Order, Schema } from "effect";
+import { Array as Arr, Effect, Order, Schema } from "effect";
 
 const { apply, applySourced, list } = refs.public.roster.imports;
 const SECOND = Schema.decodeSync(Nisn)("0098765432");
@@ -54,13 +54,11 @@ describe("roster/imports applySourced", () => {
         };
         const names = { periodId: term.id, slug: nf };
 
-        const first = yield* fixture
-          .as("counselor")
-          .mutation(applySourced, {
-            ...names,
-            rows: [row],
-            source: "oneroster",
-          });
+        const first = yield* fixture.as("counselor").mutation(applySourced, {
+          ...names,
+          rows: [row],
+          source: "oneroster",
+        });
         const second = yield* fixture.as("counselor").mutation(applySourced, {
           ...names,
           rows: [{ ...row, name: "Raka P." }],

@@ -95,10 +95,9 @@ export function ImportQuestions({
             onClick={() =>
               Effect.runFork(
                 importForm(exam.id, () => onOpenChange(false)).pipe(
-                  Effect.catchTags({
-                    DriveMissing: () => Effect.sync(toastNoDrive),
-                    FormDriveMissing: () => Effect.sync(toastNoDrive),
-                  }),
+                  Effect.catchTag(["DriveMissing", "FormDriveMissing"], () =>
+                    Effect.sync(toastNoDrive)
+                  ),
                   Effect.catch((error) =>
                     reportClientException(error, { source: SOURCE }).pipe(
                       Effect.andThen(

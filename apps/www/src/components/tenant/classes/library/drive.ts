@@ -109,9 +109,7 @@ export const pickDriveFile = Effect.fn("classroom.library.pickDrive")(
     const picker = yield* loadPicker;
     return yield* Effect.callback<Option.Option<DriveFile>>((resume) => {
       const shown = new picker.PickerBuilder()
-        .addView(
-          new picker.DocsView(picker.ViewId.DOCS).setMimeTypes(accept)
-        )
+        .addView(new picker.DocsView(picker.ViewId.DOCS).setMimeTypes(accept))
         .setAppId(keys.appId)
         .setDeveloperKey(keys.apiKey)
         .setOAuthToken(keys.accessToken)
