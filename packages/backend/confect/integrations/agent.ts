@@ -61,10 +61,12 @@ const FunctionName = Schema.String.pipe(
 });
 
 const ListInput = Schema.Struct({
-  area: Schema.optionalKey(Schema.String).annotate({
-    description:
-      "An area of Nakafa, such as exams or tenancy. Leave it out to list the areas.",
-  }),
+  area: Schema.optionalKey(
+    Schema.String.annotate({
+      description:
+        "An area of Nakafa, such as exams or tenancy. Leave it out to list the areas.",
+    })
+  ),
 });
 
 const DescribeInput = Schema.Struct({ name: FunctionName });
