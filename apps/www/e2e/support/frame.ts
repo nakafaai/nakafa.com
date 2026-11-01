@@ -16,7 +16,7 @@ export function readFrameProblems(page: Page) {
     const mostControls = 2;
     const near = 12;
     const tabs = '[data-slot="tabs-tab"]';
-    const edges = `${tabs},[data-slot="input-group"],[data-slot="item"],[data-slot="card"],[data-slot="table-card"]`;
+    const edges = `${tabs},[data-slot="input-group"],[data-slot="item"],[data-slot="card"],[data-slot="table-card"],[data-slot="pane-header"]`;
     const body =
       "h1,h2,h3,p,li,td,th,button,a,input,textarea,img,[data-slot=card],[data-slot=table-card],[data-slot=tabs-tab]";
 
@@ -121,7 +121,7 @@ export function readFrameProblems(page: Page) {
 
     /**
      * What should stand on the line the header's first letter draws, and on the edge that mirrors it: a search
-     * bar, a tab, a list row, a card. Their own edge counts, filled or bordered, not only their text, so a rail
+     * bar, a tab, a list row, a card, a pane. Their own edge counts, filled or bordered, not only their text, so a rail
      * that starts a few pixels off reads as a body wider than its header. What stands well inside, such as a
      * card in a card, is left alone, and a tab row that scrolls may run on to the screen's edge.
      */
