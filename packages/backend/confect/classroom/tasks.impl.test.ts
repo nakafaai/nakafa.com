@@ -9,6 +9,7 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
+import { schoolViews } from "@repo/backend/test/inbox";
 import { journal, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
@@ -98,11 +99,9 @@ describe("classroom/tasks", () => {
         ).toHaveLength(3);
         yield* fixture.finishScheduled();
         const rows = yield* fixture.as("student").query(inbox.list, firstPage);
-        expect(Arr.map(rows.page, (row) => row.detail?.task)).toEqual([
-          "tugas",
-          "latihan-gerak-lurus-2",
-          "latihan-gerak-lurus",
-        ]);
+        expect(
+          Arr.map(schoolViews(rows.page), (row) => row.detail?.task)
+        ).toEqual(["tugas", "latihan-gerak-lurus-2", "latihan-gerak-lurus"]);
       })
   );
 

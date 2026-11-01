@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { isSchoolRow } from "@repo/backend/confect/notifications/schema";
 import {
   denied,
   firstPage,
@@ -24,7 +25,10 @@ const noticesOf = (personId: string) =>
       .pipe(
         Effect.map(
           (rows) =>
-            Arr.filter(rows, (row) => row.recipientPersonId === personId).length
+            Arr.filter(
+              Arr.filter(rows, isSchoolRow),
+              (row) => row.recipientPersonId === personId
+            ).length
         )
       )
   );

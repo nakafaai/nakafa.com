@@ -16,17 +16,20 @@ export const NoticeKind = Schema.Literals([
   "examStart",
   "examGuardianReminder",
   "invitation",
+  "commentReply",
 ]);
 
 /**
  * How a recipient relates to the object of a notice: a student or a teacher of
- * its class, the guardian of a student, or the Person that an invitation names.
+ * its class, the guardian of a student, the Person that an invitation names, or
+ * the account whose comment was answered.
  */
 export const Relation = Schema.Literals([
   "student",
   "teacher",
   "guardian",
   "invitee",
+  "commenter",
 ]);
 
 /** A channel that reaches a person: the inbox row, a push, or an email. */
@@ -200,6 +203,11 @@ export const NOTICE_RULES: typeof NoticeRules.Type = {
   invitation: {
     alwaysSent: ["email"],
     routes: [{ relation: "invitee", inbox: [NOW], email: [NOW] }],
+  },
+  commentReply: {
+    routes: [
+      { relation: "commenter", inbox: [NOW], push: [NOW], email: [DIGEST] },
+    ],
   },
 };
 

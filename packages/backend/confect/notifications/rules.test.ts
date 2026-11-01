@@ -5,9 +5,10 @@ import {
   NoticeRules,
   Relation,
   recipientsOf,
+  routeOf,
   Timing,
 } from "@repo/backend/confect/notifications/rules";
-import { Array as Arr, Exit, Schema } from "effect";
+import { Array as Arr, Exit, Option, Schema } from "effect";
 
 const Member = Schema.Struct({ name: Schema.String, relation: Relation });
 
@@ -82,6 +83,18 @@ describe("notifications/rules Timing", () => {
 });
 
 describe("notifications/rules recipientsOf", () => {
+  it("sends a reply to the account whose comment it answers, in the inbox, by push and in the digest", () => {
+    expect(
+      Option.getOrThrow(routeOf("commentReply", "commenter"))
+    ).toStrictEqual({
+      email: [{ _tag: "Digest" }],
+      inbox: [{ _tag: "Now" }],
+      push: [{ _tag: "Now" }],
+      relation: "commenter",
+    });
+    expect(Option.isNone(routeOf("commentReply", "student"))).toBe(true);
+  });
+
   it("sends a forum mention to the student or teacher it names, never to a guardian", () => {
     expect(namesOf(recipientsOf("forumMention", members))).toEqual([
       "Ayu",

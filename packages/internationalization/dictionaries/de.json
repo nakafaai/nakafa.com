@@ -2003,6 +2003,8 @@
     "person-invited": "Du wurdest eingeladen, dieser Schule beizutreten.",
     "forum-mentioned": "{actor} hat dich in {className} erwähnt.",
     "forum-mentioned-gone": "Du wurdest in einer Klasse erwähnt, die du nicht mehr liest.",
+    "comment-replied": "Hat auf deinen Kommentar geantwortet.",
+    "comment-replied-gone": "Diese Antwort wurde gelöscht.",
     "announcement-posted": "{actor} hat in {className} eine Ankündigung gepostet.",
     "announcement-posted-gone": "Eine Ankündigung, die es nicht mehr gibt.",
     "push-offer": "Erhalte auf diesem Gerät eine Benachrichtigung, wenn es etwas Neues gibt.",

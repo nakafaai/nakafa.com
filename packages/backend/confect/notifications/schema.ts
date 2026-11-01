@@ -3,6 +3,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { ObjectRef } from "@repo/backend/confect/access/catalog";
 import { SubjectView } from "@repo/backend/confect/journal/schema";
 import { TenantProfile } from "@repo/backend/confect/tenancy/schema";
+import { UserPicture } from "@repo/backend/confect/users/picture";
+import { MascotCode } from "@repo/mascot/code";
 import { Schema } from "effect";
 
 /** What every inbox row holds: its recipient Person, its school, its subject, and when it came and was read. */
@@ -81,6 +83,19 @@ const GradeReleasedRow = Schema.Struct({
 });
 
 /**
+ * The row of a reply to an account's comment on a lesson or an article. A comment
+ * belongs to no school, so the row is addressed to the account (ADR 0027), and it
+ * names the reply.
+ */
+const CommentReplyRow = Schema.Struct({
+  changeType: Schema.Literal("comment.replied"),
+  commentId: Id("comments"),
+  createdAt: Schema.Finite,
+  readAt: Schema.optionalKey(Schema.Finite),
+  recipientUserId: Id("users"),
+});
+
+/**
  * One inbox row: one recipient Person and one invitation, mention, announcement, new task, coming sitting, child's
  * coming sitting, or released grade, told apart by `changeType`. It holds IDs and codes only, and its text is read from its subject when
  * it is opened (ADR 0027).
@@ -93,7 +108,25 @@ export const Notification = Schema.Union([
   ExamStartRow,
   ExamReminderRow,
   GradeReleasedRow,
+  CommentReplyRow,
 ]);
+
+/** A row addressed to an account, which no school holds. */
+export type AccountRow = Extract<
+  NotificationsDoc,
+  { readonly changeType: "comment.replied" }
+>;
+
+/** A row addressed to a Person of a school. */
+export type SchoolRow = Exclude<NotificationsDoc, AccountRow>;
+
+/** Whether a row is addressed to an account. */
+export const isAccountRow = (row: NotificationsDoc): row is AccountRow =>
+  row.changeType === "comment.replied";
+
+/** Whether a row is addressed to a Person of a school. */
+export const isSchoolRow = (row: NotificationsDoc): row is SchoolRow =>
+  !isAccountRow(row);
 
 /** What a row tells: an invitation, a mention, an announcement, a new task, a coming sitting, or a released grade. */
 const NotificationType = Schema.Literals([
@@ -144,12 +177,12 @@ export const ClassDetail = Schema.Struct({
 });
 
 /**
- * One inbox row as the wire shows it, with the school that holds it. A class row
- * carries its detail while the recipient still reads its class and its source
- * still stands, and a sitting row its exam while the sitting still waits to open;
- * otherwise neither.
+ * One school's inbox row as the wire shows it, with the school that holds it. A
+ * class row carries its detail while the recipient still reads its class and its
+ * source still stands, and a sitting row its exam while the sitting still waits to
+ * open; otherwise neither.
  */
-export const NotificationView = Schema.Struct({
+const SchoolNotificationView = Schema.Struct({
   changeType: NotificationType,
   createdAt: Schema.Finite,
   detail: Schema.NullOr(ClassDetail),
@@ -162,12 +195,38 @@ export const NotificationView = Schema.Struct({
 });
 
 /**
+ * A reply's inbox row as the wire shows it: the reply it opens, and the public face
+ * of who wrote it, read when the row is read, or null once either is gone.
+ */
+const ReplyNotificationView = Schema.Struct({
+  actor: Schema.NullOr(
+    Schema.Struct({
+      image: Schema.optionalKey(Schema.String),
+      mascot: MascotCode,
+      name: Schema.String,
+      picture: Schema.optionalKey(UserPicture),
+    })
+  ),
+  changeType: Schema.Literal("comment.replied"),
+  commentId: Id("comments"),
+  createdAt: Schema.Finite,
+  id: Id("notifications"),
+  readAt: Schema.optionalKey(Schema.Finite),
+});
+
+/** One inbox row as the wire shows it, of a school or of the account itself. */
+export const NotificationView = Schema.Union([
+  SchoolNotificationView,
+  ReplyNotificationView,
+]);
+
+/**
  * Projects a stored row onto its wire view, with the profile of the school that
  * holds it and the detail its source gives. The read time is set only once a row
  * is read, so an unread row has no `readAt` key at all.
  */
 export const notificationView = (
-  row: NotificationsDoc,
+  row: SchoolRow,
   tenant: typeof TenantProfile.Type,
   {
     detail,
@@ -187,5 +246,18 @@ export const notificationView = (
   id: row._id,
   subject: row.subject,
   tenant,
+  ...(row.readAt === undefined ? {} : { readAt: row.readAt }),
+});
+
+/** Projects a stored reply row onto its wire view, with the name its source gives now. */
+export const replyView = (
+  row: AccountRow,
+  actor: typeof ReplyNotificationView.Type.actor
+) => ({
+  actor,
+  changeType: row.changeType,
+  commentId: row.commentId,
+  createdAt: row.createdAt,
+  id: row._id,
   ...(row.readAt === undefined ? {} : { readAt: row.readAt }),
 });
