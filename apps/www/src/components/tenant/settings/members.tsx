@@ -115,11 +115,13 @@ export function SchoolMembersSettings() {
   );
 }
 
-/** The members of the school, read a page at a time, with the table and its end. */
+/** The members of the school, read a page at a time, in a data table, or its empty state when the school has none. */
 function SchoolMembersBody() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const search = useServerSearch();
+  const t = useTranslations("SchoolSettings");
+  const tSchool = useTranslations("School");
   const pagination = usePaginatedQuery(
     tenancy.roster.members,
     isSettled ? { slug, ...(search === "" ? {} : { search }) } : "skip",
@@ -130,18 +132,6 @@ function SchoolMembersBody() {
     pagination._tag === "LoadingFirstPage",
     pagination.results
   );
-
-  return (
-    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
-      <SchoolMemberTable members={Option.getOrElse(kept, () => [])} />
-    </TablePages>
-  );
-}
-
-/** The members in a data table, or the table's empty state when the school has none. */
-function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
-  const t = useTranslations("SchoolSettings");
-  const tSchool = useTranslations("School");
 
   const columns = [
     memberColumns.text((member) => member.name, {
@@ -193,18 +183,20 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={members}
-      empty={
-        <TableEmpty
-          act="waving"
-          description={t("members-empty-description")}
-          title={t("members-empty")}
-        />
-      }
-      rowId={(member) => member.id}
-    />
+    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+      <DataTable
+        columns={columns}
+        data={Option.getOrElse(kept, () => [])}
+        empty={
+          <TableEmpty
+            act="waving"
+            description={t("members-empty-description")}
+            title={t("members-empty")}
+          />
+        }
+        rowId={(member) => member.id}
+      />
+    </TablePages>
   );
 }
 
