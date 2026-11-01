@@ -70,6 +70,7 @@ export function SchoolCardDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 1500 });
   const printCard = useMutation(identity.cards.print);
   const [isPrinting, startPrinting] = useTransition();
@@ -79,9 +80,9 @@ export function SchoolCardDialog({
       description={t("card-code-description")}
       footer={
         <>
-          <p className="text-muted-foreground me-auto text-sm">
-            {t("card-print-footer")}
-          </p>
+          <Button onClick={onClose} type="button" variant="outline">
+            {common("close")}
+          </Button>
           <Button
             onClick={() => {
               if (card !== undefined) {

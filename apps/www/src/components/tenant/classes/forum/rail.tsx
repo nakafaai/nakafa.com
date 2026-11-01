@@ -88,24 +88,45 @@ function useChannelPages() {
   return pagination;
 }
 
-/** The list inside its filters. */
-function ChatList() {
-  const t = useTranslations("Classroom");
-  const { can, classId, slug } = useClassScope();
+/** What the list shows of its pages and of the channels being saved, under the filter the reader holds. */
+function useChatRows(saving: readonly string[]) {
   const chosen = useChatFilter();
-  const [drafts] = useState(createChannelDrafts);
   const pagination = useChannelPages();
-  const saving = useStore(drafts, (state) => state.names);
   const loadingFirst = pagination._tag === "LoadingFirstPage";
   const failed = PaginatedQueryResult.isFailure(pagination);
   const listed = failed ? [] : pagination.results;
   const anyArchived = Arr.some(listed, (channel) => channel.archived);
-  // Bringing back the last archived chat takes the filter away, so the list falls back to every chat.
-  const filter = chosen === "archived" && !anyArchived ? "all" : chosen;
-  const empty =
-    !(loadingFirst || failed) &&
-    Arr.isReadonlyArrayEmpty(listed) &&
-    Arr.isReadonlyArrayEmpty(saving);
+
+  return {
+    anyArchived,
+    empty:
+      !(loadingFirst || failed) &&
+      Arr.isReadonlyArrayEmpty(listed) &&
+      Arr.isReadonlyArrayEmpty(saving),
+    failed,
+    // Bringing back the last archived chat takes the filter away, so the list falls back to every chat.
+    filter: chosen === "archived" && !anyArchived ? "all" : chosen,
+    listed,
+    loadingFirst,
+    pagination,
+  };
+}
+
+/** The list inside its filters. */
+function ChatList() {
+  const t = useTranslations("Classroom");
+  const { can, classId, slug } = useClassScope();
+  const [drafts] = useState(createChannelDrafts);
+  const saving = useStore(drafts, (state) => state.names);
+  const {
+    anyArchived,
+    empty,
+    failed,
+    filter,
+    listed,
+    loadingFirst,
+    pagination,
+  } = useChatRows(saving);
 
   return (
     <>

@@ -17,16 +17,19 @@ const denied = (reason: "resource" | "role" | "condition") => ({
 const notMember = { _tag: "NotMember", code: "NOT_MEMBER" };
 const rejected = (code: string) => ({ _tag: "GrantRejected", code });
 
+const everyGrant = { paginationOpts: { cursor: null, numItems: 100 } };
+
+/** What the Admin of the school reads of its grants. */
+const adminList = (fixture: Effect.Success<typeof tenancyFixture>) =>
+  fixture.as("admin").query(list, { ...everyGrant, slug: nf });
+
 describe("access/grants list", () => {
   it.effect(
     "lists every active grant of the school with its Person, role and scope, to the Admin",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const answer = yield* fixture.as("admin").query(list, {
-          paginationOpts: { cursor: null, numItems: 100 },
-          slug: nf,
-        });
+        const answer = yield* adminList(fixture);
         expect(answer.page).toContainEqual({
           id: fixture.people.teacher.grantId,
           person: { id: fixture.people.teacher.personId, name: "Teacher" },
@@ -44,20 +47,14 @@ describe("access/grants list", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const ownerGrant = fixture.people.owner.grantId;
-        const alone = yield* fixture.as("admin").query(list, {
-          paginationOpts: { cursor: null, numItems: 100 },
-          slug: nf,
-        });
+        const alone = yield* adminList(fixture);
         yield* fixture.as("owner").mutation(assign, {
           personId: fixture.people.admin.personId,
           role: "owner",
           scope: { kind: "tenant" },
           slug: nf,
         });
-        const shared = yield* fixture.as("admin").query(list, {
-          paginationOpts: { cursor: null, numItems: 100 },
-          slug: nf,
-        });
+        const shared = yield* adminList(fixture);
         const [before, after] = Arr.map([alone, shared], (answer) =>
           Arr.findFirst(answer.page, (row) => row.id === ownerGrant).pipe(
             Option.map((row) => row.revocable)
@@ -97,10 +94,7 @@ describe("access/grants list", () => {
         grantId: fixture.people.teacher.grantId,
         slug: nf,
       });
-      const answer = yield* fixture.as("admin").query(list, {
-        paginationOpts: { cursor: null, numItems: 100 },
-        slug: nf,
-      });
+      const answer = yield* adminList(fixture);
       expect(Arr.map(answer.page, (row) => row.id)).not.toContain(
         fixture.people.teacher.grantId
       );
@@ -116,14 +110,14 @@ describe("access/grants list", () => {
           yield* fixture
             .as("teacher")
             .query(list, {
-              paginationOpts: { cursor: null, numItems: 100 },
+              ...everyGrant,
               slug: nf,
             })
             .pipe(Effect.flip),
           yield* fixture
             .as("otherOwner")
             .query(list, {
-              paginationOpts: { cursor: null, numItems: 100 },
+              ...everyGrant,
               slug: nf,
             })
             .pipe(Effect.flip),

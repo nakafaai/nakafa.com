@@ -1,26 +1,49 @@
 import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
-import {
-  GOOGLE_MANIFEST,
-  type GoogleConnector,
-} from "@repo/backend/confect/connectors/google/manifest";
-import { Array as Arr, Effect, Option } from "effect";
+import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
+import { Effect, Option } from "effect";
+import { type ReactNode, use } from "react";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ConnectorActionsContext } from "@/components/connectors/actions";
+import {
+  ConnectOutcomeContext,
+  ConnectorActionsContext,
+} from "@/components/connectors/actions";
 import { connectCallback } from "@/components/connectors/address";
-import { ConnectorList } from "@/components/connectors/list";
+import {
+  ServiceActions,
+  ServiceDetail,
+  ServiceEmpty,
+  ServiceHeader,
+  ServiceStatus,
+} from "@/components/connectors/detail";
+import {
+  ACCOUNT_SERVICES,
+  directoryEntries,
+} from "@/components/connectors/directory";
+import { ServiceFilter } from "@/components/connectors/filter";
+import { LibraryControls, ServiceList } from "@/components/connectors/library";
 import {
   CONNECTION_PAGE_SIZE,
   type Connection,
   disconnectOwnUpdate,
 } from "@/components/connectors/optimistic";
+import { PaneFill, PaneFooter } from "@/components/shared/pane";
+import {
+  Panes,
+  PanesDetail,
+  PanesList,
+  PanesProvider,
+} from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import {
   forumCall,
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { UserSettingsHeader } from "@/components/user/settings/header";
 import {
   type PreloadedPage,
   usePaginatedPreloaded,
@@ -28,17 +51,38 @@ import {
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**
- * The account's own Google connectors (journey J8): Drive and Calendar, which Nina
- * reads for this account alone. Connecting sends the browser to Google and back
- * to this page; disconnecting ends the connection at once.
+ * The account's own Google connectors (journey J8) as the library a school shows: one header with
+ * the search and the filter, the services in cards, and a press on one opens its detail beside them,
+ * or in a sheet on a small screen. Nina reads Drive and Calendar for this account alone.
  */
-export function UserSettingsConnectors({
+export function UserSettingsConnectors({ children }: { children: ReactNode }) {
+  return (
+    <TableFiltersProvider>
+      <PanesProvider wideFrom="lg">
+        <UserSettingsHeader>
+          <LibraryControls>
+            <ServiceFilter services={ACCOUNT_SERVICES} />
+          </LibraryControls>
+        </UserSettingsHeader>
+        {children}
+      </PanesProvider>
+    </TableFiltersProvider>
+  );
+}
+
+/**
+ * The services of the account. Connecting sends the browser to Google and back to this page, and
+ * disconnecting ends the connection at once.
+ */
+export function AccountDirectory({
   first,
   initialOffered,
 }: {
   first: PreloadedPage<Connection>;
   initialOffered: readonly GoogleConnector[];
 }) {
+  const t = useTranslations("Connectors");
+  const tried = use(ConnectOutcomeContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const live = usePreloadedQueryResult(
     connectors.google.offered,
@@ -60,7 +104,14 @@ export function UserSettingsConnectors({
   ) {
     return <LoadFailure onRetry={reloadPage} />;
   }
-  const offered = QueryResult.isSuccess(live) ? live.value : initialOffered;
+  const entries = directoryEntries({
+    hasRead: true,
+    held: { own: connections.results, school: [] },
+    mayConnectSchool: false,
+    offered: QueryResult.isSuccess(live) ? live.value : initialOffered,
+    services: ACCOUNT_SERVICES,
+    tried,
+  });
 
   return (
     <ConnectorActionsContext
@@ -91,13 +142,23 @@ export function UserSettingsConnectors({
           ),
       }}
     >
-      <ConnectorList
-        connections={connections.results}
-        offered={Arr.filter(
-          offered,
-          (connector) => GOOGLE_MANIFEST[connector].owner === "personal"
-        )}
-      />
+      <Panes>
+        <PanesList>
+          <ServiceList entries={entries} />
+        </PanesList>
+        <PanesDetail label={t("detail")}>
+          <ServiceDetail entries={entries}>
+            <ServiceHeader />
+            <PaneFill>
+              <ServiceEmpty />
+            </PaneFill>
+            <PaneFooter>
+              <ServiceStatus />
+              <ServiceActions />
+            </PaneFooter>
+          </ServiceDetail>
+        </PanesDetail>
+      </Panes>
     </ConnectorActionsContext>
   );
 }

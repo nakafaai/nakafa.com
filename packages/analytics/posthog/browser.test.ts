@@ -26,6 +26,7 @@ vi.mock("@repo/analytics/public", () => ({
 }));
 
 vi.mock("posthog-js", () => ({ default: client }));
+vi.mock("posthog-js/dist/web-vitals", () => ({}));
 
 /** Loads a fresh browser analytics module after Vitest resets its state. */
 const loadBrowserAnalytics = () =>

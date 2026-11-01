@@ -26,8 +26,19 @@ export function TryoutClockProvider({
 }
 
 let currentNow = 0;
+let clockOffset = 0;
 let timer: number | null = null;
 const listeners = MutableHashSet.empty<() => void>();
+
+/**
+ * Moves every timer of the page onto the server's time, from the correction this device's clock needs, so
+ * a device whose clock is wrong locks a section when the server does.
+ */
+export function correctTryoutClock(offset: number) {
+  clockOffset = offset;
+  currentNow = readEpochMillis();
+  notifyTickListeners(listeners);
+}
 
 /** Returns a shared realtime clock for active try-out timer UI. */
 export function useTryoutClock(active: boolean) {
@@ -106,7 +117,7 @@ function stopClockIfIdle() {
   currentNow = 0;
 }
 
-/** Reads the browser clock synchronously for snapshots and timer ticks. */
+/** Reads the browser clock, corrected to the server's, synchronously for snapshots and timer ticks. */
 function readEpochMillis() {
-  return DateTime.toEpochMillis(DateTime.nowUnsafe());
+  return DateTime.toEpochMillis(DateTime.nowUnsafe()) + clockOffset;
 }

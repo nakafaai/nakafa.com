@@ -13,6 +13,8 @@ import {
 import { schoolInvoice } from "@repo/backend/confect/billing/receipts";
 import { billingCurrencyFor } from "@repo/backend/confect/billing/route";
 import {
+  invoicedSeats,
+  invoiceSeats,
   issueSchoolInvoice,
   requestInvoiceSession,
   runningSchoolGrants,
@@ -149,7 +151,10 @@ const overview = FunctionImpl.make(
       Arr.reduce(grants, 0, (total, grant) => total + grant.ninaSeats),
       now
     );
-    const unpaid = Math.max(students - seats, 0);
+    const invoiced = Option.isSome(account)
+      ? yield* invoicedSeats(account.value._id, now)
+      : 0;
+    const unpaid = Math.max(students - seats - invoiced, 0);
     const quotes = unpaid > 0 ? quotesOf(tenant.country, unpaid, now) : [];
     return {
       tenantId: tenant._id,
@@ -175,22 +180,12 @@ const overview = FunctionImpl.make(
         periodEnd: invoice.periodEnd,
         dueAt: invoice.dueAt,
         paymentLink: invoice.paymentLink,
-        seats: Arr.reduce(
-          invoice.lines,
-          0,
-          (total, line) => total + line.quantity
-        ),
+        seats: invoiceSeats(invoice),
       })),
     };
   })
 );
 
-/**
- * Issues the invoice of one term for the students not yet paid for, or returns the
- * open invoice of that term. While Indonesia pays through Xendit, an invoice without
- * a payment link gets its hosted payment opened at once; until then the school pays
- * by bank transfer, which an operator records.
- */
 /** The PDF copy of one of the school's invoices, and nothing for another school's. */
 const invoice = FunctionImpl.make(
   databaseSchema,
@@ -218,6 +213,12 @@ const invoice = FunctionImpl.make(
   })
 );
 
+/**
+ * Issues the invoice of one term for the students no running grant or open invoice covers,
+ * or returns the open invoice of that term. While Indonesia pays through Xendit, an invoice
+ * without a payment link gets its hosted payment opened at once; until then the school pays
+ * by bank transfer, which an operator records.
+ */
 const pay = FunctionImpl.make(
   databaseSchema,
   spec,

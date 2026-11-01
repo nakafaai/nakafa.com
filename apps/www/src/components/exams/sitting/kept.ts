@@ -122,6 +122,43 @@ export function useResendKeptAnswers({
   }, [attemptId, deviceId, finish, locked, paper, send, sittingId, slug]);
 }
 
+/** Sends each answer the browser holds for a closed attempt, and tells the student of any the server refuses. */
+const sendClosedAnswers = Effect.fn("sitting.closed.send")(function* (
+  send: ReturnType<typeof useSendAnswer>,
+  attemptId: GenericId.GenericId<"examAttempts">,
+  sittingId: GenericId.GenericId<"examSittings">,
+  slug: TenantSlug
+) {
+  const device = yield* readSittingDevice(sittingId);
+  if (Option.isNone(device)) {
+    return;
+  }
+  const { answers } = yield* keptAttempt(sittingId, attemptId).read();
+  const failures = yield* Effect.forEach(
+    Rec.toEntries(answers),
+    ([questionId, answer]) =>
+      send(
+        {
+          attemptId,
+          deviceId: device.value,
+          questionId: Schema.decodeUnknownSync(Id("examQuestions"))(questionId),
+          response: answer.response,
+          sittingId,
+          slug,
+          version: answer.version,
+        },
+        answer.answeredAt
+      )
+  );
+  const refused = Arr.filter(
+    Arr.getSomes(failures),
+    (failure) => !isStaleAnswer(failure)
+  );
+  if (Arr.isReadonlyArrayNonEmpty(refused)) {
+    toastUnsentAnswers();
+  }
+});
+
 /**
  * Sends the answers the browser still holds for an attempt that closed while its page was away, when the
  * student comes back. The server takes them for a moment after the deadline (`WRITE_ALLOWANCE_MS`), and the
@@ -149,38 +186,7 @@ export function useSendClosedKept({
     }
     sent.current = true;
     Effect.runPromise(
-      Effect.gen(function* () {
-        const device = yield* readSittingDevice(sittingId);
-        if (Option.isNone(device)) {
-          return;
-        }
-        const { answers } = yield* keptAttempt(sittingId, attemptId).read();
-        const failures = yield* Effect.forEach(
-          Rec.toEntries(answers),
-          ([questionId, answer]) =>
-            send(
-              {
-                attemptId,
-                deviceId: device.value,
-                questionId: Schema.decodeUnknownSync(Id("examQuestions"))(
-                  questionId
-                ),
-                response: answer.response,
-                sittingId,
-                slug,
-                version: answer.version,
-              },
-              answer.answeredAt
-            )
-        );
-        const refused = Arr.filter(
-          Arr.getSomes(failures),
-          (failure) => !isStaleAnswer(failure)
-        );
-        if (Arr.isReadonlyArrayNonEmpty(refused)) {
-          toastUnsentAnswers();
-        }
-      }).pipe(
+      sendClosedAnswers(send, attemptId, sittingId, slug).pipe(
         Effect.provide(keptStorage),
         Effect.catchTag("KeyValueStoreError", (error) =>
           reportClientException(error, {

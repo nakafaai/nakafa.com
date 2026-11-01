@@ -1,8 +1,8 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr } from "effect";
-import { Suspense, use } from "react";
+import { Array as Arr, Effect } from "effect";
+import { Suspense, use, useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
@@ -29,8 +29,10 @@ import { useTryoutFlag } from "@/components/tryout/player/flag";
 import { projectTryoutQuestions } from "@/components/tryout/player/model";
 import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
 import { TryoutPageLink } from "@/components/tryout/route/link";
+import { correctTryoutClock } from "@/components/tryout/runtime/clock";
 import { useResendKeptPicks } from "@/components/tryout/runtime/response/kept";
 import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit";
+import { readServerClockOffset } from "@/components/tryout/runtime/server";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
@@ -66,6 +68,11 @@ export function TryoutPlayer({
   const answer = useTryoutResponseSubmit();
   const flag = useTryoutFlag();
   useResendKeptPicks({ locked, questions: runtime.questions });
+  useEffect(() => {
+    Effect.runFork(
+      readServerClockOffset().pipe(Effect.map(correctTryoutClock))
+    );
+  }, []);
   // The bodies hold each question's interaction, which a number key picks from.
   const bodies = use(TryoutContentContext)?.bodies ?? [];
   const questions = projectTryoutQuestions({

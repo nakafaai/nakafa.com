@@ -1,9 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
-  DIRECTORY_CATEGORIES,
+  ACCOUNT_SERVICES,
   DIRECTORY_SERVICES,
+  directoryCategories,
+  directoryEntries,
   directoryState,
   holderOf,
   isShown,
@@ -104,6 +106,55 @@ describe("connector directory", () => {
     expect(
       isShown(classroom, Option.some("files"), "", ["Google Classroom"])
     ).toBe(false);
-    expect(DIRECTORY_CATEGORIES).toEqual(["learning", "files", "schedule"]);
+    expect(directoryCategories(DIRECTORY_SERVICES)).toEqual([
+      "learning",
+      "files",
+      "schedule",
+    ]);
+  });
+
+  it("lists on an account what a person holds, without the school's Classroom or its Forms", () => {
+    expect(Arr.map(ACCOUNT_SERVICES, ({ key }) => key)).toEqual([
+      "drive",
+      "calendar",
+    ]);
+    expect(directoryCategories(ACCOUNT_SERVICES)).toEqual([
+      "files",
+      "schedule",
+    ]);
+  });
+
+  it("draws an entry before the reads answer, and gives it a state once they do", () => {
+    const read = {
+      held: { own: [connection("drive", "active")], school: [] },
+      mayConnectSchool: false,
+      offered: ["calendar", "classroom", "drive"] as const,
+      services: DIRECTORY_SERVICES,
+      tried: { connect: "refused", connector: "calendar" } as const,
+    };
+
+    expect(
+      Arr.map(
+        directoryEntries({ ...read, hasRead: false }),
+        ({ state }) => state
+      )
+    ).toEqual([Option.none(), Option.none(), Option.none(), Option.none()]);
+    expect(
+      Arr.map(
+        directoryEntries({ ...read, hasRead: true }),
+        ({ state }) => state
+      )
+    ).toEqual([
+      Option.some("locked"),
+      Option.some("connected"),
+      Option.some("connected"),
+      Option.some("refused"),
+    ]);
+    expect(
+      Arr.map(
+        directoryEntries({ ...read, hasRead: true, mayConnectSchool: true }),
+        ({ state }) => state
+      )[0]
+    ).toEqual(Option.some("open"));
   });
 });

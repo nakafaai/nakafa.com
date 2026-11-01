@@ -11,9 +11,10 @@ import { TableRow } from "@repo/design-system/components/ui/table";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Option } from "effect";
-import type { MouseEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { usePaneMode, usePanes } from "@/components/shared/panes";
+import { pressesRow } from "@/components/shared/row";
 import { tableCardVariants } from "@/components/shared/table/card";
 
 /** The phone's header: centred under the swipe handle, or a row from the start with a detail's icon. */
@@ -85,7 +86,7 @@ export function PaneHeader({
 
   return (
     <header
-      className="flex min-h-14 shrink-0 items-center gap-2 border-b py-2 px-(--pane-end,1rem)"
+      className="flex min-h-14 shrink-0 items-center gap-2 border-b px-(--pane-end,1rem) py-2"
       data-pane-header=""
       data-slot="pane-header"
     >
@@ -129,7 +130,7 @@ export function PaneHeader({
 export function PaneBody({ children }: { children: ReactNode }) {
   return (
     <ScrollArea className="flex-1">
-      <div className="py-4 px-(--pane-end,1rem)">{children}</div>
+      <div className="px-(--pane-end,1rem) py-4">{children}</div>
     </ScrollArea>
   );
 }
@@ -208,19 +209,6 @@ export function PaneOpen({
     </button>
   );
 }
-
-/** The elements of a row that do their own thing when pressed, so pressing them opens no row. */
-const ROW_CONTROLS =
-  "a, button, input, label, select, textarea, [role=menuitem]";
-
-/**
- * Whether a press landed on the row itself: not on a control of its own, and not on a menu or a dialog the row opened,
- * whose press React carries through the row although it stands elsewhere on the page.
- */
-export const pressesRow = (event: MouseEvent<HTMLTableRowElement>) =>
-  event.target instanceof Element &&
-  event.currentTarget.contains(event.target) &&
-  event.target.closest(ROW_CONTROLS) === null;
 
 /**
  * A data table's row on a page with panes: pressing it opens the row beside the list,

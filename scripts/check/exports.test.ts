@@ -206,6 +206,7 @@ export const { tax } = source;
             "apps/www/src/routes/api/health.ts": text,
             "apps/www/src/start.ts": text,
             "packages/backend/convex/notes/list.ts": text,
+            "packages/backend/components/betterAuth/session.ts": text,
             "packages/design-system/components/ui/table.tsx": text,
             "packages/design-system/components/evilcharts/charts/area.tsx":
               text,

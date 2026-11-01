@@ -1,4 +1,4 @@
-import { useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery, useWindowEvent } from "@mantine/hooks";
 import {
   Drawer,
   DrawerContent,
@@ -15,6 +15,7 @@ import { createContext, type ReactNode, use, useState } from "react";
 import { createPortal } from "react-dom";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { pageBoxVariants } from "@/components/shared/content/width";
+import { isTyping } from "@/components/shared/settings/return";
 
 /** From which width the open row stands beside the list: tablet for a list, laptop for the exam editor. */
 const PanesWidth = Schema.Literals(["md", "lg"]);
@@ -126,8 +127,8 @@ export function useHasPanes() {
 
 /**
  * Whether the screen is wide enough for the second pane to stand beside the first. Every page with
- * panes is a School page, which renders only in the browser (ADR 0038), so the first render already
- * reads the screen and a detail that opens with the page never shows in a sheet on a wide screen.
+ * panes renders only in the browser (ADR 0038), so the first render already reads the screen and a
+ * detail that opens with the page never shows in a sheet on a wide screen.
  */
 function useWide() {
   const width = use(PanesWidthContext);
@@ -239,6 +240,19 @@ export function PanesDetail({
   const sheet = open ?? sheetOpen;
   const close = onClose ?? closePanes;
   const beside = alwaysOn || (wide && isOpen);
+  const closes = beside && !alwaysOn;
+
+  // Escape closes a row that stands open, unless a popup over it or a field in it took the key.
+  useWindowEvent("keydown", (event) => {
+    if (
+      event.key === "Escape" &&
+      closes &&
+      !(event.defaultPrevented || event.isComposing || isTyping(event.target))
+    ) {
+      event.preventDefault();
+      close();
+    }
+  });
 
   return (
     <>
@@ -254,6 +268,7 @@ export function PanesDetail({
             <aside
               aria-label={label}
               className="bg-background flex h-full flex-col"
+              data-pane-row={closes ? "" : undefined}
             >
               <PaneModeContext
                 value={{
