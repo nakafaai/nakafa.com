@@ -81,12 +81,6 @@ navigation tests in `apps/www/e2e/chat/leave.browser.ts` check that a learner
 can leave while an admission is pending. Rename, sharing, and delete need no pending state: they
 update the loaded lists optimistically and roll back on failure.
 
-School's actions that loop over batches or pages follow the same rule: a roster
-import, issuing a class group's letters, and the exports. A whole school's file
-can take minutes, so they run through `useLongAction`
-(`apps/www/src/components/shared/pending.ts`), whose pending state is plain state
-and whose action finishes after the viewer has moved on.
-
 ## A Press Before Hydration
 
 A static page starts its scripts only after it paints (`deferStaticScripts` in
@@ -163,6 +157,12 @@ the same.
 
 ## Consequences
 
+- School's actions that loop over batches or pages keep their pending state out
+  of transitions too, as Pending Actions Are Not Transitions says: a roster
+  import, issuing a class group's letters, and the exports. A whole school's file
+  can take minutes, so they run through `useLongAction`
+  (`apps/www/src/components/shared/pending.ts`), whose pending state is plain
+  state and whose action finishes after the viewer has moved on.
 - `scripts/check/react.ts`, run by `bun run check:tests`, rejects
   `use-context-selector`, React's `useContext`, and Zustand's module-level
   `create`. Biome's `noRestrictedImports` rejects the context-backed auth APIs
