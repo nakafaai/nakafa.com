@@ -47,9 +47,13 @@ export function SidebarKnownSchoolItems() {
   const sessionId = useAuthSession((session) => session.sessionId);
   const [text] = useState(readKeptText);
 
-  return Arr.map(readKnownSchools(text, sessionId), (tenant) => (
-    <SidebarSchoolMenuItem key={tenant.slug} tenant={tenant} />
-  ));
+  return (
+    <>
+      {Arr.map(readKnownSchools(text, sessionId), (tenant) => (
+        <SidebarSchoolMenuItem key={tenant.slug} tenant={tenant} />
+      ))}
+    </>
+  );
 }
 
 /**

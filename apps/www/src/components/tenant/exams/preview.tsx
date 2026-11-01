@@ -29,7 +29,6 @@ import {
   isChoice,
   type OptionLabel,
 } from "@/components/tenant/exams/answer";
-import { choiceTitle } from "@/components/tenant/exams/choice";
 import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -38,6 +37,7 @@ import {
   useExamLive,
   useExamLocked,
 } from "@/components/tenant/exams/provider";
+import { choiceTitle } from "@/components/tenant/exams/reason";
 import {
   OptionAddRoom,
   PaperField,

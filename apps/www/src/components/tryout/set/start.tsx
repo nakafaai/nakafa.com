@@ -222,7 +222,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
   /** Opens the correct decision or continues an already-active runtime, once the page knows which. */
-  function onStart() {
+  function answerStart() {
     if (started) {
       return;
     }
@@ -322,7 +322,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       )
     );
   }
-  const answerPress = useEffectEvent(onStart);
+  const answerPress = useEffectEvent(() => answerStart());
   useEffect(() => {
     if (pressed && !resolvingAccess) {
       answerPress();
@@ -331,7 +331,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
 
   return (
     <>
-      <Button inert={started} onClick={onStart}>
+      <Button inert={started} onClick={answerStart}>
         <Spinner icon={Rocket01Icon} isLoading={started || pressed} />
         {buttonLabel}
       </Button>
@@ -344,7 +344,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
         open={dialogOpen}
         setOpen={(open) => {
           if (open) {
-            onStart();
+            answerStart();
             return;
           }
           dialog.close();
