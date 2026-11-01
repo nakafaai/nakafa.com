@@ -13085,7 +13085,15 @@ export declare const api: {
         "query",
         "public",
         { slug: string },
-        { cohort: boolean; exam: boolean; period: boolean; student: boolean }
+        {
+          classroom: boolean;
+          cohort: boolean;
+          exam: boolean;
+          parent: boolean;
+          period: boolean;
+          student: boolean;
+          teacher: boolean;
+        }
       >;
     };
     start: {

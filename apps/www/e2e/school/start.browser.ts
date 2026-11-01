@@ -5,8 +5,8 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { finishSchoolStart } from "@/e2e/support/school";
 
-/** The address of the Exams page, where a member lands. */
-const EXAMS_ADDRESS = /\/exams$/u;
+/** The address of the setup, where a new Owner lands. */
+const SETUP_ADDRESS = /\/setup$/u;
 
 /** The address of the data processing agreement, which the last question links to. */
 const DPA_ADDRESS = /\/en\/data-processing-agreement$/u;
@@ -64,9 +64,9 @@ test("a new account opens its own school in five questions and lands in it as it
     page.getByRole("link", { name: "Data Processing Agreement" })
   ).toHaveAttribute("href", DPA_ADDRESS);
   await Effect.runPromise(finishSchoolStart(page, baseURL, { name, slug }));
-  // The new Owner lands on the exams, the Owner's main page, with its one action.
-  await page.waitForURL(EXAMS_ADDRESS);
-  await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
+  // The new Owner lands on the setup, because a new school has nothing else to show yet.
+  await page.waitForURL(SETUP_ADDRESS);
+  await expect(page.getByRole("button", { name: "Finish setup" })).toBeVisible();
   // The tab names the school.
   await expect(page).toHaveTitle(new RegExp(name, "u"));
   await context.close();
