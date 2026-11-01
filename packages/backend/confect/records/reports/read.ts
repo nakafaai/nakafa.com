@@ -77,6 +77,7 @@ export const cohorts = FunctionImpl.make(
           id: row._id,
           name: row.name,
           period: active.value.name,
+          unit: unit.name,
         }));
       })
     );

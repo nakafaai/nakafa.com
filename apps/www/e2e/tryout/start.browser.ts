@@ -10,6 +10,7 @@ import id from "@repo/internationalization/dictionaries/id.json" with {
 };
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { CONVEX_SOCKET } from "@/e2e/support/frames";
 import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -19,6 +20,19 @@ import { tryoutViewports } from "@/e2e/support/viewport";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const FRAMES_KEY = "nakafaStartFrames";
+const NAMES_KEY = "nakafaActionNames";
+
+/** The set of the sections below, whose start lands on its first section. */
+const SET_HREF = "/en/try-out/indonesia/snbt/2027/set-1";
+
+/** An address that names a running attempt. */
+const ATTEMPT_ADDRESS = /attemptId=/u;
+
+/** The cell that holds a try-out action's names, whichever of them shows. */
+const ACTION_NAME = "main [data-slot=tryout-action-name]";
+
+/** A try-out action, found by its cell: a learner's has no name until their read answers. */
+const ACTION = `main :is(a, button):has(${ACTION_NAME})`;
 
 /** Every script of the page, held back so a press lands before React takes the page over. */
 const SCRIPTS = /\/assets\/.*\.js/u;
@@ -240,13 +254,7 @@ test("a press on the start before the page can act opens the confirmation", asyn
             MutableList.append(held, route);
           });
           await page.goto(section.href, { waitUntil: "domcontentloaded" });
-          await page
-            .locator("main")
-            .getByRole("button", {
-              exact: true,
-              name: section.messages.Tryouts["start-cta"],
-            })
-            .click();
+          await page.locator(ACTION).click();
           for (const route of MutableList.toArray(held)) {
             await route.continue();
           }
@@ -258,6 +266,159 @@ test("a press on the start before the page can act opens the confirmation", asyn
             })
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
         });
+      })
+    )
+  );
+});
+
+/**
+ * Records each name the page's try-out action shows, from the first frame on: an empty name is an action
+ * still waiting for the learner read. The script runs in the page, so it uses the browser's own APIs.
+ */
+const recordActionNames = Effect.fn("NakafaE2E.recordActionNames")(function* (
+  page: Page,
+  selector: string
+) {
+  yield* Effect.promise(() =>
+    page.addInitScript(
+      ([key, cell]) => {
+        const names: string[] = [];
+        Object.defineProperty(window, key, { value: names });
+        const sample = () => {
+          const shown = document.querySelector(cell);
+          if (shown !== null) {
+            const name =
+              [...shown.children].find((child) =>
+                child.checkVisibility({ checkVisibilityCSS: true })
+              )?.textContent ?? "";
+            if (names.at(-1) !== name) {
+              names.push(name);
+            }
+          }
+          requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      },
+      [NAMES_KEY, selector]
+    )
+  );
+});
+
+/**
+ * No first paint knows a learner's attempt, and a set whose attempt runs resumes it, so its action must never
+ * say Start: it waits with no name until the read answers, and then says Continue before any press.
+ */
+test("a hard load of a set whose attempt runs never reads Start", async ({
+  baseURL,
+  page,
+}) => {
+  const messages = en.Tryouts;
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        const origin = yield* Effect.fromNullishOr(baseURL);
+        yield* seedAnalyticsConsent(page, "denied");
+        yield* signInLearner(page.context(), origin);
+        yield* recordActionNames(page, ACTION_NAME);
+        yield* Effect.promise(async () => {
+          await page.goto(SET_HREF, { waitUntil: "commit" });
+          const start = page.locator("main").getByRole("button", {
+            exact: true,
+            name: messages["start-cta"],
+          });
+          await expect(start).toBeEnabled({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await waitUntilTakenOver(start);
+          await start.click();
+          await page
+            .getByRole("dialog")
+            .getByRole("button", { exact: true, name: messages["free-cta"] })
+            .click();
+          await page.waitForURL(ATTEMPT_ADDRESS);
+
+          await page.goto(SET_HREF, { waitUntil: "commit" });
+          await expect(
+            page.locator("main").getByRole("link", {
+              exact: true,
+              name: messages["continue-cta"],
+            })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+        });
+        const names = yield* Effect.promise(() =>
+          page.evaluate((key) => Reflect.get(window, key), NAMES_KEY)
+        ).pipe(
+          Effect.flatMap(
+            Schema.decodeUnknownEffect(Schema.Array(Schema.String))
+          )
+        );
+        yield* Effect.sync(() => {
+          expect(Arr.filter(names, (name) => name !== "")).toEqual([
+            messages["continue-cta"],
+          ]);
+        });
+      })
+    )
+  );
+});
+
+/**
+ * The read that a press waits for brings the attempt, which keys a new tree and takes the place of the
+ * button that was pressed. The press stays, and the section starts from it. The socket's answers wait
+ * through the press, so the press lands while the read is pending.
+ */
+test("a press while the learner read is pending starts the section it brings", async ({
+  baseURL,
+  page,
+}) => {
+  const section = SECTIONS[0];
+  const messages = section.messages.Tryouts;
+  let holding = false;
+  const held = MutableList.make<() => void>();
+  await page.routeWebSocket(CONVEX_SOCKET, (socket) => {
+    const server = socket.connectToServer();
+    server.onMessage((message) => {
+      if (holding) {
+        MutableList.append(held, () => socket.send(message));
+        return;
+      }
+      socket.send(message);
+    });
+  });
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        const origin = yield* Effect.fromNullishOr(baseURL);
+        yield* seedAnalyticsConsent(page, "denied");
+        yield* signInLearner(page.context(), origin);
+        yield* Effect.promise(async () => {
+          await page.goto(SET_HREF, { waitUntil: "commit" });
+          const start = page.locator("main").getByRole("button", {
+            exact: true,
+            name: messages["start-cta"],
+          });
+          await expect(start).toBeEnabled({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await waitUntilTakenOver(start);
+          await start.click();
+          await page
+            .getByRole("dialog")
+            .getByRole("button", { exact: true, name: messages["free-cta"] })
+            .click();
+          await page.waitForURL(ATTEMPT_ADDRESS);
+
+          holding = true;
+          await page.goto(section.href, { waitUntil: "commit" });
+          await page.locator(ACTION).click();
+          holding = false;
+          for (const answer of MutableList.toArray(held)) {
+            answer();
+          }
+        });
+        yield* waitForRunningSection(page);
       })
     )
   );

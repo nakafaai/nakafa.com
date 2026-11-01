@@ -14,8 +14,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option } from "effect";
-import { useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { useLongAction } from "@/components/shared/pending";
 import { useTenant } from "@/components/tenant/context";
 import { saveLedger } from "@/components/tenant/graduation/save";
 import { EXPORT_HEADER } from "@/components/tenant/roster/dapodik";
@@ -70,7 +70,7 @@ export function RosterExport() {
   const { slug } = useTenant();
   const read = useRosterUnit();
   const exportLines = useAction(roster.exports.lines);
-  const [isExporting, startExporting] = useTransition();
+  const [isExporting, startExporting] = useLongAction();
   const unit = Option.flatMap(
     Option.fromUndefinedOr(read),
     (found) => found.unit

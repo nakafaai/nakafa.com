@@ -103,7 +103,7 @@ const signIn = Effect.fn("auth.guardian.signIn")(function* (
 
 /**
  * Better Auth's guardian code sign-in, served on a school host alone (ADR 0009,
- * ADR 0034). The router adds this plugin (`confect/http`), because only a request
+ * ADR 0034). The router adds this plugin (`confect/auth/http`), because only a request
  * names the host that it serves.
  */
 export function guardianCodeSignIn(

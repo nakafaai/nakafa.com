@@ -45,6 +45,24 @@ D3. Reuse is an optimization, never a contract. A failed call saves no context, 
 
 D4. Leaf table schemas and lazy registration stay undone, and a cold call keeps paying for evaluation. The target holds for a burst and not for a lone cold call, for the reasons under Cold Calls.
 
+D5. An HTTP call evaluates only its own family of routes. Convex keeps no context for an action, so reuse cannot reach one, and `/api/auth/*` took a median of 535 ms on production to evaluate every route of the deployment. `confect/http.ts` holds a table of paths and imports the one router that a call needs.
+
+## HTTP Calls
+
+CPU milliseconds of evaluation, with the options of the Convex bundler, the median of five fresh processes, on the shared Mac at a load of 27:
+
+| Router | Bytes | CPU ms |
+| --- | --- | ---: |
+| Every route, before | 4.9 MB | 595 |
+| Auth | | 289 |
+| School REST and MCP | | 269 |
+| Webhooks | | 213 |
+| Public agent REST and MCP | | 185 |
+| Content | | 165 |
+| The table alone | | 71 |
+
+A thin `auth/client.ts` without its trigger bodies would take auth to 254. That stays undone: the adapter reads the presence of each trigger, so a second client that only declares them could stop a hook from firing.
+
 ## Cold Calls
 
 After the deploy of 1 November, production read like this, in milliseconds of JavaScript per call:

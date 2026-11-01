@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Deferred, Effect, Option } from "effect";
+import { CONVEX_SOCKET } from "@/e2e/support/frames";
 import { activate } from "@/e2e/support/input";
 import { expectUncovered } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -35,6 +36,9 @@ const SHORT_WINDOW_HEIGHT = 320;
 
 /** An address whose `view` parameter names one question at a time. */
 const SINGLE_VIEW_ADDRESS = /[?&]view=single(?:&|$)/u;
+
+/** What the player says while the connection is gone. */
+const OFFLINE_NOTE = "Your changes save once you are back online.";
 
 /** What the learner is told when the server cannot save the view. */
 const VIEW_ERROR = "We couldn't save your view.";
@@ -420,6 +424,50 @@ for (const viewport of tryoutViewports) {
     });
   });
 }
+
+/**
+ * Cuts the page's socket once the section runs, and keeps refusing the client's new ones, so the player
+ * says the connection is gone until a socket opens again. The note stands beside the title on a desktop.
+ */
+test("says so while the connection is gone, and stops once it is back", async ({
+  baseURL,
+  page,
+}) => {
+  let down = false;
+  const closeSocket: { current: (() => Promise<void>) | undefined } = {
+    current: undefined,
+  };
+  await page.routeWebSocket(CONVEX_SOCKET, (socket) => {
+    if (down) {
+      socket.close();
+      return;
+    }
+    socket.connectToServer();
+    closeSocket.current = () => socket.close();
+  });
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        const origin = yield* Effect.fromNullishOr(baseURL);
+        yield* runFirstSection(page, false, origin);
+        const note = page.getByText(OFFLINE_NOTE);
+        yield* Effect.promise(async () => {
+          await expect(note).toBeHidden();
+          down = true;
+          await closeSocket.current?.();
+          await expect(note).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          down = false;
+          await expect(note).toBeHidden({
+            timeout: readinessTimeoutMilliseconds,
+          });
+        });
+      })
+    )
+  );
+});
 
 test.describe("Try-out player in a short window", () => {
   test.use({

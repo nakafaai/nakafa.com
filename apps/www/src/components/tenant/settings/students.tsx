@@ -42,6 +42,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useDialogs } from "@/components/shared/dialogs";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -210,10 +211,7 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
     reissueCardChange
   );
   const [isPending, startTransition] = useTransition();
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [renaming, setRenaming] = useState(0);
-  const [isChangingLogin, setIsChangingLogin] = useState(false);
-  const [changingLogin, setChangingLogin] = useState(0);
+  const dialogs = useDialogs<"login" | "rename">();
 
   return (
     <div className="flex justify-end">
@@ -231,21 +229,11 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
           }
         />
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            onClick={() => {
-              setRenaming((count) => count + 1);
-              setIsRenaming(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => dialogs.show("rename")}>
             <HugeIcons icon={PencilEdit02Icon} />
             {t("person-rename")}
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              setChangingLogin((count) => count + 1);
-              setIsChangingLogin(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => dialogs.show("login")}>
             <HugeIcons icon={AtIcon} />
             {t("login-rename")}
           </DropdownMenuItem>
@@ -265,18 +253,22 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <PersonRenameDialog
-        key={renaming}
-        open={isRenaming}
-        person={login.person}
-        setOpen={setIsRenaming}
-      />
-      <LoginRenameDialog
-        key={changingLogin}
-        login={login}
-        open={isChangingLogin}
-        setOpen={setIsChangingLogin}
-      />
+      {dialogs.kind === "rename" ? (
+        <PersonRenameDialog
+          key={dialogs.key}
+          open={dialogs.isOpen("rename")}
+          person={login.person}
+          setOpen={dialogs.setOpen}
+        />
+      ) : null}
+      {dialogs.kind === "login" ? (
+        <LoginRenameDialog
+          key={dialogs.key}
+          login={login}
+          open={dialogs.isOpen("login")}
+          setOpen={dialogs.setOpen}
+        />
+      ) : null}
     </div>
   );
 }

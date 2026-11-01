@@ -20,6 +20,7 @@ import { mine } from "@repo/backend/confect/classroom/classes/mine";
 import { resolve } from "@repo/backend/confect/classroom/classes/resolve";
 import { restore } from "@repo/backend/confect/classroom/classes/restore";
 import { changeSubject } from "@repo/backend/confect/classroom/classes/subject";
+import { teachers } from "@repo/backend/confect/classroom/classes/teachers";
 import spec from "@repo/backend/confect/classroom/classes.spec";
 import { ClassNameTaken } from "@repo/backend/confect/classroom/errors";
 import member from "@repo/backend/confect/middleware/member.impl";
@@ -138,6 +139,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(get),
   Layer.provide(list),
   Layer.provide(mine),
+  Layer.provide(teachers),
   Layer.provide(resolve),
   Layer.provide(session),
   Layer.provide(member),

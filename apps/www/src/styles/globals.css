@@ -190,6 +190,15 @@
 }
 
 /*
+ * A try-out action's name depends on the learner's attempt, which no first
+ * paint knows. Under a signed-in hint it keeps its room and stays hidden until
+ * the learner read answers (`components/tryout/set/name.tsx`).
+ */
+:root[data-signed-in="yes"] [data-learner-read="pending"] {
+  visibility: hidden;
+}
+
+/*
  * The account row the browser kept draws in the first frame
  * (`components/sidebar/user/kept.tsx`): the pre-paint script
  * (`src/lib/identity/prepaint.ts`) names its plan in `data-kept-plan` and its

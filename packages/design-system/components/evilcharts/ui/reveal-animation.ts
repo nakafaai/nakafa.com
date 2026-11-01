@@ -68,15 +68,20 @@ function useOrderedReveal(
     ? getOrderedRevealDurationMs(animationType, dataLength)
     : 0;
   const getRevealDuration = useEffectEvent(() => revealDuration);
-  const [isRevealing, setIsRevealing] = useState(() => canReveal);
+  const [isRevealing, setIsRevealing] = useState(canReveal);
+  const [revealedFor, setRevealedFor] = useState(canReveal);
+
+  // Set during render, so the commit that first holds data starts the reveal and never paints final geometry.
+  if (canReveal !== revealedFor) {
+    setRevealedFor(canReveal);
+    setIsRevealing(canReveal);
+  }
 
   useEffect(() => {
     if (!canReveal) {
-      setIsRevealing(false);
       return;
     }
 
-    setIsRevealing(true);
     const timeout = window.setTimeout(
       () => setIsRevealing(false),
       getRevealDuration()
