@@ -242,7 +242,7 @@ function WaitingDialog({
       }
       open={open}
       setOpen={setOpen}
-      title={t("message-edit")}
+      title={t("post-waiting-edit")}
     >
       <FieldGroup>
         <Field>
