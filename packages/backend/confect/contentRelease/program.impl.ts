@@ -3,7 +3,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import spec from "@repo/backend/confect/contentRelease/program.spec";
 import { readProgramCatalog } from "@repo/backend/content/program/catalog";
 import { programLayer } from "@repo/backend/content/program/confect";
-import { readProgramPlacement } from "@repo/backend/content/program/context";
+import { readProgramPlacements } from "@repo/backend/content/program/context";
 import { readProgramPath } from "@repo/backend/content/program/path";
 import { readProgramRoute } from "@repo/backend/content/program/route";
 import {
@@ -11,7 +11,7 @@ import {
   readProgramSitemap,
 } from "@repo/backend/content/program/sitemap";
 import { readProgramSubjects } from "@repo/backend/content/program/subjects";
-import { Array as Arr, Effect, Layer } from "effect";
+import { Effect, Layer } from "effect";
 
 const catalog = FunctionImpl.make(
   databaseSchema,
@@ -33,33 +33,21 @@ const subjects = FunctionImpl.make(
     );
   })
 );
-const context = FunctionImpl.make(
+const placements = FunctionImpl.make(
   databaseSchema,
   spec,
-  "context",
-  Effect.fn("contentRelease.program.context")(function* (args) {
-    return yield* readProgramPlacement(
+  "placements",
+  Effect.fn("contentRelease.program.placements")(function* (args) {
+    return yield* readProgramPlacements(
       args.appLocale,
       {
         contentKey: args.contentKey,
         materialKey: args.materialKey,
-        nodeKey: args.nodeKey,
         parentPath: args.parentPath,
-        programKey: args.programKey,
         publicPath: args.publicPath,
       },
       args.expectedActiveReleaseId
-    ).pipe(
-      Effect.provide(programLayer),
-      Effect.map(({ ancestors, context: resolved, managed }) => ({
-        ancestorJson: Arr.map(ancestors, ({ rowJson }) => rowJson),
-        groupJson: resolved?.groupJson ?? null,
-        managed,
-        mappingJson: resolved?.mappingJson ?? null,
-        parentJson: resolved?.parentJson ?? null,
-        resolvedCanonicalPath: resolved?.resolvedCanonicalPath ?? null,
-      }))
-    );
+    ).pipe(Effect.provide(programLayer));
   })
 );
 const path = FunctionImpl.make(
@@ -114,7 +102,7 @@ const sitemapPage = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(catalog),
   Layer.provide(subjects),
-  Layer.provide(context),
+  Layer.provide(placements),
   Layer.provide(path),
   Layer.provide(route),
   Layer.provide(sitemapBuckets),
