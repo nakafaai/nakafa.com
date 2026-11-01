@@ -237,17 +237,36 @@ describe("auth/grant", () => {
     })
   );
 
-  it.effect("names no agent for an unknown client", () =>
-    Effect.gen(function* () {
-      const t = createConvexTestWithBetterAuth();
-      const client = yield* Effect.promise(() =>
-        t.fetch("/api/auth/agent/client?client_id=unknown")
-      );
-      expect(yield* jsonOf(client)).toEqual({
-        name: null,
-        redirect: null,
-      });
-    })
+  it.effect(
+    "names no agent for an unknown client, or one that gave no name",
+    () =>
+      Effect.gen(function* () {
+        const t = createConvexTestWithBetterAuth();
+        const unknown = yield* Effect.promise(() =>
+          t.fetch("/api/auth/agent/client?client_id=unknown")
+        );
+        expect(yield* jsonOf(unknown)).toEqual({ name: null, redirect: null });
+        const registered = yield* Effect.promise(() =>
+          t.fetch("/api/auth/mcp/register", {
+            body: encodeJsonText({
+              redirect_uris: [REDIRECT_URI],
+              token_endpoint_auth_method: "none",
+            }),
+            headers: { "content-type": "application/json" },
+            method: "POST",
+          })
+        );
+        const { client_id: clientId } = yield* jsonOf(registered).pipe(
+          Effect.flatMap(Schema.decodeUnknownEffect(Registered))
+        );
+        const unnamed = yield* Effect.promise(() =>
+          t.fetch(`/api/auth/agent/client?client_id=${clientId}`)
+        );
+        expect(yield* jsonOf(unnamed)).toEqual({
+          name: null,
+          redirect: "agent.example",
+        });
+      })
   );
 
   it.effect("refuses a registration past the limit", () =>

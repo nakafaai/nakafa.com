@@ -165,6 +165,12 @@ describe("the agent tools of a signed-in person", () => {
         name: "tenancy/people:list",
       });
       expect(broken.result.isError).toBe(true);
+      fetcher.mockResolvedValueOnce(Response.json({ status: "unknown" }));
+      const strange = yield* call(fixture, "nakafa_call_function", {
+        args: {},
+        name: "tenancy/people:list",
+      });
+      expect(strange.result.isError).toBe(true);
     })
   );
 

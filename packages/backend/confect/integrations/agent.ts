@@ -1,4 +1,9 @@
-import { type FunctionSpec, type GroupSpec, Spec } from "@confect/core";
+import {
+  type FunctionProvenance,
+  type FunctionSpec,
+  type GroupSpec,
+  Spec,
+} from "@confect/core";
 import { ConvexConfigProvider } from "@confect/server";
 import { decodeAgentInput } from "@repo/backend/agent/decode";
 import {
@@ -115,15 +120,32 @@ const unreachable = () =>
     message: "Nakafa did not answer this call. Try again.",
   });
 
+/** Whether a function declares its arguments as a Schema, as every public function here does. */
+const declaresArgs = (
+  spec: FunctionSpec.AnyWithProps
+): spec is FunctionSpec.AnyWithProps & {
+  readonly functionProvenance: FunctionProvenance.AnyConfect;
+} => spec.functionProvenance._tag === "Confect";
+
 /** The public functions of one group and the groups inside it, each with its Convex name. */
 const entriesOf = (
   group: GroupSpec.AnyWithProps,
   path: string
-): ReadonlyArray<readonly [string, FunctionSpec.AnyWithProps]> => [
+): ReadonlyArray<
+  readonly [
+    string,
+    FunctionSpec.AnyWithProps & {
+      readonly functionProvenance: FunctionProvenance.AnyConfect;
+    },
+  ]
+> => [
   ...Arr.map(
     Arr.filter(
-      Rec.values(group.functions),
-      (spec) => spec.functionVisibility === "public"
+      Arr.filter(
+        Rec.values(group.functions),
+        (spec) => spec.functionVisibility === "public"
+      ),
+      declaresArgs
     ),
     (spec) => [`${path}:${spec.name}`, spec] as const
   ),
@@ -150,7 +172,7 @@ const loadEntries = Effect.promise(
 const SEGMENT_END = /[/:]/u;
 
 /** The area of one function: the first segment of its name. */
-const areaOf = ([name]: readonly [string, FunctionSpec.AnyWithProps]) =>
+const areaOf = ([name]: readonly [string, unknown]) =>
   Arr.headNonEmpty(Str.split(SEGMENT_END)(name));
 
 const listFunctions = Effect.fn("integrations.agent.list")(function* (
@@ -195,12 +217,8 @@ const describeFunction = Effect.fn("integrations.agent.describe")(function* (
   const [, spec] = yield* Effect.fromOption(
     Arr.findFirst(yield* loadEntries, ([candidate]) => candidate === name)
   ).pipe(Effect.mapError(() => unknownFunction));
-  const { functionProvenance: provenance } = spec;
   return {
-    args:
-      provenance._tag === "Confect"
-        ? Schema.toJsonSchemaDocument(provenance.args).schema
-        : {},
+    args: Schema.toJsonSchemaDocument(spec.functionProvenance.args).schema,
     kind: spec.runtimeAndFunctionType.functionType,
     name,
   };

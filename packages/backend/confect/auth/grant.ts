@@ -74,6 +74,18 @@ const StoredGrant = Schema.Struct({
   userId: Schema.String,
 });
 
+/**
+ * A session as the Convex adapter gives it back. Its output transform turns every date into a
+ * number, whatever Better Auth's own type says, so this module reads the row and not that type.
+ */
+const StoredSessions = Schema.Array(
+  Schema.Struct({
+    expiresAt: Schema.Finite,
+    token: Schema.String,
+    userAgent: Schema.NullishOr(Schema.String),
+  })
+);
+
 /** The query of the consent page's read. */
 const ClientQuery = Schema.Struct({ client_id: Schema.String });
 
@@ -94,32 +106,41 @@ const LABEL_PREFIX = "agent:";
 /** The session label of one agent, so a refresh finds the session it had. */
 const labelOf = (clientId: string) => `${LABEL_PREFIX}${clientId}`;
 
+/** The stored sessions of one person, on every device and agent. */
+const readSessions = Effect.fn("auth.grant.sessions")(function* (
+  context: DispatchContext["context"],
+  userId: string
+) {
+  const sessions = yield* Effect.tryPromise(() =>
+    context.internalAdapter.listSessions(userId)
+  );
+  return yield* Schema.decodeUnknownEffect(StoredSessions)(sessions);
+});
+
 /**
- * The live session of one agent of a person, or a new one. A Convex token names a session, and
- * a write checks that session is live, so an agent is one more signed-in device of its person:
- * ending the session ends the agent.
+ * The token of the live session of one agent of a person, or of a new one. A Convex token names
+ * a session, and a write checks that session is live, so an agent is one more signed-in device
+ * of its person: ending the session ends the agent.
  */
-const sessionOf = Effect.fn("auth.grant.session")(function* (
+const sessionTokenOf = Effect.fn("auth.grant.session")(function* (
   hook: TokenHook,
   grant: typeof StoredGrant.Type
 ) {
-  const { internalAdapter } = hook.context;
   const label = labelOf(grant.clientId);
   const now = yield* Clock.currentTimeMillis;
-  const sessions = yield* Effect.tryPromise(() =>
-    internalAdapter.listSessions(grant.userId)
-  );
   const held = Arr.findFirst(
-    sessions,
-    (session) =>
-      session.userAgent === label && session.expiresAt.getTime() > now
+    yield* readSessions(hook.context, grant.userId),
+    (session) => session.userAgent === label && session.expiresAt > now
   );
   if (Option.isSome(held)) {
-    return held.value;
+    return held.value.token;
   }
-  return yield* Effect.tryPromise(() =>
-    internalAdapter.createSession(grant.userId, false, { userAgent: label })
+  const created = yield* Effect.tryPromise(() =>
+    hook.context.internalAdapter.createSession(grant.userId, false, {
+      userAgent: label,
+    })
   );
+  return created.token;
 });
 
 /**
@@ -163,11 +184,11 @@ const issueConvexToken = Effect.fn("auth.grant.issue")(function* (
     })
   );
   const grant = yield* Schema.decodeUnknownEffect(StoredGrant)(stored);
-  const session = yield* sessionOf(hook, grant);
+  const sessionToken = yield* sessionTokenOf(hook, grant);
   const auth = yield* createAuth(ctx);
   const { token } = yield* Effect.tryPromise(() =>
     auth.api.getToken({
-      headers: new Headers({ authorization: `Bearer ${session.token}` }),
+      headers: new Headers({ authorization: `Bearer ${sessionToken}` }),
     })
   );
   yield* spendRefreshToken(hook);
@@ -183,15 +204,14 @@ const listAgents = Effect.fn("auth.grant.list")(function* (
   context: DispatchContext["context"],
   userId: string
 ) {
-  const sessions = yield* Effect.tryPromise(() =>
-    context.internalAdapter.listSessions(userId)
+  const labels = Arr.map(
+    yield* readSessions(context, userId),
+    (session) => session.userAgent ?? ""
   );
   return yield* Effect.forEach(
-    Arr.filter(sessions, (session) =>
-      Str.startsWith(LABEL_PREFIX)(session.userAgent ?? "")
-    ),
-    (session) => {
-      const clientId = (session.userAgent ?? "").slice(LABEL_PREFIX.length);
+    Arr.filter(labels, Str.startsWith(LABEL_PREFIX)),
+    (label) => {
+      const clientId = label.slice(LABEL_PREFIX.length);
       return Effect.map(readClient(context, clientId), ({ name }) => ({
         clientId,
         name,
@@ -210,11 +230,11 @@ const revokeAgent = Effect.fn("auth.grant.revoke")(function* (
   clientId: string
 ) {
   const label = labelOf(clientId);
-  const sessions = yield* Effect.tryPromise(() =>
-    context.internalAdapter.listSessions(userId)
-  );
   yield* Effect.forEach(
-    Arr.filter(sessions, (session) => session.userAgent === label),
+    Arr.filter(
+      yield* readSessions(context, userId),
+      (session) => session.userAgent === label
+    ),
     (session) =>
       Effect.tryPromise(() =>
         context.internalAdapter.deleteSession(session.token)
