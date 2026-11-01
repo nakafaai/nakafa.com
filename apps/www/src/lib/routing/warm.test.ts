@@ -29,12 +29,14 @@ function routerOf(routes: Record<string, string>) {
   return {
     preloadRoute,
     router: {
-      getMatchedRoutes: (pathname: string) => ({
-        foundRoute:
+      getMatchedRoutes: (pathname: string) =>
+        [
+          [],
+          {},
           routes[pathname] === undefined
             ? undefined
             : { fullPath: routes[pathname] },
-      }),
+        ] as const,
       preloadRoute,
       state: { location: { publicHref: "/en" } },
     },

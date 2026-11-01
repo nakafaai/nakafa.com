@@ -20,9 +20,13 @@ const Connection = Schema.Struct({
 
 /** The part of the router that warming reads, so a look at a link holds no more of it than it needs. */
 interface WarmRouter {
-  readonly getMatchedRoutes: (pathname: string) => {
-    readonly foundRoute?: { readonly fullPath: string } | undefined;
-  };
+  readonly getMatchedRoutes: (
+    pathname: string
+  ) => readonly [
+    matchedRoutes: unknown,
+    rawParams: unknown,
+    foundRoute: { readonly fullPath: string } | undefined,
+  ];
   readonly preloadRoute: (options: {
     readonly href: string;
   }) => Promise<unknown>;
@@ -70,7 +74,7 @@ function spell(template: string) {
  */
 function isStaticLink(router: WarmRouter, href: string) {
   const pathname = Str.split(/[?#]/u)(href)[0];
-  const { foundRoute } = router.getMatchedRoutes(pathname);
+  const [, , foundRoute] = router.getMatchedRoutes(pathname);
   return (
     !namesFile(pathname) &&
     foundRoute !== undefined &&
