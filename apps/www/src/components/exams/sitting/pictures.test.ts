@@ -1,11 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
+import { AssetAddress } from "@repo/backend/confect/exams/asset";
 import {
   matchAnswers,
   newChoiceAnswers,
   shortAnswers,
   tableAnswers,
 } from "@repo/backend/confect/exams/blank";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import {
   addressesOf,
   partLabels,
@@ -40,9 +41,12 @@ describe("pictureIdsOfDocuments", () => {
 
 describe("addressesOf", () => {
   it("names each address by its image", () => {
-    expect(
-      addressesOf([{ id: "first", url: "https://nakafa.test/a" }])
-    ).toEqual({ first: "https://nakafa.test/a" });
+    const address = Schema.decodeUnknownSync(AssetAddress)({
+      id: "first",
+      url: "https://nakafa.test/a",
+    });
+
+    expect(addressesOf([address])).toEqual({ first: "https://nakafa.test/a" });
   });
 });
 
