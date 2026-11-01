@@ -66,7 +66,9 @@ test("a new account opens its own school in five questions and lands in it as it
   await Effect.runPromise(finishSchoolStart(page, baseURL, { name, slug }));
   // The new Owner lands on the setup, because a new school has nothing else to show yet.
   await page.waitForURL(SETUP_ADDRESS);
-  await expect(page.getByRole("button", { name: "Finish setup" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Finish setup" })
+  ).toBeVisible();
   // The tab names the school.
   await expect(page).toHaveTitle(new RegExp(name, "u"));
   await context.close();
