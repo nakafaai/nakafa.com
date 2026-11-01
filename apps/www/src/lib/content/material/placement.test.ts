@@ -58,11 +58,9 @@ describe("lesson places in search", () => {
       ["merdeka", "cambridge"]
     );
 
-    expect(Arr.map(ordered, ({ context }) => context.programKey)).toStrictEqual([
-      "merdeka",
-      "cambridge",
-      "unlisted",
-    ]);
+    expect(Arr.map(ordered, ({ context }) => context.programKey)).toStrictEqual(
+      ["merdeka", "cambridge", "unlisted"]
+    );
   });
 
   it("walks home down the first place's curriculum pages", () => {
