@@ -1,11 +1,13 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { registrations } from "@repo/backend/confect/auth/grant";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { Effect, Encoding, Schema } from "effect";
+import { Effect, Schema } from "effect";
+import { Base64Url } from "effect/encoding";
 
 const NOW = 1_800_000_000_000;
 
@@ -31,6 +33,20 @@ const form = (fields: Readonly<Record<string, string>>) => ({
   method: "POST",
 });
 
+/** The person's own sign-in, as the bearer plugin reads it. */
+const SIGNED_IN = "Bearer session-person";
+
+const SIGNED_IN_JSON = {
+  authorization: SIGNED_IN,
+  "content-type": "application/json",
+};
+
+const Agents = Schema.Array(
+  Schema.Struct({
+    clientId: Schema.String,
+    name: Schema.NullOr(Schema.String),
+  })
+);
 const Registered = Schema.Struct({ client_id: Schema.String });
 const Consent = Schema.Struct({ redirectURI: Schema.String });
 const Tokens = Schema.Struct({
@@ -67,9 +83,7 @@ const authorizeAgent = Effect.gen(function* () {
   const { client_id: clientId } = yield* bodyOf(Registered, registered);
   const challenge = yield* Effect.promise(() =>
     crypto.subtle.digest("SHA-256", new TextEncoder().encode(CODE_VERIFIER))
-  ).pipe(
-    Effect.map((bytes) => Encoding.encodeBase64Url(new Uint8Array(bytes)))
-  );
+  ).pipe(Effect.map((bytes) => Base64Url.encode(new Uint8Array(bytes))));
   const asked = new URLSearchParams({
     client_id: clientId,
     code_challenge: challenge,
@@ -80,24 +94,67 @@ const authorizeAgent = Effect.gen(function* () {
   });
   const authorized = yield* Effect.promise(() =>
     t.fetch(`/api/auth/mcp/authorize?${asked}`, {
-      headers: { authorization: "Bearer session-person" },
+      headers: { authorization: SIGNED_IN },
       redirect: "manual",
     })
   );
   return { authorized, clientId, person, t };
 });
 
+/** Answers the consent of one authorization as the person. */
+const answerConsent = (
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  authorized: Response,
+  accept: boolean
+) =>
+  Effect.gen(function* () {
+    const location = new URL(
+      authorized.headers.get("location") ?? "",
+      "https://nakafa.com"
+    );
+    const answered = yield* Effect.promise(() =>
+      t.fetch("/api/auth/oauth2/consent", {
+        body: JSON.stringify({
+          accept,
+          consent_code: location.searchParams.get("consent_code"),
+        }),
+        headers: SIGNED_IN_JSON,
+        method: "POST",
+      })
+    );
+    const { redirectURI } = yield* bodyOf(Consent, answered);
+    return new URL(redirectURI);
+  });
+
+/** Trades a person's yes for the agent's first tokens. */
+const signIn = Effect.gen(function* () {
+  const { authorized, clientId, person, t } = yield* authorizeAgent;
+  const redirect = yield* answerConsent(t, authorized, true);
+  const response = yield* Effect.promise(() =>
+    t.fetch(
+      "/api/auth/mcp/token",
+      form({
+        client_id: clientId,
+        code: redirect.searchParams.get("code") ?? "",
+        code_verifier: CODE_VERIFIER,
+        grant_type: "authorization_code",
+        redirect_uri: REDIRECT_URI,
+      })
+    )
+  );
+  const tokens = yield* bodyOf(Tokens, response);
+  return { clientId, person, t, tokens };
+});
+
 describe("auth/grant", () => {
   it.effect("asks the person, then issues a Convex token of that person", () =>
     Effect.gen(function* () {
-      const { authorized, clientId, person, t } = yield* authorizeAgent;
-      const location = new URL(
-        authorized.headers.get("location") ?? "",
-        "https://nakafa.com"
-      );
+      const { authorized, clientId, t } = yield* authorizeAgent;
       // A registered client gets no code before its person answers.
-      expect(location.pathname).toBe("/agent");
-      const consentCode = location.searchParams.get("consent_code") ?? "";
+      expect(
+        new URL(authorized.headers.get("location") ?? "", "https://nakafa.com")
+          .pathname
+      ).toBe("/agent");
       const client = yield* Effect.promise(() =>
         t.fetch(`/api/auth/agent/client?client_id=${clientId}`)
       );
@@ -105,38 +162,99 @@ describe("auth/grant", () => {
         name: "Test agent",
         redirect: "agent.example",
       });
-      const answered = yield* Effect.promise(() =>
-        t.fetch("/api/auth/oauth2/consent", {
-          body: JSON.stringify({ accept: true, consent_code: consentCode }),
-          headers: {
-            authorization: "Bearer session-person",
-            "content-type": "application/json",
-          },
-          method: "POST",
-        })
-      );
-      const { redirectURI } = yield* bodyOf(Consent, answered);
-      const code = new URL(redirectURI).searchParams.get("code") ?? "";
-      const token = yield* Effect.promise(() =>
-        t.fetch(
-          "/api/auth/mcp/token",
-          form({
-            client_id: clientId,
-            code,
-            code_verifier: CODE_VERIFIER,
-            grant_type: "authorization_code",
-            redirect_uri: REDIRECT_URI,
-          })
-        )
-      );
-      const tokens = yield* bodyOf(Tokens, token);
+      const denied = yield* answerConsent(t, authorized, false);
+      expect(denied.searchParams.has("code")).toBe(false);
+    })
+  );
+
+  it.effect("signs the agent in as its person, once per refresh token", () =>
+    Effect.gen(function* () {
+      const { clientId, person, t, tokens } = yield* signIn;
       expect(tokens.expires_in).toBe(900);
       const [, payload = ""] = tokens.access_token.split(".");
-      const text = yield* Encoding.decodeBase64UrlString(payload);
+      const text = yield* Base64Url.decodeString(payload);
       const claims = yield* Schema.decodeEffect(
         Schema.fromJsonString(Schema.Struct({ sub: Schema.String }))
       )(text);
       expect(claims.sub).toBe(person.authUserId);
+      const refresh = form({
+        client_id: clientId,
+        grant_type: "refresh_token",
+        refresh_token: tokens.refresh_token,
+      });
+      const renewed = yield* Effect.promise(() =>
+        t.fetch("/api/auth/mcp/token", refresh)
+      );
+      expect((yield* bodyOf(Tokens, renewed)).expires_in).toBe(900);
+      const replayed = yield* Effect.promise(() =>
+        t.fetch("/api/auth/mcp/token", refresh)
+      );
+      expect(replayed.status).toBe(401);
+    })
+  );
+
+  it.effect("lists the agents a person let in, and ends one", () =>
+    Effect.gen(function* () {
+      const { clientId, t, tokens } = yield* signIn;
+      const list = () =>
+        Effect.promise(() =>
+          t.fetch("/api/auth/agent/list", {
+            headers: { authorization: SIGNED_IN },
+          })
+        ).pipe(Effect.flatMap((response) => bodyOf(Agents, response)));
+      expect(yield* list()).toEqual([{ clientId, name: "Test agent" }]);
+      const revoked = yield* Effect.promise(() =>
+        t.fetch("/api/auth/agent/revoke", {
+          body: JSON.stringify({ client_id: clientId }),
+          headers: SIGNED_IN_JSON,
+          method: "POST",
+        })
+      );
+      expect(revoked.status).toBe(200);
+      expect(yield* list()).toEqual([]);
+      const refused = yield* Effect.promise(() =>
+        t.fetch(
+          "/api/auth/mcp/token",
+          form({
+            client_id: clientId,
+            grant_type: "refresh_token",
+            refresh_token: tokens.refresh_token,
+          })
+        )
+      );
+      expect(refused.status).toBe(401);
+    })
+  );
+
+  it.effect("names no agent for an unknown client", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const client = yield* Effect.promise(() =>
+        t.fetch("/api/auth/agent/client?client_id=unknown")
+      );
+      expect(yield* Effect.promise(() => client.json())).toEqual({
+        name: null,
+        redirect: null,
+      });
+    })
+  );
+
+  it.effect("refuses a registration past the limit", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      yield* Effect.promise(() =>
+        t.action((ctx) =>
+          registrations.limit(ctx, "agentRegistration", { count: 20 })
+        )
+      );
+      const refused = yield* Effect.promise(() =>
+        t.fetch("/api/auth/mcp/register", {
+          body: JSON.stringify({ redirect_uris: [REDIRECT_URI] }),
+          headers: { "content-type": "application/json" },
+          method: "POST",
+        })
+      );
+      expect(refused.status).toBe(429);
     })
   );
 });

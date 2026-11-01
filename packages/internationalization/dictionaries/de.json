@@ -2415,6 +2415,11 @@
     "contribute": "Mitwirken"
   },
   "Auth": {
+    "agents": "Agenten",
+    "agents-description": "Agenten, die du erlaubt hast, können dein Konto nutzen.",
+    "agents-empty": "Noch kein Agent hat Zugriff.",
+    "agents-footer": "Das Entziehen beendet den Zugriff des Agenten.",
+    "agents-revoke": "Entziehen",
     "agent-address": "Danach kommst du zurück zu {host}.",
     "agent-allow": "Erlauben",
     "agent-deny": "Ablehnen",

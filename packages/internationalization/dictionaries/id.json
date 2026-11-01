@@ -2415,6 +2415,11 @@
     "contribute": "Berkontribusi"
   },
   "Auth": {
+    "agents": "Agen",
+    "agents-description": "Agen yang kamu izinkan bisa memakai akunmu.",
+    "agents-empty": "Belum ada agen yang kamu izinkan.",
+    "agents-footer": "Mencabut agen mengakhiri aksesnya.",
+    "agents-revoke": "Cabut",
     "agent-address": "Setelah itu kamu kembali ke {host}.",
     "agent-allow": "Izinkan",
     "agent-deny": "Tolak",

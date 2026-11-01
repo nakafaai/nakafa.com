@@ -5,7 +5,7 @@ import { SCHOOL_MCP_PATH } from "@repo/backend/confect/integrations/api";
 import type { Fixture } from "@repo/backend/test/api";
 import { type McpRequest, modernPost } from "@repo/backend/test/mcp/harness";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Record as Rec, Schema } from "effect";
 
 /** The one stand-in for Convex's HTTP API in this file. */
 const fetcher = vi.fn<typeof fetch>();
@@ -37,20 +37,21 @@ const ToolAnswer = Schema.Struct({
 });
 
 /** Sends one MCP request as the school's admin, with their verified token. */
-const send = (fixture: Fixture, request: McpRequest) =>
-  Effect.promise(() =>
+const send = (fixture: Fixture, request: McpRequest) => {
+  const headers = new Headers({ authorization: `Bearer ${TOKEN}` });
+  for (const [name, value] of Rec.toEntries(request.headers ?? {})) {
+    if (value !== null) {
+      headers.set(name, value);
+    }
+  }
+  return Effect.promise(() =>
     fixture.fetchAs("admin", SCHOOL_MCP_PATH, {
       ...(request.body === undefined ? {} : { body: request.body }),
-      headers: {
-        accept: "application/json, text/event-stream",
-        authorization: `Bearer ${TOKEN}`,
-        "content-type": "application/json",
-        "mcp-method": "tools/call",
-        "mcp-protocol-version": "2026-07-28",
-      },
+      headers,
       method: request.method,
     })
   );
+};
 
 /** The decoded JSON body of an answer. */
 const decoded = <S extends Schema.Top & { readonly DecodingServices: never }>(

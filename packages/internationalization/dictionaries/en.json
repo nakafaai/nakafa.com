@@ -2415,6 +2415,11 @@
     "contribute": "Contribute"
   },
   "Auth": {
+    "agents": "Agents",
+    "agents-description": "Agents you allowed can use your account.",
+    "agents-empty": "No agent has access yet.",
+    "agents-footer": "Revoking an agent ends its access.",
+    "agents-revoke": "Revoke",
     "agent-address": "You go back to {host} after this.",
     "agent-allow": "Allow",
     "agent-deny": "Deny",

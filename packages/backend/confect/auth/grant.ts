@@ -8,6 +8,7 @@ import {
   createAuthEndpoint,
   createAuthMiddleware,
   type DispatchContext,
+  sessionMiddleware,
 } from "better-auth/api";
 import type { BetterAuthOptions } from "better-auth/minimal";
 import type { GenericActionCtx } from "convex/server";
@@ -32,12 +33,18 @@ const REGISTER_PATH = "/mcp/register";
 /** The path where the consent page reads which agent is asking. */
 const CLIENT_PATH = "/agent/client";
 
+/** The path where a person reads the agents they let in. */
+const LIST_PATH = "/agent/list";
+
+/** The path where a person ends one of those agents. */
+const REVOKE_PATH = "/agent/revoke";
+
 /**
  * The registrations all of Nakafa takes: twenty an hour. An agent registers once per install,
  * and the route takes no credential, so without this anyone could grow the table without end.
  * It is a design choice, not a measurement.
  */
-const registrations = new RateLimiter(components.agentRateLimiter, {
+export const registrations = new RateLimiter(components.agentRateLimiter, {
   agentRegistration: {
     capacity: 20,
     kind: "token bucket",
@@ -81,8 +88,11 @@ type TokenHook = Pick<DispatchContext, "body" | "context"> & {
   readonly json: (body: Readonly<Record<string, unknown>>) => unknown;
 };
 
+/** What every agent's session label starts with. */
+const LABEL_PREFIX = "agent:";
+
 /** The session label of one agent, so a refresh finds the session it had. */
-const labelOf = (clientId: string) => `agent:${clientId}`;
+const labelOf = (clientId: string) => `${LABEL_PREFIX}${clientId}`;
 
 /**
  * The live session of one agent of a person, or a new one. A Convex token names a session, and
@@ -168,6 +178,61 @@ const issueConvexToken = Effect.fn("auth.grant.issue")(function* (
   });
 }, Effect.provide(ConvexConfigProvider.layer));
 
+/** The agents a person let in, each with the name it gave. */
+const listAgents = Effect.fn("auth.grant.list")(function* (
+  context: DispatchContext["context"],
+  userId: string
+) {
+  const sessions = yield* Effect.tryPromise(() =>
+    context.internalAdapter.listSessions(userId)
+  );
+  return yield* Effect.forEach(
+    Arr.filter(sessions, (session) =>
+      Str.startsWith(LABEL_PREFIX)(session.userAgent ?? "")
+    ),
+    (session) => {
+      const clientId = (session.userAgent ?? "").slice(LABEL_PREFIX.length);
+      return Effect.map(readClient(context, clientId), ({ name }) => ({
+        clientId,
+        name,
+      }));
+    }
+  );
+});
+
+/**
+ * Ends one agent of a person: its session, so a write stops at once and a read within the
+ * token's 15 minutes, and its refresh tokens, so it cannot sign back in.
+ */
+const revokeAgent = Effect.fn("auth.grant.revoke")(function* (
+  context: DispatchContext["context"],
+  userId: string,
+  clientId: string
+) {
+  const label = labelOf(clientId);
+  const sessions = yield* Effect.tryPromise(() =>
+    context.internalAdapter.listSessions(userId)
+  );
+  yield* Effect.forEach(
+    Arr.filter(sessions, (session) => session.userAgent === label),
+    (session) =>
+      Effect.tryPromise(() =>
+        context.internalAdapter.deleteSession(session.token)
+      ),
+    { discard: true }
+  );
+  yield* Effect.tryPromise(() =>
+    context.adapter.deleteMany({
+      model: "oauthAccessToken",
+      where: [
+        { field: "clientId", value: clientId },
+        { field: "userId", value: userId },
+      ],
+    })
+  );
+  return { revoked: true };
+});
+
 /** Takes one registration from the limit, or refuses the request. */
 const admitRegistration = Effect.fn("auth.grant.register")(function* (
   ctx: GenericActionCtx<DataModel>
@@ -196,18 +261,17 @@ const readClient = Effect.fn("auth.grant.client")(function* (
       where: [{ field: "clientId", value: clientId }],
     })
   );
-  const client = Schema.decodeUnknownOption(StoredClient)(stored);
-  if (Option.isNone(client)) {
-    return null;
-  }
-  return {
-    name: client.value.name ?? null,
-    redirect: Option.getOrNull(
-      Option.liftThrowable((text: string) => new URL(text).host)(
-        Arr.headNonEmpty(Str.split(",")(client.value.redirectUrls))
-      )
-    ),
-  };
+  return Option.match(Schema.decodeUnknownOption(StoredClient)(stored), {
+    onNone: () => ({ name: null, redirect: null }),
+    onSome: (client) => ({
+      name: client.name ?? null,
+      redirect: Option.getOrNull(
+        Option.liftThrowable((text: string) => new URL(text).host)(
+          Arr.headNonEmpty(Str.split(",")(client.redirectUrls))
+        )
+      ),
+    }),
+  });
 });
 
 /**
@@ -222,6 +286,30 @@ export function agentGrants(
   return {
     id: "agent-grants",
     endpoints: {
+      agentList: createAuthEndpoint(
+        LIST_PATH,
+        { method: "GET", use: [sessionMiddleware] },
+        (endpoint) =>
+          Effect.runPromise(
+            listAgents(endpoint.context, endpoint.context.session.user.id)
+          )
+      ),
+      agentRevoke: createAuthEndpoint(
+        REVOKE_PATH,
+        {
+          body: Schema.toStandardSchemaV1(ClientQuery),
+          method: "POST",
+          use: [sessionMiddleware],
+        },
+        (endpoint) =>
+          Effect.runPromise(
+            revokeAgent(
+              endpoint.context,
+              endpoint.context.session.user.id,
+              endpoint.body.client_id
+            )
+          )
+      ),
       agentClient: createAuthEndpoint(
         CLIENT_PATH,
         { method: "GET", query: Schema.toStandardSchemaV1(ClientQuery) },

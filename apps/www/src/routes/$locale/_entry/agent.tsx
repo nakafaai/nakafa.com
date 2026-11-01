@@ -12,12 +12,10 @@ const AgentSearch = Schema.Struct({
 });
 
 /** The agent that asks, as it registered itself. */
-const AgentClient = Schema.NullOr(
-  Schema.Struct({
-    name: Schema.NullOr(Schema.String),
-    redirect: Schema.NullOr(Schema.String),
-  })
-);
+const AgentClient = Schema.Struct({
+  name: Schema.NullOr(Schema.String),
+  redirect: Schema.NullOr(Schema.String),
+});
 
 /**
  * Asks a signed-in person whether an agent may act as them. Better Auth redirects here from an
@@ -51,8 +49,8 @@ function AgentPage() {
       <EntryShellBody>
         <AgentConsent
           consentCode={consentCode}
-          name={client?.name ?? null}
-          redirect={client?.redirect ?? null}
+          name={client.name}
+          redirect={client.redirect}
         />
       </EntryShellBody>
     </>
