@@ -193,94 +193,80 @@ function useStatusChoices() {
   ];
 }
 
-/** The table of the given students, with its head and one row for each. */
-function StudentTable({
-  loading,
-  rows,
-}: {
-  /** Whether more students may still arrive, or the page says itself that the list holds none. */
-  readonly loading: boolean;
-  readonly rows: readonly (typeof StudentRowSchema.Type)[];
-}) {
+/** The columns of the students' table: each student's state, score, counts and the time they finished. */
+function useStudentColumns() {
   const t = useTranslations("Exams");
   const { timeZone, total } = useResultsPaper();
   const format = useFormatter();
   const statusChoices = useStatusChoices();
 
-  return (
-    <DataTable
-      columns={[
-        studentColumns.text((row) => row.name, {
-          cell: (info) => <StudentName row={info.row.original} />,
-          header: t("results-name"),
-          id: "name",
-        }),
-        studentColumns.choice((row) => row.state, {
-          cell: (info) => (
-            <TableStatus
-              icon={STATE_LOOKS[info.getValue()].icon}
-              label={t(stateKeys[info.getValue()])}
-              tone={STATE_LOOKS[info.getValue()].tone}
-            />
-          ),
-          header: t("results-status"),
-          id: "status",
-          options: statusChoices,
-        }),
-        studentColumns.number((row) => row.points, {
-          cell: (info) => {
-            const points = info.getValue();
-            return points === null ? <NotYet /> : `${points} / ${total}`;
-          },
-          header: t("results-score"),
-          id: "score",
-        }),
-        studentColumns.number((row) => row.answered, {
-          cell: (info) => info.getValue() ?? <NotYet />,
-          header: t("results-answered"),
-          id: "answered",
-        }),
-        studentColumns.number((row) => row.pending, {
-          cell: (info) => info.getValue() ?? <NotYet />,
-          header: t("results-pending"),
-          id: "pending",
-        }),
-        studentColumns.number((row) => row.awaySeconds, {
-          cell: (info) => (
-            <AwayCell
-              awaySeconds={info.getValue()}
-              exits={info.row.original.exits}
-            />
-          ),
-          header: t("results-away"),
-          id: "away",
-        }),
-        studentColumns.days((row) => row.submittedAt, {
-          cell: (info) => {
-            const at = info.getValue();
-            return at === null ? (
-              <NotYet />
-            ) : (
-              format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(at)), {
-                dateStyle: "medium",
-                timeStyle: "short",
-                timeZone,
-              })
-            );
-          },
-          header: t("results-finished"),
-          id: "finished",
-          timeZone: () => timeZone,
-        }),
-        studentColumns.menu((info) => (
-          <StudentRowMenu attemptId={info.row.original.attemptId} />
-        )),
-      ]}
-      data={rows}
-      loading={loading}
-      rowId={(row) => row.attemptId}
-    />
-  );
+  return [
+    studentColumns.text((row) => row.name, {
+      cell: (info) => <StudentName row={info.row.original} />,
+      header: t("results-name"),
+      id: "name",
+    }),
+    studentColumns.choice((row) => row.state, {
+      cell: (info) => (
+        <TableStatus
+          icon={STATE_LOOKS[info.getValue()].icon}
+          label={t(stateKeys[info.getValue()])}
+          tone={STATE_LOOKS[info.getValue()].tone}
+        />
+      ),
+      header: t("results-status"),
+      id: "status",
+      options: statusChoices,
+    }),
+    studentColumns.number((row) => row.points, {
+      cell: (info) => {
+        const points = info.getValue();
+        return points === null ? <NotYet /> : `${points} / ${total}`;
+      },
+      header: t("results-score"),
+      id: "score",
+    }),
+    studentColumns.number((row) => row.answered, {
+      cell: (info) => info.getValue() ?? <NotYet />,
+      header: t("results-answered"),
+      id: "answered",
+    }),
+    studentColumns.number((row) => row.pending, {
+      cell: (info) => info.getValue() ?? <NotYet />,
+      header: t("results-pending"),
+      id: "pending",
+    }),
+    studentColumns.number((row) => row.awaySeconds, {
+      cell: (info) => (
+        <AwayCell
+          awaySeconds={info.getValue()}
+          exits={info.row.original.exits}
+        />
+      ),
+      header: t("results-away"),
+      id: "away",
+    }),
+    studentColumns.days((row) => row.submittedAt, {
+      cell: (info) => {
+        const at = info.getValue();
+        return at === null ? (
+          <NotYet />
+        ) : (
+          format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(at)), {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone,
+          })
+        );
+      },
+      header: t("results-finished"),
+      id: "finished",
+      timeZone: () => timeZone,
+    }),
+    studentColumns.menu((info) => (
+      <StudentRowMenu attemptId={info.row.original.attemptId} />
+    )),
+  ];
 }
 
 /**
@@ -361,14 +347,18 @@ function StudentRowsSection({
   rows: readonly (typeof StudentRowSchema.Type)[];
 }) {
   const t = useTranslations("Exams");
+  const columns = useStudentColumns();
+
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {/* While a filter or a search narrows the list, the table keeps its head, so the status choice stays in reach. */}
       {rows.length > 0 || filtering ? (
-        <StudentTable
+        <DataTable
+          columns={columns}
+          data={rows}
           loading={loadMore !== null || rows.length === 0}
-          rows={rows}
+          rowId={(row) => row.attemptId}
         />
       ) : null}
       {/* A page of a search can hold no match while later pages still load, so the empty state

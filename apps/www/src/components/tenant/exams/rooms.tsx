@@ -342,7 +342,18 @@ function RoomsTable({
             timeZone: (room) => room.timeZone,
           }),
           roomColumns.choice((room) => room.state, {
-            cell: (info) => <RoomState room={info.row.original} slug={slug} />,
+            cell: (info) => (
+              <span className="inline-flex items-center gap-2">
+                <TableStatus
+                  icon={ROOM_STATE_LOOKS[info.getValue()].icon}
+                  label={t(`room-state-${info.getValue()}`)}
+                  tone={ROOM_STATE_LOOKS[info.getValue()].tone}
+                />
+                {info.getValue() === "open" ? (
+                  <RoomSeats sittingId={info.row.original.id} slug={slug} />
+                ) : null}
+              </span>
+            ),
             header: t("rooms-state"),
             id: "state",
             options: [
@@ -377,22 +388,4 @@ function RoomsTable({
 /** The sentinel that reads the next page of rooms as it comes into view, while the list has more. */
 function RoomsMore({ loadMore }: { loadMore: (() => void) | null }) {
   return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
-}
-
-/** A room's state, with how its seats stand beside it while it is open. */
-function RoomState({ room, slug }: { room: Room; slug: TenantSlug }) {
-  const t = useTranslations("Exams");
-
-  return (
-    <span className="inline-flex items-center gap-2">
-      <TableStatus
-        icon={ROOM_STATE_LOOKS[room.state].icon}
-        label={t(`room-state-${room.state}`)}
-        tone={ROOM_STATE_LOOKS[room.state].tone}
-      />
-      {room.state === "open" ? (
-        <RoomSeats sittingId={room.id} slug={slug} />
-      ) : null}
-    </span>
-  );
 }

@@ -85,6 +85,7 @@ export function DataTable<TData extends RowData>({
   search?: string;
 }) {
   const t = useTranslations("DataTable");
+  const hasPanes = useHasPanes();
   const text = useTableFilters((state) => state.search);
   const chosen = useTableFilters((state) => state.chosen);
   const table = useTable({
@@ -115,7 +116,7 @@ export function DataTable<TData extends RowData>({
       <TableBody>
         {Arr.isReadonlyArrayNonEmpty(rows) || loading ? (
           Arr.map(rows, (row) => (
-            <DataTableRow key={row.id} plain={plain} row={row}>
+            <DataTableRow key={row.id} opens={hasPanes && !plain} row={row}>
               {Arr.map(row.getAllCells(), (cell, index) => (
                 <TableCell
                   className={columnAlign({
@@ -151,16 +152,15 @@ export function DataTable<TData extends RowData>({
 /** One row of the table: a row that opens beside the list on a page with panes, else a plain row. */
 function DataTableRow({
   children,
-  plain,
+  opens,
   row,
 }: {
   children: ReactNode;
-  plain: boolean;
+  /** Whether pressing the row opens it beside the list. */
+  opens: boolean;
   row: { readonly id: string };
 }) {
-  const hasPanes = useHasPanes();
-
-  return hasPanes && !plain ? (
+  return opens ? (
     <PaneTableRow id={row.id}>{children}</PaneTableRow>
   ) : (
     <TableRow className="h-12">{children}</TableRow>
