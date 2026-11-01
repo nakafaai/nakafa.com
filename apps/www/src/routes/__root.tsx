@@ -43,6 +43,7 @@ import {
   NotFoundPageData,
   readNotFoundPageLocale,
 } from "@/lib/routing/not-found";
+import { paintFirst } from "@/lib/routing/paint";
 import { SCROLL_AREA_PROPERTIES_SCRIPT } from "@/lib/scroll/prepaint";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";
 import { THEME_PREPAINT_SCRIPT } from "@/lib/theme/prepaint";
@@ -53,12 +54,13 @@ export const Route = createRootRoute({
    * A request that the server answers not found (ADR 0026) names its not-found
    * page in the server context, so the root answers not found at the visitor's
    * own address. The browser never has that context and hydrates the root's
-   * not-found match as the server sent it.
+   * not-found match as the server sent it. A press paints before its page renders.
    */
-  beforeLoad: ({ serverContext }) => {
+  beforeLoad: ({ preload, serverContext }) => {
     if (serverContext?.notFound !== undefined) {
       throw notFound({ data: serverContext.notFound });
     }
+    return preload ? undefined : paintFirst();
   },
   /**
    * The local preview revision is read once per document: with an infinite stale
