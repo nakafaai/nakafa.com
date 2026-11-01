@@ -1,8 +1,9 @@
-import { DateTime, MutableHashSet } from "effect";
+import { DateTime, Effect, MutableHashSet } from "effect";
 import {
   createContext,
   type ReactNode,
   use,
+  useEffect,
   useSyncExternalStore,
 } from "react";
 import { notifyTickListeners } from "@/components/tryout/runtime/tick";
@@ -31,10 +32,18 @@ let timer: number | null = null;
 const listeners = MutableHashSet.empty<() => void>();
 
 /**
- * Moves every timer of the page onto the server's time, from the correction this device's clock needs, so
- * a device whose clock is wrong locks a section when the server does.
+ * Moves every timer of the page onto the server's time once `read` gives the correction this device's clock
+ * needs, so a device whose clock is wrong locks a section when the server does. The caller brings the read,
+ * since a page that only shows a countdown has no use for its HTTP client.
  */
-export function correctTryoutClock(offset: number) {
+export function useServerTime(read: () => Effect.Effect<number>) {
+  useEffect(() => {
+    Effect.runFork(read().pipe(Effect.map(correctTryoutClock)));
+  }, [read]);
+}
+
+/** Takes the device's correction and shows it on every timer at once. */
+function correctTryoutClock(offset: number) {
   clockOffset = offset;
   currentNow = readEpochMillis();
   notifyTickListeners(listeners);

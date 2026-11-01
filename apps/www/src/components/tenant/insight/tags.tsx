@@ -59,40 +59,10 @@ const ShownTags = Schema.Struct({
 export function QuestionTags() {
   const t = useTranslations("SchoolInsight");
   const { slug } = useTenant();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const id = useId();
-  const [isWanted, setIsWanted] = useState(false);
   const [open, setOpen] = useState(false);
-  const [picked, setPicked] = useState<string | null>(null);
-  const [shown, setShown] = useState<typeof ShownTags.Type | null>(null);
-  const list = useQuery(
-    exams.exams.list,
-    isWanted && isSettled
-      ? { paginationOpts: { cursor: null, numItems: EXAM_PAGE }, slug }
-      : "skip"
-  );
-  const held = QueryResult.isSuccess(list) ? list.value.page : [];
-  const items = Arr.map(held, (exam) => ({
-    label: exam.title,
-    value: exam.id,
-  }));
-  const chosen = Option.orElse(
-    Arr.findFirst(held, (exam) => exam.id === picked),
-    () => Arr.head(held)
-  );
-  const hasNoExam =
-    QueryResult.isSuccess(list) && Arr.isReadonlyArrayEmpty(held);
-  const tags = useQuery(
-    insight.tags.list,
-    Option.isSome(chosen) ? { examId: chosen.value.id, slug } : "skip"
-  );
-  if (
-    Option.isSome(chosen) &&
-    QueryResult.isSuccess(tags) &&
-    tags.value !== shown?.tags
-  ) {
-    setShown({ examId: chosen.value.id, tags: tags.value });
-  }
+  const { chosen, hasNoExam, items, setIsWanted, setPicked, shown } =
+    useExamTags();
 
   return (
     <>
@@ -166,6 +136,46 @@ export function QuestionTags() {
       </ResponsiveDialog>
     </>
   );
+}
+
+/** Reads the exams once they are wanted and the questions of the chosen exam, which stay shown until the next exam's arrive. */
+function useExamTags() {
+  const { slug } = useTenant();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const [isWanted, setIsWanted] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [shown, setShown] = useState<typeof ShownTags.Type | null>(null);
+  const list = useQuery(
+    exams.exams.list,
+    isWanted && isSettled
+      ? { paginationOpts: { cursor: null, numItems: EXAM_PAGE }, slug }
+      : "skip"
+  );
+  const held = QueryResult.isSuccess(list) ? list.value.page : [];
+  const chosen = Option.orElse(
+    Arr.findFirst(held, (exam) => exam.id === picked),
+    () => Arr.head(held)
+  );
+  const tags = useQuery(
+    insight.tags.list,
+    Option.isSome(chosen) ? { examId: chosen.value.id, slug } : "skip"
+  );
+  if (
+    Option.isSome(chosen) &&
+    QueryResult.isSuccess(tags) &&
+    tags.value !== shown?.tags
+  ) {
+    setShown({ examId: chosen.value.id, tags: tags.value });
+  }
+
+  return {
+    chosen,
+    hasNoExam: QueryResult.isSuccess(list) && Arr.isReadonlyArrayEmpty(held),
+    items: Arr.map(held, (exam) => ({ label: exam.title, value: exam.id })),
+    setIsWanted,
+    setPicked,
+    shown,
+  };
 }
 
 /** The competency of one question, saved when the field is left. An emptied field takes it away. */

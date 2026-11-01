@@ -21,7 +21,7 @@ import {
 import { createPortal } from "react-dom";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { pageBoxVariants } from "@/components/shared/content/width";
-import { isTyping } from "@/components/shared/settings/return";
+import { isTyping } from "@/components/shared/typing";
 
 /** From which width two panes stand side by side: tablet for a list, laptop for the exam editor, wide for a chat's discussion. */
 const PanesWidth = Schema.Literals(["md", "lg", "xl"]);
@@ -40,7 +40,7 @@ const decodePaneSizes = Schema.decodeUnknownOption(
 const PanesGroupContext = createContext("panes");
 
 /** The size a pane starts at until a person sets one, as a share of the group's width or a length. */
-export const PaneStartContext = createContext("35%");
+const PaneStartContext = createContext("35%");
 
 /** Which row of a page's list is open beside it, by its ID, and whether the phone's sheet shows it. */
 const PanesState = Schema.Struct({
@@ -207,9 +207,20 @@ export function PanesGroupProvider({
   );
 }
 
+/** Gives the panes inside it the size they start at until a person sets one. */
+export function PaneStartProvider({
+  children,
+  size,
+}: {
+  children: ReactNode;
+  size: string;
+}) {
+  return <PaneStartContext value={size}>{children}</PaneStartContext>;
+}
+
 /**
  * A pane with its own size, which starts at the size a person kept for it, read once as it opens, or else at the size
- * of its `PaneStartContext`. The pane that takes the room the others leave is a plain `ResizablePanel`.
+ * of its `PaneStartProvider`. The pane that takes the room the others leave is a plain `ResizablePanel`.
  */
 export function SizedPane({
   id,

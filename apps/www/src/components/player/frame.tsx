@@ -10,7 +10,7 @@ import {
   readingMeasureVariants,
 } from "@/components/shared/content/width";
 import {
-  PaneStartContext,
+  PaneStartProvider,
   PanesGroupProvider,
   SizedPane,
 } from "@/components/shared/panes";
@@ -62,7 +62,7 @@ export function PlayerMain({
             className="z-0 items-start [&>div]:sticky [&>div]:top-[50svh]"
             withHandle
           />
-          <PaneStartContext value="25%">
+          <PaneStartProvider size="25%">
             <SizedPane
               className="overflow-visible!"
               id="navigator"
@@ -71,7 +71,7 @@ export function PlayerMain({
             >
               {navigator}
             </SizedPane>
-          </PaneStartContext>
+          </PaneStartProvider>
         </>
       )}
     </PanesGroupProvider>

@@ -16,7 +16,12 @@ import {
   TableCell,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { type Header, type RowData, useTable } from "@tanstack/react-table";
+import {
+  type Cell,
+  type Header,
+  type RowData,
+  useTable,
+} from "@tanstack/react-table";
 import { Array as Arr, Match, Option } from "effect";
 import { type ComponentProps, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -147,22 +152,9 @@ export function DataTable<TData extends RowData>({
             Arr.map(shown, (row) => (
               <DataTableRow key={row.id} opens={hasPanes && !plain} row={row}>
                 {Arr.map(row.getAllCells(), (cell, index) => (
-                  <TableCell
-                    className={columnAlign({
-                      align: placeOf(index, cell.column.columnDef.meta?.align),
-                    })}
-                    key={cell.id}
-                  >
-                    {cell.column.columnDef.meta?.align === "menu" ? (
-                      <RowMenu
-                        inert={cell.column.columnDef.meta.inert?.(row.original)}
-                      >
-                        <table.FlexRender cell={cell} />
-                      </RowMenu>
-                    ) : (
-                      <table.FlexRender cell={cell} />
-                    )}
-                  </TableCell>
+                  <DataTableCell cell={cell} index={index} key={cell.id}>
+                    <table.FlexRender cell={cell} />
+                  </DataTableCell>
                 ))}
               </DataTableRow>
             ))
@@ -191,6 +183,29 @@ export function DataTable<TData extends RowData>({
         />
       ) : null}
     </>
+  );
+}
+
+/** One cell of a row, in its column's place, with the row's menu around what the menu column holds. */
+function DataTableCell<TData extends RowData>({
+  cell,
+  children,
+  index,
+}: {
+  cell: Cell<typeof dataTableFeatures, TData>;
+  children: ReactNode;
+  index: number;
+}) {
+  const { meta } = cell.column.columnDef;
+
+  return (
+    <TableCell className={columnAlign({ align: placeOf(index, meta?.align) })}>
+      {meta?.align === "menu" ? (
+        <RowMenu inert={meta.inert?.(cell.row.original)}>{children}</RowMenu>
+      ) : (
+        children
+      )}
+    </TableCell>
   );
 }
 
