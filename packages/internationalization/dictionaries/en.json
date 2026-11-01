@@ -312,7 +312,6 @@
     "unavailable": "This exam is not available.",
     "archived-note": "This school is archived, so its exams are read-only until it is restored.",
     "locked": "Locked",
-    "locked-title": "This exam is locked",
     "locked-frozen": "A sitting of this exam has finished, so its questions stay as the students answered them. Duplicate it to reuse them.",
     "duplicate-action": "Duplicate exam",
     "duplicate-suffix": "(copy)",

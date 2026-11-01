@@ -312,7 +312,6 @@
     "unavailable": "Ujian ini tidak tersedia.",
     "archived-note": "Sekolah ini diarsipkan, jadi ujiannya hanya bisa dibaca sampai dipulihkan.",
     "locked": "Terkunci",
-    "locked-title": "Ujian ini terkunci",
     "locked-frozen": "Satu sesi ujian ini sudah selesai, jadi soalnya tetap seperti yang dijawab siswa. Duplikat ujian ini untuk memakainya lagi.",
     "duplicate-action": "Duplikat ujian",
     "duplicate-suffix": "(salinan)",
