@@ -3752,6 +3752,7 @@
     "empty-description": "Setiap ujian yang dirilis tampil di sini.",
     "narrative-title": "Narasi untuk {student}",
     "narrative-description": "Tulisanmu tentang siswa ini. Orang tua hanya membacanya setelah kamu bagikan.",
+    "narrative-placeholder": "Kekuatan siswa ini, dan yang membantunya berikutnya",
     "narrative-save": "Simpan",
     "narrative-share": "Bagikan ke orang tua",
     "narrative-withdraw": "Tarik kembali",

@@ -9,7 +9,7 @@ import {
   topicNameOf,
 } from "@/components/tenant/insight/rows";
 
-const student = Schema.decodeSync(Id("tenantPeople"))("person-1");
+const student = Schema.decodeUnknownSync(Id("tenantPeople"))("person-1");
 
 /** A student with nothing on record. */
 const person = {
