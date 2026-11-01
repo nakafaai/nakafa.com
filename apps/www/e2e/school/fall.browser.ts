@@ -1,11 +1,5 @@
 import { expect, test } from "@playwright/test";
-import {
-  Array as Arr,
-  Effect,
-  MutableHashSet,
-  Option,
-  Schema,
-} from "effect";
+import { Array as Arr, Effect, MutableHashSet, Option, Schema } from "effect";
 import { CONVEX_SOCKET, decodeSent } from "@/e2e/support/frames";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
