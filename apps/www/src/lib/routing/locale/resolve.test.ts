@@ -47,6 +47,12 @@ const deProgramSubject = readTestPublishedRoute(
   "de"
 );
 
+/** The curriculum place that the addresses of these tests name. */
+const PLACE = {
+  nodeKey: "class-11-mathematics-function-composition-inverse-function",
+  programKey: "merdeka",
+};
+
 vi.mock("@/lib/content/article/category", () => ({
   readPublishedArticleCategory: publishedMocks.articleCategory,
   readPublishedCategoryAlternates: publishedMocks.categoryAlternates,
@@ -55,7 +61,7 @@ vi.mock("@/lib/content/article/route", () => ({
   readPublishedArticleRoute: publishedMocks.articleRoute,
 }));
 vi.mock("@/lib/content/material/context", () => ({
-  readPublishedMaterialContext: publishedMocks.materialContext,
+  readPublishedMaterialPlacements: publishedMocks.materialContext,
 }));
 vi.mock("@/lib/content/material/route", () => ({
   readPublishedMaterialRoute: publishedMocks.materialRoute,
@@ -117,7 +123,7 @@ beforeEach(() => {
   );
   publishedMocks.materialContext
     .mockReset()
-    .mockReturnValue(Effect.succeed(null));
+    .mockReturnValue(Effect.succeed([]));
   publishedMocks.materialRoute
     .mockReset()
     .mockReturnValue(Effect.succeed(activeMaterialRoute));
@@ -216,8 +222,8 @@ describe("resolveLocalizedNavigationHref", () => {
       Effect.gen(function* () {
         const href = `/${previewProjection.appLocale}/${previewProjection.publicPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`;
         publishedMocks.materialContext
-          .mockReturnValueOnce(Effect.succeed({ context: {} }))
-          .mockReturnValueOnce(Effect.succeed(null));
+          .mockReturnValueOnce(Effect.succeed([{ context: PLACE }]))
+          .mockReturnValueOnce(Effect.succeed([]));
 
         const verified = yield* resolveHref(href, "id");
         expect(verified).toBe(
@@ -250,7 +256,7 @@ describe("resolveLocalizedNavigationHref", () => {
           })
         );
         publishedMocks.materialContext.mockReturnValue(
-          Effect.succeed({ context: {} })
+          Effect.succeed([{ context: PLACE }])
         );
 
         const href = yield* resolveHref(

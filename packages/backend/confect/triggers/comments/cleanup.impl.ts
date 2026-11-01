@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { removeCommentLikeBatch } from "@repo/backend/confect/comments/likes";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import { purgeReply } from "@repo/backend/confect/notifications/reply";
 import {
   COMMENT_LIKE_CLEANUP_BATCH_SIZE,
   COMMENT_REPLY_CLEANUP_BATCH_SIZE,
@@ -31,7 +32,7 @@ const scheduleNextPass = Effect.fn(
 
 /**
  * Removes what a deleted comment leaves behind, one bounded batch at a time: its
- * likes, then its replies. A deleted top-level comment takes its whole thread, every
+ * inbox row, its likes, then its replies. A deleted top-level comment takes its whole thread, every
  * reply at any depth. A deleted reply takes the replies that name it as their parent,
  * and each of those takes its own. A batch that fills up schedules the next pass.
  */
@@ -43,6 +44,7 @@ const cleanupDeletedComment = FunctionImpl.make(
     function* (args) {
       const database = yield* DatabaseReader;
       const writer = yield* DatabaseWriter;
+      yield* purgeReply(args.commentId);
       const removedLikes = yield* removeCommentLikeBatch(args.commentId);
       if (removedLikes === COMMENT_LIKE_CLEANUP_BATCH_SIZE) {
         return yield* scheduleNextPass(args.commentId);

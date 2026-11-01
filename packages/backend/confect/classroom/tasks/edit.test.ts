@@ -18,6 +18,7 @@ const DAY = 86_400_000;
 /** The task the tests publish, as its teacher wrote it first. */
 const DRAFT = {
   deadline: TENANCY_NOW + DAY,
+  category: null,
   latePolicy: "accept",
   points: 100,
   text: "Kerjakan soal 1 sampai 10.",
@@ -49,6 +50,7 @@ describe("classroom/tasks edit", () => {
           targets: null,
           ...classArgs,
           deadline: TENANCY_NOW + 3 * DAY,
+          category: null,
           latePolicy: "close",
           points: 50,
           task: published.slug,
@@ -58,6 +60,7 @@ describe("classroom/tasks edit", () => {
         expect(edited).toMatchObject({
           deadline: TENANCY_NOW + 3 * DAY,
           id: published.id,
+          category: null,
           latePolicy: "close",
           points: 50,
           slug: published.slug,
@@ -74,6 +77,7 @@ describe("classroom/tasks edit", () => {
           targets: null,
           ...classArgs,
           deadline: TENANCY_NOW + 3 * DAY,
+          category: null,
           latePolicy: "close",
           points: 50,
           task: published.slug,
@@ -99,6 +103,7 @@ describe("classroom/tasks edit", () => {
             targets: null,
             ...classArgs,
             deadline: TENANCY_NOW + 3 * DAY,
+            category: null,
             latePolicy: "close",
             points: 80,
             task: published.slug,

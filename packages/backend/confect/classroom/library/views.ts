@@ -51,6 +51,7 @@ export const libraryViews = Effect.fn("classroom.library.views")(function* (
         byteSize,
         clientKey: item.clientKey,
         createdAt: item.createdAt,
+        folderId: item.folderId ?? null,
         id: item._id,
         kind,
         title,

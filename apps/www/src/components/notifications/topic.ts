@@ -6,7 +6,7 @@ export const InboxTopic = Schema.Literals(["all", "comments", "school"]);
 
 /**
  * The tab of what happened. Every kind names its tab, so a new kind does not compile until it has one. Whatever happens
- * in a school stands under School, and Comments waits for the reply notices.
+ * in a school stands under School, and a reply to a comment under Comments.
  */
 const topicOf = Match.type<ListNotification["changeType"]>().pipe(
   Match.whenOr(
@@ -19,6 +19,7 @@ const topicOf = Match.type<ListNotification["changeType"]>().pipe(
     "person.invited",
     () => "school"
   ),
+  Match.when("comment.replied", () => "comments"),
   Match.exhaustive
 );
 

@@ -627,6 +627,58 @@ export declare const api: {
         }
       >;
     };
+    folders: {
+      add: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          name: string;
+          slug: string;
+        },
+        {
+          author: string;
+          clientKey: string;
+          createdAt: number;
+          id: Id<"classroomFolders">;
+          name: string;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        Array<{
+          author: string;
+          clientKey: string;
+          createdAt: number;
+          id: Id<"classroomFolders">;
+          name: string;
+        }>
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          folderId: Id<"classroomFolders">;
+          slug: string;
+        },
+        null
+      >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          folderId: Id<"classroomFolders">;
+          name: string;
+          slug: string;
+        },
+        null
+      >;
+    };
     forum: {
       channels: {
         add: FunctionReference<
@@ -1315,6 +1367,7 @@ export declare const api: {
           address: string;
           classId: Id<"classes">;
           clientKey: string;
+          folderId: Id<"classroomFolders"> | null;
           slug: string;
           title: string;
         },
@@ -1324,6 +1377,7 @@ export declare const api: {
           byteSize: number | null;
           clientKey: string;
           createdAt: number;
+          folderId: Id<"classroomFolders"> | null;
           id: Id<"classroomLibrary">;
           kind: "link" | "pdf" | "image";
           title: string;
@@ -1341,6 +1395,7 @@ export declare const api: {
         {
           address: string | null;
           classId: Id<"classes">;
+          folderId: Id<"classroomFolders"> | null;
           itemId: Id<"classroomLibrary">;
           slug: string;
           title: string;
@@ -1354,6 +1409,7 @@ export declare const api: {
           classId: Id<"classes">;
           clientKey: string;
           fileId: string;
+          folderId: Id<"classroomFolders"> | null;
           slug: string;
           title: string;
         },
@@ -1364,6 +1420,7 @@ export declare const api: {
         "public",
         {
           classId: Id<"classes">;
+          folderId: Id<"classroomFolders"> | null;
           paginationOpts: {
             cursor: string | null;
             endCursor?: string | null;
@@ -1383,6 +1440,7 @@ export declare const api: {
             byteSize: number | null;
             clientKey: string;
             createdAt: number;
+            folderId: Id<"classroomFolders"> | null;
             id: Id<"classroomLibrary">;
             kind: "link" | "pdf" | "image";
             title: string;
@@ -1397,6 +1455,7 @@ export declare const api: {
         {
           classId: Id<"classes">;
           clientKey: string;
+          folderId: Id<"classroomFolders"> | null;
           slug: string;
           storageId: Id<"_storage">;
           title: string;
@@ -1548,6 +1607,7 @@ export declare const api: {
         "mutation",
         "public",
         {
+          category: string | null;
           classId: Id<"classes">;
           deadline: number;
           latePolicy: "accept" | "close";
@@ -1559,6 +1619,7 @@ export declare const api: {
           title: string;
         },
         {
+          category: string | null;
           deadline: number;
           handedIn: number;
           id: Id<"classroomTasks">;
@@ -1581,6 +1642,7 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string; task: string },
         {
+          category: string | null;
           deadline: number;
           handedIn: number;
           id: Id<"classroomTasks">;
@@ -1618,6 +1680,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
+            category: string | null;
             deadline: number;
             handedIn: number;
             id: Id<"classroomTasks">;
@@ -1642,6 +1705,7 @@ export declare const api: {
         "mutation",
         "public",
         {
+          category: string | null;
           classId: Id<"classes">;
           clientKey: string;
           deadline: number;
@@ -1653,6 +1717,7 @@ export declare const api: {
           title: string;
         },
         {
+          category: string | null;
           deadline: number;
           handedIn: number;
           id: Id<"classroomTasks">;
@@ -1725,6 +1790,7 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string; task: string; text: string },
         {
+          category: string | null;
           deadline: number;
           handedIn: number;
           id: Id<"classroomTasks">;
@@ -1809,6 +1875,44 @@ export declare const api: {
       >;
     };
     queries: {
+      getComment: FunctionReference<
+        "query",
+        "public",
+        { commentId: Id<"comments"> },
+        {
+          _creationTime: number;
+          _id: Id<"comments">;
+          likeCount: number;
+          liked: boolean;
+          parentId?: Id<"comments">;
+          replyCount: number;
+          replyToUser: {
+            _id: Id<"users">;
+            image?: string | null;
+            mascot: string;
+            name: string;
+            picture?: "animal" | "photo";
+          } | null;
+          replyToUserId?: Id<"users">;
+          slug: string;
+          text: string;
+          threadId?: Id<"comments">;
+          user: {
+            _id: Id<"users">;
+            image?: string | null;
+            mascot: string;
+            name: string;
+            picture?: "animal" | "photo";
+          } | null;
+          userId: Id<"users">;
+        } | null
+      >;
+      getCommentPlace: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; commentId: Id<"comments"> },
+        { appLocale: "en" | "id" | "de"; publicPath: string } | null
+      >;
       getCommentReplies: FunctionReference<
         "query",
         "public",
@@ -2594,7 +2698,13 @@ export declare const api: {
           sourceRevision: string | null;
         }
       >;
-      context: FunctionReference<
+      path: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; publicPath: string },
+        { managed: boolean; routeJson: string | null }
+      >;
+      placements: FunctionReference<
         "query",
         "public",
         {
@@ -2602,24 +2712,16 @@ export declare const api: {
           contentKey: string;
           expectedActiveReleaseId?: string | null;
           materialKey: string;
-          nodeKey: string;
           parentPath: string;
-          programKey: string;
           publicPath: string;
         },
-        {
-          groupJson: string | null;
-          managed: boolean;
-          mappingJson: string | null;
-          parentJson: string | null;
-          resolvedCanonicalPath: string | null;
-        }
-      >;
-      path: FunctionReference<
-        "query",
-        "public",
-        { appLocale: "en" | "id" | "de"; publicPath: string },
-        { managed: boolean; routeJson: string | null }
+        Array<{
+          ancestorJson: Array<string>;
+          groupJson: string;
+          mappingJson: string;
+          parentJson: string;
+          resolvedCanonicalPath: string;
+        }>
       >;
       route: FunctionReference<
         "query",
@@ -9774,12 +9876,94 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          personal?: boolean;
           slug?: string;
         },
         {
           continueCursor: string;
           isDone: boolean;
-          page: Array<{
+          page: Array<
+            | {
+                changeType:
+                  | "person.invited"
+                  | "forum.mentioned"
+                  | "announcement.posted"
+                  | "assignment.published"
+                  | "exam.starting"
+                  | "exam.reminder"
+                  | "grade.released";
+                createdAt: number;
+                detail: {
+                  actor: string;
+                  channelId: Id<"classroomChannels"> | null;
+                  className: string;
+                  classSlug: string;
+                  discussion: number | null;
+                  messageId: Id<"classroomMessages"> | null;
+                  task: string | null;
+                } | null;
+                exam: {
+                  examTitle: string;
+                  opensAt: number;
+                  room: string;
+                  sittingId: Id<"examSittings">;
+                  student: string | null;
+                } | null;
+                grade: { className: string; student: string | null } | null;
+                id: Id<"notifications">;
+                readAt?: number;
+                subject:
+                  | { id: Id<"tenants">; kind: "tenant" }
+                  | { id: Id<"tenantUnits">; kind: "unit" }
+                  | { id: Id<"tenantPeople">; kind: "person" }
+                  | { id: Id<"tenantPeriods">; kind: "period" }
+                  | { id: Id<"tenantCohorts">; kind: "cohort" }
+                  | { id: Id<"tenantPromotions">; kind: "promotion" }
+                  | { id: Id<"tenantGrants">; kind: "grant" }
+                  | { id: Id<"integrationClients">; kind: "integration" }
+                  | { id: Id<"connectorConnections">; kind: "connection" }
+                  | { id: Id<"classes">; kind: "class" }
+                  | { id: Id<"classGrades">; kind: "grade" }
+                  | { id: Id<"reportCards">; kind: "report" }
+                  | { id: Id<"tenantVisits">; kind: "visit" }
+                  | { id: Id<"editorDocuments">; kind: "document" }
+                  | { id: Id<"exams">; kind: "exam" }
+                  | { id: Id<"examSittings">; kind: "sitting" }
+                  | { id: Id<"examSittings">; kind: "result" }
+                  | { id: Id<"guardianLinks">; kind: "guardianLink" }
+                  | { kind: string };
+                tenant: {
+                  kind: "school" | "foundation";
+                  logo?: string;
+                  mascot: string;
+                  name: string;
+                  slug: string;
+                  status: "active" | "suspended";
+                };
+              }
+            | {
+                actor: {
+                  image?: string;
+                  mascot: string;
+                  name: string;
+                  picture?: "animal" | "photo";
+                } | null;
+                changeType: "comment.replied";
+                commentId: Id<"comments">;
+                createdAt: number;
+                id: Id<"notifications">;
+                readAt?: number;
+              }
+          >;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      read: FunctionReference<
+        "mutation",
+        "public",
+        { notificationId: Id<"notifications"> },
+        | {
             changeType:
               | "person.invited"
               | "forum.mentioned"
@@ -9836,73 +10020,26 @@ export declare const api: {
               slug: string;
               status: "active" | "suspended";
             };
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
+          }
+        | {
+            actor: {
+              image?: string;
+              mascot: string;
+              name: string;
+              picture?: "animal" | "photo";
+            } | null;
+            changeType: "comment.replied";
+            commentId: Id<"comments">;
+            createdAt: number;
+            id: Id<"notifications">;
+            readAt?: number;
+          }
       >;
-      read: FunctionReference<
+      readAll: FunctionReference<
         "mutation",
         "public",
-        { notificationId: Id<"notifications"> },
-        {
-          changeType:
-            | "person.invited"
-            | "forum.mentioned"
-            | "announcement.posted"
-            | "assignment.published"
-            | "exam.starting"
-            | "exam.reminder"
-            | "grade.released";
-          createdAt: number;
-          detail: {
-            actor: string;
-            channelId: Id<"classroomChannels"> | null;
-            className: string;
-            classSlug: string;
-            discussion: number | null;
-            messageId: Id<"classroomMessages"> | null;
-            task: string | null;
-          } | null;
-          exam: {
-            examTitle: string;
-            opensAt: number;
-            room: string;
-            sittingId: Id<"examSittings">;
-            student: string | null;
-          } | null;
-          grade: { className: string; student: string | null } | null;
-          id: Id<"notifications">;
-          readAt?: number;
-          subject:
-            | { id: Id<"tenants">; kind: "tenant" }
-            | { id: Id<"tenantUnits">; kind: "unit" }
-            | { id: Id<"tenantPeople">; kind: "person" }
-            | { id: Id<"tenantPeriods">; kind: "period" }
-            | { id: Id<"tenantCohorts">; kind: "cohort" }
-            | { id: Id<"tenantPromotions">; kind: "promotion" }
-            | { id: Id<"tenantGrants">; kind: "grant" }
-            | { id: Id<"integrationClients">; kind: "integration" }
-            | { id: Id<"connectorConnections">; kind: "connection" }
-            | { id: Id<"classes">; kind: "class" }
-            | { id: Id<"classGrades">; kind: "grade" }
-            | { id: Id<"reportCards">; kind: "report" }
-            | { id: Id<"tenantVisits">; kind: "visit" }
-            | { id: Id<"editorDocuments">; kind: "document" }
-            | { id: Id<"exams">; kind: "exam" }
-            | { id: Id<"examSittings">; kind: "sitting" }
-            | { id: Id<"examSittings">; kind: "result" }
-            | { id: Id<"guardianLinks">; kind: "guardianLink" }
-            | { kind: string };
-          tenant: {
-            kind: "school" | "foundation";
-            logo?: string;
-            mascot: string;
-            name: string;
-            slug: string;
-            status: "active" | "suspended";
-          };
-        }
+        { personal?: boolean; slug?: string },
+        null
       >;
       readAll: FunctionReference<"mutation", "public", { slug?: string }, null>;
     };
@@ -14666,6 +14803,7 @@ export declare const internal: {
             | "image/webp"
             | "image/gif"
             | "application/pdf";
+          folderId: Id<"classroomFolders"> | null;
           storageId: Id<"_storage">;
           title: string;
         },
@@ -18150,6 +18288,12 @@ export declare const internal: {
         "mutation",
         "internal",
         { cursor: string | null; personId: Id<"tenantPeople">; readAt: number },
+        null
+      >;
+      runAccount: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; readAt: number; userId: Id<"users"> },
         null
       >;
     };

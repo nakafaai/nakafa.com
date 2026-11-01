@@ -1,9 +1,9 @@
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, type Option } from "effect";
 import { useTranslations } from "use-intl";
 import {
   type InboxFirstPage,
+  type InboxScope,
   useInbox,
 } from "@/components/notifications/inbox";
 import { PushOffer } from "@/components/notifications/push";
@@ -23,14 +23,14 @@ import { FeedEmpty, FeedNotice } from "@/components/user/feed";
  */
 export function NotificationsList({
   first,
-  slug,
+  scope,
 }: {
   first: Option.Option<InboxFirstPage>;
-  /** The one school whose rows show; every school's without it. */
-  slug: TenantSlug | undefined;
+  /** Which rows show: one school's, or every school's and the account's own. */
+  scope: InboxScope;
 }) {
   const t = useTranslations("Notifications");
-  const { empty, failed, loadMore, ready, rows } = useInbox(first, slug);
+  const { empty, failed, loadMore, ready, rows } = useInbox(first, scope);
   const topic = useInboxTopic();
   const shown = Arr.filter(rows, (row) => inTopic(row.changeType, topic));
 

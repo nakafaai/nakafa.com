@@ -6,6 +6,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { partsOf } from "@repo/backend/confect/notifications/detail";
+import { isSchoolRow } from "@repo/backend/confect/notifications/schema";
 import {
   classOf,
   cohort,
@@ -79,7 +80,7 @@ const gradesShownTo = (
           query.eq("recipientPersonId", personId)
         )
         .take(10);
-      return yield* Effect.forEach(rows, (row) =>
+      return yield* Effect.forEach(Arr.filter(rows, isSchoolRow), (row) =>
         Effect.map(partsOf(row, person, tenant), (parts) => ({
           changeType: row.changeType,
           grade: parts.grade,

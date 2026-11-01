@@ -377,6 +377,7 @@ const storeWork = FunctionImpl.make(
         yield* writeTask(
           author,
           {
+            category: null,
             clientKey,
             deadline: work.deadline,
             latePolicy: "accept",

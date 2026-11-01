@@ -1363,6 +1363,9 @@
     "task-reach-class": "Seluruh kelas",
     "task-reach-some": "Sebagian siswa",
     "task-reach-count": "{count} siswa",
+    "task-category": "Kategori",
+    "task-category-placeholder": "PR",
+    "task-category-description": "Opsional, untuk mengelompokkan tugas kelas.",
     "task-late": "Kerja terlambat",
     "task-late-accept": "Ditandai terlambat",
     "task-late-close": "Ditolak",
@@ -1436,7 +1439,21 @@
     "discussion-rename": "Ganti judul diskusi",
     "discussion-rename-description": "Semua anggota kelas melihat judul baru.",
     "library-edit": "Ubah",
-    "library-edit-description": "Kelas langsung melihat perubahannya."
+    "library-edit-description": "Kelas langsung melihat perubahannya.",
+    "library-no-folder": "Tanpa folder",
+    "library-folder": "Folder",
+    "library-new-folder": "Folder baru",
+    "library-new-folder-description": "Kumpulkan berkas kelas, misalnya per bab.",
+    "library-folder-name": "Nama",
+    "library-folder-placeholder": "Bab 1",
+    "library-folder-create": "Buat",
+    "library-folder-rename": "Ganti nama",
+    "library-folder-rename-description": "Kelas langsung melihat nama barunya.",
+    "library-folder-remove": "Hapus",
+    "library-folder-remove-title": "Hapus folder ini",
+    "library-folder-remove-description": "Berkasnya tetap ada di pustaka.",
+    "library-folder-empty-description": "Berkas dan tautan folder ini tampil di sini, yang terbaru lebih dulu.",
+    "library-kind-folder": "Folder"
   },
   "SchoolGrades": {
     "student": "Siswa",
@@ -1986,6 +2003,8 @@
     "person-invited": "Kamu diundang bergabung ke sekolah ini.",
     "forum-mentioned": "{actor} menyebutmu di {className}.",
     "forum-mentioned-gone": "Kamu disebut di kelas yang tidak lagi kamu baca.",
+    "comment-replied": "Membalas komentarmu.",
+    "comment-replied-gone": "Balasan ini sudah dihapus.",
     "announcement-posted": "{actor} mengirim pengumuman di {className}.",
     "announcement-posted-gone": "Pengumuman yang sudah tidak ada.",
     "push-offer": "Dapatkan notifikasi di perangkat ini saat ada yang baru.",
@@ -2054,7 +2073,7 @@
   "Holy": {
     "holy": "Suci",
     "quran": "Al-Qur'an",
-    "quran-description": "Baca Al-Qur'an dengan terjemahan dan tafsir per ayat.",
+    "quran-description": "Baca 114 surah Al-Qur'an dalam bahasa Arab dengan terjemahan dan tafsir per ayat, gratis di Nakafa.",
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir",
@@ -2222,7 +2241,7 @@
   },
   "Contributor": {
     "title": "Kontributor",
-    "description": "Temui orang-orang yang membuat Nakafa menjadi mungkin."
+    "description": "Kenali orang-orang yang menulis, memeriksa, dan membangun Nakafa, tempat belajar gratis dari SD sampai universitas."
   },
   "ComingSoon": {
     "title": "Segera Hadir",

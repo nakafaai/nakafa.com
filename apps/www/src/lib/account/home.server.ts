@@ -192,7 +192,10 @@ export const notificationsScreenHandler = accountHandler(
       const token = yield* admitAccount(locale);
       const first = yield* readOptional(
         notifications.inbox.list,
-        { paginationOpts: { cursor: null, numItems: INBOX_PAGE_SIZE } },
+        {
+          paginationOpts: { cursor: null, numItems: INBOX_PAGE_SIZE },
+          personal: true,
+        },
         token
       );
       const now = yield* Clock.currentTimeMillis;
