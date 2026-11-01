@@ -84,9 +84,31 @@ const holdsLiveCard = Effect.fn("tenancy.roster.liveCard")(function* (
 });
 
 /**
- * One row of the members list: the Person, the roles its active grants give, and its
- * status. Only an unclaimed Person can wait on an invite or hold a card, so a claimed
- * Person costs one grant read.
+ * The address of one member: their account's, or the one their pending invite waits on, and none
+ * for a Person with neither, such as a student on a login card.
+ */
+const emailOf = Effect.fn("tenancy.roster.email")(function* (
+  person: TenantPeopleDoc
+) {
+  if (person.account.state === "claimed") {
+    const user = yield* (yield* DatabaseReader)
+      .table("users")
+      .get(person.account.userId)
+      .pipe(
+        Effect.asSome,
+        Effect.catchTag("GetByIdFailure", () => Effect.succeedNone),
+        Effect.orDie
+      );
+    return Option.getOrNull(Option.map(user, (found) => found.email));
+  }
+  const invite = yield* pendingInviteOf(person._id);
+  return Option.getOrNull(Option.map(invite, (found) => found.channel.email));
+});
+
+/**
+ * One row of the members list: the Person, the address it answers at, the roles its active grants
+ * give, the units those grants name, and its status. Only an unclaimed Person can wait on an invite
+ * or hold a card. A grant over the whole school names no unit.
  */
 const memberRow = Effect.fn("tenancy.roster.member")(function* (
   person: TenantPeopleDoc,
@@ -98,11 +120,17 @@ const memberRow = Effect.fn("tenancy.roster.member")(function* (
   const carded = claimed ? false : yield* holdsLiveCard(person);
   const grants = yield* activeGrants(person._id);
   return {
+    email: yield* emailOf(person),
     id: person._id,
     name: person.name,
     removable: yield* removableBy(person, grants, caller, managesOwners),
     roles: Arr.dedupe(Arr.map(grants, (grant) => grant.role.key)),
     status: memberStatusOf({ carded, claimed, invited }),
+    units: Arr.dedupe(
+      Arr.flatMap(grants, (grant) =>
+        grant.scope.kind === "unit" ? [grant.scope.unitId] : []
+      )
+    ),
   };
 });
 

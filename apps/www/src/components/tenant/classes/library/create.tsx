@@ -2,11 +2,6 @@ import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import { GoogleDriveIcon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
-import { LIBRARY_BYTE_LIMIT } from "@repo/backend/confect/classroom/library/file";
-import {
-  LibraryTitle,
-  LinkAddress,
-} from "@repo/backend/confect/classroom/library/item";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -23,7 +18,7 @@ import {
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
-import { useId, useRef, useState, useTransition } from "react";
+import { useId, useReducer, useRef, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
   forumCall,
@@ -36,7 +31,14 @@ import {
   sendLibraryFile,
   uploadLibraryFile,
 } from "@/components/tenant/classes/library/add";
-import type { DriveFile } from "@/components/tenant/classes/library/drive";
+import {
+  AddMode,
+  type DriveFile,
+  EMPTY_DRAFT,
+  isDraftReady,
+  isOversize,
+  stepDraft,
+} from "@/components/tenant/classes/library/draft";
 import {
   ChosenFile,
   LibraryDriveField,
@@ -49,9 +51,6 @@ import {
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
-
-/** The extension at the end of a file name, which a title leaves out. */
-const EXTENSION = /\.[^.]*$/u;
 
 /** Tells the teacher that a file larger than the library keeps was not added. */
 const refuseLargeFile = () =>
@@ -70,13 +69,6 @@ const refuseOtherFile = () =>
       title: "library-file-type.title",
     })
   );
-
-/** What the dialog adds: a file from the device, a file from Google Drive, or a link. */
-const AddMode = Schema.Literals(["file", "drive", "link"]);
-
-/** The title a file gives an item: its name without the extension, as long as a title may be. */
-const titleOf = (name: string) =>
-  Str.trim(name.replace(EXTENSION, "")).slice(0, 120);
 
 /** The library row's kind for a file's type. */
 const kindOf = (type: string) =>
@@ -104,86 +96,48 @@ export function AddToLibrary() {
   const importDrive = useAction(classroom.library.importDrive);
   const pickerToken = useAction(connectors.drive.pickerToken);
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<typeof AddMode.Type>("file");
+  const [draft, change] = useReducer(stepDraft, EMPTY_DRAFT);
   // Whether the dialog closes because its item was sent; Drive's picker closes it too, and keeps it as it was.
   const sent = useRef(false);
-  const [title, setTitle] = useState("");
-  const [address, setAddress] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [drive, setDrive] = useState<Option.Option<DriveFile>>(Option.none);
-  const [driveMissing, setDriveMissing] = useState(false);
-  const [isPicking, startPicking] = useTransition();
   const id = useId();
+  const { address, drive, driveStep, file, mode, title } = draft;
   const heading = Str.trim(title);
   const link = Str.trim(address);
-  const oversize = file !== null && file.size > LIBRARY_BYTE_LIMIT;
+  const oversize = isOversize(file);
   const driveOffered =
     QueryResult.isSuccess(offered) && Arr.contains(offered.value, "drive");
-  const ready =
-    viewer._tag === "Success" &&
-    Schema.is(LibraryTitle)(heading) &&
-    {
-      drive: Option.isSome(drive),
-      file: file !== null && !oversize,
-      link: Schema.is(LinkAddress)(link),
-    }[mode];
-
-  /** Clears what the dialog holds once a sent item's dialog has closed, so it opens again on a device file. */
-  const reset = () => {
-    setMode("file");
-    setTitle("");
-    setAddress("");
-    setFile(null);
-    setDrive(Option.none());
-    setDriveMissing(false);
-  };
-
-  /** Names the item after a chosen file when no title was written yet. */
-  const nameAfter = (name: string) => {
-    if (heading === "") {
-      setTitle(titleOf(name));
-    }
-  };
-
-  /** Takes a chosen file of the device. */
-  const choose = (chosen: File | null) => {
-    setFile(chosen);
-    if (chosen !== null) {
-      nameAfter(chosen.name);
-    }
-  };
+  const ready = viewer._tag === "Success" && isDraftReady(draft);
 
   /**
-   * Opens Google's Picker with the teacher's Drive. The dialog steps aside while it shows and
-   * comes back with the picked file, or as it was when the teacher closed it. An account without
-   * Drive is told so in the dialog, with the way to connect it.
+   * Opens Google's Picker with the teacher's Drive. It runs outside any transition, because a teacher can browse Drive
+   * for as long as they like and a transition would hold every navigation until they finish (ADR 0017). The dialog
+   * shows the wait until the Picker can show, steps aside while it shows, and comes back with the picked file, or as it
+   * was when the teacher closed it. An account without Drive is told so in the dialog, with the way to connect it.
    */
-  const chooseDrive = () =>
-    startPicking(() =>
-      runForumCall(
-        pickFromDrive(
-          () => pickerToken({}),
-          locale,
-          () => setOpen(false)
-        ).pipe(
-          Effect.tap((picked) =>
-            Effect.sync(() => {
-              setDriveMissing(false);
-              Option.map(picked, (found) => {
-                setDrive(Option.some(found));
-                nameAfter(found.name);
-              });
-              setOpen(true);
-            })
-          ),
-          Effect.catchTag("DriveMissing", () =>
-            Effect.sync(() => setDriveMissing(true))
-          ),
-          Effect.tapError(() => Effect.sync(() => setOpen(true)))
+  const chooseDrive = () => {
+    change({ _tag: "picking" });
+    runForumCall(
+      pickFromDrive(
+        () => pickerToken({}),
+        locale,
+        () => setOpen(false)
+      ).pipe(
+        Effect.tap((picked) =>
+          Effect.sync(() => {
+            change({ _tag: "picked", picked });
+            setOpen(true);
+          })
         ),
-        toastForumFailure
-      )
+        Effect.catchTag("DriveMissing", () =>
+          Effect.sync(() => change({ _tag: "missing" }))
+        )
+      ),
+      () => {
+        change({ _tag: "picked", picked: Option.none() });
+        toastForumFailure();
+      }
     );
+  };
 
   /** Shows the link at once, sends it under a new key, and restores the dialog when it fails. */
   const sendLink = (author: string) => {
@@ -196,9 +150,7 @@ export function AddToLibrary() {
         )
       ),
       () => {
-        setTitle((current) => (current === "" ? heading : current));
-        setAddress((current) => (current === "" ? link : current));
-        setMode("link");
+        change({ _tag: "restored", address: link, title: heading });
         setOpen(true);
         toastForumFailure();
       }
@@ -300,7 +252,7 @@ export function AddToLibrary() {
         // A sent item's dialog empties once it has closed, so it keeps what was sent while it closes.
         onOpenChangeComplete={(next) => {
           if (!next && sent.current) {
-            reset();
+            change({ _tag: "reset" });
           }
           sent.current = false;
         }}
@@ -311,7 +263,9 @@ export function AddToLibrary() {
         <FieldGroup>
           <Tabs
             onValueChange={(value) =>
-              Option.map(Schema.decodeUnknownOption(AddMode)(value), setMode)
+              Option.map(Schema.decodeUnknownOption(AddMode)(value), (next) =>
+                change({ _tag: "mode", mode: next })
+              )
             }
             value={mode}
           >
@@ -324,14 +278,18 @@ export function AddToLibrary() {
             </TabsList>
           </Tabs>
           {mode === "file" ? (
-            <LibraryFileField file={file} onFile={choose} oversize={oversize} />
+            <LibraryFileField
+              file={file}
+              onFile={(chosen) => change({ _tag: "file", file: chosen })}
+              oversize={oversize}
+            />
           ) : null}
           {mode === "drive" ? (
             <LibraryDriveField
               chosen={Option.isSome(drive)}
-              missing={driveMissing}
+              missing={driveStep === "missing"}
               onChoose={chooseDrive}
-              pending={isPicking}
+              pending={driveStep === "picking"}
             >
               {Option.match(drive, {
                 onNone: () => null,
@@ -339,7 +297,7 @@ export function AddToLibrary() {
                   <ChosenFile
                     icon={GoogleDriveIcon}
                     name={picked.name}
-                    onClear={() => setDrive(Option.none())}
+                    onClear={() => change({ _tag: "cleared" })}
                   />
                 ),
               })}
@@ -354,7 +312,9 @@ export function AddToLibrary() {
                 autoComplete="url"
                 id={`${id}-address`}
                 inputMode="url"
-                onChange={(event) => setAddress(event.target.value)}
+                onChange={(event) =>
+                  change({ _tag: "address", text: event.target.value })
+                }
                 placeholder="https://"
                 type="url"
                 value={address}
@@ -369,7 +329,9 @@ export function AddToLibrary() {
               dir="auto"
               id={`${id}-title`}
               maxLength={120}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) =>
+                change({ _tag: "title", text: event.target.value })
+              }
               placeholder={t("library-title-placeholder")}
               value={title}
             />

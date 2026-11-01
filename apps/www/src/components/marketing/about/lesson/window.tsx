@@ -220,11 +220,11 @@ export function LessonWindow({
     if (!turning) {
       return;
     }
-    const timer = window.setTimeout(() => {
+    const timer = window.setInterval(() => {
       setLesson((current) => FOLLOWING_LESSON[current]);
       setRevealed(true);
     }, TURN_EVERY_MS);
-    return () => window.clearTimeout(timer);
+    return () => window.clearInterval(timer);
   }, [turning]);
 
   /** Lets the open lesson's lab load and mount. It never turns back once it is revealed. */

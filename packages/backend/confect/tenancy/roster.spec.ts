@@ -25,11 +25,13 @@ import { Schema } from "effect";
 
 /** One active member of the school as the members list shows it: who they are, their roles, how far they have joined, and whether the caller may remove them. */
 const MemberView = Schema.Struct({
+  email: Schema.NullOr(Schema.String),
   id: Id("tenantPeople"),
   name: PersonName,
   removable: Schema.Boolean,
   roles: Schema.Array(BuiltinRole),
   status: MemberStatus,
+  units: Schema.Array(Id("tenantUnits")),
 });
 
 /** The Person and the invite that one invite writes. */

@@ -24,6 +24,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { useDialogs } from "@/components/shared/dialogs";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import {
   moveStudentChange,
@@ -161,9 +162,7 @@ export function SchoolPlacementMove({
   const move = useMutation(tenancy.placements.move).withOptimisticUpdate(
     moveStudentChange(cohortId)
   );
-  const [isMoving, setIsMoving] = useState(false);
-  const [isEditingEntry, setIsEditingEntry] = useState(false);
-  const [entryOpening, setEntryOpening] = useState(0);
+  const dialogs = useDialogs<"entry" | "move">();
   const [target, setTarget] = useState<CohortId | null>(null);
   const items = Arr.map(targets, (cohort) => ({
     label: cohort.name,
@@ -174,7 +173,7 @@ export function SchoolPlacementMove({
     if (target === null) {
       return;
     }
-    setIsMoving(false);
+    dialogs.close();
     startTransition(() =>
       saveSchool(
         () => move({ cohortId: target, personId: member.id, slug }),
@@ -199,36 +198,29 @@ export function SchoolPlacementMove({
           }
         />
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => setIsMoving(true)}>
+          <DropdownMenuItem onClick={() => dialogs.show("move")}>
             <HugeIcons icon={Move01Icon} />
             {t("placement-move")}
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              setEntryOpening((count) => count + 1);
-              setIsEditingEntry(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => dialogs.show("entry")}>
             <HugeIcons icon={IdCardIcon} />
             {t("roster-entry")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <RosterEntryDialog
-        key={entryOpening}
-        open={isEditingEntry}
-        person={member}
-        setOpen={setIsEditingEntry}
-      />
+      {dialogs.kind === "entry" ? (
+        <RosterEntryDialog
+          key={dialogs.key}
+          open={dialogs.isOpen("entry")}
+          person={member}
+          setOpen={dialogs.setOpen}
+        />
+      ) : null}
       <ResponsiveDialog
         description={t("placement-move-footer")}
         footer={
           <>
-            <Button
-              onClick={() => setIsMoving(false)}
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={dialogs.close} type="button" variant="outline">
               {common("cancel")}
             </Button>
             <Button disabled={target === null} onClick={submit} type="button">
@@ -236,8 +228,8 @@ export function SchoolPlacementMove({
             </Button>
           </>
         }
-        open={isMoving}
-        setOpen={setIsMoving}
+        open={dialogs.isOpen("move")}
+        setOpen={dialogs.setOpen}
         title={t("placement-move")}
       >
         <FieldGroup>

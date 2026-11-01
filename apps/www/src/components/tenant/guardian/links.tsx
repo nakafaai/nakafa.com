@@ -207,6 +207,10 @@ function GuardianLinkTable() {
       header: t("guardian-name"),
       id: "guardian",
     }),
+    linkColumns.text((link) => link.email, {
+      header: t("guardian-email"),
+      id: "email",
+    }),
     linkColumns.values((link) => link.status, {
       cell: (info) => (
         <TableStatus

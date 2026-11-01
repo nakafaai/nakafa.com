@@ -4,7 +4,7 @@ import type { PlacedQuestion } from "@repo/backend/confect/exams/import";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Data, Effect, Option, type Result } from "effect";
 import { forumCall } from "@/components/tenant/classes/forum/call";
-import type { DriveFile } from "@/components/tenant/classes/library/drive";
+import type { DriveFile } from "@/components/tenant/classes/library/draft";
 
 /** The file type of a Google Form, which the Picker offers. */
 export const FORM_TYPE = "application/vnd.google-apps.form";

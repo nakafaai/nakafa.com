@@ -81,11 +81,13 @@ describe("tenancy/roster invite and members", () => {
           .as("admin")
           .query(members, { ...everyone, slug: nf });
         expect(listed.page).toContainEqual({
+          email: guruBaru.email,
           id: added.person,
           name: "Guru Baru",
           removable: true,
           roles: ["teacher"],
           status: "invited",
+          units: [],
         });
         const entries = yield* fixture.run(journal);
         expect(Arr.map(entries, (entry) => entry.change.type)).toEqual(
@@ -279,11 +281,13 @@ describe("tenancy/roster invite and members", () => {
           Arr.filter(listed.page, (member) => member.name === "Guru Baru")
         ).toEqual([
           {
+            email: guruBaru.email,
             id: earlier.personId,
             name: "Guru Baru",
             removable: true,
             roles: ["teacher"],
             status: "invited",
+            units: [],
           },
         ]);
         expect(
@@ -451,18 +455,22 @@ describe("tenancy/roster invite and members", () => {
         expect(listed.page).toEqual(
           expect.arrayContaining([
             {
+              email: null,
               id: seeded.lapsed,
               name: "Kartu Lewat",
               removable: true,
               roles: [],
               status: "notInvited",
+              units: [],
             },
             {
+              email: null,
               id: seeded.current,
               name: "Kartu Berlaku",
               removable: true,
               roles: [],
               status: "cardIssued",
+              units: [],
             },
           ])
         );
@@ -482,13 +490,35 @@ describe("tenancy/roster invite and members", () => {
           (member) => member.id === fixture.people.owner.personId
         );
         expect(owner).toMatchObject({
+          email: expect.any(String),
           name: "Owner",
           roles: expect.arrayContaining(["owner"]),
           status: "joined",
+          units: [],
         });
         expect(Arr.map(listed.page, (member) => member.id)).not.toContain(
           fixture.people.suspended.personId
         );
+      })
+  );
+
+  it.effect(
+    "names the units a member's grants cover, and no address for an account that is gone",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { teacher } = fixture.people;
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("users").delete(fixture.users.teacher.userId)
+          )
+        );
+        const listed = yield* fixture
+          .as("admin")
+          .query(members, { ...everyone, slug: nf });
+        expect(
+          Arr.filter(listed.page, (member) => member.id === teacher.personId)
+        ).toMatchObject([{ email: null, units: [fixture.units.smp] }]);
       })
   );
 });

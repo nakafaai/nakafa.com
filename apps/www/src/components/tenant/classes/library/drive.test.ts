@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { LIBRARY_ACCEPT } from "@repo/backend/confect/classroom/library/item";
 import { Effect, Fiber, MutableList, Option } from "effect";
+import { TestClock } from "effect/testing";
 import { pickDriveFile } from "@/components/tenant/classes/library/drive";
 
 const SCRIPT = 'script[src="https://apis.google.com/js/api.js"]';
 
 const keys = { accessToken: "access", apiKey: "key", appId: "972685787969" };
+
+/** What clears the page for the Picker. */
+const hide = vi.fn();
 
 const picked = { id: "file-1", mimeType: "application/pdf", name: "Modul.pdf" };
 
@@ -85,13 +89,14 @@ describe("pickDriveFile", () => {
     shown.answer.mockReset();
     shown.dispose.mockReset();
     shown.setVisible.mockReset();
+    hide.mockReset();
   });
 
   it.effect(
     "loads Google's script once, shows the Picker with the teacher's keys, and answers the picked file or none on a cancel",
     () =>
       Effect.gen(function* () {
-        const first = yield* Effect.forkChild(pickDriveFile(keys, "id"));
+        const first = yield* Effect.forkChild(pickDriveFile(keys, "id", hide));
         const script = yield* appendedScript;
         installGoogle();
         script.dispatchEvent(new Event("load"));
@@ -111,12 +116,12 @@ describe("pickDriveFile", () => {
         expect(shown.setVisible).toHaveBeenCalledWith(true);
 
         shown.setVisible.mockReset();
-        const second = yield* Effect.forkChild(pickDriveFile(keys, "en"));
+        const second = yield* Effect.forkChild(pickDriveFile(keys, "en", hide));
         yield* pickerShown;
         shown.answer({ action: "cancel" });
         expect(yield* Fiber.join(second)).toEqual(Option.none());
         shown.setVisible.mockReset();
-        const empty = yield* Effect.forkChild(pickDriveFile(keys, "en"));
+        const empty = yield* Effect.forkChild(pickDriveFile(keys, "en", hide));
         yield* pickerShown;
         shown.answer({ action: "picked" });
         expect(yield* Fiber.join(empty)).toEqual(Option.none());
@@ -124,10 +129,69 @@ describe("pickDriveFile", () => {
       })
   );
 
+  it.effect(
+    "clears the page only once the Picker can show, so a load that fails leaves the dialog in place",
+    () =>
+      Effect.gen(function* () {
+        const failed = yield* Effect.forkChild(pickDriveFile(keys, "id", hide));
+        (yield* appendedScript).dispatchEvent(new Event("error"));
+        yield* Fiber.join(failed).pipe(Effect.flip);
+        expect(hide).not.toHaveBeenCalled();
+
+        installGoogle();
+        const waiting = yield* Effect.forkChild(
+          pickDriveFile(keys, "id", hide)
+        );
+        yield* pickerShown;
+        expect(hide).toHaveBeenCalledTimes(1);
+        yield* Fiber.interrupt(waiting);
+      })
+  );
+
+  it.effect(
+    "gives up on a script that stalls, takes it away, and asks again on the next press",
+    () =>
+      Effect.gen(function* () {
+        const stalled = yield* Effect.forkChild(
+          pickDriveFile(keys, "id", hide)
+        );
+        yield* appendedScript;
+        yield* TestClock.adjust("15 seconds");
+
+        expect((yield* Fiber.join(stalled).pipe(Effect.flip))._tag).toBe(
+          "PickerUnavailable"
+        );
+        expect(hide).not.toHaveBeenCalled();
+        expect(document.head.querySelector(SCRIPT)).toBeNull();
+
+        const next = yield* Effect.forkChild(pickDriveFile(keys, "id", hide));
+        const script = yield* appendedScript;
+        installGoogle();
+        script.dispatchEvent(new Event("load"));
+        yield* pickerShown;
+        shown.answer({ action: "cancel" });
+        expect(yield* Fiber.join(next)).toEqual(Option.none());
+      })
+  );
+
+  it.effect("gives up on a Picker library that stalls", () =>
+    Effect.gen(function* () {
+      window.gapi = { load: () => undefined };
+      const stalled = yield* Effect.forkChild(pickDriveFile(keys, "id", hide));
+      yield* Effect.yieldNow;
+      yield* TestClock.adjust("15 seconds");
+
+      expect((yield* Fiber.join(stalled).pipe(Effect.flip))._tag).toBe(
+        "PickerUnavailable"
+      );
+      expect(hide).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("closes the Picker when the page stops waiting for it", () =>
     Effect.gen(function* () {
       installGoogle();
-      const waiting = yield* Effect.forkChild(pickDriveFile(keys, "id"));
+      const waiting = yield* Effect.forkChild(pickDriveFile(keys, "id", hide));
       yield* pickerShown;
       yield* Fiber.interrupt(waiting);
       expect(shown.dispose).toHaveBeenCalledTimes(1);
@@ -138,21 +202,21 @@ describe("pickDriveFile", () => {
     "fails when Google's script does not load, or loads without its loader or its Picker",
     () =>
       Effect.gen(function* () {
-        const failed = yield* Effect.forkChild(pickDriveFile(keys, "id"));
+        const failed = yield* Effect.forkChild(pickDriveFile(keys, "id", hide));
         (yield* appendedScript).dispatchEvent(new Event("error"));
         expect((yield* Fiber.join(failed).pipe(Effect.flip))._tag).toBe(
           "PickerUnavailable"
         );
         expect(document.head.querySelector(SCRIPT)).toBeNull();
-        const bare = yield* Effect.forkChild(pickDriveFile(keys, "id"));
+        const bare = yield* Effect.forkChild(pickDriveFile(keys, "id", hide));
         (yield* appendedScript).dispatchEvent(new Event("load"));
         expect((yield* Fiber.join(bare).pipe(Effect.flip))._tag).toBe(
           "PickerUnavailable"
         );
         installGoogle({ picker: false });
-        expect((yield* pickDriveFile(keys, "id").pipe(Effect.flip))._tag).toBe(
-          "PickerUnavailable"
-        );
+        expect(
+          (yield* pickDriveFile(keys, "id", hide).pipe(Effect.flip))._tag
+        ).toBe("PickerUnavailable");
       })
   );
 });
