@@ -151,7 +151,11 @@
     "mismatches": "Fehlgeschlagene NISN-Prüfungen",
     "child": "Kind",
     "child-detail": "Kind",
-    "guardian-email": "E-Mail der Eltern"
+    "guardian-email": "E-Mail der Eltern",
+    "check": "Prüfung",
+    "check-nisn": "NISN",
+    "check-school": "Schule",
+    "request-read": "Lesen"
   },
   "SchoolRoster": {
     "import": "Importieren",
@@ -1667,7 +1671,8 @@
     "own-band": "Stufe",
     "own-band-none": "Ohne Stufe",
     "own-empty": "Noch keine Note freigegeben.",
-    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
+    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt.",
+    "own-open-cards": "Zeugnisse"
   },
   "SchoolReports": {
     "title": "Zeugnisse",

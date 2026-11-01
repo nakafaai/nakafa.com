@@ -1,4 +1,4 @@
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DrawerDescription,
@@ -157,6 +157,26 @@ export function PaneOpen({
     >
       {children}
     </button>
+  );
+}
+
+/** The action of a row that opens beside the list, for a reader who looks for a button at the row's end. */
+export function PaneOpenButton({ id }: { id: string }) {
+  const common = useTranslations("Common");
+  const show = usePanes((state) => state.show);
+
+  return (
+    <div className="flex justify-end">
+      <Button
+        onClick={() => show(id)}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        <HugeIcons icon={ArrowRight01Icon} />
+        {common("open")}
+      </Button>
+    </div>
   );
 }
 

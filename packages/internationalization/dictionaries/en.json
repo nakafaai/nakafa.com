@@ -151,7 +151,11 @@
     "mismatches": "Failed NISN checks",
     "child": "Child",
     "child-detail": "Child",
-    "guardian-email": "Parent email"
+    "guardian-email": "Parent email",
+    "check": "Check",
+    "check-nisn": "NISN",
+    "check-school": "School",
+    "request-read": "Read"
   },
   "SchoolRoster": {
     "import": "Import",
@@ -1667,7 +1671,8 @@
     "own-band": "Band",
     "own-band-none": "No band",
     "own-empty": "No grade is released yet.",
-    "own-empty-description": "Each grade shows here once its teacher releases it."
+    "own-empty-description": "Each grade shows here once its teacher releases it.",
+    "own-open-cards": "Report cards"
   },
   "SchoolReports": {
     "title": "Report cards",

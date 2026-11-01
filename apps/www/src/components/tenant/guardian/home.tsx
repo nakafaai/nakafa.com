@@ -1,7 +1,9 @@
 import type { Ref } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
+  Building03Icon,
   CheckmarkBadge01Icon,
+  IdentityCardIcon,
   UserRemove01Icon,
 } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
@@ -25,6 +27,7 @@ import {
   PaneFooter,
   PaneHeader,
   PaneOpen,
+  PaneOpenButton,
 } from "@/components/shared/pane";
 import {
   Panes,
@@ -115,6 +118,15 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
       header: t("child"),
       id: "child",
     }),
+    childColumns.values((child) => (child.staffCheck ? "school" : "nisn"), {
+      cell: (info) => t(`check-${info.getValue()}`),
+      header: t("check"),
+      id: "check",
+      options: [
+        { icon: IdentityCardIcon, label: t("check-nisn"), value: "nisn" },
+        { icon: Building03Icon, label: t("check-school"), value: "school" },
+      ],
+    }),
     childColumns.values((child) => child.status, {
       cell: (info) => (
         <TableStatus
@@ -131,6 +143,9 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
         value: status,
       })),
     }),
+    childColumns.menu((info) => (
+      <PaneOpenButton id={info.row.original.linkId} />
+    )),
   ];
 
   return (

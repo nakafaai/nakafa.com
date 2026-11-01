@@ -151,7 +151,11 @@
     "mismatches": "Cek NISN gagal",
     "child": "Anak",
     "child-detail": "Anak",
-    "guardian-email": "Email orang tua"
+    "guardian-email": "Email orang tua",
+    "check": "Pemeriksaan",
+    "check-nisn": "NISN",
+    "check-school": "Sekolah",
+    "request-read": "Baca"
   },
   "SchoolRoster": {
     "import": "Impor",
@@ -1667,7 +1671,8 @@
     "own-band": "Predikat",
     "own-band-none": "Tanpa predikat",
     "own-empty": "Belum ada nilai yang dirilis.",
-    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya."
+    "own-empty-description": "Setiap nilai muncul di sini setelah gurunya merilisnya.",
+    "own-open-cards": "Rapor"
   },
   "SchoolReports": {
     "title": "Rapor",

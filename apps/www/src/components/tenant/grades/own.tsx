@@ -6,6 +6,7 @@ import {
   Calendar02Icon,
   Calendar03Icon,
   Calendar04Icon,
+  Certificate01Icon,
   CheckmarkCircle02Icon,
   InformationCircleIcon,
   MedalFirstPlaceIcon,
@@ -14,6 +15,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { KktpStatus } from "@repo/backend/confect/records/grade";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -29,6 +32,7 @@ import {
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import { Link } from "@/lib/routing/link";
 
 /** One released grade of the viewer, as their grades page lists it. */
 type OwnGrade = Ref.Returns<typeof records.grades.own>[number];
@@ -134,6 +138,20 @@ function OwnGradeTable() {
         value: kktp,
       })),
     }),
+    gradeColumns.menu(() => (
+      <div className="flex justify-end">
+        <Button
+          render={
+            <Link params={{ slug }} to="/school/$slug/cards">
+              <HugeIcons icon={Certificate01Icon} />
+              {t("own-open-cards")}
+            </Link>
+          }
+          size="sm"
+          variant="outline"
+        />
+      </div>
+    )),
   ];
 
   return (

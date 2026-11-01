@@ -6,11 +6,13 @@ import {
   Clock01Icon,
   Copy01Icon,
   PencilEdit02Icon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { RequestKind } from "@repo/backend/confect/guardians/request";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -72,6 +74,42 @@ function useKindOptions() {
   }));
 }
 
+/** The action of one request's row: its whole note, which the table cuts to one line. */
+function RequestReader({ request }: { request: ParentRequest }) {
+  const t = useTranslations("SchoolGuardians");
+  const common = useTranslations("Common");
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="flex justify-end">
+      <Button
+        onClick={() => setOpen(true)}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        <HugeIcons icon={ViewIcon} />
+        {t("request-read")}
+      </Button>
+      <ResponsiveDialog
+        description={t(`request-state-${request.state}`)}
+        footer={
+          <Button onClick={() => setOpen(false)} type="button">
+            {common("close")}
+          </Button>
+        }
+        open={open}
+        setOpen={setOpen}
+        title={t(`request-kind-${request.kind}`)}
+      >
+        <p className="text-sm whitespace-pre-wrap" dir="auto">
+          {request.text}
+        </p>
+      </ResponsiveDialog>
+    </div>
+  );
+}
+
 /** What a parent asked about one child, and the button that asks again. */
 export function ParentRequests({
   linkId,
@@ -130,6 +168,9 @@ export function ParentRequests({
                     })
                   ),
                 }),
+                parentColumns.menu((info) => (
+                  <RequestReader request={info.row.original} />
+                )),
               ]}
               data={requests.value}
               plain
