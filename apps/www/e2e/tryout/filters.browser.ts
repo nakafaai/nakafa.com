@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Record as Rec } from "effect";
 import { withoutRawKeys } from "@/e2e/support/keys";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -43,7 +43,7 @@ test("every head of a try-out table filters its column, and no menu shows a raw 
           table.getByRole("button", { name: headName(HEADS.name) })
         );
         expect(await table.getByRole("columnheader").count()).toBe(
-          Arr.length(Object.values(HEADS))
+          Arr.length(Rec.values(HEADS))
         );
         const total = await rows.count();
 
