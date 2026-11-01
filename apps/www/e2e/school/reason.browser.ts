@@ -64,11 +64,11 @@ test("a teacher writes an answer and its reason, marks both keys one at a time, 
   // Each key is marked on its own, so the first mark saves before the second is given.
   const sentBefore = changes.sent;
   await panel
-    .getByRole("radio", { name: "Mark option A of question 1 as correct" })
+    .getByRole("button", { name: "Mark option A of question 1 as correct" })
     .click();
   await saved(changes, sentBefore);
   await panel
-    .getByRole("radio", { name: "Mark reason A of question 1 as correct" })
+    .getByRole("button", { name: "Mark reason A of question 1 as correct" })
     .click();
   await saved(changes, sentBefore);
   await expect(page.locator("[data-sonner-toast]")).toHaveCount(0);
