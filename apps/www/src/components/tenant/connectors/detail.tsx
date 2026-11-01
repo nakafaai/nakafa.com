@@ -91,7 +91,8 @@ function ServicePane() {
               {t(`holder-${holderOf(service)}`)}
             </PaneFact>
           </PaneFacts>
-          {service.key === "classroom" && Option.contains(state, "connected") ? (
+          {service.key === "classroom" &&
+          Option.contains(state, "connected") ? (
             <ClassroomCourses />
           ) : null}
         </div>

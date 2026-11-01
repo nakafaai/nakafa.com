@@ -87,7 +87,7 @@ export function ClassroomCourses() {
           <Spinner icon={RefreshIcon} isLoading={isLoading} />
         </Button>
       </div>
-      <Intersection onIntersect={load} once />
+      <Intersection once onIntersect={load} />
       {Option.match(shown, {
         onNone: () => null,
         onSome: (found) => (
@@ -157,9 +157,7 @@ function CourseTable({
     );
 
   if (Arr.isReadonlyArrayEmpty(preview.courses)) {
-    return (
-      <p className="text-muted-foreground text-sm">{t("courses-none")}</p>
-    );
+    return <p className="text-muted-foreground text-sm">{t("courses-none")}</p>;
   }
 
   return (
@@ -187,9 +185,7 @@ function CourseTable({
             ),
             courseColumns.number((course) => course.students, {
               cell: (info) => (
-                <span className="text-muted-foreground">
-                  {info.getValue()}
-                </span>
+                <span className="text-muted-foreground">{info.getValue()}</span>
               ),
               header: t("course-students"),
               id: "students",

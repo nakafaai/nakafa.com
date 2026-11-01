@@ -38,7 +38,12 @@ export const DIRECTORY_SERVICES = [
     key: "classroom",
     provider: "Google",
   },
-  { category: "learning", connector: "drive", key: "forms", provider: "Google" },
+  {
+    category: "learning",
+    connector: "drive",
+    key: "forms",
+    provider: "Google",
+  },
   { category: "files", connector: "drive", key: "drive", provider: "Google" },
   {
     category: "schedule",

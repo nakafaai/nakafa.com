@@ -105,7 +105,9 @@ test("the Owner finds every service in a library, searches and filters it, and o
 
   await openOf(page, "Google Forms").click();
   const detail = page.getByRole("complementary", { name: "Connector detail" });
-  await expect(detail.getByText("Connects through Google Drive.")).toBeVisible();
+  await expect(
+    detail.getByText("Connects through Google Drive.")
+  ).toBeVisible();
   await expect(detail.getByText("Your account")).toBeVisible();
   await picture(page, "detail");
 
@@ -133,9 +135,9 @@ test("a connect that ended badly says so on the card that tried, and plus starts
   );
   const classroom = cardOf(page, "Google Classroom");
 
-  await expect(
-    classroom.getByText("Tick every box at Google.")
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(classroom.getByText("Tick every box at Google.")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(page.getByRole("alert")).toHaveCount(1);
   await expect(
     classroom.getByRole("button", { name: "Connect Google Classroom" })
@@ -145,9 +147,9 @@ test("a connect that ended badly says so on the card that tried, and plus starts
   await page.goto(
     `${page.url().split("?")[0]}?connect=failed&connector=classroom`
   );
-  await expect(
-    classroom.getByText("Connect failed, try again.")
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(classroom.getByText("Connect failed, try again.")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(page.getByRole("alert")).toHaveCount(1);
   await picture(page, "failed");
   await context.close();
@@ -168,7 +170,9 @@ test("a connected school sees the check, finds its courses in the detail, and di
   const before = await classroom.boundingBox();
 
   await Effect.runPromise(runAcceptanceCommand("connection", slug, "active"));
-  await expect(classroom.getByRole("img", { name: "Connected." })).toBeVisible();
+  await expect(
+    classroom.getByRole("img", { name: "Connected." })
+  ).toBeVisible();
   expect(await classroom.boundingBox()).toEqual(before);
   await picture(page, "connected");
 
