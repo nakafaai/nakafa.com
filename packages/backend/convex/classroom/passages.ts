@@ -6,3 +6,4 @@ export const open = registeredFunctions.open;
 export const rebuild = registeredFunctions.rebuild;
 export const source = registeredFunctions.source;
 export const store = registeredFunctions.store;
+export const experimental_reuseContext = true;

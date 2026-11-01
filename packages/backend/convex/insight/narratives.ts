@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/in
 export const share = registeredFunctions.share;
 export const withdraw = registeredFunctions.withdraw;
 export const write = registeredFunctions.write;
+export const experimental_reuseContext = true;

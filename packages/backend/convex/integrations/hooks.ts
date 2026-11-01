@@ -6,3 +6,4 @@ export const prune = registeredFunctions.prune;
 export const run = registeredFunctions.run;
 export const settle = registeredFunctions.settle;
 export const sweep = registeredFunctions.sweep;
+export const experimental_reuseContext = true;

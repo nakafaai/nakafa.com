@@ -10617,7 +10617,8 @@ export declare const api: {
             | "taskMissed"
             | "examStart"
             | "examGuardianReminder"
-            | "invitation";
+            | "invitation"
+            | "commentReply";
         }>
       >;
       set: FunctionReference<
@@ -10634,7 +10635,8 @@ export declare const api: {
             | "taskMissed"
             | "examStart"
             | "examGuardianReminder"
-            | "invitation";
+            | "invitation"
+            | "commentReply";
           on: boolean;
           slug: string;
         },
