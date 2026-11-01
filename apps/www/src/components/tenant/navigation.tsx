@@ -140,6 +140,23 @@ function TenantSchoolGroups() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         ) : null}
+        {Option.contains(role, "guardian") ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={
+                matchRoute({
+                  params: { slug },
+                  to: "/school/$slug/parents",
+                }) !== false
+              }
+              render={<Link params={{ slug }} to="/school/$slug/parents" />}
+              tooltip={tGuardians("home-title")}
+            >
+              <HugeIcons icon={UserLove01Icon} />
+              <span className="truncate">{tGuardians("home-title")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ) : null}
         {Option.contains(role, "student") ? (
           <>
             <SidebarMenuItem>
