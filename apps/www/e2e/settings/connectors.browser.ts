@@ -105,12 +105,12 @@ test("the account lists a person's services like a school's library, and a pane 
     timeout: readinessTimeoutMilliseconds,
   });
   const drive = cards.filter({ hasText: "Google Drive" });
-  await expect(page.getByRole("complementary")).toHaveCount(0);
+  const pane = page.getByRole("complementary", { name: "Connector detail" });
+  await expect(pane).toHaveCount(0);
 
   const open = drive.getByRole("button", { exact: true, name: "Google Drive" });
   await waitUntilTakenOver(open);
   await open.click();
-  const pane = page.getByRole("complementary", { name: "Connector detail" });
   await expect(pane.getByText("Not connected", { exact: true })).toBeVisible();
   await expect(pane.getByRole("button", { name: "Connect" })).toBeVisible();
   await pane.getByRole("button", { name: "Close" }).click();
