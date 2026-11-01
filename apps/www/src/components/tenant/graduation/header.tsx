@@ -48,7 +48,8 @@ export function useCohortArgs() {
 /**
  * The page's header: the path back to the graduation and the class group's name, the search
  * by student, the menu with the decision on graduation and the e-Ijazah export, and Issue
- * letters for the principal.
+ * letters for the principal. The actions draw together once the class group is read, because
+ * which of them the viewer holds decides where the search stands.
  */
 export function CohortGraduationHeader() {
   const t = useTranslations("SchoolGraduation");
@@ -78,9 +79,7 @@ export function CohortGraduationHeader() {
         <GraduationActions overview={overview.value}>
           <TableSearch placeholder={t("search-students")} />
         </GraduationActions>
-      ) : (
-        <TableSearch placeholder={t("search-students")} />
-      )}
+      ) : null}
     </SchoolHeader>
   );
 }
