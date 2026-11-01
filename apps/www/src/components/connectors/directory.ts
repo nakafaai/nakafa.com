@@ -2,29 +2,88 @@ import {
   GOOGLE_MANIFEST,
   GoogleConnector,
 } from "@repo/backend/confect/connectors/google/manifest";
-import { Array as Arr, Option, Schema, String as Str } from "effect";
+import { ConnectionView } from "@repo/backend/confect/connectors/schema";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   type Connection,
   currentConnection,
 } from "@/components/connectors/optimistic";
+import { matchesSearch } from "@/components/shared/table/search";
+
+/** What a service is for, which the directory's filter reads. */
+export const DirectoryCategory = Schema.Literals([
+  "files",
+  "learning",
+  "schedule",
+]);
 
 /**
  * One service of the directory. `connector` is the connection it reads through: Forms has none of
- * its own, because a picked form is read through Drive (ADR 0015).
+ * its own, because a picked form is read through Drive (ADR 0015). `provider` is the maker's name,
+ * which no language translates.
  */
 export const DirectoryService = Schema.Struct({
+  category: DirectoryCategory,
   connector: GoogleConnector,
   key: Schema.Literals(["calendar", "classroom", "drive", "forms"]),
+  provider: Schema.Literals(["Google"]),
 });
 export type DirectoryService = typeof DirectoryService.Type;
 
 /** The services a school's directory lists, in the order they show. A new one joins by one line. */
 export const DIRECTORY_SERVICES = [
-  { connector: "classroom", key: "classroom" },
-  { connector: "drive", key: "forms" },
-  { connector: "drive", key: "drive" },
-  { connector: "calendar", key: "calendar" },
+  {
+    category: "learning",
+    connector: "classroom",
+    key: "classroom",
+    provider: "Google",
+  },
+  { category: "learning", connector: "drive", key: "forms", provider: "Google" },
+  { category: "files", connector: "drive", key: "drive", provider: "Google" },
+  {
+    category: "schedule",
+    connector: "calendar",
+    key: "calendar",
+    provider: "Google",
+  },
 ] as const satisfies readonly DirectoryService[];
+
+/** The categories the filter offers, in the order their services first show. */
+export const DIRECTORY_CATEGORIES = Arr.dedupe(
+  Arr.map(DIRECTORY_SERVICES, (service) => service.category)
+);
+
+/** Where a service stands for the viewer. */
+export const ServiceState = Schema.Literals([
+  "connected",
+  "failed",
+  "locked",
+  "open",
+  "reconnect",
+  "refused",
+  "soon",
+]);
+
+/** One card's worth of the directory: the service, its connection, and where it stands, once read. */
+export const DirectoryEntry = Schema.Struct({
+  connection: Schema.Option(ConnectionView),
+  service: DirectoryService,
+  state: Schema.Option(ServiceState),
+});
+
+/** The states from which a press starts a first connect. */
+export const CONNECTABLE = [
+  "failed",
+  "open",
+  "refused",
+] as const satisfies readonly (typeof ServiceState.Type)[];
+
+/** The states that ask for the reader's attention. */
+export const LOST = [
+  "failed",
+  "reconnect",
+  "refused",
+] as const satisfies readonly (typeof ServiceState.Type)[];
 
 /** Whether the school holds a service, or the person who connects it. */
 export const holderOf = (service: DirectoryService) =>
@@ -73,9 +132,21 @@ export const serviceConnection = (
     service.connector
   );
 
-/** Whether any of a service's words holds what the viewer searched for, in any case. */
-export const matchesSearch = (search: string, words: readonly string[]) => {
-  const wanted = Str.toLowerCase(Str.trim(search));
+/** The message that says where a service stands. Forms, while open, says it connects through Drive. */
+export const statusKey = (
+  service: DirectoryService,
+  state: typeof ServiceState.Type
+) =>
+  state === "open" && service.key === "forms"
+    ? ("status-through-drive" as const)
+    : (`status-${state}` as const);
 
-  return Arr.some(words, (word) => Str.includes(wanted)(Str.toLowerCase(word)));
-};
+/** Whether any of a service's words holds what the viewer searched for, in the chosen category. */
+export const isShown = (
+  service: DirectoryService,
+  category: Option.Option<typeof DirectoryCategory.Type>,
+  search: string,
+  words: readonly string[]
+) =>
+  (Option.isNone(category) || Option.contains(category, service.category)) &&
+  Arr.some(words, (word) => matchesSearch(word, search));

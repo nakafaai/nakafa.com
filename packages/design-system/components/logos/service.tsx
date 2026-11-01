@@ -3,23 +3,23 @@ import type { SVGProps } from "react";
 
 type LogoProps = SVGProps<SVGSVGElement>;
 
-const googleProductLogos = {
+const serviceLogos = {
   calendar: CalendarLogo,
   classroom: ClassroomLogo,
   drive: DriveLogo,
   forms: FormsLogo,
 };
 
-interface GoogleProductLogoProps extends Omit<LogoProps, "name"> {
-  name: keyof typeof googleProductLogos;
+interface ServiceLogoProps extends Omit<LogoProps, "name"> {
+  name: keyof typeof serviceLogos;
 }
 
 /**
- * Renders the mark of one Google product as an inline SVG in the product's own colors. Each mark
+ * Renders the mark of one service as an inline SVG in the service's own colors. Each mark
  * keeps its flat shapes only, so it reads the same as every other logo in the design system.
  */
-export function GoogleProductLogo({ name, ...props }: GoogleProductLogoProps) {
-  const Logo = googleProductLogos[name];
+export function ServiceLogo({ name, ...props }: ServiceLogoProps) {
+  const Logo = serviceLogos[name];
 
   return <Logo {...props} />;
 }
