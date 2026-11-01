@@ -1,5 +1,7 @@
 import {
   concreteThemeValues,
+  isNamedTheme,
+  THEME_SHEET_PATH,
   THEME_STORAGE_KEY,
   themes,
 } from "@repo/design-system/lib/theme/registry";
@@ -9,6 +11,7 @@ import { Array as Arr, Record as Rec, Schema } from "effect";
 const PrepaintConfig = Schema.Struct({
   appearances: Schema.Record(Schema.String, Schema.String),
   concreteThemes: Schema.Array(Schema.String),
+  namedThemes: Schema.Array(Schema.String),
   storageKey: Schema.String,
 });
 
@@ -21,13 +24,16 @@ const configJson = Schema.encodeSync(Schema.fromJsonString(PrepaintConfig))({
     )
   ),
   concreteThemes: concreteThemeValues,
+  namedThemes: Arr.filter(concreteThemeValues, isNamedTheme),
   storageKey: THEME_STORAGE_KEY,
 }).replaceAll("<", "\\u003c");
 
 /**
  * Applies the visitor's stored theme before the first paint. A concrete theme
  * names the class on the root element, as the theme store does once it mounts; a
- * missing, system or unknown value resolves to the system appearance.
+ * missing, system or unknown value resolves to the system appearance. A named theme
+ * writes its stylesheet into the head while the page is still parsing, so the sheet
+ * blocks the first paint for the one who picked it, and for nobody else.
  */
 export const THEME_PREPAINT_SCRIPT = `(function () {
   var root = document.documentElement;
@@ -40,4 +46,7 @@ export const THEME_PREPAINT_SCRIPT = `(function () {
   var isConcrete = config.concreteThemes.indexOf(stored) !== -1;
   root.classList.add(isConcrete ? stored : system);
   root.style.colorScheme = isConcrete ? config.appearances[stored] : system;
+  if (config.namedThemes.indexOf(stored) !== -1) {
+    document.write('<link rel="stylesheet" href="${THEME_SHEET_PATH}">');
+  }
 })();`;

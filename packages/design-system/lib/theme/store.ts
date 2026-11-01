@@ -3,8 +3,10 @@ import {
   concreteThemeValues,
   DEFAULT_THEME,
   getThemeAppearance,
+  isNamedTheme,
   parseThemeChoice,
   resolveThemeChoice,
+  THEME_SHEET_PATH,
   THEME_STORAGE_KEY,
   type ThemeAppearance,
   type ThemeChoice,
@@ -129,6 +131,32 @@ function applyResolvedTheme(resolvedTheme: ConcreteTheme) {
   root.style.setProperty("color-scheme", getThemeAppearance(resolvedTheme));
 }
 
+/**
+ * Applies the store's theme, once the stylesheet of a named theme has loaded: a root
+ * that names a theme with no colors would paint the default ones first. A failed load
+ * applies the theme too, so the choice still takes effect when the sheet returns.
+ */
+function applyStoreTheme(store: ThemeStore) {
+  const { resolvedTheme } = store.getState();
+  if (
+    !isNamedTheme(resolvedTheme) ||
+    document.querySelector(`link[href="${THEME_SHEET_PATH}"]`)
+  ) {
+    applyResolvedTheme(resolvedTheme);
+    return;
+  }
+  const sheet = document.createElement("link");
+  sheet.href = THEME_SHEET_PATH;
+  sheet.rel = "stylesheet";
+  sheet.addEventListener("load", () =>
+    applyResolvedTheme(store.getState().resolvedTheme)
+  );
+  sheet.addEventListener("error", () =>
+    applyResolvedTheme(store.getState().resolvedTheme)
+  );
+  document.head.append(sheet);
+}
+
 /** Reads whether the system asks for a dark appearance. */
 function readSystemAppearance(query: MediaQueryList): ThemeAppearance {
   return query.matches ? "dark" : "light";
@@ -142,9 +170,7 @@ function readSystemAppearance(query: MediaQueryList): ThemeAppearance {
  */
 export function connectThemeStore(store: ThemeStore): () => void {
   const query = window.matchMedia(DARK_SYSTEM_QUERY);
-  const unsubscribe = store.subscribe((state) => {
-    applyResolvedTheme(state.resolvedTheme);
-  });
+  const unsubscribe = store.subscribe(() => applyStoreTheme(store));
 
   /** Follows the system appearance. A concrete choice keeps its theme. */
   function followSystem() {
