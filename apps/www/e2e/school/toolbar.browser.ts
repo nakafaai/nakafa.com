@@ -45,7 +45,7 @@ test("on a phone the player's header stands at the top of the school's page", as
   await page.goto(page.url().replace(EDIT_SUFFIX, "/try"));
   // The try's one action returns to the editor, so the header is drawn once it shows.
   await expect(
-    page.getByRole("link", { exact: true, name: "Finish trying" })
+    page.getByRole("button", { exact: true, name: "Finish trying" })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   // A sticky header placed below where it rests opens the gap at rest too, so the page's first paint shows it.
   expect(await page.evaluate(headerTop)).toBe(0);

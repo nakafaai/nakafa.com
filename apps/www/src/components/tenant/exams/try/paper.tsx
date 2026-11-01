@@ -2,13 +2,14 @@ import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { buttonVariants } from "@repo/design-system/lib/button";
+import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
+import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
 import {
   PlayerFooter,
@@ -39,7 +40,6 @@ import {
   ExamUnavailable,
 } from "@/components/tenant/exams/unavailable";
 import { useLastValue } from "@/lib/data/kept";
-import { TargetLink } from "@/lib/routing/link";
 import { schoolExamEditTarget } from "@/lib/routing/school/target";
 
 /**
@@ -75,7 +75,6 @@ export function ExamTryPaper({
   }
   const exam = kept.value;
   const gone = QueryResult.isFailure(result);
-  const editor = schoolExamEditTarget(slug, examId);
 
   const models = projectTryQuestions({
     questions: exam.questions,
@@ -96,9 +95,7 @@ export function ExamTryPaper({
               title={exam.title || t("untitled")}
             >
               {gone ? null : (
-                <TargetLink className={buttonVariants()} target={editor}>
-                  {t("try-finish")}
-                </TargetLink>
+                <TryFinish examId={examId} questions={models} slug={slug} />
               )}
             </PaperBar>
             <PlayerMain
@@ -136,5 +133,36 @@ export function ExamTryPaper({
         </TryStoreContext>
       </TryExamIdContext>
     </TrySlugContext>
+  );
+}
+
+/**
+ * Ends a try from the header or from the review at the last question, the player's own finish, so a
+ * teacher meets the review a student meets. Nothing was saved, so finishing only returns to the editor.
+ */
+function TryFinish({
+  examId,
+  questions,
+  slug,
+}: {
+  examId: Id<"exams">;
+  questions: ComponentProps<typeof PlayerFinish>["questions"];
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("Exams");
+  const navigate = useNavigate();
+
+  return (
+    <PlayerFinish
+      description={t("try-note")}
+      label={t("try-finish")}
+      locked={false}
+      onFinish={() => {
+        navigate(schoolExamEditTarget(slug, examId));
+      }}
+      pending={false}
+      questions={questions}
+      title={t("try-finish")}
+    />
   );
 }
