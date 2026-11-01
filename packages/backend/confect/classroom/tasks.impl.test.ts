@@ -9,6 +9,7 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
+import { schoolViews } from "@repo/backend/test/inbox";
 import { journal, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
@@ -39,6 +40,7 @@ describe("classroom/tasks", () => {
             classId: forum.classId,
             clientKey,
             deadline,
+            category: null,
             latePolicy: "accept",
             points: 100,
             slug: nf,
@@ -97,11 +99,9 @@ describe("classroom/tasks", () => {
         ).toHaveLength(3);
         yield* fixture.finishScheduled();
         const rows = yield* fixture.as("student").query(inbox.list, firstPage);
-        expect(Arr.map(rows.page, (row) => row.detail?.task)).toEqual([
-          "tugas",
-          "latihan-gerak-lurus-2",
-          "latihan-gerak-lurus",
-        ]);
+        expect(
+          Arr.map(schoolViews(rows.page), (row) => row.detail?.task)
+        ).toEqual(["tugas", "latihan-gerak-lurus-2", "latihan-gerak-lurus"]);
       })
   );
 
@@ -119,6 +119,7 @@ describe("classroom/tasks", () => {
           classId: forum.classId,
           clientKey: "open-task",
           deadline: TENANCY_NOW + DAY,
+          category: null,
           latePolicy: "accept",
           points: 50,
           slug: nf,
@@ -130,6 +131,7 @@ describe("classroom/tasks", () => {
           classId: forum.classId,
           clientKey: "closed-task",
           deadline: TENANCY_NOW + DAY,
+          category: null,
           latePolicy: "close",
           points: 10,
           slug: nf,
@@ -253,6 +255,7 @@ describe("classroom/tasks", () => {
           classId: other.classId,
           clientKey: "other-task",
           deadline: TENANCY_NOW + DAY,
+          category: null,
           latePolicy: "accept",
           points: 10,
           slug: nf,
@@ -267,6 +270,7 @@ describe("classroom/tasks", () => {
               classId: forum.classId,
               clientKey: "student-task",
               deadline: TENANCY_NOW + DAY,
+              category: null,
               latePolicy: "accept",
               points: 10,
               slug: nf,
@@ -301,6 +305,7 @@ describe("classroom/tasks", () => {
           classId: forum.classId,
           clientKey: "own-task",
           deadline: TENANCY_NOW + DAY,
+          category: null,
           latePolicy: "accept",
           points: 10,
           slug: nf,

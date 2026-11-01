@@ -62,6 +62,10 @@ vi.mock("@repo/backend/client/content/public", () => ({
 vi.mock("@repo/site/keys", () => ({
   contentRuntimeKeys: () => ({ CONTENT_READ_TOKEN: "test-runtime-token" }),
 }));
+// The content store on a miss: it runs the load it was given, and no read reaches Convex.
+vi.mock("@/lib/content/store/read", () => ({
+  readContentStore: ({ load }: { readonly load: unknown }) => load,
+}));
 vi.mock("@/env", () => ({
   env: { VITE_CONVEX_SITE_URL: "https://test.convex.site" },
 }));

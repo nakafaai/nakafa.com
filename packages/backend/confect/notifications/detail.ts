@@ -6,7 +6,10 @@ import type {
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
-import type { ClassDetail } from "@repo/backend/confect/notifications/schema";
+import type {
+  ClassDetail,
+  SchoolRow,
+} from "@repo/backend/confect/notifications/schema";
 import { Effect, Match, Option } from "effect";
 
 /**
@@ -54,7 +57,7 @@ const classPart = Effect.fn("notifications.detail.class")(function* (
  * whose source is gone or whose class the recipient no longer reads.
  */
 const detailOf = Effect.fn("notifications.detail")(function* (
-  row: NotificationsDoc,
+  row: SchoolRow,
   person: TenantPeopleDoc,
   tenant: TenantsDoc
 ) {
@@ -227,7 +230,7 @@ const gradeOf = Effect.fn("notifications.detail.grade")(function* (
 
 /** What a row shows of its source, each read when the row is read: its class detail, its sitting, and its grade. */
 export const partsOf = Effect.fn("notifications.detail.parts")(function* (
-  row: NotificationsDoc,
+  row: SchoolRow,
   person: TenantPeopleDoc,
   tenant: TenantsDoc
 ) {
