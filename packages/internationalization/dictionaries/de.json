@@ -1560,6 +1560,7 @@
     "task-student": "Schüler",
     "task-hand-in": "Abgeben",
     "task-closed": "Diese Aufgabe endete mit ihrer Frist.",
+    "task-missing": "Noch nicht abgegeben",
     "task-work-empty": "Noch keine Arbeit",
     "task-work-empty-description": "Die Arbeiten der Schüler erscheinen hier.",
     "task-work-search": "Schüler suchen",

@@ -1560,6 +1560,7 @@
     "task-student": "Student",
     "task-hand-in": "Hand in",
     "task-closed": "This task closed at its deadline.",
+    "task-missing": "Not handed in yet",
     "task-work-empty": "No work yet",
     "task-work-empty-description": "The work students hand in shows here.",
     "task-work-search": "Search students",

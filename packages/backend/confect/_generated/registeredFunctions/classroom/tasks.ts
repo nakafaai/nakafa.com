@@ -13,5 +13,6 @@ export default {
 ["edit"]: RegisteredConvexFunction.register({ ...definitions["edit"], handler: forward(definitions["edit"].handler) }),
 ["submit"]: RegisteredConvexFunction.register({ ...definitions["submit"], handler: forward(definitions["submit"].handler) }),
 ["submissions"]: RegisteredConvexFunction.register({ ...definitions["submissions"], handler: forward(definitions["submissions"].handler) }),
+["missing"]: RegisteredConvexFunction.register({ ...definitions["missing"], handler: forward(definitions["missing"].handler) }),
 ["score"]: RegisteredConvexFunction.register({ ...definitions["score"], handler: forward(definitions["score"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../classroom/tasks.spec")["default"]>;

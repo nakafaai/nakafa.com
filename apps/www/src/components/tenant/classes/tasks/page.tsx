@@ -29,6 +29,7 @@ import {
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { TaskStanding } from "@/components/tenant/classes/tasks/list";
+import { TaskMissingTable } from "@/components/tenant/classes/tasks/missing";
 import {
   type ClassTask,
   submitUpdate,
@@ -38,7 +39,7 @@ import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 
 /**
  * One task of a class: what it asks and when it is due, worth how many points, and what late work
- * gets, then the student's own hand-in or, for its teacher, the work handed in. A reader who neither
+ * gets, then the student's own hand-in or, for its teacher, the work handed in and who has not. A reader who neither
  * teaches the class nor learns in it sees the task alone. A task the class does not hold shows the
  * missing state, a failed read its sentence and Try again.
  */
@@ -67,7 +68,12 @@ export function TaskPage({ task: address }: { task: string }) {
   return (
     <div className="flex w-full min-w-0 flex-col gap-6">
       <TaskDetails task={task} />
-      {Arr.contains(can, "task.manage") ? <TaskWorkTable task={task} /> : null}
+      {Arr.contains(can, "task.manage") ? (
+        <>
+          <TaskWorkTable task={task} />
+          <TaskMissingTable task={task} />
+        </>
+      ) : null}
       {Arr.contains(can, "task.submit") && !Arr.contains(can, "task.manage") ? (
         <HandIn key={task.id} task={task} />
       ) : null}

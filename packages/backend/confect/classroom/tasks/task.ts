@@ -152,6 +152,12 @@ export const SubmissionView = Schema.Struct({
   updatedAt: Schema.Finite,
 });
 
+/** A student a task reaches who has handed nothing in, as its teacher reads them. */
+export const MissingStudent = Schema.Struct({
+  id: Id("tenantPeople"),
+  name: Schema.String,
+});
+
 /** The sealed field of a task's text, bound to the row that names it (ADR 0030). */
 export const taskField = (
   row: Pick<typeof taskValidator.Type, "classId" | "clientKey">
