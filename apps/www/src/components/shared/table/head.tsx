@@ -11,14 +11,14 @@ import {
 /**
  * Where a head's button stands in its line: pulled out by its own padding in the first column, so the column's name
  * lines up with the rows below it, in the last column of figures, so its icon ends where they end, and to both edges in
- * a centred column. An active head, one that sorts or filters the rows, takes the muted fill.
+ * a centred column. An active head, one that sorts or filters the rows, takes the accent fill over the muted head row.
  */
 const headButton = cva(
   "max-w-[calc(100%+1rem)] min-w-0 overflow-hidden sm:max-w-[calc(100%+1.75rem)]",
   {
     defaultVariants: { active: false, align: "center" },
     variants: {
-      active: { false: "", true: "bg-muted text-foreground" },
+      active: { false: "", true: "bg-accent text-accent-foreground" },
       align: {
         center: "-mx-2 sm:-mx-3",
         end: "-mr-2.5",

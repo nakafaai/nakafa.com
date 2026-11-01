@@ -133,12 +133,12 @@ test("every column of the School's tables filters from its head, and the row's m
     page,
     card,
     "Questions",
-    page.getByRole("textbox", { name: "Questions, At least" }),
+    page.getByRole("textbox", { name: "Questions, Minimum" }),
     "99999"
   );
   await card.getByRole("button", { exact: true, name: "Created" }).click();
   await expect(page.getByRole("grid")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Ascending" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Oldest" })).toBeVisible();
   await expect(page.locator('[data-slot="dropdown-menu-label"]')).toHaveCount(
     0
   );
