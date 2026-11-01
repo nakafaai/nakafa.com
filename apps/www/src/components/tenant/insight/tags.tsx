@@ -25,6 +25,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { useTenant } from "@/components/tenant/context";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { Link } from "@/lib/routing/link";
@@ -70,7 +71,7 @@ export function QuestionTags() {
     <>
       <Button onClick={() => setOpen(true)} type="button" variant="outline">
         <HugeIcons icon={Tag01Icon} />
-        {t("tags")}
+        <HeaderLabel>{t("tags")}</HeaderLabel>
       </Button>
       <ResponsiveDialog
         description={t("tags-description")}
