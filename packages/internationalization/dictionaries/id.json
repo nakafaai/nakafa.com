@@ -2456,7 +2456,7 @@
     "agent-allow": "Izinkan",
     "agent-deny": "Tolak",
     "agent-description": "Agen ini bisa membaca dan mengubah semua yang bisa kamu lakukan di Nakafa. Izinkan hanya agen yang kamu percaya.",
-    "agent-failed": "Jawabanmu belum tersimpan. Coba lagi.",
+    "agent-failed": "Jawabanmu gagal tersimpan, jadi coba lagi.",
     "agent-title": "Izinkan {name} memakai akunmu?",
     "agent-unnamed": "Agen ini",
     "back-to-nakafa": "Kembali ke Nakafa",
@@ -2734,15 +2734,15 @@
       "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
     },
     "school-refusal-not-operator": {
-      "title": "Hanya staf Nakafa yang bisa melakukan ini.",
+      "title": "Ini hanya untuk staf Nakafa.",
       "description": "Masuk dengan akun operator."
     },
     "school-refusal-provision": {
-      "title": "Sekolah ini tidak bisa dibuka dengan data tersebut.",
+      "title": "Sekolah ini belum bisa dibuka.",
       "description": "Periksa alamat dan unit sekolahnya."
     },
     "school-refusal-webhook-limit": {
-      "title": "Satu klien memegang paling banyak sepuluh webhook.",
+      "title": "Satu klien hanya boleh 10 webhook.",
       "description": "Cabut yang tidak lagi dipakai."
     },
     "school-refusal-unit-limit": {
@@ -3018,8 +3018,8 @@
       "description": "Tanyakan guru apa yang harus dilakukan selanjutnya."
     },
     "sitting-answers-unsent": {
-      "title": "Sebagian jawaban mungkin belum tersimpan.",
-      "description": "Jawaban di perangkat ini mungkin belum masuk sebelum ujian ditutup, jadi beri tahu pengawas."
+      "title": "Jawaban mungkin belum tersimpan.",
+      "description": "Mungkin belum masuk sebelum ujian ditutup, jadi beri tahu pengawas."
     },
     "sitting-attempt-closed": {
       "title": "Percobaan ini sudah ditutup.",
@@ -3110,7 +3110,7 @@
       "description": "Hapus aksi itu dari klien, lalu buat klien lagi."
     },
     "school-refusal-draft-refused": {
-      "title": "Nina tidak bisa membuat draf sekarang.",
+      "title": "Nina belum bisa membuat draf.",
       "description": "Aktifkan Nina untuk sekolah, atau tunggu kredit sekolah diperbarui."
     },
     "school-refusal-promotion-state": {
@@ -3155,7 +3155,7 @@
     },
     "school-refusal-login-name-refused": {
       "title": "Nama login ini tidak diizinkan.",
-      "description": "Pakai 3 sampai 32 karakter, a sampai z, 0 sampai 9, titik, garis bawah atau strip."
+      "description": "Pakai 3 sampai 32 karakter, a sampai z, 0 sampai 9, titik, _ atau -."
     },
     "school-refusal-login-name-taken": {
       "title": "Nama login ini sudah dipakai.",
@@ -3207,7 +3207,7 @@
     },
     "import-no-drive": {
       "title": "Hubungkan Google Drive dulu",
-      "description": "Formulir dibaca lewat Google Drive-mu. Hubungkan di pengaturan akun."
+      "description": "Formulir dibaca lewat Google Drive, jadi hubungkan di pengaturan."
     },
     "import-empty": {
       "title": "Nina tidak menemukan soal.",
@@ -3255,7 +3255,7 @@
     },
     "forum-file-quota": {
       "title": "File tidak ditambahkan.",
-      "description": "Chat sekolah ini sudah mencapai batas penyimpanan. Sembunyikan file lama dulu."
+      "description": "Penyimpanan chat sekolah sudah penuh. Sembunyikan file lama dulu."
     },
     "school-refusal-report-closed": {
       "title": "Rapor ini sudah berlanjut.",

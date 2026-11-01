@@ -2738,11 +2738,11 @@
       "description": "Melde dich mit einem Operator-Konto an."
     },
     "school-refusal-provision": {
-      "title": "Diese Schule lässt sich so nicht eröffnen.",
+      "title": "Die Schule lässt sich nicht öffnen.",
       "description": "Prüfe die Adresse und die Einheiten der Schule."
     },
     "school-refusal-webhook-limit": {
-      "title": "Ein Client hält höchstens zehn Webhooks.",
+      "title": "Höchstens 10 Webhooks je Client.",
       "description": "Widerrufe einen, den er nicht mehr braucht."
     },
     "school-refusal-unit-limit": {
@@ -2814,7 +2814,7 @@
       "description": "Versuche es erneut."
     },
     "invoice-error": {
-      "title": "Die Rechnung konnte nicht geladen werden.",
+      "title": "Die Rechnung lädt gerade nicht.",
       "description": "Bitte versuche es noch einmal."
     },
     "portal-error": {
@@ -3018,8 +3018,8 @@
       "description": "Frag deine Lehrkraft, was du als Nächstes tun sollst."
     },
     "sitting-answers-unsent": {
-      "title": "Einige Antworten wurden vielleicht nicht gespeichert.",
-      "description": "Antworten auf diesem Gerät kamen vielleicht nicht an, bevor die Prüfung schloss, also sag es deiner Aufsicht."
+      "title": "Vielleicht fehlen Antworten.",
+      "description": "Sie kamen vielleicht nicht mehr an, also sag es deiner Aufsicht."
     },
     "sitting-attempt-closed": {
       "title": "Dieser Versuch ist beendet.",
@@ -3110,8 +3110,8 @@
       "description": "Entferne sie vom Client und lege ihn dann neu an."
     },
     "school-refusal-draft-refused": {
-      "title": "Nina kann das gerade nicht entwerfen.",
-      "description": "Schalte Nina für die Schule ein, oder warte, bis die Credits der Schule erneuert werden."
+      "title": "Nina kann das jetzt nicht entwerfen.",
+      "description": "Schalte Nina ein, oder warte auf neue Credits der Schule."
     },
     "school-refusal-promotion-state": {
       "title": "Diese Periode öffnet noch nicht.",
@@ -3155,7 +3155,7 @@
     },
     "school-refusal-login-name-refused": {
       "title": "Dieser Anmeldename ist ungültig.",
-      "description": "Nutze 3 bis 32 Zeichen, a bis z, 0 bis 9, Punkt, Unterstrich oder Bindestrich."
+      "description": "Nutze 3 bis 32 Zeichen, nur a bis z, 0 bis 9, Punkt, _ und -."
     },
     "school-refusal-login-name-taken": {
       "title": "Diesen Anmeldenamen gibt es schon.",
@@ -3207,7 +3207,7 @@
     },
     "import-no-drive": {
       "title": "Verbinde zuerst Google Drive",
-      "description": "Formulare werden über dein Google Drive gelesen. Verbinde es in deinen Kontoeinstellungen."
+      "description": "Formulare laufen über Google Drive, verbinde es in den Einstellungen."
     },
     "import-empty": {
       "title": "Nina hat keine Frage gefunden.",
@@ -3348,7 +3348,7 @@
       "description": "Wähle für diese Klasse einen anderen Namen."
     },
     "school-refusal-channel-fixed": {
-      "title": "Der allgemeine Kanal behält seinen Namen.",
+      "title": "Der allgemeine Kanal heißt immer so.",
       "description": "Benenne stattdessen einen Themenkanal um."
     }
   },
