@@ -645,9 +645,6 @@
     "room-move": "Neu planen",
     "room-move-description": "Schüler und Token bleiben, und die Hinweise gehen erneut hinaus.",
     "room-move-save": "Speichern",
-    "results-question-description": "Wie die Klasse diese Frage beantwortet hat.",
-    "student-finished-description": "Deine Punkte erscheinen hier nach der Freigabe.",
-    "student-results-description": "Deine Punkte und Antworten.",
     "student-closed-description": "Sie nimmt keine Antworten mehr an.",
     "student-locked-description": "Er nimmt gerade keine Antworten an."
   },

@@ -645,9 +645,6 @@
     "room-move": "Jadwalkan ulang",
     "room-move-description": "Siswa dan tokennya tetap, dan pengingatnya dikirim lagi.",
     "room-move-save": "Simpan",
-    "results-question-description": "Cara kelas menjawab soal ini.",
-    "student-finished-description": "Skormu tampil di sini setelah dirilis.",
-    "student-results-description": "Skor dan jawabanmu.",
     "student-closed-description": "Ujian ini tidak menerima jawaban lagi.",
     "student-locked-description": "Percobaan ini belum menerima jawaban."
   },

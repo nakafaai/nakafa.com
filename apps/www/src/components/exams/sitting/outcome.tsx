@@ -4,15 +4,11 @@ import { useTranslations } from "use-intl";
 import { StudentResults } from "@/components/exams/results/student";
 import type { AttemptValue } from "@/components/exams/sitting/attempt";
 import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
-import { SittingBody } from "@/components/exams/sitting/body";
+import { SittingBody, SittingNotice } from "@/components/exams/sitting/body";
 import { useSendClosedKept } from "@/components/exams/sitting/kept";
 import { PaperFrame } from "@/components/exams/sitting/recovery";
-import {
-  CardSection,
-  CardSectionFooter,
-} from "@/components/shared/card/section";
 
-/** The card of each state of an attempt that takes no answers before it is finished: its title and its sentence. */
+/** The words of each state of an attempt that takes no answers before it is finished: its title and its sentence. */
 const stoppedCards = {
   closing: {
     description: "student-closed-description",
@@ -28,8 +24,8 @@ const stoppedCards = {
 
 /**
  * An attempt that takes no answers, shown without an entry: the exam's name, then a finished attempt's own
- * result card at the top, which says the exam is finished and shows the score once the teacher releases it,
- * or the card of a closing or locked attempt, so every ending reads the same way. This screen forgets nothing: the finish forgets the
+ * result at the top, which says the exam is finished and shows the score once the teacher releases it,
+ * or the words of a closing or locked attempt, so every ending reads the same way. This screen forgets nothing: the finish forgets the
  * kept state once the server confirms it, and this screen shows the finish before that, so a refused finish
  * that rolls back would otherwise lose the answers that the student has not sent yet.
  */
@@ -62,12 +58,12 @@ export function StudentOutcome({
           <StudentResults sittingId={sitting.id} />
         ) : null}
         {attempt.state === "closing" || attempt.state === "locked" ? (
-          <CardSection
+          <SittingNotice
             description={t(stoppedCards[attempt.state].description)}
             title={t(stoppedCards[attempt.state].title)}
           >
-            <CardSectionFooter hint={t(stoppedCards[attempt.state].hint)} />
-          </CardSection>
+            <p className="text-sm">{t(stoppedCards[attempt.state].hint)}</p>
+          </SittingNotice>
         ) : null}
       </SittingBody>
     </PaperFrame>
