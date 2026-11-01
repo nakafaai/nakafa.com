@@ -58,6 +58,7 @@ const Notice = Schema.Struct({
     }),
   ]),
   named: Schema.Array(Id("tenantPeople")),
+  only: Schema.NullOr(Schema.Array(Id("tenantPeople"))),
 });
 
 /** Where the next run of a fan-out starts: the phase, and the page of it. */
@@ -87,6 +88,7 @@ const noticeOf = Effect.fn("notifications.fanout.notice")(function* (
           email: false,
           fields: { changeType: "forum.mentioned", messageId },
           named: mentionedPeople(message.mentions),
+          only: null,
         }))
       ),
     post: ({ postId }) =>
@@ -99,6 +101,7 @@ const noticeOf = Effect.fn("notifications.fanout.notice")(function* (
           email: post.email,
           fields: { changeType: "announcement.posted", postId },
           named: [],
+          only: null,
         }))
       ),
     task: ({ taskId }) =>
@@ -111,6 +114,7 @@ const noticeOf = Effect.fn("notifications.fanout.notice")(function* (
           email: false,
           fields: { changeType: "assignment.published", taskId },
           named: [],
+          only: task.targets ?? null,
         }))
       ),
   });
@@ -207,7 +211,10 @@ const run = FunctionImpl.make(
         Arr.dedupe(page.people),
         (personId) =>
           personId !== notice.value.authorId &&
-          !Arr.contains(notice.value.named, personId)
+          !Arr.contains(notice.value.named, personId) &&
+          (phase === "teachers" ||
+            notice.value.only === null ||
+            Arr.contains(notice.value.only, personId))
       ),
       (personId) =>
         Effect.gen(function* () {

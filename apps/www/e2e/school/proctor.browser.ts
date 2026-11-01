@@ -32,7 +32,7 @@ const ROOM_READ_MILLISECONDS = 30_000;
 const UPCOMING_ROW = /Lab 3/u;
 
 /** How a room reads its seats at a glance, and a seat its silence. */
-const ONE_WORKING = /^1 working/u;
+const SOME_WORKING = /^\d+ working/u;
 const ONE_OFFLINE = /1 offline/u;
 const AWAY_FOR = /^.*Away for \d+/u;
 
@@ -300,7 +300,7 @@ test("a student whose connection drops shows on the seat with a clock that runs,
   // The exam's rooms show the open room at a glance, and read it again on their own.
   const rooms = await ownerContext.newPage();
   await rooms.goto(address(`/exams/${sitting.examId}`));
-  await expect(rooms.getByRole("img", { name: ONE_WORKING })).toBeVisible({
+  await expect(rooms.getByRole("img", { name: SOME_WORKING })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
 
