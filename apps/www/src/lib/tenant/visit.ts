@@ -169,14 +169,19 @@ function readVisitFrame(
 }
 
 /**
- * Enters a school visit. The frame the host kept for the browser's session, in the page's locale, draws at once, and
+ * Reads the school for a visit. A refresh asks for the membership again, so it waits for the live read: a
+ * kept frame would land a person who just lost a role on a page that role opened. A visit that enters the
+ * school draws the frame the host kept for the browser's session, in the page's locale, at once, and
  * the live read checks it (`useLiveVisit`); a visit with no such frame waits for the live read. The sign-in hint
  * says, before any read, whether the browser holds a session.
  */
-function enterVisit(slug: TenantSlug, visit: SchoolVisit) {
+function readVisit(slug: TenantSlug, visit: SchoolVisit, refresh: boolean) {
   const locale = readSchoolLocale();
   const signedIn = hasSignedInHint(document.cookie);
   const live = readVisitFrame(slug, locale, signedIn);
+  if (refresh) {
+    return live;
+  }
   const kept = Effect.runSync(
     Effect.all([loadKeptFrameText(), loadKnownSession()]).pipe(
       Effect.map(([text, known]) =>
@@ -220,5 +225,5 @@ export function frameOfNavigation(
   if (reusesVisitFrame(navigation) && visit.frame !== undefined) {
     return Promise.resolve(visit.frame);
   }
-  return enterVisit(slug, visit);
+  return readVisit(slug, visit, navigation.invalid);
 }

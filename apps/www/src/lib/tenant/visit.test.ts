@@ -369,6 +369,20 @@ describe("frameOfNavigation", () => {
     expect(storage.removeItem).toHaveBeenCalledWith(KEPT_SCHOOL_KEY);
   });
 
+  it("waits for the live read after a refresh, whatever the host kept", async () => {
+    storage.getItem.mockImplementation((key) =>
+      key === KEPT_SCHOOL_KEY ? KEPT_TEXT : null
+    );
+    frame.read.mockReturnValueOnce(Effect.succeed({ _tag: "Refused" }));
+    const visit: SchoolVisit = {};
+
+    await expect(
+      frameOfNavigation(visit, SLUG, { ...STAY, invalid: true })
+    ).resolves.toEqual({ legal: null, school: { _tag: "Refused" } });
+
+    expect(takeLiveRead(visit)).toBeUndefined();
+  });
+
   it("draws a kept frame at once, and hands its live read to one layout", async () => {
     storage.getItem.mockImplementation((key) =>
       key === KEPT_SCHOOL_KEY ? KEPT_TEXT : null
